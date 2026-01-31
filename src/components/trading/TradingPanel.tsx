@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown, Clock, HelpCircle, Plus, Minus } from "lucide-react";
+import { TrendingUp, TrendingDown, HelpCircle, Plus, Minus, ChevronDown } from "lucide-react";
+import { expiryTimes } from "./data/assets";
 
 interface TradingPanelProps {
   asset: {
@@ -13,8 +14,9 @@ interface TradingPanelProps {
 
 const TradingPanel = ({ asset, balance, setBalance }: TradingPanelProps) => {
   const [investAmount, setInvestAmount] = useState(1000);
-  const [expiration, setExpiration] = useState(30);
-  const [profit, setProfit] = useState(86);
+  const [expirationValue, setExpirationValue] = useState(30);
+  const [showExpiryDropdown, setShowExpiryDropdown] = useState(false);
+  const [profit] = useState(86);
 
   const handleHigher = () => {
     if (investAmount <= balance) {
@@ -31,6 +33,15 @@ const TradingPanel = ({ asset, balance, setBalance }: TradingPanelProps) => {
   const adjustAmount = (delta: number) => {
     setInvestAmount(Math.max(1, investAmount + delta));
   };
+
+  const formatExpiry = (seconds: number) => {
+    if (seconds < 60) return `${seconds} sec`;
+    if (seconds < 3600) return `${seconds / 60} min`;
+    if (seconds < 86400) return `${seconds / 3600} hr`;
+    return `${seconds / 86400} day`;
+  };
+
+  const currentExpiry = expiryTimes.find((e) => e.value === expirationValue);
 
   return (
     <aside className="w-64 bg-card border-l border-border flex flex-col">
@@ -65,23 +76,61 @@ const TradingPanel = ({ asset, balance, setBalance }: TradingPanelProps) => {
         </div>
       </div>
 
-      {/* Expiration */}
+      {/* Expiration Dropdown */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-muted-foreground">Expiration</span>
           <HelpCircle className="w-4 h-4 text-muted-foreground" />
         </div>
-        <div className="flex items-center gap-2 bg-secondary rounded-lg p-2">
-          <Clock className="w-4 h-4 text-muted-foreground" />
-          <span className="text-lg font-semibold text-foreground">{expiration} sec</span>
+        
+        {/* Dropdown Trigger */}
+        <div className="relative">
+          <button
+            onClick={() => setShowExpiryDropdown(!showExpiryDropdown)}
+            className="w-full flex items-center justify-between gap-2 bg-secondary rounded-lg p-2 hover:bg-secondary/80 transition-colors"
+          >
+            <span className="text-lg font-semibold text-foreground">
+              {formatExpiry(expirationValue)}
+            </span>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showExpiryDropdown ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showExpiryDropdown && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowExpiryDropdown(false)}
+              />
+              <div className="absolute left-0 right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-xl z-50 max-h-[200px] overflow-y-auto">
+                {expiryTimes.map((expiry) => (
+                  <button
+                    key={expiry.value}
+                    onClick={() => {
+                      setExpirationValue(expiry.value);
+                      setShowExpiryDropdown(false);
+                    }}
+                    className={`w-full px-3 py-2 text-left text-sm hover:bg-secondary transition-colors ${
+                      expirationValue === expiry.value
+                        ? "text-primary bg-secondary"
+                        : "text-foreground"
+                    }`}
+                  >
+                    {expiry.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
+
+        {/* Quick Select */}
         <div className="flex gap-2 mt-2">
           {[30, 60, 120, 300].map((sec) => (
             <button
               key={sec}
-              onClick={() => setExpiration(sec)}
+              onClick={() => setExpirationValue(sec)}
               className={`flex-1 py-1 text-xs rounded ${
-                expiration === sec
+                expirationValue === sec
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
               }`}

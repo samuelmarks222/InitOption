@@ -1,4 +1,6 @@
 import { Info, Bell, Star } from "lucide-react";
+import AssetSelector from "./AssetSelector";
+import { Asset } from "./data/assets";
 
 interface AssetInfoProps {
   asset: {
@@ -8,32 +10,15 @@ interface AssetInfoProps {
     price: number;
     change: number;
   };
+  onSelectAsset: (asset: Asset & { price: number; change: number }) => void;
 }
 
-const AssetInfo = ({ asset }: AssetInfoProps) => {
+const AssetInfo = ({ asset, onSelectAsset }: AssetInfoProps) => {
   return (
-    <div className="h-12 bg-card border-b border-border flex items-center justify-between px-4">
+    <div className="h-14 bg-card border-b border-border flex items-center justify-between px-4">
       <div className="flex items-center gap-4">
-        {/* Asset selector */}
-        <button className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-            <span className="text-sm font-bold text-white">€</span>
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-foreground">{asset.symbol} ({asset.type})</span>
-              <svg className="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs px-1.5 py-0.5 bg-trading-orange text-primary-foreground rounded font-medium">
-                OTC
-              </span>
-              <span className="text-xs text-muted-foreground">{asset.name}</span>
-            </div>
-          </div>
-        </button>
+        {/* Asset selector dropdown */}
+        <AssetSelector selectedAsset={asset} onSelectAsset={onSelectAsset} />
 
         {/* Quick actions */}
         <div className="flex items-center gap-2">
