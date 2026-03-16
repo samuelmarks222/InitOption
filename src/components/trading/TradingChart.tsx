@@ -77,6 +77,7 @@ const TradingChart = ({ asset, onPriceUpdate }: TradingChartProps) => {
           const newClose = lastCandle.close * (1 + change);
 
           setCurrentPrice(newClose);
+          onPriceUpdate?.(newClose);
           lastPriceRef.current = newClose;
 
           // Trigger blinking effect
