@@ -14,6 +14,7 @@ interface TradingChartProps {
     symbol: string;
     price: number;
   };
+  onPriceUpdate?: (price: number) => void;
 }
 
 const generateCandles = (count: number, basePrice: number): Candle[] => {
