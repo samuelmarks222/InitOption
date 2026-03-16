@@ -44,7 +44,7 @@ const generateCandles = (count: number, basePrice: number): Candle[] => {
   return candles;
 };
 
-const TradingChart = ({ asset }: TradingChartProps) => {
+const TradingChart = ({ asset, onPriceUpdate }: TradingChartProps) => {
   const [candles, setCandles] = useState<Candle[]>(() => generateCandles(40, asset.price));
   const [currentPrice, setCurrentPrice] = useState(asset.price);
   const [timeframe, setTimeframe] = useState(43200); // 12h default
