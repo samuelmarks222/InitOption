@@ -14,6 +14,7 @@ interface TradingChartProps {
     symbol: string;
     price: number;
   };
+  onPriceUpdate?: (price: number) => void;
 }
 
 const generateCandles = (count: number, basePrice: number): Candle[] => {
@@ -43,7 +44,7 @@ const generateCandles = (count: number, basePrice: number): Candle[] => {
   return candles;
 };
 
-const TradingChart = ({ asset }: TradingChartProps) => {
+const TradingChart = ({ asset, onPriceUpdate }: TradingChartProps) => {
   const [candles, setCandles] = useState<Candle[]>(() => generateCandles(40, asset.price));
   const [currentPrice, setCurrentPrice] = useState(asset.price);
   const [timeframe, setTimeframe] = useState(43200); // 12h default
@@ -76,6 +77,7 @@ const TradingChart = ({ asset }: TradingChartProps) => {
           const newClose = lastCandle.close * (1 + change);
 
           setCurrentPrice(newClose);
+          onPriceUpdate?.(newClose);
           lastPriceRef.current = newClose;
 
           // Trigger blinking effect

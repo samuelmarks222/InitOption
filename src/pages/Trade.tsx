@@ -4,16 +4,16 @@ import TradingHeader from "@/components/trading/TradingHeader";
 import TradingChart from "@/components/trading/TradingChart";
 import TradingPanel from "@/components/trading/TradingPanel";
 import AssetInfo from "@/components/trading/AssetInfo";
+import ActiveTrades from "@/components/trading/ActiveTrades";
 import { Asset } from "@/components/trading/data/assets";
+import { useAuth } from "@/contexts/AuthContext";
+import { useTrading } from "@/hooks/useTrading";
 
 const Trade = () => {
-  const [selectedAsset, setSelectedAsset] = useState<{
-    symbol: string;
-    type: string;
-    name: string;
-    price: number;
-    change: number;
-  }>({
+  const { profile } = useAuth();
+  const { activeTrades, tradeHistory, openTrade, setCurrentPrice } = useTrading();
+
+  const [selectedAsset, setSelectedAsset] = useState({
     symbol: "EUR/USD",
     type: "OTC",
     name: "Blitz",
@@ -21,7 +21,7 @@ const Trade = () => {
     change: 0.35,
   });
 
-  const [balance, setBalance] = useState(0);
+  const balance = profile?.balance ?? 0;
 
   const handleSelectAsset = (asset: Asset & { price: number; change: number }) => {
     setSelectedAsset({
@@ -33,29 +33,25 @@ const Trade = () => {
     });
   };
 
+  const handlePriceUpdate = (price: number) => {
+    setCurrentPrice(price);
+  };
+
   return (
     <div className="h-screen bg-background flex overflow-hidden">
-      {/* Sidebar */}
       <TradingSidebar />
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <TradingHeader balance={balance} />
-
-        {/* Trading Area */}
         <div className="flex-1 flex">
-          {/* Chart Area */}
           <div className="flex-1 flex flex-col">
             <AssetInfo asset={selectedAsset} onSelectAsset={handleSelectAsset} />
-            <TradingChart asset={selectedAsset} />
+            <TradingChart asset={selectedAsset} onPriceUpdate={handlePriceUpdate} />
+            {activeTrades.length > 0 && <ActiveTrades trades={activeTrades} />}
           </div>
-
-          {/* Trading Panel */}
-          <TradingPanel 
-            asset={selectedAsset} 
+          <TradingPanel
+            asset={selectedAsset}
             balance={balance}
-            setBalance={setBalance}
+            onTrade={openTrade}
           />
         </div>
       </div>
