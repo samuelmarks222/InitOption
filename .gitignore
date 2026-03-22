@@ -11,6 +11,15 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+!.env.example
+supabase/.temp/
+diff.txt
+lint.txt
+lint-compact.txt
+status.txt
+ts_errors.txt
+ts_errors_2.txt
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +31,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.vercel
+.dev-server/

@@ -4,6 +4,18 @@
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
+## Pending Deposit Migration
+
+Before testing the pending deposit request flow, apply `supabase/migrations/20260322_c_pending_deposit_review.sql`.
+
+That migration creates the `deposit_requests` table and the `request_deposit_review` / `admin_update_deposit_status` RPCs. Without it, new deposit submissions fail.
+
+If you are using the Supabase CLI locally, run:
+
+```sh
+npx supabase db push
+```
+
 ## How can I edit this code?
 
 There are several ways of editing your application.

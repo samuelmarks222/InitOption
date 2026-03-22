@@ -1,81 +1,22 @@
 // All currency pairs and assets
 export interface Asset {
   symbol: string;
-  type: "OTC" | "Forex" | "Crypto" | "Stocks" | "Commodities";
+  type: "OTC" | "Forex" | "Crypto" | "Stocks" | "Stock" | "Commodities";
   name: string;
   basePrice: number;
   icon: string;
+  flags: string[]; // Emojis like ['🇺🇸', '🇪🇺'] or single icon for crypto/stocks
+  maxProfit?: number; // Represented as a percentage, e.g., 85
+  change5min?: string; // e.g., "+0.01%" or "-0.06%"
+  category?: "Trending" | "Options" | "Margin" | "Watchlist" | "Stocks"; // Maps to the left sidebar
+  isTradersChoice?: boolean;
 }
 
-export const allAssets: Asset[] = [
-  // OTC Assets
-  { symbol: "EUR/USD", type: "OTC", name: "Blitz", basePrice: 1.24183, icon: "€" },
-  { symbol: "GBP/USD", type: "OTC", name: "Blitz", basePrice: 1.31245, icon: "£" },
-  { symbol: "USD/JPY", type: "OTC", name: "Blitz", basePrice: 149.32, icon: "¥" },
-  { symbol: "AUD/USD", type: "OTC", name: "Blitz", basePrice: 0.65432, icon: "A$" },
-  { symbol: "USD/CAD", type: "OTC", name: "Blitz", basePrice: 1.35678, icon: "C$" },
-  { symbol: "EUR/GBP", type: "OTC", name: "Blitz", basePrice: 0.85432, icon: "€" },
-  { symbol: "USD/CHF", type: "OTC", name: "Blitz", basePrice: 0.89234, icon: "Fr" },
-  { symbol: "NZD/USD", type: "OTC", name: "Blitz", basePrice: 0.61234, icon: "NZ$" },
-
-  // Forex Major Pairs
-  { symbol: "EUR/USD", type: "Forex", name: "Euro/Dollar", basePrice: 1.08542, icon: "€" },
-  { symbol: "GBP/USD", type: "Forex", name: "Pound/Dollar", basePrice: 1.26783, icon: "£" },
-  { symbol: "USD/JPY", type: "Forex", name: "Dollar/Yen", basePrice: 151.234, icon: "¥" },
-  { symbol: "AUD/USD", type: "Forex", name: "Aussie/Dollar", basePrice: 0.64892, icon: "A$" },
-  { symbol: "USD/CAD", type: "Forex", name: "Dollar/CAD", basePrice: 1.37234, icon: "C$" },
-  { symbol: "EUR/JPY", type: "Forex", name: "Euro/Yen", basePrice: 164.123, icon: "€" },
-  { symbol: "GBP/JPY", type: "Forex", name: "Pound/Yen", basePrice: 191.456, icon: "£" },
-  { symbol: "EUR/GBP", type: "Forex", name: "Euro/Pound", basePrice: 0.85678, icon: "€" },
-  { symbol: "EUR/CHF", type: "Forex", name: "Euro/Franc", basePrice: 0.96234, icon: "€" },
-  { symbol: "USD/CHF", type: "Forex", name: "Dollar/Franc", basePrice: 0.88765, icon: "$" },
-  { symbol: "NZD/USD", type: "Forex", name: "Kiwi/Dollar", basePrice: 0.59876, icon: "NZ$" },
-  { symbol: "EUR/AUD", type: "Forex", name: "Euro/Aussie", basePrice: 1.67234, icon: "€" },
-  { symbol: "GBP/AUD", type: "Forex", name: "Pound/Aussie", basePrice: 1.95432, icon: "£" },
-  { symbol: "EUR/CAD", type: "Forex", name: "Euro/CAD", basePrice: 1.48765, icon: "€" },
-  { symbol: "GBP/CAD", type: "Forex", name: "Pound/CAD", basePrice: 1.73456, icon: "£" },
-  { symbol: "AUD/CAD", type: "Forex", name: "Aussie/CAD", basePrice: 0.89123, icon: "A$" },
-  { symbol: "AUD/JPY", type: "Forex", name: "Aussie/Yen", basePrice: 98.234, icon: "A$" },
-  { symbol: "CHF/JPY", type: "Forex", name: "Franc/Yen", basePrice: 170.345, icon: "Fr" },
-  { symbol: "NZD/JPY", type: "Forex", name: "Kiwi/Yen", basePrice: 90.567, icon: "NZ$" },
-  { symbol: "AUD/NZD", type: "Forex", name: "Aussie/Kiwi", basePrice: 1.08432, icon: "A$" },
-
-  // Crypto
-  { symbol: "BTC/USD", type: "Crypto", name: "Bitcoin", basePrice: 43567.89, icon: "₿" },
-  { symbol: "ETH/USD", type: "Crypto", name: "Ethereum", basePrice: 2345.67, icon: "Ξ" },
-  { symbol: "XRP/USD", type: "Crypto", name: "Ripple", basePrice: 0.5234, icon: "X" },
-  { symbol: "LTC/USD", type: "Crypto", name: "Litecoin", basePrice: 72.34, icon: "Ł" },
-  { symbol: "BCH/USD", type: "Crypto", name: "Bitcoin Cash", basePrice: 234.56, icon: "Ƀ" },
-  { symbol: "ADA/USD", type: "Crypto", name: "Cardano", basePrice: 0.4567, icon: "₳" },
-  { symbol: "DOT/USD", type: "Crypto", name: "Polkadot", basePrice: 7.234, icon: "●" },
-  { symbol: "SOL/USD", type: "Crypto", name: "Solana", basePrice: 98.76, icon: "◎" },
-  { symbol: "DOGE/USD", type: "Crypto", name: "Dogecoin", basePrice: 0.0823, icon: "Ð" },
-  { symbol: "MATIC/USD", type: "Crypto", name: "Polygon", basePrice: 0.9876, icon: "M" },
-
-  // Stocks
-  { symbol: "AAPL", type: "Stocks", name: "Apple Inc.", basePrice: 178.45, icon: "" },
-  { symbol: "GOOGL", type: "Stocks", name: "Alphabet Inc.", basePrice: 141.23, icon: "G" },
-  { symbol: "MSFT", type: "Stocks", name: "Microsoft", basePrice: 378.91, icon: "M" },
-  { symbol: "AMZN", type: "Stocks", name: "Amazon", basePrice: 178.12, icon: "A" },
-  { symbol: "TSLA", type: "Stocks", name: "Tesla", basePrice: 234.56, icon: "T" },
-  { symbol: "META", type: "Stocks", name: "Meta", basePrice: 367.89, icon: "M" },
-  { symbol: "NVDA", type: "Stocks", name: "NVIDIA", basePrice: 543.21, icon: "N" },
-  { symbol: "NFLX", type: "Stocks", name: "Netflix", basePrice: 478.90, icon: "N" },
-  { symbol: "DIS", type: "Stocks", name: "Disney", basePrice: 91.23, icon: "D" },
-  { symbol: "PYPL", type: "Stocks", name: "PayPal", basePrice: 62.45, icon: "P" },
-
-  // Commodities
-  { symbol: "XAU/USD", type: "Commodities", name: "Gold", basePrice: 2034.56, icon: "Au" },
-  { symbol: "XAG/USD", type: "Commodities", name: "Silver", basePrice: 23.456, icon: "Ag" },
-  { symbol: "OIL/USD", type: "Commodities", name: "Crude Oil", basePrice: 78.34, icon: "🛢" },
-  { symbol: "GAS/USD", type: "Commodities", name: "Natural Gas", basePrice: 2.345, icon: "⛽" },
-  { symbol: "XPT/USD", type: "Commodities", name: "Platinum", basePrice: 912.34, icon: "Pt" },
-  { symbol: "XPD/USD", type: "Commodities", name: "Palladium", basePrice: 1023.45, icon: "Pd" },
-  { symbol: "COPPER", type: "Commodities", name: "Copper", basePrice: 3.789, icon: "Cu" },
-  { symbol: "WHEAT", type: "Commodities", name: "Wheat", basePrice: 567.89, icon: "🌾" },
-];
+export const allAssets: Asset[] = []; // Intentionally left empty. Backend handles all assets now.
 
 export const assetTypes = ["OTC", "Forex", "Crypto", "Stocks", "Commodities"] as const;
+
+// ... keeping existing timeframes/indicators below ...
 
 // Chart timeframes from 5 seconds to 3 days
 export const chartTimeframes = [

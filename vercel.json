@@ -1,0 +1,21 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/render.ts": {
+      "includeFiles": "dist/**"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/assets/(.*)", "destination": "/assets/$1" },
+    { "source": "/favicon.ico", "destination": "/favicon.ico" },
+    { "source": "/robots.txt", "destination": "/robots.txt" },
+    { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
+    {
+      "source": "/(.*\\.(?:css|js|mjs|png|jpg|jpeg|gif|svg|webp|ico|json|txt|xml|map|woff|woff2|ttf|eot))",
+      "destination": "/$1"
+    },
+    { "source": "/(.*)", "destination": "/api/render?__pathname=$1" }
+  ]
+}

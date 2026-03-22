@@ -1,90 +1,75 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ArrowUpRight, Menu } from "lucide-react";
+import { SiteLogo } from "@/components/branding/SiteLogo";
+
+const NAV_ITEMS = [
+  { label: "Markets", href: "#markets" },
+  { label: "Features", href: "#features" },
+  { label: "Reviews", href: "#reviews" },
+  { label: "FAQ", href: "#faq" },
+];
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 16);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">12</span>
-            </div>
-            <span className="text-xl font-bold text-foreground">iq option</span>
-          </Link>
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "border-b border-white/10 bg-[#09131d]/88 shadow-[0_18px_60px_rgba(1,7,15,0.55)] backdrop-blur-xl"
+          : "bg-[linear-gradient(180deg,rgba(9,19,29,0.86)_0%,rgba(9,19,29,0)_100%)]"
+      }`}
+    >
+      <div className="mx-auto flex h-[78px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <SiteLogo
+          className="gap-2.5"
+          markClassName="h-9 w-9 rounded-xl bg-[linear-gradient(135deg,#1a88ff,#17bf63)]"
+        />
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <button className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              Download App <ChevronDown className="w-4 h-4" />
-            </button>
-            <button className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              For Traders <ChevronDown className="w-4 h-4" />
-            </button>
-            <button className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              About Us <ChevronDown className="w-4 h-4" />
-            </button>
-          </nav>
+        <nav className="hidden items-center gap-8 xl:flex">
+          {NAV_ITEMS.map((item) => (
+            <a
+              key={item.label}
+              href={item.href}
+              className="font-copy text-[13px] font-semibold tracking-[0.14em] text-slate-300 transition-colors hover:text-white"
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-4">
-            <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-              EN <ChevronDown className="w-4 h-4" />
-            </button>
-            <Link to="/login">
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground">
-                Log in
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button variant="trading" size="sm">
-                Sign Up
-              </Button>
-            </Link>
-          </div>
-
-          {/* Mobile Menu Button */}
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
-            className="md:hidden text-foreground"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            type="button"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-colors hover:bg-white/10 hover:text-white xl:hidden"
+            aria-label="Open navigation"
           >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            <Menu className="h-4 w-4" />
           </button>
-        </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border animate-fade-in">
-            <nav className="flex flex-col gap-4">
-              <button className="flex items-center justify-between text-muted-foreground hover:text-foreground transition-colors py-2">
-                Download App <ChevronDown className="w-4 h-4" />
-              </button>
-              <button className="flex items-center justify-between text-muted-foreground hover:text-foreground transition-colors py-2">
-                For Traders <ChevronDown className="w-4 h-4" />
-              </button>
-              <button className="flex items-center justify-between text-muted-foreground hover:text-foreground transition-colors py-2">
-                About Us <ChevronDown className="w-4 h-4" />
-              </button>
-              <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <Link to="/login">
-                  <Button variant="ghost" className="w-full justify-center">
-                    Log in
-                  </Button>
-                </Link>
-                <Link to="/register">
-                  <Button variant="trading" className="w-full justify-center">
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
-            </nav>
-          </div>
-        )}
+          <Link
+            to="/login"
+            className="hidden rounded-full border border-white/10 bg-white/5 px-4 py-2.5 font-copy text-sm font-semibold text-slate-200 transition-colors hover:bg-white/10 hover:text-white sm:inline-flex"
+          >
+            Log in
+          </Link>
+          <Link
+            to="/register"
+            className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(180deg,#22c96f_0%,#169a57_100%)] px-4 py-2.5 font-copy text-sm font-bold text-white shadow-[0_18px_34px_rgba(20,140,82,0.28)] transition-all hover:-translate-y-0.5 hover:brightness-105"
+          >
+            Open account
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </header>
   );

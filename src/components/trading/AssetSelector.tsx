@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import { ChevronDown, Search, Star, X } from "lucide-react";
-import { allAssets, assetTypes, Asset } from "./data/assets";
+import { ChevronDown, Search, Star, Flame, Zap, DollarSign, Building2, Bitcoin, Droplet, PieChart, Briefcase, Bell, Info } from "lucide-react";
+import { allAssets, Asset } from "./data/assets";
 
 interface AssetSelectorProps {
   selectedAsset: {
@@ -13,197 +13,195 @@ interface AssetSelectorProps {
   onSelectAsset: (asset: Asset & { price: number; change: number }) => void;
 }
 
-const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorProps) => {
+const CATEGORIES = [
+  { id: "Trending", label: "Trending", icon: Flame },
+  { 
+    id: "Options", label: "Options", icon: Zap,
+    subItems: [
+      { id: "Blitz", label: "Blitz", count: 132 },
+      { id: "Binary", label: "Binary", count: 149 },
+      { id: "Digital", label: "Digital", count: 139 },
+    ]
+  },
+  { id: "Forex", label: "Forex", icon: DollarSign, count: 36 },
+  { id: "Stocks", label: "Stocks", icon: Building2, count: 244 },
+  { id: "Crypto", label: "Crypto", icon: Bitcoin, count: 11 },
+  { id: "Commodities", label: "Commodities", icon: Droplet, count: 4 },
+  { id: "ETFs", label: "ETFs", icon: PieChart, count: 26 },
+  { id: "Indices", label: "Indices", icon: Briefcase, count: 12 },
+  { id: "Watchlist", label: "Watchlist", icon: Star, count: 5 },
+];
+
+export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState<string>("All");
-  const [favorites, setFavorites] = useState<string[]>(["EUR/USD-OTC", "BTC/USD-Crypto"]);
+  const [activeCategory, setActiveCategory] = useState<string>("Options");
+  const [activeSubCategory, setActiveSubCategory] = useState<string>("Binary");
+
+  const currentFullAsset = allAssets.find(a => a.symbol === selectedAsset.symbol);
+  const flags = currentFullAsset?.flags || [selectedAsset.symbol.charAt(0)];
 
   const filteredAssets = useMemo(() => {
     return allAssets.filter((asset) => {
-      const matchesSearch =
-        asset.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        asset.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesType = selectedType === "All" || asset.type === selectedType;
-      return matchesSearch && matchesType;
+      const matchesSearch = asset.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || asset.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch;
     });
-  }, [searchQuery, selectedType]);
-
-  const toggleFavorite = (assetKey: string) => {
-    setFavorites((prev) =>
-      prev.includes(assetKey)
-        ? prev.filter((f) => f !== assetKey)
-        : [...prev, assetKey]
-    );
-  };
+  }, [searchQuery]);
 
   const handleSelectAsset = (asset: Asset) => {
     onSelectAsset({
       ...asset,
       price: asset.basePrice,
-      change: Math.random() * 2 - 1,
+      change: parseFloat(asset.change5min || "0"),
     });
     setIsOpen(false);
   };
 
-  const getAssetKey = (asset: Asset) => `${asset.symbol}-${asset.type}`;
-
   return (
-    <div className="relative">
-      {/* Trigger Button */}
+    <div className="relative z-50">
+      {/* TRIGGER BUTTON (Top Left Style) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 hover:bg-secondary/50 rounded-lg p-2 transition-colors"
+        className="flex items-center gap-3 hover:bg-white/5 rounded p-1.5 transition-colors min-w-[140px]"
       >
-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-          <span className="text-sm font-bold text-primary-foreground">
-            {selectedAsset.symbol.charAt(0)}
-          </span>
+        <div className="flex -space-x-2">
+           {flags.map((flag, idx) => (
+              <div key={idx} className="w-6 h-6 rounded-full bg-trading-orange flex items-center justify-center text-[10px] border-2 border-[#141820] z-10 relative font-bold text-white shadow-sm" style={{ zIndex: 10 - idx }}>
+                {flag === "🇺🇸" ? "US" : flag === "🇪🇺" ? "EU" : flag === "₿" ? "B" : "OTC"}
+              </div>
+           ))}
         </div>
-        <div className="flex flex-col items-start">
+        <div className="flex flex-col items-start pr-2">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-foreground">
-              {selectedAsset.symbol} ({selectedAsset.type})
-            </span>
-            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+             <span className="font-bold text-foreground leading-tight tracking-wide">{selectedAsset.symbol}</span>
+             <ChevronDown className={`w-3 h-3 text-white transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs px-1.5 py-0.5 bg-trading-orange text-primary-foreground rounded font-medium">
-              {selectedAsset.type}
-            </span>
-            <span className="text-xs text-muted-foreground">{selectedAsset.name}</span>
-          </div>
+          <span className="text-xs text-muted-foreground leading-none">Digital</span>
         </div>
       </button>
 
-      {/* Dropdown */}
+      {/* MODAL DROPDOWN */}
       {isOpen && (
         <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute top-full left-0 mt-2 w-[400px] bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden">
-            {/* Header */}
-            <div className="p-3 border-b border-border">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-foreground">Select Asset</h3>
-                <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="absolute top-[calc(100%+8px)] left-0 w-[800px] h-[550px] bg-[#1a1b20] border border-white/10 rounded overflow-hidden shadow-2xl flex z-50">
+            
+            {/* Left Sidebar Menu */}
+            <div className="w-[220px] bg-[#1d2029] border-r border-white/5 flex flex-col shrink-0 overflow-y-auto scrollbar-hide py-4">
+               {CATEGORIES.map(cat => (
+                 <div key={cat.id} className="mb-2">
+                   <button
+                     onClick={() => setActiveCategory(cat.id)}
+                     className={`w-full flex items-center justify-between px-6 py-3 transition-colors ${
+                       activeCategory === cat.id ? "text-white" : "text-gray-400 hover:text-gray-200"
+                     }`}
+                   >
+                     <div className="flex items-center gap-4">
+                       <cat.icon className="w-[18px] h-[18px]" />
+                       <span className={`font-semibold text-[13px] ${activeCategory === cat.id ? "text-white" : ""}`}>{cat.label}</span>
+                     </div>
+                     {cat.count !== undefined && !cat.subItems && (
+                       <span className="text-[10px] bg-[#2a2d3e] px-2 py-0.5 rounded-full text-gray-400 font-medium">{cat.count}</span>
+                     )}
+                   </button>
+                   
+                   {/* Sub-items for active category */}
+                   {cat.subItems && activeCategory === cat.id && (
+                     <div className="flex flex-col mt-1 mb-2">
+                       {cat.subItems.map(sub => (
+                         <button
+                           key={sub.id}
+                           onClick={() => setActiveSubCategory(sub.id)}
+                           className={`w-full flex items-center justify-between pl-14 pr-6 py-2.5 transition-colors ${
+                             activeSubCategory === sub.id ? "bg-white/5 text-white" : "text-gray-400 hover:text-gray-200"
+                           }`}
+                         >
+                           <span className="font-medium text-[13px]">{sub.label}</span>
+                           <span className="text-[10px] bg-[#2a2d3e] px-2 py-0.5 rounded-full text-gray-400 font-medium">{sub.count}</span>
+                         </button>
+                       ))}
+                     </div>
+                   )}
+                 </div>
+               ))}
+            </div>
+
+            {/* Right Main Content */}
+            <div className="flex-1 flex flex-col bg-[#141820]">
               
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search assets..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-secondary border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                />
+              {/* Header: Search */}
+              <div className="p-4 border-b border-white/5 shrink-0">
+                 <div className="relative">
+                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                   <input 
+                     type="text" 
+                     placeholder="Search by name or ticker" 
+                     value={searchQuery}
+                     onChange={(e) => setSearchQuery(e.target.value)}
+                     className="w-full bg-transparent border-none text-[13px] text-white placeholder:text-gray-500 py-2 pl-10 pr-4 focus:outline-none transition-colors"
+                   />
+                 </div>
               </div>
-            </div>
 
-            {/* Type Filters */}
-            <div className="p-2 border-b border-border flex gap-1 overflow-x-auto">
-              <button
-                onClick={() => setSelectedType("All")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                  selectedType === "All"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                All
-              </button>
-              {assetTypes.map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setSelectedType(type)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                    selectedType === type
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-
-            {/* Asset List */}
-            <div className="max-h-[300px] overflow-y-auto">
-              {filteredAssets.length === 0 ? (
-                <div className="p-4 text-center text-muted-foreground text-sm">
-                  No assets found
-                </div>
-              ) : (
-                filteredAssets.map((asset) => {
-                  const assetKey = getAssetKey(asset);
-                  const isFavorite = favorites.includes(assetKey);
-                  const isSelected =
-                    selectedAsset.symbol === asset.symbol &&
-                    selectedAsset.type === asset.type;
-
-                  return (
-                    <div
-                      key={assetKey}
-                      className={`flex items-center justify-between p-3 hover:bg-secondary/50 cursor-pointer transition-colors ${
-                        isSelected ? "bg-secondary" : ""
-                      }`}
-                      onClick={() => handleSelectAsset(asset)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
-                          {asset.icon || asset.symbol.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-foreground text-sm">
-                              {asset.symbol}
-                            </span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                              asset.type === "OTC" 
-                                ? "bg-trading-orange text-primary-foreground" 
-                                : asset.type === "Crypto"
-                                ? "bg-purple-500 text-white"
-                                : asset.type === "Stocks"
-                                ? "bg-blue-500 text-white"
-                                : asset.type === "Commodities"
-                                ? "bg-yellow-500 text-black"
-                                : "bg-green-500 text-white"
-                            }`}>
-                              {asset.type}
-                            </span>
+              {/* Asset List Body */}
+              <div className="flex-1 overflow-y-auto scrollbar-hide">
+                <table className="w-full text-left text-[13px] text-gray-400">
+                  <thead className="sticky top-0 bg-[#141820] z-10 border-b border-white/5">
+                    <tr>
+                      <th className="py-3 px-6 font-medium">Sort by name</th>
+                      <th className="py-3 px-4 font-medium text-right hover:text-white cursor-pointer transition-colors">Price</th>
+                      <th className="py-3 px-4 font-medium text-right hover:text-white cursor-pointer transition-colors">Hourly</th>
+                      <th className="py-3 px-6 font-medium text-right hover:text-white cursor-pointer transition-colors">Profit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAssets.map(asset => (
+                      <tr 
+                        key={asset.symbol} 
+                        onClick={() => handleSelectAsset(asset)} 
+                        className="cursor-pointer hover:bg-white/5 transition-colors group border-b border-white/5"
+                      >
+                        <td className="py-3 px-6">
+                          <div className="flex items-center gap-3">
+                             <div className="flex -space-x-1">
+                               {asset.flags.map((flag, idx) => (
+                                  <div key={idx} className="w-6 h-6 rounded-full bg-trading-orange flex items-center justify-center text-[10px] border-2 border-[#141820] z-10 font-bold text-white shadow-sm" style={{ zIndex: 10 - idx }}>
+                                    {flag === "🇺🇸" ? "US" : flag === "🇪🇺" ? "EU" : flag === "₿" ? "B" : "OTC"}
+                                  </div>
+                               ))}
+                             </div>
+                             <span className="font-bold text-white">{asset.symbol}</span>
                           </div>
-                          <span className="text-xs text-muted-foreground">{asset.name}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-foreground">
-                          {asset.basePrice.toFixed(asset.basePrice > 100 ? 2 : 5)}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFavorite(assetKey);
-                          }}
-                          className={`p-1 rounded transition-colors ${
-                            isFavorite
-                              ? "text-trading-orange"
-                              : "text-muted-foreground hover:text-trading-orange"
-                          }`}
-                        >
-                          <Star className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+                        </td>
+                        <td className="py-3 px-4 text-right text-gray-300 font-medium tracking-wide">
+                          {asset.basePrice.toFixed(asset.basePrice > 100 ? 5 : 6)}
+                        </td>
+                        <td className={`py-3 px-4 text-right font-medium ${parseFloat(asset.change5min||"0") >= 0 ? "text-trading-green" : "text-trading-red"}`}>
+                          {asset.change5min || "+0.00%"}
+                        </td>
+                        <td className="py-3 px-6 text-right">
+                          <div className="flex items-center justify-end gap-3">
+                            <span className="font-bold text-trading-green text-sm">{asset.maxProfit || 87}%</span>
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Bell className="w-[14px] h-[14px] text-gray-400 hover:text-white" />
+                              <Star className="w-[14px] h-[14px] text-gray-400 hover:text-white" />
+                              <Info className="w-[14px] h-[14px] text-gray-400 hover:text-white" />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    
+                    {filteredAssets.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-8 text-center text-gray-500">
+                          No assets found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </>

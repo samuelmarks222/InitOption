@@ -1,0 +1,213 @@
+create extension if not exists pgcrypto;
+
+create table if not exists public.platform_settings (
+  id uuid primary key default gen_random_uuid(),
+  platform_name text not null default 'Init Option',
+  support_email text not null default 'support@initoption.com',
+  timezone text not null default 'UTC',
+  min_trade_amount numeric not null default 1,
+  max_trade_amount numeric not null default 10000,
+  enforce_max_exposure boolean not null default true,
+  enforce_2fa boolean not null default false,
+  require_kyc_withdrawal boolean not null default true,
+  strict_password boolean not null default true,
+  welcome_bonus_pct numeric not null default 50,
+  referral_commission_pct numeric not null default 10,
+  logo_url text not null default '',
+  favicon_url text not null default '',
+  chart_up_color text not null default '#00C076',
+  chart_down_color text not null default '#F6465D',
+  chart_bg_color text not null default '#0E1217',
+  site_title text not null default '',
+  meta_description text not null default '',
+  meta_keywords text not null default '',
+  og_title text not null default '',
+  og_description text not null default '',
+  og_image_url text not null default '',
+  twitter_card_type text not null default 'summary_large_image',
+  twitter_title text not null default '',
+  twitter_description text not null default '',
+  twitter_image_url text not null default '',
+  canonical_url text not null default '',
+  robots_directive text not null default 'index, follow',
+  custom_meta_tags text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table if exists public.platform_settings
+  add column if not exists platform_name text not null default 'Init Option',
+  add column if not exists support_email text not null default 'support@initoption.com',
+  add column if not exists timezone text not null default 'UTC',
+  add column if not exists min_trade_amount numeric not null default 1,
+  add column if not exists max_trade_amount numeric not null default 10000,
+  add column if not exists enforce_max_exposure boolean not null default true,
+  add column if not exists enforce_2fa boolean not null default false,
+  add column if not exists require_kyc_withdrawal boolean not null default true,
+  add column if not exists strict_password boolean not null default true,
+  add column if not exists welcome_bonus_pct numeric not null default 50,
+  add column if not exists referral_commission_pct numeric not null default 10,
+  add column if not exists logo_url text not null default '',
+  add column if not exists favicon_url text not null default '',
+  add column if not exists chart_up_color text not null default '#00C076',
+  add column if not exists chart_down_color text not null default '#F6465D',
+  add column if not exists chart_bg_color text not null default '#0E1217',
+  add column if not exists site_title text not null default '',
+  add column if not exists meta_description text not null default '',
+  add column if not exists meta_keywords text not null default '',
+  add column if not exists og_title text not null default '',
+  add column if not exists og_description text not null default '',
+  add column if not exists og_image_url text not null default '',
+  add column if not exists twitter_card_type text not null default 'summary_large_image',
+  add column if not exists twitter_title text not null default '',
+  add column if not exists twitter_description text not null default '',
+  add column if not exists twitter_image_url text not null default '',
+  add column if not exists canonical_url text not null default '',
+  add column if not exists robots_directive text not null default 'index, follow',
+  add column if not exists custom_meta_tags text not null default '',
+  add column if not exists created_at timestamptz not null default now(),
+  add column if not exists updated_at timestamptz not null default now();
+
+update public.platform_settings
+set
+  platform_name = coalesce(nullif(platform_name, ''), 'Init Option'),
+  support_email = coalesce(nullif(support_email, ''), 'support@initoption.com'),
+  timezone = coalesce(nullif(timezone, ''), 'UTC'),
+  logo_url = coalesce(logo_url, ''),
+  favicon_url = coalesce(favicon_url, ''),
+  chart_up_color = coalesce(nullif(chart_up_color, ''), '#00C076'),
+  chart_down_color = coalesce(nullif(chart_down_color, ''), '#F6465D'),
+  chart_bg_color = coalesce(nullif(chart_bg_color, ''), '#0E1217'),
+  site_title = coalesce(site_title, ''),
+  meta_description = coalesce(meta_description, ''),
+  meta_keywords = coalesce(meta_keywords, ''),
+  og_title = coalesce(og_title, ''),
+  og_description = coalesce(og_description, ''),
+  og_image_url = coalesce(og_image_url, ''),
+  twitter_card_type = coalesce(nullif(twitter_card_type, ''), 'summary_large_image'),
+  twitter_title = coalesce(twitter_title, ''),
+  twitter_description = coalesce(twitter_description, ''),
+  twitter_image_url = coalesce(twitter_image_url, ''),
+  canonical_url = coalesce(canonical_url, ''),
+  robots_directive = coalesce(nullif(robots_directive, ''), 'index, follow'),
+  custom_meta_tags = coalesce(custom_meta_tags, ''),
+  updated_at = now();
+
+insert into public.platform_settings (
+  platform_name,
+  support_email,
+  timezone,
+  logo_url,
+  favicon_url,
+  chart_up_color,
+  chart_down_color,
+  chart_bg_color,
+  site_title,
+  meta_description,
+  meta_keywords,
+  og_title,
+  og_description,
+  og_image_url,
+  twitter_card_type,
+  twitter_title,
+  twitter_description,
+  twitter_image_url,
+  canonical_url,
+  robots_directive,
+  custom_meta_tags
+)
+select
+  'Init Option',
+  'support@initoption.com',
+  'UTC',
+  '',
+  '',
+  '#00C076',
+  '#F6465D',
+  '#0E1217',
+  '',
+  '',
+  '',
+  '',
+  '',
+  '',
+  'summary_large_image',
+  '',
+  '',
+  '',
+  '',
+  'index, follow',
+  ''
+where not exists (
+  select 1 from public.platform_settings
+);
+
+alter table public.platform_settings enable row level security;
+
+drop policy if exists "Allow public read on settings" on public.platform_settings;
+drop policy if exists "Allow admin full access on settings" on public.platform_settings;
+drop policy if exists "settings_select" on public.platform_settings;
+drop policy if exists "settings_insert" on public.platform_settings;
+drop policy if exists "settings_update" on public.platform_settings;
+drop policy if exists "settings_delete" on public.platform_settings;
+drop policy if exists "platform_settings_select_public" on public.platform_settings;
+drop policy if exists "platform_settings_insert_admin" on public.platform_settings;
+drop policy if exists "platform_settings_update_admin" on public.platform_settings;
+drop policy if exists "platform_settings_delete_admin" on public.platform_settings;
+
+create policy "platform_settings_select_public"
+on public.platform_settings
+for select
+using (true);
+
+create policy "platform_settings_insert_admin"
+on public.platform_settings
+for insert
+with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+create policy "platform_settings_update_admin"
+on public.platform_settings
+for update
+using (public.has_role(auth.uid(), 'admin'::public.app_role))
+with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+create policy "platform_settings_delete_admin"
+on public.platform_settings
+for delete
+using (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+insert into storage.buckets (id, name, public)
+values ('branding', 'branding', true)
+on conflict (id) do update
+set
+  name = excluded.name,
+  public = excluded.public;
+
+drop policy if exists "Allow public read on branding" on storage.objects;
+drop policy if exists "Allow authenticated uploads on branding" on storage.objects;
+drop policy if exists "Allow authenticated updates on branding" on storage.objects;
+drop policy if exists "Allow authenticated deletes on branding" on storage.objects;
+drop policy if exists "branding_select" on storage.objects;
+drop policy if exists "branding_insert" on storage.objects;
+drop policy if exists "branding_update" on storage.objects;
+drop policy if exists "branding_delete" on storage.objects;
+
+create policy "branding_select"
+on storage.objects
+for select
+using (bucket_id = 'branding');
+
+create policy "branding_insert"
+on storage.objects
+for insert
+with check (bucket_id = 'branding' and auth.uid() is not null);
+
+create policy "branding_update"
+on storage.objects
+for update
+using (bucket_id = 'branding' and auth.uid() is not null);
+
+create policy "branding_delete"
+on storage.objects
+for delete
+using (bucket_id = 'branding' and auth.uid() is not null);
