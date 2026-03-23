@@ -1255,174 +1255,202 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 bg-[#05070d]/82 p-3 backdrop-blur-sm sm:p-4">
       <div
-        className="w-[420px] overflow-hidden rounded-[20px] border shadow-2xl"
+        className="mx-auto flex h-[calc(100dvh-24px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[20px] border text-white shadow-[0_32px_90px_rgba(0,0,0,0.55)] sm:h-[min(860px,calc(100dvh-32px))]"
         style={{ background: `linear-gradient(180deg, ${MODAL_BG} 0%, ${INNER_BG} 100%)`, borderColor: PANEL_BORDER }}
       >
-        <div className="flex items-center justify-between border-b px-5 py-5" style={{ backgroundColor: MODAL_BG, borderColor: PANEL_BORDER }}>
-          <div>
-            <div className="text-[18px] font-semibold text-white">Withdraw Funds</div>
-            <div className="text-sm text-[#9dc2c8]">Move funds from your live account safely.</div>
+        <div
+          className="flex items-start justify-between gap-4 border-b px-4 py-4 sm:px-6 sm:py-5"
+          style={{ backgroundColor: MODAL_BG, borderColor: PANEL_BORDER }}
+        >
+          <div className="min-w-0">
+            <div className="text-[22px] font-semibold text-white sm:text-[26px]">Withdraw Funds</div>
+            <div className="mt-1 text-sm text-[#9dc2c8]">Move funds from your live account safely with the same clear layout as deposits.</div>
           </div>
-          <button onClick={onClose} className="text-gray-400 transition-colors hover:text-white">
-            <X className="h-4 w-4" />
+          <button
+            onClick={onClose}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
+          >
+            <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="space-y-4 p-5">
-          <div className="rounded-[18px] border p-4" style={{ backgroundColor: SURFACE_BG, borderColor: PANEL_BORDER }}>
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#86c9d4]">Available Balance</div>
-            <div className="mt-2 text-[30px] font-bold text-white">{formatCurrency(balance)}</div>
-            <div className="mt-2 text-sm text-[#9dc2c8]">Minimum withdrawal is $10. Requests are reviewed before processing.</div>
-          </div>
 
-          <div className="flex gap-2">
-            {(["bank", "crypto"] as const).map((entry) => (
-              <button
-                key={entry}
-                onClick={() => setMethod(entry)}
-                className={`flex-1 rounded-lg py-2 text-[11px] font-bold uppercase tracking-wide transition-all ${
-                  method === entry
-                    ? "bg-[#86c9d4] text-[#121f27]"
-                    : "text-gray-300 hover:text-white"
-                }`}
-                style={method === entry ? undefined : { backgroundColor: SURFACE_BG }}
-              >
-                {entry === "bank" ? "Bank Transfer" : "Crypto Wallet"}
-              </button>
-            ))}
-          </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+          <div className="space-y-4">
+            <div className="rounded-[22px] border bg-white/5 p-5 sm:p-6" style={{ borderColor: PANEL_BORDER }}>
+              <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#86c9d4]">Available Balance</div>
+              <div className="mt-2 text-[34px] font-bold text-white">{formatCurrency(balance)}</div>
+              <div className="mt-2 max-w-md text-sm leading-6 text-[#9dc2c8]">
+                Minimum withdrawal is $10. Requests are reviewed before processing.
+              </div>
+            </div>
 
-          <div className="rounded-[18px] border p-4" style={{ backgroundColor: SURFACE_BG, borderColor: PANEL_BORDER }}>
-            <label className="mb-2 block text-sm font-medium text-[#9dc2c8]">Withdrawal amount</label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              min="10"
-              max={balance}
-              className="w-full rounded-[14px] border px-4 py-3 text-[20px] font-bold text-white outline-none transition-colors focus:border-[#86c9d4]"
-              style={{ backgroundColor: INNER_BG, borderColor: PANEL_BORDER }}
-            />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {[50, 100, 250].map((preset) => (
+            <div className="grid grid-cols-2 gap-2">
+              {(["bank", "crypto"] as const).map((entry) => (
                 <button
-                  key={preset}
-                  onClick={() => setAmount(String(preset))}
-                  className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
-                    amount === String(preset)
-                      ? "bg-[#86c9d4] text-[#121f27]"
-                      : "text-white hover:bg-[#24414d]"
+                  key={entry}
+                  onClick={() => setMethod(entry)}
+                  className={`rounded-[14px] border px-4 py-3 text-[12px] font-bold uppercase tracking-[0.14em] transition ${
+                    method === entry
+                      ? "border-[#86c9d4] bg-[#86c9d4] text-[#121f27]"
+                      : "border-transparent bg-white/5 text-gray-300 hover:border-white/10 hover:bg-white/10 hover:text-white"
                   }`}
-                  style={amount === String(preset) ? undefined : { backgroundColor: INNER_BG }}
                 >
-                  {formatCurrency(preset)}
+                  {entry === "bank" ? "Bank Transfer" : "Crypto Wallet"}
                 </button>
               ))}
             </div>
-          </div>
 
-          <div className="rounded-[18px] border p-4" style={{ backgroundColor: SURFACE_BG, borderColor: PANEL_BORDER }}>
-            <div className="mb-3 text-sm font-medium text-[#9dc2c8]">
-              {method === "bank" ? "Bank payout details" : "Destination wallet"}
-            </div>
-            {method === "bank" ? (
-              <div className="space-y-2">
-                <input
-                  value={bankAccountName}
-                  onChange={(event) => setBankAccountName(event.target.value)}
-                  placeholder="Account holder name"
-                  className="w-full rounded-lg border px-3 py-2.5 text-[13px] text-white outline-none transition-colors placeholder:text-gray-600 focus:border-[#86c9d4]"
-                  style={{ backgroundColor: INNER_BG, borderColor: PANEL_BORDER }}
-                />
-                <input
-                  value={bankAccountNumber}
-                  onChange={(event) => setBankAccountNumber(event.target.value)}
-                  placeholder="IBAN / Account number"
-                  className="w-full rounded-lg border px-3 py-2.5 text-[13px] text-white outline-none transition-colors placeholder:text-gray-600 focus:border-[#86c9d4]"
-                  style={{ backgroundColor: INNER_BG, borderColor: PANEL_BORDER }}
-                />
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="grid max-h-[150px] gap-2 overflow-y-auto pr-1">
-                  {loadingMethods ? (
-                    <div className="rounded-lg border px-3 py-3 text-sm text-[#9dc2c8]" style={{ backgroundColor: INNER_BG, borderColor: PANEL_BORDER }}>
-                      Loading crypto methods...
-                    </div>
-                  ) : cryptoMethods.length === 0 ? (
-                    <div className="rounded-lg border px-3 py-3 text-sm text-[#9dc2c8]" style={{ backgroundColor: INNER_BG, borderColor: PANEL_BORDER }}>
-                      No active crypto payout methods found yet.
-                    </div>
-                  ) : (
-                    cryptoMethods.map((crypto) => {
-                      const isActive = selectedCryptoId === crypto.id;
-                      return (
-                        <button
-                          key={crypto.id}
-                          type="button"
-                          onClick={() => setSelectedCryptoId(crypto.id)}
-                          className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
-                            isActive ? "border-[#86c9d4] bg-[#86c9d4]/10" : "hover:bg-white/5"
-                          }`}
-                          style={isActive ? undefined : { backgroundColor: INNER_BG, borderColor: PANEL_BORDER }}
-                        >
-                          <img
-                            src={getCryptoIcon(crypto.symbol)}
-                            alt={crypto.symbol}
-                            className="h-8 w-8 rounded-full bg-white object-cover"
-                            onError={(event) => {
-                              event.currentTarget.style.display = "none";
-                            }}
-                          />
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-semibold text-white">
-                              {crypto.symbol.toUpperCase()} ({crypto.network.toUpperCase()})
-                            </div>
-                            <div className="truncate text-[11px] text-[#9dc2c8]">{crypto.coin_name}</div>
-                          </div>
-                        </button>
-                      );
-                    })
-                  )}
+            <div className="rounded-[22px] border bg-white/5 p-5 sm:p-6" style={{ borderColor: PANEL_BORDER }}>
+              <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#86c9d4]">Amount</div>
+              <h3 className="mt-2 text-xl font-semibold text-white sm:text-2xl">Withdrawal amount</h3>
+              <p className="mt-2 text-sm leading-6 text-[#9dc2c8]">
+                Choose the amount you want to withdraw from your live account.
+              </p>
+
+              <div className="mt-5">
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-slate-400">$</span>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(event) => setAmount(event.target.value)}
+                    min="10"
+                    max={balance}
+                    className="w-full rounded-[16px] border border-white/10 bg-black/25 py-4 pl-10 pr-4 text-2xl font-bold text-white outline-none transition focus:border-[#86c9d4] sm:text-3xl"
+                  />
                 </div>
 
-                <input
-                  value={walletAddress}
-                  onChange={(event) => setWalletAddress(event.target.value)}
-                  placeholder="Your wallet address"
-                  className="w-full rounded-lg border px-3 py-2.5 font-mono text-[13px] text-white outline-none transition-colors placeholder:text-gray-600 focus:border-[#86c9d4]"
-                  style={{ backgroundColor: INNER_BG, borderColor: PANEL_BORDER }}
-                />
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {[50, 100, 250].map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => setAmount(String(preset))}
+                      className={`rounded-xl border px-4 py-2.5 text-sm font-bold transition sm:text-base ${
+                        amount === String(preset)
+                          ? "border-[#86c9d4] bg-[#86c9d4] text-[#121f27]"
+                          : "border-white/10 bg-black/20 text-white hover:border-white/20 hover:bg-white/10"
+                      }`}
+                    >
+                      {formatCurrency(preset)}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
-          </div>
+            </div>
 
-          <div className="rounded-[18px] border p-4" style={{ backgroundColor: INNER_BG, borderColor: PANEL_BORDER }}>
-            <div className="text-sm font-semibold text-white">Review</div>
-            <div className="mt-3 flex items-center justify-between text-sm text-[#9dc2c8]">
-              <span>Method</span>
-              <span className="font-semibold text-white">{methodLabel}</span>
-            </div>
-            <div className="mt-2 flex items-center justify-between text-sm text-[#9dc2c8]">
-              <span>Amount</span>
-              <span className="font-semibold text-white">{formatCurrency(amountValue)}</span>
-            </div>
-            <div className="mt-2 flex items-start justify-between gap-4 text-sm text-[#9dc2c8]">
-              <span>Destination</span>
-              <span className="max-w-[220px] break-all text-right font-semibold text-white">{destinationPreview}</span>
-            </div>
-          </div>
+            <div className="rounded-[22px] border bg-white/5 p-5 sm:p-6" style={{ borderColor: PANEL_BORDER }}>
+              <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#86c9d4]">Destination</div>
+              <h3 className="mt-2 text-xl font-semibold text-white sm:text-2xl">
+                {method === "bank" ? "Bank payout details" : "Destination wallet"}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-[#9dc2c8]">
+                {method === "bank"
+                  ? "Enter the receiving account details exactly as they should appear on the payout."
+                  : "Choose the payout coin first, then paste the wallet address that should receive the funds."}
+              </p>
 
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="w-full rounded-xl bg-[#86c9d4] py-3 text-[14px] font-bold text-[#121f27] transition-all hover:bg-[#9ad9e2] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {isSubmitting ? "Submitting request..." : `Request Withdrawal ${amount || "0"}`}
-          </button>
-          <p className="text-center text-[11px] text-[#7fa5ab]">Requests are reviewed manually and usually processed within 24 hours.</p>
+              <div className="mt-5">
+                {method === "bank" ? (
+                  <div className="space-y-3">
+                    <input
+                      value={bankAccountName}
+                      onChange={(event) => setBankAccountName(event.target.value)}
+                      placeholder="Account holder name"
+                      className="w-full rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[#86c9d4]"
+                    />
+                    <input
+                      value={bankAccountNumber}
+                      onChange={(event) => setBankAccountNumber(event.target.value)}
+                      placeholder="IBAN / Account number"
+                      className="w-full rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[#86c9d4]"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid max-h-[180px] gap-2 overflow-y-auto pr-1">
+                      {loadingMethods ? (
+                        <div className="rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-[#9dc2c8]">
+                          Loading crypto methods...
+                        </div>
+                      ) : cryptoMethods.length === 0 ? (
+                        <div className="rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-[#9dc2c8]">
+                          No active crypto payout methods found yet.
+                        </div>
+                      ) : (
+                        cryptoMethods.map((crypto) => {
+                          const isActive = selectedCryptoId === crypto.id;
+                          return (
+                            <button
+                              key={crypto.id}
+                              type="button"
+                              onClick={() => setSelectedCryptoId(crypto.id)}
+                              className={`flex items-center gap-3 rounded-[14px] border px-4 py-3 text-left transition ${
+                                isActive
+                                  ? "border-[#86c9d4] bg-[#86c9d4]/10"
+                                  : "border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/10"
+                              }`}
+                            >
+                              <img
+                                src={getCryptoIcon(crypto.symbol)}
+                                alt={crypto.symbol}
+                                className="h-9 w-9 rounded-full bg-white object-cover"
+                                onError={(event) => {
+                                  event.currentTarget.style.display = "none";
+                                }}
+                              />
+                              <div className="min-w-0">
+                                <div className="truncate text-sm font-semibold text-white">
+                                  {crypto.symbol.toUpperCase()} ({crypto.network.toUpperCase()})
+                                </div>
+                                <div className="truncate text-[11px] text-[#9dc2c8]">{crypto.coin_name}</div>
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    <input
+                      value={walletAddress}
+                      onChange={(event) => setWalletAddress(event.target.value)}
+                      placeholder="Your wallet address"
+                      className="w-full rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 font-mono text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[#86c9d4]"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-[22px] border border-white/8 bg-black/20 p-5" style={{ borderColor: PANEL_BORDER }}>
+              <div className="text-xl font-semibold text-white">Review</div>
+              <div className="mt-4 flex items-center justify-between text-sm text-[#9dc2c8]">
+                <span>Method</span>
+                <span className="font-semibold text-white">{methodLabel}</span>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-sm text-[#9dc2c8]">
+                <span>Amount</span>
+                <span className="font-semibold text-white">{formatCurrency(amountValue)}</span>
+              </div>
+              <div className="mt-3 flex items-start justify-between gap-4 text-sm text-[#9dc2c8]">
+                <span>Destination</span>
+                <span className="max-w-[260px] break-all text-right font-semibold text-white">{destinationPreview}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="w-full rounded-[16px] bg-[#86c9d4] px-6 py-4 text-base font-bold text-[#121f27] transition hover:bg-[#9ad9e2] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 sm:text-lg"
+            >
+              {isSubmitting ? "Submitting request..." : `Request Withdrawal ${amount || "0"}`}
+            </button>
+            <p className="text-center text-[12px] text-[#7fa5ab]">
+              Requests are reviewed manually and usually processed within 24 hours.
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -1701,6 +1729,19 @@ export const AccountDropdown = ({
     }
   };
 
+  const quickActions = [
+    { label: "Deposit", action: () => openQuickAction(onOpenDeposit) },
+    { label: "Withdrawal", action: () => openQuickAction(onOpenWithdrawal) },
+    { label: "Transactions", action: () => openQuickAction(() => onOpenProfile("balance_history")) },
+    { label: "Trades", action: () => openQuickAction(() => onOpenProfile("trading_history")) },
+    { label: "My account", action: () => openQuickAction(() => onOpenProfile("personal")) },
+  ];
+
+  const profileEmail = profile?.email || "trader@platform.com";
+  const accountId = profile?.id?.slice(0, 8).toUpperCase() || "--------";
+  const accountBadgeLabel =
+    accountType === "tournament" ? "Tournament" : accountType === "demo" ? "Demo" : "Live";
+
   return (
     <>
       <AccountCurrencyModal isOpen={showCurrencyModal} onClose={() => setShowCurrencyModal(false)} />
@@ -1712,212 +1753,224 @@ export const AccountDropdown = ({
       />
       <div className="fixed inset-0 z-[110]" onClick={onClose} />
       <div
-        className="fixed left-2 right-2 top-[58px] z-[120] w-auto max-w-[360px] overflow-hidden rounded-[18px] text-left shadow-2xl lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-3 lg:w-[340px]"
-        style={{ background: "hsl(228 20% 14%)", border: "1px solid hsl(228 15% 20%)" }}
+        className="fixed left-2 right-2 top-[58px] z-[120] mx-auto w-auto max-w-[368px] overflow-y-auto rounded-[20px] font-copy text-left shadow-2xl max-h-[calc(100dvh-180px)] lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-3 lg:w-[520px] lg:max-w-[min(520px,calc(100vw-32px))] lg:max-h-[520px]"
+        style={{
+          background: "hsl(228 20% 14%)",
+          border: "1px solid hsl(228 15% 20%)",
+        }}
       >
-        <div className="flex items-center justify-between p-3" style={{ background: "hsl(228 20% 12%)" }}>
-          <div className="flex items-center gap-3">
-            <Send className="h-5 w-5 text-green-500" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Standard:</span>
-              <div className="flex items-center gap-2">
-                <span className="text-[14px] font-bold leading-tight text-white">{vip.currentTier.name} VIP</span>
-                <VipBadge tierId={vip.currentTier.id} size={18} />
+        <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_220px]">
+          <div className="border-b border-white/5 lg:border-b-0 lg:border-r lg:border-white/5">
+            <div className="border-b border-white/5 px-4 py-3" style={{ background: "hsl(228 20% 12%)" }}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#11301f] text-green-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                    <Send className="h-[18px] w-[18px]" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-400">Standard tier</div>
+                    <div className="mt-1 flex min-w-0 items-center gap-2">
+                      <span className="truncate font-display text-[15px] font-bold leading-tight text-white">{vip.currentTier.name} VIP</span>
+                      <VipBadge tierId={vip.currentTier.id} size={18} />
+                    </div>
+                    <div className="mt-1.5 truncate text-[13px] font-extrabold text-white">{profileEmail}</div>
+                    <div className="mt-1 text-[11px] text-gray-400">{vip.currentTier.shortDescription}</div>
+                  </div>
+                </div>
+
+                <div className="rounded-full bg-white/5 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#8fa3c8]">
+                  {accountBadgeLabel}
+                </div>
+              </div>
+
+              <div className="mt-2.5 flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-gray-500">Account ID</div>
+                  <div className="mt-1 font-display text-[12px] font-semibold text-[#d5d9e5]">{accountId}</div>
+                </div>
+
+                <div className="min-w-0 text-right">
+                  <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-gray-500">Currency</div>
+                  <div className="mt-1 flex items-center justify-end gap-2">
+                    <span className="font-display text-[12px] font-bold text-white">{currency}</span>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setShowCurrencyModal(true);
+                      }}
+                      className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#86c9d4] transition-colors hover:text-white"
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="rounded-full bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#8fa3c8]">
-            {accountType.toUpperCase()}
-          </div>
-        </div>
 
-        <div className="space-y-1.5 p-4" style={{ background: "hsl(228 20% 12%)" }}>
-          <div className="truncate text-[14px] font-bold text-white">{profile?.email || "trader@platform.com"}</div>
-          <div className="flex items-center gap-2 text-[11px] text-gray-400">
-            <VipBadge tierId={vip.currentTier.id} size={16} />
-            <span>{vip.currentTier.shortDescription}</span>
-          </div>
-          <div className="text-[13px] font-medium text-gray-500">ID: {profile?.id?.slice(0, 8).toUpperCase() || "--------"}</div>
-          <div className="flex items-center justify-between gap-2 pt-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] text-gray-500">Currency:</span>
-              <span className="text-[13px] font-bold text-white">{currency}</span>
-            </div>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                setShowCurrencyModal(true);
-              }}
-              className="text-[11px] font-bold uppercase tracking-wide text-[#86c9d4] transition-colors hover:text-white"
-            >
-              Change
-            </button>
-          </div>
-        </div>
+            <div className="space-y-2 p-3">
+              <button
+                type="button"
+                onClick={() => {
+                  onSwitch("live");
+                  onClose();
+                }}
+                className={`w-full rounded-[15px] border px-3 py-2.5 text-left transition-colors ${
+                  accountType === "live"
+                    ? "border-[#2f87ff]/35 bg-white/[0.06]"
+                    : "border-white/6 bg-white/[0.03] hover:bg-white/[0.05]"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="pt-0.5">
+                    {accountType === "live" ? (
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0b65c2]">
+                        <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="h-5 w-5 rounded-full border-[1.5px] border-gray-400" />
+                    )}
+                  </div>
 
-        <div
-          onClick={() => {
-            onSwitch("live");
-            onClose();
-          }}
-          className={`cursor-pointer border-t border-white/5 p-4 transition-colors ${accountType === "live" ? "" : "hover:bg-white/5"}`}
-        >
-          <div className="flex items-start gap-3">
-            <div className="pt-0.5">
-              {accountType === "live" ? (
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0b65c2]">
-                  <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-[14px] font-bold leading-tight text-white">Live Account</div>
+                        <div className={`mt-0.5 font-display text-[17px] font-bold ${accountType === "live" ? "text-white" : "text-gray-300"}`}>
+                          {formatMoney(balance)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-1 text-[10.5px] leading-relaxed text-gray-500">Funds appear here after approved deposits.</div>
+                  </div>
                 </div>
-              ) : (
-                <div className="h-5 w-5 rounded-full border-[1.5px] border-gray-400" />
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="text-[14px] font-semibold leading-tight text-white">Live Account</div>
-              <div className={`mt-0.5 text-[16px] font-bold ${accountType === "live" ? "text-white" : "text-gray-400"}`}>
-                {formatMoney(balance)}
-              </div>
-              <div className="mt-1 text-[12px] text-gray-500">Funds show here after a real deposit is completed.</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onSwitch("demo");
+                  onClose();
+                }}
+                className={`w-full rounded-[15px] border px-3 py-2.5 text-left transition-colors ${
+                  accountType === "demo"
+                    ? "border-[#2f87ff]/35 bg-white/[0.06]"
+                    : "border-white/6 bg-white/[0.03] hover:bg-white/[0.05]"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="pt-0.5">
+                    {accountType === "demo" ? (
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0b65c2]">
+                        <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="h-5 w-5 rounded-full border-[1.5px] border-gray-400" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-[14px] font-bold leading-tight text-white">Demo Account</div>
+                        <div className={`mt-0.5 font-display text-[17px] font-bold ${accountType === "demo" ? "text-white" : "text-gray-300"}`}>
+                          {formatMoney(demoBalance)}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onResetDemoBalance();
+                          }}
+                          className="rounded-md p-1 text-gray-500 transition-colors hover:bg-white/5 hover:text-white"
+                          title="Reset demo balance"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setShowDemoBalanceModal(true);
+                          }}
+                          className="rounded-md p-1 text-gray-500 transition-colors hover:bg-white/5 hover:text-white"
+                          title="Edit demo balance"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-1 text-[10.5px] leading-relaxed text-gray-500">Editable practice balance for demo trading.</div>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onSwitch("tournament");
+                  onClose();
+                }}
+                className={`w-full rounded-[15px] border px-3 py-2.5 text-left transition-colors ${
+                  accountType === "tournament"
+                    ? "border-[#00C076]/35 bg-[#00C076]/[0.07]"
+                    : "border-white/6 bg-white/[0.03] hover:bg-white/[0.05]"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="pt-0.5">
+                    {accountType === "tournament" ? (
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#00C076]">
+                        <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="h-5 w-5 rounded-full border-[1.5px] border-gray-400" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[14px] font-bold leading-tight text-[#00C076]">Tournament Account</div>
+                    <div className="mt-0.5 font-display text-[14px] font-semibold text-white">
+                      {accountType === "tournament" ? "Active now" : "Join a tournament"}
+                    </div>
+                    <div className="mt-1 text-[10.5px] leading-relaxed text-gray-500">Use event balances for tournament trading.</div>
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
-        </div>
 
-        <div
-          onClick={() => {
-            onSwitch("demo");
-            onClose();
-          }}
-          className={`cursor-pointer border-t border-white/5 p-4 transition-colors ${accountType === "demo" ? "" : "hover:bg-white/5"}`}
-        >
-          <div className="flex items-start gap-3">
-            <div className="pt-0.5">
-              {accountType === "demo" ? (
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0b65c2]">
-                  <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
-                </div>
-              ) : (
-                <div className="h-5 w-5 rounded-full border-[1.5px] border-gray-400" />
-              )}
-            </div>
-            <div className="flex flex-1 items-start justify-between">
-              <div>
-                <div className="text-[14px] font-semibold leading-tight text-white">Demo Account</div>
-                <div className={`mt-0.5 text-[16px] font-bold ${accountType === "demo" ? "text-white" : "text-gray-400"}`}>
-                  {formatMoney(demoBalance)}
-                </div>
-                <div className="mt-1 text-[12px] text-gray-500">Editable practice balance for demo trading.</div>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onResetDemoBalance();
-                  }}
-                  className="p-1 text-gray-500 transition-colors hover:text-white"
-                  title="Reset demo balance"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setShowDemoBalanceModal(true);
-                  }}
-                  className="p-1 text-gray-500 transition-colors hover:text-white"
-                  title="Edit demo balance"
-                >
-                  <Edit2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          onClick={() => {
-            onSwitch("tournament");
-            onClose();
-          }}
-          className={`cursor-pointer border-t border-white/5 p-4 transition-colors ${accountType === "tournament" ? "" : "hover:bg-white/5"}`}
-        >
-          <div className="flex items-start gap-3">
-            <div className="pt-0.5">
-              {accountType === "tournament" ? (
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#00C076]">
-                  <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
-                </div>
-              ) : (
-                <div className="h-5 w-5 rounded-full border-[1.5px] border-gray-400" />
-              )}
-            </div>
+          <div className="flex flex-col gap-3 bg-[#121824] p-3 lg:bg-transparent">
             <div>
-              <div className="text-[14px] font-semibold leading-tight text-[#00C076]">Tournament Account</div>
-              <div className="mt-0.5 text-[14px] text-gray-400">
-                {accountType === "tournament" ? "Active" : "Join a tournament"}
+              <div className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#7f8ea8]">Quick actions</div>
+              <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+                {quickActions.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={item.action}
+                    className="flex w-full items-center justify-between rounded-[12px] bg-white/5 px-3 py-2.5 text-[12px] font-bold text-white transition-colors hover:bg-white/10 lg:text-[13px]"
+                  >
+                    {item.label}
+                    <ChevronRight className="h-4 w-4 text-[#8fa3c8]" />
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className="border-t border-white/5 p-3" style={{ background: "hsl(228 20% 12%)" }}>
-          <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#7f8ea8]">Quick actions</div>
-          <div className="grid gap-2">
             <button
               type="button"
-              onClick={() => openQuickAction(onOpenDeposit)}
-              className="flex w-full items-center justify-between rounded-[12px] bg-white/5 px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-white/10"
+              onClick={handleLogout}
+              disabled={isSigningOut}
+              className="flex w-full items-center justify-center gap-2 rounded-[12px] border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-[13px] font-extrabold text-red-300 transition-colors hover:bg-red-500/15 hover:text-white disabled:opacity-60"
             >
-              Deposit
-              <ChevronRight className="h-4 w-4 text-[#8fa3c8]" />
-            </button>
-            <button
-              type="button"
-              onClick={() => openQuickAction(onOpenWithdrawal)}
-              className="flex w-full items-center justify-between rounded-[12px] bg-white/5 px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-white/10"
-            >
-              Withdrawal
-              <ChevronRight className="h-4 w-4 text-[#8fa3c8]" />
-            </button>
-            <button
-              type="button"
-              onClick={() => openQuickAction(() => onOpenProfile("balance_history"))}
-              className="flex w-full items-center justify-between rounded-[12px] bg-white/5 px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-white/10"
-            >
-              Transactions
-              <ChevronRight className="h-4 w-4 text-[#8fa3c8]" />
-            </button>
-            <button
-              type="button"
-              onClick={() => openQuickAction(() => onOpenProfile("trading_history"))}
-              className="flex w-full items-center justify-between rounded-[12px] bg-white/5 px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-white/10"
-            >
-              Trades
-              <ChevronRight className="h-4 w-4 text-[#8fa3c8]" />
-            </button>
-            <button
-              type="button"
-              onClick={() => openQuickAction(() => onOpenProfile("personal"))}
-              className="flex w-full items-center justify-between rounded-[12px] bg-white/5 px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-white/10"
-            >
-              My account
-              <ChevronRight className="h-4 w-4 text-[#8fa3c8]" />
+              <LogOut className="h-4 w-4" />
+              {isSigningOut ? "Logging out..." : "Log out"}
             </button>
           </div>
-        </div>
-
-        <div className="border-t border-white/5 p-3" style={{ background: "hsl(228 20% 12%)" }}>
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={isSigningOut}
-            className="flex w-full items-center justify-center gap-2 rounded-[10px] border border-red-500/20 bg-red-500/10 px-4 py-3 text-[13px] font-bold text-red-300 transition-colors hover:bg-red-500/15 hover:text-white disabled:opacity-60"
-          >
-            <LogOut className="h-4 w-4" />
-            {isSigningOut ? "Logging out..." : "Log out"}
-          </button>
         </div>
       </div>
     </>

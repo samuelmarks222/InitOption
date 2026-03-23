@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { type Tables } from "@/integrations/supabase/types";
 import { NavigationSidebar, WorkspaceModule } from "@/components/navigation/NavigationSidebar";
 import { DynamicWorkspace } from "@/components/workspace/DynamicWorkspace";
 import { TournamentDetailOverlay } from "@/components/workspace/TournamentDetailOverlay";
@@ -11,7 +12,7 @@ import AssetInfo from "@/components/trading/AssetInfo";
 import { ProfileTourProvider } from "@/contexts/ProfileTourContext";
 import { GuidedTour } from "@/components/tour/GuidedTour";
 import TradingFooter from "@/components/trading/TradingFooter";
-import { AssetSelectorModal } from "@/components/trading/AssetSelectorModal";
+import { AssetSelectorModal, type AssetSelectorAsset } from "@/components/trading/AssetSelectorModal";
 import { DepositGuideReminder } from "@/components/trading/DepositGuideReminder";
 import IndicatorsPanel from "@/components/trading/indicators/IndicatorsPanel";
 import { DrawingsPanel } from "@/components/trading/drawings/DrawingsPanel";
@@ -19,7 +20,7 @@ import { ActiveIndicator } from "@/components/trading/indicators/types";
 import { INDICATOR_REGISTRY } from "@/components/trading/indicators/config";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/useTrading";
-import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
+import { useDynamicAssets, type DynamicAsset } from "@/contexts/DynamicAssetContext";
 import { AccountType, DepositModal, RealAccountWelcomeModal, WithdrawalModal } from "@/components/trading/AccountModals";
 import { ProfileDrawer, type ProfileTab } from "@/components/profile/ProfileDrawer";
 import { TournamentsGridOverlay } from "@/components/workspace/TournamentsGridOverlay";
@@ -40,16 +41,46 @@ import {
 import {
   assetCategoryToRuntimeType,
   clampAssetPayout,
+  type CommodityIcon,
   getAssetBasePrice,
   getAssetCommodityIcon,
   getAssetDefaultPayout,
   getAssetFlags,
   getAssetStockLogo,
   normalizeAssetCategory,
+  type RuntimeAssetType,
 } from "@/lib/assets";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 
 type DepositGuideReason = "deposit_required" | "insufficient_balance";
+
+type TradeAssetConfigRow = Tables<"assets_config"> & {
+  baseCountry?: string | null;
+  quoteCountry?: string | null;
+  base_country?: string | null;
+  quote_country?: string | null;
+  stockLogo?: string | null;
+  stock_logo?: string | null;
+  commodityIcon?: CommodityIcon | null;
+  commodity_icon?: CommodityIcon | null;
+};
+
+type TradeTabAsset = {
+  symbol: string;
+  type: RuntimeAssetType;
+  name: string;
+  basePrice: number;
+  icon: string;
+  flags: string[];
+  stockLogo?: string | null;
+  commodityIcon?: CommodityIcon;
+  maxProfit: number;
+  change5min: string;
+  category: "Options" | "Stocks";
+  isTradersChoice: boolean;
+  price: number;
+  change: number;
+};
 
 // ─── Extracted to top-level to prevent remount on every Trade re-render ───
 interface MobileModuleOverlayProps {
@@ -58,7 +89,7 @@ interface MobileModuleOverlayProps {
   setSelectedTournament: (id: string | null) => void;
 }
 
-const buildTradeTabAsset = (assetRow: any) => {
+const buildTradeTabAsset = (assetRow: TradeAssetConfigRow): TradeTabAsset => {
   const category = normalizeAssetCategory(assetRow.category, assetRow.symbol);
   const basePrice = getAssetBasePrice(assetRow.symbol, category);
   const maxProfit = clampAssetPayout(assetRow.payout_pct, getAssetDefaultPayout(category));
@@ -155,17 +186,24 @@ const readJsonStorage = <T,>(key: string, fallback: T): T => {
 
 const Trade = () => {
   const { profile, user } = useAuth();
-  const { activeTrades, tradeHistory, openTrade, setCurrentPrice, setTournamentParticipantId } = useTrading();
+  const {
+    activeTrades,
+    tradeHistory,
+    openTrade,
+    setCurrentPrice,
+    tournamentParticipantId,
+    setTournamentParticipantId,
+  } = useTrading();
   const navigate = useNavigate();
   const latestChartPriceRef = useRef(0);
-  const latestMarkerTimeRef = useRef<number | undefined>(undefined);
+  const latestChartMarkerTimeRef = useRef<number | null>(null);
   const [isDesktopViewport, setIsDesktopViewport] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth >= 1024 : true,
   );
 
-  const [openTabs, setOpenTabs] = useState<any[]>([]);
+  const [openTabs, setOpenTabs] = useState<TradeTabAsset[]>([]);
   const [activeTabId, setActiveTabId] = useState<string>("");
-  const [selectedAssetSaved, setSelectedAssetSaved] = useState<any>(null);
+  const [selectedAssetSaved, setSelectedAssetSaved] = useState<TradeTabAsset | null>(null);
   const [liveChartPrices, setLiveChartPrices] = useState<Record<string, number>>({});
   const { getAsset } = useDynamicAssets();
 
@@ -188,22 +226,22 @@ const Trade = () => {
       if (data && data.length > 0) {
         const savedTabsRaw = localStorage.getItem("trading_open_tabs");
         const savedActiveId = localStorage.getItem("trading_active_tab");
-        let initialTabs: any[] = [];
-        let initialActive: any = null;
+        let initialTabs: TradeTabAsset[] = [];
+        let initialActive: TradeTabAsset | null = null;
 
         if (savedTabsRaw) {
           try {
-            const parsed = JSON.parse(savedTabsRaw);
+            const parsed = JSON.parse(savedTabsRaw) as Array<{ symbol?: string }>;
             initialTabs = parsed
-              .map((tab: any) => data.find((dbA) => dbA.symbol === tab.symbol))
+              .map((tab) => data.find((dbA) => dbA.symbol === tab.symbol))
               .filter(Boolean)
-              .map((assetRow: any) => buildTradeTabAsset(assetRow));
-            if (savedActiveId) initialActive = initialTabs.find((t: any) => t.symbol === savedActiveId);
-          } catch(e) {}
+              .map((assetRow) => buildTradeTabAsset(assetRow as TradeAssetConfigRow));
+            if (savedActiveId) initialActive = initialTabs.find((tab) => tab.symbol === savedActiveId) ?? null;
+          } catch {}
         }
 
         if (initialTabs.length === 0) {
-          initialTabs = [buildTradeTabAsset(data[0])];
+          initialTabs = [buildTradeTabAsset(data[0] as TradeAssetConfigRow)];
         }
         if (!initialActive && initialTabs.length > 0) initialActive = initialTabs[0];
         setOpenTabs(initialTabs);
@@ -404,6 +442,12 @@ const Trade = () => {
     }
   }, [accountType, showDeposit]);
 
+  useEffect(() => {
+    if (accountType !== "tournament" && tournamentParticipantId) {
+      setTournamentParticipantId(null);
+    }
+  }, [accountType, setTournamentParticipantId, tournamentParticipantId]);
+
   const handleSelectTab = (tabSymbol: string) => {
     setActiveTabId(tabSymbol);
     const existing = openTabs.find(t => t.symbol === tabSymbol);
@@ -423,8 +467,8 @@ const Trade = () => {
     });
   };
 
-  const handleSelectAsset = (asset: any) => {
-    const globalAsset: any = {
+  const handleSelectAsset = (asset: AssetSelectorAsset) => {
+    const globalAsset: TradeTabAsset = {
       ...buildTradeTabAsset({
         symbol: asset.symbol,
         name: asset.name,
@@ -462,9 +506,24 @@ const Trade = () => {
     setIsProfileOpen(true);
   };
 
+  const handleSwitchAccount = (nextType: AccountType) => {
+    if (nextType === "tournament" && !tournamentParticipantId) {
+      if (isDesktopViewport) {
+        setActiveWorkspace("tournaments");
+      } else {
+        setMobileOverlay("tournaments");
+      }
+      return;
+    }
+
+    setAccountType(nextType);
+  };
+
   const handleChartPriceUpdate = (price: number, markerTime?: number) => {
     latestChartPriceRef.current = price;
-    latestMarkerTimeRef.current = markerTime;
+    if (typeof markerTime === "number" && Number.isFinite(markerTime)) {
+      latestChartMarkerTimeRef.current = markerTime;
+    }
     if (selectedAsset?.symbol) {
       setLiveChartPrices((prev) => ({ ...prev, [selectedAsset.symbol]: price }));
     }
@@ -499,7 +558,10 @@ const Trade = () => {
         direction,
         amount,
         entry_price: currentEntryPrice,
-        marker_time: latestMarkerTimeRef.current ?? Math.floor(new Date(openedAt).getTime() / 1000),
+        marker_time:
+          typeof latestChartMarkerTimeRef.current === "number" && Number.isFinite(latestChartMarkerTimeRef.current)
+            ? latestChartMarkerTimeRef.current
+            : Math.floor(new Date(openedAt).getTime() / 1000),
         expiry_seconds: expirySeconds,
         payout_rate: payoutRate,
         opened_at: openedAt,
@@ -522,7 +584,7 @@ const Trade = () => {
   const handleAddIndicator = (configId: string) => {
     const reg = INDICATOR_REGISTRY.find(c => c.id === configId);
     if (!reg) return;
-    const defaults: Record<string, any> = {};
+    const defaults: Record<string, unknown> = {};
     reg.params.forEach(p => defaults[p.id] = p.default);
     setActiveIndicators(prev => [...prev, { instanceId: crypto.randomUUID(), configId, name: reg.name, pane: reg.pane, params: defaults, visible: true }]);
   };
@@ -538,11 +600,61 @@ const Trade = () => {
     [activeTrades],
   );
   const tournamentActiveTrades = useMemo(
-    () => activeTrades.filter((trade) => !!trade.tournament_participant_id),
-    [activeTrades],
+    () =>
+      tournamentParticipantId
+        ? activeTrades.filter((trade) => trade.tournament_participant_id === tournamentParticipantId)
+        : [],
+    [activeTrades, tournamentParticipantId],
+  );
+  const liveTradeHistory = useMemo(
+    () => tradeHistory.filter((trade) => !trade.tournament_participant_id),
+    [tradeHistory],
+  );
+  const tournamentTradeHistory = useMemo(
+    () =>
+      tournamentParticipantId
+        ? tradeHistory.filter((trade) => trade.tournament_participant_id === tournamentParticipantId)
+        : [],
+    [tradeHistory, tournamentParticipantId],
   );
   const visibleActiveTrades = accountType === "demo" ? demoActiveTrades : accountType === "tournament" ? tournamentActiveTrades : liveActiveTrades;
-  const visibleTradeHistory = accountType === "demo" ? demoTradeHistory : tradeHistory;
+  const visibleTradeHistory =
+    accountType === "demo"
+      ? demoTradeHistory
+      : accountType === "tournament"
+        ? tournamentTradeHistory
+        : liveTradeHistory;
+
+  useEffect(() => {
+    if (accountType !== "tournament" || !tournamentParticipantId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadTournamentBalance = async () => {
+      const { data } = await supabase
+        .from("tournament_participants")
+        .select("current_balance")
+        .eq("id", tournamentParticipantId)
+        .maybeSingle();
+
+      if (!cancelled && data) {
+        setTournamentSandboxBalance(data.current_balance);
+      }
+    };
+
+    void loadTournamentBalance();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    accountType,
+    tournamentActiveTrades.length,
+    tournamentParticipantId,
+    tournamentTradeHistory.length,
+  ]);
 
   if (!selectedAsset) {
     return (
@@ -573,7 +685,7 @@ const Trade = () => {
       <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
         <GuidedTour enabled={tourEnabled} />
         <TradingHeader balance={currentBalance} demoBalance={demoBalance} accountType={accountType}
-          onSwitchAccount={setAccountType} activeTabId={activeTabId} onSelectTab={handleSelectTab}
+          onSwitchAccount={handleSwitchAccount} activeTabId={activeTabId} onSelectTab={handleSelectTab}
           openTabs={openTabs} onRemoveTab={handleRemoveTab} onAddAssetClick={() => setShowAssetSelector(true)}
           onOpenDeposit={() => {
             setDepositGuideReason(null);
@@ -657,7 +769,8 @@ const Trade = () => {
                       onToggleIndicatorsPanel={() => { setShowIndicatorsPanel(v => !v); setShowDrawingsPanel(false); }}
                       onToggleDrawingsPanel={() => { setShowDrawingsPanel(v => !v); setShowIndicatorsPanel(false); }}
                       onRemoveIndicator={handleRemoveIndicator}
-                      onToggleMobileHistory={() => setShowMobileHistory(true)} />
+                      onToggleMobileHistory={() => setShowMobileHistory(true)}
+                      mobileHistoryOpen={showMobileHistory} />
 
                     {/* Mobile Indicator and Drawing Panels */}
                     {showIndicatorsPanel && (
@@ -676,7 +789,7 @@ const Trade = () => {
                 </div>
 
                 {/* Trading Panel directly below chart — NO paddingBottom here to remove big space */}
-                <div className="fixed left-0 right-0 bottom-[56px] z-40 px-2 sm:px-3">
+                <div className={`fixed left-0 right-0 bottom-[56px] px-2 sm:px-3 ${showMobileHistory ? "z-[120]" : "z-40"}`}>
                   <div className="mx-auto w-full max-w-[430px]">
                     <TradingPanel 
                        asset={selectedAsset} 
@@ -708,7 +821,7 @@ const Trade = () => {
             onClick={() => { setMobileOverlay(null); setActiveWorkspace(null); }}
             className="flex flex-col items-center gap-1 px-4 py-3 text-gray-400 hover:text-white transition-colors"
           >
-            <Image className="w-5 h-5" />
+            <Image className="w-5 h-5" strokeWidth={2.5} />
           </button>
 
           {/* Help */}
@@ -716,7 +829,7 @@ const Trade = () => {
             onClick={() => setMobileOverlay("help")}
             className="flex flex-col items-center gap-1 px-4 py-3 text-gray-400 hover:text-white transition-colors"
           >
-            <HelpCircle className="w-5 h-5" />
+            <HelpCircle className="w-5 h-5" strokeWidth={2.5} />
           </button>
 
           {/* Profile / Account */}
@@ -724,7 +837,7 @@ const Trade = () => {
             onClick={() => setMobileOverlay("account")}
             className="flex flex-col items-center gap-1 px-4 py-3 text-gray-400 hover:text-white transition-colors"
           >
-            <User className="w-5 h-5" />
+            <User className="w-5 h-5" strokeWidth={2.5} />
           </button>
 
           {/* Tournaments */}
@@ -732,7 +845,7 @@ const Trade = () => {
             onClick={() => setMobileOverlay("tournaments")}
             className="relative flex flex-col items-center gap-1 px-4 py-3 text-gray-400 hover:text-white transition-colors"
           >
-            <Trophy className="w-5 h-5" />
+            <Trophy className="w-5 h-5" strokeWidth={2.5} />
             {activeTrades.length > 0 && (
               <span className="absolute top-2 right-2.5 min-w-[16px] h-4 px-0.5 bg-blue-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
                 {activeTrades.length}
@@ -745,7 +858,7 @@ const Trade = () => {
             onClick={() => setMobileOverlay("more")}
             className="flex flex-col items-center gap-1 px-4 py-3 text-gray-400 hover:text-white transition-colors"
           >
-            <MoreHorizontal className="w-5 h-5" />
+            <MoreHorizontal className="w-5 h-5" strokeWidth={2.6} />
           </button>
         </div>
 

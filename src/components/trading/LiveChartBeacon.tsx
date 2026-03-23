@@ -28,13 +28,31 @@ const getUnixTime = (value: unknown) => {
 };
 
 const formatCountdown = (seconds: number) => {
-  const total = Math.max(0, Math.floor(seconds));
-  const minutes = Math.floor(total / 60)
+  const totalSeconds = Math.max(0, seconds);
+  if (totalSeconds < 10) {
+    return `${totalSeconds.toFixed(1)}s`;
+  }
+
+  const total = Math.max(0, Math.ceil(totalSeconds));
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600)
+    .toString()
+    .padStart(2, "0");
+  const minutes = Math.floor((total % 3600) / 60)
     .toString()
     .padStart(2, "0");
   const remainder = Math.floor(total % 60)
     .toString()
     .padStart(2, "0");
+
+  if (days > 0) {
+    return `${days}d ${hours}:${minutes}`;
+  }
+
+  if (total >= 3600) {
+    return `${hours}:${minutes}:${remainder}`;
+  }
+
   return `${minutes}:${remainder}`;
 };
 

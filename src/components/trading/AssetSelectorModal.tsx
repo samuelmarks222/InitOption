@@ -5,24 +5,26 @@ import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
 import { useTrading } from "@/hooks/useTrading";
 import {
   assetCategoryToSelectorTab,
+  type CommodityIcon,
   getAssetCommodityIcon,
   getAssetFallbackLabel,
   getAssetFlags,
   getAssetStockLogo,
   getCryptoLogoUrl,
   normalizeAssetCategory,
+  type SelectorAssetCategory,
 } from "@/lib/assets";
 
-interface Asset {
+export interface AssetSelectorAsset {
   symbol: string;
   name: string;
-  category: "CURRENCIES" | "CRYPTO" | "COMMODITIES" | "STOCKS";
+  category: SelectorAssetCategory;
   isOTC?: boolean;
   baseCountry?: string;
   quoteCountry?: string;
   cryptoId?: string;
   stockLogo?: string | null;
-  commodityIcon?: "gold" | "silver" | "oil" | "gas" | "copper";
+  commodityIcon?: CommodityIcon;
   change24h: number;
   profit1m: number;
   profit5m: number;
@@ -31,7 +33,7 @@ interface Asset {
 
 interface AssetSelectorModalProps {
   onClose: () => void;
-  onSelect: (asset: Asset) => void;
+  onSelect: (asset: AssetSelectorAsset) => void;
 }
 
 type TabType = "CURRENCIES" | "CRYPTO" | "COMMODITIES" | "STOCKS";
@@ -43,7 +45,7 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
   const [sortKey, setSortKey] = useState<SortKey>("profit1m");
   const [sortAsc, setSortAsc] = useState(false);
   const [watchlist, setWatchlist] = useState<string[]>([]);
-  const [liveAssets, setLiveAssets] = useState<Asset[]>([]);
+  const [liveAssets, setLiveAssets] = useState<AssetSelectorAsset[]>([]);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
 
   const { assets } = useDynamicAssets();
@@ -58,16 +60,16 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
       return {
         symbol: da.symbol,
         name: da.name,
-        category: categoryMapped as any,
-        isOTC: categoryMapped === 'CURRENCIES',
+        category: categoryMapped,
+        isOTC: categoryMapped === "CURRENCIES",
         baseCountry: flags[0],
         quoteCountry: flags[1],
         stockLogo: getAssetStockLogo(da.symbol, da.stockLogo),
-        commodityIcon: getAssetCommodityIcon(da.symbol, da.commodityIcon) as any,
+        commodityIcon: getAssetCommodityIcon(da.symbol, da.commodityIcon),
         change24h: da.change24h,
         profit1m: da.maxProfit,
         profit5m: da.profit5m,
-        price: da.price
+        price: da.price,
       };
     });
     setLiveAssets(mapped);
@@ -129,26 +131,58 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
     });
   }, [activeTab, searchQuery, sortKey, sortAsc, watchlist, liveAssets, showOnlyFavorites]);
 
-  const SortHeader = ({ label, sortName }: { label: string, sortName: SortKey }) => {
+  const renderSortIcon = (sortName: SortKey, inactiveClassName = "opacity-0 group-hover:opacity-50") => {
     const isActive = sortKey === sortName;
-    return (
-      <th 
-        onClick={() => handleSort(sortName)}
-        className="text-left font-normal text-[#8A939F] text-[13px] pb-3 cursor-pointer hover:text-white transition-colors group select-none"
-      >
-        <div className="flex items-center gap-1">
-          {label}
-          {isActive ? (
-            sortAsc ? <ArrowUp className="w-3 h-3 text-white" /> : <ArrowDown className="w-3 h-3 text-white" />
-          ) : (
-            <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
-          )}
-        </div>
-      </th>
-    );
+
+    if (isActive) {
+      return sortAsc ? <ArrowUp className="h-3 w-3 text-white" /> : <ArrowDown className="h-3 w-3 text-white" />;
+    }
+
+    return <ArrowUpDown className={`h-3 w-3 transition-opacity ${inactiveClassName}`} />;
   };
 
-  const favoriteAssets = liveAssets.filter(a => watchlist.includes(a.symbol));
+  const SortHeader = ({ label, sortName }: { label: string; sortName: SortKey }) => (
+    <th
+      onClick={() => handleSort(sortName)}
+      className="cursor-pointer select-none pb-3 text-left text-[13px] font-normal text-[#8A939F] transition-colors hover:text-white group"
+    >
+      <div className="flex items-center gap-1">
+        {label}
+        {renderSortIcon(sortName)}
+      </div>
+    </th>
+  );
+
+  const MobileSortHeader = ({
+    lines,
+    sortName,
+  }: {
+    lines: string[];
+    sortName: SortKey;
+  }) => {
+    const isActive = sortKey === sortName;
+
+    return (
+      <button
+        type="button"
+        onClick={() => handleSort(sortName)}
+        className={`flex min-w-0 flex-col items-center justify-center gap-0.5 text-center text-[11px] font-medium leading-tight transition-colors ${
+          isActive ? "text-white" : "text-[#8A939F]"
+        }`}
+      >
+        <span>
+          {lines.map((line) => (
+            <span key={`${sortName}-${line}`} className="block">
+              {line}
+            </span>
+          ))}
+        </span>
+        <span className={isActive ? "text-white" : "text-[#667085]"}>
+          {renderSortIcon(sortName, "opacity-60")}
+        </span>
+      </button>
+    );
+  };
 
   const renderIcon = (asset: Asset) => (
     <div className="flex items-center shrink-0 w-8">
@@ -210,52 +244,77 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
     </div>
   );
 
+  const renderChangeCell = (change24h: number, compact = false) => {
+    const isPositive = change24h >= 0;
+
+    return (
+      <div className={`flex items-center ${compact ? "justify-center gap-1" : "gap-2"}`}>
+        <div
+          className={`flex shrink-0 items-center justify-center rounded-full ${
+            compact ? "h-4 w-4" : "h-4 w-4"
+          } ${isPositive ? "bg-[#00C076]" : "bg-[#F6465D]"}`}
+        >
+          {isPositive ? (
+            <ArrowUp className="h-2.5 w-2.5 text-white" strokeWidth={3} />
+          ) : (
+            <ArrowDown className="h-2.5 w-2.5 text-white" strokeWidth={3} />
+          )}
+        </div>
+        <span className={`${compact ? "text-[12px]" : "text-[13px]"} font-bold ${isPositive ? "text-[#00C076]" : "text-[#F6465D]"}`}>
+          {change24h > 0 ? "+" : ""}
+          {change24h.toFixed(2)}%
+        </span>
+      </div>
+    );
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm sm:p-4">
-      {/* Full-screen on mobile, 80% modal on desktop */}
-      <div className="w-full sm:w-[80%] sm:max-w-[1200px] h-[92dvh] sm:h-[90vh] bg-[#1A1F26] sm:rounded-lg rounded-t-2xl shadow-2xl flex flex-col border border-white/10 relative overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="relative flex h-[calc(100dvh-56px)] w-full flex-col overflow-hidden rounded-t-2xl border border-white/10 bg-[#1A1F26] shadow-2xl sm:h-[90vh] sm:w-[80%] sm:max-w-[1200px] sm:rounded-lg">
 
         
         {/* Header Title */}
-        <div className="flex items-center justify-between p-6 pb-4 shrink-0">
-          <h2 className="text-white text-[22px] font-bold tracking-wide">Select trade pair</h2>
+        <div className="flex shrink-0 items-center justify-between px-4 py-4 sm:p-6 sm:pb-4">
+          <h2 className="text-[18px] font-bold tracking-wide text-white sm:text-[22px]">Select trade pair</h2>
           <button 
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center px-6 gap-3 shrink-0">
-          {(["CURRENCIES", "CRYPTO", "COMMODITIES", "STOCKS"] as TabType[]).map(tab => (
-            <button
-              key={tab}
-              onClick={() => { setActiveTab(tab); setShowOnlyFavorites(false); }}
-              className={`px-3 py-1.5 rounded text-[11px] font-bold tracking-wider transition-colors ${
-                (!showOnlyFavorites && activeTab === tab) ? "bg-[#0b65c2] text-white" : "text-white hover:bg-white/10"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+        <div className="shrink-0 overflow-x-auto px-4 scrollbar-hide sm:px-6">
+          <div className="flex min-w-max items-center gap-2 sm:gap-3">
+            {(["CURRENCIES", "CRYPTO", "COMMODITIES", "STOCKS"] as TabType[]).map(tab => (
+              <button
+                key={tab}
+                onClick={() => { setActiveTab(tab); setShowOnlyFavorites(false); }}
+                className={`shrink-0 rounded px-3 py-1.5 text-[11px] font-bold tracking-wider transition-colors ${
+                  (!showOnlyFavorites && activeTab === tab) ? "bg-[#0b65c2] text-white" : "text-white hover:bg-white/10"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Search Bar Row */}
-        <div className="px-6 py-5 shrink-0 flex items-center gap-3 border-b border-[#ffffff10]">
+        <div className="flex shrink-0 items-center gap-2 border-b border-[#ffffff10] px-4 py-4 sm:gap-3 sm:px-6 sm:py-5">
           <button 
             onClick={() => setShowOnlyFavorites(f => !f)}
-            className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${
+            className={`flex items-center gap-2 rounded border border-white/5 px-3 py-2 transition-colors ${
               showOnlyFavorites ? "bg-white/20" : "bg-[#252A30] hover:bg-[#2A3036]"
-            } border border-white/5`}
+            }`}
           >
             <Star className="w-4 h-4 fill-[#FFC107] text-[#FFC107]" />
             <span className="text-white text-[13px] font-bold">{watchlist.length}</span>
           </button>
           
-          <div className="flex-1 relative flex items-center bg-[#252A30] rounded border border-white/5 focus-within:border-white/20 px-3 transition-colors">
-            <Search className="w-4 h-4 text-gray-400 mr-2 shrink-0" />
+          <div className="relative flex flex-1 items-center rounded border border-white/5 bg-[#252A30] px-3 transition-colors focus-within:border-white/20">
+            <Search className="mr-2 h-4 w-4 shrink-0 text-gray-400" />
             <input 
               type="text"
               placeholder="Search"
@@ -272,94 +331,167 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
         </div>
 
         {/* Data List */}
-        <div className="flex-1 overflow-y-auto CustomScrollbar px-6 pb-6 pt-2">
-          <table className="w-full border-collapse">
-            <thead className="sticky top-0 bg-[#1A1F26] z-10 border-b border-[#ffffff10]">
-              <tr>
-                <th className="w-10 pb-3"></th>
-                <SortHeader label="Name" sortName="name" />
-                <SortHeader label="24h changing" sortName="change24h" />
-                <SortHeader label="Profit 1+ min" sortName="profit1m" />
-                <SortHeader label="5+ min" sortName="profit5m" />
-              </tr>
-            </thead>
-            <tbody>
+        <div className="CustomScrollbar flex-1 overflow-y-auto px-4 pb-4 pt-2 sm:px-6 sm:pb-6">
+          <div className="sm:hidden">
+            <div className="sticky top-0 z-10 border-b border-[#ffffff10] bg-[#1A1F26] pb-3">
+              <div className="grid grid-cols-[28px,minmax(0,1.65fr),0.95fr,0.78fr,0.78fr] items-end gap-2">
+                <div />
+                <button
+                  type="button"
+                  onClick={() => handleSort("name")}
+                  className={`text-left text-[11px] font-medium transition-colors ${sortKey === "name" ? "text-white" : "text-[#8A939F]"}`}
+                >
+                  Name
+                </button>
+                <MobileSortHeader lines={["24h", "changing"]} sortName="change24h" />
+                <MobileSortHeader lines={["Profit 1+", "min"]} sortName="profit1m" />
+                <MobileSortHeader lines={["5+", "min"]} sortName="profit5m" />
+              </div>
+            </div>
+
+            <div className="divide-y divide-white/5">
               {filteredData.map((asset, i) => {
                 const isSaved = watchlist.includes(asset.symbol);
-                const isPositive = asset.change24h >= 0;
                 const hasActiveTrade = activeTrades.some(t => t.asset_symbol === asset.symbol);
 
                 return (
-                  <tr 
-                    key={asset.symbol} 
+                  <button
+                    key={asset.symbol}
+                    type="button"
                     onClick={() => onSelect(asset)}
-                    className={`cursor-pointer transition-colors border-b border-white/5 ${
+                    className={`grid w-full grid-cols-[28px,minmax(0,1.65fr),0.95fr,0.78fr,0.78fr] items-center gap-2 px-1 py-3 text-left transition-colors ${
                       i % 2 === 0 ? "bg-[#1A1F26]" : "bg-[#0E1217]/50"
-                    } hover:bg-white/5 group`}
+                    } hover:bg-white/5`}
                   >
-                    {/* Watchlist Star */}
-                    <td className="py-2 text-center w-10 text-[#8A939F]" onClick={(e) => { e.stopPropagation(); toggleWatchlist(e, asset.symbol); }}>
-                      <button className="p-1 rounded opacity-50 hover:opacity-100 transition-opacity">
+                    <span className="flex items-center justify-center text-[#8A939F]">
+                      <span
+                        onClick={(e) => toggleWatchlist(e, asset.symbol)}
+                        className="rounded p-1 opacity-70 transition-opacity hover:opacity-100"
+                      >
                         {isSaved ? (
-                          <Star className="w-[18px] h-[18px] text-[#FFC107] fill-[#FFC107]" />
+                          <Star className="h-[16px] w-[16px] fill-[#FFC107] text-[#FFC107]" />
                         ) : (
-                          <Star className="w-[18px] h-[18px] text-white hover:text-gray-300" />
+                          <Star className="h-[16px] w-[16px] text-white hover:text-gray-300" />
                         )}
-                      </button>
-                    </td>
-                    
-                    {/* Name & Icons & Added Pill */}
-                    <td className="py-2">
-                      <div className="flex items-center gap-3">
+                      </span>
+                    </span>
+
+                    <div className="flex min-w-0 items-center gap-2">
                       {renderIcon(asset)}
-                      <div className="flex items-center gap-2">
-                        <div className="min-w-0">
-                          <div className="text-white font-bold text-[14px]">{asset.symbol} {asset.isOTC ? "(OTC)" : ""}</div>
-                          <div className="text-[11px] text-[#8A939F]">{asset.name}</div>
+                      <div className="min-w-0">
+                        <div className="truncate text-[12px] font-bold leading-tight text-white">
+                          {asset.symbol} {asset.isOTC ? "(OTC)" : ""}
+                        </div>
+                        <div className="truncate text-[10px] leading-tight text-[#8A939F]">
+                          {asset.name}
                         </div>
                         {hasActiveTrade && (
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 bg-[#545A64] rounded text-white text-[9px] font-bold tracking-wider">
-                            <Check className="w-2.5 h-2.5" strokeWidth={3} /> ADDED
+                          <span className="mt-1 inline-flex items-center gap-1 rounded bg-[#545A64] px-1.5 py-0.5 text-[8px] font-bold tracking-wider text-white">
+                            <Check className="h-2.5 w-2.5" strokeWidth={3} /> ADDED
                           </span>
                         )}
                       </div>
-                      </div>
-                    </td>
+                    </div>
 
-                    {/* 24h Changing */}
-                    <td className="py-2 w-32">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${isPositive ? "bg-[#00C076]" : "bg-[#F6465D]"}`}>
-                          {isPositive ? <ArrowUp className="w-2.5 h-2.5 text-white" strokeWidth={3} /> : <ArrowDown className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
-                        </div>
-                        <span className={`text-[13px] font-bold ${isPositive ? "text-[#00C076]" : "text-[#F6465D]"}`}>
-                          {asset.change24h > 0 ? "+" : ""}{asset.change24h.toFixed(2)}%
-                        </span>
-                      </div>
-                    </td>
+                    <div className="min-w-0">
+                      {renderChangeCell(asset.change24h, true)}
+                    </div>
 
-                    {/* Profit 1+ Mins */}
-                    <td className="py-2 w-32">
-                      <span className="text-[#FF9800] font-bold text-[14px]">{asset.profit1m}%</span>
-                    </td>
+                    <div className="text-center text-[13px] font-bold text-[#FF9800]">
+                      {asset.profit1m}%
+                    </div>
 
-                    {/* Profit 5+ Mins */}
-                    <td className="py-2 w-32">
-                      <span className="text-[#FF9800] font-bold text-[14px]">{asset.profit5m}%</span>
-                    </td>
-                  </tr>
+                    <div className="text-center text-[13px] font-bold text-[#FF9800]">
+                      {asset.profit5m}%
+                    </div>
+                  </button>
                 );
               })}
-              
+
               {filteredData.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-gray-500 font-bold text-[14px]">
-                    No assets found matching your criteria.
-                  </td>
-                </tr>
+                <div className="py-12 text-center text-[14px] font-bold text-gray-500">
+                  No assets found matching your criteria.
+                </div>
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
+
+          <div className="hidden sm:block">
+            <table className="w-full border-collapse">
+              <thead className="sticky top-0 z-10 border-b border-[#ffffff10] bg-[#1A1F26]">
+                <tr>
+                  <th className="w-10 pb-3"></th>
+                  <SortHeader label="Name" sortName="name" />
+                  <SortHeader label="24h changing" sortName="change24h" />
+                  <SortHeader label="Profit 1+ min" sortName="profit1m" />
+                  <SortHeader label="5+ min" sortName="profit5m" />
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.map((asset, i) => {
+                  const isSaved = watchlist.includes(asset.symbol);
+                  const hasActiveTrade = activeTrades.some(t => t.asset_symbol === asset.symbol);
+
+                  return (
+                    <tr
+                      key={asset.symbol}
+                      onClick={() => onSelect(asset)}
+                      className={`group cursor-pointer border-b border-white/5 transition-colors ${
+                        i % 2 === 0 ? "bg-[#1A1F26]" : "bg-[#0E1217]/50"
+                      } hover:bg-white/5`}
+                    >
+                      <td className="w-10 py-2 text-center text-[#8A939F]" onClick={(e) => { e.stopPropagation(); toggleWatchlist(e, asset.symbol); }}>
+                        <button className="rounded p-1 opacity-50 transition-opacity hover:opacity-100">
+                          {isSaved ? (
+                            <Star className="h-[18px] w-[18px] fill-[#FFC107] text-[#FFC107]" />
+                          ) : (
+                            <Star className="h-[18px] w-[18px] text-white hover:text-gray-300" />
+                          )}
+                        </button>
+                      </td>
+
+                      <td className="py-2">
+                        <div className="flex items-center gap-3">
+                          {renderIcon(asset)}
+                          <div className="flex items-center gap-2">
+                            <div className="min-w-0">
+                              <div className="text-[14px] font-bold text-white">{asset.symbol} {asset.isOTC ? "(OTC)" : ""}</div>
+                              <div className="text-[11px] text-[#8A939F]">{asset.name}</div>
+                            </div>
+                            {hasActiveTrade && (
+                              <span className="flex items-center gap-1 rounded bg-[#545A64] px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-white">
+                                <Check className="h-2.5 w-2.5" strokeWidth={3} /> ADDED
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="w-32 py-2">
+                        {renderChangeCell(asset.change24h)}
+                      </td>
+
+                      <td className="w-32 py-2">
+                        <span className="text-[14px] font-bold text-[#FF9800]">{asset.profit1m}%</span>
+                      </td>
+
+                      <td className="w-32 py-2">
+                        <span className="text-[14px] font-bold text-[#FF9800]">{asset.profit5m}%</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {filteredData.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-[14px] font-bold text-gray-500">
+                      No assets found matching your criteria.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>

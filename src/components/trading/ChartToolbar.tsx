@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { BarChart, PenTool, Activity, Compass, Zap, Flame, TrendingUp, Waves, BarChart2, ArrowRight } from "lucide-react";
+import { SUPPORTED_CHART_TIMEFRAMES, type SupportedChartTimeframe } from "./engine/priceEngine";
 
 export type ChartType = "line" | "candles" | "bars" | "heikinAshi";
 
 interface ChartToolbarProps {
-  selectedTf: string;
-  onSelectTf: (tf: string) => void;
+  selectedTf: SupportedChartTimeframe;
+  onSelectTf: (tf: SupportedChartTimeframe) => void;
   chartType: ChartType;
   onSelectChartType: (type: ChartType) => void;
   activeInds: string[];
@@ -16,7 +17,7 @@ interface ChartToolbarProps {
   onToggleDrawingsPanel: () => void;
 }
 
-const TIMEFRAME_LABELS = ["5s", "10s", "15s", "30s", "1m", "5m", "15m", "30m", "1h", "4h", "1D", "1W", "1M"];
+const TIMEFRAME_LABELS = [...SUPPORTED_CHART_TIMEFRAMES];
 const CHART_TYPES = [
   { id: "candles", label: "Candles", icon: <CandleIcon className="w-4 h-4" /> },
   { id: "heikinAshi", label: "Heikin-Ashi", icon: <CandleIcon className="w-4 h-4 text-trading-orange" /> },

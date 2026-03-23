@@ -29,6 +29,7 @@ export interface ActiveTrade {
   opened_at: string;
   timeLeft: number;
   tournament_participant_id?: string | null;
+  showSettlementOverlay?: boolean;
 }
 
 export interface TradeSettlement {
@@ -95,34 +96,35 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     setLatestSettlement(null);
   }, []);
 
+  const userId = user?.id ?? null;
+
   useEffect(() => {
-    if (!user) {
-      setActiveTrades([]);
-      setTradeHistory([]);
-      setLatestSettlement(null);
+    setActiveTrades([]);
+    setTradeHistory([]);
+    setLatestSettlement(null);
+
+    if (!userId) {
       return;
     }
+
+    let cancelled = false;
 
     const loadTrades = async () => {
       const [{ data: historyData }, { data: openData }] = await Promise.all([
         supabase
           .from("trades")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .neq("status", "open")
           .order("closed_at", { ascending: false })
           .limit(50),
         supabase
           .from("trades")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .eq("status", "open")
           .order("opened_at", { ascending: false }),
       ]);
-
-      if (historyData) {
-        setTradeHistory(historyData);
-      }
 
       if (openData) {
         const restoredActiveTrades: ActiveTrade[] = openData.map((trade) => {
@@ -134,15 +136,26 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
             marker_time: Math.floor(new Date(trade.opened_at).getTime() / 1000),
             timeLeft,
             tournament_participant_id: trade.tournament_participant_id ?? null,
+            showSettlementOverlay: false,
           };
         });
 
-        setActiveTrades(restoredActiveTrades);
+        if (!cancelled) {
+          setActiveTrades(restoredActiveTrades);
+        }
+      }
+
+      if (historyData && !cancelled) {
+        setTradeHistory(historyData);
       }
     };
 
     void loadTrades();
-  }, [user]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const resolveTrade = useCallback(async (trade: ActiveTrade) => {
     const exitPrice = currentPriceRef.current;
@@ -214,19 +227,21 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       void refreshVip();
     }
 
-    setLatestSettlement({
-      id: trade.id,
-      asset_symbol: trade.asset_symbol,
-      direction: trade.direction,
-      amount: trade.amount,
-      entry_price: trade.entry_price,
-      exit_price: exitPrice,
-      expiry_seconds: trade.expiry_seconds,
-      payout_rate: trade.payout_rate,
-      profit,
-      status,
-      settled_at: settledAt,
-    });
+    if (trade.showSettlementOverlay) {
+      setLatestSettlement({
+        id: trade.id,
+        asset_symbol: trade.asset_symbol,
+        direction: trade.direction,
+        amount: trade.amount,
+        entry_price: trade.entry_price,
+        exit_price: exitPrice,
+        expiry_seconds: trade.expiry_seconds,
+        payout_rate: trade.payout_rate,
+        profit,
+        status,
+        settled_at: settledAt,
+      });
+    }
 
     if (user) {
       const { data } = await supabase
@@ -304,7 +319,10 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       const activePid = tournamentParticipantIdRef.current;
       const actualEntryPrice = currentPriceRef.current > 0 ? currentPriceRef.current : entryPrice;
       const openedAt = new Date().toISOString();
-      const markerTime = currentMarkerTimeRef.current ?? Math.floor(new Date(openedAt).getTime() / 1000);
+      const markerTime =
+        typeof currentMarkerTimeRef.current === "number" && Number.isFinite(currentMarkerTimeRef.current)
+          ? currentMarkerTimeRef.current
+          : Math.floor(new Date(openedAt).getTime() / 1000);
       const optimisticId = `temp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       const optimisticTrade: ActiveTrade = {
         id: optimisticId,
@@ -318,6 +336,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         opened_at: openedAt,
         timeLeft: expirySeconds,
         tournament_participant_id: activePid ?? null,
+        showSettlementOverlay: true,
       };
 
       if (activePid) {
@@ -422,6 +441,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
                 marker_time: markerTime,
                 timeLeft: Math.max(0, expirySeconds - (Date.now() - new Date(openedAt).getTime()) / 1000),
                 tournament_participant_id: activePid ?? null,
+                showSettlementOverlay: true,
               }
             : trade
         )

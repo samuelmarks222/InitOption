@@ -56,6 +56,17 @@ const CRYPTO_LOGO_OVERRIDES: Record<string, string> = {
   SHIB: "shiba-inu",
 };
 
+const hashStringToUnitInterval = (input: string) => {
+  let hash = 2166136261;
+
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0) / 0xffffffff;
+};
+
 export const normalizeAssetSymbol = (symbol?: string | null) => String(symbol ?? "").trim().toUpperCase();
 
 export const getMasterAssetBySymbol = (symbol?: string | null) => {
@@ -76,6 +87,26 @@ const inferCommodityIcon = (symbol?: string | null): CommodityIcon => {
 export const normalizeAssetCategory = (category?: string | null, symbol?: string | null): AssetCategory => {
   const normalizedCategory = String(category ?? "").trim().toUpperCase();
   return CATEGORY_ALIASES[normalizedCategory] ?? getMasterAssetBySymbol(symbol)?.category ?? "OTC";
+};
+
+export const getDeterministicFallbackBasePrice = (symbol?: string | null, category?: string | null) => {
+  const normalizedSymbol = normalizeAssetSymbol(symbol) || "ASSET";
+  const normalizedCategory = normalizeAssetCategory(category, normalizedSymbol);
+  const seed = hashStringToUnitInterval(`${normalizedCategory}:${normalizedSymbol}`);
+
+  if (normalizedCategory === "CRYPTO") {
+    return 5 + seed * 600;
+  }
+
+  if (normalizedCategory === "STOCKS") {
+    return 50 + seed * 400;
+  }
+
+  if (normalizedCategory === "COMMODITIES") {
+    return 10 + seed * 2400;
+  }
+
+  return 1.05 + seed * 0.3;
 };
 
 export const assetCategoryToRuntimeType = (category: AssetCategory): RuntimeAssetType => {
@@ -127,22 +158,7 @@ export const getAssetBasePrice = (symbol?: string | null, category?: string | nu
   const normalizedSymbol = normalizeAssetSymbol(symbol);
   const exactPrice = ASSET_BASE_PRICES[normalizedSymbol];
   if (typeof exactPrice === "number") return exactPrice;
-
-  const normalizedCategory = normalizeAssetCategory(category, normalizedSymbol);
-
-  if (normalizedCategory === "CRYPTO") {
-    return 5 + Math.random() * 600;
-  }
-
-  if (normalizedCategory === "STOCKS") {
-    return 50 + Math.random() * 400;
-  }
-
-  if (normalizedCategory === "COMMODITIES") {
-    return 10 + Math.random() * 2400;
-  }
-
-  return 1.05 + Math.random() * 0.3;
+  return getDeterministicFallbackBasePrice(normalizedSymbol, category);
 };
 
 export const getCryptoLogoUrl = (symbol?: string | null) => {

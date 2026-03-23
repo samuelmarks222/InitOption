@@ -10,7 +10,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import type { ProfileTab } from "@/components/profile/ProfileDrawer";
 import { KycAvatarBadge } from "@/components/profile/KycAvatarBadge";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
-import { normalizeKycStatus } from "@/lib/kyc";
+import { normalizeKycStatus, type KycDocumentsLike } from "@/lib/kyc";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 
 interface TradingHeaderProps {
@@ -20,7 +20,7 @@ interface TradingHeaderProps {
   onSwitchAccount: (type: AccountType) => void;
   activeTabId?: string;
   onSelectTab?: (tabId: string) => void;
-  openTabs: any[];
+  openTabs: Array<{ symbol: string }>;
   onRemoveTab: (id: string) => void;
   onAddAssetClick: () => void;
   onOpenDeposit: () => void;
@@ -59,13 +59,11 @@ const TradingHeader = ({
   }, [showAccountDrop]);
 
   const liveBalance = profile ? getEffectiveLiveBalance(profile) : balance;
-  const profileDocuments = ((profile as any)?.kyc_documents ?? (profile as any)?.kycDocuments) ?? {};
-  const kycStatus = normalizeKycStatus((profile as any)?.kyc_status ?? (profile as any)?.kycStatus);
+  const profileDocuments: KycDocumentsLike = (profile?.kyc_documents ?? profile?.kycDocuments) ?? {};
+  const kycStatus = normalizeKycStatus(profile?.kyc_status ?? profile?.kycStatus);
   const displayBalance =
     accountType === "demo" ? demoBalance : accountType === "tournament" ? balance : liveBalance;
-  const profileAlias = typeof (profile as { username?: string } | null)?.username === "string"
-    ? (profile as { username?: string }).username
-    : "";
+  const profileAlias = typeof profile?.username === "string" ? profile.username : "";
   const profileDisplayName = profileAlias?.trim() || profile?.email?.split("@")[0]?.trim() || "My account";
   const profileInitial = profileDisplayName.charAt(0).toUpperCase();
   const accountTitle =
@@ -92,7 +90,7 @@ const TradingHeader = ({
 
   return (
     <header
-      className="flex items-stretch justify-between shrink-0 relative z-30"
+      className={`relative flex shrink-0 items-stretch justify-between ${showAccountDrop ? "z-[90]" : "z-30"}`}
       style={{
         background: "#1c1f2d",
         borderBottom: "1px solid rgba(255,255,255,0.05)",
@@ -126,8 +124,8 @@ const TradingHeader = ({
             className="flex h-[40px] min-w-0 flex-1 items-center gap-2 rounded-[14px] border border-white/5 bg-[#151c28] px-3 shadow-[0_10px_24px_rgba(7,12,22,0.22)] transition-colors hover:bg-white/[0.07]"
           >
             <div className="min-w-0 flex-1">
-              <div className={`text-[9px] font-black uppercase tracking-[0.18em] ${accountNameTextClass}`}>{accountLabel}</div>
-              <div className={`truncate text-[14px] font-black ${balanceTextClass}`}>{formatMoney(displayBalance)}</div>
+              <div className={`font-copy text-[9px] font-black uppercase tracking-[0.18em] ${accountNameTextClass}`}>{accountLabel}</div>
+              <div className={`font-display truncate text-[14px] font-bold ${balanceTextClass}`}>{formatMoney(displayBalance)}</div>
             </div>
             <VipBadge tierId={vip.currentTier.id} size={18} />
             <ChevronDown className="h-3 w-3 text-gray-400" />
@@ -228,9 +226,9 @@ const TradingHeader = ({
               className="group flex h-full items-center gap-3 rounded-[16px] border border-white/5 bg-[#151c28] px-3 shadow-[0_12px_30px_rgba(7,12,22,0.24)] transition-all hover:border-white/10 hover:bg-white/[0.06] xl:px-3.5"
             >
               <div className="min-w-0 text-left">
-                <div className={`text-[10px] font-black uppercase tracking-[0.18em] ${accountNameTextClass}`}>{accountTitle}</div>
+                <div className={`font-copy text-[10px] font-black uppercase tracking-[0.18em] ${accountNameTextClass}`}>{accountTitle}</div>
                 <div className="flex items-center gap-2">
-                  <span className={`truncate text-[15px] font-black ${balanceTextClass}`}>
+                  <span className={`font-display truncate text-[15px] font-bold ${balanceTextClass}`}>
                     {formatMoney(displayBalance)}
                   </span>
                   {accountType === "live" && <TrendingDown className="h-3.5 w-3.5 shrink-0 text-red-400" />}

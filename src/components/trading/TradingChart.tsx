@@ -4,17 +4,31 @@ import {
   ISeriesApi,
   ColorType,
   CrosshairMode,
+  LineStyle,
   CandlestickSeries,
   LineSeries,
   BarSeries,
-  HistogramSeries
+  HistogramSeries,
+  type BarData,
+  type CandlestickData,
+  type HistogramData,
+  type LineData,
+  type LineWidth,
+  type SeriesType,
+  type Time,
 } from "lightweight-charts";
-import { OTCPriceEngine, TIMEFRAMES, OHLCCandle } from "./engine/priceEngine";
+import {
+  OTCPriceEngine,
+  SUPPORTED_CHART_TIMEFRAMES,
+  TIMEFRAMES,
+  type OHLCCandle,
+  type SupportedChartTimeframe,
+} from "./engine/priceEngine";
+import { createMarketDataFeed, type MarketDataFeed } from "./engine/marketDataFeed";
 import { CandleAggregator } from "./CandleAggregator";
 import ChartToolbar, { ChartType, CandleIcon } from "./ChartToolbar";
 import { TradeMarkersOverlay } from "./TradeMarkersOverlay";
 import { LiveChartBeacon } from "./LiveChartBeacon";
-import { TradeSentimentRail } from "./TradeSentimentRail";
 import { TradeSettlementOverlay } from "./TradeSettlementOverlay";
 import { ActiveIndicator } from "./indicators/types";
 import { calculateIndicator } from "./indicators/engine";
@@ -22,14 +36,13 @@ import { INDICATOR_REGISTRY } from "./indicators/config";
 import { DrawingOverlay } from "./drawings/DrawingOverlay";
 import { useDrawings } from "@/contexts/DrawingContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Briefcase, X, Activity, Compass, PenTool } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { type Tables } from "@/integrations/supabase/types";
+import { Briefcase, X, Activity, Compass, PenTool, MoreHorizontal } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { ActiveTrade } from "@/hooks/useTrading";
 
-const MOBILE_TIMEFRAMES = ["5s", "10s", "15s", "30s", "1m", "2m", "3m", "5m", "10m", "15m", "30m", "1h", "4h", "1D"];
-
 interface TradingChartProps {
-  asset: { symbol: string; price: number; type?: string; change?: number; maxProfit?: number; };
+  asset: { symbol: string; price: number; basePrice?: number; type?: string; change?: number; maxProfit?: number; };
   onPriceUpdate?: (price: number, markerTime?: number) => void;
   activeIndicators: ActiveIndicator[];
   activeTrades?: ActiveTrade[];
@@ -37,6 +50,7 @@ interface TradingChartProps {
   onToggleDrawingsPanel: () => void;
   onRemoveIndicator?: (id: string) => void;
   onToggleMobileHistory?: () => void;
+  mobileHistoryOpen?: boolean;
 }
 
 const THEME = {
@@ -52,39 +66,135 @@ const THEME = {
 };
 
 const DEFAULT_VISIBLE_BARS = 80;
-const MAX_CANDLES_IN_MEMORY = 500;
-const LIVE_TICK_INTERVAL_MS = 1000 / 60;
+const MAX_CANDLES_IN_MEMORY = 1200;
+type ChartSeriesApi = ISeriesApi<SeriesType>;
+type OverlayIndicatorPoint = LineData<Time> | HistogramData<Time>;
+type MainChartPoint = LineData<Time> | BarData<Time> | CandlestickData<Time>;
+type PlatformThemeRow = Pick<Tables<"platform_settings">, "chart_bg_color" | "chart_up_color" | "chart_down_color">;
+
+const toChartTime = (time: number) => time as Time;
+
+const clampLineWidth = (value: number): LineWidth => {
+  if (value >= 4) return 4;
+  if (value >= 3) return 3;
+  if (value >= 2) return 2;
+  return 1;
+};
+
+const toLineChartData = (candles: OHLCCandle[]): LineData<Time>[] =>
+  candles.map((candle) => ({ time: toChartTime(candle.time), value: candle.close }));
+
+const toOhlcChartData = (candles: OHLCCandle[]): Array<BarData<Time> | CandlestickData<Time>> =>
+  candles.map((candle) => ({
+    time: toChartTime(candle.time),
+    open: candle.open,
+    high: candle.high,
+    low: candle.low,
+    close: candle.close,
+  }));
+
+const colorizeHistogramData = (
+  data: OverlayIndicatorPoint[],
+  upColor: string,
+  downColor: string,
+): OverlayIndicatorPoint[] =>
+  data.map((point) => ({
+    ...point,
+    color: point.value >= 0 ? upColor : downColor,
+  }));
 
 const BAR_SPACING_MAP: Record<string, number> = {
+  "1s": 7,
   "5s": 8,
-  "10s": 8,
   "15s": 9,
   "30s": 10,
   "1m": 11,
   "5m": 12,
+  "10m": 12.5,
   "15m": 13,
   "30m": 14,
   "1h": 15,
+  "2h": 15.5,
+  "3h": 15.75,
   "4h": 16,
+  "12h": 16.5,
   "1D": 17,
-  "1W": 18,
-  "1M": 19,
 };
 
 const VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
+  "1s": 110,
   "5s": 90,
-  "10s": 90,
   "15s": 85,
   "30s": 80,
   "1m": 80,
   "5m": 75,
+  "10m": 73,
   "15m": 70,
   "30m": 70,
   "1h": 65,
+  "2h": 62,
+  "3h": 60,
   "4h": 60,
+  "12h": 56,
   "1D": 55,
-  "1W": 50,
-  "1M": 45,
+};
+
+const getUnixTime = (value: unknown) => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value > 1_000_000_000_000 ? Math.floor(value / 1000) : Math.floor(value);
+  }
+
+  if (typeof value === "string") {
+    const numericValue = Number(value);
+    if (Number.isFinite(numericValue)) {
+      return numericValue > 1_000_000_000_000 ? Math.floor(numericValue / 1000) : Math.floor(numericValue);
+    }
+
+    const parsed = Date.parse(value);
+    if (!Number.isNaN(parsed)) {
+      return Math.floor(parsed / 1000);
+    }
+  }
+
+  return null;
+};
+
+const resolveLogicalTime = (
+  targetTime: number,
+  seriesPoints: Array<{ time: number; logical: number }>,
+  timeframeSeconds: number,
+) => {
+  if (seriesPoints.length === 0) return null;
+
+  const firstPoint = seriesPoints[0];
+  const lastPoint = seriesPoints[seriesPoints.length - 1];
+
+  if (targetTime <= firstPoint.time) {
+    return firstPoint.logical;
+  }
+
+  for (let index = 0; index < seriesPoints.length - 1; index += 1) {
+    const currentPoint = seriesPoints[index];
+    const nextPoint = seriesPoints[index + 1];
+
+    if (targetTime === currentPoint.time) {
+      return currentPoint.logical;
+    }
+
+    if (targetTime > currentPoint.time && targetTime < nextPoint.time) {
+      const span = Math.max(1, nextPoint.time - currentPoint.time);
+      const fraction = (targetTime - currentPoint.time) / span;
+      return currentPoint.logical + fraction;
+    }
+  }
+
+  if (targetTime === lastPoint.time) {
+    return lastPoint.logical;
+  }
+
+  const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds || 60));
+  const trailingFraction = Math.min(1, Math.max(0, (targetTime - lastPoint.time) / safeTimeframe));
+  return lastPoint.logical + trailingFraction;
 };
 
 const calcHeikinAshi = (candles: OHLCCandle[]): OHLCCandle[] => {
@@ -103,6 +213,59 @@ const calcHeikinAshi = (candles: OHLCCandle[]): OHLCCandle[] => {
   return ha;
 };
 
+const getPricePrecision = (price: number) => {
+  if (price > 10000) return 2;
+  if (price > 100) return 3;
+  if (price > 1) return 5;
+  return 6;
+};
+
+const getSeriesPriceFormat = (price: number) => {
+  const precision = getPricePrecision(price);
+
+  return {
+    type: "price" as const,
+    precision,
+    minMove: Number(`1e-${precision}`),
+  };
+};
+
+const formatTimeScaleTick = (time: number, timeframeSeconds: number) => {
+  const date = new Date(time * 1000);
+
+  if (timeframeSeconds < 60) {
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+  }
+
+  if (timeframeSeconds < 12 * 60 * 60) {
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  }
+
+  if (timeframeSeconds < 24 * 60 * 60) {
+    return date.toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  }
+
+  return date.toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+  });
+};
+
 // Sub-component to seamlessly manage separate panes (Oscillators)
 const OscillatorPane = ({
   indicator,
@@ -119,7 +282,7 @@ const OscillatorPane = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const seriesRefs = useRef<Record<string, ISeriesApi<any>>>({});
+  const seriesRefs = useRef<Record<string, ChartSeriesApi>>({});
   const prevParamsRef = useRef<string>("");
 
   // 1. Mount Chart
@@ -194,12 +357,12 @@ const OscillatorPane = ({
           indicator.params[`color${out.id.charAt(0).toUpperCase()}${out.id.slice(1)}`] ||
           indicator.params.color ||
           outConf.defaultColor || THEME.line;
-        const lineWidth = Number(indicator.params.width || indicator.params.lineWidth || 1);
+        const lineWidth = clampLineWidth(Number(indicator.params.width || indicator.params.lineWidth || 1));
         if (outConf.type === "histogram") {
           seriesRefs.current[out.id] = chartRef.current!.addSeries(HistogramSeries, { color, priceLineVisible: false });
         } else {
           seriesRefs.current[out.id] = chartRef.current!.addSeries(LineSeries, {
-            color, lineWidth: lineWidth as any, priceLineVisible: false, crosshairMarkerVisible: false
+            color, lineWidth, priceLineVisible: false, crosshairMarkerVisible: false
           });
         }
       }
@@ -210,8 +373,7 @@ const OscillatorPane = ({
           if (outConf.type === "histogram") {
             const upColor = indicator.params.histColorUp || indicator.params.upColor || THEME.up;
             const downColor = indicator.params.histColorDown || indicator.params.downColor || THEME.down;
-            // For MACD or Awesome Oscillator histogram, color is positive=up, negative=down
-            finalData = out.data.map((d: any) => ({ ...d, color: d.value >= 0 ? upColor : downColor }));
+            finalData = colorizeHistogramData(out.data as OverlayIndicatorPoint[], upColor, downColor);
           }
           seriesRefs.current[out.id].setData(finalData); 
         } catch(e) {
@@ -221,7 +383,7 @@ const OscillatorPane = ({
         }
       }
     });
-  }, [indicator, renderKey]);
+  }, [historyRef, indicator, renderKey]);
 
   if (!indicator.visible) return null;
 
@@ -252,25 +414,25 @@ const TradingChart = ({
   onToggleDrawingsPanel,
   onRemoveIndicator,
   onToggleMobileHistory,
+  mobileHistoryOpen = false,
 }: TradingChartProps) => {
   const mainRef = useRef<HTMLDivElement>(null);
 
   const chartRef = useRef<IChartApi | null>(null);
-  const mainSeriesRef = useRef<ISeriesApi<any> | null>(null);
+  const mainSeriesRef = useRef<ChartSeriesApi | null>(null);
 
   // Overlay Indicators Refs Map
-  const overlaySeriesMap = useRef<Record<string, ISeriesApi<any>>>({});
-  const indicatorDataMap = useRef<Record<string, { time: any; value: number }[]>>({});
+  const overlaySeriesMap = useRef<Record<string, ChartSeriesApi>>({});
+  const indicatorDataMap = useRef<Record<string, OverlayIndicatorPoint[]>>({});
   
-  const engineRef = useRef<OTCPriceEngine | null>(null);
-  const engineSymbolRef = useRef<string | null>(null);
+  const marketFeedRef = useRef<MarketDataFeed | null>(null);
   const historyRef = useRef<OHLCCandle[]>([]);
   const liveRef = useRef<OHLCCandle | null>(null);
-  const tickTimer = useRef<number | null>(null);
-  const tickClockRef = useRef<{ epochOffsetMs: number; nextTickAtMs: number; startPrice: number } | null>(null);
   const aggregatorRef = useRef<CandleAggregator | null>(null);
   // Always-fresh ref for activeIndicators so stale closures see latest value
   const activeIndicatorsRef = useRef<ActiveIndicator[]>(activeIndicators);
+  const assetSnapshotRef = useRef({ price: asset.price, change: asset.change ?? 0 });
+  const onPriceUpdateRef = useRef(onPriceUpdate);
 
   const separateIndicators = activeIndicators.filter(i => {
     const conf = INDICATOR_REGISTRY.find(c => c.id === i.configId);
@@ -280,13 +442,13 @@ const TradingChart = ({
     const conf = INDICATOR_REGISTRY.find(c => c.id === i.configId);
     return conf && conf.pane === "overlay";
   });
-  const closeTimer = useRef<number | null>(null);
+  const hasActiveAssetTrade = activeTrades.some((trade) => trade.asset_symbol === asset.symbol);
   const indicatorRefreshTimer = useRef<number | null>(null); // dedicated indicator refresh
-  const [selectedTf, setSelectedTf] = useState("1m");
+  const [selectedTf, setSelectedTf] = useState<SupportedChartTimeframe>("1m");
   const [currentPrice, setCurrentPrice] = useState(asset.price);
   const [priceChange, setPriceChange] = useState(asset.change || 0);
   const [chartType, setChartType] = useState<ChartType>("candles");
-  const [showMobileTfMenu, setShowMobileTfMenu] = useState(true);
+  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
   const [activeMobileMenu, setActiveMobileMenu] = useState<"time" | "type" | null>(null);
   const [chartError, setChartError] = useState<string | null>(null);
   const [hideMobileQuickActions, setHideMobileQuickActions] = useState(false);
@@ -301,18 +463,16 @@ const TradingChart = ({
 
   // Propagate refs down for child mounts logic
   const [syncChart, setSyncChart] = useState<IChartApi | null>(null);
-  const [syncSeries, setSyncSeries] = useState<ISeriesApi<any> | null>(null);
+  const [syncSeries, setSyncSeries] = useState<ChartSeriesApi | null>(null);
   // Force react render when history strictly ticks candles for Oscillators
   const [forceOscillatorRender, setForceOscillatorRender] = useState(0);
-
-  const getDecimals = (p: number) => p > 10000 ? 2 : p > 100 ? 3 : p > 1 ? 5 : 6;
 
   // ─── FETCH THEME GLOBALS ──────────────────────────────────────────
   useEffect(() => {
     async function fetchTheme() {
       const { data } = await supabase.from('platform_settings').select('chart_bg_color, chart_up_color, chart_down_color').limit(1).maybeSingle();
       if (data) {
-        const payload = data as any;
+        const payload: PlatformThemeRow = data;
         const newTheme = {
           bg: payload.chart_bg_color || '#0E1217',
           up: payload.chart_up_color || '#00C076',
@@ -328,13 +488,32 @@ const TradingChart = ({
     const handleDropdown = (event: Event) => {
       const customEvent = event as CustomEvent<{ open?: boolean }>;
       setHideMobileQuickActions(!!customEvent.detail?.open);
-      setShowMobileTfMenu(!customEvent.detail?.open);
-      if (customEvent.detail?.open) setActiveMobileMenu(null);
+      if (customEvent.detail?.open) {
+        setActiveMobileMenu(null);
+        setMobileToolsOpen(false);
+      }
     };
 
     window.addEventListener("mobile_account_dropdown", handleDropdown as EventListener);
     return () => window.removeEventListener("mobile_account_dropdown", handleDropdown as EventListener);
   }, []);
+
+  useEffect(() => {
+    if (!mobileHistoryOpen) return;
+    setActiveMobileMenu(null);
+    setMobileToolsOpen(false);
+  }, [mobileHistoryOpen]);
+
+  useEffect(() => {
+    assetSnapshotRef.current = {
+      price: asset.price,
+      change: asset.change ?? 0,
+    };
+  }, [asset.change, asset.price]);
+
+  useEffect(() => {
+    onPriceUpdateRef.current = onPriceUpdate;
+  }, [onPriceUpdate]);
 
   useEffect(() => {
     globalThemeRef.current = globalTheme;
@@ -382,8 +561,20 @@ const TradingChart = ({
         },
         crosshair: {
           mode: CrosshairMode.Normal,
-          vertLine: { visible: false, labelVisible: false },
-          horzLine: { visible: false, labelVisible: false },
+          vertLine: {
+            visible: true,
+            labelVisible: true,
+            color: "rgba(255,255,255,0.14)",
+            width: 1,
+            style: LineStyle.Dashed,
+          },
+          horzLine: {
+            visible: true,
+            labelVisible: true,
+            color: "rgba(255,255,255,0.14)",
+            width: 1,
+            style: LineStyle.Dashed,
+          },
         },
         rightPriceScale: { 
           borderColor: '#2A2F36', 
@@ -395,11 +586,8 @@ const TradingChart = ({
         timeScale: { 
           borderColor: '#2A2F36', 
           timeVisible: true, 
-          secondsVisible: false,
-          tickMarkFormatter: (time: number) => {
-            const date = new Date(time * 1000);
-            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          },
+          secondsVisible: true,
+          tickMarkFormatter: (time: number) => formatTimeScaleTick(time, TIMEFRAMES["1m"].seconds),
           rightOffset: 6,
           barSpacing: BAR_SPACING_MAP["1m"],
           minBarSpacing: 6,
@@ -433,6 +621,11 @@ const TradingChart = ({
   useEffect(() => {
     chartTypeRef.current = chartType;
     if (!chartRef.current) return;
+    const referencePrice =
+      (typeof asset.basePrice === "number" && Number.isFinite(asset.basePrice) && asset.basePrice > 0
+        ? asset.basePrice
+        : asset.price) || 1;
+    const priceFormat = getSeriesPriceFormat(referencePrice);
 
     try {
       if (mainSeriesRef.current) {
@@ -441,11 +634,17 @@ const TradingChart = ({
       }
 
       if (chartType === "line") {
-        mainSeriesRef.current = chartRef.current.addSeries(LineSeries, { color: THEME.line, lineWidth: 2 });
+        mainSeriesRef.current = chartRef.current.addSeries(LineSeries, {
+          color: THEME.line,
+          lineWidth: 2,
+          priceFormat,
+          crosshairMarkerRadius: 3,
+        });
       } else if (chartType === "bars") {
         mainSeriesRef.current = chartRef.current.addSeries(BarSeries, {
           upColor: globalThemeRef.current.up,
           downColor: globalThemeRef.current.down,
+          priceFormat,
         });
       } else {
         mainSeriesRef.current = chartRef.current.addSeries(CandlestickSeries, {
@@ -455,11 +654,7 @@ const TradingChart = ({
           borderDownColor: globalThemeRef.current.down,
           wickUpColor: globalThemeRef.current.up,
           wickDownColor: globalThemeRef.current.down,
-          priceFormat: {
-            type: 'price',
-            precision: 5,
-            minMove: 0.00001,
-          },
+          priceFormat,
         });
       }
       setChartError(null);
@@ -473,14 +668,12 @@ const TradingChart = ({
     setSyncSeries(mainSeriesRef.current);
 
     if (historyRef.current.length > 0 && mainSeriesRef.current) {
-        const histToUse = chartType === "heikinAshi" ? calcHeikinAshi(historyRef.current) : historyRef.current;
-        if (chartType === "line") {
-            mainSeriesRef.current.setData(histToUse.map(c => ({ time: c.time as any, value: c.close })));
-        } else {
-            mainSeriesRef.current.setData(histToUse.map(c => ({ time: c.time as any, open: c.open, high: c.high, low: c.low, close: c.close })));
-        }
+      const histToUse = chartType === "heikinAshi" ? calcHeikinAshi(historyRef.current) : historyRef.current;
+      mainSeriesRef.current.setData(
+        chartType === "line" ? toLineChartData(histToUse) : toOhlcChartData(histToUse),
+      );
     }
-  }, [chartType]);
+  }, [asset.basePrice, asset.price, chartType]);
 
   // ─── ENGINE & CALCULATION LOOP ──────────────────────────────────────────────
   // Track previous indicator params to detect changes
@@ -489,7 +682,7 @@ const TradingChart = ({
   // Keep activeIndicatorsRef in sync on every render
   activeIndicatorsRef.current = activeIndicators;
 
-  const renderOverlayIndicators = (hist: OHLCCandle[]) => {
+  const renderOverlayIndicators = useCallback((hist: OHLCCandle[]) => {
     if (!chartRef.current) return;
     const inds = activeIndicatorsRef.current;  // Always latest!
     const overList = inds.filter(i => i.pane === "overlay");
@@ -536,12 +729,12 @@ const TradingChart = ({
                           ind.params[`color${out.id.charAt(0).toUpperCase()}${out.id.slice(1)}`] ||
                           ind.params.color ||
                           outConf?.defaultColor || THEME.line;
-            const lineWidth = Number(ind.params.width || ind.params.lineWidth || 1);
-            
+            const lineWidth = clampLineWidth(Number(ind.params.width || ind.params.lineWidth || 1));
+             
             if (outConf?.type === "histogram") {
                overlaySeriesMap.current[mapKey] = chartRef.current!.addSeries(HistogramSeries, { color, priceLineVisible: false });
             } else {
-               overlaySeriesMap.current[mapKey] = chartRef.current!.addSeries(LineSeries, { color, lineWidth: lineWidth as any, priceLineVisible: false, crosshairMarkerVisible: false });
+               overlaySeriesMap.current[mapKey] = chartRef.current!.addSeries(LineSeries, { color, lineWidth, priceLineVisible: false, crosshairMarkerVisible: false });
             }
           }
           if (out.data.length > 0) {
@@ -550,11 +743,11 @@ const TradingChart = ({
               if (outConf?.type === "histogram") {
                 const upColor = ind.params.histColorUp || ind.params.upColor || THEME.up;
                 const downColor = ind.params.histColorDown || ind.params.downColor || THEME.down;
-                finalData = out.data.map((d: any) => ({ ...d, color: d.value >= 0 ? upColor : downColor }));
+                finalData = colorizeHistogramData(out.data as OverlayIndicatorPoint[], upColor, downColor);
               }
               overlaySeriesMap.current[mapKey].setData(finalData);
               // Store raw data for background fills
-              indicatorDataMap.current[mapKey] = out.data;
+              indicatorDataMap.current[mapKey] = out.data as OverlayIndicatorPoint[];
             } catch (e) {
               console.warn("Failed setting data for", ind.name, e);
             }
@@ -564,43 +757,57 @@ const TradingChart = ({
         console.warn("Failed to render overlay indicator", ind.name, e);
       }
     });
-  };
+  }, []);
+
+  const getIndicatorHistory = useCallback(() => {
+    const history = historyRef.current;
+    const liveCandle = liveRef.current;
+
+    if (!liveCandle) {
+      return history;
+    }
+
+    const lastClosedTime = history[history.length - 1]?.time ?? -Infinity;
+    if (liveCandle.time <= lastClosedTime) {
+      return history;
+    }
+
+    return [...history, liveCandle].slice(-MAX_CANDLES_IN_MEMORY);
+  }, []);
 
   useEffect(() => {
     const tf = TIMEFRAMES[selectedTf];
     if (!tf || !mainSeriesRef.current || !chartRef.current) return;
+    const websocketUrl = import.meta.env.VITE_MARKET_DATA_WS_URL;
 
-    if (tickTimer.current !== null) window.cancelAnimationFrame(tickTimer.current);
-    if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
+    marketFeedRef.current?.disconnect();
+    marketFeedRef.current = null;
+    if (indicatorRefreshTimer.current !== null) window.clearInterval(indicatorRefreshTimer.current);
+    if (aggregatorRef.current) aggregatorRef.current.destroy();
 
-    const seedPrice =
-      engineSymbolRef.current === asset.symbol && engineRef.current
-        ? engineRef.current.getCurrentPrice()
-        : asset.price;
-    const engine = new OTCPriceEngine(asset.symbol, seedPrice);
-    engineRef.current = engine;
-    engineSymbolRef.current = asset.symbol;
+    const nowSec = Date.now() / 1000;
+    const engineBasePrice =
+      typeof asset.basePrice === "number" && Number.isFinite(asset.basePrice) && asset.basePrice > 0
+        ? asset.basePrice
+        : assetSnapshotRef.current.price;
+    const engine = new OTCPriceEngine(asset.symbol, engineBasePrice, asset.type);
 
-    const history = engine.generateHistory(tf);
+    const history = engine.generateHistory(tf, nowSec);
     historyRef.current = history;
 
     const histToUse = chartTypeRef.current === "heikinAshi" ? calcHeikinAshi(historyRef.current) : historyRef.current;
-    if (chartTypeRef.current === "line") {
-        mainSeriesRef.current?.setData(histToUse.map(c => ({ time: c.time as any, value: c.close })));
-    } else {
-        mainSeriesRef.current?.setData(histToUse.map(c => ({ time: c.time as any, open: c.open, high: c.high, low: c.low, close: c.close })));
-    }
+    mainSeriesRef.current?.setData(
+      chartTypeRef.current === "line" ? toLineChartData(histToUse) : toOhlcChartData(histToUse),
+    );
 
-    const nowSec = Math.floor(Date.now() / 1000);
     const step = tf.seconds;
-    const periodStart = Math.floor(nowSec / step) * step;
-    const liveOpen = engine.getCurrentPrice();
-    const seedCandle: OHLCCandle = { time: periodStart, open: liveOpen, high: liveOpen, low: liveOpen, close: liveOpen, volume: 0 };
+    const seedCandle = engine.generateLiveCandle(tf, nowSec);
     liveRef.current = seedCandle;
+    const startPrice = seedCandle.open;
 
     // Freeze trades to the visible live candle anchor shown on the chart.
-    setCurrentPrice(liveOpen, seedCandle.time);
-    setPriceChange(asset.change || 0);
+    setCurrentPrice(seedCandle.close);
+    setPriceChange(((seedCandle.close - seedCandle.open) / Math.max(seedCandle.open, 0.000001)) * 100);
 
     // Apply timeframe-appropriate bar spacing so candles look correct at each interval
     const visibleBars = VISIBLE_BAR_COUNT_MAP[selectedTf] ?? DEFAULT_VISIBLE_BARS;
@@ -608,135 +815,127 @@ const TradingChart = ({
       barSpacing: BAR_SPACING_MAP[selectedTf] ?? BAR_SPACING_MAP["1m"],
       minBarSpacing: 6,
       rightOffset: 6,
+      timeVisible: true,
+      secondsVisible: tf.seconds < 60,
+      tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
     });
+    const defaultFrom = Math.max(0, history.length - visibleBars);
     chartRef.current.timeScale().setVisibleLogicalRange({
-      from: Math.max(0, history.length - visibleBars),
+      from: defaultFrom,
       to: history.length + 6,
     });
 
-    renderOverlayIndicators(history);
-    setForceOscillatorRender(Date.now()); // ping instances
+    renderOverlayIndicators(getIndicatorHistory());
+    setForceOscillatorRender((current) => current + 1);
 
     // ── CandleAggregator setup ─────────────────────────────────────────────
     // Destroy previous aggregator and create a new one
-    if (aggregatorRef.current) aggregatorRef.current.destroy();
 
     // onClose: called synchronously when a period ends — push the closed candle to history
     const handleCandleClose = (closed: OHLCCandle) => {
       historyRef.current = [...historyRef.current, closed].slice(-MAX_CANDLES_IN_MEMORY);
-      setForceOscillatorRender(Date.now());
+      renderOverlayIndicators(getIndicatorHistory());
+      setForceOscillatorRender((current) => current + 1);
     };
 
     // onUpdate: called via RAF — update the live candle in the chart
     const handleCandleUpdate = (candle: OHLCCandle) => {
       if (!mainSeriesRef.current) return;
       liveRef.current = candle;
-      onPriceUpdate?.(candle.close, candle.time);
+      setCurrentPrice(candle.close);
+      setPriceChange(((candle.close - startPrice) / Math.max(startPrice, 0.000001)) * 100);
+      onPriceUpdateRef.current?.(candle.close, candle.time);
 
-      let updatePayload: any;
+      let updatePayload: MainChartPoint;
       if (chartTypeRef.current === "heikinAshi" && historyRef.current.length > 0) {
         const hist = calcHeikinAshi(historyRef.current);
         const prev = hist[hist.length - 1];
         const haOpen  = (prev.open + prev.close) / 2;
         const haClose = (candle.open + candle.high + candle.low + candle.close) / 4;
         updatePayload  = {
-          time:  candle.time as any,
+          time:  toChartTime(candle.time),
           open:  haOpen,
           high:  Math.max(candle.high, haOpen, haClose),
           low:   Math.min(candle.low,  haOpen, haClose),
           close: haClose,
         };
       } else if (chartTypeRef.current === "line") {
-        updatePayload = { time: candle.time as any, value: candle.close };
+        updatePayload = { time: toChartTime(candle.time), value: candle.close };
       } else {
-        updatePayload = { time: candle.time as any, open: candle.open, high: candle.high, low: candle.low, close: candle.close };
+        updatePayload = {
+          time: toChartTime(candle.time),
+          open: candle.open,
+          high: candle.high,
+          low: candle.low,
+          close: candle.close,
+        };
       }
 
       try { mainSeriesRef.current.update(updatePayload); } catch (_) {}
     };
 
     aggregatorRef.current = new CandleAggregator(step, handleCandleClose, handleCandleUpdate);
-    aggregatorRef.current.setSeedCandle(seedCandle);
+    aggregatorRef.current.setSeedCandle(seedCandle, nowSec);
     handleCandleUpdate(seedCandle);
 
-    const startPrice = liveOpen;
-
     // ── Tick loop (drives price engine + feeds aggregator) ─────────────────
-    const tickIntervalMs = Math.min(tf.updateIntervalMs, LIVE_TICK_INTERVAL_MS);
-    const ticksPerCandle = Math.max(1, (tf.seconds * 1000) / tickIntervalMs);
-    const perTickVol = (tf.bodyPips / Math.sqrt(ticksPerCandle)) / 5;
-    tickClockRef.current = {
-      epochOffsetMs: Date.now() - performance.now(),
-      nextTickAtMs: performance.now(),
-      startPrice,
-    };
-
-    const runTickLoop = (frameTime: number) => {
-      if (!engineRef.current || !aggregatorRef.current || !tickClockRef.current) return;
-
-      const clock = tickClockRef.current;
-      let latestPrice: number | null = null;
-      let guard = 0;
-
-      while (frameTime >= clock.nextTickAtMs && guard < 8) {
-        const tickTimestamp = (clock.epochOffsetMs + clock.nextTickAtMs) / 1000;
-        const price = engineRef.current.tick(perTickVol);
-        aggregatorRef.current.onTick({ timestamp: tickTimestamp, price });
-        latestPrice = price;
-        clock.nextTickAtMs += tickIntervalMs;
-        guard += 1;
-      }
-
-      if (frameTime - clock.nextTickAtMs > tickIntervalMs * 8) {
-        clock.nextTickAtMs = frameTime + tickIntervalMs;
-      }
-
-      if (latestPrice !== null) {
-        setCurrentPrice(latestPrice, liveRef.current?.time);
-        setPriceChange(((latestPrice - clock.startPrice) / clock.startPrice) * 100);
-      }
-
-      tickTimer.current = window.requestAnimationFrame(runTickLoop);
-    };
-
-    tickTimer.current = window.requestAnimationFrame(runTickLoop);
+    marketFeedRef.current = createMarketDataFeed({
+      websocketUrl,
+      subscription: {
+        symbol: asset.symbol,
+        basePrice: engineBasePrice,
+        timeframe: tf,
+        assetCategory: asset.type,
+      },
+      callbacks: {
+        onTick: (tick) => {
+          aggregatorRef.current?.onTick({
+            timestamp: tick.timestamp,
+            price: tick.price,
+          });
+        },
+        onError: (error) => {
+          console.warn(`Market feed error for ${asset.symbol}:`, error);
+        },
+      },
+    });
+    marketFeedRef.current.connect();
 
     // ── Dedicated overlay indicator refresh every 3s ────────────────────────
     if (indicatorRefreshTimer.current !== null) window.clearInterval(indicatorRefreshTimer.current);
     indicatorRefreshTimer.current = window.setInterval(() => {
       if (historyRef.current.length > 0) {
-        renderOverlayIndicators(historyRef.current);
-        setForceOscillatorRender(p => p + 1);
+        renderOverlayIndicators(getIndicatorHistory());
+        setForceOscillatorRender((current) => current + 1);
       }
-    }, 3000);
+    }, 1500);
 
     return () => {
-      if (tickTimer.current !== null) window.cancelAnimationFrame(tickTimer.current);
-      if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
+      marketFeedRef.current?.disconnect();
+      marketFeedRef.current = null;
       if (indicatorRefreshTimer.current !== null) window.clearInterval(indicatorRefreshTimer.current);
-      tickClockRef.current = null;
       if (aggregatorRef.current) { aggregatorRef.current.destroy(); aggregatorRef.current = null; }
     };
-  }, [selectedTf, asset.symbol]); 
+  }, [asset.basePrice, asset.symbol, getIndicatorHistory, renderOverlayIndicators, selectedTf, setCurrentPrice]); 
 
   // Immediately re-render overlays when activeIndicators changes (add / remove / update)
   useEffect(() => {
     // Run now
     if (historyRef.current.length > 0) {
-      renderOverlayIndicators(historyRef.current);
-      setForceOscillatorRender(p => p + 1);
+      renderOverlayIndicators(getIndicatorHistory());
+      setForceOscillatorRender((current) => current + 1);
     }
     // Run again after 500ms to ensure updates propagate through React batching
     const t = window.setTimeout(() => {
       if (historyRef.current.length > 0) {
-        renderOverlayIndicators(historyRef.current);
-        setForceOscillatorRender(p => p + 1);
+        renderOverlayIndicators(getIndicatorHistory());
+        setForceOscillatorRender((current) => current + 1);
       }
     }, 500);
     return () => window.clearTimeout(t);
-  }, [activeIndicators]);
+  }, [activeIndicators, getIndicatorHistory, renderOverlayIndicators]);
 
-  const dec = getDecimals(currentPrice);
+  const dec = getPricePrecision(currentPrice);
   const isUp = priceChange >= 0;
   const showStaticPriceBadge = false;
 
@@ -776,92 +975,176 @@ const TradingChart = ({
       )}
 
       {/* ── MOBILE: Floating Settings / Expanded Toolbar and Briefcase overlay ── */}
-      {!hideMobileQuickActions && (
-      <div className="absolute left-2 top-1/2 z-[55] flex -translate-y-1/2 sm:hidden flex-col gap-5 pointer-events-auto">
-        <div className="relative">
-          {showMobileTfMenu && (
-             <div className="flex flex-col gap-5 items-center">
-                {/* Pencil / Drawings */}
-                <button onClick={() => { onToggleDrawingsPanel(); }} className={`flex h-10 w-10 items-center justify-center rounded-[6px] border shadow-[0_8px_18px_rgba(0,0,0,0.24)] transition-colors ${activeTool !== null ? "border-white/18 bg-[#3a4358] text-white" : "border-white/6 bg-[#2a3142]/95 text-white hover:bg-[#30394d]"}`}>
+      {!mobileHistoryOpen && !hideMobileQuickActions && (
+      <>
+        {mobileToolsOpen && (
+          <button
+            type="button"
+            aria-label="Close chart tools"
+            onClick={() => {
+              setMobileToolsOpen(false);
+              setActiveMobileMenu(null);
+            }}
+            className="fixed inset-0 z-[54] sm:hidden"
+          />
+        )}
+
+        <div className="absolute left-3 top-3 z-[55] sm:hidden">
+          <div className="relative flex flex-col items-start gap-3 pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileToolsOpen((current) => {
+                  const next = !current;
+                  if (!next) setActiveMobileMenu(null);
+                  return next;
+                });
+              }}
+              className={`flex h-10 w-10 items-center justify-center rounded-[6px] border shadow-[0_8px_18px_rgba(0,0,0,0.24)] transition-colors ${
+                mobileToolsOpen
+                  ? "border-[#2e8fff] bg-[#1483ff] text-white"
+                  : "border-white/6 bg-[#2a3142]/95 text-white hover:bg-[#30394d]"
+              }`}
+            >
+              <MoreHorizontal className="h-[18px] w-[18px]" />
+            </button>
+
+            {mobileToolsOpen && (
+              <>
+                {activeMobileMenu === "time" && (
+                  <div className="absolute left-[54px] top-0 w-[228px] overflow-hidden rounded-[10px] border border-white/10 bg-[#5a5f72]/95 p-2 shadow-2xl backdrop-blur-sm">
+                    <div className="grid grid-cols-3 gap-2 p-1">
+                      {SUPPORTED_CHART_TIMEFRAMES.map((tf) => (
+                        <button
+                          key={tf}
+                          onClick={() => {
+                            setSelectedTf(tf);
+                            setActiveMobileMenu(null);
+                          }}
+                          className={`rounded-[8px] px-2 py-3 text-center text-[13px] font-bold transition-colors ${
+                            selectedTf === tf
+                              ? "bg-white/12 text-white"
+                              : "text-white/90 hover:bg-white/8"
+                          }`}
+                        >
+                          {tf}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeMobileMenu === "type" && (
+                  <div className="absolute left-[54px] top-0 w-[228px] overflow-hidden rounded-[10px] border border-white/10 bg-[#5a5f72]/95 p-2 shadow-2xl backdrop-blur-sm">
+                    <div className="grid gap-2 p-1">
+                      {[
+                        { id: "line" as const, label: "Area", icon: <Activity className="w-4 h-4" /> },
+                        { id: "candles" as const, label: "Candles", icon: <CandleIcon className="w-4 h-4" /> },
+                        { id: "bars" as const, label: "Bars", icon: <CandleIcon className="w-4 h-4" /> },
+                        { id: "heikinAshi" as const, label: "Heiken Ashi", icon: <CandleIcon className="w-4 h-4" /> },
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setChartType(item.id);
+                            setActiveMobileMenu(null);
+                          }}
+                          className={`flex items-center gap-3 rounded-[8px] px-4 py-3 text-left text-[13px] font-semibold transition-colors ${
+                            chartType === item.id
+                              ? "bg-white/12 text-white"
+                              : "text-white/90 hover:bg-white/8"
+                          }`}
+                        >
+                          {item.icon}
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveMobileMenu(null);
+                    onToggleDrawingsPanel();
+                    setMobileToolsOpen(false);
+                  }}
+                  className={`flex h-10 w-10 items-center justify-center rounded-[6px] border shadow-[0_8px_18px_rgba(0,0,0,0.24)] transition-colors ${
+                    activeTool !== null
+                      ? "border-white/18 bg-[#3a4358] text-white"
+                      : "border-white/6 bg-[#2a3142]/95 text-white hover:bg-[#30394d]"
+                  }`}
+                >
                   <PenTool className="h-[18px] w-[18px]" />
                 </button>
 
-                {/* Timeframe Pill */}
-                <div className="relative flex justify-center w-full">
-                  <button onClick={() => setActiveMobileMenu(p => p === "time" ? null : "time")} className={`mx-1 flex h-10 min-w-[42px] items-center justify-center rounded-[6px] border px-2 py-1.5 text-[18px] font-black transition-colors shadow-[0_8px_18px_rgba(0,0,0,0.24)] ${activeMobileMenu === "time" ? "border-white/18 bg-[#3a4358] text-[#18d87d]" : "border-white/6 bg-[#2a3142]/95 text-[#18d87d] hover:bg-[#30394d]"}`}>
-                    {selectedTf}
-                  </button>
-                  {/* The Timeframe 3-column Grid Modal attached to the Timeframe button */}
-                  {activeMobileMenu === "time" && (
-                    <div className="absolute top-0 left-[54px] w-64 overflow-hidden rounded-xl border border-[#434d61] bg-[#2a3040] shadow-2xl" style={{ zIndex: 60 }}>
-                      <div className="grid grid-cols-3 gap-2 p-3">
-                        {MOBILE_TIMEFRAMES.map((tf) => (
-                          <button
-                            key={tf}
-                            onClick={() => { setSelectedTf(tf); setActiveMobileMenu(null); }}
-                            className={`py-2 rounded-md text-[13px] font-bold text-center transition-colors ${selectedTf === tf ? "bg-[#3f475a] text-white" : "text-[#7f8b99] hover:bg-[#32394c] hover:text-white"}`}
-                          >
-                            {tf}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveMobileMenu((current) => current === "time" ? null : "time")}
+                  className={`mx-1 flex h-10 min-w-[42px] items-center justify-center rounded-[6px] border px-2 py-1.5 text-[18px] font-black transition-colors shadow-[0_8px_18px_rgba(0,0,0,0.24)] ${
+                    activeMobileMenu === "time"
+                      ? "border-white/18 bg-[#3a4358] text-[#18d87d]"
+                      : "border-white/6 bg-[#2a3142]/95 text-[#18d87d] hover:bg-[#30394d]"
+                  }`}
+                >
+                  {selectedTf}
+                </button>
 
-                {/* Chart Type */}
-                <div className="relative flex justify-center w-full">
-                  <button onClick={() => setActiveMobileMenu(p => p === "type" ? null : "type")} className={`flex h-10 w-10 items-center justify-center rounded-[6px] border shadow-[0_8px_18px_rgba(0,0,0,0.24)] transition-colors ${activeMobileMenu === "type" ? "border-white/18 bg-[#3a4358] text-white" : "border-white/6 bg-[#2a3142]/95 text-white hover:bg-[#30394d]"}`}>
-                     <CandleIcon className="h-[18px] w-[18px]" />
-                  </button>
-                  {activeMobileMenu === "type" && (
-                    <div className="absolute top-0 left-[54px] w-48 rounded-xl border border-[#434d61] bg-[#2a3040] p-1.5 shadow-2xl" style={{ zIndex: 60 }}>
-                       <button onClick={() => { setChartType("candles"); setActiveMobileMenu(null); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-[13px] font-medium transition-colors ${chartType === "candles" ? "bg-white/10 text-white" : "text-gray-400 hover:bg-white/5"}`} >
-                          <CandleIcon className="w-4 h-4" /> Candles
-                       </button>
-                       <button onClick={() => { setChartType("heikinAshi"); setActiveMobileMenu(null); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-[13px] font-medium transition-colors ${chartType === "heikinAshi" ? "bg-white/10 text-white" : "text-gray-400 hover:bg-white/5"}`} >
-                          <CandleIcon className="w-4 h-4 text-trading-orange" /> Heikin-Ashi
-                       </button>
-                       <button onClick={() => { setChartType("line"); setActiveMobileMenu(null); }} className={`w-full flex items-center gap-3 px-3 py-2 rounded text-[13px] font-medium transition-colors ${chartType === "line" ? "bg-white/10 text-white" : "text-gray-400 hover:bg-white/5"}`} >
-                          <Activity className="w-4 h-4" /> Line
-                       </button>
-                    </div>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveMobileMenu((current) => current === "type" ? null : "type")}
+                  className={`flex h-10 w-10 items-center justify-center rounded-[6px] border shadow-[0_8px_18px_rgba(0,0,0,0.24)] transition-colors ${
+                    activeMobileMenu === "type"
+                      ? "border-white/18 bg-[#ffffff] text-[#212634]"
+                      : "border-white/6 bg-[#2a3142]/95 text-white hover:bg-[#30394d]"
+                  }`}
+                >
+                  <CandleIcon className="h-[18px] w-[18px]" />
+                </button>
 
-                {/* Indicators */}
-                <button onClick={() => { onToggleIndicatorsPanel(); }} className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-white/6 bg-[#2a3142]/95 text-white shadow-[0_8px_18px_rgba(0,0,0,0.24)] transition-colors hover:bg-[#30394d]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveMobileMenu(null);
+                    onToggleIndicatorsPanel();
+                    setMobileToolsOpen(false);
+                  }}
+                  className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-white/6 bg-[#2a3142]/95 text-white shadow-[0_8px_18px_rgba(0,0,0,0.24)] transition-colors hover:bg-[#30394d]"
+                >
                   <Compass className="h-[18px] w-[18px]" />
                 </button>
-             </div>
-          )}
-        </div>
+              </>
+            )}
 
-        {/* The Briefcase button (for Trade History) */}
-        <button 
-          onClick={() => {
-            if (onToggleMobileHistory) {
-              onToggleMobileHistory();
-            } else {
-              const tradePanel = document.getElementById("tour-trade-panel");
-              if (tradePanel) tradePanel.scrollIntoView({ behavior: 'smooth' });
-            }
-          }}
-          className="relative flex h-10 w-10 items-center justify-center rounded-[6px] border border-white/6 bg-[#2a3142]/95 text-white shadow-[0_8px_18px_rgba(0,0,0,0.24)] transition-colors hover:bg-[#30394d]"
-        >
-          <Briefcase className="w-5 h-5 text-white" />
-          <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#2962ff] text-white text-[10px] font-black flex items-center justify-center rounded-full border-[2.5px] border-[#1c1f2d]">
-            {/* TODO: Bind to actual active trades count if supplied, default 0 for UI parity */}
-            0
+            <button 
+              type="button"
+              onClick={() => {
+                setActiveMobileMenu(null);
+                setMobileToolsOpen(false);
+                if (onToggleMobileHistory) {
+                  onToggleMobileHistory();
+                } else {
+                  const tradePanel = document.getElementById("tour-trade-panel");
+                  if (tradePanel) tradePanel.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+              className="relative flex h-10 w-10 items-center justify-center rounded-[6px] border border-white/6 bg-[#2a3142]/95 text-white shadow-[0_8px_18px_rgba(0,0,0,0.24)] transition-colors hover:bg-[#30394d]"
+            >
+              <Briefcase className="w-5 h-5 text-white" />
+              <div className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full border-[2.5px] border-[#1c1f2d] bg-[#2962ff] text-[10px] font-black text-white">
+                {activeTrades.length}
+              </div>
+            </button>
           </div>
-        </button>
-      </div>
+        </div>
+      </>
       )}
 
       <div className="hidden sm:block">
         <ChartToolbar
           selectedTf={selectedTf}
-          onSelectTf={setSelectedTf}
+          onSelectTf={(tf) => setSelectedTf(tf)}
           activeInds={[]}
           onToggleInd={() => {}}
           chartType={chartType}
@@ -881,22 +1164,33 @@ const TradingChart = ({
       <div className="relative flex-1 min-h-[50%]" ref={mainRef}>
         {syncChart && syncSeries && (
            <>
-             <TradeSentimentRail asset={asset} />
-             <TradeSettlementOverlay />
-             <DrawingOverlay 
-               chart={syncChart} 
-               series={syncSeries} 
-               activeIndicators={activeIndicators}
-               indicatorDataMap={indicatorDataMap}
-             />
-             <LiveChartBeacon chart={syncChart} series={syncSeries} timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60} />
-             <TradeMarkersOverlay chart={syncChart} series={syncSeries} assetSymbol={asset.symbol} trades={activeTrades} />
+             {!mobileHistoryOpen && <TradeSettlementOverlay />}
+             {!mobileHistoryOpen && (
+               <DrawingOverlay 
+                 chart={syncChart} 
+                 series={syncSeries} 
+                 activeIndicators={activeIndicators}
+                 indicatorDataMap={indicatorDataMap}
+               />
+             )}
+             {!mobileHistoryOpen && !hasActiveAssetTrade && (
+               <LiveChartBeacon chart={syncChart} series={syncSeries} timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60} />
+             )}
+             {!mobileHistoryOpen && (
+               <TradeMarkersOverlay
+                 chart={syncChart}
+                 series={syncSeries}
+                 assetSymbol={asset.symbol}
+                 trades={activeTrades}
+                 timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60}
+               />
+             )}
            </>
         )}
       </div>
 
       {/* Overlay Indicators Legend on Main Chart (So users can delete non-oscillator indicators) */}
-      <div className="absolute left-4 top-[5.75rem] z-40 flex flex-col gap-1 pointer-events-none">
+      <div className={`absolute left-4 top-[5.75rem] z-40 flex flex-col gap-1 pointer-events-none ${mobileHistoryOpen ? "hidden" : ""}`}>
         {mainChartIndicators.map(ind => (
           <div key={ind.instanceId} className="flex items-center gap-2 bg-black/40 hover:bg-black/80 px-2 py-1 rounded transition-colors pointer-events-auto group">
             <span className="text-[11px] font-semibold" style={{ color: ind.params.color || THEME.text }}>
