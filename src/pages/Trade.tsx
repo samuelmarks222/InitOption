@@ -14,10 +14,7 @@ import { GuidedTour } from "@/components/tour/GuidedTour";
 import TradingFooter from "@/components/trading/TradingFooter";
 import { AssetSelectorModal, type AssetSelectorAsset } from "@/components/trading/AssetSelectorModal";
 import { DepositGuideReminder } from "@/components/trading/DepositGuideReminder";
-import IndicatorsPanel from "@/components/trading/indicators/IndicatorsPanel";
 import { DrawingsPanel } from "@/components/trading/drawings/DrawingsPanel";
-import { ActiveIndicator } from "@/components/trading/indicators/types";
-import { INDICATOR_REGISTRY } from "@/components/trading/indicators/config";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/useTrading";
 import { useDynamicAssets, type DynamicAsset } from "@/contexts/DynamicAssetContext";
@@ -256,10 +253,8 @@ const Trade = () => {
   useEffect(() => { if (activeTabId) localStorage.setItem("trading_active_tab", activeTabId); }, [activeTabId]);
 
   const [showAssetSelector, setShowAssetSelector] = useState(false);
-  const [showIndicatorsPanel, setShowIndicatorsPanel] = useState(false);
   const [showDrawingsPanel, setShowDrawingsPanel] = useState(false);
   const [showMobileHistory, setShowMobileHistory] = useState(false);
-  const [activeIndicators, setActiveIndicators] = useState<ActiveIndicator[]>([]);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal");
   const [showDeposit, setShowDeposit] = useState(false);
@@ -581,20 +576,6 @@ const Trade = () => {
     setShowRealAccountWelcome(false);
   };
 
-  const handleAddIndicator = (configId: string) => {
-    const reg = INDICATOR_REGISTRY.find(c => c.id === configId);
-    if (!reg) return;
-    const defaults: Record<string, unknown> = {};
-    reg.params.forEach(p => defaults[p.id] = p.default);
-    setActiveIndicators(prev => [...prev, { instanceId: crypto.randomUUID(), configId, name: reg.name, pane: reg.pane, params: defaults, visible: true }]);
-  };
-
-  const handleUpdateIndicator = (instanceId: string, updates: Partial<ActiveIndicator>) =>
-    setActiveIndicators(prev => prev.map(ind => ind.instanceId === instanceId ? { ...ind, ...updates } : ind));
-
-  const handleRemoveIndicator = (instanceId: string) =>
-    setActiveIndicators(prev => prev.filter(ind => ind.instanceId !== instanceId));
-
   const liveActiveTrades = useMemo(
     () => activeTrades.filter((trade) => !trade.tournament_participant_id),
     [activeTrades],
@@ -672,7 +653,6 @@ const Trade = () => {
     !mobileOverlay &&
     !selectedTournament &&
     !showAssetSelector &&
-    !showIndicatorsPanel &&
     !showDrawingsPanel &&
     !isProfileOpen &&
     !showDeposit &&
@@ -731,15 +711,9 @@ const Trade = () => {
                       onRemoveTab={handleRemoveTab} onAddAssetClick={() => setShowAssetSelector(true)}
                       activeTrades={visibleActiveTrades} livePrices={liveChartPrices} />
                   </div>
-                  <TradingChart asset={selectedAsset} onPriceUpdate={handleChartPriceUpdate} activeIndicators={activeIndicators} activeTrades={visibleActiveTrades}
-                    onToggleIndicatorsPanel={() => { setShowIndicatorsPanel(v => !v); setShowDrawingsPanel(false); }}
-                    onToggleDrawingsPanel={() => { setShowDrawingsPanel(v => !v); setShowIndicatorsPanel(false); }}
-                    onRemoveIndicator={handleRemoveIndicator} />
-                  {showIndicatorsPanel && (
-                    <IndicatorsPanel activeIndicators={activeIndicators} onAddIndicator={handleAddIndicator}
-                      onUpdateIndicator={handleUpdateIndicator} onRemoveIndicator={handleRemoveIndicator}
-                      onClose={() => setShowIndicatorsPanel(false)} />
-                  )}
+                  <TradingChart asset={selectedAsset} onPriceUpdate={handleChartPriceUpdate} activeTrades={visibleActiveTrades}
+                    onToggleDrawingsPanel={() => { setShowDrawingsPanel(v => !v); }}
+                    onRemoveIndicator={() => {}} />
                   {showDrawingsPanel && (
                     <div className="absolute top-0 left-[60px] bottom-0 z-50">
                       <DrawingsPanel onClose={() => setShowDrawingsPanel(false)} />
@@ -765,21 +739,13 @@ const Trade = () => {
                   </div>
 
                   <div className="flex-1 relative w-full flex flex-col min-h-0">
-                    <TradingChart asset={selectedAsset} onPriceUpdate={handleChartPriceUpdate} activeIndicators={activeIndicators} activeTrades={visibleActiveTrades}
-                      onToggleIndicatorsPanel={() => { setShowIndicatorsPanel(v => !v); setShowDrawingsPanel(false); }}
-                      onToggleDrawingsPanel={() => { setShowDrawingsPanel(v => !v); setShowIndicatorsPanel(false); }}
-                      onRemoveIndicator={handleRemoveIndicator}
+                    <TradingChart asset={selectedAsset} onPriceUpdate={handleChartPriceUpdate} activeTrades={visibleActiveTrades}
+                      onToggleDrawingsPanel={() => { setShowDrawingsPanel(v => !v); }}
+                      onRemoveIndicator={() => {}}
                       onToggleMobileHistory={() => setShowMobileHistory(true)}
                       mobileHistoryOpen={showMobileHistory} />
 
-                    {/* Mobile Indicator and Drawing Panels */}
-                    {showIndicatorsPanel && (
-                      <div className="absolute top-0 left-0 right-0 bottom-0 z-50 bg-[#1c1f2d]">
-                        <IndicatorsPanel activeIndicators={activeIndicators} onAddIndicator={handleAddIndicator}
-                          onUpdateIndicator={handleUpdateIndicator} onRemoveIndicator={handleRemoveIndicator}
-                          onClose={() => setShowIndicatorsPanel(false)} />
-                      </div>
-                    )}
+                    {/* Mobile Drawing Panel */}
                     {showDrawingsPanel && (
                       <div className="absolute top-0 left-0 right-0 bottom-0 z-50 bg-[#1c1f2d]">
                         <DrawingsPanel onClose={() => setShowDrawingsPanel(false)} />

@@ -1,7 +1,9 @@
 export {
+  DEFAULT_FAVICON_PATH,
   DEFAULT_META_DESCRIPTION,
   DEFAULT_PLATFORM_NAME,
   DEFAULT_PLATFORM_SETTINGS,
+  DEFAULT_SHARE_IMAGE_PATH,
   SITE_LOGO_STORAGE_KEY,
   SITE_PLATFORM_NAME_STORAGE_KEY,
   normalizePlatformSettings,
@@ -9,7 +11,7 @@ export {
   type PlatformSettingsRecord,
   type ResolvedSeoMetadata,
   type TwitterCardType,
-} from "./platformMetadataShared.ts";
+} from "./platformMetadataShared";
 
 import {
   DEFAULT_PLATFORM_NAME,
@@ -17,9 +19,11 @@ import {
   SITE_LOGO_STORAGE_KEY,
   SITE_PLATFORM_NAME_STORAGE_KEY,
   normalizePlatformSettings,
+  resolveBrandAssetUrl,
   resolveSeoMetadata,
   type PlatformSettingsRecord,
-} from "./platformMetadataShared.ts";
+} from "./platformMetadataShared";
+import { buildStructuredData, type RouteSeoContext } from "./routeSeo";
 
 const findMetaElement = (attributeName: "name" | "property", attributeValue: string) =>
   Array.from(document.head.querySelectorAll("meta")).find(
@@ -62,7 +66,34 @@ const upsertLinkElement = (rel: string, href: string, removeWhenEmpty = false) =
   if (!existing) document.head.appendChild(element);
 };
 
+const upsertManagedLinkElement = (
+  selector: string,
+  attributes: Record<string, string>,
+  removeWhenEmpty = false,
+) => {
+  const existing = document.head.querySelector(selector);
+  const href = attributes.href?.trim() ?? "";
+
+  if (!href) {
+    if (removeWhenEmpty && existing) {
+      existing.remove();
+    }
+    return;
+  }
+
+  const element = (existing as HTMLLinkElement | null) ?? document.createElement("link");
+
+  Object.entries(attributes).forEach(([key, value]) => {
+    if (value.trim()) {
+      element.setAttribute(key, value);
+    }
+  });
+
+  if (!existing) document.head.appendChild(element);
+};
+
 const CUSTOM_META_FLAG = "data-platform-custom-meta";
+const STRUCTURED_DATA_FLAG = "data-platform-structured-data";
 
 const createCustomElementFromDescriptor = (descriptor: Record<string, unknown>) => {
   const explicitTag = typeof descriptor.tag === "string" ? descriptor.tag.toLowerCase() : "";
@@ -119,6 +150,34 @@ const applyCustomMetaTags = (rawTags: string) => {
   });
 };
 
+const applyStructuredData = (
+  websiteContentRaw: unknown,
+  currentHref: string,
+  metaDescription: string,
+  platformName: string,
+  logoUrl: string | null,
+  seoContext?: RouteSeoContext | null,
+) => {
+  document.head
+    .querySelectorAll(`script[${STRUCTURED_DATA_FLAG}="true"]`)
+    .forEach((element) => element.remove());
+
+  buildStructuredData({
+    currentHref,
+    metaDescription,
+    platformName,
+    logoUrl: logoUrl ?? undefined,
+    seoContext,
+    websiteContentRaw,
+  }).forEach((entry) => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.setAttribute(STRUCTURED_DATA_FLAG, "true");
+    script.textContent = JSON.stringify(entry);
+    document.head.appendChild(script);
+  });
+};
+
 export const readStoredPlatformName = () => {
   if (typeof window === "undefined") return DEFAULT_PLATFORM_NAME;
   return (
@@ -128,17 +187,25 @@ export const readStoredPlatformName = () => {
   );
 };
 
-export const readStoredLogoUrl = () =>
-  typeof window !== "undefined" ? window.localStorage.getItem(SITE_LOGO_STORAGE_KEY) : null;
+export const readStoredLogoUrl = () => {
+  if (typeof window === "undefined") return null;
+
+  const storedLogoUrl = window.localStorage.getItem(SITE_LOGO_STORAGE_KEY) ?? "";
+  return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
+};
 
 export const applyPlatformSettingsToDocument = (
   rawSettings: Partial<PlatformSettingsRecord> | null | undefined,
   currentHref?: string,
+  seoContext?: RouteSeoContext | null,
 ) => {
   if (typeof document === "undefined") return null;
 
   const settings = normalizePlatformSettings(rawSettings);
-  const resolvedSeo = resolveSeoMetadata(settings, currentHref);
+  const resolvedSeo = resolveSeoMetadata(settings, currentHref, seoContext);
+  const resolvedCurrentHref =
+    currentHref ?? (typeof window !== "undefined" ? window.location.href : "https://example.com/");
+  const customThemeColorDefined = settings.custom_meta_tags.toLowerCase().includes("theme-color");
 
   document.title = resolvedSeo.siteTitle;
   document.documentElement.dataset.platformName = settings.platform_name;
@@ -147,10 +214,15 @@ export const applyPlatformSettingsToDocument = (
     window.localStorage.setItem(SITE_PLATFORM_NAME_STORAGE_KEY, settings.platform_name);
   }
 
-  if (settings.logo_url.trim()) {
-    document.documentElement.style.setProperty("--site-logo", `url(${settings.logo_url})`);
+  const resolvedLogoUrl = resolveBrandAssetUrl(
+    settings.logo_url.trim(),
+    resolvedCurrentHref,
+  );
+
+  if (resolvedLogoUrl) {
+    document.documentElement.style.setProperty("--site-logo", `url(${resolvedLogoUrl})`);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem(SITE_LOGO_STORAGE_KEY, settings.logo_url);
+      window.localStorage.setItem(SITE_LOGO_STORAGE_KEY, resolvedLogoUrl);
     }
   } else {
     document.documentElement.style.removeProperty("--site-logo");
@@ -159,25 +231,50 @@ export const applyPlatformSettingsToDocument = (
     }
   }
 
-  if (settings.favicon_url.trim()) {
-    upsertLinkElement("icon", `${settings.favicon_url}?v=${Date.now()}`);
-  }
+  upsertManagedLinkElement('link[rel="icon"]', {
+    rel: "icon",
+    type: "image/png",
+    href: resolvedSeo.faviconUrl,
+  });
+  upsertManagedLinkElement('link[rel="shortcut icon"]', {
+    rel: "shortcut icon",
+    href: resolvedSeo.faviconUrl,
+  });
+  upsertManagedLinkElement('link[rel="apple-touch-icon"]', {
+    rel: "apple-touch-icon",
+    href: resolvedSeo.faviconUrl,
+  });
 
   upsertMetaElement("name", "description", resolvedSeo.metaDescription);
   upsertMetaElement("name", "keywords", resolvedSeo.metaKeywords, true);
   upsertMetaElement("name", "robots", resolvedSeo.robotsDirective);
+  if (!customThemeColorDefined) {
+    upsertMetaElement("name", "theme-color", settings.chart_bg_color || DEFAULT_PLATFORM_SETTINGS.chart_bg_color);
+  }
   upsertMetaElement("property", "og:type", "website");
   upsertMetaElement("property", "og:title", resolvedSeo.ogTitle);
   upsertMetaElement("property", "og:description", resolvedSeo.ogDescription);
   upsertMetaElement("property", "og:image", resolvedSeo.ogImageUrl, true);
+  upsertMetaElement("property", "og:image:width", resolvedSeo.ogImageUrl ? "512" : "", true);
+  upsertMetaElement("property", "og:image:height", resolvedSeo.ogImageUrl ? "512" : "", true);
+  upsertMetaElement("property", "og:image:alt", resolvedSeo.ogImageUrl ? `${settings.platform_name || DEFAULT_PLATFORM_SETTINGS.platform_name} icon` : "", true);
   upsertMetaElement("property", "og:url", resolvedSeo.canonicalUrl);
   upsertMetaElement("property", "og:site_name", settings.platform_name);
   upsertMetaElement("name", "twitter:card", resolvedSeo.twitterCardType);
   upsertMetaElement("name", "twitter:title", resolvedSeo.twitterTitle);
   upsertMetaElement("name", "twitter:description", resolvedSeo.twitterDescription);
   upsertMetaElement("name", "twitter:image", resolvedSeo.twitterImageUrl, true);
+  upsertMetaElement("name", "twitter:image:alt", resolvedSeo.twitterImageUrl ? `${settings.platform_name || DEFAULT_PLATFORM_SETTINGS.platform_name} icon` : "", true);
   upsertLinkElement("canonical", resolvedSeo.canonicalUrl);
   applyCustomMetaTags(settings.custom_meta_tags);
+  applyStructuredData(
+    settings.website_content,
+    resolvedCurrentHref,
+    resolvedSeo.metaDescription,
+    settings.platform_name,
+    resolvedLogoUrl,
+    seoContext,
+  );
 
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("brand_updated"));

@@ -1,9 +1,13 @@
+import { getRouteSeoOverride, type RouteSeoContext } from "./routeSeo.js";
+
 export const SITE_LOGO_STORAGE_KEY = "site_logo";
 export const SITE_PLATFORM_NAME_STORAGE_KEY = "site_platform_name";
 
 export const DEFAULT_PLATFORM_NAME = "Init Option";
+export const DEFAULT_FAVICON_PATH = "/share-icon.png";
+export const DEFAULT_SHARE_IMAGE_PATH = "/share-icon.png";
 export const DEFAULT_META_DESCRIPTION =
-  "Init Option is an OTC trading platform with demo and live trading access across desktop and mobile.";
+  "Trade OTC markets with Init Option. Get a 70% welcome bonus, real-time charts, instant demo, and weekly tournaments. Start trading today.";
 
 export type TwitterCardType = "summary" | "summary_large_image";
 
@@ -47,6 +51,7 @@ export interface ResolvedSeoMetadata {
   siteTitle: string;
   metaDescription: string;
   metaKeywords: string;
+  faviconUrl: string;
   ogTitle: string;
   ogDescription: string;
   ogImageUrl: string;
@@ -182,40 +187,108 @@ const resolveUrl = (value: string, fallback: string) => {
   }
 };
 
+const resolveCanonicalUrl = (configuredValue: string, href: string) => {
+  const fallback = stripUrlForCanonical(href);
+  const resolvedValue = resolveUrl(configuredValue.trim(), href);
+
+  if (!resolvedValue) return fallback;
+
+  try {
+    const configuredUrl = new URL(resolvedValue);
+    const currentUrl = new URL(fallback);
+
+    if (configuredUrl.pathname === "/" || configuredUrl.pathname === "") {
+      return new URL(`${currentUrl.pathname}${currentUrl.search}`, configuredUrl.origin).toString();
+    }
+
+    return configuredUrl.toString();
+  } catch {
+    return resolvedValue || fallback;
+  }
+};
+
+const BLOCKED_BRAND_ASSET_PATTERN = /(lovable|placeholder\.svg)/i;
+
+const isBlockedBrandAsset = (value: string) => BLOCKED_BRAND_ASSET_PATTERN.test(value);
+
+export const resolveBrandAssetUrl = (value: string, fallback: string) => {
+  const trimmedValue = value.trim();
+  if (!trimmedValue || isBlockedBrandAsset(trimmedValue)) return "";
+
+  const resolvedValue = resolveUrl(trimmedValue, fallback);
+  return isBlockedBrandAsset(resolvedValue) ? "" : resolvedValue;
+};
+
 export const resolveSeoMetadata = (
   rawSettings: Partial<PlatformSettingsRecord> | null | undefined,
   currentHref?: string,
+  seoContext?: RouteSeoContext | null,
 ): ResolvedSeoMetadata => {
   const settings = normalizePlatformSettings(rawSettings);
   const href = getCurrentHref(currentHref);
+  const pathname = (() => {
+    try {
+      return new URL(href).pathname;
+    } catch {
+      return "/";
+    }
+  })();
   const canonicalFallback = stripUrlForCanonical(href);
   const siteTitle = settings.site_title.trim() || settings.platform_name.trim() || DEFAULT_PLATFORM_NAME;
   const metaDescription = settings.meta_description.trim() || DEFAULT_META_DESCRIPTION;
   const metaKeywords = settings.meta_keywords.trim();
+  const resolvedLogoUrl = resolveBrandAssetUrl(settings.logo_url.trim(), href);
+  const resolvedFaviconUrl = resolveBrandAssetUrl(settings.favicon_url.trim(), href);
+  const resolvedOgImageUrl = resolveBrandAssetUrl(settings.og_image_url.trim(), href);
+  const resolvedTwitterImageUrl = resolveBrandAssetUrl(settings.twitter_image_url.trim(), href);
+  const fallbackShareImageUrl = resolveUrl(DEFAULT_SHARE_IMAGE_PATH, href);
+  const faviconUrl = resolvedFaviconUrl || resolveUrl(DEFAULT_FAVICON_PATH, href);
   const ogTitle = settings.og_title.trim() || siteTitle;
   const ogDescription = settings.og_description.trim() || metaDescription;
-  const ogImageUrl = resolveUrl(settings.og_image_url.trim() || settings.logo_url.trim(), href);
+  const ogImageUrl = resolvedOgImageUrl || resolvedTwitterImageUrl || resolvedLogoUrl || fallbackShareImageUrl;
   const twitterTitle = settings.twitter_title.trim() || ogTitle;
   const twitterDescription = settings.twitter_description.trim() || ogDescription;
-  const twitterImageUrl = resolveUrl(
-    settings.twitter_image_url.trim() || settings.og_image_url.trim() || settings.logo_url.trim(),
-    href,
-  );
-  const canonicalUrl = resolveUrl(settings.canonical_url.trim(), href) || canonicalFallback;
+  const twitterImageUrl =
+    resolvedTwitterImageUrl || resolvedOgImageUrl || resolvedLogoUrl || fallbackShareImageUrl;
+  const canonicalUrl = resolveCanonicalUrl(settings.canonical_url.trim(), href) || canonicalFallback;
   const robotsDirective = settings.robots_directive.trim() || DEFAULT_PLATFORM_SETTINGS.robots_directive;
+  const routeOverride =
+    seoContext?.routeOverride ??
+    getRouteSeoOverride(pathname, settings.platform_name.trim() || DEFAULT_PLATFORM_NAME, settings.website_content);
+  const preferRouteTitle = pathname !== "/" || !settings.site_title.trim();
+  const preferRouteDescription = pathname !== "/" || !settings.meta_description.trim();
+  const preferRouteKeywords = pathname !== "/" || !settings.meta_keywords.trim();
+  const preferRouteOgTitle = pathname !== "/" || !settings.og_title.trim();
+  const preferRouteOgDescription = pathname !== "/" || !settings.og_description.trim();
+  const preferRouteTwitterTitle = pathname !== "/" || !settings.twitter_title.trim();
+  const preferRouteTwitterDescription = pathname !== "/" || !settings.twitter_description.trim();
+  const resolvedSiteTitle = preferRouteTitle ? routeOverride?.siteTitle || siteTitle : siteTitle;
+  const resolvedMetaDescription = preferRouteDescription
+    ? routeOverride?.metaDescription || metaDescription
+    : metaDescription;
+  const resolvedMetaKeywords = preferRouteKeywords ? routeOverride?.metaKeywords || metaKeywords : metaKeywords;
+  const resolvedOgTitle = preferRouteOgTitle ? routeOverride?.siteTitle || ogTitle : ogTitle;
+  const resolvedOgDescription = preferRouteOgDescription
+    ? routeOverride?.metaDescription || ogDescription
+    : ogDescription;
+  const resolvedTwitterTitle = preferRouteTwitterTitle ? routeOverride?.siteTitle || twitterTitle : twitterTitle;
+  const resolvedTwitterDescription = preferRouteTwitterDescription
+    ? routeOverride?.metaDescription || twitterDescription
+    : twitterDescription;
 
   return {
-    siteTitle,
-    metaDescription,
-    metaKeywords,
-    ogTitle,
-    ogDescription,
+    siteTitle: resolvedSiteTitle,
+    metaDescription: resolvedMetaDescription,
+    metaKeywords: resolvedMetaKeywords,
+    faviconUrl,
+    ogTitle: resolvedOgTitle,
+    ogDescription: resolvedOgDescription,
     ogImageUrl,
     twitterCardType: settings.twitter_card_type,
-    twitterTitle,
-    twitterDescription,
+    twitterTitle: resolvedTwitterTitle,
+    twitterDescription: resolvedTwitterDescription,
     twitterImageUrl,
     canonicalUrl,
-    robotsDirective,
+    robotsDirective: routeOverride?.robotsDirective || robotsDirective,
   };
 };

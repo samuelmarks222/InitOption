@@ -1,4 +1,4 @@
-import { buildSeoPayload } from "./_lib/platformSettings";
+import { buildSeoPayload } from "./_lib/platformSettings.js";
 
 type ApiRequest = {
   headers?: Record<string, string | string[] | undefined>;

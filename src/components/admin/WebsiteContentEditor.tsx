@@ -13,6 +13,36 @@ interface WebsiteContentEditorProps {
   onChange: (content: WebsiteContent) => void;
 }
 
+type EditablePublicPageKey = keyof WebsiteContent["publicPages"];
+type PublicPageContent = WebsiteContent["publicPages"][EditablePublicPageKey];
+type PublicPageField = keyof Omit<PublicPageContent, "sections" | "faqItems">;
+
+const PUBLIC_PAGE_EDITOR_CONFIG: Array<{
+  key: EditablePublicPageKey;
+  label: string;
+  subtitle: string;
+  path: string;
+}> = [
+  {
+    key: "about",
+    label: "About Page",
+    subtitle: "Controls the About page heading, body copy, and SEO metadata.",
+    path: "/about",
+  },
+  {
+    key: "howItWorks",
+    label: "How It Works Page",
+    subtitle: "Controls the trading guide flow and SEO copy for new users.",
+    path: "/how-it-works",
+  },
+  {
+    key: "faq",
+    label: "FAQ Page",
+    subtitle: "Controls the public FAQ introduction, questions, and search metadata.",
+    path: "/faq",
+  },
+];
+
 export const WebsiteContentEditor = ({ content, onChange }: WebsiteContentEditorProps) => {
   const updateContent = (nextContent: WebsiteContent) => onChange(nextContent);
 
@@ -100,6 +130,100 @@ export const WebsiteContentEditor = ({ content, onChange }: WebsiteContentEditor
       },
     });
 
+  const updatePublicPageField = (pageKey: EditablePublicPageKey, field: PublicPageField, value: string) =>
+    updateContent({
+      ...content,
+      publicPages: {
+        ...content.publicPages,
+        [pageKey]: {
+          ...content.publicPages[pageKey],
+          [field]: value,
+        },
+      },
+    });
+
+  const updatePublicPageSectionTitle = (pageKey: EditablePublicPageKey, sectionIndex: number, value: string) =>
+    updateContent({
+      ...content,
+      publicPages: {
+        ...content.publicPages,
+        [pageKey]: {
+          ...content.publicPages[pageKey],
+          sections: content.publicPages[pageKey].sections.map((section, index) =>
+            index === sectionIndex ? { ...section, title: value } : section,
+          ),
+        },
+      },
+    });
+
+  const updatePublicPageParagraph = (
+    pageKey: EditablePublicPageKey,
+    sectionIndex: number,
+    paragraphIndex: number,
+    value: string,
+  ) =>
+    updateContent({
+      ...content,
+      publicPages: {
+        ...content.publicPages,
+        [pageKey]: {
+          ...content.publicPages[pageKey],
+          sections: content.publicPages[pageKey].sections.map((section, index) =>
+            index === sectionIndex
+              ? {
+                  ...section,
+                  paragraphs: section.paragraphs.map((paragraph, itemIndex) =>
+                    itemIndex === paragraphIndex ? value : paragraph,
+                  ),
+                }
+              : section,
+          ),
+        },
+      },
+    });
+
+  const updatePublicPageBullet = (
+    pageKey: EditablePublicPageKey,
+    sectionIndex: number,
+    bulletIndex: number,
+    value: string,
+  ) =>
+    updateContent({
+      ...content,
+      publicPages: {
+        ...content.publicPages,
+        [pageKey]: {
+          ...content.publicPages[pageKey],
+          sections: content.publicPages[pageKey].sections.map((section, index) =>
+            index === sectionIndex
+              ? {
+                  ...section,
+                  bullets: section.bullets.map((bullet, itemIndex) => (itemIndex === bulletIndex ? value : bullet)),
+                }
+              : section,
+          ),
+        },
+      },
+    });
+
+  const updatePublicPageFaqField = (
+    faqIndex: number,
+    field: keyof WebsiteContent["publicPages"]["faq"]["faqItems"][number],
+    value: string,
+  ) =>
+    updateContent({
+      ...content,
+      publicPages: {
+        ...content.publicPages,
+        faq: {
+          ...content.publicPages.faq,
+          faqItems: content.publicPages.faq.faqItems.map((item, index) =>
+            index === faqIndex ? { ...item, [field]: value } : item,
+          ),
+        },
+      },
+    });
+
   return (
     <div className="space-y-6">
       <div className={CARD_CLASS}>
@@ -110,11 +234,11 @@ export const WebsiteContentEditor = ({ content, onChange }: WebsiteContentEditor
               Website Content
             </h3>
             <p className="mt-1 text-sm text-gray-400">
-              Replace the landing-page copy with your own text and keep it editable from the admin panel.
+              Replace the landing-page and public SEO copy with your own text and keep it editable from the admin panel.
             </p>
           </div>
           <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs text-blue-300">
-            These fields control the public homepage content.
+            These fields control the homepage plus the main public SEO pages.
           </div>
         </div>
 
@@ -519,6 +643,203 @@ export const WebsiteContentEditor = ({ content, onChange }: WebsiteContentEditor
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className={CARD_CLASS}>
+        <div className="flex flex-col gap-3 border-b border-white/5 pb-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-white">Public SEO Pages</h3>
+            <p className="mt-1 text-sm text-gray-400">
+              Edit the About, How It Works, and FAQ pages together with their meta title, description, and keyword
+              fields.
+            </p>
+          </div>
+          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
+            Search-focused public content
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-6">
+          {PUBLIC_PAGE_EDITOR_CONFIG.map((pageConfig) => {
+            const page = content.publicPages[pageConfig.key];
+
+            return (
+              <div key={pageConfig.key} className="rounded-2xl border border-white/5 bg-[#0b0e14] p-5">
+                <div className="flex flex-col gap-2 border-b border-white/5 pb-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h4 className="text-base font-bold text-white">{pageConfig.label}</h4>
+                    <p className="mt-1 text-sm text-slate-400">{pageConfig.subtitle}</p>
+                  </div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-slate-500">{pageConfig.path}</div>
+                </div>
+
+                <div className="mt-5 grid gap-6 xl:grid-cols-2">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-400">Eyebrow</label>
+                      <input
+                        type="text"
+                        value={page.eyebrow}
+                        onChange={(event) => updatePublicPageField(pageConfig.key, "eyebrow", event.target.value)}
+                        className={INPUT_CLASS}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-400">Page Title</label>
+                      <Textarea
+                        value={page.title}
+                        onChange={(event) => updatePublicPageField(pageConfig.key, "title", event.target.value)}
+                        className={TEXTAREA_CLASS}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-400">
+                        Page Description
+                      </label>
+                      <Textarea
+                        value={page.description}
+                        onChange={(event) => updatePublicPageField(pageConfig.key, "description", event.target.value)}
+                        className={TEXTAREA_CLASS}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-400">SEO Title</label>
+                      <Textarea
+                        value={page.seoTitle}
+                        onChange={(event) => updatePublicPageField(pageConfig.key, "seoTitle", event.target.value)}
+                        className={TEXTAREA_CLASS}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-400">
+                        SEO Description
+                      </label>
+                      <Textarea
+                        value={page.seoDescription}
+                        onChange={(event) =>
+                          updatePublicPageField(pageConfig.key, "seoDescription", event.target.value)
+                        }
+                        className={TEXTAREA_CLASS}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-400">Keywords</label>
+                      <Textarea
+                        value={page.keywords}
+                        onChange={(event) => updatePublicPageField(pageConfig.key, "keywords", event.target.value)}
+                        className={TEXTAREA_CLASS}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-4 xl:grid-cols-2">
+                  {page.sections.map((section, sectionIndex) => (
+                    <div key={`${pageConfig.key}-section-${sectionIndex}`} className="rounded-xl border border-white/5 bg-[#11161d] p-4">
+                      <div className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                        Section {sectionIndex + 1}
+                      </div>
+                      <div className="mt-4 space-y-4">
+                        <div>
+                          <label className="mb-2 block text-xs font-medium text-gray-500">Section Title</label>
+                          <input
+                            type="text"
+                            value={section.title}
+                            onChange={(event) =>
+                              updatePublicPageSectionTitle(pageConfig.key, sectionIndex, event.target.value)
+                            }
+                            className={INPUT_CLASS}
+                          />
+                        </div>
+
+                        {section.paragraphs.map((paragraph, paragraphIndex) => (
+                          <div key={`${pageConfig.key}-section-${sectionIndex}-paragraph-${paragraphIndex}`}>
+                            <label className="mb-2 block text-xs font-medium text-gray-500">
+                              Paragraph {paragraphIndex + 1}
+                            </label>
+                            <Textarea
+                              value={paragraph}
+                              onChange={(event) =>
+                                updatePublicPageParagraph(
+                                  pageConfig.key,
+                                  sectionIndex,
+                                  paragraphIndex,
+                                  event.target.value,
+                                )
+                              }
+                              className={TEXTAREA_CLASS}
+                            />
+                          </div>
+                        ))}
+
+                        {section.bullets.length ? (
+                          <div className="space-y-4 rounded-xl border border-white/5 bg-[#0b0e14] p-4">
+                            <div className="text-xs font-bold uppercase tracking-wider text-gray-400">Bullet Points</div>
+                            {section.bullets.map((bullet, bulletIndex) => (
+                              <div key={`${pageConfig.key}-section-${sectionIndex}-bullet-${bulletIndex}`}>
+                                <label className="mb-2 block text-xs font-medium text-gray-500">
+                                  Bullet {bulletIndex + 1}
+                                </label>
+                                <input
+                                  type="text"
+                                  value={bullet}
+                                  onChange={(event) =>
+                                    updatePublicPageBullet(
+                                      pageConfig.key,
+                                      sectionIndex,
+                                      bulletIndex,
+                                      event.target.value,
+                                    )
+                                  }
+                                  className={INPUT_CLASS}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {pageConfig.key === "faq" ? (
+                  <div className="mt-6">
+                    <div className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-400">FAQ Items</div>
+                    <div className="grid gap-4 xl:grid-cols-2">
+                      {page.faqItems.map((item, index) => (
+                        <div key={`public-faq-${index}`} className="rounded-xl border border-white/5 bg-[#11161d] p-4">
+                          <div className="text-xs font-bold uppercase tracking-wider text-gray-400">Question {index + 1}</div>
+                          <div className="mt-4 space-y-4">
+                            <div>
+                              <label className="mb-2 block text-xs font-medium text-gray-500">Question</label>
+                              <input
+                                type="text"
+                                value={item.question}
+                                onChange={(event) => updatePublicPageFaqField(index, "question", event.target.value)}
+                                className={INPUT_CLASS}
+                              />
+                            </div>
+                            <div>
+                              <label className="mb-2 block text-xs font-medium text-gray-500">Answer</label>
+                              <Textarea
+                                value={item.answer}
+                                onChange={(event) => updatePublicPageFaqField(index, "answer", event.target.value)}
+                                className={TEXTAREA_CLASS}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -1,9 +1,12 @@
 import {
+  DEFAULT_FAVICON_PATH,
   DEFAULT_PLATFORM_NAME,
+  DEFAULT_SHARE_IMAGE_PATH,
   normalizePlatformSettings,
   resolveSeoMetadata,
   type PlatformSettingsRecord,
-} from "./platformMetadataShared.ts";
+} from "./platformMetadataShared.js";
+import { buildStructuredData, type RouteSeoContext } from "./routeSeo.js";
 
 export const PLATFORM_METADATA_START_MARKER = '<meta name="platform-metadata-start" content="true">';
 export const PLATFORM_METADATA_END_MARKER = '<meta name="platform-metadata-end" content="true">';
@@ -15,6 +18,9 @@ const escapeHtml = (value: string) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+
+const renderStructuredDataScript = (payload: Record<string, unknown>) =>
+  `<script type="application/ld+json">${JSON.stringify(payload).replaceAll("</script>", "<\\/script>")}</script>`;
 
 const renderVoidTag = (tagName: "meta" | "link", attributes: Record<string, string | undefined>) => {
   const serializedAttributes = Object.entries(attributes)
@@ -64,12 +70,23 @@ const renderCustomMetaTags = (rawTags: string) => {
 export const renderPlatformHeadMarkup = (
   rawSettings: Partial<PlatformSettingsRecord> | null | undefined,
   currentHref?: string,
+  seoContext?: RouteSeoContext | null,
 ) => {
   const settings = normalizePlatformSettings(rawSettings);
-  const resolvedSeo = resolveSeoMetadata(settings, currentHref);
+  const resolvedSeo = resolveSeoMetadata(settings, currentHref, seoContext);
   const platformName = settings.platform_name.trim() || DEFAULT_PLATFORM_NAME;
-  const faviconUrl = settings.favicon_url.trim() || "/favicon.ico";
+  const faviconUrl = resolvedSeo.faviconUrl || settings.favicon_url.trim() || DEFAULT_FAVICON_PATH;
+  const shareImageUrl = resolvedSeo.ogImageUrl || resolvedSeo.twitterImageUrl || DEFAULT_SHARE_IMAGE_PATH;
   const customMetaTags = renderCustomMetaTags(settings.custom_meta_tags);
+  const customThemeColorDefined = settings.custom_meta_tags.toLowerCase().includes("theme-color");
+  const structuredData = buildStructuredData({
+    currentHref: currentHref || "https://example.com/",
+    metaDescription: resolvedSeo.metaDescription,
+    platformName,
+    logoUrl: shareImageUrl,
+    seoContext,
+    websiteContentRaw: settings.website_content,
+  });
 
   const tags = [
     `<title>${escapeHtml(resolvedSeo.siteTitle)}</title>`,
@@ -85,24 +102,39 @@ export const renderPlatformHeadMarkup = (
     renderVoidTag("meta", { name: "twitter:title", content: resolvedSeo.twitterTitle }),
     renderVoidTag("meta", { name: "twitter:description", content: resolvedSeo.twitterDescription }),
     renderVoidTag("link", { rel: "canonical", href: resolvedSeo.canonicalUrl }),
-    renderVoidTag("link", { rel: "icon", type: "image/x-icon", href: faviconUrl }),
+    renderVoidTag("link", { rel: "icon", type: "image/png", href: faviconUrl }),
+    renderVoidTag("link", { rel: "shortcut icon", href: faviconUrl }),
+    renderVoidTag("link", { rel: "apple-touch-icon", href: faviconUrl }),
+    renderVoidTag("link", { rel: "manifest", href: "/manifest.json" }),
   ];
+
+  if (!customThemeColorDefined) {
+    tags.splice(4, 0, renderVoidTag("meta", { name: "theme-color", content: settings.chart_bg_color || "#0E1217" }));
+  }
 
   if (resolvedSeo.metaKeywords.trim()) {
     tags.splice(2, 0, renderVoidTag("meta", { name: "keywords", content: resolvedSeo.metaKeywords }));
   }
 
-  if (resolvedSeo.ogImageUrl.trim()) {
-    tags.push(renderVoidTag("meta", { property: "og:image", content: resolvedSeo.ogImageUrl }));
+  if (shareImageUrl.trim()) {
+    tags.push(renderVoidTag("meta", { property: "og:image", content: shareImageUrl }));
+    tags.push(renderVoidTag("meta", { property: "og:image:width", content: "512" }));
+    tags.push(renderVoidTag("meta", { property: "og:image:height", content: "512" }));
+    tags.push(renderVoidTag("meta", { property: "og:image:alt", content: `${platformName} icon` }));
   }
 
-  if (resolvedSeo.twitterImageUrl.trim()) {
-    tags.push(renderVoidTag("meta", { name: "twitter:image", content: resolvedSeo.twitterImageUrl }));
+  if ((resolvedSeo.twitterImageUrl || shareImageUrl).trim()) {
+    tags.push(renderVoidTag("meta", { name: "twitter:image", content: resolvedSeo.twitterImageUrl || shareImageUrl }));
+    tags.push(renderVoidTag("meta", { name: "twitter:image:alt", content: `${platformName} icon` }));
   }
 
   if (customMetaTags) {
     tags.push(customMetaTags);
   }
+
+  structuredData.forEach((entry) => {
+    tags.push(renderStructuredDataScript(entry));
+  });
 
   return tags.join("\n    ");
 };
@@ -111,8 +143,9 @@ export const injectPlatformMetadataIntoHtml = (
   htmlTemplate: string,
   rawSettings: Partial<PlatformSettingsRecord> | null | undefined,
   currentHref?: string,
+  seoContext?: RouteSeoContext | null,
 ) => {
-  const headMarkup = renderPlatformHeadMarkup(rawSettings, currentHref);
+  const headMarkup = renderPlatformHeadMarkup(rawSettings, currentHref, seoContext);
   const markerPattern =
     /<meta name="platform-metadata-start" content="true"\s*\/?>[\s\S]*?<meta name="platform-metadata-end" content="true"\s*\/?>/i;
   const replacement = `${PLATFORM_METADATA_START_MARKER}

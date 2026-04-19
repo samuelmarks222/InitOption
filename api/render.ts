@@ -1,4 +1,4 @@
-import { renderSeoHtml } from "./_lib/platformSettings";
+import { renderSeoHtml } from "./_lib/platformSettings.js";
 
 type ApiRequest = {
   headers?: Record<string, string | string[] | undefined>;

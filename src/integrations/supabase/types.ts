@@ -675,6 +675,7 @@ export type Database = {
           title: string
           description: string | null
           entry_fee: number
+          rebuy_cost: number
           prize_pool: number
           starting_balance: number
           start_date: string
@@ -688,6 +689,7 @@ export type Database = {
           title: string
           description?: string | null
           entry_fee?: number
+          rebuy_cost?: number
           prize_pool?: number
           starting_balance?: number
           start_date: string
@@ -701,6 +703,7 @@ export type Database = {
           title?: string
           description?: string | null
           entry_fee?: number
+          rebuy_cost?: number
           prize_pool?: number
           starting_balance?: number
           start_date?: string

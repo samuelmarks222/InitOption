@@ -1,6 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -24,6 +24,9 @@ import Withdraw from "./pages/Withdraw";
 import Settings from "./pages/Settings";
 import NotificationsPage from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
+import PublicInfoPage from "./pages/PublicInfoPage";
+import PublicTournamentDetailPage from "./pages/PublicTournamentDetailPage";
+import PublicTournamentsPage from "./pages/PublicTournamentsPage";
 
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -43,17 +46,25 @@ import Analytics from "./pages/admin/Analytics";
 import TournamentsAdmin from "./pages/admin/TournamentsAdmin";
 import SupportInbox from "./pages/admin/SupportInbox";
 import { applyPlatformSettingsToDocument, DEFAULT_PLATFORM_SETTINGS, type PlatformSettingsRecord } from "@/lib/platformMetadata";
+import RouteSeoManager from "@/components/seo/RouteSeoManager";
 
 const queryClient = new QueryClient();
 
 const App = () => {
+  const [platformSettings, setPlatformSettings] = useState<Partial<PlatformSettingsRecord> | null>(
+    DEFAULT_PLATFORM_SETTINGS,
+  );
+
   useEffect(() => {
     async function loadPlatformPresentation() {
       try {
         const { data } = await supabase.from("platform_settings").select("*").limit(1).maybeSingle();
-        applyPlatformSettingsToDocument((data as Partial<PlatformSettingsRecord> | null) ?? DEFAULT_PLATFORM_SETTINGS);
+        const resolvedSettings = (data as Partial<PlatformSettingsRecord> | null) ?? DEFAULT_PLATFORM_SETTINGS;
+        setPlatformSettings(resolvedSettings);
+        applyPlatformSettingsToDocument(resolvedSettings);
       } catch (e) {
         console.error("Failed to load platform presentation", e);
+        setPlatformSettings(DEFAULT_PLATFORM_SETTINGS);
         applyPlatformSettingsToDocument(DEFAULT_PLATFORM_SETTINGS);
       }
     }
@@ -67,6 +78,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <RouteSeoManager platformSettings={platformSettings} />
           <AuthProvider>
             <CurrencyProvider>
               <DrawingProvider>
@@ -76,6 +88,18 @@ const App = () => {
                       <TradingProvider>
                         <Routes>
                         <Route path="/" element={<Index />} />
+                        <Route path="/about" element={<PublicInfoPage pageKey="about" />} />
+                        <Route path="/how-it-works" element={<PublicInfoPage pageKey="how-it-works" />} />
+                        <Route path="/trading-guide" element={<PublicInfoPage pageKey="trading-guide" />} />
+                        <Route path="/faq" element={<PublicInfoPage pageKey="faq" />} />
+                        <Route path="/terms" element={<PublicInfoPage pageKey="terms" />} />
+                        <Route path="/privacy" element={<PublicInfoPage pageKey="privacy" />} />
+                        <Route path="/risk-disclaimer" element={<PublicInfoPage pageKey="risk-disclaimer" />} />
+                        <Route path="/tournaments" element={<PublicTournamentsPage platformSettings={platformSettings} />} />
+                        <Route
+                          path="/tournaments/:slug"
+                          element={<PublicTournamentDetailPage platformSettings={platformSettings} />}
+                        />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

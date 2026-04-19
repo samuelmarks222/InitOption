@@ -1,12 +1,21 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   DEFAULT_PLATFORM_SETTINGS,
   normalizePlatformSettings,
   resolveSeoMetadata,
   type PlatformSettingsRecord,
-} from "../../src/lib/platformMetadataShared.ts";
-import { injectPlatformMetadataIntoHtml } from "../../src/lib/serverPlatformMetadata.ts";
+} from "../../src/lib/platformMetadataShared.js";
+import {
+  buildTournamentDetailSeo,
+  buildTournamentListingSeo,
+  buildTournamentNotFoundSeo,
+  toTournamentStructuredData,
+} from "../../src/lib/publicTournaments.js";
+import type { RouteSeoContext } from "../../src/lib/routeSeo.js";
+import { injectPlatformMetadataIntoHtml } from "../../src/lib/serverPlatformMetadata.js";
+import { fetchPublicTournaments, findPublicTournamentBySlug } from "./publicTournaments.js";
 
 type RequestHeaderValue = string | string[] | undefined;
 
@@ -15,6 +24,10 @@ type ApiRequestLike = {
   method?: string;
   query?: Record<string, string | string[] | undefined>;
 };
+
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
+const SOURCE_BOOTSTRAP_PATTERNS = ["/src/boot.ts", "/src/main.tsx"];
 
 const getStringFromValue = (value: string | string[] | undefined) => {
   if (Array.isArray(value)) return value[0] ?? "";
@@ -30,7 +43,18 @@ const getHeaderValue = (headers: Record<string, RequestHeaderValue> | undefined,
   return matchedKey ? getStringFromValue(headers[matchedKey]) : "";
 };
 
-const getSupabaseConfig = () => {
+const getForwardedHost = (request: ApiRequestLike) =>
+  getHeaderValue(request.headers, "x-forwarded-host") || getHeaderValue(request.headers, "host") || "localhost";
+
+export const isLocalHostRequest = (request: ApiRequestLike) => {
+  const host = getForwardedHost(request).split(":")[0].trim().toLowerCase();
+  return LOCAL_HOSTS.has(host) || host.endsWith(".local");
+};
+
+export const hasSourceBootstrap = (htmlTemplate: string) =>
+  SOURCE_BOOTSTRAP_PATTERNS.some((pattern) => htmlTemplate.includes(pattern));
+
+export const getSupabaseConfig = () => {
   const url =
     process.env.SUPABASE_URL ||
     process.env.VITE_SUPABASE_URL ||
@@ -79,8 +103,7 @@ export const fetchPlatformSettings = async () => {
 
 export const buildRequestUrl = (request: ApiRequestLike) => {
   const forwardedProto = getHeaderValue(request.headers, "x-forwarded-proto") || "https";
-  const forwardedHost =
-    getHeaderValue(request.headers, "x-forwarded-host") || getHeaderValue(request.headers, "host") || "localhost";
+  const forwardedHost = getForwardedHost(request);
   const pathnameParam = getStringFromValue(request.query?.__pathname);
   const pathname = pathnameParam ? `/${pathnameParam.replace(/^\/+/, "")}` : "/";
   const url = new URL(pathname, `${forwardedProto}://${forwardedHost}`);
@@ -104,38 +127,121 @@ export const buildRequestUrl = (request: ApiRequestLike) => {
   return url.toString();
 };
 
-let cachedHtmlTemplate: string | null = null;
+let cachedBuiltHtmlTemplate: string | null = null;
+let cachedLocalHtmlTemplate: string | null = null;
 
-export const loadHtmlTemplate = async () => {
-  if (cachedHtmlTemplate) return cachedHtmlTemplate;
+const getHtmlTemplateCandidatePaths = () => [
+  path.join(process.cwd(), "dist", "index.html"),
+  path.resolve(moduleDir, "../../dist/index.html"),
+  path.join(process.cwd(), ".vercel", "output", "static", "index.html"),
+  path.resolve(moduleDir, "../../.vercel/output/static/index.html"),
+  path.join(process.cwd(), "index.html"),
+];
 
-  const candidatePaths = [path.join(process.cwd(), "dist", "index.html"), path.join(process.cwd(), "index.html")];
+export const loadHtmlTemplate = async (request?: ApiRequestLike) => {
+  const allowSourceTemplate = request ? isLocalHostRequest(request) : process.env.NODE_ENV !== "production";
+  const cachedTemplate = allowSourceTemplate ? cachedLocalHtmlTemplate : cachedBuiltHtmlTemplate;
+
+  if (cachedTemplate) {
+    return cachedTemplate;
+  }
+
+  const candidatePaths = getHtmlTemplateCandidatePaths();
 
   for (const candidatePath of candidatePaths) {
     try {
-      cachedHtmlTemplate = await readFile(candidatePath, "utf8");
-      return cachedHtmlTemplate;
+      const htmlTemplate = await readFile(candidatePath, "utf8");
+
+      if (!allowSourceTemplate && hasSourceBootstrap(htmlTemplate)) {
+        continue;
+      }
+
+      if (hasSourceBootstrap(htmlTemplate)) {
+        cachedLocalHtmlTemplate = htmlTemplate;
+      } else {
+        cachedBuiltHtmlTemplate = htmlTemplate;
+      }
+
+      return htmlTemplate;
     } catch {
       // Try the next candidate path.
     }
+  }
+
+  if (!allowSourceTemplate) {
+    throw new Error("Unable to locate a production-safe HTML template for SEO injection.");
   }
 
   throw new Error("Unable to locate an HTML template for SEO injection.");
 };
 
 export const renderSeoHtml = async (request: ApiRequestLike) => {
-  const [htmlTemplate, platformSettings] = await Promise.all([loadHtmlTemplate(), fetchPlatformSettings()]);
   const currentHref = buildRequestUrl(request);
+  const [htmlTemplate, platformSettings] = await Promise.all([loadHtmlTemplate(request), fetchPlatformSettings()]);
+  const seoContext = await resolveDynamicSeoContext(currentHref, platformSettings.platform_name);
 
-  return injectPlatformMetadataIntoHtml(htmlTemplate, platformSettings, currentHref);
+  return injectPlatformMetadataIntoHtml(htmlTemplate, platformSettings, currentHref, seoContext);
 };
 
 export const buildSeoPayload = async (request: ApiRequestLike) => {
   const settings = await fetchPlatformSettings();
   const currentHref = buildRequestUrl(request);
+  const seoContext = await resolveDynamicSeoContext(currentHref, settings.platform_name);
 
   return {
-    resolved: resolveSeoMetadata(settings, currentHref),
+    resolved: resolveSeoMetadata(settings, currentHref, seoContext),
     settings,
+  };
+};
+
+const resolveDynamicSeoContext = async (
+  currentHref: string,
+  platformName: string,
+): Promise<RouteSeoContext | null> => {
+  let url: URL;
+
+  try {
+    url = new URL(currentHref);
+  } catch {
+    return null;
+  }
+
+  const pathname = url.pathname.replace(/\/+$/, "") || "/";
+
+  if (pathname === "/tournaments") {
+    const tournaments = await fetchPublicTournaments();
+    return {
+      routeOverride: buildTournamentListingSeo(platformName),
+      tournaments: tournaments
+        .filter((tournament) => tournament.status !== "cancelled")
+        .map((tournament) => toTournamentStructuredData(tournament)),
+    };
+  }
+
+  if (!pathname.startsWith("/tournaments/")) {
+    return null;
+  }
+
+  const slug = pathname.slice("/tournaments/".length).trim();
+  if (!slug) {
+    const tournaments = await fetchPublicTournaments();
+    return {
+      routeOverride: buildTournamentListingSeo(platformName),
+      tournaments: tournaments
+        .filter((tournament) => tournament.status !== "cancelled")
+        .map((tournament) => toTournamentStructuredData(tournament)),
+    };
+  }
+
+  const tournament = await findPublicTournamentBySlug(slug);
+  if (!tournament) {
+    return {
+      routeOverride: buildTournamentNotFoundSeo(platformName),
+    };
+  }
+
+  return {
+    routeOverride: buildTournamentDetailSeo(tournament, platformName),
+    tournament: toTournamentStructuredData(tournament),
   };
 };
