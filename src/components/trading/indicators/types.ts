@@ -94,7 +94,7 @@ export const INDICATOR_DEFINITIONS: Record<IndicatorKey, IndicatorDefinition> = 
     paramsSchema: [
       createNumberParam("period", "Period", 20, 1, 500, 1),
       createNumberParam("lineWidth", "Line Width", 2, 1, 4, 1),
-      createColorParam("color", "Color", "#facc15"),
+      createColorParam("color", "Color", "#f59e0b"),
     ],
   },
   ema: {
@@ -105,7 +105,7 @@ export const INDICATOR_DEFINITIONS: Record<IndicatorKey, IndicatorDefinition> = 
     paramsSchema: [
       createNumberParam("period", "Period", 20, 1, 500, 1),
       createNumberParam("lineWidth", "Line Width", 2, 1, 4, 1),
-      createColorParam("color", "Color", "#22d3ee"),
+      createColorParam("color", "Color", "#06b6d4"),
     ],
   },
   rsi: {
@@ -147,10 +147,11 @@ export const INDICATOR_DEFINITIONS: Record<IndicatorKey, IndicatorDefinition> = 
       createNumberParam("stdDev", "Std Dev", 2, 0.1, 10, 0.1),
       createNumberParam("middleLineWidth", "Middle Width", 2, 1, 4, 1),
       createNumberParam("bandLineWidth", "Band Width", 1, 1, 4, 1),
-      createColorParam("middleColor", "Middle", "#d1d5db"),
-      createColorParam("upperColor", "Upper", "#34d399"),
-      createColorParam("lowerColor", "Lower", "#f87171"),
-      createColorParam("background", "Fill", "#60a5fa"),
+      createColorParam("middleColor", "Middle", "#94a3b8"),
+      createColorParam("upperColor", "Upper", "#22c55e"),
+      createColorParam("lowerColor", "Lower", "#ef4444"),
+      createColorParam("background", "Fill", "#3b82f6"),
+      createNumberParam("fillOpacity", "Fill Opacity", 0.15, 0.02, 0.8, 0.01),
       createBooleanParam("background_enabled", "Show Fill", true),
     ],
   },
@@ -209,6 +210,12 @@ export const coerceIndicatorParamValue = (
   const minBound = typeof schema.min === "number" ? schema.min : Number.NEGATIVE_INFINITY;
   const maxBound = typeof schema.max === "number" ? schema.max : Number.POSITIVE_INFINITY;
   const clamped = Math.min(maxBound, Math.max(minBound, numeric));
+
+  if (typeof schema.step === "number" && Number.isFinite(schema.step) && schema.step > 0) {
+    const stepped = Math.round(clamped / schema.step) * schema.step;
+    const precision = schema.step.toString().includes(".") ? schema.step.toString().split(".")[1].length : 0;
+    return Number(stepped.toFixed(precision));
+  }
 
   return clamped;
 };

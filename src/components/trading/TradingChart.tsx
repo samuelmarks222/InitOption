@@ -30,14 +30,12 @@ import {
   type OHLCCandle,
   type SupportedChartTimeframe,
 } from "./engine/priceEngine";
-import { calculateOverlayIndicator } from "./indicators/calculations";
 import { IndicatorsPanel } from "./indicators/IndicatorsPanel";
 import { OscillatorPane } from "./indicators/OscillatorPane";
+import { useIndicators } from "./indicators/useIndicators";
 import {
   coerceIndicatorParamValue,
   createIndicator,
-  isOscillatorIndicator,
-  isOverlayIndicator,
   resetIndicatorParams,
   type ActiveIndicator,
   type IndicatorKey,
@@ -222,7 +220,6 @@ const TradingChart = ({
   const [activeIndicators, setActiveIndicators] = useState<ActiveIndicator[]>([createIndicator("sma")]);
   const [syncChart, setSyncChart] = useState<IChartApi | null>(null);
   const [syncSeries, setSyncSeries] = useState<ISeriesApi<SeriesType> | null>(null);
-  const [oscillatorRenderKey, setOscillatorRenderKey] = useState(0);
 
   const mainRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -234,21 +231,19 @@ const TradingChart = ({
   const chartTypeRef = useRef<ChartType>(chartType);
   const marketFeedRef = useRef<MarketDataFeed | null>(null);
   const aggregatorRef = useRef<CandleAggregator | null>(null);
-  const indicatorRefreshTimerRef = useRef<number | null>(null);
-  const indicatorCandlesRef = useRef<OHLCCandle[]>([]);
-  const indicatorDataMap = useRef<Record<string, { time: number; value: number }[]>>({});
   const globalThemeRef = useRef(globalTheme);
 
   const { activeTool } = useDrawings();
-
-  const overlayIndicators = useMemo(
-    () => activeIndicators.filter((indicator) => indicator.visible && isOverlayIndicator(indicator)),
-    [activeIndicators],
-  );
-  const oscillatorIndicators = useMemo(
-    () => activeIndicators.filter((indicator) => indicator.visible && isOscillatorIndicator(indicator)),
-    [activeIndicators],
-  );
+  const {
+    overlayIndicators,
+    oscillatorIndicators,
+    indicatorDataMapRef,
+    overlayResultsRef,
+    oscillatorResultsRef,
+    indicatorErrorsRef,
+    oscillatorRenderKey,
+    refreshIndicatorData,
+  } = useIndicators(activeIndicators);
 
   const hasActiveAssetTrade = useMemo(
     () => activeTrades.some((trade) => trade.asset_symbol === asset.symbol),
@@ -353,7 +348,12 @@ const TradingChart = ({
         overlaySeriesRef.current[indicator.instanceId] = {
           kind: "line",
           line: chart.addSeries(LineSeries, {
-            color: typeof indicator.params.color === "string" ? indicator.params.color : "#ffffff",
+            color:
+              typeof indicator.params.color === "string"
+                ? indicator.params.color
+                : indicator.key === "sma"
+                  ? "#f59e0b"
+                  : "#06b6d4",
             lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.lineWidth, 2))),
             priceLineVisible: false,
             lastValueVisible: false,
@@ -366,20 +366,20 @@ const TradingChart = ({
         overlaySeriesRef.current[indicator.instanceId] = {
           kind: "bands",
           middle: chart.addSeries(LineSeries, {
-            color: typeof indicator.params.middleColor === "string" ? indicator.params.middleColor : "#d1d5db",
+            color: typeof indicator.params.middleColor === "string" ? indicator.params.middleColor : "#94a3b8",
             lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.middleLineWidth, 2))),
             priceLineVisible: false,
             lastValueVisible: false,
           }),
           upper: chart.addSeries(LineSeries, {
-            color: typeof indicator.params.upperColor === "string" ? indicator.params.upperColor : "#34d399",
+            color: typeof indicator.params.upperColor === "string" ? indicator.params.upperColor : "#22c55e",
             lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.bandLineWidth, 1))),
             lineStyle: LineStyle.Dashed,
             priceLineVisible: false,
             lastValueVisible: false,
           }),
           lower: chart.addSeries(LineSeries, {
-            color: typeof indicator.params.lowerColor === "string" ? indicator.params.lowerColor : "#f87171",
+            color: typeof indicator.params.lowerColor === "string" ? indicator.params.lowerColor : "#ef4444",
             lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.bandLineWidth, 1))),
             lineStyle: LineStyle.Dashed,
             priceLineVisible: false,
@@ -390,101 +390,95 @@ const TradingChart = ({
     });
   }, [overlayIndicators, removeOverlaySeries]);
 
-  const syncOverlayIndicatorData = useCallback(
-    (candles: OHLCCandle[]) => {
-      indicatorDataMap.current = {};
+  const syncOverlayIndicatorData = useCallback(() => {
+    overlayIndicators.forEach((indicator) => {
+      const seriesHandle = overlaySeriesRef.current[indicator.instanceId];
+      if (!seriesHandle) {
+        return;
+      }
 
-      overlayIndicators.forEach((indicator) => {
-        const seriesHandle = overlaySeriesRef.current[indicator.instanceId];
-        if (!seriesHandle) {
+      const calculation = overlayResultsRef.current[indicator.instanceId];
+      if (!calculation) {
+        if (seriesHandle.kind === "line") {
+          seriesHandle.line.setData([]);
           return;
         }
 
-        const calculation = calculateOverlayIndicator(indicator, candles);
-        if (!calculation) {
-          return;
-        }
+        seriesHandle.middle.setData([]);
+        seriesHandle.upper.setData([]);
+        seriesHandle.lower.setData([]);
+        return;
+      }
 
-        if (calculation.kind === "line" && seriesHandle.kind === "line") {
-          const defaultColor = indicator.key === "sma" ? "#facc15" : "#22d3ee";
+      if (calculation.kind === "line" && seriesHandle.kind === "line") {
+        const defaultColor = indicator.key === "sma" ? "#f59e0b" : "#06b6d4";
 
-          seriesHandle.line.applyOptions({
-            color: typeof indicator.params.color === "string" ? indicator.params.color : defaultColor,
-            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.lineWidth, 2))),
-          });
+        seriesHandle.line.applyOptions({
+          color: typeof indicator.params.color === "string" ? indicator.params.color : defaultColor,
+          lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.lineWidth, 2))),
+        });
 
-          seriesHandle.line.setData(
-            calculation.points.map((point) => ({
-              time: toChartTime(point.time),
-              value: point.value,
-            })),
-          );
+        seriesHandle.line.setData(
+          calculation.points.map((point) => ({
+            time: toChartTime(point.time),
+            value: point.value,
+          })),
+        );
 
-          indicatorDataMap.current[indicator.instanceId] = calculation.points;
-          return;
-        }
+        return;
+      }
 
-        if (calculation.kind === "bollinger" && seriesHandle.kind === "bands") {
-          seriesHandle.middle.applyOptions({
-            color: typeof indicator.params.middleColor === "string" ? indicator.params.middleColor : "#d1d5db",
-            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.middleLineWidth, 2))),
-          });
+      if (calculation.kind === "bollinger" && seriesHandle.kind === "bands") {
+        seriesHandle.middle.applyOptions({
+          color: typeof indicator.params.middleColor === "string" ? indicator.params.middleColor : "#94a3b8",
+          lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.middleLineWidth, 2))),
+        });
 
-          seriesHandle.upper.applyOptions({
-            color: typeof indicator.params.upperColor === "string" ? indicator.params.upperColor : "#34d399",
-            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.bandLineWidth, 1))),
-          });
+        seriesHandle.upper.applyOptions({
+          color: typeof indicator.params.upperColor === "string" ? indicator.params.upperColor : "#22c55e",
+          lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.bandLineWidth, 1))),
+        });
 
-          seriesHandle.lower.applyOptions({
-            color: typeof indicator.params.lowerColor === "string" ? indicator.params.lowerColor : "#f87171",
-            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.bandLineWidth, 1))),
-          });
+        seriesHandle.lower.applyOptions({
+          color: typeof indicator.params.lowerColor === "string" ? indicator.params.lowerColor : "#ef4444",
+          lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.bandLineWidth, 1))),
+        });
 
-          seriesHandle.middle.setData(
-            calculation.middle.map((point) => ({
-              time: toChartTime(point.time),
-              value: point.value,
-            })),
-          );
+        seriesHandle.middle.setData(
+          calculation.middle.map((point) => ({
+            time: toChartTime(point.time),
+            value: point.value,
+          })),
+        );
 
-          seriesHandle.upper.setData(
-            calculation.upper.map((point) => ({
-              time: toChartTime(point.time),
-              value: point.value,
-            })),
-          );
+        seriesHandle.upper.setData(
+          calculation.upper.map((point) => ({
+            time: toChartTime(point.time),
+            value: point.value,
+          })),
+        );
 
-          seriesHandle.lower.setData(
-            calculation.lower.map((point) => ({
-              time: toChartTime(point.time),
-              value: point.value,
-            })),
-          );
-
-          indicatorDataMap.current[indicator.instanceId] = calculation.middle;
-          indicatorDataMap.current[`${indicator.instanceId}-upper`] = calculation.upper;
-          indicatorDataMap.current[`${indicator.instanceId}-lower`] = calculation.lower;
-        }
-      });
-    },
-    [overlayIndicators],
-  );
+        seriesHandle.lower.setData(
+          calculation.lower.map((point) => ({
+            time: toChartTime(point.time),
+            value: point.value,
+          })),
+        );
+      }
+    });
+  }, [overlayIndicators, overlayResultsRef]);
 
   const refreshIndicators = useCallback(
-    (forceOscillatorRefresh = false) => {
+    (candlesOverride?: OHLCCandle[]) => {
       if (!chartRef.current) return;
 
-      const candles = getIndicatorCandles();
-      indicatorCandlesRef.current = candles;
+      const candles = candlesOverride ?? getIndicatorCandles();
 
       reconcileOverlaySeries();
-      syncOverlayIndicatorData(candles);
-
-      if (forceOscillatorRefresh) {
-        setOscillatorRenderKey((current) => current + 1);
-      }
+      refreshIndicatorData(candles);
+      syncOverlayIndicatorData();
     },
-    [getIndicatorCandles, reconcileOverlaySeries, syncOverlayIndicatorData],
+    [getIndicatorCandles, reconcileOverlaySeries, refreshIndicatorData, syncOverlayIndicatorData],
   );
 
   useEffect(() => {
@@ -688,7 +682,7 @@ const TradingChart = ({
 
     if (historyRef.current.length > 0) {
       applyMainSeriesData(historyRef.current);
-      refreshIndicators(true);
+      refreshIndicators();
     }
   }, [applyMainSeriesData, asset.basePrice, asset.price, chartType, refreshIndicators]);
 
@@ -698,11 +692,6 @@ const TradingChart = ({
 
     marketFeedRef.current?.disconnect();
     marketFeedRef.current = null;
-
-    if (indicatorRefreshTimerRef.current !== null) {
-      window.clearInterval(indicatorRefreshTimerRef.current);
-      indicatorRefreshTimerRef.current = null;
-    }
 
     if (aggregatorRef.current) {
       aggregatorRef.current.destroy();
@@ -743,11 +732,11 @@ const TradingChart = ({
       to: history.length + 6,
     });
 
-    refreshIndicators(true);
+    refreshIndicators();
 
     const handleCandleClose = (closedCandle: OHLCCandle) => {
       historyRef.current = [...historyRef.current, closedCandle].slice(-MAX_CANDLES_IN_MEMORY);
-      refreshIndicators(true);
+      refreshIndicators();
     };
 
     const openAnchor = seedCandle.open;
@@ -758,6 +747,7 @@ const TradingChart = ({
       setCurrentPrice(candle.close);
       setPriceChange(((candle.close - openAnchor) / Math.max(openAnchor, 0.000001)) * 100);
       onPriceUpdateRef.current?.(candle.close, candle.time);
+      refreshIndicators();
     };
 
     aggregatorRef.current = new CandleAggregator(tf.seconds, handleCandleClose, handleCandleUpdate);
@@ -788,18 +778,9 @@ const TradingChart = ({
 
     marketFeedRef.current.connect();
 
-    indicatorRefreshTimerRef.current = window.setInterval(() => {
-      refreshIndicators(true);
-    }, 1200);
-
     return () => {
       marketFeedRef.current?.disconnect();
       marketFeedRef.current = null;
-
-      if (indicatorRefreshTimerRef.current !== null) {
-        window.clearInterval(indicatorRefreshTimerRef.current);
-        indicatorRefreshTimerRef.current = null;
-      }
 
       if (aggregatorRef.current) {
         aggregatorRef.current.destroy();
@@ -809,9 +790,8 @@ const TradingChart = ({
   }, [applyMainSeriesData, asset.basePrice, asset.price, asset.symbol, asset.type, refreshIndicators, selectedTf, updateMainSeries]);
 
   useEffect(() => {
-    reconcileOverlaySeries();
-    refreshIndicators(true);
-  }, [activeIndicators, reconcileOverlaySeries, refreshIndicators]);
+    refreshIndicators();
+  }, [activeIndicators, refreshIndicators]);
 
   useEffect(() => {
     if (!mobileHistoryOpen) return;
@@ -1078,7 +1058,7 @@ const TradingChart = ({
                 chart={syncChart}
                 series={syncSeries}
                 activeIndicators={activeIndicators}
-                indicatorDataMap={indicatorDataMap}
+                indicatorDataMap={indicatorDataMapRef}
               />
             )}
             {!mobileHistoryOpen && !hasActiveAssetTrade && (
@@ -1126,7 +1106,8 @@ const TradingChart = ({
         <OscillatorPane
           key={indicator.instanceId}
           indicator={indicator}
-          candlesRef={indicatorCandlesRef}
+          data={oscillatorResultsRef.current[indicator.instanceId] ?? null}
+          errorMessage={indicatorErrorsRef.current[indicator.instanceId]}
           renderKey={oscillatorRenderKey}
           syncMainChart={syncChart}
           onRemove={() => handleRemoveIndicator(indicator.instanceId)}

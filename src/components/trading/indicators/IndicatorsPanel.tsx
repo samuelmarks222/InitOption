@@ -64,7 +64,10 @@ const renderParamField = (
         min={field.min}
         max={field.max}
         step={field.step}
-        onChange={(event) => onUpdate(field.key, Number(event.target.value))}
+        onChange={(event) => {
+          const nextValue = event.target.valueAsNumber;
+          onUpdate(field.key, Number.isFinite(nextValue) ? nextValue : field.defaultValue);
+        }}
         className="w-20 rounded border border-white/10 bg-[#111821] px-2 py-1 text-right text-[11px] text-white outline-none focus:border-[#3b82f6]"
       />
     </label>

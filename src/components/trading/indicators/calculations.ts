@@ -43,6 +43,25 @@ export type OscillatorIndicatorResult =
       histogram: IndicatorLinePoint[];
     };
 
+export interface IndicatorCalculationBundle {
+  overlayById: Record<string, OverlayIndicatorResult>;
+  oscillatorById: Record<string, OscillatorIndicatorResult>;
+  indicatorDataMap: Record<string, IndicatorLinePoint[]>;
+  errorsById: Record<string, string | undefined>;
+}
+
+const EMPTY_MACD_RESULT: MacdResult = {
+  macd: [],
+  signal: [],
+  histogram: [],
+};
+
+const EMPTY_BOLLINGER_RESULT: BollingerResult = {
+  upper: [],
+  middle: [],
+  lower: [],
+};
+
 const toCloseSeries = (candles: OHLCCandle[]) => candles.map((candle) => candle.close);
 
 const toPositiveInt = (value: unknown, fallback: number) => {
@@ -89,8 +108,55 @@ const alignToTimes = (candles: OHLCCandle[], values: number[]): IndicatorLinePoi
   }, []);
 };
 
+const resolveMacdPeriods = (fastPeriodInput: unknown, slowPeriodInput: unknown, signalPeriodInput: unknown) => {
+  const fastPeriod = toPositiveInt(fastPeriodInput, 12);
+  const slowPeriod = Math.max(fastPeriod + 1, toPositiveInt(slowPeriodInput, 26));
+  const signalPeriod = toPositiveInt(signalPeriodInput, 9);
+
+  return {
+    fastPeriod,
+    slowPeriod,
+    signalPeriod,
+  };
+};
+
+export const getMinimumCandlesForIndicator = (indicator: ActiveIndicator): number => {
+  if (indicator.key === "sma" || indicator.key === "ema" || indicator.key === "bb") {
+    return toPositiveInt(indicator.params.period, 20);
+  }
+
+  if (indicator.key === "rsi") {
+    return toPositiveInt(indicator.params.period, 14) + 1;
+  }
+
+  if (indicator.key === "macd") {
+    const periods = resolveMacdPeriods(
+      indicator.params.fastPeriod,
+      indicator.params.slowPeriod,
+      indicator.params.signalPeriod,
+    );
+
+    return periods.slowPeriod + periods.signalPeriod;
+  }
+
+  return 1;
+};
+
+const buildInsufficientDataMessage = (indicatorName: string, availableCandles: number, minimumCandles: number) => {
+  const remaining = Math.max(0, minimumCandles - availableCandles);
+  if (remaining === 0) {
+    return undefined;
+  }
+
+  return `${indicatorName} needs ${minimumCandles} candles (currently ${availableCandles}).`;
+};
+
 export const calculateSma = (candles: OHLCCandle[], periodInput: unknown): IndicatorLinePoint[] => {
   const period = toPositiveInt(periodInput, 20);
+
+  if (candles.length < period) {
+    return [];
+  }
 
   const values = SMA.calculate({
     period,
@@ -103,6 +169,10 @@ export const calculateSma = (candles: OHLCCandle[], periodInput: unknown): Indic
 export const calculateEma = (candles: OHLCCandle[], periodInput: unknown): IndicatorLinePoint[] => {
   const period = toPositiveInt(periodInput, 20);
 
+  if (candles.length < period) {
+    return [];
+  }
+
   const values = EMA.calculate({
     period,
     values: toCloseSeries(candles),
@@ -113,6 +183,10 @@ export const calculateEma = (candles: OHLCCandle[], periodInput: unknown): Indic
 
 export const calculateRsi = (candles: OHLCCandle[], periodInput: unknown): IndicatorLinePoint[] => {
   const period = toPositiveInt(periodInput, 14);
+
+  if (candles.length < period + 1) {
+    return [];
+  }
 
   const values = RSI.calculate({
     period,
@@ -128,9 +202,15 @@ export const calculateMacd = (
   slowPeriodInput: unknown,
   signalPeriodInput: unknown,
 ): MacdResult => {
-  const fastPeriod = toPositiveInt(fastPeriodInput, 12);
-  const slowPeriod = Math.max(fastPeriod + 1, toPositiveInt(slowPeriodInput, 26));
-  const signalPeriod = toPositiveInt(signalPeriodInput, 9);
+  const { fastPeriod, slowPeriod, signalPeriod } = resolveMacdPeriods(
+    fastPeriodInput,
+    slowPeriodInput,
+    signalPeriodInput,
+  );
+
+  if (candles.length < slowPeriod + signalPeriod) {
+    return EMPTY_MACD_RESULT;
+  }
 
   const output = MACD.calculate({
     values: toCloseSeries(candles),
@@ -142,11 +222,7 @@ export const calculateMacd = (
   });
 
   if (candles.length === 0 || output.length === 0) {
-    return {
-      macd: [],
-      signal: [],
-      histogram: [],
-    };
+    return EMPTY_MACD_RESULT;
   }
 
   const startIndex = Math.max(0, candles.length - output.length);
@@ -188,6 +264,10 @@ export const calculateBollingerBands = (
   const period = toPositiveInt(periodInput, 20);
   const stdDev = toPositiveFloat(stdDevInput, 2);
 
+  if (candles.length < period) {
+    return EMPTY_BOLLINGER_RESULT;
+  }
+
   const output = BollingerBands.calculate({
     period,
     stdDev,
@@ -195,11 +275,7 @@ export const calculateBollingerBands = (
   });
 
   if (candles.length === 0 || output.length === 0) {
-    return {
-      upper: [],
-      middle: [],
-      lower: [],
-    };
+    return EMPTY_BOLLINGER_RESULT;
   }
 
   const startIndex = Math.max(0, candles.length - output.length);
@@ -293,4 +369,65 @@ export const calculateOscillatorIndicator = (
   }
 
   return null;
+};
+
+export const calculateIndicatorBundle = (
+  indicators: ActiveIndicator[],
+  candles: OHLCCandle[],
+): IndicatorCalculationBundle => {
+  const overlayById: Record<string, OverlayIndicatorResult> = {};
+  const oscillatorById: Record<string, OscillatorIndicatorResult> = {};
+  const indicatorDataMap: Record<string, IndicatorLinePoint[]> = {};
+  const errorsById: Record<string, string | undefined> = {};
+
+  indicators.forEach((indicator) => {
+    if (!indicator.visible) {
+      return;
+    }
+
+    const minimumCandles = getMinimumCandlesForIndicator(indicator);
+    errorsById[indicator.instanceId] = buildInsufficientDataMessage(indicator.name, candles.length, minimumCandles);
+
+    if (indicator.placement === "overlay") {
+      const overlayData = calculateOverlayIndicator(indicator, candles);
+      if (!overlayData) {
+        return;
+      }
+
+      overlayById[indicator.instanceId] = overlayData;
+
+      if (overlayData.kind === "line") {
+        indicatorDataMap[indicator.instanceId] = overlayData.points;
+        return;
+      }
+
+      indicatorDataMap[indicator.instanceId] = overlayData.middle;
+      indicatorDataMap[`${indicator.instanceId}-upper`] = overlayData.upper;
+      indicatorDataMap[`${indicator.instanceId}-lower`] = overlayData.lower;
+      return;
+    }
+
+    const oscillatorData = calculateOscillatorIndicator(indicator, candles);
+    if (!oscillatorData) {
+      return;
+    }
+
+    oscillatorById[indicator.instanceId] = oscillatorData;
+
+    if (oscillatorData.kind === "rsi") {
+      indicatorDataMap[indicator.instanceId] = oscillatorData.points;
+      return;
+    }
+
+    indicatorDataMap[indicator.instanceId] = oscillatorData.macd;
+    indicatorDataMap[`${indicator.instanceId}-signal`] = oscillatorData.signal;
+    indicatorDataMap[`${indicator.instanceId}-histogram`] = oscillatorData.histogram;
+  });
+
+  return {
+    overlayById,
+    oscillatorById,
+    indicatorDataMap,
+    errorsById,
+  };
 };

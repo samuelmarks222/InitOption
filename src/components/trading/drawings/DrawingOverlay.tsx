@@ -749,6 +749,8 @@ export const DrawingOverlay = ({
     return activeIndicators.map(ind => {
       if (!ind.visible) return null;
       const color = ind.params["background"];
+      const rawOpacity = Number(ind.params["fillOpacity"]);
+      const fillOpacity = Number.isFinite(rawOpacity) ? Math.min(0.9, Math.max(0.02, rawOpacity)) : 0.15;
       if (!color || ind.params["background_enabled"] === false) return null;
       const upper = indicatorDataMap.current[`${ind.instanceId}-upper`];
       const lower = indicatorDataMap.current[`${ind.instanceId}-lower`];
@@ -771,7 +773,7 @@ export const DrawingOverlay = ({
         if (x !== null && y !== null) lo += `${x},${y} `;
       }
       if (!up || !lo) return null;
-      return <polygon key={`fill-${ind.instanceId}`} points={up + lo} fill={color} fillOpacity={0.15} style={{ pointerEvents: "none" }} />;
+      return <polygon key={`fill-${ind.instanceId}`} points={up + lo} fill={color} fillOpacity={fillOpacity} style={{ pointerEvents: "none" }} />;
     });
   };
 
