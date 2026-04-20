@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Eye, EyeOff, Plus, Trash2, X } from "lucide-react";
+import { Eye, EyeOff, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import {
   INDICATOR_DEFINITIONS,
   INDICATOR_ORDER,
@@ -14,15 +14,16 @@ interface IndicatorsPanelProps {
   onRemoveIndicator: (instanceId: string) => void;
   onToggleVisibility: (instanceId: string) => void;
   onUpdateParam: (instanceId: string, paramKey: string, value: number | string | boolean) => void;
+  onResetParams: (instanceId: string) => void;
   onClose: () => void;
 }
 
-const renderField = (
+const renderParamField = (
   field: IndicatorParamSchema,
   indicator: ActiveIndicator,
   onUpdate: (key: string, value: number | string | boolean) => void,
 ) => {
-  const fieldValue = indicator.params[field.key];
+  const rawValue = indicator.params[field.key];
 
   if (field.type === "boolean") {
     return (
@@ -30,7 +31,7 @@ const renderField = (
         <span>{field.label}</span>
         <input
           type="checkbox"
-          checked={Boolean(fieldValue)}
+          checked={Boolean(rawValue)}
           onChange={(event) => onUpdate(field.key, event.target.checked)}
           className="h-4 w-4"
         />
@@ -44,7 +45,7 @@ const renderField = (
         <span>{field.label}</span>
         <input
           type="color"
-          value={typeof fieldValue === "string" ? fieldValue : "#ffffff"}
+          value={typeof rawValue === "string" ? rawValue : field.defaultValue}
           onChange={(event) => onUpdate(field.key, event.target.value)}
           className="h-8 w-10 rounded border border-white/10 bg-transparent p-0"
         />
@@ -52,12 +53,14 @@ const renderField = (
     );
   }
 
+  const numericValue = typeof rawValue === "number" ? rawValue : Number(rawValue);
+
   return (
     <label key={field.key} className="flex items-center justify-between gap-3 text-[11px] text-slate-300">
       <span>{field.label}</span>
       <input
         type="number"
-        value={typeof fieldValue === "number" ? fieldValue : Number(fieldValue) || 0}
+        value={Number.isFinite(numericValue) ? numericValue : field.defaultValue}
         min={field.min}
         max={field.max}
         step={field.step}
@@ -74,23 +77,26 @@ export const IndicatorsPanel = ({
   onRemoveIndicator,
   onToggleVisibility,
   onUpdateParam,
+  onResetParams,
   onClose,
 }: IndicatorsPanelProps) => {
   const [nextIndicator, setNextIndicator] = useState<IndicatorKey>("sma");
 
-  const indicatorCountByType = useMemo(() => {
-    return indicators.reduce<Record<string, number>>((acc, indicator) => {
-      acc[indicator.key] = (acc[indicator.key] || 0) + 1;
-      return acc;
-    }, {});
-  }, [indicators]);
+  const indicatorCountByType = useMemo(
+    () =>
+      indicators.reduce<Record<string, number>>((acc, indicator) => {
+        acc[indicator.key] = (acc[indicator.key] || 0) + 1;
+        return acc;
+      }, {}),
+    [indicators],
+  );
 
   return (
-    <div className="absolute right-4 top-[5.6rem] z-[65] w-[340px] max-h-[75vh] overflow-hidden rounded-xl border border-white/10 bg-[#0f1722]/95 shadow-2xl backdrop-blur">
+    <div className="absolute right-4 top-[5.6rem] z-[65] max-h-[75vh] w-[340px] overflow-hidden rounded-xl border border-white/10 bg-[#0f1722]/95 shadow-2xl backdrop-blur">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div>
           <p className="text-sm font-semibold text-white">Indicators</p>
-          <p className="text-[11px] text-slate-400">Technical indicators powered by technicalindicators</p>
+          <p className="text-[11px] text-slate-400">Standard indicators powered by technicalindicators</p>
         </div>
         <button
           type="button"
@@ -114,6 +120,7 @@ export const IndicatorsPanel = ({
               </option>
             ))}
           </select>
+
           <button
             type="button"
             onClick={() => onAddIndicator(nextIndicator)}
@@ -125,15 +132,16 @@ export const IndicatorsPanel = ({
       </div>
 
       <div className="max-h-[52vh] space-y-2 overflow-y-auto p-3">
-        {indicators.length === 0 && (
+        {indicators.length === 0 ? (
           <div className="rounded-lg border border-dashed border-white/15 px-3 py-6 text-center text-sm text-slate-400">
             No active indicators.
           </div>
-        )}
+        ) : null}
 
         {indicators.map((indicator) => {
           const definition = INDICATOR_DEFINITIONS[indicator.key];
-          const sameTypeIndex = indicatorCountByType[indicator.key] > 1;
+          const sameTypeCount = indicatorCountByType[indicator.key] || 0;
+          const showInstanceSuffix = sameTypeCount > 1;
 
           return (
             <div key={indicator.instanceId} className="rounded-lg border border-white/10 bg-[#111821]">
@@ -141,20 +149,34 @@ export const IndicatorsPanel = ({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-white">
                     {indicator.name}
-                    {sameTypeIndex ? <span className="ml-1 text-slate-400">• {indicator.instanceId.slice(0, 4)}</span> : null}
+                    {showInstanceSuffix ? <span className="ml-1 text-slate-400">• {indicator.instanceId.slice(0, 4)}</span> : null}
                   </p>
+                  <p className="truncate text-[10px] uppercase tracking-[0.08em] text-slate-500">{definition.description}</p>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => onResetParams(indicator.instanceId)}
+                  className="rounded p-1 text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
+                  title="Reset settings"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+
                 <button
                   type="button"
                   onClick={() => onToggleVisibility(indicator.instanceId)}
                   className="rounded p-1 text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
+                  title={indicator.visible ? "Hide" : "Show"}
                 >
                   {indicator.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                 </button>
+
                 <button
                   type="button"
                   onClick={() => onRemoveIndicator(indicator.instanceId)}
                   className="rounded p-1 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                  title="Remove"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -162,7 +184,7 @@ export const IndicatorsPanel = ({
 
               <div className="space-y-2 px-3 py-2">
                 {definition.paramsSchema.map((field) =>
-                  renderField(field, indicator, (key, value) => onUpdateParam(indicator.instanceId, key, value)),
+                  renderParamField(field, indicator, (paramKey, value) => onUpdateParam(indicator.instanceId, paramKey, value)),
                 )}
               </div>
             </div>

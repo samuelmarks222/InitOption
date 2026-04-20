@@ -1,5 +1,6 @@
 import { BollingerBands, EMA, MACD, RSI, SMA } from "technicalindicators";
 import type { OHLCCandle } from "../engine/priceEngine";
+import type { ActiveIndicator } from "./types";
 
 export interface IndicatorLinePoint {
   time: number;
@@ -18,45 +19,79 @@ export interface BollingerResult {
   lower: IndicatorLinePoint[];
 }
 
-const sanitizePeriod = (value: unknown, fallback: number) => {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) && numeric > 0 ? Math.max(1, Math.floor(numeric)) : fallback;
-};
+export type OverlayIndicatorResult =
+  | {
+      kind: "line";
+      points: IndicatorLinePoint[];
+    }
+  | {
+      kind: "bollinger";
+      upper: IndicatorLinePoint[];
+      middle: IndicatorLinePoint[];
+      lower: IndicatorLinePoint[];
+    };
 
-const sanitizeStdDev = (value: unknown, fallback: number) => {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) && numeric > 0 ? numeric : fallback;
-};
+export type OscillatorIndicatorResult =
+  | {
+      kind: "rsi";
+      points: IndicatorLinePoint[];
+    }
+  | {
+      kind: "macd";
+      macd: IndicatorLinePoint[];
+      signal: IndicatorLinePoint[];
+      histogram: IndicatorLinePoint[];
+    };
 
 const toCloseSeries = (candles: OHLCCandle[]) => candles.map((candle) => candle.close);
 
+const toPositiveInt = (value: unknown, fallback: number) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+
+  return Math.max(1, Math.floor(numeric));
+};
+
+const toPositiveFloat = (value: unknown, fallback: number) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return fallback;
+  }
+
+  return numeric;
+};
+
 const alignToTimes = (candles: OHLCCandle[], values: number[]): IndicatorLinePoint[] => {
-  if (values.length === 0 || candles.length === 0) {
+  if (candles.length === 0 || values.length === 0) {
     return [];
   }
 
   const startIndex = Math.max(0, candles.length - values.length);
-  const points: IndicatorLinePoint[] = [];
 
-  for (let index = 0; index < values.length; index += 1) {
-    const value = values[index];
-    const candle = candles[startIndex + index];
-
-    if (!candle || !Number.isFinite(value)) {
-      continue;
+  return values.reduce<IndicatorLinePoint[]>((acc, value, index) => {
+    if (!Number.isFinite(value)) {
+      return acc;
     }
 
-    points.push({
+    const candle = candles[startIndex + index];
+    if (!candle) {
+      return acc;
+    }
+
+    acc.push({
       time: candle.time,
       value,
     });
-  }
 
-  return points;
+    return acc;
+  }, []);
 };
 
-export const calculateSma = (candles: OHLCCandle[], periodInput: unknown) => {
-  const period = sanitizePeriod(periodInput, 20);
+export const calculateSma = (candles: OHLCCandle[], periodInput: unknown): IndicatorLinePoint[] => {
+  const period = toPositiveInt(periodInput, 20);
+
   const values = SMA.calculate({
     period,
     values: toCloseSeries(candles),
@@ -65,8 +100,9 @@ export const calculateSma = (candles: OHLCCandle[], periodInput: unknown) => {
   return alignToTimes(candles, values);
 };
 
-export const calculateEma = (candles: OHLCCandle[], periodInput: unknown) => {
-  const period = sanitizePeriod(periodInput, 20);
+export const calculateEma = (candles: OHLCCandle[], periodInput: unknown): IndicatorLinePoint[] => {
+  const period = toPositiveInt(periodInput, 20);
+
   const values = EMA.calculate({
     period,
     values: toCloseSeries(candles),
@@ -75,8 +111,9 @@ export const calculateEma = (candles: OHLCCandle[], periodInput: unknown) => {
   return alignToTimes(candles, values);
 };
 
-export const calculateRsi = (candles: OHLCCandle[], periodInput: unknown) => {
-  const period = sanitizePeriod(periodInput, 14);
+export const calculateRsi = (candles: OHLCCandle[], periodInput: unknown): IndicatorLinePoint[] => {
+  const period = toPositiveInt(periodInput, 14);
+
   const values = RSI.calculate({
     period,
     values: toCloseSeries(candles),
@@ -91,9 +128,9 @@ export const calculateMacd = (
   slowPeriodInput: unknown,
   signalPeriodInput: unknown,
 ): MacdResult => {
-  const fastPeriod = sanitizePeriod(fastPeriodInput, 12);
-  const slowPeriod = sanitizePeriod(slowPeriodInput, 26);
-  const signalPeriod = sanitizePeriod(signalPeriodInput, 9);
+  const fastPeriod = toPositiveInt(fastPeriodInput, 12);
+  const slowPeriod = Math.max(fastPeriod + 1, toPositiveInt(slowPeriodInput, 26));
+  const signalPeriod = toPositiveInt(signalPeriodInput, 9);
 
   const output = MACD.calculate({
     values: toCloseSeries(candles),
@@ -104,8 +141,12 @@ export const calculateMacd = (
     SimpleMASignal: false,
   });
 
-  if (output.length === 0 || candles.length === 0) {
-    return { macd: [], signal: [], histogram: [] };
+  if (candles.length === 0 || output.length === 0) {
+    return {
+      macd: [],
+      signal: [],
+      histogram: [],
+    };
   }
 
   const startIndex = Math.max(0, candles.length - output.length);
@@ -113,24 +154,30 @@ export const calculateMacd = (
   const signal: IndicatorLinePoint[] = [];
   const histogram: IndicatorLinePoint[] = [];
 
-  output.forEach((item, index) => {
+  output.forEach((entry, index) => {
     const candle = candles[startIndex + index];
-    if (!candle) return;
-
-    if (Number.isFinite(item.MACD)) {
-      macd.push({ time: candle.time, value: item.MACD as number });
+    if (!candle) {
+      return;
     }
 
-    if (Number.isFinite(item.signal)) {
-      signal.push({ time: candle.time, value: item.signal as number });
+    if (Number.isFinite(entry.MACD)) {
+      macd.push({ time: candle.time, value: entry.MACD as number });
     }
 
-    if (Number.isFinite(item.histogram)) {
-      histogram.push({ time: candle.time, value: item.histogram as number });
+    if (Number.isFinite(entry.signal)) {
+      signal.push({ time: candle.time, value: entry.signal as number });
+    }
+
+    if (Number.isFinite(entry.histogram)) {
+      histogram.push({ time: candle.time, value: entry.histogram as number });
     }
   });
 
-  return { macd, signal, histogram };
+  return {
+    macd,
+    signal,
+    histogram,
+  };
 };
 
 export const calculateBollingerBands = (
@@ -138,8 +185,8 @@ export const calculateBollingerBands = (
   periodInput: unknown,
   stdDevInput: unknown,
 ): BollingerResult => {
-  const period = sanitizePeriod(periodInput, 20);
-  const stdDev = sanitizeStdDev(stdDevInput, 2);
+  const period = toPositiveInt(periodInput, 20);
+  const stdDev = toPositiveFloat(stdDevInput, 2);
 
   const output = BollingerBands.calculate({
     period,
@@ -147,8 +194,12 @@ export const calculateBollingerBands = (
     values: toCloseSeries(candles),
   });
 
-  if (output.length === 0 || candles.length === 0) {
-    return { upper: [], middle: [], lower: [] };
+  if (candles.length === 0 || output.length === 0) {
+    return {
+      upper: [],
+      middle: [],
+      lower: [],
+    };
   }
 
   const startIndex = Math.max(0, candles.length - output.length);
@@ -156,20 +207,90 @@ export const calculateBollingerBands = (
   const middle: IndicatorLinePoint[] = [];
   const lower: IndicatorLinePoint[] = [];
 
-  output.forEach((item, index) => {
+  output.forEach((entry, index) => {
     const candle = candles[startIndex + index];
-    if (!candle) return;
+    if (!candle) {
+      return;
+    }
 
-    if (Number.isFinite(item.upper)) {
-      upper.push({ time: candle.time, value: item.upper });
+    if (Number.isFinite(entry.upper)) {
+      upper.push({ time: candle.time, value: entry.upper });
     }
-    if (Number.isFinite(item.middle)) {
-      middle.push({ time: candle.time, value: item.middle });
+
+    if (Number.isFinite(entry.middle)) {
+      middle.push({ time: candle.time, value: entry.middle });
     }
-    if (Number.isFinite(item.lower)) {
-      lower.push({ time: candle.time, value: item.lower });
+
+    if (Number.isFinite(entry.lower)) {
+      lower.push({ time: candle.time, value: entry.lower });
     }
   });
 
-  return { upper, middle, lower };
+  return {
+    upper,
+    middle,
+    lower,
+  };
+};
+
+export const calculateOverlayIndicator = (
+  indicator: ActiveIndicator,
+  candles: OHLCCandle[],
+): OverlayIndicatorResult | null => {
+  if (indicator.key === "sma") {
+    return {
+      kind: "line",
+      points: calculateSma(candles, indicator.params.period),
+    };
+  }
+
+  if (indicator.key === "ema") {
+    return {
+      kind: "line",
+      points: calculateEma(candles, indicator.params.period),
+    };
+  }
+
+  if (indicator.key === "bb") {
+    const data = calculateBollingerBands(candles, indicator.params.period, indicator.params.stdDev);
+
+    return {
+      kind: "bollinger",
+      upper: data.upper,
+      middle: data.middle,
+      lower: data.lower,
+    };
+  }
+
+  return null;
+};
+
+export const calculateOscillatorIndicator = (
+  indicator: ActiveIndicator,
+  candles: OHLCCandle[],
+): OscillatorIndicatorResult | null => {
+  if (indicator.key === "rsi") {
+    return {
+      kind: "rsi",
+      points: calculateRsi(candles, indicator.params.period),
+    };
+  }
+
+  if (indicator.key === "macd") {
+    const data = calculateMacd(
+      candles,
+      indicator.params.fastPeriod,
+      indicator.params.slowPeriod,
+      indicator.params.signalPeriod,
+    );
+
+    return {
+      kind: "macd",
+      macd: data.macd,
+      signal: data.signal,
+      histogram: data.histogram,
+    };
+  }
+
+  return null;
 };
