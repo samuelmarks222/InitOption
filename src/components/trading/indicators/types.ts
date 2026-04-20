@@ -4,22 +4,44 @@ export type IndicatorPlacement = "overlay" | "oscillator";
 
 export type IndicatorParamType = "number" | "color" | "boolean";
 
-export interface IndicatorParamSchema {
+interface IndicatorParamSchemaBase {
   key: string;
   label: string;
   type: IndicatorParamType;
+}
+
+export interface IndicatorNumberParamSchema extends IndicatorParamSchemaBase {
+  type: "number";
+  defaultValue: number;
   min?: number;
   max?: number;
   step?: number;
 }
 
-export type IndicatorParams = Record<string, number | string | boolean>;
+export interface IndicatorColorParamSchema extends IndicatorParamSchemaBase {
+  type: "color";
+  defaultValue: string;
+}
+
+export interface IndicatorBooleanParamSchema extends IndicatorParamSchemaBase {
+  type: "boolean";
+  defaultValue: boolean;
+}
+
+export type IndicatorParamSchema =
+  | IndicatorNumberParamSchema
+  | IndicatorColorParamSchema
+  | IndicatorBooleanParamSchema;
+
+export type IndicatorParamValue = number | string | boolean;
+
+export type IndicatorParams = Record<string, IndicatorParamValue>;
 
 export interface IndicatorDefinition {
   key: IndicatorKey;
   name: string;
+  description: string;
   placement: IndicatorPlacement;
-  defaultParams: IndicatorParams;
   paramsSchema: IndicatorParamSchema[];
 }
 
@@ -32,100 +54,104 @@ export interface ActiveIndicator {
   params: IndicatorParams;
 }
 
+const createNumberParam = (
+  key: string,
+  label: string,
+  defaultValue: number,
+  min?: number,
+  max?: number,
+  step?: number,
+): IndicatorNumberParamSchema => ({
+  key,
+  label,
+  type: "number",
+  defaultValue,
+  min,
+  max,
+  step,
+});
+
+const createColorParam = (key: string, label: string, defaultValue: string): IndicatorColorParamSchema => ({
+  key,
+  label,
+  type: "color",
+  defaultValue,
+});
+
+const createBooleanParam = (key: string, label: string, defaultValue: boolean): IndicatorBooleanParamSchema => ({
+  key,
+  label,
+  type: "boolean",
+  defaultValue,
+});
+
 export const INDICATOR_DEFINITIONS: Record<IndicatorKey, IndicatorDefinition> = {
   sma: {
     key: "sma",
     name: "SMA",
+    description: "Simple Moving Average",
     placement: "overlay",
-    defaultParams: {
-      period: 20,
-      color: "#facc15",
-      lineWidth: 2,
-    },
     paramsSchema: [
-      { key: "period", label: "Period", type: "number", min: 1, step: 1 },
-      { key: "lineWidth", label: "Line Width", type: "number", min: 1, max: 4, step: 1 },
-      { key: "color", label: "Color", type: "color" },
+      createNumberParam("period", "Period", 20, 1, 500, 1),
+      createNumberParam("lineWidth", "Line Width", 2, 1, 4, 1),
+      createColorParam("color", "Color", "#facc15"),
     ],
   },
   ema: {
     key: "ema",
     name: "EMA",
+    description: "Exponential Moving Average",
     placement: "overlay",
-    defaultParams: {
-      period: 20,
-      color: "#22d3ee",
-      lineWidth: 2,
-    },
     paramsSchema: [
-      { key: "period", label: "Period", type: "number", min: 1, step: 1 },
-      { key: "lineWidth", label: "Line Width", type: "number", min: 1, max: 4, step: 1 },
-      { key: "color", label: "Color", type: "color" },
+      createNumberParam("period", "Period", 20, 1, 500, 1),
+      createNumberParam("lineWidth", "Line Width", 2, 1, 4, 1),
+      createColorParam("color", "Color", "#22d3ee"),
     ],
   },
   rsi: {
     key: "rsi",
     name: "RSI",
+    description: "Relative Strength Index",
     placement: "oscillator",
-    defaultParams: {
-      period: 14,
-      color: "#a78bfa",
-      lineWidth: 2,
-      overbought: 70,
-      oversold: 30,
-    },
     paramsSchema: [
-      { key: "period", label: "Period", type: "number", min: 2, step: 1 },
-      { key: "lineWidth", label: "Line Width", type: "number", min: 1, max: 4, step: 1 },
-      { key: "overbought", label: "Overbought", type: "number", min: 50, max: 100, step: 1 },
-      { key: "oversold", label: "Oversold", type: "number", min: 0, max: 50, step: 1 },
-      { key: "color", label: "Color", type: "color" },
+      createNumberParam("period", "Period", 14, 2, 200, 1),
+      createNumberParam("lineWidth", "Line Width", 2, 1, 4, 1),
+      createNumberParam("overbought", "Overbought", 70, 50, 100, 1),
+      createNumberParam("oversold", "Oversold", 30, 0, 50, 1),
+      createColorParam("color", "Color", "#a78bfa"),
     ],
   },
   macd: {
     key: "macd",
     name: "MACD",
+    description: "Moving Average Convergence Divergence",
     placement: "oscillator",
-    defaultParams: {
-      fastPeriod: 12,
-      slowPeriod: 26,
-      signalPeriod: 9,
-      macdColor: "#60a5fa",
-      signalColor: "#facc15",
-      histogramUpColor: "#22c55e",
-      histogramDownColor: "#ef4444",
-    },
     paramsSchema: [
-      { key: "fastPeriod", label: "Fast", type: "number", min: 1, step: 1 },
-      { key: "slowPeriod", label: "Slow", type: "number", min: 2, step: 1 },
-      { key: "signalPeriod", label: "Signal", type: "number", min: 1, step: 1 },
-      { key: "macdColor", label: "MACD Color", type: "color" },
-      { key: "signalColor", label: "Signal Color", type: "color" },
-      { key: "histogramUpColor", label: "Histogram +", type: "color" },
-      { key: "histogramDownColor", label: "Histogram -", type: "color" },
+      createNumberParam("fastPeriod", "Fast", 12, 1, 200, 1),
+      createNumberParam("slowPeriod", "Slow", 26, 2, 300, 1),
+      createNumberParam("signalPeriod", "Signal", 9, 1, 200, 1),
+      createNumberParam("lineWidth", "Line Width", 2, 1, 4, 1),
+      createColorParam("macdColor", "MACD Color", "#60a5fa"),
+      createColorParam("signalColor", "Signal Color", "#facc15"),
+      createColorParam("histogramUpColor", "Histogram +", "#22c55e"),
+      createColorParam("histogramDownColor", "Histogram -", "#ef4444"),
     ],
   },
   bb: {
     key: "bb",
     name: "Bollinger Bands",
+    description: "Price volatility bands",
     placement: "overlay",
-    defaultParams: {
-      period: 20,
-      stdDev: 2,
-      middleColor: "#d1d5db",
-      upperColor: "#34d399",
-      lowerColor: "#f87171",
-      background: "#60a5fa",
-      background_enabled: true,
-    },
     paramsSchema: [
-      { key: "period", label: "Period", type: "number", min: 2, step: 1 },
-      { key: "stdDev", label: "Std Dev", type: "number", min: 0.1, step: 0.1 },
-      { key: "middleColor", label: "Middle", type: "color" },
-      { key: "upperColor", label: "Upper", type: "color" },
-      { key: "lowerColor", label: "Lower", type: "color" },
-      { key: "background", label: "Fill", type: "color" },
-      { key: "background_enabled", label: "Show Fill", type: "boolean" },
+      createNumberParam("period", "Period", 20, 2, 500, 1),
+      createNumberParam("stdDev", "Std Dev", 2, 0.1, 10, 0.1),
+      createNumberParam("middleLineWidth", "Middle Width", 2, 1, 4, 1),
+      createNumberParam("bandLineWidth", "Band Width", 1, 1, 4, 1),
+      createColorParam("middleColor", "Middle", "#d1d5db"),
+      createColorParam("upperColor", "Upper", "#34d399"),
+      createColorParam("lowerColor", "Lower", "#f87171"),
+      createColorParam("background", "Fill", "#60a5fa"),
+      createBooleanParam("background_enabled", "Show Fill", true),
     ],
   },
 };
@@ -134,6 +160,15 @@ export const INDICATOR_ORDER: IndicatorKey[] = ["sma", "ema", "rsi", "macd", "bb
 
 const buildInstanceId = () =>
   globalThis.crypto?.randomUUID?.() ?? `indicator_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+export const getIndicatorDefaults = (key: IndicatorKey): IndicatorParams => {
+  const definition = INDICATOR_DEFINITIONS[key];
+
+  return definition.paramsSchema.reduce<IndicatorParams>((acc, param) => {
+    acc[param.key] = param.defaultValue;
+    return acc;
+  }, {});
+};
 
 export const createIndicator = (key: IndicatorKey): ActiveIndicator => {
   const definition = INDICATOR_DEFINITIONS[key];
@@ -144,9 +179,44 @@ export const createIndicator = (key: IndicatorKey): ActiveIndicator => {
     name: definition.name,
     placement: definition.placement,
     visible: true,
-    params: { ...definition.defaultParams },
+    params: getIndicatorDefaults(key),
   };
 };
+
+export const coerceIndicatorParamValue = (
+  indicatorKey: IndicatorKey,
+  paramKey: string,
+  rawValue: number | string | boolean,
+): IndicatorParamValue => {
+  const schema = INDICATOR_DEFINITIONS[indicatorKey].paramsSchema.find((param) => param.key === paramKey);
+  if (!schema) {
+    return rawValue;
+  }
+
+  if (schema.type === "boolean") {
+    return Boolean(rawValue);
+  }
+
+  if (schema.type === "color") {
+    return typeof rawValue === "string" && rawValue.length > 0 ? rawValue : schema.defaultValue;
+  }
+
+  const numeric = Number(rawValue);
+  if (!Number.isFinite(numeric)) {
+    return schema.defaultValue;
+  }
+
+  const minBound = typeof schema.min === "number" ? schema.min : Number.NEGATIVE_INFINITY;
+  const maxBound = typeof schema.max === "number" ? schema.max : Number.POSITIVE_INFINITY;
+  const clamped = Math.min(maxBound, Math.max(minBound, numeric));
+
+  return clamped;
+};
+
+export const resetIndicatorParams = (indicator: ActiveIndicator): ActiveIndicator => ({
+  ...indicator,
+  params: getIndicatorDefaults(indicator.key),
+});
 
 export const isOscillatorIndicator = (indicator: ActiveIndicator) => indicator.placement === "oscillator";
 

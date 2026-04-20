@@ -30,13 +30,15 @@ import {
   type OHLCCandle,
   type SupportedChartTimeframe,
 } from "./engine/priceEngine";
-import { calculateBollingerBands, calculateEma, calculateSma } from "./indicators/calculations";
+import { calculateOverlayIndicator } from "./indicators/calculations";
 import { IndicatorsPanel } from "./indicators/IndicatorsPanel";
 import { OscillatorPane } from "./indicators/OscillatorPane";
 import {
+  coerceIndicatorParamValue,
   createIndicator,
   isOscillatorIndicator,
   isOverlayIndicator,
+  resetIndicatorParams,
   type ActiveIndicator,
   type IndicatorKey,
 } from "./indicators/types";
@@ -65,12 +67,19 @@ type PlatformThemeRow = {
   chart_down_color?: string | null;
 };
 
-type OverlaySeriesHandle = {
-  primary?: ISeriesApi<"Line">;
-  middle?: ISeriesApi<"Line">;
-  upper?: ISeriesApi<"Line">;
-  lower?: ISeriesApi<"Line">;
+type OverlayLineSeriesHandle = {
+  kind: "line";
+  line: ISeriesApi<"Line">;
 };
+
+type OverlayBandSeriesHandle = {
+  kind: "bands";
+  middle: ISeriesApi<"Line">;
+  upper: ISeriesApi<"Line">;
+  lower: ISeriesApi<"Line">;
+};
+
+type OverlaySeriesHandle = OverlayLineSeriesHandle | OverlayBandSeriesHandle;
 
 const MAX_CANDLES_IN_MEMORY = 600;
 const DEFAULT_VISIBLE_BARS = 90;
@@ -230,7 +239,7 @@ const TradingChart = ({
   const indicatorDataMap = useRef<Record<string, { time: number; value: number }[]>>({});
   const globalThemeRef = useRef(globalTheme);
 
-  const { activeTool, setActiveTool, setDrawings } = useDrawings();
+  const { activeTool } = useDrawings();
 
   const overlayIndicators = useMemo(
     () => activeIndicators.filter((indicator) => indicator.visible && isOverlayIndicator(indicator)),
@@ -250,13 +259,17 @@ const TradingChart = ({
     const chart = chartRef.current;
     const handle = overlaySeriesRef.current[instanceId];
 
-    if (!chart || !handle) return;
+    if (!chart || !handle) {
+      return;
+    }
 
-    Object.values(handle).forEach((series) => {
-      if (series) {
-        chart.removeSeries(series);
-      }
-    });
+    if (handle.kind === "line") {
+      chart.removeSeries(handle.line);
+    } else {
+      chart.removeSeries(handle.middle);
+      chart.removeSeries(handle.upper);
+      chart.removeSeries(handle.lower);
+    }
 
     delete overlaySeriesRef.current[instanceId];
   }, []);
@@ -319,7 +332,9 @@ const TradingChart = ({
 
   const reconcileOverlaySeries = useCallback(() => {
     const chart = chartRef.current;
-    if (!chart) return;
+    if (!chart) {
+      return;
+    }
 
     const activeIds = new Set(overlayIndicators.map((indicator) => indicator.instanceId));
 
@@ -336,33 +351,36 @@ const TradingChart = ({
 
       if (indicator.key === "sma" || indicator.key === "ema") {
         overlaySeriesRef.current[indicator.instanceId] = {
-          primary: chart.addSeries(LineSeries, {
+          kind: "line",
+          line: chart.addSeries(LineSeries, {
             color: typeof indicator.params.color === "string" ? indicator.params.color : "#ffffff",
             lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.lineWidth, 2))),
             priceLineVisible: false,
             lastValueVisible: false,
           }),
         };
+        return;
       }
 
       if (indicator.key === "bb") {
         overlaySeriesRef.current[indicator.instanceId] = {
+          kind: "bands",
           middle: chart.addSeries(LineSeries, {
             color: typeof indicator.params.middleColor === "string" ? indicator.params.middleColor : "#d1d5db",
-            lineWidth: 2,
+            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.middleLineWidth, 2))),
             priceLineVisible: false,
             lastValueVisible: false,
           }),
           upper: chart.addSeries(LineSeries, {
             color: typeof indicator.params.upperColor === "string" ? indicator.params.upperColor : "#34d399",
-            lineWidth: 1,
+            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.bandLineWidth, 1))),
             lineStyle: LineStyle.Dashed,
             priceLineVisible: false,
             lastValueVisible: false,
           }),
           lower: chart.addSeries(LineSeries, {
             color: typeof indicator.params.lowerColor === "string" ? indicator.params.lowerColor : "#f87171",
-            lineWidth: 1,
+            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.bandLineWidth, 1))),
             lineStyle: LineStyle.Dashed,
             priceLineVisible: false,
             lastValueVisible: false,
@@ -378,55 +396,74 @@ const TradingChart = ({
 
       overlayIndicators.forEach((indicator) => {
         const seriesHandle = overlaySeriesRef.current[indicator.instanceId];
-        if (!seriesHandle) return;
-
-        if (indicator.key === "sma" && seriesHandle.primary) {
-          const data = calculateSma(candles, indicator.params.period);
-          seriesHandle.primary.applyOptions({
-            color: typeof indicator.params.color === "string" ? indicator.params.color : "#facc15",
-            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.lineWidth, 2))),
-          });
-          seriesHandle.primary.setData(data.map((point) => ({ time: toChartTime(point.time), value: point.value })));
-          indicatorDataMap.current[indicator.instanceId] = data;
+        if (!seriesHandle) {
+          return;
         }
 
-        if (indicator.key === "ema" && seriesHandle.primary) {
-          const data = calculateEma(candles, indicator.params.period);
-          seriesHandle.primary.applyOptions({
-            color: typeof indicator.params.color === "string" ? indicator.params.color : "#22d3ee",
-            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.lineWidth, 2))),
-          });
-          seriesHandle.primary.setData(data.map((point) => ({ time: toChartTime(point.time), value: point.value })));
-          indicatorDataMap.current[indicator.instanceId] = data;
+        const calculation = calculateOverlayIndicator(indicator, candles);
+        if (!calculation) {
+          return;
         }
 
-        if (indicator.key === "bb" && seriesHandle.upper && seriesHandle.middle && seriesHandle.lower) {
-          const data = calculateBollingerBands(candles, indicator.params.period, indicator.params.stdDev);
+        if (calculation.kind === "line" && seriesHandle.kind === "line") {
+          const defaultColor = indicator.key === "sma" ? "#facc15" : "#22d3ee";
 
+          seriesHandle.line.applyOptions({
+            color: typeof indicator.params.color === "string" ? indicator.params.color : defaultColor,
+            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.lineWidth, 2))),
+          });
+
+          seriesHandle.line.setData(
+            calculation.points.map((point) => ({
+              time: toChartTime(point.time),
+              value: point.value,
+            })),
+          );
+
+          indicatorDataMap.current[indicator.instanceId] = calculation.points;
+          return;
+        }
+
+        if (calculation.kind === "bollinger" && seriesHandle.kind === "bands") {
           seriesHandle.middle.applyOptions({
             color: typeof indicator.params.middleColor === "string" ? indicator.params.middleColor : "#d1d5db",
-            lineWidth: 2,
+            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.middleLineWidth, 2))),
           });
+
           seriesHandle.upper.applyOptions({
             color: typeof indicator.params.upperColor === "string" ? indicator.params.upperColor : "#34d399",
+            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.bandLineWidth, 1))),
           });
+
           seriesHandle.lower.applyOptions({
             color: typeof indicator.params.lowerColor === "string" ? indicator.params.lowerColor : "#f87171",
+            lineWidth: Math.max(1, Math.min(4, normalizeNumber(indicator.params.bandLineWidth, 1))),
           });
 
           seriesHandle.middle.setData(
-            data.middle.map((point) => ({ time: toChartTime(point.time), value: point.value })),
-          );
-          seriesHandle.upper.setData(
-            data.upper.map((point) => ({ time: toChartTime(point.time), value: point.value })),
-          );
-          seriesHandle.lower.setData(
-            data.lower.map((point) => ({ time: toChartTime(point.time), value: point.value })),
+            calculation.middle.map((point) => ({
+              time: toChartTime(point.time),
+              value: point.value,
+            })),
           );
 
-          indicatorDataMap.current[indicator.instanceId] = data.middle;
-          indicatorDataMap.current[`${indicator.instanceId}-upper`] = data.upper;
-          indicatorDataMap.current[`${indicator.instanceId}-lower`] = data.lower;
+          seriesHandle.upper.setData(
+            calculation.upper.map((point) => ({
+              time: toChartTime(point.time),
+              value: point.value,
+            })),
+          );
+
+          seriesHandle.lower.setData(
+            calculation.lower.map((point) => ({
+              time: toChartTime(point.time),
+              value: point.value,
+            })),
+          );
+
+          indicatorDataMap.current[indicator.instanceId] = calculation.middle;
+          indicatorDataMap.current[`${indicator.instanceId}-upper`] = calculation.upper;
+          indicatorDataMap.current[`${indicator.instanceId}-lower`] = calculation.lower;
         }
       });
     },
@@ -809,24 +846,29 @@ const TradingChart = ({
     );
   }, []);
 
-  const handleUpdateIndicatorParam = useCallback(
-    (instanceId: string, paramKey: string, value: number | string | boolean) => {
-      setActiveIndicators((current) =>
-        current.map((indicator) => {
-          if (indicator.instanceId !== instanceId) return indicator;
+  const handleUpdateIndicatorParam = useCallback((instanceId: string, paramKey: string, value: number | string | boolean) => {
+    setActiveIndicators((current) =>
+      current.map((indicator) => {
+        if (indicator.instanceId !== instanceId) {
+          return indicator;
+        }
 
-          return {
-            ...indicator,
-            params: {
-              ...indicator.params,
-              [paramKey]: value,
-            },
-          };
-        }),
-      );
-    },
-    [],
-  );
+        return {
+          ...indicator,
+          params: {
+            ...indicator.params,
+            [paramKey]: coerceIndicatorParamValue(indicator.key, paramKey, value),
+          },
+        };
+      }),
+    );
+  }, []);
+
+  const handleResetIndicatorParams = useCallback((instanceId: string) => {
+    setActiveIndicators((current) =>
+      current.map((indicator) => (indicator.instanceId === instanceId ? resetIndicatorParams(indicator) : indicator)),
+    );
+  }, []);
 
   const dec = getPricePrecision(currentPrice);
   const isUp = priceChange >= 0;
@@ -853,18 +895,7 @@ const TradingChart = ({
           onSelectTf={setSelectedTf}
           chartType={chartType}
           onSelectChartType={setChartType}
-          activeInds={activeIndicators.map((indicator) => indicator.key)}
-          onToggleInd={() => {}}
           activeDrawTool={activeTool}
-          onSelectDrawTool={(tool) => {
-            if (tool === "clear") {
-              setDrawings([]);
-              setActiveTool(null);
-              return;
-            }
-
-            setActiveTool(tool);
-          }}
           onToggleIndicatorsPanel={() => setShowIndicatorsPanel((current) => !current)}
           onToggleDrawingsPanel={() => onToggleDrawingsPanel?.()}
         />
@@ -1024,6 +1055,7 @@ const TradingChart = ({
           onRemoveIndicator={handleRemoveIndicator}
           onToggleVisibility={handleToggleIndicatorVisibility}
           onUpdateParam={handleUpdateIndicatorParam}
+          onResetParams={handleResetIndicatorParams}
           onClose={() => setShowIndicatorsPanel(false)}
         />
       )}

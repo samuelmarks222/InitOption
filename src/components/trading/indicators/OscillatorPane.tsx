@@ -4,16 +4,16 @@ import {
   createChart,
   CrosshairMode,
   HistogramSeries,
-  IChartApi,
-  IPriceLine,
-  ISeriesApi,
+  type IChartApi,
+  type IPriceLine,
+  type ISeriesApi,
   LineSeries,
   LineStyle,
   type Time,
 } from "lightweight-charts";
 import { X } from "lucide-react";
 import type { OHLCCandle } from "../engine/priceEngine";
-import { calculateMacd, calculateRsi } from "./calculations";
+import { calculateOscillatorIndicator } from "./calculations";
 import type { ActiveIndicator } from "./types";
 
 interface OscillatorPaneProps {
@@ -31,13 +31,25 @@ type PaneSeries = {
   histogram?: ISeriesApi<"Histogram">;
 };
 
-const toChartLineData = (points: Array<{ time: number; value: number }>) =>
-  points.map((point) => ({ time: point.time as Time, value: point.value }));
+const clampLineWidth = (value: unknown, fallback = 2) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
 
-const toSafeNumber = (value: unknown, fallback: number) => {
+  return Math.max(1, Math.min(4, Math.floor(numeric)));
+};
+
+const readNumber = (value: unknown, fallback: number) => {
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : fallback;
 };
+
+const toLineData = (points: Array<{ time: number; value: number }>) =>
+  points.map((point) => ({
+    time: point.time as Time,
+    value: point.value,
+  }));
 
 export const OscillatorPane = ({ indicator, candlesRef, renderKey, syncMainChart, onRemove }: OscillatorPaneProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,7 +59,9 @@ export const OscillatorPane = ({ indicator, candlesRef, renderKey, syncMainChart
   const oversoldLineRef = useRef<IPriceLine | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current) {
+      return;
+    }
 
     const chart = createChart(containerRef.current, {
       width: containerRef.current.clientWidth,
@@ -92,10 +106,12 @@ export const OscillatorPane = ({ indicator, candlesRef, renderKey, syncMainChart
           minMove: 0.00001,
         },
       });
+
       seriesRef.current.macd = chart.addSeries(LineSeries, {
         color: "#60a5fa",
         lineWidth: 2,
       });
+
       seriesRef.current.signal = chart.addSeries(LineSeries, {
         color: "#facc15",
         lineWidth: 2,
@@ -103,7 +119,10 @@ export const OscillatorPane = ({ indicator, candlesRef, renderKey, syncMainChart
     }
 
     const resizeObserver = new ResizeObserver(() => {
-      if (!containerRef.current) return;
+      if (!containerRef.current) {
+        return;
+      }
+
       chart.applyOptions({ width: containerRef.current.clientWidth });
     });
 
@@ -120,12 +139,17 @@ export const OscillatorPane = ({ indicator, candlesRef, renderKey, syncMainChart
   }, [indicator.key]);
 
   useEffect(() => {
-    if (!syncMainChart || !chartRef.current) return;
+    if (!syncMainChart || !chartRef.current) {
+      return;
+    }
 
     const paneChart = chartRef.current;
 
     const syncRange = (range: { from: number; to: number } | null) => {
-      if (!range) return;
+      if (!range) {
+        return;
+      }
+
       paneChart.timeScale().setVisibleLogicalRange(range);
     };
 
@@ -138,21 +162,29 @@ export const OscillatorPane = ({ indicator, candlesRef, renderKey, syncMainChart
   }, [syncMainChart]);
 
   useEffect(() => {
-    if (!chartRef.current) return;
+    const chart = chartRef.current;
+    if (!chart) {
+      return;
+    }
 
     const candles = candlesRef.current;
-    if (candles.length === 0) return;
+    if (candles.length === 0) {
+      return;
+    }
 
-    if (indicator.key === "rsi" && seriesRef.current.rsi) {
-      const period = toSafeNumber(indicator.params.period, 14);
-      const overbought = toSafeNumber(indicator.params.overbought, 70);
-      const oversold = toSafeNumber(indicator.params.oversold, 30);
+    const oscillator = calculateOscillatorIndicator(indicator, candles);
+    if (!oscillator) {
+      return;
+    }
+
+    if (oscillator.kind === "rsi" && seriesRef.current.rsi) {
+      const overbought = readNumber(indicator.params.overbought, 70);
+      const oversold = readNumber(indicator.params.oversold, 30);
       const color = typeof indicator.params.color === "string" ? indicator.params.color : "#a78bfa";
-      const lineWidth = Math.max(1, Math.min(4, toSafeNumber(indicator.params.lineWidth, 2)));
-      const data = toChartLineData(calculateRsi(candles, period));
+      const lineWidth = clampLineWidth(indicator.params.lineWidth, 2);
 
       seriesRef.current.rsi.applyOptions({ color, lineWidth });
-      seriesRef.current.rsi.setData(data);
+      seriesRef.current.rsi.setData(toLineData(oscillator.points));
 
       if (!overboughtLineRef.current) {
         overboughtLineRef.current = seriesRef.current.rsi.createPriceLine({
@@ -180,31 +212,32 @@ export const OscillatorPane = ({ indicator, candlesRef, renderKey, syncMainChart
         oversoldLineRef.current.applyOptions({ price: oversold });
       }
 
-      chartRef.current.priceScale("right").applyOptions({
+      chart.priceScale("right").applyOptions({
         scaleMargins: { top: 0.12, bottom: 0.12 },
         autoScale: false,
       });
     }
 
-    if (indicator.key === "macd" && seriesRef.current.macd && seriesRef.current.signal && seriesRef.current.histogram) {
-      const fastPeriod = toSafeNumber(indicator.params.fastPeriod, 12);
-      const slowPeriod = toSafeNumber(indicator.params.slowPeriod, 26);
-      const signalPeriod = toSafeNumber(indicator.params.signalPeriod, 9);
+    if (
+      oscillator.kind === "macd" &&
+      seriesRef.current.macd &&
+      seriesRef.current.signal &&
+      seriesRef.current.histogram
+    ) {
       const macdColor = typeof indicator.params.macdColor === "string" ? indicator.params.macdColor : "#60a5fa";
       const signalColor = typeof indicator.params.signalColor === "string" ? indicator.params.signalColor : "#facc15";
       const histogramUpColor =
         typeof indicator.params.histogramUpColor === "string" ? indicator.params.histogramUpColor : "#22c55e";
       const histogramDownColor =
         typeof indicator.params.histogramDownColor === "string" ? indicator.params.histogramDownColor : "#ef4444";
+      const lineWidth = clampLineWidth(indicator.params.lineWidth, 2);
 
-      const data = calculateMacd(candles, fastPeriod, slowPeriod, signalPeriod);
-
-      seriesRef.current.macd.applyOptions({ color: macdColor });
-      seriesRef.current.signal.applyOptions({ color: signalColor });
-      seriesRef.current.macd.setData(toChartLineData(data.macd));
-      seriesRef.current.signal.setData(toChartLineData(data.signal));
+      seriesRef.current.macd.applyOptions({ color: macdColor, lineWidth });
+      seriesRef.current.signal.applyOptions({ color: signalColor, lineWidth });
+      seriesRef.current.macd.setData(toLineData(oscillator.macd));
+      seriesRef.current.signal.setData(toLineData(oscillator.signal));
       seriesRef.current.histogram.setData(
-        data.histogram.map((point) => ({
+        oscillator.histogram.map((point) => ({
           time: point.time as Time,
           value: point.value,
           color: point.value >= 0 ? histogramUpColor : histogramDownColor,
@@ -212,7 +245,7 @@ export const OscillatorPane = ({ indicator, candlesRef, renderKey, syncMainChart
       );
     }
 
-    chartRef.current.timeScale().fitContent();
+    chart.timeScale().fitContent();
   }, [candlesRef, indicator, renderKey]);
 
   if (indicator.key !== "rsi" && indicator.key !== "macd") {
@@ -233,6 +266,7 @@ export const OscillatorPane = ({ indicator, candlesRef, renderKey, syncMainChart
           </button>
         ) : null}
       </div>
+
       <div ref={containerRef} className="flex-1" />
     </div>
   );
