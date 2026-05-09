@@ -1,0 +1,7 @@
+.codex-fetch-apr6.cjs
+.codex-seo-overlay-backup
+DEPLOYMENT_LOCK.md
+api/robots.ts
+api/sitemap.ts
+scripts/assert-prod-safety.ps1
+scripts/restore-april6-live.ps1

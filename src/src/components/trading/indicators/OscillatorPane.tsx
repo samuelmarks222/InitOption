@@ -1,0 +1,340 @@
+import { useEffect, useRef } from "react";
+import {
+  ColorType,
+  createChart,
+  CrosshairMode,
+  HistogramSeries,
+  LineSeries,
+  LineStyle,
+  type IChartApi,
+  type IPriceLine,
+  type ISeriesApi,
+  type Time,
+} from "lightweight-charts";
+import { X } from "lucide-react";
+import type { OscillatorIndicatorResult } from "./calculations";
+import type { ActiveIndicator } from "./types";
+
+interface OscillatorPaneProps {
+  indicator: ActiveIndicator;
+  data: OscillatorIndicatorResult | null;
+  errorMessage?: string;
+  renderKey: number;
+  syncMainChart: IChartApi | null;
+  onRemove?: () => void;
+}
+
+type PaneSeries = {
+  rsi?: ISeriesApi<"Line">;
+  macd?: ISeriesApi<"Line">;
+  signal?: ISeriesApi<"Line">;
+  histogram?: ISeriesApi<"Histogram">;
+};
+
+const clampLineWidth = (value: unknown, fallback = 2) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+
+  return Math.max(1, Math.min(4, Math.floor(numeric)));
+};
+
+const readNumber = (value: unknown, fallback: number) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+};
+
+const toLineData = (points: Array<{ time: number; value: number }>) =>
+  points.map((point) => ({
+    time: point.time as Time,
+    value: point.value,
+  }));
+
+const clearPaneSeries = (series: PaneSeries) => {
+  series.rsi?.setData([]);
+  series.macd?.setData([]);
+  series.signal?.setData([]);
+  series.histogram?.setData([]);
+};
+
+export const OscillatorPane = ({ indicator, data, errorMessage, renderKey, syncMainChart, onRemove }: OscillatorPaneProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const seriesRef = useRef<PaneSeries>({});
+  const overboughtLineRef = useRef<IPriceLine | null>(null);
+  const oversoldLineRef = useRef<IPriceLine | null>(null);
+  const baselineLineRef = useRef<IPriceLine | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) {
+      return;
+    }
+
+    const chart = createChart(containerRef.current, {
+      width: containerRef.current.clientWidth,
+      height: 140,
+      layout: {
+        background: { type: ColorType.Solid, color: "#0c131d" },
+        textColor: "#8f9bad",
+      },
+      grid: {
+        vertLines: { color: "rgba(143, 155, 173, 0.1)" },
+        horzLines: { color: "rgba(143, 155, 173, 0.1)" },
+      },
+      rightPriceScale: {
+        borderVisible: false,
+        scaleMargins: { top: 0.12, bottom: 0.12 },
+      },
+      timeScale: {
+        borderVisible: false,
+        timeVisible: true,
+        secondsVisible: false,
+      },
+      crosshair: {
+        mode: CrosshairMode.Normal,
+        vertLine: { color: "rgba(255,255,255,0.16)", style: LineStyle.Dashed },
+        horzLine: { color: "rgba(255,255,255,0.16)", style: LineStyle.Dashed },
+      },
+    });
+
+    chartRef.current = chart;
+
+    if (indicator.key === "rsi") {
+      seriesRef.current.rsi = chart.addSeries(LineSeries, {
+        color: "#a78bfa",
+        lineWidth: 2,
+        priceFormat: {
+          type: "price",
+          precision: 2,
+          minMove: 0.01,
+        },
+        autoscaleInfoProvider: () => ({
+          priceRange: {
+            minValue: 0,
+            maxValue: 100,
+          },
+        }),
+      });
+    }
+
+    if (indicator.key === "macd") {
+      seriesRef.current.histogram = chart.addSeries(HistogramSeries, {
+        priceFormat: {
+          type: "price",
+          precision: 5,
+          minMove: 0.00001,
+        },
+      });
+
+      seriesRef.current.macd = chart.addSeries(LineSeries, {
+        color: "#60a5fa",
+        lineWidth: 2,
+      });
+
+      seriesRef.current.signal = chart.addSeries(LineSeries, {
+        color: "#facc15",
+        lineWidth: 2,
+      });
+    }
+
+    if (indicator.key === "volumeOscillator") {
+      seriesRef.current.histogram = chart.addSeries(HistogramSeries, {
+        priceFormat: {
+          type: "price",
+          precision: 2,
+          minMove: 0.01,
+        },
+      });
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (!containerRef.current) {
+        return;
+      }
+
+      chart.applyOptions({ width: containerRef.current.clientWidth });
+    });
+
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+      chart.remove();
+      chartRef.current = null;
+      seriesRef.current = {};
+      overboughtLineRef.current = null;
+      oversoldLineRef.current = null;
+      baselineLineRef.current = null;
+    };
+  }, [indicator.key]);
+
+  useEffect(() => {
+    if (!syncMainChart || !chartRef.current) {
+      return;
+    }
+
+    const paneChart = chartRef.current;
+
+    const syncRange = (range: { from: number; to: number } | null) => {
+      if (!range) {
+        return;
+      }
+
+      paneChart.timeScale().setVisibleLogicalRange(range);
+    };
+
+    syncRange(syncMainChart.timeScale().getVisibleLogicalRange());
+    syncMainChart.timeScale().subscribeVisibleLogicalRangeChange(syncRange);
+
+    return () => {
+      syncMainChart.timeScale().unsubscribeVisibleLogicalRangeChange(syncRange);
+    };
+  }, [syncMainChart]);
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) {
+      return;
+    }
+
+    if (!data || errorMessage) {
+      clearPaneSeries(seriesRef.current);
+      return;
+    }
+
+    if (indicator.key === "rsi" && data.kind === "rsi" && seriesRef.current.rsi) {
+      const overbought = readNumber(indicator.params.overbought, 70);
+      const oversold = readNumber(indicator.params.oversold, 30);
+      const color = typeof indicator.params.color === "string" ? indicator.params.color : "#a78bfa";
+      const lineWidth = clampLineWidth(indicator.params.lineWidth, 2);
+
+      seriesRef.current.rsi.applyOptions({ color, lineWidth });
+      seriesRef.current.rsi.setData(toLineData(data.points));
+
+      if (!overboughtLineRef.current) {
+        overboughtLineRef.current = seriesRef.current.rsi.createPriceLine({
+          price: overbought,
+          color: "rgba(239, 68, 68, 0.65)",
+          lineStyle: LineStyle.Dashed,
+          lineWidth: 1,
+          axisLabelVisible: false,
+          title: "",
+        });
+      } else {
+        overboughtLineRef.current.applyOptions({ price: overbought });
+      }
+
+      if (!oversoldLineRef.current) {
+        oversoldLineRef.current = seriesRef.current.rsi.createPriceLine({
+          price: oversold,
+          color: "rgba(34, 197, 94, 0.65)",
+          lineStyle: LineStyle.Dashed,
+          lineWidth: 1,
+          axisLabelVisible: false,
+          title: "",
+        });
+      } else {
+        oversoldLineRef.current.applyOptions({ price: oversold });
+      }
+
+      return;
+    }
+
+    if (indicator.key === "macd" && data.kind === "macd") {
+      if (!seriesRef.current.macd || !seriesRef.current.signal || !seriesRef.current.histogram) {
+        return;
+      }
+
+      const macdColor = typeof indicator.params.macdColor === "string" ? indicator.params.macdColor : "#60a5fa";
+      const signalColor = typeof indicator.params.signalColor === "string" ? indicator.params.signalColor : "#facc15";
+      const histogramUpColor =
+        typeof indicator.params.histogramUpColor === "string" ? indicator.params.histogramUpColor : "#22c55e";
+      const histogramDownColor =
+        typeof indicator.params.histogramDownColor === "string" ? indicator.params.histogramDownColor : "#ef4444";
+      const lineWidth = clampLineWidth(indicator.params.lineWidth, 2);
+
+      seriesRef.current.macd.applyOptions({ color: macdColor, lineWidth });
+      seriesRef.current.signal.applyOptions({ color: signalColor, lineWidth });
+      seriesRef.current.macd.setData(toLineData(data.macd));
+      seriesRef.current.signal.setData(toLineData(data.signal));
+      seriesRef.current.histogram.setData(
+        data.histogram.map((point) => ({
+          time: point.time as Time,
+          value: point.value,
+          color: point.value >= 0 ? histogramUpColor : histogramDownColor,
+        })),
+      );
+
+      return;
+    }
+
+    if (indicator.key === "volumeOscillator" && data.kind === "volumeOscillator") {
+      if (!seriesRef.current.histogram) {
+        return;
+      }
+
+      const positiveColor =
+        typeof indicator.params.positiveColor === "string" ? indicator.params.positiveColor : "#22c55e";
+      const negativeColor =
+        typeof indicator.params.negativeColor === "string" ? indicator.params.negativeColor : "#ef4444";
+      const baselineColor =
+        typeof indicator.params.baselineColor === "string" ? indicator.params.baselineColor : "#10b981";
+
+      seriesRef.current.histogram.applyOptions({
+        priceFormat: {
+          type: "price",
+          precision: 2,
+          minMove: 0.01,
+        },
+      });
+      seriesRef.current.histogram.setData(
+        data.points.map((point) => ({
+          time: point.time as Time,
+          value: point.value,
+          color: point.value >= 0 ? positiveColor : negativeColor,
+        })),
+      );
+
+      if (!baselineLineRef.current) {
+        baselineLineRef.current = seriesRef.current.histogram.createPriceLine({
+          price: 0,
+          color: baselineColor,
+          lineStyle: LineStyle.Dashed,
+          lineWidth: 1,
+          axisLabelVisible: false,
+          title: "",
+        });
+      } else {
+        baselineLineRef.current.applyOptions({
+          price: 0,
+          color: baselineColor,
+        });
+      }
+    }
+  }, [data, errorMessage, indicator, renderKey]);
+
+  if (indicator.key !== "rsi" && indicator.key !== "macd" && indicator.key !== "volumeOscillator") {
+    return null;
+  }
+
+  return (
+    <div className="flex h-[176px] flex-col border-t border-white/5 bg-[#0b1118]">
+      <div className="flex items-center justify-between px-3 py-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">{indicator.name}</p>
+        {onRemove ? (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="rounded p-1 text-slate-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
+      </div>
+
+      {errorMessage ? <p className="px-3 pb-1 text-[11px] text-amber-300">{errorMessage}</p> : null}
+      <div ref={containerRef} className="flex-1" />
+    </div>
+  );
+};

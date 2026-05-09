@@ -1,0 +1,4190 @@
+diff --git a/.env b/.env
+index 28eee32..ad317ce 100644
+--- a/.env
++++ b/.env
+@@ -1,3 +1,3 @@
+-VITE_SUPABASE_PROJECT_ID="wwbvmwmphejiwuxkthoc"
+-VITE_SUPABASE_PUBLISHABLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3YnZtd21waGVqaXd1eGt0aG9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MzUzNTIsImV4cCI6MjA4NTQxMTM1Mn0.3fej3IeGEhIJfGfilndqBPIHXMN10U97dZ5f8rFB7EY"
+-VITE_SUPABASE_URL="https://wwbvmwmphejiwuxkthoc.supabase.co"
++VITE_SUPABASE_PROJECT_ID="nkfbbikqcossnashmraz"
++VITE_SUPABASE_PUBLISHABLE_KEY="sb_publishable_FFeTQPKoIN7MudksgSMDJg_WlBnCcd_"
++VITE_SUPABASE_URL="https://nkfbbikqcossnashmraz.supabase.co"
+diff --git a/.gitignore b/.gitignore
+index a547bf3..fc5ae9f 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -22,3 +22,4 @@ dist-ssr
+ *.njsproj
+ *.sln
+ *.sw?
++.vercel
+diff --git a/package-lock.json b/package-lock.json
+index 651bafd..58b102e 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -44,6 +44,7 @@
+         "date-fns": "^3.6.0",
+         "embla-carousel-react": "^8.6.0",
+         "input-otp": "^1.4.2",
++        "lightweight-charts": "^5.1.0",
+         "lucide-react": "^0.462.0",
+         "next-themes": "^0.3.0",
+         "react": "^18.3.1",
+@@ -64,11 +65,12 @@
+         "@tailwindcss/typography": "^0.5.16",
+         "@testing-library/jest-dom": "^6.6.0",
+         "@testing-library/react": "^16.0.0",
+-        "@types/node": "^22.16.5",
++        "@types/node": "^22.19.15",
+         "@types/react": "^18.3.23",
+         "@types/react-dom": "^18.3.7",
+         "@vitejs/plugin-react-swc": "^3.11.0",
+         "autoprefixer": "^10.4.21",
++        "dotenv": "^17.3.1",
+         "eslint": "^9.32.0",
+         "eslint-plugin-react-hooks": "^5.2.0",
+         "eslint-plugin-react-refresh": "^0.4.20",
+@@ -77,6 +79,7 @@
+         "lovable-tagger": "^1.1.13",
+         "postcss": "^8.5.6",
+         "tailwindcss": "^3.4.17",
++        "ts-node": "^10.9.2",
+         "typescript": "^5.8.3",
+         "typescript-eslint": "^8.38.0",
+         "vite": "^5.4.19",
+@@ -94,7 +97,6 @@
+       "version": "5.2.0",
+       "resolved": "https://registry.npmjs.org/@alloc/quick-lru/-/quick-lru-5.2.0.tgz",
+       "integrity": "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=10"
+@@ -103,6 +105,33 @@
+         "url": "https://github.com/sponsors/sindresorhus"
+       }
+     },
++    "node_modules/@babel/code-frame": {
++      "version": "7.29.0",
++      "resolved": "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.29.0.tgz",
++      "integrity": "sha512-9NhCeYjq9+3uxgdtp20LSiJXJvN0FeCtNGpJxuMFZ1Kv3cWUNb6DOhJwUvcVCzKGR66cw4njwM6hrJLqgOwbcw==",
++      "dev": true,
++      "license": "MIT",
++      "peer": true,
++      "dependencies": {
++        "@babel/helper-validator-identifier": "^7.28.5",
++        "js-tokens": "^4.0.0",
++        "picocolors": "^1.1.1"
++      },
++      "engines": {
++        "node": ">=6.9.0"
++      }
++    },
++    "node_modules/@babel/helper-validator-identifier": {
++      "version": "7.28.5",
++      "resolved": "https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-7.28.5.tgz",
++      "integrity": "sha512-qSs4ifwzKJSV39ucNjsvc6WVHs6b7S03sOh2OcHF9UHfVPqWWALUsNUVzhSBiItjRZoLHx7nIarVjqKVusUZ1Q==",
++      "dev": true,
++      "license": "MIT",
++      "peer": true,
++      "engines": {
++        "node": ">=6.9.0"
++      }
++    },
+     "node_modules/@babel/runtime": {
+       "version": "7.28.2",
+       "resolved": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.28.2.tgz",
+@@ -112,6 +141,30 @@
+         "node": ">=6.9.0"
+       }
+     },
++    "node_modules/@cspotcode/source-map-support": {
++      "version": "0.8.1",
++      "resolved": "https://registry.npmjs.org/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz",
++      "integrity": "sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==",
++      "devOptional": true,
++      "license": "MIT",
++      "dependencies": {
++        "@jridgewell/trace-mapping": "0.3.9"
++      },
++      "engines": {
++        "node": ">=12"
++      }
++    },
++    "node_modules/@cspotcode/source-map-support/node_modules/@jridgewell/trace-mapping": {
++      "version": "0.3.9",
++      "resolved": "https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.9.tgz",
++      "integrity": "sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==",
++      "devOptional": true,
++      "license": "MIT",
++      "dependencies": {
++        "@jridgewell/resolve-uri": "^3.0.3",
++        "@jridgewell/sourcemap-codec": "^1.4.10"
++      }
++    },
+     "node_modules/@esbuild/aix-ppc64": {
+       "version": "0.21.5",
+       "resolved": "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.21.5.tgz",
+@@ -808,7 +861,6 @@
+       "version": "8.0.2",
+       "resolved": "https://registry.npmjs.org/@isaacs/cliui/-/cliui-8.0.2.tgz",
+       "integrity": "sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==",
+-      "dev": true,
+       "license": "ISC",
+       "dependencies": {
+         "string-width": "^5.1.2",
+@@ -826,7 +878,6 @@
+       "version": "0.3.5",
+       "resolved": "https://registry.npmjs.org/@jridgewell/gen-mapping/-/gen-mapping-0.3.5.tgz",
+       "integrity": "sha512-IzL8ZoEDIBRWEzlCcRhOaCupYyN5gdIK+Q6fbFdPDg6HqX6jpkItn7DFIpW9LQzXG6Df9sA7+OKnq0qlz/GaQg==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "@jridgewell/set-array": "^1.2.1",
+@@ -841,7 +892,6 @@
+       "version": "3.1.2",
+       "resolved": "https://registry.npmjs.org/@jridgewell/resolve-uri/-/resolve-uri-3.1.2.tgz",
+       "integrity": "sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=6.0.0"
+@@ -851,7 +901,6 @@
+       "version": "1.2.1",
+       "resolved": "https://registry.npmjs.org/@jridgewell/set-array/-/set-array-1.2.1.tgz",
+       "integrity": "sha512-R8gLRTZeyp03ymzP/6Lil/28tGeGEzhx1q2k703KGWRAI1VdvPIXdG70VJc2pAMw3NA6JKL5hhFu1sJX0Mnn/A==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=6.0.0"
+@@ -861,14 +910,12 @@
+       "version": "1.5.5",
+       "resolved": "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.5.tgz",
+       "integrity": "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/@jridgewell/trace-mapping": {
+       "version": "0.3.25",
+       "resolved": "https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.25.tgz",
+       "integrity": "sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "@jridgewell/resolve-uri": "^3.1.0",
+@@ -879,7 +926,6 @@
+       "version": "2.1.5",
+       "resolved": "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz",
+       "integrity": "sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "@nodelib/fs.stat": "2.0.5",
+@@ -893,7 +939,6 @@
+       "version": "2.0.5",
+       "resolved": "https://registry.npmjs.org/@nodelib/fs.stat/-/fs.stat-2.0.5.tgz",
+       "integrity": "sha512-RkhPPp2zrqDAQA/2jNhnztcPAlv64XdhIp7a7454A5ovI7Bukxgt7MX7udwAu3zg1DcpPU0rz3VV1SeaqvY4+A==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">= 8"
+@@ -903,7 +948,6 @@
+       "version": "1.2.8",
+       "resolved": "https://registry.npmjs.org/@nodelib/fs.walk/-/fs.walk-1.2.8.tgz",
+       "integrity": "sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "@nodelib/fs.scandir": "2.1.5",
+@@ -917,7 +961,6 @@
+       "version": "0.11.0",
+       "resolved": "https://registry.npmjs.org/@pkgjs/parseargs/-/parseargs-0.11.0.tgz",
+       "integrity": "sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==",
+-      "dev": true,
+       "license": "MIT",
+       "optional": true,
+       "engines": {
+@@ -2602,7 +2645,7 @@
+       "version": "1.13.2",
+       "resolved": "https://registry.npmjs.org/@swc/core/-/core-1.13.2.tgz",
+       "integrity": "sha512-YWqn+0IKXDhqVLKoac4v2tV6hJqB/wOh8/Br8zjqeqBkKa77Qb0Kw2i7LOFzjFNZbZaPH6AlMGlBwNrxaauaAg==",
+-      "dev": true,
++      "devOptional": true,
+       "hasInstallScript": true,
+       "license": "Apache-2.0",
+       "dependencies": {
+@@ -2644,7 +2687,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "dev": true,
+       "license": "Apache-2.0 AND MIT",
+       "optional": true,
+       "os": [
+@@ -2661,7 +2703,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "dev": true,
+       "license": "Apache-2.0 AND MIT",
+       "optional": true,
+       "os": [
+@@ -2678,7 +2719,6 @@
+       "cpu": [
+         "arm"
+       ],
+-      "dev": true,
+       "license": "Apache-2.0",
+       "optional": true,
+       "os": [
+@@ -2695,7 +2735,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "dev": true,
+       "license": "Apache-2.0 AND MIT",
+       "optional": true,
+       "os": [
+@@ -2712,7 +2751,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "dev": true,
+       "license": "Apache-2.0 AND MIT",
+       "optional": true,
+       "os": [
+@@ -2729,7 +2767,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "dev": true,
+       "license": "Apache-2.0 AND MIT",
+       "optional": true,
+       "os": [
+@@ -2746,7 +2783,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "dev": true,
+       "license": "Apache-2.0 AND MIT",
+       "optional": true,
+       "os": [
+@@ -2763,7 +2799,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "dev": true,
+       "license": "Apache-2.0 AND MIT",
+       "optional": true,
+       "os": [
+@@ -2780,7 +2815,6 @@
+       "cpu": [
+         "ia32"
+       ],
+-      "dev": true,
+       "license": "Apache-2.0 AND MIT",
+       "optional": true,
+       "os": [
+@@ -2797,7 +2831,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "dev": true,
+       "license": "Apache-2.0 AND MIT",
+       "optional": true,
+       "os": [
+@@ -2811,14 +2844,14 @@
+       "version": "0.1.3",
+       "resolved": "https://registry.npmjs.org/@swc/counter/-/counter-0.1.3.tgz",
+       "integrity": "sha512-e2BR4lsJkkRlKZ/qCHPw9ZaSxc0MVUd7gtbtaB7aMvHeJVYe8sOB8DBZkP2DtISHGSku9sCK6T6cnY0CtXrOCQ==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "Apache-2.0"
+     },
+     "node_modules/@swc/types": {
+       "version": "0.1.23",
+       "resolved": "https://registry.npmjs.org/@swc/types/-/types-0.1.23.tgz",
+       "integrity": "sha512-u1iIVZV9Q0jxY+yM2vw/hZGDNudsN85bBpTqzAQ9rzkxW9D+e3aEM4Han+ow518gSewkXgjmEK0BD79ZcNVgPw==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "Apache-2.0",
+       "dependencies": {
+         "@swc/counter": "^0.1.3"
+@@ -2879,6 +2912,46 @@
+         "react": "^18 || ^19"
+       }
+     },
++    "node_modules/@testing-library/dom": {
++      "version": "10.4.1",
++      "resolved": "https://registry.npmjs.org/@testing-library/dom/-/dom-10.4.1.tgz",
++      "integrity": "sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==",
++      "dev": true,
++      "license": "MIT",
++      "peer": true,
++      "dependencies": {
++        "@babel/code-frame": "^7.10.4",
++        "@babel/runtime": "^7.12.5",
++        "@types/aria-query": "^5.0.1",
++        "aria-query": "5.3.0",
++        "dom-accessibility-api": "^0.5.9",
++        "lz-string": "^1.5.0",
++        "picocolors": "1.1.1",
++        "pretty-format": "^27.0.2"
++      },
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@testing-library/dom/node_modules/aria-query": {
++      "version": "5.3.0",
++      "resolved": "https://registry.npmjs.org/aria-query/-/aria-query-5.3.0.tgz",
++      "integrity": "sha512-b0P0sZPKtyu8HkeRAfCq0IfURZK+SuwMjY1UXGBU27wpAiTwQAIlq56IbIO+ytk/JjS1fMR14ee5WBBfKi5J6A==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "peer": true,
++      "dependencies": {
++        "dequal": "^2.0.3"
++      }
++    },
++    "node_modules/@testing-library/dom/node_modules/dom-accessibility-api": {
++      "version": "0.5.16",
++      "resolved": "https://registry.npmjs.org/dom-accessibility-api/-/dom-accessibility-api-0.5.16.tgz",
++      "integrity": "sha512-X7BJ2yElsnOJ30pZF4uIIDfBEVgF4XEBxL9Bxhy6dnrm5hkzqmsWHGTiHqRiITNhMyFLyAiWndIJP7Z1NTteDg==",
++      "dev": true,
++      "license": "MIT",
++      "peer": true
++    },
+     "node_modules/@testing-library/jest-dom": {
+       "version": "6.9.1",
+       "resolved": "https://registry.npmjs.org/@testing-library/jest-dom/-/jest-dom-6.9.1.tgz",
+@@ -2937,6 +3010,42 @@
+         "node": ">= 10"
+       }
+     },
++    "node_modules/@tsconfig/node10": {
++      "version": "1.0.12",
++      "resolved": "https://registry.npmjs.org/@tsconfig/node10/-/node10-1.0.12.tgz",
++      "integrity": "sha512-UCYBaeFvM11aU2y3YPZ//O5Rhj+xKyzy7mvcIoAjASbigy8mHMryP5cK7dgjlz2hWxh1g5pLw084E0a/wlUSFQ==",
++      "devOptional": true,
++      "license": "MIT"
++    },
++    "node_modules/@tsconfig/node12": {
++      "version": "1.0.11",
++      "resolved": "https://registry.npmjs.org/@tsconfig/node12/-/node12-1.0.11.tgz",
++      "integrity": "sha512-cqefuRsh12pWyGsIoBKJA9luFu3mRxCA+ORZvA4ktLSzIuCUtWVxGIuXigEwO5/ywWFMZ2QEGKWvkZG1zDMTag==",
++      "devOptional": true,
++      "license": "MIT"
++    },
++    "node_modules/@tsconfig/node14": {
++      "version": "1.0.3",
++      "resolved": "https://registry.npmjs.org/@tsconfig/node14/-/node14-1.0.3.tgz",
++      "integrity": "sha512-ysT8mhdixWK6Hw3i1V2AeRqZ5WfXg1G43mqoYlM2nc6388Fq5jcXyr5mRsqViLx/GJYdoL0bfXD8nmF+Zn/Iow==",
++      "devOptional": true,
++      "license": "MIT"
++    },
++    "node_modules/@tsconfig/node16": {
++      "version": "1.0.4",
++      "resolved": "https://registry.npmjs.org/@tsconfig/node16/-/node16-1.0.4.tgz",
++      "integrity": "sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==",
++      "devOptional": true,
++      "license": "MIT"
++    },
++    "node_modules/@types/aria-query": {
++      "version": "5.0.4",
++      "resolved": "https://registry.npmjs.org/@types/aria-query/-/aria-query-5.0.4.tgz",
++      "integrity": "sha512-rfT93uj5s0PRL7EzccGMs3brplhcrghnDoV26NqKhCAS1hVo+WdNsPvE/yb6ilfr5hi2MEk6d5EWJTKdxg8jVw==",
++      "dev": true,
++      "license": "MIT",
++      "peer": true
++    },
+     "node_modules/@types/chai": {
+       "version": "5.2.3",
+       "resolved": "https://registry.npmjs.org/@types/chai/-/chai-5.2.3.tgz",
+@@ -3033,9 +3142,9 @@
+       "license": "MIT"
+     },
+     "node_modules/@types/node": {
+-      "version": "22.16.5",
+-      "resolved": "https://registry.npmjs.org/@types/node/-/node-22.16.5.tgz",
+-      "integrity": "sha512-bJFoMATwIGaxxx8VJPeM8TonI8t579oRvgAuT8zFugJsJZgzqv0Fu8Mhp68iecjzG7cnN3mO2dJQ5uUM2EFrgQ==",
++      "version": "22.19.15",
++      "resolved": "https://registry.npmjs.org/@types/node/-/node-22.19.15.tgz",
++      "integrity": "sha512-F0R/h2+dsy5wJAUe3tAU6oqa2qbWY5TpNfL/RGmo1y38hiyO1w3x2jPtt76wmuaJI4DQnOBu21cNXQ2STIUUWg==",
+       "license": "MIT",
+       "dependencies": {
+         "undici-types": "~6.21.0"
+@@ -3051,14 +3160,14 @@
+       "version": "15.7.13",
+       "resolved": "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.13.tgz",
+       "integrity": "sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "MIT"
+     },
+     "node_modules/@types/react": {
+       "version": "18.3.23",
+       "resolved": "https://registry.npmjs.org/@types/react/-/react-18.3.23.tgz",
+       "integrity": "sha512-/LDXMQh55EzZQ0uVAZmKKhfENivEvWz6E+EYzh+/MCjMhNsotd+ZHhBGIjFDTi6+fz0OhQQQLbTgdQIxxCsC0w==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "MIT",
+       "dependencies": {
+         "@types/prop-types": "*",
+@@ -3069,7 +3178,7 @@
+       "version": "18.3.7",
+       "resolved": "https://registry.npmjs.org/@types/react-dom/-/react-dom-18.3.7.tgz",
+       "integrity": "sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "MIT",
+       "peerDependencies": {
+         "@types/react": "^18.0.0"
+@@ -3483,7 +3592,7 @@
+       "version": "8.15.0",
+       "resolved": "https://registry.npmjs.org/acorn/-/acorn-8.15.0.tgz",
+       "integrity": "sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "MIT",
+       "bin": {
+         "acorn": "bin/acorn"
+@@ -3517,7 +3626,7 @@
+       "version": "8.3.4",
+       "resolved": "https://registry.npmjs.org/acorn-walk/-/acorn-walk-8.3.4.tgz",
+       "integrity": "sha512-ueEepnujpqee2o5aIYnvHU6C0A42MNdsIDeqy5BydrkuC5R1ZuUFnm27EeFJGoEHJQgn3uleRvmTXaJgfXbt4g==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "MIT",
+       "dependencies": {
+         "acorn": "^8.11.0"
+@@ -3560,7 +3669,6 @@
+       "version": "6.1.0",
+       "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-6.1.0.tgz",
+       "integrity": "sha512-7HSX4QQb4CspciLpVFwyRe79O3xsIZDDLER21kERQ71oaPodF8jL725AgJMFAYbooIqolJoRLuM81SpeUkpkvA==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=12"
+@@ -3573,7 +3681,6 @@
+       "version": "4.3.0",
+       "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-4.3.0.tgz",
+       "integrity": "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "color-convert": "^2.0.1"
+@@ -3589,14 +3696,12 @@
+       "version": "1.3.0",
+       "resolved": "https://registry.npmjs.org/any-promise/-/any-promise-1.3.0.tgz",
+       "integrity": "sha512-7UvmKalWRt1wgjL1RrGxoSJW/0QZFIegpeGvZG9kjp8vrRu55XTHbwnqq2GpXm9uLbcuhxm3IqX9OB4MZR1b2A==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/anymatch": {
+       "version": "3.1.3",
+       "resolved": "https://registry.npmjs.org/anymatch/-/anymatch-3.1.3.tgz",
+       "integrity": "sha512-KMReFUr0B4t+D+OBkjR3KYqvocp2XaSzO55UcB6mgQMd3KbcE+mWTyvVV7D/zsdEbNnV6acZUutkiHQXvTr1Rw==",
+-      "dev": true,
+       "license": "ISC",
+       "dependencies": {
+         "normalize-path": "^3.0.0",
+@@ -3606,11 +3711,22 @@
+         "node": ">= 8"
+       }
+     },
++    "node_modules/anymatch/node_modules/picomatch": {
++      "version": "2.3.1",
++      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.1.tgz",
++      "integrity": "sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=8.6"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/jonschlinkert"
++      }
++    },
+     "node_modules/arg": {
+       "version": "5.0.2",
+       "resolved": "https://registry.npmjs.org/arg/-/arg-5.0.2.tgz",
+       "integrity": "sha512-PYjyFOLKQ9y57JvQ6QLo8dAgNqswh8M1RMJYdQduT6xbWSgK36P/Z/v+p888pM69jMMfS8Xd8F6I1kQ/I9HUGg==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/argparse": {
+@@ -3701,14 +3817,12 @@
+       "version": "1.0.2",
+       "resolved": "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz",
+       "integrity": "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/binary-extensions": {
+       "version": "2.3.0",
+       "resolved": "https://registry.npmjs.org/binary-extensions/-/binary-extensions-2.3.0.tgz",
+       "integrity": "sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=8"
+@@ -3732,7 +3846,6 @@
+       "version": "3.0.3",
+       "resolved": "https://registry.npmjs.org/braces/-/braces-3.0.3.tgz",
+       "integrity": "sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "fill-range": "^7.1.1"
+@@ -3812,7 +3925,6 @@
+       "version": "2.0.1",
+       "resolved": "https://registry.npmjs.org/camelcase-css/-/camelcase-css-2.0.1.tgz",
+       "integrity": "sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">= 6"
+@@ -3887,7 +3999,6 @@
+       "version": "3.6.0",
+       "resolved": "https://registry.npmjs.org/chokidar/-/chokidar-3.6.0.tgz",
+       "integrity": "sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "anymatch": "~3.1.2",
+@@ -3912,7 +4023,6 @@
+       "version": "5.1.2",
+       "resolved": "https://registry.npmjs.org/glob-parent/-/glob-parent-5.1.2.tgz",
+       "integrity": "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==",
+-      "dev": true,
+       "license": "ISC",
+       "dependencies": {
+         "is-glob": "^4.0.1"
+@@ -3961,7 +4071,6 @@
+       "version": "2.0.1",
+       "resolved": "https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz",
+       "integrity": "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "color-name": "~1.1.4"
+@@ -3974,7 +4083,6 @@
+       "version": "1.1.4",
+       "resolved": "https://registry.npmjs.org/color-name/-/color-name-1.1.4.tgz",
+       "integrity": "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/combined-stream": {
+@@ -3994,7 +4102,6 @@
+       "version": "4.1.1",
+       "resolved": "https://registry.npmjs.org/commander/-/commander-4.1.1.tgz",
+       "integrity": "sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">= 6"
+@@ -4007,11 +4114,17 @@
+       "dev": true,
+       "license": "MIT"
+     },
++    "node_modules/create-require": {
++      "version": "1.1.1",
++      "resolved": "https://registry.npmjs.org/create-require/-/create-require-1.1.1.tgz",
++      "integrity": "sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==",
++      "devOptional": true,
++      "license": "MIT"
++    },
+     "node_modules/cross-spawn": {
+       "version": "7.0.6",
+       "resolved": "https://registry.npmjs.org/cross-spawn/-/cross-spawn-7.0.6.tgz",
+       "integrity": "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==",
+-      "dev": true,
+       "dependencies": {
+         "path-key": "^3.1.0",
+         "shebang-command": "^2.0.0",
+@@ -4032,7 +4145,6 @@
+       "version": "3.0.0",
+       "resolved": "https://registry.npmjs.org/cssesc/-/cssesc-3.0.0.tgz",
+       "integrity": "sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==",
+-      "dev": true,
+       "license": "MIT",
+       "bin": {
+         "cssesc": "bin/cssesc"
+@@ -4278,6 +4390,17 @@
+         "node": ">=0.4.0"
+       }
+     },
++    "node_modules/dequal": {
++      "version": "2.0.3",
++      "resolved": "https://registry.npmjs.org/dequal/-/dequal-2.0.3.tgz",
++      "integrity": "sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==",
++      "dev": true,
++      "license": "MIT",
++      "peer": true,
++      "engines": {
++        "node": ">=6"
++      }
++    },
+     "node_modules/detect-node-es": {
+       "version": "1.1.0",
+       "resolved": "https://registry.npmjs.org/detect-node-es/-/detect-node-es-1.1.0.tgz",
+@@ -4288,14 +4411,22 @@
+       "version": "1.2.2",
+       "resolved": "https://registry.npmjs.org/didyoumean/-/didyoumean-1.2.2.tgz",
+       "integrity": "sha512-gxtyfqMg7GKyhQmb056K7M3xszy/myH8w+B4RT+QXBQsvAOdc3XymqDDPHx1BgPgsdAA5SIifona89YtRATDzw==",
+-      "dev": true,
+       "license": "Apache-2.0"
+     },
++    "node_modules/diff": {
++      "version": "4.0.4",
++      "resolved": "https://registry.npmjs.org/diff/-/diff-4.0.4.tgz",
++      "integrity": "sha512-X07nttJQkwkfKfvTPG/KSnE2OMdcUCao6+eXF3wmnIQRn2aPAHH3VxDbDOdegkd6JbPsXqShpvEOHfAT+nCNwQ==",
++      "devOptional": true,
++      "license": "BSD-3-Clause",
++      "engines": {
++        "node": ">=0.3.1"
++      }
++    },
+     "node_modules/dlv": {
+       "version": "1.1.3",
+       "resolved": "https://registry.npmjs.org/dlv/-/dlv-1.1.3.tgz",
+       "integrity": "sha512-+HlytyjlPKnIG8XuRG8WvmBP8xs8P71y+SKKS6ZXWoEgLuePxtDoUEiH7WkdePWrQ5JBpE6aoVqfZfJUQkjXwA==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/dom-accessibility-api": {
+@@ -4329,6 +4460,19 @@
+         "node": ">=12"
+       }
+     },
++    "node_modules/dotenv": {
++      "version": "17.3.1",
++      "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-17.3.1.tgz",
++      "integrity": "sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==",
++      "dev": true,
++      "license": "BSD-2-Clause",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://dotenvx.com"
++      }
++    },
+     "node_modules/dunder-proto": {
+       "version": "1.0.1",
+       "resolved": "https://registry.npmjs.org/dunder-proto/-/dunder-proto-1.0.1.tgz",
+@@ -4348,7 +4492,6 @@
+       "version": "0.2.0",
+       "resolved": "https://registry.npmjs.org/eastasianwidth/-/eastasianwidth-0.2.0.tgz",
+       "integrity": "sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/electron-to-chromium": {
+@@ -4390,7 +4533,6 @@
+       "version": "9.2.2",
+       "resolved": "https://registry.npmjs.org/emoji-regex/-/emoji-regex-9.2.2.tgz",
+       "integrity": "sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/entities": {
+@@ -4764,6 +4906,12 @@
+         "node": ">=12.0.0"
+       }
+     },
++    "node_modules/fancy-canvas": {
++      "version": "2.1.0",
++      "resolved": "https://registry.npmjs.org/fancy-canvas/-/fancy-canvas-2.1.0.tgz",
++      "integrity": "sha512-nifxXJ95JNLFR2NgRV4/MxVP45G9909wJTEKz5fg/TZS20JJZA6hfgRVh/bC9bwl2zBtBNcYPjiBE4njQHVBwQ==",
++      "license": "MIT"
++    },
+     "node_modules/fast-deep-equal": {
+       "version": "3.1.3",
+       "resolved": "https://registry.npmjs.org/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz",
+@@ -4784,7 +4932,6 @@
+       "version": "3.3.2",
+       "resolved": "https://registry.npmjs.org/fast-glob/-/fast-glob-3.3.2.tgz",
+       "integrity": "sha512-oX2ruAFQwf/Orj8m737Y5adxDQO0LAB7/S5MnxCdTNDd4p6BsyIVsv9JQsATbTSq8KHRpLwIHbVlUNatxd+1Ow==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "@nodelib/fs.stat": "^2.0.2",
+@@ -4801,7 +4948,6 @@
+       "version": "5.1.2",
+       "resolved": "https://registry.npmjs.org/glob-parent/-/glob-parent-5.1.2.tgz",
+       "integrity": "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==",
+-      "dev": true,
+       "license": "ISC",
+       "dependencies": {
+         "is-glob": "^4.0.1"
+@@ -4828,7 +4974,6 @@
+       "version": "1.17.1",
+       "resolved": "https://registry.npmjs.org/fastq/-/fastq-1.17.1.tgz",
+       "integrity": "sha512-sRVD3lWVIXWg6By68ZN7vho9a1pQcN/WBFaAAsDDFzlJjvoGx0P8z7V1t72grFJfJhu3YPZBuu25f7Kaw2jN1w==",
+-      "dev": true,
+       "license": "ISC",
+       "dependencies": {
+         "reusify": "^1.0.4"
+@@ -4869,7 +5014,6 @@
+       "version": "7.1.1",
+       "resolved": "https://registry.npmjs.org/fill-range/-/fill-range-7.1.1.tgz",
+       "integrity": "sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "to-regex-range": "^5.0.1"
+@@ -4920,7 +5064,6 @@
+       "version": "3.3.0",
+       "resolved": "https://registry.npmjs.org/foreground-child/-/foreground-child-3.3.0.tgz",
+       "integrity": "sha512-Ld2g8rrAyMYFXBhEqMz8ZAHBi4J4uS1i/CxGMDnjyFWddMXLVcDp051DZfu+t7+ab7Wv6SMqpWmyFIj5UbfFvg==",
+-      "dev": true,
+       "license": "ISC",
+       "dependencies": {
+         "cross-spawn": "^7.0.0",
+@@ -4968,7 +5111,6 @@
+       "version": "2.3.3",
+       "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
+       "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
+-      "dev": true,
+       "hasInstallScript": true,
+       "license": "MIT",
+       "optional": true,
+@@ -4983,7 +5125,6 @@
+       "version": "1.1.2",
+       "resolved": "https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz",
+       "integrity": "sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==",
+-      "dev": true,
+       "license": "MIT",
+       "funding": {
+         "url": "https://github.com/sponsors/ljharb"
+@@ -5041,7 +5182,6 @@
+       "version": "10.4.5",
+       "resolved": "https://registry.npmjs.org/glob/-/glob-10.4.5.tgz",
+       "integrity": "sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==",
+-      "dev": true,
+       "license": "ISC",
+       "dependencies": {
+         "foreground-child": "^3.1.0",
+@@ -5062,7 +5202,6 @@
+       "version": "6.0.2",
+       "resolved": "https://registry.npmjs.org/glob-parent/-/glob-parent-6.0.2.tgz",
+       "integrity": "sha512-XxwI8EOhVQgWp6iDL+3b0r86f4d6AX6zSU55HfB4ydCEuXLXc5FcYeOu+nnGftS4TEju/11rt4KJPTMgbfmv4A==",
+-      "dev": true,
+       "license": "ISC",
+       "dependencies": {
+         "is-glob": "^4.0.3"
+@@ -5075,7 +5214,6 @@
+       "version": "2.0.2",
+       "resolved": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.0.2.tgz",
+       "integrity": "sha512-Jt0vHyM+jmUBqojB7E1NIYadt0vI0Qxjxd2TErW94wDz+E2LAm5vKMXXwg6ZZBTHPuUlDgQHKXvjGBdfcF1ZDQ==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "balanced-match": "^1.0.0"
+@@ -5085,7 +5223,6 @@
+       "version": "9.0.5",
+       "resolved": "https://registry.npmjs.org/minimatch/-/minimatch-9.0.5.tgz",
+       "integrity": "sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow==",
+-      "dev": true,
+       "license": "ISC",
+       "dependencies": {
+         "brace-expansion": "^2.0.1"
+@@ -5173,7 +5310,6 @@
+       "version": "2.0.2",
+       "resolved": "https://registry.npmjs.org/hasown/-/hasown-2.0.2.tgz",
+       "integrity": "sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "function-bind": "^1.1.2"
+@@ -5316,7 +5452,6 @@
+       "version": "2.1.0",
+       "resolved": "https://registry.npmjs.org/is-binary-path/-/is-binary-path-2.1.0.tgz",
+       "integrity": "sha512-ZMERYes6pDydyuGidse7OsHxtbI7WVeUEozgR/g7rd0xUimYNlvZRE/K2MgZTjWy725IfelLeVcEM97mmtRGXw==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "binary-extensions": "^2.0.0"
+@@ -5329,7 +5464,6 @@
+       "version": "2.15.1",
+       "resolved": "https://registry.npmjs.org/is-core-module/-/is-core-module-2.15.1.tgz",
+       "integrity": "sha512-z0vtXSwucUJtANQWldhbtbt7BnL0vxiFjIdDLAatwhDYty2bad6s+rijD6Ri4YuYJubLzIJLUidCh09e1djEVQ==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "hasown": "^2.0.2"
+@@ -5345,7 +5479,6 @@
+       "version": "2.1.1",
+       "resolved": "https://registry.npmjs.org/is-extglob/-/is-extglob-2.1.1.tgz",
+       "integrity": "sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=0.10.0"
+@@ -5355,7 +5488,6 @@
+       "version": "3.0.0",
+       "resolved": "https://registry.npmjs.org/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz",
+       "integrity": "sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=8"
+@@ -5365,7 +5497,6 @@
+       "version": "4.0.3",
+       "resolved": "https://registry.npmjs.org/is-glob/-/is-glob-4.0.3.tgz",
+       "integrity": "sha512-xelSayHH36ZgE7ZWhli7pW34hNbNl8Ojv5KVmkJD4hBdD3th8Tfk9vYasLM+mXWOZhFkgZfxhLSnrwRr4elSSg==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "is-extglob": "^2.1.1"
+@@ -5378,7 +5509,6 @@
+       "version": "7.0.0",
+       "resolved": "https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz",
+       "integrity": "sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=0.12.0"
+@@ -5395,14 +5525,12 @@
+       "version": "2.0.0",
+       "resolved": "https://registry.npmjs.org/isexe/-/isexe-2.0.0.tgz",
+       "integrity": "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==",
+-      "dev": true,
+       "license": "ISC"
+     },
+     "node_modules/jackspeak": {
+       "version": "3.4.3",
+       "resolved": "https://registry.npmjs.org/jackspeak/-/jackspeak-3.4.3.tgz",
+       "integrity": "sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==",
+-      "dev": true,
+       "license": "BlueOak-1.0.0",
+       "dependencies": {
+         "@isaacs/cliui": "^8.0.2"
+@@ -5418,7 +5546,6 @@
+       "version": "1.21.6",
+       "resolved": "https://registry.npmjs.org/jiti/-/jiti-1.21.6.tgz",
+       "integrity": "sha512-2yTgeWTWzMWkHu6Jp9NKgePDaYHbntiwvYuuJLbbN9vl7DC9DvXKOB2BC3ZZ92D3cvV/aflH0osDfwpHepQ53w==",
+-      "dev": true,
+       "license": "MIT",
+       "bin": {
+         "jiti": "bin/jiti.js"
+@@ -5534,11 +5661,19 @@
+         "node": ">= 0.8.0"
+       }
+     },
++    "node_modules/lightweight-charts": {
++      "version": "5.1.0",
++      "resolved": "https://registry.npmjs.org/lightweight-charts/-/lightweight-charts-5.1.0.tgz",
++      "integrity": "sha512-jEAYR4ODYeyNZcWUigsoLTl52rbPmgXnvd5FLIv/ZoA/2sSDw63YKnef8n4yhzum7W926yHeFwlm7ididKb7YQ==",
++      "license": "Apache-2.0",
++      "dependencies": {
++        "fancy-canvas": "2.1.0"
++      }
++    },
+     "node_modules/lilconfig": {
+       "version": "3.1.3",
+       "resolved": "https://registry.npmjs.org/lilconfig/-/lilconfig-3.1.3.tgz",
+       "integrity": "sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=14"
+@@ -5551,7 +5686,6 @@
+       "version": "1.2.4",
+       "resolved": "https://registry.npmjs.org/lines-and-columns/-/lines-and-columns-1.2.4.tgz",
+       "integrity": "sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/locate-path": {
+@@ -6064,7 +6198,6 @@
+       "version": "10.4.3",
+       "resolved": "https://registry.npmjs.org/lru-cache/-/lru-cache-10.4.3.tgz",
+       "integrity": "sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==",
+-      "dev": true,
+       "license": "ISC"
+     },
+     "node_modules/lucide-react": {
+@@ -6075,6 +6208,17 @@
+         "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0-rc"
+       }
+     },
++    "node_modules/lz-string": {
++      "version": "1.5.0",
++      "resolved": "https://registry.npmjs.org/lz-string/-/lz-string-1.5.0.tgz",
++      "integrity": "sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==",
++      "dev": true,
++      "license": "MIT",
++      "peer": true,
++      "bin": {
++        "lz-string": "bin/bin.js"
++      }
++    },
+     "node_modules/magic-string": {
+       "version": "0.30.21",
+       "resolved": "https://registry.npmjs.org/magic-string/-/magic-string-0.30.21.tgz",
+@@ -6085,6 +6229,13 @@
+         "@jridgewell/sourcemap-codec": "^1.5.5"
+       }
+     },
++    "node_modules/make-error": {
++      "version": "1.3.6",
++      "resolved": "https://registry.npmjs.org/make-error/-/make-error-1.3.6.tgz",
++      "integrity": "sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==",
++      "devOptional": true,
++      "license": "ISC"
++    },
+     "node_modules/math-intrinsics": {
+       "version": "1.1.0",
+       "resolved": "https://registry.npmjs.org/math-intrinsics/-/math-intrinsics-1.1.0.tgz",
+@@ -6099,7 +6250,6 @@
+       "version": "1.4.1",
+       "resolved": "https://registry.npmjs.org/merge2/-/merge2-1.4.1.tgz",
+       "integrity": "sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">= 8"
+@@ -6109,7 +6259,6 @@
+       "version": "4.0.8",
+       "resolved": "https://registry.npmjs.org/micromatch/-/micromatch-4.0.8.tgz",
+       "integrity": "sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "braces": "^3.0.3",
+@@ -6119,6 +6268,18 @@
+         "node": ">=8.6"
+       }
+     },
++    "node_modules/micromatch/node_modules/picomatch": {
++      "version": "2.3.1",
++      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.1.tgz",
++      "integrity": "sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=8.6"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/jonschlinkert"
++      }
++    },
+     "node_modules/mime-db": {
+       "version": "1.52.0",
+       "resolved": "https://registry.npmjs.org/mime-db/-/mime-db-1.52.0.tgz",
+@@ -6169,7 +6330,6 @@
+       "version": "7.1.2",
+       "resolved": "https://registry.npmjs.org/minipass/-/minipass-7.1.2.tgz",
+       "integrity": "sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==",
+-      "dev": true,
+       "license": "ISC",
+       "engines": {
+         "node": ">=16 || 14 >=14.17"
+@@ -6186,7 +6346,6 @@
+       "version": "2.7.0",
+       "resolved": "https://registry.npmjs.org/mz/-/mz-2.7.0.tgz",
+       "integrity": "sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "any-promise": "^1.0.0",
+@@ -6198,7 +6357,6 @@
+       "version": "3.3.11",
+       "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.11.tgz",
+       "integrity": "sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==",
+-      "dev": true,
+       "funding": [
+         {
+           "type": "github",
+@@ -6241,7 +6399,6 @@
+       "version": "3.0.0",
+       "resolved": "https://registry.npmjs.org/normalize-path/-/normalize-path-3.0.0.tgz",
+       "integrity": "sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=0.10.0"
+@@ -6277,7 +6434,6 @@
+       "version": "3.0.0",
+       "resolved": "https://registry.npmjs.org/object-hash/-/object-hash-3.0.0.tgz",
+       "integrity": "sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">= 6"
+@@ -6337,7 +6493,6 @@
+       "version": "1.0.1",
+       "resolved": "https://registry.npmjs.org/package-json-from-dist/-/package-json-from-dist-1.0.1.tgz",
+       "integrity": "sha512-UEZIS3/by4OC8vL3P2dTXRETpebLI2NiI5vIrjaD/5UtrkFX/tNbwjTSRAGC/+7CAo2pIcBaRgWmcBBHcsaCIw==",
+-      "dev": true,
+       "license": "BlueOak-1.0.0"
+     },
+     "node_modules/parent-module": {
+@@ -6380,7 +6535,6 @@
+       "version": "3.1.1",
+       "resolved": "https://registry.npmjs.org/path-key/-/path-key-3.1.1.tgz",
+       "integrity": "sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=8"
+@@ -6390,14 +6544,12 @@
+       "version": "1.0.7",
+       "resolved": "https://registry.npmjs.org/path-parse/-/path-parse-1.0.7.tgz",
+       "integrity": "sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/path-scurry": {
+       "version": "1.11.1",
+       "resolved": "https://registry.npmjs.org/path-scurry/-/path-scurry-1.11.1.tgz",
+       "integrity": "sha512-Xa4Nw17FS9ApQFJ9umLiJS4orGjm7ZzwUrwamcGQuHSzDyth9boKDaycYdDcZDuqYATXw4HFXgaqWTctW/v1HA==",
+-      "dev": true,
+       "license": "BlueOak-1.0.0",
+       "dependencies": {
+         "lru-cache": "^10.2.0",
+@@ -6431,17 +6583,16 @@
+       "version": "1.1.1",
+       "resolved": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
+       "integrity": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==",
+-      "dev": true,
+       "license": "ISC"
+     },
+     "node_modules/picomatch": {
+-      "version": "2.3.1",
+-      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.1.tgz",
+-      "integrity": "sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==",
++      "version": "4.0.3",
++      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.3.tgz",
++      "integrity": "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==",
+       "dev": true,
+       "license": "MIT",
+       "engines": {
+-        "node": ">=8.6"
++        "node": ">=12"
+       },
+       "funding": {
+         "url": "https://github.com/sponsors/jonschlinkert"
+@@ -6451,7 +6602,6 @@
+       "version": "2.3.0",
+       "resolved": "https://registry.npmjs.org/pify/-/pify-2.3.0.tgz",
+       "integrity": "sha512-udgsAY+fTnvv7kI7aaxbqwWNb0AHiB0qBO89PZKPkoTmGOgdbrHDKD+0B2X4uTfJ/FT1R09r9gTsjUjNJotuog==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=0.10.0"
+@@ -6461,7 +6611,6 @@
+       "version": "4.0.6",
+       "resolved": "https://registry.npmjs.org/pirates/-/pirates-4.0.6.tgz",
+       "integrity": "sha512-saLsH7WeYYPiD25LDuLRRY/i+6HaPYr6G1OUlN39otzkSTxKnubR9RTxS3/Kk50s1g2JTgFwWQDQyplC5/SHZg==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">= 6"
+@@ -6471,7 +6620,6 @@
+       "version": "8.5.6",
+       "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.5.6.tgz",
+       "integrity": "sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==",
+-      "dev": true,
+       "funding": [
+         {
+           "type": "opencollective",
+@@ -6500,7 +6648,6 @@
+       "version": "15.1.0",
+       "resolved": "https://registry.npmjs.org/postcss-import/-/postcss-import-15.1.0.tgz",
+       "integrity": "sha512-hpr+J05B2FVYUAXHeK1YyI267J/dDDhMU6B6civm8hSY1jYJnBXxzKDKDswzJmtLHryrjhnDjqqp/49t8FALew==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "postcss-value-parser": "^4.0.0",
+@@ -6518,7 +6665,6 @@
+       "version": "4.0.1",
+       "resolved": "https://registry.npmjs.org/postcss-js/-/postcss-js-4.0.1.tgz",
+       "integrity": "sha512-dDLF8pEO191hJMtlHFPRa8xsizHaM82MLfNkUHdUtVEV3tgTp5oj+8qbEqYM57SLfc74KSbw//4SeJma2LRVIw==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "camelcase-css": "^2.0.1"
+@@ -6538,7 +6684,6 @@
+       "version": "4.0.2",
+       "resolved": "https://registry.npmjs.org/postcss-load-config/-/postcss-load-config-4.0.2.tgz",
+       "integrity": "sha512-bSVhyJGL00wMVoPUzAVAnbEoWyqRxkjv64tUl427SKnPrENtq6hJwUojroMz2VB+Q1edmi4IfrAPpami5VVgMQ==",
+-      "dev": true,
+       "funding": [
+         {
+           "type": "opencollective",
+@@ -6574,7 +6719,6 @@
+       "version": "6.2.0",
+       "resolved": "https://registry.npmjs.org/postcss-nested/-/postcss-nested-6.2.0.tgz",
+       "integrity": "sha512-HQbt28KulC5AJzG+cZtj9kvKB93CFCdLvog1WFLf1D+xmMvPGlBstkpTEZfK5+AN9hfJocyBFCNiqyS48bpgzQ==",
+-      "dev": true,
+       "funding": [
+         {
+           "type": "opencollective",
+@@ -6600,7 +6744,6 @@
+       "version": "6.1.2",
+       "resolved": "https://registry.npmjs.org/postcss-selector-parser/-/postcss-selector-parser-6.1.2.tgz",
+       "integrity": "sha512-Q8qQfPiZ+THO/3ZrOrO0cJJKfpYCagtMUkXbnEfmgUjwXg6z/WBeOyS9APBBPCTSiDV+s4SwQGu8yFsiMRIudg==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "cssesc": "^3.0.0",
+@@ -6614,7 +6757,6 @@
+       "version": "4.2.0",
+       "resolved": "https://registry.npmjs.org/postcss-value-parser/-/postcss-value-parser-4.2.0.tgz",
+       "integrity": "sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/prelude-ls": {
+@@ -6627,6 +6769,55 @@
+         "node": ">= 0.8.0"
+       }
+     },
++    "node_modules/pretty-format": {
++      "version": "27.5.1",
++      "resolved": "https://registry.npmjs.org/pretty-format/-/pretty-format-27.5.1.tgz",
++      "integrity": "sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==",
++      "dev": true,
++      "license": "MIT",
++      "peer": true,
++      "dependencies": {
++        "ansi-regex": "^5.0.1",
++        "ansi-styles": "^5.0.0",
++        "react-is": "^17.0.1"
++      },
++      "engines": {
++        "node": "^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0"
++      }
++    },
++    "node_modules/pretty-format/node_modules/ansi-regex": {
++      "version": "5.0.1",
++      "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz",
++      "integrity": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
++      "dev": true,
++      "license": "MIT",
++      "peer": true,
++      "engines": {
++        "node": ">=8"
++      }
++    },
++    "node_modules/pretty-format/node_modules/ansi-styles": {
++      "version": "5.2.0",
++      "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-5.2.0.tgz",
++      "integrity": "sha512-Cxwpt2SfTzTtXcfOlzGEee8O+c+MmUgGrNiBcXnuWxuFJHe6a5Hz7qwhwe5OgaSYI0IJvkLqWX1ASG+cJOkEiA==",
++      "dev": true,
++      "license": "MIT",
++      "peer": true,
++      "engines": {
++        "node": ">=10"
++      },
++      "funding": {
++        "url": "https://github.com/chalk/ansi-styles?sponsor=1"
++      }
++    },
++    "node_modules/pretty-format/node_modules/react-is": {
++      "version": "17.0.2",
++      "resolved": "https://registry.npmjs.org/react-is/-/react-is-17.0.2.tgz",
++      "integrity": "sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==",
++      "dev": true,
++      "license": "MIT",
++      "peer": true
++    },
+     "node_modules/prop-types": {
+       "version": "15.8.1",
+       "resolved": "https://registry.npmjs.org/prop-types/-/prop-types-15.8.1.tgz",
+@@ -6678,7 +6869,6 @@
+       "version": "1.2.3",
+       "resolved": "https://registry.npmjs.org/queue-microtask/-/queue-microtask-1.2.3.tgz",
+       "integrity": "sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==",
+-      "dev": true,
+       "funding": [
+         {
+           "type": "github",
+@@ -6902,7 +7092,6 @@
+       "version": "1.0.0",
+       "resolved": "https://registry.npmjs.org/read-cache/-/read-cache-1.0.0.tgz",
+       "integrity": "sha512-Owdv/Ft7IjOgm/i0xvNDZ1LrRANRfew4b2prF3OWMQLxLfu3bS8FVhCsrSCMK4lR56Y9ya+AThoTpDCTxCmpRA==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "pify": "^2.3.0"
+@@ -6912,7 +7101,6 @@
+       "version": "3.6.0",
+       "resolved": "https://registry.npmjs.org/readdirp/-/readdirp-3.6.0.tgz",
+       "integrity": "sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "picomatch": "^2.2.1"
+@@ -6921,6 +7109,18 @@
+         "node": ">=8.10.0"
+       }
+     },
++    "node_modules/readdirp/node_modules/picomatch": {
++      "version": "2.3.1",
++      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.1.tgz",
++      "integrity": "sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=8.6"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/jonschlinkert"
++      }
++    },
+     "node_modules/recharts": {
+       "version": "2.15.4",
+       "resolved": "https://registry.npmjs.org/recharts/-/recharts-2.15.4.tgz",
+@@ -6978,7 +7178,6 @@
+       "version": "1.22.8",
+       "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.22.8.tgz",
+       "integrity": "sha512-oKWePCxqpd6FlLvGV1VU0x7bkPmmCNolxzjMf4NczoDnQcIWrAF+cPtZn5i6n+RfD2d9i0tzpKnG6Yk168yIyw==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "is-core-module": "^2.13.0",
+@@ -7006,7 +7205,6 @@
+       "version": "1.0.4",
+       "resolved": "https://registry.npmjs.org/reusify/-/reusify-1.0.4.tgz",
+       "integrity": "sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "iojs": ">=1.0.0",
+@@ -7053,7 +7251,6 @@
+       "version": "1.2.0",
+       "resolved": "https://registry.npmjs.org/run-parallel/-/run-parallel-1.2.0.tgz",
+       "integrity": "sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==",
+-      "dev": true,
+       "funding": [
+         {
+           "type": "github",
+@@ -7119,7 +7316,6 @@
+       "version": "2.0.0",
+       "resolved": "https://registry.npmjs.org/shebang-command/-/shebang-command-2.0.0.tgz",
+       "integrity": "sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "shebang-regex": "^3.0.0"
+@@ -7132,7 +7328,6 @@
+       "version": "3.0.0",
+       "resolved": "https://registry.npmjs.org/shebang-regex/-/shebang-regex-3.0.0.tgz",
+       "integrity": "sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=8"
+@@ -7149,7 +7344,6 @@
+       "version": "4.1.0",
+       "resolved": "https://registry.npmjs.org/signal-exit/-/signal-exit-4.1.0.tgz",
+       "integrity": "sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==",
+-      "dev": true,
+       "license": "ISC",
+       "engines": {
+         "node": ">=14"
+@@ -7183,7 +7377,6 @@
+       "version": "1.2.1",
+       "resolved": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz",
+       "integrity": "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==",
+-      "dev": true,
+       "license": "BSD-3-Clause",
+       "engines": {
+         "node": ">=0.10.0"
+@@ -7207,7 +7400,6 @@
+       "version": "5.1.2",
+       "resolved": "https://registry.npmjs.org/string-width/-/string-width-5.1.2.tgz",
+       "integrity": "sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "eastasianwidth": "^0.2.0",
+@@ -7226,7 +7418,6 @@
+       "version": "4.2.3",
+       "resolved": "https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz",
+       "integrity": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "emoji-regex": "^8.0.0",
+@@ -7241,7 +7432,6 @@
+       "version": "5.0.1",
+       "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz",
+       "integrity": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=8"
+@@ -7251,14 +7441,12 @@
+       "version": "8.0.0",
+       "resolved": "https://registry.npmjs.org/emoji-regex/-/emoji-regex-8.0.0.tgz",
+       "integrity": "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/string-width-cjs/node_modules/strip-ansi": {
+       "version": "6.0.1",
+       "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz",
+       "integrity": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "ansi-regex": "^5.0.1"
+@@ -7271,7 +7459,6 @@
+       "version": "7.1.0",
+       "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-7.1.0.tgz",
+       "integrity": "sha512-iq6eVVI64nQQTRYq2KtEg2d2uU7LElhTJwsH4YzIHZshxlgZms/wIc4VoDQTlG/IvVIrBKG06CrZnp0qv7hkcQ==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "ansi-regex": "^6.0.1"
+@@ -7288,7 +7475,6 @@
+       "version": "6.0.1",
+       "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz",
+       "integrity": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "ansi-regex": "^5.0.1"
+@@ -7301,7 +7487,6 @@
+       "version": "5.0.1",
+       "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz",
+       "integrity": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=8"
+@@ -7357,7 +7542,6 @@
+       "version": "3.35.0",
+       "resolved": "https://registry.npmjs.org/sucrase/-/sucrase-3.35.0.tgz",
+       "integrity": "sha512-8EbVDiu9iN/nESwxeSxDKe0dunta1GOlHufmSSXxMD2z2/tMZpDMpvXQGsc+ajGo8y2uYUmixaSRUc/QPoQ0GA==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "@jridgewell/gen-mapping": "^0.3.2",
+@@ -7393,7 +7577,6 @@
+       "version": "1.0.0",
+       "resolved": "https://registry.npmjs.org/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz",
+       "integrity": "sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">= 0.4"
+@@ -7423,7 +7606,6 @@
+       "version": "3.4.17",
+       "resolved": "https://registry.npmjs.org/tailwindcss/-/tailwindcss-3.4.17.tgz",
+       "integrity": "sha512-w33E2aCvSDP0tW9RZuNXadXlkHXqFzSkQew/aIa2i/Sj8fThxwovwlXHSPXTbAHwEIhBFXAedUhP2tueAKP8Og==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "@alloc/quick-lru": "^5.2.0",
+@@ -7470,7 +7652,6 @@
+       "version": "3.3.1",
+       "resolved": "https://registry.npmjs.org/thenify/-/thenify-3.3.1.tgz",
+       "integrity": "sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "any-promise": "^1.0.0"
+@@ -7480,7 +7661,6 @@
+       "version": "1.6.0",
+       "resolved": "https://registry.npmjs.org/thenify-all/-/thenify-all-1.6.0.tgz",
+       "integrity": "sha512-RNxQH/qI8/t3thXJDwcstUO4zeqo64+Uy/+sNVRBx4Xn2OX+OZ9oP+iJnNFqplFra2ZUVeKCSa2oVWi3T4uVmA==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "thenify": ">= 3.1.0 < 4"
+@@ -7526,19 +7706,6 @@
+         "url": "https://github.com/sponsors/SuperchupuDev"
+       }
+     },
+-    "node_modules/tinyglobby/node_modules/picomatch": {
+-      "version": "4.0.3",
+-      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.3.tgz",
+-      "integrity": "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==",
+-      "dev": true,
+-      "license": "MIT",
+-      "engines": {
+-        "node": ">=12"
+-      },
+-      "funding": {
+-        "url": "https://github.com/sponsors/jonschlinkert"
+-      }
+-    },
+     "node_modules/tinypool": {
+       "version": "1.1.1",
+       "resolved": "https://registry.npmjs.org/tinypool/-/tinypool-1.1.1.tgz",
+@@ -7573,7 +7740,6 @@
+       "version": "5.0.1",
+       "resolved": "https://registry.npmjs.org/to-regex-range/-/to-regex-range-5.0.1.tgz",
+       "integrity": "sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "is-number": "^7.0.0"
+@@ -7628,9 +7794,59 @@
+       "version": "0.1.13",
+       "resolved": "https://registry.npmjs.org/ts-interface-checker/-/ts-interface-checker-0.1.13.tgz",
+       "integrity": "sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==",
+-      "dev": true,
+       "license": "Apache-2.0"
+     },
++    "node_modules/ts-node": {
++      "version": "10.9.2",
++      "resolved": "https://registry.npmjs.org/ts-node/-/ts-node-10.9.2.tgz",
++      "integrity": "sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==",
++      "devOptional": true,
++      "license": "MIT",
++      "dependencies": {
++        "@cspotcode/source-map-support": "^0.8.0",
++        "@tsconfig/node10": "^1.0.7",
++        "@tsconfig/node12": "^1.0.7",
++        "@tsconfig/node14": "^1.0.0",
++        "@tsconfig/node16": "^1.0.2",
++        "acorn": "^8.4.1",
++        "acorn-walk": "^8.1.1",
++        "arg": "^4.1.0",
++        "create-require": "^1.1.0",
++        "diff": "^4.0.1",
++        "make-error": "^1.1.1",
++        "v8-compile-cache-lib": "^3.0.1",
++        "yn": "3.1.1"
++      },
++      "bin": {
++        "ts-node": "dist/bin.js",
++        "ts-node-cwd": "dist/bin-cwd.js",
++        "ts-node-esm": "dist/bin-esm.js",
++        "ts-node-script": "dist/bin-script.js",
++        "ts-node-transpile-only": "dist/bin-transpile.js",
++        "ts-script": "dist/bin-script-deprecated.js"
++      },
++      "peerDependencies": {
++        "@swc/core": ">=1.2.50",
++        "@swc/wasm": ">=1.2.50",
++        "@types/node": "*",
++        "typescript": ">=2.7"
++      },
++      "peerDependenciesMeta": {
++        "@swc/core": {
++          "optional": true
++        },
++        "@swc/wasm": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/ts-node/node_modules/arg": {
++      "version": "4.1.3",
++      "resolved": "https://registry.npmjs.org/arg/-/arg-4.1.3.tgz",
++      "integrity": "sha512-58S9QDqG0Xx27YwPSt9fJxivjYl432YCwfDMfZ+71RAqUrZef7LrKQZ3LHLOwCS4FLNBplP533Zx895SeOCHvA==",
++      "devOptional": true,
++      "license": "MIT"
++    },
+     "node_modules/tslib": {
+       "version": "2.8.1",
+       "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
+@@ -7654,7 +7870,7 @@
+       "version": "5.8.3",
+       "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.8.3.tgz",
+       "integrity": "sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==",
+-      "dev": true,
++      "devOptional": true,
+       "license": "Apache-2.0",
+       "bin": {
+         "tsc": "bin/tsc",
+@@ -7812,7 +8028,13 @@
+       "version": "1.0.2",
+       "resolved": "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz",
+       "integrity": "sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==",
+-      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/v8-compile-cache-lib": {
++      "version": "3.0.1",
++      "resolved": "https://registry.npmjs.org/v8-compile-cache-lib/-/v8-compile-cache-lib-3.0.1.tgz",
++      "integrity": "sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==",
++      "devOptional": true,
+       "license": "MIT"
+     },
+     "node_modules/vaul": {
+@@ -8006,19 +8228,6 @@
+         }
+       }
+     },
+-    "node_modules/vitest/node_modules/picomatch": {
+-      "version": "4.0.3",
+-      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.3.tgz",
+-      "integrity": "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==",
+-      "dev": true,
+-      "license": "MIT",
+-      "engines": {
+-        "node": ">=12"
+-      },
+-      "funding": {
+-        "url": "https://github.com/sponsors/jonschlinkert"
+-      }
+-    },
+     "node_modules/w3c-xmlserializer": {
+       "version": "4.0.0",
+       "resolved": "https://registry.npmjs.org/w3c-xmlserializer/-/w3c-xmlserializer-4.0.0.tgz",
+@@ -8084,7 +8293,6 @@
+       "version": "2.0.2",
+       "resolved": "https://registry.npmjs.org/which/-/which-2.0.2.tgz",
+       "integrity": "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==",
+-      "dev": true,
+       "license": "ISC",
+       "dependencies": {
+         "isexe": "^2.0.0"
+@@ -8127,7 +8335,6 @@
+       "version": "8.1.0",
+       "resolved": "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-8.1.0.tgz",
+       "integrity": "sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "ansi-styles": "^6.1.0",
+@@ -8146,7 +8353,6 @@
+       "version": "7.0.0",
+       "resolved": "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-7.0.0.tgz",
+       "integrity": "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "ansi-styles": "^4.0.0",
+@@ -8164,7 +8370,6 @@
+       "version": "5.0.1",
+       "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz",
+       "integrity": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=8"
+@@ -8174,14 +8379,12 @@
+       "version": "8.0.0",
+       "resolved": "https://registry.npmjs.org/emoji-regex/-/emoji-regex-8.0.0.tgz",
+       "integrity": "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==",
+-      "dev": true,
+       "license": "MIT"
+     },
+     "node_modules/wrap-ansi-cjs/node_modules/string-width": {
+       "version": "4.2.3",
+       "resolved": "https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz",
+       "integrity": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "emoji-regex": "^8.0.0",
+@@ -8196,7 +8399,6 @@
+       "version": "6.0.1",
+       "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz",
+       "integrity": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
+-      "dev": true,
+       "license": "MIT",
+       "dependencies": {
+         "ansi-regex": "^5.0.1"
+@@ -8209,7 +8411,6 @@
+       "version": "6.2.1",
+       "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-6.2.1.tgz",
+       "integrity": "sha512-bN798gFfQX+viw3R7yrGWRqnrN2oRkEkUjjl4JNn4E8GxxbjtG3FbrEIIY3l8/hrwUwIeCZvi4QuOTP4MErVug==",
+-      "dev": true,
+       "license": "MIT",
+       "engines": {
+         "node": ">=12"
+@@ -8260,7 +8461,6 @@
+       "version": "2.6.0",
+       "resolved": "https://registry.npmjs.org/yaml/-/yaml-2.6.0.tgz",
+       "integrity": "sha512-a6ae//JvKDEra2kdi1qzCyrJW/WZCgFi8ydDV+eXExl95t+5R+ijnqHJbz9tmMh8FUjx3iv2fCQ4dclAQlO2UQ==",
+-      "dev": true,
+       "license": "ISC",
+       "bin": {
+         "yaml": "bin.mjs"
+@@ -8269,6 +8469,16 @@
+         "node": ">= 14"
+       }
+     },
++    "node_modules/yn": {
++      "version": "3.1.1",
++      "resolved": "https://registry.npmjs.org/yn/-/yn-3.1.1.tgz",
++      "integrity": "sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==",
++      "devOptional": true,
++      "license": "MIT",
++      "engines": {
++        "node": ">=6"
++      }
++    },
+     "node_modules/yocto-queue": {
+       "version": "0.1.0",
+       "resolved": "https://registry.npmjs.org/yocto-queue/-/yocto-queue-0.1.0.tgz",
+diff --git a/package.json b/package.json
+index 589faae..4436bf2 100644
+--- a/package.json
++++ b/package.json
+@@ -49,6 +49,7 @@
+     "date-fns": "^3.6.0",
+     "embla-carousel-react": "^8.6.0",
+     "input-otp": "^1.4.2",
++    "lightweight-charts": "^5.1.0",
+     "lucide-react": "^0.462.0",
+     "next-themes": "^0.3.0",
+     "react": "^18.3.1",
+@@ -69,11 +70,12 @@
+     "@tailwindcss/typography": "^0.5.16",
+     "@testing-library/jest-dom": "^6.6.0",
+     "@testing-library/react": "^16.0.0",
+-    "@types/node": "^22.16.5",
++    "@types/node": "^22.19.15",
+     "@types/react": "^18.3.23",
+     "@types/react-dom": "^18.3.7",
+     "@vitejs/plugin-react-swc": "^3.11.0",
+     "autoprefixer": "^10.4.21",
++    "dotenv": "^17.3.1",
+     "eslint": "^9.32.0",
+     "eslint-plugin-react-hooks": "^5.2.0",
+     "eslint-plugin-react-refresh": "^0.4.20",
+@@ -82,6 +84,7 @@
+     "lovable-tagger": "^1.1.13",
+     "postcss": "^8.5.6",
+     "tailwindcss": "^3.4.17",
++    "ts-node": "^10.9.2",
+     "typescript": "^5.8.3",
+     "typescript-eslint": "^8.38.0",
+     "vite": "^5.4.19",
+diff --git a/src/App.tsx b/src/App.tsx
+index 7f9f692..acb8aca 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -10,6 +10,9 @@ import Login from "./pages/Login";
+ import Register from "./pages/Register";
+ import Trade from "./pages/Trade";
+ import Dashboard from "./pages/Dashboard";
++import Deposit from "./pages/Deposit";
++import Withdraw from "./pages/Withdraw";
++import Settings from "./pages/Settings";
+ import NotFound from "./pages/NotFound";
+ 
+ const queryClient = new QueryClient();
+@@ -28,6 +31,9 @@ const App = () => (
+             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+             <Route path="/trade" element={<ProtectedRoute><Trade /></ProtectedRoute>} />
+             <Route path="/trade/*" element={<ProtectedRoute><Trade /></ProtectedRoute>} />
++            <Route path="/deposit" element={<ProtectedRoute><Deposit /></ProtectedRoute>} />
++            <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
++            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+             <Route path="*" element={<NotFound />} />
+           </Routes>
+         </AuthProvider>
+diff --git a/src/components/landing/Features.tsx b/src/components/landing/Features.tsx
+index f99064c..f8cc6e3 100644
+--- a/src/components/landing/Features.tsx
++++ b/src/components/landing/Features.tsx
+@@ -58,25 +58,7 @@ const Features = () => {
+           ))}
+         </div>
+ 
+-        {/* Stats Section */}
+-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+-          <div className="text-center">
+-            <div className="text-4xl md:text-5xl font-bold text-foreground mb-2">12+</div>
+-            <p className="text-muted-foreground">Years of experience</p>
+-          </div>
+-          <div className="text-center">
+-            <div className="text-4xl md:text-5xl font-bold text-foreground mb-2">174M+</div>
+-            <p className="text-muted-foreground">Traders worldwide</p>
+-          </div>
+-          <div className="text-center">
+-            <div className="text-4xl md:text-5xl font-bold text-foreground mb-2">550+</div>
+-            <p className="text-muted-foreground">Trading assets</p>
+-          </div>
+-          <div className="text-center">
+-            <div className="text-4xl md:text-5xl font-bold text-foreground mb-2">180</div>
+-            <p className="text-muted-foreground">Countries supported</p>
+-          </div>
+-        </div>
++        {/* Features list ends here */}
+       </div>
+     </section>
+   );
+diff --git a/src/components/landing/Hero.tsx b/src/components/landing/Hero.tsx
+index a954d27..ca4c133 100644
+--- a/src/components/landing/Hero.tsx
++++ b/src/components/landing/Hero.tsx
+@@ -34,9 +34,8 @@ const Hero = () => {
+ 
+           {/* Subheading */}
+           <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+-            Join IQ Option — the first-choice broker for{" "}
+-            <span className="text-foreground font-semibold">174 207 579</span>{" "}
+-            traders across 180 countries.
++            Join the new standard in modern trading — a powerful platform designed for{" "}
++            <span className="text-foreground font-semibold">speed and precision</span>.
+           </p>
+ 
+           {/* CTA Buttons */}
+@@ -53,13 +52,7 @@ const Hero = () => {
+             </Link>
+           </div>
+ 
+-          {/* Trustpilot */}
+-          <div className="flex items-center justify-center gap-2 text-muted-foreground animate-slide-up" style={{ animationDelay: "0.4s" }}>
+-            <Star className="w-5 h-5 text-trading-green fill-trading-green" />
+-            <span className="font-medium">4.3</span>
+-            <Star className="w-4 h-4 text-trading-green fill-trading-green" />
+-            <span>on Trustpilot</span>
+-          </div>
++
+         </div>
+ 
+         {/* Hero Image - Racing car silhouette effect */}
+diff --git a/src/components/landing/TradingPlatform.tsx b/src/components/landing/TradingPlatform.tsx
+index 02425e2..118a58e 100644
+--- a/src/components/landing/TradingPlatform.tsx
++++ b/src/components/landing/TradingPlatform.tsx
+@@ -61,39 +61,7 @@ const TradingPlatform = () => {
+           ))}
+         </div>
+ 
+-        {/* Trading preview mockup */}
+-        <div className="mt-16 relative">
+-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10 pointer-events-none" />
+-          <div className="rounded-xl overflow-hidden border border-border bg-card p-4">
+-            <div className="flex items-center gap-2 mb-4">
+-              <div className="w-3 h-3 rounded-full bg-trading-red" />
+-              <div className="w-3 h-3 rounded-full bg-primary" />
+-              <div className="w-3 h-3 rounded-full bg-trading-green" />
+-            </div>
+-            <div className="aspect-video bg-background rounded-lg flex items-center justify-center relative overflow-hidden">
+-              {/* Simulated chart */}
+-              <div className="absolute inset-0 flex items-end justify-around px-4 pb-4">
+-                {Array.from({ length: 20 }).map((_, i) => {
+-                  const isGreen = Math.random() > 0.4;
+-                  const height = 20 + Math.random() * 60;
+-                  return (
+-                    <div
+-                      key={i}
+-                      className={`w-3 rounded-sm ${isGreen ? 'bg-trading-green' : 'bg-trading-red'}`}
+-                      style={{ height: `${height}%` }}
+-                    />
+-                  );
+-                })}
+-              </div>
+-              <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+-              <Link to="/trade" className="relative z-10">
+-                <Button variant="trading" size="lg">
+-                  Open Trading Platform
+-                </Button>
+-              </Link>
+-            </div>
+-          </div>
+-        </div>
++        {/* End of Platform Features */}
+       </div>
+     </section>
+   );
+diff --git a/src/components/trading/AssetInfo.tsx b/src/components/trading/AssetInfo.tsx
+index 0770e37..e69579c 100644
+--- a/src/components/trading/AssetInfo.tsx
++++ b/src/components/trading/AssetInfo.tsx
+@@ -3,10 +3,7 @@ import AssetSelector from "./AssetSelector";
+ import { Asset } from "./data/assets";
+ 
+ interface AssetInfoProps {
+-  asset: {
+-    symbol: string;
+-    type: string;
+-    name: string;
++  asset: Asset & {
+     price: number;
+     change: number;
+   };
+@@ -14,40 +11,61 @@ interface AssetInfoProps {
+ }
+ 
+ const AssetInfo = ({ asset, onSelectAsset }: AssetInfoProps) => {
++  const higherPct = 57;
++  const lowerPct = 43;
++
+   return (
+-    <div className="h-14 bg-card border-b border-border flex items-center justify-between px-4">
+-      <div className="flex items-center gap-4">
+-        {/* Asset selector dropdown */}
++    <div
++      className="h-[52px] flex items-center justify-between px-3 shrink-0"
++      style={{
++        background: "hsl(228 20% 10%)",
++        borderBottom: "1px solid hsl(228 15% 15%)"
++      }}
++    >
++      {/* Left: Asset Selector + Info/Bell/Star */}
++      <div className="flex items-center gap-3">
+         <AssetSelector selectedAsset={asset} onSelectAsset={onSelectAsset} />
+ 
+         {/* Quick actions */}
+-        <div className="flex items-center gap-2">
+-          <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-secondary text-muted-foreground hover:text-foreground transition-colors">
+-            <Info className="w-4 h-4" />
+-            <span className="text-sm">Info</span>
++        <div className="flex items-center gap-1">
++          <button
++            className="flex items-center gap-1 px-2 py-1 rounded text-xs text-gray-400 hover:text-white transition-colors"
++            style={{ background: "hsl(228 16% 15%)" }}
++          >
++            <Info className="w-3.5 h-3.5" />
++            <span>Info</span>
+           </button>
+-          <button className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+-            <Bell className="w-4 h-4" />
++          <button
++            className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:text-white transition-colors"
++            style={{ background: "hsl(228 16% 15%)" }}
++          >
++            <Bell className="w-3.5 h-3.5" />
+           </button>
+-          <button className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-trading-orange hover:opacity-80 transition-opacity">
+-            <Star className="w-4 h-4 fill-current" />
++          <button
++            className="w-7 h-7 rounded flex items-center justify-center text-trading-orange hover:opacity-80 transition-opacity"
++            style={{ background: "hsl(228 16% 15%)" }}
++          >
++            <Star className="w-3.5 h-3.5 fill-current" />
+           </button>
+         </div>
+       </div>
+ 
+-      {/* Sentiment indicators */}
+-      <div className="flex items-center gap-4">
+-        <div className="flex items-center gap-2">
+-          <span className="text-sm text-muted-foreground">HIGHER</span>
+-          <span className="text-sm font-medium text-trading-green">56%</span>
++      {/* Right: ACIMA/ABAIXO sentiment */}
++      <div className="flex items-center gap-3">
++        <div className="flex flex-col items-center">
++          <span className="text-[10px] font-semibold text-trading-green">ACIMA</span>
++          <span className="text-[10px] text-trading-green">{higherPct}%</span>
+         </div>
+-        <div className="w-24 h-2 bg-muted rounded-full overflow-hidden flex">
+-          <div className="h-full bg-trading-green" style={{ width: "56%" }} />
+-          <div className="h-full bg-trading-red" style={{ width: "44%" }} />
++        <div
++          className="w-20 h-2 rounded-full overflow-hidden flex"
++          style={{ background: "hsl(228 16% 20%)" }}
++        >
++          <div className="h-full bg-trading-green transition-all" style={{ width: `${higherPct}%` }} />
++          <div className="h-full bg-trading-red transition-all" style={{ width: `${lowerPct}%` }} />
+         </div>
+-        <div className="flex items-center gap-2">
+-          <span className="text-sm text-muted-foreground">LOWER</span>
+-          <span className="text-sm font-medium text-trading-red">44%</span>
++        <div className="flex flex-col items-center">
++          <span className="text-[10px] font-semibold text-trading-red">ABAIXO</span>
++          <span className="text-[10px] text-trading-red">{lowerPct}%</span>
+         </div>
+       </div>
+     </div>
+diff --git a/src/components/trading/AssetSelector.tsx b/src/components/trading/AssetSelector.tsx
+index 5d0710c..76aa1b6 100644
+--- a/src/components/trading/AssetSelector.tsx
++++ b/src/components/trading/AssetSelector.tsx
+@@ -1,6 +1,6 @@
+ import { useState, useMemo } from "react";
+-import { ChevronDown, Search, Star, X } from "lucide-react";
+-import { allAssets, assetTypes, Asset } from "./data/assets";
++import { ChevronDown, Search, Star, X, Flame, Layers, Percent, Clock } from "lucide-react";
++import { allAssets, Asset } from "./data/assets";
+ 
+ interface AssetSelectorProps {
+   selectedAsset: {
+@@ -13,197 +13,194 @@ interface AssetSelectorProps {
+   onSelectAsset: (asset: Asset & { price: number; change: number }) => void;
+ }
+ 
+-const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorProps) => {
++const CATEGORIES = [
++  { id: "Trending", label: "Trending", icon: Flame },
++  { id: "Options", label: "Options", icon: Layers, count: 244 },
++  { id: "Margin", label: "Margin", icon: Percent, count: 426 },
++  { id: "Watchlist", label: "Watchlist", icon: Star, count: 0 },
++];
++
++export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorProps) => {
+   const [isOpen, setIsOpen] = useState(false);
+   const [searchQuery, setSearchQuery] = useState("");
+-  const [selectedType, setSelectedType] = useState<string>("All");
+-  const [favorites, setFavorites] = useState<string[]>(["EUR/USD-OTC", "BTC/USD-Crypto"]);
++  const [activeCategory, setActiveCategory] = useState<string>("Options");
++
++  // Get current full asset details to display its flags
++  const currentFullAsset = allAssets.find(a => a.symbol === selectedAsset.symbol);
++  const flags = currentFullAsset?.flags || [selectedAsset.symbol.charAt(0)];
+ 
+   const filteredAssets = useMemo(() => {
+     return allAssets.filter((asset) => {
+-      const matchesSearch =
+-        asset.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+-        asset.name.toLowerCase().includes(searchQuery.toLowerCase());
+-      const matchesType = selectedType === "All" || asset.type === selectedType;
+-      return matchesSearch && matchesType;
++      const matchesSearch = asset.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || asset.name.toLowerCase().includes(searchQuery.toLowerCase());
++      const matchesCategory = asset.category === activeCategory;
++      return matchesSearch && matchesCategory;
+     });
+-  }, [searchQuery, selectedType]);
+-
+-  const toggleFavorite = (assetKey: string) => {
+-    setFavorites((prev) =>
+-      prev.includes(assetKey)
+-        ? prev.filter((f) => f !== assetKey)
+-        : [...prev, assetKey]
+-    );
+-  };
++  }, [searchQuery, activeCategory]);
++
++  const tradersChoice = filteredAssets.filter(a => a.isTradersChoice);
++  const regularAssets = filteredAssets.filter(a => !a.isTradersChoice);
+ 
+   const handleSelectAsset = (asset: Asset) => {
+     onSelectAsset({
+       ...asset,
+       price: asset.basePrice,
+-      change: Math.random() * 2 - 1,
++      change: parseFloat(asset.change5min || "0"),
+     });
+     setIsOpen(false);
+   };
+ 
+-  const getAssetKey = (asset: Asset) => `${asset.symbol}-${asset.type}`;
++  // Render a specific asset card
++  const renderAssetCard = (asset: Asset) => (
++    <div
++      key={asset.symbol}
++      onClick={() => handleSelectAsset(asset)}
++      className="bg-[#2a2d35] rounded-lg p-3 cursor-pointer hover:bg-[#32363e] border border-transparent hover:border-white/10 transition-colors flex flex-col justify-between h-[110px]"
++    >
++      {/* Top Row: Flags & Symbol */}
++      <div className="flex items-center gap-2">
++        <div className="flex -space-x-2">
++           {asset.flags.map((flag, idx) => (
++              <div key={idx} className="w-6 h-6 rounded-full bg-black/50 flex items-center justify-center text-sm border border-[#2a2d35] z-10 relative" style={{ zIndex: 10 - idx }}>
++                {flag}
++              </div>
++           ))}
++        </div>
++        <span className="font-semibold text-foreground text-sm tracking-wide">{asset.symbol}</span>
++      </div>
++      
++      {/* Max Profit Row */}
++      <div className="flex flex-col mt-2">
++         <span className="text-[10px] text-muted-foreground uppercase">Max profit</span>
++         <span className="text-trading-green font-bold text-lg">{asset.maxProfit || 85}%</span>
++      </div>
++
++      {/* Bottom Row: Price & 5m change */}
++      <div className="flex justify-between items-end mt-1">
++         <div className="flex flex-col">
++            <span className="text-[10px] text-muted-foreground">Price</span>
++            <span className="text-xs text-foreground/80">{asset.basePrice.toFixed(asset.basePrice > 100 ? 4 : 6)}</span>
++         </div>
++         <div className="flex flex-col items-end">
++            <span className="text-[10px] text-muted-foreground">5 min change</span>
++            <span className={`text-xs ${asset.change5min?.startsWith("+") ? "text-trading-green" : "text-trading-red"}`}>
++               {asset.change5min || "+0.00%"}
++            </span>
++         </div>
++      </div>
++    </div>
++  );
+ 
+   return (
+-    <div className="relative">
+-      {/* Trigger Button */}
++    <div className="relative z-50">
++      {/* TRIGGER BUTTON (Top Left Style) */}
+       <button
+         onClick={() => setIsOpen(!isOpen)}
+-        className="flex items-center gap-2 hover:bg-secondary/50 rounded-lg p-2 transition-colors"
++        className="flex items-center gap-3 bg-[#292929] hover:bg-[#333] border-2 border-primary rounded p-2 transition-colors min-w-[140px]"
+       >
+-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+-          <span className="text-sm font-bold text-primary-foreground">
+-            {selectedAsset.symbol.charAt(0)}
+-          </span>
++        <div className="flex -space-x-2">
++           {flags.map((flag, idx) => (
++              <div key={idx} className="w-6 h-6 rounded-full bg-black flex items-center justify-center text-sm border border-[#2a2d35] z-10 relative" style={{ zIndex: 10 - idx }}>
++                {flag}
++              </div>
++           ))}
+         </div>
+-        <div className="flex flex-col items-start">
++        <div className="flex flex-col items-start pr-2">
+           <div className="flex items-center gap-2">
+-            <span className="font-medium text-foreground">
+-              {selectedAsset.symbol} ({selectedAsset.type})
+-            </span>
+-            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+-          </div>
+-          <div className="flex items-center gap-2">
+-            <span className="text-xs px-1.5 py-0.5 bg-trading-orange text-primary-foreground rounded font-medium">
+-              {selectedAsset.type}
+-            </span>
+-            <span className="text-xs text-muted-foreground">{selectedAsset.name}</span>
++             <span className="font-bold text-foreground leading-tight tracking-wide">{selectedAsset.symbol}</span>
++             <ChevronDown className={`w-3 h-3 text-white transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+           </div>
++          <span className="text-xs text-muted-foreground leading-none">Binary</span>
+         </div>
+       </button>
+ 
+-      {/* Dropdown */}
++      {/* MODAL DROPDOWN */}
+       {isOpen && (
+         <>
+-          <div
+-            className="fixed inset-0 z-40"
+-            onClick={() => setIsOpen(false)}
+-          />
+-          <div className="absolute top-full left-0 mt-2 w-[400px] bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+-            {/* Header */}
+-            <div className="p-3 border-b border-border">
+-              <div className="flex items-center justify-between mb-3">
+-                <h3 className="text-sm font-semibold text-foreground">Select Asset</h3>
+-                <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground">
+-                  <X className="w-4 h-4" />
+-                </button>
+-              </div>
++          <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setIsOpen(false)} />
++          <div className="absolute top-[calc(100%+8px)] left-0 w-[800px] h-[500px] bg-[#1a1b20] border border-white/10 rounded-xl shadow-2xl flex overflow-hidden z-50">
++            
++            {/* Left Sidebar Menu */}
++            <div className="w-[200px] bg-[#22242a] border-r border-white/5 flex flex-col shrink-0">
++               <div className="p-4 space-y-2">
++                 {CATEGORIES.map(cat => (
++                   <button
++                     key={cat.id}
++                     onClick={() => setActiveCategory(cat.id)}
++                     className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${activeCategory === cat.id ? "bg-[#32363e] text-foreground" : "text-muted-foreground hover:bg-[#2a2d35] hover:text-foreground"}`}
++                   >
++                     <div className="flex items-center gap-3">
++                       <cat.icon className="w-5 h-5" />
++                       <span className="font-medium text-sm">{cat.label}</span>
++                     </div>
++                     {cat.count !== undefined && (
++                       <span className="text-xs bg-[#1a1b20] px-2 py-0.5 rounded text-muted-foreground">{cat.count}</span>
++                     )}
++                   </button>
++                 ))}
++               </div>
++            </div>
++
++            {/* Right Main Content */}
++            <div className="flex-1 flex flex-col bg-[#1a1b20]">
+               
+-              {/* Search */}
+-              <div className="relative">
+-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+-                <input
+-                  type="text"
+-                  placeholder="Search assets..."
+-                  value={searchQuery}
+-                  onChange={(e) => setSearchQuery(e.target.value)}
+-                  className="w-full pl-9 pr-3 py-2 bg-secondary border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+-                />
++              {/* Header: Search and Filters */}
++              <div className="h-[60px] border-b border-white/5 flex items-center px-6 gap-4 shrink-0">
++                 <div className="flex-1 relative">
++                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
++                   <input 
++                     type="text" 
++                     placeholder="Search by name or ticker" 
++                     value={searchQuery}
++                     onChange={(e) => setSearchQuery(e.target.value)}
++                     className="w-full bg-[#2a2d35] border border-transparent hover:border-white/10 focus:border-white/20 text-sm text-foreground placeholder:text-muted-foreground rounded py-2 pl-9 pr-4 focus:outline-none transition-colors"
++                   />
++                 </div>
++                 <div className="flex items-center gap-2">
++                   <button className="flex items-center gap-2 bg-[#2a2d35] hover:bg-[#32363e] px-4 py-2 rounded text-sm text-foreground transition-colors">
++                     Binary <ChevronDown className="w-4 h-4" />
++                   </button>
++                   <div className="flex bg-[#2a2d35] rounded overflow-hidden">
++                     <button className="px-4 py-2 text-sm text-foreground bg-[#32363e]">Worldwide</button>
++                     <button className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-[#32363e]/50 transition-colors">Georgia</button>
++                   </div>
++                 </div>
+               </div>
+-            </div>
+ 
+-            {/* Type Filters */}
+-            <div className="p-2 border-b border-border flex gap-1 overflow-x-auto">
+-              <button
+-                onClick={() => setSelectedType("All")}
+-                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+-                  selectedType === "All"
+-                    ? "bg-primary text-primary-foreground"
+-                    : "bg-secondary text-muted-foreground hover:text-foreground"
+-                }`}
+-              >
+-                All
+-              </button>
+-              {assetTypes.map((type) => (
+-                <button
+-                  key={type}
+-                  onClick={() => setSelectedType(type)}
+-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+-                    selectedType === type
+-                      ? "bg-primary text-primary-foreground"
+-                      : "bg-secondary text-muted-foreground hover:text-foreground"
+-                  }`}
+-                >
+-                  {type}
+-                </button>
+-              ))}
+-            </div>
++              {/* Asset Grids Body */}
++              <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
++                 
++                 {/* Traders Choice Section */}
++                 {tradersChoice.length > 0 && (
++                   <div className="mb-8">
++                     <div className="flex justify-between items-end mb-4">
++                       <h2 className="text-xl font-medium text-foreground">Trader's choice</h2>
++                       <span className="text-xs text-muted-foreground">Last week</span>
++                     </div>
++                     <div className="grid grid-cols-3 gap-4">
++                       {tradersChoice.map(renderAssetCard)}
++                     </div>
++                   </div>
++                 )}
+ 
+-            {/* Asset List */}
+-            <div className="max-h-[300px] overflow-y-auto">
+-              {filteredAssets.length === 0 ? (
+-                <div className="p-4 text-center text-muted-foreground text-sm">
+-                  No assets found
+-                </div>
+-              ) : (
+-                filteredAssets.map((asset) => {
+-                  const assetKey = getAssetKey(asset);
+-                  const isFavorite = favorites.includes(assetKey);
+-                  const isSelected =
+-                    selectedAsset.symbol === asset.symbol &&
+-                    selectedAsset.type === asset.type;
+-
+-                  return (
+-                    <div
+-                      key={assetKey}
+-                      className={`flex items-center justify-between p-3 hover:bg-secondary/50 cursor-pointer transition-colors ${
+-                        isSelected ? "bg-secondary" : ""
+-                      }`}
+-                      onClick={() => handleSelectAsset(asset)}
+-                    >
+-                      <div className="flex items-center gap-3">
+-                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium">
+-                          {asset.icon || asset.symbol.charAt(0)}
+-                        </div>
+-                        <div>
+-                          <div className="flex items-center gap-2">
+-                            <span className="font-medium text-foreground text-sm">
+-                              {asset.symbol}
+-                            </span>
+-                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+-                              asset.type === "OTC" 
+-                                ? "bg-trading-orange text-primary-foreground" 
+-                                : asset.type === "Crypto"
+-                                ? "bg-purple-500 text-white"
+-                                : asset.type === "Stocks"
+-                                ? "bg-blue-500 text-white"
+-                                : asset.type === "Commodities"
+-                                ? "bg-yellow-500 text-black"
+-                                : "bg-green-500 text-white"
+-                            }`}>
+-                              {asset.type}
+-                            </span>
+-                          </div>
+-                          <span className="text-xs text-muted-foreground">{asset.name}</span>
+-                        </div>
+-                      </div>
+-
+-                      <div className="flex items-center gap-3">
+-                        <span className="text-sm font-medium text-foreground">
+-                          {asset.basePrice.toFixed(asset.basePrice > 100 ? 2 : 5)}
+-                        </span>
+-                        <button
+-                          onClick={(e) => {
+-                            e.stopPropagation();
+-                            toggleFavorite(assetKey);
+-                          }}
+-                          className={`p-1 rounded transition-colors ${
+-                            isFavorite
+-                              ? "text-trading-orange"
+-                              : "text-muted-foreground hover:text-trading-orange"
+-                          }`}
+-                        >
+-                          <Star className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
+-                        </button>
+-                      </div>
+-                    </div>
+-                  );
+-                })
+-              )}
++                 {/* Gainers / Main List Section */}
++                 {regularAssets.length > 0 && (
++                   <div>
++                     <div className="flex justify-between items-end mb-4">
++                       <h2 className="text-xl font-medium text-foreground">{searchQuery ? "Results" : "Gainers"}</h2>
++                       {!searchQuery && <span className="text-xs text-muted-foreground">Last week</span>}
++                     </div>
++                     <div className="grid grid-cols-3 gap-4">
++                       {regularAssets.map(renderAssetCard)}
++                     </div>
++                   </div>
++                 )}
++
++                 {filteredAssets.length === 0 && (
++                   <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
++                      <span className="mb-2">No assets found for "{searchQuery}"</span>
++                   </div>
++                 )}
++              </div>
+             </div>
+           </div>
+         </>
+diff --git a/src/components/trading/TradingChart.tsx b/src/components/trading/TradingChart.tsx
+index c3538c8..b47d7de 100644
+--- a/src/components/trading/TradingChart.tsx
++++ b/src/components/trading/TradingChart.tsx
+@@ -1,419 +1,388 @@
+-import { useEffect, useState, useRef, useCallback } from "react";
+-import ChartToolbar from "./ChartToolbar";
+-
+-interface Candle {
+-  open: number;
+-  high: number;
+-  low: number;
+-  close: number;
+-  time: number;
+-}
++import { useEffect, useRef, useState } from "react";
++import {
++  createChart,
++  IChartApi,
++  ISeriesApi,
++  CandlestickData,
++  LineData,
++  ColorType,
++  CrosshairMode,
++  CandlestickSeries,
++  LineSeries,
++} from "lightweight-charts";
++import { OTCPriceEngine, TIMEFRAMES, OHLCCandle } from "./engine/priceEngine";
+ 
+ interface TradingChartProps {
+   asset: {
+     symbol: string;
+     price: number;
++    type?: string;
+   };
+   onPriceUpdate?: (price: number) => void;
+ }
+ 
+-const generateCandles = (count: number, basePrice: number): Candle[] => {
+-  const candles: Candle[] = [];
+-  let currentPrice = basePrice;
+-  const now = Date.now();
+-
+-  for (let i = count; i >= 0; i--) {
+-    const volatility = 0.002;
+-    const change = (Math.random() - 0.5) * 2 * volatility;
+-    const open = currentPrice;
+-    const close = open * (1 + change);
+-    const high = Math.max(open, close) * (1 + Math.random() * volatility * 0.5);
+-    const low = Math.min(open, close) * (1 - Math.random() * volatility * 0.5);
+-
+-    candles.push({
+-      open,
+-      high,
+-      low,
+-      close,
+-      time: now - i * 60000,
+-    });
++const TIMEFRAME_LABELS = ["5s", "15s", "30s", "1m", "2m", "5m", "10m", "15m", "30m", "1h", "2h", "4h", "1D"];
++
++// ─── Indicator helpers ────────────────────────────────────────────────────────
++const calcSMA = (candles: OHLCCandle[], period: number): LineData[] =>
++  candles.slice(period - 1).map((_, i) => ({
++    time: candles[i + period - 1].time as any,
++    value: parseFloat((candles.slice(i, i + period).reduce((s, c) => s + c.close, 0) / period).toFixed(6)),
++  }));
++
++const calcEMA = (candles: OHLCCandle[], period: number): LineData[] => {
++  const k = 2 / (period + 1);
++  const result: LineData[] = [];
++  let ema = candles.slice(0, period).reduce((s, c) => s + c.close, 0) / period;
++  result.push({ time: candles[period - 1].time as any, value: parseFloat(ema.toFixed(6)) });
++  for (let i = period; i < candles.length; i++) {
++    ema = candles[i].close * k + ema * (1 - k);
++    result.push({ time: candles[i].time as any, value: parseFloat(ema.toFixed(6)) });
++  }
++  return result;
++};
+ 
+-    currentPrice = close;
++const calcRSI = (candles: OHLCCandle[], period = 14): LineData[] => {
++  if (candles.length < period + 2) return [];
++  const changes = candles.slice(1).map((c, i) => c.close - candles[i].close);
++  let avgGain = 0, avgLoss = 0;
++  for (let i = 0; i < period; i++) {
++    if (changes[i] > 0) avgGain += changes[i];
++    else avgLoss += Math.abs(changes[i]);
++  }
++  avgGain /= period; avgLoss /= period;
++  const result: LineData[] = [];
++  for (let i = period; i < changes.length; i++) {
++    const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
++    result.push({
++      time: candles[i].time as any,
++      value: parseFloat((100 - 100 / (1 + rs)).toFixed(2)),
++    });
++    avgGain = (avgGain * (period - 1) + Math.max(0, changes[i])) / period;
++    avgLoss = (avgLoss * (period - 1) + Math.max(0, -changes[i])) / period;
+   }
++  return result;
++};
+ 
+-  return candles;
++// ─── Chart colors ─────────────────────────────────────────────────────────────
++const THEME = {
++  bg: "#141820",
++  text: "#6b7280",
++  grid: "#1d2133",
++  border: "#1d2133",
++  up: "#26a69a",
++  down: "#ef5350",
+ };
+ 
+ const TradingChart = ({ asset, onPriceUpdate }: TradingChartProps) => {
+-  const [candles, setCandles] = useState<Candle[]>(() => generateCandles(40, asset.price));
++  const mainRef = useRef<HTMLDivElement>(null);
++  const rsiRef = useRef<HTMLDivElement>(null);
++
++  const chartRef = useRef<IChartApi | null>(null);
++  const rsiChartRef = useRef<IChartApi | null>(null);
++  const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
++  const rsiSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
++  const smaRef = useRef<ISeriesApi<"Line"> | null>(null);
++  const emaRef = useRef<ISeriesApi<"Line"> | null>(null);
++  const engineRef = useRef<OTCPriceEngine | null>(null);
++  const historyRef = useRef<OHLCCandle[]>([]);
++  const liveRef = useRef<OHLCCandle | null>(null);
++  const tickTimer = useRef<number | null>(null);
++  const closeTimer = useRef<number | null>(null);
++
++  const [selectedTf, setSelectedTf] = useState("1m");
+   const [currentPrice, setCurrentPrice] = useState(asset.price);
+-  const [timeframe, setTimeframe] = useState(43200); // 12h default
+-  const [activeIndicators, setActiveIndicators] = useState<string[]>([]);
+-  const [activeTool, setActiveTool] = useState<string | null>(null);
+-  const [isBlinking, setIsBlinking] = useState(false);
+-  const containerRef = useRef<HTMLDivElement>(null);
+-  const animationRef = useRef<number>(0);
+-  const lastPriceRef = useRef(asset.price);
+-
+-  const toggleIndicator = useCallback((id: string) => {
+-    setActiveIndicators((prev) =>
+-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+-    );
+-  }, []);
+-
+-  // Smooth price animation with blinking effect
++  const [priceChange, setPriceChange] = useState(0);
++  const [activeInds, setActiveInds] = useState<string[]>([]);
++  const [showRsi, setShowRsi] = useState(false);
++  const [ohlcTooltip, setOhlcTooltip] = useState<OHLCCandle | null>(null);
++  const [tooltipX, setTooltipX] = useState(0);
++
++  const getDecimals = (p: number) => p > 10000 ? 2 : p > 100 ? 3 : p > 1 ? 5 : 6;
++
++  // ─── Create charts once on mount ───────────────────────────────────────────
+   useEffect(() => {
+-    let lastTime = 0;
+-    const updateInterval = 100; // Update every 100ms for smooth animation
+-
+-    const animate = (time: number) => {
+-      if (time - lastTime >= updateInterval) {
+-        lastTime = time;
+-
+-        setCandles((prev) => {
+-          const lastCandle = prev[prev.length - 1];
+-          const volatility = 0.00015; // Smaller volatility for smoother movement
+-          const change = (Math.random() - 0.5) * 2 * volatility;
+-          const newClose = lastCandle.close * (1 + change);
+-
+-          setCurrentPrice(newClose);
+-          onPriceUpdate?.(newClose);
+-          lastPriceRef.current = newClose;
+-
+-          // Trigger blinking effect
+-          setIsBlinking(true);
+-          setTimeout(() => setIsBlinking(false), 150);
+-
+-          // Update last candle smoothly
+-          const updatedCandles = [...prev];
+-          updatedCandles[updatedCandles.length - 1] = {
+-            ...lastCandle,
+-            close: newClose,
+-            high: Math.max(lastCandle.high, newClose),
+-            low: Math.min(lastCandle.low, newClose),
+-          };
+-
+-          return updatedCandles;
+-        });
+-      }
++    if (!mainRef.current) return;
++
++    const opts = (container: HTMLDivElement) => ({
++      width: container.clientWidth || 800,
++      height: container.clientHeight || 400,
++      layout: {
++        background: { type: ColorType.Solid, color: THEME.bg },
++        textColor: THEME.text,
++        fontFamily: "'Inter', system-ui, sans-serif",
++        fontSize: 11,
++      },
++      grid: {
++        vertLines: { color: THEME.grid },
++        horzLines: { color: THEME.grid },
++      },
++      crosshair: { mode: CrosshairMode.Normal },
++      rightPriceScale: { borderColor: THEME.border, minimumWidth: 80 },
++      timeScale: {
++        borderColor: THEME.border,
++        timeVisible: true,
++        secondsVisible: true,
++      },
++      handleScroll: true,
++      handleScale: true,
++    });
+ 
+-      animationRef.current = requestAnimationFrame(animate);
+-    };
++    const chart = createChart(mainRef.current, opts(mainRef.current));
++    const cs = chart.addSeries(CandlestickSeries, {
++      upColor: THEME.up, downColor: THEME.down,
++      borderUpColor: THEME.up, borderDownColor: THEME.down,
++      wickUpColor: THEME.up, wickDownColor: THEME.down,
++    });
++    chartRef.current = chart;
++    candleSeriesRef.current = cs;
++
++    // RSI subchart
++    if (rsiRef.current) {
++      const rc = createChart(rsiRef.current, { ...opts(rsiRef.current), height: 80 });
++      const rs = rc.addSeries(LineSeries, { color: "#9b59b6", lineWidth: 1, lastValueVisible: true, priceLineVisible: false });
++      rsiChartRef.current = rc;
++      rsiSeriesRef.current = rs;
++    }
++
++    // Tooltip via crosshair subscription
++    chart.subscribeCrosshairMove((param) => {
++      if (!param?.time || !param.point) { setOhlcTooltip(null); return; }
++      const d = param.seriesData.get(cs) as any;
++      if (!d) return;
++      setOhlcTooltip(d);
++      setTooltipX(param.point.x);
++    });
+ 
+-    animationRef.current = requestAnimationFrame(animate);
++    // Resize handler
++    const obs = new ResizeObserver(() => {
++      if (mainRef.current) chart.applyOptions({ width: mainRef.current.clientWidth, height: mainRef.current.clientHeight });
++      if (rsiRef.current && rsiChartRef.current) rsiChartRef.current.applyOptions({ width: rsiRef.current.clientWidth });
++    });
++    obs.observe(mainRef.current);
+ 
+     return () => {
+-      if (animationRef.current) {
+-        cancelAnimationFrame(animationRef.current);
+-      }
++      obs.disconnect();
++      chart.remove();
++      rsiChartRef.current?.remove();
+     };
+-  }, []);
++  }, []); // runs once
+ 
+-  // Add new candle periodically
++  // ─── Load / switch timeframe ───────────────────────────────────────────────
+   useEffect(() => {
+-    const interval = setInterval(() => {
+-      setCandles((prev) => {
+-        const lastCandle = prev[prev.length - 1];
+-        const newCandle: Candle = {
+-          open: lastCandle.close,
+-          high: lastCandle.close,
+-          low: lastCandle.close,
+-          close: lastCandle.close,
+-          time: Date.now(),
+-        };
+-
+-        // Keep last 50 candles
+-        const newCandles = [...prev.slice(-49), newCandle];
+-        return newCandles;
++    const tf = TIMEFRAMES[selectedTf];
++    if (!tf || !candleSeriesRef.current || !chartRef.current) return;
++
++    // Clear old timers
++    if (tickTimer.current !== null) window.clearInterval(tickTimer.current);
++    if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
++
++    // Engine
++    const engine = new OTCPriceEngine(asset.symbol, engineRef.current?.getCurrentPrice() ?? asset.price);
++    engineRef.current = engine;
++
++    // Historical
++    const history = engine.generateHistory(tf);
++    historyRef.current = history;
++
++    const cdata: CandlestickData[] = history.map(c => ({
++      time: c.time as any,
++      open: c.open, high: c.high, low: c.low, close: c.close,
++    }));
++    candleSeriesRef.current.setData(cdata);
++    chartRef.current.timeScale().scrollToRealTime();
++
++    // RSI
++    if (rsiSeriesRef.current && history.length > 20) {
++      rsiSeriesRef.current.setData(calcRSI(history));
++      rsiChartRef.current?.timeScale().scrollToRealTime();
++    }
++
++    // Apply indicators
++    const applyInds = (hist: OHLCCandle[]) => {
++      if (!chartRef.current) return;
++      if (activeInds.includes("sma")) {
++        if (!smaRef.current) smaRef.current = chartRef.current.addSeries(LineSeries, { color: "#f39c12", lineWidth: 1, lastValueVisible: false, priceLineVisible: false });
++        if (hist.length >= 14) smaRef.current.setData(calcSMA(hist, 14));
++      }
++      if (activeInds.includes("ema")) {
++        if (!emaRef.current) emaRef.current = chartRef.current.addSeries(LineSeries, { color: "#e74c3c", lineWidth: 1, lastValueVisible: false, priceLineVisible: false });
++        if (hist.length >= 9) emaRef.current.setData(calcEMA(hist, 9));
++      }
++    };
++    applyInds(history);
++
++    // Start live candle
++    const nowSec = Math.floor(Date.now() / 1000);
++    const step = tf.seconds;
++    const candleStart = Math.floor(nowSec / step) * step;
++    const liveOpen = engine.getCurrentPrice();
++    liveRef.current = { time: candleStart, open: liveOpen, high: liveOpen, low: liveOpen, close: liveOpen, volume: 0 };
++    const startPrice = liveOpen;
++
++    // TICK interval → partial candle update
++    tickTimer.current = window.setInterval(() => {
++      if (!engineRef.current || !candleSeriesRef.current || !liveRef.current) return;
++      const p = engineRef.current.tick(tf.volatilityMult);
++      const live = liveRef.current;
++      live.close = p;
++      live.high = Math.max(live.high, p);
++      live.low = Math.min(live.low, p);
++      candleSeriesRef.current.update({
++        time: live.time as any,
++        open: live.open, high: live.high, low: live.low, close: live.close,
+       });
+-    }, 30000); // New candle every 30 seconds
+-
+-    return () => clearInterval(interval);
+-  }, []);
+-
+-  const minPrice = Math.min(...candles.map((c) => c.low));
+-  const maxPrice = Math.max(...candles.map((c) => c.high));
+-  const priceRange = maxPrice - minPrice;
++      setCurrentPrice(p);
++      setPriceChange(((p - startPrice) / startPrice) * 100);
++      onPriceUpdate?.(p);
++    }, tf.updateIntervalMs);
++
++    // CANDLE CLOSE scheduler
++    const scheduleCandleClose = () => {
++      const nowMs = Date.now();
++      const msBetween = step * 1000;
++      const nextClose = (Math.floor(nowMs / msBetween) + 1) * msBetween;
++      const msUntil = nextClose - nowMs;
++
++      closeTimer.current = window.setTimeout(() => {
++        const live = liveRef.current;
++        if (live) {
++          historyRef.current.push({ ...live });
++          applyInds(historyRef.current);
++          if (rsiSeriesRef.current && historyRef.current.length > 20) {
++            rsiSeriesRef.current.setData(calcRSI(historyRef.current));
++            rsiChartRef.current?.timeScale().scrollToRealTime();
++          }
++        }
++        const newStart = Math.floor(Date.now() / 1000 / step) * step;
++        const newOpen = engineRef.current!.getCurrentPrice();
++        liveRef.current = { time: newStart, open: newOpen, high: newOpen, low: newOpen, close: newOpen, volume: 0 };
++        scheduleCandleClose();
++      }, msUntil);
++    };
++    scheduleCandleClose();
+ 
+-  const getY = (price: number) => {
+-    return ((maxPrice - price) / priceRange) * 100;
+-  };
++    return () => {
++      if (tickTimer.current !== null) window.clearInterval(tickTimer.current);
++      if (closeTimer.current !== null) window.clearTimeout(closeTimer.current);
++    };
++  }, [selectedTf, asset.symbol, asset.price]); // only re-run when TF or asset changes
+ 
+-  const candleWidth = 100 / candles.length;
+-
+-  // Calculate SMA if active
+-  const smaValues = activeIndicators.includes("sma")
+-    ? candles.map((_, index) => {
+-        if (index < 9) return null;
+-        const sum = candles.slice(index - 9, index + 1).reduce((acc, c) => acc + c.close, 0);
+-        return sum / 10;
+-      })
+-    : [];
+-
+-  // Calculate EMA if active
+-  const emaValues = activeIndicators.includes("ema")
+-    ? (() => {
+-        const multiplier = 2 / (10 + 1);
+-        const ema: (number | null)[] = [];
+-        candles.forEach((candle, index) => {
+-          if (index === 0) {
+-            ema.push(candle.close);
+-          } else {
+-            const prevEma = ema[index - 1] || candle.close;
+-            ema.push((candle.close - prevEma) * multiplier + prevEma);
+-          }
+-        });
+-        return ema;
+-      })()
+-    : [];
+-
+-  // Calculate Bollinger Bands if active
+-  const bbValues = activeIndicators.includes("bb")
+-    ? candles.map((_, index) => {
+-        if (index < 19) return null;
+-        const slice = candles.slice(index - 19, index + 1);
+-        const mean = slice.reduce((acc, c) => acc + c.close, 0) / 20;
+-        const variance = slice.reduce((acc, c) => acc + Math.pow(c.close - mean, 2), 0) / 20;
+-        const std = Math.sqrt(variance);
+-        return {
+-          upper: mean + 2 * std,
+-          middle: mean,
+-          lower: mean - 2 * std,
+-        };
+-      })
+-    : [];
+-
+-  const lastCandle = candles[candles.length - 1];
+-  const isGreen = lastCandle?.close >= lastCandle?.open;
++  // ─── When indicators are toggled ──────────────────────────────────────────
++  useEffect(() => {
++    if (!chartRef.current) return;
++    setShowRsi(activeInds.includes("rsi"));
++
++    // SMA
++    if (activeInds.includes("sma")) {
++      if (!smaRef.current) smaRef.current = chartRef.current.addSeries(LineSeries, { color: "#f39c12", lineWidth: 1, lastValueVisible: false, priceLineVisible: false });
++      if (historyRef.current.length >= 14) smaRef.current.setData(calcSMA(historyRef.current, 14));
++    } else if (smaRef.current) {
++      chartRef.current.removeSeries(smaRef.current);
++      smaRef.current = null;
++    }
++
++    // EMA
++    if (activeInds.includes("ema")) {
++      if (!emaRef.current) emaRef.current = chartRef.current.addSeries(LineSeries, { color: "#e74c3c", lineWidth: 1, lastValueVisible: false, priceLineVisible: false });
++      if (historyRef.current.length >= 9) emaRef.current.setData(calcEMA(historyRef.current, 9));
++    } else if (emaRef.current) {
++      chartRef.current.removeSeries(emaRef.current);
++      emaRef.current = null;
++    }
++
++    // RSI
++    if (activeInds.includes("rsi") && rsiSeriesRef.current && historyRef.current.length > 20) {
++      rsiSeriesRef.current.setData(calcRSI(historyRef.current));
++    }
++  }, [activeInds]);
++
++  const dec = getDecimals(currentPrice);
++  const isUp = priceChange >= 0;
+ 
+   return (
+-    <div className="flex-1 bg-chart-bg relative" ref={containerRef}>
+-      {/* Chart Toolbar */}
+-      <ChartToolbar
+-        timeframe={timeframe}
+-        onTimeframeChange={setTimeframe}
+-        activeIndicators={activeIndicators}
+-        onToggleIndicator={toggleIndicator}
+-        activeTool={activeTool}
+-        onSelectTool={setActiveTool}
+-      />
+-
+-      {/* Chart OHLC info */}
+-      <div className="absolute left-24 top-4 z-10 flex gap-4 text-xs text-muted-foreground">
+-        <span>
+-          Open <span className="text-foreground">{lastCandle?.open.toFixed(6)}</span>
+-        </span>
+-        <span>
+-          High <span className="text-foreground">{lastCandle?.high.toFixed(6)}</span>
+-        </span>
+-        <span>
+-          Low <span className="text-foreground">{lastCandle?.low.toFixed(6)}</span>
+-        </span>
+-        <span>
+-          Close{" "}
+-          <span className={isGreen ? "text-trading-green" : "text-trading-red"}>
+-            {lastCandle?.close.toFixed(6)}
+-          </span>
+-        </span>
+-      </div>
+-
+-      {/* SVG Chart */}
+-      <svg className="w-full h-full" preserveAspectRatio="none">
+-        <defs>
+-          {/* Blinking animation for current candle */}
+-          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+-            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+-            <feMerge>
+-              <feMergeNode in="coloredBlur" />
+-              <feMergeNode in="SourceGraphic" />
+-            </feMerge>
+-          </filter>
+-        </defs>
+-
+-        {/* Grid lines */}
+-        {[0, 25, 50, 75, 100].map((y) => (
+-          <line
+-            key={y}
+-            x1="0"
+-            y1={`${y}%`}
+-            x2="100%"
+-            y2={`${y}%`}
+-            className="chart-grid"
+-            strokeWidth="1"
+-            strokeDasharray="4"
+-            opacity="0.3"
+-          />
++    <div className="flex-1 flex flex-col min-h-0" style={{ background: THEME.bg }}>
++
++      {/* ─── Timeframe + Tools Bar ─────── */}
++      <div className="flex items-center gap-1 px-3 shrink-0 flex-wrap"
++        style={{ height: "40px", borderBottom: `1px solid ${THEME.border}`, background: "#141820" }}>
++        {TIMEFRAME_LABELS.map(tf => (
++          <button key={tf} onClick={() => setSelectedTf(tf)}
++            className="px-2 py-0.5 text-[11px] rounded font-medium transition-all"
++            style={{
++              background: selectedTf === tf ? "hsl(23 100% 50%)" : "transparent",
++              color: selectedTf === tf ? "#fff" : "#6b7280",
++            }}>
++            {tf}
++          </button>
+         ))}
+ 
+-        {/* Bollinger Bands */}
+-        {bbValues.length > 0 && (
+-          <>
+-            {/* Upper band */}
+-            <polyline
+-              fill="none"
+-              stroke="hsl(var(--primary))"
+-              strokeWidth="1"
+-              opacity="0.5"
+-              points={bbValues
+-                .map((bb, index) => {
+-                  if (!bb) return "";
+-                  const x = index * candleWidth + candleWidth / 2;
+-                  return `${x}%,${getY(bb.upper)}%`;
+-                })
+-                .filter(Boolean)
+-                .join(" ")}
+-            />
+-            {/* Lower band */}
+-            <polyline
+-              fill="none"
+-              stroke="hsl(var(--primary))"
+-              strokeWidth="1"
+-              opacity="0.5"
+-              points={bbValues
+-                .map((bb, index) => {
+-                  if (!bb) return "";
+-                  const x = index * candleWidth + candleWidth / 2;
+-                  return `${x}%,${getY(bb.lower)}%`;
+-                })
+-                .filter(Boolean)
+-                .join(" ")}
+-            />
+-          </>
+-        )}
++        <div className="w-px h-4 mx-2 bg-white/10" />
++
++        {/* Indicator toggles */}
++        {[
++          { id: "sma", label: "SMA", color: "#f39c12" },
++          { id: "ema", label: "EMA", color: "#e74c3c" },
++          { id: "rsi", label: "RSI", color: "#9b59b6" },
++          { id: "bb",  label: "BB",  color: "#3498db" },
++        ].map(ind => (
++          <button key={ind.id}
++            onClick={() => setActiveInds(p => p.includes(ind.id) ? p.filter(x => x !== ind.id) : [...p, ind.id])}
++            className="px-2 py-0.5 text-[10px] rounded border font-medium transition-all"
++            style={{
++              borderColor: activeInds.includes(ind.id) ? ind.color : "#2a2d3e",
++              color: activeInds.includes(ind.id) ? ind.color : "#6b7280",
++              background: activeInds.includes(ind.id) ? `${ind.color}22` : "transparent",
++            }}>
++            {ind.label}
++          </button>
++        ))}
+ 
+-        {/* SMA Line */}
+-        {smaValues.length > 0 && (
+-          <polyline
+-            fill="none"
+-            stroke="hsl(30 100% 50%)"
+-            strokeWidth="1.5"
+-            points={smaValues
+-              .map((sma, index) => {
+-                if (!sma) return "";
+-                const x = index * candleWidth + candleWidth / 2;
+-                return `${x}%,${getY(sma)}%`;
+-              })
+-              .filter(Boolean)
+-              .join(" ")}
+-          />
+-        )}
++        {/* Live Price */}
++        <div className="ml-auto flex items-center gap-2">
++          <span className="text-white font-bold text-base">{currentPrice.toFixed(dec)}</span>
++          <span className={`text-xs ${isUp ? "text-green-400" : "text-red-400"}`}>
++            {isUp ? "▲" : "▼"} {Math.abs(priceChange).toFixed(3)}%
++          </span>
++        </div>
++      </div>
+ 
+-        {/* EMA Line */}
+-        {emaValues.length > 0 && (
+-          <polyline
+-            fill="none"
+-            stroke="hsl(280 100% 60%)"
+-            strokeWidth="1.5"
+-            points={emaValues
+-              .map((ema, index) => {
+-                if (!ema) return "";
+-                const x = index * candleWidth + candleWidth / 2;
+-                return `${x}%,${getY(ema)}%`;
+-              })
+-              .filter(Boolean)
+-              .join(" ")}
+-          />
++      {/* ─── Chart ─────────────────────── */}
++      <div className="relative flex-1 min-h-0" ref={mainRef} style={{ minHeight: "200px" }}>
++        {/* OHLC Tooltip */}
++        {ohlcTooltip && (
++          <div className="absolute top-2 z-50 px-2 py-1 rounded text-[10px] pointer-events-none"
++            style={{
++              left: Math.max(4, Math.min(tooltipX + 10, (mainRef.current?.clientWidth || 500) - 220)),
++              background: "#1d2133",
++              border: "1px solid #2a2d3e",
++              color: "#ccc",
++            }}>
++            <span className="mr-2">O: <b style={{ color: ohlcTooltip.close >= ohlcTooltip.open ? "#26a69a" : "#ef5350" }}>{ohlcTooltip.open.toFixed(dec)}</b></span>
++            <span className="mr-2">H: <b style={{ color: "#26a69a" }}>{ohlcTooltip.high.toFixed(dec)}</b></span>
++            <span className="mr-2">L: <b style={{ color: "#ef5350" }}>{ohlcTooltip.low.toFixed(dec)}</b></span>
++            <span>C: <b style={{ color: ohlcTooltip.close >= ohlcTooltip.open ? "#26a69a" : "#ef5350" }}>{ohlcTooltip.close.toFixed(dec)}</b></span>
++          </div>
+         )}
+-
+-        {/* Candles */}
+-        {candles.map((candle, index) => {
+-          const isCandleGreen = candle.close >= candle.open;
+-          const isLast = index === candles.length - 1;
+-          const x = index * candleWidth + candleWidth / 2;
+-          const bodyTop = getY(Math.max(candle.open, candle.close));
+-          const bodyBottom = getY(Math.min(candle.open, candle.close));
+-          const bodyHeight = Math.max(bodyBottom - bodyTop, 0.5);
+-
+-          return (
+-            <g key={index} className={isLast ? "transition-all duration-100 ease-out" : ""}>
+-              {/* Wick */}
+-              <line
+-                x1={`${x}%`}
+-                y1={`${getY(candle.high)}%`}
+-                x2={`${x}%`}
+-                y2={`${getY(candle.low)}%`}
+-                stroke={isCandleGreen ? "hsl(145 80% 45%)" : "hsl(0 72% 55%)"}
+-                strokeWidth="1"
+-                className={isLast ? "transition-all duration-100 ease-out" : ""}
+-              />
+-              {/* Body */}
+-              <rect
+-                x={`${x - candleWidth * 0.35}%`}
+-                y={`${bodyTop}%`}
+-                width={`${candleWidth * 0.7}%`}
+-                height={`${bodyHeight}%`}
+-                fill={isCandleGreen ? "hsl(145 80% 45%)" : "hsl(0 72% 55%)"}
+-                rx="1"
+-                filter={isLast && isBlinking ? "url(#glow)" : undefined}
+-                className={`${isLast ? "transition-all duration-100 ease-out" : ""} ${
+-                  isLast && isBlinking && isGreen ? "animate-pulse" : ""
+-                }`}
+-                style={
+-                  isLast && isBlinking
+-                    ? {
+-                        filter: `drop-shadow(0 0 6px ${
+-                          isGreen ? "hsl(145 80% 45%)" : "hsl(0 72% 55%)"
+-                        })`,
+-                      }
+-                    : undefined
+-                }
+-              />
+-            </g>
+-          );
+-        })}
+-
+-        {/* Current price line */}
+-        <line
+-          x1="0"
+-          y1={`${getY(currentPrice)}%`}
+-          x2="100%"
+-          y2={`${getY(currentPrice)}%`}
+-          stroke="hsl(30 100% 50%)"
+-          strokeWidth="1"
+-          strokeDasharray="4"
+-          className="transition-all duration-100 ease-out"
+-        />
+-      </svg>
+-
+-      {/* Current price label */}
+-      <div
+-        className={`absolute right-0 transform -translate-y-1/2 px-3 py-1 text-sm font-medium rounded-l transition-all duration-100 ease-out ${
+-          isBlinking && isGreen
+-            ? "bg-trading-green text-white shadow-lg shadow-trading-green/50"
+-            : isBlinking
+-            ? "bg-trading-red text-white shadow-lg shadow-trading-red/50"
+-            : "bg-trading-orange text-primary-foreground"
+-        }`}
+-        style={{ top: `${getY(currentPrice)}%` }}
+-      >
+-        {currentPrice.toFixed(5)}
+       </div>
+ 
+-      {/* Time labels */}
+-      <div className="absolute bottom-0 left-0 right-0 h-8 bg-card border-t border-border flex items-center justify-between px-4 text-xs text-muted-foreground">
+-        <span>27 Jan</span>
+-        <div className="px-2 py-1 bg-secondary rounded">
+-          {new Date().toISOString().slice(0, 19).replace("T", " ")}
++      {/* ─── RSI Subchart ──────────────── */}
++      {showRsi && (
++        <div style={{ height: "90px", borderTop: `1px solid ${THEME.border}`, background: THEME.bg }}>
++          <div className="flex items-center px-3 gap-2" style={{ height: "22px" }}>
++            <span style={{ fontSize: "10px", color: "#9b59b6", fontWeight: 600 }}>RSI (14)</span>
++            <button onClick={() => setActiveInds(p => p.filter(x => x !== "rsi"))}
++              style={{ marginLeft: "auto", color: "#6b7280", fontSize: "11px" }}>✕</button>
++          </div>
++          <div ref={rsiRef} style={{ height: "68px", width: "100%" }} />
+         </div>
+-        <span>31 Jan</span>
+-        <span>February</span>
+-      </div>
++      )}
+ 
+-      {/* Bottom bar */}
+-      <div className="absolute bottom-8 left-0 right-0 h-10 bg-card border-t border-border flex items-center justify-between px-4">
+-        <span className="text-sm text-muted-foreground">Total portfolio</span>
+-        <button className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
+-          Show positions
+-          <svg
+-            className="w-4 h-4"
+-            viewBox="0 0 24 24"
+-            fill="none"
+-            stroke="currentColor"
+-            strokeWidth="2"
+-          >
+-            <path d="M18 15l-6-6-6 6" />
+-          </svg>
+-        </button>
++      {/* ─── Portfolio Bar ─────────────── */}
++      <div className="flex items-center justify-between px-4 shrink-0"
++        style={{ height: "32px", borderTop: `1px solid ${THEME.border}`, background: "#141820" }}>
++        <span style={{ fontSize: "12px", color: "#6b7280" }}>Portfólio total</span>
++        <button style={{ fontSize: "11px", color: "#6b7280" }}>Ocultar posições ▾</button>
+       </div>
+     </div>
+   );
+diff --git a/src/components/trading/TradingHeader.tsx b/src/components/trading/TradingHeader.tsx
+index fff38fe..f3a7c17 100644
+--- a/src/components/trading/TradingHeader.tsx
++++ b/src/components/trading/TradingHeader.tsx
+@@ -1,54 +1,139 @@
++import { useState } from "react";
+ import { Link } from "react-router-dom";
+-import { Button } from "@/components/ui/button";
+-import { ChevronDown, Plus, DollarSign, User } from "lucide-react";
++import { ChevronDown, Plus, DollarSign, Bell } from "lucide-react";
++import ProfileDropdown from "./ProfileDropdown";
++import { Asset } from "./data/assets";
+ 
+ interface TradingHeaderProps {
+   balance: number;
++  asset?: Asset & { price?: number; change?: number };
++  onOpenSettings: () => void;
++  onOpenHistory: () => void;
+ }
+ 
+-const TradingHeader = ({ balance }: TradingHeaderProps) => {
++const TradingHeader = ({ balance, asset, onOpenSettings, onOpenHistory }: TradingHeaderProps) => {
++  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
++
+   return (
+-    <header className="h-14 bg-card border-b border-border flex items-center justify-between px-4">
+-      {/* Left - Asset tabs */}
+-      <div className="flex items-center gap-2">
+-        <div className="flex items-center gap-2 px-3 py-2 bg-secondary rounded-lg">
+-          <div className="flex items-center gap-2">
+-            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+-              <span className="text-xs font-bold text-white">€</span>
++    <header
++      className="h-[48px] flex items-stretch justify-between shrink-0 relative z-30"
++      style={{
++        background: "hsl(228 22% 8%)",
++        borderBottom: "1px solid hsl(228 15% 14%)"
++      }}
++    >
++      {/* Left — Logo + Asset Tab */}
++      <div className="flex items-stretch">
++        {/* Logo */}
++        <Link
++          to="/"
++          className="flex items-center px-3 gap-2 border-r"
++          style={{ borderColor: "hsl(228 15% 14%)" }}
++        >
++          <div
++            className="w-8 h-8 rounded flex items-center justify-center text-white font-bold text-sm"
++            style={{ background: "hsl(23 100% 50%)" }}
++          >
++            DG
++          </div>
++          {/* Grid icon */}
++          <div className="grid grid-cols-2 gap-[2px] w-4 h-4">
++            {[...Array(4)].map((_, i) => (
++              <div key={i} className="w-1.5 h-1.5 rounded-[1px] bg-gray-500" />
++            ))}
++          </div>
++        </Link>
++
++        {/* Asset Tab */}
++        <div className="flex items-stretch">
++          <div
++            className="flex items-center gap-2 px-4 border-b-2 cursor-pointer hover:bg-white/5 transition-colors select-none"
++            style={{ borderBottomColor: "hsl(23 100% 50%)", background: "hsl(228 20% 10%)" }}
++          >
++            {/* Asset Icon */}
++            <div
++              className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
++              style={{ background: "hsl(23 100% 50%)" }}
++            >
++              {asset?.flags?.[0] || "₿"}
++            </div>
++            <div className="flex flex-col">
++              <div className="flex items-center gap-1">
++                <span className="text-white text-sm font-semibold leading-tight">
++                  {asset?.symbol || "NZD/USD"} (OTC)
++                </span>
++                <ChevronDown className="w-3 h-3 text-gray-400" />
++              </div>
++              <span className="text-[10px] text-gray-400 leading-tight">
++                {asset?.type === "OTC" ? "OTC" : "Digital"}
++              </span>
+             </div>
+-            <span className="text-sm font-medium text-foreground">EUR/USD (O...</span>
+           </div>
+-          <span className="text-xs px-1.5 py-0.5 bg-trading-orange text-primary-foreground rounded font-medium">
+-            OTC
+-          </span>
+-          <span className="text-xs text-muted-foreground">Blitz</span>
++
++          <button
++            className="w-10 flex items-center justify-center text-gray-500 hover:text-gray-200 hover:bg-white/5 transition-colors border-l"
++            style={{ borderColor: "hsl(228 15% 14%)" }}
++          >
++            <Plus className="w-4 h-4" />
++          </button>
+         </div>
+-        
+-        <button className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+-          <Plus className="w-5 h-5" />
+-        </button>
+       </div>
+ 
+-      {/* Right - User info */}
+-      <div className="flex items-center gap-4">
+-        {/* Account selector */}
+-        <button className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+-          <User className="w-8 h-8 rounded-full bg-secondary p-1.5" />
+-          <ChevronDown className="w-4 h-4" />
++      {/* Right — Profile + Balance + Deposit */}
++      <div className="flex items-center gap-0 pr-2">
++        {/* Notification Bell */}
++        <button className="px-3 text-gray-500 hover:text-gray-200 transition-colors h-full flex items-center">
++          <Bell className="w-4 h-4" />
+         </button>
+ 
+-        {/* Balance */}
+-        <div className="flex items-center gap-1 text-foreground font-semibold">
+-          <span className="text-trading-green">${balance.toFixed(2)}</span>
+-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
++        {/* Profile avatar with green check */}
++        <div className="relative">
++          <button
++            onClick={() => setShowProfileDropdown(!showProfileDropdown)}
++            className="flex items-center gap-2 px-2 h-full hover:bg-white/5 transition-colors rounded"
++          >
++            <div className="relative">
++              <div
++                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold"
++                style={{ background: "hsl(228 16% 22%)" }}
++              >
++                👤
++              </div>
++              {/* Green check badge */}
++              <div
++                className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-[1.5px] flex items-center justify-center text-[8px] font-bold"
++                style={{ background: "#1d9e40", borderColor: "hsl(228 22% 8%)", color: "white" }}
++              >
++                ✓
++              </div>
++            </div>
++            <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
++          </button>
++
++          {showProfileDropdown && (
++            <ProfileDropdown
++              balance={balance}
++              onClose={() => setShowProfileDropdown(false)}
++              onOpenSettings={onOpenSettings}
++              onOpenHistory={onOpenHistory}
++            />
++          )}
+         </div>
+ 
+-        {/* Deposit button */}
++        {/* Balance */}
++        <button className="flex items-center gap-1 px-3 h-full hover:bg-white/5 transition-colors rounded">
++          <span className="text-white font-bold text-sm">${balance.toFixed(2)}</span>
++          <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
++        </button>
++
++        {/* Deposit Button */}
+         <Link to="/deposit">
+-          <Button variant="deposit" size="sm" className="gap-2">
+-            <DollarSign className="w-4 h-4" />
+-            Deposit
+-          </Button>
++          <button
++            className="px-5 py-2 rounded text-sm font-semibold text-white transition-colors"
++            style={{ background: "#1d9e40" }}
++          >
++            Depositar
++          </button>
+         </Link>
+       </div>
+     </header>
+diff --git a/src/components/trading/TradingPanel.tsx b/src/components/trading/TradingPanel.tsx
+index 1ae29ef..27f9928 100644
+--- a/src/components/trading/TradingPanel.tsx
++++ b/src/components/trading/TradingPanel.tsx
+@@ -1,5 +1,4 @@
+-import { useState } from "react";
+-import { Button } from "@/components/ui/button";
++import { useState, useEffect } from "react";
+ import { TrendingUp, TrendingDown, HelpCircle, Plus, Minus, ChevronDown } from "lucide-react";
+ import { expiryTimes } from "./data/assets";
+ 
+@@ -20,128 +19,166 @@ interface TradingPanelProps {
+ }
+ 
+ const TradingPanel = ({ asset, balance, onTrade }: TradingPanelProps) => {
+-  const [investAmount, setInvestAmount] = useState(1000);
+-  const [expirationValue, setExpirationValue] = useState(30);
++  const [investAmount, setInvestAmount] = useState(1);
++  const [expirationSeconds, setExpirationSeconds] = useState(300); // 5 min default
+   const [showExpiryDropdown, setShowExpiryDropdown] = useState(false);
+-  const [profit] = useState(86);
++  const [profit] = useState(90);
+   const [loading, setLoading] = useState(false);
++  const [currentTime, setCurrentTime] = useState(new Date());
++
++  useEffect(() => {
++    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
++    return () => clearInterval(timer);
++  }, []);
+ 
+   const handleTrade = async (direction: "higher" | "lower") => {
+-    if (!onTrade) return;
++    if (!onTrade || loading) return;
+     setLoading(true);
+-    await onTrade(asset.symbol, direction, investAmount, asset.price, expirationValue, profit / 100);
++    await onTrade(asset.symbol, direction, investAmount, asset.price, expirationSeconds, profit / 100);
+     setLoading(false);
+   };
+ 
+   const adjustAmount = (delta: number) => {
+-    setInvestAmount(Math.max(1, investAmount + delta));
++    setInvestAmount(prev => Math.max(1, +(prev + delta).toFixed(2)));
+   };
+ 
+-  const formatExpiry = (seconds: number) => {
+-    if (seconds < 60) return `${seconds} sec`;
+-    if (seconds < 3600) return `${seconds / 60} min`;
+-    if (seconds < 86400) return `${seconds / 3600} hr`;
+-    return `${seconds / 86400} day`;
++  const getExpiryLabel = () => {
++    const t = expiryTimes.find(e => e.value === expirationSeconds);
++    if (t) return t.label;
++    const mins = Math.floor(expirationSeconds / 60);
++    const secs = expirationSeconds % 60;
++    return secs > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${mins}m`;
+   };
+ 
+   return (
+-    <aside className="w-64 bg-card border-l border-border flex flex-col">
+-      {/* Current Price */}
+-      <div className="p-4 border-b border-border">
+-        <div className="flex items-center justify-between mb-2">
+-          <span className="text-2xl font-bold text-foreground">{asset.price.toFixed(5)}</span>
+-        </div>
+-      </div>
+-
+-      {/* Investment Amount */}
+-      <div className="p-4 border-b border-border">
+-        <div className="flex items-center justify-between mb-2">
+-          <span className="text-sm text-muted-foreground">Invest</span>
++    <aside
++      className="w-[220px] shrink-0 flex flex-col"
++      style={{ background: "hsl(228 18% 11%)", borderLeft: "1px solid hsl(228 15% 17%)" }}
++    >
++      {/* === Valor (Amount) === */}
++      <div className="border-b" style={{ borderColor: "hsl(228 15% 17%)" }}>
++        <div className="flex items-center justify-between px-3 pt-3 pb-1">
+           <div className="flex items-center gap-1">
+-            <button onClick={() => adjustAmount(-100)} className="w-6 h-6 rounded bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground">
+-              <Minus className="w-3 h-3" />
+-            </button>
+-            <button onClick={() => adjustAmount(100)} className="w-6 h-6 rounded bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground">
+-              <Plus className="w-3 h-3" />
+-            </button>
++            <span className="text-xs text-gray-400">Valor</span>
++            <HelpCircle className="w-3 h-3 text-gray-600" />
+           </div>
++          <button className="w-5 h-5 flex items-center justify-center text-gray-500 hover:text-white transition-colors">
++            <Plus className="w-3.5 h-3.5" />
++          </button>
+         </div>
+-        <div className="flex items-center gap-2 bg-secondary rounded-lg p-2">
+-          <span className="text-lg font-semibold text-foreground">$ {investAmount}</span>
++        <div className="flex items-center px-3 pb-3 gap-0">
++          <button
++            onClick={() => adjustAmount(-1)}
++            className="w-7 h-7 rounded-l flex items-center justify-center text-gray-400 hover:text-white transition-colors"
++            style={{ background: "hsl(228 16% 17%)", border: "1px solid hsl(228 15% 22%)" }}
++          >
++            <Minus className="w-3 h-3" />
++          </button>
++          <div
++            className="flex-1 h-7 flex items-center justify-center text-sm font-semibold text-white"
++            style={{ background: "hsl(228 16% 14%)", borderTop: "1px solid hsl(228 15% 22%)", borderBottom: "1px solid hsl(228 15% 22%)" }}
++          >
++            $ {investAmount}
++          </div>
++          <button
++            onClick={() => adjustAmount(1)}
++            className="w-7 h-7 rounded-r flex items-center justify-center text-gray-400 hover:text-white transition-colors"
++            style={{ background: "hsl(228 16% 17%)", border: "1px solid hsl(228 15% 22%)" }}
++          >
++            <Plus className="w-3 h-3" />
++          </button>
+         </div>
+-        {balance > 0 && (
+-          <p className="text-xs text-muted-foreground mt-1">Balance: ${balance.toFixed(2)}</p>
+-        )}
+       </div>
+ 
+-      {/* Expiration Dropdown */}
+-      <div className="p-4 border-b border-border">
+-        <div className="flex items-center justify-between mb-2">
+-          <span className="text-sm text-muted-foreground">Expiration</span>
+-          <HelpCircle className="w-4 h-4 text-muted-foreground" />
++      {/* === Expiração (Expiry) === */}
++      <div className="border-b" style={{ borderColor: "hsl(228 15% 17%)" }}>
++        <div className="flex items-center justify-between px-3 pt-3 pb-1">
++          <div className="flex items-center gap-1">
++            <span className="text-xs text-gray-400">Expiração</span>
++            <HelpCircle className="w-3 h-3 text-gray-600" />
++          </div>
++          <button className="w-5 h-5 flex items-center justify-center text-gray-500 hover:text-white transition-colors">
++            <Plus className="w-3.5 h-3.5" />
++          </button>
+         </div>
+-        <div className="relative">
++        <div className="px-3 pb-3 relative">
+           <button
+             onClick={() => setShowExpiryDropdown(!showExpiryDropdown)}
+-            className="w-full flex items-center justify-between gap-2 bg-secondary rounded-lg p-2 hover:bg-secondary/80 transition-colors"
++            className="w-full flex items-center justify-between px-2 py-1.5 rounded text-sm font-semibold text-white hover:opacity-80 transition-opacity"
++            style={{ background: "hsl(228 16% 14%)", border: "1px solid hsl(228 15% 22%)" }}
+           >
+-            <span className="text-lg font-semibold text-foreground">{formatExpiry(expirationValue)}</span>
+-            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showExpiryDropdown ? "rotate-180" : ""}`} />
++            <span>{getExpiryLabel()}</span>
++            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showExpiryDropdown ? "rotate-180" : ""}`} />
+           </button>
+           {showExpiryDropdown && (
+             <>
+               <div className="fixed inset-0 z-40" onClick={() => setShowExpiryDropdown(false)} />
+-              <div className="absolute left-0 right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-xl z-50 max-h-[200px] overflow-y-auto">
+-                {expiryTimes.map((expiry) => (
++              <div
++                className="absolute right-3 left-3 top-full mt-1 rounded shadow-xl z-50 max-h-[160px] overflow-y-auto"
++                style={{ background: "hsl(228 18% 14%)", border: "1px solid hsl(228 15% 22%)" }}
++              >
++                {expiryTimes.map(e => (
+                   <button
+-                    key={expiry.value}
+-                    onClick={() => { setExpirationValue(expiry.value); setShowExpiryDropdown(false); }}
+-                    className={`w-full px-3 py-2 text-left text-sm hover:bg-secondary transition-colors ${expirationValue === expiry.value ? "text-primary bg-secondary" : "text-foreground"}`}
++                    key={e.value}
++                    onClick={() => { setExpirationSeconds(e.value); setShowExpiryDropdown(false); }}
++                    className={`w-full px-3 py-1.5 text-left text-xs transition-colors hover:bg-white/5 ${expirationSeconds === e.value ? "text-trading-orange" : "text-gray-300"}`}
+                   >
+-                    {expiry.label}
++                    {e.label}
+                   </button>
+                 ))}
+               </div>
+             </>
+           )}
+         </div>
+-        <div className="flex gap-2 mt-2">
+-          {[30, 60, 120, 300].map((sec) => (
+-            <button
+-              key={sec}
+-              onClick={() => setExpirationValue(sec)}
+-              className={`flex-1 py-1 text-xs rounded ${expirationValue === sec ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
+-            >
+-              {sec < 60 ? `${sec}s` : `${sec / 60}m`}
+-            </button>
+-          ))}
+-        </div>
+       </div>
+ 
+-      {/* Profit Display */}
+-      <div className="p-4 border-b border-border">
+-        <div className="flex items-center justify-between mb-1">
+-          <span className="text-sm text-muted-foreground">Profit</span>
+-          <HelpCircle className="w-4 h-4 text-muted-foreground" />
++      {/* === Lucro (Profit) === */}
++      <div
++        className="px-3 py-3 border-b"
++        style={{ borderColor: "hsl(228 15% 17%)" }}
++      >
++        <div className="flex items-center gap-1 mb-1">
++          <span className="text-xs text-gray-400">Lucro</span>
++          <HelpCircle className="w-3 h-3 text-gray-600" />
++        </div>
++        <div className="text-4xl font-bold text-trading-green leading-none">
++          +{profit}%
++        </div>
++        <div className="text-sm font-semibold text-trading-green mt-1">
++          +$ {((investAmount * profit) / 100).toFixed(2)}
+         </div>
+-        <div className="text-3xl font-bold text-trading-green">+{profit}%</div>
+-        <div className="text-lg font-semibold text-trading-green">+$ {((investAmount * profit) / 100).toFixed(0)}</div>
+       </div>
+ 
+-      {/* Trading Buttons */}
+-      <div className="p-4 flex-1 flex flex-col gap-3">
+-        <Button variant="higher" size="trading" onClick={() => handleTrade("higher")} disabled={loading} className="flex flex-col items-center justify-center">
+-          <TrendingUp className="w-8 h-8 mb-1" />
+-          <span className="text-lg">HIGHER</span>
+-        </Button>
+-        <Button variant="lower" size="trading" onClick={() => handleTrade("lower")} disabled={loading} className="flex flex-col items-center justify-center">
+-          <TrendingDown className="w-8 h-8 mb-1" />
+-          <span className="text-lg">LOWER</span>
+-        </Button>
+-      </div>
++      {/* === ACIMA Button === */}
++      <button
++        onClick={() => handleTrade("higher")}
++        disabled={loading}
++        className="flex flex-col items-center justify-center py-5 gap-1 font-bold text-lg text-white transition-all active:scale-[0.98] disabled:opacity-60"
++        style={{ background: "#1d9e40", borderBottom: "1px solid hsl(228 15% 17%)" }}
++      >
++        <TrendingUp className="w-7 h-7" />
++        ACIMA
++      </button>
++
++      {/* === ABAIXO Button === */}
++      <button
++        onClick={() => handleTrade("lower")}
++        disabled={loading}
++        className="flex flex-col items-center justify-center py-5 gap-1 font-bold text-lg text-white transition-all active:scale-[0.98] disabled:opacity-60 flex-1"
++        style={{ background: "#bf3030" }}
++      >
++        <TrendingDown className="w-7 h-7" />
++        ABAIXO
++      </button>
+ 
+-      <div className="p-3 border-t border-border text-center">
+-        <span className="text-xs text-muted-foreground">CURRENT TIME: {new Date().toLocaleTimeString()} (UTC+3)</span>
++      {/* Status bar */}
++      <div
++        className="px-3 py-2 text-center"
++        style={{ borderTop: "1px solid hsl(228 15% 17%)" }}
++      >
++        <span className="text-[10px] text-gray-500">
++          HORA ATUAL: {currentTime.toLocaleTimeString()} (UTC+3)
++        </span>
+       </div>
+     </aside>
+   );
+diff --git a/src/components/trading/TradingSidebar.tsx b/src/components/trading/TradingSidebar.tsx
+index 31e3843..1f1ddff 100644
+--- a/src/components/trading/TradingSidebar.tsx
++++ b/src/components/trading/TradingSidebar.tsx
+@@ -1,83 +1,96 @@
+ import { Link, useLocation } from "react-router-dom";
+ import {
+-  LayoutGrid,
+   PieChart,
+-  Gauge,
+-  History,
++  Clock,
+   MessageSquare,
+   Trophy,
+   Gift,
+-  Users,
+-  BarChart3,
++  BarChart2,
++  Layers,
+   MoreHorizontal,
+-  Flame,
++  Tv,
++  Zap,
+ } from "lucide-react";
+ 
++interface TradingSidebarProps {
++  onOpenHistory?: () => void;
++  onOpenAssetInfo?: () => void;
++}
++
+ const sidebarItems = [
+-  { icon: PieChart, label: "Total Portfolio", path: "/trade" },
+-  { icon: Gauge, label: "Performance Dashboard", path: "/trade/performance", isNew: true },
+-  { icon: History, label: "Trading History", path: "/trade/history" },
+-  { icon: MessageSquare, label: "Chats & Support", path: "/trade/support" },
+-  { icon: Trophy, label: "Leader Board", path: "/trade/leaderboard" },
+-  { icon: Gift, label: "Promo", path: "/trade/promo" },
+-  { icon: Users, label: "Partnership", path: "/trade/partnership" },
+-  { icon: BarChart3, label: "Market Analysis", path: "/trade/analysis" },
+-  { icon: MoreHorizontal, label: "More", path: "/trade/more" },
++  { icon: PieChart, label: "PORTFOLIO\nTOTAL", path: "/trade", action: "portfolio" },
++  { icon: Clock, label: "HISTÓRICO\nDE TRADING", path: "/trade", action: "history" },
++  { icon: MessageSquare, label: "CHATS\nSUPORTE", path: "#", action: "chat" },
++  { icon: Trophy, label: "TABELA\nDE LÍDERES", path: "/dashboard", action: "leaders" },
++  { icon: Gift, label: "PROMOÇÃO", path: "#", action: "promo" },
++  { icon: Tv, label: "WEBINARS", path: "#", action: "webinars" },
++  { icon: BarChart2, label: "ANÁLISE DE\nMERCADO", path: "#", action: "analysis" },
++  { icon: Layers, label: "TORNEIOS", path: "#", action: "tournaments" },
++  { icon: MoreHorizontal, label: "MAIS", path: "#", action: "more" },
+ ];
+ 
+-const TradingSidebar = () => {
++const TradingSidebar = ({ onOpenHistory, onOpenAssetInfo }: TradingSidebarProps) => {
+   const location = useLocation();
+ 
+   return (
+-    <aside className="w-20 bg-sidebar border-r border-sidebar-border flex flex-col">
+-      {/* Logo */}
+-      <div className="h-14 flex items-center justify-center border-b border-sidebar-border">
+-        <Link to="/" className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center">
+-          <Flame className="w-5 h-5 text-primary-foreground" />
+-        </Link>
+-      </div>
++    <aside
++      className="w-[72px] flex flex-col items-center shrink-0"
++      style={{ background: "hsl(228 22% 8%)", borderRight: "1px solid hsl(228 15% 14%)" }}
++    >
++      {/* Navigation Items */}
++      <nav className="flex-1 w-full overflow-y-auto scrollbar-hide pt-2">
++        <ul className="flex flex-col items-center gap-0 w-full">
++          {sidebarItems.map((item, index) => {
++            const isHistory = item.action === "history";
++            const isActive = !isHistory && location.pathname === item.path && item.path !== "#";
+ 
+-      {/* Grid icon */}
+-      <div className="h-14 flex items-center justify-center border-b border-sidebar-border">
+-        <button className="w-9 h-9 rounded-lg bg-sidebar-accent flex items-center justify-center text-sidebar-foreground hover:text-foreground transition-colors">
+-          <LayoutGrid className="w-5 h-5" />
+-        </button>
+-      </div>
++            const cls = `w-full flex flex-col items-center justify-center py-3 px-1 cursor-pointer transition-colors relative group ${
++              isActive
++                ? "text-white bg-white/5"
++                : "text-gray-500 hover:text-gray-200 hover:bg-white/5"
++            }`;
++
++            const content = (
++              <>
++                <item.icon className="w-5 h-5 mb-1 shrink-0" />
++                <span className="text-[8px] font-medium leading-tight text-center whitespace-pre-line tracking-wide">
++                  {item.label}
++                </span>
++                {item.action === "promo" && (
++                  <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-trading-orange text-white text-[8px] flex items-center justify-center font-bold">1</span>
++                )}
++                {/* Tooltip */}
++                <div className="absolute left-full ml-1 px-2 py-1 bg-[#222636] text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 whitespace-nowrap border border-white/10 shadow-lg">
++                  {item.label.replace("\n", " ")}
++                </div>
++              </>
++            );
++
++            if (isHistory) {
++              return (
++                <li key={index} className="w-full">
++                  <button onClick={onOpenHistory} className={cls}>{content}</button>
++                </li>
++              );
++            }
+ 
+-      {/* Navigation */}
+-      <nav className="flex-1 py-4 overflow-y-auto scrollbar-hide">
+-        <ul className="space-y-1">
+-          {sidebarItems.map((item, index) => {
+-            const isActive = location.pathname === item.path;
+             return (
+-              <li key={index}>
+-                <Link
+-                  to={item.path}
+-                  className={`flex flex-col items-center justify-center py-3 px-2 text-[10px] transition-colors relative ${
+-                    isActive
+-                      ? "text-foreground"
+-                      : "text-sidebar-foreground hover:text-foreground"
+-                  }`}
+-                >
+-                  {item.isNew && (
+-                    <span className="absolute top-1 right-2 px-1 py-0.5 text-[8px] font-bold bg-trading-green text-success-foreground rounded">
+-                      NEW
+-                    </span>
+-                  )}
+-                  <item.icon className="w-5 h-5 mb-1" />
+-                  <span className="text-center leading-tight">{item.label}</span>
+-                </Link>
++              <li key={index} className="w-full">
++                <Link to={item.path} className={cls}>{content}</Link>
+               </li>
+             );
+           })}
+         </ul>
+       </nav>
+ 
+-      {/* Support */}
+-      <div className="p-2 border-t border-sidebar-border">
+-        <button className="w-full py-2 px-1 rounded-lg bg-trading-green text-success-foreground text-[10px] font-medium flex flex-col items-center gap-1">
+-          <MessageSquare className="w-4 h-4" />
+-          SUPPORT
++      {/* Bottom Support Button */}
++      <div className="w-full p-2 border-t border-white/5 pb-3">
++        <button
++          className="w-full py-2 rounded text-[9px] font-bold tracking-widest transition-colors flex items-center justify-center gap-1"
++          style={{ background: "#1e9c3a", color: "white" }}
++        >
++          <Zap className="w-3 h-3" />
++          SUPORTE
+         </button>
+       </div>
+     </aside>
+diff --git a/src/components/trading/data/assets.ts b/src/components/trading/data/assets.ts
+index 5f5731c..cae08c8 100644
+--- a/src/components/trading/data/assets.ts
++++ b/src/components/trading/data/assets.ts
+@@ -5,78 +5,50 @@ export interface Asset {
+   name: string;
+   basePrice: number;
+   icon: string;
++  flags: string[]; // Emojis like ['🇺🇸', '🇪🇺'] or single icon for crypto/stocks
++  maxProfit?: number; // Represented as a percentage, e.g., 85
++  change5min?: string; // e.g., "+0.01%" or "-0.06%"
++  category?: "Trending" | "Options" | "Margin" | "Watchlist"; // Maps to the left sidebar
++  isTradersChoice?: boolean;
+ }
+ 
+ export const allAssets: Asset[] = [
+-  // OTC Assets
+-  { symbol: "EUR/USD", type: "OTC", name: "Blitz", basePrice: 1.24183, icon: "€" },
+-  { symbol: "GBP/USD", type: "OTC", name: "Blitz", basePrice: 1.31245, icon: "£" },
+-  { symbol: "USD/JPY", type: "OTC", name: "Blitz", basePrice: 149.32, icon: "¥" },
+-  { symbol: "AUD/USD", type: "OTC", name: "Blitz", basePrice: 0.65432, icon: "A$" },
+-  { symbol: "USD/CAD", type: "OTC", name: "Blitz", basePrice: 1.35678, icon: "C$" },
+-  { symbol: "EUR/GBP", type: "OTC", name: "Blitz", basePrice: 0.85432, icon: "€" },
+-  { symbol: "USD/CHF", type: "OTC", name: "Blitz", basePrice: 0.89234, icon: "Fr" },
+-  { symbol: "NZD/USD", type: "OTC", name: "Blitz", basePrice: 0.61234, icon: "NZ$" },
+-
+-  // Forex Major Pairs
+-  { symbol: "EUR/USD", type: "Forex", name: "Euro/Dollar", basePrice: 1.08542, icon: "€" },
+-  { symbol: "GBP/USD", type: "Forex", name: "Pound/Dollar", basePrice: 1.26783, icon: "£" },
+-  { symbol: "USD/JPY", type: "Forex", name: "Dollar/Yen", basePrice: 151.234, icon: "¥" },
+-  { symbol: "AUD/USD", type: "Forex", name: "Aussie/Dollar", basePrice: 0.64892, icon: "A$" },
+-  { symbol: "USD/CAD", type: "Forex", name: "Dollar/CAD", basePrice: 1.37234, icon: "C$" },
+-  { symbol: "EUR/JPY", type: "Forex", name: "Euro/Yen", basePrice: 164.123, icon: "€" },
+-  { symbol: "GBP/JPY", type: "Forex", name: "Pound/Yen", basePrice: 191.456, icon: "£" },
+-  { symbol: "EUR/GBP", type: "Forex", name: "Euro/Pound", basePrice: 0.85678, icon: "€" },
+-  { symbol: "EUR/CHF", type: "Forex", name: "Euro/Franc", basePrice: 0.96234, icon: "€" },
+-  { symbol: "USD/CHF", type: "Forex", name: "Dollar/Franc", basePrice: 0.88765, icon: "$" },
+-  { symbol: "NZD/USD", type: "Forex", name: "Kiwi/Dollar", basePrice: 0.59876, icon: "NZ$" },
+-  { symbol: "EUR/AUD", type: "Forex", name: "Euro/Aussie", basePrice: 1.67234, icon: "€" },
+-  { symbol: "GBP/AUD", type: "Forex", name: "Pound/Aussie", basePrice: 1.95432, icon: "£" },
+-  { symbol: "EUR/CAD", type: "Forex", name: "Euro/CAD", basePrice: 1.48765, icon: "€" },
+-  { symbol: "GBP/CAD", type: "Forex", name: "Pound/CAD", basePrice: 1.73456, icon: "£" },
+-  { symbol: "AUD/CAD", type: "Forex", name: "Aussie/CAD", basePrice: 0.89123, icon: "A$" },
+-  { symbol: "AUD/JPY", type: "Forex", name: "Aussie/Yen", basePrice: 98.234, icon: "A$" },
+-  { symbol: "CHF/JPY", type: "Forex", name: "Franc/Yen", basePrice: 170.345, icon: "Fr" },
+-  { symbol: "NZD/JPY", type: "Forex", name: "Kiwi/Yen", basePrice: 90.567, icon: "NZ$" },
+-  { symbol: "AUD/NZD", type: "Forex", name: "Aussie/Kiwi", basePrice: 1.08432, icon: "A$" },
+-
+-  // Crypto
+-  { symbol: "BTC/USD", type: "Crypto", name: "Bitcoin", basePrice: 43567.89, icon: "₿" },
+-  { symbol: "ETH/USD", type: "Crypto", name: "Ethereum", basePrice: 2345.67, icon: "Ξ" },
+-  { symbol: "XRP/USD", type: "Crypto", name: "Ripple", basePrice: 0.5234, icon: "X" },
+-  { symbol: "LTC/USD", type: "Crypto", name: "Litecoin", basePrice: 72.34, icon: "Ł" },
+-  { symbol: "BCH/USD", type: "Crypto", name: "Bitcoin Cash", basePrice: 234.56, icon: "Ƀ" },
+-  { symbol: "ADA/USD", type: "Crypto", name: "Cardano", basePrice: 0.4567, icon: "₳" },
+-  { symbol: "DOT/USD", type: "Crypto", name: "Polkadot", basePrice: 7.234, icon: "●" },
+-  { symbol: "SOL/USD", type: "Crypto", name: "Solana", basePrice: 98.76, icon: "◎" },
+-  { symbol: "DOGE/USD", type: "Crypto", name: "Dogecoin", basePrice: 0.0823, icon: "Ð" },
+-  { symbol: "MATIC/USD", type: "Crypto", name: "Polygon", basePrice: 0.9876, icon: "M" },
+-
+-  // Stocks
+-  { symbol: "AAPL", type: "Stocks", name: "Apple Inc.", basePrice: 178.45, icon: "" },
+-  { symbol: "GOOGL", type: "Stocks", name: "Alphabet Inc.", basePrice: 141.23, icon: "G" },
+-  { symbol: "MSFT", type: "Stocks", name: "Microsoft", basePrice: 378.91, icon: "M" },
+-  { symbol: "AMZN", type: "Stocks", name: "Amazon", basePrice: 178.12, icon: "A" },
+-  { symbol: "TSLA", type: "Stocks", name: "Tesla", basePrice: 234.56, icon: "T" },
+-  { symbol: "META", type: "Stocks", name: "Meta", basePrice: 367.89, icon: "M" },
+-  { symbol: "NVDA", type: "Stocks", name: "NVIDIA", basePrice: 543.21, icon: "N" },
+-  { symbol: "NFLX", type: "Stocks", name: "Netflix", basePrice: 478.90, icon: "N" },
+-  { symbol: "DIS", type: "Stocks", name: "Disney", basePrice: 91.23, icon: "D" },
+-  { symbol: "PYPL", type: "Stocks", name: "PayPal", basePrice: 62.45, icon: "P" },
+-
++  // Options / Traders Choice matches
++  { symbol: "NZD/USD", type: "Forex", name: "New Zealand Dollar / US Dollar", basePrice: 0.58383, icon: "NZ$", flags: ["🇳🇿", "🇺🇸"], maxProfit: 85, change5min: "+0.03%", category: "Options", isTradersChoice: true },
++  { symbol: "USD/JPY", type: "Forex", name: "US Dollar / Japanese Yen", basePrice: 106.6019, icon: "¥", flags: ["🇺🇸", "🇯🇵"], maxProfit: 85, change5min: "-0.06%", category: "Options", isTradersChoice: true },
++  { symbol: "EUR/USD", type: "Forex", name: "Euro / US Dollar", basePrice: 1.048115, icon: "€", flags: ["🇪🇺", "🇺🇸"], maxProfit: 85, change5min: "+0.01%", category: "Options", isTradersChoice: true },
++  { symbol: "JPY/USD", type: "Forex", name: "Japanese Yen / US Dollar", basePrice: 439.0796, icon: "¥", flags: ["🇯🇵", "🇺🇸"], maxProfit: 85, change5min: "+0.01%", category: "Options", isTradersChoice: true },
++  
++  // Trending / Gainers (OTC matches from screen)
++  { symbol: "NOT (OTC)", type: "OTC", name: "Notcoin", basePrice: 0.013045, icon: "N", flags: ["⚠️"], maxProfit: 86, change5min: "+5.75%", category: "Trending" },
++  { symbol: "Sei (OTC)", type: "OTC", name: "Sei", basePrice: 0.783465, icon: "S", flags: ["🔴"], maxProfit: 86, change5min: "+3.20%", category: "Trending" },
++  { symbol: "AIG (OTC)", type: "OTC", name: "AIG", basePrice: 77.62500, icon: "A", flags: ["🔵"], maxProfit: 86, change5min: "+2.31%", category: "Trending" },
++  
++  // More Forex
++  { symbol: "GBP/USD", type: "Forex", name: "British Pound / US Dollar", basePrice: 1.26783, icon: "£", flags: ["🇬🇧", "🇺🇸"], maxProfit: 81, change5min: "-0.12%", category: "Options" },
++  { symbol: "AUD/USD", type: "Forex", name: "Australian Dollar / US Dollar", basePrice: 0.64892, icon: "A$", flags: ["🇦🇺", "🇺🇸"], maxProfit: 82, change5min: "+0.05%", category: "Options" },
++  { symbol: "USD/CAD", type: "Forex", name: "US Dollar / Canadian Dollar", basePrice: 1.37234, icon: "C$", flags: ["🇺🇸", "🇨🇦"], maxProfit: 80, change5min: "-0.02%", category: "Options" },
++  { symbol: "EUR/GBP", type: "Forex", name: "Euro / British Pound", basePrice: 0.85678, icon: "€", flags: ["🇪🇺", "🇬🇧"], maxProfit: 78, change5min: "+0.01%", category: "Options" },
++  { symbol: "USD/CHF", type: "Forex", name: "US Dollar / Swiss Franc", basePrice: 0.88765, icon: "$", flags: ["🇺🇸", "🇨🇭"], maxProfit: 75, change5min: "-0.04%", category: "Options" },
++  
++  // Margin / Crypto
++  { symbol: "BTC/USD", type: "Crypto", name: "Bitcoin", basePrice: 43567.89, icon: "₿", flags: ["₿"], maxProfit: 95, change5min: "+1.20%", category: "Margin" },
++  { symbol: "ETH/USD", type: "Crypto", name: "Ethereum", basePrice: 2345.67, icon: "Ξ", flags: ["Ξ"], maxProfit: 90, change5min: "-0.40%", category: "Margin" },
++  { symbol: "SOL/USD", type: "Crypto", name: "Solana", basePrice: 98.76, icon: "◎", flags: ["◎"], maxProfit: 88, change5min: "+3.10%", category: "Margin" },
++  
++  // General Stock options
++  { symbol: "AAPL", type: "Stocks", name: "Apple Inc.", basePrice: 178.45, icon: "🍏", flags: ["🍎"], maxProfit: 70, change5min: "+0.15%", category: "Margin" },
++  { symbol: "TSLA", type: "Stocks", name: "Tesla", basePrice: 234.56, icon: "T", flags: ["T"], maxProfit: 75, change5min: "-1.20%", category: "Margin" },
++  
+   // Commodities
+-  { symbol: "XAU/USD", type: "Commodities", name: "Gold", basePrice: 2034.56, icon: "Au" },
+-  { symbol: "XAG/USD", type: "Commodities", name: "Silver", basePrice: 23.456, icon: "Ag" },
+-  { symbol: "OIL/USD", type: "Commodities", name: "Crude Oil", basePrice: 78.34, icon: "🛢" },
+-  { symbol: "GAS/USD", type: "Commodities", name: "Natural Gas", basePrice: 2.345, icon: "⛽" },
+-  { symbol: "XPT/USD", type: "Commodities", name: "Platinum", basePrice: 912.34, icon: "Pt" },
+-  { symbol: "XPD/USD", type: "Commodities", name: "Palladium", basePrice: 1023.45, icon: "Pd" },
+-  { symbol: "COPPER", type: "Commodities", name: "Copper", basePrice: 3.789, icon: "Cu" },
+-  { symbol: "WHEAT", type: "Commodities", name: "Wheat", basePrice: 567.89, icon: "🌾" },
++  { symbol: "XAU/USD", type: "Commodities", name: "Gold", basePrice: 2034.56, icon: "Au", flags: ["🪙"], maxProfit: 80, change5min: "+0.05%", category: "Margin" },
++  { symbol: "OIL/USD", type: "Commodities", name: "Crude Oil", basePrice: 78.34, icon: "🛢", flags: ["🛢"], maxProfit: 78, change5min: "-0.30%", category: "Margin" },
+ ];
+ 
+ export const assetTypes = ["OTC", "Forex", "Crypto", "Stocks", "Commodities"] as const;
+ 
++// ... keeping existing timeframes/indicators below ...
++
+ // Chart timeframes from 5 seconds to 3 days
+ export const chartTimeframes = [
+   { label: "5s", value: 5, unit: "seconds" },
+diff --git a/src/contexts/AuthContext.tsx b/src/contexts/AuthContext.tsx
+index 1b935e3..ef99c78 100644
+--- a/src/contexts/AuthContext.tsx
++++ b/src/contexts/AuthContext.tsx
+@@ -10,6 +10,7 @@ interface AuthContextType {
+   loading: boolean;
+   signUp: (email: string, password: string, username?: string) => Promise<{ error: any }>;
+   signIn: (email: string, password: string) => Promise<{ error: any }>;
++  signInWithGoogle: () => Promise<{ error: any }>;
+   signOut: () => Promise<void>;
+   refreshProfile: () => Promise<void>;
+ }
+@@ -84,6 +85,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
+     return { error };
+   };
+ 
++  const signInWithGoogle = async () => {
++    const { error } = await supabase.auth.signInWithOAuth({
++      provider: 'google',
++      options: {
++        redirectTo: window.location.origin + '/trade',
++      }
++    });
++    return { error };
++  };
++
+   const signOut = async () => {
+     await supabase.auth.signOut();
+     setUser(null);
+@@ -92,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
+   };
+ 
+   return (
+-    <AuthContext.Provider value={{ user, session, profile, loading, signUp, signIn, signOut, refreshProfile }}>
++    <AuthContext.Provider value={{ user, session, profile, loading, signUp, signIn, signInWithGoogle, signOut, refreshProfile }}>
+       {children}
+     </AuthContext.Provider>
+   );
+diff --git a/src/index.css b/src/index.css
+index 91d6f31..07fcb1a 100644
+--- a/src/index.css
++++ b/src/index.css
+@@ -6,91 +6,92 @@
+ 
+ @layer base {
+   :root {
+-    --background: 220 15% 8%;
+-    --foreground: 0 0% 95%;
++    /* Deep navy-blue dark theme matching screenshot */
++    --background: 228 18% 10%;      /* #141721 */
++    --foreground: 0 0% 92%;
+ 
+-    --card: 220 15% 11%;
+-    --card-foreground: 0 0% 95%;
++    --card: 226 17% 13%;             /* #1a1e2e */
++    --card-foreground: 0 0% 92%;
+ 
+-    --popover: 220 15% 11%;
+-    --popover-foreground: 0 0% 95%;
++    --popover: 226 17% 13%;
++    --popover-foreground: 0 0% 92%;
+ 
+-    --primary: 30 100% 50%;
++    --primary: 23 100% 50%;          /* #ff6200 Orange */
+     --primary-foreground: 0 0% 100%;
+ 
+-    --secondary: 220 15% 15%;
+-    --secondary-foreground: 0 0% 95%;
++    --secondary: 228 16% 17%;        /* #222636 */
++    --secondary-foreground: 0 0% 90%;
+ 
+-    --muted: 220 15% 18%;
+-    --muted-foreground: 220 10% 55%;
++    --muted: 228 16% 20%;
++    --muted-foreground: 225 10% 55%;
+ 
+-    --accent: 220 15% 20%;
+-    --accent-foreground: 0 0% 95%;
++    --accent: 228 16% 18%;
++    --accent-foreground: 0 0% 92%;
+ 
+-    --destructive: 0 72% 51%;
++    --destructive: 0 80% 55%;
+     --destructive-foreground: 0 0% 100%;
+ 
+-    --success: 145 80% 42%;
++    --success: 140 70% 38%;
+     --success-foreground: 0 0% 100%;
+ 
+-    --border: 220 15% 18%;
+-    --input: 220 15% 15%;
+-    --ring: 30 100% 50%;
++    --border: 228 15% 19%;
++    --input: 228 15% 16%;
++    --ring: 23 100% 50%;
+ 
+-    --radius: 0.5rem;
++    --radius: 0.375rem;
+ 
+     /* Trading specific colors */
+-    --trading-green: 145 80% 42%;
+-    --trading-red: 0 72% 51%;
+-    --trading-orange: 30 100% 50%;
+-    --chart-bg: 220 20% 10%;
+-    --sidebar-bg: 220 18% 9%;
+-    --panel-bg: 220 16% 12%;
++    --trading-green: 140 70% 38%;
++    --trading-red: 350 80% 50%;
++    --trading-orange: 23 100% 50%;
++    --chart-bg: 228 20% 9%;          /* Slightly darker for chart */
++    --sidebar-bg: 228 22% 8%;        /* Even darker sidebar */
++    --panel-bg: 228 17% 12%;
+ 
+     /* Chart colors */
+-    --candle-green: 145 80% 45%;
+-    --candle-red: 0 72% 55%;
+-    --chart-grid: 220 15% 20%;
+-    --price-line: 30 100% 50%;
+-
+-    --sidebar-background: 220 18% 9%;
+-    --sidebar-foreground: 0 0% 70%;
+-    --sidebar-primary: 30 100% 50%;
++    --candle-green: 140 70% 40%;
++    --candle-red: 350 80% 52%;
++    --chart-grid: 228 15% 18%;
++    --price-line: 23 100% 50%;
++
++    --sidebar-background: 228 22% 8%;
++    --sidebar-foreground: 225 10% 55%;
++    --sidebar-primary: 23 100% 50%;
+     --sidebar-primary-foreground: 0 0% 100%;
+-    --sidebar-accent: 220 15% 15%;
+-    --sidebar-accent-foreground: 0 0% 95%;
+-    --sidebar-border: 220 15% 15%;
+-    --sidebar-ring: 30 100% 50%;
++    --sidebar-accent: 228 16% 17%;
++    --sidebar-accent-foreground: 0 0% 92%;
++    --sidebar-border: 228 15% 16%;
++    --sidebar-ring: 23 100% 50%;
+   }
+ 
+   .dark {
+-    --background: 220 15% 8%;
+-    --foreground: 0 0% 95%;
+-    --card: 220 15% 11%;
+-    --card-foreground: 0 0% 95%;
+-    --popover: 220 15% 11%;
+-    --popover-foreground: 0 0% 95%;
+-    --primary: 30 100% 50%;
++    --background: 228 18% 10%;
++    --foreground: 0 0% 92%;
++    --card: 226 17% 13%;
++    --card-foreground: 0 0% 92%;
++    --popover: 226 17% 13%;
++    --popover-foreground: 0 0% 92%;
++    --primary: 23 100% 50%;
+     --primary-foreground: 0 0% 100%;
+-    --secondary: 220 15% 15%;
+-    --secondary-foreground: 0 0% 95%;
+-    --muted: 220 15% 18%;
+-    --muted-foreground: 220 10% 55%;
+-    --accent: 220 15% 20%;
+-    --accent-foreground: 0 0% 95%;
+-    --destructive: 0 72% 51%;
++    --secondary: 228 16% 17%;
++    --secondary-foreground: 0 0% 90%;
++    --muted: 228 16% 20%;
++    --muted-foreground: 225 10% 55%;
++    --accent: 228 16% 18%;
++    --accent-foreground: 0 0% 92%;
++    --destructive: 0 80% 55%;
+     --destructive-foreground: 0 0% 100%;
+-    --border: 220 15% 18%;
+-    --input: 220 15% 15%;
+-    --ring: 30 100% 50%;
+-    --sidebar-background: 220 18% 9%;
+-    --sidebar-foreground: 0 0% 70%;
+-    --sidebar-primary: 30 100% 50%;
++    --border: 228 15% 19%;
++    --input: 228 15% 16%;
++    --ring: 23 100% 50%;
++    --sidebar-background: 228 22% 8%;
++    --sidebar-foreground: 225 10% 55%;
++    --sidebar-primary: 23 100% 50%;
+     --sidebar-primary-foreground: 0 0% 100%;
+-    --sidebar-accent: 220 15% 15%;
+-    --sidebar-accent-foreground: 0 0% 95%;
+-    --sidebar-border: 220 15% 15%;
+-    --sidebar-ring: 30 100% 50%;
++    --sidebar-accent: 228 16% 17%;
++    --sidebar-accent-foreground: 0 0% 92%;
++    --sidebar-border: 228 15% 16%;
++    --sidebar-ring: 23 100% 50%;
+   }
+ }
+ 
+@@ -110,23 +111,23 @@
+ 
+ @layer components {
+   .gradient-primary {
+-    background: linear-gradient(135deg, hsl(30 100% 50%) 0%, hsl(35 100% 45%) 100%);
++    background: linear-gradient(135deg, hsl(23 100% 50%) 0%, hsl(23 100% 40%) 100%);
+   }
+ 
+   .gradient-dark {
+-    background: linear-gradient(180deg, hsl(220 15% 10%) 0%, hsl(220 15% 6%) 100%);
++    background: linear-gradient(180deg, hsl(228 18% 11%) 0%, hsl(228 18% 8%) 100%);
+   }
+ 
+   .glow-primary {
+-    box-shadow: 0 0 40px hsl(30 100% 50% / 0.3);
++    box-shadow: 0 0 40px hsl(23 100% 50% / 0.3);
+   }
+ 
+   .glow-success {
+-    box-shadow: 0 0 20px hsl(145 80% 42% / 0.4);
++    box-shadow: 0 0 20px hsl(140 70% 38% / 0.4);
+   }
+ 
+   .glow-danger {
+-    box-shadow: 0 0 20px hsl(0 72% 51% / 0.4);
++    box-shadow: 0 0 20px hsl(350 80% 50% / 0.4);
+   }
+ 
+   .trading-card {
+diff --git a/src/pages/Login.tsx b/src/pages/Login.tsx
+index 11ca0b1..7be70f2 100644
+--- a/src/pages/Login.tsx
++++ b/src/pages/Login.tsx
+@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
+ 
+ const Login = () => {
+   const navigate = useNavigate();
+-  const { signIn } = useAuth();
++  const { signIn, signInWithGoogle } = useAuth();
+   const [showPassword, setShowPassword] = useState(false);
+   const [email, setEmail] = useState("");
+   const [password, setPassword] = useState("");
+@@ -62,6 +62,33 @@ const Login = () => {
+             <Button type="submit" variant="trading" className="w-full" size="lg" disabled={loading}>
+               {loading ? "Signing in..." : "Log in"}
+             </Button>
++            
++            <div className="relative my-6">
++              <div className="absolute inset-0 flex items-center">
++                <span className="w-full border-t border-border" />
++              </div>
++              <div className="relative flex justify-center text-xs uppercase">
++                <span className="bg-card px-2 text-muted-foreground">Or</span>
++              </div>
++            </div>
++
++            <Button 
++              type="button" 
++              variant="outline" 
++              className="w-full bg-background" 
++              size="lg" 
++              onClick={signInWithGoogle}
++              disabled={loading}
++            >
++              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
++                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
++                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
++                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
++                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
++                <path d="M1 1h22v22H1z" fill="none" />
++              </svg>
++              Continue with Google
++            </Button>
+           </form>
+ 
+           <div className="mt-6 text-center">
+diff --git a/src/pages/Register.tsx b/src/pages/Register.tsx
+index 872998c..7765fd1 100644
+--- a/src/pages/Register.tsx
++++ b/src/pages/Register.tsx
+@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
+ import { toast } from "@/hooks/use-toast";
+ 
+ const Register = () => {
+-  const { signUp } = useAuth();
++  const { signUp, signInWithGoogle } = useAuth();
+   const [showPassword, setShowPassword] = useState(false);
+   const [email, setEmail] = useState("");
+   const [password, setPassword] = useState("");
+@@ -76,6 +76,33 @@ const Register = () => {
+             <Button type="submit" variant="trading" className="w-full" size="lg" disabled={!agreed || loading}>
+               {loading ? "Creating account..." : "Create account"}
+             </Button>
++
++            <div className="relative my-6">
++              <div className="absolute inset-0 flex items-center">
++                <span className="w-full border-t border-border" />
++              </div>
++              <div className="relative flex justify-center text-xs uppercase">
++                <span className="bg-card px-2 text-muted-foreground">Or</span>
++              </div>
++            </div>
++
++            <Button 
++              type="button" 
++              variant="outline" 
++              className="w-full bg-background" 
++              size="lg" 
++              onClick={signInWithGoogle}
++              disabled={loading}
++            >
++              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
++                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
++                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
++                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
++                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
++                <path d="M1 1h22v22H1z" fill="none" />
++              </svg>
++              Continue with Google
++            </Button>
+           </form>
+ 
+           <div className="mt-6 text-center">
+diff --git a/src/pages/Trade.tsx b/src/pages/Trade.tsx
+index 281497d..31e670f 100644
+--- a/src/pages/Trade.tsx
++++ b/src/pages/Trade.tsx
+@@ -1,59 +1,103 @@
+ import { useState } from "react";
++import { useNavigate } from "react-router-dom";
+ import TradingSidebar from "@/components/trading/TradingSidebar";
+ import TradingHeader from "@/components/trading/TradingHeader";
+ import TradingChart from "@/components/trading/TradingChart";
+ import TradingPanel from "@/components/trading/TradingPanel";
+ import AssetInfo from "@/components/trading/AssetInfo";
++import AssetInfoPanel from "@/components/trading/AssetInfoPanel";
+ import ActiveTrades from "@/components/trading/ActiveTrades";
++import TradingHistoryPanel from "@/components/trading/TradingHistoryPanel";
+ import { Asset } from "@/components/trading/data/assets";
+ import { useAuth } from "@/contexts/AuthContext";
+ import { useTrading } from "@/hooks/useTrading";
+ 
+ const Trade = () => {
+   const { profile } = useAuth();
+-  const { activeTrades, tradeHistory, openTrade, setCurrentPrice } = useTrading();
+-
+-  const [selectedAsset, setSelectedAsset] = useState({
+-    symbol: "EUR/USD",
+-    type: "OTC",
+-    name: "Blitz",
+-    price: 1.24183,
+-    change: 0.35,
++  const { activeTrades, openTrade, setCurrentPrice } = useTrading();
++  const navigate = useNavigate();
++
++  const [selectedAsset, setSelectedAsset] = useState<Asset & { price: number; change: number }>({
++    symbol: "NZD/USD",
++    type: "Forex",
++    name: "New Zealand Dollar / US Dollar",
++    basePrice: 0.58383,
++    icon: "NZ$",
++    flags: ["🇳🇿", "🇺🇸"],
++    maxProfit: 85,
++    change5min: "+0.03%",
++    category: "Options",
++    isTradersChoice: true,
++    price: 0.58383,
++    change: 0.03,
+   });
+ 
++  const [showAssetInfoPanel, setShowAssetInfoPanel] = useState(false);
++  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
++
+   const balance = profile?.balance ?? 0;
+ 
+   const handleSelectAsset = (asset: Asset & { price: number; change: number }) => {
+-    setSelectedAsset({
+-      symbol: asset.symbol,
+-      type: asset.type,
+-      name: asset.name,
+-      price: asset.price,
+-      change: asset.change,
+-    });
++    setSelectedAsset(asset);
+   };
+ 
+   const handlePriceUpdate = (price: number) => {
+     setCurrentPrice(price);
+   };
+ 
++  const handleOpenSettings = () => {
++    navigate("/settings");
++  };
++
++  const handleOpenHistory = () => {
++    setShowHistoryPanel(!showHistoryPanel);
++  };
++
+   return (
+-    <div className="h-screen bg-background flex overflow-hidden">
+-      <TradingSidebar />
+-      <div className="flex-1 flex flex-col">
+-        <TradingHeader balance={balance} />
+-        <div className="flex-1 flex">
+-          <div className="flex-1 flex flex-col">
+-            <AssetInfo asset={selectedAsset} onSelectAsset={handleSelectAsset} />
+-            <TradingChart asset={selectedAsset} onPriceUpdate={handlePriceUpdate} />
+-            {activeTrades.length > 0 && <ActiveTrades trades={activeTrades} />}
+-          </div>
+-          <TradingPanel
+-            asset={selectedAsset}
+-            balance={balance}
+-            onTrade={openTrade}
++    <div className="h-screen bg-background flex flex-col overflow-hidden">
++      <TradingHeader
++        balance={balance}
++        asset={selectedAsset}
++        onOpenSettings={handleOpenSettings}
++        onOpenHistory={handleOpenHistory}
++      />
++      <div className="flex-1 flex overflow-hidden">
++        <TradingSidebar
++          onOpenHistory={() => setShowHistoryPanel(true)}
++          onOpenAssetInfo={() => setShowAssetInfoPanel(true)}
++        />
++
++        {/* Asset Info Panel (slides in from left when active) */}
++        {showAssetInfoPanel && (
++          <AssetInfoPanel
++            asset={{
++              symbol: selectedAsset.symbol,
++              price: selectedAsset.price,
++              flags: selectedAsset.flags,
++            }}
++            onClose={() => setShowAssetInfoPanel(false)}
+           />
++        )}
++
++        {/* Main Chart Area */}
++        <div className="flex-1 flex flex-col relative min-w-0">
++          <AssetInfo asset={selectedAsset} onSelectAsset={handleSelectAsset} />
++          <TradingChart asset={selectedAsset} onPriceUpdate={handlePriceUpdate} />
++          {activeTrades.length > 0 && <ActiveTrades trades={activeTrades} />}
++
++          {/* Trading History Panel (floated over left edge of chart) */}
++          {showHistoryPanel && (
++            <div className="absolute top-0 left-14 z-50">
++              <TradingHistoryPanel onClose={() => setShowHistoryPanel(false)} />
++            </div>
++          )}
+         </div>
++
++        <TradingPanel
++          asset={selectedAsset}
++          balance={balance}
++          onTrade={openTrade}
++        />
+       </div>
+     </div>
+   );

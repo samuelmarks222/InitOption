@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover"
+    />
+    <meta name="platform-metadata-start" content="true" />
+    <title>Init Option</title>
+    <meta name="description" content="Init Option is an OTC trading platform with real-time charts, public tournament pages, instant demo access, and fast withdrawals.">
+    <meta name="keywords" content="OTC trading platform, real-time charts, trading tournaments, demo account, fast withdrawals">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Init Option" />
+    <meta name="application-name" content="Init Option" />
+    <meta name="language" content="en" />
+    <meta name="theme-color" content="#0E1217" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="og:title" content="Init Option">
+    <meta property="og:site_name" content="Init Option">
+    <meta name="twitter:title" content="Init Option">
+    <meta property="og:description" content="Init Option is an OTC trading platform with demo and live trading access across desktop and mobile.">
+    <meta property="og:image" content="/share-icon.png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:image:alt" content="Init Option icon">
+    <meta name="twitter:description" content="Init Option is an OTC trading platform with demo and live trading access across desktop and mobile.">
+    <meta name="twitter:image" content="/share-icon.png">
+    <meta name="twitter:image:alt" content="Init Option icon">
+    <link rel="canonical" href="/">
+    <link rel="icon" type="image/png" href="/share-icon.png">
+    <link rel="shortcut icon" href="/share-icon.png">
+    <link rel="apple-touch-icon" href="/share-icon.png">
+    <link rel="alternate" hreflang="en" href="/">
+    <link rel="alternate" hreflang="x-default" href="/">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <meta name="platform-metadata-end" content="true" />
+    <script type="module" crossorigin src="/assets/index-BF6pV97g.js"></script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script>
+      (() => {
+        const BOOT_STATUS_KEY = "__INITOPTION_BOOT_STATUS__";
+        const RECOVERY_ATTEMPT_KEY = "initoption:boot-recovery-attempts:v1";
+        const MAX_RECOVERY_ATTEMPTS = 1;
+        const BOOT_TIMEOUT_MS = 7000;
+        const BOOT_ERROR_PATTERNS = [
+          /Failed to fetch dynamically imported module/i,
+          /Importing a module script failed/i,
+          /ChunkLoadError/i,
+          /Unable to preload CSS/i,
+          /Loading chunk [\w-]+ failed/i,
+        ];
+        let recoveryTriggered = false;
+
+        const getRoot = () => document.getElementById("root");
+        const setBootStatus = (status) => {
+          window[BOOT_STATUS_KEY] = status;
+        };
+        const getBootStatus = () => window[BOOT_STATUS_KEY];
+        const rootHasMountedContent = () => {
+          const root = getRoot();
+          return Boolean(root && root.childElementCount > 0);
+        };
+        const readRecoveryAttempts = () => {
+          try {
+            return Number(window.sessionStorage.getItem(RECOVERY_ATTEMPT_KEY) || "0");
+          } catch {
+            return 0;
+          }
+        };
+        const writeRecoveryAttempts = (value) => {
+          try {
+            window.sessionStorage.setItem(RECOVERY_ATTEMPT_KEY, String(value));
+          } catch {
+            // Ignore storage failures and keep the recovery best-effort.
+          }
+        };
+        const clearRecoveryAttempts = () => {
+          try {
+            window.sessionStorage.removeItem(RECOVERY_ATTEMPT_KEY);
+          } catch {
+            // Ignore storage failures and continue.
+          }
+        };
+        const normalizeErrorMessage = (value) => {
+          if (!value) return "";
+          if (typeof value === "string") return value;
+          if (typeof value.message === "string") return value.message;
+          try {
+            return JSON.stringify(value);
+          } catch {
+            return String(value);
+          }
+        };
+        const matchesBootFailure = (value) =>
+          BOOT_ERROR_PATTERNS.some((pattern) => pattern.test(normalizeErrorMessage(value)));
+        const renderRecoveryScreen = (message, details) => {
+          const root = getRoot();
+          if (!root) return;
+
+          root.innerHTML = `
+            <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#141721;color:#edf2f7;font-family:Inter,system-ui,sans-serif;">
+              <div style="width:min(100%,720px);border:1px solid rgba(255,255,255,0.08);background:linear-gradient(180deg,#1a1e2e 0%,#121722 100%);border-radius:20px;padding:24px;box-shadow:0 30px 90px rgba(0,0,0,0.32);">
+                <div style="font-size:12px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:#ff9b5a;">Recovery mode</div>
+                <h1 style="margin:14px 0 0;font-size:28px;line-height:1.2;">We hit a startup problem.</h1>
+                <p style="margin:14px 0 0;color:#b6bfce;line-height:1.7;">${message}</p>
+                ${
+                  details
+                    ? `<pre style="margin:18px 0 0;overflow:auto;border-radius:14px;background:rgba(0,0,0,0.28);padding:16px;font-size:12px;line-height:1.6;color:#ffb4b4;white-space:pre-wrap;">${details.replace(/[&<>]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[char]))}</pre>`
+                    : ""
+                }
+                <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;">
+                  <button id="boot-recovery-retry" style="border:0;border-radius:999px;padding:12px 18px;background:linear-gradient(180deg,#ff6200 0%,#df5200 100%);color:#fff;font-weight:800;cursor:pointer;">Try reload</button>
+                  <button id="boot-recovery-reset" style="border:1px solid rgba(255,255,255,0.1);border-radius:999px;padding:12px 18px;background:#1b2232;color:#fff;font-weight:700;cursor:pointer;">Clear cached app data</button>
+                </div>
+              </div>
+            </div>
+          `;
+
+          document.getElementById("boot-recovery-retry")?.addEventListener("click", () => {
+            clearRecoveryAttempts();
+            window.location.reload();
+          });
+          document.getElementById("boot-recovery-reset")?.addEventListener("click", async () => {
+            try {
+              const registrations = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistrations() : [];
+              const cacheKeys = "caches" in window ? await caches.keys() : [];
+              await Promise.all(registrations.map((registration) => registration.unregister().catch(() => false)));
+              await Promise.all(cacheKeys.map((cacheKey) => caches.delete(cacheKey).catch(() => false)));
+              clearRecoveryAttempts();
+            } catch {
+              // Ignore cleanup failures and still refresh.
+            }
+
+            window.location.reload();
+          });
+        };
+        const recoverBoot = async (reason, error) => {
+          if (recoveryTriggered) return;
+          recoveryTriggered = true;
+
+          const attempts = readRecoveryAttempts();
+          if (attempts >= MAX_RECOVERY_ATTEMPTS) {
+            renderRecoveryScreen(
+              "The app could not finish loading automatically. Use the buttons below to retry or clear cached app data.",
+              [reason, normalizeErrorMessage(error)].filter(Boolean).join("\n\n"),
+            );
+            return;
+          }
+
+          writeRecoveryAttempts(attempts + 1);
+
+          try {
+            const registrations = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistrations() : [];
+            const cacheKeys = "caches" in window ? await caches.keys() : [];
+            await Promise.all(registrations.map((registration) => registration.unregister().catch(() => false)));
+            await Promise.all(cacheKeys.map((cacheKey) => caches.delete(cacheKey).catch(() => false)));
+          } catch {
+            // Continue to reload even if cleanup fails.
+          }
+
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.set("__boot_recover", String(Date.now()));
+          window.location.replace(nextUrl.toString());
+        };
+
+        setBootStatus("preboot");
+
+        window.addEventListener(
+          "error",
+          (event) => {
+            const target = event.target;
+            const resourceUrl =
+              target instanceof HTMLScriptElement || target instanceof HTMLLinkElement
+                ? target.src || target.href
+                : "";
+
+            if (resourceUrl || matchesBootFailure(event.error || event.message)) {
+              void recoverBoot(resourceUrl ? `Failed to load resource: ${resourceUrl}` : "Startup error", event.error || event.message);
+            }
+          },
+          true,
+        );
+
+        window.addEventListener("unhandledrejection", (event) => {
+          if (matchesBootFailure(event.reason)) {
+            void recoverBoot("Unhandled startup rejection", event.reason);
+          }
+        });
+
+        window.setTimeout(() => {
+          if (getBootStatus() === "mounted" || rootHasMountedContent()) {
+            clearRecoveryAttempts();
+            return;
+          }
+
+          void recoverBoot("Boot timeout", "The application did not mount within the expected startup window.");
+        }, BOOT_TIMEOUT_MS);
+      })();
+    </script>
+  </body>
+</html>

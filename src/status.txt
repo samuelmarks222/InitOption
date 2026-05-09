@@ -1,0 +1,44 @@
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   .env
+	modified:   .gitignore
+	modified:   package-lock.json
+	modified:   package.json
+	modified:   src/App.tsx
+	modified:   src/components/landing/Features.tsx
+	modified:   src/components/landing/Hero.tsx
+	modified:   src/components/landing/TradingPlatform.tsx
+	modified:   src/components/trading/AssetInfo.tsx
+	modified:   src/components/trading/AssetSelector.tsx
+	modified:   src/components/trading/TradingChart.tsx
+	modified:   src/components/trading/TradingHeader.tsx
+	modified:   src/components/trading/TradingPanel.tsx
+	modified:   src/components/trading/TradingSidebar.tsx
+	modified:   src/components/trading/data/assets.ts
+	modified:   src/contexts/AuthContext.tsx
+	modified:   src/index.css
+	modified:   src/pages/Login.tsx
+	modified:   src/pages/Register.tsx
+	modified:   src/pages/Trade.tsx
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	diff.txt
+	src/components/trading/AssetInfoPanel.tsx
+	src/components/trading/ChartAnalysisPanel.tsx
+	src/components/trading/ProfileDropdown.tsx
+	src/components/trading/TradingHistoryPanel.tsx
+	src/components/trading/engine/
+	src/pages/Deposit.tsx
+	src/pages/Settings.tsx
+	src/pages/Withdraw.tsx
+	status.txt
+	test-chart.mjs
+	test.mjs
+	vercel.json
+
+no changes added to commit (use "git add" and/or "git commit -a")

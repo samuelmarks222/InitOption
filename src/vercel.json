@@ -1,0 +1,52 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/render.ts": {
+      "includeFiles": "dist/**"
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/mobile-money/process-withdrawals",
+      "schedule": "0 6 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/system/(.*)", "destination": "/api/system?resource=$1" },
+    { "source": "/api/public-bonus", "destination": "/api/system?resource=public-bonus" },
+    { "source": "/api/site.webmanifest", "destination": "/api/system?resource=site.webmanifest" },
+    { "source": "/api/blog/categories", "destination": "/api/blog?route=categories" },
+    { "source": "/api/blog/posts", "destination": "/api/blog?route=posts" },
+    { "source": "/api/blog/posts/(.*)", "destination": "/api/blog?route=post&slug=$1" },
+    { "source": "/rss.xml", "destination": "/api/system?resource=rss" },
+    { "source": "/api/mobile-money/deposit-callback", "destination": "/api/mobile-money/callback?flow=deposit" },
+    { "source": "/api/mobile-money/withdraw-callback", "destination": "/api/mobile-money/callback?flow=withdraw" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/assets/(.*)", "destination": "/assets/$1" },
+    { "source": "/favicon.ico", "destination": "/favicon.ico" },
+    { "source": "/robots.txt", "destination": "/api/system?resource=robots" },
+    { "source": "/sitemap.xml", "destination": "/api/system?resource=sitemap" },
+    {
+      "source": "/(.*\\.(?:css|js|mjs|png|jpg|jpeg|gif|svg|webp|ico|json|webmanifest|txt|xml|map|woff|woff2|ttf|eot))",
+      "destination": "/$1"
+    },
+    { "source": "/(.*)", "destination": "/api/render?__pathname=$1" }
+  ]
+}
