@@ -1,0 +1,1229 @@
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  ChevronDown, Plus, Minus, ArrowUp, ArrowDown,
+  Clock, Briefcase,
+  X, Check, TrendingUp, TrendingDown, Loader2
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { ActiveTrade, OpenTradeHandler, TradeDirection, TradeHistoryEntry, useTrading } from "@/hooks/useTrading";
+import { toast } from "@/hooks/use-toast";
+import { getEffectiveLiveBalance } from "@/lib/live-balance";
+import { AccountType } from "./AccountModals";
+import AssetSymbolMark from "./AssetSymbolMark";
+import {
+  mapTradeHistoryEntryToPresentation,
+  TradeResultDetailModal,
+  TradeResultInlinePanel,
+} from "./TradeResultPresentation";
+import { TRADING_DOWN_COLOR, TRADING_UP_COLOR } from "./tradingPalette";
+import {
+  TRADE_DESK_DIRECTION_FOCUS_EVENT,
+  TRADE_DESK_DIRECTION_SUBMIT_EVENT,
+  type TradeDeskDirectionFocusDetail,
+} from "./tradeDeskEvents";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface TradingPanelProps {
+  asset: { symbol: string; name?: string; price: number; maxProfit?: number };
+  balance?: number;
+  demoBalance: number;
+  accountType: AccountType;
+  onDemoBalanceChange: React.Dispatch<React.SetStateAction<number>>;
+  onTrade?: OpenTradeHandler;
+  onDemoTrade?: OpenTradeHandler;
+  activeTradesOverride?: ActiveTrade[];
+  tradeHistoryOverride?: TradeHistoryEntry[];
+  onTournamentsClick?: () => void;
+  onOpenAssetSelector?: () => void;
+  mobileHistoryOpen?: boolean;
+  onCloseMobileHistory?: () => void;
+  onOpenMobileHistory?: () => void;
+  mobileDocked?: boolean;
+}
+
+type ActiveTab = "trades" | "pending";
+type InvestmentMode = "amount" | "percent";
+
+interface QueuedPendingTrade {
+  id: string;
+  asset_symbol: string;
+  direction: TradeDirection;
+  amount: number;
+  payout_rate: number;
+  expiry_seconds: number;
+  created_at: string;
+  opened_at: string;
+}
+
+// ─── Utility ──────────────────────────────────────────────────────────────────
+const formatTime = (s: number) => {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = Math.floor(s % 60);
+  if (h > 0) return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+};
+
+const formatTradeClock = (seconds: number) => {
+  const total = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const sec = Math.floor(total % 60);
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+};
+
+const formatDurationShortcut = (seconds: number) => {
+  if (seconds % 3600 === 0 && seconds >= 3600) {
+    return `${seconds / 3600}h`;
+  }
+
+  if (seconds % 60 === 0 && seconds >= 60) {
+    return `${seconds / 60}m`;
+  }
+
+  return `${seconds}s`;
+};
+
+const useLiveCountdownSeconds = (
+  openedAt: string,
+  expirySeconds: number,
+  fallbackSeconds: number,
+) => {
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timerId = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 100);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, []);
+
+  const openedAtMs = new Date(openedAt).getTime();
+  if (!Number.isFinite(openedAtMs)) {
+    return Math.max(0, fallbackSeconds);
+  }
+
+  const elapsedSeconds = (nowMs - openedAtMs) / 1000;
+  return Math.max(0, expirySeconds - elapsedSeconds);
+};
+
+const formatStake = (amount: number) => `${Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2)} $`;
+
+const formatProfit = (amount: number) => `${amount > 0 ? "+" : amount < 0 ? "-" : ""}${Math.abs(amount).toFixed(2)} $`;
+
+const formatGroupLabel = (value?: string) => {
+  const date = value ? new Date(value) : new Date();
+
+  if (Number.isNaN(date.getTime())) {
+    return "RECENT";
+  }
+
+  const day = date.getDate();
+  const month = date.toLocaleString("en-US", { month: "long" }).toUpperCase();
+  return `${day} ${month}`;
+};
+
+const buildTradeGroups = <T extends { closed_at?: string; opened_at?: string }>(trades: T[]) => {
+  const groups = new Map<string, T[]>();
+
+  trades.forEach((trade) => {
+    const label = formatGroupLabel(trade.closed_at ?? trade.opened_at);
+    const items = groups.get(label) ?? [];
+    items.push(trade);
+    groups.set(label, items);
+  });
+
+  return Array.from(groups.entries()).map(([label, items]) => ({ label, items }));
+};
+
+// Preset durations in seconds
+const TIME_PRESETS = [
+  { label: "5s",   val: 5      },
+  { label: "10s",  val: 10     },
+  { label: "15s",  val: 15     },
+  { label: "30s",  val: 30     },
+  { label: "1m",   val: 60     },
+  { label: "2m",   val: 120    },
+  { label: "3m",   val: 180    },
+  { label: "4m",   val: 240    },
+  { label: "5m",   val: 300    },
+  { label: "10m",  val: 600    },
+  { label: "15m",  val: 900    },
+  { label: "30m",  val: 1800   },
+  { label: "1h",   val: 3600   },
+  { label: "4h",   val: 14400  },
+];
+
+const MAX_MANUAL_INVESTMENT = 3000;
+const MIN_MANUAL_EXPIRY_SECONDS = 5;
+const MAX_MANUAL_EXPIRY_SECONDS = 24 * 60 * 60;
+const PENDING_TRADE_DELAY_MS = 3000;
+const PENDING_TRADE_MODE_KEY = "trade_pending_mode_enabled";
+
+const clampInvestmentValue = (value: number, mode: InvestmentMode) => {
+  if (mode === "percent") {
+    return Math.max(1, Math.min(100, Math.round(value)));
+  }
+
+  return Math.max(1, Math.min(MAX_MANUAL_INVESTMENT, Math.round(value * 100) / 100));
+};
+
+type CustomDurationUnit = "seconds" | "minutes" | "hours";
+
+const deriveCustomDurationInput = (seconds: number): { amount: string; unit: CustomDurationUnit } => {
+  if (seconds >= 3600 && seconds % 3600 === 0) {
+    return { amount: String(seconds / 3600), unit: "hours" };
+  }
+
+  if (seconds >= 60 && seconds % 60 === 0) {
+    return { amount: String(seconds / 60), unit: "minutes" };
+  }
+
+  return { amount: String(seconds), unit: "seconds" };
+};
+
+const customDurationUnitToSeconds = (amount: number, unit: CustomDurationUnit) => {
+  if (unit === "hours") return amount * 3600;
+  if (unit === "minutes") return amount * 60;
+  return amount;
+};
+
+// ─── Withdrawal Modal and more was extracted to AccountModals.tsx ───
+
+// ─── Time Switcher ─────────────────────────────────────────────────────────────
+const TimeSwitcher = ({
+  value,
+  onChange,
+  onClose,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  onClose: () => void;
+}) => {
+  const derived = deriveCustomDurationInput(value);
+  const [customAmount, setCustomAmount] = useState(derived.amount);
+  const [customUnit, setCustomUnit] = useState<CustomDurationUnit>(derived.unit);
+
+  useEffect(() => {
+    const nextDerived = deriveCustomDurationInput(value);
+    setCustomAmount(nextDerived.amount);
+    setCustomUnit(nextDerived.unit);
+  }, [value]);
+
+  const applyCustomDuration = () => {
+    const parsedAmount = Math.max(1, Number(customAmount) || 0);
+    const nextSeconds = Math.max(
+      MIN_MANUAL_EXPIRY_SECONDS,
+      Math.min(
+        MAX_MANUAL_EXPIRY_SECONDS,
+        Math.round(customDurationUnitToSeconds(parsedAmount, customUnit)),
+      ),
+    );
+
+    onChange(nextSeconds);
+    onClose();
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 z-30" onClick={onClose} />
+      <div
+        className="absolute bottom-full left-0 right-0 z-[80] mb-2 max-h-[320px] overflow-y-auto rounded-[8px] border border-[#5d6579] p-1.5 shadow-[0_16px_36px_rgba(0,0,0,0.38)] backdrop-blur-sm sm:max-h-[344px] sm:p-2 lg:bottom-auto lg:top-full lg:mb-0 lg:mt-2 lg:max-h-[360px] lg:rounded-xl"
+        style={{ background: "rgba(90, 96, 116, 0.96)" }}
+      >
+        <div className="grid grid-cols-3 gap-2">
+          {TIME_PRESETS.map((preset) => {
+            const isSelected = value === preset.val;
+
+            return (
+              <button
+                key={preset.val}
+                type="button"
+                onClick={() => {
+                  onChange(preset.val);
+                  onClose();
+                }}
+                className={`font-copy rounded-[7px] px-1.5 py-2.5 text-center text-[12px] font-semibold transition-colors sm:text-[13px] ${
+                  isSelected
+                    ? "bg-[#1e2330] text-white"
+                    : "bg-[#62697d] text-white/95 hover:bg-[#6f778c]"
+                }`}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 rounded-[10px] border border-white/10 bg-[#51586b]/85 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-[11px] font-black uppercase tracking-[0.08em] text-white">
+                Custom Time
+              </div>
+              <div className="text-[10px] text-white/60">
+                Enter any duration from 5 seconds to 24 hours.
+              </div>
+            </div>
+            <div className="rounded-full bg-[#1e2330] px-2 py-1 text-[10px] font-bold text-white">
+              {formatDurationShortcut(value)}
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={customAmount}
+              onChange={(event) => setCustomAmount(event.target.value)}
+              className="hide-number-spin h-10 min-w-0 flex-1 rounded-[8px] border border-white/10 bg-[#42495c] px-3 text-[14px] font-semibold text-white outline-none transition-colors focus:border-[#0fa053]"
+            />
+            <select
+              value={customUnit}
+              onChange={(event) => setCustomUnit(event.target.value as CustomDurationUnit)}
+              className="h-10 rounded-[8px] border border-white/10 bg-[#42495c] px-3 text-[13px] font-semibold text-white outline-none transition-colors focus:border-[#0fa053]"
+            >
+              <option value="seconds">Sec</option>
+              <option value="minutes">Min</option>
+              <option value="hours">Hour</option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            onClick={applyCustomDuration}
+            className="mt-3 w-full rounded-[8px] bg-[linear-gradient(180deg,#f36f66_0%,#d95952_100%)] px-3 py-2.5 text-[12px] font-black uppercase tracking-[0.08em] text-white shadow-[0_10px_24px_rgba(229,97,84,0.28)] transition-transform hover:scale-[1.01]"
+          >
+            Apply Custom Time
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// ─── Active Trade Row ─────────────────────────────────────────────────────────
+const ActiveTradeRow = ({ trade }: { trade: ActiveTrade }) => {
+  const pct = Math.max(0, (trade.timeLeft / trade.expiry_seconds) * 100);
+  const isUp = trade.direction === "higher";
+
+  return (
+    <div className="px-4 py-3 border-b border-white/5">
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center gap-2">
+          <div
+            className="flex h-5 w-5 items-center justify-center rounded-full"
+            style={{ background: isUp ? TRADING_UP_COLOR : TRADING_DOWN_COLOR }}
+          >
+            {isUp ? <TrendingUp className="w-3 h-3 text-white" /> : <TrendingDown className="w-3 h-3 text-white" />}
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold text-white">{trade.asset_symbol}</div>
+            <div className="text-[9px] text-gray-500">{isUp ? "▲ UP" : "▼ DOWN"}</div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[12px] font-bold text-white">${trade.amount.toFixed(2)}</div>
+          <div className="text-[10px]" style={{ color: TRADING_UP_COLOR }}>+${(trade.amount * trade.payout_rate).toFixed(2)}</div>
+        </div>
+      </div>
+      {/* Countdown bar */}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-1 rounded-full bg-white/10">
+          <div className="h-full rounded-full bg-[#0fa053] transition-all duration-100"
+            style={{ width: `${pct}%` }} />
+        </div>
+        <span className="text-[10px] text-gray-400 font-mono w-8 shrink-0 text-right">
+          {formatTime(trade.timeLeft)}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+// ─── History Trade Row ────────────────────────────────────────────────────────
+const HistoryRow = ({ trade }: { trade: TradeHistoryEntry }) => {
+  const won = trade.status === "won";
+  return (
+    <div className="px-4 py-3 border-b border-white/5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div
+            className="flex h-5 w-5 items-center justify-center rounded-full"
+            style={{ background: won ? TRADING_UP_COLOR : TRADING_DOWN_COLOR }}
+          >
+            {won ? <Check className="w-3 h-3 text-white" /> : <X className="w-3 h-3 text-white" />}
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold text-white">{trade.asset_symbol}</div>
+            <div className="text-[9px] text-gray-500">{trade.direction === "higher" ? "▲ UP" : "▼ DOWN"}</div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[12px] font-bold" style={{ color: won ? TRADING_UP_COLOR : TRADING_DOWN_COLOR }}>
+            {won ? "+" : "−"}${Math.abs(trade.profit ?? 0).toFixed(2)}
+          </div>
+          <div className="text-[9px] text-gray-500">${trade.amount.toFixed(2)}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Main TradingPanel ────────────────────────────────────────────────────────
+const SymbolFlags = ({ symbol, size = 20 }: { symbol: string; size?: number }) => {
+  return (
+    <AssetSymbolMark symbol={symbol} size={size} />
+  );
+};
+
+const TradeGroupHeader = ({ label, count }: { label: string; count: number }) => (
+  <div className="flex items-center justify-center gap-1.5 px-3 pb-1 pt-4">
+    <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#b8c0d3]">{label}</span>
+    <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#666f86] px-1 text-[10px] font-black text-white">
+      {count}
+    </span>
+  </div>
+);
+
+const CompactTradeRowShell = ({
+  symbol,
+  clockValue,
+  amountLabel,
+  amountColor,
+  profitLabel,
+  profitColor,
+  direction,
+  expanded = false,
+  onToggle,
+  details,
+}: {
+  symbol: string;
+  clockValue: string;
+  amountLabel: string;
+  amountColor: string;
+  profitLabel: string;
+  profitColor: string;
+  direction: TradeDirection;
+  expanded?: boolean;
+  onToggle?: () => void;
+  details?: ReactNode;
+}) => {
+  const rowBody = (
+    <div className="px-3 py-3 transition-colors hover:bg-white/[0.02]">
+      <div className="flex items-start gap-2">
+        <span className="mt-[2px] flex h-4 w-4 shrink-0 items-center justify-center text-[#b8c2d8]">
+          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} />
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <SymbolFlags symbol={symbol} size={20} />
+              <span className="truncate text-[11px] font-black uppercase tracking-[0.01em] text-white sm:text-[12px]">
+                {symbol}
+              </span>
+            </div>
+
+            <span className="shrink-0 text-[11px] font-black tabular-nums text-[#eff3ff]">
+              {clockValue}
+            </span>
+          </div>
+
+          <div className="mt-1.5 flex items-center justify-between gap-2 pl-[30px]">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-black" style={{ color: amountColor }}>
+              <span
+                className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full"
+                style={{ background: direction === "higher" ? "rgba(24, 216, 125, 0.16)" : "rgba(255, 106, 114, 0.16)" }}
+              >
+                {direction === "higher" ? <ArrowUp className="h-3 w-3" strokeWidth={3} /> : <ArrowDown className="h-3 w-3" strokeWidth={3} />}
+              </span>
+              {amountLabel}
+            </span>
+
+            <span className="shrink-0 text-[11px] font-black sm:text-[12px]" style={{ color: profitColor }}>
+              {profitLabel}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="border-b border-white/6 last:border-b-0">
+      {onToggle ? (
+        <button type="button" onClick={onToggle} className="block w-full text-left">
+          {rowBody}
+        </button>
+      ) : (
+        rowBody
+      )}
+
+      {expanded && details ? (
+        <div className="px-3 pb-3 pl-9">
+          <div className="rounded-[12px] border border-white/6 bg-[#2d3342] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+            {details}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const CompactActiveTradeRow = ({ trade }: { trade: ActiveTrade }) => {
+  const liveTimeLeft = useLiveCountdownSeconds(trade.opened_at, trade.expiry_seconds, trade.timeLeft);
+
+  return (
+    <CompactTradeRowShell
+      symbol={trade.asset_symbol}
+      clockValue={formatTradeClock(Math.max(0, liveTimeLeft - 0.05))}
+      amountLabel={formatStake(trade.amount)}
+      amountColor={trade.direction === "higher" ? TRADING_UP_COLOR : TRADING_DOWN_COLOR}
+      profitLabel={formatProfit(trade.amount * trade.payout_rate)}
+      profitColor={TRADING_UP_COLOR}
+      direction={trade.direction}
+    />
+  );
+};
+
+const CompactPendingTradeRow = ({ trade }: { trade: QueuedPendingTrade }) => {
+  const pendingTimeLeft = useLiveCountdownSeconds(
+    trade.created_at,
+    PENDING_TRADE_DELAY_MS / 1000,
+    PENDING_TRADE_DELAY_MS / 1000,
+  );
+
+  return (
+    <CompactTradeRowShell
+      symbol={trade.asset_symbol}
+      clockValue={formatTradeClock(Math.max(0, pendingTimeLeft))}
+      amountLabel={formatStake(trade.amount)}
+      amountColor={trade.direction === "higher" ? TRADING_UP_COLOR : TRADING_DOWN_COLOR}
+      profitLabel="Queued"
+      profitColor="#c7d1e6"
+      direction={trade.direction}
+    />
+  );
+};
+
+const CompactHistoryRow = ({
+  trade,
+  expanded,
+  onToggle,
+  onOpenModal,
+}: {
+  trade: TradeHistoryEntry;
+  expanded: boolean;
+  onToggle: () => void;
+  onOpenModal: (trade: TradeHistoryEntry) => void;
+}) => {
+  const result = Number(trade.profit ?? 0);
+
+  return (
+    <CompactTradeRowShell
+      symbol={trade.asset_symbol}
+      clockValue={formatTradeClock(trade.expiry_seconds ?? 0)}
+      amountLabel={formatStake(trade.amount ?? 0)}
+      amountColor={trade.direction === "higher" ? TRADING_UP_COLOR : TRADING_DOWN_COLOR}
+      profitLabel={formatProfit(result)}
+      profitColor={result > 0 ? TRADING_UP_COLOR : TRADING_DOWN_COLOR}
+      direction={trade.direction}
+      expanded={expanded}
+      onToggle={onToggle}
+      details={<TradeResultInlinePanel trade={trade} onOpenModal={onOpenModal} />}
+    />
+  );
+};
+
+const TradingPanel = ({
+  asset,
+  accountType,
+  demoBalance,
+  onDemoBalanceChange,
+  onTrade,
+  onDemoTrade,
+  activeTradesOverride,
+  tradeHistoryOverride,
+  onOpenAssetSelector,
+  mobileHistoryOpen,
+  onCloseMobileHistory,
+  onOpenMobileHistory,
+  mobileDocked = false,
+}: TradingPanelProps) => {
+  const { profile } = useAuth();
+  const { activeTrades, tradeHistory, openTrade } = useTrading();
+  const executeTrade = onTrade ?? openTrade;
+
+  // Trading params
+  const [expirySeconds, setExpirySeconds] = useState(60);
+  const [investment, setInvestment] = useState(1);
+  const [investmentMode] = useState<InvestmentMode>("amount");
+  const [showTimeSwitcher, setShowTimeSwitcher] = useState(false);
+
+  // Tabs
+  const [activeTab, setActiveTab] = useState<ActiveTab>("trades");
+  const [isLoading, setIsLoading] = useState<"up" | "down" | null>(null);
+  const [expandedHistoryTradeId, setExpandedHistoryTradeId] = useState<string | null>(null);
+  const [selectedHistoryTrade, setSelectedHistoryTrade] = useState<TradeHistoryEntry | null>(null);
+  const [queuedPendingTrades, setQueuedPendingTrades] = useState<QueuedPendingTrade[]>([]);
+  const [pendingTradeEnabled, setPendingTradeEnabled] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(PENDING_TRADE_MODE_KEY) === "1";
+  });
+  const visibleActiveTrades = activeTradesOverride ?? activeTrades;
+  const visibleTradeHistory = tradeHistoryOverride ?? tradeHistory;
+  const sortedActiveTrades = [...visibleActiveTrades].sort(
+    (left, right) => new Date(right.opened_at).getTime() - new Date(left.opened_at).getTime(),
+  );
+  const sortedTradeHistory = [...visibleTradeHistory].sort(
+    (left, right) =>
+      new Date(right.closed_at ?? right.opened_at ?? 0).getTime() -
+      new Date(left.closed_at ?? left.opened_at ?? 0).getTime(),
+  );
+  const selectedAssetTrades = sortedActiveTrades.filter((trade) => trade.asset_symbol === asset.symbol);
+  const firstSelectedAssetTradeId = selectedAssetTrades[0]?.id ?? null;
+  const tradesTabCount = visibleActiveTrades.length + visibleTradeHistory.length;
+  const activeTradeGroups = buildTradeGroups(sortedActiveTrades);
+  const historyGroups = buildTradeGroups(sortedTradeHistory);
+  const pendingTradeGroups = buildTradeGroups(queuedPendingTrades);
+  const tradeListRef = useRef<HTMLDivElement | null>(null);
+  const selectedAssetTradeRef = useRef<HTMLDivElement | null>(null);
+  const queuedPendingTimeoutRef = useRef<number | null>(null);
+  const queuedPendingTradeIdRef = useRef<string | null>(null);
+  const directionFocusTimeoutRef = useRef<number | null>(null);
+  const higherButtonRef = useRef<HTMLButtonElement | null>(null);
+  const lowerButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [focusedDirection, setFocusedDirection] = useState<TradeDirection | null>(null);
+
+  const liveBalance = getEffectiveLiveBalance(profile);
+  const balance = accountType === "live" ? liveBalance : demoBalance;
+  const payoutRate = (asset.maxProfit ?? 63) / 100;
+  const effectiveInvestment = Math.max(1, Math.min(MAX_MANUAL_INVESTMENT, +investment.toFixed(2)));
+  const payout = +(effectiveInvestment * (1 + payoutRate)).toFixed(2);
+  const investmentUnit = "$";
+
+  const adjustInvestment = (delta: number) => {
+    const step = 1;
+    const max = Math.max(1, Math.floor(Math.min(balance, MAX_MANUAL_INVESTMENT)));
+    setInvestment((value) => {
+      const next = Math.round((value + delta * step) * 100) / 100;
+      return Math.max(1, Math.min(max, next));
+    });
+  };
+
+  const adjustExpiry = (delta: number) => {
+    const idx = TIME_PRESETS.findIndex((preset) => preset.val === expirySeconds);
+    const resolvedIdx =
+      idx >= 0
+        ? idx
+        : TIME_PRESETS.reduce((closestIndex, preset, presetIndex) => {
+            const currentDistance = Math.abs(TIME_PRESETS[closestIndex].val - expirySeconds);
+            const nextDistance = Math.abs(preset.val - expirySeconds);
+            return nextDistance < currentDistance ? presetIndex : closestIndex;
+          }, 0);
+    const nextIdx = Math.max(0, Math.min(TIME_PRESETS.length - 1, resolvedIdx + delta));
+    setExpirySeconds(TIME_PRESETS[nextIdx].val);
+  };
+
+  const handleInvestmentInput = (rawValue: string) => {
+    setInvestment(clampInvestmentValue(Number(rawValue) || 1, "amount"));
+  };
+
+  useEffect(() => {
+    if (expandedHistoryTradeId && !sortedTradeHistory.some((trade) => trade.id === expandedHistoryTradeId)) {
+      setExpandedHistoryTradeId(null);
+    }
+  }, [expandedHistoryTradeId, sortedTradeHistory]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(PENDING_TRADE_MODE_KEY, pendingTradeEnabled ? "1" : "0");
+  }, [pendingTradeEnabled]);
+
+  useEffect(() => {
+    return () => {
+      if (queuedPendingTimeoutRef.current !== null) {
+        window.clearTimeout(queuedPendingTimeoutRef.current);
+      }
+      if (directionFocusTimeoutRef.current !== null) {
+        window.clearTimeout(directionFocusTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Trade execution
+  const executeTradeNow = async (direction: "higher" | "lower") => {
+    if (effectiveInvestment <= 0) return false;
+
+    if (accountType === "demo") {
+      if (effectiveInvestment > demoBalance) {
+        alert("Insufficient demo balance");
+        return false;
+      }
+      return await (onDemoTrade ?? executeTrade)(
+        asset.symbol,
+        direction,
+        effectiveInvestment,
+        asset.price,
+        expirySeconds,
+        payoutRate,
+      );
+    }
+
+    return await executeTrade(
+      asset.symbol,
+      direction,
+      effectiveInvestment,
+      asset.price,
+      expirySeconds,
+      payoutRate,
+    );
+  };
+
+  const cancelQueuedPendingTrade = () => {
+    if (queuedPendingTimeoutRef.current !== null) {
+      window.clearTimeout(queuedPendingTimeoutRef.current);
+      queuedPendingTimeoutRef.current = null;
+      queuedPendingTradeIdRef.current = null;
+      setQueuedPendingTrades([]);
+      setIsLoading(null);
+      toast({
+        title: "Pending trade canceled",
+        description: "Pending execution was canceled.",
+      });
+    }
+  };
+
+  const placeTrade = async (direction: "higher" | "lower") => {
+    if (isLoading) return;
+    if (effectiveInvestment <= 0) return;
+
+    if (pendingTradeEnabled) {
+      const queuedTradeId =
+        typeof window !== "undefined" && typeof window.crypto?.randomUUID === "function"
+          ? window.crypto.randomUUID()
+          : `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const createdAt = new Date().toISOString();
+
+      queuedPendingTradeIdRef.current = queuedTradeId;
+      setQueuedPendingTrades([
+        {
+          id: queuedTradeId,
+          asset_symbol: asset.symbol,
+          direction,
+          amount: effectiveInvestment,
+          payout_rate: payoutRate,
+          expiry_seconds: expirySeconds,
+          created_at: createdAt,
+          opened_at: createdAt,
+        },
+      ]);
+      setIsLoading(direction === "higher" ? "up" : "down");
+      focusPendingTab();
+      toast({
+        title: "Pending trade armed",
+        description: `${direction === "higher" ? "Up" : "Down"} trade will execute in 3 seconds.`,
+      });
+
+      queuedPendingTimeoutRef.current = window.setTimeout(() => {
+        void (async () => {
+          try {
+            const didOpenTrade = await executeTradeNow(direction);
+            if (didOpenTrade) {
+              focusTradesTab();
+            }
+          } finally {
+            queuedPendingTimeoutRef.current = null;
+            queuedPendingTradeIdRef.current = null;
+            setQueuedPendingTrades([]);
+            setIsLoading(null);
+          }
+        })();
+      }, PENDING_TRADE_DELAY_MS);
+      return;
+    }
+
+    setIsLoading(direction === "higher" ? "up" : "down");
+    try {
+      const didOpenTrade = await executeTradeNow(direction);
+      if (didOpenTrade) {
+        focusTradesTab();
+      }
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const focusDirectionButton = (direction: TradeDirection) => {
+    setFocusedDirection(direction);
+    const targetButton = direction === "higher" ? higherButtonRef.current : lowerButtonRef.current;
+
+    if (targetButton && targetButton.offsetParent !== null) {
+      targetButton.focus({ preventScroll: true });
+    }
+
+    if (directionFocusTimeoutRef.current !== null) {
+      window.clearTimeout(directionFocusTimeoutRef.current);
+    }
+
+    directionFocusTimeoutRef.current = window.setTimeout(() => {
+      setFocusedDirection(null);
+      directionFocusTimeoutRef.current = null;
+    }, 1800);
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleDirectionFocus = (event: Event) => {
+      const detail = (event as CustomEvent<TradeDeskDirectionFocusDetail>).detail;
+      if (!detail?.direction) return;
+
+      focusDirectionButton(detail.direction);
+    };
+
+    const handleDirectionSubmit = (event: Event) => {
+      const detail = (event as CustomEvent<TradeDeskDirectionFocusDetail>).detail;
+      if (!detail?.direction) return;
+
+      focusDirectionButton(detail.direction);
+      void placeTrade(detail.direction);
+    };
+
+    window.addEventListener(TRADE_DESK_DIRECTION_FOCUS_EVENT, handleDirectionFocus as EventListener);
+    window.addEventListener(TRADE_DESK_DIRECTION_SUBMIT_EVENT, handleDirectionSubmit as EventListener);
+    return () => {
+      window.removeEventListener(TRADE_DESK_DIRECTION_FOCUS_EVENT, handleDirectionFocus as EventListener);
+      window.removeEventListener(TRADE_DESK_DIRECTION_SUBMIT_EVENT, handleDirectionSubmit as EventListener);
+    };
+  }, [placeTrade]);
+
+  const focusTradesTab = ({ openMobilePanel = false }: { openMobilePanel?: boolean } = {}) => {
+    setActiveTab("trades");
+
+    if (openMobilePanel && typeof window !== "undefined" && window.innerWidth < 1024) {
+      onOpenMobileHistory?.();
+    }
+
+    window.setTimeout(() => {
+      if (selectedAssetTradeRef.current) {
+        selectedAssetTradeRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      tradeListRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    }, 80);
+  };
+
+  const focusPendingTab = ({ openMobilePanel = false }: { openMobilePanel?: boolean } = {}) => {
+    setActiveTab("pending");
+
+    if (openMobilePanel && typeof window !== "undefined" && window.innerWidth < 1024) {
+      onOpenMobileHistory?.();
+    }
+
+    window.setTimeout(() => {
+      tradeListRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    }, 80);
+  };
+
+  const handlePendingTradeToggle = () => {
+    const nextValue = !pendingTradeEnabled;
+
+    if (!nextValue) {
+      cancelQueuedPendingTrade();
+    }
+
+    setPendingTradeEnabled(nextValue);
+
+    if (nextValue) {
+      focusPendingTab();
+      toast({
+        title: "Pending trade enabled",
+        description: "New trades will execute after a short delay.",
+      });
+    }
+  };
+
+  const higherButtonFocused = focusedDirection === "higher";
+  const lowerButtonFocused = focusedDirection === "lower";
+
+  return (
+    <>
+      <aside className={`font-copy w-full lg:w-[210px] xl:w-[220px] h-full min-h-[190px] shrink-0 flex flex-col text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none ${showTimeSwitcher ? "overflow-visible lg:overflow-hidden" : "overflow-hidden"} ${mobileDocked ? "rounded-t-[16px]" : ""}`}
+        style={{ background: "#1e2330" }}>
+
+        {/* ── Asset Header & Pending Toggle (Single Row) ──────────────── */}
+        <div className="flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-4 lg:pt-3.5 lg:pb-1">
+          <button 
+            onClick={() => onOpenAssetSelector?.()}
+            className="flex min-w-0 items-center gap-1.5 rounded-lg p-1 -ml-1 transition-colors hover:bg-white/5"
+          >
+            <SymbolFlags symbol={asset.symbol} />
+            <div className="flex min-w-0 items-center gap-1 text-[11px] font-extrabold tracking-[0.01em] text-white sm:text-[12px] lg:text-[14px]">
+              <span className="max-w-[112px] truncate sm:max-w-[180px] lg:max-w-[150px]">{asset.symbol}</span>
+              <span className="text-[#0fa053] shrink-0">{asset.maxProfit ?? 79}%</span>
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400 lg:hidden" strokeWidth={3} />
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={handlePendingTradeToggle}
+            aria-pressed={pendingTradeEnabled}
+            className="flex shrink-0 items-center gap-1.5 rounded-full px-1 py-0.5 transition-colors hover:bg-white/5 lg:hidden"
+          >
+            <span className={`text-[9px] font-black tracking-[0.06em] uppercase ${pendingTradeEnabled ? "text-[#0fa053]" : "text-[#7f8b99]"}`}>
+              PENDING TRADE
+            </span>
+            <div
+              className={`relative h-[14px] w-[28px] rounded-full border transition-all ${pendingTradeEnabled ? "bg-[#0fa053] border-[#0fa053]/50" : "bg-transparent border-white/15"}`}
+            >
+              <div className={`absolute top-[2px] h-[8px] w-[8px] rounded-full transition-all ${pendingTradeEnabled ? "left-[16px] bg-white shadow-sm" : "left-[2px] bg-gray-500"}`} />
+            </div>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={handlePendingTradeToggle}
+          aria-pressed={pendingTradeEnabled}
+          className="hidden items-center justify-between px-4 pb-3 text-left transition-colors hover:bg-white/[0.02] lg:flex"
+        >
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-[#0fa053]" strokeWidth={2.4} />
+            <span className={`text-[12px] font-black uppercase tracking-[0.05em] ${pendingTradeEnabled ? "text-[#0fa053]" : "text-[#8fb0cf]"}`}>
+              Pending trade
+            </span>
+          </div>
+
+          <div
+            className={`relative h-[24px] w-[42px] rounded-full border transition-all ${pendingTradeEnabled ? "border-[#0fa053]/80 bg-[#1e2330]" : "border-[#0fa053]/80 bg-transparent"}`}
+          >
+            <div
+              className={`absolute top-[3px] h-[14px] w-[14px] rounded-full transition-all ${pendingTradeEnabled ? "left-[22px] bg-[#0fa053] shadow-[0_0_10px_rgba(48,168,106,0.45)]" : "left-[4px] bg-[#0fa053]"}`}
+            />
+          </div>
+        </button>
+
+        {accountType === "tournament" && (
+          <div className="mx-2.5 mb-2 rounded-[10px] border border-[#0fa053]/35 bg-[#1e2330]/72 px-3 py-2 text-[10px] font-semibold leading-relaxed text-[#d8f6e5] lg:mx-4 lg:mb-3">
+            Tournament mode is active. Open positions and history below are scoped to this tournament account.
+          </div>
+        )}
+
+        {/* ── Compact mobile layout with desktop controls restored ── */}
+        <div className="px-2.5 pb-2 lg:px-4 lg:pb-2.5">
+          <div className="relative z-10 lg:pb-0">
+            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-1 lg:gap-2">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowTimeSwitcher((value) => !value)}
+                  className="relative flex h-[44px] w-full flex-col justify-between rounded-[4px] border border-[#596278] bg-[#2e3444] px-2.5 py-1.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-[#69738a] lg:hidden"
+                >
+                  <span className="flex items-center justify-between gap-2 text-[9px] font-medium leading-none text-[#8fb0cf]">
+                    <span>Timer</span>
+                    <Clock className="h-3 w-3 text-[#1e2330]" strokeWidth={2.4} />
+                  </span>
+                  <span className="text-[15px] font-semibold tracking-[0.01em] tabular-nums text-white min-[360px]:text-[16px]">
+                    {formatTradeClock(expirySeconds)}
+                  </span>
+                </button>
+
+                <div
+                  onClick={() => setShowTimeSwitcher((value) => !value)}
+                  className="relative hidden h-[42px] w-full cursor-pointer flex-col justify-center rounded-[5px] border border-[#596278] bg-[#2e3444] px-2 pb-1 pt-1 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex"
+                >
+                  <span className="absolute -top-[6px] left-2.5 bg-[#1e2330] px-1 text-[8px] font-medium leading-none text-[#8fb0cf]">
+                    Time
+                  </span>
+                  <div className="mt-0.5 flex items-center justify-between gap-1.5">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        adjustExpiry(-1);
+                      }}
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4b5266] text-white transition-colors hover:bg-[#596177]"
+                    >
+                      <Minus className="h-2.5 w-2.5" strokeWidth={2.8} />
+                    </button>
+                    <div className="flex-1 text-center text-[12px] font-semibold tracking-[0.01em] text-white">
+                      {formatTradeClock(expirySeconds)}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        adjustExpiry(1);
+                      }}
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4b5266] text-white transition-colors hover:bg-[#596177]"
+                    >
+                      <Plus className="h-2.5 w-2.5" strokeWidth={2.8} />
+                    </button>
+                  </div>
+
+                  <span className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 bg-[#1e2330] px-1 text-[7px] font-bold uppercase leading-none tracking-[0.07em] text-[#0fa053]">
+                    SWITCH TIME
+                  </span>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="relative flex h-[44px] w-full flex-col justify-between rounded-[4px] border border-[#596278] bg-[#2e3444] px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[9px] font-medium leading-none text-[#8fb0cf]">
+                      Investment
+                    </span>
+                    <span className="text-[8px] font-bold uppercase tracking-[0.06em] text-[#8fb0cf]">
+                      USD
+                    </span>
+                  </div>
+                  <div className="flex min-w-0 items-center gap-1">
+                    <input
+                      type="number"
+                      value={investment}
+                      min={1}
+                      max={MAX_MANUAL_INVESTMENT}
+                      step={0.01}
+                      inputMode="decimal"
+                      onChange={(event) => handleInvestmentInput(event.target.value)}
+                      className="hide-number-spin min-w-0 max-w-[72px] bg-transparent text-[15px] font-semibold tracking-[0.01em] text-white outline-none min-[360px]:text-[16px]"
+                    />
+                    <span className="shrink-0 text-[15px] font-semibold tracking-[0.01em] text-white min-[360px]:text-[16px]">
+                      {investmentUnit}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="relative hidden h-[42px] w-full flex-col justify-center rounded-[5px] border border-[#596278] bg-[#2e3444] px-2 pb-1 pt-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex">
+                  <span className="absolute -top-[6px] left-2.5 bg-[#1e2330] px-1 text-[8px] font-medium leading-none text-[#8fb0cf]">
+                    Investment
+                  </span>
+                  <div className="mt-0.5 flex items-center justify-between gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => adjustInvestment(-1)}
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4b5266] text-white transition-colors hover:bg-[#596177]"
+                    >
+                      <Minus className="h-2.5 w-2.5" strokeWidth={2.8} />
+                    </button>
+                    <div className="flex flex-1 items-center justify-center gap-1">
+                      <input
+                        type="number"
+                        value={investment}
+                        min={1}
+                        max={MAX_MANUAL_INVESTMENT}
+                        step={0.01}
+                        inputMode="decimal"
+                        onChange={(event) => handleInvestmentInput(event.target.value)}
+                        className="hide-number-spin w-8 bg-transparent text-right text-[12px] font-semibold text-white outline-none"
+                      />
+                      <span className="text-[12px] font-semibold text-white">{investmentUnit}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => adjustInvestment(1)}
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4b5266] text-white transition-colors hover:bg-[#596177]"
+                    >
+                      <Plus className="h-2.5 w-2.5" strokeWidth={2.8} />
+                    </button>
+                  </div>
+
+                  <span className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 bg-[#1e2330] px-1 text-[7px] font-bold uppercase leading-none tracking-[0.07em] text-[#8fb0cf]">
+                    USD
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {showTimeSwitcher && (
+              <TimeSwitcher value={expirySeconds} onChange={setExpirySeconds} onClose={() => setShowTimeSwitcher(false)} />
+            )}
+          </div>
+        </div>
+
+        {/* ── Payout ───────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-2.5 pb-2 text-white lg:px-4 lg:pb-3">
+          <span className="text-[10px] font-medium text-[#9aa3b5] lg:text-[12px]">Your payout:</span>
+          <div className="mx-2 flex-1 translate-y-[-1px] border-b border-dashed border-[#5f677c]" />
+          <span className="text-[12px] font-semibold tracking-[0.01em] lg:text-[14px]">{payout.toFixed(2)} $</span>
+        </div>
+
+        {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
+        <div className="grid grid-cols-2 gap-2.5 px-2.5 pb-3 lg:grid-cols-1 lg:gap-3 lg:px-4 lg:pb-4">
+          <button
+            ref={higherButtonRef}
+            type="button"
+            onClick={() => placeTrade("higher")}
+            disabled={!!isLoading}
+            className={`flex h-[36px] items-center justify-between rounded-[4px] px-3 text-[14px] font-bold text-white transition-all active:scale-[0.98] focus:outline-none lg:h-[48px] lg:rounded-[6px] lg:px-4 lg:text-[15px] ${
+              higherButtonFocused ? "scale-[1.01]" : ""
+            }`}
+            style={{
+              background: TRADING_UP_COLOR,
+              boxShadow: higherButtonFocused
+                ? "0 0 0 2px rgba(115,245,174,0.48), 0 0 0 6px rgba(15,160,83,0.16), 0 10px 24px rgba(15,160,83,0.22)"
+                : "0 10px 24px rgba(15,160,83,0.22)",
+            }}>
+            <span>Up</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
+              {isLoading === "up" ? <Loader2 className="w-3.5 h-3.5 animate-spin lg:h-4 lg:w-4" /> : <ArrowUp className="w-3.5 h-3.5 lg:h-4 lg:w-4" strokeWidth={2.8} />}
+            </span>
+          </button>
+
+          <button
+            ref={lowerButtonRef}
+            type="button"
+            onClick={() => placeTrade("lower")}
+            disabled={!!isLoading}
+            className={`flex h-[36px] items-center justify-between rounded-[4px] px-3 text-[14px] font-bold text-white transition-all active:scale-[0.98] focus:outline-none lg:h-[48px] lg:rounded-[6px] lg:px-4 lg:text-[15px] ${
+              lowerButtonFocused ? "scale-[1.01]" : ""
+            }`}
+            style={{
+              background: TRADING_DOWN_COLOR,
+              boxShadow: lowerButtonFocused
+                ? "0 0 0 2px rgba(255,166,170,0.48), 0 0 0 6px rgba(233,89,81,0.16), 0 10px 24px rgba(233,89,81,0.22)"
+                : "0 10px 24px rgba(233,89,81,0.22)",
+            }}>
+            <span>Down</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
+              {isLoading === "down" ? <Loader2 className="w-3.5 h-3.5 animate-spin lg:h-4 lg:w-4" /> : <ArrowDown className="w-3.5 h-3.5 lg:h-4 lg:w-4" strokeWidth={2.8} />}
+            </span>
+          </button>
+        </div>
+
+        {/* ── Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) ── */}
+        <div className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:flex flex-1'} flex-col overflow-hidden border-t border-[#161c28]/70`} style={{ background: "#303646" }}>
+          
+          {/* ── Tabs: History / Pending ───────────────────────────────── */}
+          <div className="flex items-end gap-1.5 border-b border-white/6 px-2.5 pt-2" style={{ background: "rgba(43, 49, 64, 0.98)" }}>
+            <button
+              onClick={() => setActiveTab("trades")}
+              className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "trades" ? "bg-[#33394a] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
+            >
+              {activeTab === "trades" && <div className="absolute left-0 right-0 top-0 h-[2px] rounded-full bg-[#3391ff]" />}
+              <span>Trades</span>
+              <span className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-black ${activeTab === "trades" ? "bg-[#515a70] text-white" : "bg-black/20 text-[#c1c8d7]"}`}>
+                {tradesTabCount}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("pending")}
+              aria-label="Pending trades"
+              className={`relative flex h-[44px] w-[78px] shrink-0 items-center justify-center gap-2 rounded-t-[10px] px-3 text-[12px] font-black transition-colors ${activeTab === "pending" ? "bg-[#33394a] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
+            >
+              {activeTab === "pending" && <div className="absolute left-0 right-0 top-0 h-[2px] rounded-full bg-[#3391ff]" />}
+              <Clock className="h-4 w-4" />
+              <span className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-black ${activeTab === "pending" ? "bg-[#515a70] text-white" : "bg-black/20 text-[#c1c8d7]"}`}>
+                {queuedPendingTrades.length}
+              </span>
+            </button>
+
+            {mobileHistoryOpen && (
+              <button onClick={onCloseMobileHistory} className="ml-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/20 text-gray-400 hover:text-white">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* ── Trade List ───────────────────────────────────────────── */}
+          <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-2.5 py-3">
+            {activeTab === "pending" ? (
+              queuedPendingTrades.length === 0 ? (
+                <div className="flex h-full flex-col items-center justify-center gap-3 rounded-[18px] border border-white/6 bg-[#33394a] p-6 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
+                    <Clock className="h-7 w-7 text-gray-600" />
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-gray-500">
+                    No pending trades yet. Armed delayed trades will appear here before execution.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-hidden rounded-[20px] border border-white/6 bg-[#34394a] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                  {pendingTradeGroups.map((group, groupIndex) => (
+                    <section key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/6" : ""}>
+                      <TradeGroupHeader label={group.label} count={group.items.length} />
+                      <div>
+                        {group.items.map((trade) => (
+                          <CompactPendingTradeRow key={trade.id} trade={trade} />
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              )
+            ) : (
+              tradesTabCount === 0 ? (
+                <div className="flex h-full flex-col items-center justify-center gap-3 rounded-[18px] border border-white/6 bg-[#33394a] p-6 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
+                    <Briefcase className="h-7 w-7 text-gray-600" />
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-gray-500">No trades yet. Ongoing and completed trades will appear here.</p>
+                </div>
+              ) : (
+                <div className="overflow-hidden rounded-[20px] border border-white/6 bg-[#34394a] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                  {sortedActiveTrades.length > 0 ? (
+                    <section>
+                      <TradeGroupHeader label="OPEN TRADES" count={sortedActiveTrades.length} />
+                      <div>
+                        {sortedActiveTrades.map((trade) => (
+                          <div
+                            key={trade.id}
+                            ref={trade.id === firstSelectedAssetTradeId ? selectedAssetTradeRef : null}
+                          >
+                            <CompactActiveTradeRow trade={trade} />
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
+
+                  {sortedTradeHistory.length > 0 ? (
+                    <section className={sortedActiveTrades.length > 0 ? "border-t border-white/6" : ""}>
+                      {historyGroups.map((group, groupIndex) => (
+                        <div key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/6" : ""}>
+                          <TradeGroupHeader label={group.label} count={group.items.length} />
+                          <div>
+                            {group.items.map((trade) => (
+                              <CompactHistoryRow
+                                key={trade.id}
+                                trade={trade}
+                                expanded={expandedHistoryTradeId === trade.id}
+                                onToggle={() =>
+                                  setExpandedHistoryTradeId((current) => (current === trade.id ? null : trade.id))
+                                }
+                                onOpenModal={setSelectedHistoryTrade}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </section>
+                  ) : null}
+                </div>
+              )
+            )}
+          </div>
+
+        </div>
+      </aside>
+      <TradeResultDetailModal
+        trade={selectedHistoryTrade ? mapTradeHistoryEntryToPresentation(selectedHistoryTrade) : null}
+        onClose={() => setSelectedHistoryTrade(null)}
+      />
+    </>
+  );
+};
+
+export default TradingPanel;
+
+
+
