@@ -29,7 +29,7 @@ const bottomStats = [
 
 const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   const navigate = useNavigate();
-  const { signIn, signUp, signInWithGoogle, user, loading: authLoading } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user, loading: authLoading, sendEmailVerificationCode } = useAuth();
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -38,6 +38,8 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   const [promoCode, setPromoCode] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
 
   useEffect(() => {
     setIsLogin(initialMode === "login");
@@ -96,10 +98,27 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
       return;
     }
 
-    toast({
-      title: "Check your email",
-      description: "We sent a verification email so you can finish creating your account.",
-    });
+    // Store email for verification prompt
+    setVerificationEmail(email);
+    setShowVerificationPrompt(true);
+
+    // Try to send verification code after a short delay to ensure user is created
+    setTimeout(() => {
+      sendEmailVerificationCode()
+        .then(() => {
+          toast({
+            title: "Verification email sent",
+            description: `Check ${email} for a verification link to complete your registration.`,
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to send verification email:", err);
+          toast({
+            title: "Verification email",
+            description: `Check ${email} for your verification link. If you don't see it, you can request a new one from your account settings.`,
+          });
+        });
+    }, 1000);
   };
 
   if (authLoading) {
@@ -207,15 +226,59 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
           </div>
 
           <h2 className="font-heading text-2xl font-bold text-foreground">
-            {isLogin ? "Welcome back" : "Create your account"}
+            {showVerificationPrompt
+              ? "Verify your email"
+              : isLogin
+                ? "Welcome back"
+                : "Create your account"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {isLogin
-              ? "Sign in to access your trading dashboard"
-              : "Start trading with a free demo account"}
+            {showVerificationPrompt
+              ? `We've sent a verification link to ${verificationEmail}. Check your inbox and click the link to confirm your email.`
+              : isLogin
+                ? "Sign in to access your trading dashboard"
+                : "Start trading with a free demo account"}
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          {showVerificationPrompt ? (
+            <div className="mt-6 space-y-4">
+              <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4">
+                <p className="text-sm text-foreground">
+                  📧 <strong>Check your email</strong> at <strong>{verificationEmail}</strong>
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Look for an email from Init Option with the subject "Confirm your email" and click the verification link inside.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-border bg-card/50 p-4">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Didn't receive the email?</strong>
+                </p>
+                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                  <li>• Check your spam or junk folder</li>
+                  <li>• Wait a few moments and refresh your inbox</li>
+                  <li>• Make sure you entered the correct email address</li>
+                </ul>
+              </div>
+
+              <Button
+                type="button"
+                size="lg"
+                className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-primary/25"
+                onClick={() => {
+                  setShowVerificationPrompt(false);
+                  setEmail("");
+                  setPassword("");
+                  setFullName("");
+                  setVerificationEmail("");
+                }}
+              >
+                Back to Sign Up
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {!isLogin ? (
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
@@ -319,17 +382,20 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
               {loading ? (isLogin ? "Signing In..." : "Creating Account...") : (isLogin ? "Sign In" : "Create Account")}{" "}
               <ArrowRight size={16} />
             </Button>
-          </form>
+            </form>
+          )}
 
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground">or continue with</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
+          {!showVerificationPrompt ? (
+            <>
+            <div className="my-6 flex items-center gap-3">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs text-muted-foreground">or continue with</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
 
-          <div className="grid grid-cols-1 gap-3">
-            <button
-              type="button"
+            <div className="grid grid-cols-1 gap-3">
+              <button
+                type="button"
               onClick={() => void signInWithGoogle()}
               className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
@@ -362,6 +428,8 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
               </Link>
             </p>
           </div>
+            </>
+          )}
         </motion.div>
       </div>
     </div>
