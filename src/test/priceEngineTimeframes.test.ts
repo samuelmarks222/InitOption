@@ -7,11 +7,13 @@ import {
 describe("supported chart timeframes", () => {
   it("matches the trading chart contract", () => {
     expect(SUPPORTED_CHART_TIMEFRAMES).toEqual([
-      "1s",
       "5s",
       "15s",
       "30s",
       "1m",
+      "2m",
+      "3m",
+      "4m",
       "5m",
       "10m",
       "15m",

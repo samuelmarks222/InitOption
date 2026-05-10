@@ -24,7 +24,6 @@ export interface TimeframeConfig {
 }
 
 export const SUPPORTED_CHART_TIMEFRAMES = [
-  "1s",
   "5s",
   "15s",
   "30s",
