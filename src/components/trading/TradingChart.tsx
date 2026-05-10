@@ -3119,10 +3119,10 @@ const TradingChart = ({
             onClick={() => setStyleEditorOpen(false)}
             className="absolute inset-0 pointer-events-auto"
           />
-          <div className="pointer-events-auto absolute left-[72px] top-4 w-[380px] max-h-[calc(100%-32px)] max-w-[calc(100%-80px)] overflow-y-auto rounded-[4px] border border-[#353d50] bg-[#252c3b] shadow-[0_20px_48px_rgba(0,0,0,0.48)]">
-            <div className="flex items-center justify-between border-b border-[#343b4a] px-4 py-3">
+          <div className="pointer-events-auto absolute left-[72px] top-4 w-[540px] max-h-[calc(100%-32px)] max-w-[calc(100%-80px)] overflow-y-auto rounded-[4px] border border-[#353d50] bg-[#252c3b] shadow-[0_20px_48px_rgba(0,0,0,0.48)]">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#343b4a] px-4 py-3">
               <div className="text-[12px] font-black uppercase tracking-[0.08em] text-white">Chart Type</div>
-              <label className="flex items-center gap-2 text-[11px] font-medium text-slate-300">
+              <label className="ml-auto flex max-w-[280px] items-center justify-end gap-2 text-right text-[11px] font-medium leading-tight text-slate-300">
                 <span>Full-width current price line</span>
                 <button
                   type="button"
@@ -3141,7 +3141,7 @@ const TradingChart = ({
               </label>
             </div>
 
-            <div className="grid grid-cols-[180px_1fr]">
+            <div className="grid grid-cols-[170px_minmax(0,1fr)]">
               <div className="border-r border-[#343b4a] bg-[#232937]">
                 {chartTypeOptions.map((option) => {
                   const selected = chartType === option.id;
@@ -3169,8 +3169,8 @@ const TradingChart = ({
                 })}
               </div>
 
-              <div className="bg-[#252c3b]">
-                <div className="flex items-center justify-between px-4 py-3">
+              <div className="min-w-0 bg-[#252c3b]">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                   <div className="text-[12px] font-medium text-slate-300">{styleSectionTitle}</div>
                   <div className="flex items-center gap-2 text-[11px] text-slate-400">
                     <div className="flex h-6 w-6 items-center justify-center rounded-[4px] border border-[#434b5d] bg-[#2a3142]">
@@ -3203,10 +3203,10 @@ const TradingChart = ({
                   {chartType === "line" ? (
                     <>
                       <div className="mt-4 grid grid-cols-2 gap-3">
-                        <label className="relative flex h-[40px] cursor-pointer items-center justify-between rounded-[4px] bg-[#4c5567] px-3 text-white">
-                          <span className="flex items-center gap-3">
+                        <label className="relative flex min-h-[48px] cursor-pointer items-start justify-between gap-3 rounded-[4px] bg-[#4c5567] px-3 py-2 text-white">
+                          <span className="flex min-w-0 items-center gap-3">
                             <span className="h-5 w-5 rounded-[2px] border border-white/10" style={{ background: chartStyles.areaLineColor }} />
-                            <span className="text-[12px] font-semibold">Line color</span>
+                            <span className="min-w-0 whitespace-normal text-[12px] font-semibold leading-tight">Line color</span>
                           </span>
                           <span className="text-[12px] text-white/70">▼</span>
                           <input
@@ -3216,10 +3216,10 @@ const TradingChart = ({
                             className="absolute inset-0 cursor-pointer opacity-0"
                           />
                         </label>
-                        <label className="relative flex h-[40px] cursor-pointer items-center justify-between rounded-[4px] bg-[#4c5567] px-3 text-white">
-                          <span className="flex items-center gap-3">
+                        <label className="relative flex min-h-[48px] cursor-pointer items-start justify-between gap-3 rounded-[4px] bg-[#4c5567] px-3 py-2 text-white">
+                          <span className="flex min-w-0 items-center gap-3">
                             <span className="h-5 w-5 rounded-[2px] border border-white/10" style={{ background: chartStyles.areaFillColor }} />
-                            <span className="text-[12px] font-semibold">Fill color</span>
+                            <span className="min-w-0 whitespace-normal text-[12px] font-semibold leading-tight">Fill color</span>
                           </span>
                           <span className="text-[12px] text-white/70">▼</span>
                           <input
@@ -3231,7 +3231,7 @@ const TradingChart = ({
                         </label>
                       </div>
 
-                      <div className="mt-3 flex items-center justify-between gap-3">
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                         <label className="flex items-center gap-2 text-[11px] font-medium text-slate-300">
                           <input
                             type="checkbox"
@@ -3264,10 +3264,10 @@ const TradingChart = ({
                     <>
                       <div className="mt-4 grid grid-cols-2 gap-3">
                         {styleColorFields.map((item) => (
-                          <label key={item.key} className="relative flex h-[40px] cursor-pointer items-center justify-between rounded-[4px] bg-[#4c5567] px-3 text-white">
-                            <span className="flex items-center gap-3">
+                          <label key={item.key} className="relative flex min-h-[48px] cursor-pointer items-start justify-between gap-3 rounded-[4px] bg-[#4c5567] px-3 py-2 text-white">
+                            <span className="flex min-w-0 items-center gap-3">
                               <span className="h-5 w-5 rounded-[2px] border border-white/10" style={{ background: chartStyles[item.key] }} />
-                              <span className="text-[12px] font-semibold">{item.label}</span>
+                              <span className="min-w-0 whitespace-normal text-[12px] font-semibold leading-tight">{item.label}</span>
                             </span>
                             <span className="text-[12px] text-white/70">▼</span>
                             <input
@@ -3280,7 +3280,7 @@ const TradingChart = ({
                         ))}
                       </div>
 
-                      <div className="mt-3 flex items-center justify-between gap-3">
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                         <span className="text-[11px] font-medium text-slate-400">{bodyScaleLabel}</span>
                         <div className="flex items-center gap-2">
                           <input
@@ -3300,7 +3300,7 @@ const TradingChart = ({
                     </>
                   )}
 
-                  <div className="mt-4 flex items-center justify-between">
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                     <button
                       type="button"
                       onClick={() => {
