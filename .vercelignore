@@ -3,5 +3,11 @@
 DEPLOYMENT_LOCK.md
 api/robots.ts
 api/sitemap.ts
+node_modules
+dist
+.dev-server
+.env
+.env.local
+*.log
 scripts/assert-prod-safety.ps1
 scripts/restore-april6-live.ps1
