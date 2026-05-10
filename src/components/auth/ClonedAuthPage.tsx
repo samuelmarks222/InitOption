@@ -279,20 +279,20 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            {!isLogin ? (
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                  Full Name
-                </label>
-                <Input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Enter your full name"
-                  className="h-11 border-border bg-card pl-4 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
-                />
-              </div>
-            ) : null}
+              {!isLogin ? (
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                    Full Name
+                  </label>
+                  <Input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your full name"
+                    className="h-11 border-border bg-card pl-4 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                  />
+                </div>
+              ) : null}
 
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
@@ -387,7 +387,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
 
           {!showVerificationPrompt ? (
             <>
-            <div className="my-6 flex items-center gap-3">
+              <div className="my-6 flex items-center gap-3">
               <div className="h-px flex-1 bg-border" />
               <span className="text-xs text-muted-foreground">or continue with</span>
               <div className="h-px flex-1 bg-border" />
@@ -420,16 +420,16 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
             </button>
           </p>
 
-          <div className="mt-6 rounded-lg border border-border/50 bg-card/50 p-3">
-            <p className="text-center text-[10px] leading-relaxed text-muted-foreground">
-              Risk Warning: Trading involves risk. You may lose your invested capital.{" "}
-              <Link to="/risk-disclaimer" className="text-primary underline">
-                Read risk disclaimer
-              </Link>
-            </p>
-          </div>
+              <div className="mt-6 rounded-lg border border-border/50 bg-card/50 p-3">
+                <p className="text-center text-[10px] leading-relaxed text-muted-foreground">
+                  Risk Warning: Trading involves risk. You may lose your invested capital.{" "}
+                  <Link to="/risk-disclaimer" className="text-primary underline">
+                    Read risk disclaimer
+                  </Link>
+                </p>
+              </div>
             </>
-          )}
+          ) : null}
         </motion.div>
       </div>
     </div>
