@@ -58,6 +58,7 @@ import {
   type RuntimeAssetType,
 } from "@/lib/assets";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
+import { filterRetainedTradeHistory } from "@/lib/tradeHistoryRetention";
 import { getCandleStartTime, resolveFreshTradeMarkerTime } from "@/lib/tradeMarkerTime";
 
 type DepositGuideReason = "deposit_required" | "insufficient_balance";
@@ -425,7 +426,11 @@ const Trade = () => {
         };
       }),
     );
-    setDemoTradeHistory(readJsonStorage<TradeHistoryEntry[]>(getDemoTradeHistoryStorageKey(user.id), []));
+    setDemoTradeHistory(
+      filterRetainedTradeHistory(
+        readJsonStorage<TradeHistoryEntry[]>(getDemoTradeHistoryStorageKey(user.id), []),
+      ).slice(0, 50),
+    );
   }, [user?.id]);
 
   useEffect(() => {
@@ -442,8 +447,27 @@ const Trade = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    localStorage.setItem(getDemoTradeHistoryStorageKey(user.id), JSON.stringify(demoTradeHistory));
+    localStorage.setItem(
+      getDemoTradeHistoryStorageKey(user.id),
+      JSON.stringify(filterRetainedTradeHistory(demoTradeHistory).slice(0, 50)),
+    );
   }, [demoTradeHistory, user?.id]);
+
+  useEffect(() => {
+    if (demoTradeHistory.length === 0) return;
+
+    const pruneDemoTradeHistory = () => {
+      setDemoTradeHistory((current) => {
+        const next = filterRetainedTradeHistory(current).slice(0, 50);
+        return next.length === current.length ? current : next;
+      });
+    };
+
+    pruneDemoTradeHistory();
+
+    const timerId = window.setInterval(pruneDemoTradeHistory, 60 * 1000);
+    return () => window.clearInterval(timerId);
+  }, [demoTradeHistory.length]);
 
   const showChartSettlementAnnouncement = useCallback((announcement: ChartSettlementAnnouncement) => {
     setChartSettlementAnnouncements((current) => ({
@@ -554,7 +578,9 @@ const Trade = () => {
         if (creditedAmount > 0) {
           setDemoBalance((current) => current + creditedAmount);
         }
-        setDemoTradeHistory((current) => [...settledTrades.reverse(), ...current].slice(0, 50));
+        setDemoTradeHistory((current) =>
+          filterRetainedTradeHistory([...settledTrades.reverse(), ...current]).slice(0, 50),
+        );
         showChartSettlementAnnouncement({
           id: latestSettledTrade.id,
           assetSymbol: latestSettledTrade.asset_symbol,

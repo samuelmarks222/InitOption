@@ -143,12 +143,12 @@ export const useStatistics = () => {
       payout: t.profit > 0 ? t.amount + t.profit : 0,
       profit: t.profit,
       openTime: t.opened_at,
-      closeTime: t.closed_at
+      closeTime: t.closed_at ?? t.opened_at
     }));
   }, [tradeHistory]);
 
-  const ledgerEntries = useMemo<TransactionSeed[]>(() => {
-    const depositEntries = deposits.flatMap((request) => {
+  const depositEntries = useMemo<TransactionSeed[]>(() => {
+    return deposits.flatMap((request) => {
       const requestedAmount = Number(request.amount ?? 0);
       if (!requestedAmount) return [];
 
@@ -199,8 +199,10 @@ export const useStatistics = () => {
         },
       ];
     });
+  }, [deposits]);
 
-    const tradeEntries = trades.map((trade) => ({
+  const tradeEntries = useMemo<TransactionSeed[]>(() => {
+    return trades.map((trade) => ({
       id: `TXN-${trade.id}`,
       date: trade.closeTime,
       type: "trade" as const,
@@ -208,8 +210,10 @@ export const useStatistics = () => {
       amount: trade.profit,
       balanceImpact: trade.profit,
     }));
+  }, [trades]);
 
-    const withdrawalEntries = withdrawals.flatMap((request) => {
+  const withdrawalEntries = useMemo<TransactionSeed[]>(() => {
+    return withdrawals.flatMap((request) => {
       const amount = Number(request.amount ?? 0);
       if (!amount || !request.created_at) return [];
 
@@ -292,15 +296,23 @@ export const useStatistics = () => {
 
       return entries;
     });
+  }, [withdrawals]);
 
-    return [...depositEntries, ...tradeEntries, ...withdrawalEntries].sort(
+  const transactionLedgerEntries = useMemo<TransactionSeed[]>(() => {
+    return [...depositEntries, ...withdrawalEntries].sort(
       (left, right) => getTimestamp(right.date) - getTimestamp(left.date),
     );
-  }, [deposits, trades, withdrawals]);
+  }, [depositEntries, withdrawalEntries]);
+
+  const equityLedgerEntries = useMemo<TransactionSeed[]>(() => {
+    return [...transactionLedgerEntries, ...tradeEntries].sort(
+      (left, right) => getTimestamp(right.date) - getTimestamp(left.date),
+    );
+  }, [tradeEntries, transactionLedgerEntries]);
 
   const transactions = useMemo<Transaction[]>(() => {
     let runningBalance = currentBalance;
-    return ledgerEntries.map((entry) => {
+    return transactionLedgerEntries.map((entry) => {
       const tx = {
         ...entry,
         balanceAfter: runningBalance,
@@ -308,7 +320,7 @@ export const useStatistics = () => {
       runningBalance -= entry.balanceImpact;
       return tx;
     });
-  }, [currentBalance, ledgerEntries]);
+  }, [currentBalance, transactionLedgerEntries]);
 
   const tradeStats = useMemo(() => {
     const totalTrades = trades.length;
@@ -423,7 +435,7 @@ export const useStatistics = () => {
   };
 
   const equityCurve = useMemo(() => {
-    const startingBalance = ledgerEntries.reduce((balance, entry) => balance - entry.balanceImpact, currentBalance);
+    const startingBalance = equityLedgerEntries.reduce((balance, entry) => balance - entry.balanceImpact, currentBalance);
     let forwardBal = startingBalance;
     let currentPeak = forwardBal;
     
@@ -436,7 +448,7 @@ export const useStatistics = () => {
       profit: 0
     }];
 
-    [...ledgerEntries]
+    [...equityLedgerEntries]
       .sort((left, right) => getTimestamp(left.date) - getTimestamp(right.date))
       .forEach((entry) => {
       forwardBal += entry.balanceImpact;
@@ -455,7 +467,7 @@ export const useStatistics = () => {
     });
     
     return curve;
-  }, [currentBalance, ledgerEntries]);
+  }, [currentBalance, equityLedgerEntries]);
 
   const assetPerformance = useMemo(() => {
     const assets: Record<string, AssetPerformanceEntry> = {};

@@ -87,7 +87,7 @@ const TxIcon = ({ type }: { type: Transaction["type"] }) => {
 
 export const ProfileBalanceHistory = () => {
   const { transactions } = useStatistics();
-  const [filter, setFilter] = useState<"all" | "deposit" | "withdrawal" | "trade">("all");
+  const [filter, setFilter] = useState<"all" | "deposit" | "withdrawal">("all");
   const { formatMoney } = useCurrency();
 
   const filteredTransactions = useMemo(
@@ -100,15 +100,14 @@ export const ProfileBalanceHistory = () => {
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center">
         <div className="flex flex-wrap gap-2 rounded-[14px] border border-[#2a3142] bg-[#202736] p-2">
           {[
-            { id: "withdrawal", label: "Withdrawal" },
             { id: "all", label: "Transactions" },
-            { id: "trade", label: "Trades" },
             { id: "deposit", label: "Deposits" },
+            { id: "withdrawal", label: "Withdrawals" },
           ].map((item) => (
             <button
               key={item.id}
               type="button"
-              onClick={() => setFilter(item.id as "all" | "deposit" | "withdrawal" | "trade")}
+              onClick={() => setFilter(item.id as "all" | "deposit" | "withdrawal")}
               className={`rounded-[10px] px-3 py-2 text-[12px] font-semibold transition-colors sm:px-4 sm:text-[13px] ${
                 filter === item.id ? "bg-[#2f374b] text-white" : "text-[#c2cadd] hover:bg-[#2a3142]"
               }`}

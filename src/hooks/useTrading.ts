@@ -14,6 +14,7 @@ import {
   hasFundedLiveAccount,
 } from "@/lib/live-balance";
 import { insertTradeBalanceAudit } from "@/lib/tradeBalanceAudit";
+import { filterRetainedTradeHistory, getTradeHistoryCutoffIso } from "@/lib/tradeHistoryRetention";
 import { resolveFreshTradeMarkerTime } from "@/lib/tradeMarkerTime";
 import { buildTradeInsertPayload } from "@/lib/tradePersistence";
 import {
@@ -180,6 +181,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
           .select("*")
           .eq("user_id", userId)
           .neq("status", "open")
+          .gte("closed_at", getTradeHistoryCutoffIso())
           .order("closed_at", { ascending: false })
           .limit(50),
         supabase
@@ -219,7 +221,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       }
 
       if (historyData && !cancelled) {
-        setTradeHistory(historyData);
+        setTradeHistory(filterRetainedTradeHistory(historyData));
       }
     };
 
@@ -229,6 +231,24 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       cancelled = true;
     };
   }, [userId]);
+
+  useEffect(() => {
+    if (tradeHistory.length === 0) {
+      return;
+    }
+
+    const pruneTradeHistory = () => {
+      setTradeHistory((current) => {
+        const next = filterRetainedTradeHistory(current);
+        return next.length === current.length ? current : next;
+      });
+    };
+
+    pruneTradeHistory();
+
+    const timerId = window.setInterval(pruneTradeHistory, 60 * 1000);
+    return () => window.clearInterval(timerId);
+  }, [tradeHistory.length]);
 
   const resolveTrade = useCallback(async (trade: ActiveTrade) => {
     const exitPrice = currentPriceRef.current;
@@ -405,11 +425,12 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         .select("*")
         .eq("user_id", user.id)
         .neq("status", "open")
+        .gte("closed_at", getTradeHistoryCutoffIso())
         .order("closed_at", { ascending: false })
         .limit(50);
 
       if (data) {
-        setTradeHistory(data);
+        setTradeHistory(filterRetainedTradeHistory(data));
       }
     }
   }, [profile, refreshProfile, refreshVip, user]);
