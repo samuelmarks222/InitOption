@@ -7,6 +7,7 @@ import { WorkspaceMore } from "./WorkspaceMore";
 import { WorkspaceReferral } from "./WorkspaceReferral";
 import { WorkspaceHelp } from "./WorkspaceHelp";
 import { WorkspaceLeaderboard } from "./WorkspaceLeaderboard";
+import { WorkspaceSettings } from "./WorkspaceSettings";
 import { WorkspaceSocial } from "../social/WorkspaceSocial";
 
 interface DynamicWorkspaceProps {
@@ -35,6 +36,7 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament }:
     tournaments: "tournaments",
     leaderboard: "leaders",
     more: "more",
+    settings: "settings",
     join: "join us",
     help: "help",
   };
@@ -45,7 +47,9 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament }:
       ? "w-[430px] max-w-[calc(100vw-85px)]"
       : isDedicatedLeaderboard
         ? "w-[390px] max-w-[calc(100vw-85px)]"
-        : "w-[350px] max-w-[calc(100vw-85px)]";
+        : activeWorkspace === "settings"
+          ? "w-[260px] max-w-[calc(100vw-85px)]"
+          : "w-[350px] max-w-[calc(100vw-85px)]";
 
   return (
     <div className={`h-full flex flex-col border-r border-[#ffffff10] z-30 shrink-0 bg-[#0E1217] shadow-[4px_0_24px_rgba(0,0,0,0.5)] transform transition-transform duration-300 ${workspaceWidthClass}`}>
@@ -85,6 +89,11 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament }:
         {activeWorkspace === "more" && (
           <div className="flex-1 w-full h-full">
             <WorkspaceMore />
+          </div>
+        )}
+        {activeWorkspace === "settings" && (
+          <div className="flex-1 w-full h-full">
+            <WorkspaceSettings />
           </div>
         )}
         {activeWorkspace === "join" && (

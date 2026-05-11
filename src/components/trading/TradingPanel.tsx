@@ -16,6 +16,7 @@ import {
   TradeResultInlinePanel,
 } from "./TradeResultPresentation";
 import { TRADING_DOWN_COLOR, TRADING_UP_COLOR } from "./tradingPalette";
+import { useTradingPreferences } from "@/lib/tradingPreferences";
 import {
   TRADE_DESK_DIRECTION_FOCUS_EVENT,
   TRADE_DESK_DIRECTION_SUBMIT_EVENT,
@@ -475,23 +476,43 @@ const CompactTradeRowShell = ({
   );
 };
 
-const CompactActiveTradeRow = ({ trade }: { trade: ActiveTrade }) => {
+const CompactActiveTradeRow = ({
+  trade,
+  shortOrderLabel,
+  upColor,
+  downColor,
+}: {
+  trade: ActiveTrade;
+  shortOrderLabel: boolean;
+  upColor: string;
+  downColor: string;
+}) => {
   const liveTimeLeft = useLiveCountdownSeconds(trade.opened_at, trade.expiry_seconds, trade.timeLeft);
 
   return (
     <CompactTradeRowShell
       symbol={trade.asset_symbol}
-      clockValue={formatTradeClock(Math.max(0, liveTimeLeft - 0.05))}
+      clockValue={shortOrderLabel ? formatDurationShortcut(Math.max(0, liveTimeLeft - 0.05)) : formatTradeClock(Math.max(0, liveTimeLeft - 0.05))}
       amountLabel={formatStake(trade.amount)}
-      amountColor={trade.direction === "higher" ? TRADING_UP_COLOR : TRADING_DOWN_COLOR}
+      amountColor={trade.direction === "higher" ? upColor : downColor}
       profitLabel={formatProfit(trade.amount * trade.payout_rate)}
-      profitColor={TRADING_UP_COLOR}
+      profitColor={upColor}
       direction={trade.direction}
     />
   );
 };
 
-const CompactPendingTradeRow = ({ trade }: { trade: QueuedPendingTrade }) => {
+const CompactPendingTradeRow = ({
+  trade,
+  shortOrderLabel,
+  upColor,
+  downColor,
+}: {
+  trade: QueuedPendingTrade;
+  shortOrderLabel: boolean;
+  upColor: string;
+  downColor: string;
+}) => {
   const pendingTimeLeft = useLiveCountdownSeconds(
     trade.created_at,
     PENDING_TRADE_DELAY_MS / 1000,
@@ -501,9 +522,9 @@ const CompactPendingTradeRow = ({ trade }: { trade: QueuedPendingTrade }) => {
   return (
     <CompactTradeRowShell
       symbol={trade.asset_symbol}
-      clockValue={formatTradeClock(Math.max(0, pendingTimeLeft))}
+      clockValue={shortOrderLabel ? formatDurationShortcut(Math.max(0, pendingTimeLeft)) : formatTradeClock(Math.max(0, pendingTimeLeft))}
       amountLabel={formatStake(trade.amount)}
-      amountColor={trade.direction === "higher" ? TRADING_UP_COLOR : TRADING_DOWN_COLOR}
+      amountColor={trade.direction === "higher" ? upColor : downColor}
       profitLabel="Queued"
       profitColor="#c7d1e6"
       direction={trade.direction}
@@ -516,22 +537,28 @@ const CompactHistoryRow = ({
   expanded,
   onToggle,
   onOpenModal,
+  shortOrderLabel,
+  upColor,
+  downColor,
 }: {
   trade: TradeHistoryEntry;
   expanded: boolean;
   onToggle: () => void;
   onOpenModal: (trade: TradeHistoryEntry) => void;
+  shortOrderLabel: boolean;
+  upColor: string;
+  downColor: string;
 }) => {
   const result = Number(trade.profit ?? 0);
 
   return (
     <CompactTradeRowShell
       symbol={trade.asset_symbol}
-      clockValue={formatTradeClock(trade.expiry_seconds ?? 0)}
+      clockValue={shortOrderLabel ? formatDurationShortcut(trade.expiry_seconds ?? 0) : formatTradeClock(trade.expiry_seconds ?? 0)}
       amountLabel={formatStake(trade.amount ?? 0)}
-      amountColor={trade.direction === "higher" ? TRADING_UP_COLOR : TRADING_DOWN_COLOR}
+      amountColor={trade.direction === "higher" ? upColor : downColor}
       profitLabel={formatProfit(result)}
-      profitColor={result > 0 ? TRADING_UP_COLOR : TRADING_DOWN_COLOR}
+      profitColor={result > 0 ? upColor : downColor}
       direction={trade.direction}
       expanded={expanded}
       onToggle={onToggle}
@@ -557,6 +584,7 @@ const TradingPanel = ({
 }: TradingPanelProps) => {
   const { profile } = useAuth();
   const { activeTrades, tradeHistory, openTrade } = useTrading();
+  const { preferences: tradingPreferences } = useTradingPreferences();
   const executeTrade = onTrade ?? openTrade;
 
   // Trading params
@@ -606,6 +634,8 @@ const TradingPanel = ({
   const effectiveInvestment = Math.max(1, Math.min(MAX_MANUAL_INVESTMENT, +investment.toFixed(2)));
   const payout = +(effectiveInvestment * (1 + payoutRate)).toFixed(2);
   const investmentUnit = "$";
+  const upColor = tradingPreferences.upTrendColor;
+  const downColor = tradingPreferences.downTrendColor;
 
   const adjustInvestment = (delta: number) => {
     const step = 1;
@@ -702,6 +732,16 @@ const TradingPanel = ({
   const placeTrade = async (direction: "higher" | "lower") => {
     if (isLoading) return;
     if (effectiveInvestment <= 0) return;
+
+    if (!tradingPreferences.oneClickTrade) {
+      const confirmed = window.confirm(
+        `Confirm ${direction === "higher" ? "Up" : "Down"} trade on ${asset.symbol} for ${formatStake(effectiveInvestment)}?`,
+      );
+
+      if (!confirmed) {
+        return;
+      }
+    }
 
     if (pendingTradeEnabled) {
       const queuedTradeId =
@@ -1067,10 +1107,10 @@ const TradingPanel = ({
               higherButtonFocused ? "scale-[1.01]" : ""
             }`}
             style={{
-              background: TRADING_UP_COLOR,
+              background: upColor,
               boxShadow: higherButtonFocused
-                ? "0 0 0 2px rgba(115,245,174,0.48), 0 0 0 6px rgba(15,160,83,0.16), 0 10px 24px rgba(15,160,83,0.22)"
-                : "0 10px 24px rgba(15,160,83,0.22)",
+                ? `0 0 0 2px ${upColor}66, 0 0 0 6px ${upColor}24, 0 10px 24px ${upColor}36`
+                : `0 10px 24px ${upColor}36`,
             }}>
             <span>Up</span>
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
@@ -1087,10 +1127,10 @@ const TradingPanel = ({
               lowerButtonFocused ? "scale-[1.01]" : ""
             }`}
             style={{
-              background: TRADING_DOWN_COLOR,
+              background: downColor,
               boxShadow: lowerButtonFocused
-                ? "0 0 0 2px rgba(255,166,170,0.48), 0 0 0 6px rgba(233,89,81,0.16), 0 10px 24px rgba(233,89,81,0.22)"
-                : "0 10px 24px rgba(233,89,81,0.22)",
+                ? `0 0 0 2px ${downColor}66, 0 0 0 6px ${downColor}24, 0 10px 24px ${downColor}36`
+                : `0 10px 24px ${downColor}36`,
             }}>
             <span>Down</span>
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
@@ -1153,7 +1193,13 @@ const TradingPanel = ({
                       <TradeGroupHeader label={group.label} count={group.items.length} />
                       <div>
                         {group.items.map((trade) => (
-                          <CompactPendingTradeRow key={trade.id} trade={trade} />
+                          <CompactPendingTradeRow
+                            key={trade.id}
+                            trade={trade}
+                            shortOrderLabel={tradingPreferences.shortOrderLabel}
+                            upColor={upColor}
+                            downColor={downColor}
+                          />
                         ))}
                       </div>
                     </section>
@@ -1179,7 +1225,12 @@ const TradingPanel = ({
                             key={trade.id}
                             ref={trade.id === firstSelectedAssetTradeId ? selectedAssetTradeRef : null}
                           >
-                            <CompactActiveTradeRow trade={trade} />
+                            <CompactActiveTradeRow
+                              trade={trade}
+                              shortOrderLabel={tradingPreferences.shortOrderLabel}
+                              upColor={upColor}
+                              downColor={downColor}
+                            />
                           </div>
                         ))}
                       </div>
@@ -1201,6 +1252,9 @@ const TradingPanel = ({
                                   setExpandedHistoryTradeId((current) => (current === trade.id ? null : trade.id))
                                 }
                                 onOpenModal={setSelectedHistoryTrade}
+                                shortOrderLabel={tradingPreferences.shortOrderLabel}
+                                upColor={upColor}
+                                downColor={downColor}
                               />
                             ))}
                           </div>

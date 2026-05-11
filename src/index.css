@@ -322,6 +322,27 @@
     font-weight: 700;
   }
 
+  html[data-trading-performance-mode="on"] .trading-terminal *,
+  html[data-trading-performance-mode="on"] .trading-terminal *::before,
+  html[data-trading-performance-mode="on"] .trading-terminal *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 80ms !important;
+  }
+
+  html[data-trading-template="light"] .trading-terminal {
+    --trading-workspace-bg: #e7edf7;
+  }
+
+  html[data-trading-template="twilight"] .trading-terminal {
+    --trading-workspace-bg: #172338;
+  }
+
+  html[data-trading-template="fullNight"] .trading-terminal {
+    --trading-workspace-bg: #1a1e2b;
+  }
+
   .gradient-dark {
     background: linear-gradient(180deg, #1e2330 0%, #1c1f2d 100%);
   }

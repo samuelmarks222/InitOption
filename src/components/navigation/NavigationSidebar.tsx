@@ -1,6 +1,6 @@
-import { Headset, User, Trophy, Grid, Handshake, HelpCircle, BarChart } from "lucide-react";
+import { Headset, User, Trophy, Grid, Handshake, HelpCircle, BarChart, Settings } from "lucide-react";
 
-export type WorkspaceModule = "support" | "account" | "tournaments" | "leaderboard" | "more" | "join" | "help" | null;
+export type WorkspaceModule = "support" | "account" | "tournaments" | "leaderboard" | "more" | "settings" | "join" | "help" | null;
 
 interface NavigationSidebarProps {
   activeWorkspace: WorkspaceModule;
@@ -17,6 +17,7 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
   ] as const;
 
   const BOTTOM_ITEMS = [
+    { id: "settings", label: "SETTINGS", icon: Settings },
     { id: "join", label: "JOIN US", icon: Handshake },
     { id: "help", label: "HELP", icon: HelpCircle },
   ] as const;

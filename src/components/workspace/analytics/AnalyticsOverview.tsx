@@ -42,7 +42,7 @@ export const AnalyticsOverview = () => {
             </div>
           </div>
           
-          <div className="flex-1 min-h-[300px] w-full relative">
+          <div className="h-[320px] w-full min-h-0 relative">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={equityCurve} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                 <defs>
@@ -67,8 +67,8 @@ export const AnalyticsOverview = () => {
                     name === "balance" ? "Balance" : "Drawdown"
                   ]}
                 />
-                <Area yAxisId="left" type="monotone" dataKey="balance" stroke="#0b65c2" strokeWidth={2} fillOpacity={1} fill="url(#colorBalance)" />
-                <Area yAxisId="right" type="monotone" dataKey="drawdown" stroke="#ef4444" strokeWidth={1} fillOpacity={1} fill="url(#colorDrawdown)" />
+                <Area yAxisId="left" type="monotone" dataKey="balance" stroke="#0b65c2" strokeWidth={2} fillOpacity={1} fill="url(#colorBalance)" isAnimationActive={false} />
+                <Area yAxisId="right" type="monotone" dataKey="drawdown" stroke="#ef4444" strokeWidth={1} fillOpacity={1} fill="url(#colorDrawdown)" isAnimationActive={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -81,7 +81,7 @@ export const AnalyticsOverview = () => {
             <p className="text-[12px] text-gray-500">Based on {tradeStats.totalTrades} closed trades</p>
           </div>
           
-          <div className="flex-1 min-h-[200px] w-full relative">
+          <div className="h-[260px] w-full min-h-0 relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -93,6 +93,7 @@ export const AnalyticsOverview = () => {
                   paddingAngle={5}
                   dataKey="value"
                   stroke="none"
+                  isAnimationActive={false}
                 >
                   {winLossData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -136,7 +137,7 @@ export const AnalyticsOverview = () => {
             <p className="text-[12px] text-gray-500">Top 5 traded assets contribution</p>
           </div>
           
-          <div className="flex-1 min-h-[250px] w-full">
+          <div className="h-[280px] w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={performanceData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
@@ -147,7 +148,7 @@ export const AnalyticsOverview = () => {
                   contentStyle={{ backgroundColor: "#1A1F26", borderColor: "#ffffff10", borderRadius: "8px", color: "#fff" }}
                   formatter={(value: number) => [`$${value.toFixed(2)}`, "Net Profit"]}
                 />
-                <Bar dataKey="profit" radius={[4, 4, 0, 0]}>
+                <Bar dataKey="profit" radius={[4, 4, 0, 0]} isAnimationActive={false}>
                   {performanceData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? "#00C076" : "#ef4444"} />
                   ))}

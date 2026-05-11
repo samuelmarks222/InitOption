@@ -65,6 +65,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ActiveTrade, TradeDirection } from "@/hooks/useTrading";
 import { cn } from "@/lib/utils";
 import AssetSymbolMark from "./AssetSymbolMark";
+import {
+  getTradingChartSurfaceColor,
+  getTradingChartTextColor,
+  getTradingGridColor,
+  getTradingTimezone,
+  useTradingPreferences,
+} from "@/lib/tradingPreferences";
 
 interface TradingChartProps {
   asset: { symbol: string; name?: string; price: number; basePrice?: number; type?: string; change?: number; maxProfit?: number; };
@@ -1612,7 +1619,27 @@ const TradingChart = ({
     up: PROFESSIONAL_UP_COLOR,
     down: PROFESSIONAL_DOWN_COLOR,
   });
-  const globalThemeRef = useRef(globalTheme);
+  const { preferences: tradingPreferences } = useTradingPreferences();
+  const effectiveChartTheme = useMemo(() => ({
+    bg: getTradingChartSurfaceColor(tradingPreferences, globalTheme.bg),
+    up: tradingPreferences.upTrendColor,
+    down: tradingPreferences.downTrendColor,
+  }), [globalTheme.bg, tradingPreferences]);
+  const chartTextColor = useMemo(() => getTradingChartTextColor(tradingPreferences), [tradingPreferences]);
+  const chartGridColor = useMemo(() => getTradingGridColor(tradingPreferences), [tradingPreferences]);
+  const chartViewportStyle = useMemo<React.CSSProperties>(() => {
+    if (!tradingPreferences.chartBackgroundImage) {
+      return { background: effectiveChartTheme.bg };
+    }
+
+    return {
+      backgroundColor: tradingPreferences.template === "light" ? "#dfe7f2" : "#111827",
+      backgroundImage: `linear-gradient(rgba(11,16,24,0.34), rgba(11,16,24,0.34)), url("${tradingPreferences.chartBackgroundImage}")`,
+      backgroundPosition: "center",
+      backgroundSize: "cover",
+    };
+  }, [effectiveChartTheme.bg, tradingPreferences]);
+  const globalThemeRef = useRef(effectiveChartTheme);
   const chartStylesRef = useRef(chartStyles);
   const tradingSchedule = useMemo(() => buildTradingSchedule(), []);
   const pairNotionalVol = useMemo(
@@ -1806,6 +1833,31 @@ const TradingChart = ({
   }, [chartStyles]);
 
   useEffect(() => {
+    setChartStyles((current) => {
+      if (
+        current.candleUpColor === tradingPreferences.upTrendColor &&
+        current.barUpColor === tradingPreferences.upTrendColor &&
+        current.heikinUpColor === tradingPreferences.upTrendColor &&
+        current.candleDownColor === tradingPreferences.downTrendColor &&
+        current.barDownColor === tradingPreferences.downTrendColor &&
+        current.heikinDownColor === tradingPreferences.downTrendColor
+      ) {
+        return current;
+      }
+
+      return {
+        ...current,
+        candleUpColor: tradingPreferences.upTrendColor,
+        barUpColor: tradingPreferences.upTrendColor,
+        heikinUpColor: tradingPreferences.upTrendColor,
+        candleDownColor: tradingPreferences.downTrendColor,
+        barDownColor: tradingPreferences.downTrendColor,
+        heikinDownColor: tradingPreferences.downTrendColor,
+      };
+    });
+  }, [tradingPreferences.downTrendColor, tradingPreferences.upTrendColor]);
+
+  useEffect(() => {
     if (compactPane) {
       setPairInfoOpen(false);
       setStyleEditorOpen(false);
@@ -1813,23 +1865,30 @@ const TradingChart = ({
   }, [compactPane]);
 
   useEffect(() => {
-    globalThemeRef.current = globalTheme;
+    globalThemeRef.current = effectiveChartTheme;
     if (!chartRef.current) return;
     
     // Apply background colors reactively
     chartRef.current.applyOptions({
-      layout: { background: { type: ColorType.Solid, color: globalTheme.bg } }
+      layout: {
+        background: { type: ColorType.Solid, color: effectiveChartTheme.bg },
+        textColor: chartTextColor,
+      },
+      grid: {
+        vertLines: { color: chartGridColor },
+        horzLines: { color: chartGridColor },
+      },
     });
     
     // Apply series colors reactively
     if (mainSeriesRef.current) {
         if (chartTypeRef.current === "bars") {
             mainSeriesRef.current.applyOptions({
-              ...getBarDisplaySettings(chartStylesRef.current, globalTheme),
+              ...getBarDisplaySettings(chartStylesRef.current, effectiveChartTheme),
             });
         } else if (chartTypeRef.current !== "line") {
             mainSeriesRef.current.applyOptions({
-              ...getCandlestickDisplaySettings(chartTypeRef.current, chartStylesRef.current, globalTheme),
+              ...getCandlestickDisplaySettings(chartTypeRef.current, chartStylesRef.current, effectiveChartTheme),
             });
         } else {
             mainSeriesRef.current.applyOptions({
@@ -1837,7 +1896,7 @@ const TradingChart = ({
             });
         }
     }
-  }, [globalTheme]);
+  }, [chartGridColor, chartTextColor, effectiveChartTheme]);
 
   // ─── INIT MASTER CHART ───────────────────────────────────────────
   useEffect(() => {
@@ -1849,13 +1908,13 @@ const TradingChart = ({
         height: mainRef.current.clientHeight,
         layout: { 
           background: { type: ColorType.Solid, color: globalThemeRef.current.bg }, 
-          textColor: THEME.text, 
-          fontFamily: "'Roboto', sans-serif", 
+          textColor: chartTextColor,
+          fontFamily: "Arial, Helvetica, sans-serif",
           fontSize: 12 
         },
         grid: { 
-          vertLines: { color: THEME.grid }, 
-          horzLines: { color: THEME.grid } 
+          vertLines: { color: chartGridColor },
+          horzLines: { color: chartGridColor }
         },
         handleScroll: {
           mouseWheel: true,
@@ -2388,6 +2447,11 @@ const TradingChart = ({
       return;
     }
 
+    if (!tradingPreferences.autoScrolling) {
+      timeScale.setVisibleLogicalRange(currentRange);
+      return;
+    }
+
     if (!wasNearLiveEdge) {
       timeScale.setVisibleLogicalRange(currentRange);
       return;
@@ -2412,6 +2476,7 @@ const TradingChart = ({
     asset.symbol,
     chartStyles.bodyScale,
     selectedTf,
+    tradingPreferences.autoScrolling,
   ]);
 
   // Immediately re-render overlays when activeIndicators changes (add / remove / update)
@@ -2473,15 +2538,15 @@ const TradingChart = ({
   const extendedPayout = Math.min(92, shortPayout + 15);
   const dominantBias = pairSentiment.buy >= pairSentiment.sell ? "Buy" : "Sell";
   const marketClockLabel = useMemo(() => {
-    const timeLabel = new Intl.DateTimeFormat("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-      timeZone: "Africa/Nairobi",
-    }).format(new Date(marketClockMs));
-    return `${timeLabel} UTC+3`;
-  }, [marketClockMs]);
+    const { offsetMinutes } = getTradingTimezone(tradingPreferences.timezone);
+    const zonedDate = new Date(marketClockMs + offsetMinutes * 60 * 1000);
+    const timeLabel = [
+      zonedDate.getUTCHours(),
+      zonedDate.getUTCMinutes(),
+      zonedDate.getUTCSeconds(),
+    ].map((part) => String(part).padStart(2, "0")).join(":");
+    return `${timeLabel} ${tradingPreferences.timezone.replace(":00", "")}`;
+  }, [marketClockMs, tradingPreferences.timezone]);
   const minimumStakeLabel = "$1";
   const expiryWindowLabel = "5 sec - 4 hour";
   const rangeSpan = Math.max(0, pairDayRange.high - pairDayRange.low);
@@ -2567,7 +2632,7 @@ const TradingChart = ({
   }
 
   return (
-    <div ref={rootRef} className="flex-1 flex flex-col min-h-0 relative" style={{ background: THEME.bg }}>
+    <div ref={rootRef} className="flex-1 flex flex-col min-h-0 relative" style={{ background: effectiveChartTheme.bg }}>
       {settlementAnnouncement && settlementAnnouncement.assetSymbol === asset.symbol ? (
         <SettlementCloneOverlay announcement={settlementAnnouncement} compact={compactPane || miniOverlay} />
       ) : null}
@@ -2795,7 +2860,7 @@ const TradingChart = ({
         </>
       )}
 
-      <div className="relative flex-1 min-h-0 overflow-hidden" ref={mainRef}>
+      <div className="relative flex-1 min-h-0 overflow-hidden" ref={mainRef} style={chartViewportStyle}>
         {showDesktopChartTools && !overlayUiSuppressed && (
           <>
             <div className="pointer-events-none absolute inset-y-0 left-0 z-[80] hidden sm:flex items-stretch">
