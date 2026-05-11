@@ -6,6 +6,7 @@ describe("websiteContent", () => {
     const defaults = createDefaultWebsiteContent("Init Option");
 
     expect(defaults.hero.description).toContain("Init Option");
+    expect(defaults.hero.title).toContain("Init Option");
     expect(defaults.review.title).toContain("Init Option");
     expect(defaults.steps.items).toHaveLength(3);
     expect(defaults.faq.items).toHaveLength(8);

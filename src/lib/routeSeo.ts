@@ -11,11 +11,11 @@ const AUTH_PATHS = new Set(["/login", "/register"]);
 const PRIVATE_PREFIXES = ["/admin", "/dashboard", "/trade", "/deposit", "/withdraw", "/settings", "/notifications", "/traders"];
 const TOURNAMENTS_INDEX_PATH = "/tournaments";
 const DEFAULT_SHARE_IMAGE_PATH = "/share-icon.png";
-const HOME_TITLE_TEMPLATE = "{platformName} - Trade with up to 95% Profit | Fast Withdrawals";
+const HOME_TITLE_TEMPLATE = "{platformName} | OTC Trading Platform, Demo Access & Fast Withdrawals";
 const HOME_DESCRIPTION_TEMPLATE =
-  "Trade OTC markets with {platformName}. Get a 70% welcome bonus, real-time charts, instant demo, and weekly tournaments. Start trading today.";
+  "{platformName} is an OTC trading platform with real-time charts, instant demo trading, M-PESA and crypto funding, public tournaments, and fast withdrawals.";
 const HOME_KEYWORDS =
-  "trading platform, online trading, OTC trading, high profit trading, real-time charts, demo account, trading tournaments, fast withdrawals, welcome bonus, web terminal, mobile trading";
+  "Init Option, initoption, OTC trading platform, online trading, demo trading, real-time charts, M-PESA trading, crypto funding, trading tournaments, fast withdrawals, web terminal, mobile trading";
 
 export interface RouteSeoOverride {
   siteTitle?: string;
@@ -209,6 +209,11 @@ export const buildStructuredData = ({
     description: metaDescription,
   };
 
+  const alternateBrandName = platformName.replace(/\s+/g, "");
+  if (alternateBrandName && alternateBrandName !== platformName) {
+    organizationEntry.alternateName = alternateBrandName;
+  }
+
   if (supportEmail?.trim()) {
     organizationEntry.email = supportEmail.trim();
     organizationEntry.contactPoint = [
@@ -231,6 +236,7 @@ export const buildStructuredData = ({
       "@context": "https://schema.org",
       "@type": "WebSite",
       name: platformName,
+      alternateName: alternateBrandName !== platformName ? alternateBrandName : undefined,
       url: siteOrigin,
       description: metaDescription,
       inLanguage: "en",

@@ -245,9 +245,9 @@ export const createDefaultWebsiteContent = (platformName = DEFAULT_PLATFORM_NAME
   },
   hero: {
     badge: "Trade financial markets with up to 95% profit",
-    title: "Trade financial markets with up to 95% profit, a 70% welcome bonus, and fast withdrawals.",
+    title: `${platformName} trading platform for OTC markets, demo access, and fast withdrawals.`,
     description:
-      `${platformName} is a modern trading platform with real-time charts, instant demo access, weekly tournaments, and a clean web terminal built for beginners and active traders alike.`,
+      `${platformName} brings real-time charts, instant demo trading, weekly tournaments, M-PESA and crypto funding, and a clean web terminal for beginners and active traders alike.`,
     primaryButtonLabel: "Create live account",
     secondaryButtonLabel: "Start instant demo",
     trustItems: [

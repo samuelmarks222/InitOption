@@ -30,9 +30,9 @@ describe("route SEO", () => {
   it("applies the homepage SEO plan on the root route", () => {
     const override = getRouteSeoOverride("/", "Init Option");
 
-    expect(override?.siteTitle).toBe("Init Option - Trade with up to 95% Profit | Fast Withdrawals");
-    expect(override?.metaDescription).toContain("70% welcome bonus");
-    expect(override?.metaKeywords).toContain("trading tournaments");
+    expect(override?.siteTitle).toBe("Init Option | OTC Trading Platform, Demo Access & Fast Withdrawals");
+    expect(override?.metaDescription).toContain("M-PESA and crypto funding");
+    expect(override?.metaKeywords).toContain("Init Option");
   });
 
   it("builds FAQ structured data for the public FAQ page", () => {
@@ -84,9 +84,14 @@ describe("route SEO", () => {
     const organizationEntry = structuredData.find((entry) => entry["@type"] === "Organization") as
       | Record<string, unknown>
       | undefined;
+    const websiteEntry = structuredData.find((entry) => entry["@type"] === "WebSite") as
+      | Record<string, unknown>
+      | undefined;
 
     expect(contactEntry).toBeTruthy();
     expect(organizationEntry?.email).toBe("support@initoption.example");
+    expect(organizationEntry?.alternateName).toBe("InitOption");
+    expect(websiteEntry?.alternateName).toBe("InitOption");
     expect(JSON.stringify(organizationEntry)).toContain("https://t.me/initoption");
   });
 

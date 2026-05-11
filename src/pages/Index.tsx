@@ -12,14 +12,12 @@ import MobileSection from "@/components/landing/MobileSection";
 import EarningsSection from "@/components/landing/EarningsSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FAQSection from "@/components/landing/FAQSection";
+import SeoContentSection from "@/components/landing/SeoContentSection";
 import CTASection from "@/components/landing/CTASection";
 import Footer from "@/components/landing/Footer";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const { user, loading } = useAuth();
-  const mobileViewport = useIsMobile();
-  const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : mobileViewport;
 
   if (loading) {
     return <div className="min-h-screen bg-background" />;
@@ -27,10 +25,6 @@ const Index = () => {
 
   if (user) {
     return <Navigate to={getAuthRestorePath()} replace />;
-  }
-
-  if (isMobile) {
-    return <Navigate to="/login" replace />;
   }
 
   return (
@@ -46,6 +40,7 @@ const Index = () => {
       <EarningsSection />
       <TestimonialsSection />
       <FAQSection />
+      <SeoContentSection />
       <CTASection />
       <Footer />
     </div>
