@@ -30,7 +30,7 @@ describe("route SEO", () => {
   it("applies the homepage SEO plan on the root route", () => {
     const override = getRouteSeoOverride("/", "Init Option");
 
-    expect(override?.siteTitle).toBe("Init Option | OTC Trading Platform, Demo Access & Fast Withdrawals");
+    expect(override?.siteTitle).toBe("Init Option – Trading Platform: Free Demo, Live Trading & Fast Withdrawals");
     expect(override?.metaDescription).toContain("M-PESA and crypto funding");
     expect(override?.metaKeywords).toContain("Init Option");
   });

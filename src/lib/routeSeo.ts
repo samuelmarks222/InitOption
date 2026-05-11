@@ -11,7 +11,7 @@ const AUTH_PATHS = new Set(["/login", "/register"]);
 const PRIVATE_PREFIXES = ["/admin", "/dashboard", "/trade", "/deposit", "/withdraw", "/settings", "/notifications", "/traders"];
 const TOURNAMENTS_INDEX_PATH = "/tournaments";
 const DEFAULT_SHARE_IMAGE_PATH = "/share-icon.png";
-const HOME_TITLE_TEMPLATE = "{platformName} | OTC Trading Platform, Demo Access & Fast Withdrawals";
+const HOME_TITLE_TEMPLATE = "{platformName} – Trading Platform: Free Demo, Live Trading & Fast Withdrawals";
 const HOME_DESCRIPTION_TEMPLATE =
   "{platformName} is an OTC trading platform with real-time charts, instant demo trading, M-PESA and crypto funding, public tournaments, and fast withdrawals.";
 const HOME_KEYWORDS =
