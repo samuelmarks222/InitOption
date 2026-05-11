@@ -1090,7 +1090,7 @@ const Trade = () => {
 
   return (
     <ProfileTourProvider>
-      <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
+      <div className="trading-terminal h-[100dvh] bg-background flex flex-col overflow-hidden">
         <GuidedTour enabled={tourEnabled} />
           <TradingHeader balance={currentBalance} demoBalance={demoBalance} accountType={accountType}
           onSwitchAccount={handleSwitchAccount} activeTabId={activeTabId} onSelectTab={handleSelectTab}

@@ -1,4 +1,4 @@
-/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=Outfit:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -291,6 +291,21 @@
 
   .quotex-glow-home .font-copy {
     font-family: Arial, system-ui, sans-serif !important;
+  }
+
+  .trading-terminal,
+  .trading-terminal button,
+  .trading-terminal input,
+  .trading-terminal textarea,
+  .trading-terminal select {
+    font-family: "Roboto Condensed", "Arial Narrow", Roboto, Arial, system-ui, sans-serif;
+    text-rendering: geometricPrecision;
+  }
+
+  .trading-terminal .font-display,
+  .trading-terminal .font-copy,
+  .trading-terminal .font-heading {
+    font-family: "Roboto Condensed", "Arial Narrow", Roboto, Arial, system-ui, sans-serif !important;
   }
 
   .gradient-dark {
