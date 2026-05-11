@@ -8,7 +8,7 @@ export const DEFAULT_PLATFORM_NAME = "Init Option";
 export const DEFAULT_FAVICON_PATH = "/favicon.ico";
 export const DEFAULT_SHARE_IMAGE_PATH = "/apple-touch-icon.png";
 export const DEFAULT_META_DESCRIPTION =
-  "Init Option is an OTC trading platform with live charts, M-PESA and crypto funding, instant demo access, and weekly tournaments.";
+  "Init Option is an online trading platform with live charts, M-PESA and crypto funding, instant demo access, and weekly tournaments.";
 
 export type TwitterCardType = "summary" | "summary_large_image";
 

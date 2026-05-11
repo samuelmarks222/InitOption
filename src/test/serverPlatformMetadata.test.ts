@@ -43,13 +43,13 @@ describe("serverPlatformMetadata", () => {
       {
         platform_name: "Init Option",
         site_title: "Init Option - Trading",
-        meta_description: "Trade the OTC market.",
+        meta_description: "Trade the market.",
       },
       "https://initoption.example/",
     );
 
     expect(html).toContain("<title>Init Option - Trading</title>");
-    expect(html).toContain('meta name="description" content="Trade the OTC market."');
+    expect(html).toContain('meta name="description" content="Trade the market."');
     expect(html).toContain('meta property="og:image" content="https://initoption.example/apple-touch-icon.png"');
     expect(html).toContain('link rel="icon" type="image/png" href="https://initoption.example/favicon.ico"');
     expect(html).toContain('<meta name="platform-metadata-start" content="true">');
@@ -61,7 +61,7 @@ describe("serverPlatformMetadata", () => {
       {
         platform_name: "Init Option",
         site_title: "Init Option",
-        meta_description: "Trade the OTC market.",
+        meta_description: "Trade the market.",
       },
       "https://initoption.example/tournaments/monday-momentum-1234abcd",
       {

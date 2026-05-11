@@ -307,7 +307,7 @@ const RiskManagement = () => {
                 <div key={trader.id} className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] p-4">
                   <div className="font-bold text-white">{trader.label}</div>
                   <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-300">
-                    <span className="rounded-full bg-[#1e2330] px-2.5 py-1">{trader.trades} OTC trades</span>
+                    <span className="rounded-full bg-[#1e2330] px-2.5 py-1">{trader.trades} trades</span>
                     <span className="rounded-full bg-[#1e2330] px-2.5 py-1">{trader.winRate}% win rate</span>
                     <span className="rounded-full bg-[#1e2330] px-2.5 py-1">{formatSignedMoney(trader.profit)}</span>
                   </div>

@@ -430,7 +430,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     featuredImageAlt: "Trading workspace prepared for major economic calendar events",
     metaTitle: "Economic Calendar Events That Move the Markets | Init Option Blog",
     metaDescription:
-      "Understand which economic events move forex and OTC markets most, and learn how to prepare for high-volatility releases before you trade.",
+      "Understand which economic events move financial markets most, and learn how to prepare for high-volatility releases before you trade.",
     publishedAt: "2026-04-02T09:00:00.000Z",
     updatedAt: "2026-04-02T09:00:00.000Z",
     status: "published",

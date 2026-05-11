@@ -64,17 +64,17 @@ export const PUBLIC_PAGE_DEFINITIONS: Record<PublicPageKey, PublicPageDefinition
     eyebrow: "About us",
     title: "About {platformName}",
     description:
-      "{platformName} is a modern OTC trading platform built around clean execution, transparent funding flows, and practical tools for both beginners and active traders.",
+      "{platformName} is a modern trading platform built around clean execution, transparent funding flows, and practical tools for both beginners and active traders.",
     seoTitle: "About {platformName} | Mission, Platform Vision & Trading Experience",
     seoDescription:
-      "Learn about {platformName}, our mission, platform philosophy, and the trading experience we are building for modern OTC traders.",
+      "Learn about {platformName}, our mission, platform philosophy, and the trading experience we are building for modern traders.",
     keywords:
-      "about init option, OTC trading platform mission, trading platform company, web trading terminal, about init option team",
+      "about init option, trading platform mission, trading platform company, web trading terminal, about init option team",
     sections: [
       {
         title: "Who we are",
         paragraphs: [
-          "{platformName} was created to make short-term OTC trading simpler to understand, faster to access, and easier to manage across desktop and mobile.",
+          "{platformName} was created to make short-term trading simpler to understand, faster to access, and easier to manage across desktop and mobile.",
           "We focus on chart clarity, reliable account actions, and public platform information that helps users understand what they are joining before they ever make a deposit.",
         ],
       },
@@ -128,7 +128,7 @@ export const PUBLIC_PAGE_DEFINITIONS: Record<PublicPageKey, PublicPageDefinition
     seoDescription:
       "See the published platform statistics for {platformName}, including trading activity, uptime, supported assets, payouts, tournaments, and support metrics.",
     keywords:
-      "init option facts and figures, trading platform stats, otc trading volume, tournament prize pool, platform uptime",
+      "init option facts and figures, trading platform stats, trading volume, tournament prize pool, platform uptime",
     sections: [
       {
         title: "Core platform statistics",
@@ -183,7 +183,7 @@ export const PUBLIC_PAGE_DEFINITIONS: Record<PublicPageKey, PublicPageDefinition
     seoDescription:
       "Read advanced trading education, platform updates, tournament results, and market analysis from the {platformName} blog.",
     keywords:
-      "init option blog, trading strategies blog, market analysis, platform updates, tournament results, otc trading education",
+      "init option blog, trading strategies blog, market analysis, platform updates, tournament results, trading education",
     sections: [
       {
         title: "What the blog covers",

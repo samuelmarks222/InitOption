@@ -2913,7 +2913,7 @@ const TradingChart = ({
                     <span className="text-[15px] font-black text-[#ffb52e]">{shortPayout}%</span>
                   </div>
                   <p className="mt-1 text-[11px] font-semibold text-slate-400">
-                    {asset.name || asset.symbol} - {asset.type ?? "OTC"} market - {selectedTf} chart active
+                    {asset.name || asset.symbol} - {asset.type && asset.type !== "OTC" ? asset.type : "Trading"} market - {selectedTf} chart active
                   </p>
                 </div>
               </div>

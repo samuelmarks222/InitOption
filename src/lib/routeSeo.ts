@@ -13,9 +13,9 @@ const TOURNAMENTS_INDEX_PATH = "/tournaments";
 const DEFAULT_SHARE_IMAGE_PATH = "/share-icon.png";
 const HOME_TITLE_TEMPLATE = "{platformName} – Trading Platform: Free Demo, Live Trading & Fast Withdrawals";
 const HOME_DESCRIPTION_TEMPLATE =
-  "{platformName} is an OTC trading platform with real-time charts, instant demo trading, M-PESA and crypto funding, public tournaments, and fast withdrawals.";
+  "{platformName} is an online trading platform with real-time charts, instant demo trading, M-PESA and crypto funding, public tournaments, and fast withdrawals.";
 const HOME_KEYWORDS =
-  "Init Option, initoption, OTC trading platform, online trading, demo trading, real-time charts, M-PESA trading, crypto funding, trading tournaments, fast withdrawals, web terminal, mobile trading";
+  "Init Option, initoption, trading platform, online trading, demo trading, real-time charts, M-PESA trading, crypto funding, trading tournaments, fast withdrawals, web terminal, mobile trading";
 
 export interface RouteSeoOverride {
   siteTitle?: string;
@@ -261,8 +261,8 @@ export const buildStructuredData = ({
     items.push({
       "@context": "https://schema.org",
       "@type": "Service",
-      name: `${platformName} OTC trading platform`,
-      serviceType: "OTC Trading Platform",
+      name: `${platformName} trading platform`,
+      serviceType: "Trading Platform",
       provider: {
         "@type": "Organization",
         name: platformName,

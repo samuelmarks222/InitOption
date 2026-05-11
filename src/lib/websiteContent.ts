@@ -245,7 +245,7 @@ export const createDefaultWebsiteContent = (platformName = DEFAULT_PLATFORM_NAME
   },
   hero: {
     badge: "Trade financial markets with up to 95% profit",
-    title: `${platformName} trading platform for OTC markets, demo access, and fast withdrawals.`,
+    title: `${platformName} trading platform for market analysis, demo access, and fast withdrawals.`,
     description:
       `${platformName} brings real-time charts, instant demo trading, weekly tournaments, M-PESA and crypto funding, and a clean web terminal for beginners and active traders alike.`,
     primaryButtonLabel: "Create live account",
@@ -450,7 +450,7 @@ export const createDefaultWebsiteContent = (platformName = DEFAULT_PLATFORM_NAME
       seoTitle: `How to Trade | Step-by-Step Guide - ${platformName}`,
       seoDescription:
         "New to trading? Our simple guide explains how to get started with Init Option, from demo to live trading.",
-      keywords: "how to trade OTC markets, best trading platform for beginners, free demo trading account, mobile trading",
+      keywords: "how to trade online, best trading platform for beginners, free demo trading account, mobile trading",
       sections: [
         {
           title: "Step 1: Create your account",
@@ -469,7 +469,7 @@ export const createDefaultWebsiteContent = (platformName = DEFAULT_PLATFORM_NAME
         {
           title: "Step 3: Choose your asset and timeframe",
           paragraphs: [
-            "Select the OTC market you want to trade, review the payout percentage, and choose the amount and duration that match your plan.",
+            "Select the market you want to trade, review the payout percentage, and choose the amount and duration that match your plan.",
           ],
           bullets: [],
         },
@@ -494,7 +494,7 @@ export const createDefaultWebsiteContent = (platformName = DEFAULT_PLATFORM_NAME
       eyebrow: "FAQ",
       title: "Frequently asked questions",
       description:
-        `Find answers about deposits, withdrawals, bonuses, tournaments, and OTC trading on ${platformName}.`,
+        `Find answers about deposits, withdrawals, bonuses, tournaments, and trading on ${platformName}.`,
       seoTitle: `Frequently Asked Questions | ${platformName}`,
       seoDescription:
         "Find answers about deposits, withdrawals, bonuses, tournaments, and trading on Init Option.",

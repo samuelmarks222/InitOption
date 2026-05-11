@@ -67,7 +67,7 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
         <div className="flex -space-x-2">
            {flags.map((flag, idx) => (
               <div key={idx} className="w-6 h-6 rounded-full bg-trading-orange flex items-center justify-center text-[10px] border-2 border-[#141820] z-10 relative font-bold text-white shadow-sm" style={{ zIndex: 10 - idx }}>
-                {flag === "🇺🇸" ? "US" : flag === "🇪🇺" ? "EU" : flag === "₿" ? "B" : "OTC"}
+                {flag === "🇺🇸" ? "US" : flag === "🇪🇺" ? "EU" : flag === "₿" ? "B" : "FX"}
               </div>
            ))}
         </div>
@@ -166,7 +166,7 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
                              <div className="flex -space-x-1">
                                {asset.flags.map((flag, idx) => (
                                   <div key={idx} className="w-6 h-6 rounded-full bg-trading-orange flex items-center justify-center text-[10px] border-2 border-[#141820] z-10 font-bold text-white shadow-sm" style={{ zIndex: 10 - idx }}>
-                                    {flag === "🇺🇸" ? "US" : flag === "🇪🇺" ? "EU" : flag === "₿" ? "B" : "OTC"}
+                                    {flag === "🇺🇸" ? "US" : flag === "🇪🇺" ? "EU" : flag === "₿" ? "B" : "FX"}
                                   </div>
                                ))}
                              </div>
