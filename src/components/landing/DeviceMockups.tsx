@@ -1,4 +1,5 @@
 import CandlestickChart from "./CandlestickChart";
+import defaultLogoUrl from "@/assets/logo.png";
 
 const DeviceMockups = () => {
   return (
@@ -39,7 +40,7 @@ const DeviceMockups = () => {
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="flex h-6 w-6 items-center justify-center rounded bg-gradient-gold">
-                      <span className="text-[8px] font-bold text-primary-foreground">IO</span>
+                      <img src={defaultLogoUrl} alt="Init Option" className="h-4 w-4 object-contain" />
                     </div>
                     <div className="flex gap-2">
                       {["EUR/USD", "BTC/USD", "XAU/USD"].map((pair) => (
@@ -116,7 +117,7 @@ const DeviceMockups = () => {
                 <div className="mb-2 flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <div className="flex h-4 w-4 items-center justify-center rounded bg-gradient-gold">
-                      <span className="text-[5px] font-bold text-primary-foreground">IO</span>
+                      <img src={defaultLogoUrl} alt="Init Option" className="h-2.5 w-2.5 object-contain" />
                     </div>
                     <span className="text-[8px] font-semibold text-foreground">EUR/USD</span>
                   </div>

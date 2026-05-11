@@ -6,6 +6,7 @@ import {
   readStoredPlatformName,
   readStoredSupportEmail,
 } from "@/lib/platformMetadata";
+import defaultLogoUrl from "@/assets/logo.png";
 
 const buildInitials = (platformName: string) => {
   const parts = platformName
@@ -20,13 +21,13 @@ const buildInitials = (platformName: string) => {
 };
 
 export const useSiteBranding = () => {
-  const [logoUrl, setLogoUrl] = useState<string | null>(() => readStoredLogoUrl());
+  const [logoUrl, setLogoUrl] = useState<string | null>(() => readStoredLogoUrl() || defaultLogoUrl);
   const [platformName, setPlatformName] = useState(() => readStoredPlatformName());
   const [supportEmail, setSupportEmail] = useState(() => readStoredSupportEmail());
 
   useEffect(() => {
     const updateBranding = () => {
-      setLogoUrl(readStoredLogoUrl());
+      setLogoUrl(readStoredLogoUrl() || defaultLogoUrl);
       setPlatformName(readStoredPlatformName());
       setSupportEmail(readStoredSupportEmail());
     };

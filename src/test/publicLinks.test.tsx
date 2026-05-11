@@ -52,6 +52,7 @@ describe("public navigation links", () => {
   it("keeps footer links on live internal destinations", () => {
     renderWithProviders(<Footer />);
 
+    expect(screen.getByRole("img", { name: "Init Option" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Blog" })[0]).toHaveAttribute("href", "/blog");
     expect(screen.getAllByRole("link", { name: "Contact us" })[0]).toHaveAttribute("href", "/contact");
     expect(screen.getByRole("link", { name: "Terms and Conditions" })).toHaveAttribute("href", "/terms");
