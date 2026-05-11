@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAuthRestorePath } from "@/lib/authRedirect";
+import { shouldStartAtLoginOnMobile } from "@/lib/mobileLanding";
 import Navbar from "@/components/landing/Navbar";
 import BonusPopup from "@/components/landing/BonusPopup";
 import HeroSection from "@/components/landing/HeroSection";
@@ -24,6 +25,10 @@ const Index = () => {
 
   if (user) {
     return <Navigate to={getAuthRestorePath()} replace />;
+  }
+
+  if (shouldStartAtLoginOnMobile()) {
+    return <Navigate to="/login" replace />;
   }
 
   return (
