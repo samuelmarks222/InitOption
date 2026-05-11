@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -298,14 +296,30 @@
   .trading-terminal input,
   .trading-terminal textarea,
   .trading-terminal select {
-    font-family: "Roboto Condensed", "Arial Narrow", Roboto, Arial, system-ui, sans-serif;
-    text-rendering: geometricPrecision;
+    font-family: Arial, Helvetica, system-ui, sans-serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    text-rendering: optimizeLegibility;
   }
 
   .trading-terminal .font-display,
   .trading-terminal .font-copy,
   .trading-terminal .font-heading {
-    font-family: "Roboto Condensed", "Arial Narrow", Roboto, Arial, system-ui, sans-serif !important;
+    font-family: Arial, Helvetica, system-ui, sans-serif !important;
+  }
+
+  .trading-terminal .font-medium {
+    font-weight: 500;
+  }
+
+  .trading-terminal .font-semibold {
+    font-weight: 600;
+  }
+
+  .trading-terminal .font-bold,
+  .trading-terminal .font-extrabold,
+  .trading-terminal .font-black {
+    font-weight: 700;
   }
 
   .gradient-dark {
