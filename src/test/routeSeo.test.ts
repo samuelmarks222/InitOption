@@ -164,6 +164,8 @@ describe("route SEO", () => {
     expect(entries.some((entry) => entry.url === "https://initoption.example/")).toBe(true);
     expect(entries.some((entry) => entry.url === "https://initoption.example/tournaments")).toBe(true);
     expect(entries.some((entry) => entry.url === "https://initoption.example/tournaments/monday-momentum-1234abcd")).toBe(true);
+    expect(entries.some((entry) => entry.url === "https://initoption.example/features")).toBe(true);
+    expect(entries.some((entry) => entry.url === "https://initoption.example/why-choose-init-option")).toBe(true);
     expect(entries.some((entry) => entry.url === "https://initoption.example/trading-guide")).toBe(true);
     expect(entries.some((entry) => entry.url === "https://initoption.example/privacy")).toBe(true);
     expect(entries.some((entry) => entry.url === "https://initoption.example/contact")).toBe(true);

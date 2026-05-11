@@ -112,8 +112,10 @@ const App = () => {
                         <Route path="/blog/:slug" element={<BlogPostPage />} />
                         <Route path="/contact" element={<PublicInfoPage pageKey="contact" />} />
                         <Route path="/delete-account" element={<PublicInfoPage pageKey="delete-account" />} />
+                        <Route path="/features" element={<PublicInfoPage pageKey="features" />} />
                         <Route path="/how-it-works" element={<PublicInfoPage pageKey="how-it-works" />} />
                         <Route path="/trading-guide" element={<PublicInfoPage pageKey="trading-guide" />} />
+                        <Route path="/why-choose-init-option" element={<PublicInfoPage pageKey="why-choose-init-option" />} />
                         <Route path="/faq" element={<PublicInfoPage pageKey="faq" />} />
                         <Route path="/terms" element={<PublicInfoPage pageKey="terms" />} />
                         <Route path="/privacy" element={<PublicInfoPage pageKey="privacy" />} />

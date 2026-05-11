@@ -41,6 +41,20 @@ const CATEGORY_RISK_MANAGEMENT: BlogCategoryDefinition = {
   description: "Money management, discipline, and decision frameworks for sustainable trading.",
 };
 
+const CATEGORY_PLATFORM_GUIDES: BlogCategoryDefinition = {
+  id: "starter-category-platform-guides",
+  name: "Platform Guides",
+  slug: "platform-guides",
+  description: "Beginner-friendly guides to platform tools, account workflows, and trading features.",
+};
+
+const CATEGORY_PAYMENTS: BlogCategoryDefinition = {
+  id: "starter-category-payments",
+  name: "Payments",
+  slug: "payments",
+  description: "Deposit, withdrawal, mobile money, and crypto funding guides for traders.",
+};
+
 export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
   {
     id: "starter-post-1",
@@ -441,6 +455,328 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
       <p>You do not need to become a macroeconomist to use the calendar effectively. In practice, the most important habit is simply being aware of timing. If you know that a high-impact release is due in ten minutes, you can choose to stand aside, reduce size, or wait for confirmation after the announcement. That awareness protects you from walking blindly into conditions that do not match your normal setup rules.</p>
       <p>Over time, you will also notice which events matter most to the assets you trade most often. That is where your review process becomes valuable. Record which releases created clean structure, which caused unstable spikes, and which were less important than expected. That helps turn the calendar from a list of headlines into a practical decision tool.</p>
       <p>Markets move on expectations as much as on numbers. The economic calendar gives you a chance to respect that reality before the move begins. Used properly, it improves timing, reduces surprise, and helps you understand when the market deserves extra caution or extra attention.</p>
+    `,
+  },
+  {
+    id: "seo-post-trading-platform-guide",
+    title: "What is a Trading Platform? A Complete Beginner's Guide",
+    slug: "what-is-a-trading-platform",
+    excerpt:
+      "Learn what a trading platform is, how online trading platforms work, and what beginners should look for before opening a live account.",
+    featuredImageUrl: "/landing/hero-laptop-front.png",
+    featuredImageAlt: "Init Option trading platform shown on a laptop screen",
+    metaTitle: "What is a Trading Platform? Beginner's Guide | Init Option",
+    metaDescription:
+      "Learn what a trading platform is, how it works, and how to choose the best one for beginners. Start with Init Option's free demo account.",
+    publishedAt: "2026-05-11T09:00:00.000Z",
+    updatedAt: "2026-05-11T09:00:00.000Z",
+    status: "published",
+    authorName: "Init Option Team",
+    categories: [CATEGORY_PLATFORM_GUIDES, CATEGORY_TRADING_TIPS],
+    contentHtml: `
+      <p>A trading platform is software that allows traders to buy, sell, or speculate on financial assets such as forex pairs, cryptocurrencies, stocks, and commodities. In short-term trading, the platform becomes the place where you read the chart, choose an asset, set the trade amount, and decide whether price is likely to move higher or lower within a selected time period.</p>
+      <p>Modern trading platforms come in several forms. Some are desktop applications, some are mobile apps, and others are web-based terminals that run directly in the browser. Init Option is built as a web trading platform, which means users can access the terminal without installing a separate app. That keeps the first steps simple for beginners while still giving active traders the tools they expect.</p>
+      <h2>What a good trading platform should include</h2>
+      <ol>
+        <li><strong>User-friendly interface.</strong> You should be able to understand the layout, choose an asset, and place a trade without fighting the software.</li>
+        <li><strong>Free demo account.</strong> A demo account lets you practice with virtual funds before using real money.</li>
+        <li><strong>Real-time charts.</strong> Candlestick charts, timeframes, and price updates help traders read market movement more clearly.</li>
+        <li><strong>Technical indicators.</strong> Tools such as RSI, MACD, moving averages, and Bollinger Bands help traders test structured ideas.</li>
+        <li><strong>Fast withdrawals.</strong> A platform should make it clear how users can request payouts and how long each method usually takes.</li>
+        <li><strong>Helpful support.</strong> Account, deposit, withdrawal, and verification questions should be easy to raise with the support team.</li>
+      </ol>
+      <h2>Why beginners should start with simple tools</h2>
+      <p>The best trading platform for beginners is not always the one with the most complicated interface. New traders need clarity first. A clean terminal helps you focus on the asset, direction, stake, expiry time, and chart context. Too much clutter can make early mistakes more likely because the trader starts reacting to every tool instead of following a plan.</p>
+      <p>Init Option is designed around a simpler path: open a free demo account, practice with virtual funds, learn the chart, then move to live trading only when you understand the risks and platform workflow.</p>
+      <h2>How Init Option fits this checklist</h2>
+      <p>Init Option offers a free demo environment, real-time candlestick charts, multiple assets, technical indicators, drawing tools, public guides, M-PESA funding support, crypto funding support, and fast withdrawal workflows. This gives beginners a place to learn while also giving active traders a focused web terminal for day-to-day trading.</p>
+      <p>Before trading live, spend time in demo mode, read the platform guides, and review the risk disclaimer. Good trading starts with understanding the tool in front of you and the risk behind every decision.</p>
+      <p><a href="/register">Open a free demo account today.</a></p>
+    `,
+  },
+  {
+    id: "seo-post-demo-trading-account",
+    title: "Why You Need a Demo Trading Account Before Trading Live",
+    slug: "why-demo-trading-account-essential",
+    excerpt:
+      "A demo trading account helps beginners learn the platform, test strategies, and build discipline before moving into live trading.",
+    featuredImageUrl: "/landing/hero-laptop-angle.png",
+    featuredImageAlt: "Demo trading account with charts and trading tools",
+    metaTitle: "Why a Demo Trading Account is Essential Before Going Live | Init Option",
+    metaDescription:
+      "Discover why every trader should start with a demo trading account. Learn how to practice risk-free and build confidence before trading with real money.",
+    publishedAt: "2026-05-11T09:10:00.000Z",
+    updatedAt: "2026-05-11T09:10:00.000Z",
+    status: "published",
+    authorName: "Init Option Team",
+    categories: [CATEGORY_PLATFORM_GUIDES, CATEGORY_RISK_MANAGEMENT],
+    contentHtml: `
+      <p>A demo trading account is a simulated account where you can practice using virtual funds. It mirrors the platform experience, including charts, assets, trade direction, and expiry choices, but it removes the financial risk while you learn.</p>
+      <p>Every beginner should spend time on demo before going live. Trading is simple to understand at the surface, but real improvement comes from repetition: reading candles, testing indicators, managing stake size, and learning how you react after wins and losses.</p>
+      <h2>Why use a demo account before trading live?</h2>
+      <ol>
+        <li><strong>Learn without losing money.</strong> Beginners make mistakes. A demo account lets those mistakes become lessons instead of losses.</li>
+        <li><strong>Test trading strategies.</strong> You can try trend following, support and resistance, RSI confirmation, and other methods before risking real funds.</li>
+        <li><strong>Understand platform features.</strong> Demo mode lets you explore indicators, drawing tools, timeframes, and asset classes at your own pace.</li>
+        <li><strong>Build confidence.</strong> Repeated practice helps you become more comfortable with the trading terminal.</li>
+        <li><strong>Practice risk management.</strong> You can test stake sizes, daily limits, and loss-control rules without financial pressure.</li>
+      </ol>
+      <h2>How long should you use a demo account?</h2>
+      <p>Many traders practice for at least two to four weeks before trading live, but the better rule is consistency. Move slowly. If your demo results are random, your live results are likely to feel random too. A good goal is to build a repeatable plan, review your trades, and prove that you can follow your own rules.</p>
+      <h2>Init Option's demo account</h2>
+      <p>Init Option offers a free demo account with virtual funds, real platform tools, and no time limit. You can use it to learn chart reading, try different assets, and understand how the terminal behaves before making a deposit.</p>
+      <p>Demo trading does not remove risk from live trading, but it does give you a better starting point. Treat it like training, not a game. The habits you build there are the habits you bring into live markets.</p>
+      <p><a href="/register">Open your free demo account now.</a></p>
+    `,
+  },
+  {
+    id: "seo-post-mpesa-trading-guide",
+    title: "How to Trade with M-PESA: A Complete Guide for Kenyan Traders",
+    slug: "how-to-trade-with-mpesa",
+    excerpt:
+      "Learn how M-PESA deposits and withdrawals work on Init Option, including the basic account flow for Kenyan traders.",
+    featuredImageUrl: "/landing/hero-laptop-front.png",
+    featuredImageAlt: "M-PESA trading funding guide on Init Option",
+    metaTitle: "How to Trade Using M-PESA - Kenyan Guide | Init Option",
+    metaDescription:
+      "Learn how to deposit and withdraw using M-PESA on Init Option. Fast, secure, and low-minimum trading for Kenyan traders.",
+    publishedAt: "2026-05-11T09:20:00.000Z",
+    updatedAt: "2026-05-11T09:20:00.000Z",
+    status: "published",
+    authorName: "Init Option Team",
+    categories: [CATEGORY_PAYMENTS, CATEGORY_PLATFORM_GUIDES],
+    contentHtml: `
+      <p>For many Kenyan traders, M-PESA is the most convenient way to fund a trading account and receive withdrawals. It is familiar, mobile-first, and fast enough for users who do not want to wait on slow bank transfers.</p>
+      <p>Init Option supports an M-PESA trading flow so eligible users can deposit, trade, and request withdrawals through a payment method they already know. As with any financial account, users should confirm details carefully and complete any required verification before expecting smooth withdrawals.</p>
+      <h2>How to deposit using M-PESA on Init Option</h2>
+      <ol>
+        <li>Log into your Init Option account.</li>
+        <li>Click the deposit button.</li>
+        <li>Select M-PESA as the payment method.</li>
+        <li>Enter the amount you want to deposit.</li>
+        <li>Confirm the phone number connected to your M-PESA account.</li>
+        <li>Approve the payment prompt when it appears on your phone.</li>
+        <li>Wait for the deposit status to update inside your account.</li>
+      </ol>
+      <h2>How to withdraw using M-PESA</h2>
+      <ol>
+        <li>Open the withdrawal area from your account.</li>
+        <li>Select M-PESA as the payout method.</li>
+        <li>Enter the amount you want to withdraw.</li>
+        <li>Confirm your registered M-PESA phone number.</li>
+        <li>Submit the request and follow the status from your account history.</li>
+      </ol>
+      <h2>Why Kenyan traders use M-PESA funding</h2>
+      <ul>
+        <li><strong>Convenience.</strong> Funding can be completed from a mobile phone.</li>
+        <li><strong>Low entry barrier.</strong> M-PESA is familiar to many users in Kenya.</li>
+        <li><strong>Clear account flow.</strong> Deposit and withdrawal records are shown in the account area.</li>
+        <li><strong>Local payment access.</strong> Traders do not need to rely only on cards or international payment methods.</li>
+      </ul>
+      <h2>Tips for smoother M-PESA withdrawals</h2>
+      <p>Use the same phone number consistently, make sure your account details are accurate, complete verification early, and avoid submitting duplicate withdrawal requests while one is already processing. These small steps help reduce delays and support reviews.</p>
+      <p><a href="/register">Create your free account and try the demo first.</a></p>
+    `,
+  },
+  {
+    id: "seo-post-crypto-trading-platform",
+    title: "Crypto Trading Platform: How to Trade Bitcoin, Ethereum and USDT",
+    slug: "crypto-trading-platform",
+    excerpt:
+      "Explore how crypto trading works on Init Option, including Bitcoin, Ethereum, USDT funding, withdrawals, and demo practice.",
+    featuredImageUrl: "/landing/hero-laptop-angle.png",
+    featuredImageAlt: "Crypto trading platform interface with candlestick charts",
+    metaTitle: "Crypto Trading Platform - Trade Bitcoin, Ethereum & USDT | Init Option",
+    metaDescription:
+      "Trade Bitcoin, Ethereum, USDT and other cryptocurrencies on Init Option. Learn how to deposit and withdraw crypto safely and quickly.",
+    publishedAt: "2026-05-11T09:30:00.000Z",
+    updatedAt: "2026-05-11T09:30:00.000Z",
+    status: "published",
+    authorName: "Init Option Team",
+    categories: [CATEGORY_PAYMENTS, CATEGORY_TRADING_TIPS],
+    contentHtml: `
+      <p>Cryptocurrencies are popular with short-term traders because they can move quickly and trade around the clock. Assets such as Bitcoin, Ethereum, and USDT-related markets are widely followed, and their price swings can create frequent chart setups.</p>
+      <p>Init Option gives users a place to practice crypto trading on demo before using live funds. For eligible users, crypto can also be used as a funding method depending on the payment options available in the account.</p>
+      <h2>How to deposit crypto on Init Option</h2>
+      <ol>
+        <li>Log into your account and open the deposit area.</li>
+        <li>Select crypto as the payment method.</li>
+        <li>Choose the cryptocurrency or network shown in your account.</li>
+        <li>Copy the deposit address carefully.</li>
+        <li>Send the exact amount from your personal wallet or exchange account.</li>
+        <li>Wait for blockchain confirmations and account crediting.</li>
+      </ol>
+      <h2>How to withdraw crypto</h2>
+      <ol>
+        <li>Open the withdrawal page.</li>
+        <li>Select crypto as the payout method.</li>
+        <li>Choose the coin and network carefully.</li>
+        <li>Paste your external wallet address and double-check every character.</li>
+        <li>Submit the request and follow the status from your account.</li>
+      </ol>
+      <h2>Popular crypto assets for traders</h2>
+      <table>
+        <thead>
+          <tr><th>Asset</th><th>Symbol</th><th>Why traders watch it</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Bitcoin</td><td>BTC</td><td>High liquidity and strong market attention</td></tr>
+          <tr><td>Ethereum</td><td>ETH</td><td>Active price movement and major crypto ecosystem role</td></tr>
+          <tr><td>Tether</td><td>USDT</td><td>Useful for stable-value transfers and crypto funding</td></tr>
+          <tr><td>Litecoin</td><td>LTC</td><td>Often used for lower-cost transfers and active trading</td></tr>
+        </tbody>
+      </table>
+      <h2>Crypto trading tips for beginners</h2>
+      <p>Crypto markets can be volatile, so beginners should practice on demo first, reduce stake size when volatility expands, and avoid trading around major news without a plan. Always check the network before sending crypto. A transfer on the wrong network may not be recoverable.</p>
+      <p><a href="/register">Open your free demo account before trading live.</a></p>
+    `,
+  },
+  {
+    id: "seo-post-fast-withdrawals-trading",
+    title: "Fast Withdrawals Trading: Why Speed Matters and How Init Option Delivers",
+    slug: "fast-withdrawals-trading",
+    excerpt:
+      "Fast withdrawals are a major trust signal for traders. Learn why payout speed matters and how to avoid common delays.",
+    featuredImageUrl: "/landing/hero-laptop-front.png",
+    featuredImageAlt: "Fast withdrawal dashboard on a trading platform",
+    metaTitle: "Fast Withdrawals Trading - Get Your Profits Faster | Init Option",
+    metaDescription:
+      "Learn why fast withdrawals are essential for traders. Init Option supports M-PESA and crypto withdrawal workflows for eligible users.",
+    publishedAt: "2026-05-11T09:40:00.000Z",
+    updatedAt: "2026-05-11T09:40:00.000Z",
+    status: "published",
+    authorName: "Init Option Team",
+    categories: [CATEGORY_PAYMENTS, CATEGORY_PLATFORM_GUIDES],
+    contentHtml: `
+      <p>One of the most frustrating experiences for any trader is waiting too long to withdraw funds. Slow withdrawals create uncertainty, reduce trust, and make it harder for users to manage their trading capital responsibly.</p>
+      <p>Fast withdrawals matter because they prove that a trading platform is built for the full user journey: deposit, trade, manage risk, and request payouts. A platform should make withdrawal methods, minimums, account checks, and expected processing steps easy to understand.</p>
+      <h2>Why withdrawal speed matters</h2>
+      <ul>
+        <li><strong>Trust.</strong> Traders need confidence that account balances can be accessed through the available payout methods.</li>
+        <li><strong>Planning.</strong> Faster withdrawals help users manage cash flow and avoid uncertainty.</li>
+        <li><strong>Account discipline.</strong> Clear withdrawal systems make it easier to separate trading funds from personal funds.</li>
+        <li><strong>Transparency.</strong> Visible status updates reduce confusion and duplicate requests.</li>
+      </ul>
+      <h2>Withdrawal methods on Init Option</h2>
+      <table>
+        <thead>
+          <tr><th>Withdrawal method</th><th>Typical use case</th><th>Helpful reminder</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>M-PESA</td><td>Local Kenyan mobile money withdrawals</td><td>Confirm the registered phone number before submitting</td></tr>
+          <tr><td>Bitcoin</td><td>Crypto payouts to BTC wallets</td><td>Check the address and network carefully</td></tr>
+          <tr><td>Ethereum</td><td>Crypto payouts to ETH wallets</td><td>Network fees and congestion can affect timing</td></tr>
+          <tr><td>USDT</td><td>Stable-value crypto transfers</td><td>Choose the correct chain shown in your account</td></tr>
+          <tr><td>Litecoin</td><td>Crypto transfers with active network use</td><td>Double-check wallet compatibility</td></tr>
+        </tbody>
+      </table>
+      <h2>Tips for faster withdrawals</h2>
+      <ol>
+        <li>Complete verification before you need an urgent payout.</li>
+        <li>Use correct phone numbers and wallet addresses.</li>
+        <li>Check active bonus or turnover requirements before requesting funds.</li>
+        <li>Avoid submitting repeated requests for the same withdrawal.</li>
+        <li>Contact support with your user ID and request time if a status is unclear.</li>
+      </ol>
+      <p>Fast withdrawals are not only about speed. They are about clear systems, accurate account details, and fewer surprises for the user.</p>
+      <p><a href="/register">Create an account and test the platform workflow.</a></p>
+    `,
+  },
+  {
+    id: "seo-post-binary-options-vs-forex",
+    title: "Binary Options vs Forex: Which is Better for Beginners?",
+    slug: "binary-options-vs-forex",
+    excerpt:
+      "Compare binary options and forex trading so beginners can understand risk, payouts, timeframes, and complexity before choosing a style.",
+    featuredImageUrl: "/landing/hero-trader-photo.jpg",
+    featuredImageAlt: "Trader comparing binary options and forex chart setups",
+    metaTitle: "Binary Options vs Forex - Which Trading Style is Right for You? | Init Option",
+    metaDescription:
+      "Compare binary options and forex trading. Learn the key differences, risks, and benefits to decide which is better for beginners.",
+    publishedAt: "2026-05-11T09:50:00.000Z",
+    updatedAt: "2026-05-11T09:50:00.000Z",
+    status: "published",
+    authorName: "Init Option Team",
+    categories: [CATEGORY_TRADING_TIPS, CATEGORY_RISK_MANAGEMENT],
+    contentHtml: `
+      <p>Binary options and forex trading both involve predicting price movement, but they work very differently. Understanding the difference helps beginners choose a style that matches their risk tolerance, time availability, and learning goals.</p>
+      <p>In binary options, the trader usually predicts whether an asset will close higher or lower after a fixed time. The possible loss and payout are visible before the trade is placed. In forex trading, the trader buys or sells currency pairs directly, and profit or loss changes with the size of the price move, leverage, spread, and position size.</p>
+      <h2>Key differences</h2>
+      <table>
+        <thead>
+          <tr><th>Feature</th><th>Binary options</th><th>Forex</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Risk</td><td>Fixed by the trade amount</td><td>Variable and affected by position size and leverage</td></tr>
+          <tr><td>Payout</td><td>Known before the trade</td><td>Depends on how far price moves</td></tr>
+          <tr><td>Timeframe</td><td>Seconds, minutes, hours, or days</td><td>Minutes to months</td></tr>
+          <tr><td>Complexity</td><td>Lower entry complexity</td><td>Requires more position and margin management</td></tr>
+          <tr><td>Trade management</td><td>Usually runs to expiry</td><td>Can use stop loss and take profit orders</td></tr>
+        </tbody>
+      </table>
+      <h2>Which style is better for beginners?</h2>
+      <p>Binary options can be easier for beginners to understand because the decision is simpler: choose an asset, choose direction, choose an amount, and choose an expiry. The risk is fixed before entry, which can make planning clearer.</p>
+      <p>Forex gives traders more control but also introduces more complexity. Leverage, margin, spreads, stop loss placement, and position sizing all matter. A beginner who does not understand these mechanics can make expensive mistakes quickly.</p>
+      <h2>How to start carefully</h2>
+      <ol>
+        <li>Open a free demo account first.</li>
+        <li>Practice reading candlestick charts and support or resistance levels.</li>
+        <li>Use small trade sizes when moving live.</li>
+        <li>Track every trade and review whether you followed your plan.</li>
+        <li>Read the risk disclaimer before using real funds.</li>
+      </ol>
+      <p>No trading style removes risk. The better choice is the one you understand, can practice consistently, and can manage without emotional decisions.</p>
+      <p><a href="/register">Start with a free demo account today.</a></p>
+    `,
+  },
+  {
+    id: "seo-post-candlestick-chart-guide",
+    title: "How to Read Candlestick Charts: A Beginner's Guide",
+    slug: "how-to-read-candlestick-charts",
+    excerpt:
+      "Learn how candlestick charts work, what open, high, low, and close mean, and how beginners can spot basic price-action patterns.",
+    featuredImageUrl: "/landing/hero-laptop-angle.png",
+    featuredImageAlt: "Candlestick chart guide on a trading platform screen",
+    metaTitle: "How to Read Candlestick Charts - Beginner's Guide | Init Option",
+    metaDescription:
+      "Learn how to read candlestick charts, identify trends, and spot reversal patterns. Essential knowledge for any trader.",
+    publishedAt: "2026-05-11T10:00:00.000Z",
+    updatedAt: "2026-05-11T10:00:00.000Z",
+    status: "published",
+    authorName: "Init Option Team",
+    categories: [CATEGORY_TECHNICAL_ANALYSIS, CATEGORY_TRADING_TIPS],
+    contentHtml: `
+      <p>Candlestick charts are one of the most popular ways to visualize price movement. Each candle represents a specific time period, such as one minute, five minutes, one hour, or one day. The candle shows where price opened, how high it moved, how low it moved, and where it closed.</p>
+      <p>Learning candlesticks helps beginners understand market rhythm. Instead of seeing the chart as random movement, you start to notice pressure, rejection, momentum, hesitation, and trend structure.</p>
+      <h2>The four prices of a candlestick</h2>
+      <table>
+        <thead>
+          <tr><th>Price</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Open</td><td>The first price of the candle period</td></tr>
+          <tr><td>High</td><td>The highest price reached during the period</td></tr>
+          <tr><td>Low</td><td>The lowest price reached during the period</td></tr>
+          <tr><td>Close</td><td>The last price of the candle period</td></tr>
+        </tbody>
+      </table>
+      <h2>What candle color means</h2>
+      <ul>
+        <li><strong>Green candle.</strong> The close is higher than the open, showing bullish pressure during that period.</li>
+        <li><strong>Red candle.</strong> The close is lower than the open, showing bearish pressure during that period.</li>
+        <li><strong>Doji.</strong> The open and close are very close together, which can show hesitation or indecision.</li>
+      </ul>
+      <h2>Simple patterns to recognize</h2>
+      <ol>
+        <li><strong>Long green candle.</strong> Strong buying pressure and possible continuation if trend context supports it.</li>
+        <li><strong>Long red candle.</strong> Strong selling pressure and possible continuation lower.</li>
+        <li><strong>Hammer.</strong> A small body with a long lower wick, often watched after a decline.</li>
+        <li><strong>Shooting star.</strong> A small body with a long upper wick, often watched after an upward move.</li>
+      </ol>
+      <h2>How to use candlesticks in trading</h2>
+      <p>Candlestick patterns work best with context. A hammer in the middle of random movement is less useful than a hammer near a clear support zone. A long green candle matters more when it breaks a clean resistance level or appears after a controlled pullback.</p>
+      <p>Start by identifying trend direction, then mark support and resistance zones, then read how candles react at those zones. That simple order keeps candlestick analysis practical.</p>
+      <p><a href="/register">Open your free Init Option demo account and practice chart reading.</a></p>
     `,
   },
 ];

@@ -7,7 +7,9 @@ export type PublicPageKey =
   | "blog"
   | "contact"
   | "delete-account"
+  | "features"
   | "how-it-works"
+  | "why-choose-init-option"
   | "trading-guide"
   | "faq"
   | "terms"
@@ -792,6 +794,159 @@ export const PUBLIC_PAGE_DEFINITIONS: Record<PublicPageKey, PublicPageDefinition
       },
     ],
   },
+  features: {
+    key: "features",
+    path: "/features",
+    eyebrow: "Platform features",
+    title: "Trading platform features",
+    description:
+      "Explore the tools that make {platformName} useful for demo practice, live trading, chart analysis, account funding, and fast withdrawal workflows.",
+    seoTitle: "Trading Platform Features | Charts, Indicators & Fast Withdrawals | {platformName}",
+    seoDescription:
+      "Explore {platformName} trading platform features: real-time candlestick charts, technical indicators, drawing tools, demo account access, and M-PESA and crypto withdrawal workflows.",
+    keywords:
+      "trading platform features, online trading tools, best trading terminal, candlestick charts, technical indicators, demo trading account, fast withdrawals trading",
+    sections: [
+      {
+        title: "Why {platformName} is built for practical trading",
+        paragraphs: [
+          "{platformName} combines professional chart tools with a clean, browser-based trading terminal. Beginners can start in demo mode, while active traders can use indicators, drawing tools, asset filters, and account controls from one focused workspace.",
+          "The goal is to keep the core trading workflow clear: choose an asset, read the chart, set the amount, select an expiry, and manage the account from a transparent dashboard.",
+        ],
+      },
+      {
+        title: "Real-time candlestick charts",
+        paragraphs: [
+          "Candlestick charts help traders understand open, high, low, and close behavior across different timeframes. {platformName} supports short-term chart reading with live price updates, visible market movement, and chart settings that can be adjusted to match the trader's preference.",
+        ],
+        bullets: [
+          "Multiple chart timeframes from seconds to daily views",
+          "Candlestick, Heikin-Ashi, area, and bar-style chart views",
+          "Custom chart colors, spacing, grid settings, and price-line display",
+          "A clean trading workspace designed for fast reading and execution",
+        ],
+      },
+      {
+        title: "Technical indicators and drawing tools",
+        paragraphs: [
+          "Technical indicators and drawings help traders move from guessing to structured analysis. Users can study trend, momentum, volatility, and price-action behavior before placing a trade.",
+        ],
+        bullets: [
+          "Popular indicators such as RSI, MACD, moving averages, Bollinger Bands, Stochastic, CCI, ADX, Aroon, Momentum, ATR, and volume tools",
+          "Drawing tools for trend lines, horizontal levels, vertical markers, Fibonacci analysis, channels, rectangles, and triangles",
+          "Indicator settings for periods, colors, sources, line thickness, and visibility",
+          "Chart tools designed for both beginner practice and active trade preparation",
+        ],
+      },
+      {
+        title: "Free demo account and low-friction practice",
+        paragraphs: [
+          "A demo trading account gives users a safer way to learn the terminal before using real funds. Demo mode helps beginners test chart reading, expiry choices, stake sizes, and emotional discipline without financial pressure.",
+          "Demo practice is especially useful for traders learning candlesticks, support and resistance, indicator confirmation, and risk-management rules.",
+        ],
+        bullets: [
+          "Virtual funds for practice",
+          "No time limit for learning the platform",
+          "A practical space to test strategies before going live",
+          "A better starting point for beginners who need repetition before real trading",
+        ],
+      },
+      {
+        title: "Funding, withdrawals, bonuses, and tournaments",
+        paragraphs: [
+          "{platformName} supports account workflows for local and crypto-focused users, including M-PESA and crypto funding paths where available. The platform also includes welcome-bonus logic, public tournament pages, and account history tools so users can track what is happening.",
+        ],
+        bullets: [
+          "M-PESA deposit and withdrawal workflows for eligible Kenyan traders",
+          "Crypto funding support for users who prefer digital assets",
+          "Fast withdrawal workflows with clear account history",
+          "Weekly tournament pages, prize-pool information, and public competition discovery",
+        ],
+      },
+    ],
+    relatedLinks: [
+      { label: "Why choose Init Option", to: "/why-choose-init-option", description: "Compare the main reasons traders choose the platform." },
+      { label: "How it works", to: "/how-it-works", description: "Follow the account journey from signup to demo and live trading." },
+      { label: "Trading guide", to: "/trading-guide", description: "Learn chart basics, strategy structure, and risk management." },
+      { label: "Blog", to: "/blog", description: "Read detailed tutorials on trading platforms, demo accounts, M-PESA, crypto, and withdrawals." },
+    ],
+  },
+  "why-choose-init-option": {
+    key: "why-choose-init-option",
+    path: "/why-choose-init-option",
+    eyebrow: "Why choose us",
+    title: "Why choose {platformName}",
+    description:
+      "See why traders choose {platformName} for demo access, beginner-friendly tools, M-PESA and crypto funding options, fast withdrawal workflows, and weekly tournaments.",
+    seoTitle: "Why Choose {platformName} | Fast, Fair & Beginner-Friendly Trading",
+    seoDescription:
+      "Discover why traders choose {platformName}: free demo account, fast M-PESA and crypto withdrawal workflows, welcome bonus, professional chart tools, and weekly tournaments.",
+    keywords:
+      "best trading platform, why choose Init Option, trading platform comparison, beginner friendly trading platform, free demo account, fast withdrawals trading",
+    sections: [
+      {
+        title: "Built for users who want a clear trading path",
+        paragraphs: [
+          "A good trading platform should make the first steps understandable and the account workflow transparent. {platformName} is designed around a simple path: learn in demo, understand the chart, manage risk, deposit only when ready, and track account activity from one place.",
+          "That clarity matters for beginners, but it also matters for active traders who need a focused terminal instead of a cluttered interface.",
+        ],
+      },
+      {
+        title: "Free demo account with no pressure to rush",
+        paragraphs: [
+          "Demo mode lets traders practice with virtual funds before live trading. This helps users test strategies, learn candlestick behavior, understand indicators, and build confidence without putting real money at risk.",
+        ],
+        bullets: [
+          "Practice chart reading before live trading",
+          "Test strategies across different assets and timeframes",
+          "Learn the trading panel, expiry controls, and account flow",
+          "Build discipline before switching to real funds",
+        ],
+      },
+      {
+        title: "Fast withdrawal workflows and familiar funding options",
+        paragraphs: [
+          "Withdrawal speed is one of the strongest trust signals for traders. {platformName} supports account workflows built around clear payout requests, status visibility, and funding methods such as M-PESA and crypto where available.",
+        ],
+        bullets: [
+          "M-PESA support for eligible Kenyan traders",
+          "Crypto funding options for digital-asset users",
+          "Account history views for deposits, withdrawals, and statuses",
+          "Verification and payout checks designed to reduce confusion",
+        ],
+      },
+      {
+        title: "Professional tools made easier to use",
+        paragraphs: [
+          "Many platforms overload beginners with complex screens. {platformName} keeps the terminal focused while still offering serious tools: candlestick charts, technical indicators, drawing tools, asset lists, account modes, and public educational content.",
+        ],
+        bullets: [
+          "Real-time charting for short-term market reading",
+          "Popular technical indicators for trend, momentum, volatility, and volume",
+          "Drawing tools for support, resistance, trendlines, and Fibonacci analysis",
+          "A browser-based terminal that works across desktop and mobile devices",
+        ],
+      },
+      {
+        title: "Bonuses, tournaments, and support",
+        paragraphs: [
+          "{platformName} includes public tournament pages, account bonus logic, and support flows that help users understand more than just the trading screen. Traders can explore competitions, review platform guides, and contact support when they need help.",
+        ],
+        bullets: [
+          "Welcome bonus support for eligible accounts",
+          "Weekly tournaments with public discovery pages",
+          "Support pages, FAQ content, and risk information",
+          "Transparent educational pages for users researching the platform before registration",
+        ],
+      },
+    ],
+    relatedLinks: [
+      { label: "Platform features", to: "/features", description: "Review the charts, indicators, tools, and account workflows." },
+      { label: "About Init Option", to: "/about", description: "Learn the platform mission and product direction." },
+      { label: "FAQ", to: "/faq", description: "Find answers about deposits, withdrawals, bonuses, and tournaments." },
+      { label: "Create account", to: "/register", description: "Open an account and start with demo mode." },
+    ],
+  },
   "site-map": {
     key: "site-map",
     path: "/site-map",
@@ -822,6 +977,8 @@ export const PUBLIC_PAGE_DEFINITIONS: Record<PublicPageKey, PublicPageDefinition
       { label: "Homepage", to: "/", description: "Return to the main public landing page." },
       { label: "About", to: "/about", description: "Learn the platform story, mission, and product direction." },
       { label: "Facts and figures", to: "/facts-and-figures", description: "Review published operating and platform statistics." },
+      { label: "Platform features", to: "/features", description: "Explore charts, indicators, drawing tools, demo access, and withdrawal workflows." },
+      { label: "Why choose Init Option", to: "/why-choose-init-option", description: "Compare the reasons traders choose the platform." },
       { label: "How it works", to: "/how-it-works", description: "Follow the platform journey from signup to live trading." },
       { label: "Trading guide", to: "/trading-guide", description: "Study chart basics, strategies, and risk management guidance." },
       { label: "FAQ", to: "/faq", description: "Find answers about funding, bonuses, tournaments, and technical issues." },

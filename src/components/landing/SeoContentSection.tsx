@@ -14,6 +14,16 @@ const EXPLORE_LINKS = [
     to: "/how-it-works",
   },
   {
+    title: "Platform features",
+    description: "Charts, indicators, drawing tools, demo access, funding paths, and account workflows.",
+    to: "/features",
+  },
+  {
+    title: "Why choose Init Option",
+    description: "A focused comparison of demo access, fast withdrawals, tools, tournaments, and support.",
+    to: "/why-choose-init-option",
+  },
+  {
     title: "Trading guide",
     description: "Practical chart, discipline, and risk-control guidance for newer and active traders.",
     to: "/trading-guide",
