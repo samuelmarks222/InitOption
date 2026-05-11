@@ -9,7 +9,7 @@ import { VipBadge } from "@/components/vip/VipBadge";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import type { ProfileTab } from "@/components/profile/ProfileDrawer";
 import { KycAvatarBadge } from "@/components/profile/KycAvatarBadge";
-import { getEffectiveLiveBalance } from "@/lib/live-balance";
+import { getStoredLiveBalance } from "@/lib/live-balance";
 import { normalizeKycStatus, type KycDocumentsLike } from "@/lib/kyc";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import {
@@ -126,7 +126,7 @@ const TradingHeader = ({
     };
   }, [showChartLayoutMenu]);
 
-  const liveBalance = profile ? getEffectiveLiveBalance(profile) : balance;
+  const liveBalance = profile ? getStoredLiveBalance(profile) : balance;
   const profileDocuments: KycDocumentsLike = (profile?.kyc_documents ?? profile?.kycDocuments) ?? {};
   const kycStatus = normalizeKycStatus(profile?.kyc_status ?? profile?.kycStatus);
   const displayBalance =

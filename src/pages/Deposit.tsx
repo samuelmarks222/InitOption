@@ -24,6 +24,7 @@ import {
   type DepositBonusRedemption,
 } from "@/lib/depositBonusOffers";
 import { formatCurrencyAmount } from "@/lib/currency";
+import { getEffectiveLiveBalance, getReservedWithdrawalBalance, getStoredLiveBalance } from "@/lib/live-balance";
 import { requestMobileMoneyDeposit, type MobileMoneyDepositPayload } from "@/lib/mobileMoney";
 import { convertUsdToKesAmount } from "@/lib/mobileMoneyShared";
 import { isPlisioSupportedCryptoMethod } from "@/lib/plisio";
@@ -266,6 +267,9 @@ const Deposit = () => {
     bonusEnabled,
     selectedOffer: appliedBonusOffer,
   });
+  const storedLiveBalance = getStoredLiveBalance(profile);
+  const availableLiveBalance = getEffectiveLiveBalance(profile);
+  const reservedWithdrawalBalance = getReservedWithdrawalBalance(profile);
 
   const hasEligibleBonusOffers = resolvedBonusCatalog.some((offer) => offer.eligible);
   useEffect(() => {
@@ -715,8 +719,13 @@ const Deposit = () => {
                   <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Account snapshot</div>
                   <div className="mt-4 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <div className="text-sm text-[#9dc2c8]">Current Balance</div>
-                      <div className="mt-2 break-all text-3xl font-bold text-white">${profile?.balance?.toFixed(2) || "0.00"}</div>
+                      <div className="text-sm text-[#9dc2c8]">Live Balance</div>
+                      <div className="mt-2 break-all text-3xl font-bold text-white">${storedLiveBalance.toFixed(2)}</div>
+                      {reservedWithdrawalBalance > 0 ? (
+                        <div className="mt-2 text-xs leading-5 text-[#9dc2c8]">
+                          ${availableLiveBalance.toFixed(2)} available for trading. ${reservedWithdrawalBalance.toFixed(2)} reserved for pending withdrawals.
+                        </div>
+                      ) : null}
                     </div>
                     <div className="rounded-full bg-[#0fa053]/12 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#0fa053]">
                       Live account
