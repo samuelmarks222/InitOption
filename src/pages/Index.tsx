@@ -12,7 +12,6 @@ import MobileSection from "@/components/landing/MobileSection";
 import EarningsSection from "@/components/landing/EarningsSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FAQSection from "@/components/landing/FAQSection";
-import SeoContentSection from "@/components/landing/SeoContentSection";
 import CTASection from "@/components/landing/CTASection";
 import Footer from "@/components/landing/Footer";
 
@@ -40,7 +39,6 @@ const Index = () => {
       <EarningsSection />
       <TestimonialsSection />
       <FAQSection />
-      <SeoContentSection />
       <CTASection />
       <Footer />
     </div>
