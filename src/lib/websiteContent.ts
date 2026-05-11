@@ -125,6 +125,23 @@ const toStringArray = (value: unknown, fallback: string[]) =>
     ? fallback.map((defaultValue, index) => toStringValue(value[index], defaultValue))
     : fallback;
 
+const normalizeComparableText = (value: unknown) =>
+  typeof value === "string" ? value.trim().replace(/\s+/g, " ").toLowerCase() : "";
+
+const isLegacyHomepageHero = (hero: Record<string, unknown>) => {
+  const title = normalizeComparableText(hero.title);
+  const description = normalizeComparableText(hero.description);
+
+  return (
+    title === "the smarter way to trade and earn."
+    || title === "the smarter way to trade and earn"
+    || (
+      title.includes("trade and earn")
+      && description.includes("start trading in seconds")
+    )
+  );
+};
+
 const normalizeFeatureCards = (value: unknown, fallback: WebsiteFeatureCardContent[]) =>
   fallback.map((defaultItem, index) => {
     const source = Array.isArray(value) && isRecord(value[index]) ? value[index] : {};
@@ -574,6 +591,7 @@ export const normalizeWebsiteContent = (rawValue: unknown, platformName = DEFAUL
   const publicPages = isRecord(content.publicPages) ? content.publicPages : {};
   const blog = isRecord(content.blog) ? content.blog : {};
   const normalizedBlogCategories = normalizeBlogCategories(blog.categories, defaults.blog.categories);
+  const shouldUseDefaultHero = isLegacyHomepageHero(hero);
 
   return {
     blog: {
@@ -581,12 +599,16 @@ export const normalizeWebsiteContent = (rawValue: unknown, platformName = DEFAUL
       posts: normalizeBlogPosts(blog.posts, defaults.blog.posts),
     },
     hero: {
-      badge: toStringValue(hero.badge, defaults.hero.badge),
-      title: toStringValue(hero.title, defaults.hero.title),
-      description: toStringValue(hero.description, defaults.hero.description),
-      primaryButtonLabel: toStringValue(hero.primaryButtonLabel, defaults.hero.primaryButtonLabel),
-      secondaryButtonLabel: toStringValue(hero.secondaryButtonLabel, defaults.hero.secondaryButtonLabel),
-      trustItems: toStringArray(hero.trustItems, defaults.hero.trustItems),
+      badge: shouldUseDefaultHero ? defaults.hero.badge : toStringValue(hero.badge, defaults.hero.badge),
+      title: shouldUseDefaultHero ? defaults.hero.title : toStringValue(hero.title, defaults.hero.title),
+      description: shouldUseDefaultHero ? defaults.hero.description : toStringValue(hero.description, defaults.hero.description),
+      primaryButtonLabel: shouldUseDefaultHero
+        ? defaults.hero.primaryButtonLabel
+        : toStringValue(hero.primaryButtonLabel, defaults.hero.primaryButtonLabel),
+      secondaryButtonLabel: shouldUseDefaultHero
+        ? defaults.hero.secondaryButtonLabel
+        : toStringValue(hero.secondaryButtonLabel, defaults.hero.secondaryButtonLabel),
+      trustItems: shouldUseDefaultHero ? defaults.hero.trustItems : toStringArray(hero.trustItems, defaults.hero.trustItems),
     },
     features: {
       paymentLogos: toStringArray(features.paymentLogos, defaults.features.paymentLogos),

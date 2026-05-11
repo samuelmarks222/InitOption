@@ -45,4 +45,24 @@ describe("websiteContent", () => {
     expect(content.publicPages.about.sections[0].title).toBe("Custom section title");
     expect(content.publicPages.faq.faqItems).toHaveLength(6);
   });
+
+  it("replaces legacy earn-focused homepage copy with trading defaults", () => {
+    const content = normalizeWebsiteContent(
+      JSON.stringify({
+        hero: {
+          title: "The smarter way to trade and earn.",
+          description:
+            "Start trading in seconds. Practice with demo, learn how the market moves, and place trades with speed and full control.",
+          primaryButtonLabel: "Create account",
+          secondaryButtonLabel: "Open demo account",
+          trustItems: ["Instant demo access", "Responsive mobile terminal", "Secure funding workflow"],
+        },
+      }),
+      "Init Option",
+    );
+
+    expect(content.hero.title).toBe("Init Option trading platform for market analysis, demo access, and fast withdrawals.");
+    expect(content.hero.description).toContain("real-time charts");
+    expect(content.hero.trustItems).toContain("Fast withdrawals and secure funding options");
+  });
 });
