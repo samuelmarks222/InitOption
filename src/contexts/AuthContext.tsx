@@ -221,7 +221,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
 
       if (shouldNormalizeSeededLiveBalance(mergedProfile)) {
+        mergedProfile.balance = 0;
         mergedProfile.welcome_bonus_granted_at = null;
+
+        void supabase
+          .from("profiles")
+          .update({
+            balance: 0,
+            welcome_bonus_granted_at: null,
+          } as TablesUpdate<"profiles">)
+          .eq("id", userId)
+          .eq("balance", 10000)
+          .eq("total_deposit", 0)
+          .eq("total_trades", 0)
+          .then(({ error }) => {
+            if (error) {
+              console.error("Failed to clear legacy seeded live balance", error);
+            }
+          });
       }
 
       if (activeProfileUserIdRef.current !== userId) {
@@ -236,12 +253,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      setProfile({
+      const fallbackProfile: AuthProfile = {
         ...createProfileFallback(userId),
         ...getSanitizedUserMetadata(authUser),
         ...loadProfileCache(userId),
         email: authUser?.email ?? null,
-      });
+      };
+
+      if (shouldNormalizeSeededLiveBalance(fallbackProfile)) {
+        fallbackProfile.balance = 0;
+        fallbackProfile.welcome_bonus_granted_at = null;
+      }
+
+      setProfile(fallbackProfile);
     }
   }, [ensureProfileRow]);
 

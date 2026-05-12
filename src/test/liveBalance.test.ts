@@ -66,4 +66,21 @@ describe("live balance helpers", () => {
     expect(getStoredLiveBalance(profile)).toBe(384);
     expect(getEffectiveLiveBalance(profile)).toBe(384);
   });
+
+  it("does not treat the old 10000 demo seed as live funds", () => {
+    const profile = {
+      balance: 10000,
+      reserved_withdrawal_balance: 0,
+      total_deposit: 0,
+      total_profit: 0,
+      total_trades: 0,
+      welcome_bonus_granted_at: null,
+    };
+
+    expect(hasFundedLiveAccount(profile)).toBe(false);
+    expect(shouldNormalizeSeededLiveBalance(profile)).toBe(true);
+    expect(getStoredLiveBalance(profile)).toBe(0);
+    expect(getEffectiveLiveBalance(profile)).toBe(0);
+    expect(getAvailableLiveBalanceForTrading(profile)).toBe(0);
+  });
 });
