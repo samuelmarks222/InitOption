@@ -318,4 +318,4 @@ const AUTO_FILL_TOOL_IDS = new Set([
 export const isAutoFilledDrawingTool = (toolId: string) => AUTO_FILL_TOOL_IDS.has(toolId);
 
 export const getDrawingToolFillColor = (toolId: string, color: string) =>
-  isAutoFilledDrawingTool(toolId) ? withHexAlpha(resolveDrawingToolColor(toolId, color), "28") : undefined;
+  isAutoFilledDrawingTool(toolId) ? resolveDrawingToolColor(toolId, color) : undefined;

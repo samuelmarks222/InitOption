@@ -6,6 +6,7 @@ import {
   getDrawingToolDefinition,
   getDrawingToolFillColor,
   getDrawingToolLabel,
+  isAutoFilledDrawingTool,
   STANDARD_DRAWING_GROUPS,
 } from "./toolCatalog";
 
@@ -67,6 +68,14 @@ export const DrawingsPanel = ({ onClose }: { onClose: () => void }) => {
 
     const setLineStyle = (lineStyle: "solid" | "dashed" | "dotted") =>
       updateDrawing(selectedDrawing.id, { style: { ...selectedDrawing.style, lineStyle } });
+    const setFillOpacity = (fillOpacity: number) =>
+      updateDrawing(selectedDrawing.id, {
+        style: {
+          ...selectedDrawing.style,
+          fillColor: getDrawingToolFillColor(selectedDrawing.tool, selectedDrawing.style.color),
+          fillOpacity: Math.max(0.08, Math.min(0.6, fillOpacity)),
+        },
+      });
 
     return (
       <div className="flex h-full w-full max-w-[208px] flex-col border-r border-[#2b3241] bg-[#1d2332] animate-in slide-in-from-left-8">
@@ -190,6 +199,29 @@ export const DrawingsPanel = ({ onClose }: { onClose: () => void }) => {
               <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             </div>
           </div>
+
+          {isAutoFilledDrawingTool(selectedDrawing.tool) && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-1 text-[11px] text-slate-400">
+                <span>Fill</span>
+                <span className="text-slate-300">
+                  {Math.round((selectedDrawing.style.fillOpacity ?? 0.3) * 100)}%
+                </span>
+              </div>
+              <div className="rounded-[4px] border border-[#485064] bg-[#202736] px-2 py-2">
+                <input
+                  type="range"
+                  min={0.08}
+                  max={0.6}
+                  step={0.01}
+                  value={selectedDrawing.style.fillOpacity ?? 0.3}
+                  onChange={(event) => setFillOpacity(Number(event.target.value))}
+                  className={SLIDER_CLASS}
+                  style={{ accentColor: selectedDrawing.style.color }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="border-t border-white/6 bg-[#1a2030] px-2 py-2">

@@ -126,13 +126,27 @@ export const DrawingProvider = ({ children }: { children: ReactNode }) => {
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const drawingsRef = useRef(drawings);
   const placementFnRef = useRef<PlacementFn | null>(null);
   const duplicateFnRef = useRef<DuplicateFn | null>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(DRAWINGS_STORAGE_KEY, JSON.stringify(drawings));
+    drawingsRef.current = drawings;
   }, [drawings]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const persistTimer = window.setTimeout(() => {
+      window.localStorage.setItem(DRAWINGS_STORAGE_KEY, JSON.stringify(drawings));
+    }, 180);
+
+    return () => window.clearTimeout(persistTimer);
+  }, [drawings]);
+
+  useEffect(() => () => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(DRAWINGS_STORAGE_KEY, JSON.stringify(drawingsRef.current));
+  }, []);
 
   const addDrawing = useCallback((d: DrawingObject) => setDrawings((prev) => [...prev, d]), []);
 

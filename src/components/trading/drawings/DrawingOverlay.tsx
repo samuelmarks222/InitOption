@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IChartApi, ISeriesApi, Time } from "lightweight-charts";
 import { useDrawings, DrawingObject, Point } from "@/contexts/DrawingContext";
 import { useDrawingPreferences } from "@/hooks/useDrawingPreferences";
@@ -37,6 +37,9 @@ type SvgPoint = { x: number; y: number };
 type BoxCornerId = "topLeft" | "topRight" | "bottomRight" | "bottomLeft";
 type DragKind = "move" | "point" | "box-corner";
 type IndicatorValuePoint = { time: any; value: number };
+
+const HEX_WITH_ALPHA_PATTERN = /^#[0-9a-fA-F]{8}$/;
+const DEFAULT_SHAPE_FILL_OPACITY = 0.3;
 
 const BOX_TOOL_IDS = new Set(["rect", "disjoint", "flat", "priceRange", "dateRange", "datePriceRange", "gannBox", "cyclic"]);
 
@@ -246,6 +249,8 @@ export const DrawingOverlay = ({
   const [renderTick, setRenderTick] = useState(0);
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const pendingDragUpdateRef = useRef<{ id: string; points: Point[] } | null>(null);
+  const dragFrameRef = useRef<number | null>(null);
 
   // Action bar opens the left panel color editor
   const [showColorEditor, setShowColorEditor] = useState(false);
@@ -257,6 +262,26 @@ export const DrawingOverlay = ({
 
   const getDefaultToolColor = (tool: string) =>
     resolveDrawingToolColor(tool, preferences.defaultColor, LEGACY_DEFAULT_COLORS[tool] ?? "#3498db");
+
+  const flushPendingDragUpdate = useCallback(() => {
+    dragFrameRef.current = null;
+    const pending = pendingDragUpdateRef.current;
+    if (!pending) return;
+    pendingDragUpdateRef.current = null;
+    updateDrawing(pending.id, { points: pending.points });
+  }, [updateDrawing]);
+
+  const queueDragPointsUpdate = useCallback((id: string, points: Point[]) => {
+    pendingDragUpdateRef.current = { id, points };
+    if (dragFrameRef.current !== null) return;
+    dragFrameRef.current = window.requestAnimationFrame(flushPendingDragUpdate);
+  }, [flushPendingDragUpdate]);
+
+  useEffect(() => () => {
+    if (dragFrameRef.current !== null) {
+      window.cancelAnimationFrame(dragFrameRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -372,38 +397,38 @@ export const DrawingOverlay = ({
     };
   };
 
-  const resolveTimeFromSvgX = (svgX: number) => {
+  const resolveTimeFromSvgX = (svgX: number, options: { clamp?: boolean } = {}) => {
     if (!chart || !svgRef.current) return null;
     const width = svgRef.current.clientWidth ?? 0;
-    const clampedX = clampViewportCoordinate(svgX, width);
-    const logical = chart.timeScale().coordinateToLogical(clampedX);
+    const resolvedX = options.clamp === false ? svgX : clampViewportCoordinate(svgX, width);
+    const logical = chart.timeScale().coordinateToLogical(resolvedX);
     const reference = timeframeSeconds > 0 ? getLogicalTimeReference() : null;
 
     if (logical !== null && reference) {
       return timeFromLogicalCoordinate(Number(logical), reference.logical, reference.time, timeframeSeconds);
     }
 
-    const samples = buildAxisSampleCoordinates(width, clampedX);
+    const samples = buildAxisSampleCoordinates(width, clampViewportCoordinate(resolvedX, width));
 
-    return resolveAxisValue(clampedX, samples, (coordinate) => {
+    return resolveAxisValue(resolvedX, samples, (coordinate) => {
       const time = chart.timeScale().coordinateToTime(coordinate);
       return time === null ? null : Number(time);
     });
   };
 
-  const resolvePriceFromSvgY = (svgY: number) => {
+  const resolvePriceFromSvgY = (svgY: number, options: { clamp?: boolean } = {}) => {
     if (!series || !svgRef.current) return null;
     const height = svgRef.current.clientHeight ?? 0;
-    const clampedY = clampViewportCoordinate(svgY, height);
-    const samples = buildAxisSampleCoordinates(height, clampedY);
+    const resolvedY = options.clamp === false ? svgY : clampViewportCoordinate(svgY, height);
+    const samples = buildAxisSampleCoordinates(height, clampViewportCoordinate(resolvedY, height));
 
-    return resolveAxisValue(clampedY, samples, (coordinate) => series.coordinateToPrice(coordinate));
+    return resolveAxisValue(resolvedY, samples, (coordinate) => series.coordinateToPrice(coordinate));
   };
 
-  const toAbstractFromSvg = (svgX: number, svgY: number): Point | null => {
-    const clamped = clampSvgPoint({ x: svgX, y: svgY });
-    const time = resolveTimeFromSvgX(clamped.x);
-    const price = resolvePriceFromSvgY(clamped.y);
+  const toAbstractFromSvg = (svgX: number, svgY: number, options: { clamp?: boolean } = {}): Point | null => {
+    const resolvedPoint = options.clamp === false ? { x: svgX, y: svgY } : clampSvgPoint({ x: svgX, y: svgY });
+    const time = resolveTimeFromSvgX(resolvedPoint.x, options);
+    const price = resolvePriceFromSvgY(resolvedPoint.y, options);
     if (time === null || price === null) return null;
     return { time, price };
   };
@@ -742,7 +767,6 @@ export const DrawingOverlay = ({
       // Capture pointer → SVG keeps receiving move/up even if cursor leaves
       svgRef.current!.setPointerCapture(e.pointerId);
       setRenderTick(t => t + 1);
-      setRenderTick(t => t + 1);
       e.stopPropagation();
     } else {
       setSelectedId(null);
@@ -774,7 +798,7 @@ export const DrawingOverlay = ({
     const deltaX = currentSvgPoint.x - d.anchorSvgX;
     const deltaY = currentSvgPoint.y - d.anchorSvgY;
     const projectSvgPoint = (originalSvgPoint: SvgPoint) =>
-      toAbstractFromSvg(originalSvgPoint.x + deltaX, originalSvgPoint.y + deltaY);
+      toAbstractFromSvg(originalSvgPoint.x + deltaX, originalSvgPoint.y + deltaY, { clamp: false });
 
     if (d.dragKind === "box-corner" && d.boxCorner) {
       const originalCorners = getBoxCorners(d.originalPoints);
@@ -784,7 +808,7 @@ export const DrawingOverlay = ({
       const movingCorner = projectSvgPoint(movingCornerSvg);
       if (!movingCorner) return;
       const nextPoints = normalizeBoxPoints([movingCorner, fixedCorner]);
-      updateDrawing(d.drawingId, { points: nextPoints });
+      queueDragPointsUpdate(d.drawingId, nextPoints);
       return;
     }
 
@@ -798,12 +822,13 @@ export const DrawingOverlay = ({
       return p;
     });
 
-    updateDrawing(d.drawingId, { points: newPts });
+    queueDragPointsUpdate(d.drawingId, newPts);
   };
 
   // ─── Pointer Up ───────────────────────────────────────────────────────────
   const onSvgPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
     if (drag.current) svgRef.current?.releasePointerCapture(e.pointerId);
+    flushPendingDragUpdate();
     setChartPointerNavigationEnabled(true);
     drag.current = null;
     setRenderTick(t => t + 1);
@@ -816,6 +841,12 @@ export const DrawingOverlay = ({
     const { color, lineWidth: lw, lineStyle, fillColor } = d.style;
     const dash = lineStyle === "dashed" ? "6 4" : lineStyle === "dotted" ? "2 3" : undefined;
     const fill = fillColor || getDrawingToolFillColor(d.tool, color) || "transparent";
+    const numericFillOpacity = Number(d.style.fillOpacity);
+    const shapeFillOpacity = Number.isFinite(numericFillOpacity)
+      ? Math.max(0, Math.min(0.65, numericFillOpacity))
+      : HEX_WITH_ALPHA_PATTERN.test(fill)
+        ? 1
+        : DEFAULT_SHAPE_FILL_OPACITY;
 
     // Each shape element gets onPointerDown that feeds the central drag system
     const shapeDown = (e: React.PointerEvent, pointIdx = -1) => {
@@ -958,7 +989,7 @@ export const DrawingOverlay = ({
           <polygon
             points={polygonPoints}
             fill={fill}
-            fillOpacity={0.15}
+            fillOpacity={shapeFillOpacity}
             stroke="transparent"
             style={{ pointerEvents: "visiblePainted", cursor: "grab" }}
             onPointerDown={e => shapeDown(e)}
@@ -992,7 +1023,7 @@ export const DrawingOverlay = ({
           <polygon
             points={trianglePoints}
             fill={fill}
-            fillOpacity={0.15}
+            fillOpacity={shapeFillOpacity}
             stroke={color}
             strokeWidth={lw}
             strokeDasharray={dash}
@@ -1019,7 +1050,7 @@ export const DrawingOverlay = ({
       const bh = Math.max(0, cornerEntries[3].point.y - cornerEntries[0].point.y);
       return (
         <g key={d.id}>
-          <rect x={bx} y={by} width={bw} height={bh} fill={fill} fillOpacity={0.15} stroke={color} strokeWidth={lw} strokeDasharray={dash}
+          <rect x={bx} y={by} width={bw} height={bh} fill={fill} fillOpacity={shapeFillOpacity} stroke={color} strokeWidth={lw} strokeDasharray={dash}
             style={{ pointerEvents: "visiblePainted", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
           {d.tool === "gannBox" && <>
             <line x1={bx} y1={by} x2={bx + bw} y2={by + bh} stroke={color} strokeWidth={1} strokeOpacity={0.4} style={{ pointerEvents: "none" }} />
@@ -1270,7 +1301,7 @@ export const DrawingOverlay = ({
       const ry = Math.abs(dy) * 0.75;
       return (
         <g key={d.id}>
-          <ellipse cx={cx2} cy={cy2} rx={rx} ry={ry} fill={fill} fillOpacity={0.1}
+          <ellipse cx={cx2} cy={cy2} rx={rx} ry={ry} fill={fill} fillOpacity={shapeFillOpacity}
             stroke={color} strokeWidth={lw} strokeDasharray={dash}
             style={{ pointerEvents: "visiblePainted", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
           {anchors}
@@ -1407,7 +1438,6 @@ export const DrawingOverlay = ({
         onPointerMove={onSvgPointerMove}
         onPointerUp={onSvgPointerUp}
         onPointerCancel={onSvgPointerUp}
-        onPointerLeave={onSvgPointerUp}
         onContextMenu={e => {
           e.preventDefault();
           setChartPointerNavigationEnabled(true);

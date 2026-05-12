@@ -1,6 +1,6 @@
 import { useDrawings } from "@/contexts/DrawingContext";
 import { Trash2, X } from "lucide-react";
-import { getDrawingToolFillColor, getDrawingToolLabel } from "./toolCatalog";
+import { getDrawingToolFillColor, getDrawingToolLabel, isAutoFilledDrawingTool } from "./toolCatalog";
 
 interface Props { onClose?: () => void; }
 
@@ -25,6 +25,13 @@ export const DrawingProperties = ({ onClose }: Props) => {
   });
   const setWidth = (w: number) => updateDrawing(d.id, { style: { ...d.style, lineWidth: w } });
   const setStyle = (s: "solid" | "dashed" | "dotted") => updateDrawing(d.id, { style: { ...d.style, lineStyle: s } });
+  const setFillOpacity = (fillOpacity: number) => updateDrawing(d.id, {
+    style: {
+      ...d.style,
+      fillColor: getDrawingToolFillColor(d.tool, d.style.color),
+      fillOpacity: Math.max(0.08, Math.min(0.6, fillOpacity)),
+    },
+  });
 
   return (
     <div
@@ -71,6 +78,24 @@ export const DrawingProperties = ({ onClose }: Props) => {
           </button>
         ))}
       </div>
+
+      {isAutoFilledDrawingTool(d.tool) && (
+        <div className="mb-3 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-2">
+          <div className="mb-1 flex items-center justify-between text-[10px] text-gray-300">
+            <span>Fill</span>
+            <span>{Math.round((d.style.fillOpacity ?? 0.3) * 100)}%</span>
+          </div>
+          <input
+            type="range"
+            min={0.08}
+            max={0.6}
+            step={0.01}
+            value={d.style.fillOpacity ?? 0.3}
+            onChange={e => setFillOpacity(Number(e.target.value))}
+            className="h-1 w-full accent-[#0fa053]"
+          />
+        </div>
+      )}
 
       {/* Delete */}
       <button onClick={() => deleteDrawing(d.id)}
