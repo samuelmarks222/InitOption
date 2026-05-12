@@ -180,6 +180,41 @@ const colorizeHistogramData = (
     color: point.value >= 0 ? upColor : downColor,
   }));
 
+const getNumericTime = (time: Time) => (typeof time === "number" && Number.isFinite(time) ? time : null);
+
+const isHorizontalLineData = (data: OverlayIndicatorPoint[]) => {
+  const values = data
+    .map((point) => point.value)
+    .filter((value) => Number.isFinite(value));
+
+  if (values.length < 2) return false;
+
+  const reference = values[0];
+  return values.every((value) => Math.abs(value - reference) < 0.0000001);
+};
+
+const extendHorizontalLineDataToRightEdge = (
+  data: OverlayIndicatorPoint[],
+  timeframeSeconds: number,
+  rightOffsetBars: number,
+): OverlayIndicatorPoint[] => {
+  if (!isHorizontalLineData(data)) return data;
+
+  const lastPoint = data[data.length - 1];
+  const lastTime = getNumericTime(lastPoint?.time);
+  if (lastTime === null) return data;
+
+  const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds || 60));
+  const extraBars = Math.max(8, Math.ceil(rightOffsetBars) + 4);
+  const extendedPoints = Array.from({ length: extraBars }, (_, index) => ({
+    ...lastPoint,
+    time: toChartTime(lastTime + safeTimeframe * (index + 1)),
+    value: lastPoint.value,
+  }));
+
+  return [...data, ...extendedPoints];
+};
+
 const isSvgOnlyOverlayOutput = (indicatorConfigId: string, outputId: string) =>
   indicatorConfigId === "fractal" && (outputId === "up" || outputId === "down");
 
@@ -1512,6 +1547,12 @@ const OscillatorPane = ({
             const upColor = indicator.params.histColorUp || indicator.params.upColor || THEME.up;
             const downColor = indicator.params.histColorDown || indicator.params.downColor || THEME.down;
             finalData = colorizeHistogramData(out.data as OverlayIndicatorPoint[], upColor, downColor);
+          } else if (outConf.type === "line") {
+            finalData = extendHorizontalLineDataToRightEdge(
+              out.data as OverlayIndicatorPoint[],
+              tf.seconds,
+              rightOffset,
+            );
           }
           if (shouldRenderBackground) {
             seriesRefs.current[fillSeriesKey]?.setData(out.data as LineData<Time>[]);
