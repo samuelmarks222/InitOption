@@ -14,6 +14,7 @@ import {
   type BarData,
   type CandlestickData,
   type HistogramData,
+  type IPriceLine,
   type LineData,
   type LineWidth,
   type SeriesType,
@@ -180,39 +181,15 @@ const colorizeHistogramData = (
     color: point.value >= 0 ? upColor : downColor,
   }));
 
-const getNumericTime = (time: Time) => (typeof time === "number" && Number.isFinite(time) ? time : null);
-
-const isHorizontalLineData = (data: OverlayIndicatorPoint[]) => {
+const getHorizontalLineValue = (data: OverlayIndicatorPoint[]) => {
   const values = data
     .map((point) => point.value)
     .filter((value) => Number.isFinite(value));
 
-  if (values.length < 2) return false;
+  if (values.length < 2) return null;
 
   const reference = values[0];
-  return values.every((value) => Math.abs(value - reference) < 0.0000001);
-};
-
-const extendHorizontalLineDataToRightEdge = (
-  data: OverlayIndicatorPoint[],
-  timeframeSeconds: number,
-  rightOffsetBars: number,
-): OverlayIndicatorPoint[] => {
-  if (!isHorizontalLineData(data)) return data;
-
-  const lastPoint = data[data.length - 1];
-  const lastTime = getNumericTime(lastPoint?.time);
-  if (lastTime === null) return data;
-
-  const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds || 60));
-  const extraBars = Math.max(8, Math.ceil(rightOffsetBars) + 4);
-  const extendedPoints = Array.from({ length: extraBars }, (_, index) => ({
-    ...lastPoint,
-    time: toChartTime(lastTime + safeTimeframe * (index + 1)),
-    value: lastPoint.value,
-  }));
-
-  return [...data, ...extendedPoints];
+  return values.every((value) => Math.abs(value - reference) < 0.0000001) ? reference : null;
 };
 
 const isSvgOnlyOverlayOutput = (indicatorConfigId: string, outputId: string) =>
@@ -1359,6 +1336,7 @@ const OscillatorPane = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRefs = useRef<Record<string, ChartSeriesApi>>({});
+  const guideLineRefs = useRef<Record<string, IPriceLine>>({});
   const prevParamsRef = useRef<string>("");
 
   // 1. Mount Chart
@@ -1484,6 +1462,7 @@ const OscillatorPane = ({
     if (paramsChanged && Object.keys(seriesRefs.current).length > 0) {
       Object.values(seriesRefs.current).forEach(s => { try { chartRef.current!.removeSeries(s); } catch(e) {} });
       seriesRefs.current = {};
+      guideLineRefs.current = {};
     }
 
     const outputs = calculateIndicator(indicator, history);
@@ -1523,19 +1502,24 @@ const OscillatorPane = ({
         delete seriesRefs.current[fillSeriesKey];
       }
 
+      // Resolve color: try outId-specific (e.g. macdColor, kColor), camelCase (colorUpper), generic color
+      const color =
+        indicator.params[`${out.id}Color`] ||
+        indicator.params[`color${out.id.charAt(0).toUpperCase()}${out.id.slice(1)}`] ||
+        indicator.params.color ||
+        outConf.defaultColor || THEME.line;
+      const lineWidth = clampLineWidth(Number(indicator.params.width || indicator.params.lineWidth || 1));
+
       if (!seriesRefs.current[out.id]) {
-        // Resolve color: try outId-specific (e.g. macdColor, kColor), camelCase (colorUpper), generic color
-        const color =
-          indicator.params[`${out.id}Color`] ||
-          indicator.params[`color${out.id.charAt(0).toUpperCase()}${out.id.slice(1)}`] ||
-          indicator.params.color ||
-          outConf.defaultColor || THEME.line;
-        const lineWidth = clampLineWidth(Number(indicator.params.width || indicator.params.lineWidth || 1));
         if (outConf.type === "histogram") {
           seriesRefs.current[out.id] = chartRef.current!.addSeries(HistogramSeries, { color, priceLineVisible: false });
         } else {
           seriesRefs.current[out.id] = chartRef.current!.addSeries(LineSeries, {
-            color, lineWidth, priceLineVisible: false, crosshairMarkerVisible: false
+            color,
+            lineWidth,
+            priceLineVisible: false,
+            lastValueVisible: false,
+            crosshairMarkerVisible: false
           });
         }
       }
@@ -1548,11 +1532,36 @@ const OscillatorPane = ({
             const downColor = indicator.params.histColorDown || indicator.params.downColor || THEME.down;
             finalData = colorizeHistogramData(out.data as OverlayIndicatorPoint[], upColor, downColor);
           } else if (outConf.type === "line") {
-            finalData = extendHorizontalLineDataToRightEdge(
-              out.data as OverlayIndicatorPoint[],
-              tf.seconds,
-              rightOffset,
-            );
+            const horizontalValue = getHorizontalLineValue(out.data as OverlayIndicatorPoint[]);
+            seriesRefs.current[out.id].applyOptions({
+              color: horizontalValue === null ? color : "rgba(0,0,0,0)",
+              lineWidth,
+              lastValueVisible: false,
+              priceLineVisible: false,
+            });
+
+            if (horizontalValue === null) {
+              if (guideLineRefs.current[out.id]) {
+                try { seriesRefs.current[out.id].removePriceLine(guideLineRefs.current[out.id]); } catch (_e) {}
+                delete guideLineRefs.current[out.id];
+              }
+            } else if (!guideLineRefs.current[out.id]) {
+              guideLineRefs.current[out.id] = seriesRefs.current[out.id].createPriceLine({
+                price: horizontalValue,
+                color,
+                lineStyle: LineStyle.Solid,
+                lineWidth,
+                axisLabelVisible: false,
+                title: "",
+              });
+            } else {
+              guideLineRefs.current[out.id].applyOptions({
+                price: horizontalValue,
+                color,
+                lineStyle: LineStyle.Solid,
+                lineWidth,
+              });
+            }
           }
           if (shouldRenderBackground) {
             seriesRefs.current[fillSeriesKey]?.setData(out.data as LineData<Time>[]);
