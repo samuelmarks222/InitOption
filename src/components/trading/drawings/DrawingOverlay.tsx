@@ -251,6 +251,8 @@ export const DrawingOverlay = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingDragUpdateRef = useRef<{ id: string; points: Point[] } | null>(null);
   const dragFrameRef = useRef<number | null>(null);
+  const lastVisibleSvgPointsRef = useRef<Record<string, SvgPoint[]>>({});
+  const previousTimeframeSecondsRef = useRef(timeframeSeconds);
 
   // Action bar opens the left panel color editor
   const [showColorEditor, setShowColorEditor] = useState(false);
@@ -264,18 +266,26 @@ export const DrawingOverlay = ({
     resolveDrawingToolColor(tool, preferences.defaultColor, LEGACY_DEFAULT_COLORS[tool] ?? "#3498db");
 
   const flushPendingDragUpdate = useCallback(() => {
-    dragFrameRef.current = null;
+    if (dragFrameRef.current !== null) {
+      window.cancelAnimationFrame(dragFrameRef.current);
+      dragFrameRef.current = null;
+    }
+
     const pending = pendingDragUpdateRef.current;
     if (!pending) return;
     pendingDragUpdateRef.current = null;
     updateDrawing(pending.id, { points: pending.points });
+    setRenderTick((tick) => tick + 1);
   }, [updateDrawing]);
 
   const queueDragPointsUpdate = useCallback((id: string, points: Point[]) => {
     pendingDragUpdateRef.current = { id, points };
     if (dragFrameRef.current !== null) return;
-    dragFrameRef.current = window.requestAnimationFrame(flushPendingDragUpdate);
-  }, [flushPendingDragUpdate]);
+    dragFrameRef.current = window.requestAnimationFrame(() => {
+      dragFrameRef.current = null;
+      setRenderTick((tick) => tick + 1);
+    });
+  }, []);
 
   useEffect(() => () => {
     if (dragFrameRef.current !== null) {
@@ -309,6 +319,11 @@ export const DrawingOverlay = ({
         event.preventDefault();
         setChartPointerNavigationEnabled(true);
         drag.current = null;
+        pendingDragUpdateRef.current = null;
+        if (dragFrameRef.current !== null) {
+          window.cancelAnimationFrame(dragFrameRef.current);
+          dragFrameRef.current = null;
+        }
         previewPts.current = [];
         setIsDrawing(false);
         setActiveTool(null);
@@ -439,6 +454,69 @@ export const DrawingOverlay = ({
     if (!relativePoint) return null;
     return toAbstractFromSvg(relativePoint.x, relativePoint.y);
   };
+
+  useEffect(() => {
+    if (!chart || !series || !svgRef.current) {
+      previousTimeframeSecondsRef.current = timeframeSeconds;
+      return;
+    }
+
+    if (previousTimeframeSecondsRef.current === timeframeSeconds) return;
+
+    previousTimeframeSecondsRef.current = timeframeSeconds;
+    const savedSvgPoints = lastVisibleSvgPointsRef.current;
+
+    const frame = window.requestAnimationFrame(() => {
+      drawings.forEach((drawing) => {
+        const snapshot = savedSvgPoints[drawing.id];
+        if (!snapshot || snapshot.length !== drawing.points.length) return;
+
+        const nextPoints = snapshot
+          .map((point) => toAbstractFromSvg(point.x, point.y, { clamp: false }))
+          .filter((point): point is Point => point !== null);
+
+        if (nextPoints.length !== drawing.points.length) return;
+
+        updateDrawing(drawing.id, {
+          points: isBoxTool(drawing.tool) ? normalizeBoxPoints(nextPoints) : nextPoints,
+        });
+      });
+
+      setRenderTick((tick) => tick + 1);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [chart, drawings, series, timeframeSeconds, updateDrawing]);
+
+  useEffect(() => {
+    if (!chart || !series || !svgRef.current) return;
+
+    const width = svgRef.current.clientWidth || 0;
+    const height = svgRef.current.clientHeight || 0;
+    const nextSnapshots = { ...lastVisibleSvgPointsRef.current };
+
+    drawings.forEach((drawing) => {
+      if (!drawing.visible || drawing.points.length === 0) return;
+
+      const pending = pendingDragUpdateRef.current;
+      const points = pending?.id === drawing.id ? pending.points : drawing.points;
+      const svgPoints = points.map(toSvg);
+      const hasUsablePoints = svgPoints.every((point) => (
+        Number.isFinite(point.x) &&
+        Number.isFinite(point.y) &&
+        point.x > width * -1 &&
+        point.x < width * 2 &&
+        point.y > height * -1 &&
+        point.y < height * 2
+      ));
+
+      if (hasUsablePoints) {
+        nextSnapshots[drawing.id] = svgPoints;
+      }
+    });
+
+    lastVisibleSvgPointsRef.current = nextSnapshots;
+  }, [chart, drawings, renderTick, series, timeframeSeconds]);
 
   const setChartPointerNavigationEnabled = (enabled: boolean) => {
     if (!chart) return;
@@ -837,6 +915,11 @@ export const DrawingOverlay = ({
 
   // ─── Shape Renderers ─────────────────────────────────────────────────────
   const renderShape = (d: DrawingObject, isTemp = false) => {
+    const pending = pendingDragUpdateRef.current;
+    if (pending?.id === d.id) {
+      d = { ...d, points: pending.points };
+    }
+
     const sel = selectedId === d.id && !isTemp;
     const { color, lineWidth: lw, lineStyle, fillColor } = d.style;
     const dash = lineStyle === "dashed" ? "6 4" : lineStyle === "dotted" ? "2 3" : undefined;
@@ -1414,7 +1497,8 @@ export const DrawingOverlay = ({
     if (!selectedId) return null;
     const d = drawings.find(dd => dd.id === selectedId);
     if (!d || d.points.length === 0) return null;
-    const pts = d.points.map(toSvg);
+    const pending = pendingDragUpdateRef.current;
+    const pts = (pending?.id === d.id ? pending.points : d.points).map(toSvg);
     const xs = pts.map(p => p.x);
     const ys = pts.map(p => p.y);
     return {
