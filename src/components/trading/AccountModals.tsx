@@ -1830,9 +1830,9 @@ export const RealAccountWelcomeModal = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-[#03060d]/82 p-4 backdrop-blur-[3px]">
+    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-[#03060d]/82 p-2 backdrop-blur-[3px] sm:p-4">
       <div
-        className="relative w-full max-w-[410px] overflow-hidden rounded-[26px] border shadow-[0_35px_100px_rgba(8,18,40,0.62)]"
+        className="relative w-full max-w-[330px] overflow-hidden rounded-[20px] border shadow-[0_35px_100px_rgba(8,18,40,0.62)] sm:max-w-[410px] sm:rounded-[26px]"
         style={{
           background:
             "linear-gradient(180deg, rgba(50,63,99,0.98) 0%, rgba(42,53,84,0.98) 100%)",
@@ -1842,35 +1842,36 @@ export const RealAccountWelcomeModal = ({
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(106,180,255,0.28),transparent_42%)]" />
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full text-[#a7b8db] transition hover:bg-white/5 hover:text-white"
+          className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full text-[#a7b8db] transition hover:bg-white/5 hover:text-white sm:right-4 sm:top-4 sm:h-9 sm:w-9"
           aria-label="Close welcome modal"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
 
-        <div className="relative px-5 pb-8 pt-7 sm:px-6">
-          <div className="mx-auto mb-5 h-[258px] w-full max-w-[296px]">
+        <div className="relative px-4 pb-5 pt-5 sm:px-6 sm:pb-8 sm:pt-7">
+          <div className="mx-auto mb-3 h-[132px] w-full max-w-[176px] sm:mb-5 sm:h-[258px] sm:max-w-[296px]">
             <div className="relative h-full w-full">
-              <div className="absolute left-1/2 top-10 h-28 w-28 -translate-x-1/2 rounded-full bg-[#5dc2ff]/25 blur-3xl" />
-              <div className="absolute left-1/2 top-[74px] h-[118px] w-[118px] -translate-x-1/2 rounded-full border border-white/12 bg-white/5 backdrop-blur-sm" />
-              <div className="absolute left-1/2 top-[104px] flex h-[60px] w-[60px] -translate-x-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 shadow-[0_8px_24px_rgba(70,150,255,0.28)]">
-                <Wallet className="h-7 w-7 text-[#edf5ff]" />
+              <div className="absolute left-1/2 top-5 h-16 w-16 -translate-x-1/2 rounded-full bg-[#5dc2ff]/25 blur-2xl sm:top-10 sm:h-28 sm:w-28 sm:blur-3xl" />
+              <div className="absolute left-1/2 top-[38px] h-[66px] w-[66px] -translate-x-1/2 rounded-full border border-white/12 bg-white/5 backdrop-blur-sm sm:top-[74px] sm:h-[118px] sm:w-[118px]" />
+              <div className="absolute left-1/2 top-[54px] flex h-[36px] w-[36px] -translate-x-1/2 items-center justify-center rounded-full border border-white/15 bg-white/10 shadow-[0_8px_24px_rgba(70,150,255,0.28)] sm:top-[104px] sm:h-[60px] sm:w-[60px]">
+                <Wallet className="h-4 w-4 text-[#edf5ff] sm:h-7 sm:w-7" />
               </div>
 
-              <div className="absolute left-1/2 bottom-1 h-[84px] w-[236px] -translate-x-1/2 rounded-full border border-[#7db5ff]/14 bg-[radial-gradient(circle_at_center,rgba(86,164,255,0.72),rgba(54,112,211,0.34)_52%,rgba(32,55,110,0.08)_74%,transparent_80%)] shadow-[0_18px_50px_rgba(44,119,236,0.35)]" />
-              <div className="absolute left-1/2 bottom-[12px] h-[56px] w-[214px] -translate-x-1/2 rounded-full border border-white/6" />
-              <div className="absolute left-1/2 bottom-[26px] h-[138px] w-[190px] -translate-x-1/2">
+              <div className="absolute left-1/2 bottom-0 h-[48px] w-[144px] -translate-x-1/2 rounded-full border border-[#7db5ff]/14 bg-[radial-gradient(circle_at_center,rgba(86,164,255,0.72),rgba(54,112,211,0.34)_52%,rgba(32,55,110,0.08)_74%,transparent_80%)] shadow-[0_18px_50px_rgba(44,119,236,0.35)] sm:bottom-1 sm:h-[84px] sm:w-[236px]" />
+              <div className="absolute left-1/2 bottom-[7px] h-[31px] w-[130px] -translate-x-1/2 rounded-full border border-white/6 sm:bottom-[12px] sm:h-[56px] sm:w-[214px]" />
+              <div className="absolute left-1/2 bottom-[14px] h-[74px] w-[112px] -translate-x-1/2 sm:bottom-[26px] sm:h-[138px] sm:w-[190px]">
                 {stackLayers.map((layer, index) => (
                   <div
                     key={index}
-                    className="absolute left-1/2 top-0"
+                    className="real-account-wallet-layer absolute left-1/2 top-0"
                     style={{
-                      transform: `translate(calc(-50% + ${layer.translateX}px), ${layer.translateY}px) scale(${layer.scale})`,
+                      "--wallet-layer-mobile-transform": `translate(calc(-50% + ${layer.translateX * 0.56}px), ${layer.translateY * 0.56}px) scale(${layer.scale})`,
+                      "--wallet-layer-desktop-transform": `translate(calc(-50% + ${layer.translateX}px), ${layer.translateY}px) scale(${layer.scale})`,
                       opacity: layer.opacity,
-                    }}
+                    } as React.CSSProperties}
                   >
                     <div
-                      className="relative h-[62px] w-[170px] rounded-[16px] border"
+                      className="relative h-[36px] w-[98px] rounded-[10px] border sm:h-[62px] sm:w-[170px] sm:rounded-[16px]"
                       style={{
                         background:
                           "linear-gradient(180deg, rgba(224,242,255,0.94) 0%, rgba(148,213,255,0.92) 36%, rgba(78,171,255,0.48) 100%)",
@@ -1878,38 +1879,38 @@ export const RealAccountWelcomeModal = ({
                         boxShadow: "0 12px 24px rgba(55, 136, 237, 0.24)",
                       }}
                     >
-                      <div className="absolute inset-x-0 top-0 h-3 rounded-t-[16px] bg-white/55" />
-                      <div className="absolute inset-y-[10px] left-4 right-[52px] rounded-[10px] border border-white/50 bg-[linear-gradient(180deg,rgba(240,250,255,0.95),rgba(162,222,255,0.55))]" />
-                      <div className="absolute inset-y-0 right-[44px] w-[34px] bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(205,225,255,0.78))]" />
-                      <div className="absolute inset-y-0 right-[55px] w-[2px] bg-[#9ac7ff]" />
-                      <div className="absolute inset-y-0 right-[66px] w-[2px] bg-[#9ac7ff]" />
-                      <div className="absolute left-7 top-[19px] h-[7px] w-[58px] rounded-full bg-[#cbe8ff]" />
-                      <div className="absolute left-7 top-[31px] h-[5px] w-[40px] rounded-full bg-[#89caff]" />
+                      <div className="absolute inset-x-0 top-0 h-2 rounded-t-[10px] bg-white/55 sm:h-3 sm:rounded-t-[16px]" />
+                      <div className="absolute inset-y-[6px] left-2.5 right-[31px] rounded-[7px] border border-white/50 bg-[linear-gradient(180deg,rgba(240,250,255,0.95),rgba(162,222,255,0.55))] sm:inset-y-[10px] sm:left-4 sm:right-[52px] sm:rounded-[10px]" />
+                      <div className="absolute inset-y-0 right-[26px] w-[20px] bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(205,225,255,0.78))] sm:right-[44px] sm:w-[34px]" />
+                      <div className="absolute inset-y-0 right-[32px] w-[1px] bg-[#9ac7ff] sm:right-[55px] sm:w-[2px]" />
+                      <div className="absolute inset-y-0 right-[38px] w-[1px] bg-[#9ac7ff] sm:right-[66px] sm:w-[2px]" />
+                      <div className="absolute left-4 top-[11px] h-[4px] w-[34px] rounded-full bg-[#cbe8ff] sm:left-7 sm:top-[19px] sm:h-[7px] sm:w-[58px]" />
+                      <div className="absolute left-4 top-[18px] h-[3px] w-[24px] rounded-full bg-[#89caff] sm:left-7 sm:top-[31px] sm:h-[5px] sm:w-[40px]" />
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="absolute left-[18px] top-[58px] h-5 w-[2px] rotate-[-20deg] rounded-full bg-[#7bd0ff] shadow-[0_0_10px_rgba(123,208,255,0.8)]" />
-              <div className="absolute left-[34px] top-[112px] h-3 w-3 rounded-full bg-[#80cfff]/65 blur-[1px]" />
-              <div className="absolute left-[22px] top-[148px] h-6 w-[2px] rotate-[24deg] rounded-full bg-[#7bd0ff] shadow-[0_0_10px_rgba(123,208,255,0.7)]" />
-              <div className="absolute right-[26px] top-[50px] h-7 w-[2px] rotate-[26deg] rounded-full bg-[#7bd0ff] shadow-[0_0_10px_rgba(123,208,255,0.8)]" />
-              <div className="absolute right-[14px] top-[128px] h-4 w-4 rounded-full bg-[#80cfff]/60 blur-[1px]" />
-              <div className="absolute right-[36px] top-[160px] h-5 w-[2px] rotate-[-22deg] rounded-full bg-[#7bd0ff] shadow-[0_0_10px_rgba(123,208,255,0.75)]" />
+              <div className="absolute left-[12px] top-[31px] h-3 w-[2px] rotate-[-20deg] rounded-full bg-[#7bd0ff] shadow-[0_0_10px_rgba(123,208,255,0.8)] sm:left-[18px] sm:top-[58px] sm:h-5" />
+              <div className="absolute left-[20px] top-[60px] h-2 w-2 rounded-full bg-[#80cfff]/65 blur-[1px] sm:left-[34px] sm:top-[112px] sm:h-3 sm:w-3" />
+              <div className="absolute left-[14px] top-[78px] h-4 w-[2px] rotate-[24deg] rounded-full bg-[#7bd0ff] shadow-[0_0_10px_rgba(123,208,255,0.7)] sm:left-[22px] sm:top-[148px] sm:h-6" />
+              <div className="absolute right-[16px] top-[27px] h-4 w-[2px] rotate-[26deg] rounded-full bg-[#7bd0ff] shadow-[0_0_10px_rgba(123,208,255,0.8)] sm:right-[26px] sm:top-[50px] sm:h-7" />
+              <div className="absolute right-[8px] top-[68px] h-2.5 w-2.5 rounded-full bg-[#80cfff]/60 blur-[1px] sm:right-[14px] sm:top-[128px] sm:h-4 sm:w-4" />
+              <div className="absolute right-[22px] top-[84px] h-3.5 w-[2px] rotate-[-22deg] rounded-full bg-[#7bd0ff] shadow-[0_0_10px_rgba(123,208,255,0.75)] sm:right-[36px] sm:top-[160px] sm:h-5" />
             </div>
           </div>
 
-          <h2 className="text-center text-[22px] font-bold text-white sm:text-[24px]">
+          <h2 className="text-center text-[17px] font-bold leading-snug text-white sm:text-[24px]">
             Choose what you want to do first
           </h2>
-          <p className="mx-auto mt-4 max-w-[300px] text-center text-[17px] font-medium leading-8 text-[#dce9ff]">
+          <p className="mx-auto mt-2 max-w-[250px] text-center text-[13px] font-medium leading-6 text-[#dce9ff] sm:mt-4 sm:max-w-[300px] sm:text-[17px] sm:leading-8">
             Fund the live account, request a withdrawal, or keep practicing with a demo balance.
           </p>
 
-          <div className="mt-8 space-y-3">
+          <div className="mt-4 space-y-2.5 sm:mt-8 sm:space-y-3">
             <button
               onClick={onWithdraw}
-              className="w-full rounded-[14px] border px-5 py-3.5 text-[17px] font-semibold text-[#eef4ff] transition hover:bg-white/10"
+              className="w-full rounded-[11px] border px-4 py-2.5 text-[14px] font-semibold text-[#eef4ff] transition hover:bg-white/10 sm:rounded-[14px] sm:px-5 sm:py-3.5 sm:text-[17px]"
               style={{
                 background: "rgba(79, 94, 136, 0.72)",
                 borderColor: "rgba(155, 183, 236, 0.18)",
@@ -1919,7 +1920,7 @@ export const RealAccountWelcomeModal = ({
             </button>
             <button
               onClick={onDeposit}
-              className="w-full rounded-[14px] px-5 py-3.5 text-[17px] font-semibold text-white transition hover:brightness-105"
+              className="w-full rounded-[11px] px-4 py-2.5 text-[14px] font-semibold text-white transition hover:brightness-105 sm:rounded-[14px] sm:px-5 sm:py-3.5 sm:text-[17px]"
               style={{
                 background: "linear-gradient(180deg, #47adff 0%, #3397ef 100%)",
                 boxShadow: "0 14px 30px rgba(52, 140, 236, 0.32)",
@@ -1931,7 +1932,7 @@ export const RealAccountWelcomeModal = ({
 
           <button
             onClick={onUseDemo}
-            className="mt-6 w-full text-center text-[15px] font-medium text-[#55b7ff] transition hover:text-[#86cbff]"
+            className="mt-4 w-full text-center text-[12px] font-medium text-[#55b7ff] transition hover:text-[#86cbff] sm:mt-6 sm:text-[15px]"
           >
             Trade on Demo Account
           </button>
