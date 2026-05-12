@@ -1335,6 +1335,7 @@ const OscillatorPane = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  const timeAnchorSeriesRef = useRef<ISeriesApi<"Line"> | null>(null);
   const seriesRefs = useRef<Record<string, ChartSeriesApi>>({});
   const guideLineRefs = useRef<Record<string, IPriceLine>>({});
   const prevParamsRef = useRef<string>("");
@@ -1366,6 +1367,14 @@ const OscillatorPane = ({
       },
     });
     chartRef.current = chart;
+    timeAnchorSeriesRef.current = chart.addSeries(LineSeries, {
+      color: "rgba(0,0,0,0)",
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      crosshairMarkerVisible: false,
+      pointMarkersVisible: false,
+    });
 
     if (syncMainChart) {
       const mainTs = syncMainChart.timeScale();
@@ -1395,6 +1404,7 @@ const OscillatorPane = ({
         obs.disconnect();
         chart.remove();
         chartRef.current = null;
+        timeAnchorSeriesRef.current = null;
       };
     }
 
@@ -1403,7 +1413,12 @@ const OscillatorPane = ({
         chartRef.current.applyOptions({ width: containerRef.current.clientWidth, height: 90 });
     });
     obs.observe(containerRef.current);
-    return () => { obs.disconnect(); chart.remove(); chartRef.current = null; };
+    return () => {
+      obs.disconnect();
+      chart.remove();
+      chartRef.current = null;
+      timeAnchorSeriesRef.current = null;
+    };
   }, [syncMainChart]);
 
   useEffect(() => {
@@ -1466,6 +1481,7 @@ const OscillatorPane = ({
     }
 
     const outputs = calculateIndicator(indicator, history);
+    timeAnchorSeriesRef.current?.setData(history.map((candle) => ({ time: toChartTime(candle.time) })));
 
     outputs.forEach(out => {
       const outConf = conf.outputs.find(o => o.id === out.id);
@@ -1578,7 +1594,14 @@ const OscillatorPane = ({
         }
       }
     });
-  }, [getHistory, indicator, liveSignal, renderKey]);
+
+    if (syncMainChart) {
+      const visibleRange = syncMainChart.timeScale().getVisibleLogicalRange();
+      if (visibleRange) {
+        chartRef.current.timeScale().setVisibleLogicalRange(visibleRange);
+      }
+    }
+  }, [getHistory, indicator, liveSignal, renderKey, syncMainChart]);
 
   if (!indicator.visible) return null;
 
