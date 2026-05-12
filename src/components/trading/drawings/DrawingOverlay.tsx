@@ -65,6 +65,26 @@ const normalizeBoxPoints = (points: Point[]): Point[] => {
   return [corners.topLeft, corners.bottomRight];
 };
 
+const getSvgBoxCorners = (points: SvgPoint[]) => {
+  const [p1, p2] = points;
+  const leftX = Math.min(p1?.x ?? 0, p2?.x ?? 0);
+  const rightX = Math.max(p1?.x ?? 0, p2?.x ?? 0);
+  const topY = Math.min(p1?.y ?? 0, p2?.y ?? 0);
+  const bottomY = Math.max(p1?.y ?? 0, p2?.y ?? 0);
+
+  return {
+    topLeft: { x: leftX, y: topY },
+    topRight: { x: rightX, y: topY },
+    bottomRight: { x: rightX, y: bottomY },
+    bottomLeft: { x: leftX, y: bottomY },
+  } satisfies Record<BoxCornerId, SvgPoint>;
+};
+
+const normalizeSvgBoxPoints = (points: SvgPoint[]): SvgPoint[] => {
+  const corners = getSvgBoxCorners(points);
+  return [corners.topLeft, corners.bottomRight];
+};
+
 const getOppositeBoxCorner = (corner: BoxCornerId): BoxCornerId => {
   switch (corner) {
     case "topLeft":
@@ -249,8 +269,9 @@ export const DrawingOverlay = ({
   const [renderTick, setRenderTick] = useState(0);
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const pendingDragUpdateRef = useRef<{ id: string; points: Point[] } | null>(null);
+  const dragPreviewRef = useRef<{ id: string; tool: string; svgPoints: SvgPoint[] } | null>(null);
   const dragFrameRef = useRef<number | null>(null);
+  const rangeFrameRef = useRef<number | null>(null);
   const lastVisibleSvgPointsRef = useRef<Record<string, SvgPoint[]>>({});
   const previousTimeframeSecondsRef = useRef(timeframeSeconds);
 
@@ -265,31 +286,12 @@ export const DrawingOverlay = ({
   const getDefaultToolColor = (tool: string) =>
     resolveDrawingToolColor(tool, preferences.defaultColor, LEGACY_DEFAULT_COLORS[tool] ?? "#3498db");
 
-  const flushPendingDragUpdate = useCallback(() => {
-    if (dragFrameRef.current !== null) {
-      window.cancelAnimationFrame(dragFrameRef.current);
-      dragFrameRef.current = null;
-    }
-
-    const pending = pendingDragUpdateRef.current;
-    if (!pending) return;
-    pendingDragUpdateRef.current = null;
-    updateDrawing(pending.id, { points: pending.points });
-    setRenderTick((tick) => tick + 1);
-  }, [updateDrawing]);
-
-  const queueDragPointsUpdate = useCallback((id: string, points: Point[]) => {
-    pendingDragUpdateRef.current = { id, points };
-    if (dragFrameRef.current !== null) return;
-    dragFrameRef.current = window.requestAnimationFrame(() => {
-      dragFrameRef.current = null;
-      setRenderTick((tick) => tick + 1);
-    });
-  }, []);
-
   useEffect(() => () => {
     if (dragFrameRef.current !== null) {
       window.cancelAnimationFrame(dragFrameRef.current);
+    }
+    if (rangeFrameRef.current !== null) {
+      window.cancelAnimationFrame(rangeFrameRef.current);
     }
   }, []);
 
@@ -319,7 +321,7 @@ export const DrawingOverlay = ({
         event.preventDefault();
         setChartPointerNavigationEnabled(true);
         drag.current = null;
-        pendingDragUpdateRef.current = null;
+        dragPreviewRef.current = null;
         if (dragFrameRef.current !== null) {
           window.cancelAnimationFrame(dragFrameRef.current);
           dragFrameRef.current = null;
@@ -340,9 +342,21 @@ export const DrawingOverlay = ({
   // ─── Re-render on chart pan/zoom ──────────────────────────────────────────
   useEffect(() => {
     if (!chart) return;
-    const tick = () => setRenderTick(t => t + 1);
+    const tick = () => {
+      if (rangeFrameRef.current !== null) return;
+      rangeFrameRef.current = window.requestAnimationFrame(() => {
+        rangeFrameRef.current = null;
+        setRenderTick(t => t + 1);
+      });
+    };
     chart.timeScale().subscribeVisibleLogicalRangeChange(tick);
-    return () => chart.timeScale().unsubscribeVisibleLogicalRangeChange(tick);
+    return () => {
+      chart.timeScale().unsubscribeVisibleLogicalRangeChange(tick);
+      if (rangeFrameRef.current !== null) {
+        window.cancelAnimationFrame(rangeFrameRef.current);
+        rangeFrameRef.current = null;
+      }
+    };
   }, [chart]);
 
   // ─── Coordinate helpers ───────────────────────────────────────────────────
@@ -455,6 +469,40 @@ export const DrawingOverlay = ({
     return toAbstractFromSvg(relativePoint.x, relativePoint.y);
   };
 
+  const flushPendingDragUpdate = useCallback(() => {
+    if (dragFrameRef.current !== null) {
+      window.cancelAnimationFrame(dragFrameRef.current);
+      dragFrameRef.current = null;
+    }
+
+    const preview = dragPreviewRef.current;
+    if (!preview) return;
+
+    dragPreviewRef.current = null;
+    const nextPoints = preview.svgPoints
+      .map((point) => toAbstractFromSvg(point.x, point.y, { clamp: false }))
+      .filter((point): point is Point => point !== null);
+
+    if (nextPoints.length !== preview.svgPoints.length) {
+      setRenderTick((tick) => tick + 1);
+      return;
+    }
+
+    updateDrawing(preview.id, {
+      points: isBoxTool(preview.tool) ? normalizeBoxPoints(nextPoints) : nextPoints,
+    });
+    setRenderTick((tick) => tick + 1);
+  }, [updateDrawing]);
+
+  const queueDragSvgPreview = useCallback((id: string, tool: string, svgPoints: SvgPoint[]) => {
+    dragPreviewRef.current = { id, tool, svgPoints };
+    if (dragFrameRef.current !== null) return;
+    dragFrameRef.current = window.requestAnimationFrame(() => {
+      dragFrameRef.current = null;
+      setRenderTick((tick) => tick + 1);
+    });
+  }, []);
+
   useEffect(() => {
     if (!chart || !series || !svgRef.current) {
       previousTimeframeSecondsRef.current = timeframeSeconds;
@@ -498,9 +546,8 @@ export const DrawingOverlay = ({
     drawings.forEach((drawing) => {
       if (!drawing.visible || drawing.points.length === 0) return;
 
-      const pending = pendingDragUpdateRef.current;
-      const points = pending?.id === drawing.id ? pending.points : drawing.points;
-      const svgPoints = points.map(toSvg);
+      const preview = dragPreviewRef.current;
+      const svgPoints = preview?.id === drawing.id ? preview.svgPoints : drawing.points.map(toSvg);
       const hasUsablePoints = svgPoints.every((point) => (
         Number.isFinite(point.x) &&
         Number.isFinite(point.y) &&
@@ -875,32 +922,32 @@ export const DrawingOverlay = ({
 
     const deltaX = currentSvgPoint.x - d.anchorSvgX;
     const deltaY = currentSvgPoint.y - d.anchorSvgY;
-    const projectSvgPoint = (originalSvgPoint: SvgPoint) =>
-      toAbstractFromSvg(originalSvgPoint.x + deltaX, originalSvgPoint.y + deltaY, { clamp: false });
+    const projectSvgPoint = (originalSvgPoint: SvgPoint): SvgPoint => ({
+      x: originalSvgPoint.x + deltaX,
+      y: originalSvgPoint.y + deltaY,
+    });
 
     if (d.dragKind === "box-corner" && d.boxCorner) {
-      const originalCorners = getBoxCorners(d.originalPoints);
       const movingCornerSvg = d.originalBoxCornerSvgPoints?.[d.boxCorner];
-      const fixedCorner = originalCorners[getOppositeBoxCorner(d.boxCorner)];
-      if (!movingCornerSvg) return;
+      const fixedCornerSvg = d.originalBoxCornerSvgPoints?.[getOppositeBoxCorner(d.boxCorner)];
+      if (!movingCornerSvg || !fixedCornerSvg) return;
       const movingCorner = projectSvgPoint(movingCornerSvg);
-      if (!movingCorner) return;
-      const nextPoints = normalizeBoxPoints([movingCorner, fixedCorner]);
-      queueDragPointsUpdate(d.drawingId, nextPoints);
+      const nextSvgPoints = normalizeSvgBoxPoints([movingCorner, fixedCornerSvg]);
+      queueDragSvgPreview(d.drawingId, d.tool, nextSvgPoints);
       return;
     }
 
-    const newPts = d.originalPoints.map((p, i) => {
+    const newSvgPoints = d.originalSvgPoints.map((point, i) => {
       if (d.dragKind === "move") {
-        return projectSvgPoint(d.originalSvgPoints[i]) ?? p;
+        return projectSvgPoint(point);
       }
       if (d.dragKind === "point" && i === d.pointIdx) {
-        return projectSvgPoint(d.originalSvgPoints[i]) ?? p;
+        return projectSvgPoint(point);
       }
-      return p;
+      return point;
     });
 
-    queueDragPointsUpdate(d.drawingId, newPts);
+    queueDragSvgPreview(d.drawingId, d.tool, newSvgPoints);
   };
 
   // ─── Pointer Up ───────────────────────────────────────────────────────────
@@ -915,10 +962,8 @@ export const DrawingOverlay = ({
 
   // ─── Shape Renderers ─────────────────────────────────────────────────────
   const renderShape = (d: DrawingObject, isTemp = false) => {
-    const pending = pendingDragUpdateRef.current;
-    if (pending?.id === d.id) {
-      d = { ...d, points: pending.points };
-    }
+    const preview = dragPreviewRef.current;
+    const previewSvgPoints = preview?.id === d.id ? preview.svgPoints : null;
 
     const sel = selectedId === d.id && !isTemp;
     const { color, lineWidth: lw, lineStyle, fillColor } = d.style;
@@ -967,7 +1012,7 @@ export const DrawingOverlay = ({
       svgRef.current!.setPointerCapture(e.pointerId);
     };
 
-    const svgPts = d.points.map(toSvg);
+    const svgPts = previewSvgPoints ?? d.points.map(toSvg);
     if (svgPts.length === 0) return null;
     const p1 = svgPts[0];
 
@@ -1121,11 +1166,19 @@ export const DrawingOverlay = ({
 
     if (isBoxTool(d.tool)) {
       const boxCorners = getBoxCorners(d.points);
+      const svgBoxCorners = previewSvgPoints
+        ? getSvgBoxCorners(svgPts)
+        : {
+            topLeft: toSvg(boxCorners.topLeft),
+            topRight: toSvg(boxCorners.topRight),
+            bottomRight: toSvg(boxCorners.bottomRight),
+            bottomLeft: toSvg(boxCorners.bottomLeft),
+          };
       const cornerEntries: Array<{ id: BoxCornerId; point: SvgPoint; cursor: string }> = [
-        { id: "topLeft", point: toSvg(boxCorners.topLeft), cursor: "nwse-resize" },
-        { id: "topRight", point: toSvg(boxCorners.topRight), cursor: "nesw-resize" },
-        { id: "bottomRight", point: toSvg(boxCorners.bottomRight), cursor: "nwse-resize" },
-        { id: "bottomLeft", point: toSvg(boxCorners.bottomLeft), cursor: "nesw-resize" },
+        { id: "topLeft", point: svgBoxCorners.topLeft, cursor: "nwse-resize" },
+        { id: "topRight", point: svgBoxCorners.topRight, cursor: "nesw-resize" },
+        { id: "bottomRight", point: svgBoxCorners.bottomRight, cursor: "nwse-resize" },
+        { id: "bottomLeft", point: svgBoxCorners.bottomLeft, cursor: "nesw-resize" },
       ];
       const bx = cornerEntries[0].point.x;
       const by = cornerEntries[0].point.y;
@@ -1168,12 +1221,7 @@ export const DrawingOverlay = ({
                       anchorSvgY: relativePoint.y,
                       originalPoints: d.points.map(p => ({ ...p })),
                       originalSvgPoints: d.points.map(toSvg),
-                      originalBoxCornerSvgPoints: {
-                        topLeft: toSvg(boxCorners.topLeft),
-                        topRight: toSvg(boxCorners.topRight),
-                        bottomRight: toSvg(boxCorners.bottomRight),
-                        bottomLeft: toSvg(boxCorners.bottomLeft),
-                      },
+                      originalBoxCornerSvgPoints: svgBoxCorners,
                     };
                     svgRef.current!.setPointerCapture(e.pointerId);
                     setRenderTick(t => t + 1);
@@ -1497,8 +1545,8 @@ export const DrawingOverlay = ({
     if (!selectedId) return null;
     const d = drawings.find(dd => dd.id === selectedId);
     if (!d || d.points.length === 0) return null;
-    const pending = pendingDragUpdateRef.current;
-    const pts = (pending?.id === d.id ? pending.points : d.points).map(toSvg);
+    const preview = dragPreviewRef.current;
+    const pts = preview?.id === d.id ? preview.svgPoints : d.points.map(toSvg);
     const xs = pts.map(p => p.x);
     const ys = pts.map(p => p.y);
     return {
@@ -1515,9 +1563,14 @@ export const DrawingOverlay = ({
     <div ref={containerRef} className="absolute inset-0" style={{ pointerEvents: "none" }}>
       <svg
         ref={svgRef}
-        className="absolute inset-0 z-30 h-full w-full outline-none"
+        className="trading-drawing-overlay absolute inset-0 z-30 h-full w-full outline-none"
         tabIndex={0}
-        style={{ pointerEvents: svgPointerEvents, touchAction: svgPointerEvents === "auto" ? "none" : "pinch-zoom" }}
+        style={{
+          pointerEvents: svgPointerEvents,
+          touchAction: svgPointerEvents === "auto" ? "none" : "pinch-zoom",
+          transition: "none",
+          animation: "none",
+        }}
         onPointerDown={onSvgPointerDown}
         onPointerMove={onSvgPointerMove}
         onPointerUp={onSvgPointerUp}
@@ -1528,6 +1581,11 @@ export const DrawingOverlay = ({
           setActiveTool(null);
           setIsDrawing(false);
           drag.current = null;
+          dragPreviewRef.current = null;
+          if (dragFrameRef.current !== null) {
+            window.cancelAnimationFrame(dragFrameRef.current);
+            dragFrameRef.current = null;
+          }
           setShowColorEditor(false);
           setRenderTick(t => t + 1);
         }}

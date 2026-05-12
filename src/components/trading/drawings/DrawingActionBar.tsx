@@ -21,7 +21,7 @@ export const DrawingActionBar = ({ x, y, onEditColor }: Props) => {
 
   return (
     <div
-      className="absolute z-40 flex items-center gap-0.5 bg-[#1A1F2C]/95 border border-white/10 shadow-lg rounded-md px-1 py-0.5 backdrop-blur-sm"
+      className="trading-drawing-actionbar absolute z-40 flex items-center gap-0.5 bg-[#1A1F2C]/95 border border-white/10 shadow-lg rounded-md px-1 py-0.5 backdrop-blur-sm"
       style={{
         left: Math.max(4, x),
         top: Math.max(4, y - 44),

@@ -361,6 +361,14 @@
     transition-duration: 80ms !important;
   }
 
+  .trading-terminal .trading-drawing-overlay,
+  .trading-terminal .trading-drawing-overlay *,
+  .trading-terminal .trading-drawing-actionbar,
+  .trading-terminal .trading-drawing-actionbar * {
+    animation: none !important;
+    transition: none !important;
+  }
+
   html[data-trading-template="light"] .trading-terminal {
     --trading-workspace-bg: #dfe9f6;
     --trading-header-bg: #26364f;
