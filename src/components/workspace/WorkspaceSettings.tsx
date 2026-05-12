@@ -57,7 +57,10 @@ export const WorkspaceSettings = () => {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-[#181d2b] px-4 pb-6 pt-2 text-white no-scrollbar">
+    <div
+      className="h-full overflow-y-auto px-4 pb-6 pt-2 text-white no-scrollbar"
+      style={{ background: "var(--trading-workspace-panel-bg)" }}
+    >
       <div className="space-y-4">
         <div className="space-y-1.5">
           <FieldLabel>Language</FieldLabel>
@@ -65,6 +68,7 @@ export const WorkspaceSettings = () => {
             value={preferences.language}
             onChange={() => updatePreferences({ language: "en" })}
             className="h-10 w-full rounded-[3px] border border-[#596278] bg-[#1d2332] px-3 text-[12px] font-semibold text-white outline-none"
+            style={{ background: "var(--trading-panel-bg)", borderColor: "var(--trading-tool-border)" }}
           >
             <option value="en">English</option>
           </select>
@@ -76,6 +80,7 @@ export const WorkspaceSettings = () => {
             value={preferences.timezone}
             onChange={(event) => updatePreferences({ timezone: event.target.value })}
             className="h-10 w-full rounded-[3px] border border-[#596278] bg-[#1d2332] px-3 text-[12px] font-semibold text-white outline-none"
+            style={{ background: "var(--trading-panel-bg)", borderColor: "var(--trading-tool-border)" }}
           >
             {TIMEZONE_OPTIONS.map((timezone) => (
               <option key={timezone} value={timezone}>
@@ -120,7 +125,10 @@ export const WorkspaceSettings = () => {
         <div className="space-y-3">
           <div>
             <FieldLabel>Grid&apos;s opacity</FieldLabel>
-            <div className="flex h-9 items-center justify-between rounded-[3px] border border-[#596278] bg-[#242b3b] px-2">
+            <div
+              className="flex h-9 items-center justify-between rounded-[3px] border px-2"
+              style={{ background: "var(--trading-panel-bg)", borderColor: "var(--trading-tool-border)" }}
+            >
               <button
                 type="button"
                 onClick={() => updateGridOpacity(-1)}
@@ -229,7 +237,7 @@ const SectionLabel = ({ children }: { children: string }) => (
 );
 
 const FieldLabel = ({ children }: { children: string }) => (
-  <div className="ml-2 bg-[#181d2b] px-1 text-[9px] font-semibold text-[#7f8b99]">{children}</div>
+  <div className="ml-2 px-1 text-[9px] font-semibold text-[#7f8b99]" style={{ background: "var(--trading-workspace-panel-bg)" }}>{children}</div>
 );
 
 const SettingsCheck = ({
@@ -274,7 +282,10 @@ const ColorPalette = ({
       <span className="h-4 w-4 rounded-full" style={{ background: activeColor }} />
       <span className="text-[11px] font-bold text-white">{label}</span>
     </div>
-    <div className="flex w-max gap-2 rounded-[3px] bg-[#62697a] p-2">
+    <div
+      className="flex w-max gap-2 rounded-[3px] border p-2"
+      style={{ background: "var(--trading-panel-soft-bg)", borderColor: "var(--trading-border-color)" }}
+    >
       {colors.map((color) => {
         const selected = color.toLowerCase() === activeColor.toLowerCase();
 

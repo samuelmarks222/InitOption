@@ -174,8 +174,8 @@ const TradingHeader = ({
     <header
       className={`relative flex shrink-0 items-stretch justify-between ${showAccountDrop || showChartLayoutMenu ? "z-[90]" : "z-30"}`}
       style={{
-        background: "#1c1f2d",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
+        background: "var(--trading-header-bg)",
+        borderBottom: "1px solid var(--trading-border-color)",
         height: "72px",
       }}
     >
@@ -259,7 +259,7 @@ const TradingHeader = ({
           <Link
             to="/trade"
             className="flex h-full min-w-[260px] shrink items-center border-r px-4 xl:min-w-[430px] xl:px-6"
-            style={{ borderColor: "hsl(228 15% 14%)" }}
+            style={{ borderColor: "var(--trading-border-strong-color)" }}
           >
             {logoUrl ? (
               <div className="flex min-w-0 items-center gap-3 overflow-visible xl:gap-4">
@@ -297,7 +297,7 @@ const TradingHeader = ({
           <div
             ref={chartLayoutMenuRef}
             className="relative flex shrink-0 items-center border-r px-3"
-            style={{ borderColor: "hsl(228 15% 14%)" }}
+            style={{ borderColor: "var(--trading-border-strong-color)" }}
           >
             <button
               type="button"
@@ -307,6 +307,10 @@ const TradingHeader = ({
                   ? "border-[#5a84b8]/55 bg-[#1e3656]"
                   : "border-white/8 bg-[#121a27] hover:border-white/14 hover:bg-white/[0.06]"
               }`}
+              style={{
+                background: showChartLayoutMenu ? "var(--trading-tool-active-bg)" : "var(--trading-control-bg)",
+                borderColor: showChartLayoutMenu ? "var(--trading-tool-active-border)" : "var(--trading-control-border)",
+              }}
               title="Multi-screen layout"
               aria-label="Multi-screen layout"
             >
@@ -314,7 +318,10 @@ const TradingHeader = ({
             </button>
 
             {showChartLayoutMenu && (
-              <div className="absolute left-3 top-[calc(100%+10px)] z-[110] w-[220px] overflow-hidden rounded-[14px] border border-white/10 bg-[#111a2a]/96 p-2 shadow-[0_24px_54px_rgba(0,0,0,0.48)] backdrop-blur-sm">
+              <div
+                className="absolute left-3 top-[calc(100%+10px)] z-[110] w-[220px] overflow-hidden rounded-[14px] border p-2 shadow-[0_24px_54px_rgba(0,0,0,0.48)] backdrop-blur-sm"
+                style={{ background: "var(--trading-menu-bg)", borderColor: "var(--trading-menu-border)" }}
+              >
                 <div className="px-2 pb-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                   Multi-screen
                 </div>
@@ -360,7 +367,10 @@ const TradingHeader = ({
         </div>
 
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 pr-2 xl:flex-nowrap">
-          <div className="rounded-[14px] border border-white/5 bg-[#151c28] shadow-[0_12px_30px_rgba(7,12,22,0.24)]">
+          <div
+            className="rounded-[14px] border shadow-[0_12px_30px_rgba(7,12,22,0.24)]"
+            style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
+          >
             <NotificationBell />
           </div>
 
@@ -368,6 +378,7 @@ const TradingHeader = ({
             <button
               onClick={() => onOpenProfile()}
               className="group flex h-full items-center gap-3 rounded-[16px] border border-white/5 bg-[#151c28] px-3.5 shadow-[0_12px_30px_rgba(7,12,22,0.24)] transition-all hover:border-white/10 hover:bg-white/[0.06]"
+              style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
             >
               <div className="relative shrink-0">
                 {profile?.avatar_url ? (
@@ -394,6 +405,7 @@ const TradingHeader = ({
               id="tour-account-switch"
               onClick={() => setShowAccountDrop((value) => !value)}
               className="group flex h-full items-center gap-3 rounded-[16px] border border-white/5 bg-[#151c28] px-3 shadow-[0_12px_30px_rgba(7,12,22,0.24)] transition-all hover:border-white/10 hover:bg-white/[0.06] xl:px-3.5"
+              style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
             >
               <div className="min-w-0 text-left">
                 <div className={`font-copy text-[10px] font-black uppercase tracking-[0.18em] ${accountNameTextClass}`}>{accountTitle}</div>
@@ -446,7 +458,7 @@ const TradingHeader = ({
           <button
             onClick={onOpenWithdrawal}
             className="flex h-[38px] items-center gap-1.5 rounded px-3 text-[13px] font-bold text-white xl:px-4"
-            style={{ background: "hsl(228 16% 22%)", border: "1px solid hsl(228 15% 30%)" }}
+            style={{ background: "var(--trading-control-bg)", border: "1px solid var(--trading-control-border)" }}
           >
             Withdrawal
           </button>

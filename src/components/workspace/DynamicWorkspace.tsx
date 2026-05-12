@@ -52,11 +52,17 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament }:
           : "w-[350px] max-w-[calc(100vw-85px)]";
 
   return (
-    <div className={`h-full flex flex-col border-r border-[#ffffff10] z-30 shrink-0 bg-[#0E1217] shadow-[4px_0_24px_rgba(0,0,0,0.5)] transform transition-transform duration-300 ${workspaceWidthClass}`}>
+    <div
+      className={`h-full flex flex-col border-r z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.5)] transform transition-transform duration-300 ${workspaceWidthClass}`}
+      style={{ background: "var(--trading-workspace-panel-bg)", borderRightColor: "var(--trading-border-color)" }}
+    >
       
       {/* Workspace Header Component */}
       {!isImmersiveSupport && !isEmbeddedTournaments && !isDedicatedLeaderboard ? (
-      <div className="flex items-center justify-between p-4 border-b border-[#ffffff10] bg-[#1A1F26]">
+      <div
+        className="flex items-center justify-between p-4 border-b"
+        style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
+      >
         <h2 className="text-[14px] font-bold text-white uppercase tracking-wider">
           {workspaceTitle}
         </h2>

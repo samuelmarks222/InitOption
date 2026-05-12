@@ -110,8 +110,8 @@ const AssetInfo = ({
     <div
       className="relative h-[50px] shrink-0 overflow-hidden"
       style={{
-        background: "#1c2130",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        background: "var(--trading-tabs-bg)",
+        borderBottom: "1px solid var(--trading-border-color)",
       }}
     >
       <div
@@ -249,7 +249,8 @@ const AssetInfo = ({
         <button
           type="button"
           onClick={() => scrollTabs("left")}
-          className="absolute left-1.5 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[#151c28]/95 text-white shadow-[0_8px_18px_rgba(0,0,0,0.28)] transition-colors hover:bg-[#20283a]"
+          className="absolute left-1.5 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border text-[var(--trading-tool-text)] shadow-[0_8px_18px_rgba(0,0,0,0.28)] transition-colors hover:bg-[var(--trading-tool-hover-bg)]"
+          style={{ background: "var(--trading-tool-bg)", borderColor: "var(--trading-tool-border)" }}
           aria-label="Show previous assets"
         >
           <ChevronLeft className="h-3.5 w-3.5" strokeWidth={3} />
@@ -260,7 +261,8 @@ const AssetInfo = ({
         <button
           type="button"
           onClick={() => scrollTabs("right")}
-          className="absolute right-1.5 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[#151c28]/95 text-white shadow-[0_8px_18px_rgba(0,0,0,0.28)] transition-colors hover:bg-[#20283a]"
+          className="absolute right-1.5 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border text-[var(--trading-tool-text)] shadow-[0_8px_18px_rgba(0,0,0,0.28)] transition-colors hover:bg-[var(--trading-tool-hover-bg)]"
+          style={{ background: "var(--trading-tool-bg)", borderColor: "var(--trading-tool-border)" }}
           aria-label="Show more assets"
         >
           <ChevronRight className="h-3.5 w-3.5" strokeWidth={3} />

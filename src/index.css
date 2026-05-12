@@ -322,6 +322,36 @@
     font-weight: 700;
   }
 
+  .trading-terminal {
+    --trading-workspace-bg: #1a1e2b;
+    --trading-header-bg: #1c1f2d;
+    --trading-sidebar-bg: #1a1e2b;
+    --trading-workspace-panel-bg: #0e1217;
+    --trading-panel-bg: #1e2330;
+    --trading-panel-soft-bg: #303646;
+    --trading-tabs-bg: #1c2130;
+    --trading-chart-divider-bg: #222b3b;
+    --trading-chart-pane-bg: #0b1016;
+    --trading-border-color: rgba(255, 255, 255, 0.07);
+    --trading-border-strong-color: hsl(228 15% 14%);
+    --trading-control-bg: #151c28;
+    --trading-control-hover-bg: rgba(255, 255, 255, 0.07);
+    --trading-control-border: rgba(255, 255, 255, 0.06);
+    --trading-text-color: #f7fbff;
+    --trading-muted-color: #8f9bb0;
+    --trading-tool-bg: rgba(35, 42, 56, 0.98);
+    --trading-tool-hover-bg: #2a3446;
+    --trading-tool-active-bg: #2a3346;
+    --trading-tool-border: #2f3a4e;
+    --trading-tool-hover-border: #3b4a63;
+    --trading-tool-active-border: #445873;
+    --trading-tool-text: #e7edf6;
+    --trading-tool-active-text: #ffffff;
+    --trading-timeframe-text: #18d87d;
+    --trading-menu-bg: #1f2736;
+    --trading-menu-border: rgba(88, 102, 132, 0.7);
+  }
+
   html[data-trading-performance-mode="on"] .trading-terminal *,
   html[data-trading-performance-mode="on"] .trading-terminal *::before,
   html[data-trading-performance-mode="on"] .trading-terminal *::after {
@@ -332,15 +362,75 @@
   }
 
   html[data-trading-template="light"] .trading-terminal {
-    --trading-workspace-bg: #e7edf7;
+    --trading-workspace-bg: #dfe9f6;
+    --trading-header-bg: #26364f;
+    --trading-sidebar-bg: #2b3b56;
+    --trading-workspace-panel-bg: #33445f;
+    --trading-panel-bg: #30415c;
+    --trading-panel-soft-bg: #3b4d69;
+    --trading-tabs-bg: #d6e1ef;
+    --trading-chart-divider-bg: #b8c8dd;
+    --trading-chart-pane-bg: #e7edf7;
+    --trading-border-color: rgba(25, 42, 67, 0.2);
+    --trading-border-strong-color: rgba(32, 49, 75, 0.28);
+    --trading-control-bg: #344761;
+    --trading-control-hover-bg: #405775;
+    --trading-control-border: rgba(210, 224, 242, 0.18);
+    --trading-text-color: #f7fbff;
+    --trading-muted-color: #b6c2d3;
+    --trading-tool-bg: #edf4fb;
+    --trading-tool-hover-bg: #d7e5f5;
+    --trading-tool-active-bg: #1683f5;
+    --trading-tool-border: rgba(31, 49, 76, 0.48);
+    --trading-tool-hover-border: rgba(21, 65, 116, 0.62);
+    --trading-tool-active-border: #1683f5;
+    --trading-tool-text: #17243a;
+    --trading-tool-active-text: #ffffff;
+    --trading-timeframe-text: #0fa053;
+    --trading-menu-bg: #f3f7fc;
+    --trading-menu-border: rgba(31, 49, 76, 0.3);
   }
 
   html[data-trading-template="twilight"] .trading-terminal {
     --trading-workspace-bg: #172338;
+    --trading-header-bg: #182236;
+    --trading-sidebar-bg: #141d30;
+    --trading-workspace-panel-bg: #111a2a;
+    --trading-panel-bg: #202a3e;
+    --trading-panel-soft-bg: #2d3850;
+    --trading-tabs-bg: #1d2b43;
+    --trading-chart-divider-bg: #253957;
+    --trading-chart-pane-bg: #172338;
+    --trading-border-color: rgba(119, 153, 204, 0.13);
+    --trading-border-strong-color: rgba(119, 153, 204, 0.18);
+    --trading-control-bg: #172238;
+    --trading-control-hover-bg: rgba(105, 148, 212, 0.12);
+    --trading-control-border: rgba(119, 153, 204, 0.12);
+    --trading-text-color: #f3f8ff;
+    --trading-muted-color: #8ea0bc;
+    --trading-tool-bg: rgba(30, 42, 62, 0.98);
+    --trading-tool-hover-bg: #273a59;
+    --trading-tool-active-bg: #21446d;
+    --trading-tool-border: #344763;
+    --trading-tool-hover-border: #48648a;
+    --trading-tool-active-border: #5a8ed2;
+    --trading-tool-text: #edf5ff;
+    --trading-tool-active-text: #ffffff;
+    --trading-timeframe-text: #39df91;
+    --trading-menu-bg: #1c2840;
+    --trading-menu-border: rgba(89, 118, 158, 0.72);
   }
 
   html[data-trading-template="fullNight"] .trading-terminal {
     --trading-workspace-bg: #1a1e2b;
+    --trading-header-bg: #1c1f2d;
+    --trading-sidebar-bg: #1a1e2b;
+    --trading-workspace-panel-bg: #0e1217;
+    --trading-panel-bg: #1e2330;
+    --trading-panel-soft-bg: #303646;
+    --trading-tabs-bg: #1c2130;
+    --trading-chart-divider-bg: #222b3b;
+    --trading-chart-pane-bg: #0b1016;
   }
 
   .real-account-wallet-layer {

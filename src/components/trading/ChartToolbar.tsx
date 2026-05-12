@@ -74,8 +74,8 @@ const INDICATOR_DB: Record<string, { id: string; label: string; }[]> = {
 };
 
 const MODAL_STYLE = {
-  background: "#1f2736",
-  border: "1px solid rgba(88, 102, 132, 0.7)",
+  background: "var(--trading-menu-bg)",
+  border: "1px solid var(--trading-menu-border)",
   boxShadow: "0 18px 42px rgba(0,0,0,0.44)",
 };
 
@@ -152,17 +152,17 @@ const MODAL_STYLE = {
   }, [activeMenu, dismissMenu]);
 
   const desktopToolBase =
-    "flex h-[32px] w-[32px] items-center justify-center rounded-[4px] border border-[#2f3a4e] bg-[#232a38]/98 transition-colors duration-150";
+    "flex h-[32px] w-[32px] items-center justify-center rounded-[4px] border border-[var(--trading-tool-border)] bg-[var(--trading-tool-bg)] transition-colors duration-150";
 
   const menuBtnClass = (isActive: boolean, accent: "default" | "green" = "default") => {
     const idleClass =
       accent === "green"
-        ? "text-[#18d87d] hover:border-[#3b4a63] hover:bg-[#2a3446]"
-        : "text-[#e7edf6] hover:border-[#3b4a63] hover:bg-[#2a3446]";
+        ? "text-[var(--trading-timeframe-text)] hover:border-[var(--trading-tool-hover-border)] hover:bg-[var(--trading-tool-hover-bg)]"
+        : "text-[var(--trading-tool-text)] hover:border-[var(--trading-tool-hover-border)] hover:bg-[var(--trading-tool-hover-bg)]";
     const activeClass =
       accent === "green"
-        ? "border-[#2f3a4e] bg-[#232a38]/98 text-[#18d87d]"
-        : "border-[#445873] bg-[#2a3346]/98 text-white";
+        ? "border-[var(--trading-tool-active-border)] bg-[var(--trading-tool-active-bg)] text-[var(--trading-tool-active-text)]"
+        : "border-[var(--trading-tool-active-border)] bg-[var(--trading-tool-active-bg)] text-[var(--trading-tool-active-text)]";
 
     return `${desktopToolBase} ${isActive ? activeClass : idleClass}`;
   };
@@ -193,7 +193,7 @@ const MODAL_STYLE = {
             className={menuBtnClass(activeMenu === "time", "green")}
             title="Time Interval"
           >
-              <span className={`text-[12px] font-black tracking-[-0.03em] ${activeMenu === "time" ? "text-white" : "text-[#18d87d]"}`}>
+              <span className={`text-[12px] font-black tracking-[-0.03em] ${activeMenu === "time" ? "text-[var(--trading-tool-active-text)]" : "text-[var(--trading-timeframe-text)]"}`}>
                 {selectedTf}
               </span>
           </button>

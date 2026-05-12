@@ -25,9 +25,9 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
   return (
     <div
       className="relative w-[85px] h-full flex flex-col items-center border-r border-[#ffffff10] z-40 shrink-0 pb-4 overflow-hidden"
-      style={{ background: "#1a1e2b" }}
+      style={{ background: "var(--trading-sidebar-bg)", borderRightColor: "var(--trading-border-color)" }}
     >
-      <div className="absolute inset-0 bg-[#1a1e2b]" />
+      <div className="absolute inset-0" style={{ background: "var(--trading-sidebar-bg)" }} />
       <div className="relative z-10 flex h-full w-full flex-col items-center">
       
       {/* Quick Trade Widget */}
@@ -90,7 +90,7 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
 
       {/* Bottom User Engagement Widgets */}
       <div className="w-full flex items-center justify-center">
-        <div className="w-[50px] h-[1px] bg-[#ffffff1a] mb-4" />
+        <div className="w-[50px] h-[1px] mb-4" style={{ background: "var(--trading-border-color)" }} />
       </div>
       
       <div className="w-full flex flex-col items-center space-y-3 pb-2">

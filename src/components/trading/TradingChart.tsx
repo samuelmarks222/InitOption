@@ -2865,8 +2865,12 @@ const TradingChart = ({
           <>
             <div className="pointer-events-none absolute inset-y-0 left-0 z-[80] hidden sm:flex items-stretch">
               <div
-                className="h-full border-r border-[hsl(228_15%_14%)] bg-[#1a1e2b] shadow-none"
-                style={{ width: DESKTOP_SENTIMENT_RAIL_WIDTH }}
+                className="h-full border-r shadow-none"
+                style={{
+                  width: DESKTOP_SENTIMENT_RAIL_WIDTH,
+                  background: "var(--trading-workspace-bg)",
+                  borderRightColor: "var(--trading-border-strong-color)",
+                }}
               >
                 <TradeSentimentRail
                   higherPercent={pairSentiment.buy}

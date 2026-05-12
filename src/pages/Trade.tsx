@@ -1090,7 +1090,7 @@ const Trade = () => {
 
   return (
     <ProfileTourProvider>
-      <div className="trading-terminal h-[100dvh] bg-background flex flex-col overflow-hidden">
+      <div className="trading-terminal h-[100dvh] flex flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
         <GuidedTour enabled={tourEnabled} />
           <TradingHeader balance={currentBalance} demoBalance={demoBalance} accountType={accountType}
           onSwitchAccount={handleSwitchAccount} activeTabId={activeTabId} onSelectTab={handleSelectTab}
@@ -1103,7 +1103,7 @@ const Trade = () => {
           onOpenSettings={() => handleOpenProfile("settings")} onOpenHistory={() => {}}
           highlightDepositButton={Boolean(depositGuideReason)} />
 
-        <div className="flex-1 flex overflow-hidden min-h-0 bg-[#1a1e2b]">
+        <div className="flex-1 flex overflow-hidden min-h-0" style={{ background: "var(--trading-workspace-bg)" }}>
           {/* Left sidebar — desktop only */}
           {isDesktopViewport && (
           <div className="shrink-0">
@@ -1117,17 +1117,17 @@ const Trade = () => {
 
           {/* Desktop full-screen workspace overlays */}
           {activeWorkspace === "account" ? (
-            <div className="flex-1 w-full h-full relative z-30 bg-[#0a0d14]"><AccountGridOverlay onClose={() => setActiveWorkspace(null)} /></div>
+            <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}><AccountGridOverlay onClose={() => setActiveWorkspace(null)} /></div>
           ) : activeWorkspace === "more" ? (
-            <div className="flex-1 w-full h-full relative z-30 bg-[#0a0d14]"><AnalyticsGridOverlay onClose={() => setActiveWorkspace(null)} /></div>
+            <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}><AnalyticsGridOverlay onClose={() => setActiveWorkspace(null)} /></div>
           ) : activeWorkspace === "help" ? (
-            <div className="flex-1 w-full h-full relative z-30 bg-[#0a0d14]"><HelpCenterOverlay onClose={() => setActiveWorkspace(null)} /></div>
+            <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}><HelpCenterOverlay onClose={() => setActiveWorkspace(null)} /></div>
           ) : (
             <>
               {/* ── DESKTOP & TABLET: side-by-side chart + panel ── */}
               {isDesktopViewport ? (
               <div className="flex flex-1 overflow-hidden min-h-0">
-                <div id="tour-chart" className="flex-1 flex flex-col relative min-w-0 bg-[#1a1e2b]">
+                <div id="tour-chart" className="flex-1 flex flex-col relative min-w-0" style={{ background: "var(--trading-workspace-bg)" }}>
                   <div>
                     <AssetInfo asset={selectedAsset} onSelectAsset={() => {}} onOpenSelector={() => setShowAssetSelector(true)}
                       openTabs={openTabs} activeTabId={activeTabId} onSelectTab={handleSelectTab}
@@ -1135,7 +1135,8 @@ const Trade = () => {
                       activeTrades={visibleActiveTrades} livePrices={liveChartPrices} />
                   </div>
                   <div
-                    className={`grid flex-1 min-h-0 gap-[1px] bg-[#222b3b] ${getDesktopChartGridClass(chartLayoutMode)}`}
+                    className={`grid flex-1 min-h-0 gap-[1px] ${getDesktopChartGridClass(chartLayoutMode)}`}
+                    style={{ background: "var(--trading-chart-divider-bg)" }}
                   >
                     {desktopChartAssets.map((chartAsset, index) => {
                       const isPrimaryPane = index === 0;
@@ -1144,9 +1145,10 @@ const Trade = () => {
                       return (
                         <div
                           key={chartAsset.symbol}
-                          className={`relative flex min-h-0 flex-col overflow-hidden bg-[#0b1016] ${
+                          className={`relative flex min-h-0 flex-col overflow-hidden ${
                             chartLayoutMode > 1 ? "border border-transparent" : ""
                           } ${isActivePane && chartLayoutMode > 1 ? "border-[#4f86c8]/55 shadow-[inset_0_0_0_1px_rgba(104,166,255,0.18)]" : ""}`}
+                          style={{ background: "var(--trading-chart-pane-bg)" }}
                         >
                           {chartLayoutMode > 1 && (
                             <button
@@ -1233,12 +1235,12 @@ const Trade = () => {
                 </div>
               </div>
               ) : (
-              <div className="flex-1 flex flex-col overflow-hidden bg-[#1a1e2b]">
+              <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
                 {/* ── MOBILE: Chart + Trading Panel combined in a fixed flex layout ── */}
                 {/* Chart block — dynamically fills remaining vertical space */}
                 <div id="tour-chart" className="flex-1 min-h-0 relative flex flex-col pb-[250px] sm:pb-[262px]">
                   {/* Total portfolio bar matches reference immediately below tabs */}
-                  <div className="flex items-center justify-between px-4 shrink-0" style={{ height: "28px", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "#1a1e2b" }}>
+                  <div className="flex items-center justify-between px-4 shrink-0" style={{ height: "28px", borderBottom: "1px solid var(--trading-border-color)", background: "var(--trading-workspace-bg)" }}>
                     <span style={{ fontSize: "11px", color: "#7f8b99" }}>
                       {accountType === "tournament" ? "Tournament positions" : "Total portfolio"}
                     </span>
@@ -1267,7 +1269,7 @@ const Trade = () => {
 
                     {/* Mobile Indicator and Drawing Panels */}
                     {showIndicatorsPanel && (
-                      <div className="absolute top-0 left-0 right-0 bottom-0 z-50 bg-[#1a1e2b]">
+                      <div className="absolute top-0 left-0 right-0 bottom-0 z-50" style={{ background: "var(--trading-workspace-bg)" }}>
                         <IndicatorsPanel activeIndicators={standardActiveIndicators} onAddIndicator={handleAddIndicator}
                           onUpdateIndicator={handleUpdateIndicator} onRemoveIndicator={handleRemoveIndicator}
                           editingIndicatorId={editingIndicatorId}
@@ -1276,7 +1278,7 @@ const Trade = () => {
                       </div>
                     )}
                     {showDrawingsPanel && (
-                      <div className="absolute top-0 left-0 right-0 bottom-0 z-50 bg-[#1a1e2b]">
+                      <div className="absolute top-0 left-0 right-0 bottom-0 z-50" style={{ background: "var(--trading-workspace-bg)" }}>
                         <DrawingsPanel onClose={() => setShowDrawingsPanel(false)} />
                       </div>
                     )}

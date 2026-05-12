@@ -896,7 +896,7 @@ const TradingPanel = ({
   return (
     <>
       <aside className={`font-copy w-full lg:w-[210px] xl:w-[220px] h-full min-h-[190px] shrink-0 flex flex-col text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none ${showTimeSwitcher ? "overflow-visible lg:overflow-hidden" : "overflow-hidden"} ${mobileDocked ? "rounded-t-[16px]" : ""}`}
-        style={{ background: "#1e2330" }}>
+        style={{ background: "var(--trading-panel-bg)" }}>
 
         {/* ── Asset Header & Pending Toggle (Single Row) ──────────────── */}
         <div className="flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-4 lg:pt-3.5 lg:pb-1">
@@ -1140,10 +1140,16 @@ const TradingPanel = ({
         </div>
 
         {/* ── Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) ── */}
-        <div className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:flex flex-1'} flex-col overflow-hidden border-t border-[#161c28]/70`} style={{ background: "#303646" }}>
+        <div
+          className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:flex flex-1'} flex-col overflow-hidden border-t`}
+          style={{ background: "var(--trading-panel-soft-bg)", borderTopColor: "var(--trading-border-color)" }}
+        >
           
           {/* ── Tabs: History / Pending ───────────────────────────────── */}
-          <div className="flex items-end gap-1.5 border-b border-white/6 px-2.5 pt-2" style={{ background: "rgba(43, 49, 64, 0.98)" }}>
+          <div
+            className="flex items-end gap-1.5 border-b px-2.5 pt-2"
+            style={{ background: "color-mix(in srgb, var(--trading-panel-soft-bg) 84%, #111827)", borderBottomColor: "var(--trading-border-color)" }}
+          >
             <button
               onClick={() => setActiveTab("trades")}
               className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "trades" ? "bg-[#33394a] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
