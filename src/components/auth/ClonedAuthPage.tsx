@@ -29,7 +29,7 @@ const bottomStats = [
 
 const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   const navigate = useNavigate();
-  const { signIn, signUp, signInWithGoogle, user, loading: authLoading, sendEmailVerificationCode } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user, loading: authLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -98,27 +98,12 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
       return;
     }
 
-    // Store email for verification prompt
     setVerificationEmail(email);
     setShowVerificationPrompt(true);
-
-    // Try to send verification code after a short delay to ensure user is created
-    setTimeout(() => {
-      sendEmailVerificationCode()
-        .then(() => {
-          toast({
-            title: "Verification email sent",
-            description: `Check ${email} for a verification link to complete your registration.`,
-          });
-        })
-        .catch((err) => {
-          console.error("Failed to send verification email:", err);
-          toast({
-            title: "Verification email",
-            description: `Check ${email} for your verification link. If you don't see it, you can request a new one from your account settings.`,
-          });
-        });
-    }, 1000);
+    toast({
+      title: "Confirmation email sent",
+      description: `Check ${email} and click the confirmation link to activate your account.`,
+    });
   };
 
   if (authLoading) {
@@ -244,7 +229,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
             <div className="mt-6 space-y-4">
               <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4">
                 <p className="text-sm text-foreground">
-                  📧 <strong>Check your email</strong> at <strong>{verificationEmail}</strong>
+                  <strong>Check your email</strong> at <strong>{verificationEmail}</strong>
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">
                   Look for an email from Init Option with the subject "Confirm your email" and click the verification link inside.

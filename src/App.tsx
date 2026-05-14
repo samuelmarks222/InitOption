@@ -18,6 +18,7 @@ import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 import PublicInfoPage from "./pages/PublicInfoPage";
 import PublicTournamentDetailPage from "./pages/PublicTournamentDetailPage";
@@ -129,6 +130,7 @@ const App = () => {
                         />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
+                        <Route path="/auth/callback" element={<AuthCallback />} />
                         <Route path="/dashboard" element={withRouteSuspense(<ProtectedRoute><Dashboard /></ProtectedRoute>)} />
                         <Route path="/trade" element={withRouteSuspense(<ProtectedRoute><Trade /></ProtectedRoute>)} />
                         <Route path="/trade/*" element={withRouteSuspense(<ProtectedRoute><Trade /></ProtectedRoute>)} />

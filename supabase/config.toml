@@ -1,1 +1,5 @@
 project_id = "nkfbbikqcossnashmraz"
+
+[auth.email.template.confirmation]
+subject = "Confirm your Init Option email"
+content_path = "./templates/confirmation.html"

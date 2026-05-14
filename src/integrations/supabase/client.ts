@@ -58,6 +58,7 @@ export const supabase = createClient<Database>(
       storage: resolveAuthStorage(),
       persistSession: isSupabaseConfigured,
       autoRefreshToken: isSupabaseConfigured,
+      detectSessionInUrl: isSupabaseConfigured,
     },
   }
 );

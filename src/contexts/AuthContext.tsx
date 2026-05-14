@@ -121,7 +121,11 @@ const readString = (value: unknown) => (typeof value === "string" && value.trim(
 const getEmailVerifiedAt = (authUser?: User | null) => {
   if (!authUser) return null;
 
-  return readString(asObjectRecord(authUser.user_metadata).platform_email_verified_at);
+  return (
+    readString(asObjectRecord(authUser.user_metadata).platform_email_verified_at) ??
+    readString(authUser.email_confirmed_at) ??
+    readString(authUser.confirmed_at)
+  );
 };
 
 const deriveProfileIdentity = (authUser: User | null | undefined, userId: string) => {
@@ -448,7 +452,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [fetchProfile, user]);
 
-  const signUp = async (email: string, password: string, username?: string, referredByCode?: string) => {
+  useEffect(() => {
+    if (!user) return;
+
+    const metadata = asObjectRecord(user.user_metadata);
+    if (readString(metadata.platform_email_verified_at)) return;
+
+    const confirmedAt = readString(user.email_confirmed_at) ?? readString(user.confirmed_at);
+    if (!confirmedAt) return;
+
+    let isActive = true;
+    const sanitizedMetadata = getSanitizedUserMetadata(user);
+
+    saveProfileCache(user.id, {
+      platform_email_verified_at: confirmedAt,
+    });
+
+    void supabase.auth
+      .updateUser({
+        data: {
+          ...sanitizedMetadata,
+          platform_email_verified_at: confirmedAt,
+        },
+      })
+      .then(({ data, error }) => {
+        if (!isActive || error || !data.user) return;
+        setUser(data.user);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [user]);
+
+  const getEmailConfirmationRedirectUrl = () => {
+    const restorePath = getAuthRestorePath();
+    const nextPath = restorePath || "/trade";
+    return `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+  };
+
+  const toAuthError = (message: string, status = 400) =>
+    ({
+      name: "AuthApiError",
+      message,
+      status,
+    }) as AuthError;
+
+  const signUpWithSupabaseConfirmation = async (
+    email: string,
+    password: string,
+    username?: string,
+    referredByCode?: string,
+  ) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -457,11 +512,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           username: username || email.split("@")[0],
           referred_by_code: referredByCode ? referredByCode.trim().toUpperCase() : undefined,
         },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: getEmailConfirmationRedirectUrl(),
       },
     });
 
     return { error };
+  };
+
+  const signUp = async (email: string, password: string, username?: string, referredByCode?: string) => {
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          username,
+          referredByCode,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as { code?: string; error?: string };
+
+      if (response.ok) {
+        return { error: null };
+      }
+
+      if (response.status === 501 && payload.code === "custom_email_unavailable") {
+        return signUpWithSupabaseConfirmation(email, password, username, referredByCode);
+      }
+
+      return {
+        error: toAuthError(payload.error || "Registration failed. Please try again.", response.status),
+      };
+    } catch {
+      return signUpWithSupabaseConfirmation(email, password, username, referredByCode);
+    }
   };
 
   const signIn = async (email: string, password: string) => {
