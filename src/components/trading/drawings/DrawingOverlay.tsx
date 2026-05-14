@@ -565,7 +565,7 @@ export const DrawingOverlay = ({
     lastVisibleSvgPointsRef.current = nextSnapshots;
   }, [chart, drawings, renderTick, series, timeframeSeconds]);
 
-  const setChartPointerNavigationEnabled = (enabled: boolean) => {
+  const setChartPointerNavigationEnabled = useCallback((enabled: boolean) => {
     if (!chart) return;
     chart.applyOptions({
       handleScroll: {
@@ -577,7 +577,53 @@ export const DrawingOverlay = ({
         axisPressedMouseMove: enabled,
       },
     });
-  };
+  }, [chart]);
+
+  const finishPointerInteraction = useCallback((pointerId?: number) => {
+    const hadDrag = Boolean(drag.current);
+    drag.current = null;
+
+    if (pointerId !== undefined && svgRef.current?.hasPointerCapture(pointerId)) {
+      try {
+        svgRef.current.releasePointerCapture(pointerId);
+      } catch {
+        // Mobile browsers can clear pointer capture before React receives pointerup.
+      }
+    }
+
+    if (hadDrag) {
+      flushPendingDragUpdate();
+    }
+
+    setChartPointerNavigationEnabled(true);
+
+    if (hadDrag) {
+      setRenderTick(t => t + 1);
+    }
+  }, [flushPendingDragUpdate, setChartPointerNavigationEnabled]);
+
+  useEffect(() => () => {
+    drag.current = null;
+    dragPreviewRef.current = null;
+    setChartPointerNavigationEnabled(true);
+  }, [setChartPointerNavigationEnabled]);
+
+  useEffect(() => {
+    const releaseIfDragging = () => {
+      if (!drag.current) return;
+      finishPointerInteraction();
+    };
+
+    window.addEventListener("pointerup", releaseIfDragging, true);
+    window.addEventListener("pointercancel", releaseIfDragging, true);
+    window.addEventListener("blur", releaseIfDragging);
+
+    return () => {
+      window.removeEventListener("pointerup", releaseIfDragging, true);
+      window.removeEventListener("pointercancel", releaseIfDragging, true);
+      window.removeEventListener("blur", releaseIfDragging);
+    };
+  }, [finishPointerInteraction]);
 
   useEffect(() => {
     if (!chart) return;
@@ -952,11 +998,11 @@ export const DrawingOverlay = ({
 
   // ─── Pointer Up ───────────────────────────────────────────────────────────
   const onSvgPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (drag.current) svgRef.current?.releasePointerCapture(e.pointerId);
-    flushPendingDragUpdate();
-    setChartPointerNavigationEnabled(true);
-    drag.current = null;
-    setRenderTick(t => t + 1);
+    if (drag.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    finishPointerInteraction(e.pointerId);
     if (isDrawing) { /* keep drawing active */ }
   };
 
@@ -1575,9 +1621,10 @@ export const DrawingOverlay = ({
         onPointerMove={onSvgPointerMove}
         onPointerUp={onSvgPointerUp}
         onPointerCancel={onSvgPointerUp}
+        onLostPointerCapture={() => finishPointerInteraction()}
         onContextMenu={e => {
           e.preventDefault();
-          setChartPointerNavigationEnabled(true);
+          finishPointerInteraction();
           setActiveTool(null);
           setIsDrawing(false);
           drag.current = null;

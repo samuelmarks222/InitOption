@@ -1701,11 +1701,22 @@ const TradingChart = ({
   const chartTextColor = useMemo(() => getTradingChartTextColor(tradingPreferences), [tradingPreferences]);
   const chartGridColor = useMemo(() => getTradingGridColor(tradingPreferences), [tradingPreferences]);
   const chartViewportStyle = useMemo<React.CSSProperties>(() => {
+    const mobileTouchSurface: React.CSSProperties = {
+      touchAction: "none",
+      overscrollBehavior: "contain",
+      WebkitUserSelect: "none",
+      userSelect: "none",
+    };
+
     if (!tradingPreferences.chartBackgroundImage) {
-      return { background: effectiveChartTheme.bg };
+      return {
+        ...mobileTouchSurface,
+        background: effectiveChartTheme.bg,
+      };
     }
 
     return {
+      ...mobileTouchSurface,
       backgroundColor: tradingPreferences.template === "light" ? "#dfe7f2" : "#111827",
       backgroundImage: `linear-gradient(rgba(11,16,24,0.34), rgba(11,16,24,0.34)), url("${tradingPreferences.chartBackgroundImage}")`,
       backgroundPosition: "center",
