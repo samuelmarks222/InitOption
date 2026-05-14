@@ -38,21 +38,26 @@ describe("deterministic market feed", () => {
     expect(lastFiveMinuteCandle.low).toBe(Math.min(...sourceMinuteCandles.map((candle) => candle.low)));
   });
 
-  it("keeps 1h candles aligned with the underlying 1m candles", () => {
+  it("renders 30m and higher candles from their own smoother professional range", () => {
     const nowSec = 1_711_111_111;
     const engine = new OTCPriceEngine("GBP/USD", 1.2745);
-    const minuteHistory = engine.generateHistory(TIMEFRAMES["1m"], nowSec);
+    const thirtyMinuteHistory = engine.generateHistory(TIMEFRAMES["30m"], nowSec);
     const hourlyHistory = engine.generateHistory(TIMEFRAMES["1h"], nowSec);
+    const dailyHistory = engine.generateHistory(TIMEFRAMES["1D"], nowSec);
+    const average = (values: number[]) =>
+      values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length);
+    const averageRange = (candles: typeof hourlyHistory) =>
+      average(candles.slice(-40).map((candle) => candle.high - candle.low));
+    const averageBody = (candles: typeof hourlyHistory) =>
+      average(candles.slice(-40).map((candle) => Math.abs(candle.close - candle.open)));
     const lastHourlyCandle = hourlyHistory[hourlyHistory.length - 1];
-    const sourceMinuteCandles = minuteHistory.filter(
-      (candle) => Math.floor(candle.time / TIMEFRAMES["1h"].seconds) * TIMEFRAMES["1h"].seconds === lastHourlyCandle.time,
-    );
 
-    expect(sourceMinuteCandles).toHaveLength(60);
-    expect(lastHourlyCandle.open).toBe(sourceMinuteCandles[0].open);
-    expect(lastHourlyCandle.close).toBe(sourceMinuteCandles[sourceMinuteCandles.length - 1].close);
-    expect(lastHourlyCandle.high).toBe(Math.max(...sourceMinuteCandles.map((candle) => candle.high)));
-    expect(lastHourlyCandle.low).toBe(Math.min(...sourceMinuteCandles.map((candle) => candle.low)));
+    expect(thirtyMinuteHistory[thirtyMinuteHistory.length - 1].time % TIMEFRAMES["30m"].seconds).toBe(0);
+    expect(lastHourlyCandle.time % TIMEFRAMES["1h"].seconds).toBe(0);
+    expect(dailyHistory[dailyHistory.length - 1].time % TIMEFRAMES["1D"].seconds).toBe(0);
+    expect(averageRange(hourlyHistory)).toBeLessThan(averageRange(thirtyMinuteHistory) * 2.2);
+    expect(averageRange(dailyHistory)).toBeLessThan(1.2745 * 0.012);
+    expect(averageRange(hourlyHistory)).toBeGreaterThan(averageBody(hourlyHistory));
   });
 
   it("keeps 1s candles readable with visible wicks", () => {

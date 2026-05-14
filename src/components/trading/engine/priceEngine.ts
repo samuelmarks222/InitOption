@@ -57,16 +57,17 @@ export const TIMEFRAMES: Record<string, TimeframeConfig> = {
   "5m": { label: "5m", seconds: 300, updateIntervalMs: 250, historical: 220, bodyPips: 18, wickPips: 12 },
   "10m": { label: "10m", seconds: 600, updateIntervalMs: 350, historical: 200, bodyPips: 24, wickPips: 16 },
   "15m": { label: "15m", seconds: 900, updateIntervalMs: 500, historical: 190, bodyPips: 30, wickPips: 20 },
-  "30m": { label: "30m", seconds: 1800, updateIntervalMs: 1000, historical: 180, bodyPips: 45, wickPips: 30 },
-  "1h": { label: "1h", seconds: 3600, updateIntervalMs: 1500, historical: 160, bodyPips: 70, wickPips: 50 },
-  "2h": { label: "2h", seconds: 7200, updateIntervalMs: 2000, historical: 150, bodyPips: 95, wickPips: 68 },
-  "3h": { label: "3h", seconds: 10800, updateIntervalMs: 2500, historical: 145, bodyPips: 118, wickPips: 84 },
-  "4h": { label: "4h", seconds: 14400, updateIntervalMs: 3000, historical: 140, bodyPips: 140, wickPips: 100 },
-  "12h": { label: "12h", seconds: 43200, updateIntervalMs: 4000, historical: 120, bodyPips: 220, wickPips: 160 },
-  "1D": { label: "1D", seconds: 86400, updateIntervalMs: 5000, historical: 110, bodyPips: 300, wickPips: 200 },
+  "30m": { label: "30m", seconds: 1800, updateIntervalMs: 1000, historical: 180, bodyPips: 34, wickPips: 18 },
+  "1h": { label: "1h", seconds: 3600, updateIntervalMs: 1500, historical: 160, bodyPips: 46, wickPips: 24 },
+  "2h": { label: "2h", seconds: 7200, updateIntervalMs: 2000, historical: 150, bodyPips: 58, wickPips: 30 },
+  "3h": { label: "3h", seconds: 10800, updateIntervalMs: 2500, historical: 145, bodyPips: 66, wickPips: 34 },
+  "4h": { label: "4h", seconds: 14400, updateIntervalMs: 3000, historical: 140, bodyPips: 74, wickPips: 38 },
+  "12h": { label: "12h", seconds: 43200, updateIntervalMs: 4000, historical: 120, bodyPips: 96, wickPips: 48 },
+  "1D": { label: "1D", seconds: 86400, updateIntervalMs: 5000, historical: 110, bodyPips: 116, wickPips: 58 },
 };
 
-const HISTORY_CACHE_VERSION = 6;
+const HIGH_TIMEFRAME_DIRECT_SECONDS = 30 * 60;
+const HISTORY_CACHE_VERSION = 7;
 const HISTORY_MEMORY_CACHE_LIMIT = 48;
 const historyMemoryCache = new Map<string, OHLCCandle[]>();
 
@@ -203,7 +204,9 @@ export class OTCPriceEngine {
     };
     let candles: OHLCCandle[];
 
-    if (effectiveConfig.seconds < TIMEFRAMES["1m"].seconds) {
+    if (effectiveConfig.seconds >= HIGH_TIMEFRAME_DIRECT_SECONDS) {
+      candles = this.getClosedHistory(effectiveConfig, effectiveConfig.historical, nowSec);
+    } else if (effectiveConfig.seconds < TIMEFRAMES["1m"].seconds) {
       candles = this.aggregateFromBase(effectiveConfig, TIMEFRAMES["1s"], nowSec);
     } else if (effectiveConfig.seconds <= TIMEFRAMES["1h"].seconds) {
       candles = this.aggregateFromBase(effectiveConfig, TIMEFRAMES["1m"], nowSec);

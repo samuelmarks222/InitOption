@@ -383,6 +383,18 @@ const MIN_BAR_SPACING_MAP: Record<string, number> = {
   "1D": 6,
 };
 
+const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
+
+const getMainPriceScaleMargins = (timeframe: SupportedChartTimeframe) => {
+  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
+
+  if (seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS) {
+    return { top: 0.18, bottom: 0.18 };
+  }
+
+  return { top: 0.1, bottom: 0.1 };
+};
+
 const getTargetVisibleBars = (containerWidth: number, timeframe: SupportedChartTimeframe) => {
   const safeWidth = Math.max(320, containerWidth);
   const targetSpacing = BAR_SPACING_MAP[timeframe] ?? BAR_SPACING_MAP["1m"];
@@ -2366,6 +2378,16 @@ const TradingChart = ({
       secondsVisible: tf.seconds < 60,
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
     });
+    chartRef.current.applyOptions({
+      rightPriceScale: {
+        borderColor: THEME.border,
+        scaleMargins: getMainPriceScaleMargins(selectedTf),
+        minimumWidth: SYNCED_PRICE_SCALE_MIN_WIDTH,
+        entireTextOnly: true,
+        ticksVisible: true,
+        borderVisible: true,
+      },
+    });
     const defaultFrom = Math.max(0, history.length - initialVisibleBars);
     chartRef.current.timeScale().setVisibleLogicalRange({
       from: defaultFrom,
@@ -2412,7 +2434,7 @@ const TradingChart = ({
 
     aggregatorRef.current = new CandleAggregator(step, handleCandleClose, handleCandleUpdate);
     aggregatorRef.current.setSeedCandle(seedCandle, nowSec);
-    handleCandleUpdate(seedCandle, nowSec);
+    handleCandleUpdate(aggregatorRef.current.getCurrentCandle() ?? seedCandle, nowSec);
 
     // ── Tick loop (drives price engine + feeds aggregator) ─────────────────
     marketFeedRef.current = createMarketDataFeed({
@@ -2516,6 +2538,16 @@ const TradingChart = ({
       timeVisible: true,
       secondsVisible: tf.seconds < 60,
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
+    });
+    chart.applyOptions({
+      rightPriceScale: {
+        borderColor: THEME.border,
+        scaleMargins: getMainPriceScaleMargins(selectedTf),
+        minimumWidth: SYNCED_PRICE_SCALE_MIN_WIDTH,
+        entireTextOnly: true,
+        ticksVisible: true,
+        borderVisible: true,
+      },
     });
 
     if (dataPointCount <= 0) {
