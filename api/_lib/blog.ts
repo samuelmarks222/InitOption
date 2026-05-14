@@ -79,6 +79,15 @@ const getFallbackBlogPayload = (): ManagedBlogPayload => {
   };
 };
 
+const mergeBySlug = <T extends { slug: string }>(fallbackEntries: T[], managedEntries: T[]) => {
+  const entriesBySlug = new Map<string, T>();
+
+  fallbackEntries.forEach((entry) => entriesBySlug.set(entry.slug, entry));
+  managedEntries.forEach((entry) => entriesBySlug.set(entry.slug, entry));
+
+  return Array.from(entriesBySlug.values());
+};
+
 const loadManagedBlogPayload = async (): Promise<ManagedBlogPayload> => {
   const { anonKey, url } = getSupabaseConfig();
 
@@ -110,17 +119,15 @@ const loadManagedBlogPayload = async (): Promise<ManagedBlogPayload> => {
     const websiteContent = normalizeWebsiteContent(row?.website_content ?? "", platformName);
     const managedBlog = (websiteContent as WebsiteContentBlogLike).blog;
     const fallback = getFallbackBlogPayload();
-    const categories = Array.isArray(managedBlog?.categories) && managedBlog.categories.length > 0
-      ? managedBlog.categories
-      : fallback.categories;
-    const posts = Array.isArray(managedBlog?.posts) && managedBlog.posts.length > 0
-      ? managedBlog.posts
-      : fallback.posts;
+    const managedCategories = Array.isArray(managedBlog?.categories) ? managedBlog.categories : [];
+    const managedPosts = Array.isArray(managedBlog?.posts) ? managedBlog.posts : [];
+    const categories = mergeBySlug(fallback.categories, managedCategories);
+    const posts = mergeBySlug(fallback.posts, managedPosts);
 
     return {
       categories,
       posts: sortBlogPostsByDate(posts.filter((post) => post.status === "published")),
-      usesFallback: !hasManagedBlogPostsConfig(row?.website_content),
+      usesFallback: !hasManagedBlogPostsConfig(row?.website_content) || managedPosts.length === 0,
     };
   } catch {
     return getFallbackBlogPayload();
