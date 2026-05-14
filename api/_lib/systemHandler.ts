@@ -32,6 +32,13 @@ type KycReviewPayload = {
   userId?: string;
 };
 
+type SignupPayload = {
+  email?: unknown;
+  password?: unknown;
+  referredByCode?: unknown;
+  username?: unknown;
+};
+
 type AdminAuthUser = {
   created_at?: string;
   email?: string | null;
@@ -63,6 +70,8 @@ const DEFAULT_PUBLIC_BONUS_PAYLOAD = {
   depositBonusEnabled: true,
   depositBonusPercent: 70,
 };
+const DEFAULT_PLATFORM_NAME = "Init Option";
+const DEFAULT_SUPPORT_EMAIL = "support@initoption.com";
 
 const getQueryString = (value: string | string[] | undefined) => {
   if (Array.isArray(value)) return value[0] ?? "";
@@ -77,6 +86,25 @@ const asString = (value: unknown) => {
 
 const asObjectRecord = (value: unknown) =>
   value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const normalizeEmail = (value: unknown) => (asString(value) ?? "").toLowerCase();
+
+const resolveSignupBaseUrl = (request: ApiRequest) => {
+  const configuredUrl = process.env.APP_BASE_URL?.trim();
+  if (configuredUrl) return configuredUrl.replace(/\/+$/, "");
+
+  const proto = getHeaderValue(request.headers ?? {}, "x-forwarded-proto") || "https";
+  const host = getHeaderValue(request.headers ?? {}, "x-forwarded-host") || getHeaderValue(request.headers ?? {}, "host");
+  return host ? `${proto}://${host.replace(/\/+$/, "")}` : "http://localhost:3000";
+};
 
 const parseBearerToken = (authorizationHeader: string) => {
   const trimmed = authorizationHeader.trim();
@@ -457,6 +485,204 @@ const handleManifest = async (request: ApiRequest, response: ApiResponse) => {
   response.status(200).send(body);
 };
 
+const sendViaResend = async ({
+  from,
+  html,
+  subject,
+  text,
+  to,
+}: {
+  from: string;
+  html: string;
+  subject: string;
+  text: string;
+  to: string;
+}) => {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) {
+    throw new Error("Missing RESEND_API_KEY.");
+  }
+
+  const resendResponse = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      html,
+      subject,
+      text,
+      to: [to],
+    }),
+  });
+
+  if (!resendResponse.ok) {
+    const errorBody = await resendResponse.text();
+    throw new Error(`Resend API returned ${resendResponse.status}: ${errorBody}`);
+  }
+};
+
+const buildSignupConfirmationEmail = ({
+  actionLink,
+  email,
+  platformName,
+  supportEmail,
+}: {
+  actionLink: string;
+  email: string;
+  platformName: string;
+  supportEmail: string;
+}) => {
+  const safeActionLink = escapeHtml(actionLink);
+  const safeEmail = escapeHtml(email);
+  const safePlatformName = escapeHtml(platformName);
+  const safeSupportEmail = escapeHtml(supportEmail);
+  const subject = `Confirm your ${platformName} email`;
+
+  const html = `<!doctype html>
+<html>
+  <body style="margin:0;background:#f6f8fb;font-family:Arial,Helvetica,sans-serif;color:#111827;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f8fb;padding:28px 14px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;">
+            <tr>
+              <td style="padding:28px 28px 10px 28px;">
+                <div style="font-size:18px;font-weight:700;color:#111827;">${safePlatformName}</div>
+                <h1 style="margin:22px 0 0 0;font-size:24px;line-height:1.25;color:#111827;">Confirm your email</h1>
+                <p style="margin:12px 0 0 0;font-size:15px;line-height:1.7;color:#4b5563;">
+                  You used <strong>${safeEmail}</strong> to create an account. Click the button below to activate your account.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 28px 8px 28px;">
+                <a href="${safeActionLink}" style="display:inline-block;border-radius:10px;background:#10b981;padding:13px 18px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">
+                  Confirm email
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 28px 26px 28px;">
+                <p style="margin:0;font-size:13px;line-height:1.7;color:#6b7280;">
+                  If the button does not work, copy and paste this link into your browser:
+                </p>
+                <p style="margin:8px 0 0 0;font-size:12px;line-height:1.6;word-break:break-all;color:#2563eb;">
+                  ${safeActionLink}
+                </p>
+                <p style="margin:18px 0 0 0;font-size:12px;line-height:1.7;color:#9ca3af;">
+                  If you did not create this account, you can ignore this email. Need help? Contact ${safeSupportEmail}.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  const text = [
+    `${platformName} - Confirm your email`,
+    "",
+    `You used ${email} to create an account.`,
+    "Open this link to activate your account:",
+    actionLink,
+    "",
+    `If you did not create this account, ignore this email. Need help? Contact ${supportEmail}.`,
+  ].join("\n");
+
+  return { html, subject, text };
+};
+
+const handleAuthSignup = async (request: ApiRequest, response: ApiResponse) => {
+  response.setHeader("Content-Type", "application/json; charset=utf-8");
+  response.setHeader("Cache-Control", "no-store, max-age=0");
+
+  if (request.method !== "POST") {
+    response.setHeader("Allow", "POST");
+    response.status(405).json({ error: "Method not allowed." });
+    return;
+  }
+
+  const emailFromAddress = process.env.EMAIL_FROM_ADDRESS?.trim();
+  if (!emailFromAddress || !process.env.RESEND_API_KEY?.trim()) {
+    response.status(501).json({
+      code: "custom_email_unavailable",
+      error: "Custom signup email is not configured.",
+    });
+    return;
+  }
+
+  const body = (await readJsonRequestBody(request as never)) as SignupPayload;
+  const email = normalizeEmail(body.email);
+  const password = asString(body.password) ?? "";
+  const username = asString(body.username) ?? email.split("@")[0] ?? "trader";
+  const referredByCode = (asString(body.referredByCode) ?? "").toUpperCase();
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    response.status(400).json({ error: "Enter a valid email address." });
+    return;
+  }
+
+  if (password.length < 6) {
+    response.status(400).json({ error: "Password must be at least 6 characters." });
+    return;
+  }
+
+  const [adminClient, platformSettings] = [getSupabaseAdminClient() as any, await fetchPlatformSettings()];
+  const platformName = platformSettings.platform_name || DEFAULT_PLATFORM_NAME;
+  const supportEmail = platformSettings.support_email || DEFAULT_SUPPORT_EMAIL;
+  const redirectTo = `${resolveSignupBaseUrl(request)}/auth/callback?next=${encodeURIComponent("/trade")}`;
+
+  const { data, error } = await adminClient.auth.admin.generateLink({
+    type: "signup",
+    email,
+    password,
+    options: {
+      data: {
+        username,
+        referred_by_code: referredByCode || undefined,
+      },
+      redirectTo,
+    },
+  });
+
+  if (error) {
+    const message = typeof error.message === "string" ? error.message : "Could not create account.";
+    const alreadyRegistered = /already|registered|exists/i.test(message);
+    response.status(alreadyRegistered ? 409 : 400).json({
+      error: alreadyRegistered ? "This email is already registered. Please sign in instead." : message,
+    });
+    return;
+  }
+
+  const actionLink = asString(data?.properties?.action_link);
+  if (!actionLink) {
+    throw new Error("Supabase did not return a confirmation link.");
+  }
+
+  const emailContent = buildSignupConfirmationEmail({
+    actionLink,
+    email,
+    platformName,
+    supportEmail,
+  });
+
+  await sendViaResend({
+    from: emailFromAddress,
+    to: email,
+    ...emailContent,
+  });
+
+  response.status(200).json({
+    email,
+    status: "confirmation_sent",
+  });
+};
+
 const requireKycReviewer = async (accessToken: string) => {
   const userClient = getSupabaseUserClient(accessToken);
   const authResponse = await userClient.auth.getUser();
@@ -752,6 +978,9 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         return;
       case "admin-review-kyc":
         await handleAdminReviewKyc(request, response);
+        return;
+      case "auth-signup":
+        await handleAuthSignup(request, response);
         return;
       case "public-bonus":
         await handlePublicBonus(request, response);
