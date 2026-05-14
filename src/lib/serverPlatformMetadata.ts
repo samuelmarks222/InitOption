@@ -11,6 +11,7 @@ import { buildStructuredData, type RouteSeoContext } from "./routeSeo.js";
 
 export const PLATFORM_METADATA_START_MARKER = '<meta name="platform-metadata-start" content="true">';
 export const PLATFORM_METADATA_END_MARKER = '<meta name="platform-metadata-end" content="true">';
+const STRUCTURED_DATA_FLAG = "data-platform-structured-data";
 
 const escapeHtml = (value: string) =>
   value
@@ -21,7 +22,7 @@ const escapeHtml = (value: string) =>
     .replaceAll("'", "&#39;");
 
 const renderStructuredDataScript = (payload: Record<string, unknown>) =>
-  `<script type="application/ld+json">${JSON.stringify(payload).replaceAll("</script>", "<\\/script>")}</script>`;
+  `<script type="application/ld+json" ${STRUCTURED_DATA_FLAG}="true">${JSON.stringify(payload).replaceAll("</script>", "<\\/script>")}</script>`;
 
 const renderVoidTag = (tagName: "meta" | "link", attributes: Record<string, string | undefined>) => {
   const serializedAttributes = Object.entries(attributes)

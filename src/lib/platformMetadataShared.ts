@@ -263,11 +263,24 @@ export const resolveSeoMetadata = (
   const twitterTitle = settings.twitter_title.trim() || ogTitle;
   const twitterDescription = settings.twitter_description.trim() || ogDescription;
   const twitterImageUrl = resolvedTwitterImageUrl || resolvedOgImageUrl || fallbackShareImageUrl;
-  const canonicalUrl = resolveCanonicalUrl(settings.canonical_url.trim(), href) || canonicalFallback;
   const robotsDirective = settings.robots_directive.trim() || DEFAULT_PLATFORM_SETTINGS.robots_directive;
   const routeOverride =
     seoContext?.routeOverride ??
     getRouteSeoOverride(pathname, settings.platform_name.trim() || DEFAULT_PLATFORM_NAME, settings.website_content);
+  const configuredCanonicalUrl = resolveCanonicalUrl(settings.canonical_url.trim(), href) || canonicalFallback;
+  const routeIsIndexable = Boolean(routeOverride?.robotsDirective && !/noindex/i.test(routeOverride.robotsDirective));
+  const canonicalUrl = (() => {
+    if (!routeIsIndexable) return configuredCanonicalUrl;
+
+    try {
+      const configuredUrl = new URL(configuredCanonicalUrl);
+      const fallbackUrl = new URL(canonicalFallback);
+
+      return configuredUrl.pathname === fallbackUrl.pathname ? configuredCanonicalUrl : canonicalFallback;
+    } catch {
+      return canonicalFallback;
+    }
+  })();
   const preferRouteTitle = pathname !== "/" || !settings.site_title.trim();
   const preferRouteDescription = pathname !== "/" || !settings.meta_description.trim();
   const preferRouteKeywords = pathname !== "/" || !settings.meta_keywords.trim();

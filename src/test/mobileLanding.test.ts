@@ -13,4 +13,15 @@ describe("mobile landing behavior", () => {
   it("keeps desktop visitors on the public landing page", () => {
     expect(shouldStartAtLoginOnMobile(() => ({ matches: false }))).toBe(false);
   });
+
+  it("keeps search crawlers on the public landing page during smartphone tests", () => {
+    expect(
+      shouldStartAtLoginOnMobile(
+        () => ({
+          matches: true,
+        }),
+        "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 Google-InspectionTool/1.0",
+      ),
+    ).toBe(false);
+  });
 });

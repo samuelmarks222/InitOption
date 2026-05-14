@@ -34,6 +34,7 @@ describe("serverPlatformMetadata", () => {
     expect(markup).toContain('link rel="apple-touch-icon" href="https://cdn.example.com/favicon.ico"');
     expect(markup).toContain('link rel="alternate" hreflang="en" href="https://initoption.example/trade"');
     expect(markup).toContain('link rel="sitemap" type="application/xml" href="/sitemap.xml"');
+    expect(markup).toContain('script type="application/ld+json" data-platform-structured-data="true"');
   });
 
   it("injects server-rendered metadata into the template marker block", () => {

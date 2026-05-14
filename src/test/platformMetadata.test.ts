@@ -55,6 +55,20 @@ describe("platform metadata", () => {
     expect(resolved.twitterCardType).toBe("summary");
   });
 
+  it("keeps indexable public routes self-canonical when a global canonical points elsewhere", () => {
+    const resolved = resolveSeoMetadata(
+      {
+        platform_name: "Init Option",
+        canonical_url: "https://initoption.example/login",
+        robots_directive: "noindex, follow",
+      },
+      "https://initoption.example/",
+    );
+
+    expect(resolved.canonicalUrl).toBe("https://initoption.example/");
+    expect(resolved.robotsDirective).toBe("index, follow");
+  });
+
   it("applies head tags, branding state, and custom meta tags", () => {
     applyPlatformSettingsToDocument(
       {

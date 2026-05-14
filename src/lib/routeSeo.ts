@@ -181,6 +181,39 @@ const buildBreadcrumbSchema = (
   };
 };
 
+const buildFaqPageSchema = (
+  name: string,
+  items: Array<{ question: string; answer: string }>,
+  platformName: string,
+) => {
+  const mainEntity = items.flatMap((item) => {
+    const question = interpolate(item.question, platformName).trim();
+    const answer = interpolate(item.answer, platformName).trim();
+
+    if (!question || !answer) return [];
+
+    return [
+      {
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: answer,
+        },
+      },
+    ];
+  });
+
+  if (!mainEntity.length) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    name: interpolate(name, platformName),
+    mainEntity,
+  };
+};
+
 export const buildStructuredData = ({
   currentHref,
   platformName,
@@ -306,18 +339,15 @@ export const buildStructuredData = ({
       })),
     });
 
-    items.push({
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: websiteContent.faq.items.map((item) => ({
-        "@type": "Question",
-        name: interpolate(item.question, platformName),
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: interpolate(item.answer, platformName),
-        },
-      })),
-    });
+    const homeFaqSchema = buildFaqPageSchema(
+      `${platformName} frequently asked questions`,
+      websiteContent.faq.items,
+      platformName,
+    );
+
+    if (homeFaqSchema) {
+      items.push(homeFaqSchema);
+    }
   }
 
   if (pathname === TOURNAMENTS_INDEX_PATH) {
@@ -374,18 +404,15 @@ export const buildStructuredData = ({
     }
 
     if (pathname === "/faq" && publicPage.faqItems?.length) {
-      items.push({
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: publicPage.faqItems.map((item) => ({
-          "@type": "Question",
-          name: interpolate(item.question, platformName),
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: interpolate(item.answer, platformName),
-          },
-        })),
-      });
+      const faqPageSchema = buildFaqPageSchema(
+        `${interpolate(publicPage.title, platformName)} questions and answers`,
+        publicPage.faqItems,
+        platformName,
+      );
+
+      if (faqPageSchema) {
+        items.push(faqPageSchema);
+      }
     }
 
     if (pathname === "/contact" && supportEmail?.trim()) {
