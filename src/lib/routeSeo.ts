@@ -4,12 +4,14 @@ import {
   type TournamentStructuredDataInput,
 } from "./publicTournaments.js";
 import type { BlogPostDefinition, BlogPostSummary } from "./blogPosts.js";
+import { getBlogPostByPath } from "./blogStarterContent.js";
 import { PUBLIC_PAGE_LIST, getPublicPageByPath } from "./publicPages.js";
 import { normalizeWebsiteContent } from "./websiteContent.js";
 
 const AUTH_PATHS = new Set(["/login", "/register"]);
 const PRIVATE_PREFIXES = ["/admin", "/dashboard", "/trade", "/deposit", "/withdraw", "/settings", "/notifications", "/traders"];
 const TOURNAMENTS_INDEX_PATH = "/tournaments";
+const BLOG_INDEX_PATH = "/blog";
 const DEFAULT_SHARE_IMAGE_PATH = "/share-icon.png";
 const HOME_TITLE_TEMPLATE = "{platformName} – Trading Platform: Free Demo, Live Trading & Fast Withdrawals";
 const HOME_DESCRIPTION_TEMPLATE =
@@ -43,6 +45,7 @@ const isPrivatePath = (pathname: string) =>
   PRIVATE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 
 const isTournamentDetailPath = (pathname: string) => pathname.startsWith(`${TOURNAMENTS_INDEX_PATH}/`);
+const isBlogDetailPath = (pathname: string) => pathname.startsWith(`${BLOG_INDEX_PATH}/`);
 
 export const getRouteSeoOverride = (
   pathname: string,
@@ -57,6 +60,20 @@ export const getRouteSeoOverride = (
       siteTitle: interpolate(publicPage.seoTitle, platformName),
       metaDescription: interpolate(publicPage.seoDescription, platformName),
       metaKeywords: publicPage.keywords,
+      robotsDirective: "index, follow",
+    };
+  }
+
+  if (isBlogDetailPath(normalizedPathname)) {
+    const starterPost = getBlogPostByPath(normalizedPathname);
+
+    return {
+      siteTitle: starterPost?.metaTitle || `${platformName} Blog Article`,
+      metaDescription:
+        starterPost?.metaDescription ||
+        starterPost?.excerpt ||
+        `Read trading education, platform guidance, and market tutorials from the ${platformName} blog.`,
+      metaKeywords: starterPost?.categories.map((category) => category.name).join(", "),
       robotsDirective: "index, follow",
     };
   }
