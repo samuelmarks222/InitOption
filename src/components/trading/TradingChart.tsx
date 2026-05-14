@@ -1057,7 +1057,7 @@ const buildPairTrendGeometry = (trend: PairInfoTrendPoint[]) => {
   const linePoints = trend
     .map((point, index) => {
       const x = trend.length <= 1 ? 0 : (index / Math.max(1, trend.length - 1)) * 100;
-      const y = 82 - point.normalized * 52;
+      const y = 86 - point.normalized * 62;
       return `${x},${y}`;
     })
     .join(" ");
@@ -3080,8 +3080,8 @@ const TradingChart = ({
             onClick={() => setPairInfoOpen(false)}
             className="absolute inset-0 pointer-events-auto"
           />
-          <div className="pointer-events-auto absolute left-1/2 top-1/2 w-[calc(100%-64px)] max-w-[940px] max-h-[calc(100%-48px)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[16px] border border-[#40485b] bg-[#2d3446]/[0.98] p-5 shadow-[0_30px_64px_rgba(0,0,0,0.46)]">
-            <div className="flex items-start justify-between gap-5 border-b border-white/10 pb-4">
+          <div className="pointer-events-auto absolute left-1/2 top-4 max-h-[calc(100vh-152px)] w-[calc(100%-92px)] max-w-[900px] -translate-x-1/2 overflow-y-auto rounded-[14px] border border-[#40485b] bg-[#2d3446]/[0.98] p-4 shadow-[0_30px_64px_rgba(0,0,0,0.46)]">
+            <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-3">
               <div className="min-w-0 flex items-center gap-3">
                 <div className="rounded-[12px] border border-white/10 bg-[#131c2d] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
                   <AssetSymbolMark
@@ -3128,28 +3128,28 @@ const TradingChart = ({
               </div>
             </div>
 
-            <div className="mt-4 grid gap-3 border-b border-white/8 pb-5 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-[12px] bg-[#353d50] px-4 py-3.5">
+            <div className="mt-3 grid gap-3 border-b border-white/8 pb-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-[12px] bg-[#353d50] px-4 py-3">
                 <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Price now</div>
                 <div className="mt-1 text-[16px] font-black text-white">{currentPrice.toFixed(dec)}</div>
               </div>
-              <div className="rounded-[12px] bg-[#353d50] px-4 py-3.5">
+              <div className="rounded-[12px] bg-[#353d50] px-4 py-3">
                 <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Session change</div>
                 <div className={`mt-1 text-[16px] font-black ${isUp ? "text-[#72efb1]" : "text-[#ff8c96]"}`}>
                   {formatSignedPercent(priceChange)}
                 </div>
               </div>
-              <div className="rounded-[12px] bg-[#353d50] px-4 py-3.5">
+              <div className="rounded-[12px] bg-[#353d50] px-4 py-3">
                 <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Range span</div>
                 <div className="mt-1 text-[16px] font-black text-white">{rangeSpan.toFixed(dec)}</div>
               </div>
-              <div className="rounded-[12px] bg-[#353d50] px-4 py-3.5">
+              <div className="rounded-[12px] bg-[#353d50] px-4 py-3">
                 <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Notional flow</div>
                 <div className="mt-1 text-[16px] font-black text-white">{pairNotionalVol}</div>
               </div>
             </div>
 
-            <div className="mt-5 rounded-[10px] bg-[#3a4153] px-5 py-4">
+            <div className="mt-4 rounded-[10px] bg-[#3a4153] px-5 py-3.5">
               <div className="flex items-end justify-between gap-4">
                 <div>
                   <div className="text-[18px] font-black text-white">{dominantBias}</div>
@@ -3177,22 +3177,22 @@ const TradingChart = ({
               </div>
             </div>
 
-            <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(310px,0.9fr)]">
-              <div className="space-y-4">
+            <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.9fr)]">
+              <div className="space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-[12px] bg-[#31384a]/90 px-4 py-3.5">
+                  <div className="rounded-[12px] bg-[#31384a]/90 px-4 py-3">
                     <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Minimum stake</div>
                     <div className="mt-1 text-[14px] font-black text-white">{minimumStakeLabel}</div>
                   </div>
-                  <div className="rounded-[12px] bg-[#31384a]/90 px-4 py-3.5">
+                  <div className="rounded-[12px] bg-[#31384a]/90 px-4 py-3">
                     <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Return - 1 min</div>
                     <div className="mt-1 text-[14px] font-black text-[#28d77f]">{shortPayout}%</div>
                   </div>
-                  <div className="rounded-[12px] bg-[#31384a]/90 px-4 py-3.5">
+                  <div className="rounded-[12px] bg-[#31384a]/90 px-4 py-3">
                     <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Return - 5+ min</div>
                     <div className="mt-1 text-[14px] font-black text-[#28d77f]">{extendedPayout}%</div>
                   </div>
-                  <div className="rounded-[12px] bg-[#31384a]/90 px-4 py-3.5">
+                  <div className="rounded-[12px] bg-[#31384a]/90 px-4 py-3">
                     <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Expiry window</div>
                     <div className="mt-1 text-[14px] font-black text-white">{expiryWindowLabel}</div>
                   </div>
@@ -3203,7 +3203,7 @@ const TradingChart = ({
                     {pairChangeCards.map((item) => (
                       <div
                         key={item.label}
-                        className="border-b border-white/8 px-5 py-4 last:border-b-0 sm:border-b-0 sm:border-r sm:border-white/8 sm:last:border-r-0"
+                        className="border-b border-white/8 px-5 py-3 last:border-b-0 sm:border-b-0 sm:border-r sm:border-white/8 sm:last:border-r-0"
                       >
                         <div className="text-[12px] font-bold text-white">{item.label}</div>
                         <div className={`mt-2 text-[18px] font-medium ${item.value >= 0 ? "text-[#1cd56d]" : "text-[#ff5e4a]"}`}>
@@ -3213,8 +3213,8 @@ const TradingChart = ({
                     ))}
                   </div>
 
-                  <div className="border-t border-white/8 px-5 py-5">
-                    <div className="relative h-[240px] overflow-hidden rounded-[6px] bg-[#2d3546]">
+                  <div className="border-t border-white/8 px-5 py-4">
+                    <div className="relative h-[270px] overflow-hidden rounded-[6px] bg-[#2d3546]">
                       <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
                         <defs>
                           <linearGradient id={`${pairTrendId}-line`} x1="0" y1="0" x2="0" y2="1">
