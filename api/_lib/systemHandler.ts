@@ -337,6 +337,8 @@ const handleRobots = async (request: ApiRequest, response: ApiResponse) => {
   const body = [
     "User-agent: *",
     "Allow: /",
+    "Allow: /api/blog/",
+    "Allow: /api/blog",
     "Disallow: /admin/",
     "Disallow: /api/",
     `Sitemap: ${siteOrigin}/sitemap.xml`,

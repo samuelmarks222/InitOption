@@ -1,6 +1,8 @@
 User-agent: *
 Allow: /
 # Public SEO pages are indexable; private app areas stay blocked below.
+Allow: /api/blog/
+Allow: /api/blog
 Disallow: /admin/
 Disallow: /api/
 Disallow: /dashboard

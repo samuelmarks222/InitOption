@@ -6,6 +6,7 @@ import {
   resolveSeoMetadata,
   type PlatformSettingsRecord,
 } from "./platformMetadataShared.js";
+import { stripHtmlTags } from "./blogPosts.js";
 import { buildStructuredData, type RouteSeoContext } from "./routeSeo.js";
 
 export const PLATFORM_METADATA_START_MARKER = '<meta name="platform-metadata-start" content="true">';
@@ -29,6 +30,27 @@ const renderVoidTag = (tagName: "meta" | "link", attributes: Record<string, stri
     .join("");
 
   return `<${tagName}${serializedAttributes}>`;
+};
+
+const renderSeoBodyFallback = (seoContext?: RouteSeoContext | null) => {
+  const blogPost = seoContext?.blogPost ?? null;
+  if (!blogPost) return "";
+
+  const contentText = stripHtmlTags(blogPost.contentHtml).slice(0, 6000);
+  const categoryName = blogPost.categories[0]?.name || "Trading guide";
+  const summary = blogPost.metaDescription || blogPost.excerpt;
+
+  return `
+    <main data-seo-prerender="blog-post" style="min-height:100vh;background:#101521;color:#f8fbff;font-family:Arial,sans-serif;padding:32px 18px;">
+      <article style="max-width:900px;margin:0 auto;line-height:1.75;">
+        <a href="/blog" style="color:#21c77a;text-decoration:none;font-weight:700;">Init Option Blog</a>
+        <p style="margin:20px 0 0;color:#9fb0c7;font-size:13px;text-transform:uppercase;letter-spacing:.14em;">${escapeHtml(categoryName)}</p>
+        <h1 style="margin:12px 0 0;font-size:42px;line-height:1.12;color:#fff;">${escapeHtml(blogPost.title)}</h1>
+        <p style="margin:18px 0 0;font-size:18px;color:#d7e2f1;">${escapeHtml(summary)}</p>
+        <p style="margin:26px 0 0;color:#eef4ff;">${escapeHtml(contentText)}</p>
+      </article>
+    </main>
+  `;
 };
 
 const SAFE_RAW_CUSTOM_TAGS = /^(?:\s*<(?:meta|link)\b[^<>]*\/?>\s*)+$/i;
@@ -159,9 +181,12 @@ export const injectPlatformMetadataIntoHtml = (
     ${headMarkup}
     ${PLATFORM_METADATA_END_MARKER}`;
 
-  if (markerPattern.test(htmlTemplate)) {
-    return htmlTemplate.replace(markerPattern, replacement);
-  }
+  const htmlWithHead = markerPattern.test(htmlTemplate)
+    ? htmlTemplate.replace(markerPattern, replacement)
+    : htmlTemplate.replace("</head>", `    ${headMarkup}\n  </head>`);
+  const bodyFallback = renderSeoBodyFallback(seoContext);
 
-  return htmlTemplate.replace("</head>", `    ${headMarkup}\n  </head>`);
+  if (!bodyFallback) return htmlWithHead;
+
+  return htmlWithHead.replace(/<div id="root"><\/div>/i, `<div id="root">${bodyFallback}</div>`);
 };
