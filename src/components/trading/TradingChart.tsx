@@ -330,24 +330,24 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 6.6,
-  "5s": 7.8,
-  "15s": 8.8,
-  "30s": 9.6,
-  "1m": 10.2,
-  "2m": 10.6,
-  "3m": 10.8,
-  "4m": 11,
-  "5m": 11.2,
-  "10m": 11.6,
-  "15m": 12.2,
-  "30m": 13.4,
-  "1h": 16.4,
-  "2h": 17.8,
-  "3h": 18.8,
-  "4h": 19.6,
-  "12h": 21.6,
-  "1D": 23.6,
+  "1s": 6.2,
+  "5s": 7,
+  "15s": 7.8,
+  "30s": 8.4,
+  "1m": 8.8,
+  "2m": 9,
+  "3m": 9.1,
+  "4m": 9.2,
+  "5m": 9.4,
+  "10m": 9.8,
+  "15m": 10.1,
+  "30m": 9.4,
+  "1h": 9.7,
+  "2h": 10,
+  "3h": 10.3,
+  "4h": 10.6,
+  "12h": 11,
+  "1D": 11.4,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
@@ -372,24 +372,24 @@ const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 1.6,
-  "5s": 1.9,
-  "15s": 2.4,
-  "30s": 3,
-  "1m": 3.8,
-  "2m": 4.1,
-  "3m": 4.3,
-  "4m": 4.4,
-  "5m": 4.6,
-  "10m": 5,
-  "15m": 6,
-  "30m": 6,
-  "1h": 6,
-  "2h": 6,
-  "3h": 6,
-  "4h": 6,
-  "12h": 6,
-  "1D": 6,
+  "1s": 1.1,
+  "5s": 1.2,
+  "15s": 1.35,
+  "30s": 1.45,
+  "1m": 1.6,
+  "2m": 1.65,
+  "3m": 1.7,
+  "4m": 1.75,
+  "5m": 1.8,
+  "10m": 1.9,
+  "15m": 2,
+  "30m": 1.7,
+  "1h": 1.75,
+  "2h": 1.8,
+  "3h": 1.85,
+  "4h": 1.9,
+  "12h": 2,
+  "1D": 2.1,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
@@ -398,11 +398,46 @@ const getMainPriceScaleMargins = (timeframe: SupportedChartTimeframe) => {
   const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
 
   if (seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS) {
-    return { top: 0.18, bottom: 0.18 };
+    return { top: 0.16, bottom: 0.16 };
   }
 
   return { top: 0.1, bottom: 0.1 };
 };
+
+const getZoomResponsivePriceScaleMargins = (
+  timeframe: SupportedChartTimeframe,
+  visibleSpan: number | null | undefined,
+  containerWidth: number,
+) => {
+  const baseMargins = getMainPriceScaleMargins(timeframe);
+  const targetVisibleBars = getTargetVisibleBars(containerWidth, timeframe);
+  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
+
+  if (!Number.isFinite(visibleSpan) || !visibleSpan || visibleSpan <= 0 || targetVisibleBars <= 0) {
+    return baseMargins;
+  }
+
+  const zoomRatio = visibleSpan / targetVisibleBars;
+  const highTimeframeBonus = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.03 : 0;
+  const zoomPadding = Math.max(-0.035, Math.min(0.12, (zoomRatio - 1) * 0.07));
+  const maxMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.28 : 0.23;
+  const margin = Math.max(0.08, Math.min(maxMargin, baseMargins.top + highTimeframeBonus + zoomPadding));
+
+  return { top: margin, bottom: margin };
+};
+
+const getMainPriceScaleOptions = (
+  timeframe: SupportedChartTimeframe,
+  visibleSpan?: number | null,
+  containerWidth = 960,
+) => ({
+  borderColor: THEME.border,
+  scaleMargins: getZoomResponsivePriceScaleMargins(timeframe, visibleSpan, containerWidth),
+  minimumWidth: SYNCED_PRICE_SCALE_MIN_WIDTH,
+  entireTextOnly: true,
+  ticksVisible: true,
+  borderVisible: true,
+});
 
 const getTargetVisibleBars = (containerWidth: number, timeframe: SupportedChartTimeframe) => {
   const safeWidth = Math.max(320, containerWidth);
@@ -1702,6 +1737,7 @@ const TradingChart = ({
   const liveRef = useRef<OHLCCandle | null>(null);
   const loadedHistoryCountRef = useRef(0);
   const isBackfillingHistoryRef = useRef(false);
+  const priceScaleMarginKeyRef = useRef("");
   const aggregatorRef = useRef<CandleAggregator | null>(null);
   // Always-fresh ref for activeIndicators so stale closures see latest value
   const activeIndicatorsRef = useRef<ActiveIndicator[]>(activeIndicators);
@@ -2121,9 +2157,9 @@ const TradingChart = ({
       ? Math.max(12, currentRange.to - currentRange.from)
       : defaultVisibleBars;
     const nextSpan = direction === "in"
-      ? currentSpan * 0.82
-      : currentSpan * 1.22;
-    const minSpan = Math.max(10, Math.round(defaultVisibleBars * 0.32));
+      ? currentSpan * 0.76
+      : currentSpan * 1.34;
+    const minSpan = Math.max(22, Math.round(defaultVisibleBars * 0.36));
     const maxSpan = Math.max(defaultVisibleBars, dataPointCount + rightOffset);
     const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
     const anchorTo = currentRange?.to ?? (dataPointCount + rightOffset);
@@ -2134,6 +2170,25 @@ const TradingChart = ({
       to: nextTo,
     });
   }, [selectedTf]);
+
+  const applyResponsivePriceScale = useCallback(
+    (visibleSpan?: number | null, force = false) => {
+      const chart = chartRef.current;
+      if (!chart) return;
+
+      const containerWidth = mainRef.current?.clientWidth ?? 960;
+      const options = getMainPriceScaleOptions(selectedTf, visibleSpan, containerWidth);
+      const marginKey = `${selectedTf}:${options.scaleMargins.top.toFixed(3)}:${options.scaleMargins.bottom.toFixed(3)}`;
+
+      if (!force && priceScaleMarginKeyRef.current === marginKey) {
+        return;
+      }
+
+      priceScaleMarginKeyRef.current = marginKey;
+      chart.applyOptions({ rightPriceScale: options });
+    },
+    [selectedTf],
+  );
 
   // ─── FETCH THEME GLOBALS ──────────────────────────────────────────
   useEffect(() => {
@@ -2318,14 +2373,7 @@ const TradingChart = ({
             style: LineStyle.Dashed,
           },
         },
-        rightPriceScale: { 
-          borderColor: THEME.border, 
-          scaleMargins: { top: 0.1, bottom: 0.1 },
-          minimumWidth: SYNCED_PRICE_SCALE_MIN_WIDTH,
-          entireTextOnly: true,
-          ticksVisible: true,
-          borderVisible: true,
-        },
+        rightPriceScale: getMainPriceScaleOptions("1m", DEFAULT_VISIBLE_BARS, 960),
         timeScale: { 
           borderColor: THEME.border, 
           timeVisible: true, 
@@ -2655,16 +2703,7 @@ const TradingChart = ({
       secondsVisible: tf.seconds < 60,
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
     });
-    chartRef.current.applyOptions({
-      rightPriceScale: {
-        borderColor: THEME.border,
-        scaleMargins: getMainPriceScaleMargins(selectedTf),
-        minimumWidth: SYNCED_PRICE_SCALE_MIN_WIDTH,
-        entireTextOnly: true,
-        ticksVisible: true,
-        borderVisible: true,
-      },
-    });
+    applyResponsivePriceScale(initialVisibleBars, true);
     const defaultFrom = Math.max(0, history.length - initialVisibleBars);
     chartRef.current.timeScale().setVisibleLogicalRange({
       from: defaultFrom,
@@ -2743,7 +2782,15 @@ const TradingChart = ({
       engineRef.current = null;
       if (aggregatorRef.current) { aggregatorRef.current.destroy(); aggregatorRef.current = null; }
     };
-  }, [asset.basePrice, asset.symbol, getIndicatorHistory, renderOverlayIndicators, selectedTf, setCurrentPrice]); 
+  }, [
+    applyResponsivePriceScale,
+    asset.basePrice,
+    asset.symbol,
+    getIndicatorHistory,
+    renderOverlayIndicators,
+    selectedTf,
+    setCurrentPrice,
+  ]);
 
   useEffect(() => {
     const chart = chartRef.current;
@@ -2751,7 +2798,13 @@ const TradingChart = ({
 
     const timeScale = chart.timeScale();
     const handleVisibleRangeChange = (range: { from: number; to: number } | null) => {
-      if (!range || isBackfillingHistoryRef.current || !engineRef.current) {
+      if (!range) {
+        return;
+      }
+
+      applyResponsivePriceScale(range.to - range.from);
+
+      if (isBackfillingHistoryRef.current || !engineRef.current) {
         return;
       }
 
@@ -2780,7 +2833,7 @@ const TradingChart = ({
 
     timeScale.subscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
     return () => timeScale.unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
-  }, [reloadHistoricalCandles, selectedTf]);
+  }, [applyResponsivePriceScale, reloadHistoricalCandles, selectedTf]);
 
   useEffect(() => {
     const chart = chartRef.current;
@@ -2816,16 +2869,7 @@ const TradingChart = ({
       secondsVisible: tf.seconds < 60,
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
     });
-    chart.applyOptions({
-      rightPriceScale: {
-        borderColor: THEME.border,
-        scaleMargins: getMainPriceScaleMargins(selectedTf),
-        minimumWidth: SYNCED_PRICE_SCALE_MIN_WIDTH,
-        entireTextOnly: true,
-        ticksVisible: true,
-        borderVisible: true,
-      },
-    });
+    applyResponsivePriceScale(currentRange ? currentRange.to - currentRange.from : initialVisibleBars, true);
 
     if (dataPointCount <= 0) {
       return;
@@ -2867,6 +2911,7 @@ const TradingChart = ({
     });
   }, [
     asset.symbol,
+    applyResponsivePriceScale,
     chartStyles.bodyScale,
     selectedTf,
     tradingPreferences.autoScrolling,
