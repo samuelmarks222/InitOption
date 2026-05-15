@@ -330,18 +330,18 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 4.8,
-  "5s": 5.4,
-  "15s": 6.1,
-  "30s": 6.8,
-  "1m": 7.8,
-  "2m": 8.4,
-  "3m": 8.8,
-  "4m": 9,
-  "5m": 9.2,
-  "10m": 10,
-  "15m": 10.5,
-  "30m": 12.4,
+  "1s": 6.6,
+  "5s": 7.8,
+  "15s": 8.8,
+  "30s": 9.6,
+  "1m": 10.2,
+  "2m": 10.6,
+  "3m": 10.8,
+  "4m": 11,
+  "5m": 11.2,
+  "10m": 11.6,
+  "15m": 12.2,
+  "30m": 13.4,
   "1h": 16.4,
   "2h": 17.8,
   "3h": 18.8,
@@ -451,10 +451,7 @@ const getDefaultVisibleBars = (
   availableBars = Number.POSITIVE_INFINITY,
 ) => {
   const targetVisibleBars = getTargetVisibleBars(containerWidth, timeframe);
-  return Math.max(
-    Math.min(availableBars, getTrendContextBarCount(containerWidth, timeframe, availableBars)),
-    Math.min(availableBars, targetVisibleBars),
-  );
+  return Math.max(1, Math.min(availableBars, targetVisibleBars));
 };
 
 const getUnixTime = (value: unknown) => {
@@ -720,6 +717,7 @@ type PairInfoTrendPoint = {
 type MainSeriesKind = "area" | "bar" | "candlestick";
 
 const CHART_STYLE_STORAGE_KEY = "trade_chart_style_preferences_v4";
+const SELECTED_TIMEFRAME_STORAGE_KEY = "trade_selected_timeframe_v1";
 const TRANSPARENT_COLOR = "rgba(0,0,0,0)";
 
 const DEFAULT_CHART_STYLE: ChartStylePreferences = {
@@ -796,6 +794,20 @@ const clampAreaWidth = (value: number) => Math.max(1, Math.min(4, value));
 
 const isChartDisplayPreset = (value: unknown): value is ChartDisplayPreset =>
   value === "primary" || value === "secondary";
+
+const isSupportedChartTimeframeValue = (value: unknown): value is SupportedChartTimeframe =>
+  typeof value === "string" && Object.prototype.hasOwnProperty.call(TIMEFRAMES, value);
+
+const loadSelectedTimeframePreference = (): SupportedChartTimeframe => {
+  if (typeof window === "undefined") return "1m";
+
+  try {
+    const storedValue = window.localStorage.getItem(SELECTED_TIMEFRAME_STORAGE_KEY);
+    return isSupportedChartTimeframeValue(storedValue) ? storedValue : "1m";
+  } catch {
+    return "1m";
+  }
+};
 
 const getAreaDisplaySettings = (styles: ChartStylePreferences) => {
   const fillEnabled = styles.areaFillEnabled && styles.displayPreset === "primary";
@@ -1705,7 +1717,7 @@ const TradingChart = ({
     return conf && conf.pane === "overlay";
   });
   const activeAssetTrades = activeTrades.filter((trade) => trade.asset_symbol === asset.symbol);
-  const [selectedTf, setSelectedTf] = useState<SupportedChartTimeframe>("1m");
+  const [selectedTf, setSelectedTf] = useState<SupportedChartTimeframe>(() => loadSelectedTimeframePreference());
   const [currentPrice, setCurrentPrice] = useState(asset.price);
   const [priceChange, setPriceChange] = useState(asset.change || 0);
   const [chartType, setChartType] = useState<ChartType>(DEFAULT_CHART_TYPE);
@@ -1791,6 +1803,15 @@ const TradingChart = ({
     const intervalId = window.setInterval(() => setMarketClockMs(Date.now()), 1000);
     return () => window.clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SELECTED_TIMEFRAME_STORAGE_KEY, selectedTf);
+    } catch {
+      // Storage can be unavailable in private or restricted browsing modes.
+    }
+  }, [selectedTf]);
+
   const [syncSeries, setSyncSeries] = useState<ChartSeriesApi | null>(null);
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
   const [hoverPriceData, setHoverPriceData] = useState<{ price: number; top: number } | null>(null);
