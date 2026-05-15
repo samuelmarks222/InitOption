@@ -51,6 +51,8 @@ import {
   X,
   Activity,
   BarChart,
+  Bell,
+  BellRing,
   Compass,
   PenTool,
   MoreHorizontal,
@@ -66,6 +68,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ActiveTrade, TradeDirection } from "@/hooks/useTrading";
 import { cn } from "@/lib/utils";
 import AssetSymbolMark from "./AssetSymbolMark";
+import { toast } from "sonner";
 import {
   getTradingChartSurfaceColor,
   getTradingChartTextColor,
@@ -157,6 +160,12 @@ const clampLineWidth = (value: number): LineWidth => {
   if (value >= 3) return 3;
   if (value >= 2) return 2;
   return 1;
+};
+
+type PriceAlert = {
+  id: string;
+  price: number;
+  triggered: boolean;
 };
 
 const toLineChartData = (candles: OHLCCandle[]): LineData<Time>[] =>
@@ -1799,16 +1808,230 @@ const TradingChart = ({
     return () => window.clearInterval(intervalId);
   }, []);
   const [syncSeries, setSyncSeries] = useState<ChartSeriesApi | null>(null);
+  const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
+  const [hoverPriceData, setHoverPriceData] = useState<{ price: number; top: number } | null>(null);
+  const alertLineRefs = useRef<Record<string, IPriceLine>>({});
+  const previousPriceRef = useRef<number>(asset.price);
   // Force react render when history strictly ticks candles for Oscillators
   const [forceOscillatorRender, setForceOscillatorRender] = useState(0);
   const dismissMobileMenu = useCallback(() => {
     setActiveMobileMenu(null);
     setMobileMenuStyle(null);
   }, []);
-  const closeMobileTools = useCallback(() => {
-    dismissMobileMenu();
-    setMobileToolsOpen(false);
-  }, [dismissMobileMenu]);
+  const PRICE_ALERT_HOVER_ZONE = 88;
+
+  const roundAlertPrice = useCallback((price: number) => {
+    const precision = mainSeriesPrecisionRef.current ?? 2;
+    return Number(price.toFixed(Math.max(0, precision)));
+  }, []);
+
+  const formatAlertPrice = useCallback((price: number) => {
+    const precision = mainSeriesPrecisionRef.current ?? 2;
+    return price.toFixed(Math.max(0, precision));
+  }, []);
+
+  const playAlertTone = useCallback(() => {
+    try {
+      const context = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const startAt = context.currentTime;
+
+      [0, 0.17, 0.34].forEach((delay, index) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(index === 1 ? 1120 : 880, startAt + delay);
+        gain.gain.setValueAtTime(0.0001, startAt + delay);
+        gain.gain.exponentialRampToValueAtTime(0.22, startAt + delay + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startAt + delay + 0.14);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start(startAt + delay);
+        oscillator.stop(startAt + delay + 0.15);
+      });
+
+      window.setTimeout(() => {
+        void context.close();
+      }, 700);
+    } catch {
+      // Audio may be blocked by browser policies; ignore silently.
+    }
+  }, []);
+
+  const addPriceAlert = useCallback(
+    (price: number) => {
+      const normalized = roundAlertPrice(price);
+      if (priceAlerts.some((alert) => Math.abs(alert.price - normalized) < 0.0000001)) {
+        toast.info("Price alert already exists", {
+          description: `${asset.symbol} already has an alert at ${formatAlertPrice(normalized)}.`,
+        });
+        return;
+      }
+
+      setPriceAlerts((current) => [
+        ...current,
+        {
+          id: typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `price-alert-${Date.now()}`,
+          price: normalized,
+          triggered: false,
+        },
+      ]);
+
+      toast.success("Price alert set", {
+        description: `${asset.symbol} will ring when price crosses ${formatAlertPrice(normalized)}.`,
+      });
+    },
+    [asset.symbol, formatAlertPrice, priceAlerts, roundAlertPrice],
+  );
+
+  const removePriceAlert = useCallback(
+    (id: string) => {
+      const alert = priceAlerts.find((item) => item.id === id);
+      setPriceAlerts((current) => current.filter((item) => item.id !== id));
+
+      if (alert) {
+        toast.info("Price alert removed", {
+          description: `${asset.symbol} alert at ${formatAlertPrice(alert.price)} was deleted.`,
+        });
+      }
+    },
+    [asset.symbol, formatAlertPrice, priceAlerts],
+  );
+
+  const handleChartMouseMove = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!mainRef.current || !mainSeriesRef.current) {
+        setHoverPriceData(null);
+        return;
+      }
+
+      const rect = mainRef.current.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      if (x < rect.width - PRICE_ALERT_HOVER_ZONE || y < 0 || y > rect.height) {
+        setHoverPriceData(null);
+        return;
+      }
+
+      const hoveredPrice = mainSeriesRef.current.coordinateToPrice(y);
+      if (!Number.isFinite(hoveredPrice)) {
+        setHoverPriceData(null);
+        return;
+      }
+
+      setHoverPriceData({ price: roundAlertPrice(hoveredPrice), top: Math.min(Math.max(4, y), rect.height - 4) });
+    },
+    [roundAlertPrice],
+  );
+
+  const handleChartMouseLeave = useCallback(() => {
+    setHoverPriceData(null);
+  }, []);
+
+  const handleChartClick = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!hoverPriceData) return;
+      event.stopPropagation();
+      addPriceAlert(hoverPriceData.price);
+    },
+    [addPriceAlert, hoverPriceData],
+  );
+
+  useEffect(() => {
+    if (priceAlerts.length === 0) {
+      previousPriceRef.current = currentPrice;
+      return;
+    }
+
+    const prevPrice = previousPriceRef.current;
+    const triggeredAlerts = priceAlerts.filter((alert) => {
+      const crossedUp = prevPrice < alert.price && currentPrice >= alert.price;
+      const crossedDown = prevPrice > alert.price && currentPrice <= alert.price;
+      return crossedUp || crossedDown || currentPrice === alert.price;
+    });
+
+    if (triggeredAlerts.length > 0) {
+      const triggeredIds = new Set(triggeredAlerts.map((alert) => alert.id));
+      setPriceAlerts((currentAlerts) => currentAlerts.filter((alert) => !triggeredIds.has(alert.id)));
+      playAlertTone();
+      triggeredAlerts.forEach((alert) => {
+        toast.success("Price alert reached", {
+          description: `${asset.symbol} crossed ${formatAlertPrice(alert.price)}. The alert was removed automatically.`,
+        });
+      });
+    }
+
+    previousPriceRef.current = currentPrice;
+  }, [asset.symbol, currentPrice, formatAlertPrice, playAlertTone, priceAlerts]);
+
+  useEffect(() => {
+    setPriceAlerts([]);
+    setHoverPriceData(null);
+    previousPriceRef.current = asset.price;
+  }, [asset.symbol]);
+
+  useEffect(() => {
+    if (!mainSeriesRef.current) return;
+
+    const series = mainSeriesRef.current;
+    const existing = alertLineRefs.current;
+
+    priceAlerts.forEach((alert) => {
+      const options = {
+        price: alert.price,
+        color: "#fbbf24",
+        lineStyle: LineStyle.Dashed,
+        lineWidth: 1,
+        axisLabelVisible: true,
+        axisLabelColor: "#fbbf24",
+        axisLabelTextColor: "#111827",
+        title: `Alert ${formatAlertPrice(alert.price)}`,
+      } as const;
+
+      if (!existing[alert.id]) {
+        try {
+          existing[alert.id] = series.createPriceLine(options);
+        } catch {
+          existing[alert.id] = series.createPriceLine(options);
+        }
+      } else {
+        try {
+          existing[alert.id].applyOptions(options);
+        } catch {
+          try {
+            existing[alert.id] = series.createPriceLine(options);
+          } catch {
+            delete existing[alert.id];
+          }
+        }
+      }
+    });
+
+    Object.keys(existing).forEach((id) => {
+      if (!priceAlerts.some((alert) => alert.id === id)) {
+        try {
+          existing[id].remove();
+        } catch {
+          // Ignore invalid lines
+        }
+        delete existing[id];
+      }
+    });
+  }, [formatAlertPrice, priceAlerts]);
+
+  useEffect(() => {
+    return () => {
+      Object.keys(alertLineRefs.current).forEach((id) => {
+        try {
+          alertLineRefs.current[id].remove();
+        } catch {
+          // ignore
+        }
+      });
+      alertLineRefs.current = {};
+    };
+  }, []);
 
   useEffect(() => {
     if (!overlayUiSuppressed) return;
@@ -1817,6 +2040,12 @@ const TradingChart = ({
     dismissMobileMenu();
     setMobileToolsOpen(false);
   }, [dismissMobileMenu, overlayUiSuppressed]);
+
+  const closeMobileTools = useCallback(() => {
+    dismissMobileMenu();
+    setMobileToolsOpen(false);
+  }, [dismissMobileMenu]);
+
   const toggleMobileMenu = useCallback(
     (menu: "time" | "type", anchor: HTMLButtonElement) => {
       if (activeMobileMenu === menu) {
@@ -3008,7 +3237,14 @@ const TradingChart = ({
         </>
       )}
 
-      <div className="relative flex-1 min-h-0 overflow-hidden" ref={mainRef} style={chartViewportStyle}>
+      <div
+        className="relative flex-1 min-h-0 overflow-hidden"
+        ref={mainRef}
+        style={chartViewportStyle}
+        onMouseMove={handleChartMouseMove}
+        onMouseLeave={handleChartMouseLeave}
+        onClick={handleChartClick}
+      >
         {showDesktopChartTools && !overlayUiSuppressed && (
           <>
             <div className="pointer-events-none absolute inset-y-0 left-0 z-[80] hidden sm:flex items-stretch">
@@ -3076,6 +3312,61 @@ const TradingChart = ({
                />
              )}
            </>
+        )}
+
+        {hoverPriceData && !overlayUiSuppressed && (
+          <>
+            <div className="pointer-events-none absolute inset-x-0 z-[87]" style={{ top: hoverPriceData.top }}>
+              <div className="absolute inset-x-0 h-px bg-amber-300/50" />
+            </div>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                addPriceAlert(hoverPriceData.price);
+              }}
+              className="pointer-events-auto absolute right-2 z-[88] inline-flex items-center gap-2 rounded-full border border-amber-300/40 bg-[#121826]/95 px-3 py-2 text-xs font-black text-white shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:border-amber-200 hover:bg-[#1b2232]"
+              style={{ top: hoverPriceData.top - 12 }}
+              title="Set alert at this price"
+            >
+              <Bell className="h-4 w-4 text-yellow-300" />
+              <span>{formatAlertPrice(hoverPriceData.price)}</span>
+            </button>
+          </>
+        )}
+
+        {priceAlerts.length > 0 && mainSeriesRef.current && !overlayUiSuppressed && (
+          <>
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-[89]">
+              {priceAlerts.map((alert) => {
+                const y = mainSeriesRef.current?.priceToCoordinate(alert.price);
+                if (y === null || !Number.isFinite(y)) return null;
+                return (
+                  <div key={`marker-${alert.id}`} className="absolute right-2 z-[89]" style={{ top: y - 18 }}>
+                    <div className="pointer-events-none absolute -right-10 h-[1px] w-[calc(100vw-96px)] bg-amber-300/25" />
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        removePriceAlert(alert.id);
+                      }}
+                      className="pointer-events-auto group relative inline-flex items-center gap-2 rounded-full border border-amber-400/45 bg-[#121826]/95 px-3 py-2 text-[11px] font-black text-amber-100 shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:border-rose-300/70 hover:bg-rose-500/15"
+                      title="Click to remove alert"
+                      aria-label={`Remove alert at ${formatAlertPrice(alert.price)}`}
+                    >
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-amber-300/30 bg-slate-900/90 text-yellow-300">
+                        <BellRing className="h-4 w-4" />
+                      </span>
+                      <span>{formatAlertPrice(alert.price)}</span>
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white ring-1 ring-white/20 transition-transform group-hover:scale-110">
+                        <X className="h-3 w-3" strokeWidth={3} />
+                      </span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
 
         {!compactPane && !miniOverlay && !mobileHistoryOpen && !overlayUiSuppressed && (
