@@ -330,24 +330,24 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 6.2,
-  "5s": 7,
-  "15s": 7.8,
-  "30s": 8.4,
-  "1m": 8.8,
-  "2m": 9,
-  "3m": 9.1,
-  "4m": 9.2,
-  "5m": 9.4,
-  "10m": 9.8,
-  "15m": 10.1,
-  "30m": 9.4,
-  "1h": 9.7,
-  "2h": 10,
-  "3h": 10.3,
-  "4h": 10.6,
-  "12h": 11,
-  "1D": 11.4,
+  "1s": 7,
+  "5s": 7.8,
+  "15s": 8.6,
+  "30s": 9.2,
+  "1m": 9.8,
+  "2m": 10,
+  "3m": 10.1,
+  "4m": 10.3,
+  "5m": 10.5,
+  "10m": 10.9,
+  "15m": 11.3,
+  "30m": 11.2,
+  "1h": 11.5,
+  "2h": 11.9,
+  "3h": 12.2,
+  "4h": 12.5,
+  "12h": 13,
+  "1D": 13.5,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
@@ -372,24 +372,24 @@ const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 1.1,
-  "5s": 1.2,
-  "15s": 1.35,
-  "30s": 1.45,
-  "1m": 1.6,
-  "2m": 1.65,
-  "3m": 1.7,
-  "4m": 1.75,
-  "5m": 1.8,
-  "10m": 1.9,
-  "15m": 2,
-  "30m": 1.7,
-  "1h": 1.75,
-  "2h": 1.8,
-  "3h": 1.85,
-  "4h": 1.9,
-  "12h": 2,
-  "1D": 2.1,
+  "1s": 2.3,
+  "5s": 2.45,
+  "15s": 2.6,
+  "30s": 2.75,
+  "1m": 2.9,
+  "2m": 3,
+  "3m": 3.05,
+  "4m": 3.1,
+  "5m": 3.15,
+  "10m": 3.25,
+  "15m": 3.35,
+  "30m": 3.25,
+  "1h": 3.35,
+  "2h": 3.45,
+  "3h": 3.55,
+  "4h": 3.65,
+  "12h": 3.8,
+  "1D": 4,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
@@ -824,7 +824,7 @@ const resolveChartCandleColor = (
   return matchesHexColor(value, legacyColor) ? professionalColor : value;
 };
 
-const clampBodyScale = (value: number) => Math.max(0.72, Math.min(1.42, value));
+const clampBodyScale = (value: number) => Math.max(0.9, Math.min(1.5, value));
 const clampAreaWidth = (value: number) => Math.max(1, Math.min(4, value));
 
 const isChartDisplayPreset = (value: unknown): value is ChartDisplayPreset =>
@@ -882,12 +882,12 @@ const getCandlestickDisplaySettings = (
   const baseUpColor = getCandleUpColor(chartType, styles, globalTheme.up);
   const baseDownColor = getCandleDownColor(chartType, styles, globalTheme.down);
   const minimalPreset = styles.displayPreset === "secondary";
-  const upColor = minimalPreset ? toRgba(baseUpColor, 0.92) : baseUpColor;
-  const downColor = minimalPreset ? toRgba(baseDownColor, 0.92) : baseDownColor;
-  const borderUpColor = minimalPreset ? upColor : baseUpColor;
-  const borderDownColor = minimalPreset ? downColor : baseDownColor;
-  const wickUpColor = minimalPreset ? upColor : mixHexColors(baseUpColor, "#ffffff", 0.08);
-  const wickDownColor = minimalPreset ? downColor : mixHexColors(baseDownColor, "#ffffff", 0.06);
+  const upColor = minimalPreset ? toRgba(baseUpColor, 0.92) : mixHexColors(baseUpColor, "#ffffff", 0.03);
+  const downColor = minimalPreset ? toRgba(baseDownColor, 0.92) : mixHexColors(baseDownColor, "#ffffff", 0.03);
+  const borderUpColor = toRgba(baseUpColor, 0.72);
+  const borderDownColor = toRgba(baseDownColor, 0.72);
+  const wickUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.02 : 0.08), 0.88);
+  const wickDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", minimalPreset ? 0.02 : 0.06), 0.88);
 
   return {
     upColor,
@@ -896,7 +896,7 @@ const getCandlestickDisplaySettings = (
     borderDownColor,
     wickUpColor,
     wickDownColor,
-    borderVisible: true,
+    borderVisible: false,
     wickVisible: true,
     priceLineVisible: styles.priceLineVisible,
   };
@@ -1015,7 +1015,7 @@ const getBarSpacingForScale = (timeframe: SupportedChartTimeframe, bodyScale: nu
   (BAR_SPACING_MAP[timeframe] ?? BAR_SPACING_MAP["1m"]) * clampBodyScale(bodyScale);
 
 const getMinBarSpacingForScale = (timeframe: SupportedChartTimeframe, bodyScale: number) =>
-  Math.max(1, (MIN_BAR_SPACING_MAP[timeframe] ?? MIN_BAR_SPACING_MAP["1m"]) * Math.max(0.75, bodyScale * 0.92));
+  Math.max(1, (MIN_BAR_SPACING_MAP[timeframe] ?? MIN_BAR_SPACING_MAP["1m"]) * Math.max(0.95, bodyScale * 0.96));
 
 const buildPairInfoTrend = (candles: OHLCCandle[]): PairInfoTrendPoint[] => {
   const closes = candles.slice(-72).map((candle) => candle.close);
@@ -2160,7 +2160,11 @@ const TradingChart = ({
       ? currentSpan * 0.76
       : currentSpan * 1.34;
     const minSpan = Math.max(22, Math.round(defaultVisibleBars * 0.36));
-    const maxSpan = Math.max(defaultVisibleBars, dataPointCount + rightOffset);
+    const maxVisibleBySpacing = Math.max(
+      defaultVisibleBars,
+      Math.floor(containerWidth / getMinBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale)) + rightOffset,
+    );
+    const maxSpan = Math.max(defaultVisibleBars, Math.min(dataPointCount + rightOffset, maxVisibleBySpacing));
     const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
     const anchorTo = currentRange?.to ?? (dataPointCount + rightOffset);
     const nextTo = Math.max(clampedSpan, anchorTo);
