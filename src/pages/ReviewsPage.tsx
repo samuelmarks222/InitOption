@@ -129,6 +129,15 @@ const resolveSocialVisual = (platform: string): Pick<SocialButton, "brand" | "ic
   return { icon: Globe };
 };
 
+const countryToCode = (country: string | null | undefined) => {
+  if (!country) return null;
+  const trimmed = country.trim();
+  if (!trimmed) return null;
+  const normalized = trimmed.toUpperCase();
+  if (!/^[A-Z]{2}$/.test(normalized)) return null;
+  return normalized;
+};
+
 const codeToFlag = (code: string) => {
   const normalized = code.trim().toUpperCase();
   if (!/^[A-Z]{2}$/.test(normalized)) return null;
@@ -136,10 +145,8 @@ const codeToFlag = (code: string) => {
 };
 
 const countryToFlag = (country: string | null | undefined) => {
-  if (!country) return null;
-  const trimmed = country.trim();
-  if (!trimmed) return null;
-  return codeToFlag(trimmed) ?? codeToFlag(COUNTRY_CODES[trimmed.toLowerCase()] ?? "");
+  const code = countryToCode(country) ?? COUNTRY_CODES[country?.trim().toLowerCase() ?? ""];
+  return code ? codeToFlag(code) : null;
 };
 
 const formatReviewDate = (value: string) => {
@@ -235,6 +242,30 @@ const StarRating = ({ rating, onChange }: { rating: number; onChange?: (rating: 
   </div>
 );
 
+const FlagBadge = ({ country, className = "" }: { country: string | null | undefined; className?: string }) => {
+  const code = countryToCode(country) ?? COUNTRY_CODES[country?.trim().toLowerCase() ?? ""];
+  const flag = countryToFlag(country);
+
+  if (!code && !flag) return null;
+
+  return (
+    <span
+      className={`flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1b2537] text-[11px] font-black text-white ring-2 ring-[#253047] ${className}`}
+      title={country ?? code ?? "Country"}
+    >
+      {code ? (
+        <img
+          alt={country ?? code}
+          className="h-full w-full object-cover"
+          src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
+        />
+      ) : (
+        flag
+      )}
+    </span>
+  );
+};
+
 const ReviewAvatar = ({
   avatarUrl,
   country,
@@ -246,7 +277,6 @@ const ReviewAvatar = ({
   name: string;
   size?: "sm" | "md" | "lg";
 }) => {
-  const flag = countryToFlag(country);
   const sizeClass = size === "lg" ? "h-[72px] w-[72px]" : size === "sm" ? "h-[56px] w-[56px]" : "h-[64px] w-[64px]";
 
   return (
@@ -256,11 +286,7 @@ const ReviewAvatar = ({
       ) : (
         <span>{initialsFromName(name)}</span>
       )}
-      {flag ? (
-        <span className="absolute -bottom-0.5 -left-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#1b2537] text-[13px] ring-2 ring-[#253047]">
-          {flag}
-        </span>
-      ) : null}
+      <FlagBadge country={country} className="absolute -bottom-0.5 -left-0.5" />
     </div>
   );
 };
@@ -287,31 +313,31 @@ const AccountRail = ({
     <aside
       className="hidden min-h-screen w-[282px] shrink-0 flex-col border-l px-7 py-5 xl:flex"
       style={{
-        background: "var(--trading-account-rail-bg, #153760)",
+        background: "#252e48",
         borderColor: "var(--trading-border-color, rgba(255,255,255,0.08))",
       }}
     >
       <div className="flex items-center gap-4">
         <ReviewAvatar avatarUrl={profile?.avatar_url ?? null} country={profile?.nationality ?? null} name={displayName} size="lg" />
-        <div className="min-w-0">
-          <div className="truncate text-lg font-black leading-tight text-white">{displayName}</div>
-          <div className="mt-1 truncate text-xs text-[#a9c0dd]">id {profile?.id?.slice(0, 9) || "guest"}</div>
-          <div className="mt-1 truncate text-xs text-[#a9c0dd]">{user?.email || "Sign in to review"}</div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[18px] font-bold leading-tight text-white" title={displayName}>{displayName}</div>
+          <div className="mt-1 truncate text-[11px] text-[#a9c0dd]">id {profile?.id?.slice(0, 9) || "guest"}</div>
+          <div className="mt-1 truncate text-[11px] text-[#a9c0dd]" title={user?.email ?? undefined}>{user?.email || "Sign in to review"}</div>
         </div>
       </div>
 
-      <div className="mt-7 flex h-[45px] items-center rounded-[8px] bg-[#274b78] text-white">
-        <div className="flex h-[45px] w-[48px] items-center justify-center rounded-l-[8px] bg-white/10">
-          <Wallet className="h-5 w-5 text-[#b7c7dd]" />
+      <div className="mt-6 flex h-[40px] items-center rounded-[7px] bg-[#303a5b] text-white">
+        <div className="flex h-[40px] w-[44px] items-center justify-center rounded-l-[7px] bg-white/8">
+          <Wallet className="h-4 w-4 text-[#b7c7dd]" />
         </div>
-        <div className="flex-1 text-center text-2xl font-black">${balance.toFixed(0)}</div>
+        <div className="flex-1 text-center text-xl font-bold">${balance.toFixed(0)}</div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        <Link to="/deposit" className="rounded-[10px] bg-white px-4 py-3 text-center text-sm font-black uppercase text-[#173153]">
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        <Link to="/deposit" className="rounded-[9px] px-4 py-2.5 text-center text-[13px] font-bold uppercase text-[#173153]" style={{ background: "#e9effd" }}>
           Deposit
         </Link>
-        <Link to="/trade" className="rounded-[10px] px-4 py-3 text-center text-sm font-black uppercase text-white" style={{ background: accentBlue }}>
+        <Link to="/trade" className="rounded-[9px] px-4 py-2.5 text-center text-[13px] font-bold uppercase text-white" style={{ background: "#0b7557" }}>
           Trade now
         </Link>
       </div>
@@ -482,7 +508,7 @@ const ReviewsPage = () => {
       <div className="flex min-h-screen">
         <div className="min-w-0 flex-1">
           <header className="sticky top-0 z-40 border-b" style={headerStyle}>
-            <div className="mx-auto flex min-h-[62px] max-w-[1240px] items-center justify-between gap-4 px-5">
+            <div className="flex min-h-[62px] w-full items-center justify-between gap-4 px-6 xl:px-8">
               <SiteLogo
                 to="/"
                 className="gap-2"
@@ -509,7 +535,7 @@ const ReviewsPage = () => {
             </div>
           </header>
 
-          <main className="mx-auto max-w-[1240px] px-5 pb-14 pt-12">
+          <main className="w-full px-6 pb-14 pt-12 xl:px-8">
             <section className="pb-20">
               <h1 className="text-[42px] font-black leading-tight tracking-[0.01em] text-white md:text-[48px]">Real reviews 2026</h1>
               <div className="mt-4 text-xs font-medium text-[#9eb4d0]">
@@ -533,7 +559,7 @@ const ReviewsPage = () => {
               </Link>
             </section>
 
-            <section className="grid items-start gap-14 lg:grid-cols-[minmax(0,616px)_minmax(390px,440px)] lg:gap-[72px]">
+            <section className="grid items-start gap-10 lg:grid-cols-[minmax(520px,1fr)_minmax(390px,460px)] xl:gap-12 2xl:gap-16">
               <div>
                 <div className="mb-8 flex items-center justify-between gap-4">
                   <h2 className="text-[26px] font-black uppercase tracking-[0.06em] text-white">Customer Reviews</h2>
@@ -555,9 +581,11 @@ const ReviewsPage = () => {
                         <div className="grid sm:grid-cols-[162px_minmax(0,1fr)]">
                           <aside className="flex flex-col items-center justify-center px-6 py-7 text-center" style={panelSoftStyle}>
                             <ReviewAvatar avatarUrl={review.avatarUrl} country={review.country} name={review.reviewerName} />
-                            <div className="mt-4 flex items-center justify-center gap-1 text-sm font-bold text-[#8ec3ff]">
-                              {countryToFlag(review.country) ? <span>{countryToFlag(review.country)}</span> : null}
-                              <span>{review.reviewerName}</span>
+                            <div className="mt-4 flex w-full min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#8ec3ff]">
+                              <FlagBadge country={review.country} className="h-4 w-4 ring-0" />
+                              <span className="block max-w-[132px] truncate text-center" title={review.reviewerName}>
+                                {review.reviewerName}
+                              </span>
                             </div>
                             <div className="mt-2 text-xs text-[#b4c4dc]">UID {review.reviewerUid}</div>
                             {review.country ? <div className="mt-1 text-[11px] uppercase tracking-[0.16em] text-[#7f93b0]">{review.country}</div> : null}
