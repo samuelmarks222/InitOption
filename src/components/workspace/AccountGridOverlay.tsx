@@ -28,20 +28,24 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
     { id: "settings", icon: Settings, label: "Settings", desc: "Configure account preferences" },
   ] as const;
 
-  const activeItem = MENU_ITEMS.find(m => m.id === activeTab);
-
   return (
-    <div className="absolute inset-0 z-40 bg-[#121f27] flex flex-col overflow-hidden">
+    <div
+      className="absolute inset-0 z-40 flex flex-col overflow-hidden text-[var(--trading-text-color)]"
+      style={{ background: "var(--trading-workspace-bg)" }}
+    >
 
       {/* ── TOP HEADER ── */}
-      <div className="flex items-center justify-between px-4 md:px-8 py-3 md:py-5 border-b border-[#0b2f3a] bg-[#13232d] shrink-0">
+      <div
+        className="flex shrink-0 items-center justify-between border-b border-[var(--trading-border-color)] px-4 py-3 md:px-7"
+        style={{ background: "var(--trading-header-bg)" }}
+      >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#0b2f3a] flex items-center justify-center text-white font-bold text-[14px] shrink-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-[14px] font-bold text-white">
             {profile?.username?.charAt(0)?.toUpperCase() ?? "U"}
           </div>
           <div className="min-w-0">
             <h1 className="text-[15px] md:text-[18px] font-bold text-white truncate">{profile?.username ?? "Your Account"}</h1>
-            <p className="text-[11px] text-gray-500 truncate hidden md:block">{user?.email ?? "Manage your profile & settings"}</p>
+            <p className="hidden truncate text-[11px] text-[var(--trading-muted-color)] md:block">{user?.email ?? "Manage your profile & settings"}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -52,7 +56,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
             <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Sign Out</span>
           </button>
           {onClose && (
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#0b2f3a] hover:bg-[#15404e] flex items-center justify-center text-gray-300 hover:text-white transition-colors">
+            <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/8 bg-white/[0.06] text-gray-300 transition-colors hover:bg-white/[0.1] hover:text-white">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -60,7 +64,10 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
       </div>
 
       {/* ── MOBILE: Scrollable Tab Strip ── */}
-      <div className="grid shrink-0 grid-cols-3 gap-2 border-b border-[#0b2f3a] bg-[#13232d] px-3 py-3 md:hidden">
+      <div
+        className="grid shrink-0 grid-cols-3 gap-2 border-b border-[var(--trading-border-color)] px-3 py-3 md:hidden"
+        style={{ background: "var(--trading-header-bg)" }}
+      >
         {MENU_ITEMS.map(item => {
           const isActive = activeTab === item.id;
           return (
@@ -68,7 +75,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
               key={item.id}
               onClick={() => setActiveTab(item.id as AccountTab)}
               className={`flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center transition-colors ${
-                isActive ? "bg-[#0b2f3a] text-[#86c9d4]" : "bg-[#0f1a21] text-gray-500"
+                isActive ? "border border-[#2f80ed]/35 bg-[#263044] text-white" : "border border-white/[0.04] bg-white/[0.035] text-[var(--trading-muted-color)]"
               }`}
             >
               <item.icon className="w-4 h-4" />
@@ -79,7 +86,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
                     ? "Trading"
                     : item.label.split(" ")[0]}
               </span>
-              {isActive && <div className="w-4 h-[2px] bg-[#86c9d4] rounded-full" />}
+              {isActive && <div className="h-[2px] w-4 rounded-full bg-[#2f80ed]" />}
             </button>
           );
         })}
@@ -89,27 +96,30 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
       <div className="flex-1 flex overflow-hidden min-h-0">
 
         {/* Desktop Sidebar */}
-        <div className="hidden md:flex w-[260px] shrink-0 border-r border-[#0b2f3a] bg-[#13232d] flex-col py-4 overflow-y-auto">
+        <div
+          className="hidden w-[244px] shrink-0 flex-col overflow-y-auto border-r border-[var(--trading-border-color)] py-3 md:flex"
+          style={{ background: "var(--trading-header-bg)" }}
+        >
           {MENU_ITEMS.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id as AccountTab)}
-                className={`flex items-center gap-3 px-5 py-3.5 mx-2 my-0.5 rounded-xl text-left transition-all ${
+                className={`mx-2 my-0.5 flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all ${
                   isActive
-                    ? "bg-[#0b2f3a] text-white border border-[#1b4f60]"
-                    : "text-gray-400 hover:text-white hover:bg-[#0b2f3a]/50"
+                    ? "border border-[#2f80ed]/28 bg-[#263044] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]"
+                    : "text-[var(--trading-muted-color)] hover:bg-white/[0.045] hover:text-white"
                 }`}
               >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActive ? "bg-[#15404e] text-[#86c9d4]" : "bg-[#121f27] text-gray-500"}`}>
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${isActive ? "bg-[#2f80ed]/15 text-[#78b8ff]" : "bg-black/20 text-[#748197]"}`}>
                   <item.icon className="w-4 h-4" />
                 </div>
                 <div>
                   <div className={`text-[13px] font-bold ${isActive ? "text-white" : ""}`}>{item.label}</div>
-                  <div className="text-[11px] text-gray-600 mt-0.5">{item.desc}</div>
+                  <div className="mt-0.5 text-[11px] leading-4 text-[#6f7b91]">{item.desc}</div>
                 </div>
-                {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#86c9d4] shrink-0" />}
+                {isActive && <div className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#78b8ff]" />}
               </button>
             );
           })}
@@ -117,13 +127,9 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="hidden md:block px-8 py-4 border-b border-[#0b2f3a] bg-[#13232d] shrink-0">
-            <h2 className="text-[17px] font-bold text-white">{activeItem?.label}</h2>
-            <p className="text-[13px] text-gray-500 mt-0.5">{activeItem?.desc}</p>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 md:p-8">
+          <div className="flex-1 overflow-y-auto p-3 md:p-4">
             {activeTab === "upload" && <ProfileUploadPhoto />}
-            {activeTab === "personal" && <ProfilePersonalData />}
+            {activeTab === "personal" && <ProfilePersonalData compact />}
             {activeTab === "deposit" && <ProfileDeposit />}
             {activeTab === "balance_history" && <ProfileBalanceHistory />}
             {activeTab === "trading_history" && <ProfileTradingHistory />}

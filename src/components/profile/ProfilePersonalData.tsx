@@ -51,6 +51,7 @@ type KycDocuments = {
 };
 
 interface ProfilePersonalDataProps {
+  compact?: boolean;
   guidedTarget?: GuideTarget;
 }
 
@@ -79,7 +80,7 @@ const readFileAsDataUrl = (file: File) =>
     reader.readAsDataURL(file);
   });
 
-export const ProfilePersonalData = ({ guidedTarget = null }: ProfilePersonalDataProps) => {
+export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: ProfilePersonalDataProps) => {
   const { emailVerified, profile, updateProfile, user } = useAuth();
   const { currency, formatMoney } = useCurrency();
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
@@ -393,11 +394,11 @@ export const ProfilePersonalData = ({ guidedTarget = null }: ProfilePersonalData
   };
 
   return (
-    <div className="w-full text-white">
+    <div className={`w-full text-white ${compact ? "profile-personal-data-compact" : ""}`}>
       <AccountCurrencyModal isOpen={showCurrencyModal} onClose={() => setShowCurrencyModal(false)} />
 
-      <div className="overflow-hidden rounded-[24px] border border-white/8 bg-[#242a39] shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
-        <div className="border-b border-white/6 bg-[#262d3d] px-4 py-4 md:px-6">
+      <div className="profile-personal-data-card overflow-hidden rounded-[24px] border border-white/8 bg-[#242a39] shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+        <div className="profile-personal-data-summary border-b border-white/6 bg-[#262d3d] px-4 py-4 md:px-6">
           <div className="grid gap-4 md:grid-cols-[1.2fr_1fr_1fr]">
             <SummaryCard
               label="My current currency"
@@ -411,13 +412,13 @@ export const ProfilePersonalData = ({ guidedTarget = null }: ProfilePersonalData
         </div>
 
         <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-          <form onSubmit={handleSave} className="border-b border-white/6 p-4 md:p-6 lg:border-b-0 lg:border-r lg:border-white/6">
+          <form onSubmit={handleSave} className="profile-personal-data-form border-b border-white/6 p-4 md:p-6 lg:border-b-0 lg:border-r lg:border-white/6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={isUpdatingAvatar}
-                className="group relative h-[116px] w-[116px] overflow-hidden rounded-full bg-[#1f3a5d] shadow-[inset_0_0_0_10px_rgba(33,45,68,0.9)] transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-70"
+                className="profile-avatar-button group relative h-[116px] w-[116px] overflow-hidden rounded-full bg-[#1f3a5d] shadow-[inset_0_0_0_10px_rgba(33,45,68,0.9)] transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-70"
                 title="Upload profile photo"
               >
                 <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full">
@@ -495,7 +496,7 @@ export const ProfilePersonalData = ({ guidedTarget = null }: ProfilePersonalData
               </div>
             </div>
 
-            <div className="mt-6 grid gap-5">
+            <div className="profile-fields-grid mt-6 grid gap-5">
               <FieldShell label="Nickname">
                 <input
                   ref={fieldRefs.username}
@@ -508,7 +509,7 @@ export const ProfilePersonalData = ({ guidedTarget = null }: ProfilePersonalData
                 />
               </FieldShell>
 
-              <div className="grid gap-5 md:grid-cols-2">
+              <div className="profile-field-pair grid gap-5 md:grid-cols-2">
                 <FieldShell label="First Name">
                   <input
                     ref={fieldRefs.firstName}
@@ -534,7 +535,7 @@ export const ProfilePersonalData = ({ guidedTarget = null }: ProfilePersonalData
                 </FieldShell>
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
+              <div className="profile-field-pair grid gap-5 md:grid-cols-2">
                 <FieldShell label="Date of birth">
                   <input
                     ref={fieldRefs.dob}
@@ -580,16 +581,18 @@ export const ProfilePersonalData = ({ guidedTarget = null }: ProfilePersonalData
                 </FieldShell>
               </div>
 
-              <FieldShell label="Email">
-                <input
-                  type="text"
-                  value={user?.email || ""}
-                  disabled
-                  className="h-[66px] w-full cursor-not-allowed bg-transparent px-5 text-[18px] text-[#8490a6] outline-none"
-                />
-              </FieldShell>
+              {!compact && (
+                <FieldShell label="Email">
+                  <input
+                    type="text"
+                    value={user?.email || ""}
+                    disabled
+                    className="h-[66px] w-full cursor-not-allowed bg-transparent px-5 text-[18px] text-[#8490a6] outline-none"
+                  />
+                </FieldShell>
+              )}
 
-              <EmailVerificationPanel variant="compact" />
+              <EmailVerificationPanel hideWhenVerified={compact} variant="compact" />
 
               <FieldShell label="Country">
                 <select
@@ -631,11 +634,11 @@ export const ProfilePersonalData = ({ guidedTarget = null }: ProfilePersonalData
             </div>
           </form>
 
-          <div className="p-4 md:p-6">
+          <div className="profile-documents-panel p-4 md:p-6">
             <h3 className="text-[18px] font-bold text-white">Documents verification:</h3>
 
             <div
-              className={`mt-6 rounded-[14px] border px-5 py-6 ${
+              className={`profile-verification-notice mt-6 rounded-[14px] border px-5 py-6 ${
                 verificationNotice.tone === "success"
                   ? "border-[#0fa053]/30 bg-green-500/10 text-green-300"
                   : verificationNotice.tone === "warning"
@@ -764,7 +767,7 @@ const SummaryCard = ({
   actionLabel?: string;
   onAction?: () => void;
 }) => (
-  <div className="rounded-[14px] border border-white/6 bg-[#242a39] px-4 py-4">
+  <div className="profile-summary-card rounded-[14px] border border-white/6 bg-[#242a39] px-4 py-4">
     <div className="text-[13px] text-[#8e9ab0]">{label}</div>
     <div className="mt-2 flex items-center gap-3">
       <div className="text-[18px] font-bold text-white">{value}</div>
@@ -782,8 +785,8 @@ const SummaryCard = ({
 );
 
 const FieldShell = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="relative rounded-[12px] border border-[#535d73] bg-[#242a39]">
-    <div className="absolute left-4 top-0 -translate-y-1/2 bg-[#242a39] px-2 text-[12px] font-medium text-[#737e94]">
+  <div className="profile-field-shell relative rounded-[12px] border border-[#535d73] bg-[#242a39]">
+    <div className="profile-field-label absolute left-4 top-0 -translate-y-1/2 bg-[#242a39] px-2 text-[12px] font-medium text-[#737e94]">
       {label}
     </div>
     {children}
@@ -805,7 +808,7 @@ const DocumentRow = ({
   onUpload: () => void;
   onRemove: () => void;
 }) => (
-  <div className="rounded-[14px] border border-[#535d73] bg-[#242a39] p-4">
+  <div className="profile-document-row rounded-[14px] border border-[#535d73] bg-[#242a39] p-4">
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">
         <div className="text-[15px] font-semibold text-white">{label}</div>
