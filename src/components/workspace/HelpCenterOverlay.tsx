@@ -113,10 +113,10 @@ const VIDEOS = [
   { id: "v3", title: "Using the RSI Indicator", duration: "5:48", category: "Technical Analysis", color: "from-green-600 to-emerald-500", emoji: "📈" },
   { id: "v4", title: "MACD Strategy Explained", duration: "7:32", category: "Technical Analysis", color: "from-[#0fa053] to-[#1e2330]", emoji: "📉" },
   { id: "v5", title: "How Tournaments Work", duration: "4:10", category: "Platform", color: "from-[#0fa053] to-[#1e2330]", emoji: "🏆" },
-  { id: "v6", title: "Setting Up Your Account", duration: "3:55", category: "Basics", color: "from-pink-600 to-rose-500", emoji: "👤" },
+  { id: "v6", title: "Setting Up Your Account", duration: "3:55", category: "Basics", color: "from-[#1e2330] to-[#2b3548]", emoji: "👤" },
   { id: "v7", title: "Risk Management for Traders", duration: "9:20", category: "Strategy", color: "from-[#0fa053] to-[#1e2330]", emoji: "🛡️" },
   { id: "v8", title: "Using Trading Signals", duration: "6:00", category: "Platform", color: "from-[#1e2330] to-[#0fa053]", emoji: "🔔" },
-  { id: "v9", title: "Bollinger Bands Strategy", duration: "7:45", category: "Technical Analysis", color: "from-fuchsia-600 to-pink-500", emoji: "🎯" },
+  { id: "v9", title: "Bollinger Bands Strategy", duration: "7:45", category: "Technical Analysis", color: "from-[#1e2330] to-[#2b3548]", emoji: "🎯" },
 ];
 
 const GUIDE_SECTIONS = [
@@ -270,9 +270,15 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
   ] as const;
 
   return (
-    <div className="absolute inset-0 z-40 bg-[#0E1217] flex flex-col overflow-hidden">
+    <div
+      className="absolute inset-0 z-40 flex flex-col overflow-hidden"
+      style={{ background: "var(--trading-workspace-bg)" }}
+    >
       {/* ── TOP NAV BAR ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between px-4 md:px-8 border-b border-white/5 bg-[#111518] shrink-0 gap-2 md:gap-0 pt-3 md:pt-0">
+      <div
+        className="flex shrink-0 flex-col justify-between gap-2 border-b border-white/5 px-4 pt-3 md:flex-row md:items-center md:gap-0 md:px-8 md:pt-0"
+        style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
+      >
         
         {/* Mobile Top Row: Logo & Close */}
         <div className="flex items-center justify-between md:w-auto w-full">
@@ -320,7 +326,10 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
       {/* ── ARTICLE VIEW ── */}
       {view === "article" && activeArticle && (
         <>
-          <div className="flex items-center gap-3 px-4 md:px-8 py-3.5 border-b border-white/5 bg-[#111518] shrink-0">
+          <div
+            className="flex shrink-0 items-center gap-3 border-b border-white/5 px-4 py-3.5 md:px-8"
+            style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
+          >
             <button onClick={() => setView("home")} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-[13px] font-bold group">
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back
             </button>
@@ -340,10 +349,13 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
       {view === "home" && (
         <div className="flex-1 overflow-y-auto">
           {/* Hero Section */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0E1217] px-4 sm:px-6 md:px-10 pt-10 md:pt-14 pb-12 md:pb-16">
+          <div
+            className="relative overflow-hidden px-4 pb-12 pt-10 sm:px-6 md:px-10 md:pb-16 md:pt-14"
+            style={{ background: "linear-gradient(135deg, var(--trading-panel-bg) 0%, var(--trading-workspace-bg) 100%)" }}
+          >
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#0fa053]/10 rounded-full blur-[80px] translate-x-1/3 -translate-y-1/3" />
-            <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-violet-600/10 rounded-full blur-[80px] -translate-x-1/4 translate-y-1/4" />
+            <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#2f80ed]/8 rounded-full blur-[80px] -translate-x-1/4 translate-y-1/4" />
             <div className="relative z-10 max-w-[900px] mx-auto text-center">
               <div className="inline-flex max-w-full items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-1.5 text-[11px] md:text-[12px] text-gray-400 font-bold mb-5">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
@@ -487,7 +499,10 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
       {/* ── TRADING GUIDE VIEW ── */}
       {view === "guide" && (
         <div className="flex-1 overflow-y-auto">
-          <div className="bg-gradient-to-br from-[#0f172a] to-[#0E1217] px-4 sm:px-6 md:px-10 py-8 md:py-10 border-b border-white/5">
+          <div
+            className="border-b border-white/5 px-4 py-8 sm:px-6 md:px-10 md:py-10"
+            style={{ background: "linear-gradient(135deg, var(--trading-panel-bg) 0%, var(--trading-workspace-bg) 100%)", borderBottomColor: "var(--trading-border-color)" }}
+          >
             <div className="flex items-center gap-3 mb-2">
               <BookOpen className="w-5 h-5 text-[#0fa053]" />
               <span className="text-[12px] text-[#0fa053] font-bold uppercase tracking-widest">Knowledge Base</span>
@@ -542,7 +557,10 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
       {/* ── VIDEO TUTORIALS VIEW ── */}
       {view === "videos" && (
         <div className="flex-1 overflow-y-auto">
-          <div className="bg-gradient-to-br from-[#170f2e] to-[#0E1217] px-4 sm:px-6 md:px-10 py-8 md:py-10 border-b border-white/5">
+          <div
+            className="border-b border-white/5 px-4 py-8 sm:px-6 md:px-10 md:py-10"
+            style={{ background: "linear-gradient(135deg, var(--trading-panel-bg) 0%, var(--trading-workspace-bg) 100%)", borderBottomColor: "var(--trading-border-color)" }}
+          >
             <div className="flex items-center gap-3 mb-2">
               <PlayCircle className="w-5 h-5 text-[#8fb0cf]" />
               <span className="text-[12px] text-[#8fb0cf] font-bold uppercase tracking-widest">Video Library</span>
@@ -588,9 +606,12 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
 
       {/* ── LIVE CHAT VIEW ── */}
       {view === "chat" && (
-        <div className="flex-1 flex flex-col overflow-hidden bg-[#0E1217]">
+        <div className="flex flex-1 flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
           {/* Chat agent bar */}
-          <div className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 bg-[#111518] border-b border-white/5 shrink-0">
+          <div
+            className="flex shrink-0 items-center gap-3 border-b border-white/5 px-4 py-4 md:gap-4 md:px-6"
+            style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
+          >
             <div className="relative">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-[15px]">S</div>
               <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-400 border-2 border-[#111518]" />
@@ -638,7 +659,10 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
           </div>
 
           {/* Input bar */}
-          <div className="px-4 md:px-6 py-4 border-t border-white/5 bg-[#111518] shrink-0">
+          <div
+            className="shrink-0 border-t border-white/5 px-4 py-4 md:px-6"
+            style={{ background: "var(--trading-header-bg)", borderTopColor: "var(--trading-border-color)" }}
+          >
             <div className="flex items-center gap-3 bg-[#1A1F26] border border-white/10 focus-within:border-[#0fa053]/50 rounded-2xl px-4 py-2.5 transition-colors">
               <input
                 type="text"

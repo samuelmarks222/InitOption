@@ -24,9 +24,15 @@ export const WorkspaceAccount = () => {
   ] as const;
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#0E1217]">
+    <div
+      className="flex h-full w-full flex-col"
+      style={{ background: "var(--trading-workspace-bg)" }}
+    >
       {/* Sub-navigation Tabs */}
-      <div className="w-full overflow-x-auto border-b border-[#ffffff10] bg-[#1A1F26] no-scrollbar">
+      <div
+        className="w-full overflow-x-auto border-b no-scrollbar"
+        style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
+      >
         <div className="flex w-max px-2 py-1">
           {MENU_ITEMS.map((item) => {
             const isActive = activeTab === item.id;
@@ -35,7 +41,7 @@ export const WorkspaceAccount = () => {
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors mx-1 whitespace-nowrap text-[12px] font-bold ${
-                  isActive ? "bg-[#ffffff15] text-[#0b65c2]" : "text-gray-400 hover:text-white hover:bg-[#ffffff0a]"
+                  isActive ? "bg-white/[0.07] text-white" : "text-[var(--trading-muted-color)] hover:bg-white/[0.05] hover:text-white"
                 }`}
               >
                 <item.icon className="w-4 h-4" />
@@ -55,9 +61,9 @@ export const WorkspaceAccount = () => {
       </div>
 
       {/* Dynamic Tab Content (Reusing Profile Components) */}
-      <div className="flex-1 overflow-y-auto p-6 w-full relative">
+      <div className="relative w-full flex-1 overflow-y-auto p-4">
         {activeTab === "upload" && <ProfileUploadPhoto />}
-        {activeTab === "personal" && <ProfilePersonalData />}
+        {activeTab === "personal" && <ProfilePersonalData compact />}
         {activeTab === "deposit" && <ProfileDeposit />}
         {activeTab === "balance_history" && <ProfileBalanceHistory />}
         {activeTab === "trading_history" && <ProfileTradingHistory />}

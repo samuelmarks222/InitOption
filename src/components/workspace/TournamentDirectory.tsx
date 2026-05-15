@@ -221,7 +221,7 @@ export const TournamentDirectory = ({ onOpenDetails, onClose, variant = "full" }
   };
 
   return (
-    <div className="h-full min-h-0 overflow-y-auto bg-[#1d253a] text-white">
+    <div className="h-full min-h-0 overflow-y-auto text-white" style={{ background: "var(--trading-workspace-bg)" }}>
       <div className={cn("w-full", isCompact ? "px-4 py-4" : "mx-auto max-w-6xl px-4 py-5 sm:px-6")}>
         <div className="mb-3 flex items-center justify-between">
           <h1 className="text-[33px] leading-none sm:text-[36px] font-bold text-[#e6edf9]">Tournaments</h1>

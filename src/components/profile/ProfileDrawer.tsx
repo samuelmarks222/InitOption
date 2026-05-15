@@ -123,8 +123,14 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
       <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm" onClick={onClose} />
 
       <div className="fixed inset-y-0 right-0 z-50 flex w-full justify-end">
-        <div className="flex h-full w-full max-w-[1520px] flex-col bg-[#1b2230] shadow-[0_32px_120px_rgba(0,0,0,0.55)] md:w-[88%]">
-          <div className="border-b border-white/6 bg-[#202737] px-4 py-4 md:px-6 md:py-5">
+        <div
+          className="flex h-full w-full max-w-[1520px] flex-col shadow-[0_32px_120px_rgba(0,0,0,0.55)] md:w-[88%]"
+          style={{ background: "var(--trading-workspace-bg)" }}
+        >
+          <div
+            className="border-b border-white/6 px-4 py-4 md:px-6 md:py-5"
+            style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
+          >
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
               <div className="min-w-0">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#7f8ea8]">Account</div>
@@ -176,8 +182,8 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
                   onClick={() => setActiveTab(item.id)}
                   className={`shrink-0 rounded-[12px] px-3 py-2 text-[13px] font-bold transition-colors sm:px-4 sm:py-3 sm:text-[14px] ${
                     activeTab === item.id
-                      ? "bg-[#4a5161] text-white"
-                      : "bg-[#2a3142] text-[#b7c2d8] hover:bg-[#323a4d] hover:text-white"
+                      ? "bg-white/[0.08] text-white"
+                      : "bg-white/[0.045] text-[#b7c2d8] hover:bg-white/[0.075] hover:text-white"
                   }`}
                 >
                   <span className="inline-flex items-center gap-2">
@@ -198,8 +204,11 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto bg-[#1b2230] px-4 py-4 md:px-6 md:py-6">
-            {activeTab === "personal" && <ProfilePersonalData guidedTarget={personalGuideTarget} />}
+          <div
+            className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6"
+            style={{ background: "var(--trading-workspace-bg)" }}
+          >
+            {activeTab === "personal" && <ProfilePersonalData compact guidedTarget={personalGuideTarget} />}
             {activeTab === "deposit" && <ProfileDeposit />}
             {activeTab === "support" && <ProfileSupport />}
             {activeTab === "balance_history" && <ProfileBalanceHistory />}

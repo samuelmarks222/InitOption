@@ -19,7 +19,7 @@ export const WorkspaceMore = () => {
 
   if (activeTab === "grid") {
     return (
-      <div className="no-scrollbar h-full w-full overflow-y-auto p-4 text-white sm:p-6">
+      <div className="no-scrollbar h-full w-full overflow-y-auto p-4 text-white sm:p-6" style={{ background: "var(--trading-workspace-bg)" }}>
         <h3 className="mb-6 text-[15px] font-bold">Explore More Features</h3>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -30,7 +30,7 @@ export const WorkspaceMore = () => {
               className={`group flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-white/5 p-6 transition-all hover:scale-[1.03] hover:border-white/20 ${
                 tile.id === "analytics" ? "sm:col-span-2 sm:aspect-[3/1] sm:min-h-[160px]" : "min-h-[180px] sm:aspect-square"
               }`}
-              style={{ background: "#1A1F26" }}
+              style={{ background: "var(--trading-panel-bg)" }}
             >
               <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${tile.bg} transition-transform group-hover:scale-110`}>
                 <tile.icon className={`h-6 w-6 ${tile.color}`} />
@@ -45,8 +45,11 @@ export const WorkspaceMore = () => {
   }
 
   return (
-    <div className="flex h-full w-full flex-col bg-[#0E1217] text-white">
-      <div className="flex items-center gap-3 border-b border-white/5 bg-[#1A1F26] p-4">
+    <div className="flex h-full w-full flex-col text-white" style={{ background: "var(--trading-workspace-bg)" }}>
+      <div
+        className="flex items-center gap-3 border-b border-white/5 p-4"
+        style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
+      >
         <button
           onClick={() => setActiveTab("grid")}
           className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
@@ -67,7 +70,7 @@ export const WorkspaceMore = () => {
 
         {activeTab === "signals" && (
           <div className="p-4 sm:p-6">
-            <div className="rounded-2xl border border-dashed border-white/10 bg-[#1A1F26] p-6 text-center">
+            <div className="rounded-2xl border border-dashed border-white/10 p-6 text-center" style={{ background: "var(--trading-panel-bg)" }}>
               <BellRing className="mx-auto mb-4 h-12 w-12 text-green-500/50" />
               <h3 className="text-xl font-bold text-white">No Live Signal Feed Connected</h3>
               <p className="mt-3 text-sm leading-6 text-gray-400">

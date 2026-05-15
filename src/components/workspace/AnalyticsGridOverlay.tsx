@@ -35,10 +35,16 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
       {/* Slide-in container — full width on mobile */}
-      <div className="w-full md:w-[90%] h-full bg-[#0E1217] shadow-2xl flex flex-col border-l border-white/10">
+      <div
+        className="flex h-full w-full flex-col border-l border-white/10 shadow-2xl md:w-[90%]"
+        style={{ background: "var(--trading-workspace-bg)", borderLeftColor: "var(--trading-border-color)" }}
+      >
 
         {/* ── TOP HEADER ── */}
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between px-4 md:px-8 py-3 md:py-5 border-b border-[#ffffff10] bg-[#1A1F26] shrink-0">
+        <div
+          className="flex shrink-0 flex-col gap-2 border-b px-4 py-3 md:flex-row md:items-center md:justify-between md:px-8 md:py-5"
+          style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
+        >
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
@@ -56,7 +62,7 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
 
           {/* Date Filter */}
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <div className="flex bg-[#0E1217] rounded-lg p-1 border border-white/5 shrink-0">
+            <div className="flex shrink-0 rounded-lg border border-white/5 bg-black/20 p-1">
               {(["Today", "Week", "Month", "All"] as const).map(range => (
                 <button
                   key={range}
@@ -76,7 +82,10 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
         </div>
 
         {/* ── KPI STRIP ── */}
-        <div className="bg-[#14181F] px-4 py-3 border-b border-[#ffffff10] shrink-0">
+        <div
+          className="shrink-0 border-b px-4 py-3"
+          style={{ background: "var(--trading-workspace-bg)", borderBottomColor: "var(--trading-border-color)" }}
+        >
           <div className="flex overflow-x-auto gap-3 scrollbar-hide">
             <KPICard label="Net Profit" value={`$${tradeStats.totalProfit.toFixed(2)}`} color={tradeStats.totalProfit >= 0 ? "text-[#00C076]" : "text-red-500"} />
             <KPICard label="Total Trades" value={tradeStats.totalTrades} />
@@ -90,7 +99,10 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
         </div>
 
         {/* ── MOBILE: Horizontal Tab Scroll ── */}
-        <div className="md:hidden shrink-0 flex overflow-x-auto gap-1 px-2 py-2 bg-[#1A1F26] border-b border-white/5 scrollbar-hide snap-x snap-mandatory">
+        <div
+          className="flex shrink-0 snap-x snap-mandatory gap-1 overflow-x-auto border-b border-white/5 px-2 py-2 scrollbar-hide md:hidden"
+          style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
+        >
           {TABS.map(tab => {
             const isActive = activeTab === tab.id;
             return (
@@ -113,7 +125,10 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
         <div className="flex-1 flex overflow-hidden min-h-0">
 
           {/* Desktop Vertical Tabs */}
-          <div className="hidden md:flex w-[280px] bg-[#1A1F26] border-r border-[#ffffff10] flex-col p-4 space-y-2 shrink-0 overflow-y-auto">
+          <div
+            className="hidden w-[280px] shrink-0 flex-col space-y-2 overflow-y-auto border-r p-4 md:flex"
+            style={{ background: "var(--trading-header-bg)", borderRightColor: "var(--trading-border-color)" }}
+          >
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -131,7 +146,7 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto bg-[#0E1217] p-4 md:p-8">
+          <div className="flex-1 overflow-y-auto p-4 md:p-8" style={{ background: "var(--trading-workspace-bg)" }}>
             <h2 className="text-[18px] md:text-[24px] font-bold text-white mb-4 md:mb-8 border-b border-white/5 pb-4">
               {TABS.find(t => t.id === activeTab)?.label}
             </h2>
@@ -150,7 +165,7 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
 
 // --- KPI Card ---
 const KPICard = ({ label, value, color = "text-white" }: { label: string, value: string | number, color?: string }) => (
-  <div className="min-w-[120px] md:min-w-[160px] flex-1 bg-[#1A1F26] rounded-xl p-3 md:p-4 border border-white/5 shadow-sm flex flex-col justify-center shrink-0">
+  <div className="flex min-w-[120px] flex-1 shrink-0 flex-col justify-center rounded-xl border border-white/5 p-3 shadow-sm md:min-w-[160px] md:p-4" style={{ background: "var(--trading-panel-bg)" }}>
     <span className="text-[10px] md:text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-1">{label}</span>
     <span className={`text-[16px] md:text-[22px] font-black tracking-tight ${color}`}>{value}</span>
   </div>

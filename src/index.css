@@ -324,9 +324,9 @@
 
   .trading-terminal {
     --trading-workspace-bg: #1a1e2b;
-    --trading-header-bg: #1c1f2d;
+    --trading-header-bg: #1a1e2b;
     --trading-sidebar-bg: #1a1e2b;
-    --trading-workspace-panel-bg: #0e1217;
+    --trading-workspace-panel-bg: #1a1e2b;
     --trading-panel-bg: #1e2330;
     --trading-panel-soft-bg: #303646;
     --trading-tabs-bg: #1c2130;
@@ -369,10 +369,100 @@
     transition: none !important;
   }
 
+  .trading-terminal [class*="bg-[#0E1217]"],
+  .trading-terminal [class*="bg-[#0d1117]"],
+  .trading-terminal [class*="bg-[#0c141d]"],
+  .trading-terminal [class*="bg-[#0b0e14]"],
+  .trading-terminal [class*="bg-[#111518]"],
+  .trading-terminal [class*="bg-[#11161d]"],
+  .trading-terminal [class*="bg-[#121f27]"],
+  .trading-terminal [class*="bg-[#131a28]"],
+  .trading-terminal [class*="bg-[#14181f]"],
+  .trading-terminal [class*="bg-[#141b27]"],
+  .trading-terminal [class*="bg-[#151b24]"],
+  .trading-terminal [class*="bg-[#151c28]"],
+  .trading-terminal [class*="bg-[#151c2a]"],
+  .trading-terminal [class*="bg-[#0f1a21]"],
+  .trading-terminal [class*="bg-[#0f1623]"],
+  .trading-terminal [class*="bg-[#1d253a]"],
+  .trading-terminal [class*="bg-[#0a0d14]"] {
+    background: var(--trading-workspace-bg) !important;
+  }
+
+  .trading-terminal [class*="bg-[#13232d]"],
+  .trading-terminal [class*="bg-[#0f1c24]"],
+  .trading-terminal [class*="bg-[#10202a]"],
+  .trading-terminal [class*="bg-[#1A1F26]"],
+  .trading-terminal [class*="bg-[#1A2033]"],
+  .trading-terminal [class*="bg-[#1a1f26]"],
+  .trading-terminal [class*="bg-[#1D2539]"],
+  .trading-terminal [class*="bg-[#1d2332]"],
+  .trading-terminal [class*="bg-[#1b2230]"],
+  .trading-terminal [class*="bg-[#1b2436]"],
+  .trading-terminal [class*="bg-[#1c2437]"],
+  .trading-terminal [class*="bg-[#1c1f2d]"],
+  .trading-terminal [class*="bg-[#1e3656]"],
+  .trading-terminal [class*="bg-[#1d2433]"],
+  .trading-terminal [class*="bg-[#1e2330]"],
+  .trading-terminal [class*="bg-[#202736]"],
+  .trading-terminal [class*="bg-[#202737]"],
+  .trading-terminal [class*="bg-[#20355D]"],
+  .trading-terminal [class*="bg-[#20344a]"],
+  .trading-terminal [class*="bg-[#212a42]"],
+  .trading-terminal [class*="bg-[#222C45]"],
+  .trading-terminal [class*="bg-[#223049]"],
+  .trading-terminal [class*="bg-[#223358]"],
+  .trading-terminal [class*="bg-[#242a39]"],
+  .trading-terminal [class*="bg-[#242E4A]"],
+  .trading-terminal [class*="bg-[#262d3d]"],
+  .trading-terminal [class*="bg-[#273451]"] {
+    background: var(--trading-panel-bg) !important;
+  }
+
+  .trading-terminal [class*="bg-[#0b2f3a]"],
+  .trading-terminal [class*="bg-[#15404e]"],
+  .trading-terminal [class*="bg-[#232c45]"],
+  .trading-terminal [class*="bg-[#263044]"],
+  .trading-terminal [class*="bg-[#26314d]"],
+  .trading-terminal [class*="bg-[#273454]"],
+  .trading-terminal [class*="bg-[#2a3142]"],
+  .trading-terminal [class*="bg-[#2f374b]"],
+  .trading-terminal [class*="bg-[#303646]"],
+  .trading-terminal [class*="bg-[#394766]"],
+  .trading-terminal [class*="bg-[#4a5161]"] {
+    background: var(--trading-panel-soft-bg) !important;
+  }
+
+  .trading-terminal [class*="border-[#0b2f3a]"],
+  .trading-terminal [class*="border-[#1b4f60]"],
+  .trading-terminal [class*="border-[#2f3c5e]"],
+  .trading-terminal [class*="border-[#2f3d60]"],
+  .trading-terminal [class*="border-[#283142]"],
+  .trading-terminal [class*="border-[#2a3142]"],
+  .trading-terminal [class*="border-[#243047]"],
+  .trading-terminal [class*="border-[#334261]"],
+  .trading-terminal [class*="border-[#535d73]"],
+  .trading-terminal [class*="border-[#ffffff10]"] {
+    border-color: var(--trading-border-color) !important;
+  }
+
+  .trading-terminal [class*="text-[#86c9d4]"],
+  .trading-terminal [class*="text-[#8eb3bf]"],
+  .trading-terminal [class*="text-[#9dc2c8]"],
+  .trading-terminal [class*="text-[#9badc9]"],
+  .trading-terminal [class*="text-[#9fb0cf]"],
+  .trading-terminal [class*="text-[#88a3ac]"],
+  .trading-terminal [class*="text-[#92a0bd]"],
+  .trading-terminal [class*="text-[#99b7bd]"],
+  .trading-terminal [class*="text-[#a6b1c8]"],
+  .trading-terminal [class*="text-[#c2cadd]"] {
+    color: var(--trading-muted-color) !important;
+  }
+
   html[data-trading-template="light"] .trading-terminal {
     --trading-workspace-bg: #dfe9f6;
     --trading-header-bg: #26364f;
-    --trading-sidebar-bg: #2b3b56;
+    --trading-sidebar-bg: #26364f;
     --trading-workspace-panel-bg: #33445f;
     --trading-panel-bg: #30415c;
     --trading-panel-soft-bg: #3b4d69;
@@ -402,7 +492,7 @@
   html[data-trading-template="twilight"] .trading-terminal {
     --trading-workspace-bg: #172338;
     --trading-header-bg: #182236;
-    --trading-sidebar-bg: #141d30;
+    --trading-sidebar-bg: #182236;
     --trading-workspace-panel-bg: #111a2a;
     --trading-panel-bg: #202a3e;
     --trading-panel-soft-bg: #2d3850;
@@ -431,9 +521,9 @@
 
   html[data-trading-template="fullNight"] .trading-terminal {
     --trading-workspace-bg: #1a1e2b;
-    --trading-header-bg: #1c1f2d;
+    --trading-header-bg: #1a1e2b;
     --trading-sidebar-bg: #1a1e2b;
-    --trading-workspace-panel-bg: #0e1217;
+    --trading-workspace-panel-bg: #1a1e2b;
     --trading-panel-bg: #1e2330;
     --trading-panel-soft-bg: #303646;
     --trading-tabs-bg: #1c2130;

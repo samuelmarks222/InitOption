@@ -192,7 +192,7 @@ const TradingHeader = ({
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
             ) : (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,#8244d6,#b95cf1)] text-sm font-black text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2f80ed,#1e2330)] text-sm font-black text-white">
                 {profileInitial}
               </div>
             )}
@@ -384,7 +384,7 @@ const TradingHeader = ({
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="Avatar" className="h-9 w-9 rounded-full object-cover ring-1 ring-white/10" />
                 ) : (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#8244d6,#b95cf1)] text-[15px] font-black text-white ring-1 ring-white/10">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2f80ed,#1e2330)] text-[15px] font-black text-white ring-1 ring-white/10">
                     {profileInitial}
                   </div>
                 )}

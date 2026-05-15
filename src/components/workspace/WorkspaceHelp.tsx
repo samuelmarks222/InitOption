@@ -9,15 +9,15 @@ export const WorkspaceHelp = () => {
   ];
 
   return (
-    <div className="w-full h-full text-white flex flex-col">
-      <div className="p-6 bg-gradient-to-b from-[#1A1F26] to-transparent">
+    <div className="flex h-full w-full flex-col text-white" style={{ background: "var(--trading-workspace-bg)" }}>
+      <div className="border-b border-[var(--trading-border-color)] p-6" style={{ background: "var(--trading-header-bg)" }}>
         <h2 className="text-[20px] font-bold mb-4">Hello, how can we help?</h2>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input 
             type="text" 
             placeholder="Search for answers..." 
-            className="w-full bg-[#ffffff0a] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-[14px] text-white focus:outline-none focus:border-[#0b65c2] transition-colors"
+            className="w-full rounded-xl border border-white/10 bg-white/[0.05] py-3 pl-11 pr-4 text-[14px] text-white transition-colors focus:border-[#2f80ed]/60 focus:outline-none"
           />
         </div>
       </div>
@@ -25,11 +25,11 @@ export const WorkspaceHelp = () => {
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-6 space-y-6 no-scrollbar">
         {/* Quick Links */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-          <button className="bg-[#1A1F26] border border-white/5 rounded-xl p-4 flex flex-col hover:border-white/20 transition-all text-left">
+          <button className="flex flex-col rounded-xl border border-white/5 p-4 text-left transition-all hover:border-white/20" style={{ background: "var(--trading-panel-bg)" }}>
             <FileText className="w-5 h-5 text-[#0fa053] mb-2" />
             <div className="text-[13px] font-bold">Trading Guide</div>
           </button>
-          <button className="bg-[#1A1F26] border border-white/5 rounded-xl p-4 flex flex-col hover:border-white/20 transition-all text-left">
+          <button className="flex flex-col rounded-xl border border-white/5 p-4 text-left transition-all hover:border-white/20" style={{ background: "var(--trading-panel-bg)" }}>
             <PlayCircle className="w-5 h-5 text-[#0fa053] mb-2" />
             <div className="text-[13px] font-bold">Video Tutorials</div>
           </button>
@@ -38,7 +38,7 @@ export const WorkspaceHelp = () => {
         {/* Popular Articles */}
         <div>
           <h3 className="text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-3">Popular Articles</h3>
-          <div className="bg-[#1A1F26] border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5">
+          <div className="overflow-hidden rounded-2xl border border-white/5 divide-y divide-white/5" style={{ background: "var(--trading-panel-bg)" }}>
             {FAQS.map((q, i) => (
               <button key={i} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors text-left group">
                 <span className="text-[13px] text-gray-300 group-hover:text-white transition-colors">{q}</span>
