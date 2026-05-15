@@ -8,15 +8,16 @@ import { AnalyticsAnalysis } from "./analytics/AnalyticsAnalysis";
 import { AnalyticsAssets } from "./analytics/AnalyticsAssets";
 import { AnalyticsRisk } from "./analytics/AnalyticsRisk";
 import { AnalyticsBenchmark } from "./analytics/AnalyticsBenchmark";
-import { AnalyticsSignals } from "./analytics/AnalyticsSignals";
+import { AnalyticsSignals, type AnalyticsSignalAsset } from "./analytics/AnalyticsSignals";
 
 type AnalyticsTab = "overview" | "analysis" | "assets" | "risk" | "benchmark" | "signals";
 
 interface AnalyticsGridOverlayProps {
   onClose?: () => void;
+  activeAsset?: AnalyticsSignalAsset;
 }
 
-export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => {
+export const AnalyticsGridOverlay = ({ onClose, activeAsset }: AnalyticsGridOverlayProps) => {
   const [activeTab, setActiveTab] = useState<AnalyticsTab>("overview");
   const [dateRange, setDateRange] = useState<"Today" | "Week" | "Month" | "All">("All");
 
@@ -155,7 +156,7 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
             {activeTab === "assets" && <AnalyticsAssets />}
             {activeTab === "risk" && <AnalyticsRisk />}
             {activeTab === "benchmark" && <AnalyticsBenchmark />}
-            {activeTab === "signals" && <AnalyticsSignals />}
+            {activeTab === "signals" && <AnalyticsSignals asset={activeAsset} />}
           </div>
         </div>
       </div>

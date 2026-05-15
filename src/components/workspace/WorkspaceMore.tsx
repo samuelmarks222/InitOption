@@ -3,6 +3,7 @@ import { ArrowLeft, BellRing, BookOpen, LineChart, PlayCircle, Trophy } from "lu
 
 import { ProfileTradingHistory } from "../profile/ProfileTradingHistory";
 import { WorkspaceLeaderboard } from "./WorkspaceLeaderboard";
+import { AnalyticsSignals } from "./analytics/AnalyticsSignals";
 
 type MoreTab = "grid" | "analytics" | "leaderboard" | "signals" | "webinars" | "tutorials";
 
@@ -70,14 +71,7 @@ export const WorkspaceMore = () => {
 
         {activeTab === "signals" && (
           <div className="p-4 sm:p-6">
-            <div className="rounded-2xl border border-dashed border-white/10 p-6 text-center" style={{ background: "var(--trading-panel-bg)" }}>
-              <BellRing className="mx-auto mb-4 h-12 w-12 text-green-500/50" />
-              <h3 className="text-xl font-bold text-white">No Live Signal Feed Connected</h3>
-              <p className="mt-3 text-sm leading-6 text-gray-400">
-                This panel no longer generates random buy or sell calls. Connect a real signal engine before showing signal
-                accuracy or actionable alerts here.
-              </p>
-            </div>
+            <AnalyticsSignals />
           </div>
         )}
 

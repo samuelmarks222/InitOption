@@ -34,6 +34,7 @@ import { ProfileDrawer, type ProfileTab } from "@/components/profile/ProfileDraw
 import { TournamentsGridOverlay } from "@/components/workspace/TournamentsGridOverlay";
 import { AccountGridOverlay } from "@/components/workspace/AccountGridOverlay";
 import { AnalyticsGridOverlay } from "@/components/workspace/AnalyticsGridOverlay";
+import type { AnalyticsSignalAsset } from "@/components/workspace/analytics/AnalyticsSignals";
 import { HelpCenterOverlay } from "@/components/workspace/HelpCenterOverlay";
 import { Image, HelpCircle, User, Trophy, MoreHorizontal, X } from "lucide-react";
 import { MobileMoreMenu, MobileLeaderboardOverlay } from "@/components/workspace/MobileMoreMenu";
@@ -96,6 +97,7 @@ interface MobileModuleOverlayProps {
   mobileOverlay: string | null;
   setMobileOverlay: (v: string | null) => void;
   setSelectedTournament: (id: string | null) => void;
+  analyticsSignalAsset?: AnalyticsSignalAsset;
 }
 
 const buildTradeTabAsset = (assetRow: TradeAssetConfigRow): TradeTabAsset => {
@@ -239,7 +241,12 @@ const CandlestickLoadingScreen = () => (
   </div>
 );
 
-const MobileModuleOverlay = ({ mobileOverlay, setMobileOverlay, setSelectedTournament }: MobileModuleOverlayProps) => {
+const MobileModuleOverlay = ({
+  mobileOverlay,
+  setMobileOverlay,
+  setSelectedTournament,
+  analyticsSignalAsset,
+}: MobileModuleOverlayProps) => {
   if (!mobileOverlay) return null;
   return (
     <div className="fixed top-0 left-0 right-0 bottom-[56px] z-[200] bg-[#0a0d14] flex flex-col">
@@ -266,7 +273,9 @@ const MobileModuleOverlay = ({ mobileOverlay, setMobileOverlay, setSelectedTourn
         </div>
       )}
       {mobileOverlay === "leaderboard" && <MobileLeaderboardOverlay onClose={() => setMobileOverlay(null)} />}
-      {mobileOverlay === "analytics_detail" && <AnalyticsGridOverlay onClose={() => setMobileOverlay("more")} />}
+      {mobileOverlay === "analytics_detail" && (
+        <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setMobileOverlay("more")} />
+      )}
       {mobileOverlay === "help" && <HelpCenterOverlay onClose={() => setMobileOverlay(null)} />}
       {/* balance/trading history: open account overlay pre-set to that tab */}
       {mobileOverlay === "balance_history" && (
@@ -1008,6 +1017,26 @@ const Trade = () => {
     [chartLayoutMode, getAsset, liveChartPrices, orderedChartTabs],
   );
   const emptyDesktopChartSlots = Math.max(0, chartLayoutMode - desktopChartAssets.length);
+  const analyticsSignalAsset = useMemo<AnalyticsSignalAsset | undefined>(() => {
+    if (!selectedAsset) return undefined;
+
+    return {
+      symbol: selectedAsset.symbol,
+      name: selectedAsset.name,
+      basePrice: selectedAsset.basePrice,
+      price: liveChartPrices[selectedAsset.symbol] ?? selectedAsset.price,
+      category: selectedAsset.category,
+      maxProfit: selectedAsset.maxProfit,
+    };
+  }, [
+    liveChartPrices,
+    selectedAsset?.basePrice,
+    selectedAsset?.category,
+    selectedAsset?.maxProfit,
+    selectedAsset?.name,
+    selectedAsset?.price,
+    selectedAsset?.symbol,
+  ]);
 
   useEffect(() => {
     if (accountType !== "tournament" || !tournamentParticipantId) {
@@ -1119,7 +1148,9 @@ const Trade = () => {
           {activeWorkspace === "account" ? (
             <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}><AccountGridOverlay onClose={() => setActiveWorkspace(null)} /></div>
           ) : activeWorkspace === "more" ? (
-            <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}><AnalyticsGridOverlay onClose={() => setActiveWorkspace(null)} /></div>
+            <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
+              <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setActiveWorkspace(null)} />
+            </div>
           ) : activeWorkspace === "help" ? (
             <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}><HelpCenterOverlay onClose={() => setActiveWorkspace(null)} /></div>
           ) : (
@@ -1387,6 +1418,7 @@ const Trade = () => {
           mobileOverlay={mobileOverlay}
           setMobileOverlay={setMobileOverlay}
           setSelectedTournament={setSelectedTournament}
+          analyticsSignalAsset={analyticsSignalAsset}
         />
 
         {showRealAccountWelcome && (
