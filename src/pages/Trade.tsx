@@ -34,6 +34,7 @@ import { ProfileDrawer, type ProfileTab } from "@/components/profile/ProfileDraw
 import { TournamentsGridOverlay } from "@/components/workspace/TournamentsGridOverlay";
 import { AccountGridOverlay } from "@/components/workspace/AccountGridOverlay";
 import { AnalyticsGridOverlay } from "@/components/workspace/AnalyticsGridOverlay";
+import { WorkspaceReferral } from "@/components/workspace/WorkspaceReferral";
 import type { AnalyticsSignalAsset } from "@/components/workspace/analytics/AnalyticsSignals";
 import { HelpCenterOverlay } from "@/components/workspace/HelpCenterOverlay";
 import { Image, HelpCircle, User, Trophy, MoreHorizontal, X } from "lucide-react";
@@ -1084,7 +1085,7 @@ const Trade = () => {
     navigate("/withdraw");
   };
 
-  const isFullScreen = ["account", "more", "help"].includes(activeWorkspace || "");
+  const isFullScreen = ["account", "more", "join"].includes(activeWorkspace || "");
   const currentBalance = accountType === "tournament" ? tournamentSandboxBalance : balance;
   const tourEnabled =
     !mobileOverlay &&
@@ -1095,7 +1096,7 @@ const Trade = () => {
     !isProfileOpen &&
     !showMobileHistory &&
     !showRealAccountWelcome &&
-    !["account", "tournaments", "more", "help"].includes(activeWorkspace || "");
+    !["account", "tournaments", "more", "join", "help"].includes(activeWorkspace || "");
 
   const isChartNavActive =
     !mobileOverlay &&
@@ -1141,7 +1142,12 @@ const Trade = () => {
           )}
 
           {activeWorkspace && !isFullScreen && (
-            <DynamicWorkspace activeWorkspace={activeWorkspace} onClose={() => setActiveWorkspace(null)} onOpenTournament={setSelectedTournament} />
+            <DynamicWorkspace
+              activeWorkspace={activeWorkspace}
+              onClose={() => setActiveWorkspace(null)}
+              onOpenTournament={setSelectedTournament}
+              onSelectWorkspace={setActiveWorkspace}
+            />
           )}
 
           {/* Desktop full-screen workspace overlays */}
@@ -1151,8 +1157,10 @@ const Trade = () => {
             <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
               <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setActiveWorkspace(null)} />
             </div>
-          ) : activeWorkspace === "help" ? (
-            <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}><HelpCenterOverlay onClose={() => setActiveWorkspace(null)} /></div>
+          ) : activeWorkspace === "join" ? (
+            <div className="flex-1 w-full h-full relative z-30" style={{ background: "#141827" }}>
+              <WorkspaceReferral />
+            </div>
           ) : (
             <>
               {/* ── DESKTOP & TABLET: side-by-side chart + panel ── */}

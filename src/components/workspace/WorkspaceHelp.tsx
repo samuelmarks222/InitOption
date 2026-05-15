@@ -1,62 +1,119 @@
-import { Search, ChevronRight, FileText, PlayCircle, MessageCircle } from "lucide-react";
+import {
+  BadgeInfo,
+  Blocks,
+  Headset,
+  Instagram,
+  MessageSquareText,
+  Send,
+  Star,
+  ThumbsUp,
+  Youtube,
+} from "lucide-react";
 
-export const WorkspaceHelp = () => {
-  const FAQS = [
-    "How to verify my account?",
-    "Withdrawal methods and limits",
-    "How to trade Options?",
-    "What is the VIP status?",
-  ];
+interface WorkspaceHelpProps {
+  onOpenSupport?: () => void;
+}
+
+const HELP_ITEMS = [
+  { label: "Support Service", icon: Headset, action: "support" },
+  { label: "Guides and Tutorials", icon: BadgeInfo, action: "guide" },
+  { label: "Reviews", icon: ThumbsUp, action: "reviews" },
+  { label: "Support Chat", icon: MessageSquareText, action: "support" },
+  { label: "Apps", icon: Blocks, action: "apps" },
+];
+
+const CHANNELS = [
+  { label: "Telegram", icon: Send },
+  { label: "WhatsApp", text: "W" },
+  { label: "Discord", text: "D" },
+];
+
+const SOCIALS = [
+  { label: "Facebook", text: "f" },
+  { label: "Telegram", icon: Send },
+  { label: "Instagram", icon: Instagram },
+  { label: "X", text: "X" },
+  { label: "YouTube", icon: Youtube },
+  { label: "TikTok", text: "t" },
+];
+
+export const WorkspaceHelp = ({ onOpenSupport }: WorkspaceHelpProps) => {
+  const handleItemClick = (action: string) => {
+    if (action === "support") {
+      onOpenSupport?.();
+    }
+  };
 
   return (
-    <div className="flex h-full w-full flex-col text-white" style={{ background: "var(--trading-workspace-bg)" }}>
-      <div className="border-b border-[var(--trading-border-color)] p-6" style={{ background: "var(--trading-header-bg)" }}>
-        <h2 className="text-[20px] font-bold mb-4">Hello, how can we help?</h2>
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input 
-            type="text" 
-            placeholder="Search for answers..." 
-            className="w-full rounded-xl border border-white/10 bg-white/[0.05] py-3 pl-11 pr-4 text-[14px] text-white transition-colors focus:border-[#2f80ed]/60 focus:outline-none"
-          />
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-6 space-y-6 no-scrollbar">
-        {/* Quick Links */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-          <button className="flex flex-col rounded-xl border border-white/5 p-4 text-left transition-all hover:border-white/20" style={{ background: "var(--trading-panel-bg)" }}>
-            <FileText className="w-5 h-5 text-[#0fa053] mb-2" />
-            <div className="text-[13px] font-bold">Trading Guide</div>
-          </button>
-          <button className="flex flex-col rounded-xl border border-white/5 p-4 text-left transition-all hover:border-white/20" style={{ background: "var(--trading-panel-bg)" }}>
-            <PlayCircle className="w-5 h-5 text-[#0fa053] mb-2" />
-            <div className="text-[13px] font-bold">Video Tutorials</div>
-          </button>
-        </div>
-
-        {/* Popular Articles */}
-        <div>
-          <h3 className="text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-3">Popular Articles</h3>
-          <div className="overflow-hidden rounded-2xl border border-white/5 divide-y divide-white/5" style={{ background: "var(--trading-panel-bg)" }}>
-            {FAQS.map((q, i) => (
-              <button key={i} className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors text-left group">
-                <span className="text-[13px] text-gray-300 group-hover:text-white transition-colors">{q}</span>
-                <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" />
+    <div className="flex h-full w-full flex-col bg-[#222839] text-white">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3">
+        <div className="space-y-2">
+          {HELP_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => handleItemClick(item.action)}
+                className="flex h-[56px] w-full items-center gap-4 rounded-[4px] bg-[#2b3448] px-5 text-left text-[14px] font-bold text-white transition-colors hover:bg-[#323d54]"
+              >
+                <Icon className="h-[23px] w-[23px] shrink-0 text-[#9db0c9]" strokeWidth={2.7} />
+                <span>{item.label}</span>
               </button>
-            ))}
+            );
+          })}
+        </div>
+
+        <div className="mt-3">
+          <h3 className="mb-2 text-[14px] font-bold text-white">Official channels:</h3>
+          <div className="grid grid-cols-3 gap-2">
+            {CHANNELS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  aria-label={item.label}
+                  className="flex h-[39px] items-center justify-center rounded-[5px] bg-[#2b3448] text-[#9db0c9] transition-colors hover:bg-[#33405a] hover:text-white"
+                >
+                  {Icon ? <Icon className="h-[21px] w-[21px]" strokeWidth={2.5} /> : <span className="text-[18px] font-black">{item.text}</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Need More Help */}
-        <div>
-          <h3 className="text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-3">Need More Help?</h3>
-          <button className="w-full bg-[#0b65c2] hover:bg-[#094e96] text-white rounded-xl p-4 flex items-center justify-center gap-2 font-bold text-[14px] transition-colors shadow-lg">
-            <MessageCircle className="w-5 h-5" /> Chat with Support Array
-          </button>
+        <div className="mt-4">
+          <h3 className="mb-2 text-[14px] font-bold text-white">Follow us on:</h3>
+          <div className="grid grid-cols-3 gap-2">
+            {SOCIALS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  aria-label={item.label}
+                  className="flex h-[39px] items-center justify-center rounded-[5px] bg-[#2b3448] text-[#9db0c9] transition-colors hover:bg-[#33405a] hover:text-white"
+                >
+                  {Icon ? <Icon className="h-[21px] w-[21px]" strokeWidth={2.5} /> : <span className="text-[18px] font-black">{item.text}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-auto pt-4">
+          <div className="rounded-[5px] border border-white/[0.06] bg-[#1d2434] p-3">
+            <div className="flex items-center gap-2 text-[12px] font-bold text-[#9db0c9]">
+              <Star className="h-4 w-4 text-[#74a8ff]" fill="currentColor" />
+              24/7 online desk
+            </div>
+            <p className="mt-1 text-[11px] leading-5 text-[#7f8da5]">
+              Support chat opens in the trading panel so users can keep the chart visible.
+            </p>
+          </div>
         </div>
       </div>
     </div>
   );
 };
-

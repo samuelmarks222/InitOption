@@ -14,9 +14,10 @@ interface DynamicWorkspaceProps {
   activeWorkspace: WorkspaceModule;
   onClose: () => void;
   onOpenTournament?: (id: string) => void;
+  onSelectWorkspace?: (workspace: WorkspaceModule) => void;
 }
 
-export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament }: DynamicWorkspaceProps) => {
+export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, onSelectWorkspace }: DynamicWorkspaceProps) => {
   const [supportImmersive, setSupportImmersive] = useState(false);
 
   useEffect(() => {
@@ -49,8 +50,10 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament }:
       ? "w-[430px] max-w-[calc(100vw-85px)]"
       : isDedicatedLeaderboard
         ? "w-[304px] max-w-[calc(100vw-85px)]"
-        : activeWorkspace === "settings"
+      : activeWorkspace === "settings"
           ? "w-[260px] max-w-[calc(100vw-85px)]"
+          : activeWorkspace === "help"
+            ? "w-[360px] max-w-[calc(100vw-85px)]"
           : "w-[350px] max-w-[calc(100vw-85px)]";
 
   return (
@@ -60,7 +63,7 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament }:
     >
       
       {/* Workspace Header Component */}
-      {!isImmersiveSupport && !isEmbeddedTournaments && !isDedicatedLeaderboard ? (
+      {!isImmersiveSupport && !isEmbeddedTournaments && !isDedicatedLeaderboard && activeWorkspace !== "help" ? (
       <div
         className="flex items-center justify-between p-4 border-b"
         style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
@@ -111,7 +114,7 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament }:
         )}
         {activeWorkspace === "help" && (
           <div className="flex-1 w-full h-full">
-            <WorkspaceHelp />
+            <WorkspaceHelp onOpenSupport={() => onSelectWorkspace?.("support")} />
           </div>
         )}
         {activeWorkspace === "leaderboard" && (

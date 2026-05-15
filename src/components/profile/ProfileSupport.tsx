@@ -35,6 +35,17 @@ type GroupChatMessageRow = ChatMessageRow & {
     vip_tier: string | null;
   } | null;
 };
+type CompactInboxRow = {
+  avatarLabel?: string;
+  avatarUrl?: string | null;
+  icon?: LucideIcon;
+  id: string;
+  preview: string;
+  tab: "group" | "support";
+  time: string;
+  title: string;
+  unread: number;
+};
 type SupportThreadRow = Tables<"support_threads">;
 type SupportMessageRow = Tables<"support_messages">;
 type SupportTicketRow = Tables<"support_tickets">;
@@ -140,6 +151,30 @@ const EmptyState = ({
     <h3 className="mt-4 text-sm font-bold text-white">{title}</h3>
     <p className="mt-2 text-xs leading-6 text-gray-400">{description}</p>
     {action ? <div className="mt-4">{action}</div> : null}
+  </div>
+);
+
+const ChatAvatar = ({
+  alt,
+  className = "",
+  icon: Icon,
+  label,
+  src,
+}: {
+  alt: string;
+  className?: string;
+  icon?: LucideIcon;
+  label?: string;
+  src?: string | null;
+}) => (
+  <div className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#2a2f3a] text-[11px] font-bold text-[#dce6f7] ${className}`}>
+    {src ? (
+      <img src={src} alt={alt} className="h-full w-full object-cover" />
+    ) : Icon ? (
+      <Icon className="h-4 w-4" />
+    ) : (
+      <span>{label || toInitials(alt)}</span>
+    )}
   </div>
 );
 
@@ -496,7 +531,7 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
   const supportUnreadCount = supportThread?.status === "pending" ? 1 : 0;
   const notificationCount = supportUnreadCount + Number(Boolean(groupError || supportError));
 
-  const recentGroupRows = useMemo(() => {
+  const recentGroupRows = useMemo<CompactInboxRow[]>(() => {
     const seenSenders = new Set<string>();
     return [...groupMessages]
       .reverse()
@@ -517,11 +552,12 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
           time: formatInboxTime(message.created_at),
           unread: index === 0 ? 1 : 0,
           avatarLabel: toInitials(sender),
+          avatarUrl: message.profiles?.avatar_url,
         };
       });
   }, [groupMessages]);
 
-  const compactRows = useMemo(() => {
+  const compactRows = useMemo<CompactInboxRow[]>(() => {
     const rows = [
       {
         id: "general-chat",
@@ -531,6 +567,7 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
         time: formatInboxTime(latestGroupMessage?.created_at),
         unread: groupUnreadCount,
         avatarLabel: "EN",
+        avatarUrl: latestGroupMessage?.profiles?.avatar_url,
       },
       {
         id: "support-chat",
@@ -607,9 +644,13 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
               <ChevronLeft className="h-4 w-4" />
             </button>
 
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#2a2f3a] text-[12px] font-bold text-white">
-              {isSupportView ? <LifeBuoy className="h-4 w-4 text-[#66a9ff]" /> : "EN"}
-            </div>
+            <ChatAvatar
+              alt={compactTitle}
+              className="h-8 w-8 text-white"
+              icon={isSupportView ? LifeBuoy : undefined}
+              label={isSupportView ? undefined : "EN"}
+              src={!isSupportView ? latestGroupMessage?.profiles?.avatar_url : null}
+            />
 
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-bold leading-5 text-white">{compactTitle}</div>
@@ -665,19 +706,11 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
                 {groupMessages.map((message) => {
                   const isMe = message.user_id === user?.id;
                   const name = (message as Partial<ChatMessageRow>).sender_name || "Trader";
-                  const avatarUrl = message.profiles?.avatar_url;
+                  const avatarUrl = message.profiles?.avatar_url || (isMe ? profile?.avatar_url : null);
 
                   return (
                     <div key={message.id} className={`flex gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
-                      {!isMe ? (
-                        <div className="mt-5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#2a2f3a] text-[11px] font-bold text-white">
-                          {avatarUrl ? (
-                            <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
-                          ) : (
-                            <span className="flex h-full w-full items-center justify-center">{toInitials(name)}</span>
-                          )}
-                        </div>
-                      ) : null}
+                      {!isMe ? <ChatAvatar alt={name} className="mt-5 h-8 w-8 text-white" src={avatarUrl} /> : null}
                       <div className={`max-w-[82%] ${isMe ? "items-end" : "items-start"}`}>
                         <div className={`mb-1 text-[10px] text-[#7f8798] ${isMe ? "text-right" : "text-left"}`}>
                           {isMe ? "You" : name} - {formatTime(message.created_at)}
@@ -692,6 +725,7 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
                           {message.message}
                         </div>
                       </div>
+                      {isMe ? <ChatAvatar alt={name} className="mt-5 h-8 w-8 text-white" src={avatarUrl} /> : null}
                     </div>
                   );
                 })}
@@ -810,9 +844,7 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
                     isActiveRow ? "bg-[#171f31]" : "hover:bg-white/[0.04]"
                   }`}
                 >
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2a2f3a] text-[12px] font-bold text-[#dce6f7]">
-                    {row.icon ? <row.icon className="h-4 w-4" /> : row.avatarLabel}
-                  </div>
+                  <ChatAvatar alt={row.title} className="mt-0.5 h-8 w-8" icon={row.icon} label={row.avatarLabel} src={row.avatarUrl} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <p className="truncate text-[12px] font-bold leading-5 text-white">{row.title}</p>
@@ -943,31 +975,38 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
                   const isMe = message.user_id === user?.id;
                   const name = (message as Partial<ChatMessageRow>).sender_name || "Trader";
                   const profileLink = message.profiles?.username ? `/traders/${message.profiles.username}` : null;
+                  const avatarUrl = message.profiles?.avatar_url || (isMe ? profile?.avatar_url : null);
 
                   return (
-                    <div key={message.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                      <div className="mb-1 flex items-center gap-2 px-1">
-                        {!isMe ? (
-                          profileLink ? (
-                            <Link to={profileLink} className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#8be0af] hover:text-[#d8f6e5]">
-                              <span>{name}</span>
-                              {message.profiles?.vip_tier ? <VipBadge tierId={message.profiles.vip_tier as any} size={14} /> : null}
-                            </Link>
+                    <div key={message.id} className={`flex gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
+                      {!isMe ? <ChatAvatar alt={name} className="mt-5 h-9 w-9" src={avatarUrl} /> : null}
+                      <div className={`flex max-w-[92%] flex-col ${isMe ? "items-end" : "items-start"}`}>
+                        <div className="mb-1 flex items-center gap-2 px-1">
+                          {!isMe ? (
+                            profileLink ? (
+                              <Link to={profileLink} className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#8be0af] hover:text-[#d8f6e5]">
+                                <span>{name}</span>
+                                {message.profiles?.vip_tier ? <VipBadge tierId={message.profiles.vip_tier as any} size={14} /> : null}
+                              </Link>
+                            ) : (
+                              <span className="text-[11px] font-semibold text-[#8be0af]">{name}</span>
+                            )
                           ) : (
-                            <span className="text-[11px] font-semibold text-[#8be0af]">{name}</span>
-                          )
-                        ) : null}
-                        <span className="text-[10px] text-gray-500">{formatTime(message.created_at)}</span>
+                            <span className="text-[11px] font-semibold text-[#8be0af]">You</span>
+                          )}
+                          <span className="text-[10px] text-gray-500">{formatTime(message.created_at)}</span>
+                        </div>
+                        <div
+                          className={`rounded-2xl px-3.5 ${isCommunity ? "py-3 text-[14px] leading-6 sm:max-w-[78%]" : "py-2.5 text-[13px] leading-6"} ${
+                            isMe
+                              ? "rounded-tr-sm bg-emerald-500 text-[#04150f]"
+                              : "rounded-tl-sm border border-white/5 bg-[#151b24] text-gray-100"
+                          }`}
+                        >
+                          {message.message}
+                        </div>
                       </div>
-                      <div
-                        className={`max-w-[92%] rounded-2xl px-3.5 ${isCommunity ? "py-3 text-[14px] leading-6 sm:max-w-[78%]" : "py-2.5 text-[13px] leading-6"} ${
-                          isMe
-                            ? "rounded-tr-sm bg-emerald-500 text-[#04150f]"
-                            : "rounded-tl-sm border border-white/5 bg-[#151b24] text-gray-100"
-                        }`}
-                      >
-                        {message.message}
-                      </div>
+                      {isMe ? <ChatAvatar alt={name} className="mt-5 h-9 w-9" src={avatarUrl} /> : null}
                     </div>
                   );
                 })}
