@@ -1046,6 +1046,33 @@ const buildPairChangeCards = (candles: OHLCCandle[], timeframeSeconds: number) =
   });
 };
 
+const buildPairLongChangeCards = (candles: OHLCCandle[], timeframeSeconds: number) => {
+  const safeSeconds = Math.max(1, timeframeSeconds);
+  const specs = [
+    { label: "1 month change", seconds: 30 * 86400 },
+    { label: "1 year change", seconds: 365 * 86400 },
+    { label: "YTD change", seconds: 365 * 86400 },
+  ];
+
+  const latestClose = candles[candles.length - 1]?.close ?? 0;
+  const firstClose = candles[0]?.open ?? latestClose;
+
+  return specs.map((spec) => {
+    const lookback = Math.max(1, Math.round(spec.seconds / safeSeconds));
+    const referenceIndex = spec.label === "YTD change"
+      ? 0
+      : Math.max(0, candles.length - 1 - lookback);
+    const referenceClose = candles[referenceIndex]?.close ?? firstClose;
+    const change =
+      referenceClose > 0 ? ((latestClose - referenceClose) / referenceClose) * 100 : 0;
+
+    return {
+      label: spec.label,
+      value: Number.isFinite(change) ? change : 0,
+    };
+  });
+};
+
 const buildPairTrendGeometry = (trend: PairInfoTrendPoint[]) => {
   if (trend.length === 0) {
     return {
@@ -2644,12 +2671,17 @@ const TradingChart = ({
     () => buildPairChangeCards(pairHistory, timeframeSeconds),
     [pairHistory, timeframeSeconds],
   );
+  const pairLongChangeCards = useMemo(
+    () => buildPairLongChangeCards(pairHistory, timeframeSeconds),
+    [pairHistory, timeframeSeconds],
+  );
   const pairTrendSvg = useMemo(() => buildPairTrendGeometry(pairTrend), [pairTrend]);
   const pairTrendId = useMemo(
     () => asset.symbol.replace(/[^a-z0-9]/gi, "-").toLowerCase() || "pair-trend",
     [asset.symbol],
   );
   const pairSession = getPairSessionState();
+  const pairSessionDisplayLabel = pairSession.label.replace(/\b\w/g, (char) => char.toUpperCase());
   const shortPayout = Math.min(95, Math.max(60, asset.maxProfit ?? 79));
   const extendedPayout = Math.min(92, shortPayout + 15);
   const dominantBias = pairSentiment.buy >= pairSentiment.sell ? "Buy" : "Sell";
@@ -3074,16 +3106,26 @@ const TradingChart = ({
 
       {pairInfoOpen && !mobileHistoryOpen && (
         <div className="pointer-events-none absolute inset-0 z-[70] hidden sm:block">
+          <div className="absolute inset-0 bg-[#111724]/70 backdrop-blur-[3px]" />
           <button
             type="button"
             aria-label="Close pair info"
             onClick={() => setPairInfoOpen(false)}
             className="absolute inset-0 pointer-events-auto"
           />
-          <div className="pointer-events-auto absolute left-1/2 top-4 max-h-[calc(100vh-152px)] w-[calc(100%-92px)] max-w-[900px] -translate-x-1/2 overflow-y-auto rounded-[14px] border border-[#40485b] bg-[#2d3446]/[0.98] p-4 shadow-[0_30px_64px_rgba(0,0,0,0.46)]">
-            <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-3">
-              <div className="min-w-0 flex items-center gap-3">
-                <div className="rounded-[12px] border border-white/10 bg-[#131c2d] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <div className="pointer-events-auto absolute left-1/2 top-1/2 w-[calc(100%-120px)] max-w-[920px] -translate-x-1/2 -translate-y-1/2">
+            <button
+              type="button"
+              onClick={() => setPairInfoOpen(false)}
+              className="absolute -left-[17px] -top-[17px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full border-[3px] border-[#2d3446] bg-white text-[#2d3446] shadow-[0_12px_24px_rgba(0,0,0,0.35)] transition-transform hover:scale-[1.04]"
+              aria-label="Close pair info"
+            >
+              <X className="h-4 w-4" strokeWidth={3} />
+            </button>
+
+            <div className="max-h-[calc(100vh-118px)] overflow-y-auto rounded-[6px] border border-[#394154] bg-[#2d3446]/[0.99] px-[30px] py-[28px] shadow-[0_32px_86px_rgba(0,0,0,0.52)]">
+              <div className="flex items-center justify-between gap-5 border-b border-dashed border-white/16 pb-5">
+                <div className="min-w-0 flex items-center gap-3">
                   <AssetSymbolMark
                     symbol={asset.symbol}
                     name={asset.name}
@@ -3091,204 +3133,176 @@ const TradingChart = ({
                     size={22}
                     fallbackLabelLength={3}
                   />
+                  <h2 className="truncate text-[18px] font-black leading-none text-white">{asset.symbol}</h2>
+                  <span className="text-[14px] font-black text-[#ffb52e]">{shortPayout}%</span>
                 </div>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h2 className="truncate text-[15px] font-black text-white">{asset.symbol}</h2>
-                    <span className="text-[15px] font-black text-[#ffb52e]">{shortPayout}%</span>
-                  </div>
-                  <p className="mt-1 text-[11px] font-semibold text-slate-400">
-                    {asset.name || asset.symbol} - {asset.type && asset.type !== "OTC" ? asset.type : "Trading"} market - {selectedTf} chart active
-                  </p>
+                <div className="hidden items-center gap-3 text-right lg:flex">
+                  <span className={`text-[14px] font-black ${pairSession.isOpen ? "text-white" : "text-[#ff8d99]"}`}>
+                    {pairSessionDisplayLabel}
+                  </span>
+                  <span className="text-[18px] font-medium text-slate-600">/</span>
+                  <span className="text-[13px] font-semibold text-slate-500">{pairSession.detail}</span>
                 </div>
               </div>
-              <div className="flex items-start gap-2">
-                <div className="hidden text-right lg:block">
-                  <div className={`text-[14px] font-black ${pairSession.isOpen ? "text-white" : "text-[#ff8d99]"}`}>
-                    {pairSession.label}
+
+              <div className="mt-5 grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_180px]">
+                <div className="grid max-w-[430px] grid-cols-2 divide-x divide-white/12">
+                  <div className="pr-10">
+                    <div className="text-[14px] font-semibold text-slate-400">Price Now</div>
+                    <div className="mt-1 text-[17px] font-black text-white">{currentPrice.toFixed(dec)}</div>
                   </div>
-                  <div className="mt-1 text-[12px] font-semibold text-slate-500">{pairSession.detail}</div>
+                  <div className="pl-10">
+                    <div className="text-[14px] font-semibold text-slate-400">Session Change</div>
+                    <div className={`mt-1 text-[17px] font-black ${isUp ? "text-[#18d67b]" : "text-[#ff4c45]"}`}>
+                      {formatSignedPercent(priceChange)}
+                    </div>
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={handleOpenTradeDesk}
-                  className="inline-flex h-10 items-center gap-2 rounded-[4px] bg-[#2f98ff] px-4 text-[13px] font-black text-white shadow-[0_14px_28px_rgba(25,97,187,0.28)] transition-colors hover:bg-[#40a4ff]"
+                  className="inline-flex h-11 items-center justify-center gap-3 rounded-[4px] bg-[#1684e8] px-6 text-[15px] font-black text-white shadow-[0_14px_30px_rgba(22,132,232,0.26)] transition-colors hover:bg-[#2394fb]"
                 >
                   Trade Now
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPairInfoOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#243047] shadow-[0_10px_18px_rgba(0,0,0,0.3)] transition-transform hover:scale-[1.04]"
-                  aria-label="Close pair info"
-                >
-                  <X className="h-4 w-4" strokeWidth={3} />
+                  <ArrowRight className="h-4 w-4 rounded-full bg-white/20 p-0.5" />
                 </button>
               </div>
-            </div>
 
-            <div className="mt-3 grid gap-3 border-b border-white/8 pb-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-[12px] bg-[#353d50] px-4 py-3">
-                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Price now</div>
-                <div className="mt-1 text-[16px] font-black text-white">{currentPrice.toFixed(dec)}</div>
-              </div>
-              <div className="rounded-[12px] bg-[#353d50] px-4 py-3">
-                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Session change</div>
-                <div className={`mt-1 text-[16px] font-black ${isUp ? "text-[#72efb1]" : "text-[#ff8c96]"}`}>
-                  {formatSignedPercent(priceChange)}
+              <div className="mt-5 rounded-[6px] bg-[#3a4153] px-4 py-4">
+                <div className="grid grid-cols-[140px_auto_minmax(0,1fr)_auto] items-center gap-3">
+                  <div>
+                    <div className="text-[21px] font-medium leading-none text-white">{dominantBias}</div>
+                    <div className="mt-2 text-[14px] font-medium text-slate-500">Traders&apos; Sentiment</div>
+                  </div>
+                  <span className="text-[18px] font-black text-white">{pairSentiment.sell}%</span>
+                  <div className="flex h-1 overflow-hidden rounded-full bg-[#252b3a]">
+                    <div className="h-full bg-[#ff4c45]" style={{ width: `${pairSentiment.sell}%` }} />
+                    <div className="h-full bg-[#18d67b]" style={{ width: `${pairSentiment.buy}%` }} />
+                  </div>
+                  <span className="text-[18px] font-black text-white">{pairSentiment.buy}%</span>
                 </div>
               </div>
-              <div className="rounded-[12px] bg-[#353d50] px-4 py-3">
-                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Range span</div>
-                <div className="mt-1 text-[16px] font-black text-white">{rangeSpan.toFixed(dec)}</div>
-              </div>
-              <div className="rounded-[12px] bg-[#353d50] px-4 py-3">
-                <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Notional flow</div>
-                <div className="mt-1 text-[16px] font-black text-white">{pairNotionalVol}</div>
-              </div>
-            </div>
 
-            <div className="mt-4 rounded-[10px] bg-[#3a4153] px-5 py-3.5">
-              <div className="flex items-end justify-between gap-4">
+              <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <div className="text-[18px] font-black text-white">{dominantBias}</div>
-                  <div className="text-[12px] font-medium text-slate-400">Traders&apos; Sentiment</div>
+                  <div className="text-[12px] font-semibold text-slate-400">Minimum investment</div>
+                  <div className="mt-1 text-[16px] font-black text-white">{minimumStakeLabel}</div>
                 </div>
-                <div className="text-right">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Edge</div>
-                  <div className="mt-1 text-[15px] font-black text-white">
-                    {Math.abs(pairSentiment.buy - pairSentiment.sell)} pts
-                  </div>
+                <div>
+                  <div className="text-[12px] font-semibold text-slate-400">Profit - 1 min</div>
+                  <div className="mt-1 text-[16px] font-black text-[#18d67b]">{shortPayout}%</div>
+                </div>
+                <div>
+                  <div className="text-[12px] font-semibold text-slate-400">Profit - 5+ min</div>
+                  <div className="mt-1 text-[16px] font-black text-[#18d67b]">{extendedPayout}%</div>
+                </div>
+                <div>
+                  <div className="text-[12px] font-semibold text-slate-400">Expiry time</div>
+                  <div className="mt-1 text-[16px] font-black text-white">{expiryWindowLabel}</div>
                 </div>
               </div>
-              <div className="mt-3 grid grid-cols-[auto_1fr_auto] items-center gap-3">
-                <span className="text-[16px] font-black text-white">{pairSentiment.sell}%</span>
-                <div className="flex h-1.5 overflow-hidden rounded-full bg-[#232838]">
-                  <div className="h-full bg-[#ff6b5c]" style={{ width: `${pairSentiment.sell}%` }} />
-                  <div className="h-full bg-[#24cb75]" style={{ width: `${pairSentiment.buy}%` }} />
-                </div>
-                <span className="text-[16px] font-black text-white">{pairSentiment.buy}%</span>
-              </div>
-              <div className="mt-2 grid grid-cols-3 text-[11px] font-medium text-slate-400">
-                <span>Sell pressure</span>
-                <span className="text-center">Retail flow bias</span>
-                <span className="text-right">Buy pressure</span>
-              </div>
-            </div>
 
-            <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.9fr)]">
-              <div className="space-y-3">
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-[12px] bg-[#31384a]/90 px-4 py-3">
-                    <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Minimum stake</div>
-                    <div className="mt-1 text-[14px] font-black text-white">{minimumStakeLabel}</div>
-                  </div>
-                  <div className="rounded-[12px] bg-[#31384a]/90 px-4 py-3">
-                    <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Return - 1 min</div>
-                    <div className="mt-1 text-[14px] font-black text-[#28d77f]">{shortPayout}%</div>
-                  </div>
-                  <div className="rounded-[12px] bg-[#31384a]/90 px-4 py-3">
-                    <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Return - 5+ min</div>
-                    <div className="mt-1 text-[14px] font-black text-[#28d77f]">{extendedPayout}%</div>
-                  </div>
-                  <div className="rounded-[12px] bg-[#31384a]/90 px-4 py-3">
-                    <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">Expiry window</div>
-                    <div className="mt-1 text-[14px] font-black text-white">{expiryWindowLabel}</div>
-                  </div>
-                </div>
-
-                <div className="overflow-hidden rounded-[6px] bg-[#30384a]">
-                  <div className="grid gap-0 sm:grid-cols-3">
-                    {pairChangeCards.map((item) => (
+              <div className="mt-7 grid gap-8 lg:grid-cols-[minmax(0,1fr)_345px]">
+                <div>
+                  <div className="grid grid-cols-3">
+                    {pairChangeCards.map((item, index) => (
                       <div
                         key={item.label}
-                        className="border-b border-white/8 px-5 py-3 last:border-b-0 sm:border-b-0 sm:border-r sm:border-white/8 sm:last:border-r-0"
+                        className={`px-5 py-4 ${index === 0 ? "rounded-t-[6px] bg-[#3a4153]" : ""}`}
                       >
-                        <div className="text-[12px] font-bold text-white">{item.label}</div>
-                        <div className={`mt-2 text-[18px] font-medium ${item.value >= 0 ? "text-[#1cd56d]" : "text-[#ff5e4a]"}`}>
+                        <div className="text-[14px] font-black text-white">{item.label}</div>
+                        <div className={`mt-2 text-[20px] font-medium ${item.value >= 0 ? "text-[#18d67b]" : "text-[#ff4c45]"}`}>
                           {formatChangeCardPercent(item.value)}
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  <div className="border-t border-white/8 px-5 py-4">
-                    <div className="relative h-[270px] overflow-hidden rounded-[6px] bg-[#2d3546]">
-                      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
-                        <defs>
-                          <linearGradient id={`${pairTrendId}-line`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#2489ee" />
-                            <stop offset="100%" stopColor="#0a68cb" />
-                          </linearGradient>
-                          <linearGradient id={`${pairTrendId}-fill`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="rgba(32,129,233,0.22)" />
-                            <stop offset="100%" stopColor="rgba(32,129,233,0.02)" />
-                          </linearGradient>
-                        </defs>
-                        {Array.from({ length: 7 }).map((_, index) => {
-                          const y = 10 + index * 12.8;
-                          return (
-                            <line
-                              key={`h-${index}`}
-                              x1="0"
-                              y1={y}
-                              x2="100"
-                              y2={y}
-                              stroke="rgba(255,255,255,0.06)"
-                              strokeWidth="0.8"
-                            />
-                          );
-                        })}
-                        {Array.from({ length: 7 }).map((_, index) => {
-                          const x = 12 + index * 18;
-                          return (
-                            <line
-                              key={`v-${index}`}
-                              x1={x}
-                              y1="0"
-                              x2={x}
-                              y2="100"
-                              stroke="rgba(255,255,255,0.04)"
-                              strokeWidth="0.8"
-                            />
-                          );
-                        })}
-                        <polygon points={pairTrendSvg.areaPoints} fill={`url(#${pairTrendId}-fill)`} />
-                        <polyline
-                          points={pairTrendSvg.linePoints}
-                          fill="none"
-                          stroke={`url(#${pairTrendId}-line)`}
-                          strokeWidth="0.55"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </div>
+                  <div className="relative h-[250px] overflow-hidden bg-[#333b4d]">
+                    <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
+                      <defs>
+                        <linearGradient id={`${pairTrendId}-line`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#2489ee" />
+                          <stop offset="100%" stopColor="#0a68cb" />
+                        </linearGradient>
+                        <linearGradient id={`${pairTrendId}-fill`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="rgba(32,129,233,0.26)" />
+                          <stop offset="100%" stopColor="rgba(32,129,233,0.05)" />
+                        </linearGradient>
+                      </defs>
+                      {Array.from({ length: 7 }).map((_, index) => {
+                        const y = 12 + index * 12.5;
+                        return (
+                          <line
+                            key={`h-${index}`}
+                            x1="0"
+                            y1={y}
+                            x2="100"
+                            y2={y}
+                            stroke="rgba(255,255,255,0.055)"
+                            strokeWidth="0.75"
+                          />
+                        );
+                      })}
+                      {Array.from({ length: 6 }).map((_, index) => {
+                        const x = 16 + index * 20;
+                        return (
+                          <line
+                            key={`v-${index}`}
+                            x1={x}
+                            y1="0"
+                            x2={x}
+                            y2="100"
+                            stroke="rgba(255,255,255,0.045)"
+                            strokeWidth="0.75"
+                          />
+                        );
+                      })}
+                      <polygon points={pairTrendSvg.areaPoints} fill={`url(#${pairTrendId}-fill)`} />
+                      <polyline
+                        points={pairTrendSvg.linePoints}
+                        fill="none"
+                        stroke={`url(#${pairTrendId}-line)`}
+                        strokeWidth="0.55"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-3 gap-5 text-[12px] font-semibold text-slate-500">
+                    {pairLongChangeCards.map((item) => (
+                      <div key={item.label}>
+                        {item.label}
+                        <span className={`ml-2 font-black ${item.value >= 0 ? "text-[#18d67b]" : "text-[#ff4c45]"}`}>
+                          {formatChangeCardPercent(item.value)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
 
-              <div className="rounded-[12px] bg-[#30384a]/45 p-4">
-                <div className="text-center text-[18px] font-black text-white">Trading schedule</div>
-                <div className="mt-4 space-y-1.5">
-                  <div className="grid grid-cols-[86px_minmax(92px,1fr)_128px] gap-3 px-3 text-[12px] font-black text-slate-500">
-                    <span>Date</span>
-                    <span>Weekday</span>
-                    <span className="text-right">Trading Time</span>
-                  </div>
-                  {tradingSchedule.slice(0, 5).map((row, index) => (
-                    <div
-                      key={`${row.weekday}-${row.dateLabel}`}
-                      className={`grid grid-cols-[86px_minmax(92px,1fr)_128px] items-center gap-3 px-3 py-3.5 text-[12px] ${
-                        index === 0 ? "rounded-[7px] bg-[#3a4153]" : "border-b border-white/8"
-                      }`}
-                    >
-                      <div className="font-black text-white">{row.dateLabel}</div>
-                      <div className="font-semibold text-slate-300">{row.weekday}</div>
-                      <div className="text-right font-black text-white">{row.session}</div>
+                <div>
+                  <div className="text-center text-[16px] font-black text-white">Trading Schedule</div>
+                  <div className="mt-5 space-y-0">
+                    <div className="grid grid-cols-[92px_minmax(90px,1fr)_112px] gap-3 px-3 pb-3 text-[12px] font-black text-slate-500">
+                      <span>Date</span>
+                      <span>Weekday</span>
+                      <span className="text-right">Trading Time</span>
                     </div>
-                  ))}
+                    {tradingSchedule.slice(0, 7).map((row, index) => (
+                      <div
+                        key={`${row.weekday}-${row.dateLabel}`}
+                        className={`grid grid-cols-[92px_minmax(90px,1fr)_112px] items-center gap-3 px-3 py-3 text-[13px] ${
+                          index === 0 ? "rounded-[4px] bg-[#3a4153]" : "border-b border-white/10"
+                        }`}
+                      >
+                        <div className="font-black text-white">{row.dateLabel}</div>
+                        <div className="font-semibold text-slate-300">{row.weekday}</div>
+                        <div className="text-right font-black text-white">{row.session}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
