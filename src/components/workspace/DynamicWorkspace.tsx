@@ -42,11 +42,13 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament }:
   };
   const workspaceTitle = workspaceTitleMap[activeWorkspace];
   const workspaceWidthClass = isImmersiveSupport
-    ? "w-[620px] max-w-[calc(100vw-85px)]"
-    : activeWorkspace === "tournaments"
+    ? "w-[318px] max-w-[calc(100vw-85px)]"
+    : activeWorkspace === "support"
+      ? "w-[318px] max-w-[calc(100vw-85px)]"
+      : activeWorkspace === "tournaments"
       ? "w-[430px] max-w-[calc(100vw-85px)]"
       : isDedicatedLeaderboard
-        ? "w-[390px] max-w-[calc(100vw-85px)]"
+        ? "w-[304px] max-w-[calc(100vw-85px)]"
         : activeWorkspace === "settings"
           ? "w-[260px] max-w-[calc(100vw-85px)]"
           : "w-[350px] max-w-[calc(100vw-85px)]";

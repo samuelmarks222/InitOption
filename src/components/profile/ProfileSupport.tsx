@@ -583,54 +583,54 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
 
   if (isCompact) {
     return (
-      <div className="flex h-full min-h-0 flex-col bg-[#1A2033] text-white">
-        <div className="border-b border-[#2B3552] bg-[#1D2539] px-4 py-3">
+      <div className="flex h-full min-h-0 flex-col bg-[#0f1118] text-white">
+        <div className="border-b border-white/[0.08] bg-[#11151f] px-3 py-2.5">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8EA3C9]" />
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#7f8798]" />
               <input
                 type="text"
                 value={chatSearch}
                 onChange={(event) => setChatSearch(event.target.value)}
                 placeholder="Search..."
-                className="h-10 w-full rounded-xl border border-[#334062] bg-[#222C45] pl-9 pr-3 text-[14px] text-white outline-none transition-colors placeholder:text-[#7F95BC] focus:border-[#3D7CE2]"
+                className="h-8 w-full rounded-[8px] border border-white/[0.08] bg-[#171b25] pl-8 pr-2.5 text-[12px] text-white outline-none transition-colors placeholder:text-[#747d8d] focus:border-[#218cff]/60"
               />
             </div>
             <button
               type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#334062] bg-[#222C45] text-[#B2C4E6] transition-colors hover:bg-[#273454] hover:text-white"
+              className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-white/[0.08] bg-[#171b25] text-[#9ca7bb] transition-colors hover:bg-white/[0.06] hover:text-white"
               aria-label="Compose message"
             >
-              <PencilLine className="h-4 w-4" />
+              <PencilLine className="h-3.5 w-3.5" />
             </button>
           </div>
 
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-2 flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => setActiveTab("group")}
-              className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-semibold transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-[8px] border px-2.5 py-1.5 text-[11px] font-bold transition-colors ${
                 compactTab === "group"
-                  ? "border-[#2987FF] bg-[#20355D] text-white"
-                  : "border-[#2E3A58] bg-[#212A42] text-[#A8BCDF] hover:text-white"
+                  ? "border-[#218cff]/50 bg-[#173055] text-white"
+                  : "border-white/[0.08] bg-[#171b25] text-[#8e97a8] hover:text-white"
               }`}
             >
               Chats
-              <span className="rounded-full bg-[#1889E6] px-2 py-[1px] text-[11px] font-bold leading-5 text-white">
+              <span className="rounded-full bg-[#1889E6] px-1.5 py-[1px] text-[10px] font-bold leading-4 text-white">
                 {Math.max(2, groupUnreadCount > 0 ? 3 : 2)}
               </span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("support")}
-              className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-[13px] font-semibold transition-colors ${
+              className={`inline-flex items-center gap-1.5 rounded-[8px] border px-2.5 py-1.5 text-[11px] font-bold transition-colors ${
                 compactTab === "support"
-                  ? "border-[#2987FF] bg-[#20355D] text-white"
-                  : "border-[#2E3A58] bg-[#212A42] text-[#A8BCDF] hover:text-white"
+                  ? "border-[#218cff]/50 bg-[#173055] text-white"
+                  : "border-white/[0.08] bg-[#171b25] text-[#8e97a8] hover:text-white"
               }`}
             >
-              Notifications
-              <span className="rounded-full bg-[#1889E6] px-2 py-[1px] text-[11px] font-bold leading-5 text-white">
+              Support
+              <span className="rounded-full bg-[#1889E6] px-1.5 py-[1px] text-[10px] font-bold leading-4 text-white">
                 {Math.max(notificationCount, 1)}
               </span>
             </button>
@@ -656,22 +656,22 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
                   key={row.id}
                   type="button"
                   onClick={() => setActiveTab(row.tab)}
-                  className={`flex w-full items-start gap-3 border-b border-[#2A3350] px-4 py-3 text-left transition-colors ${
-                    isActiveRow ? "bg-[#223358]" : "hover:bg-[#242E4A]"
+                  className={`flex w-full items-start gap-2.5 border-b border-white/[0.07] px-3 py-2.5 text-left transition-colors ${
+                    isActiveRow ? "bg-[#171f31]" : "hover:bg-white/[0.04]"
                   }`}
                 >
-                  <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#394766] text-[16px] font-semibold text-[#CFE0FF]">
-                    {row.icon ? <row.icon className="h-5 w-5" /> : row.avatarLabel}
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2a2f3a] text-[12px] font-bold text-[#dce6f7]">
+                    {row.icon ? <row.icon className="h-4 w-4" /> : row.avatarLabel}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="truncate text-[16px] font-semibold leading-6 text-white">{row.title}</p>
-                      <span className="shrink-0 text-[12px] text-[#9DB0D2]">{row.time}</span>
+                      <p className="truncate text-[12px] font-bold leading-5 text-white">{row.title}</p>
+                      <span className="shrink-0 text-[10px] text-[#7f8798]">{row.time}</span>
                     </div>
-                    <p className="mt-0.5 truncate text-[13px] text-[#A2B3D2]">{row.preview}</p>
+                    <p className="truncate text-[11px] leading-4 text-[#8a94a6]">{row.preview}</p>
                   </div>
                   {row.unread > 0 ? (
-                    <span className="mt-1 inline-flex h-6 min-w-[24px] items-center justify-center rounded-full bg-[#0E8BEB] px-2 text-[12px] font-semibold text-white">
+                    <span className="mt-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#0E8BEB] px-1.5 text-[10px] font-bold text-white">
                       {row.unread > 99 ? "99+" : row.unread}
                     </span>
                   ) : null}
@@ -681,7 +681,7 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
           )}
         </div>
 
-        <div className="border-t border-[#2B3552] bg-[#1D2539] px-4 py-3">
+        <div className="border-t border-white/[0.08] bg-[#11151f] px-3 py-2.5">
           <form onSubmit={handleCompactSubmit} className="flex items-center gap-2">
             <input
               type="text"
@@ -694,21 +694,21 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
                 setGroupInput(event.target.value);
               }}
               placeholder={compactTab === "support" ? "Write to support..." : "Write to general chat..."}
-              className="h-10 flex-1 rounded-xl border border-[#334062] bg-[#222C45] px-3 text-[14px] text-white outline-none transition-colors placeholder:text-[#7F95BC] focus:border-[#3D7CE2]"
+              className="h-8 flex-1 rounded-[8px] border border-white/[0.08] bg-[#171b25] px-2.5 text-[12px] text-white outline-none transition-colors placeholder:text-[#747d8d] focus:border-[#218cff]/60"
             />
             <button
               type="submit"
               disabled={isCompactSending || !compactInputValue.trim()}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#0C89E7] text-white transition-colors hover:bg-[#0A7BD0] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] bg-[#0C89E7] text-white transition-colors hover:bg-[#0A7BD0] disabled:cursor-not-allowed disabled:opacity-60"
               aria-label={compactTab === "support" ? "Send support message" : "Send chat message"}
             >
-              {isCompactSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {isCompactSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
             </button>
           </form>
-          <div className="mt-2 flex items-center justify-between text-[11px] text-[#98ABCC]">
+          <div className="mt-2 flex items-center justify-between text-[10px] text-[#7f8798]">
             <span>{compactTab === "support" ? "Support desk online" : `${roomCount} traders active`}</span>
             <span className="inline-flex items-center gap-1">
-              <Bell className="h-3.5 w-3.5" />
+              <Bell className="h-3 w-3" />
               Live updates
             </span>
           </div>

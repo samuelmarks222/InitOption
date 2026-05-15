@@ -292,12 +292,12 @@ const TradeResultChart = ({
   compact?: boolean;
 }) => {
   const pointCount = compact ? 32 : 56;
-  const chartWidth = compact ? 222 : 612;
-  const chartHeight = compact ? 102 : 256;
-  const rightAxisWidth = compact ? 0 : 60;
-  const leftPadding = compact ? 8 : 16;
-  const topPadding = compact ? 8 : 14;
-  const bottomPadding = compact ? 8 : 28;
+  const chartWidth = compact ? 222 : 560;
+  const chartHeight = compact ? 102 : 202;
+  const rightAxisWidth = compact ? 0 : 52;
+  const leftPadding = compact ? 8 : 14;
+  const topPadding = compact ? 8 : 12;
+  const bottomPadding = compact ? 8 : 24;
   const drawableWidth = chartWidth - leftPadding * 2 - rightAxisWidth;
   const drawableHeight = chartHeight - topPadding - bottomPadding;
   const series = buildTradeResultSeries(trade, pointCount);
@@ -348,7 +348,7 @@ const TradeResultChart = ({
   return (
     <div
       className={`relative overflow-hidden rounded-[10px] border border-white/4 bg-[#253247] ${
-        compact ? "h-[102px]" : "h-[308px]"
+        compact ? "h-[102px]" : "h-[238px]"
       }`}
       style={{
         background: compact
@@ -378,18 +378,18 @@ const TradeResultChart = ({
         <path
           d={`M ${leftPadding} ${entryY} L ${leftPadding + drawableWidth} ${entryY}`}
           stroke="#ff5f55"
-          strokeWidth={compact ? 2 : 2.6}
+          strokeWidth={compact ? 0.65 : 0.8}
           strokeLinecap="round"
         />
         <path
           d={linePath}
           fill="none"
-          stroke="rgba(20,141,255,0.12)"
-          strokeWidth={compact ? 3.6 : 4.8}
+          stroke="rgba(20,141,255,0.08)"
+          strokeWidth={compact ? 1.1 : 1.35}
           strokeLinejoin="miter"
           strokeLinecap="round"
         />
-        <path d={linePath} fill="none" stroke="#148dff" strokeWidth={compact ? 2 : 2.5} strokeLinejoin="miter" strokeLinecap="round" />
+        <path d={linePath} fill="none" stroke="#148dff" strokeWidth={compact ? 0.75 : 0.9} strokeLinejoin="miter" strokeLinecap="round" />
 
         <circle cx={markerX} cy={markerY} r={compact ? 5 : 6.5} fill="#ffffff" stroke="#ff5f55" strokeWidth={compact ? 2.2 : 2.8} />
         <g transform={`translate(${badgeX},${badgeY})`}>
@@ -411,7 +411,7 @@ const TradeResultChart = ({
                 y={item.y + 4}
                 textAnchor="end"
                 fill="rgba(200,212,236,0.46)"
-                fontSize="14"
+                fontSize="12"
                 fontWeight="600"
               >
                 {item.label}
@@ -425,7 +425,7 @@ const TradeResultChart = ({
                 y={chartHeight - 10}
                 textAnchor={item.x === leftPadding ? "start" : item.x >= leftPadding + drawableWidth ? "end" : "middle"}
                 fill="rgba(200,212,236,0.34)"
-                fontSize="13"
+                fontSize="11"
                 fontWeight="600"
               >
                 {item.label}
@@ -630,7 +630,7 @@ export const TradeResultDetailModal = ({
   const differencePoints = Math.round((trade.exitPrice - trade.entryPrice) * 10 ** quotePrecision);
 
   return (
-    <div className="fixed inset-0 z-[420] flex items-center justify-center px-4 py-6">
+    <div className="fixed inset-0 z-[420] flex items-center justify-center px-3 py-4">
       <button
         type="button"
         aria-label="Close trade result"
@@ -638,35 +638,35 @@ export const TradeResultDetailModal = ({
         className="absolute inset-0 bg-[rgba(11,16,28,0.68)] backdrop-blur-[9px]"
       />
 
-      <div className="relative z-[421] w-full max-w-[686px] overflow-hidden rounded-[18px] border border-white/7 bg-[#30384c] shadow-[0_34px_80px_rgba(0,0,0,0.42)]">
-        <div className="flex items-start justify-between gap-4 border-b border-white/8 px-5 py-4">
+      <div className="relative z-[421] max-h-[calc(100vh-32px)] w-full max-w-[620px] overflow-x-hidden overflow-y-auto rounded-[16px] border border-white/7 bg-[#30384c] shadow-[0_34px_80px_rgba(0,0,0,0.42)]">
+        <div className="flex items-start justify-between gap-3 border-b border-white/8 px-4 py-3">
           <div className="min-w-0">
-            <div className="text-[18px] font-bold text-white">Trade ID</div>
-            <div className="mt-2 break-all text-[14px] font-semibold text-[#eef4ff]">{trade.id}</div>
+            <div className="text-[16px] font-bold text-white">Trade ID</div>
+            <div className="mt-1.5 break-all text-[12px] font-semibold text-[#eef4ff]">{trade.id}</div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="mt-1 flex h-10 w-10 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/5 hover:text-white"
+            className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/5 hover:text-white"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="px-5 py-4">
-          <div className="grid gap-4 sm:grid-cols-4">
+        <div className="px-4 py-3">
+          <div className="grid gap-3 sm:grid-cols-4">
             <div>
               <div className="text-[12px] font-semibold text-[#a8b2c7]">Asset:</div>
               <div className="mt-1.5 flex items-center gap-2.5">
-                <AssetSymbolMark symbol={trade.assetSymbol} size={27} />
-                <span className="text-[17px] font-bold text-white">{trade.assetSymbol}</span>
+                <AssetSymbolMark symbol={trade.assetSymbol} size={24} />
+                <span className="text-[15px] font-bold text-white">{trade.assetSymbol}</span>
               </div>
             </div>
 
             <div>
               <div className="text-[12px] font-semibold text-[#a8b2c7]">Type:</div>
-              <div className="mt-1.5 inline-flex items-center gap-2 text-[16px] font-bold" style={{ color: directionColor }}>
+              <div className="mt-1.5 inline-flex items-center gap-2 text-[14px] font-bold" style={{ color: directionColor }}>
                 <span
                   className="inline-flex h-[24px] w-[24px] items-center justify-center rounded-full"
                   style={{ background: trade.direction === "higher" ? "rgba(24, 216, 125, 0.16)" : "rgba(255, 106, 114, 0.16)" }}
@@ -679,7 +679,7 @@ export const TradeResultDetailModal = ({
 
             <div>
               <div className="text-[12px] font-semibold text-[#a8b2c7]">Duration:</div>
-              <div className="mt-1.5 inline-flex items-center gap-2 text-[16px] font-bold text-white">
+              <div className="mt-1.5 inline-flex items-center gap-2 text-[14px] font-bold text-white">
                 <Clock3 className="h-4.5 w-4.5 text-[#cfd8eb]" />
                 <span>{formatTradeClock(trade.expirySeconds)}</span>
               </div>
@@ -687,17 +687,17 @@ export const TradeResultDetailModal = ({
 
             <div>
               <div className="text-[12px] font-semibold text-[#a8b2c7]">Result:</div>
-              <div className="mt-1.5 text-[16px] font-bold" style={{ color: resultColor }}>
+              <div className="mt-1.5 text-[14px] font-bold" style={{ color: resultColor }}>
                 {formatMoneySuffix(trade.profit, true)}
               </div>
             </div>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-3">
             <TradeResultChart trade={trade} />
           </div>
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div>
               <div className="text-[12px] font-semibold text-[#a8b2c7]">Opening quote:</div>
               <div className="mt-1.5 text-[14px] font-bold text-white">{formatQuote(trade.entryPrice, quotePrecision)}</div>
@@ -719,13 +719,13 @@ export const TradeResultDetailModal = ({
           </div>
 
           {auditEntries.length > 0 ? (
-            <div className="mt-5 rounded-[14px] border border-white/7 bg-[#2a3243] px-4 py-4">
+            <div className="mt-4 rounded-[14px] border border-white/7 bg-[#2a3243] px-3 py-3">
               <div className="text-[12px] font-black uppercase tracking-[0.14em] text-[#a8b2c7]">Balance trail</div>
-              <div className="mt-3 space-y-2">
+              <div className="mt-2 space-y-2">
                 {auditEntries.map((entry) => (
                   <div
                     key={entry.id}
-                    className="grid gap-2 rounded-[10px] border border-white/6 bg-[#232b3b] px-3 py-3 text-[12px] text-[#d8e2f5] sm:grid-cols-[110px_1fr_120px_120px]"
+                    className="grid gap-2 rounded-[10px] border border-white/6 bg-[#232b3b] px-3 py-2.5 text-[12px] text-[#d8e2f5] sm:grid-cols-[100px_1fr_105px_105px]"
                   >
                     <div>
                       <div className="font-black uppercase tracking-[0.08em] text-white">
