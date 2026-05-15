@@ -5,7 +5,6 @@ import {
   Globe,
   Headset,
   Instagram,
-  MessageCircle,
   MessageSquareText,
   Music2,
   Send,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { WhatsAppLogo } from "@/components/icons/BrandSocialIcons";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 
 interface WorkspaceHelpProps {
@@ -35,8 +35,9 @@ type SocialButton = {
   label: string;
   platform: string;
   href: string;
-  icon?: LucideIcon;
+  icon?: LucideIcon | typeof WhatsAppLogo;
   text?: string;
+  brand?: "whatsapp";
 };
 
 const resolveSocialHref = (url: string) => {
@@ -54,7 +55,7 @@ const resolveSocialVisual = (platform: string): Pick<SocialButton, "icon" | "tex
   if (normalized.includes("instagram") || normalized === "ig") return { icon: Instagram };
   if (normalized.includes("facebook") || normalized === "fb") return { icon: Facebook };
   if (normalized.includes("youtube") || normalized === "yt") return { icon: Youtube };
-  if (normalized.includes("whatsapp") || normalized === "wa") return { icon: MessageCircle };
+  if (normalized.includes("whatsapp") || normalized === "wa") return { brand: "whatsapp", icon: WhatsAppLogo };
   if (normalized.includes("tiktok") || normalized === "tt") return { icon: Music2 };
   if (normalized.includes("discord")) return { text: "D" };
 
@@ -128,6 +129,7 @@ export const WorkspaceHelp = ({ onOpenSupport }: WorkspaceHelpProps) => {
           <div className="grid grid-cols-3 gap-2">
             {officialChannels.map((item) => {
               const Icon = item.icon;
+              const isWhatsApp = item.brand === "whatsapp";
               return (
                 <a
                   key={item.label}
@@ -138,7 +140,11 @@ export const WorkspaceHelp = ({ onOpenSupport }: WorkspaceHelpProps) => {
                   className="flex h-[39px] items-center justify-center rounded-[5px] border text-[#9db0c9] transition-colors hover:text-white"
                   style={{ background: "var(--trading-panel-bg)", borderColor: "var(--trading-border-color)" }}
                 >
-                  {Icon ? <Icon className="h-[21px] w-[21px]" strokeWidth={2.5} /> : <span className="text-[18px] font-black">{item.text}</span>}
+                  {Icon ? (
+                    <Icon className={`h-[21px] w-[21px] ${isWhatsApp ? "text-[#25D366]" : ""}`} strokeWidth={2.5} />
+                  ) : (
+                    <span className="text-[18px] font-black">{item.text}</span>
+                  )}
                 </a>
               );
             })}
@@ -150,6 +156,7 @@ export const WorkspaceHelp = ({ onOpenSupport }: WorkspaceHelpProps) => {
           <div className="grid grid-cols-3 gap-2">
             {followLinks.map((item) => {
               const Icon = item.icon;
+              const isWhatsApp = item.brand === "whatsapp";
               return (
                 <a
                   key={item.label}
@@ -160,7 +167,11 @@ export const WorkspaceHelp = ({ onOpenSupport }: WorkspaceHelpProps) => {
                   className="flex h-[39px] items-center justify-center rounded-[5px] border text-[#9db0c9] transition-colors hover:text-white"
                   style={{ background: "var(--trading-panel-bg)", borderColor: "var(--trading-border-color)" }}
                 >
-                  {Icon ? <Icon className="h-[21px] w-[21px]" strokeWidth={2.5} /> : <span className="text-[18px] font-black">{item.text}</span>}
+                  {Icon ? (
+                    <Icon className={`h-[21px] w-[21px] ${isWhatsApp ? "text-[#25D366]" : ""}`} strokeWidth={2.5} />
+                  ) : (
+                    <span className="text-[18px] font-black">{item.text}</span>
+                  )}
                 </a>
               );
             })}

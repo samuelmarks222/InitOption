@@ -2,7 +2,6 @@ import {
   Facebook,
   Globe,
   Instagram,
-  MessageCircle,
   Music2,
   Send,
   Twitter,
@@ -10,6 +9,7 @@ import {
   Youtube,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { WhatsAppLogo } from "@/components/icons/BrandSocialIcons";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { normalizeWebsiteContent } from "@/lib/websiteContent";
 import { SiteLogo } from "@/components/branding/SiteLogo";
@@ -44,38 +44,40 @@ const resolveSocialHref = (url: string) => {
   return `https://${trimmed.replace(/^\/+/, "")}`;
 };
 
-const resolveSocialIcon = (platform: string): LucideIcon => {
+type SocialIcon = LucideIcon | typeof WhatsAppLogo;
+
+const resolveSocialIcon = (platform: string): { Icon: SocialIcon; isWhatsApp?: boolean } => {
   const normalizedPlatform = platform.trim().toLowerCase();
 
   if (normalizedPlatform.includes("telegram") || normalizedPlatform === "tg") {
-    return Send;
+    return { Icon: Send };
   }
 
   if (normalizedPlatform === "x" || normalizedPlatform.includes("twitter")) {
-    return Twitter;
+    return { Icon: Twitter };
   }
 
   if (normalizedPlatform.includes("instagram") || normalizedPlatform === "ig") {
-    return Instagram;
+    return { Icon: Instagram };
   }
 
   if (normalizedPlatform.includes("facebook") || normalizedPlatform === "fb") {
-    return Facebook;
+    return { Icon: Facebook };
   }
 
   if (normalizedPlatform.includes("youtube") || normalizedPlatform === "yt") {
-    return Youtube;
+    return { Icon: Youtube };
   }
 
   if (normalizedPlatform.includes("whatsapp") || normalizedPlatform === "wa") {
-    return MessageCircle;
+    return { Icon: WhatsAppLogo, isWhatsApp: true };
   }
 
   if (normalizedPlatform.includes("tiktok") || normalizedPlatform === "tt") {
-    return Music2;
+    return { Icon: Music2 };
   }
 
-  return Globe;
+  return { Icon: Globe };
 };
 
 const Footer = ({ content }: FooterProps) => {
@@ -164,7 +166,7 @@ const Footer = ({ content }: FooterProps) => {
                 ) : null}
                 <div className="flex flex-wrap items-center gap-4 lg:justify-end">
                   {visibleSocialLinks.map((item) => {
-                    const Icon = resolveSocialIcon(item.platform);
+                    const { Icon, isWhatsApp } = resolveSocialIcon(item.platform);
                     const label = item.handle.trim() || item.platform.trim() || "social account";
 
                     return (
@@ -177,7 +179,7 @@ const Footer = ({ content }: FooterProps) => {
                         title={label}
                         className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white transition-colors hover:border-[#0fa053]/40 hover:bg-[#0fa053]/12 hover:text-[#0fa053]"
                       >
-                        <Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.25} />
+                        <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${isWhatsApp ? "text-[#25D366]" : ""}`} strokeWidth={2.25} />
                       </a>
                     );
                   })}
