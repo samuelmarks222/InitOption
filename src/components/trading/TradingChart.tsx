@@ -3148,7 +3148,7 @@ const TradingChart = ({
                           key={tf}
                           onClick={() => {
                             setSelectedTf(tf);
-                            dismissMobileMenu();
+                            closeMobileTools();
                           }}
                           className={`rounded-[8px] px-2 py-3 text-center text-[13px] font-bold transition-colors ${
                             selectedTf === tf
@@ -3179,7 +3179,7 @@ const TradingChart = ({
                           key={item.id}
                           onClick={() => {
                             setChartType(item.id);
-                            dismissMobileMenu();
+                            closeMobileTools();
                           }}
                           className={`flex items-center gap-3 rounded-[8px] px-4 py-3 text-left text-[13px] font-semibold transition-colors ${
                             chartType === item.id
