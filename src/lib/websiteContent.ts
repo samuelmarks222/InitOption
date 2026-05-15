@@ -170,15 +170,25 @@ const normalizeFaqItems = (value: unknown, fallback: WebsiteFaqItem[]) =>
     };
   });
 
-const normalizeSocialLinkItems = (value: unknown, fallback: WebsiteSocialLinkItem[]) =>
-  fallback.map((defaultItem, index) => {
-    const source = Array.isArray(value) && isRecord(value[index]) ? value[index] : {};
-    return {
-      platform: toStringValue(source.platform, defaultItem.platform),
-      handle: toStringValue(source.handle, defaultItem.handle),
-      url: toStringValue(source.url, defaultItem.url),
-    };
-  });
+const normalizeSocialLinkItems = (value: unknown, fallback: WebsiteSocialLinkItem[]) => {
+  if (!Array.isArray(value) || !value.length) {
+    return fallback;
+  }
+
+  const normalizedItems = value
+    .filter(isRecord)
+    .map((source, index) => {
+      const defaultItem = fallback[index] ?? { platform: "", handle: "", url: "" };
+
+      return {
+        platform: toStringValue(source.platform, defaultItem.platform),
+        handle: toStringValue(source.handle, defaultItem.handle),
+        url: toStringValue(source.url, defaultItem.url),
+      };
+    });
+
+  return normalizedItems.length ? normalizedItems : fallback;
+};
 
 const normalizePublicPageSections = (value: unknown, fallback: WebsitePublicPageSectionContent[]) =>
   fallback.map((defaultItem, index) => {
@@ -406,6 +416,11 @@ export const createDefaultWebsiteContent = (platformName = DEFAULT_PLATFORM_NAME
         url: "https://t.me/initoption",
       },
       {
+        platform: "WhatsApp",
+        handle: "WhatsApp support",
+        url: "https://wa.me/254700000000",
+      },
+      {
         platform: "Instagram",
         handle: "@initoption",
         url: "https://instagram.com/initoption",
@@ -414,6 +429,21 @@ export const createDefaultWebsiteContent = (platformName = DEFAULT_PLATFORM_NAME
         platform: "Facebook",
         handle: "Init Option",
         url: "https://facebook.com/initoption",
+      },
+      {
+        platform: "YouTube",
+        handle: "Init Option",
+        url: "https://youtube.com/@initoption",
+      },
+      {
+        platform: "X",
+        handle: "@initoption",
+        url: "https://x.com/initoption",
+      },
+      {
+        platform: "TikTok",
+        handle: "@initoption",
+        url: "https://tiktok.com/@initoption",
       },
     ],
   },

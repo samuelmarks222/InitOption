@@ -12,6 +12,7 @@ const AUTH_PATHS = new Set(["/login", "/register"]);
 const PRIVATE_PREFIXES = ["/admin", "/dashboard", "/trade", "/deposit", "/withdraw", "/settings", "/notifications", "/traders"];
 const TOURNAMENTS_INDEX_PATH = "/tournaments";
 const BLOG_INDEX_PATH = "/blog";
+const REVIEWS_PATH = "/reviews";
 const DEFAULT_SHARE_IMAGE_PATH = "/share-icon.png";
 const HOME_TITLE_TEMPLATE = "{platformName} – Trading Platform: Free Demo, Live Trading & Fast Withdrawals";
 const HOME_DESCRIPTION_TEMPLATE =
@@ -80,6 +81,15 @@ export const getRouteSeoOverride = (
 
   if (normalizedPathname === TOURNAMENTS_INDEX_PATH) {
     return buildTournamentListingSeo(platformName);
+  }
+
+  if (normalizedPathname === REVIEWS_PATH) {
+    return {
+      siteTitle: `Customer Reviews | ${platformName}`,
+      metaDescription: `Read customer reviews for ${platformName} and submit your own trading platform experience.`,
+      metaKeywords: `${platformName} reviews, trading platform reviews, customer reviews, trader feedback`,
+      robotsDirective: "index, follow",
+    };
   }
 
   if (isTournamentDetailPath(normalizedPathname)) {
@@ -382,6 +392,34 @@ export const buildStructuredData = ({
     });
   }
 
+  if (pathname === REVIEWS_PATH) {
+    items.push({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: `Customer Reviews | ${platformName}`,
+      description: metaDescription,
+      url: currentHref,
+    });
+    items.push({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: platformName,
+          item: siteOrigin,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Customer Reviews",
+          item: `${siteOrigin}${REVIEWS_PATH}`,
+        },
+      ],
+    });
+  }
+
   if (publicPage) {
     const publicPageType =
       pathname === "/contact"
@@ -506,6 +544,7 @@ export const getSitemapEntries = (siteOrigin: string, extraEntries: SitemapEntry
   const entries = [
     { path: "/", changefreq: "daily", priority: "1.0" },
     { path: TOURNAMENTS_INDEX_PATH, changefreq: "daily", priority: "0.8" },
+    { path: REVIEWS_PATH, changefreq: "weekly", priority: "0.8" },
     ...PUBLIC_PAGE_LIST.map((page) => ({
       path: page.path,
       changefreq: page.key === "faq" ? "weekly" : "monthly",

@@ -9,6 +9,15 @@ import { ProfileTradingHistory } from "../profile/ProfileTradingHistory";
 import { ProfileSettings } from "../profile/ProfileSettings";
 
 type AccountTab = "upload" | "personal" | "deposit" | "balance_history" | "trading_history" | "settings";
+const ACCOUNT_TAB_STORAGE_KEY = "initoption:account-tab";
+
+const isAccountTab = (value: string | null): value is AccountTab =>
+  value === "upload" ||
+  value === "personal" ||
+  value === "deposit" ||
+  value === "balance_history" ||
+  value === "trading_history" ||
+  value === "settings";
 
 interface AccountGridOverlayProps {
   onClose?: () => void;
@@ -17,7 +26,18 @@ interface AccountGridOverlayProps {
 
 export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: AccountGridOverlayProps) => {
   const { profile, user, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<AccountTab>(initialTab);
+  const [activeTab, setActiveTab] = useState<AccountTab>(() => {
+    if (typeof window === "undefined") return initialTab;
+    const storedTab = window.sessionStorage.getItem(ACCOUNT_TAB_STORAGE_KEY);
+    return isAccountTab(storedTab) ? storedTab : initialTab;
+  });
+
+  const changeTab = (tab: AccountTab) => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(ACCOUNT_TAB_STORAGE_KEY, tab);
+    }
+    setActiveTab(tab);
+  };
 
   const MENU_ITEMS = [
     { id: "personal", icon: User, label: "Personal Data", desc: "View and edit your profile information" },
@@ -73,7 +93,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
           return (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id as AccountTab)}
+              onClick={() => changeTab(item.id as AccountTab)}
               className={`flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center transition-colors ${
                 isActive ? "border border-[#2f80ed]/35 bg-[#263044] text-white" : "border border-white/[0.04] bg-white/[0.035] text-[var(--trading-muted-color)]"
               }`}
@@ -105,7 +125,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id as AccountTab)}
+                onClick={() => changeTab(item.id as AccountTab)}
                 className={`mx-2 my-0.5 flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all ${
                   isActive
                     ? "border border-[#2f80ed]/28 bg-[#263044] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]"

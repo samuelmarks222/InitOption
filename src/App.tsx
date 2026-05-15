@@ -25,6 +25,7 @@ import PublicTournamentDetailPage from "./pages/PublicTournamentDetailPage";
 import PublicTournamentsPage from "./pages/PublicTournamentsPage";
 import BlogPage from "./pages/BlogPage";
 import BlogPostPage from "./pages/BlogPostPage";
+import ReviewsPage from "./pages/ReviewsPage";
 import { applyPlatformSettingsToDocument, DEFAULT_PLATFORM_SETTINGS, type PlatformSettingsRecord } from "@/lib/platformMetadata";
 import RouteSeoManager from "@/components/seo/RouteSeoManager";
 
@@ -111,6 +112,7 @@ const App = () => {
                         <Route path="/facts-and-figures" element={<PublicInfoPage pageKey="facts-and-figures" />} />
                         <Route path="/blog" element={<BlogPage />} />
                         <Route path="/blog/:slug" element={<BlogPostPage />} />
+                        <Route path="/reviews" element={<ReviewsPage />} />
                         <Route path="/contact" element={<PublicInfoPage pageKey="contact" />} />
                         <Route path="/delete-account" element={<PublicInfoPage pageKey="delete-account" />} />
                         <Route path="/features" element={<PublicInfoPage pageKey="features" />} />

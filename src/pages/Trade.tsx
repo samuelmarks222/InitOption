@@ -1158,8 +1158,8 @@ const Trade = () => {
               <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setActiveWorkspace(null)} />
             </div>
           ) : activeWorkspace === "join" ? (
-            <div className="flex-1 w-full h-full relative z-30" style={{ background: "#141827" }}>
-              <WorkspaceReferral />
+            <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-bg)" }}>
+              <WorkspaceReferral onSelectWorkspace={setActiveWorkspace} />
             </div>
           ) : (
             <>

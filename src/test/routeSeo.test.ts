@@ -35,6 +35,14 @@ describe("route SEO", () => {
     expect(override?.metaKeywords).toContain("Init Option");
   });
 
+  it("marks the customer reviews route indexable", () => {
+    const override = getRouteSeoOverride("/reviews", "Init Option");
+
+    expect(override?.robotsDirective).toBe("index, follow");
+    expect(override?.siteTitle).toBe("Customer Reviews | Init Option");
+    expect(override?.metaDescription).toContain("customer reviews");
+  });
+
   it("builds FAQ structured data for the public FAQ page", () => {
     const structuredData = buildStructuredData({
       currentHref: "https://initoption.example/faq",
@@ -163,6 +171,7 @@ describe("route SEO", () => {
 
     expect(entries.some((entry) => entry.url === "https://initoption.example/")).toBe(true);
     expect(entries.some((entry) => entry.url === "https://initoption.example/tournaments")).toBe(true);
+    expect(entries.some((entry) => entry.url === "https://initoption.example/reviews")).toBe(true);
     expect(entries.some((entry) => entry.url === "https://initoption.example/tournaments/monday-momentum-1234abcd")).toBe(true);
     expect(entries.some((entry) => entry.url === "https://initoption.example/features")).toBe(true);
     expect(entries.some((entry) => entry.url === "https://initoption.example/why-choose-init-option")).toBe(true);

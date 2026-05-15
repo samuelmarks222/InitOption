@@ -2,6 +2,8 @@ import {
   Facebook,
   Globe,
   Instagram,
+  MessageCircle,
+  Music2,
   Send,
   Twitter,
   type LucideIcon,
@@ -63,6 +65,14 @@ const resolveSocialIcon = (platform: string): LucideIcon => {
 
   if (normalizedPlatform.includes("youtube") || normalizedPlatform === "yt") {
     return Youtube;
+  }
+
+  if (normalizedPlatform.includes("whatsapp") || normalizedPlatform === "wa") {
+    return MessageCircle;
+  }
+
+  if (normalizedPlatform.includes("tiktok") || normalizedPlatform === "tt") {
+    return Music2;
   }
 
   return Globe;

@@ -7,7 +7,7 @@ import { useSiteBranding } from "@/hooks/useSiteBranding";
 const NAV_ITEMS = [
   { label: "Markets", href: "/#markets" },
   { label: "Platform", href: "/#features" },
-  { label: "Reviews", href: "/#reviews" },
+  { label: "Reviews", href: "/reviews" },
   { label: "FAQ", href: "/#faq" },
   { label: "Blog", href: "/blog" },
 ];

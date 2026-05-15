@@ -725,10 +725,10 @@ export const WebsiteContentEditor = ({ content: rawContent, onChange }: WebsiteC
       <div className={CARD_CLASS}>
         <div className="mb-4 flex flex-col gap-3 border-b border-[#1e2330] pb-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-lg font-bold text-white">Footer Social Links</h3>
+            <h3 className="text-lg font-bold text-white">Social Links</h3>
             <p className="mt-1 text-sm text-slate-400">
-              Add the social icons shown in the footer and send users directly to your Telegram, Instagram, Facebook,
-              YouTube, X, or any other public account.
+              Add the social icons shown in the footer, Help panel, and reviews page. Use direct links for WhatsApp,
+              Telegram, Facebook, YouTube, Instagram, TikTok, X, or any official app/community account.
             </p>
           </div>
           <button
@@ -770,7 +770,7 @@ export const WebsiteContentEditor = ({ content: rawContent, onChange }: WebsiteC
 
           <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3 text-sm text-slate-400">
             Leave the title and subtitle blank if you want the same clean icon-only look as your reference. Each item
-            below should use the direct public URL of the account you want visitors to open from the footer.
+            below should use the direct public URL users should open from the footer, Help panel, and review page.
           </div>
         </div>
 
@@ -796,7 +796,7 @@ export const WebsiteContentEditor = ({ content: rawContent, onChange }: WebsiteC
                     value={item.platform}
                     onChange={(event) => updateSocialLinkField(index, "platform", event.target.value)}
                     className={INPUT_CLASS}
-                    placeholder="Telegram, Twitter, Instagram, Facebook, YouTube"
+                    placeholder="WhatsApp, Telegram, Facebook, YouTube, Instagram, TikTok, X"
                   />
                 </div>
                 <div>

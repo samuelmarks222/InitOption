@@ -696,6 +696,7 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
                           {message.message}
                         </div>
                       </div>
+                      {isMe ? <ChatAvatar alt={senderName} className="mt-5 h-8 w-8 text-white" src={profile?.avatar_url} /> : null}
                     </div>
                   );
                 })}
@@ -1104,22 +1105,28 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
                 {supportMessages.map((message) => {
                   const isMe = message.sender_id === user?.id && message.sender_role === "user";
                   return (
-                    <div key={message.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                      <div className="mb-1 flex items-center gap-2 px-1">
-                        {!isMe ? (
-                          <span className="text-[11px] font-semibold text-emerald-300">{message.sender_name || "Desk"}</span>
-                        ) : null}
-                        <span className="text-[10px] text-gray-500">{formatTime(message.created_at)}</span>
+                    <div key={message.id} className={`flex gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
+                      {!isMe ? (
+                        <ChatAvatar alt={message.sender_name || "Support"} className="mt-5 h-9 w-9" icon={LifeBuoy} />
+                      ) : null}
+                      <div className={`flex max-w-[88%] flex-col ${isMe ? "items-end" : "items-start"}`}>
+                        <div className="mb-1 flex items-center gap-2 px-1">
+                          <span className="text-[11px] font-semibold text-emerald-300">
+                            {isMe ? "You" : message.sender_name || "Desk"}
+                          </span>
+                          <span className="text-[10px] text-gray-500">{formatTime(message.created_at)}</span>
+                        </div>
+                        <div
+                          className={`rounded-2xl px-3.5 py-2.5 text-[13px] leading-6 ${
+                            isMe
+                              ? "rounded-tr-sm bg-[#0fa053] text-white"
+                              : "rounded-tl-sm border border-white/5 bg-[#151b24] text-gray-100"
+                          }`}
+                        >
+                          {message.message}
+                        </div>
                       </div>
-                      <div
-                        className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-6 ${
-                          isMe
-                            ? "rounded-tr-sm bg-[#0fa053] text-white"
-                            : "rounded-tl-sm border border-white/5 bg-[#151b24] text-gray-100"
-                        }`}
-                      >
-                        {message.message}
-                      </div>
+                      {isMe ? <ChatAvatar alt={senderName} className="mt-5 h-9 w-9" src={profile?.avatar_url} /> : null}
                     </div>
                   );
                 })}

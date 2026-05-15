@@ -9,10 +9,30 @@ import { ProfileTradingHistory } from "../profile/ProfileTradingHistory";
 import { ProfileSettings } from "../profile/ProfileSettings";
 
 type AccountTab = "upload" | "personal" | "deposit" | "balance_history" | "trading_history" | "settings";
+const ACCOUNT_TAB_STORAGE_KEY = "initoption:account-tab";
+
+const isAccountTab = (value: string | null): value is AccountTab =>
+  value === "upload" ||
+  value === "personal" ||
+  value === "deposit" ||
+  value === "balance_history" ||
+  value === "trading_history" ||
+  value === "settings";
 
 export const WorkspaceAccount = () => {
   const { signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState<AccountTab>("personal");
+  const [activeTab, setActiveTab] = useState<AccountTab>(() => {
+    if (typeof window === "undefined") return "personal";
+    const storedTab = window.sessionStorage.getItem(ACCOUNT_TAB_STORAGE_KEY);
+    return isAccountTab(storedTab) ? storedTab : "personal";
+  });
+
+  const changeTab = (tab: AccountTab) => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(ACCOUNT_TAB_STORAGE_KEY, tab);
+    }
+    setActiveTab(tab);
+  };
 
   const MENU_ITEMS = [
     { id: "personal", icon: User, label: "Personal Data" },
@@ -39,7 +59,7 @@ export const WorkspaceAccount = () => {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => changeTab(item.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors mx-1 whitespace-nowrap text-[12px] font-bold ${
                   isActive ? "bg-white/[0.07] text-white" : "text-[var(--trading-muted-color)] hover:bg-white/[0.05] hover:text-white"
                 }`}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, TrendingUp, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ const bottomStats = [
 
 const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn, signUp, signInWithGoogle, user, loading: authLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [showPassword, setShowPassword] = useState(false);
@@ -44,6 +45,14 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   useEffect(() => {
     setIsLogin(initialMode === "login");
   }, [initialMode]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const referralValue = params.get("ref") || params.get("promo") || params.get("code");
+    if (referralValue && initialMode === "signup") {
+      setPromoCode(referralValue.trim().toUpperCase());
+    }
+  }, [initialMode, location.search]);
 
   const switchMode = (mode: AuthMode) => {
     setIsLogin(mode === "login");

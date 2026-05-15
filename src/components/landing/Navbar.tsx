@@ -8,7 +8,7 @@ import logo from "@/assets/logo.png";
 const navLinks = [
   { label: "Markets", href: "/#markets" },
   { label: "Features", href: "/#features" },
-  { label: "Reviews", href: "/#reviews" },
+  { label: "Reviews", href: "/reviews" },
   { label: "FAQ", href: "/#faq" },
   { label: "Blog", href: "/blog" },
 ];
