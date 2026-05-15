@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, HelpCircle, Trophy, UserCheck, UserPlus, X } from "lucide-react";
-import Flag from "react-world-flags";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSocialTrading } from "@/contexts/SocialTradingContext";
 import type { TraderSummary } from "@/lib/social";
 import { computeTraderWinRate, getTraderDisplayName } from "@/lib/social";
+import CountryFlag from "@/components/ui/CountryFlag";
+import { getCountryOptionByName } from "@/lib/countries";
 
 type LeaderboardTrader = TraderSummary & {
   rankedProfit: number;
@@ -23,26 +24,16 @@ const PERIODS: Array<{ id: LeaderboardPeriod; label: string }> = [
   { id: "all", label: "All" },
 ];
 
-const COUNTRY_CODES = [
-  "KE",
-  "NG",
-  "ZA",
-  "GB",
-  "US",
-  "FR",
-  "BR",
-  "IN",
-  "TR",
-  "AE",
-  "CA",
-  "AU",
-  "DE",
-  "JP",
-  "KR",
-  "MX",
-  "EG",
-  "SA",
-];
+const LEADERBOARD_SELECT_WITH_COUNTRY =
+  "user_id, profit, status, closed_at, profiles(id, username, display_name, avatar_url, nationality, phone_country, vip_tier, followers_count, following_count, total_profit, total_trades, total_wins)";
+
+const LEADERBOARD_SELECT_FALLBACK =
+  "user_id, profit, status, closed_at, profiles(id, username, display_name, avatar_url, vip_tier, followers_count, following_count, total_profit, total_trades, total_wins)";
+
+const isMissingCountryColumnError = (error: unknown) => {
+  const message = error && typeof error === "object" && "message" in error ? String(error.message) : "";
+  return /(nationality|phone_country)/iu.test(message) && /(column|schema|not found|does not exist)/iu.test(message);
+};
 
 const hashSeed = (value: string) => {
   let hash = 0;
@@ -53,8 +44,19 @@ const hashSeed = (value: string) => {
 };
 
 const getTraderCountryCode = (trader: Partial<TraderSummary>, offset = 0) => {
+  const storedCountryCode = (trader.phone_country ?? trader.phoneCountry ?? "").trim().toUpperCase();
+  if (/^[A-Z]{2}$/u.test(storedCountryCode)) {
+    return storedCountryCode;
+  }
+
+  const nationalityCode = getCountryOptionByName(trader.nationality)?.code;
+  if (nationalityCode) {
+    return nationalityCode;
+  }
+
+  const fallbackCodes = ["KE", "NG", "ZA", "GB", "US", "FR", "BR", "IN", "TR", "AE", "CA", "AU", "DE", "JP", "KR", "MX", "EG", "SA"];
   const seed = trader.id || trader.username || trader.display_name || "trader";
-  return COUNTRY_CODES[(hashSeed(seed) + offset) % COUNTRY_CODES.length];
+  return fallbackCodes[(hashSeed(seed) + offset) % fallbackCodes.length];
 };
 
 const getCutoff = (period: LeaderboardPeriod) => {
@@ -99,16 +101,15 @@ const getRankBadgeClass = (rank: number) => {
   return "bg-transparent text-white/45";
 };
 
-const CountryFlag = ({ code, className = "" }: { code: string; className?: string }) => (
+const FlagBadge = ({ code, size = 16, className = "" }: { code: string; size?: number; className?: string }) => (
   <span className={`inline-flex shrink-0 overflow-hidden rounded-full ring-1 ring-black/35 ${className}`}>
-    <Flag code={code} className="h-full w-full object-cover" />
+    <CountryFlag code={code} size={size} className="rounded-full" />
   </span>
 );
 
-const FlagStack = ({ trader, rank }: { trader: Partial<TraderSummary>; rank: number }) => (
+const FlagStack = ({ trader }: { trader: Partial<TraderSummary> }) => (
   <span className="flex shrink-0 items-center">
-    <CountryFlag code={getTraderCountryCode(trader)} className="h-[16px] w-[16px]" />
-    <CountryFlag code={getTraderCountryCode(trader, rank + 5)} className="-ml-1.5 h-[16px] w-[16px]" />
+    <FlagBadge code={getTraderCountryCode(trader)} size={16} />
   </span>
 );
 
@@ -147,20 +148,36 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
     const fetchLeaders = async () => {
       setLoading(true);
       const cutoff = getCutoff(period);
-      let query = supabase
-        .from("trades")
-        .select(
-          "user_id, profit, status, closed_at, profiles(id, username, display_name, avatar_url, vip_tier, followers_count, following_count, total_profit, total_trades, total_wins)",
-        )
-        .neq("status", "open")
-        .order("closed_at", { ascending: false })
-        .limit(500);
 
-      if (cutoff) {
-        query = query.gte("closed_at", cutoff);
+      const runLeaderboardQuery = (selectClause: string) => {
+        let query = supabase
+          .from("trades")
+          .select(selectClause)
+          .neq("status", "open")
+          .order("closed_at", { ascending: false })
+          .limit(500);
+
+        if (cutoff) {
+          query = query.gte("closed_at", cutoff);
+        }
+
+        return query;
+      };
+
+      let { data, error } = await runLeaderboardQuery(LEADERBOARD_SELECT_WITH_COUNTRY);
+
+      if (error && isMissingCountryColumnError(error)) {
+        const fallbackResult = await runLeaderboardQuery(LEADERBOARD_SELECT_FALLBACK);
+        data = fallbackResult.data;
+        error = fallbackResult.error;
       }
 
-      const { data } = await query;
+      if (error) {
+        setTraders([]);
+        setLoading(false);
+        return;
+      }
+
       const aggregate = new Map<string, LeaderboardTrader>();
 
       (data ?? []).forEach((row: any) => {
@@ -215,6 +232,9 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
     id: profile?.id,
     username: profile?.username,
     display_name: profile?.display_name,
+    nationality: profile?.nationality,
+    phone_country: profile?.phone_country,
+    phoneCountry: profile?.phoneCountry,
   });
 
   return (
@@ -252,7 +272,7 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
         <div className="rounded-[5px] bg-[#242837] px-2.5 py-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
-              <CountryFlag code={currentUserCountry} className="h-[17px] w-[17px]" />
+              <FlagBadge code={currentUserCountry} size={17} />
               <span className="truncate text-[12px] font-black text-white">{currentUserLabel}</span>
             </div>
             <span className="shrink-0 text-[12px] font-black text-[#00c977]">{formatLeaderboardProfit(currentUserProfit)}</span>
@@ -319,7 +339,7 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
                   <div className="flex shrink-0 items-center">
                     <Avatar trader={trader} />
                     <span className="-ml-2 mt-4">
-                      <FlagStack trader={trader} rank={trader.rank} />
+                      <FlagStack trader={trader} />
                     </span>
                   </div>
 

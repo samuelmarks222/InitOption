@@ -14,6 +14,9 @@ export interface TraderSummary {
   username: string | null;
   display_name?: string | null;
   avatar_url?: string | null;
+  nationality?: string | null;
+  phone_country?: string | null;
+  phoneCountry?: string | null;
   vip_tier?: string | null;
   created_at?: string;
   total_profit?: number;

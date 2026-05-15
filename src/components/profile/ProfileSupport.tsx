@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   AlertCircle,
   Bell,
+  ChevronLeft,
   CircleUserRound,
   Clock3,
   LifeBuoy,
@@ -168,6 +169,7 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
   const [supportError, setSupportError] = useState<string | null>(null);
   const [ticketError, setTicketError] = useState<string | null>(null);
   const [chatSearch, setChatSearch] = useState("");
+  const [compactChatOpen, setCompactChatOpen] = useState(false);
   const groupEndRef = useRef<HTMLDivElement | null>(null);
   const supportEndRef = useRef<HTMLDivElement | null>(null);
   const isCompact = mode === "compact";
@@ -582,6 +584,151 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
   const isCompactSending = compactTab === "support" ? sendingSupport : sendingGroup;
 
   if (isCompact) {
+    if (compactChatOpen) {
+      const isSupportView = compactTab === "support";
+      const compactTitle = isSupportView ? "Support Chat (Online)" : "General chat (English)";
+      const compactSubtitle = isSupportView
+        ? "Private desk conversation"
+        : `${roomCount} traders active`;
+      const compactMessages = isSupportView ? supportMessages : groupMessages;
+      const compactLoading = isSupportView ? loadingSupport : loadingGroup;
+      const compactError = isSupportView ? supportError : groupError;
+      const EmptyIcon = isSupportView ? LifeBuoy : MessageSquare;
+
+      return (
+        <div className="flex h-full min-h-0 flex-col bg-[#0f1118] text-white">
+          <div className="flex h-[58px] shrink-0 items-center gap-2 border-b border-white/[0.08] bg-[#11151f] px-3">
+            <button
+              type="button"
+              onClick={() => setCompactChatOpen(false)}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.04] text-white/50 transition-colors hover:bg-white/[0.08] hover:text-white"
+              aria-label="Back to chats"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#2a2f3a] text-[12px] font-bold text-white">
+              {isSupportView ? <LifeBuoy className="h-4 w-4 text-[#66a9ff]" /> : "EN"}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[13px] font-bold leading-5 text-white">{compactTitle}</div>
+              <div className="truncate text-[10px] font-semibold text-[#7f8798]">{compactSubtitle}</div>
+            </div>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+            {compactLoading ? (
+              <div className="flex h-full items-center justify-center text-[12px] text-[#8a94a6]">
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> Loading chat...
+              </div>
+            ) : compactError ? (
+              <EmptyState description={compactError} icon={AlertCircle} title="Chat unavailable" />
+            ) : compactMessages.length === 0 ? (
+              <EmptyState
+                description={isSupportView ? "Send a message and support will reply here." : "Start the trader room with a setup or question."}
+                icon={EmptyIcon}
+                title={isSupportView ? "No support messages yet" : "No trader messages yet"}
+              />
+            ) : isSupportView ? (
+              <div className="space-y-3">
+                {supportMessages.map((message) => {
+                  const isMe = message.sender_id === user?.id && message.sender_role === "user";
+                  return (
+                    <div key={message.id} className={`flex gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
+                      {!isMe ? (
+                        <div className="mt-5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2b3344] text-[#66a9ff]">
+                          <LifeBuoy className="h-4 w-4" />
+                        </div>
+                      ) : null}
+                      <div className={`max-w-[82%] ${isMe ? "items-end" : "items-start"}`}>
+                        <div className={`mb-1 text-[10px] text-[#7f8798] ${isMe ? "text-right" : "text-left"}`}>
+                          {isMe ? "You" : message.sender_name || "Support"} - {formatTime(message.created_at)}
+                        </div>
+                        <div
+                          className={`rounded-[10px] px-3 py-2 text-[12px] leading-5 ${
+                            isMe
+                              ? "rounded-tr-sm bg-[#0e8beb] text-white"
+                              : "rounded-tl-sm bg-[#252d40] text-[#e9f1ff]"
+                          }`}
+                        >
+                          {message.message}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={supportEndRef} />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {groupMessages.map((message) => {
+                  const isMe = message.user_id === user?.id;
+                  const name = (message as Partial<ChatMessageRow>).sender_name || "Trader";
+                  const avatarUrl = message.profiles?.avatar_url;
+
+                  return (
+                    <div key={message.id} className={`flex gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
+                      {!isMe ? (
+                        <div className="mt-5 h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#2a2f3a] text-[11px] font-bold text-white">
+                          {avatarUrl ? (
+                            <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center">{toInitials(name)}</span>
+                          )}
+                        </div>
+                      ) : null}
+                      <div className={`max-w-[82%] ${isMe ? "items-end" : "items-start"}`}>
+                        <div className={`mb-1 text-[10px] text-[#7f8798] ${isMe ? "text-right" : "text-left"}`}>
+                          {isMe ? "You" : name} - {formatTime(message.created_at)}
+                        </div>
+                        <div
+                          className={`rounded-[10px] px-3 py-2 text-[12px] leading-5 ${
+                            isMe
+                              ? "rounded-tr-sm bg-[#0e8beb] text-white"
+                              : "rounded-tl-sm bg-[#252d40] text-[#e9f1ff]"
+                          }`}
+                        >
+                          {message.message}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div ref={groupEndRef} />
+              </div>
+            )}
+          </div>
+
+          <div className="shrink-0 border-t border-white/[0.08] bg-[#11151f] px-3 py-2.5">
+            <form onSubmit={handleCompactSubmit} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={compactInputValue}
+                onChange={(event) => {
+                  if (isSupportView) {
+                    setSupportInput(event.target.value);
+                    return;
+                  }
+                  setGroupInput(event.target.value);
+                }}
+                placeholder="Message text"
+                className="h-9 flex-1 rounded-[8px] border border-white/[0.08] bg-[#171b25] px-3 text-[12px] text-white outline-none transition-colors placeholder:text-[#747d8d] focus:border-[#218cff]/60"
+              />
+              <button
+                type="submit"
+                disabled={isCompactSending || !compactInputValue.trim()}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-[8px] bg-[#0e8beb] text-white transition-colors hover:bg-[#0a7bd0] disabled:cursor-not-allowed disabled:opacity-60"
+                aria-label={isSupportView ? "Send support message" : "Send chat message"}
+              >
+                {isCompactSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex h-full min-h-0 flex-col bg-[#0f1118] text-white">
         <div className="border-b border-white/[0.08] bg-[#11151f] px-3 py-2.5">
@@ -655,7 +802,10 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
                 <button
                   key={row.id}
                   type="button"
-                  onClick={() => setActiveTab(row.tab)}
+                  onClick={() => {
+                    setActiveTab(row.tab);
+                    setCompactChatOpen(row.id !== "favorites");
+                  }}
                   className={`flex w-full items-start gap-2.5 border-b border-white/[0.07] px-3 py-2.5 text-left transition-colors ${
                     isActiveRow ? "bg-[#171f31]" : "hover:bg-white/[0.04]"
                   }`}

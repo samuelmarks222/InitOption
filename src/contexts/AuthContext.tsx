@@ -94,6 +94,9 @@ const createProfileFallback = (userId: string): AuthProfile => {
     display_name: null,
     email: null,
     id: userId,
+    nationality: null,
+    phone_country: null,
+    phone_country_code: null,
     kyc_documents: null,
     kyc_status: null,
     referral_code: "",
@@ -117,6 +120,11 @@ const createProfileFallback = (userId: string): AuthProfile => {
 const asObjectRecord = (value: unknown) => (value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {});
 
 const readString = (value: unknown) => (typeof value === "string" && value.trim().length > 0 ? value.trim() : null);
+
+const isMissingProfileCountryColumnError = (error: unknown) => {
+  const message = error && typeof error === "object" && "message" in error ? String(error.message) : "";
+  return /(nationality|phone_country|phone_country_code)/iu.test(message) && /(column|schema|not found|does not exist)/iu.test(message);
+};
 
 const getEmailVerifiedAt = (authUser?: User | null) => {
   if (!authUser) return null;
@@ -312,6 +320,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (Object.prototype.hasOwnProperty.call(updates, "kyc_documents")) {
       profileUpdates.kyc_documents = updates.kyc_documents ?? null;
     }
+    if (Object.prototype.hasOwnProperty.call(updates, "nationality")) {
+      profileUpdates.nationality = updates.nationality ?? null;
+    }
+    if (Object.prototype.hasOwnProperty.call(updates, "phoneCountry")) {
+      profileUpdates.phone_country = updates.phoneCountry ?? null;
+    }
+    if (Object.prototype.hasOwnProperty.call(updates, "phoneCountryCode")) {
+      profileUpdates.phone_country_code = updates.phoneCountryCode ?? null;
+    }
 
     delete metadataUpdates.avatar_url;
     delete metadataUpdates.username;
@@ -324,7 +341,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .from("profiles")
         .update(profileUpdates)
         .eq("id", user.id);
-      if (error) throw error;
+      if (error) {
+        if (!isMissingProfileCountryColumnError(error)) throw error;
+
+        const fallbackProfileUpdates = { ...(profileUpdates as Record<string, unknown>) };
+        delete fallbackProfileUpdates.nationality;
+        delete fallbackProfileUpdates.phone_country;
+        delete fallbackProfileUpdates.phone_country_code;
+
+        if (Object.keys(fallbackProfileUpdates).length > 0) {
+          const { error: retryError } = await supabase
+            .from("profiles")
+            .update(fallbackProfileUpdates as TablesUpdate<"profiles">)
+            .eq("id", user.id);
+
+          if (retryError) throw retryError;
+        }
+      }
     }
 
     saveProfileCache(user.id, metadataUpdates);

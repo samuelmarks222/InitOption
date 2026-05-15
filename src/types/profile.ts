@@ -17,6 +17,8 @@ export type ProfileMetadataFields = {
   lastName?: string | null;
   phone?: string | null;
   nationality?: string | null;
+  phoneCountry?: string | null;
+  phoneCountryCode?: string | null;
   address?: string | null;
   dob?: string | null;
   idType?: string | null;

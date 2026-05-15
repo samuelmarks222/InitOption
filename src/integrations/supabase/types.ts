@@ -1010,6 +1010,9 @@ export type Database = {
             followers_count: number
             following_count: number
             id: string
+            nationality: string | null
+            phone_country: string | null
+            phone_country_code: string | null
           kyc_documents: Json | null
           kyc_status: string | null
           referral_code: string
@@ -1037,6 +1040,9 @@ export type Database = {
             followers_count?: number
             following_count?: number
             id: string
+            nationality?: string | null
+            phone_country?: string | null
+            phone_country_code?: string | null
           kyc_documents?: Json | null
           kyc_status?: string | null
           referral_code?: string
@@ -1064,6 +1070,9 @@ export type Database = {
             followers_count?: number
             following_count?: number
             id?: string
+            nationality?: string | null
+            phone_country?: string | null
+            phone_country_code?: string | null
           kyc_documents?: Json | null
           kyc_status?: string | null
           referral_code?: string
