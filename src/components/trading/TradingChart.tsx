@@ -1811,6 +1811,7 @@ const TradingChart = ({
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
   const [hoverPriceData, setHoverPriceData] = useState<{ price: number; top: number } | null>(null);
   const alertLineRefs = useRef<Record<string, IPriceLine>>({});
+  const alertSeriesRef = useRef<ChartSeriesApi | null>(null);
   const previousPriceRef = useRef<number>(asset.price);
   // Force react render when history strictly ticks candles for Oscillators
   const [forceOscillatorRender, setForceOscillatorRender] = useState(0);
@@ -1975,6 +1976,19 @@ const TradingChart = ({
     if (!mainSeriesRef.current) return;
 
     const series = mainSeriesRef.current;
+    if (alertSeriesRef.current && alertSeriesRef.current !== series) {
+      const previousSeries = alertSeriesRef.current;
+      Object.keys(alertLineRefs.current).forEach((id) => {
+        try {
+          previousSeries.removePriceLine(alertLineRefs.current[id]);
+        } catch {
+          // The previous series may already be removed when chart type changes.
+        }
+      });
+      alertLineRefs.current = {};
+    }
+
+    alertSeriesRef.current = series;
     const existing = alertLineRefs.current;
 
     priceAlerts.forEach((alert) => {
@@ -2011,7 +2025,7 @@ const TradingChart = ({
     Object.keys(existing).forEach((id) => {
       if (!priceAlerts.some((alert) => alert.id === id)) {
         try {
-          existing[id].remove();
+          series.removePriceLine(existing[id]);
         } catch {
           // Ignore invalid lines
         }
@@ -2022,14 +2036,16 @@ const TradingChart = ({
 
   useEffect(() => {
     return () => {
+      const series = alertSeriesRef.current;
       Object.keys(alertLineRefs.current).forEach((id) => {
         try {
-          alertLineRefs.current[id].remove();
+          series?.removePriceLine(alertLineRefs.current[id]);
         } catch {
           // ignore
         }
       });
       alertLineRefs.current = {};
+      alertSeriesRef.current = null;
     };
   }, []);
 
