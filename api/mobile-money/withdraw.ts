@@ -4,6 +4,7 @@ import {
   convertUsdToKesAmount,
   maskKenyanPhoneNumber,
   MPESA_CHANNEL_CODE,
+  MPESA_METHOD_LABEL,
   normalizeKenyanPhoneNumber,
 } from "../../src/lib/mobileMoneyShared.js";
 import { readJsonRequestBody } from "../_lib/sasapay.js";
@@ -64,6 +65,32 @@ const getClientIp = (headers: ApiRequest["headers"]) => {
   return asString(getHeaderValue(headers, "x-real-ip"));
 };
 
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object") {
+    const maybeMessage = "message" in error && typeof error.message === "string" ? error.message : null;
+    const maybeDetails = "details" in error && typeof error.details === "string" ? error.details : null;
+    const maybeHint = "hint" in error && typeof error.hint === "string" ? error.hint : null;
+    return [maybeMessage, maybeDetails, maybeHint].filter(Boolean).join(" ");
+  }
+  return typeof error === "string" ? error : "";
+};
+
+const shouldFallbackToManualWithdrawal = (message: string) => {
+  const normalized = message.toLowerCase();
+  return [
+    "request_mobile_money_withdrawal",
+    "schema cache",
+    "does not exist",
+    "withdrawal_requests_merchant_ref",
+    "provider_",
+    "approval_required",
+    "auto_approved",
+    "queued_at",
+    "merchant_ref",
+  ].some((pattern) => normalized.includes(pattern));
+};
+
 export default async function handler(request: ApiRequest, response: ApiResponse) {
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
@@ -103,7 +130,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       return;
     }
 
-    const requestResponse = await userClient.rpc("request_mobile_money_withdrawal", {
+    let requestResponse = await userClient.rpc("request_mobile_money_withdrawal", {
       p_amount: amountUsd,
       p_amount_kes: amountKes,
       p_phone_number: normalizedPhoneNumber,
@@ -113,7 +140,23 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     });
 
     if (requestResponse.error) {
-      throw requestResponse.error;
+      const mobileMoneyErrorMessage = getErrorMessage(requestResponse.error);
+
+      if (!shouldFallbackToManualWithdrawal(mobileMoneyErrorMessage)) {
+        throw requestResponse.error;
+      }
+
+      console.warn("Mobile money withdrawal queue unavailable; falling back to manual withdrawal request", requestResponse.error);
+
+      requestResponse = await userClient.rpc("request_withdrawal", {
+        p_amount: amountUsd,
+        p_destination: normalizedPhoneNumber,
+        p_method: MPESA_METHOD_LABEL,
+      });
+
+      if (requestResponse.error) {
+        throw requestResponse.error;
+      }
     }
 
     const requestPayload = (requestResponse.data ?? {}) as {
@@ -146,8 +189,9 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     });
   } catch (error) {
     console.error("Mobile money withdrawal request creation failed", error);
+    const errorMessage = getErrorMessage(error);
     sendJson(response, 500, {
-      error: error instanceof Error ? error.message : "Failed to submit mobile money withdrawal request.",
+      error: errorMessage || "Failed to submit mobile money withdrawal request.",
     });
   }
 }
