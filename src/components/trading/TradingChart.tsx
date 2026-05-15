@@ -433,22 +433,6 @@ const getTrendContextBarCount = (
   );
 };
 
-const getLiveFocusBarCount = (
-  containerWidth: number,
-  timeframe: SupportedChartTimeframe,
-  availableBars = Number.POSITIVE_INFINITY,
-) => {
-  const targetVisibleBars = getTargetVisibleBars(containerWidth, timeframe);
-  const baselineBars = MIN_VISIBLE_BAR_COUNT_MAP[timeframe] ?? DEFAULT_VISIBLE_BARS;
-  const minimumFocusBars = Math.max(24, Math.round(baselineBars * 0.66));
-  const desiredFocusBars = Math.round(targetVisibleBars * 0.34);
-
-  return Math.max(
-    minimumFocusBars,
-    Math.min(availableBars, desiredFocusBars),
-  );
-};
-
 const getHistoryBackfillThreshold = (containerWidth: number, timeframe: SupportedChartTimeframe) =>
   Math.max(18, Math.round(getTrendContextBarCount(containerWidth, timeframe) * 0.18));
 
@@ -459,7 +443,7 @@ const getHistoryBackfillIncrement = (containerWidth: number, timeframe: Supporte
   return Math.max(trendContextBars, Math.round(historicalBaseline * 0.55));
 };
 
-const getChartRightOffset = (visibleBars: number) => Math.max(4, Math.min(8, Math.round(visibleBars * 0.06)));
+const getChartRightOffset = (visibleBars: number) => Math.max(8, Math.min(24, Math.round(visibleBars * 0.08)));
 
 const getDefaultVisibleBars = (
   containerWidth: number,
@@ -2640,7 +2624,7 @@ const TradingChart = ({
     // Apply timeframe-appropriate bar spacing so candles look correct at each interval
     const containerWidth = mainRef.current?.clientWidth ?? 960;
     const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, history.length);
-    const initialVisibleBars = getLiveFocusBarCount(containerWidth, selectedTf, history.length);
+    const initialVisibleBars = getDefaultVisibleBars(containerWidth, selectedTf, history.length);
     const rightOffset = getChartRightOffset(trendContextBars);
     chartRef.current.timeScale().applyOptions({
       barSpacing: getBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale),
@@ -2790,7 +2774,7 @@ const TradingChart = ({
       selectedTf,
       Math.max(1, historyRef.current.length),
     );
-    const initialVisibleBars = getLiveFocusBarCount(
+    const initialVisibleBars = getDefaultVisibleBars(
       containerWidth,
       selectedTf,
       Math.max(1, historyRef.current.length),
