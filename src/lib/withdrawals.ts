@@ -6,6 +6,7 @@ export type MobileMoneyWithdrawalDecision = "approved" | "rejected" | "completed
 export interface WithdrawalRequestPayload {
   amount?: number;
   destination?: string;
+  forfeited_bonus_amount?: number;
   method?: string;
   request_id?: string;
   status?: string;
@@ -14,6 +15,7 @@ export interface WithdrawalRequestPayload {
 interface RequestWithdrawalArgs {
   amount: number;
   destination: string;
+  forfeitBonus?: boolean;
   method: string;
 }
 
@@ -64,19 +66,15 @@ const postAuthenticatedJson = async <T>(path: string, body: Record<string, unkno
 export const requestWithdrawal = async ({
   amount,
   destination,
+  forfeitBonus = false,
   method,
 }: RequestWithdrawalArgs): Promise<WithdrawalRequestPayload> => {
-  const response = await supabase.rpc("request_withdrawal", {
-    p_amount: amount,
-    p_destination: destination,
-    p_method: method,
+  return postAuthenticatedJson<WithdrawalRequestPayload>("/api/withdraw", {
+    amount,
+    destination,
+    forfeitBonus,
+    method,
   });
-
-  if (response.error) {
-    throw response.error;
-  }
-
-  return (response.data ?? {}) as WithdrawalRequestPayload;
 };
 
 export const adminUpdateWithdrawalStatus = async ({

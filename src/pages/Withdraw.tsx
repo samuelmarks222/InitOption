@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Bitcoin, Building2, Minus, Plus } from "lucide-react";
+import { ArrowLeft, Bitcoin, Building2, Gift, Minus, Plus } from "lucide-react";
 import { MpesaIcon } from "@/components/ui/MpesaIcon";
 import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
@@ -17,6 +17,23 @@ import { requestWithdrawal } from "@/lib/withdrawals";
 
 type CryptoMethod = Tables<"crypto_payment_methods">;
 type WithdrawalMethod = "mpesa" | "bank" | "crypto";
+type BonusTurnoverStatus = {
+  bonusTotal: number;
+  completedTurnover: number;
+  isLoading: boolean;
+  remainingTurnover: number;
+  requiredTurnover: number;
+};
+
+const BONUS_TURNOVER_MULTIPLIER = 10;
+
+const EMPTY_BONUS_STATUS: BonusTurnoverStatus = {
+  bonusTotal: 0,
+  completedTurnover: 0,
+  isLoading: false,
+  remainingTurnover: 0,
+  requiredTurnover: 0,
+};
 
 const Withdraw = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -27,6 +44,8 @@ const Withdraw = () => {
   const [address, setAddress] = useState("");
   const [cryptoMethods, setCryptoMethods] = useState<CryptoMethod[]>([]);
   const [selectedCryptoId, setSelectedCryptoId] = useState("");
+  const [bonusStatus, setBonusStatus] = useState<BonusTurnoverStatus>(EMPTY_BONUS_STATUS);
+  const [withdrawWithoutBonus, setWithdrawWithoutBonus] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +75,68 @@ const Withdraw = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchBonusStatus = async () => {
+      if (!user?.id) {
+        setBonusStatus(EMPTY_BONUS_STATUS);
+        return;
+      }
+
+      setBonusStatus((current) => ({ ...current, isLoading: true }));
+
+      const [depositsResponse, tradesResponse] = await Promise.all([
+        supabase
+          .from("deposit_requests")
+          .select("welcome_bonus,deposit_bonus,promo_bonus")
+          .eq("user_id", user.id)
+          .eq("status", "approved"),
+        supabase
+          .from("trades")
+          .select("amount")
+          .eq("user_id", user.id)
+          .in("status", ["won", "lost", "expired"])
+          .is("tournament_participant_id", null),
+      ]);
+
+      if (cancelled) {
+        return;
+      }
+
+      if (depositsResponse.error || tradesResponse.error) {
+        console.error("Failed to load withdrawal bonus status", depositsResponse.error || tradesResponse.error);
+        setBonusStatus(EMPTY_BONUS_STATUS);
+        return;
+      }
+
+      const bonusTotal = (depositsResponse.data ?? []).reduce(
+        (sum, deposit) =>
+          sum +
+          Number(deposit.welcome_bonus ?? 0) +
+          Number(deposit.deposit_bonus ?? 0) +
+          Number(deposit.promo_bonus ?? 0),
+        0,
+      );
+      const completedTurnover = (tradesResponse.data ?? []).reduce((sum, trade) => sum + Number(trade.amount ?? 0), 0);
+      const requiredTurnover = Math.round(bonusTotal * BONUS_TURNOVER_MULTIPLIER * 100) / 100;
+
+      setBonusStatus({
+        bonusTotal,
+        completedTurnover,
+        isLoading: false,
+        remainingTurnover: Math.max(0, requiredTurnover - completedTurnover),
+        requiredTurnover,
+      });
+    };
+
+    void fetchBonusStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
   const minimumWithdrawalAmount = 10;
   const amountValue = Number(amount) || 0;
   const amountKes = convertUsdToKesAmount(amountValue);
@@ -66,7 +147,24 @@ const Withdraw = () => {
 
   const availableBalance = getEffectiveLiveBalance(profile);
   const reservedWithdrawalBalance = Number(profile?.reserved_withdrawal_balance ?? 0);
+  const hasBonus = bonusStatus.bonusTotal > 0;
+  const bonusTurnoverComplete = hasBonus && bonusStatus.remainingTurnover <= 0;
+  const bonusBlocksWithdrawal = hasBonus && !bonusTurnoverComplete;
+  const effectiveWithdrawalBalance =
+    bonusBlocksWithdrawal && withdrawWithoutBonus
+      ? Math.max(0, availableBalance - bonusStatus.bonusTotal)
+      : availableBalance;
+  const bonusProgress =
+    bonusStatus.requiredTurnover > 0
+      ? Math.min(100, Math.max(0, (bonusStatus.completedTurnover / bonusStatus.requiredTurnover) * 100))
+      : 100;
   const destination = method === "mpesa" ? mpesaPhoneNumber.trim() : address.trim();
+
+  useEffect(() => {
+    if (!bonusBlocksWithdrawal) {
+      setWithdrawWithoutBonus(false);
+    }
+  }, [bonusBlocksWithdrawal]);
 
   const methodCopy =
     method === "mpesa"
@@ -130,10 +228,22 @@ const Withdraw = () => {
       return;
     }
 
-    if (amountValue > availableBalance) {
+    if (bonusBlocksWithdrawal && !withdrawWithoutBonus) {
+      toast({
+        title: "Bonus turnover is still active",
+        description: "Complete the turnover first, or choose Withdraw without bonus to remove the bonus and continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (amountValue > effectiveWithdrawalBalance) {
       toast({
         title: "Insufficient funds",
-        description: `Your balance is $${availableBalance.toFixed(2)}.`,
+        description:
+          bonusBlocksWithdrawal && withdrawWithoutBonus
+            ? `After removing the active bonus, you can withdraw up to $${effectiveWithdrawalBalance.toFixed(2)}.`
+            : `Your balance is $${availableBalance.toFixed(2)}.`,
         variant: "destructive",
       });
       return;
@@ -152,10 +262,15 @@ const Withdraw = () => {
       if (method === "mpesa") {
         const payoutResponse = await requestMobileMoneyWithdrawal({
           amount: amountValue,
+          forfeitBonus: withdrawWithoutBonus,
           phoneNumber: mpesaPhoneNumber,
         });
 
         await refreshProfile();
+        if (withdrawWithoutBonus) {
+          setBonusStatus(EMPTY_BONUS_STATUS);
+          setWithdrawWithoutBonus(false);
+        }
         setAmount("");
         toast({
           title:
@@ -173,18 +288,26 @@ const Withdraw = () => {
         return;
       }
 
-      await requestWithdrawal({
+      const withdrawalResponse = await requestWithdrawal({
         amount: amountValue,
         destination,
+        forfeitBonus: withdrawWithoutBonus,
         method: withdrawalMethod,
       });
 
       await refreshProfile();
+      if (withdrawWithoutBonus) {
+        setBonusStatus(EMPTY_BONUS_STATUS);
+        setWithdrawWithoutBonus(false);
+      }
       setAmount("");
       setAddress("");
       toast({
         title: "Withdrawal submitted",
-        description: `$${amountValue.toFixed(2)} is now being prepared.`,
+        description:
+          Number(withdrawalResponse.forfeited_bonus_amount ?? 0) > 0
+            ? `$${amountValue.toFixed(2)} is now being prepared. Active bonus of $${Number(withdrawalResponse.forfeited_bonus_amount).toFixed(2)} was removed.`
+            : `$${amountValue.toFixed(2)} is now being prepared.`,
       });
     } catch (error: unknown) {
       toast({
@@ -349,12 +472,14 @@ const Withdraw = () => {
                     </div>
 
                     <div className="mt-4 flex flex-col gap-3 rounded-[16px] bg-[#1e2330] px-4 py-3 text-sm text-[#a7bdd9] sm:flex-row sm:items-center sm:justify-between">
-                      <span>Available balance</span>
+                      <span>
+                        {bonusBlocksWithdrawal && withdrawWithoutBonus ? "Withdrawable after bonus removal" : "Available balance"}
+                      </span>
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className="break-all font-semibold text-white">${availableBalance.toFixed(2)}</span>
+                        <span className="break-all font-semibold text-white">${effectiveWithdrawalBalance.toFixed(2)}</span>
                         <button
                           type="button"
-                          onClick={() => setAmount(Number(availableBalance.toFixed(2)))}
+                          onClick={() => setAmount(Number(effectiveWithdrawalBalance.toFixed(2)))}
                           className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/15"
                         >
                           MAX
@@ -363,6 +488,83 @@ const Withdraw = () => {
                     </div>
                   </div>
                 </div>
+
+                {hasBonus && (
+                  <div className="rounded-[22px] border border-[#f5a524]/35 bg-[#211f2b] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.22)]">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#f5a524]/14 text-[#f5a524]">
+                          <Gift className="h-5 w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-bold text-white">Bonus turnover status</div>
+                          <div className="mt-1 text-xs leading-5 text-[#b7c8d6]">
+                            This appears because your account used a deposit or welcome bonus.
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        className={`w-fit rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] ${
+                          bonusTurnoverComplete ? "bg-[#0b7557]/18 text-[#5ee0bd]" : "bg-[#f5a524]/14 text-[#ffc66d]"
+                        }`}
+                      >
+                        {bonusTurnoverComplete ? "Turnover complete" : "Turnover active"}
+                      </div>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                      <div className="rounded-[16px] bg-[#1e2330] px-4 py-3">
+                        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8eb3bf]">Active bonus</div>
+                        <div className="mt-2 text-lg font-bold text-white">${bonusStatus.bonusTotal.toFixed(2)}</div>
+                      </div>
+                      <div className="rounded-[16px] bg-[#1e2330] px-4 py-3">
+                        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8eb3bf]">Required volume</div>
+                        <div className="mt-2 text-lg font-bold text-white">${bonusStatus.requiredTurnover.toFixed(2)}</div>
+                      </div>
+                      <div className="rounded-[16px] bg-[#1e2330] px-4 py-3">
+                        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8eb3bf]">Completed</div>
+                        <div className="mt-2 text-lg font-bold text-[#5ee0bd]">${bonusStatus.completedTurnover.toFixed(2)}</div>
+                      </div>
+                      <div className="rounded-[16px] bg-[#1e2330] px-4 py-3">
+                        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8eb3bf]">Remaining</div>
+                        <div className="mt-2 text-lg font-bold text-[#ffc66d]">${bonusStatus.remainingTurnover.toFixed(2)}</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between gap-3 text-xs text-[#9dc2c8]">
+                        <span>{bonusStatus.isLoading ? "Checking turnover..." : `${bonusProgress.toFixed(0)}% completed`}</span>
+                        <span>{BONUS_TURNOVER_MULTIPLIER}x rule</span>
+                      </div>
+                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/25">
+                        <div
+                          className="h-full rounded-full bg-[#0b7557] transition-[width] duration-500"
+                          style={{ width: `${bonusProgress}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {bonusBlocksWithdrawal ? (
+                      <label className="mt-5 flex cursor-pointer flex-col gap-3 rounded-[18px] border border-white/10 bg-[#1e2330] p-4 transition hover:border-[#86c9d4]/35 sm:flex-row sm:items-start">
+                        <input
+                          type="checkbox"
+                          checked={withdrawWithoutBonus}
+                          onChange={(event) => setWithdrawWithoutBonus(event.target.checked)}
+                          className="mt-1 h-4 w-4 shrink-0 accent-[#0b7557]"
+                        />
+                        <span className="min-w-0 text-sm leading-6 text-[#d9e8ef]">
+                          <span className="block font-bold text-white">Withdraw without bonus</span>
+                          Remove the active bonus of <strong>${bonusStatus.bonusTotal.toFixed(2)}</strong> from your live balance and continue withdrawing your own funds now. Your max withdrawable balance becomes{" "}
+                          <strong>${Math.max(0, availableBalance - bonusStatus.bonusTotal).toFixed(2)}</strong>.
+                        </span>
+                      </label>
+                    ) : (
+                      <div className="mt-5 rounded-[18px] border border-[#0b7557]/30 bg-[#0b7557]/12 p-4 text-sm leading-6 text-[#c7fff0]">
+                        Bonus turnover is complete. You can withdraw normally without removing the bonus.
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {method === "crypto" && (
                   <div className="rounded-[22px] border border-white/8 bg-[#1e2330] p-5">
@@ -468,6 +670,8 @@ const Withdraw = () => {
                       loading ||
                       !amount ||
                       amountValue < minimumWithdrawalAmount ||
+                      (bonusBlocksWithdrawal && !withdrawWithoutBonus) ||
+                      amountValue > effectiveWithdrawalBalance ||
                       (method === "mpesa" ? !mpesaPhoneNumber.trim() : !address.trim()) ||
                       (method === "crypto" && !selectedCrypto)
                     }
@@ -487,7 +691,9 @@ const Withdraw = () => {
                       : "Make sure the destination details are correct before you continue."}
                   </p>
                   <p className="mt-2 text-center text-xs leading-5 text-[#9dc2c8]">
-                    If your account has active bonus conditions, required turnover must be completed before withdrawal.
+                    {bonusBlocksWithdrawal
+                      ? "Your bonus turnover is still active. Choose Withdraw without bonus if you want to remove the bonus and continue now."
+                      : "If your account has active bonus conditions, the bonus panel will show your turnover progress here."}
                   </p>
                 </div>
               </div>

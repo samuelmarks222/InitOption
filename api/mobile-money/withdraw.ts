@@ -19,6 +19,7 @@ type ApiResponse = ServerResponse<IncomingMessage>;
 
 type RequestPayload = {
   amount?: number;
+  forfeitBonus?: boolean;
   phoneNumber?: string;
 };
 
@@ -97,15 +98,40 @@ const isBonusTurnoverError = (message: string) =>
 const formatUsd = (value: number) =>
   Number.isFinite(value) ? value.toFixed(2) : "0.00";
 
+const clearActiveBonusRows = async ({
+  adminClient,
+  userId,
+}: {
+  adminClient: ReturnType<typeof getSupabaseAdminClient>;
+  userId: string;
+}) => {
+  const response = await adminClient
+    .from("deposit_requests")
+    .update({
+      deposit_bonus: 0,
+      promo_bonus: 0,
+      updated_at: new Date().toISOString(),
+      welcome_bonus: 0,
+    })
+    .eq("user_id", userId)
+    .eq("status", "approved");
+
+  if (response.error) {
+    throw response.error;
+  }
+};
+
 const createTenXMobileMoneyWithdrawal = async ({
   amountKes,
   amountUsd,
+  forfeitBonus,
   phoneNumber,
   requestHeaders,
   userId,
 }: {
   amountKes: number;
   amountUsd: number;
+  forfeitBonus: boolean;
   phoneNumber: string;
   requestHeaders: ApiRequest["headers"];
   userId: string;
@@ -127,6 +153,10 @@ const createTenXMobileMoneyWithdrawal = async ({
   if (!profile) {
     throw new Error("Profile not found");
   }
+
+  const balance = Number(profile.balance ?? 0);
+  const reservedBalance = Number(profile.reserved_withdrawal_balance ?? 0);
+  const availableBalance = Math.max(0, balance - reservedBalance);
 
   const settingsResponse = await adminClient
     .from("platform_settings")
@@ -163,8 +193,11 @@ const createTenXMobileMoneyWithdrawal = async ({
     );
   }, 0);
 
+  let completedTurnover = 0;
+  let forfeitedBonusAmount = 0;
+  const requiredTurnover = Math.round(bonusTotal * 10 * 100) / 100;
+
   if (bonusTotal > 0) {
-    const requiredTurnover = Math.round(bonusTotal * 10 * 100) / 100;
     const tradesResponse = await adminClient
       .from("trades")
       .select("amount")
@@ -176,20 +209,27 @@ const createTenXMobileMoneyWithdrawal = async ({
       throw tradesResponse.error;
     }
 
-    const completedTurnover = (tradesResponse.data ?? []).reduce((sum, trade) => sum + Number(trade.amount ?? 0), 0);
+    completedTurnover = (tradesResponse.data ?? []).reduce((sum, trade) => sum + Number(trade.amount ?? 0), 0);
 
     if (completedTurnover < requiredTurnover) {
-      throw new Error(
-        `Bonus turnover requirement not met. Required volume: $${formatUsd(requiredTurnover)}, completed: $${formatUsd(completedTurnover)}.`,
-      );
+      if (!forfeitBonus) {
+        throw new Error(
+          `Bonus turnover requirement not met. Required volume: $${formatUsd(requiredTurnover)}, completed: $${formatUsd(completedTurnover)}.`,
+        );
+      }
+
+      const availableAfterBonusRemoval = Math.max(0, availableBalance - bonusTotal);
+      if (amountUsd > availableAfterBonusRemoval) {
+        throw new Error(
+          `Insufficient available balance. Your withdrawable balance after removing the active bonus is $${formatUsd(availableAfterBonusRemoval)}.`,
+        );
+      }
+
+      forfeitedBonusAmount = bonusTotal;
     }
   }
 
-  const balance = Number(profile.balance ?? 0);
-  const reservedBalance = Number(profile.reserved_withdrawal_balance ?? 0);
-  const availableBalance = Math.max(0, balance - reservedBalance);
-
-  if (availableBalance < amountUsd) {
+  if (amountUsd > Math.max(0, availableBalance - forfeitedBonusAmount)) {
     throw new Error("Insufficient available balance");
   }
 
@@ -212,6 +252,7 @@ const createTenXMobileMoneyWithdrawal = async ({
         amount: amountUsd,
         amount_kes: amountKes,
         created_at: nowIso,
+        forfeited_bonus_amount: forfeitedBonusAmount,
         status: autoApproved ? "approved" : "pending",
         turnover_multiplier: 10,
       },
@@ -286,11 +327,12 @@ const createTenXMobileMoneyWithdrawal = async ({
 
   const profileUpdatePayload = usesReservation
     ? {
+        balance: balance - forfeitedBonusAmount,
         reserved_withdrawal_balance: reservedBalance + amountUsd,
         updated_at: nowIso,
       }
     : {
-        balance: balance - amountUsd,
+        balance: balance - amountUsd - forfeitedBonusAmount,
         updated_at: nowIso,
       };
 
@@ -301,11 +343,40 @@ const createTenXMobileMoneyWithdrawal = async ({
     throw profileUpdateResponse.error;
   }
 
+  try {
+    if (forfeitedBonusAmount > 0) {
+      await clearActiveBonusRows({ adminClient, userId });
+    }
+  } catch (error) {
+    const rollbackPayload = usesReservation
+      ? {
+          balance,
+          reserved_withdrawal_balance: reservedBalance,
+          updated_at: nowIso,
+        }
+      : {
+          balance,
+          updated_at: nowIso,
+        };
+
+    await adminClient.from("profiles").update(rollbackPayload).eq("id", userId);
+    await adminClient.from("withdrawal_requests").delete().eq("id", insertedRequestId);
+    throw error;
+  }
+
   return {
     amount: amountUsd,
     amount_kes: amountKes,
     approval_required: insertedApprovalRequired,
     auto_approved: insertedAutoApproved,
+    bonus_turnover: {
+      bonusTotal,
+      completedTurnover,
+      isComplete: bonusTotal <= 0 || completedTurnover >= requiredTurnover,
+      remainingTurnover: Math.max(0, requiredTurnover - completedTurnover),
+      requiredTurnover,
+    },
+    forfeited_bonus_amount: forfeitedBonusAmount,
     request_id: insertedRequestId,
     status: insertedStatus,
   };
@@ -350,14 +421,27 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       return;
     }
 
-    let requestResponse = await userClient.rpc("request_mobile_money_withdrawal", {
-      p_amount: amountUsd,
-      p_amount_kes: amountKes,
-      p_phone_number: normalizedPhoneNumber,
-      p_provider_channel: MPESA_CHANNEL_CODE,
-      p_request_ip: getClientIp(request.headers),
-      p_request_user_agent: asString(getHeaderValue(request.headers, "user-agent")),
-    });
+    const shouldForfeitBonus = body.forfeitBonus === true;
+    let requestResponse = shouldForfeitBonus
+      ? {
+          data: await createTenXMobileMoneyWithdrawal({
+            amountKes,
+            amountUsd,
+            forfeitBonus: true,
+            phoneNumber: normalizedPhoneNumber,
+            requestHeaders: request.headers,
+            userId: authResponse.data.user.id,
+          }),
+          error: null,
+        }
+      : await userClient.rpc("request_mobile_money_withdrawal", {
+          p_amount: amountUsd,
+          p_amount_kes: amountKes,
+          p_phone_number: normalizedPhoneNumber,
+          p_provider_channel: MPESA_CHANNEL_CODE,
+          p_request_ip: getClientIp(request.headers),
+          p_request_user_agent: asString(getHeaderValue(request.headers, "user-agent")),
+        });
 
     if (requestResponse.error) {
       const mobileMoneyErrorMessage = getErrorMessage(requestResponse.error);
@@ -367,6 +451,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
           data: await createTenXMobileMoneyWithdrawal({
             amountKes,
             amountUsd,
+            forfeitBonus: false,
             phoneNumber: normalizedPhoneNumber,
             requestHeaders: request.headers,
             userId: authResponse.data.user.id,
@@ -392,6 +477,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
               data: await createTenXMobileMoneyWithdrawal({
                 amountKes,
                 amountUsd,
+                forfeitBonus: false,
                 phoneNumber: normalizedPhoneNumber,
                 requestHeaders: request.headers,
                 userId: authResponse.data.user.id,
@@ -410,6 +496,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       amount_kes?: number | null;
       approval_required?: boolean;
       auto_approved?: boolean;
+      bonus_turnover?: unknown;
+      forfeited_bonus_amount?: number | null;
       request_id?: string | null;
       status?: string | null;
     };
@@ -422,13 +510,20 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       requestStatus === "pending"
         ? "Withdrawal request received. It is waiting for finance approval before the payout is sent manually."
         : "Withdrawal request received. Finance can now send it manually from the merchant dashboard.";
+    const forfeitedBonusAmount = Number(requestPayload.forfeited_bonus_amount ?? 0);
+
+    if (forfeitedBonusAmount > 0) {
+      detail = `Active bonus of $${formatUsd(forfeitedBonusAmount)} was removed so this withdrawal can continue without bonus restrictions. ${detail}`;
+    }
 
     sendJson(response, 200, {
       amount_kes: amountKes,
       amount_usd: amountUsd,
       approval_required: approvalRequired,
       auto_approved: Boolean(requestPayload.auto_approved),
+      bonus_turnover: requestPayload.bonus_turnover ?? null,
       detail,
+      forfeited_bonus_amount: forfeitedBonusAmount,
       masked_phone_number: maskKenyanPhoneNumber(normalizedPhoneNumber),
       request_id: requestId,
       status: nextStatus,

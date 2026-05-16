@@ -18,6 +18,7 @@ export interface MobileMoneyWithdrawalPayload {
   amount_kes: number;
   amount_usd: number;
   auto_approved?: boolean;
+  forfeited_bonus_amount?: number;
   detail: string | null;
   masked_phone_number: string;
   provider_checkout_id: string | null;
@@ -93,9 +94,11 @@ export const requestMobileMoneyDeposit = async ({
 
 export const requestMobileMoneyWithdrawal = async ({
   amount,
+  forfeitBonus = false,
   phoneNumber,
 }: {
   amount: number;
+  forfeitBonus?: boolean;
   phoneNumber: string;
 }) => {
   const normalizedPhoneNumber = normalizeKenyanPhoneNumber(phoneNumber);
@@ -106,6 +109,7 @@ export const requestMobileMoneyWithdrawal = async ({
 
   const response = await postAuthenticatedJson<MobileMoneyWithdrawalPayload>("/api/mobile-money/withdraw", {
     amount,
+    forfeitBonus,
     phoneNumber: normalizedPhoneNumber,
   });
 
