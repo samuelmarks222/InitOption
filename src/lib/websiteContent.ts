@@ -44,7 +44,29 @@ export interface WebsitePublicPageContent {
   faqItems: WebsiteFaqItem[];
 }
 
+export const GUIDE_MEDIA_KEYS = [
+  "chart",
+  "profile",
+  "finance",
+  "security",
+  "chat",
+  "market",
+  "orders",
+  "tournament",
+  "settings",
+  "mobile",
+  "signals",
+  "wallet",
+  "support",
+  "videoTrading",
+  "videoMobile",
+] as const;
+
+export type GuideMediaKey = (typeof GUIDE_MEDIA_KEYS)[number];
+export type GuideMediaSettings = Partial<Record<GuideMediaKey, string>>;
+
 export interface WebsiteContent {
+  guideMedia: GuideMediaSettings;
   blog: {
     categories: BlogCategoryDefinition[];
     posts: BlogPostDefinition[];
@@ -216,6 +238,18 @@ const normalizePublicPageContent = (value: unknown, fallback: WebsitePublicPageC
   };
 };
 
+const normalizeGuideMedia = (value: unknown): GuideMediaSettings => {
+  const source = isRecord(value) ? value : {};
+
+  return GUIDE_MEDIA_KEYS.reduce<GuideMediaSettings>((accumulator, key) => {
+    const mediaUrl = source[key];
+    if (typeof mediaUrl === "string" && mediaUrl.trim()) {
+      accumulator[key] = mediaUrl.trim();
+    }
+    return accumulator;
+  }, {});
+};
+
 const normalizeBlogCategories = (value: unknown, fallback: BlogCategoryDefinition[]) =>
   Array.isArray(value) && value.length
     ? value
@@ -266,6 +300,7 @@ const normalizeBlogPosts = (
     : fallbackPosts;
 
 export const createDefaultWebsiteContent = (platformName = DEFAULT_PLATFORM_NAME): WebsiteContent => ({
+  guideMedia: {},
   blog: {
     categories: getStarterBlogCategories(),
     posts: STARTER_BLOG_POSTS,
@@ -624,6 +659,7 @@ export const normalizeWebsiteContent = (rawValue: unknown, platformName = DEFAUL
   const shouldUseDefaultHero = isLegacyHomepageHero(hero);
 
   return {
+    guideMedia: normalizeGuideMedia(content.guideMedia),
     blog: {
       categories: normalizedBlogCategories,
       posts: normalizeBlogPosts(blog.posts, defaults.blog.posts),

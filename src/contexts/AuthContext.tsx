@@ -417,11 +417,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [refreshAuthUser]);
 
   useEffect(() => {
-    const isOAuthRedirect = window.location.hash.includes("access_token") || window.location.hash.includes("error_description");
-    let fallbackTimeout: ReturnType<typeof setTimeout>;
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const isOAuthRedirect =
+      window.location.pathname === "/auth/callback" ||
+      searchParams.has("code") ||
+      searchParams.has("error") ||
+      searchParams.has("error_description") ||
+      hashParams.has("access_token") ||
+      hashParams.has("error") ||
+      hashParams.has("error_description");
+    let fallbackTimeout: ReturnType<typeof setTimeout> | undefined;
 
     if (isOAuthRedirect) {
-      fallbackTimeout = setTimeout(() => setLoading(false), 3000);
+      fallbackTimeout = setTimeout(() => setLoading(false), 8000);
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -445,20 +454,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    void supabase.auth.getSession().then(({ data: { session: nextSession } }) => {
-      setSession(nextSession);
-      setUser(nextSession?.user ?? null);
-      activeProfileUserIdRef.current = nextSession?.user?.id ?? null;
+    void supabase.auth.getSession()
+      .then(({ data: { session: nextSession } }) => {
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
+        activeProfileUserIdRef.current = nextSession?.user?.id ?? null;
 
-      if (nextSession?.user) {
-        setProfile((current) => (current?.id === nextSession.user.id ? current : null));
-        void fetchProfile(nextSession.user.id, nextSession.user);
-        setLoading(false);
-      } else if (!isOAuthRedirect) {
+        if (nextSession?.user) {
+          setProfile((current) => (current?.id === nextSession.user.id ? current : null));
+          void fetchProfile(nextSession.user.id, nextSession.user);
+          setLoading(false);
+        } else if (!isOAuthRedirect) {
+          setProfile(null);
+          setLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to restore auth session", error);
+        activeProfileUserIdRef.current = null;
+        setSession(null);
+        setUser(null);
         setProfile(null);
         setLoading(false);
-      }
-    });
+      });
 
     return () => {
       subscription.unsubscribe();
@@ -591,11 +609,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
-    const redirectPath = getAuthRestorePath();
+    const redirectPath = getAuthRestorePath() || "/trade";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}${redirectPath}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
+        queryParams: {
+          prompt: "select_account",
+        },
       }
     });
 

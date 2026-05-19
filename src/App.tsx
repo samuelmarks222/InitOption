@@ -21,6 +21,7 @@ import Register from "./pages/Register";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 import PublicInfoPage from "./pages/PublicInfoPage";
+import TermsAndConditions from "./pages/TermsAndConditions";
 import PublicTournamentDetailPage from "./pages/PublicTournamentDetailPage";
 import PublicTournamentsPage from "./pages/PublicTournamentsPage";
 import BlogPage from "./pages/BlogPage";
@@ -121,7 +122,7 @@ const App = () => {
                         <Route path="/trading-guide" element={<TradingGuidePage />} />
                         <Route path="/why-choose-init-option" element={<PublicInfoPage pageKey="why-choose-init-option" />} />
                         <Route path="/faq" element={<PublicInfoPage pageKey="faq" />} />
-                        <Route path="/terms" element={<PublicInfoPage pageKey="terms" />} />
+                        <Route path="/terms" element={<TermsAndConditions />} />
                         <Route path="/privacy" element={<PublicInfoPage pageKey="privacy" />} />
                         <Route path="/risk-disclaimer" element={<PublicInfoPage pageKey="risk-disclaimer" />} />
                         <Route path="/affiliate-program" element={<PublicInfoPage pageKey="affiliate-program" />} />

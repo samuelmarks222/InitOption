@@ -64,9 +64,9 @@ const AuthCallback = () => {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
-            <h1 className="mt-4 text-2xl font-bold text-foreground">Confirming your email</h1>
+            <h1 className="mt-4 text-2xl font-bold text-foreground">Finishing sign-in</h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              One moment while we finish activating your account.
+              One moment while we confirm your session.
             </p>
           </>
         ) : (
@@ -75,7 +75,7 @@ const AuthCallback = () => {
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <h1 className="mt-4 text-2xl font-bold text-foreground">
-              {emailVerified || user ? "Email confirmed" : "Email confirmation complete"}
+              {user ? "Sign-in complete" : emailVerified ? "Email confirmed" : "Email confirmation complete"}
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               {user

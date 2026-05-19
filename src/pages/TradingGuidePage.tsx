@@ -1,4 +1,4 @@
-import { useMemo, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -18,6 +18,7 @@ import {
   Globe2,
   Headset,
   HelpCircle,
+  Image as ImageIcon,
   LineChart,
   MessageCircle,
   PlaySquare,
@@ -35,25 +36,14 @@ import {
   Wallet,
 } from "lucide-react";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
-import mobileTradingImage from "@/assets/mobile-trading.jpg";
-import tradingPlatformImage from "@/assets/trading-platform.jpg";
+import { supabase } from "@/integrations/supabase/client";
+import { normalizeWebsiteContent, type GuideMediaKey, type GuideMediaSettings } from "@/lib/websiteContent";
 
 type IconType = ComponentType<{ className?: string }>;
 
 type HelpPanel = "support" | "guides" | "support-chat" | "apps";
 type GuideCategoryId = "platform" | "strategies" | "glossary" | "videos";
-type VisualVariant =
-  | "chart"
-  | "profile"
-  | "finance"
-  | "security"
-  | "chat"
-  | "market"
-  | "orders"
-  | "tournament"
-  | "settings"
-  | "mobile"
-  | "signals";
+type VisualVariant = GuideMediaKey;
 
 interface GuideTopic {
   id: string;
@@ -949,122 +939,60 @@ const getDefaultOpenSections = (topics: GuideTopic[]) => {
   return open;
 };
 
-const GuideMockup = ({ title, variant }: { title: string; variant: VisualVariant }) => {
-  const accent =
-    variant === "security"
-      ? "#38bdf8"
-      : variant === "finance" || variant === "wallet"
-        ? "#0b7557"
-        : variant === "chat"
-          ? "#2d9cff"
-          : variant === "tournament"
-            ? "#f6b83f"
-            : "#0ea5e9";
+const useGuideMedia = (platformName: string) => {
+  const [guideMedia, setGuideMedia] = useState<GuideMediaSettings>({});
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadGuideMedia = async () => {
+      const { data, error } = await supabase
+        .from("platform_settings")
+        .select("platform_name, website_content")
+        .limit(1)
+        .maybeSingle();
+
+      if (!isMounted || error) {
+        return;
+      }
+
+      const row = data as { platform_name?: string | null; website_content?: unknown } | null;
+      const content = normalizeWebsiteContent(row?.website_content, row?.platform_name || platformName);
+      setGuideMedia(content.guideMedia ?? {});
+    };
+
+    void loadGuideMedia();
+
+    const handleBrandUpdated = () => void loadGuideMedia();
+    window.addEventListener("brand_updated", handleBrandUpdated);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener("brand_updated", handleBrandUpdated);
+    };
+  }, [platformName]);
+
+  return guideMedia;
+};
+
+const GuideMediaPlaceholder = ({ title }: { title: string }) => (
+  <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#33415f] bg-[#151a2a] px-6 py-10 text-center">
+    <ImageIcon className="h-10 w-10 text-[#8aa4c8]" />
+    <div>
+      <p className="text-sm font-semibold text-white">Guide image not assigned</p>
+      <p className="mt-1 text-xs text-[#8fa2c2]">Upload the real {title} image from Admin Settings.</p>
+    </div>
+  </div>
+);
+
+const GuideMockup = ({ title, mediaUrl }: { title: string; mediaUrl?: string }) => {
+  if (!mediaUrl) {
+    return <GuideMediaPlaceholder title={title} />;
+  }
 
   return (
-    <div className="relative overflow-hidden rounded-[18px] border border-[#8fa4c2]/55 bg-[#151b2b] p-4 shadow-[0_18px_44px_rgba(0,0,0,0.28)]">
-      <div className="absolute inset-0 opacity-55 [background-image:linear-gradient(to_right,rgba(148,163,184,0.18)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.16)_1px,transparent_1px)] [background-size:54px_54px]" />
-      <div className="relative rounded-[14px] border border-white/8 bg-[#0f1424]/70 p-4">
-        <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
-          <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: accent }} />
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#95a8c6]">{title}</span>
-          </div>
-          <div className="flex gap-1">
-            <span className="h-2 w-2 rounded-full bg-[#7b879d]" />
-            <span className="h-2 w-2 rounded-full bg-[#7b879d]" />
-            <span className="h-2 w-2 rounded-full bg-[#7b879d]" />
-          </div>
-        </div>
-
-        <div className="grid min-h-[230px] grid-cols-[1fr_150px] gap-4 max-sm:grid-cols-1">
-          <div className="relative overflow-hidden rounded-[14px] border border-white/8 bg-[#111827]/80">
-            <div className="absolute inset-0 [background-image:linear-gradient(to_right,rgba(148,163,184,0.14)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:42px_42px]" />
-            <div className="absolute bottom-8 left-5 right-5 flex h-36 items-end gap-2">
-              {Array.from({ length: 24 }).map((_, index) => {
-                const isUp = index % 3 !== 0;
-                const height = 32 + ((index * 17) % 92);
-                return (
-                  <span key={index} className="relative flex flex-1 justify-center">
-                    <span
-                      className="absolute bottom-0 w-[2px] rounded-full"
-                      style={{
-                        height: `${height + 22}px`,
-                        backgroundColor: isUp ? "#23c477" : "#ff615a",
-                      }}
-                    />
-                    <span
-                      className="relative mt-auto w-full max-w-[11px] rounded-[3px]"
-                      style={{
-                        height: `${Math.max(16, height * 0.58)}px`,
-                        backgroundColor: isUp ? "#22c55e" : "#e4544d",
-                      }}
-                    />
-                  </span>
-                );
-              })}
-            </div>
-            <div className="absolute left-5 right-5 top-1/2 border-t border-dashed border-[#38bdf8]/70" />
-            <div className="absolute right-5 top-[45%] rounded bg-[#2d9cff] px-2 py-1 text-xs font-bold text-white">
-              1.27624
-            </div>
-          </div>
-
-          <div className="grid gap-3">
-            {variant === "chat" ? (
-              <>
-                {["General chat", "Support chat", "Private chat"].map((item, index) => (
-                  <div key={item} className="rounded-[12px] bg-[#20283b] p-3">
-                    <div className="flex items-center gap-2">
-                      <span className="grid h-8 w-8 place-items-center rounded-full bg-[#2d9cff]/20 text-xs font-bold text-[#8ecbff]">
-                        {index + 1}
-                      </span>
-                      <div>
-                        <div className="text-xs font-bold text-white">{item}</div>
-                        <div className="mt-1 h-1.5 w-16 rounded-full bg-[#52627f]" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </>
-            ) : variant === "finance" || variant === "wallet" ? (
-              <>
-                {["Deposit", "Withdrawal", "History"].map((item) => (
-                  <div key={item} className="rounded-[12px] border border-[#0b7557]/30 bg-[#0b7557]/15 p-3">
-                    <div className="text-xs font-bold text-white">{item}</div>
-                    <div className="mt-2 h-1.5 w-20 rounded-full bg-[#88d8c5]/60" />
-                  </div>
-                ))}
-              </>
-            ) : (
-              <>
-                {["Time", "Amount", "Payout"].map((item, index) => (
-                  <div key={item} className="rounded-[12px] bg-[#20283b] p-3">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#93a4c2]">{item}</div>
-                    <div className="mt-2 text-lg font-bold text-white">{index === 0 ? "00:01:00" : index === 1 ? "$1" : "92%"}</div>
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {["Current", "History", "Settings"].map((item, index) => (
-            <span
-              key={item}
-              className="rounded-lg px-3 py-2 text-xs font-bold"
-              style={{
-                backgroundColor: index === 0 ? `${accent}22` : "#242d42",
-                color: index === 0 ? "#e8fbff" : "#9caecb",
-                border: `1px solid ${index === 0 ? accent : "rgba(148,163,184,0.14)"}`,
-              }}
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-      </div>
+    <div className="rounded-2xl border border-[#33415f] bg-[#151a2a] p-3">
+      <img src={mediaUrl} alt={title} className="h-auto w-full rounded-xl object-contain" loading="lazy" />
     </div>
   );
 };
@@ -1072,29 +1000,26 @@ const GuideMockup = ({ title, variant }: { title: string; variant: VisualVariant
 const VideoPreview = ({
   title,
   duration,
-  image,
+  mediaUrl,
 }: {
   title: string;
   duration: string;
-  image: "trading" | "mobile";
+  mediaUrl?: string;
 }) => (
   <div className="mt-7 overflow-hidden rounded-[18px] border border-white/8 bg-[#111527]">
-    <div className="relative h-56 overflow-hidden sm:h-72">
-      <img
-        src={image === "trading" ? tradingPlatformImage : mobileTradingImage}
-        alt=""
-        className="h-full w-full object-cover opacity-75"
-      />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,14,26,0.95),rgba(9,14,26,0.38)),radial-gradient(circle_at_right,rgba(45,156,255,0.28),transparent_42%)]" />
-      <div className="absolute left-6 top-6 rounded-xl bg-[#16233a]/90 px-3 py-2 text-xs font-bold uppercase tracking-[0.22em] text-[#75c7ff]">
-        Training tutorials
-      </div>
-      <div className="absolute bottom-6 left-6 max-w-md">
-        <div className="text-3xl font-black uppercase leading-[0.95] tracking-tight text-white sm:text-5xl">
-          How to use
-          <br />
-          {title.replace(/^How to Use\s*/i, "").replace(/^How to\s*/i, "")}
+    <div className="relative aspect-video overflow-hidden bg-[#0e1324]">
+      {mediaUrl ? (
+        <img src={mediaUrl} alt={title} className="h-full w-full object-cover opacity-80" loading="lazy" />
+      ) : (
+        <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-[#8fa2c2]">
+          <PlaySquare className="h-10 w-10 text-[#2d9cff]" />
+          <p className="text-sm font-semibold text-white">Video thumbnail not assigned</p>
+          <p className="max-w-sm text-xs">Upload this thumbnail from Admin Settings.</p>
         </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0b1020]/70 via-transparent to-transparent" />
+      <div className="absolute left-6 top-6 rounded-xl bg-[#16233a]/90 px-3 py-2 text-xs font-bold uppercase tracking-[0.22em] text-[#75c7ff]">
+        Trading tutorial
       </div>
       <div className="absolute right-6 top-6 grid h-12 w-12 place-items-center rounded-full bg-[#2d9cff] text-white shadow-[0_0_30px_rgba(45,156,255,0.42)]">
         <PlaySquare className="h-6 w-6" />
@@ -1264,6 +1189,7 @@ const AppsPanel = () => (
 const TradingGuidePage = () => {
   const navigate = useNavigate();
   const { logoUrl, platformName } = useSiteBranding();
+  const guideMedia = useGuideMedia(platformName);
   const [activePanel, setActivePanel] = useState<HelpPanel>("guides");
   const [activeCategory, setActiveCategory] = useState<GuideCategoryId>("platform");
   const [selectedTopicId, setSelectedTopicId] = useState("introduction");
@@ -1480,14 +1406,20 @@ const TradingGuidePage = () => {
 
                       {selectedContent.figure ? (
                         <figure className="mt-8">
-                          <GuideMockup title={selectedContent.figure.title} variant={selectedContent.figure.variant} />
+                          <GuideMockup
+                            title={selectedContent.figure.title}
+                            mediaUrl={guideMedia[selectedContent.figure.variant]}
+                          />
                           <figcaption className="mt-3 text-sm italic text-[#8fa8ce]">{selectedContent.figure.caption}</figcaption>
                         </figure>
                       ) : null}
 
                       {selectedContent.secondaryFigure ? (
                         <figure className="mt-8">
-                          <GuideMockup title={selectedContent.secondaryFigure.title} variant={selectedContent.secondaryFigure.variant} />
+                          <GuideMockup
+                            title={selectedContent.secondaryFigure.title}
+                            mediaUrl={guideMedia[selectedContent.secondaryFigure.variant]}
+                          />
                           <figcaption className="mt-3 text-sm italic text-[#8fa8ce]">{selectedContent.secondaryFigure.caption}</figcaption>
                         </figure>
                       ) : null}
@@ -1496,7 +1428,7 @@ const TradingGuidePage = () => {
                         <VideoPreview
                           title={selectedContent.video.title}
                           duration={selectedContent.video.duration}
-                          image={selectedContent.video.image}
+                          mediaUrl={selectedContent.video.image === "trading" ? guideMedia.videoTrading : guideMedia.videoMobile}
                         />
                       ) : null}
 

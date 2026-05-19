@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Globe, Image as ImageIcon, Save, Search, Share2, UploadCloud } from "lucide-react";
+import { Globe, Image as ImageIcon, Save, Search, Share2, Trash2, UploadCloud } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,13 +13,15 @@ import {
   type TwitterCardType,
 } from "@/lib/platformMetadata";
 import {
+  GUIDE_MEDIA_KEYS,
   createDefaultWebsiteContent,
   normalizeWebsiteContent,
   serializeWebsiteContent,
+  type GuideMediaKey,
   type WebsiteContent,
 } from "@/lib/websiteContent";
 
-type UploadTarget = "logo" | "favicon" | "social" | "twitter";
+type UploadTarget = "logo" | "favicon" | "social" | "twitter" | `guide:${GuideMediaKey}`;
 
 const CARD_CLASS = "rounded-2xl border border-[#1e2330] bg-[#1e2330] p-6 shadow-lg";
 const INPUT_CLASS =
@@ -40,6 +42,69 @@ const ROBOTS_OPTIONS = [
 ];
 
 const TWITTER_CARD_OPTIONS: TwitterCardType[] = ["summary", "summary_large_image"];
+
+const GUIDE_MEDIA_LABELS: Record<GuideMediaKey, { label: string; description: string }> = {
+  chart: {
+    label: "Chart and trading screen",
+    description: "Main chart screenshots, interface highlights, and trading desk visuals.",
+  },
+  profile: {
+    label: "Profile and account screens",
+    description: "Profile, account, KYC, personal data, and verification screens.",
+  },
+  finance: {
+    label: "Finance and funding screens",
+    description: "Deposit, withdrawal, balance, and funding walkthrough visuals.",
+  },
+  security: {
+    label: "Security and verification screens",
+    description: "Password, active sessions, security, and verification visuals.",
+  },
+  chat: {
+    label: "Chat and private messages",
+    description: "General chat, private chat, support inbox, and messaging visuals.",
+  },
+  market: {
+    label: "Market and asset browser",
+    description: "Asset list, market browser, favorites, and quote selection visuals.",
+  },
+  orders: {
+    label: "Trade order and pending orders",
+    description: "Order panel, pending trades, trade results, and order controls.",
+  },
+  tournament: {
+    label: "Tournaments",
+    description: "Tournament list, participation, rebuy, and prize claim visuals.",
+  },
+  settings: {
+    label: "Settings and chart tools",
+    description: "Theme, language, indicators, drawings, chart type, and tool settings.",
+  },
+  mobile: {
+    label: "Mobile and demo screenshots",
+    description: "Mobile terminal, demo balance, onboarding, and responsive screens.",
+  },
+  signals: {
+    label: "Signals and social trading",
+    description: "Signals, copy trading, rankings, and social trading visuals.",
+  },
+  wallet: {
+    label: "Wallet and payout screens",
+    description: "Wallet, payout, payment methods, and transaction screen visuals.",
+  },
+  support: {
+    label: "Support and help screens",
+    description: "Support service, guides, reviews, applications, and help navigation.",
+  },
+  videoTrading: {
+    label: "Trading tutorial thumbnail",
+    description: "Thumbnail used for trading-related guide videos.",
+  },
+  videoMobile: {
+    label: "Mobile tutorial thumbnail",
+    description: "Thumbnail used for mobile, demo, and onboarding guide videos.",
+  },
+};
 
 const getPlatformSettingsErrorMessage = (error: { message?: string } | null | undefined) => {
   const message = error?.message ?? "";
@@ -151,6 +216,21 @@ const PlatformSettings = () => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
+  const updateGuideMedia = (key: GuideMediaKey, value: string) => {
+    setWebsiteContent((previous) => {
+      const nextMedia = { ...(previous.guideMedia ?? {}) };
+      const nextValue = value.trim();
+
+      if (nextValue) {
+        nextMedia[key] = nextValue;
+      } else {
+        delete nextMedia[key];
+      }
+
+      return { ...previous, guideMedia: nextMedia };
+    });
+  };
+
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
     target: UploadTarget,
@@ -171,8 +251,11 @@ const PlatformSettings = () => {
       return;
     }
 
+    const guideMediaKey = target.startsWith("guide:") ? (target.replace("guide:", "") as GuideMediaKey) : null;
     const fileExt = file.name.split(".").pop() || "png";
-    const filePath = `seo/${target}_${Date.now()}.${fileExt}`;
+    const filePath = guideMediaKey
+      ? `guide-media/${guideMediaKey}_${Date.now()}.${fileExt}`
+      : `seo/${target}_${Date.now()}.${fileExt}`;
 
     setSaving(true);
     toast({ title: "Uploading image..." });
@@ -189,10 +272,14 @@ const PlatformSettings = () => {
 
     const { data: publicData } = supabase.storage.from("branding").getPublicUrl(filePath);
 
-    if (target === "logo") updateSetting("logo_url", publicData.publicUrl);
-    if (target === "favicon") updateSetting("favicon_url", publicData.publicUrl);
-    if (target === "social") updateSetting("og_image_url", publicData.publicUrl);
-    if (target === "twitter") updateSetting("twitter_image_url", publicData.publicUrl);
+    if (guideMediaKey) {
+      updateGuideMedia(guideMediaKey, publicData.publicUrl);
+    } else {
+      if (target === "logo") updateSetting("logo_url", publicData.publicUrl);
+      if (target === "favicon") updateSetting("favicon_url", publicData.publicUrl);
+      if (target === "social") updateSetting("og_image_url", publicData.publicUrl);
+      if (target === "twitter") updateSetting("twitter_image_url", publicData.publicUrl);
+    }
 
     toast({
       title: "Image uploaded",
@@ -515,6 +602,78 @@ const PlatformSettings = () => {
       </div>
 
       <WebsiteContentEditor content={websiteContent} onChange={setWebsiteContent} />
+
+      <div className={CARD_CLASS}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
+              <ImageIcon className="h-5 w-5 text-[#62d5ff]" />
+              Trading Guide Media
+            </h3>
+            <p className="mt-2 max-w-3xl text-sm text-slate-400">
+              Upload the real InitOption screenshots and graphics used on the help and guide page. Empty slots show a
+              neutral placeholder, so sample graphics never appear by accident.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {GUIDE_MEDIA_KEYS.map((key) => {
+            const meta = GUIDE_MEDIA_LABELS[key];
+            const mediaUrl = websiteContent.guideMedia?.[key] ?? "";
+
+            return (
+              <div key={key} className="rounded-xl border border-[#2b3142] bg-[#171b28] p-4">
+                <div className="aspect-[16/9] overflow-hidden rounded-lg border border-[#2b3142] bg-[#111522]">
+                  {mediaUrl ? (
+                    <img src={mediaUrl} alt={meta.label} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-xs text-slate-500">
+                      <ImageIcon className="h-8 w-8 text-slate-600" />
+                      No guide image assigned
+                    </div>
+                  )}
+                </div>
+
+                <p className="mt-3 text-sm font-semibold text-white">{meta.label}</p>
+                <p className="mt-1 min-h-[38px] text-xs leading-5 text-slate-400">{meta.description}</p>
+
+                <input
+                  type="url"
+                  value={mediaUrl}
+                  onChange={(event) => updateGuideMedia(key, event.target.value)}
+                  placeholder="https://..."
+                  className={`${INPUT_CLASS} mt-3`}
+                />
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#33415f] bg-[#20283b] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#273149]">
+                    <UploadCloud className="h-4 w-4" />
+                    Upload
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) => void handleFileUpload(event, `guide:${key}`)}
+                    />
+                  </label>
+
+                  {mediaUrl ? (
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/20"
+                      onClick={() => updateGuideMedia(key, "")}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Clear
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <div className={CARD_CLASS}>
         <div className="flex flex-col gap-3 border-b border-[#1e2330] pb-4 sm:flex-row sm:items-start sm:justify-between">
