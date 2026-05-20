@@ -1,4 +1,4 @@
-import { buildRequestUrl, fetchPlatformSettings } from "./platformSettings.js";
+import { buildRequestUrl, buildSeoPayload, fetchPlatformSettings } from "./platformSettings.js";
 import { fetchAllPublishedBlogPostsForSeo, fetchPublicBlogSitemapEntries } from "./blog.js";
 import { fetchPublicTournaments } from "./publicTournaments.js";
 import { readJsonRequestBody } from "./sasapay.js";
@@ -483,6 +483,21 @@ const handleManifest = async (request: ApiRequest, response: ApiResponse) => {
   }
 
   response.status(200).send(body);
+};
+
+const handleSeo = async (request: ApiRequest, response: ApiResponse) => {
+  const payload = await buildSeoPayload(request);
+
+  response.setHeader("Content-Type", "application/json; charset=utf-8");
+  response.setHeader("Cache-Control", "no-store, max-age=0");
+
+  if (request.method === "HEAD") {
+    response.status(200);
+    response.end();
+    return;
+  }
+
+  response.status(200).json(payload);
 };
 
 const sendViaResend = async ({
@@ -991,6 +1006,9 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       case "rss":
         await handleRss(request, response);
         return;
+      case "seo":
+        await handleSeo(request, response);
+        return;
       case "sitemap":
         await handleSitemap(request, response);
         return;
@@ -1008,6 +1026,10 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     }
     if (resource === "rss") {
       response.status(500).send("Failed to render rss.xml");
+      return;
+    }
+    if (resource === "seo") {
+      response.status(500).json({ error: "Failed to read SEO settings." });
       return;
     }
     if (resource === "sitemap") {

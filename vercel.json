@@ -32,6 +32,7 @@
     { "source": "/api/system/(.*)", "destination": "/api/system?resource=$1" },
     { "source": "/api/public-bonus", "destination": "/api/system?resource=public-bonus" },
     { "source": "/api/site.webmanifest", "destination": "/api/system?resource=site.webmanifest" },
+    { "source": "/api/seo", "destination": "/api/system?resource=seo" },
     { "source": "/api/blog/categories", "destination": "/api/blog?route=categories" },
     { "source": "/api/blog/posts", "destination": "/api/blog?route=posts" },
     { "source": "/api/blog/posts/(.*)", "destination": "/api/blog?route=post&slug=$1" },
