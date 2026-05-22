@@ -16,6 +16,7 @@ import {
 import type { RouteSeoContext } from "../../src/lib/routeSeo.js";
 import { injectPlatformMetadataIntoHtml } from "../../src/lib/serverPlatformMetadata.js";
 import { fetchAllPublishedBlogPostsForSeo, fetchPublicBlogPost, fetchPublicBlogPosts } from "./blog.js";
+import { fetchWithTimeout, resolveWithTimeout } from "./fetchWithTimeout.js";
 import { fetchPublicTournaments, findPublicTournamentBySlug } from "./publicTournaments.js";
 
 type RequestHeaderValue = string | string[] | undefined;
@@ -29,6 +30,7 @@ type ApiRequestLike = {
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 const SOURCE_BOOTSTRAP_PATTERNS = ["/src/boot.ts", "/src/main.tsx"];
+const DYNAMIC_SEO_TIMEOUT_MS = 3500;
 
 const getStringFromValue = (value: string | string[] | undefined) => {
   if (Array.isArray(value)) return value[0] ?? "";
@@ -86,20 +88,25 @@ export const fetchPlatformSettings = async () => {
   endpoint.searchParams.set("limit", "1");
   endpoint.searchParams.set("order", "created_at.asc.nullslast");
 
-  const response = await fetch(endpoint, {
-    headers: {
-      apikey: anonKey,
-      authorization: `Bearer ${anonKey}`,
-      accept: "application/json",
-    },
-  });
+  try {
+    const response = await fetchWithTimeout(endpoint, {
+      headers: {
+        apikey: anonKey,
+        authorization: `Bearer ${anonKey}`,
+        accept: "application/json",
+      },
+    });
 
-  if (!response.ok) {
-    throw new Error(`Supabase settings fetch failed with ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Supabase settings fetch failed with ${response.status}`);
+    }
+
+    const payload = (await response.json()) as Partial<PlatformSettingsRecord>[];
+    return normalizePlatformSettings(payload[0] ?? DEFAULT_PLATFORM_SETTINGS);
+  } catch (error) {
+    console.warn("Platform settings fetch failed. Falling back to defaults.", error);
+    return DEFAULT_PLATFORM_SETTINGS;
   }
-
-  const payload = (await response.json()) as Partial<PlatformSettingsRecord>[];
-  return normalizePlatformSettings(payload[0] ?? DEFAULT_PLATFORM_SETTINGS);
 };
 
 export const buildRequestUrl = (request: ApiRequestLike) => {
@@ -179,7 +186,12 @@ export const loadHtmlTemplate = async (request?: ApiRequestLike) => {
 export const renderSeoHtml = async (request: ApiRequestLike) => {
   const currentHref = buildRequestUrl(request);
   const [htmlTemplate, platformSettings] = await Promise.all([loadHtmlTemplate(request), fetchPlatformSettings()]);
-  const seoContext = await resolveDynamicSeoContext(currentHref, platformSettings.platform_name);
+  const seoContext = await resolveWithTimeout(
+    resolveDynamicSeoContext(currentHref, platformSettings.platform_name),
+    null,
+    DYNAMIC_SEO_TIMEOUT_MS,
+    "Dynamic SEO context",
+  );
 
   return injectPlatformMetadataIntoHtml(htmlTemplate, platformSettings, currentHref, seoContext);
 };
@@ -209,79 +221,84 @@ const resolveDynamicSeoContext = async (
 
   const pathname = url.pathname.replace(/\/+$/, "") || "/";
 
-  if (pathname === "/tournaments") {
-    const tournaments = await fetchPublicTournaments();
-    return {
-      routeOverride: buildTournamentListingSeo(platformName),
-      tournaments: tournaments
-        .filter((tournament) => tournament.status !== "cancelled")
-        .map((tournament) => toTournamentStructuredData(tournament)),
-    };
-  }
+  try {
+    if (pathname === "/tournaments") {
+      const tournaments = await fetchPublicTournaments();
+      return {
+        routeOverride: buildTournamentListingSeo(platformName),
+        tournaments: tournaments
+          .filter((tournament) => tournament.status !== "cancelled")
+          .map((tournament) => toTournamentStructuredData(tournament)),
+      };
+    }
 
-  if (pathname === "/blog") {
-    const blogPayload = await fetchPublicBlogPosts(1, 6);
-    return {
-      blogPosts: blogPayload.posts,
-    };
-  }
-
-  if (pathname.startsWith("/blog/")) {
-    const slug = pathname.slice("/blog/".length).trim();
-    if (!slug) {
+    if (pathname === "/blog") {
       const blogPayload = await fetchPublicBlogPosts(1, 6);
       return {
         blogPosts: blogPayload.posts,
       };
     }
 
-    const blogPostPayload = await fetchPublicBlogPost(slug);
-    if (!blogPostPayload.post) {
+    if (pathname.startsWith("/blog/")) {
+      const slug = pathname.slice("/blog/".length).trim();
+      if (!slug) {
+        const blogPayload = await fetchPublicBlogPosts(1, 6);
+        return {
+          blogPosts: blogPayload.posts,
+        };
+      }
+
+      const blogPostPayload = await fetchPublicBlogPost(slug);
+      if (!blogPostPayload.post) {
+        return {
+          routeOverride: {
+            siteTitle: `Article Not Found | ${platformName}`,
+            metaDescription: `The blog article you requested could not be found on ${platformName}.`,
+            robotsDirective: "noindex, nofollow",
+          },
+        };
+      }
+
       return {
         routeOverride: {
-          siteTitle: `Article Not Found | ${platformName}`,
-          metaDescription: `The blog article you requested could not be found on ${platformName}.`,
-          robotsDirective: "noindex, nofollow",
+          siteTitle: blogPostPayload.post.metaTitle || `${blogPostPayload.post.title} | ${platformName} Blog`,
+          metaDescription: blogPostPayload.post.metaDescription,
+          metaKeywords: blogPostPayload.post.categories.map((category) => category.name).join(", "),
+          robotsDirective: "index, follow",
         },
+        blogPost: blogPostPayload.post,
+        blogPosts: await fetchAllPublishedBlogPostsForSeo(),
+      };
+    }
+
+    if (!pathname.startsWith("/tournaments/")) {
+      return null;
+    }
+
+    const slug = pathname.slice("/tournaments/".length).trim();
+    if (!slug) {
+      const tournaments = await fetchPublicTournaments();
+      return {
+        routeOverride: buildTournamentListingSeo(platformName),
+        tournaments: tournaments
+          .filter((tournament) => tournament.status !== "cancelled")
+          .map((tournament) => toTournamentStructuredData(tournament)),
+      };
+    }
+
+    const tournament = await findPublicTournamentBySlug(slug);
+    if (!tournament) {
+      return {
+        routeOverride: buildTournamentNotFoundSeo(platformName),
       };
     }
 
     return {
-      routeOverride: {
-        siteTitle: blogPostPayload.post.metaTitle || `${blogPostPayload.post.title} | ${platformName} Blog`,
-        metaDescription: blogPostPayload.post.metaDescription,
-        metaKeywords: blogPostPayload.post.categories.map((category) => category.name).join(", "),
-        robotsDirective: "index, follow",
-      },
-      blogPost: blogPostPayload.post,
-      blogPosts: await fetchAllPublishedBlogPostsForSeo(),
+      routeOverride: buildTournamentDetailSeo(tournament, platformName),
+      tournament: toTournamentStructuredData(tournament),
     };
-  }
-
-  if (!pathname.startsWith("/tournaments/")) {
+  } catch (error) {
+    console.warn("Dynamic SEO context failed. Falling back to static metadata.", error);
     return null;
   }
-
-  const slug = pathname.slice("/tournaments/".length).trim();
-  if (!slug) {
-    const tournaments = await fetchPublicTournaments();
-    return {
-      routeOverride: buildTournamentListingSeo(platformName),
-      tournaments: tournaments
-        .filter((tournament) => tournament.status !== "cancelled")
-        .map((tournament) => toTournamentStructuredData(tournament)),
-    };
-  }
-
-  const tournament = await findPublicTournamentBySlug(slug);
-  if (!tournament) {
-    return {
-      routeOverride: buildTournamentNotFoundSeo(platformName),
-    };
-  }
-
-  return {
-    routeOverride: buildTournamentDetailSeo(tournament, platformName),
-    tournament: toTournamentStructuredData(tournament),
-  };
 };

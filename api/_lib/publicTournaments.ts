@@ -1,5 +1,6 @@
 import type { Database } from "../../src/integrations/supabase/types.js";
 import { matchesTournamentSlug } from "../../src/lib/publicTournaments.js";
+import { fetchWithTimeout } from "./fetchWithTimeout.js";
 
 type TournamentRow = Database["public"]["Tables"]["tournaments"]["Row"];
 
@@ -31,20 +32,25 @@ export const fetchPublicTournaments = async (): Promise<TournamentRow[]> => {
   endpoint.searchParams.set("select", "*");
   endpoint.searchParams.set("order", "start_date.asc");
 
-  const response = await fetch(endpoint, {
-    headers: {
-      apikey: anonKey,
-      authorization: `Bearer ${anonKey}`,
-      accept: "application/json",
-    },
-  });
+  try {
+    const response = await fetchWithTimeout(endpoint, {
+      headers: {
+        apikey: anonKey,
+        authorization: `Bearer ${anonKey}`,
+        accept: "application/json",
+      },
+    });
 
-  if (!response.ok) {
-    throw new Error(`Supabase tournaments fetch failed with ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Supabase tournaments fetch failed with ${response.status}`);
+    }
+
+    const payload = (await response.json()) as TournamentRow[];
+    return payload ?? [];
+  } catch (error) {
+    console.warn("Public tournaments fetch failed. Falling back to an empty listing.", error);
+    return [];
   }
-
-  const payload = (await response.json()) as TournamentRow[];
-  return payload ?? [];
 };
 
 export const findPublicTournamentBySlug = async (slug: string) => {

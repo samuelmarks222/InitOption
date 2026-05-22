@@ -10,6 +10,7 @@ import {
 } from "../../src/lib/blogPosts.js";
 import { getStarterBlogCategories, STARTER_BLOG_POSTS } from "../../src/lib/blogStarterContent.js";
 import { normalizeWebsiteContent } from "../../src/lib/websiteContent.js";
+import { fetchWithTimeout } from "./fetchWithTimeout.js";
 
 type PlatformSettingsBlogRow = {
   platform_name?: string | null;
@@ -101,7 +102,7 @@ const loadManagedBlogPayload = async (): Promise<ManagedBlogPayload> => {
     endpoint.searchParams.set("limit", "1");
     endpoint.searchParams.set("order", "created_at.asc.nullslast");
 
-    const response = await fetch(endpoint, {
+    const response = await fetchWithTimeout(endpoint, {
       headers: {
         apikey: anonKey,
         authorization: `Bearer ${anonKey}`,
