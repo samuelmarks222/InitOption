@@ -62,9 +62,24 @@ const EMPTY_SOCIAL_LINK_ITEM = {
   url: "",
 };
 
+type SocialLinkItem = WebsiteContent["socialLinks"]["items"][number];
+
+const WHATSAPP_SOCIAL_LINK_ITEM: SocialLinkItem = {
+  platform: "WhatsApp",
+  handle: "WhatsApp support",
+  url: "",
+};
+
+const isWhatsAppSocialLink = (item: SocialLinkItem) => {
+  const signature = `${item.platform} ${item.handle} ${item.url}`.toLowerCase();
+  return signature.includes("whatsapp") || signature.includes("wa.me") || signature.includes("api.whatsapp.com");
+};
+
 export const WebsiteContentEditor = ({ content: rawContent, onChange }: WebsiteContentEditorProps) => {
   const content = normalizeWebsiteContent(rawContent);
   const updateContent = (nextContent: WebsiteContent) => onChange(nextContent);
+  const whatsappLinkIndex = content.socialLinks.items.findIndex(isWhatsAppSocialLink);
+  const whatsappLink = whatsappLinkIndex >= 0 ? content.socialLinks.items[whatsappLinkIndex] : null;
 
   const updateHeroField = (field: keyof WebsiteContent["hero"], value: string) =>
     updateContent({ ...content, hero: { ...content.hero, [field]: value } });
@@ -192,6 +207,27 @@ export const WebsiteContentEditor = ({ content: rawContent, onChange }: WebsiteC
       socialLinks: {
         ...content.socialLinks,
         items: content.socialLinks.items.filter((_, itemIndex) => itemIndex !== index),
+      },
+    });
+
+  const updateWhatsAppLink = (url: string) =>
+    updateContent({
+      ...content,
+      socialLinks: {
+        ...content.socialLinks,
+        items:
+          whatsappLinkIndex >= 0
+            ? content.socialLinks.items.map((item, itemIndex) =>
+                itemIndex === whatsappLinkIndex
+                  ? {
+                      ...item,
+                      platform: "WhatsApp",
+                      handle: item.handle.trim() || WHATSAPP_SOCIAL_LINK_ITEM.handle,
+                      url,
+                    }
+                  : item,
+              )
+            : [...content.socialLinks.items, { ...WHATSAPP_SOCIAL_LINK_ITEM, url }],
       },
     });
 
@@ -739,6 +775,30 @@ export const WebsiteContentEditor = ({ content: rawContent, onChange }: WebsiteC
             <Plus className="h-4 w-4" />
             Add Social Link
           </button>
+        </div>
+
+        <div className="mb-6 rounded-xl border border-[#0fa053]/25 bg-[#0fa053]/10 p-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex-1">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-emerald-300">
+                WhatsApp Link
+              </label>
+              <input
+                type="url"
+                value={whatsappLink?.url ?? ""}
+                onChange={(event) => updateWhatsAppLink(event.target.value)}
+                className={INPUT_CLASS}
+                placeholder="https://wa.me/254700000000"
+              />
+            </div>
+            <div className="rounded-lg border border-[#0fa053]/20 bg-[#0fa053]/10 px-3 py-2 text-xs font-semibold text-emerald-200">
+              Direct admin shortcut
+            </div>
+          </div>
+          <p className="mt-3 text-sm text-slate-300">
+            Add your WhatsApp chat URL here. It updates the WhatsApp icon users open from the footer, Help panel, and
+            reviews page.
+          </p>
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">

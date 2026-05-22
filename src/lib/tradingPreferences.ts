@@ -75,8 +75,8 @@ export const DEFAULT_TRADING_PREFERENCES: TradingPreferences = {
   oneClickTrade: true,
   performanceMode: true,
   shortOrderLabel: false,
-  upTrendColor: "#23b35f",
-  downTrendColor: "#e05d56",
+  upTrendColor: "#21a566",
+  downTrendColor: "#d96059",
   chartBackgroundImage: null,
 };
 
@@ -95,8 +95,12 @@ const normalizeTemplate = (value: unknown): TradingTemplate => {
   return DEFAULT_TRADING_PREFERENCES.template;
 };
 
-const normalizeColor = (value: unknown, fallback: string) =>
-  typeof value === "string" && HEX_COLOR_PATTERN.test(value) ? value.toLowerCase() : fallback;
+const normalizeColor = (value: unknown, fallback: string, legacyDefaults: string[] = []) => {
+  if (typeof value !== "string" || !HEX_COLOR_PATTERN.test(value)) return fallback;
+
+  const normalized = value.toLowerCase();
+  return legacyDefaults.includes(normalized) ? fallback : normalized;
+};
 
 export const normalizeTradingPreferences = (
   value?: Partial<TradingPreferences> | null,
@@ -127,8 +131,14 @@ export const normalizeTradingPreferences = (
     typeof value?.shortOrderLabel === "boolean"
       ? value.shortOrderLabel
       : DEFAULT_TRADING_PREFERENCES.shortOrderLabel,
-  upTrendColor: normalizeColor(value?.upTrendColor, DEFAULT_TRADING_PREFERENCES.upTrendColor),
-  downTrendColor: normalizeColor(value?.downTrendColor, DEFAULT_TRADING_PREFERENCES.downTrendColor),
+  upTrendColor: normalizeColor(value?.upTrendColor, DEFAULT_TRADING_PREFERENCES.upTrendColor, [
+    "#23b35f",
+    "#0fa053",
+  ]),
+  downTrendColor: normalizeColor(value?.downTrendColor, DEFAULT_TRADING_PREFERENCES.downTrendColor, [
+    "#e05d56",
+    "#e95951",
+  ]),
   chartBackgroundImage:
     typeof value?.chartBackgroundImage === "string" && value.chartBackgroundImage.startsWith("data:image/")
       ? value.chartBackgroundImage

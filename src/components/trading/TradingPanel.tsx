@@ -1107,10 +1107,9 @@ const TradingPanel = ({
               higherButtonFocused ? "scale-[1.01]" : ""
             }`}
             style={{
-              background: upColor,
-              boxShadow: higherButtonFocused
-                ? `0 0 0 2px ${upColor}66, 0 0 0 6px ${upColor}24, 0 10px 24px ${upColor}36`
-                : `0 10px 24px ${upColor}36`,
+              background: "var(--trading-success-color)",
+              color: "var(--trading-success-contrast-color)",
+              boxShadow: higherButtonFocused ? "var(--trading-success-focus-shadow)" : "var(--trading-success-shadow)",
             }}>
             <span>Up</span>
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
@@ -1127,10 +1126,9 @@ const TradingPanel = ({
               lowerButtonFocused ? "scale-[1.01]" : ""
             }`}
             style={{
-              background: downColor,
-              boxShadow: lowerButtonFocused
-                ? `0 0 0 2px ${downColor}66, 0 0 0 6px ${downColor}24, 0 10px 24px ${downColor}36`
-                : `0 10px 24px ${downColor}36`,
+              background: "var(--trading-danger-color)",
+              color: "var(--trading-danger-contrast-color)",
+              boxShadow: lowerButtonFocused ? "var(--trading-danger-focus-shadow)" : "var(--trading-danger-shadow)",
             }}>
             <span>Down</span>
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">

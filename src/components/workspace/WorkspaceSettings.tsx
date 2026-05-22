@@ -15,8 +15,8 @@ const TIMEZONE_OPTIONS = [
   "UTC+04:00",
 ];
 
-const UP_COLOR_OPTIONS = ["#23b35f", "#20c776", "#24a8ff", "#54e6e5", "#f7f8fb"];
-const DOWN_COLOR_OPTIONS = ["#e05d56", "#ef4444", "#f7c948", "#d85cf6", "#0f1118"];
+const UP_COLOR_OPTIONS = ["#21a566", "#35b977", "#6fa7e8", "#54c8c6", "#f7f8fb"];
+const DOWN_COLOR_OPTIONS = ["#d96059", "#e47670", "#d8a441", "#c474d6", "#1a1d22"];
 const MAX_BACKGROUND_BYTES = 2 * 1024 * 1024;
 
 export const WorkspaceSettings = () => {

@@ -492,7 +492,7 @@ const TradingSidebar = ({ onOpenHistory, onOpenAssetInfo, onOpenPromo }: Trading
                     )}
                     {/* Active indicator line */}
                     {isActive && (
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-8 bg-[#0fa053] rounded-l" />
+                      <div className="absolute right-0 top-1/2 h-8 w-0.5 -translate-y-1/2 rounded-l bg-[var(--trading-success-color)]" />
                     )}
                     {/* Tooltip */}
                     <div className="absolute left-full ml-2 px-2 py-1 bg-[#222636] text-white text-[11px] rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 whitespace-nowrap border border-white/10 shadow-lg pointer-events-none">
@@ -509,7 +509,7 @@ const TradingSidebar = ({ onOpenHistory, onOpenAssetInfo, onOpenPromo }: Trading
         <div className="w-full p-2 border-t border-white/5 pb-3">
           <button
             className="w-full py-2 rounded text-[8px] font-bold tracking-widest flex items-center justify-center gap-1"
-            style={{ background: "#0fa053", color: "white" }}
+            style={{ background: "var(--trading-success-color)", color: "var(--trading-success-contrast-color)" }}
           >
             <Zap className="w-3 h-3" />
             CHAT
@@ -521,7 +521,7 @@ const TradingSidebar = ({ onOpenHistory, onOpenAssetInfo, onOpenPromo }: Trading
       {activePanel && (
         <div
           className={`${isChatPanel ? "w-[500px]" : "w-[270px]"} flex flex-col shrink-0 border-r overflow-hidden`}
-          style={{ background: "hsl(228 20% 9%)", borderColor: "hsl(228 15% 14%)" }}
+          style={{ background: "var(--trading-workspace-panel-bg)", borderColor: "var(--trading-border-color)" }}
         >
           {!isChatPanel ? (
             <PanelHeader

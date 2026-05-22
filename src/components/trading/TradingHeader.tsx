@@ -55,7 +55,7 @@ const SplitScreenIcon = ({ active = false }: { active?: boolean }) => (
       <span
         key={index}
         className="rounded-[2px]"
-        style={{ background: active ? "rgba(255,255,255,0.92)" : "rgba(229,236,247,0.9)" }}
+        style={{ background: active ? "var(--trading-active-color)" : "var(--trading-muted-color)" }}
       />
     ))}
   </span>
@@ -243,7 +243,11 @@ const TradingHeader = ({
           className={`relative px-3 sm:px-5 h-[34px] rounded-lg text-[12px] sm:text-[13px] font-black text-white transition-all active:scale-95 shrink-0 ${
             highlightDepositButton ? "ring-2 ring-[#8ff6bb] ring-offset-2 ring-offset-[#1c1f2d] animate-pulse" : ""
           }`}
-          style={{ background: "#18a038", boxShadow: highlightDepositButton ? "0 0 0 1px rgba(143,246,187,0.35), 0 10px 24px rgba(24,160,56,0.42)" : "0 2px 8px rgba(24,160,56,0.4)" }}
+          style={{
+            background: "var(--trading-success-color)",
+            color: "var(--trading-success-contrast-color)",
+            boxShadow: highlightDepositButton ? "var(--trading-success-focus-shadow)" : "var(--trading-success-shadow)",
+          }}
         >
           Deposit
           {highlightDepositButton && (
@@ -268,6 +272,7 @@ const TradingHeader = ({
                     src={logoUrl}
                     alt={platformName}
                     className="block max-h-[42px] w-auto max-w-full shrink-0 object-contain object-left brightness-110 contrast-125 saturate-110 xl:max-h-[46px]"
+                    style={{ filter: "var(--trading-logo-filter)" }}
                   />
                 </div>
                 <span className="hidden h-1.5 w-1.5 shrink-0 rounded-full bg-white/14 xl:block" />
@@ -279,7 +284,10 @@ const TradingHeader = ({
               <div className="flex min-w-0 items-center gap-4">
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-white text-[24px] shrink-0"
-                  style={{ background: "linear-gradient(135deg, #0f9d58, #34a853)", boxShadow: "0 0 14px rgba(52,168,83,0.45)" }}
+                  style={{
+                    background: "linear-gradient(135deg, var(--trading-success-color), color-mix(in srgb, var(--trading-success-color) 72%, var(--trading-panel-bg)))",
+                    boxShadow: "var(--trading-success-shadow)",
+                  }}
                 >
                   {initials}
                 </div>
@@ -445,7 +453,11 @@ const TradingHeader = ({
             className={`relative flex h-[38px] items-center gap-1.5 rounded px-3 text-[13px] font-bold text-white xl:px-4 ${
               highlightDepositButton ? "ring-2 ring-[#8ff6bb] ring-offset-2 ring-offset-[#1c1f2d] animate-pulse" : ""
             }`}
-            style={{ background: "#18a038", boxShadow: highlightDepositButton ? "0 0 0 1px rgba(143,246,187,0.35), 0 10px 24px rgba(24,160,56,0.34)" : "0 2px 5px rgba(24,160,56,0.2)" }}
+            style={{
+              background: "var(--trading-success-color)",
+              color: "var(--trading-success-contrast-color)",
+              boxShadow: highlightDepositButton ? "var(--trading-success-focus-shadow)" : "var(--trading-success-shadow)",
+            }}
           >
             <Plus className="w-3.5 h-3.5" /> Deposit
             {highlightDepositButton && (

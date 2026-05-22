@@ -22,11 +22,11 @@ import {
   Settings,
   Smartphone,
   Star,
-  TrendingUp,
   Trophy,
   User,
   Wallet,
 } from "lucide-react";
+import { TradeDeskShortcut } from "@/components/navigation/TradeDeskShortcut";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeWebsiteContent, type GuideMediaKey, type GuideMediaSettings } from "@/lib/websiteContent";
@@ -1351,30 +1351,7 @@ const TradingGuidePage = () => {
           style={{ background: "var(--trading-sidebar-bg)", borderRightColor: "var(--trading-border-color)" }}
         >
           <nav className="flex h-full flex-col items-center pb-4">
-            <div className="flex h-[70px] w-full items-start justify-center overflow-visible pt-[10px]">
-              <Link
-                to="/trade"
-                className="group relative flex h-[60px] w-[58px] flex-col items-center overflow-hidden rounded-[16px] border px-2.5 py-2 text-center transition-transform duration-200 hover:-translate-y-[1px] active:scale-[0.98]"
-                style={{
-                  background:
-                    "linear-gradient(180deg, rgba(42,168,122,0.98) 0%, rgba(20,112,94,0.98) 52%, rgba(12,58,73,0.98) 100%)",
-                  borderColor: "rgba(167, 255, 223, 0.24)",
-                  boxShadow: "0 16px 24px rgba(8, 87, 82, 0.24), inset 0 1px 0 rgba(255,255,255,0.14)",
-                }}
-              >
-                <span
-                  className="pointer-events-none absolute inset-0 opacity-90"
-                  style={{
-                    background:
-                      "radial-gradient(circle at top right, rgba(255,255,255,0.16), transparent 34%), radial-gradient(circle at bottom left, rgba(8,37,48,0.34), transparent 46%)",
-                  }}
-                />
-                <span className="relative mt-[2px] flex h-7 w-7 items-center justify-center rounded-[10px] border border-white/14 bg-white/10">
-                  <TrendingUp className="h-4 w-4 text-white" strokeWidth={2.6} />
-                </span>
-                <span className="relative mt-2 text-[10px] font-black tracking-[0.16em] text-white">TRADE</span>
-              </Link>
-            </div>
+            <TradeDeskShortcut to="/trade" />
 
             <div className="mt-3 flex w-full flex-1 flex-col items-center space-y-2 overflow-y-auto">
               {railItems.map((item) => {

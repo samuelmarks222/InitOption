@@ -22,13 +22,13 @@ const TradingFooter = () => {
   return (
     <footer
       className="h-[32px] flex items-center justify-between px-4 shrink-0 z-30 text-[10px]"
-      style={{ background: "hsl(228 22% 7%)", borderTop: "1px solid hsl(228 15% 13%)" }}
+      style={{ background: "var(--trading-header-bg)", borderTop: "1px solid var(--trading-border-color)" }}
     >
       {/* Left */}
       <div className="flex items-center gap-3">
         <button
           className="flex items-center gap-1.5 px-2 py-0.5 rounded font-bold tracking-widest"
-          style={{ background: "#0fa053", color: "white", fontSize: "9px" }}
+          style={{ background: "var(--trading-success-color)", color: "var(--trading-success-contrast-color)", fontSize: "9px" }}
         >
           ⚡ SUPPORT
         </button>

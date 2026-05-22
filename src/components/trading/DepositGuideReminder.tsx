@@ -193,7 +193,12 @@ export const DepositGuideReminder = ({ open, reason, onClose, onDeposit }: Depos
           <button
             type="button"
             onClick={onDeposit}
-            className="rounded-[12px] bg-[#18a038] px-5 py-3 text-[14px] font-bold text-white transition-colors hover:bg-[#158c31]"
+            className="rounded-[12px] px-5 py-3 text-[14px] font-bold text-white transition-colors hover:brightness-110"
+            style={{
+              background: "var(--trading-success-color)",
+              color: "var(--trading-success-contrast-color)",
+              boxShadow: "var(--trading-success-shadow)",
+            }}
           >
             Open deposit
           </button>
