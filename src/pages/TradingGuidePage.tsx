@@ -1,45 +1,37 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   ArrowRight,
   BarChart3,
-  Bell,
   BookOpen,
   BookText,
   CheckCircle2,
   ChevronDown,
   ClipboardList,
-  Clock,
-  Copy,
-  DollarSign,
   Download,
-  Gem,
   Globe2,
+  Grid,
+  Handshake,
   Headset,
   HelpCircle,
   Image as ImageIcon,
   LineChart,
   MessageCircle,
+  Plus,
   PlaySquare,
-  Search,
   Settings,
-  ShieldCheck,
-  ShoppingCart,
   Smartphone,
-  Sparkles,
   Star,
   TrendingUp,
   Trophy,
   User,
-  Video,
   Wallet,
 } from "lucide-react";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeWebsiteContent, type GuideMediaKey, type GuideMediaSettings } from "@/lib/websiteContent";
 
-type IconType = ComponentType<{ className?: string }>;
+type IconType = ComponentType<{ className?: string; strokeWidth?: number }>;
 
 type HelpPanel = "support" | "guides" | "support-chat" | "apps";
 type GuideCategoryId = "platform" | "strategies" | "glossary" | "videos";
@@ -879,14 +871,17 @@ const contentById: Record<string, GuideContent> = {
 };
 
 const railItems: Array<{ label: string; to: string; icon: IconType; badge?: string }> = [
-  { label: "Trading", to: "/trade", icon: TrendingUp },
-  { label: "Finance", to: "/deposit", icon: DollarSign },
-  { label: "Profile", to: "/settings", icon: User },
-  { label: "Market", to: "/features", icon: ShoppingCart, badge: "4" },
-  { label: "Achievements", to: "/tournaments", icon: Gem },
-  { label: "Tournaments", to: "/tournaments", icon: Trophy },
-  { label: "Chat", to: "/trade", icon: MessageCircle, badge: "9" },
-  { label: "Help", to: "/trading-guide", icon: HelpCircle },
+  { label: "CHAT", to: "/trade", icon: Headset, badge: "9" },
+  { label: "ACCOUNT", to: "/settings", icon: User },
+  { label: "TOURNAMENTS", to: "/tournaments", icon: Trophy },
+  { label: "LEADERS", to: "/trade", icon: BarChart3 },
+  { label: "... MORE", to: "/trade", icon: Grid },
+];
+
+const railBottomItems: Array<{ label: string; to: string; icon: IconType; active?: boolean }> = [
+  { label: "SETTINGS", to: "/settings", icon: Settings },
+  { label: "JOIN US", to: "/affiliate-program", icon: Handshake },
+  { label: "HELP", to: "/trading-guide", icon: HelpCircle, active: true },
 ];
 
 const flattenTopics = (topics: GuideTopic[]): GuideTopic[] =>
@@ -1188,7 +1183,7 @@ const AppsPanel = () => (
 
 const TradingGuidePage = () => {
   const navigate = useNavigate();
-  const { logoUrl, platformName } = useSiteBranding();
+  const { logoUrl, platformName, initials } = useSiteBranding();
   const guideMedia = useGuideMedia(platformName);
   const [activePanel, setActivePanel] = useState<HelpPanel>("guides");
   const [activeCategory, setActiveCategory] = useState<GuideCategoryId>("platform");
@@ -1229,68 +1224,162 @@ const TradingGuidePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#171b2a] font-sans text-white">
-      <header className="sticky top-0 z-40 border-b border-[#2a3348] bg-[#1b2030]">
-        <div className="flex h-[76px] items-center justify-between gap-4 px-5 sm:px-8">
-          <Link to="/" className="flex items-center gap-3">
-            {logoUrl ? <img src={logoUrl} alt={platformName} className="h-10 w-auto" /> : null}
+    <div className="trading-terminal min-h-screen font-sans text-white" style={{ background: "var(--trading-workspace-bg)" }}>
+      <header
+        className="sticky top-0 z-40 border-b"
+        style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
+      >
+        <div className="flex h-[72px] items-stretch justify-between gap-3 px-3 sm:px-5 lg:px-0 lg:pr-4">
+          <Link
+            to="/trade"
+            className="flex h-full min-w-0 items-center border-r px-3 sm:min-w-[260px] sm:px-5 xl:min-w-[430px] xl:px-6"
+            style={{ borderColor: "var(--trading-border-strong-color)" }}
+          >
+            {logoUrl ? (
+              <div className="flex min-w-0 items-center gap-3 overflow-visible xl:gap-4">
+                <div className="flex min-h-[48px] min-w-0 max-w-[230px] items-center overflow-visible py-1 xl:max-w-[300px]">
+                  <img
+                    src={logoUrl}
+                    alt={platformName}
+                    className="block max-h-[42px] w-auto max-w-full shrink-0 object-contain object-left brightness-110 contrast-125 saturate-110"
+                  />
+                </div>
+                <span className="hidden h-1.5 w-1.5 shrink-0 rounded-full bg-white/14 xl:block" />
+                <span className="hidden whitespace-nowrap text-[12px] font-black uppercase tracking-[0.13em] text-slate-500 xl:block">
+                  Web trading platform
+                </span>
+              </div>
+            ) : (
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-[#0fa053] text-lg font-black text-white shadow-[0_0_14px_rgba(15,160,83,0.38)]">
+                  {initials}
+                </div>
+                <span className="truncate text-[22px] font-black uppercase tracking-[0.08em] text-white">{platformName}</span>
+              </div>
+            )}
           </Link>
-          <div className="hidden items-center gap-3 md:flex">
-            <div className="rounded-[12px] border border-[#2f3a52] bg-[#171d2b] px-5 py-2.5">
-              <div className="text-xs font-semibold text-[#8fa8ce]">Real Account&nbsp;&nbsp;USD</div>
-              <div className="text-2xl font-semibold leading-none text-white">0</div>
-            </div>
-            <Link
-              to="/deposit"
-              className="inline-flex items-center gap-2 rounded-[10px] border border-[#0b7557]/60 bg-[#0b7557] px-6 py-3 text-sm font-bold uppercase text-white"
-            >
-              <Wallet className="h-5 w-5" />
-              Top up
-            </Link>
+
+          <div className="hidden min-w-0 items-center justify-end gap-2 md:flex">
             <Link
               to="/settings"
-              className="grid h-14 w-14 place-items-center overflow-hidden rounded-full border-4 border-[#2764b5] bg-[#2f3a52]"
+              className="group hidden h-[46px] items-center gap-3 rounded-[16px] border px-3.5 shadow-[0_12px_30px_rgba(7,12,22,0.24)] transition-all hover:bg-white/[0.06] lg:flex"
+              style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
             >
-              <User className="h-7 w-7 text-[#aebbd2]" />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2f80ed,#1e2330)] text-[15px] font-black text-white ring-1 ring-white/10">
+                <User className="h-5 w-5 text-white/85" />
+              </div>
+              <div className="min-w-0 text-left">
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7f8ea8]">Profile</div>
+                <div className="max-w-[126px] truncate text-[13px] font-semibold text-white">My account</div>
+              </div>
+            </Link>
+
+            <Link
+              to="/settings"
+              className="flex h-[46px] min-w-[150px] items-center rounded-[16px] border px-3.5 shadow-[0_12px_30px_rgba(7,12,22,0.24)] transition-all hover:bg-white/[0.06]"
+              style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
+            >
+              <div className="min-w-0 text-left">
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#00C076]">Live account&nbsp;&nbsp;USD</div>
+                <div className="text-[15px] font-bold leading-tight text-white">0</div>
+              </div>
+            </Link>
+
+            <Link
+              to="/deposit"
+              className="inline-flex h-[38px] items-center gap-1.5 rounded px-4 text-[13px] font-bold text-white"
+              style={{ background: "#18a038", boxShadow: "0 2px 5px rgba(24,160,56,0.2)" }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Deposit
+            </Link>
+
+            <Link
+              to="/withdraw"
+              className="inline-flex h-[38px] items-center rounded px-4 text-[13px] font-bold text-white"
+              style={{ background: "var(--trading-control-bg)", border: "1px solid var(--trading-control-border)" }}
+            >
+              Withdrawal
             </Link>
           </div>
         </div>
       </header>
 
       <div className="flex">
-        <aside className="sticky top-[76px] hidden h-[calc(100vh-76px)] w-[92px] shrink-0 border-r border-[#263047] bg-[#1b2030] py-5 lg:block">
-          <nav className="flex h-full flex-col items-center gap-2">
-            {railItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.label === "Help";
-              return (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  className={`relative flex w-full flex-col items-center gap-1.5 px-2 py-3 text-center text-[12px] font-bold ${
-                    isActive ? "bg-[#2a3145] text-white" : "text-[#9fb2d0] hover:bg-[#222a3f] hover:text-white"
-                  }`}
-                >
-                  <Icon className="h-6 w-6" />
-                  <span>{item.label}</span>
-                  {item.badge ? (
-                    <span className="absolute right-4 top-2 rounded-full bg-[#2098e9] px-1.5 py-0.5 text-[10px] text-white">
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </Link>
-              );
-            })}
-            <div className="mt-auto grid gap-3 px-3">
-              <Link to="/affiliate-program" className="rounded-[8px] bg-[#0a4ca8] px-2 py-3 text-center text-xs font-bold text-[#bde5ff]">
-                PROMO
+        <aside
+          className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-[85px] shrink-0 overflow-hidden border-r lg:block"
+          style={{ background: "var(--trading-sidebar-bg)", borderRightColor: "var(--trading-border-color)" }}
+        >
+          <nav className="flex h-full flex-col items-center pb-4">
+            <div className="flex h-[70px] w-full items-start justify-center overflow-visible pt-[10px]">
+              <Link
+                to="/trade"
+                className="group relative flex h-[60px] w-[58px] flex-col items-center overflow-hidden rounded-[16px] border px-2.5 py-2 text-center transition-transform duration-200 hover:-translate-y-[1px] active:scale-[0.98]"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(42,168,122,0.98) 0%, rgba(20,112,94,0.98) 52%, rgba(12,58,73,0.98) 100%)",
+                  borderColor: "rgba(167, 255, 223, 0.24)",
+                  boxShadow: "0 16px 24px rgba(8, 87, 82, 0.24), inset 0 1px 0 rgba(255,255,255,0.14)",
+                }}
+              >
+                <span
+                  className="pointer-events-none absolute inset-0 opacity-90"
+                  style={{
+                    background:
+                      "radial-gradient(circle at top right, rgba(255,255,255,0.16), transparent 34%), radial-gradient(circle at bottom left, rgba(8,37,48,0.34), transparent 46%)",
+                  }}
+                />
+                <span className="relative mt-[2px] flex h-7 w-7 items-center justify-center rounded-[10px] border border-white/14 bg-white/10">
+                  <TrendingUp className="h-4 w-4 text-white" strokeWidth={2.6} />
+                </span>
+                <span className="relative mt-2 text-[10px] font-black tracking-[0.16em] text-white">TRADE</span>
               </Link>
-              <Link to="/affiliate-program" className="rounded-[8px] bg-[#1f62ff] px-2 py-3 text-center text-xs font-black text-white">
-                INIT FRIENDS
-              </Link>
-              <Link to="/trade" className="grid place-items-center text-[#9fb2d0]">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
+            </div>
+
+            <div className="mt-3 flex w-full flex-1 flex-col items-center space-y-2 overflow-y-auto">
+              {railItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.to}
+                    className="group relative flex w-full flex-col items-center justify-center py-3 text-white/85 transition-all hover:text-white"
+                  >
+                    <Icon className="mb-1.5 h-[26px] w-[26px] text-white/90 transition-transform duration-200 group-hover:scale-110 group-hover:text-white" strokeWidth={2.6} />
+                    <span className="relative top-[1px] text-[8px] font-extrabold tracking-wider text-white/90">{item.label}</span>
+                    {item.badge ? (
+                      <span className="absolute right-3 top-2 rounded-full bg-[#2098e9] px-1.5 py-0.5 text-[10px] font-bold text-white">
+                        {item.badge}
+                      </span>
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="flex w-full items-center justify-center">
+              <div className="mb-4 h-px w-[50px]" style={{ background: "var(--trading-border-color)" }} />
+            </div>
+
+            <div className="flex w-full flex-col items-center space-y-3 pb-2">
+              {railBottomItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.to}
+                    className={`group relative flex w-full flex-col items-center justify-center py-2 transition-all ${
+                      item.active ? "text-[#00C076]" : "text-white/80 hover:text-white"
+                    }`}
+                  >
+                    {item.active ? (
+                      <span className="absolute left-0 top-1/2 h-[60%] w-[3px] -translate-y-1/2 rounded-r-full bg-[#00C076] shadow-[0_0_8px_#00c076]" />
+                    ) : null}
+                    <Icon className="mb-1 h-[24px] w-[24px] transition-transform group-hover:scale-110" strokeWidth={2.4} />
+                    <span className="text-[8px] font-extrabold tracking-wider">{item.label}</span>
+                  </Link>
+                );
+              })}
             </div>
           </nav>
         </aside>

@@ -66,28 +66,28 @@ interface WorkspaceReferralProps {
 
 const PromoIllustration = () => (
   <div className="relative h-full min-h-[150px] overflow-hidden">
-    <div className="absolute bottom-[-44px] right-0 h-[210px] w-[310px] rounded-full bg-[#2f9cf5]/10 blur-[24px]" />
-    <div className="absolute bottom-0 right-[178px] h-[142px] w-[58px] rounded-t-[32px] bg-[#86a5cf] shadow-[0_0_0_2px_rgba(255,255,255,0.16)_inset]" />
-    <div className="absolute right-[194px] top-[30px] h-[48px] w-[48px] rounded-full bg-[#b5c8e8] shadow-[0_0_0_2px_rgba(255,255,255,0.16)_inset]" />
-    <div className="absolute right-[201px] top-[48px] h-[3px] w-[7px] rounded-full bg-[#2a3650]" />
-    <div className="absolute right-[181px] top-[48px] h-[3px] w-[7px] rounded-full bg-[#2a3650]" />
-    <div className="absolute right-[189px] top-[62px] h-[7px] w-[16px] rounded-b-full border-b-2 border-[#2a3650]" />
-    <div className="absolute right-[238px] top-[72px] h-[78px] w-[34px] -rotate-12 rounded-[10px] bg-[#7898c5] shadow-[0_0_0_2px_rgba(255,255,255,0.14)_inset]" />
-    <div className="absolute right-[229px] top-[99px] h-[12px] w-[25px] rounded-full bg-[#2f9cf5]" />
-    <div className="absolute bottom-0 right-[48px] h-[160px] w-[76px] rounded-t-[40px] bg-[#6f8fbf] shadow-[0_0_0_2px_rgba(255,255,255,0.16)_inset]" />
-    <div className="absolute right-[77px] top-[22px] h-[54px] w-[54px] rounded-full bg-[#a6bee3] shadow-[0_0_0_2px_rgba(255,255,255,0.16)_inset]" />
-    <div className="absolute right-[94px] top-[42px] h-[3px] w-[7px] rounded-full bg-[#2a3650]" />
-    <div className="absolute right-[73px] top-[42px] h-[3px] w-[7px] rounded-full bg-[#2a3650]" />
-    <div className="absolute right-[82px] top-[56px] h-[7px] w-[16px] rounded-b-full border-b-2 border-[#2a3650]" />
-    <div className="absolute right-[10px] top-[88px] h-[88px] w-[44px] rotate-12 rounded-[12px] bg-[#8ea8d1] shadow-[0_0_0_2px_rgba(255,255,255,0.15)_inset]" />
-    <div className="absolute right-[27px] top-[105px] h-[42px] w-[4px] rounded bg-[#dce7f7]" />
+    <div className="absolute bottom-[-44px] right-0 h-[210px] w-[310px] rounded-full bg-[#0b7557]/10 blur-[24px]" />
+    <div className="absolute bottom-0 right-[178px] h-[142px] w-[58px] rounded-t-[32px] bg-[#558b79] shadow-[0_0_0_2px_rgba(255,255,255,0.16)_inset]" />
+    <div className="absolute right-[194px] top-[30px] h-[48px] w-[48px] rounded-full bg-[#93cbb7] shadow-[0_0_0_2px_rgba(255,255,255,0.16)_inset]" />
+    <div className="absolute right-[201px] top-[48px] h-[3px] w-[7px] rounded-full bg-[#1f3f37]" />
+    <div className="absolute right-[181px] top-[48px] h-[3px] w-[7px] rounded-full bg-[#1f3f37]" />
+    <div className="absolute right-[189px] top-[62px] h-[7px] w-[16px] rounded-b-full border-b-2 border-[#1f3f37]" />
+    <div className="absolute right-[238px] top-[72px] h-[78px] w-[34px] -rotate-12 rounded-[10px] bg-[#477564] shadow-[0_0_0_2px_rgba(255,255,255,0.14)_inset]" />
+    <div className="absolute right-[229px] top-[99px] h-[12px] w-[25px] rounded-full bg-[#0b7557]" />
+    <div className="absolute bottom-0 right-[48px] h-[160px] w-[76px] rounded-t-[40px] bg-[#3f6f5f] shadow-[0_0_0_2px_rgba(255,255,255,0.16)_inset]" />
+    <div className="absolute right-[77px] top-[22px] h-[54px] w-[54px] rounded-full bg-[#7fbca5] shadow-[0_0_0_2px_rgba(255,255,255,0.16)_inset]" />
+    <div className="absolute right-[94px] top-[42px] h-[3px] w-[7px] rounded-full bg-[#1f3f37]" />
+    <div className="absolute right-[73px] top-[42px] h-[3px] w-[7px] rounded-full bg-[#1f3f37]" />
+    <div className="absolute right-[82px] top-[56px] h-[7px] w-[16px] rounded-b-full border-b-2 border-[#1f3f37]" />
+    <div className="absolute right-[10px] top-[88px] h-[88px] w-[44px] rotate-12 rounded-[12px] bg-[#5c8e7b] shadow-[0_0_0_2px_rgba(255,255,255,0.15)_inset]" />
+    <div className="absolute right-[27px] top-[105px] h-[42px] w-[4px] rounded bg-[#c7fff0]" />
   </div>
 );
 
 const MiniBrandMark = () => (
   <div className="relative h-[126px] w-[126px]">
-    <div className="absolute inset-y-0 left-1 w-[72px] rounded-l-[12px] rounded-r-[54px] bg-[#2f9cf5]" />
-    <div className="absolute bottom-2 left-[56px] h-[58px] w-[58px] rounded-full bg-[#8ecbff]" />
+    <div className="absolute inset-y-0 left-1 w-[72px] rounded-l-[12px] rounded-r-[54px] bg-[#0b7557]" />
+    <div className="absolute bottom-2 left-[56px] h-[58px] w-[58px] rounded-full bg-[#5ee0bd]" />
     <div className="absolute left-8 top-9 h-10 w-12 rounded-lg border border-white/50" />
     <div className="absolute left-11 top-12 h-2 w-7 rounded-full bg-white/75" />
   </div>
@@ -100,7 +100,7 @@ const EmptyFriendsState = ({ onShare }: { onShare: () => void }) => (
       <div className="mx-auto mt-2 h-[16px] w-[196px] rounded bg-white/[0.035]" />
       <div className="mx-auto mt-2 h-[16px] w-[150px] rounded bg-white/[0.035]" />
       <div className="absolute left-1/2 top-1 flex h-[54px] w-[54px] -translate-x-1/2 items-center justify-center rounded-[10px] border border-white/[0.08] bg-white/[0.06]">
-        <UserRoundPlus className="h-7 w-7 text-[#9db7da]" />
+        <UserRoundPlus className="h-7 w-7 text-[#9ddac6]" />
       </div>
     </div>
     <h3 className="text-[16px] font-bold text-[var(--trading-text-color)]">No referred traders yet</h3>
@@ -110,7 +110,7 @@ const EmptyFriendsState = ({ onShare }: { onShare: () => void }) => (
     <button
       type="button"
       onClick={onShare}
-      className="mt-4 flex h-[34px] w-[250px] max-w-full items-center justify-center gap-2 rounded-[7px] bg-[#2f9cf5] text-[12px] font-bold text-white hover:brightness-110"
+      className="mt-4 flex h-[34px] w-[250px] max-w-full items-center justify-center gap-2 rounded-[7px] bg-[#0b7557] text-[12px] font-bold text-white hover:brightness-110"
     >
       <Share2 className="h-4 w-4" />
       Share your link
@@ -336,7 +336,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
       <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_320px] gap-4">
         <section className="flex min-h-0 flex-col rounded-[10px] border p-5" style={panelStyle}>
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#2f9cf5]/15 text-[#9fd0ff]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0b7557]/15 text-[#5ee0bd]">
               <Icon className="h-5 w-5" />
             </div>
             <div>
@@ -352,7 +352,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
               </div>
             ))}
           </div>
-          <div className="mt-auto rounded-[9px] border border-[#2f9cf5]/20 bg-[#2f9cf5]/10 p-4 text-[12px] leading-5 text-[#c9e6ff]">
+          <div className="mt-auto rounded-[9px] border border-[#0b7557]/20 bg-[#0b7557]/10 p-4 text-[12px] leading-5 text-[#c7fff0]">
             These panels are connected to the logged-in profile and platform settings. Changing tabs keeps the page in-place without losing the referral calculator state.
           </div>
         </section>
@@ -426,7 +426,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
               className="flex h-[38px] w-full items-center justify-center gap-2 rounded-[8px] border text-[13px] font-bold hover:brightness-110"
               style={softPanelStyle}
             >
-              <Share2 className="h-4 w-4 text-[#9badc8]" />
+              <Share2 className="h-4 w-4 text-[#9ddac6]" />
               Share
             </button>
           </div>
@@ -449,7 +449,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
             </div>
           </div>
 
-          <div className="mt-auto rounded-[10px] border border-[#2f9cf5]/20 bg-[#2f9cf5]/10 p-3 text-[11px] leading-5 text-[#c9e6ff]">
+          <div className="mt-auto rounded-[10px] border border-[#0b7557]/20 bg-[#0b7557]/10 p-3 text-[11px] leading-5 text-[#c7fff0]">
             Promo code and referral link both point to Init Option signup. The signup form reads the `ref` value automatically.
           </div>
         </aside>
@@ -462,7 +462,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                 type="button"
                 onClick={() => handleTabClick(tab.id)}
                 className={`h-[34px] rounded-[7px] border px-4 text-[11px] font-bold uppercase tracking-[0.04em] transition-colors ${
-                  activeTab === tab.id ? "border-[#2f9cf5]/50 bg-[#2f9cf5] text-white" : "text-[var(--trading-muted-color)] hover:text-white"
+                  activeTab === tab.id ? "border-[#0b7557]/50 bg-[#0b7557] text-white" : "text-[var(--trading-muted-color)] hover:text-white"
                 }`}
                 style={activeTab === tab.id ? undefined : softPanelStyle}
               >
@@ -478,7 +478,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
               <section className="grid min-h-0 grid-cols-[minmax(0,1fr)_320px] overflow-hidden rounded-[12px] border" style={panelStyle}>
                 <div className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2f9cf5]/15 text-[#9fd0ff]">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0b7557]/15 text-[#5ee0bd]">
                       <UsersRound className="h-5 w-5" />
                     </div>
                     <div>
@@ -500,7 +500,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                       type="button"
                       onClick={() => setDetailMode("calculator")}
                       className={`flex h-[34px] items-center gap-2 rounded-[7px] border px-4 text-[12px] font-bold ${
-                        detailMode === "calculator" ? "border-[#2f9cf5]/40 bg-[#2f9cf5]/20 text-[#c9e6ff]" : "text-[var(--trading-muted-color)]"
+                        detailMode === "calculator" ? "border-[#0b7557]/40 bg-[#0b7557]/20 text-[#c7fff0]" : "text-[var(--trading-muted-color)]"
                       }`}
                       style={detailMode === "calculator" ? undefined : softPanelStyle}
                     >
@@ -511,7 +511,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                       type="button"
                       onClick={() => setDetailMode("terms")}
                       className={`flex h-[34px] items-center gap-2 rounded-[7px] border px-4 text-[12px] font-bold ${
-                        detailMode === "terms" ? "border-[#2f9cf5]/40 bg-[#2f9cf5]/20 text-[#c9e6ff]" : "text-[var(--trading-muted-color)]"
+                        detailMode === "terms" ? "border-[#0b7557]/40 bg-[#0b7557]/20 text-[#c7fff0]" : "text-[var(--trading-muted-color)]"
                       }`}
                       style={detailMode === "terms" ? undefined : softPanelStyle}
                     >
@@ -539,7 +539,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                         step={10}
                         value={depositAmount}
                         onChange={(event) => setDepositAmount(Number(event.target.value))}
-                        className="mt-4 h-[4px] w-full accent-[#2f9cf5]"
+                        className="mt-4 h-[4px] w-full accent-[#0b7557]"
                       />
                       <div className="mt-1 flex justify-between text-[11px] font-semibold text-[var(--trading-muted-color)]">
                         <span>$10</span>
@@ -575,7 +575,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                       `Referral abuse, self-referrals, or duplicate accounts can be reviewed before rewards are paid.`,
                     ].map((term) => (
                       <div key={term} className="flex gap-3 rounded-[10px] border p-4 text-[12px] leading-5" style={softPanelStyle}>
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#9fd0ff]" />
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#5ee0bd]" />
                         <span>{term}</span>
                       </div>
                     ))}
@@ -583,7 +583,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                 )}
               </section>
 
-              <section className="flex min-h-0 items-center justify-between rounded-[12px] border border-[#2f9cf5]/20 bg-[#2f9cf5] px-4 text-white">
+              <section className="flex min-h-0 items-center justify-between rounded-[12px] border border-[#0b7557]/20 bg-[#0b7557] px-4 text-white">
                 <div className="min-w-0">
                   <h2 className="truncate text-[18px] font-bold">Promo materials for Init Option partners</h2>
                   <p className="mt-1 truncate text-[12px] font-semibold text-white/85">
@@ -629,7 +629,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                       <CalendarDays className="h-4 w-4" />
                       2026-01-01 - 2026-05-15
                     </button>
-                    <button type="button" className="h-[32px] rounded-[7px] bg-[#2f9cf5] px-4 text-[12px] font-bold text-white">Apply</button>
+                    <button type="button" className="h-[32px] rounded-[7px] bg-[#0b7557] px-4 text-[12px] font-bold text-white">Apply</button>
                   </div>
                 </div>
                 <div className="mt-2 h-[calc(100%-46px)] min-h-0">
@@ -668,7 +668,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                     type="button"
                     onClick={() => setShareMode(item.id)}
                     className={`h-[34px] rounded-[7px] border px-4 text-[12px] font-bold ${
-                      shareMode === item.id ? "border-[#2f9cf5]/50 bg-[#2f9cf5]/20 text-[#c9e6ff]" : "text-[var(--trading-muted-color)]"
+                      shareMode === item.id ? "border-[#0b7557]/50 bg-[#0b7557]/20 text-[#c7fff0]" : "text-[var(--trading-muted-color)]"
                     }`}
                     style={shareMode === item.id ? undefined : softPanelStyle}
                   >
@@ -717,7 +717,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                 </div>
               </div>
 
-              {copiedField ? <p className="mt-3 text-[12px] font-bold text-[#9fd0ff]">Copied {copiedField}.</p> : null}
+              {copiedField ? <p className="mt-3 text-[12px] font-bold text-[#5ee0bd]">Copied {copiedField}.</p> : null}
             </div>
           </div>
         </div>
