@@ -1795,10 +1795,23 @@ const TradingChart = ({
       };
     }
 
+    const imageBaseColor =
+      tradingPreferences.template === "ivory"
+        ? "#efe6d6"
+        : tradingPreferences.template === "amber"
+          ? "#1d1100"
+          : tradingPreferences.template === "graphite"
+            ? "#101215"
+            : "#111827";
+    const imageOverlay =
+      tradingPreferences.template === "ivory"
+        ? "rgba(239,230,214,0.28), rgba(239,230,214,0.28)"
+        : "rgba(11,16,24,0.34), rgba(11,16,24,0.34)";
+
     return {
       ...mobileTouchSurface,
-      backgroundColor: tradingPreferences.template === "light" ? "#dfe7f2" : "#111827",
-      backgroundImage: `linear-gradient(rgba(11,16,24,0.34), rgba(11,16,24,0.34)), url("${tradingPreferences.chartBackgroundImage}")`,
+      backgroundColor: imageBaseColor,
+      backgroundImage: `linear-gradient(${imageOverlay}), url("${tradingPreferences.chartBackgroundImage}")`,
       backgroundPosition: "center",
       backgroundSize: "cover",
     };

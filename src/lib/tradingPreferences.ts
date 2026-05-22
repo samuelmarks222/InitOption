@@ -1,6 +1,53 @@
 import { useEffect, useState } from "react";
 
-export type TradingTemplate = "light" | "twilight" | "fullNight";
+export type TradingTemplate = "default" | "graphite" | "amber" | "ivory";
+
+export const TRADING_TEMPLATE_OPTIONS: Array<{
+  id: TradingTemplate;
+  label: string;
+  surface: string;
+  panel: string;
+  line: string;
+  grid: string;
+  text: string;
+}> = [
+  {
+    id: "default",
+    label: "Default",
+    surface: "#17191c",
+    panel: "#22242a",
+    line: "#ff7a1a",
+    grid: "#5a351d",
+    text: "#ffffff",
+  },
+  {
+    id: "graphite",
+    label: "Graphite",
+    surface: "#0d0f12",
+    panel: "#17191d",
+    line: "#f1f3f5",
+    grid: "#545960",
+    text: "#f8fafc",
+  },
+  {
+    id: "amber",
+    label: "Amber",
+    surface: "#1d1100",
+    panel: "#2b1b04",
+    line: "#ff7a1a",
+    grid: "#6e3f0d",
+    text: "#fff3e2",
+  },
+  {
+    id: "ivory",
+    label: "Ivory",
+    surface: "#efe6d6",
+    panel: "#fff4df",
+    line: "#ff7a1a",
+    grid: "#d4b98f",
+    text: "#2a2118",
+  },
+];
 
 export interface TradingPreferences {
   language: "en";
@@ -22,7 +69,7 @@ export const TRADING_PREFERENCES_UPDATED_EVENT = "trading-terminal-preferences-u
 export const DEFAULT_TRADING_PREFERENCES: TradingPreferences = {
   language: "en",
   timezone: "UTC+03:00",
-  template: "fullNight",
+  template: "default",
   gridOpacity: 7,
   autoScrolling: true,
   oneClickTrade: true,
@@ -37,7 +84,16 @@ const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 const TIMEZONE_PATTERN = /^UTC[+-](0\d|1[0-4]):[03]0$/;
 
 const isTradingTemplate = (value: unknown): value is TradingTemplate =>
-  value === "light" || value === "twilight" || value === "fullNight";
+  value === "default" || value === "graphite" || value === "amber" || value === "ivory";
+
+const normalizeTemplate = (value: unknown): TradingTemplate => {
+  if (isTradingTemplate(value)) return value;
+  if (value === "fullNight" || value === "dark") return "default";
+  if (value === "twilight" || value === "darker") return "graphite";
+  if (value === "dark-orange") return "amber";
+  if (value === "light") return "ivory";
+  return DEFAULT_TRADING_PREFERENCES.template;
+};
 
 const normalizeColor = (value: unknown, fallback: string) =>
   typeof value === "string" && HEX_COLOR_PATTERN.test(value) ? value.toLowerCase() : fallback;
@@ -50,7 +106,7 @@ export const normalizeTradingPreferences = (
     typeof value?.timezone === "string" && TIMEZONE_PATTERN.test(value.timezone)
       ? value.timezone
       : DEFAULT_TRADING_PREFERENCES.timezone,
-  template: isTradingTemplate(value?.template) ? value.template : DEFAULT_TRADING_PREFERENCES.template,
+  template: normalizeTemplate(value?.template),
   gridOpacity:
     typeof value?.gridOpacity === "number"
       ? Math.max(0, Math.min(10, Math.round(value.gridOpacity)))
@@ -131,19 +187,21 @@ export const getTradingTimezone = (timezone: string) => {
 
 export const getTradingChartSurfaceColor = (preferences: TradingPreferences, fallback: string) => {
   if (preferences.chartBackgroundImage) return "rgba(0,0,0,0)";
-  if (preferences.template === "light") return "#e7edf7";
-  if (preferences.template === "twilight") return "#172338";
+  if (preferences.template === "ivory") return "#efe6d6";
+  if (preferences.template === "graphite") return "#101215";
+  if (preferences.template === "amber") return "#1d1100";
   return fallback;
 };
 
 export const getTradingChartTextColor = (preferences: TradingPreferences) =>
-  preferences.template === "light" ? "#152033" : "#eef3fb";
+  preferences.template === "ivory" ? "#2a2118" : "#eef3fb";
 
 export const getTradingGridColor = (preferences: TradingPreferences) => {
   const alpha = Math.max(0, Math.min(0.18, preferences.gridOpacity * 0.018));
-  return preferences.template === "light"
-    ? `rgba(21, 32, 51, ${alpha + 0.02})`
-    : `rgba(255, 255, 255, ${alpha})`;
+  if (preferences.template === "ivory") return `rgba(86, 57, 22, ${alpha + 0.03})`;
+  if (preferences.template === "amber") return `rgba(255, 138, 24, ${alpha + 0.02})`;
+  if (preferences.template === "graphite") return `rgba(255, 255, 255, ${alpha + 0.02})`;
+  return `rgba(255, 255, 255, ${alpha})`;
 };
 
 export const useTradingPreferences = () => {

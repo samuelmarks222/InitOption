@@ -36,6 +36,9 @@ type IconType = ComponentType<{ className?: string; strokeWidth?: number }>;
 type HelpPanel = "support" | "guides" | "support-chat" | "apps";
 type GuideCategoryId = "platform" | "strategies" | "glossary" | "videos";
 type VisualVariant = GuideMediaKey;
+type GuideShellTarget =
+  | { kind: "panel"; panel: HelpPanel }
+  | { kind: "topic"; topicId: string; category?: GuideCategoryId };
 
 interface GuideTopic {
   id: string;
@@ -386,7 +389,7 @@ const contentById: Record<string, GuideContent> = {
     intro:
       "The platform supports visual themes for different lighting conditions. Open settings, choose a theme, and apply it to the full dashboard area.",
     paragraphs: [
-      "Use the lighter theme in bright rooms, twilight for balanced contrast, and full night for long trading sessions.",
+      "Use Default for the standard dark dashboard, Graphite for high-contrast black, Amber for a warm low-light view, and Ivory in bright rooms.",
     ],
     figure: { title: "Theme controls", caption: "Fig. 7. Switching a platform layout theme", variant: "settings" },
   },
@@ -870,18 +873,18 @@ const contentById: Record<string, GuideContent> = {
   },
 };
 
-const railItems: Array<{ label: string; to: string; icon: IconType; badge?: string }> = [
-  { label: "CHAT", to: "/trade", icon: Headset, badge: "9" },
-  { label: "ACCOUNT", to: "/settings", icon: User },
-  { label: "TOURNAMENTS", to: "/tournaments", icon: Trophy },
-  { label: "LEADERS", to: "/trade", icon: BarChart3 },
-  { label: "... MORE", to: "/trade", icon: Grid },
+const railItems: Array<{ label: string; target: GuideShellTarget; icon: IconType; badge?: string }> = [
+  { label: "CHAT", target: { kind: "panel", panel: "support-chat" }, icon: Headset, badge: "9" },
+  { label: "ACCOUNT", target: { kind: "topic", topicId: "profile" }, icon: User },
+  { label: "TOURNAMENTS", target: { kind: "topic", topicId: "tournaments" }, icon: Trophy },
+  { label: "LEADERS", target: { kind: "topic", topicId: "top-ranked-trades" }, icon: BarChart3 },
+  { label: "... MORE", target: { kind: "topic", topicId: "market" }, icon: Grid },
 ];
 
-const railBottomItems: Array<{ label: string; to: string; icon: IconType; active?: boolean }> = [
-  { label: "SETTINGS", to: "/settings", icon: Settings },
-  { label: "JOIN US", to: "/affiliate-program", icon: Handshake },
-  { label: "HELP", to: "/trading-guide", icon: HelpCircle, active: true },
+const railBottomItems: Array<{ label: string; target: GuideShellTarget; icon: IconType }> = [
+  { label: "SETTINGS", target: { kind: "topic", topicId: "profile-settings" }, icon: Settings },
+  { label: "JOIN US", target: { kind: "topic", topicId: "social-rewards" }, icon: Handshake },
+  { label: "HELP", target: { kind: "topic", topicId: "help" }, icon: HelpCircle },
 ];
 
 const flattenTopics = (topics: GuideTopic[]): GuideTopic[] =>
@@ -1122,13 +1125,13 @@ const SupportChatPanel = () => (
         Start a support conversation from the trading workspace. Keep transaction IDs, phone numbers, and screenshots
         ready when the issue is about payments.
       </p>
-      <Link
-        to="/trade"
+      <button
+        type="button"
         className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-[8px] bg-[#2d9cff] px-5 py-3 text-sm font-bold text-white"
       >
         Open support chat
         <ArrowRight className="h-4 w-4" />
-      </Link>
+      </button>
     </div>
     <div className="rounded-[18px] border border-white/8 bg-[#111527] p-6">
       <div className="mb-5 flex items-center gap-3 border-b border-white/8 pb-4">
@@ -1215,6 +1218,39 @@ const TradingGuidePage = () => {
     setActivePanel("guides");
   };
 
+  const openGuideTopic = (topicId: string, categoryId: GuideCategoryId = "platform") => {
+    const topics = topicsByCategory[categoryId];
+    setActivePanel("guides");
+    setActiveCategory(categoryId);
+    setSelectedTopicId(topicId);
+    setOpenIds(() => {
+      const next = getDefaultOpenSections(topics);
+      collectOpenParents(topics, topicId).forEach((parentId) => next.add(parentId));
+      return next;
+    });
+  };
+
+  const openShellTarget = (target: GuideShellTarget) => {
+    if (target.kind === "panel") {
+      setActivePanel(target.panel);
+      return;
+    }
+
+    openGuideTopic(target.topicId, target.category);
+  };
+
+  const isShellTargetActive = (target: GuideShellTarget) => {
+    if (target.kind === "panel") {
+      return activePanel === target.panel;
+    }
+
+    return (
+      activePanel === "guides" &&
+      activeCategory === (target.category ?? "platform") &&
+      selectedTopic.id === target.topicId
+    );
+  };
+
   const handleTabClick = (id: HelpPanel | "reviews") => {
     if (id === "reviews") {
       navigate("/reviews");
@@ -1260,8 +1296,9 @@ const TradingGuidePage = () => {
           </Link>
 
           <div className="hidden min-w-0 items-center justify-end gap-2 md:flex">
-            <Link
-              to="/settings"
+            <button
+              type="button"
+              onClick={() => openGuideTopic("profile")}
               className="group hidden h-[46px] items-center gap-3 rounded-[16px] border px-3.5 shadow-[0_12px_30px_rgba(7,12,22,0.24)] transition-all hover:bg-white/[0.06] lg:flex"
               style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
             >
@@ -1272,10 +1309,11 @@ const TradingGuidePage = () => {
                 <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7f8ea8]">Profile</div>
                 <div className="max-w-[126px] truncate text-[13px] font-semibold text-white">My account</div>
               </div>
-            </Link>
+            </button>
 
-            <Link
-              to="/settings"
+            <button
+              type="button"
+              onClick={() => openGuideTopic("real-account")}
               className="flex h-[46px] min-w-[150px] items-center rounded-[16px] border px-3.5 shadow-[0_12px_30px_rgba(7,12,22,0.24)] transition-all hover:bg-white/[0.06]"
               style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
             >
@@ -1283,24 +1321,26 @@ const TradingGuidePage = () => {
                 <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#00C076]">Live account&nbsp;&nbsp;USD</div>
                 <div className="text-[15px] font-bold leading-tight text-white">0</div>
               </div>
-            </Link>
+            </button>
 
-            <Link
-              to="/deposit"
+            <button
+              type="button"
+              onClick={() => openGuideTopic("deposit")}
               className="inline-flex h-[38px] items-center gap-1.5 rounded px-4 text-[13px] font-bold text-white"
               style={{ background: "#18a038", boxShadow: "0 2px 5px rgba(24,160,56,0.2)" }}
             >
               <Plus className="h-3.5 w-3.5" />
               Deposit
-            </Link>
+            </button>
 
-            <Link
-              to="/withdraw"
+            <button
+              type="button"
+              onClick={() => openGuideTopic("withdrawal")}
               className="inline-flex h-[38px] items-center rounded px-4 text-[13px] font-bold text-white"
               style={{ background: "var(--trading-control-bg)", border: "1px solid var(--trading-control-border)" }}
             >
               Withdrawal
-            </Link>
+            </button>
           </div>
         </div>
       </header>
@@ -1339,20 +1379,27 @@ const TradingGuidePage = () => {
             <div className="mt-3 flex w-full flex-1 flex-col items-center space-y-2 overflow-y-auto">
               {railItems.map((item) => {
                 const Icon = item.icon;
+                const isActive = isShellTargetActive(item.target);
                 return (
-                  <Link
+                  <button
                     key={item.label}
-                    to={item.to}
-                    className="group relative flex w-full flex-col items-center justify-center py-3 text-white/85 transition-all hover:text-white"
+                    type="button"
+                    onClick={() => openShellTarget(item.target)}
+                    className={`group relative flex w-full flex-col items-center justify-center py-3 transition-all ${
+                      isActive ? "text-[#00C076]" : "text-white/85 hover:text-white"
+                    }`}
                   >
-                    <Icon className="mb-1.5 h-[26px] w-[26px] text-white/90 transition-transform duration-200 group-hover:scale-110 group-hover:text-white" strokeWidth={2.6} />
-                    <span className="relative top-[1px] text-[8px] font-extrabold tracking-wider text-white/90">{item.label}</span>
+                    {isActive ? (
+                      <span className="absolute left-0 top-1/2 h-[60%] w-[3px] -translate-y-1/2 rounded-r-full bg-[#00C076] shadow-[0_0_8px_#00c076]" />
+                    ) : null}
+                    <Icon className="mb-1.5 h-[26px] w-[26px] transition-transform duration-200 group-hover:scale-110" strokeWidth={2.6} />
+                    <span className="relative top-[1px] text-[8px] font-extrabold tracking-wider">{item.label}</span>
                     {item.badge ? (
                       <span className="absolute right-3 top-2 rounded-full bg-[#2098e9] px-1.5 py-0.5 text-[10px] font-bold text-white">
                         {item.badge}
                       </span>
                     ) : null}
-                  </Link>
+                  </button>
                 );
               })}
             </div>
@@ -1364,20 +1411,22 @@ const TradingGuidePage = () => {
             <div className="flex w-full flex-col items-center space-y-3 pb-2">
               {railBottomItems.map((item) => {
                 const Icon = item.icon;
+                const isActive = isShellTargetActive(item.target);
                 return (
-                  <Link
+                  <button
                     key={item.label}
-                    to={item.to}
+                    type="button"
+                    onClick={() => openShellTarget(item.target)}
                     className={`group relative flex w-full flex-col items-center justify-center py-2 transition-all ${
-                      item.active ? "text-[#00C076]" : "text-white/80 hover:text-white"
+                      isActive ? "text-[#00C076]" : "text-white/80 hover:text-white"
                     }`}
                   >
-                    {item.active ? (
+                    {isActive ? (
                       <span className="absolute left-0 top-1/2 h-[60%] w-[3px] -translate-y-1/2 rounded-r-full bg-[#00C076] shadow-[0_0_8px_#00c076]" />
                     ) : null}
                     <Icon className="mb-1 h-[24px] w-[24px] transition-transform group-hover:scale-110" strokeWidth={2.4} />
                     <span className="text-[8px] font-extrabold tracking-wider">{item.label}</span>
-                  </Link>
+                  </button>
                 );
               })}
             </div>

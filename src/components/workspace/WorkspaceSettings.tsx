@@ -1,16 +1,10 @@
 import { useRef } from "react";
-import { Check, Image, Minus, Plus, Sun, Moon, CloudSun, Trash2 } from "lucide-react";
+import { Check, Image, Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import {
-  type TradingTemplate,
+  TRADING_TEMPLATE_OPTIONS,
   useTradingPreferences,
 } from "@/lib/tradingPreferences";
-
-const TEMPLATE_OPTIONS: Array<{ id: TradingTemplate; label: string; icon: typeof Sun }> = [
-  { id: "light", label: "Light Mode", icon: Sun },
-  { id: "twilight", label: "Twilight", icon: CloudSun },
-  { id: "fullNight", label: "Full Night", icon: Moon },
-];
 
 const TIMEZONE_OPTIONS = [
   "UTC-05:00",
@@ -58,8 +52,8 @@ export const WorkspaceSettings = () => {
 
   return (
     <div
-      className="h-full overflow-y-auto px-4 pb-6 pt-2 text-white no-scrollbar"
-      style={{ background: "var(--trading-workspace-panel-bg)" }}
+      className="h-full overflow-y-auto px-4 pb-6 pt-2 no-scrollbar"
+      style={{ background: "var(--trading-workspace-panel-bg)", color: "var(--trading-text-color)" }}
     >
       <div className="space-y-4">
         <div className="space-y-1.5">
@@ -67,8 +61,12 @@ export const WorkspaceSettings = () => {
           <select
             value={preferences.language}
             onChange={() => updatePreferences({ language: "en" })}
-            className="h-10 w-full rounded-[3px] border border-[#596278] bg-[#1d2332] px-3 text-[12px] font-semibold text-white outline-none"
-            style={{ background: "var(--trading-panel-bg)", borderColor: "var(--trading-tool-border)" }}
+            className="h-10 w-full rounded-[3px] border px-3 text-[12px] font-semibold outline-none"
+            style={{
+              background: "var(--trading-panel-bg)",
+              borderColor: "var(--trading-tool-border)",
+              color: "var(--trading-text-color)",
+            }}
           >
             <option value="en">English</option>
           </select>
@@ -79,8 +77,12 @@ export const WorkspaceSettings = () => {
           <select
             value={preferences.timezone}
             onChange={(event) => updatePreferences({ timezone: event.target.value })}
-            className="h-10 w-full rounded-[3px] border border-[#596278] bg-[#1d2332] px-3 text-[12px] font-semibold text-white outline-none"
-            style={{ background: "var(--trading-panel-bg)", borderColor: "var(--trading-tool-border)" }}
+            className="h-10 w-full rounded-[3px] border px-3 text-[12px] font-semibold outline-none"
+            style={{
+              background: "var(--trading-panel-bg)",
+              borderColor: "var(--trading-tool-border)",
+              color: "var(--trading-text-color)",
+            }}
           >
             {TIMEZONE_OPTIONS.map((timezone) => (
               <option key={timezone} value={timezone}>
@@ -90,10 +92,9 @@ export const WorkspaceSettings = () => {
           </select>
         </div>
 
-        <SectionLabel>Template</SectionLabel>
-        <div className="space-y-2">
-          {TEMPLATE_OPTIONS.map((option) => {
-            const Icon = option.icon;
+        <SectionLabel>Theme Settings</SectionLabel>
+        <div className="grid grid-cols-2 gap-2">
+          {TRADING_TEMPLATE_OPTIONS.map((option) => {
             const selected = preferences.template === option.id;
 
             return (
@@ -101,21 +102,35 @@ export const WorkspaceSettings = () => {
                 key={option.id}
                 type="button"
                 onClick={() => updatePreferences({ template: option.id })}
-                className={`flex h-9 w-full items-center justify-between rounded-full border px-3 text-left transition-all ${
-                  selected
-                    ? "border-[#1584ff] bg-white text-[#111827] shadow-[0_0_0_1px_rgba(21,132,255,0.35)]"
-                    : "border-[#15456e] bg-[#1c2437] text-white hover:border-[#2876b7]"
-                }`}
+                className="h-[58px] overflow-hidden rounded-[6px] border-2 text-left transition-all"
+                style={{
+                  background: option.surface,
+                  borderColor: selected ? option.line : "var(--trading-control-border)",
+                }}
               >
-                <span className="flex items-center gap-2 text-[12px] font-bold">
-                  <Icon className={`h-4 w-4 ${selected ? "text-[#ff8a00]" : "text-[#ff8a00]"}`} />
-                  {option.label}
-                </span>
                 <span
-                  className={`h-4 w-4 rounded-full transition-colors ${
-                    selected ? "bg-[#1683f5]" : "bg-[#3c465c]"
-                  }`}
-                />
+                  className="flex h-full w-full items-center justify-between px-2"
+                  style={{ background: `linear-gradient(135deg, ${option.surface} 0%, ${option.panel} 100%)` }}
+                >
+                  <svg viewBox="0 0 82 34" className="h-full w-[82px] opacity-90" aria-hidden="true">
+                    <polyline
+                      points="0,25 10,19 20,23 31,13 42,21 53,10 65,16 76,8 82,12"
+                      fill="none"
+                      stroke={option.line}
+                      strokeWidth="2"
+                    />
+                    <line x1="0" y1="21" x2="82" y2="21" stroke={option.grid} strokeWidth="1" strokeDasharray="3" opacity="0.7" />
+                    <circle cx="76" cy="8" r="3" fill={option.line} opacity="0.85" />
+                  </svg>
+                  <span className="sr-only">{option.label}</span>
+                  <span
+                    className="h-3.5 w-3.5 rounded-full border"
+                    style={{
+                      background: selected ? option.line : "transparent",
+                      borderColor: selected ? option.line : option.grid,
+                    }}
+                  />
+                </span>
               </button>
             );
           })}
@@ -132,7 +147,8 @@ export const WorkspaceSettings = () => {
               <button
                 type="button"
                 onClick={() => updateGridOpacity(-1)}
-                className="flex h-6 w-6 items-center justify-center rounded-full bg-[#535b70] text-white hover:bg-[#626b82]"
+                className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--trading-accent-contrast-color)] hover:brightness-110"
+                style={{ background: "var(--trading-accent-color)" }}
               >
                 <Minus className="h-3 w-3" strokeWidth={3} />
               </button>
@@ -140,7 +156,8 @@ export const WorkspaceSettings = () => {
               <button
                 type="button"
                 onClick={() => updateGridOpacity(1)}
-                className="flex h-6 w-6 items-center justify-center rounded-full bg-[#535b70] text-white hover:bg-[#626b82]"
+                className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--trading-accent-contrast-color)] hover:brightness-110"
+                style={{ background: "var(--trading-accent-color)" }}
               >
                 <Plus className="h-3 w-3" strokeWidth={3} />
               </button>
@@ -199,12 +216,17 @@ export const WorkspaceSettings = () => {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex h-11 w-full items-center justify-center gap-3 rounded-[3px] border border-dashed border-[#1683f5] bg-[#102a47] text-[12px] font-bold text-white hover:bg-[#143559]"
+            className="flex h-11 w-full items-center justify-center gap-3 rounded-[3px] border border-dashed text-[12px] font-bold hover:brightness-110"
+            style={{
+              background: "var(--trading-accent-soft-color)",
+              borderColor: "var(--trading-accent-color)",
+              color: "var(--trading-accent-color)",
+            }}
           >
-            <Image className="h-5 w-5 text-[#1683f5]" />
+            <Image className="h-5 w-5 text-[var(--trading-accent-color)]" />
             <span>
               Choose file
-              <span className="ml-1 text-[10px] font-semibold text-[#b9c8dc]">(Max size - 2 MB)</span>
+              <span className="ml-1 text-[10px] font-semibold text-[var(--trading-muted-color)]">(Max size - 2 MB)</span>
             </span>
           </button>
 
@@ -212,7 +234,12 @@ export const WorkspaceSettings = () => {
             <button
               type="button"
               onClick={() => updatePreferences({ chartBackgroundImage: null })}
-              className="flex h-9 w-full items-center justify-center gap-2 rounded-[3px] border border-white/10 bg-white/5 text-[11px] font-bold text-slate-200 hover:bg-white/10"
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-[3px] border text-[11px] font-bold hover:brightness-110"
+              style={{
+                background: "var(--trading-control-bg)",
+                borderColor: "var(--trading-border-color)",
+                color: "var(--trading-text-color)",
+              }}
             >
               <Trash2 className="h-3.5 w-3.5" />
               Remove chart background
@@ -222,7 +249,12 @@ export const WorkspaceSettings = () => {
           <button
             type="button"
             onClick={resetPreferences}
-            className="mt-2 h-9 w-full rounded-[3px] border border-white/10 bg-[#242b3b] text-[11px] font-black uppercase tracking-[0.12em] text-slate-200 hover:bg-[#2d3548]"
+            className="mt-2 h-9 w-full rounded-[3px] border text-[11px] font-black uppercase tracking-[0.12em] hover:brightness-110"
+            style={{
+              background: "var(--trading-panel-soft-bg)",
+              borderColor: "var(--trading-border-color)",
+              color: "var(--trading-text-color)",
+            }}
           >
             Restore defaults
           </button>
@@ -233,11 +265,11 @@ export const WorkspaceSettings = () => {
 };
 
 const SectionLabel = ({ children }: { children: string }) => (
-  <div className="pt-1 text-[9px] font-black uppercase tracking-[0.16em] text-white">{children}</div>
+  <div className="pt-1 text-[9px] font-black uppercase tracking-[0.16em] text-[var(--trading-text-color)]">{children}</div>
 );
 
 const FieldLabel = ({ children }: { children: string }) => (
-  <div className="ml-2 px-1 text-[9px] font-semibold text-[#7f8b99]" style={{ background: "var(--trading-workspace-panel-bg)" }}>{children}</div>
+  <div className="ml-2 px-1 text-[9px] font-semibold text-[var(--trading-muted-color)]" style={{ background: "var(--trading-workspace-panel-bg)" }}>{children}</div>
 );
 
 const SettingsCheck = ({
@@ -253,15 +285,17 @@ const SettingsCheck = ({
 }) => (
   <button type="button" onClick={onClick} className="flex w-full items-start gap-2 text-left">
     <span
-      className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] border ${
-        checked ? "border-[#429dff] bg-[#203a5f]" : "border-[#8a93a4] bg-transparent"
-      }`}
+      className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[2px] border"
+      style={{
+        background: checked ? "var(--trading-accent-soft-color)" : "transparent",
+        borderColor: checked ? "var(--trading-accent-color)" : "var(--trading-muted-color)",
+      }}
     >
-      {checked ? <Check className="h-3 w-3 text-[#73b7ff]" strokeWidth={3} /> : null}
+      {checked ? <Check className="h-3 w-3 text-[var(--trading-accent-color)]" strokeWidth={3} /> : null}
     </span>
     <span>
-      <span className="block text-[12px] font-bold leading-tight text-white">{title}</span>
-      <span className="mt-0.5 block text-[9px] font-medium leading-tight text-[#8a94a7]">{caption}</span>
+      <span className="block text-[12px] font-bold leading-tight text-[var(--trading-text-color)]">{title}</span>
+      <span className="mt-0.5 block text-[9px] font-medium leading-tight text-[var(--trading-muted-color)]">{caption}</span>
     </span>
   </button>
 );
@@ -280,7 +314,7 @@ const ColorPalette = ({
   <div className="space-y-2">
     <div className="flex items-center gap-2">
       <span className="h-4 w-4 rounded-full" style={{ background: activeColor }} />
-      <span className="text-[11px] font-bold text-white">{label}</span>
+      <span className="text-[11px] font-bold text-[var(--trading-text-color)]">{label}</span>
     </div>
     <div
       className="flex w-max gap-2 rounded-[3px] border p-2"
