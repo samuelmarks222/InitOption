@@ -526,39 +526,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [fetchProfile, user]);
 
-  useEffect(() => {
-    if (!user) return;
-
-    const metadata = asObjectRecord(user.user_metadata);
-    if (readString(metadata.platform_email_verified_at)) return;
-
-    const confirmedAt = readString(user.email_confirmed_at) ?? readString(user.confirmed_at);
-    if (!confirmedAt) return;
-
-    let isActive = true;
-    const sanitizedMetadata = getSanitizedUserMetadata(user);
-
-    saveProfileCache(user.id, {
-      platform_email_verified_at: confirmedAt,
-    });
-
-    void supabase.auth
-      .updateUser({
-        data: {
-          ...sanitizedMetadata,
-          platform_email_verified_at: confirmedAt,
-        },
-      })
-      .then(({ data, error }) => {
-        if (!isActive || error || !data.user) return;
-        setUser(data.user);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [user]);
-
   const getEmailConfirmationRedirectUrl = () => {
     const restorePath = getAuthRestorePath();
     const nextPath = restorePath || "/trade";
@@ -644,9 +611,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
-          queryParams: {
-            prompt: "select_account",
-          },
         }
       });
 

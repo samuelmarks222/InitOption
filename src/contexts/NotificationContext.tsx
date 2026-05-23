@@ -80,6 +80,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       .from("notifications")
       .select("*")
       .eq("user_id", user.id)
+      .neq("type", "trade_result")
       .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
       .order("created_at", { ascending: false })
       .limit(MAX_NOTIFICATIONS);

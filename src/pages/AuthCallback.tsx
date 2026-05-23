@@ -34,7 +34,7 @@ const AuthCallback = () => {
 
     const timer = window.setTimeout(() => {
       navigate(user ? safeNextPath : "/login", { replace: true });
-    }, user ? 1600 : 2600);
+    }, user ? 250 : 900);
 
     return () => window.clearTimeout(timer);
   }, [hasError, loading, navigate, safeNextPath, user]);

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, TrendingUp, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -156,29 +155,14 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
         </Link>
 
         <div className="relative z-10 max-w-md">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="font-heading text-4xl font-bold leading-tight text-foreground"
-          >
+          <h1 className="font-heading text-4xl font-bold leading-tight text-foreground">
             Trade smarter with <span className="text-gradient-primary">Init Option</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="mt-4 leading-relaxed text-muted-foreground"
-          >
+          </h1>
+          <p className="mt-4 leading-relaxed text-muted-foreground">
             Access real-time charts, practice with demo funds, and trade with confidence on our modern platform.
-          </motion.p>
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-8 space-y-4"
-          >
+          <div className="mt-8 space-y-4">
             {featureItems.map((item) => (
               <div key={item.text} className="flex items-center gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
@@ -187,22 +171,17 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                 <span className="text-sm text-secondary-foreground">{item.text}</span>
               </div>
             ))}
-          </motion.div>
+          </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="relative z-10 flex gap-8"
-        >
+        <div className="relative z-10 flex gap-8">
           {bottomStats.map((stat) => (
             <div key={stat.label}>
               <div className="font-heading text-xl font-bold text-gradient-primary">{stat.value}</div>
               <div className="text-xs text-muted-foreground">{stat.label}</div>
             </div>
           ))}
-        </motion.div>
+        </div>
       </div>
 
       <div className="flex w-full flex-col items-center justify-center bg-background px-6 py-12 lg:w-1/2">
@@ -210,12 +189,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
           <img src={logo} alt="Init Option" className="h-8 w-auto" />
         </Link>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
+        <div className="w-full max-w-md">
           <div className="mb-8 flex rounded-xl border border-border bg-card p-1">
             <button
               type="button"
@@ -447,7 +421,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
               </div>
             </>
           ) : null}
-        </motion.div>
+        </div>
       </div>
     </div>
   );
