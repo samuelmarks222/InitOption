@@ -101,6 +101,18 @@ interface MobileModuleOverlayProps {
   analyticsSignalAsset?: AnalyticsSignalAsset;
 }
 
+const DEFAULT_TRADE_ASSET_ROW = {
+  symbol: "EUR/USD",
+  name: "EUR/USD",
+  category: "OTC",
+  payout_pct: 85,
+  status: "active",
+  base_country: "EU",
+  quote_country: "US",
+} as TradeAssetConfigRow;
+
+const TRADE_ASSET_BOOT_TIMEOUT_MS = 4500;
+
 const buildTradeTabAsset = (assetRow: TradeAssetConfigRow): TradeTabAsset => {
   const category = normalizeAssetCategory(assetRow.category, assetRow.symbol);
   const basePrice = getAssetBasePrice(assetRow.symbol, category);
@@ -354,35 +366,79 @@ const Trade = () => {
   } : selectedAssetSaved;
 
   useEffect(() => {
+    let cancelled = false;
+    let timeoutId: number | undefined;
+    const fallbackAsset = buildTradeTabAsset(DEFAULT_TRADE_ASSET_ROW);
+
+    const resolveActiveAssetRows = async () => {
+      const query = supabase
+        .from("assets_config")
+        .select("*")
+        .eq("status", "active")
+        .order("symbol")
+        .then(({ data, error }) => {
+          if (error) throw error;
+          return ((data ?? []) as TradeAssetConfigRow[]).filter((assetRow) => String(assetRow.symbol ?? "").trim());
+        });
+
+      const timeout = new Promise<TradeAssetConfigRow[]>((resolve) => {
+        timeoutId = window.setTimeout(() => resolve([DEFAULT_TRADE_ASSET_ROW]), TRADE_ASSET_BOOT_TIMEOUT_MS);
+      });
+
+      return Promise.race([query, timeout]);
+    };
+
+    const applyInitialAssets = (assetRows: TradeAssetConfigRow[]) => {
+      const availableRows = assetRows.length ? assetRows : [DEFAULT_TRADE_ASSET_ROW];
+      const savedTabsRaw = localStorage.getItem("trading_open_tabs");
+      const savedActiveId = localStorage.getItem("trading_active_tab");
+      let initialTabs: TradeTabAsset[] = [];
+      let initialActive: TradeTabAsset | null = null;
+
+      if (savedTabsRaw) {
+        try {
+          const parsed = JSON.parse(savedTabsRaw) as Array<{ symbol?: string }>;
+          initialTabs = parsed
+            .map((tab) => availableRows.find((dbA) => dbA.symbol === tab.symbol))
+            .filter(Boolean)
+            .map((assetRow) => buildTradeTabAsset(assetRow as TradeAssetConfigRow));
+          if (savedActiveId) initialActive = initialTabs.find((tab) => tab.symbol === savedActiveId) ?? null;
+        } catch {}
+      }
+
+      if (initialTabs.length === 0) {
+        initialTabs = [buildTradeTabAsset(availableRows[0] ?? DEFAULT_TRADE_ASSET_ROW)];
+      }
+      if (!initialActive && initialTabs.length > 0) initialActive = initialTabs[0];
+
+      const resolvedActive = initialActive ?? fallbackAsset;
+      setOpenTabs(initialTabs.length ? initialTabs : [fallbackAsset]);
+      setSelectedAssetSaved(resolvedActive);
+      setActiveTabId(resolvedActive.symbol);
+    };
+
     async function initAssets() {
-      const { data } = await supabase.from('assets_config').select('*').eq('status', 'active').order('symbol');
-      if (data && data.length > 0) {
-        const savedTabsRaw = localStorage.getItem("trading_open_tabs");
-        const savedActiveId = localStorage.getItem("trading_active_tab");
-        let initialTabs: TradeTabAsset[] = [];
-        let initialActive: TradeTabAsset | null = null;
-
-        if (savedTabsRaw) {
-          try {
-            const parsed = JSON.parse(savedTabsRaw) as Array<{ symbol?: string }>;
-            initialTabs = parsed
-              .map((tab) => data.find((dbA) => dbA.symbol === tab.symbol))
-              .filter(Boolean)
-              .map((assetRow) => buildTradeTabAsset(assetRow as TradeAssetConfigRow));
-            if (savedActiveId) initialActive = initialTabs.find((tab) => tab.symbol === savedActiveId) ?? null;
-          } catch {}
+      try {
+        const assetRows = await resolveActiveAssetRows();
+        if (!cancelled) {
+          applyInitialAssets(assetRows);
         }
-
-        if (initialTabs.length === 0) {
-          initialTabs = [buildTradeTabAsset(data[0] as TradeAssetConfigRow)];
+      } catch (error) {
+        console.warn("Failed to load active assets. Using fallback trade desk asset.", error);
+        if (!cancelled) {
+          applyInitialAssets([DEFAULT_TRADE_ASSET_ROW]);
         }
-        if (!initialActive && initialTabs.length > 0) initialActive = initialTabs[0];
-        setOpenTabs(initialTabs);
-        setSelectedAssetSaved(initialActive);
-        setActiveTabId(initialActive.symbol);
+      } finally {
+        if (timeoutId) window.clearTimeout(timeoutId);
       }
     }
-    initAssets();
+
+    void initAssets();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
   }, []);
 
   useEffect(() => { if (openTabs.length > 0) localStorage.setItem("trading_open_tabs", JSON.stringify(openTabs)); }, [openTabs]);

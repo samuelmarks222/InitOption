@@ -27,6 +27,11 @@ export interface WebsiteSocialLinkItem {
   url: string;
 }
 
+export interface WebsiteTradingDefaults {
+  chartBackgroundImage: string;
+  chartBackgroundOpacity: number;
+}
+
 export interface WebsitePublicPageSectionContent {
   title: string;
   paragraphs: string[];
@@ -66,6 +71,7 @@ export type GuideMediaKey = (typeof GUIDE_MEDIA_KEYS)[number];
 export type GuideMediaSettings = Partial<Record<GuideMediaKey, string>>;
 
 export interface WebsiteContent {
+  tradingDefaults: WebsiteTradingDefaults;
   guideMedia: GuideMediaSettings;
   blog: {
     categories: BlogCategoryDefinition[];
@@ -141,6 +147,20 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const toStringValue = (value: unknown, fallback = "") =>
   typeof value === "string" && value.trim().length > 0 ? value : fallback;
+
+const toImageSourceValue = (value: unknown, fallback = "") => {
+  if (typeof value !== "string") return fallback;
+
+  const trimmed = value.trim();
+  if (!trimmed) return fallback;
+  if (/^(https?:\/\/|data:image\/)/i.test(trimmed)) return trimmed;
+  return fallback;
+};
+
+const toPercentValue = (value: unknown, fallback: number) => {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? Math.max(0, Math.min(100, Math.round(numericValue))) : fallback;
+};
 
 const toStringArray = (value: unknown, fallback: string[]) =>
   Array.isArray(value)
@@ -441,6 +461,10 @@ export const createDefaultWebsiteContent = (platformName = DEFAULT_PLATFORM_NAME
       "Risk warning: Trading and similar high-risk products can lead to rapid gains or losses. Practice with demo funds first and only trade money you can afford to lose.",
     pills: ["Trading", "Real-Time Charts", "Demo Account", "Fast Withdrawals", "Trading Tournaments", "Mobile Trading"],
   },
+  tradingDefaults: {
+    chartBackgroundImage: "",
+    chartBackgroundOpacity: 66,
+  },
   socialLinks: {
     title: "Follow Init Option",
     subtitle: "Open our official channels for updates, support, and new trading content.",
@@ -652,6 +676,7 @@ export const normalizeWebsiteContent = (rawValue: unknown, platformName = DEFAUL
   const faq = isRecord(content.faq) ? content.faq : {};
   const finalCta = isRecord(content.finalCta) ? content.finalCta : {};
   const footer = isRecord(content.footer) ? content.footer : {};
+  const tradingDefaults = isRecord(content.tradingDefaults) ? content.tradingDefaults : {};
   const socialLinks = isRecord(content.socialLinks) ? content.socialLinks : {};
   const publicPages = isRecord(content.publicPages) ? content.publicPages : {};
   const blog = isRecord(content.blog) ? content.blog : {};
@@ -720,6 +745,16 @@ export const normalizeWebsiteContent = (rawValue: unknown, platformName = DEFAUL
       description: toStringValue(footer.description, defaults.footer.description),
       riskWarning: toStringValue(footer.riskWarning, defaults.footer.riskWarning),
       pills: toStringArray(footer.pills, defaults.footer.pills),
+    },
+    tradingDefaults: {
+      chartBackgroundImage: toImageSourceValue(
+        tradingDefaults.chartBackgroundImage,
+        defaults.tradingDefaults.chartBackgroundImage,
+      ),
+      chartBackgroundOpacity: toPercentValue(
+        tradingDefaults.chartBackgroundOpacity,
+        defaults.tradingDefaults.chartBackgroundOpacity,
+      ),
     },
     socialLinks: {
       title: toStringValue(socialLinks.title, defaults.socialLinks.title),

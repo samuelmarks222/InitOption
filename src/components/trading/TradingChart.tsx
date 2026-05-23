@@ -76,6 +76,7 @@ import {
   getTradingTimezone,
   useTradingPreferences,
 } from "@/lib/tradingPreferences";
+import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 
 interface TradingChartProps {
   asset: { symbol: string; name?: string; price: number; basePrice?: number; type?: string; change?: number; maxProfit?: number; };
@@ -1773,11 +1774,17 @@ const TradingChart = ({
     down: PROFESSIONAL_DOWN_COLOR,
   });
   const { preferences: tradingPreferences } = useTradingPreferences();
+  const { data: websiteContent } = useWebsiteContent();
+  const defaultChartBackgroundImage = websiteContent.tradingDefaults.chartBackgroundImage.trim();
+  const activeChartBackgroundImage = tradingPreferences.chartBackgroundImage || defaultChartBackgroundImage || null;
+  const activeChartBackgroundOpacity = tradingPreferences.chartBackgroundImage
+    ? tradingPreferences.chartBackgroundOpacity
+    : websiteContent.tradingDefaults.chartBackgroundOpacity;
   const effectiveChartTheme = useMemo(() => ({
-    bg: getTradingChartSurfaceColor(tradingPreferences, globalTheme.bg),
+    bg: activeChartBackgroundImage ? "rgba(0,0,0,0)" : getTradingChartSurfaceColor(tradingPreferences, globalTheme.bg),
     up: tradingPreferences.upTrendColor,
     down: tradingPreferences.downTrendColor,
-  }), [globalTheme.bg, tradingPreferences]);
+  }), [activeChartBackgroundImage, globalTheme.bg, tradingPreferences]);
   const chartTextColor = useMemo(() => getTradingChartTextColor(tradingPreferences), [tradingPreferences]);
   const chartGridColor = useMemo(() => getTradingGridColor(tradingPreferences), [tradingPreferences]);
   const chartViewportStyle = useMemo<React.CSSProperties>(() => {
@@ -1788,7 +1795,7 @@ const TradingChart = ({
       userSelect: "none",
     };
 
-    if (!tradingPreferences.chartBackgroundImage) {
+    if (!activeChartBackgroundImage) {
       return {
         ...mobileTouchSurface,
         background: effectiveChartTheme.bg,
@@ -1803,19 +1810,21 @@ const TradingChart = ({
           : tradingPreferences.template === "graphite"
             ? "#101215"
             : "#111827";
+    const imageOpacity = Math.max(0, Math.min(100, activeChartBackgroundOpacity)) / 100;
+    const overlayAlpha = Math.max(0.08, Math.min(0.94, 1 - imageOpacity));
     const imageOverlay =
       tradingPreferences.template === "ivory"
-        ? "rgba(239,230,214,0.28), rgba(239,230,214,0.28)"
-        : "rgba(11,16,24,0.34), rgba(11,16,24,0.34)";
+        ? `rgba(239,230,214,${overlayAlpha}), rgba(239,230,214,${overlayAlpha})`
+        : `rgba(11,16,24,${overlayAlpha}), rgba(11,16,24,${overlayAlpha})`;
 
     return {
       ...mobileTouchSurface,
       backgroundColor: imageBaseColor,
-      backgroundImage: `linear-gradient(${imageOverlay}), url("${tradingPreferences.chartBackgroundImage}")`,
+      backgroundImage: `linear-gradient(${imageOverlay}), url("${activeChartBackgroundImage}")`,
       backgroundPosition: "center",
       backgroundSize: "cover",
     };
-  }, [effectiveChartTheme.bg, tradingPreferences]);
+  }, [activeChartBackgroundImage, activeChartBackgroundOpacity, effectiveChartTheme.bg, tradingPreferences]);
   const globalThemeRef = useRef(effectiveChartTheme);
   const chartStylesRef = useRef(chartStyles);
   const tradingSchedule = useMemo(() => buildTradingSchedule(), []);

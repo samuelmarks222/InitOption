@@ -21,7 +21,7 @@ import {
   type WebsiteContent,
 } from "@/lib/websiteContent";
 
-type UploadTarget = "logo" | "favicon" | "social" | "twitter" | `guide:${GuideMediaKey}`;
+type UploadTarget = "logo" | "favicon" | "social" | "twitter" | "chartBackground" | `guide:${GuideMediaKey}`;
 
 const CARD_CLASS = "rounded-2xl border border-[#1e2330] bg-[#1e2330] p-6 shadow-lg";
 const INPUT_CLASS =
@@ -187,6 +187,7 @@ const PlatformSettings = () => {
   const faviconInputRef = useRef<HTMLInputElement>(null);
   const socialImageInputRef = useRef<HTMLInputElement>(null);
   const twitterImageInputRef = useRef<HTMLInputElement>(null);
+  const chartBackgroundInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     void fetchSettings();
@@ -231,6 +232,16 @@ const PlatformSettings = () => {
     });
   };
 
+  const updateTradingDefaults = (updates: Partial<WebsiteContent["tradingDefaults"]>) => {
+    setWebsiteContent((previous) => ({
+      ...previous,
+      tradingDefaults: {
+        ...previous.tradingDefaults,
+        ...updates,
+      },
+    }));
+  };
+
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
     target: UploadTarget,
@@ -255,6 +266,8 @@ const PlatformSettings = () => {
     const fileExt = file.name.split(".").pop() || "png";
     const filePath = guideMediaKey
       ? `guide-media/${guideMediaKey}_${Date.now()}.${fileExt}`
+      : target === "chartBackground"
+        ? `trading-backgrounds/default_${Date.now()}.${fileExt}`
       : `seo/${target}_${Date.now()}.${fileExt}`;
 
     setSaving(true);
@@ -274,6 +287,8 @@ const PlatformSettings = () => {
 
     if (guideMediaKey) {
       updateGuideMedia(guideMediaKey, publicData.publicUrl);
+    } else if (target === "chartBackground") {
+      updateTradingDefaults({ chartBackgroundImage: publicData.publicUrl });
     } else {
       if (target === "logo") updateSetting("logo_url", publicData.publicUrl);
       if (target === "favicon") updateSetting("favicon_url", publicData.publicUrl);
@@ -527,6 +542,96 @@ const PlatformSettings = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-[#1e2330] bg-[#1c1f2d] p-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <h4 className="text-base font-bold text-white">Default Trading Background</h4>
+              <p className="mt-1 text-sm text-slate-400">
+                This image appears behind the trading chart for users who have not uploaded their own background.
+              </p>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <input
+                ref={chartBackgroundInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => void handleFileUpload(event, "chartBackground")}
+              />
+              <button
+                type="button"
+                onClick={() => chartBackgroundInputRef.current?.click()}
+                className="inline-flex items-center gap-2 rounded-lg border border-[#0fa053]/30 bg-[#0fa053]/10 px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#0fa053] transition-colors hover:bg-[#0fa053]/20"
+              >
+                <UploadCloud className="h-4 w-4" />
+                Upload
+              </button>
+              {websiteContent.tradingDefaults.chartBackgroundImage ? (
+                <button
+                  type="button"
+                  onClick={() => updateTradingDefaults({ chartBackgroundImage: "" })}
+                  className="inline-flex items-center gap-2 rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-bold uppercase tracking-wider text-red-300 transition-colors hover:bg-red-500/20"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Remove
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Background Image URL
+                </label>
+                <input
+                  type="text"
+                  value={websiteContent.tradingDefaults.chartBackgroundImage}
+                  onChange={(event) => updateTradingDefaults({ chartBackgroundImage: event.target.value })}
+                  className={INPUT_CLASS}
+                  placeholder="https://... or upload an image"
+                />
+              </div>
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                    Image Opacity
+                  </label>
+                  <span className="text-xs font-bold text-[#0fa053]">
+                    {websiteContent.tradingDefaults.chartBackgroundOpacity}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={websiteContent.tradingDefaults.chartBackgroundOpacity}
+                  onChange={(event) =>
+                    updateTradingDefaults({ chartBackgroundOpacity: Number(event.target.value) })
+                  }
+                  className="h-2 w-full accent-[#0fa053]"
+                />
+              </div>
+            </div>
+
+            <div
+              className="min-h-[148px] overflow-hidden rounded-xl border border-[#1e2330] bg-[#111827]"
+              style={{
+                backgroundImage: websiteContent.tradingDefaults.chartBackgroundImage
+                  ? `linear-gradient(rgba(17,24,39,${Math.max(0.05, 1 - websiteContent.tradingDefaults.chartBackgroundOpacity / 100)}), rgba(17,24,39,${Math.max(0.05, 1 - websiteContent.tradingDefaults.chartBackgroundOpacity / 100)})), url("${websiteContent.tradingDefaults.chartBackgroundImage}")`
+                  : "linear-gradient(135deg, #111827 0%, #1c1f2d 100%)",
+                backgroundPosition: "center",
+                backgroundSize: "cover",
+              }}
+            >
+              <div className="flex h-full min-h-[148px] items-center justify-center px-4 text-center text-xs font-bold uppercase tracking-[0.16em] text-slate-300">
+                Chart preview
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

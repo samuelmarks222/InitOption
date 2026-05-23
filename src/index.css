@@ -436,6 +436,13 @@
   }
 
   .trading-terminal [class*="bg-[#0fa053]"],
+  .trading-terminal [class*="bg-[#0b7557]"],
+  .trading-terminal [class*="bg-[#477564]"],
+  .trading-terminal [class*="bg-[#3f6f5f]"],
+  .trading-terminal [class*="bg-[#558b79]"],
+  .trading-terminal [class*="bg-[#5c8e7b]"],
+  .trading-terminal [class*="bg-[#7fbca5]"],
+  .trading-terminal [class*="bg-[#93cbb7]"],
   .trading-terminal [class*="bg-[#00C076]"],
   .trading-terminal [class*="bg-[#18a038]"],
   .trading-terminal [class*="bg-[#179c59]"],
@@ -446,6 +453,7 @@
   }
 
   .trading-terminal [class*="bg-[#0fa053]/"],
+  .trading-terminal [class*="bg-[#0b7557]/"],
   .trading-terminal [class*="bg-[#00C076]/"],
   .trading-terminal [class*="bg-[#18a038]/"],
   .trading-terminal [class*="bg-[#12b76a]/"],
@@ -453,7 +461,15 @@
     background: var(--trading-success-soft-color) !important;
   }
 
+  .trading-terminal [class*="bg-[#1f3f37]"] {
+    background: color-mix(in srgb, var(--trading-text-color) 70%, var(--trading-panel-bg)) !important;
+  }
+
   .trading-terminal [class*="text-[#0fa053]"],
+  .trading-terminal [class*="text-[#0b7557]"],
+  .trading-terminal [class*="text-[#5ee0bd]"],
+  .trading-terminal [class*="text-[#c7fff0]"],
+  .trading-terminal [class*="text-[#9ddac6]"],
   .trading-terminal [class*="text-[#00C076]"],
   .trading-terminal [class*="text-[#20c776]"],
   .trading-terminal [class*="text-[#18a038]"],
@@ -463,6 +479,8 @@
   }
 
   .trading-terminal [class*="border-[#0fa053]"],
+  .trading-terminal [class*="border-[#0b7557]"],
+  .trading-terminal [class*="border-[#1f3f37]"],
   .trading-terminal [class*="border-[#00C076]"],
   .trading-terminal [class*="border-[#18a038]"],
   .trading-terminal [class*="border-green-"] {
@@ -541,6 +559,7 @@
   }
 
   .trading-terminal [class*="accent-[#0fa053]"],
+  .trading-terminal [class*="accent-[#0b7557]"],
   .trading-terminal [class*="accent-green-"] {
     accent-color: var(--trading-success-color) !important;
   }
@@ -896,6 +915,7 @@
 
   html[data-trading-template="ivory"] .trading-terminal [style*="--trading-success-color"],
   html[data-trading-template="ivory"] .trading-terminal [class*="bg-[#0fa053]"],
+  html[data-trading-template="ivory"] .trading-terminal [class*="bg-[#0b7557]"],
   html[data-trading-template="ivory"] .trading-terminal [class*="bg-[#00C076]"],
   html[data-trading-template="ivory"] .trading-terminal [class*="bg-[#18a038]"],
   html[data-trading-template="ivory"] .trading-terminal [class*="bg-[#179c59]"] {
@@ -903,7 +923,11 @@
   }
 
   html[data-trading-template="ivory"] .trading-terminal [style*="--trading-success-color"] .text-white,
-  html[data-trading-template="ivory"] .trading-terminal [style*="--trading-success-color"] [class*="text-white/"] {
+  html[data-trading-template="ivory"] .trading-terminal [style*="--trading-success-color"] [class*="text-white/"],
+  html[data-trading-template="ivory"] .trading-terminal [class*="bg-[#0fa053]"] .text-white,
+  html[data-trading-template="ivory"] .trading-terminal [class*="bg-[#0fa053]"] [class*="text-white/"],
+  html[data-trading-template="ivory"] .trading-terminal [class*="bg-[#0b7557]"] .text-white,
+  html[data-trading-template="ivory"] .trading-terminal [class*="bg-[#0b7557]"] [class*="text-white/"] {
     color: var(--trading-success-contrast-color) !important;
   }
 

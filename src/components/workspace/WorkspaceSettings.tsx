@@ -231,19 +231,35 @@ export const WorkspaceSettings = () => {
           </button>
 
           {preferences.chartBackgroundImage ? (
-            <button
-              type="button"
-              onClick={() => updatePreferences({ chartBackgroundImage: null })}
-              className="flex h-9 w-full items-center justify-center gap-2 rounded-[3px] border text-[11px] font-bold hover:brightness-110"
-              style={{
-                background: "var(--trading-control-bg)",
-                borderColor: "var(--trading-border-color)",
-                color: "var(--trading-text-color)",
-              }}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Remove chart background
-            </button>
+            <>
+              <div className="space-y-1.5">
+                <FieldLabel>Image opacity</FieldLabel>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={preferences.chartBackgroundOpacity}
+                  onChange={(event) => updatePreferences({ chartBackgroundOpacity: Number(event.target.value) })}
+                  className="h-2 w-full accent-[var(--trading-accent-color)]"
+                />
+                <div className="text-right text-[10px] font-bold text-[var(--trading-muted-color)]">
+                  {preferences.chartBackgroundOpacity}%
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => updatePreferences({ chartBackgroundImage: null })}
+                className="flex h-9 w-full items-center justify-center gap-2 rounded-[3px] border text-[11px] font-bold hover:brightness-110"
+                style={{
+                  background: "var(--trading-control-bg)",
+                  borderColor: "var(--trading-border-color)",
+                  color: "var(--trading-text-color)",
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Remove chart background
+              </button>
+            </>
           ) : null}
 
           <button

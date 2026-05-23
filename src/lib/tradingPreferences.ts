@@ -61,6 +61,7 @@ export interface TradingPreferences {
   upTrendColor: string;
   downTrendColor: string;
   chartBackgroundImage: string | null;
+  chartBackgroundOpacity: number;
 }
 
 export const TRADING_PREFERENCES_STORAGE_KEY = "trading_terminal_preferences_v1";
@@ -78,6 +79,7 @@ export const DEFAULT_TRADING_PREFERENCES: TradingPreferences = {
   upTrendColor: "#21a566",
   downTrendColor: "#d96059",
   chartBackgroundImage: null,
+  chartBackgroundOpacity: 66,
 };
 
 const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
@@ -143,6 +145,10 @@ export const normalizeTradingPreferences = (
     typeof value?.chartBackgroundImage === "string" && value.chartBackgroundImage.startsWith("data:image/")
       ? value.chartBackgroundImage
       : null,
+  chartBackgroundOpacity:
+    typeof value?.chartBackgroundOpacity === "number"
+      ? Math.max(0, Math.min(100, Math.round(value.chartBackgroundOpacity)))
+      : DEFAULT_TRADING_PREFERENCES.chartBackgroundOpacity,
 });
 
 export const readTradingPreferences = (): TradingPreferences => {
