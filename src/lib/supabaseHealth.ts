@@ -8,7 +8,7 @@ type SupabaseHealthResult = {
 };
 
 const buildUnavailableMessage = () =>
-  "Login service is taking too long to respond. Please wait a moment and try again.";
+  "The login service is not responding right now. Please try again after the Supabase project is back online.";
 
 export const checkSupabaseAuthReachable = async (): Promise<SupabaseHealthResult> => {
   if (!supabaseUrl || !supabasePublishableKey) {

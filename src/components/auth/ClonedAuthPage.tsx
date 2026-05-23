@@ -68,8 +68,9 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
     if (!error) return;
 
     setGoogleLoading(false);
+    const isServiceUnavailable = (error as { status?: number }).status === 503;
     toast({
-      title: "Google sign-in failed",
+      title: isServiceUnavailable ? "Login service unavailable" : "Google sign-in failed",
       description: error.message || "Please try again in a moment.",
       variant: "destructive",
     });
@@ -107,7 +108,12 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
       setLoading(false);
 
       if (error) {
-        toast({ title: "Login failed", description: error.message, variant: "destructive" });
+        const isServiceUnavailable = (error as { status?: number }).status === 503;
+        toast({
+          title: isServiceUnavailable ? "Login service unavailable" : "Login failed",
+          description: error.message,
+          variant: "destructive",
+        });
         return;
       }
 

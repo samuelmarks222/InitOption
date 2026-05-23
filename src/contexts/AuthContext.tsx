@@ -628,17 +628,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const health = await checkSupabaseAuthReachable();
-    if (!health.ok) {
-      return { error: toAuthError(health.message, 503) };
-    }
-
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       return { error };
     } catch {
       return {
-        error: toAuthError("Login service is taking too long to respond. Please wait a moment and try again.", 503),
+        error: toAuthError("The login service is not responding right now. Please try again after the Supabase project is back online.", 503),
       };
     }
   };
@@ -664,7 +659,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { error };
     } catch {
       return {
-        error: toAuthError("Google sign-in is taking too long to start. Please wait a moment and try again.", 503),
+        error: toAuthError("Google sign-in could not start because the login service is not responding.", 503),
       };
     }
   };
