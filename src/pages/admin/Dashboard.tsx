@@ -64,6 +64,7 @@ const panelClass =
   "rounded-[28px] border border-[#1e2330] bg-[linear-gradient(180deg,#1e2330_0%,#1c1f2d_100%)] shadow-[0_24px_70px_rgba(6,14,24,0.42)] backdrop-blur-xl";
 
 const innerCardClass = "rounded-[22px] border border-[#1e2330] bg-[#1e2330]/70";
+const ADMIN_DASHBOARD_CHART_ROW_LIMIT = 5000;
 
 const formatMoney = (value: number) =>
   `$${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -166,8 +167,8 @@ const AdminDashboard = () => {
         supabase.from("deposit_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("withdrawal_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("withdrawal_requests").select("id", { count: "exact", head: true }).in("status", ["approved", "processing"]),
-        supabase.from("profiles").select("id, username, display_name, created_at").gte("created_at", chartStart.toISOString()),
-        supabase.from("trades").select("id, user_id, asset_symbol, amount, profit, opened_at, closed_at, status").gte("opened_at", chartStart.toISOString()),
+        supabase.from("profiles").select("id, username, display_name, created_at").gte("created_at", chartStart.toISOString()).limit(ADMIN_DASHBOARD_CHART_ROW_LIMIT),
+        supabase.from("trades").select("id, user_id, asset_symbol, amount, profit, opened_at, closed_at, status").gte("opened_at", chartStart.toISOString()).limit(ADMIN_DASHBOARD_CHART_ROW_LIMIT),
         supabase.from("profiles").select("id, username, display_name, created_at").order("created_at", { ascending: false }).limit(10),
         supabase.from("trades").select("id, user_id, asset_symbol, amount, profit, opened_at, closed_at, status").order("opened_at", { ascending: false }).limit(10),
         supabase.from("deposit_requests").select("id, user_id, amount, created_at, status").order("created_at", { ascending: false }).limit(10),

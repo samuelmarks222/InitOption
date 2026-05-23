@@ -849,136 +849,41 @@ const handleAdminUsers = async (request: ApiRequest, response: ApiResponse) => {
   await requireKycReviewer(accessToken);
 
   const adminClient = getSupabaseAdminClient();
-  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const [authUsers, profilesResponse, tradesResponse] = await Promise.all([
-    listAllAuthUsers(adminClient),
-    adminClient
-      .from("profiles")
-      .select(
-        "id, username, display_name, balance, total_trades, total_wins, total_profit, created_at, total_deposit, vip_tier_override, kyc_status, kyc_documents",
-      )
-      .order("created_at", { ascending: false }),
-    adminClient
-      .from("trades")
-      .select("user_id, amount, closed_at, status")
-      .neq("status", "open")
-      .gte("closed_at", cutoff),
-  ]);
+  const profilesResponse = await adminClient
+    .from("profiles")
+    .select(
+      "id, username, display_name, balance, total_trades, total_wins, total_profit, created_at, total_deposit, total_trade_volume_30d, trade_count_30d, vip_tier_override, kyc_status, kyc_documents",
+    )
+    .order("created_at", { ascending: false })
+    .limit(250);
 
   if (profilesResponse.error) {
     throw profilesResponse.error;
   }
 
-  if (tradesResponse.error) {
-    throw tradesResponse.error;
-  }
-
-  const existingProfiles = profilesResponse.data ?? [];
-  const existingProfileIds = new Set(existingProfiles.map((profile) => profile.id));
-  const missingProfileRows = authUsers
-    .filter((authUser) => !existingProfileIds.has(authUser.id))
-    .map((authUser) => {
-      const identity = deriveProfileIdentity(authUser);
-      return {
-        display_name: identity.displayName,
-        id: authUser.id,
-        username: identity.username,
-      };
-    });
-
-  if (missingProfileRows.length > 0) {
-    const upsertResponse = await adminClient
-      .from("profiles")
-      .upsert(missingProfileRows as never, {
-        ignoreDuplicates: true,
-        onConflict: "id",
-      });
-
-    if (upsertResponse.error) {
-      throw upsertResponse.error;
-    }
-  }
-
-  const finalProfilesResponse =
-    missingProfileRows.length > 0
-      ? await adminClient
-          .from("profiles")
-          .select(
-            "id, username, display_name, balance, total_trades, total_wins, total_profit, created_at, total_deposit, vip_tier_override, kyc_status, kyc_documents",
-          )
-          .order("created_at", { ascending: false })
-      : profilesResponse;
-
-  if (finalProfilesResponse.error) {
-    throw finalProfilesResponse.error;
-  }
-
-  const tradesByUser = new Map<string, { trades30d: number; volume30d: number }>();
-  for (const trade of tradesResponse.data ?? []) {
-    const stats = tradesByUser.get(trade.user_id) ?? { trades30d: 0, volume30d: 0 };
-    stats.trades30d += 1;
-    stats.volume30d += Number(trade.amount ?? 0);
-    tradesByUser.set(trade.user_id, stats);
-  }
-
-  const authUsersById = new Map(authUsers.map((authUser) => [authUser.id, authUser]));
-  const repairedDocuments: Array<{ id: string; kyc_documents: ReturnType<typeof normalizeKycDocuments> }> = [];
-  const users: AdminUserFeedItem[] = await Promise.all((finalProfilesResponse.data ?? []).map(async (profile) => {
-    const authUser = authUsersById.get(profile.id);
-    const identity = authUser ? deriveProfileIdentity(authUser) : null;
+  const users: AdminUserFeedItem[] = (profilesResponse.data ?? []).map((profile) => {
     const storedDocuments = normalizeKycDocuments(profile.kyc_documents);
-    const kycDocuments = await recoverKycDocumentsFromStorage(adminClient, profile.id, storedDocuments);
-    const shouldRepairDocuments =
-      hasAnyKycDocument(kycDocuments) && JSON.stringify(kycDocuments) !== JSON.stringify(storedDocuments);
 
-    if (shouldRepairDocuments) {
-      repairedDocuments.push({
-        id: profile.id,
-        kyc_documents: kycDocuments,
-      });
-    }
-
-    const stats = tradesByUser.get(profile.id) ?? { trades30d: 0, volume30d: 0 };
     return {
       balance: Number(profile.balance ?? 0),
       currentTier: profile.vip_tier_override ?? "none",
       id: profile.id,
-      kycDocuments,
+      kycDocuments: storedDocuments,
       kycStatus: ((profile.kyc_status as SupportedKycStatus | null) ?? "Pending") as SupportedKycStatus,
       manualOverride: profile.vip_tier_override ?? null,
-      name: profile.display_name || identity?.displayName || profile.username || identity?.username || "Unnamed user",
+      name: profile.display_name || profile.username || "Unnamed user",
       registrationDate: profile.created_at
         ? new Date(profile.created_at).toLocaleDateString("en-GB")
-        : authUser?.created_at
-          ? new Date(authUser.created_at).toLocaleDateString("en-GB")
-          : "-",
+        : "-",
       totalDeposit: Number(profile.total_deposit ?? 0),
       totalProfit: Number(profile.total_profit ?? 0),
       totalTrades: Number(profile.total_trades ?? 0),
       totalWins: Number(profile.total_wins ?? 0),
-      trades30d: stats.trades30d,
-      username: profile.username || identity?.username || profile.id.slice(0, 8),
-      volume30d: stats.volume30d,
+      trades30d: Number(profile.trade_count_30d ?? 0),
+      username: profile.username || profile.id.slice(0, 8),
+      volume30d: Number(profile.total_trade_volume_30d ?? 0),
     };
-  }));
-
-  if (repairedDocuments.length > 0) {
-    await Promise.all(
-      repairedDocuments.map(async (repair) => {
-        const repairResponse = await adminClient
-          .from("profiles")
-          .update({
-            kyc_documents: repair.kyc_documents,
-            updated_at: new Date().toISOString(),
-          } as never)
-          .eq("id", repair.id);
-
-        if (repairResponse.error) {
-          console.error(`Failed to backfill KYC documents for user ${repair.id}`, repairResponse.error);
-        }
-      }),
-    );
-  }
+  });
 
   response.status(200).json({ users });
 };

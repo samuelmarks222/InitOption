@@ -34,6 +34,9 @@ const getUserLabel = (profilesById: Map<string, ProfileRow>, userId: string) => 
   return profile?.display_name || profile?.username || `User ${userId.slice(0, 8).toUpperCase()}`;
 };
 
+const ADMIN_OPEN_TRADES_LIMIT = 500;
+const ADMIN_TRADE_HISTORY_LIMIT = 500;
+
 const TradeManagement = () => {
   const [activeTab, setActiveTab] = useState<"live" | "history">("live");
   const [searchTerm, setSearchTerm] = useState("");
@@ -50,11 +53,23 @@ const TradeManagement = () => {
     const fetchTrades = async () => {
       setLoading(true);
 
-      const { data: tradeRows, error: tradeError } = await supabase
-        .from("trades")
-        .select("*")
-        .order("opened_at", { ascending: false })
-        .limit(1000);
+      const [openTradesResponse, historyTradesResponse] = await Promise.all([
+        supabase
+          .from("trades")
+          .select("*")
+          .eq("status", "open")
+          .order("opened_at", { ascending: false })
+          .limit(ADMIN_OPEN_TRADES_LIMIT),
+        supabase
+          .from("trades")
+          .select("*")
+          .neq("status", "open")
+          .order("closed_at", { ascending: false })
+          .limit(ADMIN_TRADE_HISTORY_LIMIT),
+      ]);
+
+      const tradeError = openTradesResponse.error ?? historyTradesResponse.error;
+      const tradeRows = [...(openTradesResponse.data ?? []), ...(historyTradesResponse.data ?? [])];
 
       if (tradeError) {
         console.error("Failed to load trades for admin trade management", tradeError);

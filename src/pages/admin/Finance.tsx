@@ -51,6 +51,7 @@ const STATUS_STYLES: Record<string, string> = {
   processing: "bg-[#0fa053]/10 text-[#9be1bc]",
   rejected: "bg-red-500/10 text-red-400",
 };
+const FINANCE_REQUEST_LIMIT = 300;
 
 const formatDateTime = (value: string | null) => {
   if (!value) return "-";
@@ -100,10 +101,9 @@ const Finance = () => {
   const loadFinanceData = async () => {
     setLoading(true);
 
-    const [depositsResponse, withdrawalsResponse, profilesResponse, cryptoMethodsResponse, platformSettingsResponse] = await Promise.all([
-      supabase.from("deposit_requests").select("*").order("created_at", { ascending: false }),
-      supabase.from("withdrawal_requests").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id, username, display_name"),
+    const [depositsResponse, withdrawalsResponse, cryptoMethodsResponse, platformSettingsResponse] = await Promise.all([
+      supabase.from("deposit_requests").select("*").order("created_at", { ascending: false }).limit(FINANCE_REQUEST_LIMIT),
+      supabase.from("withdrawal_requests").select("*").order("created_at", { ascending: false }).limit(FINANCE_REQUEST_LIMIT),
       supabase.from("crypto_payment_methods").select("id, attribution_mode, symbol, network"),
       supabase.from("platform_settings").select("id, mpesa_withdrawal_approval_threshold_kes").limit(1).maybeSingle(),
     ]);
@@ -128,20 +128,31 @@ const Finance = () => {
       return;
     }
 
-    if (profilesResponse.error) {
+    if (cryptoMethodsResponse.error) {
       toast({
-        title: "Profiles unavailable",
-        description: profilesResponse.error.message,
+        title: "Crypto metadata unavailable",
+        description: cryptoMethodsResponse.error.message,
         variant: "destructive",
       });
       setLoading(false);
       return;
     }
 
-    if (cryptoMethodsResponse.error) {
+    const userIds = Array.from(
+      new Set([
+        ...(depositsResponse.data ?? []).map((request) => request.user_id),
+        ...(withdrawalsResponse.data ?? []).map((request) => request.user_id),
+      ]),
+    );
+    const profilesResponse =
+      userIds.length > 0
+        ? await supabase.from("profiles").select("id, username, display_name").in("id", userIds)
+        : { data: [], error: null };
+
+    if (profilesResponse.error) {
       toast({
-        title: "Crypto metadata unavailable",
-        description: cryptoMethodsResponse.error.message,
+        title: "Profiles unavailable",
+        description: profilesResponse.error.message,
         variant: "destructive",
       });
       setLoading(false);

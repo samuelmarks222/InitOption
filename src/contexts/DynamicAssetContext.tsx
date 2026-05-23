@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 import type { CommodityIcon } from "@/lib/assets";
 import {
@@ -100,14 +101,24 @@ const buildDynamicAsset = (assetRow: AssetConfigRow, timestampSec: number): Dyna
 };
 
 export const DynamicAssetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [assets, setAssets] = useState<DynamicAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const assetsRef = useRef<DynamicAsset[]>([]);
+  const userId = user?.id ?? null;
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
+    if (!userId) {
+      assetsRef.current = [];
+      setAssets([]);
+      setLoading(false);
+      return;
+    }
+
     const initAssets = async () => {
+      setLoading(true);
       const { data, error } = await supabase
         .from('assets_config')
         .select('*')
@@ -142,7 +153,7 @@ export const DynamicAssetProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, []);
+  }, [userId]);
 
   const getAsset = (symbol: string) => {
     return assets.find(a => a.symbol === symbol);

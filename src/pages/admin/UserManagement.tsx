@@ -102,7 +102,7 @@ const UserManagement = () => {
 
     const intervalId = window.setInterval(() => {
       void loadUsers(false);
-    }, 15000);
+    }, 120000);
 
     const handleFocus = () => {
       void loadUsers(false);
