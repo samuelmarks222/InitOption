@@ -1,14 +1,6 @@
 -- Keep auth and notification paths light while Supabase is under pressure.
-
-create index if not exists notifications_user_visible_created_idx
-  on public.notifications(user_id, created_at desc)
-  where type <> 'trade_result';
-
-create index if not exists notification_email_deliveries_type_created_idx
-  on public.notification_email_deliveries(notification_type, created_at desc);
-
-create index if not exists email_verification_codes_created_idx
-  on public.email_verification_codes(created_at desc);
+-- Intentionally avoids index creation and cleanup deletes because overloaded
+-- Supabase projects can time out on those operations in the SQL editor.
 
 create or replace function public.is_email_verified_internal(p_user_id uuid)
 returns boolean
@@ -73,7 +65,3 @@ end;
 $$;
 
 grant execute on function public.notify_trade_result(uuid) to authenticated;
-
-analyze public.notifications;
-analyze public.notification_email_deliveries;
-analyze public.email_verification_codes;
