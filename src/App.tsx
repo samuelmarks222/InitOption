@@ -6,33 +6,27 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { DrawingProvider } from "@/contexts/DrawingContext";
-import { NotificationProvider } from "@/contexts/NotificationContext";
-import { VipProvider } from "@/contexts/VipContext";
-import { CurrencyProvider } from "@/contexts/CurrencyContext";
-import { TradingProvider } from "@/hooks/useTrading";
-import { DynamicAssetProvider } from "@/contexts/DynamicAssetContext";
-import { SocialTradingProvider } from "@/contexts/SocialTradingContext";
+import TradingRouteProviders from "@/components/TradingRouteProviders";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import AuthCallback from "./pages/AuthCallback";
-import NotFound from "./pages/NotFound";
-import PublicInfoPage from "./pages/PublicInfoPage";
-import TermsAndConditions from "./pages/TermsAndConditions";
-import PublicTournamentDetailPage from "./pages/PublicTournamentDetailPage";
-import PublicTournamentsPage from "./pages/PublicTournamentsPage";
-import BlogPage from "./pages/BlogPage";
-import BlogPostPage from "./pages/BlogPostPage";
-import ReviewsPage from "./pages/ReviewsPage";
-import TradingGuidePage from "./pages/TradingGuidePage";
 import { applyPlatformSettingsToDocument, DEFAULT_PLATFORM_SETTINGS, type PlatformSettingsRecord } from "@/lib/platformMetadata";
 import RouteSeoManager from "@/components/seo/RouteSeoManager";
 
 const queryClient = new QueryClient();
 
+const Index = lazy(() => import("./pages/Index"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PublicInfoPage = lazy(() => import("./pages/PublicInfoPage"));
+const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
+const PublicTournamentDetailPage = lazy(() => import("./pages/PublicTournamentDetailPage"));
+const PublicTournamentsPage = lazy(() => import("./pages/PublicTournamentsPage"));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
+const ReviewsPage = lazy(() => import("./pages/ReviewsPage"));
+const TradingGuidePage = lazy(() => import("./pages/TradingGuidePage"));
 const Trade = lazy(() => import("./pages/Trade"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Deposit = lazy(() => import("./pages/Deposit"));
@@ -71,6 +65,16 @@ const withRouteSuspense = (element: React.ReactElement) => (
   <Suspense fallback={<RouteLoadingScreen />}>{element}</Suspense>
 );
 
+const withProtectedRoute = (element: React.ReactElement) => withRouteSuspense(
+  <ProtectedRoute>{element}</ProtectedRoute>,
+);
+
+const withTradingRoute = (element: React.ReactElement) => withRouteSuspense(
+  <ProtectedRoute>
+    <TradingRouteProviders>{element}</TradingRouteProviders>
+  </ProtectedRoute>,
+);
+
 const App = () => {
   const [platformSettings, setPlatformSettings] = useState<Partial<PlatformSettingsRecord> | null>(
     DEFAULT_PLATFORM_SETTINGS,
@@ -101,50 +105,43 @@ const App = () => {
         <BrowserRouter>
           <RouteSeoManager platformSettings={platformSettings} />
           <AuthProvider>
-            <CurrencyProvider>
-              <DrawingProvider>
-                <VipProvider>
-                  <NotificationProvider>
-                    <SocialTradingProvider>
-                      <DynamicAssetProvider>
-                        <TradingProvider>
-                          <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/about" element={<PublicInfoPage pageKey="about" />} />
-                        <Route path="/facts-and-figures" element={<PublicInfoPage pageKey="facts-and-figures" />} />
-                        <Route path="/blog" element={<BlogPage />} />
-                        <Route path="/blog/:slug" element={<BlogPostPage />} />
-                        <Route path="/reviews" element={<ReviewsPage />} />
-                        <Route path="/contact" element={<PublicInfoPage pageKey="contact" />} />
-                        <Route path="/delete-account" element={<PublicInfoPage pageKey="delete-account" />} />
-                        <Route path="/features" element={<PublicInfoPage pageKey="features" />} />
-                        <Route path="/how-it-works" element={<PublicInfoPage pageKey="how-it-works" />} />
-                        <Route path="/trading-guide" element={<TradingGuidePage />} />
-                        <Route path="/why-choose-init-option" element={<PublicInfoPage pageKey="why-choose-init-option" />} />
-                        <Route path="/faq" element={<PublicInfoPage pageKey="faq" />} />
-                        <Route path="/terms" element={<TermsAndConditions />} />
-                        <Route path="/privacy" element={<PublicInfoPage pageKey="privacy" />} />
-                        <Route path="/risk-disclaimer" element={<PublicInfoPage pageKey="risk-disclaimer" />} />
-                        <Route path="/affiliate-program" element={<PublicInfoPage pageKey="affiliate-program" />} />
-                        <Route path="/site-map" element={<PublicInfoPage pageKey="site-map" />} />
-                        <Route path="/tournaments" element={<PublicTournamentsPage platformSettings={platformSettings} />} />
+            <Routes>
+                        <Route path="/" element={withRouteSuspense(<Index />)} />
+                        <Route path="/about" element={withRouteSuspense(<PublicInfoPage pageKey="about" />)} />
+                        <Route path="/facts-and-figures" element={withRouteSuspense(<PublicInfoPage pageKey="facts-and-figures" />)} />
+                        <Route path="/blog" element={withRouteSuspense(<BlogPage />)} />
+                        <Route path="/blog/:slug" element={withRouteSuspense(<BlogPostPage />)} />
+                        <Route path="/reviews" element={withRouteSuspense(<ReviewsPage />)} />
+                        <Route path="/contact" element={withRouteSuspense(<PublicInfoPage pageKey="contact" />)} />
+                        <Route path="/delete-account" element={withRouteSuspense(<PublicInfoPage pageKey="delete-account" />)} />
+                        <Route path="/features" element={withRouteSuspense(<PublicInfoPage pageKey="features" />)} />
+                        <Route path="/how-it-works" element={withRouteSuspense(<PublicInfoPage pageKey="how-it-works" />)} />
+                        <Route path="/trading-guide" element={withRouteSuspense(<TradingGuidePage />)} />
+                        <Route path="/why-choose-init-option" element={withRouteSuspense(<PublicInfoPage pageKey="why-choose-init-option" />)} />
+                        <Route path="/faq" element={withRouteSuspense(<PublicInfoPage pageKey="faq" />)} />
+                        <Route path="/terms" element={withRouteSuspense(<TermsAndConditions />)} />
+                        <Route path="/privacy" element={withRouteSuspense(<PublicInfoPage pageKey="privacy" />)} />
+                        <Route path="/risk-disclaimer" element={withRouteSuspense(<PublicInfoPage pageKey="risk-disclaimer" />)} />
+                        <Route path="/affiliate-program" element={withRouteSuspense(<PublicInfoPage pageKey="affiliate-program" />)} />
+                        <Route path="/site-map" element={withRouteSuspense(<PublicInfoPage pageKey="site-map" />)} />
+                        <Route path="/tournaments" element={withRouteSuspense(<PublicTournamentsPage platformSettings={platformSettings} />)} />
                         <Route
                           path="/tournaments/:slug"
-                          element={<PublicTournamentDetailPage platformSettings={platformSettings} />}
+                          element={withRouteSuspense(<PublicTournamentDetailPage platformSettings={platformSettings} />)}
                         />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
-                        <Route path="/auth/callback" element={<AuthCallback />} />
-                        <Route path="/dashboard" element={withRouteSuspense(<ProtectedRoute><Dashboard /></ProtectedRoute>)} />
-                        <Route path="/trade" element={withRouteSuspense(<ProtectedRoute><Trade /></ProtectedRoute>)} />
-                        <Route path="/trade/*" element={withRouteSuspense(<ProtectedRoute><Trade /></ProtectedRoute>)} />
-                        <Route path="/deposit" element={withRouteSuspense(<ProtectedRoute><Deposit /></ProtectedRoute>)} />
-                        <Route path="/withdraw" element={withRouteSuspense(<ProtectedRoute><Withdraw /></ProtectedRoute>)} />
-                        <Route path="/settings" element={withRouteSuspense(<ProtectedRoute><Settings /></ProtectedRoute>)} />
-                        <Route path="/notifications" element={withRouteSuspense(<ProtectedRoute><NotificationsPage /></ProtectedRoute>)} />
+                        <Route path="/login" element={withRouteSuspense(<Login />)} />
+                        <Route path="/register" element={withRouteSuspense(<Register />)} />
+                        <Route path="/auth/callback" element={withRouteSuspense(<AuthCallback />)} />
+                        <Route path="/dashboard" element={withTradingRoute(<Dashboard />)} />
+                        <Route path="/trade" element={withTradingRoute(<Trade />)} />
+                        <Route path="/trade/*" element={withTradingRoute(<Trade />)} />
+                        <Route path="/deposit" element={withTradingRoute(<Deposit />)} />
+                        <Route path="/withdraw" element={withTradingRoute(<Withdraw />)} />
+                        <Route path="/settings" element={withTradingRoute(<Settings />)} />
+                        <Route path="/notifications" element={withTradingRoute(<NotificationsPage />)} />
                         
                         {/* Admin Routes */}
-                        <Route path="/admin" element={withRouteSuspense(<ProtectedRoute><AdminLayout /></ProtectedRoute>)}>
+                        <Route path="/admin" element={withProtectedRoute(<AdminLayout />)}>
                           <Route index element={withRouteSuspense(<AdminDashboard />)} />
                           <Route path="dashboard" element={withRouteSuspense(<AdminDashboard />)} />
                           <Route path="blog" element={withRouteSuspense(<BlogAdmin />)} />
@@ -165,15 +162,8 @@ const App = () => {
                           <Route path="tournaments" element={withRouteSuspense(<TournamentsAdmin />)} />
                         </Route>
 
-                        <Route path="*" element={<NotFound />} />
-                          </Routes>
-                        </TradingProvider>
-                      </DynamicAssetProvider>
-                    </SocialTradingProvider>
-                  </NotificationProvider>
-                </VipProvider>
-              </DrawingProvider>
-            </CurrencyProvider>
+                        <Route path="*" element={withRouteSuspense(<NotFound />)} />
+            </Routes>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

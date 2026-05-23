@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAuthRestorePath } from "@/lib/authRedirect";
@@ -7,15 +8,18 @@ import Navbar from "@/components/landing/Navbar";
 import BonusPopup from "@/components/landing/BonusPopup";
 import HeroSection from "@/components/landing/HeroSection";
 import MarketTicker from "@/components/landing/MarketTicker";
-import WhatWeOfferSection from "@/components/landing/WhatWeOfferSection";
-import FeaturesSection from "@/components/landing/FeaturesSection";
-import StepsSection from "@/components/landing/StepsSection";
-import MobileSection from "@/components/landing/MobileSection";
-import EarningsSection from "@/components/landing/EarningsSection";
-import TestimonialsSection from "@/components/landing/TestimonialsSection";
-import FAQSection from "@/components/landing/FAQSection";
-import CTASection from "@/components/landing/CTASection";
-import Footer from "@/components/landing/Footer";
+
+const WhatWeOfferSection = lazy(() => import("@/components/landing/WhatWeOfferSection"));
+const FeaturesSection = lazy(() => import("@/components/landing/FeaturesSection"));
+const StepsSection = lazy(() => import("@/components/landing/StepsSection"));
+const MobileSection = lazy(() => import("@/components/landing/MobileSection"));
+const EarningsSection = lazy(() => import("@/components/landing/EarningsSection"));
+const TestimonialsSection = lazy(() => import("@/components/landing/TestimonialsSection"));
+const FAQSection = lazy(() => import("@/components/landing/FAQSection"));
+const CTASection = lazy(() => import("@/components/landing/CTASection"));
+const Footer = lazy(() => import("@/components/landing/Footer"));
+
+const LandingSectionFallback = () => <div className="min-h-[28vh]" aria-hidden="true" />;
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -38,15 +42,17 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <MarketTicker />
-      <WhatWeOfferSection />
-      <FeaturesSection />
-      <StepsSection />
-      <MobileSection />
-      <EarningsSection />
-      <TestimonialsSection />
-      <FAQSection />
-      <CTASection />
-      <Footer />
+      <Suspense fallback={<LandingSectionFallback />}>
+        <WhatWeOfferSection />
+        <FeaturesSection />
+        <StepsSection />
+        <MobileSection />
+        <EarningsSection />
+        <TestimonialsSection />
+        <FAQSection />
+        <CTASection />
+        <Footer />
+      </Suspense>
     </div>
   );
 };
