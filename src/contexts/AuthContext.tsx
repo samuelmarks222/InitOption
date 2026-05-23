@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { type TablesUpdate } from "@/integrations/supabase/types";
 import { clearAuthRestorePath, getAuthRestorePath } from "@/lib/authRedirect";
 import { shouldNormalizeSeededLiveBalance } from "@/lib/live-balance";
-import { checkSupabaseAuthReachable } from "@/lib/supabaseHealth";
 import type { AuthProfile, ProfileUpdateInput } from "@/types/profile";
 
 interface AuthContextType {
@@ -633,17 +632,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { error };
     } catch {
       return {
-        error: toAuthError("The login service is not responding right now. Please try again after the Supabase project is back online.", 503),
+        error: toAuthError("Login is taking longer than expected. Please try again in a moment.", 503),
       };
     }
   };
 
   const signInWithGoogle = async () => {
-    const health = await checkSupabaseAuthReachable();
-    if (!health.ok) {
-      return { error: toAuthError(health.message, 503) };
-    }
-
     const redirectPath = getAuthRestorePath() || "/trade";
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -659,7 +653,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { error };
     } catch {
       return {
-        error: toAuthError("Google sign-in could not start because the login service is not responding.", 503),
+        error: toAuthError("Google sign-in is taking longer than expected. Please try again in a moment.", 503),
       };
     }
   };
