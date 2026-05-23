@@ -74,66 +74,6 @@ $$;
 
 grant execute on function public.notify_trade_result(uuid) to authenticated;
 
-do $$
-declare
-  v_deleted integer;
-begin
-  loop
-    with doomed as (
-      select ctid
-      from public.notification_email_deliveries
-      where notification_type = 'trade_result'
-         or (
-          status in ('sent', 'skipped', 'failed')
-          and created_at < now() - interval '30 days'
-        )
-      limit 5000
-    )
-    delete from public.notification_email_deliveries d
-    using doomed
-    where d.ctid = doomed.ctid;
-
-    get diagnostics v_deleted = row_count;
-    exit when v_deleted = 0;
-  end loop;
-
-  loop
-    with doomed as (
-      select ctid
-      from public.notifications
-      where type = 'trade_result'
-         or (
-          expires_at is not null
-          and expires_at < now() - interval '1 day'
-        )
-      limit 5000
-    )
-    delete from public.notifications n
-    using doomed
-    where n.ctid = doomed.ctid;
-
-    get diagnostics v_deleted = row_count;
-    exit when v_deleted = 0;
-  end loop;
-
-  loop
-    with doomed as (
-      select ctid
-      from public.email_verification_codes
-      where created_at < now() - interval '7 days'
-         or expires_at < now() - interval '1 day'
-      limit 5000
-    )
-    delete from public.email_verification_codes c
-    using doomed
-    where c.ctid = doomed.ctid;
-
-    get diagnostics v_deleted = row_count;
-    exit when v_deleted = 0;
-  end loop;
-end;
-$$;
-
 analyze public.notifications;
 analyze public.notification_email_deliveries;
 analyze public.email_verification_codes;
