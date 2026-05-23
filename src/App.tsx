@@ -10,6 +10,7 @@ import TradingRouteProviders from "@/components/TradingRouteProviders";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { applyPlatformSettingsToDocument, DEFAULT_PLATFORM_SETTINGS, type PlatformSettingsRecord } from "@/lib/platformMetadata";
+import { readPlatformPresentationCache, writePlatformPresentationCache } from "@/lib/platformSettingsCache";
 import RouteSeoManager from "@/components/seo/RouteSeoManager";
 
 const queryClient = new QueryClient();
@@ -82,9 +83,17 @@ const App = () => {
 
   useEffect(() => {
     async function loadPlatformPresentation() {
+      const cachedSettings = readPlatformPresentationCache();
+      if (cachedSettings) {
+        setPlatformSettings(cachedSettings);
+        applyPlatformSettingsToDocument(cachedSettings);
+        return;
+      }
+
       try {
         const { data } = await supabase.from("platform_settings").select("*").limit(1).maybeSingle();
         const resolvedSettings = (data as Partial<PlatformSettingsRecord> | null) ?? DEFAULT_PLATFORM_SETTINGS;
+        writePlatformPresentationCache(resolvedSettings);
         setPlatformSettings(resolvedSettings);
         applyPlatformSettingsToDocument(resolvedSettings);
       } catch (e) {

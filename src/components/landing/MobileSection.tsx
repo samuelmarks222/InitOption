@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import mobileTrading from "@/assets/mobile-trading.png";
+import mobileTrading from "@/assets/mobile-trading.jpg";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 
 const features = [

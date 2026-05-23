@@ -17,8 +17,8 @@ interface TradingPlatformProps {
   content: WebsiteContent;
 }
 
-const FRONT_IMAGE = "/landing/hero-laptop-front.png";
-const ANGLE_IMAGE = "/landing/hero-laptop-angle.png";
+const FRONT_IMAGE = "/landing/hero-laptop-front.jpg";
+const ANGLE_IMAGE = "/landing/hero-laptop-angle.jpg";
 
 const REVIEW_TONES = [
   "landing-neo-card text-[#17131a]",

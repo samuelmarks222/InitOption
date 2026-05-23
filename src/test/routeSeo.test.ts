@@ -48,7 +48,7 @@ describe("route SEO", () => {
       currentHref: "https://initoption.example/faq",
       metaDescription: "Frequently asked questions for Init Option.",
       platformName: "Init Option",
-      logoUrl: "https://initoption.example/share-icon.png",
+      logoUrl: "https://initoption.example/apple-touch-icon.png",
       websiteContentRaw: JSON.stringify({
         publicPages: {
           faq: {
@@ -74,7 +74,7 @@ describe("route SEO", () => {
       currentHref: "https://initoption.example/contact",
       metaDescription: "Contact Init Option support.",
       platformName: "Init Option",
-      logoUrl: "https://initoption.example/share-icon.png",
+      logoUrl: "https://initoption.example/apple-touch-icon.png",
       supportEmail: "support@initoption.example",
       websiteContentRaw: JSON.stringify({
         socialLinks: {
@@ -108,7 +108,7 @@ describe("route SEO", () => {
       currentHref: "https://initoption.example/tournaments/monday-momentum-1234abcd",
       metaDescription: "Tournament detail page",
       platformName: "Init Option",
-      logoUrl: "https://initoption.example/share-icon.png",
+      logoUrl: "https://initoption.example/apple-touch-icon.png",
       seoContext: {
         tournament: toTournamentStructuredData({
           id: "1234abcd-0000-0000-0000-000000000000",
@@ -150,7 +150,7 @@ describe("route SEO", () => {
       currentHref: "https://initoption.example/tournaments",
       metaDescription: "Tournament listing page",
       platformName: "Init Option",
-      logoUrl: "https://initoption.example/share-icon.png",
+      logoUrl: "https://initoption.example/apple-touch-icon.png",
       seoContext: {
         tournaments: [tournament],
       },

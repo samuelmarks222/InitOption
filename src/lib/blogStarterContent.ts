@@ -61,7 +61,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     title: "5 Proven Trading Strategies for Beginners",
     slug: "5-proven-trading-strategies-beginners",
     excerpt: "New to trading? Learn five simple yet effective strategies to start your journey with confidence.",
-    featuredImageUrl: "/landing/hero-trader-photo.jpg",
+    featuredImageUrl: "/landing/hero-laptop-front.jpg",
     featuredImageAlt: "Trader studying a market setup on a dark trading terminal",
     metaTitle: "5 Proven Trading Strategies for Beginners | Init Option Blog",
     metaDescription:
@@ -106,7 +106,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     title: "Understanding RSI: A Complete Guide",
     slug: "understanding-rsi-complete-guide",
     excerpt: "The Relative Strength Index is one of the most popular indicators. Here is how to use it correctly.",
-    featuredImageUrl: "/landing/hero-laptop-angle.png",
+    featuredImageUrl: "/landing/hero-laptop-angle.jpg",
     featuredImageAlt: "Clean trading chart with RSI-style technical overlays",
     metaTitle: "Understanding RSI: A Complete Guide | Init Option Blog",
     metaDescription:
@@ -151,7 +151,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     title: "How to Win at Weekly Trading Tournaments",
     slug: "how-to-win-weekly-trading-tournaments",
     excerpt: "Increase your chances of winning real prizes with these tournament-tested tactics.",
-    featuredImageUrl: "/landing/hero-laptop-front.png",
+    featuredImageUrl: "/landing/hero-laptop-front.jpg",
     featuredImageAlt: "Tournament-ready trading terminal displayed on a laptop",
     metaTitle: "How to Win at Weekly Trading Tournaments | Init Option Blog",
     metaDescription:
@@ -196,7 +196,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     title: "Why Up to 95% Profit Changes Your Trading Math",
     slug: "why-up-to-95-percent-profit-matters",
     excerpt: "Higher payouts mean you can be wrong more often and still be profitable. Learn the math behind the number.",
-    featuredImageUrl: "/landing/hero-laptop-front.png",
+    featuredImageUrl: "/landing/hero-laptop-front.jpg",
     featuredImageAlt: "Payout-focused trading interface showing performance math",
     metaTitle: "Why Up to 95% Profit Changes Your Trading Math | Init Option Blog",
     metaDescription:
@@ -241,7 +241,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     title: "Platform Update: New Indicators and Drawing Tools",
     slug: "platform-update-new-indicators-drawing-tools",
     excerpt: "We have added 10 new indicators and a complete drawing suite. Here is what is new and how to use them.",
-    featuredImageUrl: "/landing/hero-laptop-angle.png",
+    featuredImageUrl: "/landing/hero-laptop-angle.jpg",
     featuredImageAlt: "Updated trading platform with indicators and drawing tools visible",
     metaTitle: "Platform Update: New Indicators and Drawing Tools | Init Option Blog",
     metaDescription:
@@ -288,7 +288,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     slug: "understanding-support-and-resistance-levels",
     excerpt:
       "Support and resistance help traders find decision zones, not magic lines. Learn how to mark them and use them with more discipline.",
-    featuredImageUrl: "/landing/hero-laptop-angle.png",
+    featuredImageUrl: "/landing/hero-laptop-angle.jpg",
     featuredImageAlt: "Trading chart with marked support and resistance zones",
     metaTitle: "Understanding Support and Resistance Levels | Init Option Blog",
     metaDescription:
@@ -323,7 +323,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     slug: "weekend-showdown-tournament-results-april-2026",
     excerpt:
       "A full breakdown of the April 2026 Weekend Showdown, including how the top traders climbed the leaderboard and what separated the winners.",
-    featuredImageUrl: "/landing/hero-laptop-front.png",
+    featuredImageUrl: "/landing/hero-laptop-front.jpg",
     featuredImageAlt: "Leaderboard style tournament display on a trading screen",
     metaTitle: "Weekend Showdown Tournament Results - April 2026 | Init Option Blog",
     metaDescription:
@@ -355,7 +355,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     slug: "psychology-of-trading-control-emotions",
     excerpt:
       "Most trading mistakes are emotional before they are technical. Learn how to reduce revenge trades, fear, and impulsive decisions.",
-    featuredImageUrl: "/landing/hero-trader-photo.jpg",
+    featuredImageUrl: "/landing/hero-laptop-front.jpg",
     featuredImageAlt: "Focused trader managing emotions while studying a chart",
     metaTitle: "The Psychology of Trading: How to Control Emotions | Init Option Blog",
     metaDescription:
@@ -390,7 +390,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     slug: "how-to-withdraw-mpesa-in-under-30-minutes",
     excerpt:
       "A clear step-by-step guide to requesting M-PESA withdrawals quickly and avoiding the most common verification delays.",
-    featuredImageUrl: "/landing/hero-laptop-front.png",
+    featuredImageUrl: "/landing/hero-laptop-front.jpg",
     featuredImageAlt: "Funding dashboard showing a fast mobile money withdrawal flow",
     metaTitle: "How to Withdraw M-PESA in Under 30 Minutes | Init Option Blog",
     metaDescription:
@@ -426,7 +426,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     slug: "economic-calendar-events-that-move-markets",
     excerpt:
       "Interest rates, inflation, payrolls, and central-bank guidance can shift short-term price action fast. Here is how to prepare before the release.",
-    featuredImageUrl: "/landing/hero-laptop-angle.png",
+    featuredImageUrl: "/landing/hero-laptop-angle.jpg",
     featuredImageAlt: "Trading workspace prepared for major economic calendar events",
     metaTitle: "Economic Calendar Events That Move the Markets | Init Option Blog",
     metaDescription:
@@ -463,7 +463,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     slug: "what-is-a-trading-platform",
     excerpt:
       "Learn what a trading platform is, how online trading platforms work, and what beginners should look for before opening a live account.",
-    featuredImageUrl: "/landing/hero-laptop-front.png",
+    featuredImageUrl: "/landing/hero-laptop-front.jpg",
     featuredImageAlt: "Init Option trading platform shown on a laptop screen",
     metaTitle: "What is a Trading Platform? Beginner's Guide | Init Option",
     metaDescription:
@@ -500,7 +500,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     slug: "why-demo-trading-account-essential",
     excerpt:
       "A demo trading account helps beginners learn the platform, test strategies, and build discipline before moving into live trading.",
-    featuredImageUrl: "/landing/hero-laptop-angle.png",
+    featuredImageUrl: "/landing/hero-laptop-angle.jpg",
     featuredImageAlt: "Demo trading account with charts and trading tools",
     metaTitle: "Why a Demo Trading Account is Essential Before Going Live | Init Option",
     metaDescription:
@@ -535,7 +535,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     slug: "how-to-trade-with-mpesa",
     excerpt:
       "Learn how M-PESA deposits and withdrawals work on Init Option, including the basic account flow for Kenyan traders.",
-    featuredImageUrl: "/landing/hero-laptop-front.png",
+    featuredImageUrl: "/landing/hero-laptop-front.jpg",
     featuredImageAlt: "M-PESA trading funding guide on Init Option",
     metaTitle: "How to Trade Using M-PESA - Kenyan Guide | Init Option",
     metaDescription:
@@ -584,7 +584,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     slug: "crypto-trading-platform",
     excerpt:
       "Explore how crypto trading works on Init Option, including Bitcoin, Ethereum, USDT funding, withdrawals, and demo practice.",
-    featuredImageUrl: "/landing/hero-laptop-angle.png",
+    featuredImageUrl: "/landing/hero-laptop-angle.jpg",
     featuredImageAlt: "Crypto trading platform interface with candlestick charts",
     metaTitle: "Crypto Trading Platform - Trade Bitcoin, Ethereum & USDT | Init Option",
     metaDescription:
@@ -637,7 +637,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     slug: "fast-withdrawals-trading",
     excerpt:
       "Fast withdrawals are a major trust signal for traders. Learn why payout speed matters and how to avoid common delays.",
-    featuredImageUrl: "/landing/hero-laptop-front.png",
+    featuredImageUrl: "/landing/hero-laptop-front.jpg",
     featuredImageAlt: "Fast withdrawal dashboard on a trading platform",
     metaTitle: "Fast Withdrawals Trading - Get Your Profits Faster | Init Option",
     metaDescription:
@@ -688,7 +688,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     slug: "binary-options-vs-forex",
     excerpt:
       "Compare binary options and forex trading so beginners can understand risk, payouts, timeframes, and complexity before choosing a style.",
-    featuredImageUrl: "/landing/hero-trader-photo.jpg",
+    featuredImageUrl: "/landing/hero-laptop-front.jpg",
     featuredImageAlt: "Trader comparing binary options and forex chart setups",
     metaTitle: "Binary Options vs Forex - Which Trading Style is Right for You? | Init Option",
     metaDescription:
@@ -735,7 +735,7 @@ export const STARTER_BLOG_POSTS: BlogPostDefinition[] = [
     slug: "how-to-read-candlestick-charts",
     excerpt:
       "Learn how candlestick charts work, what open, high, low, and close mean, and how beginners can spot basic price-action patterns.",
-    featuredImageUrl: "/landing/hero-laptop-angle.png",
+    featuredImageUrl: "/landing/hero-laptop-angle.jpg",
     featuredImageAlt: "Candlestick chart guide on a trading platform screen",
     metaTitle: "How to Read Candlestick Charts - Beginner's Guide | Init Option",
     metaDescription:

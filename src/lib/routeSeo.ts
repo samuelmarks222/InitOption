@@ -13,7 +13,7 @@ const PRIVATE_PREFIXES = ["/admin", "/dashboard", "/trade", "/deposit", "/withdr
 const TOURNAMENTS_INDEX_PATH = "/tournaments";
 const BLOG_INDEX_PATH = "/blog";
 const REVIEWS_PATH = "/reviews";
-const DEFAULT_SHARE_IMAGE_PATH = "/share-icon.png";
+const DEFAULT_SHARE_IMAGE_PATH = "/apple-touch-icon.png";
 const HOME_TITLE_TEMPLATE = "{platformName} – Trading Platform: Free Demo, Live Trading & Fast Withdrawals";
 const HOME_DESCRIPTION_TEMPLATE =
   "{platformName} is an online trading platform with real-time charts, instant demo trading, M-PESA and crypto funding, public tournaments, and fast withdrawals.";
