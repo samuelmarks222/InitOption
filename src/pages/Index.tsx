@@ -2,6 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getAuthRestorePath } from "@/lib/authRedirect";
 import { shouldStartAtLoginOnMobile } from "@/lib/mobileLanding";
+import AuthLoadingScreen from "@/components/auth/AuthLoadingScreen";
 import Navbar from "@/components/landing/Navbar";
 import BonusPopup from "@/components/landing/BonusPopup";
 import HeroSection from "@/components/landing/HeroSection";
@@ -20,7 +21,7 @@ const Index = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen bg-background" />;
+    return <AuthLoadingScreen message="Opening Init Option..." />;
   }
 
   if (user) {

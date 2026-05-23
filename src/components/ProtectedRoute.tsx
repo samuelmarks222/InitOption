@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import AuthLoadingScreen from "@/components/auth/AuthLoadingScreen";
 import { useAuth } from "@/contexts/AuthContext";
 import { saveAuthRestorePath } from "@/lib/authRedirect";
 
@@ -14,11 +15,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }, [location.hash, location.pathname, location.search, user]);
 
   if (loading) {
-    return (
-      <div className="h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
+    return <AuthLoadingScreen message="Checking your account..." />;
   }
 
   if (!user) return <Navigate to="/login" replace />;

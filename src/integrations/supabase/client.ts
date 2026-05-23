@@ -6,6 +6,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL?.trim() ?? "";
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim() ?? "";
 const FALLBACK_SUPABASE_URL = "https://placeholder.invalid";
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY = "missing-publishable-key";
+const SUPABASE_CLIENT_FETCH_TIMEOUT_MS = 8000;
 
 type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
@@ -42,10 +43,43 @@ const resolveAuthStorage = (): StorageLike => {
 };
 
 export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
+export const supabaseUrl = isSupabaseConfigured ? SUPABASE_URL : "";
+export const supabasePublishableKey = isSupabaseConfigured ? SUPABASE_PUBLISHABLE_KEY : "";
 
 if (!isSupabaseConfigured) {
   console.error("Supabase environment variables are missing. Falling back to a disabled client.");
 }
+
+const createTimeoutFetch =
+  (timeoutMs: number): typeof fetch =>
+  async (input, init = {}) => {
+    if (typeof AbortController === "undefined") {
+      return fetch(input, init);
+    }
+
+    const controller = new AbortController();
+    const inheritedSignal = init.signal;
+    const timeout = globalThis.setTimeout(() => controller.abort(), timeoutMs);
+    const abortFromInheritedSignal = () => controller.abort();
+
+    if (inheritedSignal) {
+      if (inheritedSignal.aborted) {
+        controller.abort();
+      } else {
+        inheritedSignal.addEventListener("abort", abortFromInheritedSignal, { once: true });
+      }
+    }
+
+    try {
+      return await fetch(input, {
+        ...init,
+        signal: controller.signal,
+      });
+    } finally {
+      globalThis.clearTimeout(timeout);
+      inheritedSignal?.removeEventListener("abort", abortFromInheritedSignal);
+    }
+  };
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +88,9 @@ export const supabase = createClient<Database>(
   isSupabaseConfigured ? SUPABASE_URL : FALLBACK_SUPABASE_URL,
   isSupabaseConfigured ? SUPABASE_PUBLISHABLE_KEY : FALLBACK_SUPABASE_PUBLISHABLE_KEY,
   {
+    global: {
+      fetch: createTimeoutFetch(SUPABASE_CLIENT_FETCH_TIMEOUT_MS),
+    },
     auth: {
       storage: resolveAuthStorage(),
       persistSession: isSupabaseConfigured,

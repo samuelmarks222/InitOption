@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { type TablesUpdate } from "@/integrations/supabase/types";
 import { clearAuthRestorePath, getAuthRestorePath } from "@/lib/authRedirect";
 import { shouldNormalizeSeededLiveBalance } from "@/lib/live-balance";
+import { checkSupabaseAuthReachable } from "@/lib/supabaseHealth";
 import type { AuthProfile, ProfileUpdateInput } from "@/types/profile";
 
 interface AuthContextType {
@@ -33,6 +34,8 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AUTH_SESSION_RESTORE_TIMEOUT_MS = 3500;
+const OAUTH_SESSION_RESTORE_TIMEOUT_MS = 8000;
 
 const getProfileCacheKey = (userId: string) => `profile_cache_${userId}`;
 
@@ -428,20 +431,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       hashParams.has("error") ||
       hashParams.has("error_description");
     let fallbackTimeout: ReturnType<typeof setTimeout> | undefined;
+    let isActive = true;
 
-    if (isOAuthRedirect) {
-      fallbackTimeout = setTimeout(() => setLoading(false), 8000);
-    }
+    const clearFallbackTimeout = () => {
+      if (!fallbackTimeout) return;
+      clearTimeout(fallbackTimeout);
+      fallbackTimeout = undefined;
+    };
+
+    fallbackTimeout = setTimeout(() => {
+      if (!isActive) return;
+      console.warn("Auth session restore timed out. Continuing with a guest session.");
+      setLoading(false);
+    }, isOAuthRedirect ? OAUTH_SESSION_RESTORE_TIMEOUT_MS : AUTH_SESSION_RESTORE_TIMEOUT_MS);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, nextSession) => {
-        if (event === "SIGNED_IN" && fallbackTimeout) clearTimeout(fallbackTimeout);
+        if (event === "SIGNED_IN") clearFallbackTimeout();
 
         setSession(nextSession);
         setUser(nextSession?.user ?? null);
         activeProfileUserIdRef.current = nextSession?.user?.id ?? null;
 
         if (nextSession?.user) {
+          clearFallbackTimeout();
           setProfile((current) => (current?.id === nextSession.user.id ? current : null));
           setTimeout(() => {
             void fetchProfile(nextSession.user.id, nextSession.user);
@@ -449,27 +462,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setLoading(false);
         } else {
           setProfile(null);
-          if (!isOAuthRedirect) setLoading(false);
+          if (!isOAuthRedirect) {
+            clearFallbackTimeout();
+            setLoading(false);
+          }
         }
       }
     );
 
     void supabase.auth.getSession()
       .then(({ data: { session: nextSession } }) => {
+        if (!isActive) return;
+
         setSession(nextSession);
         setUser(nextSession?.user ?? null);
         activeProfileUserIdRef.current = nextSession?.user?.id ?? null;
 
         if (nextSession?.user) {
+          clearFallbackTimeout();
           setProfile((current) => (current?.id === nextSession.user.id ? current : null));
           void fetchProfile(nextSession.user.id, nextSession.user);
           setLoading(false);
         } else if (!isOAuthRedirect) {
+          clearFallbackTimeout();
           setProfile(null);
           setLoading(false);
         }
       })
       .catch((error) => {
+        if (!isActive) return;
+
+        clearFallbackTimeout();
         console.error("Failed to restore auth session", error);
         activeProfileUserIdRef.current = null;
         setSession(null);
@@ -479,8 +502,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
     return () => {
+      isActive = false;
       subscription.unsubscribe();
-      if (fallbackTimeout) clearTimeout(fallbackTimeout);
+      clearFallbackTimeout();
     };
   }, [fetchProfile]);
 
@@ -604,23 +628,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    const health = await checkSupabaseAuthReachable();
+    if (!health.ok) {
+      return { error: toAuthError(health.message, 503) };
+    }
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error };
+    } catch {
+      return {
+        error: toAuthError("Login service is taking too long to respond. Please wait a moment and try again.", 503),
+      };
+    }
   };
 
   const signInWithGoogle = async () => {
-    const redirectPath = getAuthRestorePath() || "/trade";
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
-        queryParams: {
-          prompt: "select_account",
-        },
-      }
-    });
+    const health = await checkSupabaseAuthReachable();
+    if (!health.ok) {
+      return { error: toAuthError(health.message, 503) };
+    }
 
-    return { error };
+    const redirectPath = getAuthRestorePath() || "/trade";
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
+          queryParams: {
+            prompt: "select_account",
+          },
+        }
+      });
+
+      return { error };
+    } catch {
+      return {
+        error: toAuthError("Google sign-in is taking too long to start. Please wait a moment and try again.", 503),
+      };
+    }
   };
 
   const signOut = async () => {

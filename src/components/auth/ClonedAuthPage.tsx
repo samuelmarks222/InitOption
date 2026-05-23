@@ -4,6 +4,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, TrendingUp, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import AuthLoadingScreen from "@/components/auth/AuthLoadingScreen";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { getAuthRestorePath } from "@/lib/authRedirect";
@@ -131,7 +132,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   };
 
   if (authLoading) {
-    return <div className="min-h-screen bg-background" />;
+    return <AuthLoadingScreen message="Checking your session..." />;
   }
 
   if (user) {
