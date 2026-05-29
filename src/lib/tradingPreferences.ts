@@ -14,11 +14,11 @@ export const TRADING_TEMPLATE_OPTIONS: Array<{
   {
     id: "default",
     label: "Default",
-    surface: "#17191c",
-    panel: "#22242a",
-    line: "#ff7a1a",
-    grid: "#5a351d",
-    text: "#ffffff",
+    surface: "#202942",
+    panel: "#25314d",
+    line: "#8fb0cf",
+    grid: "#3b4968",
+    text: "#f3f7ff",
   },
   {
     id: "graphite",

@@ -139,7 +139,7 @@ export const renderPlatformHeadMarkup = (
   ];
 
   if (!customThemeColorDefined) {
-    tags.splice(4, 0, renderVoidTag("meta", { name: "theme-color", content: settings.chart_bg_color || "#0E1217" }));
+    tags.splice(4, 0, renderVoidTag("meta", { name: "theme-color", content: settings.chart_bg_color || "#202942" }));
   }
 
   if (resolvedSeo.metaKeywords.trim()) {

@@ -82,7 +82,7 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettingsRecord = {
   favicon_url: "",
   chart_up_color: "#00C076",
   chart_down_color: "#F6465D",
-  chart_bg_color: "#0E1217",
+  chart_bg_color: "#202942",
   site_title: "",
   meta_description: "",
   meta_keywords: "",

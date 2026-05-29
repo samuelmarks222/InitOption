@@ -111,8 +111,8 @@ export interface ChartSettlementAnnouncement {
   status: "won" | "lost";
 }
 
-const PROFESSIONAL_CHART_BG = "#1b2230";
-const PROFESSIONAL_CHART_PANEL = "#202838";
+const PROFESSIONAL_CHART_BG = "#202942";
+const PROFESSIONAL_CHART_PANEL = "#25314d";
 const PROFESSIONAL_CHART_TEXT = "#eef3fb";
 const PROFESSIONAL_CHART_MUTED_TEXT = "#96a4b9";
 const PROFESSIONAL_CHART_GRID = "rgba(255, 255, 255, 0.07)";

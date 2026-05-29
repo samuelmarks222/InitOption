@@ -9,8 +9,8 @@
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
-  "background_color": "#0E1217",
-  "theme_color": "#0E1217",
+  "background_color": "#202942",
+  "theme_color": "#202942",
   "categories": ["finance", "business", "productivity"],
   "shortcuts": [
     {

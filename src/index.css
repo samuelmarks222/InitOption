@@ -4,25 +4,25 @@
 @layer base {
   :root {
     /* Shared Init Option palette */
-    --background: 229 23.3% 14.3%;   /* #1c1f2d */
+    --background: 224 34.7% 19.2%;   /* #202942 */
     --foreground: 0 0% 100%;
 
-    --card: 223 23.1% 15.3%;         /* #1e2330 */
+    --card: 222 35.1% 21.8%;         /* #24304b */
     --card-foreground: 0 0% 100%;
 
-    --popover: 223 23.1% 15.3%;
+    --popover: 222 35.1% 21.8%;
     --popover-foreground: 0 0% 100%;
 
     --primary: 148 82.9% 34.3%;      /* #0fa053 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 223 23.1% 15.3%;    /* #1e2330 */
+    --secondary: 222 35.1% 21.8%;    /* #24304b */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 223 18% 20%;
+    --muted: 222 30% 24%;
     --muted-foreground: 220 12% 72%;
 
-    --accent: 223 23.1% 15.3%;
+    --accent: 222 35.1% 21.8%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 80% 55%;
@@ -31,8 +31,8 @@
     --success: 148 82.9% 34.3%;
     --success-foreground: 0 0% 100%;
 
-    --border: 223 20% 23%;
-    --input: 223 23.1% 15.3%;
+    --border: 221 27% 32%;
+    --input: 222 35.1% 21.8%;
     --ring: 148 82.9% 34.3%;
 
     --radius: 0.375rem;
@@ -41,53 +41,53 @@
     --trading-green: 148 82.9% 34.3%;
     --trading-red: 350 80% 50%;
     --trading-orange: 29 100% 62%;
-    --chart-bg: 229 23.3% 14.3%;
-    --sidebar-bg: 223 23.1% 15.3%;
-    --panel-bg: 223 23.1% 15.3%;
+    --chart-bg: 224 34.7% 19.2%;
+    --sidebar-bg: 224 34.7% 19.2%;
+    --panel-bg: 222 35.1% 21.8%;
 
     /* Chart colors */
     --candle-green: 148 82.9% 34.3%;
     --candle-red: 350 80% 52%;
-    --chart-grid: 223 20% 23%;
+    --chart-grid: 221 27% 32%;
     --price-line: 148 82.9% 34.3%;
 
-    --sidebar-background: 229 23.3% 14.3%;
+    --sidebar-background: 224 34.7% 19.2%;
     --sidebar-foreground: 220 12% 72%;
     --sidebar-primary: 148 82.9% 34.3%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 223 23.1% 15.3%;
+    --sidebar-accent: 222 35.1% 21.8%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 223 20% 23%;
+    --sidebar-border: 221 27% 32%;
     --sidebar-ring: 148 82.9% 34.3%;
   }
 
   .dark {
-    --background: 229 23.3% 14.3%;
+    --background: 224 34.7% 19.2%;
     --foreground: 0 0% 100%;
-    --card: 223 23.1% 15.3%;
+    --card: 222 35.1% 21.8%;
     --card-foreground: 0 0% 100%;
-    --popover: 223 23.1% 15.3%;
+    --popover: 222 35.1% 21.8%;
     --popover-foreground: 0 0% 100%;
     --primary: 148 82.9% 34.3%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 223 23.1% 15.3%;
+    --secondary: 222 35.1% 21.8%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 223 18% 20%;
+    --muted: 222 30% 24%;
     --muted-foreground: 220 12% 72%;
-    --accent: 223 23.1% 15.3%;
+    --accent: 222 35.1% 21.8%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 80% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 223 20% 23%;
-    --input: 223 23.1% 15.3%;
+    --border: 221 27% 32%;
+    --input: 222 35.1% 21.8%;
     --ring: 148 82.9% 34.3%;
-    --sidebar-background: 229 23.3% 14.3%;
+    --sidebar-background: 224 34.7% 19.2%;
     --sidebar-foreground: 220 12% 72%;
     --sidebar-primary: 148 82.9% 34.3%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 223 23.1% 15.3%;
+    --sidebar-accent: 222 35.1% 21.8%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 223 20% 23%;
+    --sidebar-border: 221 27% 32%;
     --sidebar-ring: 148 82.9% 34.3%;
   }
 }
@@ -125,9 +125,9 @@
   }
 
   .admin-theme {
-    --admin-surface: #1e2330;
-    --admin-deep: #1c1f2d;
-    --admin-border: #1e2330;
+    --admin-surface: #25314d;
+    --admin-deep: #202942;
+    --admin-border: #334365;
     --admin-green: #0fa053;
     --admin-green-soft: #9be1bc;
     --admin-orange: #ff9a3d;
@@ -170,7 +170,7 @@
 
   .admin-theme .admin-button-secondary {
     border: 1px solid rgba(255, 154, 61, 0.22);
-    background: rgba(30, 35, 48, 0.92);
+    background: rgba(37, 49, 77, 0.92);
     color: var(--admin-orange-soft);
     transition:
       background-color 180ms ease,
@@ -291,6 +291,20 @@
     font-family: Arial, system-ui, sans-serif !important;
   }
 
+  .admin-theme[class*="bg-[#1c1f2d]"],
+  .admin-theme [class*="bg-[#1c1f2d]"] {
+    background-color: var(--admin-deep) !important;
+  }
+
+  .admin-theme[class*="bg-[#1e2330]"],
+  .admin-theme [class*="bg-[#1e2330]"] {
+    background-color: var(--admin-surface) !important;
+  }
+
+  .admin-theme [class*="border-[#1e2330]"] {
+    border-color: var(--admin-border) !important;
+  }
+
   .trading-terminal,
   .trading-terminal button,
   .trading-terminal input,
@@ -323,39 +337,39 @@
   }
 
   .trading-terminal {
-    --trading-workspace-bg: #17191c;
-    --trading-header-bg: #17191c;
-    --trading-sidebar-bg: #17191c;
-    --trading-workspace-panel-bg: #17191c;
-    --trading-panel-bg: #22242a;
-    --trading-panel-soft-bg: #2a2d35;
-    --trading-tabs-bg: #1e2025;
-    --trading-chart-divider-bg: #2a2d35;
-    --trading-chart-pane-bg: #0b1016;
-    --trading-border-color: rgba(255, 255, 255, 0.07);
-    --trading-border-strong-color: rgba(255, 255, 255, 0.08);
-    --trading-control-bg: #22242a;
-    --trading-control-hover-bg: rgba(255, 255, 255, 0.07);
-    --trading-control-border: rgba(255, 255, 255, 0.1);
-    --trading-text-color: #f7fbff;
-    --trading-muted-color: #a8b0bd;
-    --trading-tool-bg: rgba(34, 36, 42, 0.98);
-    --trading-tool-hover-bg: #32363e;
-    --trading-tool-active-bg: #3a2a1d;
-    --trading-tool-border: rgba(255, 255, 255, 0.1);
-    --trading-tool-hover-border: rgba(255, 122, 26, 0.5);
-    --trading-tool-active-border: #ff7a1a;
-    --trading-tool-text: #e7edf6;
+    --trading-workspace-bg: #202942;
+    --trading-header-bg: #202942;
+    --trading-sidebar-bg: #202942;
+    --trading-workspace-panel-bg: #202942;
+    --trading-panel-bg: #25314d;
+    --trading-panel-soft-bg: #2d3a59;
+    --trading-tabs-bg: #222d46;
+    --trading-chart-divider-bg: #2a3653;
+    --trading-chart-pane-bg: #202942;
+    --trading-border-color: rgba(143, 176, 207, 0.16);
+    --trading-border-strong-color: rgba(143, 176, 207, 0.24);
+    --trading-control-bg: #303b59;
+    --trading-control-hover-bg: #384566;
+    --trading-control-border: rgba(154, 181, 213, 0.18);
+    --trading-text-color: #f3f7ff;
+    --trading-muted-color: #a9b9d4;
+    --trading-tool-bg: rgba(37, 49, 77, 0.98);
+    --trading-tool-hover-bg: #33405f;
+    --trading-tool-active-bg: #344862;
+    --trading-tool-border: rgba(154, 181, 213, 0.18);
+    --trading-tool-hover-border: rgba(143, 176, 207, 0.42);
+    --trading-tool-active-border: #8fb0cf;
+    --trading-tool-text: #e8f0ff;
     --trading-tool-active-text: #ffffff;
-    --trading-timeframe-text: #ff9a3d;
-    --trading-menu-bg: #22242a;
-    --trading-menu-border: rgba(255, 255, 255, 0.12);
-    --trading-accent-color: #ff7a1a;
-    --trading-accent-soft-color: rgba(255, 122, 26, 0.18);
-    --trading-accent-contrast-color: #ffffff;
-    --trading-active-color: #d89043;
-    --trading-active-soft-color: rgba(216, 144, 67, 0.18);
-    --trading-active-border-color: rgba(216, 144, 67, 0.42);
+    --trading-timeframe-text: #9fbde7;
+    --trading-menu-bg: #25314d;
+    --trading-menu-border: rgba(143, 176, 207, 0.2);
+    --trading-accent-color: #8fb0cf;
+    --trading-accent-soft-color: rgba(143, 176, 207, 0.18);
+    --trading-accent-contrast-color: #142033;
+    --trading-active-color: #9fbde7;
+    --trading-active-soft-color: rgba(159, 189, 231, 0.16);
+    --trading-active-border-color: rgba(159, 189, 231, 0.36);
     --trading-success-color: #21a566;
     --trading-success-soft-color: rgba(33, 165, 102, 0.18);
     --trading-success-border-color: rgba(33, 165, 102, 0.42);
@@ -646,6 +660,7 @@
   .trading-terminal [class*="bg-[#1e3656]"],
   .trading-terminal [class*="bg-[#1d2433]"],
   .trading-terminal [class*="bg-[#1e2330]"],
+  .trading-terminal [class*="bg-[#202942]"],
   .trading-terminal [class*="bg-[#202736]"],
   .trading-terminal [class*="bg-[#202737]"],
   .trading-terminal [class*="bg-[#20355D]"],
@@ -671,6 +686,7 @@
   .trading-terminal [class*="bg-[#26314d]"],
   .trading-terminal [class*="bg-[#273454]"],
   .trading-terminal [class*="bg-[#2a3142]"],
+  .trading-terminal [class*="bg-[#2a344d]"],
   .trading-terminal [class*="bg-[#2a2d35]"],
   .trading-terminal [class*="bg-[#2f374b]"],
   .trading-terminal [class*="bg-[#303646]"],
@@ -723,6 +739,8 @@
   .trading-terminal [class*="border-[#2a3142]"],
   .trading-terminal [class*="border-[#243047]"],
   .trading-terminal [class*="border-[#334261]"],
+  .trading-terminal [class*="border-[#334365]"],
+  .trading-terminal [class*="border-[#3b4968]"],
   .trading-terminal [class*="border-[#535d73]"],
   .trading-terminal [class*="border-[#596278]"],
   .trading-terminal [class*="border-[#69738a]"],
