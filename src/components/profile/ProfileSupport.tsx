@@ -4,7 +4,6 @@ import {
   AlertCircle,
   Bell,
   ChevronLeft,
-  CircleUserRound,
   Clock3,
   LifeBuoy,
   Loader2,
@@ -367,46 +366,54 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
   useEffect(() => {
     if (!user?.id) return;
 
-    const channel = supabase
-      .channel(`profile-support-${mode}-${user.id}`)
-      .on(
+    let channel = supabase.channel(`profile-support-${mode}-${user.id}-${supportThread?.id ?? "new"}`);
+
+    if (!isDesk) {
+      channel = channel.on(
         "postgres_changes",
         { event: "*", schema: "public", table: "chat_messages" },
         () => {
-          if (!isDesk) {
-            void loadGroupMessages();
-          }
+          void loadGroupMessages();
         },
-      )
-      .on(
+      );
+    }
+
+    if (!isCommunity) {
+      channel = channel.on(
         "postgres_changes",
         { event: "*", schema: "public", table: "support_threads", filter: `user_id=eq.${user.id}` },
         () => {
-          if (!isCommunity) {
-            void loadSupportDesk();
-          }
-        },
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "support_messages" }, () => {
-        if (!isCommunity) {
           void loadSupportDesk();
-        }
-      })
-      .on(
+        },
+      );
+
+      if (supportThread?.id) {
+        channel = channel.on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "support_messages", filter: `thread_id=eq.${supportThread.id}` },
+          () => {
+            void loadSupportDesk();
+          },
+        );
+      }
+    }
+
+    if (!isCompact && !isCommunity && !isDesk) {
+      channel = channel.on(
         "postgres_changes",
         { event: "*", schema: "public", table: "support_tickets", filter: `user_id=eq.${user.id}` },
         () => {
-          if (!isCompact && !isCommunity && !isDesk) {
-            void loadTickets();
-          }
+          void loadTickets();
         },
-      )
-      .subscribe();
+      );
+    }
+
+    channel.subscribe();
 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [isCompact, isCommunity, isDesk, mode, user?.id]);
+  }, [isCompact, isCommunity, isDesk, mode, supportThread?.id, user?.id]);
 
   const handleSendGroupMessage = async (event: FormEvent) => {
     event.preventDefault();
@@ -531,73 +538,38 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
   const supportUnreadCount = supportThread?.status === "pending" ? 1 : 0;
   const notificationCount = supportUnreadCount + Number(Boolean(groupError || supportError));
 
-  const recentGroupRows = useMemo<CompactInboxRow[]>(() => {
-    const seenSenders = new Set<string>();
-    return [...groupMessages]
-      .reverse()
-      .filter((message) => {
-        const sender = ((message as Partial<ChatMessageRow>).sender_name || "Trader").trim().toLowerCase();
-        if (seenSenders.has(sender)) return false;
-        seenSenders.add(sender);
-        return true;
-      })
-      .slice(0, 4)
-      .map((message, index) => {
-        const sender = (message as Partial<ChatMessageRow>).sender_name || "Trader";
-        return {
-          id: `room-${message.id}`,
-          tab: "group" as const,
-          title: sender,
-          preview: trimPreview(message.message || "Shared a setup in the room."),
-          time: formatInboxTime(message.created_at),
-          unread: index === 0 ? 1 : 0,
-          avatarLabel: toInitials(sender),
-          avatarUrl: message.profiles?.avatar_url,
-        };
-      });
-  }, [groupMessages]);
-
   const compactRows = useMemo<CompactInboxRow[]>(() => {
-    const rows = [
-      {
-        id: "general-chat",
-        tab: "group" as const,
-        title: "General chat (English)",
-        preview: trimPreview(latestGroupMessage?.message || "How do I place the trades"),
-        time: formatInboxTime(latestGroupMessage?.created_at),
-        unread: groupUnreadCount,
-        avatarLabel: "EN",
-        avatarUrl: latestGroupMessage?.profiles?.avatar_url,
-      },
-      {
-        id: "support-chat",
-        tab: "support" as const,
-        title: "Support Chat (Online)",
-        preview: trimPreview(latestSupportMessage?.message || "You have a new message from support."),
-        time: formatInboxTime(latestSupportMessage?.created_at || supportThread?.updated_at),
-        unread: supportUnreadCount,
-        icon: LifeBuoy,
-      },
-      ...recentGroupRows,
-      {
-        id: "favorites",
-        tab: "group" as const,
-        title: "Favorites",
-        preview: "Pin your most active traders for faster access.",
-        time: "",
-        unread: 0,
-        icon: CircleUserRound,
-      },
-    ];
-    return rows.slice(0, 7);
+    const generalRow: CompactInboxRow = {
+      id: "general-chat",
+      tab: "group",
+      title: "General chat (English)",
+      preview: trimPreview(latestGroupMessage?.message || "Public trader room."),
+      time: formatInboxTime(latestGroupMessage?.created_at),
+      unread: groupUnreadCount,
+      avatarLabel: "EN",
+      avatarUrl: latestGroupMessage?.profiles?.avatar_url,
+    };
+
+    const supportRow: CompactInboxRow = {
+      id: "support-chat",
+      tab: "support",
+      title: "Support Chat (Online)",
+      preview: supportThread ? "Private conversation with support." : "Start a private support chat.",
+      time: formatInboxTime(latestSupportMessage?.created_at || supportThread?.updated_at),
+      unread: supportUnreadCount,
+      icon: LifeBuoy,
+    };
+
+    return compactTab === "support" ? [supportRow] : [generalRow];
   }, [
+    compactTab,
     groupUnreadCount,
     latestGroupMessage?.created_at,
     latestGroupMessage?.message,
+    latestGroupMessage?.profiles?.avatar_url,
     latestSupportMessage?.created_at,
-    latestSupportMessage?.message,
-    recentGroupRows,
     supportThread?.updated_at,
+    supportThread,
     supportUnreadCount,
   ]);
 
