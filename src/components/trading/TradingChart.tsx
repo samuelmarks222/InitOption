@@ -331,15 +331,15 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 9.5,
-  "5s": 9.7,
-  "15s": 9.9,
-  "30s": 10.1,
-  "1m": 10.3,
-  "2m": 9.8,
-  "3m": 9.4,
-  "4m": 9.1,
-  "5m": 8.9,
+  "1s": 15.4,
+  "5s": 15.8,
+  "15s": 16.1,
+  "30s": 16.3,
+  "1m": 16.5,
+  "2m": 14.8,
+  "3m": 13.8,
+  "4m": 12.9,
+  "5m": 12.2,
   "10m": 8.9,
   "15m": 9.3,
   "30m": 9.8,
@@ -352,15 +352,15 @@ const BAR_SPACING_MAP: Record<string, number> = {
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
-  "1s": 118,
-  "5s": 116,
-  "15s": 114,
-  "30s": 112,
-  "1m": 110,
-  "2m": 120,
-  "3m": 114,
-  "4m": 110,
-  "5m": 106,
+  "1s": 78,
+  "5s": 78,
+  "15s": 80,
+  "30s": 82,
+  "1m": 84,
+  "2m": 90,
+  "3m": 94,
+  "4m": 96,
+  "5m": 98,
   "10m": 98,
   "15m": 92,
   "30m": 86,
@@ -373,15 +373,15 @@ const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
 };
 
 const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
-  "1s": 194,
-  "5s": 190,
-  "15s": 186,
-  "30s": 182,
-  "1m": 180,
-  "2m": 210,
-  "3m": 202,
-  "4m": 194,
-  "5m": 188,
+  "1s": 128,
+  "5s": 126,
+  "15s": 124,
+  "30s": 122,
+  "1m": 120,
+  "2m": 136,
+  "3m": 148,
+  "4m": 158,
+  "5m": 168,
   "10m": 176,
   "15m": 166,
   "30m": 156,
@@ -394,15 +394,15 @@ const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>
 };
 
 const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
-  "1s": 266,
-  "5s": 260,
-  "15s": 254,
-  "30s": 248,
-  "1m": 242,
-  "2m": 264,
-  "3m": 252,
-  "4m": 240,
-  "5m": 228,
+  "1s": 180,
+  "5s": 176,
+  "15s": 172,
+  "30s": 168,
+  "1m": 164,
+  "2m": 184,
+  "3m": 198,
+  "4m": 210,
+  "5m": 220,
   "10m": 214,
   "15m": 202,
   "30m": 188,
@@ -415,15 +415,15 @@ const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, n
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 4.7,
-  "5s": 4.8,
-  "15s": 4.95,
-  "30s": 5.1,
-  "1m": 5.25,
-  "2m": 1.95,
-  "3m": 2.05,
-  "4m": 2.14,
-  "5m": 2.24,
+  "1s": 7.8,
+  "5s": 8,
+  "15s": 8.2,
+  "30s": 8.4,
+  "1m": 8.6,
+  "2m": 7.4,
+  "3m": 6.8,
+  "4m": 6.2,
+  "5m": 5.8,
   "10m": 2.38,
   "15m": 2.52,
   "30m": 2.68,
@@ -570,9 +570,9 @@ const getInitialVisibleBars = (
   const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
   const pocketStyleContextMultiplier =
     seconds < 60
-      ? 1.06
+      ? 1.02
       : seconds < 5 * 60
-        ? 1.08
+        ? 1.04
         : seconds < 30 * 60
           ? 1.14
           : seconds < 4 * 60 * 60
