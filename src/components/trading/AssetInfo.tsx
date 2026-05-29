@@ -4,7 +4,6 @@ import type { ActiveTrade } from "@/hooks/useTrading";
 import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { getLiveAssetTradeSummary } from "@/lib/liveTradeSummary";
-import AssetSymbolMark from "./AssetSymbolMark";
 import { Asset } from "./data/assets";
 
 interface AssetInfoProps {
@@ -23,7 +22,22 @@ interface AssetInfoProps {
 const WIN_COLOR = "#18d87d";
 const LOSS_COLOR = "#ff6a72";
 const NEUTRAL_TRADE_COLOR = "#d6def1";
-const TAB_PAYOUT_COLOR = "#ffb52e";
+const TAB_PAYOUT_COLOR = "#62d17f";
+const TAB_SPARKLINE_COLOR = "#0e8beb";
+
+const getTabSparklinePoints = (symbol: string, change = 0) => {
+  let seed = Array.from(symbol).reduce((hash, char) => hash * 31 + char.charCodeAt(0), 17);
+  const direction = change >= 0 ? -0.18 : 0.18;
+
+  return Array.from({ length: 22 }, (_, index) => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const wave = Math.sin(index * 0.72 + seed * 0.000001) * 4.8;
+    const noise = ((seed % 1000) / 1000 - 0.5) * 6.2;
+    const x = 2 + index * (116 / 21);
+    const y = Math.max(8, Math.min(39, 25 + wave + noise + index * direction));
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+};
 
 const formatCompactTimer = (seconds: number) => {
   const safeSeconds = Math.max(1, Math.ceil(seconds));
@@ -108,26 +122,26 @@ const AssetInfo = ({
 
   return (
     <div
-      className="relative h-[50px] shrink-0 overflow-hidden"
+      className="relative h-[60px] shrink-0 overflow-hidden"
       style={{
-        background: "var(--trading-tabs-bg)",
+        background: "linear-gradient(180deg, #1e2131 0%, var(--trading-tabs-bg) 100%)",
         borderBottom: "1px solid var(--trading-border-color)",
       }}
     >
       <div
-        className="pointer-events-none absolute inset-0 opacity-90"
+        className="pointer-events-none absolute inset-0 opacity-80"
         style={{
           background:
-            "linear-gradient(180deg, rgba(255,255,255,0.03), transparent 65%)",
+            "linear-gradient(180deg, rgba(143,164,210,0.06), transparent 70%)",
         }}
       />
       <div
         ref={stripRef}
-        className="relative flex h-full items-center gap-1.5 overflow-x-auto overflow-y-hidden px-2 pr-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="relative flex h-full items-center gap-1.5 overflow-x-auto overflow-y-hidden px-2.5 pr-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         <button
           onClick={onAddAssetClick ?? onOpenSelector}
-          className="group relative flex h-[36px] w-[42px] shrink-0 items-center justify-center overflow-hidden rounded-[9px] border text-white transition-all duration-200 hover:bg-[#2b8cff] active:scale-[0.98]"
+          className="group relative flex h-[42px] w-[48px] shrink-0 items-center justify-center overflow-hidden rounded-[5px] border text-white transition-all duration-200 active:scale-[0.98]"
           style={{
             background: "linear-gradient(180deg,#1e86ff 0%,#0f67d9 100%)",
             borderColor: "rgba(104, 175, 255, 0.34)",
@@ -143,10 +157,6 @@ const AssetInfo = ({
             const dynamicTab = getAsset(tab.symbol);
             const isActive = (activeTabId ?? asset.symbol) === tab.symbol;
             const currentPrice = Number(livePrices[tab.symbol] ?? dynamicTab?.price ?? tab.price ?? tab.basePrice ?? 0);
-            const resolvedFlags = dynamicTab?.flags ?? tab.flags ?? [];
-            const resolvedStockLogo = dynamicTab?.stockLogo ?? (tab as { stockLogo?: string | null }).stockLogo ?? null;
-            const resolvedCommodityIcon =
-              dynamicTab?.commodityIcon ?? (tab as { commodityIcon?: "gold" | "silver" | "oil" | "gas" | "copper" }).commodityIcon;
             const relatedTrades = activeTrades.filter((trade) => trade.asset_symbol === tab.symbol);
             const { nextExpiringTrade: activeTrade, netState, totalLiveResult } = getLiveAssetTradeSummary(
               relatedTrades,
@@ -163,21 +173,23 @@ const AssetInfo = ({
                   maximumFractionDigits: 2,
                 })}`
               : `${payout}%`;
+            const sparklinePoints = getTabSparklinePoints(tab.symbol, Number(dynamicTab?.change24h ?? tab.change ?? 0));
+            const sparklineFillPoints = `${sparklinePoints} 120,44 0,44`;
 
             return (
               <div
                 key={tab.symbol}
-                className="group relative flex h-[36px] min-w-[132px] max-w-[148px] shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded-[7px] border px-2.5 transition-all duration-200"
+                className="group relative flex h-[50px] min-w-[166px] max-w-[182px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-[4px] border px-2 py-1.5 transition-all duration-200"
                 style={{
                   background: hasActiveTrade
                     ? isWinningTrade
-                      ? "#2d3845"
+                      ? "linear-gradient(180deg,#243245 0%,#1e2536 100%)"
                       : isLosingTrade
-                        ? "#312e41"
-                        : "#2d3447"
+                        ? "linear-gradient(180deg,#302c3d 0%,#202435 100%)"
+                        : "linear-gradient(180deg,#232b3d 0%,#1d2434 100%)"
                     : isActive
-                      ? "#353d53"
-                      : "#2c3345",
+                      ? "linear-gradient(180deg,#243149 0%,#1e2538 100%)"
+                      : "linear-gradient(180deg,#202638 0%,#1b2030 100%)",
                   borderColor: hasActiveTrade
                     ? isWinningTrade
                       ? "rgba(24,216,125,0.26)"
@@ -185,60 +197,68 @@ const AssetInfo = ({
                         ? "rgba(255,106,114,0.26)"
                         : "rgba(214,222,241,0.18)"
                     : isActive
-                      ? "rgba(101,143,255,0.38)"
-                      : "rgba(255,255,255,0.08)",
-                  boxShadow: isActive ? "inset 0 1px 0 rgba(255,255,255,0.05)" : "none",
+                      ? "rgba(14,139,235,0.92)"
+                      : "rgba(143,164,210,0.22)",
+                  boxShadow: isActive
+                    ? "inset 0 0 0 1px rgba(14,139,235,0.18), inset 0 1px 0 rgba(255,255,255,0.08)"
+                    : "inset 0 1px 0 rgba(255,255,255,0.04)",
                 }}
                 onClick={() => (onSelectTab ? onSelectTab(tab.symbol) : onOpenSelector())}
               >
-                {isActive ? (
-                  <div className="absolute inset-y-0 left-0 w-[2px] bg-[#ff7b65]" />
-                ) : null}
+                <svg
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-[34px] w-full opacity-95"
+                  viewBox="0 0 120 44"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <polygon points={sparklineFillPoints} fill="rgba(14,139,235,0.16)" />
+                  <polyline
+                    points={sparklinePoints}
+                    fill="none"
+                    stroke={TAB_SPARKLINE_COLOR}
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
 
-                {onRemoveTab && (
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onRemoveTab(tab.symbol);
-                    }}
-                    className="absolute right-1 top-1 z-10 flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#1a1f2b] text-white/70 transition-all hover:bg-[#262d3e] hover:text-white"
-                    aria-label={`Close ${tab.symbol}`}
-                  >
-                    <X className="h-2.5 w-2.5" strokeWidth={2.6} />
-                  </button>
-                )}
+                <div className="relative z-[1] flex w-full items-start gap-1.5">
+                  {onRemoveTab && (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onRemoveTab(tab.symbol);
+                      }}
+                      className="mt-[1px] flex h-[12px] w-[12px] shrink-0 items-center justify-center text-[#9aa8c5] transition-colors hover:text-white"
+                      aria-label={`Close ${tab.symbol}`}
+                    >
+                      <X className="h-3 w-3" strokeWidth={3} />
+                    </button>
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[12px] font-black uppercase leading-[1.05] text-white">
+                      {getChipTitle(tab)}
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 text-[12px] font-black leading-[1.05]" style={{ color: hasActiveTrade ? accent : TAB_PAYOUT_COLOR }}>
+                    {liveResultLabel}
+                  </div>
+                </div>
 
                 {activeTrade ? (
                   <div
-                    className="relative z-[1] flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full border text-[7px] font-black text-white"
+                    className="relative z-[1] mt-auto inline-flex h-[15px] w-fit items-center rounded-full border px-1.5 text-[8px] font-black text-white/90"
                     style={{
-                      borderColor: "rgba(255,255,255,0.16)",
-                      background: "rgba(11,15,22,0.45)",
+                      borderColor: "rgba(255,255,255,0.14)",
+                      background: "rgba(20,23,38,0.72)",
                     }}
                   >
                     {formatCompactTimer(activeTrade.timeLeft)}
                   </div>
                 ) : null}
-
-                <div className="relative z-[1]">
-                  <AssetSymbolMark
-                    symbol={tab.symbol}
-                    name={tab.name}
-                    category={tab.type}
-                    flags={resolvedFlags}
-                    stockLogo={resolvedStockLogo}
-                    commodityIcon={resolvedCommodityIcon}
-                    size={18}
-                  />
-                </div>
-
-                <div className="relative z-[1] min-w-0 flex-1 pr-3">
-                  <div className="truncate text-[11px] font-black leading-none text-white">{getChipTitle(tab)}</div>
-                  <div className="mt-0.5 text-[10px] font-black leading-none" style={{ color: hasActiveTrade ? accent : TAB_PAYOUT_COLOR }}>
-                    {liveResultLabel}
-                  </div>
-                </div>
               </div>
             );
           })}

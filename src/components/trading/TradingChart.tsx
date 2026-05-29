@@ -111,12 +111,12 @@ export interface ChartSettlementAnnouncement {
   status: "won" | "lost";
 }
 
-const PROFESSIONAL_CHART_BG = "#202942";
-const PROFESSIONAL_CHART_PANEL = "#25314d";
+const PROFESSIONAL_CHART_BG = "#1e2131";
+const PROFESSIONAL_CHART_PANEL = "#23283b";
 const PROFESSIONAL_CHART_TEXT = "#eef3fb";
 const PROFESSIONAL_CHART_MUTED_TEXT = "#96a4b9";
-const PROFESSIONAL_CHART_GRID = "rgba(143, 176, 207, 0.08)";
-const PROFESSIONAL_CHART_BORDER = "rgba(143, 176, 207, 0.14)";
+const PROFESSIONAL_CHART_GRID = "rgba(143, 164, 210, 0.08)";
+const PROFESSIONAL_CHART_BORDER = "rgba(143, 164, 210, 0.14)";
 const PROFESSIONAL_UP_COLOR = "#21a566";
 const PROFESSIONAL_DOWN_COLOR = "#d96059";
 const LEGACY_CHART_BG = "#0E1217";
@@ -138,9 +138,9 @@ const THEME = {
   up: PROFESSIONAL_UP_COLOR,
   down: PROFESSIONAL_DOWN_COLOR,
   line: "#4da3ff",
-  areaLine: "#f39a2e",
-  areaTop: "rgba(243,154,46,0.40)",
-  areaBottom: "rgba(243,154,46,0.03)",
+  areaLine: "#8fa4d2",
+  areaTop: "rgba(143,164,210,0.28)",
+  areaBottom: "rgba(143,164,210,0.03)",
 };
 
 const DEFAULT_VISIBLE_BARS = 80;
@@ -1618,7 +1618,7 @@ const OscillatorPane = ({
         rightOffset,
         barSpacing: getBarSpacingForScale(selectedTf, bodyScale),
         minBarSpacing: getMinBarSpacingForScale(selectedTf, bodyScale),
-        fixLeftEdge: false,
+        fixLeftEdge: true,
         fixRightEdge: false,
         rightBarStaysOnScroll: false,
         shiftVisibleRangeOnNewBar: false,
@@ -1833,6 +1833,7 @@ const TradingChart = ({
   const liveRef = useRef<OHLCCandle | null>(null);
   const loadedHistoryCountRef = useRef(0);
   const isBackfillingHistoryRef = useRef(false);
+  const isNormalizingVisibleRangeRef = useRef(false);
   const priceScaleMarginKeyRef = useRef("");
   const aggregatorRef = useRef<CandleAggregator | null>(null);
   // Always-fresh ref for activeIndicators so stale closures see latest value
@@ -1901,10 +1902,10 @@ const TradingChart = ({
       tradingPreferences.template === "ivory"
         ? "#efe6d6"
         : tradingPreferences.template === "amber"
-          ? "#1d1100"
+          ? "#1e2131"
           : tradingPreferences.template === "graphite"
             ? "#101215"
-            : "#111827";
+            : "#1e2131";
     const imageOpacity = Math.max(0, Math.min(100, activeChartBackgroundOpacity)) / 100;
     const overlayAlpha = Math.max(0.08, Math.min(0.94, 1 - imageOpacity));
     const imageOverlay =
@@ -2291,8 +2292,12 @@ const TradingChart = ({
     const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing));
     const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
     const maxTo = dataPointCount + rightOffset;
+    const currentDataFrom = currentRange ? Math.max(0, currentRange.from) : Math.max(0, dataPointCount - defaultVisibleBars);
+    const currentDataTo = currentRange
+      ? Math.max(currentDataFrom + 1, Math.min(dataPointCount, currentRange.to))
+      : dataPointCount;
     const currentCenter = currentRange
-      ? (currentRange.from + currentRange.to) / 2
+      ? (currentDataFrom + currentDataTo) / 2
       : Math.max(clampedSpan / 2, maxTo - defaultVisibleBars / 2);
     let nextFrom = currentCenter - clampedSpan / 2;
     let nextTo = currentCenter + clampedSpan / 2;
@@ -2312,6 +2317,12 @@ const TradingChart = ({
       to: nextTo,
     });
   }, [selectedTf]);
+
+  const adjustChartZoomRef = useRef(adjustChartZoom);
+
+  useEffect(() => {
+    adjustChartZoomRef.current = adjustChartZoom;
+  }, [adjustChartZoom]);
 
   const applyResponsivePriceScale = useCallback(
     (visibleSpan?: number | null, force = false) => {
@@ -2487,13 +2498,13 @@ const TradingChart = ({
           horzLines: { color: chartGridColor }
         },
         handleScroll: {
-          mouseWheel: true,
+          mouseWheel: false,
           pressedMouseMove: true,
           horzTouchDrag: true,
           vertTouchDrag: false,
         },
         handleScale: {
-          mouseWheel: true,
+          mouseWheel: false,
           pinch: true,
           axisPressedMouseMove: true,
           axisDoubleClickReset: true,
@@ -2524,7 +2535,7 @@ const TradingChart = ({
           rightOffset: 6,
           barSpacing: getBarSpacingForScale("1m", chartStylesRef.current.bodyScale),
           minBarSpacing: getMinBarSpacingForScale("1m", chartStylesRef.current.bodyScale),
-          fixLeftEdge: false,
+          fixLeftEdge: true,
           fixRightEdge: false,
           rightBarStaysOnScroll: false,
           shiftVisibleRangeOnNewBar: false,
@@ -2541,13 +2552,27 @@ const TradingChart = ({
     }
     chartRef.current = chart;
     setSyncChart(chart);
+    const chartContainer = mainRef.current;
+    if (!chartContainer) {
+      chart.remove();
+      return;
+    }
+    const handleChartWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+
+      event.preventDefault();
+      adjustChartZoomRef.current(event.deltaY < 0 ? "in" : "out");
+    };
+
+    chartContainer.addEventListener("wheel", handleChartWheel, { capture: true, passive: false });
 
     const obs = new ResizeObserver(() => {
       if (mainRef.current && chartRef.current) chartRef.current.applyOptions({ width: mainRef.current.clientWidth, height: mainRef.current.clientHeight });
     });
-    obs.observe(mainRef.current);
+    obs.observe(chartContainer);
 
     return () => {
+      chartContainer.removeEventListener("wheel", handleChartWheel, true);
       obs.disconnect();
       chart.remove();
     };
@@ -2848,7 +2873,7 @@ const TradingChart = ({
       timeVisible: true,
       secondsVisible: tf.seconds < 60,
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
-      fixLeftEdge: false,
+      fixLeftEdge: true,
       fixRightEdge: false,
       rightBarStaysOnScroll: false,
       shiftVisibleRangeOnNewBar: false,
@@ -2955,6 +2980,10 @@ const TradingChart = ({
 
       applyResponsivePriceScale(range.to - range.from);
 
+      if (isNormalizingVisibleRangeRef.current) {
+        return;
+      }
+
       const containerWidth = mainRef.current?.clientWidth ?? 960;
       const dataPointCount = mainSeriesRef.current?.data()?.length ?? historyRef.current.length;
       const maxReadableBars = getMaxReadableZoomBars(
@@ -2962,29 +2991,32 @@ const TradingChart = ({
         selectedTf,
         Math.max(1, dataPointCount),
       );
-      const maxReadableSpan = maxReadableBars + getChartRightOffset(maxReadableBars);
+      const maxReadableRightOffset = getChartRightOffset(maxReadableBars);
+      const maxReadableSpan = maxReadableBars + maxReadableRightOffset;
       const visibleSpan = range.to - range.from;
 
-      if (visibleSpan > maxReadableSpan + 0.5) {
-        const center = (range.from + range.to) / 2;
-        const maxTo = dataPointCount + getChartRightOffset(maxReadableBars);
-        let nextFrom = center - maxReadableSpan / 2;
-        let nextTo = center + maxReadableSpan / 2;
-
-        if (nextFrom < 0) {
-          nextTo -= nextFrom;
-          nextFrom = 0;
-        }
+      if (range.from < -0.5 || visibleSpan > maxReadableSpan + 0.5) {
+        const targetSpan = Math.max(1, Math.min(visibleSpan, maxReadableSpan));
+        const center = range.from < -0.5 ? targetSpan / 2 : (Math.max(0, range.from) + Math.min(dataPointCount, range.to)) / 2;
+        const maxTo = dataPointCount + maxReadableRightOffset;
+        let nextFrom = Math.max(0, center - targetSpan / 2);
+        let nextTo = nextFrom + targetSpan;
 
         if (nextTo > maxTo) {
           nextFrom = Math.max(0, nextFrom - (nextTo - maxTo));
           nextTo = maxTo;
         }
 
-        timeScale.setVisibleLogicalRange({
-          from: nextFrom,
-          to: nextTo,
-        });
+        if (Math.abs(range.from - nextFrom) > 0.01 || Math.abs(range.to - nextTo) > 0.01) {
+          isNormalizingVisibleRangeRef.current = true;
+          timeScale.setVisibleLogicalRange({
+            from: nextFrom,
+            to: nextTo,
+          });
+          window.requestAnimationFrame(() => {
+            isNormalizingVisibleRangeRef.current = false;
+          });
+        }
         return;
       }
 
@@ -3051,7 +3083,7 @@ const TradingChart = ({
       timeVisible: true,
       secondsVisible: tf.seconds < 60,
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
-      fixLeftEdge: false,
+      fixLeftEdge: true,
       fixRightEdge: false,
       rightBarStaysOnScroll: false,
       shiftVisibleRangeOnNewBar: false,
@@ -3571,7 +3603,7 @@ const TradingChart = ({
         {hoverPriceData && !overlayUiSuppressed && (
           <>
             <div className="pointer-events-none absolute inset-x-0 z-[87]" style={{ top: hoverPriceData.top }}>
-              <div className="absolute inset-x-0 h-px bg-amber-300/50" />
+              <div className="absolute inset-x-0 h-px bg-[#8fa4d2]/50" />
             </div>
             <button
               type="button"
@@ -3579,11 +3611,11 @@ const TradingChart = ({
                 event.stopPropagation();
                 addPriceAlert(hoverPriceData.price);
               }}
-              className="pointer-events-auto absolute right-2 z-[88] inline-flex items-center gap-2 rounded-full border border-amber-300/40 bg-[#121826]/95 px-3 py-2 text-xs font-black text-white shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:border-amber-200 hover:bg-[#1b2232]"
+              className="pointer-events-auto absolute right-2 z-[88] inline-flex items-center gap-2 rounded-full border border-[#8fa4d2]/40 bg-[#121826]/95 px-3 py-2 text-xs font-black text-white shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:border-[#c7d6f4] hover:bg-[#1b2232]"
               style={{ top: hoverPriceData.top - 12 }}
               title="Set alert at this price"
             >
-              <Bell className="h-4 w-4 text-yellow-300" />
+              <Bell className="h-4 w-4 text-[#b9c8ea]" />
               <span>{formatAlertPrice(hoverPriceData.price)}</span>
             </button>
           </>
@@ -3597,18 +3629,18 @@ const TradingChart = ({
                 if (y === null || !Number.isFinite(y)) return null;
                 return (
                   <div key={`marker-${alert.id}`} className="absolute right-2 z-[89]" style={{ top: y - 18 }}>
-                    <div className="pointer-events-none absolute -right-10 h-[1px] w-[calc(100vw-96px)] bg-amber-300/25" />
+                    <div className="pointer-events-none absolute -right-10 h-[1px] w-[calc(100vw-96px)] bg-[#8fa4d2]/25" />
                     <button
                       type="button"
                       onClick={(event) => {
                         event.stopPropagation();
                         removePriceAlert(alert.id);
                       }}
-                      className="pointer-events-auto group relative inline-flex items-center gap-2 rounded-full border border-amber-400/45 bg-[#121826]/95 px-3 py-2 text-[11px] font-black text-amber-100 shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:border-rose-300/70 hover:bg-rose-500/15"
+                      className="pointer-events-auto group relative inline-flex items-center gap-2 rounded-full border border-[#8fa4d2]/45 bg-[#121826]/95 px-3 py-2 text-[11px] font-black text-[#d9e4ff] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:border-rose-300/70 hover:bg-rose-500/15"
                       title="Click to remove alert"
                       aria-label={`Remove alert at ${formatAlertPrice(alert.price)}`}
                     >
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-amber-300/30 bg-slate-900/90 text-yellow-300">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#8fa4d2]/30 bg-slate-900/90 text-[#b9c8ea]">
                         <BellRing className="h-4 w-4" />
                       </span>
                       <span>{formatAlertPrice(alert.price)}</span>
@@ -3679,7 +3711,7 @@ const TradingChart = ({
                     fallbackLabelLength={3}
                   />
                   <h2 className="truncate text-[18px] font-black leading-none text-white">{asset.symbol}</h2>
-                  <span className="text-[14px] font-black text-[#ffb52e]">{shortPayout}%</span>
+                  <span className="text-[14px] font-black text-[var(--trading-success-color)]">{shortPayout}%</span>
                 </div>
                 <div className="hidden items-center gap-3 text-right lg:flex">
                   <span className={`text-[14px] font-black ${pairSession.isOpen ? "text-white" : "text-[#ff8d99]"}`}>

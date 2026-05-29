@@ -389,7 +389,7 @@ const contentById: Record<string, GuideContent> = {
     intro:
       "The platform supports visual themes for different lighting conditions. Open settings, choose a theme, and apply it to the full dashboard area.",
     paragraphs: [
-      "Use Default for the standard dark dashboard, Graphite for high-contrast black, Amber for a warm low-light view, and Ivory in bright rooms.",
+      "Use Default for the standard dark dashboard, Graphite for high-contrast black, Midnight for a deeper low-light view, and Ivory in bright rooms.",
     ],
     figure: { title: "Theme controls", caption: "Fig. 7. Switching a platform layout theme", variant: "settings" },
   },

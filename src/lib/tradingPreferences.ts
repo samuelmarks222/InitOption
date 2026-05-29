@@ -14,10 +14,10 @@ export const TRADING_TEMPLATE_OPTIONS: Array<{
   {
     id: "default",
     label: "Default",
-    surface: "#202942",
-    panel: "#25314d",
-    line: "#8fb0cf",
-    grid: "#3b4968",
+    surface: "#1e2131",
+    panel: "#23283b",
+    line: "#8fa4d2",
+    grid: "#343b54",
     text: "#f3f7ff",
   },
   {
@@ -31,19 +31,19 @@ export const TRADING_TEMPLATE_OPTIONS: Array<{
   },
   {
     id: "amber",
-    label: "Amber",
-    surface: "#1d1100",
-    panel: "#2b1b04",
-    line: "#ff7a1a",
-    grid: "#6e3f0d",
-    text: "#fff3e2",
+    label: "Midnight",
+    surface: "#1e2131",
+    panel: "#23283b",
+    line: "#8fa4d2",
+    grid: "#34394a",
+    text: "#f3f7ff",
   },
   {
     id: "ivory",
     label: "Ivory",
     surface: "#efe6d6",
     panel: "#fff4df",
-    line: "#ff7a1a",
+    line: "#477564",
     grid: "#d4b98f",
     text: "#2a2118",
   },
@@ -205,8 +205,8 @@ export const getTradingChartSurfaceColor = (preferences: TradingPreferences, _fa
   if (preferences.chartBackgroundImage) return "rgba(0,0,0,0)";
   if (preferences.template === "ivory") return "#efe6d6";
   if (preferences.template === "graphite") return "#101215";
-  if (preferences.template === "amber") return "#1d1100";
-  return "#202942";
+  if (preferences.template === "amber") return "#1e2131";
+  return "#1e2131";
 };
 
 export const getTradingChartTextColor = (preferences: TradingPreferences) =>
@@ -215,9 +215,9 @@ export const getTradingChartTextColor = (preferences: TradingPreferences) =>
 export const getTradingGridColor = (preferences: TradingPreferences) => {
   const alpha = Math.max(0, Math.min(0.12, preferences.gridOpacity * 0.011));
   if (preferences.template === "ivory") return `rgba(86, 57, 22, ${alpha + 0.03})`;
-  if (preferences.template === "amber") return `rgba(255, 138, 24, ${alpha + 0.02})`;
+  if (preferences.template === "amber") return `rgba(143, 164, 210, ${alpha + 0.01})`;
   if (preferences.template === "graphite") return `rgba(255, 255, 255, ${alpha + 0.02})`;
-  return `rgba(143, 176, 207, ${alpha + 0.01})`;
+  return `rgba(143, 164, 210, ${alpha + 0.01})`;
 };
 
 export const useTradingPreferences = () => {

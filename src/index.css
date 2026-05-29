@@ -4,25 +4,25 @@
 @layer base {
   :root {
     /* Shared Init Option palette */
-    --background: 224 34.7% 19.2%;   /* #202942 */
+    --background: 229 24.1% 15.5%;   /* #1e2131 */
     --foreground: 0 0% 100%;
 
-    --card: 222 35.1% 21.8%;         /* #24304b */
+    --card: 227 25.5% 18.4%;         /* #23283b */
     --card-foreground: 0 0% 100%;
 
-    --popover: 222 35.1% 21.8%;
+    --popover: 227 25.5% 18.4%;
     --popover-foreground: 0 0% 100%;
 
     --primary: 148 82.9% 34.3%;      /* #0fa053 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 35.1% 21.8%;    /* #24304b */
+    --secondary: 227 25.5% 18.4%;    /* #23283b */
     --secondary-foreground: 0 0% 100%;
 
     --muted: 222 30% 24%;
     --muted-foreground: 220 12% 72%;
 
-    --accent: 222 35.1% 21.8%;
+    --accent: 227 25.5% 18.4%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 80% 55%;
@@ -32,7 +32,7 @@
     --success-foreground: 0 0% 100%;
 
     --border: 221 27% 32%;
-    --input: 222 35.1% 21.8%;
+    --input: 227 25.5% 18.4%;
     --ring: 148 82.9% 34.3%;
 
     --radius: 0.375rem;
@@ -40,10 +40,10 @@
     /* Trading specific colors */
     --trading-green: 148 82.9% 34.3%;
     --trading-red: 350 80% 50%;
-    --trading-orange: 29 100% 62%;
-    --chart-bg: 224 34.7% 19.2%;
-    --sidebar-bg: 224 34.7% 19.2%;
-    --panel-bg: 222 35.1% 21.8%;
+    --trading-orange: 225 14.9% 24.7%;
+    --chart-bg: 229 24.1% 15.5%;
+    --sidebar-bg: 230 31% 11.4%;
+    --panel-bg: 227 25.5% 18.4%;
 
     /* Chart colors */
     --candle-green: 148 82.9% 34.3%;
@@ -51,41 +51,41 @@
     --chart-grid: 221 27% 32%;
     --price-line: 148 82.9% 34.3%;
 
-    --sidebar-background: 224 34.7% 19.2%;
+    --sidebar-background: 230 31% 11.4%;
     --sidebar-foreground: 220 12% 72%;
     --sidebar-primary: 148 82.9% 34.3%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 35.1% 21.8%;
+    --sidebar-accent: 227 25.5% 18.4%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 221 27% 32%;
     --sidebar-ring: 148 82.9% 34.3%;
   }
 
   .dark {
-    --background: 224 34.7% 19.2%;
+    --background: 229 24.1% 15.5%;
     --foreground: 0 0% 100%;
-    --card: 222 35.1% 21.8%;
+    --card: 227 25.5% 18.4%;
     --card-foreground: 0 0% 100%;
-    --popover: 222 35.1% 21.8%;
+    --popover: 227 25.5% 18.4%;
     --popover-foreground: 0 0% 100%;
     --primary: 148 82.9% 34.3%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 222 35.1% 21.8%;
+    --secondary: 227 25.5% 18.4%;
     --secondary-foreground: 0 0% 100%;
     --muted: 222 30% 24%;
     --muted-foreground: 220 12% 72%;
-    --accent: 222 35.1% 21.8%;
+    --accent: 227 25.5% 18.4%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 80% 55%;
     --destructive-foreground: 0 0% 100%;
     --border: 221 27% 32%;
-    --input: 222 35.1% 21.8%;
+    --input: 227 25.5% 18.4%;
     --ring: 148 82.9% 34.3%;
-    --sidebar-background: 224 34.7% 19.2%;
+    --sidebar-background: 230 31% 11.4%;
     --sidebar-foreground: 220 12% 72%;
     --sidebar-primary: 148 82.9% 34.3%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 35.1% 21.8%;
+    --sidebar-accent: 227 25.5% 18.4%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 221 27% 32%;
     --sidebar-ring: 148 82.9% 34.3%;
@@ -337,39 +337,39 @@
   }
 
   .trading-terminal {
-    --trading-workspace-bg: #202942;
-    --trading-header-bg: #202942;
-    --trading-sidebar-bg: #202942;
-    --trading-workspace-panel-bg: #202942;
-    --trading-panel-bg: #25314d;
-    --trading-panel-soft-bg: #2d3a59;
-    --trading-tabs-bg: #222d46;
-    --trading-chart-divider-bg: #2a3653;
-    --trading-chart-pane-bg: #202942;
-    --trading-border-color: rgba(143, 176, 207, 0.16);
-    --trading-border-strong-color: rgba(143, 176, 207, 0.24);
-    --trading-control-bg: #303b59;
-    --trading-control-hover-bg: #384566;
-    --trading-control-border: rgba(154, 181, 213, 0.18);
+    --trading-workspace-bg: #1e2131;
+    --trading-header-bg: #141726;
+    --trading-sidebar-bg: #141726;
+    --trading-workspace-panel-bg: #1e2131;
+    --trading-panel-bg: #23283b;
+    --trading-panel-soft-bg: #2c3148;
+    --trading-tabs-bg: #141726;
+    --trading-chart-divider-bg: #23283b;
+    --trading-chart-pane-bg: #1e2131;
+    --trading-border-color: rgba(143, 164, 210, 0.16);
+    --trading-border-strong-color: rgba(143, 164, 210, 0.24);
+    --trading-control-bg: #2a3046;
+    --trading-control-hover-bg: #34394a;
+    --trading-control-border: rgba(143, 164, 210, 0.18);
     --trading-text-color: #f3f7ff;
-    --trading-muted-color: #a9b9d4;
-    --trading-tool-bg: rgba(37, 49, 77, 0.98);
-    --trading-tool-hover-bg: #33405f;
-    --trading-tool-active-bg: #344862;
-    --trading-tool-border: rgba(154, 181, 213, 0.18);
-    --trading-tool-hover-border: rgba(143, 176, 207, 0.42);
-    --trading-tool-active-border: #8fb0cf;
+    --trading-muted-color: #a9b5d0;
+    --trading-tool-bg: rgba(35, 40, 59, 0.98);
+    --trading-tool-hover-bg: #34394a;
+    --trading-tool-active-bg: #34394a;
+    --trading-tool-border: rgba(143, 164, 210, 0.18);
+    --trading-tool-hover-border: rgba(143, 164, 210, 0.42);
+    --trading-tool-active-border: #8fa4d2;
     --trading-tool-text: #e8f0ff;
     --trading-tool-active-text: #ffffff;
-    --trading-timeframe-text: #9fbde7;
-    --trading-menu-bg: #25314d;
-    --trading-menu-border: rgba(143, 176, 207, 0.2);
-    --trading-accent-color: #8fb0cf;
-    --trading-accent-soft-color: rgba(143, 176, 207, 0.18);
+    --trading-timeframe-text: #9fb5e2;
+    --trading-menu-bg: #23283b;
+    --trading-menu-border: rgba(143, 164, 210, 0.2);
+    --trading-accent-color: #8fa4d2;
+    --trading-accent-soft-color: rgba(143, 164, 210, 0.18);
     --trading-accent-contrast-color: #142033;
-    --trading-active-color: #9fbde7;
-    --trading-active-soft-color: rgba(159, 189, 231, 0.16);
-    --trading-active-border-color: rgba(159, 189, 231, 0.36);
+    --trading-active-color: #8fb3ea;
+    --trading-active-soft-color: rgba(143, 179, 234, 0.16);
+    --trading-active-border-color: rgba(143, 179, 234, 0.36);
     --trading-success-color: #21a566;
     --trading-success-soft-color: rgba(33, 165, 102, 0.18);
     --trading-success-border-color: rgba(33, 165, 102, 0.42);
@@ -848,39 +848,39 @@
   }
 
   html[data-trading-template="amber"] .trading-terminal {
-    --trading-workspace-bg: #1d1100;
-    --trading-header-bg: #1a1002;
-    --trading-sidebar-bg: #1a1002;
-    --trading-workspace-panel-bg: #1d1100;
-    --trading-panel-bg: #2b1b04;
-    --trading-panel-soft-bg: #3b2707;
-    --trading-tabs-bg: #251600;
-    --trading-chart-divider-bg: #3b2707;
-    --trading-chart-pane-bg: #160d00;
-    --trading-border-color: rgba(255, 154, 61, 0.14);
-    --trading-border-strong-color: rgba(255, 154, 61, 0.24);
-    --trading-control-bg: #2b1b04;
-    --trading-control-hover-bg: #3b2707;
-    --trading-control-border: rgba(255, 154, 61, 0.2);
-    --trading-text-color: #fff3e2;
-    --trading-muted-color: #c9aa7f;
-    --trading-tool-bg: rgba(43, 27, 4, 0.98);
-    --trading-tool-hover-bg: #4a3008;
-    --trading-tool-active-bg: #5b3808;
-    --trading-tool-border: rgba(255, 154, 61, 0.25);
-    --trading-tool-hover-border: rgba(255, 154, 61, 0.5);
-    --trading-tool-active-border: #ff7a1a;
-    --trading-tool-text: #fff3e2;
+    --trading-workspace-bg: #1e2131;
+    --trading-header-bg: #141726;
+    --trading-sidebar-bg: #141726;
+    --trading-workspace-panel-bg: #1e2131;
+    --trading-panel-bg: #23283b;
+    --trading-panel-soft-bg: #2c3148;
+    --trading-tabs-bg: #141726;
+    --trading-chart-divider-bg: #23283b;
+    --trading-chart-pane-bg: #1e2131;
+    --trading-border-color: rgba(143, 164, 210, 0.16);
+    --trading-border-strong-color: rgba(143, 164, 210, 0.24);
+    --trading-control-bg: #2a3046;
+    --trading-control-hover-bg: #34394a;
+    --trading-control-border: rgba(143, 164, 210, 0.18);
+    --trading-text-color: #f3f7ff;
+    --trading-muted-color: #a9b5d0;
+    --trading-tool-bg: rgba(35, 40, 59, 0.98);
+    --trading-tool-hover-bg: #34394a;
+    --trading-tool-active-bg: #34394a;
+    --trading-tool-border: rgba(143, 164, 210, 0.18);
+    --trading-tool-hover-border: rgba(143, 164, 210, 0.42);
+    --trading-tool-active-border: #8fa4d2;
+    --trading-tool-text: #e8f0ff;
     --trading-tool-active-text: #ffffff;
-    --trading-timeframe-text: #ff9a3d;
-    --trading-menu-bg: #2b1b04;
-    --trading-menu-border: rgba(255, 154, 61, 0.24);
-    --trading-accent-color: #ff7a1a;
-    --trading-accent-soft-color: rgba(255, 122, 26, 0.2);
-    --trading-accent-contrast-color: #ffffff;
-    --trading-active-color: #c27b2f;
-    --trading-active-soft-color: rgba(194, 123, 47, 0.2);
-    --trading-active-border-color: rgba(194, 123, 47, 0.42);
+    --trading-timeframe-text: #9fb5e2;
+    --trading-menu-bg: #23283b;
+    --trading-menu-border: rgba(143, 164, 210, 0.2);
+    --trading-accent-color: #8fa4d2;
+    --trading-accent-soft-color: rgba(143, 164, 210, 0.18);
+    --trading-accent-contrast-color: #141726;
+    --trading-active-color: #8fb3ea;
+    --trading-active-soft-color: rgba(143, 179, 234, 0.16);
+    --trading-active-border-color: rgba(143, 179, 234, 0.36);
     --trading-success-color: #2fa56a;
     --trading-success-soft-color: rgba(47, 165, 106, 0.16);
     --trading-success-border-color: rgba(47, 165, 106, 0.36);
@@ -915,21 +915,21 @@
     --trading-muted-color: #715f4a;
     --trading-tool-bg: rgba(255, 244, 223, 0.98);
     --trading-tool-hover-bg: #f1dfc4;
-    --trading-tool-active-bg: #ffe2bd;
+    --trading-tool-active-bg: #dce5ec;
     --trading-tool-border: rgba(92, 68, 39, 0.2);
-    --trading-tool-hover-border: rgba(255, 122, 26, 0.45);
-    --trading-tool-active-border: #ff7a1a;
+    --trading-tool-hover-border: rgba(71, 117, 100, 0.42);
+    --trading-tool-active-border: #477564;
     --trading-tool-text: #2a2118;
     --trading-tool-active-text: #2a2118;
-    --trading-timeframe-text: #d85a00;
+    --trading-timeframe-text: #477564;
     --trading-menu-bg: #fff4df;
     --trading-menu-border: rgba(92, 68, 39, 0.2);
-    --trading-accent-color: #ff7a1a;
-    --trading-accent-soft-color: rgba(255, 122, 26, 0.18);
+    --trading-accent-color: #477564;
+    --trading-accent-soft-color: rgba(71, 117, 100, 0.16);
     --trading-accent-contrast-color: #ffffff;
-    --trading-active-color: #a96c2c;
-    --trading-active-soft-color: rgba(169, 108, 44, 0.16);
-    --trading-active-border-color: rgba(169, 108, 44, 0.34);
+    --trading-active-color: #526b8f;
+    --trading-active-soft-color: rgba(82, 107, 143, 0.14);
+    --trading-active-border-color: rgba(82, 107, 143, 0.3);
     --trading-success-color: #238d5b;
     --trading-success-soft-color: rgba(35, 141, 91, 0.14);
     --trading-success-border-color: rgba(35, 141, 91, 0.34);
