@@ -339,16 +339,16 @@ const BAR_SPACING_MAP: Record<string, number> = {
   "2m": 10,
   "3m": 10.1,
   "4m": 10.3,
-  "5m": 10.5,
-  "10m": 10.9,
-  "15m": 11.3,
-  "30m": 11.2,
-  "1h": 11.5,
-  "2h": 11.9,
-  "3h": 12.2,
-  "4h": 12.5,
-  "12h": 13,
-  "1D": 13.5,
+  "5m": 11.2,
+  "10m": 12,
+  "15m": 12.6,
+  "30m": 13.4,
+  "1h": 14,
+  "2h": 14.7,
+  "3h": 15.3,
+  "4h": 16,
+  "12h": 17.2,
+  "1D": 18,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
@@ -370,6 +370,23 @@ const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
   "4h": 24,
   "12h": 20,
   "1D": 18,
+};
+
+const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
+  "1m": 108,
+  "2m": 116,
+  "3m": 120,
+  "4m": 124,
+  "5m": 126,
+  "10m": 112,
+  "15m": 102,
+  "30m": 88,
+  "1h": 80,
+  "2h": 72,
+  "3h": 68,
+  "4h": 64,
+  "12h": 54,
+  "1D": 48,
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
@@ -399,10 +416,10 @@ const getMainPriceScaleMargins = (timeframe: SupportedChartTimeframe) => {
   const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
 
   if (seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS) {
-    return { top: 0.16, bottom: 0.16 };
+    return { top: 0.045, bottom: 0.055 };
   }
 
-  return { top: 0.1, bottom: 0.1 };
+  return { top: 0.085, bottom: 0.095 };
 };
 
 const getZoomResponsivePriceScaleMargins = (
@@ -419,10 +436,10 @@ const getZoomResponsivePriceScaleMargins = (
   }
 
   const zoomRatio = visibleSpan / targetVisibleBars;
-  const highTimeframeBonus = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.03 : 0;
-  const zoomPadding = Math.max(-0.035, Math.min(0.12, (zoomRatio - 1) * 0.07));
-  const maxMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.28 : 0.23;
-  const margin = Math.max(0.08, Math.min(maxMargin, baseMargins.top + highTimeframeBonus + zoomPadding));
+  const zoomPadding = Math.max(-0.025, Math.min(0.08, (zoomRatio - 1) * 0.045));
+  const maxMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.11 : 0.2;
+  const minMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.035 : 0.07;
+  const margin = Math.max(minMargin, Math.min(maxMargin, baseMargins.top + zoomPadding));
 
   return { top: margin, bottom: margin };
 };
@@ -444,11 +461,24 @@ const getTargetVisibleBars = (containerWidth: number, timeframe: SupportedChartT
   const safeWidth = Math.max(320, containerWidth);
   const targetSpacing = BAR_SPACING_MAP[timeframe] ?? BAR_SPACING_MAP["1m"];
   const minimumBars = MIN_VISIBLE_BAR_COUNT_MAP[timeframe] ?? DEFAULT_VISIBLE_BARS;
+  const maximumBars = MAX_VISIBLE_BAR_COUNT_MAP[timeframe];
+  const widthBasedBars = Math.floor(safeWidth / Math.max(1, targetSpacing));
+  const cappedBars =
+    typeof maximumBars === "number" ? Math.min(widthBasedBars, maximumBars) : widthBasedBars;
 
-  return Math.max(minimumBars, Math.floor(safeWidth / Math.max(1, targetSpacing)));
+  return Math.max(minimumBars, cappedBars);
 };
 
-const getTrendContextMultiplier = (containerWidth: number) => {
+const getTrendContextMultiplier = (containerWidth: number, timeframe: SupportedChartTimeframe) => {
+  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
+
+  if (seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS) {
+    if (containerWidth >= 1440) return 1.22;
+    if (containerWidth >= 1024) return 1.18;
+    if (containerWidth >= 768) return 1.14;
+    return 1.1;
+  }
+
   if (containerWidth >= 1440) return 1.62;
   if (containerWidth >= 1024) return 1.52;
   if (containerWidth >= 768) return 1.4;
@@ -461,7 +491,7 @@ const getTrendContextBarCount = (
   availableBars = Number.POSITIVE_INFINITY,
 ) => {
   const targetVisibleBars = getTargetVisibleBars(containerWidth, timeframe);
-  const expandedBarCount = Math.round(targetVisibleBars * getTrendContextMultiplier(containerWidth));
+  const expandedBarCount = Math.round(targetVisibleBars * getTrendContextMultiplier(containerWidth, timeframe));
 
   return Math.max(
     targetVisibleBars,
