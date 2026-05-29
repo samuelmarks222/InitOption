@@ -201,23 +201,23 @@ export const getTradingTimezone = (timezone: string) => {
   return { offsetMinutes, timeZone };
 };
 
-export const getTradingChartSurfaceColor = (preferences: TradingPreferences, fallback: string) => {
+export const getTradingChartSurfaceColor = (preferences: TradingPreferences, _fallback: string) => {
   if (preferences.chartBackgroundImage) return "rgba(0,0,0,0)";
   if (preferences.template === "ivory") return "#efe6d6";
   if (preferences.template === "graphite") return "#101215";
   if (preferences.template === "amber") return "#1d1100";
-  return fallback;
+  return "#202942";
 };
 
 export const getTradingChartTextColor = (preferences: TradingPreferences) =>
   preferences.template === "ivory" ? "#2a2118" : "#eef3fb";
 
 export const getTradingGridColor = (preferences: TradingPreferences) => {
-  const alpha = Math.max(0, Math.min(0.18, preferences.gridOpacity * 0.018));
+  const alpha = Math.max(0, Math.min(0.12, preferences.gridOpacity * 0.011));
   if (preferences.template === "ivory") return `rgba(86, 57, 22, ${alpha + 0.03})`;
   if (preferences.template === "amber") return `rgba(255, 138, 24, ${alpha + 0.02})`;
   if (preferences.template === "graphite") return `rgba(255, 255, 255, ${alpha + 0.02})`;
-  return `rgba(255, 255, 255, ${alpha})`;
+  return `rgba(143, 176, 207, ${alpha + 0.01})`;
 };
 
 export const useTradingPreferences = () => {
