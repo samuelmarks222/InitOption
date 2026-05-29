@@ -331,106 +331,106 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 8.8,
-  "5s": 9.2,
-  "15s": 9.6,
-  "30s": 10,
-  "1m": 10.4,
-  "2m": 10.8,
-  "3m": 11.2,
-  "4m": 11.6,
-  "5m": 12,
-  "10m": 12.8,
-  "15m": 13.4,
-  "30m": 14,
-  "1h": 14.8,
-  "2h": 15.4,
-  "3h": 16,
-  "4h": 16.6,
-  "12h": 17.6,
-  "1D": 18.6,
+  "1s": 6.2,
+  "5s": 6.4,
+  "15s": 6.7,
+  "30s": 7,
+  "1m": 7.3,
+  "2m": 7.6,
+  "3m": 7.9,
+  "4m": 8.2,
+  "5m": 8.5,
+  "10m": 8.9,
+  "15m": 9.3,
+  "30m": 9.8,
+  "1h": 10.3,
+  "2h": 10.8,
+  "3h": 11.2,
+  "4h": 11.6,
+  "12h": 12.5,
+  "1D": 13.2,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
-  "1s": 120,
-  "5s": 112,
-  "15s": 104,
-  "30s": 96,
-  "1m": 88,
-  "2m": 82,
-  "3m": 78,
-  "4m": 74,
-  "5m": 70,
-  "10m": 64,
-  "15m": 60,
-  "30m": 56,
-  "1h": 52,
-  "2h": 48,
-  "3h": 44,
-  "4h": 42,
-  "12h": 34,
-  "1D": 30,
+  "1s": 160,
+  "5s": 150,
+  "15s": 142,
+  "30s": 134,
+  "1m": 126,
+  "2m": 120,
+  "3m": 114,
+  "4m": 110,
+  "5m": 106,
+  "10m": 98,
+  "15m": 92,
+  "30m": 86,
+  "1h": 80,
+  "2h": 74,
+  "3h": 70,
+  "4h": 66,
+  "12h": 54,
+  "1D": 46,
 };
 
 const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
-  "5s": 170,
-  "15s": 160,
-  "30s": 152,
-  "1m": 144,
-  "2m": 138,
-  "3m": 134,
-  "4m": 130,
-  "5m": 126,
-  "10m": 122,
-  "15m": 116,
-  "30m": 110,
-  "1h": 104,
-  "2h": 98,
-  "3h": 94,
-  "4h": 90,
-  "12h": 78,
-  "1D": 70,
-};
-
-const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
   "5s": 260,
-  "15s": 250,
-  "30s": 240,
-  "1m": 230,
-  "2m": 220,
-  "3m": 212,
-  "4m": 204,
-  "5m": 196,
-  "10m": 184,
-  "15m": 174,
-  "30m": 164,
-  "1h": 150,
-  "2h": 138,
-  "3h": 130,
+  "15s": 246,
+  "30s": 232,
+  "1m": 220,
+  "2m": 210,
+  "3m": 202,
+  "4m": 194,
+  "5m": 188,
+  "10m": 176,
+  "15m": 166,
+  "30m": 156,
+  "1h": 146,
+  "2h": 136,
+  "3h": 128,
   "4h": 122,
-  "12h": 102,
+  "12h": 104,
   "1D": 92,
 };
 
+const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
+  "5s": 340,
+  "15s": 320,
+  "30s": 300,
+  "1m": 280,
+  "2m": 264,
+  "3m": 252,
+  "4m": 240,
+  "5m": 228,
+  "10m": 214,
+  "15m": 202,
+  "30m": 188,
+  "1h": 174,
+  "2h": 160,
+  "3h": 150,
+  "4h": 140,
+  "12h": 118,
+  "1D": 106,
+};
+
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 2.1,
-  "5s": 2.2,
-  "15s": 2.3,
-  "30s": 2.45,
-  "1m": 2.6,
-  "2m": 2.7,
-  "3m": 2.78,
-  "4m": 2.86,
-  "5m": 2.94,
-  "10m": 3.1,
-  "15m": 3.24,
-  "30m": 3.45,
-  "1h": 3.7,
-  "2h": 3.95,
-  "3h": 4.18,
-  "4h": 4.4,
-  "12h": 4.78,
-  "1D": 5.1,
+  "1s": 1.5,
+  "5s": 1.55,
+  "15s": 1.65,
+  "30s": 1.75,
+  "1m": 1.85,
+  "2m": 1.95,
+  "3m": 2.05,
+  "4m": 2.14,
+  "5m": 2.24,
+  "10m": 2.38,
+  "15m": 2.52,
+  "30m": 2.68,
+  "1h": 2.88,
+  "2h": 3.08,
+  "3h": 3.24,
+  "4h": 3.38,
+  "12h": 3.68,
+  "1D": 3.95,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
@@ -439,10 +439,10 @@ const getMainPriceScaleMargins = (timeframe: SupportedChartTimeframe) => {
   const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
 
   if (seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS) {
-    return { top: 0.075, bottom: 0.085 };
+    return { top: 0.16, bottom: 0.17 };
   }
 
-  return { top: 0.085, bottom: 0.095 };
+  return { top: 0.14, bottom: 0.15 };
 };
 
 const getZoomResponsivePriceScaleMargins = (
@@ -459,9 +459,9 @@ const getZoomResponsivePriceScaleMargins = (
   }
 
   const zoomRatio = visibleSpan / targetVisibleBars;
-  const zoomPadding = Math.max(-0.035, Math.min(0.16, (zoomRatio - 1) * 0.085));
-  const maxMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.24 : 0.26;
-  const minMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.045 : 0.065;
+  const zoomPadding = Math.max(-0.08, Math.min(0.2, (zoomRatio - 1) * 0.11));
+  const maxMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.32 : 0.34;
+  const minMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.055 : 0.06;
   const margin = Math.max(minMargin, Math.min(maxMargin, baseMargins.top + zoomPadding));
 
   return { top: margin, bottom: margin };
@@ -548,7 +548,7 @@ const getHistoryBackfillIncrement = (containerWidth: number, timeframe: Supporte
   return Math.max(trendContextBars, Math.round(historicalBaseline * 0.55));
 };
 
-const getChartRightOffset = (visibleBars: number) => Math.max(8, Math.min(24, Math.round(visibleBars * 0.08)));
+const getChartRightOffset = (visibleBars: number) => Math.max(18, Math.min(58, Math.round(visibleBars * 0.18)));
 
 const getDefaultVisibleBars = (
   containerWidth: number,
@@ -557,6 +557,18 @@ const getDefaultVisibleBars = (
 ) => {
   const targetVisibleBars = getTargetVisibleBars(containerWidth, timeframe);
   return Math.max(1, Math.min(availableBars, targetVisibleBars));
+};
+
+const getInitialVisibleBars = (
+  containerWidth: number,
+  timeframe: SupportedChartTimeframe,
+  availableBars = Number.POSITIVE_INFINITY,
+) => {
+  const defaultVisibleBars = getDefaultVisibleBars(containerWidth, timeframe, availableBars);
+  const readableZoomBars = getMaxReadableZoomBars(containerWidth, timeframe, availableBars);
+  const pocketStyleContextBars = Math.round(readableZoomBars * 0.78);
+
+  return Math.max(defaultVisibleBars, Math.min(availableBars, pocketStyleContextBars));
 };
 
 const getUnixTime = (value: unknown) => {
@@ -1606,7 +1618,11 @@ const OscillatorPane = ({
         rightOffset,
         barSpacing: getBarSpacingForScale(selectedTf, bodyScale),
         minBarSpacing: getMinBarSpacingForScale(selectedTf, bodyScale),
-        fixLeftEdge: true,
+        fixLeftEdge: false,
+        fixRightEdge: false,
+        rightBarStaysOnScroll: false,
+        shiftVisibleRangeOnNewBar: false,
+        allowShiftVisibleRangeOnWhitespaceReplacement: false,
         lockVisibleTimeRangeOnResize: true,
       },
     });
@@ -2247,30 +2263,32 @@ const TradingChart = ({
       selectedTf,
       Math.max(1, dataPointCount),
     );
-    const defaultVisibleBars = getDefaultVisibleBars(
+    const defaultVisibleBars = getInitialVisibleBars(
       containerWidth,
       selectedTf,
       Math.max(1, dataPointCount),
     );
     const rightOffset = getChartRightOffset(trendContextBars);
+    const defaultSpan = defaultVisibleBars + rightOffset;
     const currentRange = timeScale.getVisibleLogicalRange();
     const currentSpan = currentRange
       ? Math.max(12, currentRange.to - currentRange.from)
-      : defaultVisibleBars;
+      : defaultSpan;
     const nextSpan = direction === "in"
       ? currentSpan * 0.76
       : currentSpan * 1.34;
-    const minSpan = Math.max(22, Math.round(defaultVisibleBars * 0.36));
+    const minSpan = Math.max(22 + rightOffset, Math.round(defaultVisibleBars * 0.36) + rightOffset);
     const maxVisibleBySpacing = Math.max(
-      defaultVisibleBars,
+      defaultSpan,
       Math.floor(containerWidth / getMinBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale)) + rightOffset,
     );
     const maxReadableBars = getMaxReadableZoomBars(
       containerWidth,
       selectedTf,
-      Math.max(1, dataPointCount + rightOffset),
+      Math.max(1, dataPointCount),
     );
-    const maxSpan = Math.max(defaultVisibleBars, Math.min(maxReadableBars, maxVisibleBySpacing));
+    const maxReadableSpan = maxReadableBars + getChartRightOffset(maxReadableBars);
+    const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing));
     const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
     const maxTo = dataPointCount + rightOffset;
     const currentCenter = currentRange
@@ -2506,7 +2524,11 @@ const TradingChart = ({
           rightOffset: 6,
           barSpacing: getBarSpacingForScale("1m", chartStylesRef.current.bodyScale),
           minBarSpacing: getMinBarSpacingForScale("1m", chartStylesRef.current.bodyScale),
-          fixLeftEdge: true,
+          fixLeftEdge: false,
+          fixRightEdge: false,
+          rightBarStaysOnScroll: false,
+          shiftVisibleRangeOnNewBar: false,
+          allowShiftVisibleRangeOnWhitespaceReplacement: false,
           lockVisibleTimeRangeOnResize: true,
         },
       });
@@ -2817,7 +2839,7 @@ const TradingChart = ({
     // Apply timeframe-appropriate bar spacing so candles look correct at each interval
     const containerWidth = mainRef.current?.clientWidth ?? 960;
     const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, history.length);
-    const initialVisibleBars = getDefaultVisibleBars(containerWidth, selectedTf, history.length);
+    const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, history.length);
     const rightOffset = getChartRightOffset(trendContextBars);
     chartRef.current.timeScale().applyOptions({
       barSpacing: getBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale),
@@ -2826,8 +2848,13 @@ const TradingChart = ({
       timeVisible: true,
       secondsVisible: tf.seconds < 60,
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
+      fixLeftEdge: false,
+      fixRightEdge: false,
+      rightBarStaysOnScroll: false,
+      shiftVisibleRangeOnNewBar: false,
+      allowShiftVisibleRangeOnWhitespaceReplacement: false,
     });
-    applyResponsivePriceScale(initialVisibleBars, true);
+    applyResponsivePriceScale(initialVisibleBars + rightOffset, true);
     const defaultFrom = Math.max(0, history.length - initialVisibleBars);
     chartRef.current.timeScale().setVisibleLogicalRange({
       from: defaultFrom,
@@ -2933,15 +2960,16 @@ const TradingChart = ({
       const maxReadableBars = getMaxReadableZoomBars(
         containerWidth,
         selectedTf,
-        Math.max(1, dataPointCount + getChartRightOffset(getTrendContextBarCount(containerWidth, selectedTf))),
+        Math.max(1, dataPointCount),
       );
+      const maxReadableSpan = maxReadableBars + getChartRightOffset(maxReadableBars);
       const visibleSpan = range.to - range.from;
 
-      if (visibleSpan > maxReadableBars + 0.5) {
+      if (visibleSpan > maxReadableSpan + 0.5) {
         const center = (range.from + range.to) / 2;
         const maxTo = dataPointCount + getChartRightOffset(maxReadableBars);
-        let nextFrom = center - maxReadableBars / 2;
-        let nextTo = center + maxReadableBars / 2;
+        let nextFrom = center - maxReadableSpan / 2;
+        let nextTo = center + maxReadableSpan / 2;
 
         if (nextFrom < 0) {
           nextTo -= nextFrom;
@@ -3003,7 +3031,7 @@ const TradingChart = ({
       selectedTf,
       Math.max(1, historyRef.current.length),
     );
-    const initialVisibleBars = getDefaultVisibleBars(
+    const initialVisibleBars = getInitialVisibleBars(
       containerWidth,
       selectedTf,
       Math.max(1, historyRef.current.length),
@@ -3023,8 +3051,13 @@ const TradingChart = ({
       timeVisible: true,
       secondsVisible: tf.seconds < 60,
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
+      fixLeftEdge: false,
+      fixRightEdge: false,
+      rightBarStaysOnScroll: false,
+      shiftVisibleRangeOnNewBar: false,
+      allowShiftVisibleRangeOnWhitespaceReplacement: false,
     });
-    applyResponsivePriceScale(currentRange ? currentRange.to - currentRange.from : initialVisibleBars, true);
+    applyResponsivePriceScale(currentRange ? currentRange.to - currentRange.from : initialVisibleBars + rightOffset, true);
 
     if (dataPointCount <= 0) {
       return;
@@ -3033,7 +3066,7 @@ const TradingChart = ({
     if (!currentRange) {
       const targetTo = dataPointCount + rightOffset;
       timeScale.setVisibleLogicalRange({
-        from: Math.max(0, targetTo - initialVisibleBars),
+        from: Math.max(0, targetTo - (initialVisibleBars + rightOffset)),
         to: targetTo,
       });
       return;
@@ -3050,8 +3083,8 @@ const TradingChart = ({
     }
 
     const visibleSpan = Math.min(
-      Math.max(initialVisibleBars, currentRange.to - currentRange.from),
-      trendContextBars,
+      Math.max(initialVisibleBars + rightOffset, currentRange.to - currentRange.from),
+      trendContextBars + rightOffset,
     );
     const targetTo = dataPointCount + rightOffset;
     const targetFrom = Math.max(0, targetTo - visibleSpan);
