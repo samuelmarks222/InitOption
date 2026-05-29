@@ -12,7 +12,7 @@ const shortcutClassName =
 
 const shortcutStyle: CSSProperties = {
   background:
-    "linear-gradient(180deg, #34394a 0%, #23283b 58%, color-mix(in srgb, #141726 88%, #34394a) 100%)",
+    "linear-gradient(180deg, #34394a 0%, #23283b 58%, color-mix(in srgb, #1e2131 88%, #34394a) 100%)",
   borderColor: "rgba(143, 164, 210, 0.28)",
   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12)",
   color: "#ffffff",

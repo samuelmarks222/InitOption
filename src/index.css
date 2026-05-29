@@ -42,7 +42,7 @@
     --trading-red: 350 80% 50%;
     --trading-orange: 225 14.9% 24.7%;
     --chart-bg: 229 24.1% 15.5%;
-    --sidebar-bg: 230 31% 11.4%;
+    --sidebar-bg: 229 24.1% 15.5%;
     --panel-bg: 227 25.5% 18.4%;
 
     /* Chart colors */
@@ -51,7 +51,7 @@
     --chart-grid: 221 27% 32%;
     --price-line: 148 82.9% 34.3%;
 
-    --sidebar-background: 230 31% 11.4%;
+    --sidebar-background: 229 24.1% 15.5%;
     --sidebar-foreground: 220 12% 72%;
     --sidebar-primary: 148 82.9% 34.3%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -81,7 +81,7 @@
     --border: 221 27% 32%;
     --input: 227 25.5% 18.4%;
     --ring: 148 82.9% 34.3%;
-    --sidebar-background: 230 31% 11.4%;
+    --sidebar-background: 229 24.1% 15.5%;
     --sidebar-foreground: 220 12% 72%;
     --sidebar-primary: 148 82.9% 34.3%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -338,12 +338,12 @@
 
   .trading-terminal {
     --trading-workspace-bg: #1e2131;
-    --trading-header-bg: #141726;
-    --trading-sidebar-bg: #141726;
+    --trading-header-bg: #1e2131;
+    --trading-sidebar-bg: #1e2131;
     --trading-workspace-panel-bg: #1e2131;
     --trading-panel-bg: #23283b;
     --trading-panel-soft-bg: #2c3148;
-    --trading-tabs-bg: #141726;
+    --trading-tabs-bg: #1e2131;
     --trading-chart-divider-bg: #23283b;
     --trading-chart-pane-bg: #1e2131;
     --trading-border-color: rgba(143, 164, 210, 0.16);
@@ -849,12 +849,12 @@
 
   html[data-trading-template="amber"] .trading-terminal {
     --trading-workspace-bg: #1e2131;
-    --trading-header-bg: #141726;
-    --trading-sidebar-bg: #141726;
+    --trading-header-bg: #1e2131;
+    --trading-sidebar-bg: #1e2131;
     --trading-workspace-panel-bg: #1e2131;
     --trading-panel-bg: #23283b;
     --trading-panel-soft-bg: #2c3148;
-    --trading-tabs-bg: #141726;
+    --trading-tabs-bg: #1e2131;
     --trading-chart-divider-bg: #23283b;
     --trading-chart-pane-bg: #1e2131;
     --trading-border-color: rgba(143, 164, 210, 0.16);

@@ -331,15 +331,15 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 6.2,
-  "5s": 6.4,
-  "15s": 6.7,
-  "30s": 7,
-  "1m": 7.3,
-  "2m": 7.6,
-  "3m": 7.9,
-  "4m": 8.2,
-  "5m": 8.5,
+  "1s": 9.5,
+  "5s": 9.7,
+  "15s": 9.9,
+  "30s": 10.1,
+  "1m": 10.3,
+  "2m": 9.8,
+  "3m": 9.4,
+  "4m": 9.1,
+  "5m": 8.9,
   "10m": 8.9,
   "15m": 9.3,
   "30m": 9.8,
@@ -352,11 +352,11 @@ const BAR_SPACING_MAP: Record<string, number> = {
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
-  "1s": 160,
-  "5s": 150,
-  "15s": 142,
-  "30s": 134,
-  "1m": 126,
+  "1s": 118,
+  "5s": 116,
+  "15s": 114,
+  "30s": 112,
+  "1m": 110,
   "2m": 120,
   "3m": 114,
   "4m": 110,
@@ -373,10 +373,11 @@ const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
 };
 
 const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
-  "5s": 260,
-  "15s": 246,
-  "30s": 232,
-  "1m": 220,
+  "1s": 194,
+  "5s": 190,
+  "15s": 186,
+  "30s": 182,
+  "1m": 180,
   "2m": 210,
   "3m": 202,
   "4m": 194,
@@ -393,10 +394,11 @@ const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>
 };
 
 const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
-  "5s": 340,
-  "15s": 320,
-  "30s": 300,
-  "1m": 280,
+  "1s": 266,
+  "5s": 260,
+  "15s": 254,
+  "30s": 248,
+  "1m": 242,
   "2m": 264,
   "3m": 252,
   "4m": 240,
@@ -413,11 +415,11 @@ const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, n
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 1.5,
-  "5s": 1.55,
-  "15s": 1.65,
-  "30s": 1.75,
-  "1m": 1.85,
+  "1s": 4.7,
+  "5s": 4.8,
+  "15s": 4.95,
+  "30s": 5.1,
+  "1m": 5.25,
   "2m": 1.95,
   "3m": 2.05,
   "4m": 2.14,
@@ -565,8 +567,18 @@ const getInitialVisibleBars = (
   availableBars = Number.POSITIVE_INFINITY,
 ) => {
   const defaultVisibleBars = getDefaultVisibleBars(containerWidth, timeframe, availableBars);
-  const readableZoomBars = getMaxReadableZoomBars(containerWidth, timeframe, availableBars);
-  const pocketStyleContextBars = Math.round(readableZoomBars * 0.78);
+  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
+  const pocketStyleContextMultiplier =
+    seconds < 60
+      ? 1.06
+      : seconds < 5 * 60
+        ? 1.08
+        : seconds < 30 * 60
+          ? 1.14
+          : seconds < 4 * 60 * 60
+            ? 1.18
+            : 1.22;
+  const pocketStyleContextBars = Math.round(defaultVisibleBars * pocketStyleContextMultiplier);
 
   return Math.max(defaultVisibleBars, Math.min(availableBars, pocketStyleContextBars));
 };
