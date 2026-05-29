@@ -331,100 +331,106 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 7,
-  "5s": 7.8,
-  "15s": 8.6,
-  "30s": 9.2,
-  "1m": 9.8,
-  "2m": 10,
-  "3m": 10.1,
-  "4m": 10.3,
-  "5m": 11.2,
-  "10m": 12,
-  "15m": 12.6,
-  "30m": 13.4,
-  "1h": 14,
-  "2h": 14.7,
-  "3h": 15.3,
-  "4h": 16,
-  "12h": 17.2,
-  "1D": 18,
+  "1s": 8.8,
+  "5s": 9.2,
+  "15s": 9.6,
+  "30s": 10,
+  "1m": 10.4,
+  "2m": 10.8,
+  "3m": 11.2,
+  "4m": 11.6,
+  "5m": 12,
+  "10m": 12.8,
+  "15m": 13.4,
+  "30m": 14,
+  "1h": 14.8,
+  "2h": 15.4,
+  "3h": 16,
+  "4h": 16.6,
+  "12h": 17.6,
+  "1D": 18.6,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
-  "1s": 108,
-  "5s": 96,
-  "15s": 82,
-  "30s": 72,
-  "1m": 64,
-  "2m": 60,
-  "3m": 58,
-  "4m": 57,
-  "5m": 56,
-  "10m": 52,
-  "15m": 50,
-  "30m": 40,
-  "1h": 30,
-  "2h": 28,
-  "3h": 26,
-  "4h": 24,
-  "12h": 20,
-  "1D": 18,
+  "1s": 120,
+  "5s": 112,
+  "15s": 104,
+  "30s": 96,
+  "1m": 88,
+  "2m": 82,
+  "3m": 78,
+  "4m": 74,
+  "5m": 70,
+  "10m": 64,
+  "15m": 60,
+  "30m": 56,
+  "1h": 52,
+  "2h": 48,
+  "3h": 44,
+  "4h": 42,
+  "12h": 34,
+  "1D": 30,
 };
 
 const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
-  "1m": 108,
-  "2m": 116,
-  "3m": 120,
-  "4m": 124,
+  "5s": 170,
+  "15s": 160,
+  "30s": 152,
+  "1m": 144,
+  "2m": 138,
+  "3m": 134,
+  "4m": 130,
   "5m": 126,
-  "10m": 112,
-  "15m": 102,
-  "30m": 88,
-  "1h": 80,
-  "2h": 72,
-  "3h": 68,
-  "4h": 64,
-  "12h": 54,
-  "1D": 48,
+  "10m": 122,
+  "15m": 116,
+  "30m": 110,
+  "1h": 104,
+  "2h": 98,
+  "3h": 94,
+  "4h": 90,
+  "12h": 78,
+  "1D": 70,
 };
 
 const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
-  "1m": 148,
-  "2m": 148,
-  "3m": 146,
-  "4m": 144,
-  "5m": 140,
-  "10m": 126,
-  "15m": 118,
-  "30m": 104,
-  "1h": 96,
-  "2h": 90,
-  "3h": 86,
-  "4h": 82,
-  "12h": 70,
-  "1D": 62,
+  "5s": 260,
+  "15s": 250,
+  "30s": 240,
+  "1m": 230,
+  "2m": 220,
+  "3m": 212,
+  "4m": 204,
+  "5m": 196,
+  "10m": 184,
+  "15m": 174,
+  "30m": 164,
+  "1h": 150,
+  "2h": 138,
+  "3h": 130,
+  "4h": 122,
+  "12h": 102,
+  "1D": 92,
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 2.3,
-  "5s": 2.45,
-  "15s": 2.6,
-  "30s": 2.75,
-  "1m": 2.9,
-  "2m": 3,
-  "3m": 3.05,
-  "4m": 3.1,
-  "5m": 3.15,
-  "10m": 3.25,
-  "15m": 3.35,
-  "30m": 7.4,
-  "1h": 8.6,
-  "2h": 9.8,
-  "3h": 10.8,
-  "4h": 11.8,
-  "12h": 13.2,
-  "1D": 14.6,
+  "1s": 2.1,
+  "5s": 2.2,
+  "15s": 2.3,
+  "30s": 2.45,
+  "1m": 2.6,
+  "2m": 2.7,
+  "3m": 2.78,
+  "4m": 2.86,
+  "5m": 2.94,
+  "10m": 3.1,
+  "15m": 3.24,
+  "30m": 3.45,
+  "1h": 3.7,
+  "2h": 3.95,
+  "3h": 4.18,
+  "4h": 4.4,
+  "12h": 4.78,
+  "1D": 5.1,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
@@ -433,7 +439,7 @@ const getMainPriceScaleMargins = (timeframe: SupportedChartTimeframe) => {
   const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
 
   if (seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS) {
-    return { top: 0.045, bottom: 0.055 };
+    return { top: 0.075, bottom: 0.085 };
   }
 
   return { top: 0.085, bottom: 0.095 };
@@ -453,9 +459,9 @@ const getZoomResponsivePriceScaleMargins = (
   }
 
   const zoomRatio = visibleSpan / targetVisibleBars;
-  const zoomPadding = Math.max(-0.025, Math.min(0.08, (zoomRatio - 1) * 0.045));
-  const maxMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.11 : 0.2;
-  const minMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.035 : 0.07;
+  const zoomPadding = Math.max(-0.035, Math.min(0.16, (zoomRatio - 1) * 0.085));
+  const maxMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.24 : 0.26;
+  const minMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.045 : 0.065;
   const margin = Math.max(minMargin, Math.min(maxMargin, baseMargins.top + zoomPadding));
 
   return { top: margin, bottom: margin };
@@ -2266,11 +2272,25 @@ const TradingChart = ({
     );
     const maxSpan = Math.max(defaultVisibleBars, Math.min(maxReadableBars, maxVisibleBySpacing));
     const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
-    const anchorTo = currentRange?.to ?? (dataPointCount + rightOffset);
-    const nextTo = Math.max(clampedSpan, anchorTo);
+    const maxTo = dataPointCount + rightOffset;
+    const currentCenter = currentRange
+      ? (currentRange.from + currentRange.to) / 2
+      : Math.max(clampedSpan / 2, maxTo - defaultVisibleBars / 2);
+    let nextFrom = currentCenter - clampedSpan / 2;
+    let nextTo = currentCenter + clampedSpan / 2;
+
+    if (nextFrom < 0) {
+      nextTo -= nextFrom;
+      nextFrom = 0;
+    }
+
+    if (nextTo > maxTo) {
+      nextFrom = Math.max(0, nextFrom - (nextTo - maxTo));
+      nextTo = maxTo;
+    }
 
     timeScale.setVisibleLogicalRange({
-      from: Math.max(0, nextTo - clampedSpan),
+      from: nextFrom,
       to: nextTo,
     });
   }, [selectedTf]);
