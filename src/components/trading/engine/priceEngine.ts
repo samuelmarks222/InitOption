@@ -67,7 +67,7 @@ export const TIMEFRAMES: Record<string, TimeframeConfig> = {
 };
 
 const HIGH_TIMEFRAME_DIRECT_SECONDS = 30 * 60;
-const HISTORY_CACHE_VERSION = 7;
+const HISTORY_CACHE_VERSION = 8;
 const HISTORY_MEMORY_CACHE_LIMIT = 48;
 const historyMemoryCache = new Map<string, OHLCCandle[]>();
 
@@ -160,12 +160,13 @@ export class OTCPriceEngine {
     return this.price;
   }
 
-  getCurrentPriceAt(timestampSec = Date.now() / 1000): number {
+  getCurrentPriceAt(timestampSec = Date.now() / 1000, timeframeSeconds?: number): number {
     this.price = getClampedPriceAt({
       symbol: this.symbol,
       basePrice: this.basePrice,
       timestamp: timestampSec,
       category: this.category,
+      timeframeSeconds,
     });
 
     return this.price;

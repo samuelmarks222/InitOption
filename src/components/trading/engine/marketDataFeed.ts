@@ -252,7 +252,7 @@ export const replayDeterministicTickState = ({
   const normalizedTimestamp = normalizeTimestamp(timestamp, Date.now() / 1000);
   const bucketStart = Math.floor(normalizedTimestamp / timeframe.seconds) * timeframe.seconds;
   const engine = new OTCPriceEngine(symbol, basePrice, assetCategory);
-  const openingPrice = engine.getCurrentPriceAt(bucketStart);
+  const openingPrice = engine.getCurrentPriceAt(bucketStart, timeframe.seconds);
   const candle = createFlatReplayCandle(bucketStart, openingPrice);
   const tickIntervalSeconds = Math.max(0.025, Math.max(25, timeframe.updateIntervalMs) / 1000);
 
@@ -262,7 +262,7 @@ export const replayDeterministicTickState = ({
   let lastReplayTimestamp = bucketStart;
 
   while (replayTime < normalizedTimestamp) {
-    const anchorPrice = engine.getCurrentPriceAt(replayTime);
+    const anchorPrice = engine.getCurrentPriceAt(replayTime, timeframe.seconds);
     const nextTick = simulateDeterministicTickPrice({
       symbol,
       basePrice,
@@ -284,7 +284,7 @@ export const replayDeterministicTickState = ({
   }
 
   if (normalizedTimestamp > lastReplayTimestamp) {
-    const anchorPrice = engine.getCurrentPriceAt(normalizedTimestamp);
+    const anchorPrice = engine.getCurrentPriceAt(normalizedTimestamp, timeframe.seconds);
     const nextTick = simulateDeterministicTickPrice({
       symbol,
       basePrice,
@@ -373,7 +373,7 @@ class DeterministicTickFeed implements MarketDataFeed {
 
     while (this.nextTickAtMs <= nowMs && guard < 64) {
       const timestamp = this.nextTickAtMs / 1000;
-      const anchorPrice = this.engine.getCurrentPriceAt(timestamp);
+      const anchorPrice = this.engine.getCurrentPriceAt(timestamp, this.subscription.timeframe.seconds);
       const nextTick = simulateDeterministicTickPrice({
         symbol: this.subscription.symbol,
         basePrice: this.subscription.basePrice,

@@ -389,6 +389,23 @@ const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>
   "1D": 48,
 };
 
+const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
+  "1m": 148,
+  "2m": 148,
+  "3m": 146,
+  "4m": 144,
+  "5m": 140,
+  "10m": 126,
+  "15m": 118,
+  "30m": 104,
+  "1h": 96,
+  "2h": 90,
+  "3h": 86,
+  "4h": 82,
+  "12h": 70,
+  "1D": 62,
+};
+
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
   "1s": 2.3,
   "5s": 2.45,
@@ -401,13 +418,13 @@ const MIN_BAR_SPACING_MAP: Record<string, number> = {
   "5m": 3.15,
   "10m": 3.25,
   "15m": 3.35,
-  "30m": 3.25,
-  "1h": 3.35,
-  "2h": 3.45,
-  "3h": 3.55,
-  "4h": 3.65,
-  "12h": 3.8,
-  "1D": 4,
+  "30m": 7.4,
+  "1h": 8.6,
+  "2h": 9.8,
+  "3h": 10.8,
+  "4h": 11.8,
+  "12h": 13.2,
+  "1D": 14.6,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
@@ -467,6 +484,22 @@ const getTargetVisibleBars = (containerWidth: number, timeframe: SupportedChartT
     typeof maximumBars === "number" ? Math.min(widthBasedBars, maximumBars) : widthBasedBars;
 
   return Math.max(minimumBars, cappedBars);
+};
+
+const getMaxReadableZoomBars = (
+  containerWidth: number,
+  timeframe: SupportedChartTimeframe,
+  availableBars = Number.POSITIVE_INFINITY,
+) => {
+  const targetVisibleBars = getTargetVisibleBars(containerWidth, timeframe);
+  const configuredMaximum = MAX_READABLE_ZOOM_BAR_COUNT_MAP[timeframe];
+  const spacingMaximum = Math.floor(
+    Math.max(320, containerWidth) / Math.max(1, MIN_BAR_SPACING_MAP[timeframe] ?? MIN_BAR_SPACING_MAP["1m"]),
+  );
+  const readableMaximum =
+    typeof configuredMaximum === "number" ? Math.min(configuredMaximum, spacingMaximum) : spacingMaximum;
+
+  return Math.max(targetVisibleBars, Math.min(availableBars, readableMaximum));
 };
 
 const getTrendContextMultiplier = (containerWidth: number, timeframe: SupportedChartTimeframe) => {
@@ -734,6 +767,16 @@ const formatTimeScaleTick = (time: number, timeframeSeconds: number) => {
   }
 
   if (timeframeSeconds < 12 * 60 * 60) {
+    if (timeframeSeconds >= 4 * 60 * 60) {
+      return date.toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+    }
+
     return date.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -2216,7 +2259,12 @@ const TradingChart = ({
       defaultVisibleBars,
       Math.floor(containerWidth / getMinBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale)) + rightOffset,
     );
-    const maxSpan = Math.max(defaultVisibleBars, Math.min(dataPointCount + rightOffset, maxVisibleBySpacing));
+    const maxReadableBars = getMaxReadableZoomBars(
+      containerWidth,
+      selectedTf,
+      Math.max(1, dataPointCount + rightOffset),
+    );
+    const maxSpan = Math.max(defaultVisibleBars, Math.min(maxReadableBars, maxVisibleBySpacing));
     const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
     const anchorTo = currentRange?.to ?? (dataPointCount + rightOffset);
     const nextTo = Math.max(clampedSpan, anchorTo);
@@ -2860,11 +2908,42 @@ const TradingChart = ({
 
       applyResponsivePriceScale(range.to - range.from);
 
+      const containerWidth = mainRef.current?.clientWidth ?? 960;
+      const dataPointCount = mainSeriesRef.current?.data()?.length ?? historyRef.current.length;
+      const maxReadableBars = getMaxReadableZoomBars(
+        containerWidth,
+        selectedTf,
+        Math.max(1, dataPointCount + getChartRightOffset(getTrendContextBarCount(containerWidth, selectedTf))),
+      );
+      const visibleSpan = range.to - range.from;
+
+      if (visibleSpan > maxReadableBars + 0.5) {
+        const center = (range.from + range.to) / 2;
+        const maxTo = dataPointCount + getChartRightOffset(maxReadableBars);
+        let nextFrom = center - maxReadableBars / 2;
+        let nextTo = center + maxReadableBars / 2;
+
+        if (nextFrom < 0) {
+          nextTo -= nextFrom;
+          nextFrom = 0;
+        }
+
+        if (nextTo > maxTo) {
+          nextFrom = Math.max(0, nextFrom - (nextTo - maxTo));
+          nextTo = maxTo;
+        }
+
+        timeScale.setVisibleLogicalRange({
+          from: nextFrom,
+          to: nextTo,
+        });
+        return;
+      }
+
       if (isBackfillingHistoryRef.current || !engineRef.current) {
         return;
       }
 
-      const containerWidth = mainRef.current?.clientWidth ?? 960;
       const threshold = getHistoryBackfillThreshold(containerWidth, selectedTf);
 
       if (range.from > threshold) {

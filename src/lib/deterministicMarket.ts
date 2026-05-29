@@ -146,40 +146,102 @@ const roundPrice = (value: number, referencePrice: number) => {
   return Number(value.toFixed(precision));
 };
 
+const HIGH_TIMEFRAME_PROFESSIONAL_SECONDS = 30 * 60;
+
 const resolveProfile = (symbol: string, category?: string | null) =>
   CATEGORY_PROFILES[normalizeAssetCategory(category, symbol)];
 
-export const getDeterministicPriceAt = ({
+const getHighTimeframeSmoothingWeight = (timeframeSeconds?: number) => {
+  if (
+    typeof timeframeSeconds !== "number" ||
+    !Number.isFinite(timeframeSeconds) ||
+    timeframeSeconds < HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
+  ) {
+    return 0;
+  }
+
+  return clamp(
+    0.38 + Math.log2(timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) / 3.4,
+    0.38,
+    1,
+  );
+};
+
+const getDeterministicRelativeOffset = (
+  normalizedSymbol: string,
+  profile: MarketProfile,
+  timestampSec: number,
+  timeframeSeconds?: number,
+) => {
+  const primaryPhase = hashUnit(normalizedSymbol, "primary-phase") * TAU;
+  const secondaryPhase = hashUnit(normalizedSymbol, "secondary-phase") * TAU;
+  const smoothingWeight = getHighTimeframeSmoothingWeight(timeframeSeconds);
+  const driftWeight = 1 + smoothingWeight * 0.2;
+  const swingWeight = 1 + smoothingWeight * 0.85;
+  const pulseWeight = 1 - smoothingWeight * 0.65;
+  const microWeight = 1 - smoothingWeight * 0.96;
+  const tickWeight = 1 - smoothingWeight;
+  const cycleWeight = 1 + smoothingWeight * 0.42;
+  const secondaryCycleWeight = 1 + smoothingWeight * 0.28;
+  const macroShape =
+    smoothingWeight *
+    (
+      noiseAt(normalizedSymbol, "macro-drift", timestampSec / (profile.driftScaleSeconds * 1.7)) *
+        profile.driftAmplitude *
+        0.3 +
+      Math.sin((timestampSec / (profile.cycleSeconds * 2.35)) * TAU + hashUnit(normalizedSymbol, "macro-phase") * TAU) *
+        profile.swingAmplitude *
+        0.55
+    );
+
+  return (
+    noiseAt(normalizedSymbol, "drift", timestampSec / profile.driftScaleSeconds) * profile.driftAmplitude * driftWeight +
+    noiseAt(normalizedSymbol, "swing", timestampSec / profile.swingScaleSeconds) * profile.swingAmplitude * swingWeight +
+    noiseAt(normalizedSymbol, "pulse", timestampSec / profile.pulseScaleSeconds) * profile.pulseAmplitude * pulseWeight +
+    noiseAt(normalizedSymbol, "micro", timestampSec / profile.microScaleSeconds) * profile.microAmplitude * microWeight +
+    noiseAt(normalizedSymbol, "tick", timestampSec / profile.tickScaleSeconds) * profile.tickAmplitude * tickWeight +
+    Math.sin((timestampSec / profile.cycleSeconds) * TAU + primaryPhase) * profile.cycleAmplitude * cycleWeight +
+    Math.sin((timestampSec / profile.secondaryCycleSeconds) * TAU + secondaryPhase) *
+      profile.secondaryCycleAmplitude *
+      secondaryCycleWeight +
+    macroShape
+  );
+};
+
+const getDeterministicPriceAtForTimeframe = ({
   symbol,
   basePrice,
   timestamp,
   category,
+  timeframeSeconds,
 }: {
   symbol: string;
   basePrice: number;
   timestamp: number;
   category?: string | null;
+  timeframeSeconds?: number;
 }) => {
   const safeBasePrice = Number.isFinite(basePrice) && basePrice > 0 ? basePrice : 1;
   const normalizedSymbol = String(symbol || "ASSET").toUpperCase();
   const profile = resolveProfile(normalizedSymbol, category);
   const timestampSec = normalizeUnixSeconds(timestamp);
-  const primaryPhase = hashUnit(normalizedSymbol, "primary-phase") * TAU;
-  const secondaryPhase = hashUnit(normalizedSymbol, "secondary-phase") * TAU;
-
-  const relativeOffset =
-    noiseAt(normalizedSymbol, "drift", timestampSec / profile.driftScaleSeconds) * profile.driftAmplitude +
-    noiseAt(normalizedSymbol, "swing", timestampSec / profile.swingScaleSeconds) * profile.swingAmplitude +
-    noiseAt(normalizedSymbol, "pulse", timestampSec / profile.pulseScaleSeconds) * profile.pulseAmplitude +
-    noiseAt(normalizedSymbol, "micro", timestampSec / profile.microScaleSeconds) * profile.microAmplitude +
-    noiseAt(normalizedSymbol, "tick", timestampSec / profile.tickScaleSeconds) * profile.tickAmplitude +
-    Math.sin((timestampSec / profile.cycleSeconds) * TAU + primaryPhase) * profile.cycleAmplitude +
-    Math.sin((timestampSec / profile.secondaryCycleSeconds) * TAU + secondaryPhase) *
-      profile.secondaryCycleAmplitude;
+  const relativeOffset = getDeterministicRelativeOffset(
+    normalizedSymbol,
+    profile,
+    timestampSec,
+    timeframeSeconds,
+  );
 
   const price = safeBasePrice * Math.exp(relativeOffset);
   return Math.max(safeBasePrice * 0.25, price);
 };
+
+export const getDeterministicPriceAt = (input: {
+  symbol: string;
+  basePrice: number;
+  timestamp: number;
+  category?: string | null;
+}) => getDeterministicPriceAtForTimeframe(input);
 
 export const getDeterministicChange24h = ({
   symbol,
@@ -211,8 +273,6 @@ const getPriceStep = (price: number) => Number(`1e-${getPricePrecision(price)}`)
 
 const clampPriceToBounds = (price: number, basePrice: number) =>
   clamp(price, basePrice * 0.25, basePrice * 4);
-
-const HIGH_TIMEFRAME_PROFESSIONAL_SECONDS = 30 * 60;
 
 const getSampleStepSeconds = (timeframeSeconds: number) => {
   if (timeframeSeconds <= 1) return 0.1;
@@ -331,7 +391,13 @@ const buildInteriorProbePrices = ({
   return Array.from({ length: probeCount }, (_, index) => {
     const fraction = (index + 1) / (probeCount + 1);
     const timestamp = startTimeSec + durationSeconds * fraction;
-    const basePriceAtTime = getDeterministicPriceAt({ symbol, basePrice, timestamp, category });
+    const basePriceAtTime = getDeterministicPriceAtForTimeframe({
+      symbol,
+      basePrice,
+      timestamp,
+      category,
+      timeframeSeconds,
+    });
     const oscillation = Math.sin(fraction * TAU * wickFrequency + wickPhase);
     const jitter = noiseAt(symbol, "wick-noise", timestamp / Math.max(0.04, durationSeconds / 5));
     const impulse = noiseAt(symbol, "wick-impulse", (startTimeSec + index) / Math.max(1, timeframeSeconds));
@@ -375,7 +441,7 @@ export const buildDeterministicCandle = ({
   }
 
   const prices = sampleTimes.map((timestamp) =>
-    getDeterministicPriceAt({ symbol, basePrice, timestamp, category }),
+    getDeterministicPriceAtForTimeframe({ symbol, basePrice, timestamp, category, timeframeSeconds }),
   );
   const rawOpen = prices[0];
   const rawClose = prices[prices.length - 1];
@@ -520,6 +586,7 @@ export const getClampedPriceAt = ({
   minimumRatio = 0.25,
   maximumRatio = 4,
   category,
+  timeframeSeconds,
 }: {
   symbol: string;
   basePrice: number;
@@ -527,8 +594,15 @@ export const getClampedPriceAt = ({
   minimumRatio?: number;
   maximumRatio?: number;
   category?: string | null;
+  timeframeSeconds?: number;
 }) => {
   const safeBasePrice = Number.isFinite(basePrice) && basePrice > 0 ? basePrice : 1;
-  const rawPrice = getDeterministicPriceAt({ symbol, basePrice: safeBasePrice, timestamp, category });
+  const rawPrice = getDeterministicPriceAtForTimeframe({
+    symbol,
+    basePrice: safeBasePrice,
+    timestamp,
+    category,
+    timeframeSeconds,
+  });
   return clamp(rawPrice, safeBasePrice * minimumRatio, safeBasePrice * maximumRatio);
 };
