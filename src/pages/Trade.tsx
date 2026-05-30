@@ -868,6 +868,7 @@ const Trade = () => {
       const liveChartMarkerTime =
         latestChartMarkerTimesBySymbolRef.current[assetSymbol] ?? latestChartMarkerTimeRef.current;
       const markerTimeOverride = liveChartMarkerTime ?? clickTimestampSec;
+      const markerLogicalOverride = latestChartMarkerLogicalBySymbolRef.current[assetSymbol] ?? null;
 
       return openTrade(
         assetSymbol,
@@ -877,7 +878,7 @@ const Trade = () => {
         expirySeconds,
         payoutRate,
         markerTimeOverride,
-        undefined,
+        markerLogicalOverride,
         timeframeSeconds,
       );
     },
@@ -919,6 +920,7 @@ const Trade = () => {
     const clickTimestampSec = Math.floor(Date.now() / 1000);
     const activeMarkerTime =
       latestChartMarkerTimesBySymbolRef.current[assetSymbol] ?? latestChartMarkerTimeRef.current;
+    const activeMarkerLogical = latestChartMarkerLogicalBySymbolRef.current[assetSymbol] ?? null;
     const markerTime = resolveFreshTradeMarkerTime(
       markerTimeOverride === undefined
         ? activeMarkerTime ?? clickTimestampSec
@@ -926,6 +928,8 @@ const Trade = () => {
       openedAt,
       Math.max(10, Math.floor(timeframeSeconds)),
     );
+    const markerLogical =
+      markerLogicalOverride === undefined ? activeMarkerLogical : markerLogicalOverride;
 
     setDemoBalance((current) => current - amount);
     setDemoActiveTrades((current) => [
@@ -936,6 +940,10 @@ const Trade = () => {
         amount,
         entry_price: currentEntryPrice,
         marker_time: markerTime,
+        marker_logical:
+          typeof markerLogical === "number" && Number.isFinite(markerLogical)
+            ? markerLogical
+            : undefined,
         expiry_seconds: expirySeconds,
         payout_rate: payoutRate,
         opened_at: openedAt,

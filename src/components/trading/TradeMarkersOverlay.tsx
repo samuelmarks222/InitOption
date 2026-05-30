@@ -63,7 +63,7 @@ const clampFraction = (value: number) => Math.min(1, Math.max(0, value));
 const getIntrabarLogicalOffset = (fraction: number) =>
   (clampFraction(fraction) - 0.5) * INTRABAR_LOGICAL_SPAN;
 
-const isUsableCoordinate = (value: number | null | undefined) =>
+const isUsableCoordinate = (value: number | null | undefined): value is number =>
   typeof value === "number" && Number.isFinite(value) && !Number.isNaN(value);
 
 const clampCoordinate = (value: number, min: number, max: number) =>
@@ -235,6 +235,33 @@ const getVisibleFallbackCoordinate = (
   return isUsableCoordinate(coordinate) ? coordinate : Math.max(44, containerWidth - 96);
 };
 
+const getStoredLogicalCoordinate = (
+  chart: IChartApi,
+  seriesPoints: SeriesPoint[],
+  markerLogical: number | null | undefined,
+  entryTime: number,
+  timeframeSeconds: number,
+) => {
+  if (!isUsableCoordinate(markerLogical) || seriesPoints.length === 0) {
+    return null;
+  }
+
+  const lowerIndex = Math.max(0, Math.min(seriesPoints.length - 1, Math.floor(markerLogical)));
+  const currentPoint = seriesPoints[lowerIndex];
+  const nextPoint = seriesPoints[Math.min(seriesPoints.length - 1, lowerIndex + 1)];
+  const pointSpan = Math.max(1, nextPoint.time - currentPoint.time || timeframeSeconds || 1);
+  const logicalFraction = Math.max(0, Math.min(1, markerLogical - currentPoint.logical));
+  const impliedTime = currentPoint.time + logicalFraction * pointSpan;
+  const maxDrift = Math.max(3, Math.floor((timeframeSeconds || 60) * 1.25));
+
+  if (Math.abs(impliedTime - entryTime) > maxDrift) {
+    return null;
+  }
+
+  const coordinate = chart.timeScale().logicalToCoordinate(markerLogical as never);
+  return isUsableCoordinate(coordinate) ? coordinate : null;
+};
+
 export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timeframeSeconds }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const tradesRef = useRef<ActiveTrade[]>([]);
@@ -290,7 +317,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         const verticalGuide = document.createElement("div");
         verticalGuide.className = "absolute";
         verticalGuide.style.width = "0";
-        verticalGuide.style.borderLeft = "1px dashed rgba(167, 183, 216, 0.34)";
+        verticalGuide.style.borderLeft = "1px solid rgba(167, 183, 216, 0.26)";
         verticalGuide.style.transform = "translateX(-50%)";
         verticalGuide.style.zIndex = "0";
         marker.appendChild(verticalGuide);
@@ -390,12 +417,24 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         const marker = el.children[index] as HTMLElement;
         const rawEntryY = series.priceToCoordinate(trade.entry_price);
         const { entryTime, expiryTime, activeLineEndTime } = getTradeDisplayTimes(trade, nowSec);
-        const rawEntryX = getTradeMarkerCoordinate(chart, seriesPoints, entryTime, timeframeSeconds);
         const isActiveTrade = nowSec <= expiryTime + 1;
         const markerMinX = 34;
         const markerMaxX = Math.max(markerMinX, el.clientWidth - 64);
+        const storedLogicalEntryX = getStoredLogicalCoordinate(
+          chart,
+          seriesPoints,
+          trade.marker_logical,
+          entryTime,
+          timeframeSeconds,
+        );
+        const timeBasedEntryX = getTradeMarkerCoordinate(chart, seriesPoints, entryTime, timeframeSeconds);
+        const rawEntryX = storedLogicalEntryX ?? timeBasedEntryX;
+        const rawEntryXInView =
+          isUsableCoordinate(rawEntryX) &&
+          rawEntryX >= markerMinX &&
+          rawEntryX <= markerMaxX;
         const entryX =
-          isUsableCoordinate(rawEntryX) && rawEntryX >= -32 && rawEntryX <= el.clientWidth + 32
+          rawEntryXInView
             ? rawEntryX
             : isActiveTrade
               ? getVisibleFallbackCoordinate(chart, seriesPoints, el.clientWidth)
@@ -458,12 +497,12 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         activeLine.style.left = "0px";
         activeLine.style.width = `${activeWidth}px`;
         activeLine.style.background = accent;
-        activeLine.style.height = "2px";
-        activeLine.style.boxShadow = `0 0 10px ${hexToRgba(accent, 0.22)}`;
+        activeLine.style.height = "1px";
+        activeLine.style.boxShadow = "none";
 
         projectedLine.style.left = `${Math.max(activeWidth - 1, 0)}px`;
         projectedLine.style.width = `${projectedWidth}px`;
-        projectedLine.style.background = `repeating-linear-gradient(90deg, ${hexToRgba(accent, 0.78)} 0 7px, transparent 7px 12px)`;
+        projectedLine.style.background = hexToRgba(accent, 0.9);
         projectedLine.style.boxShadow = "none";
         projectedLine.style.height = "1px";
         projectedLine.style.opacity = projectedWidth > 0 ? "1" : "0";
