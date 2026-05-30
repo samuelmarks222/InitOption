@@ -92,6 +92,27 @@ const getReadableTradeLineWidth = (expirySeconds: number) => {
   );
 };
 
+const fixedMarkerAnchors = new Map<string, number>();
+
+const getTradeAnchorKey = (
+  trade: Pick<
+    ActiveTrade,
+    "id" | "asset_symbol" | "direction" | "amount" | "expiry_seconds" | "marker_time" | "opened_at"
+  >,
+) => {
+  const markerTime = getUnixTime(trade.marker_time);
+  const openedTime = getUnixTime(trade.opened_at);
+  const entryTime = markerTime ?? openedTime ?? 0;
+  const openedKey =
+    typeof trade.opened_at === "string" && trade.opened_at.length > 0
+      ? trade.opened_at
+      : String(openedTime ?? trade.id);
+  const amount = Number.isFinite(Number(trade.amount)) ? Number(trade.amount).toFixed(2) : "0.00";
+  const expiry = Math.max(1, Math.floor(Number(trade.expiry_seconds) || 0));
+
+  return `${trade.asset_symbol}|${entryTime}|${openedKey}|${trade.direction}|${amount}|${expiry}`;
+};
+
 const getShortTimeframeLogicalTime = (
   seriesPoints: SeriesPoint[],
   targetTime: number,
@@ -221,6 +242,19 @@ export const getTradeMarkerCoordinate = (
     : null;
 };
 
+const getLatestSeriesCoordinate = (
+  chart: IChartApi,
+  seriesPoints: SeriesPoint[],
+) => {
+  if (seriesPoints.length === 0) {
+    return null;
+  }
+
+  const latestPoint = seriesPoints[seriesPoints.length - 1];
+  const coordinate = chart.timeScale().logicalToCoordinate(latestPoint.logical as never);
+  return isUsableCoordinate(coordinate) ? coordinate : null;
+};
+
 const getStoredLogicalCoordinate = (
   chart: IChartApi,
   seriesPoints: SeriesPoint[],
@@ -251,9 +285,10 @@ const getStoredLogicalCoordinate = (
 export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timeframeSeconds }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const tradesRef = useRef<ActiveTrade[]>([]);
+  const fixedMarkerAnchorRef = useRef(fixedMarkerAnchors);
 
   useEffect(() => {
-    tradesRef.current = [...trades.filter((trade) => trade.asset_symbol === assetSymbol)].sort((left, right) => {
+    const nextTrades = [...trades.filter((trade) => trade.asset_symbol === assetSymbol)].sort((left, right) => {
       const leftTime =
         getUnixTime(left.marker_time) ??
         getUnixTime(left.opened_at) ??
@@ -264,6 +299,15 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         0;
 
       return leftTime - rightTime;
+    });
+
+    tradesRef.current = nextTrades;
+
+    const visibleAnchorKeys = new Set(nextTrades.map(getTradeAnchorKey));
+    fixedMarkerAnchorRef.current.forEach((_, anchorKey) => {
+      if (!visibleAnchorKeys.has(anchorKey)) {
+        fixedMarkerAnchorRef.current.delete(anchorKey);
+      }
     });
   }, [assetSymbol, trades]);
 
@@ -284,7 +328,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
 
         const activeLine = document.createElement("div");
         activeLine.className = "absolute";
-        activeLine.style.height = "1px";
+        activeLine.style.height = "2px";
         activeLine.style.transform = "translateY(-50%)";
         activeLine.style.borderRadius = "999px";
         activeLine.style.zIndex = "2";
@@ -293,7 +337,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
 
         const projectedLine = document.createElement("div");
         projectedLine.className = "absolute";
-        projectedLine.style.height = "1px";
+        projectedLine.style.height = "2px";
         projectedLine.style.transform = "translateY(-50%)";
         projectedLine.style.borderRadius = "999px";
         projectedLine.style.zIndex = "1";
@@ -404,6 +448,12 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         const marker = el.children[index] as HTMLElement;
         const rawEntryY = series.priceToCoordinate(trade.entry_price);
         const { entryTime, expiryTime } = getTradeDisplayTimes(trade, nowSec);
+        const expirySeconds = Math.max(1, Number(trade.expiry_seconds) || 60);
+        const secondsSinceEntry = nowSec - entryTime;
+        const isFreshActiveTrade =
+          nowSec <= expiryTime + 1 &&
+          secondsSinceEntry >= -2 &&
+          secondsSinceEntry <= expirySeconds + 10;
         const storedLogicalEntryX = getStoredLogicalCoordinate(
           chart,
           seriesPoints,
@@ -412,7 +462,32 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
           timeframeSeconds,
         );
         const timeBasedEntryX = getTradeMarkerCoordinate(chart, seriesPoints, entryTime, timeframeSeconds);
-        const entryX = storedLogicalEntryX ?? timeBasedEntryX;
+        const preferredEntryX = isFreshActiveTrade
+          ? timeBasedEntryX ?? storedLogicalEntryX
+          : storedLogicalEntryX ?? timeBasedEntryX;
+        const latestEntryX = getLatestSeriesCoordinate(chart, seriesPoints);
+        const staleEntryDistance = Math.max(96, getReadableTradeLineWidth(expirySeconds) * 1.4);
+        const futureProjectionDistance = Math.max(48, getReadableTradeLineWidth(expirySeconds) * 0.45);
+        const shouldRepairStaleStoredPosition =
+          isFreshActiveTrade &&
+          isUsableCoordinate(preferredEntryX) &&
+          isUsableCoordinate(latestEntryX) &&
+          latestEntryX > el.clientWidth * 0.42 &&
+          (preferredEntryX < latestEntryX - staleEntryDistance ||
+            preferredEntryX > latestEntryX + futureProjectionDistance);
+        let entryX = shouldRepairStaleStoredPosition ? latestEntryX : preferredEntryX;
+
+        if (isFreshActiveTrade) {
+          const anchorKey = getTradeAnchorKey(trade);
+          const fixedEntryX = fixedMarkerAnchorRef.current.get(anchorKey);
+
+          if (isUsableCoordinate(fixedEntryX)) {
+            entryX = fixedEntryX;
+          } else if (isUsableCoordinate(entryX)) {
+            fixedMarkerAnchorRef.current.set(anchorKey, entryX);
+          }
+        }
+
         const entryY = rawEntryY;
 
         if (
@@ -437,7 +512,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
           isUsableCoordinate(fullExpiryXRaw) && fullExpiryXRaw > visibleEntryX
             ? fullExpiryXRaw - visibleEntryX
             : projectedLeadOffset;
-        const readableTotalWidth = getReadableTradeLineWidth(Number(trade.expiry_seconds) || 60);
+        const readableTotalWidth = getReadableTradeLineWidth(expirySeconds);
         const availableRightWidth = Math.max(MARKER_MIN_TOTAL_WIDTH, maxX - visibleEntryX);
         const totalLineWidth = Math.max(
           MARKER_MIN_LINE_WIDTH,
@@ -472,14 +547,14 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         activeLine.style.left = "0px";
         activeLine.style.width = `${activeWidth}px`;
         activeLine.style.background = accent;
-        activeLine.style.height = "1px";
-        activeLine.style.boxShadow = `0 0 8px ${hexToRgba(accent, 0.24)}`;
+        activeLine.style.height = "2px";
+        activeLine.style.boxShadow = `0 0 10px ${hexToRgba(accent, 0.38)}`;
 
         projectedLine.style.left = `${Math.max(activeWidth, 0)}px`;
         projectedLine.style.width = `${projectedWidth}px`;
-        projectedLine.style.background = hexToRgba(accent, 0.62);
-        projectedLine.style.boxShadow = "none";
-        projectedLine.style.height = "1px";
+        projectedLine.style.background = accent;
+        projectedLine.style.boxShadow = `0 0 10px ${hexToRgba(accent, 0.34)}`;
+        projectedLine.style.height = "2px";
         projectedLine.style.opacity = projectedWidth > 0 ? "1" : "0";
 
         tradePill.style.background = "transparent";
@@ -509,11 +584,11 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
 
         entryDot.style.left = "0px";
         entryDot.style.top = "0px";
-        entryDot.style.width = "7px";
-        entryDot.style.height = "7px";
-        entryDot.style.background = "#ff8a34";
+        entryDot.style.width = "8px";
+        entryDot.style.height = "8px";
+        entryDot.style.background = accent;
         entryDot.style.border = "2px solid #ffffff";
-        entryDot.style.boxShadow = `0 0 0 2px ${hexToRgba(accent, 0.16)}, 0 0 10px rgba(255,138,52,0.42)`;
+        entryDot.style.boxShadow = `0 0 0 2px ${hexToRgba(accent, 0.32)}, 0 0 12px ${hexToRgba(accent, 0.58)}`;
 
         activeDot.style.left = `${activeWidth}px`;
         activeDot.style.top = "0px";
