@@ -49,6 +49,15 @@ const formatCompactTimer = (seconds: number) => {
   return `${safeSeconds}s`;
 };
 
+const getTradeProgressPercent = (trade?: ActiveTrade | null) => {
+  if (!trade || !Number.isFinite(trade.expiry_seconds) || trade.expiry_seconds <= 0) {
+    return 0;
+  }
+
+  const elapsed = trade.expiry_seconds - Math.max(0, trade.timeLeft);
+  return Math.min(100, Math.max(0, (elapsed / trade.expiry_seconds) * 100));
+};
+
 const getChipTitle = (tab: Asset) => {
   if (tab.type === "Stock" || tab.type === "Stocks") {
     const cleaned = tab.name
@@ -166,6 +175,15 @@ const AssetInfo = ({
             const isWinningTrade = hasActiveTrade && netState === "positive";
             const isLosingTrade = hasActiveTrade && netState === "negative";
             const accent = isWinningTrade ? WIN_COLOR : isLosingTrade ? LOSS_COLOR : NEUTRAL_TRADE_COLOR;
+            const totalOpenAmount = relatedTrades.reduce(
+              (sum, trade) => sum + (Number.isFinite(trade.amount) ? trade.amount : 0),
+              0,
+            );
+            const activeAmountLabel = formatMoney(totalOpenAmount, {
+              minimumFractionDigits: Number.isInteger(totalOpenAmount) ? 0 : 2,
+              maximumFractionDigits: Number.isInteger(totalOpenAmount) ? 0 : 2,
+            });
+            const progressPercent = getTradeProgressPercent(activeTrade);
             const payout = Math.round(dynamicTab?.maxProfit ?? tab.maxProfit ?? 82);
             const liveResultLabel = hasActiveTrade
               ? `${totalLiveResult > 0 ? "+" : totalLiveResult < 0 ? "-" : ""}${formatMoney(Math.abs(totalLiveResult), {
@@ -175,32 +193,36 @@ const AssetInfo = ({
               : `${payout}%`;
             const sparklinePoints = getTabSparklinePoints(tab.symbol, Number(dynamicTab?.change24h ?? tab.change ?? 0));
             const sparklineFillPoints = `${sparklinePoints} 120,44 0,44`;
+            const sparklineColor = hasActiveTrade ? accent : TAB_SPARKLINE_COLOR;
+            const sparklineFill = hasActiveTrade ? `${accent}24` : "rgba(14,139,235,0.16)";
 
             return (
               <div
                 key={tab.symbol}
-                className="group relative flex h-[50px] min-w-[166px] max-w-[182px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-[4px] border px-2 py-1.5 transition-all duration-200"
+                className="group relative flex h-[50px] min-w-[166px] max-w-[186px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-[4px] border px-2 py-1.5 transition-all duration-200"
                 style={{
                   background: hasActiveTrade
                     ? isWinningTrade
-                      ? "linear-gradient(180deg,#243245 0%,#1e2536 100%)"
+                      ? "linear-gradient(180deg,#153b36 0%,#192535 100%)"
                       : isLosingTrade
-                        ? "linear-gradient(180deg,#302c3d 0%,#202435 100%)"
+                        ? "linear-gradient(180deg,#3a2631 0%,#202435 100%)"
                         : "linear-gradient(180deg,#232b3d 0%,#1d2434 100%)"
                     : isActive
                       ? "linear-gradient(180deg,#243149 0%,#1e2538 100%)"
                       : "linear-gradient(180deg,#202638 0%,#1b2030 100%)",
                   borderColor: hasActiveTrade
                     ? isWinningTrade
-                      ? "rgba(24,216,125,0.26)"
+                      ? "rgba(24,216,125,0.72)"
                       : isLosingTrade
-                        ? "rgba(255,106,114,0.26)"
-                        : "rgba(214,222,241,0.18)"
+                        ? "rgba(255,106,114,0.68)"
+                        : "rgba(214,222,241,0.38)"
                     : isActive
                       ? "rgba(14,139,235,0.92)"
                       : "rgba(143,164,210,0.22)",
-                  boxShadow: isActive
-                    ? "inset 0 0 0 1px rgba(14,139,235,0.18), inset 0 1px 0 rgba(255,255,255,0.08)"
+                  boxShadow: hasActiveTrade
+                    ? `inset 0 0 0 1px ${accent}44, inset 0 1px 0 rgba(255,255,255,0.08)`
+                    : isActive
+                      ? "inset 0 0 0 1px rgba(14,139,235,0.18), inset 0 1px 0 rgba(255,255,255,0.08)"
                     : "inset 0 1px 0 rgba(255,255,255,0.04)",
                 }}
                 onClick={() => (onSelectTab ? onSelectTab(tab.symbol) : onOpenSelector())}
@@ -211,11 +233,11 @@ const AssetInfo = ({
                   preserveAspectRatio="none"
                   aria-hidden="true"
                 >
-                  <polygon points={sparklineFillPoints} fill="rgba(14,139,235,0.16)" />
+                  <polygon points={sparklineFillPoints} fill={sparklineFill} />
                   <polyline
                     points={sparklinePoints}
                     fill="none"
-                    stroke={TAB_SPARKLINE_COLOR}
+                    stroke={sparklineColor}
                     strokeWidth="1.4"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -249,15 +271,26 @@ const AssetInfo = ({
                 </div>
 
                 {activeTrade ? (
-                  <div
-                    className="relative z-[1] mt-auto inline-flex h-[15px] w-fit items-center rounded-full border px-1.5 text-[8px] font-black text-white/90"
-                    style={{
-                      borderColor: "rgba(255,255,255,0.14)",
-                      background: "rgba(20,23,38,0.72)",
-                    }}
-                  >
-                    {formatCompactTimer(activeTrade.timeLeft)}
-                  </div>
+                  <>
+                    <div className="relative z-[1] mt-auto flex w-full items-end justify-between gap-2 pb-0.5">
+                      <span className="text-[12px] font-black leading-none text-white">
+                        {activeAmountLabel}
+                      </span>
+                      <span className="rounded-full bg-black/30 px-1.5 py-[2px] text-[8px] font-black leading-none text-white/90">
+                        {formatCompactTimer(activeTrade.timeLeft)}
+                      </span>
+                    </div>
+                    <div className="absolute inset-x-2 bottom-[3px] z-[2] h-[3px] overflow-hidden rounded-full bg-black/35">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${progressPercent}%`,
+                          background: accent,
+                          boxShadow: `0 0 8px ${accent}88`,
+                        }}
+                      />
+                    </div>
+                  </>
                 ) : null}
               </div>
             );

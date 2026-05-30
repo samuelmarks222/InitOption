@@ -63,9 +63,15 @@ const clampFraction = (value: number) => Math.min(1, Math.max(0, value));
 const getIntrabarLogicalOffset = (fraction: number) =>
   (clampFraction(fraction) - 0.5) * INTRABAR_LOGICAL_SPAN;
 
+const isUsableCoordinate = (value: number | null | undefined) =>
+  typeof value === "number" && Number.isFinite(value) && !Number.isNaN(value);
+
+const clampCoordinate = (value: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, value));
+
 const formatTradeAmountLabel = (amount: number) => {
   const safeAmount = Number.isFinite(amount) ? amount : 0;
-  return Number.isInteger(safeAmount) ? `$ ${safeAmount.toFixed(0)}` : `$ ${safeAmount.toFixed(2)}`;
+  return Number.isInteger(safeAmount) ? `$${safeAmount.toFixed(0)}` : `$${safeAmount.toFixed(2)}`;
 };
 
 const formatTradeCountdown = (secondsRemaining: number) => {
@@ -210,6 +216,25 @@ export const getTradeMarkerCoordinate = (
     : null;
 };
 
+const getVisibleFallbackCoordinate = (
+  chart: IChartApi,
+  seriesPoints: SeriesPoint[],
+  containerWidth: number,
+) => {
+  if (seriesPoints.length === 0) {
+    return Math.max(44, containerWidth - 96);
+  }
+
+  const lastPoint = seriesPoints[seriesPoints.length - 1];
+  const visibleRange = chart.timeScale().getVisibleLogicalRange();
+  const targetLogical = visibleRange
+    ? Math.min(lastPoint.logical, Math.max(visibleRange.from + 2, visibleRange.to - 8))
+    : lastPoint.logical;
+  const coordinate = chart.timeScale().logicalToCoordinate(targetLogical as never);
+
+  return isUsableCoordinate(coordinate) ? coordinate : Math.max(44, containerWidth - 96);
+};
+
 export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timeframeSeconds }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const tradesRef = useRef<ActiveTrade[]>([]);
@@ -262,44 +287,41 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         projectedLine.style.opacity = "1";
         marker.appendChild(projectedLine);
 
+        const verticalGuide = document.createElement("div");
+        verticalGuide.className = "absolute";
+        verticalGuide.style.width = "0";
+        verticalGuide.style.borderLeft = "1px dashed rgba(167, 183, 216, 0.34)";
+        verticalGuide.style.transform = "translateX(-50%)";
+        verticalGuide.style.zIndex = "0";
+        marker.appendChild(verticalGuide);
+
         const tradePill = document.createElement("div");
-        tradePill.className = "absolute rounded-full border text-[11px] font-black text-white";
+        tradePill.className = "absolute text-[11px] font-black text-white";
         tradePill.style.zIndex = "5";
         tradePill.style.position = "absolute";
         tradePill.style.display = "flex";
-        tradePill.style.alignItems = "center";
+        tradePill.style.flexDirection = "column";
+        tradePill.style.alignItems = "flex-start";
         tradePill.style.gap = "2px";
         tradePill.style.whiteSpace = "nowrap";
-        tradePill.style.overflow = "hidden";
 
-        const pillPattern = document.createElement("span");
-        pillPattern.className = "pill-pattern";
-        pillPattern.style.position = "absolute";
-        pillPattern.style.left = "0";
-        pillPattern.style.bottom = "0";
-        pillPattern.style.width = "20px";
-        pillPattern.style.height = "18px";
-        pillPattern.style.opacity = "0.35";
-        pillPattern.style.backgroundImage =
-          "radial-gradient(rgba(130,20,20,0.38) 1px, transparent 1px)";
-        pillPattern.style.backgroundSize = "5px 5px";
-        pillPattern.style.pointerEvents = "none";
-        tradePill.appendChild(pillPattern);
+        const labelRow = document.createElement("div");
+        labelRow.className = "label-row";
+        labelRow.style.display = "flex";
+        labelRow.style.alignItems = "center";
+        labelRow.style.gap = "3px";
+        labelRow.style.lineHeight = "1";
+        tradePill.appendChild(labelRow);
 
-        const iconBubble = document.createElement("span");
-        iconBubble.className = "direction-icon";
-        iconBubble.style.display = "inline-flex";
-        iconBubble.style.alignItems = "center";
-        iconBubble.style.justifyContent = "center";
-        iconBubble.style.position = "relative";
-        iconBubble.style.zIndex = "1";
-        iconBubble.style.width = "4px";
-        iconBubble.style.height = "4px";
-        iconBubble.style.borderRadius = "999px";
-        iconBubble.style.background = "rgba(255,255,255,0.14)";
-        iconBubble.style.fontSize = "2px";
-        iconBubble.style.lineHeight = "1";
-        tradePill.appendChild(iconBubble);
+        const directionIcon = document.createElement("span");
+        directionIcon.className = "direction-icon";
+        directionIcon.style.display = "inline-flex";
+        directionIcon.style.width = "0";
+        directionIcon.style.height = "0";
+        directionIcon.style.borderLeft = "4px solid transparent";
+        directionIcon.style.borderRight = "4px solid transparent";
+        directionIcon.style.filter = "drop-shadow(0 1px 2px rgba(0,0,0,0.6))";
+        labelRow.appendChild(directionIcon);
 
         const amountSpan = document.createElement("span");
         amountSpan.className = "amount-text";
@@ -307,7 +329,16 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         amountSpan.style.alignItems = "center";
         amountSpan.style.position = "relative";
         amountSpan.style.zIndex = "1";
-        tradePill.appendChild(amountSpan);
+        labelRow.appendChild(amountSpan);
+
+        const timeSpan = document.createElement("span");
+        timeSpan.className = "time-text";
+        timeSpan.style.display = "block";
+        timeSpan.style.fontSize = "10px";
+        timeSpan.style.fontWeight = "800";
+        timeSpan.style.lineHeight = "1";
+        timeSpan.style.color = "rgba(214,222,241,0.9)";
+        tradePill.appendChild(timeSpan);
 
         marker.appendChild(tradePill);
 
@@ -357,33 +388,49 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
       });
       visibleTradesSorted.forEach((trade, index) => {
         const marker = el.children[index] as HTMLElement;
-        const entryY = series.priceToCoordinate(trade.entry_price);
+        const rawEntryY = series.priceToCoordinate(trade.entry_price);
         const { entryTime, expiryTime, activeLineEndTime } = getTradeDisplayTimes(trade, nowSec);
-        const entryX = getTradeMarkerCoordinate(chart, seriesPoints, entryTime, timeframeSeconds);
+        const rawEntryX = getTradeMarkerCoordinate(chart, seriesPoints, entryTime, timeframeSeconds);
+        const isActiveTrade = nowSec <= expiryTime + 1;
+        const markerMinX = 34;
+        const markerMaxX = Math.max(markerMinX, el.clientWidth - 64);
+        const entryX =
+          isUsableCoordinate(rawEntryX) && rawEntryX >= -32 && rawEntryX <= el.clientWidth + 32
+            ? rawEntryX
+            : isActiveTrade
+              ? getVisibleFallbackCoordinate(chart, seriesPoints, el.clientWidth)
+              : null;
+        const entryY =
+          isUsableCoordinate(rawEntryY)
+            ? rawEntryY
+            : isActiveTrade
+              ? el.clientHeight / 2
+              : null;
 
         if (
           entryX === null ||
           entryY === null ||
-          Number.isNaN(entryX) ||
-          entryX < -32 ||
-          entryX > el.clientWidth + 32
+          !isUsableCoordinate(entryX) ||
+          !isUsableCoordinate(entryY)
         ) {
           marker.style.opacity = "0";
           return;
         }
 
+        const visibleEntryX = clampCoordinate(entryX, markerMinX, markerMaxX);
+        const visibleEntryY = clampCoordinate(entryY, 18, Math.max(18, el.clientHeight - 18));
         const maxX = Math.max(28, el.clientWidth - 10);
         const activeEndXRaw = getTradeMarkerCoordinate(chart, seriesPoints, activeLineEndTime, timeframeSeconds);
         const fullExpiryXRaw = getTradeMarkerCoordinate(chart, seriesPoints, expiryTime, timeframeSeconds);
         const minimumActiveOffset = 1;
         const projectedLeadOffset = Math.max(18, Math.min(34, el.clientWidth * 0.028));
         const activeEndX = activeEndXRaw === null || Number.isNaN(activeEndXRaw)
-          ? Math.min(maxX, entryX + minimumActiveOffset)
-          : Math.max(entryX + minimumActiveOffset, Math.min(activeEndXRaw, maxX));
+          ? Math.min(maxX, visibleEntryX + minimumActiveOffset)
+          : Math.max(visibleEntryX + minimumActiveOffset, Math.min(activeEndXRaw, maxX));
         const fullExpiryX = fullExpiryXRaw === null || Number.isNaN(fullExpiryXRaw)
           ? Math.min(maxX, activeEndX + projectedLeadOffset)
           : Math.max(activeEndX + projectedLeadOffset, Math.min(fullExpiryXRaw, maxX));
-        const activeWidth = Math.max(minimumActiveOffset, activeEndX - entryX);
+        const activeWidth = Math.max(minimumActiveOffset, activeEndX - visibleEntryX);
         const projectedWidth = Math.max(0, fullExpiryX - activeEndX);
         const isHigher = trade.direction === "higher";
         const accent = isHigher ? "#18d87d" : "#ff6a72";
@@ -391,60 +438,71 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
 
         const activeLine = marker.children[0] as HTMLElement;
         const projectedLine = marker.children[1] as HTMLElement;
-        const tradePill = marker.children[2] as HTMLElement;
-        const iconBubble = tradePill.querySelector(".direction-icon") as HTMLElement;
+        const verticalGuide = marker.children[2] as HTMLElement;
+        const tradePill = marker.children[3] as HTMLElement;
+        const directionIcon = tradePill.querySelector(".direction-icon") as HTMLElement;
         const amountSpan = tradePill.querySelector(".amount-text") as HTMLElement;
-        const entryDot = marker.children[3] as HTMLElement;
-        const activeDot = marker.children[4] as HTMLElement;
+        const timeSpan = tradePill.querySelector(".time-text") as HTMLElement;
+        const entryDot = marker.children[4] as HTMLElement;
+        const activeDot = marker.children[5] as HTMLElement;
 
         marker.style.opacity = "1";
-        marker.style.left = `${entryX}px`;
-        marker.style.top = `${entryY}px`;
+        marker.style.left = `${visibleEntryX}px`;
+        marker.style.top = `${visibleEntryY}px`;
+
+        verticalGuide.style.left = "0px";
+        verticalGuide.style.top = `${-visibleEntryY}px`;
+        verticalGuide.style.height = `${el.clientHeight}px`;
+        verticalGuide.style.opacity = "1";
 
         activeLine.style.left = "0px";
         activeLine.style.width = `${activeWidth}px`;
         activeLine.style.background = accent;
-        activeLine.style.boxShadow = "none";
+        activeLine.style.height = "2px";
+        activeLine.style.boxShadow = `0 0 10px ${hexToRgba(accent, 0.22)}`;
 
         projectedLine.style.left = `${Math.max(activeWidth - 1, 0)}px`;
         projectedLine.style.width = `${projectedWidth}px`;
-        projectedLine.style.background = hexToRgba(accent, 0.68);
+        projectedLine.style.background = `repeating-linear-gradient(90deg, ${hexToRgba(accent, 0.78)} 0 7px, transparent 7px 12px)`;
         projectedLine.style.boxShadow = "none";
+        projectedLine.style.height = "1px";
         projectedLine.style.opacity = projectedWidth > 0 ? "1" : "0";
 
-        const pillFill = isHigher ? "linear-gradient(180deg,#25cb79 0%,#1aa663 100%)" : "linear-gradient(180deg,#f47a71 0%,#db5b53 100%)";
-        tradePill.style.background = pillFill;
-        tradePill.style.borderColor = "rgba(255,255,255,0.09)";
-        tradePill.style.boxShadow = `0 10px 20px ${hexToRgba(accent, 0.24)}`;
-        tradePill.style.paddingLeft = "7px";
-        tradePill.style.paddingRight = "9px";
-        tradePill.style.paddingTop = "4px";
-        tradePill.style.paddingBottom = "4px";
-        tradePill.style.borderRadius = "13px";
-        iconBubble.textContent = isHigher ? "↑" : "↓";
+        tradePill.style.background = "transparent";
+        tradePill.style.borderColor = "transparent";
+        tradePill.style.boxShadow = "none";
+        tradePill.style.paddingLeft = "0";
+        tradePill.style.paddingRight = "0";
+        tradePill.style.paddingTop = "0";
+        tradePill.style.paddingBottom = "0";
+        tradePill.style.borderRadius = "0";
+        tradePill.style.textShadow = "0 1px 3px rgba(0,0,0,0.82)";
+        directionIcon.style.borderTop = isHigher ? "0" : "7px solid #ffffff";
+        directionIcon.style.borderBottom = isHigher ? "7px solid #ffffff" : "0";
         amountSpan.textContent = amountLabel;
         amountSpan.style.letterSpacing = "0";
-        amountSpan.style.fontSize = "11px";
+        amountSpan.style.fontSize = "12px";
         amountSpan.style.fontWeight = "900";
+        amountSpan.style.color = "#ffffff";
+        timeSpan.textContent = formatTradeCountdown(expiryTime - nowSec);
 
         const pillWidth = tradePill.offsetWidth || 56;
-        const desiredPillOffset = -(pillWidth - 1);
-        const minimumVisibleWidth = 18;
-        const minClippedOffset = -entryX - pillWidth + minimumVisibleWidth;
+        const desiredPillOffset = -(pillWidth + 8);
+        const minClippedOffset = -visibleEntryX + 8;
         const pillLeftOffset = Math.max(desiredPillOffset, minClippedOffset);
-        tradePill.style.top = "0px";
+        tradePill.style.top = "-5px";
         tradePill.style.left = `${pillLeftOffset}px`;
-        tradePill.style.transform = "translate(0, -50%)";
+        tradePill.style.transform = "translateY(-100%)";
 
         entryDot.style.left = "0px";
         entryDot.style.top = "0px";
-        entryDot.style.background = "#ffffff";
-        entryDot.style.border = `2px solid ${accent}`;
-        entryDot.style.boxShadow = `0 0 8px ${hexToRgba(accent, 0.24)}`;
+        entryDot.style.background = "#ff8a34";
+        entryDot.style.border = "2px solid #ffffff";
+        entryDot.style.boxShadow = `0 0 0 2px ${hexToRgba(accent, 0.18)}, 0 0 12px rgba(255,138,52,0.42)`;
 
         activeDot.style.left = `${activeWidth}px`;
         activeDot.style.top = "0px";
-        activeDot.style.background = "#ffffff";
+        activeDot.style.background = accent;
         activeDot.style.border = `2px solid ${accent}`;
         activeDot.style.boxShadow = `0 0 8px ${hexToRgba(accent, 0.24)}`;
       });
@@ -456,5 +514,5 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
     return () => cancelAnimationFrame(reqId);
   }, [assetSymbol, chart, series, timeframeSeconds]);
 
-  return <div ref={containerRef} className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 47 }} />;
+  return <div ref={containerRef} className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 76 }} />;
 };
