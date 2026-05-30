@@ -2303,14 +2303,14 @@ const TradingChart = ({
     const maxReadableSpan = maxReadableBars + getChartRightOffset(maxReadableBars);
     const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing));
     const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
-    const maxTo = dataPointCount + rightOffset;
-    const currentDataFrom = currentRange ? Math.max(0, currentRange.from) : Math.max(0, dataPointCount - defaultVisibleBars);
-    const currentDataTo = currentRange
-      ? Math.max(currentDataFrom + 1, Math.min(dataPointCount, currentRange.to))
-      : dataPointCount;
+    const maxFutureWhitespace = Math.max(
+      rightOffset,
+      Math.min(Math.round(clampedSpan * 0.52), trendContextBars),
+    );
+    const maxTo = dataPointCount + maxFutureWhitespace;
     const currentCenter = currentRange
-      ? (currentDataFrom + currentDataTo) / 2
-      : Math.max(clampedSpan / 2, maxTo - defaultVisibleBars / 2);
+      ? (currentRange.from + currentRange.to) / 2
+      : Math.max(clampedSpan / 2, dataPointCount + rightOffset - defaultSpan / 2);
     let nextFrom = currentCenter - clampedSpan / 2;
     let nextTo = currentCenter + clampedSpan / 2;
 
