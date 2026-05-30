@@ -53,8 +53,10 @@ type SeriesPoint = {
 
 const HIGHER_TIMEFRAME_FULL_TIME_SECONDS = 5 * 60;
 const INTRABAR_LOGICAL_SPAN = 0.72;
-const MARKER_VIEW_PADDING = 72;
+const MARKER_VIEW_PADDING = 160;
 const MARKER_MIN_LINE_WIDTH = 2;
+const MARKER_MIN_TOTAL_WIDTH = 58;
+const MARKER_MAX_TOTAL_WIDTH = 168;
 
 const clampFraction = (value: number) => Math.min(1, Math.max(0, value));
 
@@ -80,6 +82,14 @@ const formatTradeCountdown = (secondsRemaining: number) => {
   }
 
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+};
+
+const getReadableTradeLineWidth = (expirySeconds: number) => {
+  const safeExpirySeconds = Math.max(1, Number.isFinite(expirySeconds) ? expirySeconds : 60);
+  return Math.max(
+    MARKER_MIN_TOTAL_WIDTH,
+    Math.min(MARKER_MAX_TOTAL_WIDTH, safeExpirySeconds * 0.95),
+  );
 };
 
 const getShortTimeframeLogicalTime = (
@@ -393,7 +403,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
       visibleTradesSorted.forEach((trade, index) => {
         const marker = el.children[index] as HTMLElement;
         const rawEntryY = series.priceToCoordinate(trade.entry_price);
-        const { entryTime, expiryTime, activeLineEndTime } = getTradeDisplayTimes(trade, nowSec);
+        const { entryTime, expiryTime } = getTradeDisplayTimes(trade, nowSec);
         const storedLogicalEntryX = getStoredLogicalCoordinate(
           chart,
           seriesPoints,
@@ -420,17 +430,24 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         const visibleEntryX = entryX;
         const visibleEntryY = entryY;
         const maxX = Math.max(visibleEntryX, el.clientWidth - 3);
-        const activeEndXRaw = getTradeMarkerCoordinate(chart, seriesPoints, activeLineEndTime, timeframeSeconds);
         const fullExpiryXRaw = getTradeMarkerCoordinate(chart, seriesPoints, expiryTime, timeframeSeconds);
         const projectedLeadOffset = Math.max(22, Math.min(42, el.clientWidth * 0.032));
-        const activeEndX = isUsableCoordinate(activeEndXRaw)
-          ? Math.max(visibleEntryX, Math.min(activeEndXRaw, maxX))
-          : visibleEntryX;
-        const fullExpiryX = isUsableCoordinate(fullExpiryXRaw)
-          ? Math.max(activeEndX + MARKER_MIN_LINE_WIDTH, Math.min(fullExpiryXRaw, maxX))
-          : Math.min(maxX, activeEndX + projectedLeadOffset);
-        const activeWidth = Math.max(MARKER_MIN_LINE_WIDTH, activeEndX - visibleEntryX);
-        const projectedWidth = Math.max(0, fullExpiryX - activeEndX);
+        const progress = getTradeProgress(entryTime, expiryTime, nowSec);
+        const coordinateTotalWidth =
+          isUsableCoordinate(fullExpiryXRaw) && fullExpiryXRaw > visibleEntryX
+            ? fullExpiryXRaw - visibleEntryX
+            : projectedLeadOffset;
+        const readableTotalWidth = getReadableTradeLineWidth(Number(trade.expiry_seconds) || 60);
+        const availableRightWidth = Math.max(MARKER_MIN_TOTAL_WIDTH, maxX - visibleEntryX);
+        const totalLineWidth = Math.max(
+          MARKER_MIN_LINE_WIDTH,
+          Math.min(Math.max(coordinateTotalWidth, readableTotalWidth), availableRightWidth),
+        );
+        const activeWidth = Math.max(
+          MARKER_MIN_LINE_WIDTH,
+          Math.min(totalLineWidth, totalLineWidth * progress),
+        );
+        const projectedWidth = Math.max(0, totalLineWidth - activeWidth);
         const isHigher = trade.direction === "higher";
         const accent = isHigher ? TRADING_UP_COLOR : TRADING_DOWN_COLOR;
         const amountLabel = formatTradeAmountLabel(trade.amount);
@@ -515,5 +532,5 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
     return () => cancelAnimationFrame(reqId);
   }, [assetSymbol, chart, series, timeframeSeconds]);
 
-  return <div ref={containerRef} className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 76 }} />;
+  return <div ref={containerRef} className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 92 }} />;
 };
