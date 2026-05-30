@@ -4,7 +4,7 @@ import {
   replayDeterministicTickState,
   simulateDeterministicTickPrice,
 } from "@/components/trading/engine/marketDataFeed";
-import { OTCPriceEngine, TIMEFRAMES } from "@/components/trading/engine/priceEngine";
+import { TIMEFRAMES } from "@/components/trading/engine/priceEngine";
 
 describe("simulateDeterministicTickPrice", () => {
   it("keeps the fallback feed two-sided while tracking the anchor trend", () => {
@@ -165,71 +165,21 @@ describe("simulateDeterministicTickPrice", () => {
     expect(average(topWicks)).toBeLessThan(average(bodies) * 0.58);
     expect(average(bottomWicks)).toBeLessThan(average(bodies) * 0.58);
   });
+});
 
-  it("rebuilds the live candle from the same deterministic tick path used after refresh", () => {
+describe("replayDeterministicTickState", () => {
+  it("rebuilds the selected live candle while closing at the shared market price", () => {
     const symbol = "USD/IDR (OTC)";
     const basePrice = 17039.1;
     const timeframe = TIMEFRAMES["1m"];
     const timestamp = 1_711_111_245.32;
-    const engine = new OTCPriceEngine(symbol, basePrice, "OTC");
-    const bucketStart = Math.floor(timestamp / timeframe.seconds) * timeframe.seconds;
-    const tickIntervalSeconds = Math.max(0.025, Math.max(25, timeframe.updateIntervalMs) / 1000);
-    const openingPrice = engine.getCurrentPriceAt(bucketStart);
-    const expectedCandle = {
-      time: bucketStart,
-      open: openingPrice,
-      high: openingPrice,
-      low: openingPrice,
-      close: openingPrice,
-      volume: 0,
-    };
-
-    let price = openingPrice;
-    let velocity = 0;
-    let replayTime = bucketStart + tickIntervalSeconds;
-    let lastReplayTimestamp = bucketStart;
-
-    while (replayTime < timestamp) {
-      const anchorPrice = engine.getCurrentPriceAt(replayTime);
-      const nextTick = simulateDeterministicTickPrice({
-        symbol,
-        basePrice,
-        timeframeSeconds: timeframe.seconds,
-        timestamp: replayTime,
-        previousPrice: price,
-        anchorPrice,
-        velocity,
-      });
-
-      price = nextTick.price;
-      velocity = nextTick.velocity;
-      expectedCandle.high = Math.max(expectedCandle.high, price);
-      expectedCandle.low = Math.min(expectedCandle.low, price);
-      expectedCandle.close = price;
-      expectedCandle.volume += 1;
-      lastReplayTimestamp = replayTime;
-      replayTime += tickIntervalSeconds;
-    }
-
-    if (timestamp > lastReplayTimestamp) {
-      const anchorPrice = engine.getCurrentPriceAt(timestamp);
-      const nextTick = simulateDeterministicTickPrice({
-        symbol,
-        basePrice,
-        timeframeSeconds: timeframe.seconds,
-        timestamp,
-        previousPrice: price,
-        anchorPrice,
-        velocity,
-      });
-
-      price = nextTick.price;
-      velocity = nextTick.velocity;
-      expectedCandle.high = Math.max(expectedCandle.high, price);
-      expectedCandle.low = Math.min(expectedCandle.low, price);
-      expectedCandle.close = price;
-      expectedCandle.volume += 1;
-    }
+    const sharedPrice = getClampedPriceAt({
+      symbol,
+      basePrice,
+      timestamp,
+      category: "OTC",
+      timeframeSeconds: 1,
+    });
 
     const replay = replayDeterministicTickState({
       symbol,
@@ -239,8 +189,33 @@ describe("simulateDeterministicTickPrice", () => {
       assetCategory: "OTC",
     });
 
-    expect(replay.candle).toEqual(expectedCandle);
-    expect(replay.price).toBe(price);
-    expect(replay.velocity).toBe(velocity);
+    expect(replay.candle.time).toBe(Math.floor(timestamp / timeframe.seconds) * timeframe.seconds);
+    expect(replay.candle.close).toBe(sharedPrice);
+    expect(replay.candle.high).toBeGreaterThanOrEqual(sharedPrice);
+    expect(replay.candle.low).toBeLessThanOrEqual(sharedPrice);
+    expect(replay.price).toBe(sharedPrice);
+    expect(replay.velocity).toBe(0);
+  });
+
+  it("keeps the live price stable when only the displayed timeframe changes", () => {
+    const timestamp = 1_779_963_720;
+    const input = {
+      symbol: "AUD/CHF",
+      basePrice: 1.10859,
+      timestamp,
+      assetCategory: "OTC",
+    };
+
+    const oneMinute = replayDeterministicTickState({
+      ...input,
+      timeframe: TIMEFRAMES["1m"],
+    });
+    const fourHour = replayDeterministicTickState({
+      ...input,
+      timeframe: TIMEFRAMES["4h"],
+    });
+
+    expect(fourHour.price).toBe(oneMinute.price);
+    expect(fourHour.candle.close).toBe(oneMinute.candle.close);
   });
 });

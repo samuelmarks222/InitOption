@@ -40,7 +40,7 @@ describe("resolveFreshTradeMarkerTime", () => {
 
 describe("getCandleStartTime", () => {
   it("snaps a short-timeframe trade to the active candle start", () => {
-    expect(getCandleStartTime(1_774_712_123, 30)).toBe(1_774_712_120);
-    expect(getCandleStartTime(1_774_712_159, 60)).toBe(1_774_712_120);
+    expect(getCandleStartTime(1_774_712_123, 30)).toBe(1_774_712_100);
+    expect(getCandleStartTime(1_774_712_159, 60)).toBe(1_774_712_100);
   });
 });

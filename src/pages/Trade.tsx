@@ -61,7 +61,7 @@ import {
 } from "@/lib/assets";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { filterRetainedTradeHistory } from "@/lib/tradeHistoryRetention";
-import { getCandleStartTime, resolveFreshTradeMarkerTime } from "@/lib/tradeMarkerTime";
+import { resolveFreshTradeMarkerTime } from "@/lib/tradeMarkerTime";
 
 type DepositGuideReason = "deposit_required" | "insufficient_balance";
 
@@ -865,13 +865,9 @@ const Trade = () => {
     ) => {
       const timeframeSeconds = latestChartTimeframesBySymbolRef.current[assetSymbol] ?? 60;
       const clickTimestampSec = Math.floor(Date.now() / 1000);
-      const candleStartSec = getCandleStartTime(clickTimestampSec, timeframeSeconds);
       const liveChartMarkerTime =
         latestChartMarkerTimesBySymbolRef.current[assetSymbol] ?? latestChartMarkerTimeRef.current;
-      const markerTimeOverride =
-        timeframeSeconds > 0
-          ? candleStartSec
-          : liveChartMarkerTime ?? clickTimestampSec;
+      const markerTimeOverride = liveChartMarkerTime ?? clickTimestampSec;
 
       return openTrade(
         assetSymbol,
@@ -921,14 +917,11 @@ const Trade = () => {
     const currentEntryPrice = latestChartPriceRef.current > 0 ? latestChartPriceRef.current : entryPrice;
     const timeframeSeconds = latestChartTimeframesBySymbolRef.current[assetSymbol] ?? 60;
     const clickTimestampSec = Math.floor(Date.now() / 1000);
-    const candleStartSec = getCandleStartTime(clickTimestampSec, timeframeSeconds);
     const activeMarkerTime =
       latestChartMarkerTimesBySymbolRef.current[assetSymbol] ?? latestChartMarkerTimeRef.current;
     const markerTime = resolveFreshTradeMarkerTime(
       markerTimeOverride === undefined
-        ? timeframeSeconds > 0
-          ? candleStartSec
-          : activeMarkerTime ?? clickTimestampSec
+        ? activeMarkerTime ?? clickTimestampSec
         : markerTimeOverride,
       openedAt,
       Math.max(10, Math.floor(timeframeSeconds)),

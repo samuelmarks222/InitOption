@@ -129,6 +129,11 @@ const getSyntheticStepRatio = (timeframeSeconds: number) => {
 
 const LIVE_MARKET_MICROSTRUCTURE_SECONDS = 1;
 
+const getSharedLivePriceAt = (
+  engine: OTCPriceEngine,
+  timestamp: number,
+) => engine.getCurrentPriceAt(timestamp, LIVE_MARKET_MICROSTRUCTURE_SECONDS);
+
 const getIntraBucketFraction = (timestamp: number, timeframeSeconds: number) => {
   const safePeriod = Math.max(1, timeframeSeconds);
   const remainder = ((timestamp % safePeriod) + safePeriod) % safePeriod;
@@ -233,15 +238,6 @@ export const simulateDeterministicTickPrice = ({
   };
 };
 
-const createFlatReplayCandle = (time: number, price: number): OHLCCandle => ({
-  time,
-  open: price,
-  high: price,
-  low: price,
-  close: price,
-  volume: 0,
-});
-
 export const replayDeterministicTickState = ({
   symbol,
   basePrice,
@@ -250,63 +246,19 @@ export const replayDeterministicTickState = ({
   assetCategory,
 }: DeterministicTickReplayInput): DeterministicTickReplayResult => {
   const normalizedTimestamp = normalizeTimestamp(timestamp, Date.now() / 1000);
-  const bucketStart = Math.floor(normalizedTimestamp / timeframe.seconds) * timeframe.seconds;
   const engine = new OTCPriceEngine(symbol, basePrice, assetCategory);
-  const openingPrice = engine.getCurrentPriceAt(bucketStart, timeframe.seconds);
-  const candle = createFlatReplayCandle(bucketStart, openingPrice);
-  const tickIntervalSeconds = Math.max(0.025, Math.max(25, timeframe.updateIntervalMs) / 1000);
+  const candle = engine.generateLiveCandle(timeframe, normalizedTimestamp);
+  const price = getSharedLivePriceAt(engine, normalizedTimestamp);
 
-  let price = openingPrice;
-  let velocity = 0;
-  let replayTime = bucketStart + tickIntervalSeconds;
-  let lastReplayTimestamp = bucketStart;
-
-  while (replayTime < normalizedTimestamp) {
-    const anchorPrice = engine.getCurrentPriceAt(replayTime, timeframe.seconds);
-    const nextTick = simulateDeterministicTickPrice({
-      symbol,
-      basePrice,
-      timeframeSeconds: timeframe.seconds,
-      timestamp: replayTime,
-      previousPrice: price,
-      anchorPrice,
-      velocity,
-    });
-
-    price = nextTick.price;
-    velocity = nextTick.velocity;
-    candle.high = Math.max(candle.high, price);
-    candle.low = Math.min(candle.low, price);
-    candle.close = price;
-    candle.volume += 1;
-    lastReplayTimestamp = replayTime;
-    replayTime += tickIntervalSeconds;
-  }
-
-  if (normalizedTimestamp > lastReplayTimestamp) {
-    const anchorPrice = engine.getCurrentPriceAt(normalizedTimestamp, timeframe.seconds);
-    const nextTick = simulateDeterministicTickPrice({
-      symbol,
-      basePrice,
-      timeframeSeconds: timeframe.seconds,
-      timestamp: normalizedTimestamp,
-      previousPrice: price,
-      anchorPrice,
-      velocity,
-    });
-
-    price = nextTick.price;
-    velocity = nextTick.velocity;
-    candle.high = Math.max(candle.high, price);
-    candle.low = Math.min(candle.low, price);
-    candle.close = price;
-    candle.volume += 1;
-  }
+  candle.close = price;
+  candle.high = Math.max(candle.high, candle.open, price);
+  candle.low = Math.min(candle.low, candle.open, price);
+  candle.volume = Math.max(1, candle.volume);
 
   return {
     candle,
     price,
-    velocity,
+    velocity: 0,
   };
 };
 
@@ -319,8 +271,6 @@ class DeterministicTickFeed implements MarketDataFeed {
   private connected = false;
   private nextTickAtMs = 0;
   private timer: TimerHandle | null = null;
-  private lastPrice = Number.NaN;
-  private velocity = 0;
 
   constructor(subscription: MarketFeedSubscription, callbacks: MarketFeedCallbacks) {
     this.subscription = subscription;
@@ -333,15 +283,6 @@ class DeterministicTickFeed implements MarketDataFeed {
 
     this.connected = true;
     this.nextTickAtMs = Date.now();
-    const replayState = replayDeterministicTickState({
-      symbol: this.subscription.symbol,
-      basePrice: this.subscription.basePrice,
-      timeframe: this.subscription.timeframe,
-      timestamp: this.nextTickAtMs / 1000,
-      assetCategory: this.subscription.assetCategory,
-    });
-    this.lastPrice = replayState.price;
-    this.velocity = replayState.velocity;
     this.callbacks.onStatusChange?.("fallback");
     this.schedulePump(0);
   }
@@ -354,8 +295,6 @@ class DeterministicTickFeed implements MarketDataFeed {
       this.timer = null;
     }
 
-    this.lastPrice = Number.NaN;
-    this.velocity = 0;
     this.callbacks.onStatusChange?.("disconnected");
   }
 
@@ -373,19 +312,7 @@ class DeterministicTickFeed implements MarketDataFeed {
 
     while (this.nextTickAtMs <= nowMs && guard < 64) {
       const timestamp = this.nextTickAtMs / 1000;
-      const anchorPrice = this.engine.getCurrentPriceAt(timestamp, this.subscription.timeframe.seconds);
-      const nextTick = simulateDeterministicTickPrice({
-        symbol: this.subscription.symbol,
-        basePrice: this.subscription.basePrice,
-        timeframeSeconds: this.subscription.timeframe.seconds,
-        timestamp,
-        previousPrice: this.lastPrice,
-        anchorPrice,
-        velocity: this.velocity,
-      });
-      const price = nextTick.price;
-      this.lastPrice = price;
-      this.velocity = nextTick.velocity;
+      const price = getSharedLivePriceAt(this.engine, timestamp);
 
       this.callbacks.onTick({
         symbol: this.subscription.symbol,

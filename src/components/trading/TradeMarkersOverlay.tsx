@@ -55,7 +55,7 @@ type SeriesPoint = {
   logical: number;
 };
 
-const HIGHER_TIMEFRAME_BUCKET_SNAP_SECONDS = 5 * 60;
+const HIGHER_TIMEFRAME_FULL_TIME_SECONDS = 5 * 60;
 const INTRABAR_LOGICAL_SPAN = 0.72;
 
 const clampFraction = (value: number) => Math.min(1, Math.max(0, value));
@@ -144,11 +144,11 @@ export const getTradeMarkerLogicalTime = (
   }
 
   const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds || 60));
-  const snapToBucketCenter = safeTimeframe >= HIGHER_TIMEFRAME_BUCKET_SNAP_SECONDS;
+  const useFullTimeInterpolation = safeTimeframe >= HIGHER_TIMEFRAME_FULL_TIME_SECONDS;
   const firstPoint = seriesPoints[0];
   const lastPoint = seriesPoints[seriesPoints.length - 1];
 
-  if (!snapToBucketCenter) {
+  if (!useFullTimeInterpolation) {
     return getShortTimeframeLogicalTime(seriesPoints, targetTime, safeTimeframe);
   }
 
@@ -165,13 +165,9 @@ export const getTradeMarkerLogicalTime = (
     }
 
     if (targetTime > currentPoint.time && targetTime < nextPoint.time) {
-      if (snapToBucketCenter) {
-        return currentPoint.logical;
-      }
-
       const span = Math.max(1, nextPoint.time - currentPoint.time);
       const fraction = (targetTime - currentPoint.time) / span;
-      return currentPoint.logical + getIntrabarLogicalOffset(fraction);
+      return currentPoint.logical + clampFraction(fraction);
     }
   }
 
@@ -180,12 +176,8 @@ export const getTradeMarkerLogicalTime = (
   }
 
   if (targetTime > lastPoint.time && targetTime < lastPoint.time + safeTimeframe) {
-    if (snapToBucketCenter) {
-      return lastPoint.logical;
-    }
-
     const fraction = (targetTime - lastPoint.time) / safeTimeframe;
-    return lastPoint.logical + getIntrabarLogicalOffset(fraction);
+    return lastPoint.logical + clampFraction(fraction);
   }
 
   const trailingBars = Math.max(0, (targetTime - lastPoint.time) / safeTimeframe);

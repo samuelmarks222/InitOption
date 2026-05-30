@@ -44,7 +44,7 @@ describe("getTradeDisplayTimes", () => {
 });
 
 describe("getTradeMarkerLogicalTime", () => {
-  it("snaps higher timeframes to the containing candle so markers stay attached to the right bar", () => {
+  it("interpolates higher timeframes inside the containing candle so markers keep the real entry time", () => {
     const logical = getTradeMarkerLogicalTime(
       [
         { time: 3_600, logical: 0 },
@@ -55,7 +55,9 @@ describe("getTradeMarkerLogicalTime", () => {
       3_600,
     );
 
-    expect(logical).toBe(2);
+    expect(logical).not.toBeNull();
+    expect(logical!).toBeGreaterThan(2);
+    expect(logical!).toBeLessThan(2.1);
   });
 
   it("keeps minute charts inside the live candle instead of jumping into the next candle gap", () => {
@@ -109,11 +111,11 @@ describe("getTradeMarkerLogicalTime", () => {
   it("locks an exact candle-start trade to that candle instead of shifting it left", () => {
     const logical = getTradeMarkerLogicalTime(
       [
-        { time: 1_000, logical: 10 },
-        { time: 1_060, logical: 11 },
-        { time: 1_120, logical: 12 },
+        { time: 1_020, logical: 10 },
+        { time: 1_080, logical: 11 },
+        { time: 1_140, logical: 12 },
       ],
-      1_060,
+      1_080,
       60,
     );
 
