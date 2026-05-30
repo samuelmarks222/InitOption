@@ -55,8 +55,8 @@ const HIGHER_TIMEFRAME_FULL_TIME_SECONDS = 5 * 60;
 const INTRABAR_LOGICAL_SPAN = 0.72;
 const MARKER_VIEW_PADDING = 160;
 const MARKER_MIN_LINE_WIDTH = 2;
-const MARKER_MIN_TOTAL_WIDTH = 58;
-const MARKER_MAX_TOTAL_WIDTH = 168;
+const MARKER_MIN_TOTAL_WIDTH = 46;
+const MARKER_MAX_TOTAL_WIDTH = 78;
 
 const clampFraction = (value: number) => Math.min(1, Math.max(0, value));
 
@@ -88,7 +88,7 @@ const getReadableTradeLineWidth = (expirySeconds: number) => {
   const safeExpirySeconds = Math.max(1, Number.isFinite(expirySeconds) ? expirySeconds : 60);
   return Math.max(
     MARKER_MIN_TOTAL_WIDTH,
-    Math.min(MARKER_MAX_TOTAL_WIDTH, safeExpirySeconds * 0.95),
+    Math.min(MARKER_MAX_TOTAL_WIDTH, safeExpirySeconds * 0.72),
   );
 };
 
@@ -99,6 +99,7 @@ const getTradeAnchorKey = (
     ActiveTrade,
     "id" | "asset_symbol" | "direction" | "amount" | "expiry_seconds" | "marker_time" | "opened_at"
   >,
+  timeframeSeconds?: number,
 ) => {
   const markerTime = getUnixTime(trade.marker_time);
   const openedTime = getUnixTime(trade.opened_at);
@@ -109,8 +110,9 @@ const getTradeAnchorKey = (
       : String(openedTime ?? trade.id);
   const amount = Number.isFinite(Number(trade.amount)) ? Number(trade.amount).toFixed(2) : "0.00";
   const expiry = Math.max(1, Math.floor(Number(trade.expiry_seconds) || 0));
+  const timeframe = Math.max(1, Math.floor(Number(timeframeSeconds) || 60));
 
-  return `${trade.asset_symbol}|${entryTime}|${openedKey}|${trade.direction}|${amount}|${expiry}`;
+  return `${trade.asset_symbol}|${entryTime}|${openedKey}|${trade.direction}|${amount}|${expiry}|${timeframe}`;
 };
 
 const getShortTimeframeLogicalTime = (
@@ -264,6 +266,62 @@ const logicalToCoordinate = (
   return isUsableCoordinate(coordinate) ? coordinate : null;
 };
 
+const isLogicalAnchorAligned = (
+  fixedLogical: number | null | undefined,
+  resolvedLogical: number | null | undefined,
+  timeframeSeconds: number,
+) => {
+  if (!isUsableCoordinate(fixedLogical) || !isUsableCoordinate(resolvedLogical)) {
+    return false;
+  }
+
+  const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds || 60));
+  const tolerance = safeTimeframe < 60 ? 1.2 : 0.85;
+
+  return Math.abs(fixedLogical - resolvedLogical) <= tolerance;
+};
+
+export const resolveTradeMarkerEntryLogicalAnchor = ({
+  fixedEntryLogical,
+  isFreshActiveTrade,
+  latestLogicalAnchor,
+  storedLogicalAnchor,
+  timeframeSeconds,
+  timeBasedLogicalAnchor,
+}: {
+  fixedEntryLogical?: number | null;
+  isFreshActiveTrade: boolean;
+  latestLogicalAnchor?: number | null;
+  storedLogicalAnchor?: number | null;
+  timeframeSeconds: number;
+  timeBasedLogicalAnchor?: number | null;
+}) => {
+  const preferredLogicalAnchor = isFreshActiveTrade
+    ? timeBasedLogicalAnchor ?? storedLogicalAnchor
+    : storedLogicalAnchor ?? timeBasedLogicalAnchor;
+  const futureProjectionBars = 0.54;
+  const shouldRepairStaleStoredPosition =
+    isFreshActiveTrade &&
+    isUsableCoordinate(preferredLogicalAnchor) &&
+    isUsableCoordinate(latestLogicalAnchor) &&
+    preferredLogicalAnchor > latestLogicalAnchor + futureProjectionBars;
+  const repairedLogicalAnchor = shouldRepairStaleStoredPosition ? latestLogicalAnchor : preferredLogicalAnchor;
+
+  if (!isFreshActiveTrade) {
+    return repairedLogicalAnchor ?? null;
+  }
+
+  if (isLogicalAnchorAligned(fixedEntryLogical, timeBasedLogicalAnchor, timeframeSeconds)) {
+    return fixedEntryLogical ?? null;
+  }
+
+  if (isUsableCoordinate(timeBasedLogicalAnchor)) {
+    return timeBasedLogicalAnchor;
+  }
+
+  return repairedLogicalAnchor ?? null;
+};
+
 const getStoredLogicalAnchor = (
   seriesPoints: SeriesPoint[],
   markerLogical: number | null | undefined,
@@ -310,13 +368,13 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
 
     tradesRef.current = nextTrades;
 
-    const visibleAnchorKeys = new Set(nextTrades.map(getTradeAnchorKey));
+    const visibleAnchorKeys = new Set(nextTrades.map((trade) => getTradeAnchorKey(trade, timeframeSeconds)));
     fixedMarkerAnchorRef.current.forEach((_, anchorKey) => {
       if (!visibleAnchorKeys.has(anchorKey)) {
         fixedMarkerAnchorRef.current.delete(anchorKey);
       }
     });
-  }, [assetSymbol, trades]);
+  }, [assetSymbol, trades, timeframeSeconds]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -468,27 +526,20 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
           timeframeSeconds,
         );
         const timeBasedLogicalAnchor = getTradeMarkerLogicalTime(seriesPoints, entryTime, timeframeSeconds);
-        const preferredLogicalAnchor = isFreshActiveTrade
-          ? storedLogicalAnchor ?? timeBasedLogicalAnchor
-          : storedLogicalAnchor ?? timeBasedLogicalAnchor;
         const latestLogicalAnchor = getLatestSeriesLogical(seriesPoints);
-        const futureProjectionBars = 0.54;
-        const shouldRepairStaleStoredPosition =
-          isFreshActiveTrade &&
-          isUsableCoordinate(preferredLogicalAnchor) &&
-          isUsableCoordinate(latestLogicalAnchor) &&
-          preferredLogicalAnchor > latestLogicalAnchor + futureProjectionBars;
-        let entryLogical = shouldRepairStaleStoredPosition ? latestLogicalAnchor : preferredLogicalAnchor;
+        const anchorKey = isFreshActiveTrade ? getTradeAnchorKey(trade, timeframeSeconds) : null;
+        const fixedEntryLogical = anchorKey ? fixedMarkerAnchorRef.current.get(anchorKey) : null;
+        const entryLogical = resolveTradeMarkerEntryLogicalAnchor({
+          fixedEntryLogical,
+          isFreshActiveTrade,
+          latestLogicalAnchor,
+          storedLogicalAnchor,
+          timeframeSeconds,
+          timeBasedLogicalAnchor,
+        });
 
-        if (isFreshActiveTrade) {
-          const anchorKey = getTradeAnchorKey(trade);
-          const fixedEntryLogical = fixedMarkerAnchorRef.current.get(anchorKey);
-
-          if (isUsableCoordinate(fixedEntryLogical)) {
-            entryLogical = fixedEntryLogical;
-          } else if (isUsableCoordinate(entryLogical)) {
-            fixedMarkerAnchorRef.current.set(anchorKey, entryLogical);
-          }
+        if (isFreshActiveTrade && anchorKey && isUsableCoordinate(entryLogical)) {
+          fixedMarkerAnchorRef.current.set(anchorKey, entryLogical);
         }
 
         const entryX = logicalToCoordinate(chart, entryLogical);
@@ -527,9 +578,10 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
             : projectedLeadOffset;
         const readableTotalWidth = getReadableTradeLineWidth(expirySeconds);
         const availableRightWidth = Math.max(MARKER_MIN_TOTAL_WIDTH, maxX - visibleEntryX);
+        const cappedAvailableWidth = Math.min(MARKER_MAX_TOTAL_WIDTH, availableRightWidth);
         const totalLineWidth = Math.max(
           MARKER_MIN_LINE_WIDTH,
-          Math.min(Math.max(coordinateTotalWidth, readableTotalWidth), availableRightWidth),
+          Math.min(Math.max(coordinateTotalWidth, readableTotalWidth), cappedAvailableWidth),
         );
         const activeWidth = Math.max(
           MARKER_MIN_LINE_WIDTH,

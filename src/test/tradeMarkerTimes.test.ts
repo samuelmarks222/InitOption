@@ -4,6 +4,7 @@ import {
   getTradeMarkerCoordinate,
   getTradeMarkerLogicalTime,
   getTradeProgress,
+  resolveTradeMarkerEntryLogicalAnchor,
 } from "@/components/trading/TradeMarkersOverlay";
 
 describe("getTradeDisplayTimes", () => {
@@ -120,6 +121,34 @@ describe("getTradeMarkerLogicalTime", () => {
     );
 
     expect(logical).toBe(11);
+  });
+});
+
+describe("resolveTradeMarkerEntryLogicalAnchor", () => {
+  it("keeps a fresh trade on the timestamp-derived chart position when a saved logical anchor is stale", () => {
+    const logical = resolveTradeMarkerEntryLogicalAnchor({
+      fixedEntryLogical: 4,
+      isFreshActiveTrade: true,
+      latestLogicalAnchor: 88,
+      storedLogicalAnchor: 4,
+      timeframeSeconds: 60,
+      timeBasedLogicalAnchor: 88,
+    });
+
+    expect(logical).toBe(88);
+  });
+
+  it("reuses a fixed logical anchor only when it still matches the current timeframe", () => {
+    const logical = resolveTradeMarkerEntryLogicalAnchor({
+      fixedEntryLogical: 88.2,
+      isFreshActiveTrade: true,
+      latestLogicalAnchor: 89,
+      storedLogicalAnchor: 4,
+      timeframeSeconds: 60,
+      timeBasedLogicalAnchor: 88,
+    });
+
+    expect(logical).toBe(88.2);
   });
 });
 
