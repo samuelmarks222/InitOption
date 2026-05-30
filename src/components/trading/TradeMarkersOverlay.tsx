@@ -92,7 +92,7 @@ const getReadableTradeLineWidth = (expirySeconds: number) => {
   );
 };
 
-const fixedMarkerAnchors = new Map<string, number>();
+const fixedMarkerLogicalAnchors = new Map<string, number>();
 
 const getTradeAnchorKey = (
   trade: Pick<
@@ -242,21 +242,29 @@ export const getTradeMarkerCoordinate = (
     : null;
 };
 
-const getLatestSeriesCoordinate = (
-  chart: IChartApi,
+const getLatestSeriesLogical = (
   seriesPoints: SeriesPoint[],
 ) => {
   if (seriesPoints.length === 0) {
     return null;
   }
 
-  const latestPoint = seriesPoints[seriesPoints.length - 1];
-  const coordinate = chart.timeScale().logicalToCoordinate(latestPoint.logical as never);
+  return seriesPoints[seriesPoints.length - 1].logical;
+};
+
+const logicalToCoordinate = (
+  chart: IChartApi,
+  logical: number | null | undefined,
+) => {
+  if (!isUsableCoordinate(logical)) {
+    return null;
+  }
+
+  const coordinate = chart.timeScale().logicalToCoordinate(logical as never);
   return isUsableCoordinate(coordinate) ? coordinate : null;
 };
 
-const getStoredLogicalCoordinate = (
-  chart: IChartApi,
+const getStoredLogicalAnchor = (
   seriesPoints: SeriesPoint[],
   markerLogical: number | null | undefined,
   entryTime: number,
@@ -278,14 +286,13 @@ const getStoredLogicalCoordinate = (
     return null;
   }
 
-  const coordinate = chart.timeScale().logicalToCoordinate(markerLogical as never);
-  return isUsableCoordinate(coordinate) ? coordinate : null;
+  return markerLogical;
 };
 
 export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timeframeSeconds }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const tradesRef = useRef<ActiveTrade[]>([]);
-  const fixedMarkerAnchorRef = useRef(fixedMarkerAnchors);
+  const fixedMarkerAnchorRef = useRef(fixedMarkerLogicalAnchors);
 
   useEffect(() => {
     const nextTrades = [...trades.filter((trade) => trade.asset_symbol === assetSymbol)].sort((left, right) => {
@@ -454,40 +461,37 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
           nowSec <= expiryTime + 1 &&
           secondsSinceEntry >= -2 &&
           secondsSinceEntry <= expirySeconds + 10;
-        const storedLogicalEntryX = getStoredLogicalCoordinate(
-          chart,
+        const storedLogicalAnchor = getStoredLogicalAnchor(
           seriesPoints,
           trade.marker_logical,
           entryTime,
           timeframeSeconds,
         );
-        const timeBasedEntryX = getTradeMarkerCoordinate(chart, seriesPoints, entryTime, timeframeSeconds);
-        const preferredEntryX = isFreshActiveTrade
-          ? timeBasedEntryX ?? storedLogicalEntryX
-          : storedLogicalEntryX ?? timeBasedEntryX;
-        const latestEntryX = getLatestSeriesCoordinate(chart, seriesPoints);
-        const staleEntryDistance = Math.max(96, getReadableTradeLineWidth(expirySeconds) * 1.4);
-        const futureProjectionDistance = Math.max(48, getReadableTradeLineWidth(expirySeconds) * 0.45);
+        const timeBasedLogicalAnchor = getTradeMarkerLogicalTime(seriesPoints, entryTime, timeframeSeconds);
+        const preferredLogicalAnchor = isFreshActiveTrade
+          ? storedLogicalAnchor ?? timeBasedLogicalAnchor
+          : storedLogicalAnchor ?? timeBasedLogicalAnchor;
+        const latestLogicalAnchor = getLatestSeriesLogical(seriesPoints);
+        const futureProjectionBars = 0.54;
         const shouldRepairStaleStoredPosition =
           isFreshActiveTrade &&
-          isUsableCoordinate(preferredEntryX) &&
-          isUsableCoordinate(latestEntryX) &&
-          latestEntryX > el.clientWidth * 0.42 &&
-          (preferredEntryX < latestEntryX - staleEntryDistance ||
-            preferredEntryX > latestEntryX + futureProjectionDistance);
-        let entryX = shouldRepairStaleStoredPosition ? latestEntryX : preferredEntryX;
+          isUsableCoordinate(preferredLogicalAnchor) &&
+          isUsableCoordinate(latestLogicalAnchor) &&
+          preferredLogicalAnchor > latestLogicalAnchor + futureProjectionBars;
+        let entryLogical = shouldRepairStaleStoredPosition ? latestLogicalAnchor : preferredLogicalAnchor;
 
         if (isFreshActiveTrade) {
           const anchorKey = getTradeAnchorKey(trade);
-          const fixedEntryX = fixedMarkerAnchorRef.current.get(anchorKey);
+          const fixedEntryLogical = fixedMarkerAnchorRef.current.get(anchorKey);
 
-          if (isUsableCoordinate(fixedEntryX)) {
-            entryX = fixedEntryX;
-          } else if (isUsableCoordinate(entryX)) {
-            fixedMarkerAnchorRef.current.set(anchorKey, entryX);
+          if (isUsableCoordinate(fixedEntryLogical)) {
+            entryLogical = fixedEntryLogical;
+          } else if (isUsableCoordinate(entryLogical)) {
+            fixedMarkerAnchorRef.current.set(anchorKey, entryLogical);
           }
         }
 
+        const entryX = logicalToCoordinate(chart, entryLogical);
         const entryY = rawEntryY;
 
         if (
@@ -506,11 +510,20 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         const visibleEntryY = entryY;
         const maxX = Math.max(visibleEntryX, el.clientWidth - 3);
         const fullExpiryXRaw = getTradeMarkerCoordinate(chart, seriesPoints, expiryTime, timeframeSeconds);
+        const latestEntryX = logicalToCoordinate(chart, latestLogicalAnchor);
         const projectedLeadOffset = Math.max(22, Math.min(42, el.clientWidth * 0.032));
         const progress = getTradeProgress(entryTime, expiryTime, nowSec);
+        const candlePassedLineTarget =
+          isUsableCoordinate(latestEntryX) && latestEntryX > visibleEntryX
+            ? latestEntryX + 18
+            : null;
+        const lineTargetXRaw = Math.max(
+          isUsableCoordinate(fullExpiryXRaw) ? fullExpiryXRaw : Number.NEGATIVE_INFINITY,
+          isUsableCoordinate(candlePassedLineTarget) ? candlePassedLineTarget : Number.NEGATIVE_INFINITY,
+        );
         const coordinateTotalWidth =
-          isUsableCoordinate(fullExpiryXRaw) && fullExpiryXRaw > visibleEntryX
-            ? fullExpiryXRaw - visibleEntryX
+          Number.isFinite(lineTargetXRaw) && lineTargetXRaw > visibleEntryX
+            ? lineTargetXRaw - visibleEntryX
             : projectedLeadOffset;
         const readableTotalWidth = getReadableTradeLineWidth(expirySeconds);
         const availableRightWidth = Math.max(MARKER_MIN_TOTAL_WIDTH, maxX - visibleEntryX);
