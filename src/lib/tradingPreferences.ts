@@ -76,8 +76,8 @@ export const DEFAULT_TRADING_PREFERENCES: TradingPreferences = {
   oneClickTrade: true,
   performanceMode: true,
   shortOrderLabel: false,
-  upTrendColor: "#21a566",
-  downTrendColor: "#d96059",
+  upTrendColor: "#10a055",
+  downTrendColor: "#e85b4e",
   chartBackgroundImage: null,
   chartBackgroundOpacity: 66,
 };
@@ -134,12 +134,18 @@ export const normalizeTradingPreferences = (
       ? value.shortOrderLabel
       : DEFAULT_TRADING_PREFERENCES.shortOrderLabel,
   upTrendColor: normalizeColor(value?.upTrendColor, DEFAULT_TRADING_PREFERENCES.upTrendColor, [
+    "#0faf59",
+    "#21a566",
     "#23b35f",
     "#0fa053",
+    "#147648",
   ]),
   downTrendColor: normalizeColor(value?.downTrendColor, DEFAULT_TRADING_PREFERENCES.downTrendColor, [
+    "#db4635",
+    "#d96059",
     "#e05d56",
     "#e95951",
+    "#ea5d51",
   ]),
   chartBackgroundImage:
     typeof value?.chartBackgroundImage === "string" && value.chartBackgroundImage.startsWith("data:image/")

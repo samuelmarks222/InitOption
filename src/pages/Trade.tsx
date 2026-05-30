@@ -350,6 +350,7 @@ const Trade = () => {
   const [activeTabId, setActiveTabId] = useState<string>("");
   const [selectedAssetSaved, setSelectedAssetSaved] = useState<TradeTabAsset | null>(null);
   const [liveChartPrices, setLiveChartPrices] = useState<Record<string, number>>({});
+  const [chartLiveEdgeRequestKey, setChartLiveEdgeRequestKey] = useState(0);
   const { getAsset } = useDynamicAssets();
 
   const dynamicSelectedAsset = getAsset(activeTabId);
@@ -760,6 +761,7 @@ const Trade = () => {
     setActiveTabId(tabSymbol);
     const existing = openTabs.find(t => t.symbol === tabSymbol);
     if (existing) setSelectedAssetSaved(existing);
+    setChartLiveEdgeRequestKey((current) => current + 1);
   };
 
   const handleRemoveTab = (tabSymbol: string) => {
@@ -770,6 +772,7 @@ const Trade = () => {
         const next = remaining[remaining.length - 1];
         setActiveTabId(next.symbol);
         setSelectedAssetSaved(next);
+        setChartLiveEdgeRequestKey((current) => current + 1);
       }
       return remaining;
     });
@@ -794,6 +797,7 @@ const Trade = () => {
     setOpenTabs(prev => !prev.find(t => t.symbol === globalAsset.symbol) ? [...prev, globalAsset] : prev);
     setSelectedAssetSaved(globalAsset);
     setActiveTabId(globalAsset.symbol);
+    setChartLiveEdgeRequestKey((current) => current + 1);
     setShowAssetSelector(false);
     setMobileOverlay(null);
   };
@@ -1282,6 +1286,7 @@ const Trade = () => {
                             overlayUiSuppressed={showIndicatorsPanel || showDrawingsPanel}
                             compactPane={!isPrimaryPane}
                             miniOverlay={chartLayoutMode > 1 && isPrimaryPane}
+                            liveEdgeRequestKey={`${chartAsset.symbol}:${chartLiveEdgeRequestKey}`}
                             settlementAnnouncement={chartSettlementAnnouncements[chartAsset.symbol] ?? null}
                           />
                         </div>
@@ -1361,6 +1366,7 @@ const Trade = () => {
                       overlayUiSuppressed={showIndicatorsPanel || showDrawingsPanel}
                       onToggleMobileHistory={() => setShowMobileHistory(true)}
                       mobileHistoryOpen={showMobileHistory}
+                      liveEdgeRequestKey={`${selectedAsset.symbol}:${chartLiveEdgeRequestKey}`}
                       settlementAnnouncement={chartSettlementAnnouncements[selectedAsset.symbol] ?? null} />
 
                     {/* Mobile Indicator and Drawing Panels */}

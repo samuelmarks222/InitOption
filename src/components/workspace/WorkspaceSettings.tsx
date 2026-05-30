@@ -15,8 +15,8 @@ const TIMEZONE_OPTIONS = [
   "UTC+04:00",
 ];
 
-const UP_COLOR_OPTIONS = ["#21a566", "#35b977", "#6fa7e8", "#54c8c6", "#f7f8fb"];
-const DOWN_COLOR_OPTIONS = ["#d96059", "#e47670", "#d8a441", "#c474d6", "#1a1d22"];
+const UP_COLOR_OPTIONS = ["#10a055", "#0faf59", "#21a566", "#35b977", "#6fa7e8", "#54c8c6"];
+const DOWN_COLOR_OPTIONS = ["#e85b4e", "#db4635", "#d96059", "#e47670", "#d8a441", "#c474d6"];
 const MAX_BACKGROUND_BYTES = 2 * 1024 * 1024;
 
 export const WorkspaceSettings = () => {
@@ -190,15 +190,15 @@ export const WorkspaceSettings = () => {
           />
         </div>
 
-        <SectionLabel>Graph Colors</SectionLabel>
+        <SectionLabel>Trade Button Colors</SectionLabel>
         <ColorPalette
-          label="Up Trend"
+          label="Up Button"
           activeColor={preferences.upTrendColor}
           colors={UP_COLOR_OPTIONS}
           onSelect={(color) => updatePreferences({ upTrendColor: color })}
         />
         <ColorPalette
-          label="Down Trend"
+          label="Down Button"
           activeColor={preferences.downTrendColor}
           colors={DOWN_COLOR_OPTIONS}
           onSelect={(color) => updatePreferences({ downTrendColor: color })}

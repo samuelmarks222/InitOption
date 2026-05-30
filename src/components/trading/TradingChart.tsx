@@ -98,6 +98,7 @@ interface TradingChartProps {
   mobileHistoryOpen?: boolean;
   compactPane?: boolean;
   miniOverlay?: boolean;
+  liveEdgeRequestKey?: number | string;
   settlementAnnouncement?: ChartSettlementAnnouncement | null;
 }
 
@@ -117,8 +118,12 @@ const PROFESSIONAL_CHART_TEXT = "#eef3fb";
 const PROFESSIONAL_CHART_MUTED_TEXT = "#96a4b9";
 const PROFESSIONAL_CHART_GRID = "rgba(143, 164, 210, 0.08)";
 const PROFESSIONAL_CHART_BORDER = "rgba(143, 164, 210, 0.14)";
-const PROFESSIONAL_UP_COLOR = "#21a566";
-const PROFESSIONAL_DOWN_COLOR = "#d96059";
+const PROFESSIONAL_UP_COLOR = "#10a055";
+const PROFESSIONAL_DOWN_COLOR = "#e85b4e";
+const LEGACY_INIT_UP_COLOR = "#147648";
+const LEGACY_INIT_DOWN_COLOR = "#ea5d51";
+const LEGACY_PROFESSIONAL_UP_COLOR = "#21a566";
+const LEGACY_PROFESSIONAL_DOWN_COLOR = "#d96059";
 const LEGACY_CHART_BG = "#0E1217";
 const LEGACY_PLATFORM_UP = "#00C076";
 const LEGACY_PLATFORM_DOWN = "#F6465D";
@@ -860,20 +865,27 @@ const SELECTED_TIMEFRAME_STORAGE_KEY = "trade_selected_timeframe_v1";
 const TRANSPARENT_COLOR = "rgba(0,0,0,0)";
 
 const DEFAULT_CHART_STYLE: ChartStylePreferences = {
-  areaLineColor: "#f59e0b",
-  areaFillColor: "#f59e0b",
+  areaLineColor: PROFESSIONAL_UP_COLOR,
+  areaFillColor: PROFESSIONAL_UP_COLOR,
   areaFillEnabled: true,
   areaLineWidth: 3,
   candleUpColor: PROFESSIONAL_UP_COLOR,
   candleDownColor: PROFESSIONAL_DOWN_COLOR,
   barUpColor: PROFESSIONAL_UP_COLOR,
   barDownColor: PROFESSIONAL_DOWN_COLOR,
-  heikinUpColor: "#29c76c",
-  heikinDownColor: "#ea6860",
+  heikinUpColor: PROFESSIONAL_UP_COLOR,
+  heikinDownColor: PROFESSIONAL_DOWN_COLOR,
   bodyScale: 1.08,
   displayPreset: "primary",
   priceLineVisible: true,
 };
+
+const CANDLE_COLOR_PRESETS = [
+  { id: "init", label: "Init", up: PROFESSIONAL_UP_COLOR, down: PROFESSIONAL_DOWN_COLOR },
+  { id: "soft", label: "Soft", up: LEGACY_PROFESSIONAL_UP_COLOR, down: LEGACY_PROFESSIONAL_DOWN_COLOR },
+  { id: "bright", label: "Bright", up: LEGACY_PLATFORM_UP, down: LEGACY_PLATFORM_DOWN },
+  { id: "classic", label: "Classic", up: "#29c76c", down: "#ea6860" },
+] as const;
 
 const isValidHexColor = (value: unknown): value is string =>
   typeof value === "string" && /^#([0-9a-fA-F]{6})$/.test(value);
@@ -918,14 +930,15 @@ const resolveChartSurfaceColor = (value: string | null | undefined) => {
 
 const resolveChartCandleColor = (
   value: string | null | undefined,
-  legacyColor: string,
+  legacyColor: string | string[],
   professionalColor: string,
 ) => {
   if (!isValidHexColor(value)) {
     return professionalColor;
   }
 
-  return matchesHexColor(value, legacyColor) ? professionalColor : value;
+  const legacyColors = Array.isArray(legacyColor) ? legacyColor : [legacyColor];
+  return legacyColors.some((color) => matchesHexColor(value, color)) ? professionalColor : value;
 };
 
 const clampBodyScale = (value: number) => Math.max(0.9, Math.min(1.5, value));
@@ -1088,17 +1101,41 @@ const loadChartStylePreferences = (): ChartStylePreferences => {
     if (!raw) return DEFAULT_CHART_STYLE;
     const parsed = JSON.parse(raw) as Partial<ChartStylePreferences>;
     return {
-      areaLineColor: isValidHexColor(parsed.areaLineColor) ? parsed.areaLineColor : DEFAULT_CHART_STYLE.areaLineColor,
-      areaFillColor: isValidHexColor(parsed.areaFillColor) ? parsed.areaFillColor : DEFAULT_CHART_STYLE.areaFillColor,
+      areaLineColor: resolveChartCandleColor(parsed.areaLineColor, ["#f59e0b"], DEFAULT_CHART_STYLE.areaLineColor),
+      areaFillColor: resolveChartCandleColor(parsed.areaFillColor, ["#f59e0b"], DEFAULT_CHART_STYLE.areaFillColor),
       areaFillEnabled: typeof parsed.areaFillEnabled === "boolean" ? parsed.areaFillEnabled : DEFAULT_CHART_STYLE.areaFillEnabled,
       areaLineWidth:
         typeof parsed.areaLineWidth === "number" ? clampAreaWidth(parsed.areaLineWidth) : DEFAULT_CHART_STYLE.areaLineWidth,
-      candleUpColor: isValidHexColor(parsed.candleUpColor) ? parsed.candleUpColor : DEFAULT_CHART_STYLE.candleUpColor,
-      candleDownColor: isValidHexColor(parsed.candleDownColor) ? parsed.candleDownColor : DEFAULT_CHART_STYLE.candleDownColor,
-      barUpColor: isValidHexColor(parsed.barUpColor) ? parsed.barUpColor : DEFAULT_CHART_STYLE.barUpColor,
-      barDownColor: isValidHexColor(parsed.barDownColor) ? parsed.barDownColor : DEFAULT_CHART_STYLE.barDownColor,
-      heikinUpColor: isValidHexColor(parsed.heikinUpColor) ? parsed.heikinUpColor : DEFAULT_CHART_STYLE.heikinUpColor,
-      heikinDownColor: isValidHexColor(parsed.heikinDownColor) ? parsed.heikinDownColor : DEFAULT_CHART_STYLE.heikinDownColor,
+      candleUpColor: resolveChartCandleColor(
+        parsed.candleUpColor,
+        [LEGACY_PLATFORM_UP, LEGACY_INIT_UP_COLOR, LEGACY_PROFESSIONAL_UP_COLOR, "#0faf59"],
+        DEFAULT_CHART_STYLE.candleUpColor,
+      ),
+      candleDownColor: resolveChartCandleColor(
+        parsed.candleDownColor,
+        [LEGACY_PLATFORM_DOWN, LEGACY_INIT_DOWN_COLOR, LEGACY_PROFESSIONAL_DOWN_COLOR, "#db4635"],
+        DEFAULT_CHART_STYLE.candleDownColor,
+      ),
+      barUpColor: resolveChartCandleColor(
+        parsed.barUpColor,
+        [LEGACY_PLATFORM_UP, LEGACY_INIT_UP_COLOR, LEGACY_PROFESSIONAL_UP_COLOR, "#0faf59"],
+        DEFAULT_CHART_STYLE.barUpColor,
+      ),
+      barDownColor: resolveChartCandleColor(
+        parsed.barDownColor,
+        [LEGACY_PLATFORM_DOWN, LEGACY_INIT_DOWN_COLOR, LEGACY_PROFESSIONAL_DOWN_COLOR, "#db4635"],
+        DEFAULT_CHART_STYLE.barDownColor,
+      ),
+      heikinUpColor: resolveChartCandleColor(
+        parsed.heikinUpColor,
+        ["#29c76c", LEGACY_INIT_UP_COLOR, LEGACY_PROFESSIONAL_UP_COLOR, "#0faf59"],
+        DEFAULT_CHART_STYLE.heikinUpColor,
+      ),
+      heikinDownColor: resolveChartCandleColor(
+        parsed.heikinDownColor,
+        ["#ea6860", LEGACY_INIT_DOWN_COLOR, LEGACY_PROFESSIONAL_DOWN_COLOR, "#db4635"],
+        DEFAULT_CHART_STYLE.heikinDownColor,
+      ),
       bodyScale: typeof parsed.bodyScale === "number" ? clampBodyScale(parsed.bodyScale) : DEFAULT_CHART_STYLE.bodyScale,
       displayPreset: isChartDisplayPreset(parsed.displayPreset) ? parsed.displayPreset : DEFAULT_CHART_STYLE.displayPreset,
       priceLineVisible:
@@ -1288,7 +1325,7 @@ const ChartStylePreview = ({
 }) => {
   const backgroundClass =
     variant === "primary"
-      ? "border-[#f59e0b] bg-[#20283a]"
+      ? "border-[#10a055] bg-[#20283a]"
       : "border-white/8 bg-[#252d3d]";
 
   if (chartType === "line") {
@@ -1827,6 +1864,7 @@ const TradingChart = ({
   mobileHistoryOpen = false,
   compactPane = false,
   miniOverlay = false,
+  liveEdgeRequestKey,
   settlementAnnouncement = null,
 }: TradingChartProps) => {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -1890,9 +1928,9 @@ const TradingChart = ({
     : websiteContent.tradingDefaults.chartBackgroundOpacity;
   const effectiveChartTheme = useMemo(() => ({
     bg: activeChartBackgroundImage ? "rgba(0,0,0,0)" : getTradingChartSurfaceColor(tradingPreferences, globalTheme.bg),
-    up: tradingPreferences.upTrendColor,
-    down: tradingPreferences.downTrendColor,
-  }), [activeChartBackgroundImage, globalTheme.bg, tradingPreferences]);
+    up: globalTheme.up,
+    down: globalTheme.down,
+  }), [activeChartBackgroundImage, globalTheme.bg, globalTheme.down, globalTheme.up, tradingPreferences]);
   const chartTextColor = useMemo(() => getTradingChartTextColor(tradingPreferences), [tradingPreferences]);
   const chartGridColor = useMemo(() => getTradingGridColor(tradingPreferences), [tradingPreferences]);
   const chartViewportStyle = useMemo<React.CSSProperties>(() => {
@@ -2355,6 +2393,39 @@ const TradingChart = ({
     [selectedTf],
   );
 
+  const scrollChartToLiveEdge = useCallback(
+    (historyCountOverride?: number) => {
+      const chart = chartRef.current;
+      if (!chart) return;
+
+      const dataPointCount = Math.max(
+        1,
+        historyCountOverride ??
+          mainSeriesRef.current?.data()?.length ??
+          historyRef.current.length,
+      );
+      const containerWidth = mainRef.current?.clientWidth ?? 960;
+      const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, dataPointCount);
+      const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, dataPointCount);
+      const rightOffset = getChartRightOffset(trendContextBars);
+      const visibleSpan = initialVisibleBars + rightOffset;
+      const targetTo = dataPointCount + rightOffset;
+
+      chart.timeScale().applyOptions({
+        rightOffset,
+        rightBarStaysOnScroll: false,
+        shiftVisibleRangeOnNewBar: false,
+        allowShiftVisibleRangeOnWhitespaceReplacement: false,
+      });
+      applyResponsivePriceScale(visibleSpan, true);
+      chart.timeScale().setVisibleLogicalRange({
+        from: Math.max(0, targetTo - visibleSpan),
+        to: targetTo,
+      });
+    },
+    [applyResponsivePriceScale, selectedTf],
+  );
+
   // ─── FETCH THEME GLOBALS ──────────────────────────────────────────
   useEffect(() => {
     async function fetchTheme() {
@@ -2363,8 +2434,16 @@ const TradingChart = ({
         const payload: PlatformThemeRow = data;
         const newTheme = {
           bg: resolveChartSurfaceColor(payload.chart_bg_color),
-          up: resolveChartCandleColor(payload.chart_up_color, LEGACY_PLATFORM_UP, PROFESSIONAL_UP_COLOR),
-          down: resolveChartCandleColor(payload.chart_down_color, LEGACY_PLATFORM_DOWN, PROFESSIONAL_DOWN_COLOR),
+          up: resolveChartCandleColor(
+            payload.chart_up_color,
+            [LEGACY_PLATFORM_UP, LEGACY_INIT_UP_COLOR, LEGACY_PROFESSIONAL_UP_COLOR, "#0faf59"],
+            PROFESSIONAL_UP_COLOR,
+          ),
+          down: resolveChartCandleColor(
+            payload.chart_down_color,
+            [LEGACY_PLATFORM_DOWN, LEGACY_INIT_DOWN_COLOR, LEGACY_PROFESSIONAL_DOWN_COLOR, "#db4635"],
+            PROFESSIONAL_DOWN_COLOR,
+          ),
         };
         setGlobalTheme(newTheme);
       }
@@ -2424,31 +2503,6 @@ const TradingChart = ({
     if (typeof window === "undefined") return;
     window.localStorage.setItem(CHART_STYLE_STORAGE_KEY, JSON.stringify(chartStyles));
   }, [chartStyles]);
-
-  useEffect(() => {
-    setChartStyles((current) => {
-      if (
-        current.candleUpColor === tradingPreferences.upTrendColor &&
-        current.barUpColor === tradingPreferences.upTrendColor &&
-        current.heikinUpColor === tradingPreferences.upTrendColor &&
-        current.candleDownColor === tradingPreferences.downTrendColor &&
-        current.barDownColor === tradingPreferences.downTrendColor &&
-        current.heikinDownColor === tradingPreferences.downTrendColor
-      ) {
-        return current;
-      }
-
-      return {
-        ...current,
-        candleUpColor: tradingPreferences.upTrendColor,
-        barUpColor: tradingPreferences.upTrendColor,
-        heikinUpColor: tradingPreferences.upTrendColor,
-        candleDownColor: tradingPreferences.downTrendColor,
-        barDownColor: tradingPreferences.downTrendColor,
-        heikinDownColor: tradingPreferences.downTrendColor,
-      };
-    });
-  }, [tradingPreferences.downTrendColor, tradingPreferences.upTrendColor]);
 
   useEffect(() => {
     if (compactPane) {
@@ -2891,12 +2945,7 @@ const TradingChart = ({
       shiftVisibleRangeOnNewBar: false,
       allowShiftVisibleRangeOnWhitespaceReplacement: false,
     });
-    applyResponsivePriceScale(initialVisibleBars + rightOffset, true);
-    const defaultFrom = Math.max(0, history.length - initialVisibleBars);
-    chartRef.current.timeScale().setVisibleLogicalRange({
-      from: defaultFrom,
-      to: history.length + rightOffset,
-    });
+    scrollChartToLiveEdge(history.length);
 
     renderOverlayIndicators(getIndicatorHistory());
     setForceOscillatorRender((current) => current + 1);
@@ -2976,9 +3025,20 @@ const TradingChart = ({
     asset.symbol,
     getIndicatorHistory,
     renderOverlayIndicators,
+    scrollChartToLiveEdge,
     selectedTf,
     setCurrentPrice,
   ]);
+
+  useEffect(() => {
+    if (liveEdgeRequestKey === undefined || liveEdgeRequestKey === null) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      scrollChartToLiveEdge();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [asset.symbol, liveEdgeRequestKey, scrollChartToLiveEdge]);
 
   useEffect(() => {
     const chart = chartRef.current;
@@ -3917,13 +3977,13 @@ const TradingChart = ({
                   onClick={() => updateChartStyle({ priceLineVisible: !chartStyles.priceLineVisible })}
                   className={`flex h-4 w-4 items-center justify-center rounded-[3px] border ${
                     chartStyles.priceLineVisible
-                      ? "border-[#f59e0b] bg-[#2f3545]"
+                      ? "border-[#10a055] bg-[#2f3545]"
                       : "border-[#5a6272] bg-[#232937]"
                   }`}
                   aria-label="Toggle full-width current price line"
                 >
                   {chartStyles.priceLineVisible ? (
-                    <span className="block h-2 w-2 rounded-[1px] bg-[#f59e0b]" />
+                    <span className="block h-2 w-2 rounded-[1px] bg-[#10a055]" />
                   ) : null}
                 </button>
               </label>
@@ -3942,7 +4002,7 @@ const TradingChart = ({
                         selected ? "bg-[#363d4d] text-white" : "text-slate-200 hover:bg-[#2c3343]"
                       }`}
                     >
-                      <span className={`${selected ? "text-[#f59e0b]" : "text-slate-300"}`}>
+                      <span className={`${selected ? "text-[#10a055]" : "text-slate-300"}`}>
                         {option.id === "line" ? (
                           <Activity className="h-4 w-4" />
                         ) : option.id === "bars" ? (
@@ -4025,7 +4085,7 @@ const TradingChart = ({
                             type="checkbox"
                             checked={chartStyles.areaFillEnabled}
                             onChange={(event) => updateChartStyle({ areaFillEnabled: event.target.checked })}
-                            className="h-4 w-4 accent-[#f59e0b]"
+                            className="h-4 w-4 accent-[#10a055]"
                           />
                           Area fill
                         </label>
@@ -4038,7 +4098,7 @@ const TradingChart = ({
                               onClick={() => updateChartStyle({ areaLineWidth: width })}
                               className={`flex h-7 w-7 items-center justify-center rounded-[4px] border text-[11px] font-black ${
                                 chartStyles.areaLineWidth === width
-                                  ? "border-[#f59e0b] bg-[#373028] text-white"
+                                  ? "border-[#10a055] bg-[#273a32] text-white"
                                   : "border-[#4a5264] bg-[#313848] text-slate-300"
                               }`}
                             >
@@ -4066,6 +4126,39 @@ const TradingChart = ({
                             />
                           </label>
                         ))}
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-4 gap-2">
+                        {CANDLE_COLOR_PRESETS.map((preset) => {
+                          const selected =
+                            matchesHexColor(chartStyles[styleColorFields[0].key], preset.up) &&
+                            matchesHexColor(chartStyles[styleColorFields[1].key], preset.down);
+
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() =>
+                                updateChartStyle({
+                                  [styleColorFields[0].key]: preset.up,
+                                  [styleColorFields[1].key]: preset.down,
+                                } as Partial<ChartStylePreferences>)
+                              }
+                              className={`flex min-h-[42px] items-center gap-2 rounded-[4px] border px-2 text-left transition-colors ${
+                                selected
+                                  ? "border-[#8fb3e7] bg-[#34394a] text-white"
+                                  : "border-[#4a5264] bg-[#313848] text-slate-300 hover:bg-[#373f51]"
+                              }`}
+                              aria-label={`Use ${preset.label} candle colors`}
+                            >
+                              <span className="flex shrink-0 overflow-hidden rounded-[2px] border border-white/10">
+                                <span className="h-5 w-3" style={{ background: preset.up }} />
+                                <span className="h-5 w-3" style={{ background: preset.down }} />
+                              </span>
+                              <span className="min-w-0 truncate text-[11px] font-black">{preset.label}</span>
+                            </button>
+                          );
+                        })}
                       </div>
 
                       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
