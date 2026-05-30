@@ -640,8 +640,8 @@ const Deposit = () => {
           };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,#1c1f2d_0%,#1e2330_42%,#1c1f2d_100%)] p-3 text-white sm:p-4 md:p-8">
-      <div className="mx-auto mt-4 w-full max-w-[1220px] space-y-5 sm:mt-6 sm:space-y-6 md:mt-10">
+    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,#23283b_0%,#1e2131_48%,#141726_100%)] p-2 text-white sm:p-3 md:p-5">
+      <div className="mx-auto mt-3 w-full max-w-[1080px] space-y-3 sm:mt-4 sm:space-y-4 md:mt-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
           <SiteLogo to="/" subtitle="Secure funding" />
           <Link to="/trade" className="flex w-fit items-center gap-2 text-[#9ab7c9] transition-colors hover:text-white">
@@ -650,29 +650,29 @@ const Deposit = () => {
           </Link>
         </div>
 
-        <Card className="overflow-hidden border border-[#1e2330] bg-[#1c1f2d] shadow-[0_24px_80px_rgba(0,0,0,0.36)]">
-          <CardHeader className="border-b border-white/8 bg-[linear-gradient(180deg,rgba(30,35,48,0.96)_0%,rgba(28,31,45,0.98)_100%)] px-4 py-5 sm:px-5 sm:py-6 md:px-8">
+        <Card className="overflow-hidden rounded-[16px] border border-white/10 bg-[#23283b] shadow-[0_18px_44px_rgba(0,0,0,0.32)]">
+          <CardHeader className="border-b border-white/8 bg-[#23283b] px-4 py-4 sm:px-5 md:px-6">
             <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Funding desk</div>
-            <CardTitle className="mt-2 text-2xl text-white sm:text-3xl md:text-4xl">Top up your balance</CardTitle>
-            <CardDescription className="mt-2 max-w-[780px] text-sm leading-6 text-[#9dc2c8]">
+            <CardTitle className="mt-1 text-xl text-white sm:text-2xl md:text-[28px]">Top up your balance</CardTitle>
+            <CardDescription className="mt-1 max-w-[760px] text-xs leading-5 text-[#9dc2c8] sm:text-sm">
               Choose the payment method, enter the amount, attach any available bonus, and continue to payment.
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="px-4 py-5 sm:px-5 sm:py-6 md:px-8 md:py-8">
-            <form onSubmit={handleDeposit} className="grid gap-6 xl:grid-cols-[340px,minmax(0,1fr)]">
-              <div className="space-y-6">
-                <div className="rounded-[22px] border border-[#1e2330] bg-[#1e2330] p-5 text-sm leading-6 text-slate-200">
+          <CardContent className="px-4 py-4 sm:px-5 md:px-6 md:py-5">
+            <form onSubmit={handleDeposit} className="grid gap-4 xl:grid-cols-[280px,minmax(0,1fr)]">
+              <div className="space-y-4">
+                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4 text-sm leading-6 text-slate-200">
                   {automationCopy}
                 </div>
 
-                <div className="rounded-[22px] border border-white/8 bg-[#1e2330] p-5">
+                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
                   <label className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Select payment method</label>
-                  <div className="mt-4 grid gap-3">
+                  <div className="mt-3 grid gap-2.5">
                     <button
                       type="button"
                       onClick={() => handleSelectMethod("mpesa")}
-                      className={`flex flex-col items-start gap-3 rounded-[18px] border p-4 text-left transition sm:flex-row sm:items-center sm:gap-4 ${
+                      className={`flex flex-col items-start gap-3 rounded-[14px] border p-3 text-left transition sm:flex-row sm:items-center sm:gap-3 ${
                         selectedMethod === "mpesa"
                           ? "border-[#0fa053]/60 bg-[#1e2330] shadow-[0_12px_26px_rgba(15,160,83,0.2)]"
                           : "border-white/10 bg-[#1e2330] hover:border-white/20"
@@ -689,7 +689,7 @@ const Deposit = () => {
                       type="button"
                       disabled={cryptoMethods.length === 0}
                       onClick={() => handleSelectMethod("crypto")}
-                      className={`flex flex-col items-start gap-3 rounded-[18px] border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 sm:flex-row sm:items-center sm:gap-4 ${
+                      className={`flex flex-col items-start gap-3 rounded-[14px] border p-3 text-left transition disabled:cursor-not-allowed disabled:opacity-60 sm:flex-row sm:items-center sm:gap-3 ${
                         selectedMethod === "crypto"
                           ? "border-white/12 bg-[#1e2330] shadow-[0_12px_26px_rgba(255,255,255,0.04)]"
                           : "border-white/10 bg-[#1e2330] hover:border-white/20"
@@ -710,12 +710,12 @@ const Deposit = () => {
                 </div>
 
                 {cryptoMethods.length === 0 && (
-                  <div className="rounded-[22px] border border-[#1e2330] bg-[#1e2330] p-5 text-sm leading-6 text-slate-200">
+                  <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4 text-sm leading-6 text-slate-200">
                     Cryptocurrency deposits are temporarily unavailable right now.
                   </div>
                 )}
 
-                <div className="rounded-[22px] border border-white/8 bg-[#1e2330] p-5">
+                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
                   <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Account snapshot</div>
                   <div className="mt-4 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
@@ -734,11 +734,11 @@ const Deposit = () => {
                 </div>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="space-y-4">
                   <label className="text-sm font-medium text-white">Amount (USD)</label>
-                  <div className="rounded-[22px] border border-border bg-[#1e2330] p-4 shadow-[0_20px_48px_rgba(0,0,0,0.18)]">
-                    <div className="flex flex-col gap-4 rounded-[16px] bg-[#1e2330] p-4 lg:flex-row lg:items-center">
+                  <div className="rounded-[14px] border border-white/10 bg-[#1e2131] p-3.5 shadow-[0_16px_34px_rgba(0,0,0,0.2)]">
+                    <div className="flex flex-col gap-3 rounded-[12px] bg-[#23283b] p-3 lg:flex-row lg:items-center">
                       <div className="flex min-w-0 flex-1 items-center gap-3">
                         <span className="shrink-0 text-[18px] font-black text-[#0fa053] sm:text-[22px]">USD</span>
                         <input
@@ -778,7 +778,7 @@ const Deposit = () => {
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-col gap-3 rounded-[16px] bg-[#1e2330] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mt-3 flex flex-col gap-3 rounded-[12px] bg-[#23283b] px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex min-w-0 items-start gap-3">
                         <button
                           type="button"
@@ -826,7 +826,7 @@ const Deposit = () => {
                       </div>
 
                       {resolvedBonusCatalog.length === 0 ? (
-                        <div className="mt-3 rounded-[16px] border border-white/8 bg-[#1e2330] px-4 py-4 text-sm text-[#9dc2c8]">
+                        <div className="mt-3 rounded-[12px] border border-white/8 bg-[#23283b] px-3 py-3 text-sm text-[#9dc2c8]">
                           No deposit bonus offers are available right now.
                         </div>
                       ) : (
@@ -847,7 +847,7 @@ const Deposit = () => {
                                 type="button"
                                 disabled={!offer.eligible}
                                 onClick={() => handleSelectBonusOffer(offer)}
-                                className={`rounded-[16px] border px-4 py-4 text-left transition ${
+                                className={`rounded-[12px] border px-3 py-3 text-left transition ${
                                   isSelected
                                     ? "border-[#ff9a3d] bg-[#1e2330] text-white shadow-[0_16px_26px_rgba(255,154,61,0.18)]"
                                     : offer.eligible
@@ -891,7 +891,7 @@ const Deposit = () => {
                 </div>
 
                 {selectedMethod === "mpesa" ? (
-                  <div className="rounded-[22px] border border-white/8 bg-[#1e2330] p-5">
+                  <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       <MpesaIcon className="h-8 w-[74px] shrink-0" />
                       <div className="min-w-0">
@@ -906,7 +906,7 @@ const Deposit = () => {
                       placeholder="e.g. 0712345678 or 254712345678"
                       className="mt-4 w-full rounded-[16px] border border-white/10 bg-[#1e2330] px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-500 focus:border-[#0fa053]/60"
                     />
-                    <div className="mt-4 rounded-[16px] border border-white/8 bg-[#1e2330] p-4">
+                    <div className="mt-3 rounded-[12px] border border-white/8 bg-[#23283b] p-3">
                       <div className="flex flex-col gap-2 text-sm text-[#9dc2c8] sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                         <span>Mobile money charge</span>
                         <span className="break-all font-semibold text-white">{formatCurrencyAmount(amountKes, "KES")}</span>
@@ -919,7 +919,7 @@ const Deposit = () => {
                 ) : null}
 
                 <div className="grid gap-4">
-                  <div className="rounded-[22px] border border-white/8 bg-[#1e2330] px-5 py-4">
+                  <div className="rounded-[14px] border border-white/8 bg-[#1e2131] px-4 py-3">
                     <div className="text-sm font-medium text-white">Will be credited</div>
                     <div className="text-xs leading-5 text-[#9dc2c8]">
                       {bonusEnabled && bonusAmount > 0
@@ -930,7 +930,7 @@ const Deposit = () => {
                   </div>
                 </div>
 
-                <div className="rounded-[22px] border border-white/8 bg-[#1e2330] p-5">
+                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
                   <Button
                     type="submit"
                     disabled={
@@ -940,7 +940,7 @@ const Deposit = () => {
                       (selectedMethod === "mpesa" && !mpesaPhoneNumber.trim()) ||
                       (selectedMethod === "crypto" && !selectedCryptoMethod)
                     }
-                    className="w-full px-4 py-5 text-base gradient-primary sm:py-6 sm:text-lg"
+                    className="w-full px-4 py-4 text-base gradient-primary sm:py-5"
                   >
                     {loading
                       ? selectedMethod === "mpesa"

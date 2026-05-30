@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { IChartApi, ISeriesApi, type SeriesType, type Time } from "lightweight-charts";
 import type { ActiveTrade } from "@/hooks/useTrading";
+import { TRADING_DOWN_COLOR, TRADING_UP_COLOR } from "./tradingPalette";
 
 interface Props {
   chart: IChartApi;
@@ -45,11 +46,6 @@ const hexToRgba = (hex: string, alpha: number) => {
   return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
 };
 
-const rectanglesOverlap = (
-  first: { left: number; right: number; top: number; bottom: number },
-  second: { left: number; right: number; top: number; bottom: number },
-) => first.left < second.right && first.right > second.left && first.top < second.bottom && first.bottom > second.top;
-
 type SeriesPoint = {
   time: number;
   logical: number;
@@ -57,6 +53,8 @@ type SeriesPoint = {
 
 const HIGHER_TIMEFRAME_FULL_TIME_SECONDS = 5 * 60;
 const INTRABAR_LOGICAL_SPAN = 0.72;
+const MARKER_VIEW_PADDING = 72;
+const MARKER_MIN_LINE_WIDTH = 2;
 
 const clampFraction = (value: number) => Math.min(1, Math.max(0, value));
 
@@ -65,9 +63,6 @@ const getIntrabarLogicalOffset = (fraction: number) =>
 
 const isUsableCoordinate = (value: number | null | undefined): value is number =>
   typeof value === "number" && Number.isFinite(value) && !Number.isNaN(value);
-
-const clampCoordinate = (value: number, min: number, max: number) =>
-  Math.max(min, Math.min(max, value));
 
 const formatTradeAmountLabel = (amount: number) => {
   const safeAmount = Number.isFinite(amount) ? amount : 0;
@@ -216,25 +211,6 @@ export const getTradeMarkerCoordinate = (
     : null;
 };
 
-const getVisibleFallbackCoordinate = (
-  chart: IChartApi,
-  seriesPoints: SeriesPoint[],
-  containerWidth: number,
-) => {
-  if (seriesPoints.length === 0) {
-    return Math.max(44, containerWidth - 96);
-  }
-
-  const lastPoint = seriesPoints[seriesPoints.length - 1];
-  const visibleRange = chart.timeScale().getVisibleLogicalRange();
-  const targetLogical = visibleRange
-    ? Math.min(lastPoint.logical, Math.max(visibleRange.from + 2, visibleRange.to - 8))
-    : lastPoint.logical;
-  const coordinate = chart.timeScale().logicalToCoordinate(targetLogical as never);
-
-  return isUsableCoordinate(coordinate) ? coordinate : Math.max(44, containerWidth - 96);
-};
-
 const getStoredLogicalCoordinate = (
   chart: IChartApi,
   seriesPoints: SeriesPoint[],
@@ -320,6 +296,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         verticalGuide.style.borderLeft = "1px solid rgba(167, 183, 216, 0.26)";
         verticalGuide.style.transform = "translateX(-50%)";
         verticalGuide.style.zIndex = "0";
+        verticalGuide.style.display = "none";
         marker.appendChild(verticalGuide);
 
         const tradePill = document.createElement("div");
@@ -370,13 +347,13 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         marker.appendChild(tradePill);
 
         const entryDot = document.createElement("div");
-        entryDot.className = "absolute h-[9px] w-[9px] rounded-full";
+        entryDot.className = "absolute rounded-full";
         entryDot.style.transform = "translate(-50%, -50%)";
         entryDot.style.zIndex = "4";
         marker.appendChild(entryDot);
 
         const expiryDot = document.createElement("div");
-        expiryDot.className = "absolute h-[9px] w-[9px] rounded-full";
+        expiryDot.className = "absolute rounded-full";
         expiryDot.style.transform = "translate(-50%, -50%)";
         expiryDot.style.zIndex = "4";
         marker.appendChild(expiryDot);
@@ -417,9 +394,6 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         const marker = el.children[index] as HTMLElement;
         const rawEntryY = series.priceToCoordinate(trade.entry_price);
         const { entryTime, expiryTime, activeLineEndTime } = getTradeDisplayTimes(trade, nowSec);
-        const isActiveTrade = nowSec <= expiryTime + 1;
-        const markerMinX = 34;
-        const markerMaxX = Math.max(markerMinX, el.clientWidth - 64);
         const storedLogicalEntryX = getStoredLogicalCoordinate(
           chart,
           seriesPoints,
@@ -428,51 +402,37 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
           timeframeSeconds,
         );
         const timeBasedEntryX = getTradeMarkerCoordinate(chart, seriesPoints, entryTime, timeframeSeconds);
-        const rawEntryX = storedLogicalEntryX ?? timeBasedEntryX;
-        const rawEntryXInView =
-          isUsableCoordinate(rawEntryX) &&
-          rawEntryX >= markerMinX &&
-          rawEntryX <= markerMaxX;
-        const entryX =
-          rawEntryXInView
-            ? rawEntryX
-            : isActiveTrade
-              ? getVisibleFallbackCoordinate(chart, seriesPoints, el.clientWidth)
-              : null;
-        const entryY =
-          isUsableCoordinate(rawEntryY)
-            ? rawEntryY
-            : isActiveTrade
-              ? el.clientHeight / 2
-              : null;
+        const entryX = storedLogicalEntryX ?? timeBasedEntryX;
+        const entryY = rawEntryY;
 
         if (
-          entryX === null ||
-          entryY === null ||
           !isUsableCoordinate(entryX) ||
-          !isUsableCoordinate(entryY)
+          !isUsableCoordinate(entryY) ||
+          entryX < -MARKER_VIEW_PADDING ||
+          entryX > el.clientWidth + MARKER_VIEW_PADDING ||
+          entryY < -MARKER_VIEW_PADDING ||
+          entryY > el.clientHeight + MARKER_VIEW_PADDING
         ) {
           marker.style.opacity = "0";
           return;
         }
 
-        const visibleEntryX = clampCoordinate(entryX, markerMinX, markerMaxX);
-        const visibleEntryY = clampCoordinate(entryY, 18, Math.max(18, el.clientHeight - 18));
-        const maxX = Math.max(28, el.clientWidth - 10);
+        const visibleEntryX = entryX;
+        const visibleEntryY = entryY;
+        const maxX = Math.max(visibleEntryX, el.clientWidth - 3);
         const activeEndXRaw = getTradeMarkerCoordinate(chart, seriesPoints, activeLineEndTime, timeframeSeconds);
         const fullExpiryXRaw = getTradeMarkerCoordinate(chart, seriesPoints, expiryTime, timeframeSeconds);
-        const minimumActiveOffset = 1;
-        const projectedLeadOffset = Math.max(18, Math.min(34, el.clientWidth * 0.028));
-        const activeEndX = activeEndXRaw === null || Number.isNaN(activeEndXRaw)
-          ? Math.min(maxX, visibleEntryX + minimumActiveOffset)
-          : Math.max(visibleEntryX + minimumActiveOffset, Math.min(activeEndXRaw, maxX));
-        const fullExpiryX = fullExpiryXRaw === null || Number.isNaN(fullExpiryXRaw)
-          ? Math.min(maxX, activeEndX + projectedLeadOffset)
-          : Math.max(activeEndX + projectedLeadOffset, Math.min(fullExpiryXRaw, maxX));
-        const activeWidth = Math.max(minimumActiveOffset, activeEndX - visibleEntryX);
+        const projectedLeadOffset = Math.max(22, Math.min(42, el.clientWidth * 0.032));
+        const activeEndX = isUsableCoordinate(activeEndXRaw)
+          ? Math.max(visibleEntryX, Math.min(activeEndXRaw, maxX))
+          : visibleEntryX;
+        const fullExpiryX = isUsableCoordinate(fullExpiryXRaw)
+          ? Math.max(activeEndX + MARKER_MIN_LINE_WIDTH, Math.min(fullExpiryXRaw, maxX))
+          : Math.min(maxX, activeEndX + projectedLeadOffset);
+        const activeWidth = Math.max(MARKER_MIN_LINE_WIDTH, activeEndX - visibleEntryX);
         const projectedWidth = Math.max(0, fullExpiryX - activeEndX);
         const isHigher = trade.direction === "higher";
-        const accent = isHigher ? "#18d87d" : "#ff6a72";
+        const accent = isHigher ? TRADING_UP_COLOR : TRADING_DOWN_COLOR;
         const amountLabel = formatTradeAmountLabel(trade.amount);
 
         const activeLine = marker.children[0] as HTMLElement;
@@ -489,20 +449,18 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         marker.style.left = `${visibleEntryX}px`;
         marker.style.top = `${visibleEntryY}px`;
 
-        verticalGuide.style.left = "0px";
-        verticalGuide.style.top = `${-visibleEntryY}px`;
-        verticalGuide.style.height = `${el.clientHeight}px`;
-        verticalGuide.style.opacity = "1";
+        verticalGuide.style.display = "none";
+        verticalGuide.style.opacity = "0";
 
         activeLine.style.left = "0px";
         activeLine.style.width = `${activeWidth}px`;
         activeLine.style.background = accent;
         activeLine.style.height = "1px";
-        activeLine.style.boxShadow = "none";
+        activeLine.style.boxShadow = `0 0 8px ${hexToRgba(accent, 0.24)}`;
 
-        projectedLine.style.left = `${Math.max(activeWidth - 1, 0)}px`;
+        projectedLine.style.left = `${Math.max(activeWidth, 0)}px`;
         projectedLine.style.width = `${projectedWidth}px`;
-        projectedLine.style.background = hexToRgba(accent, 0.9);
+        projectedLine.style.background = hexToRgba(accent, 0.62);
         projectedLine.style.boxShadow = "none";
         projectedLine.style.height = "1px";
         projectedLine.style.opacity = projectedWidth > 0 ? "1" : "0";
@@ -526,24 +484,28 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         timeSpan.textContent = formatTradeCountdown(expiryTime - nowSec);
 
         const pillWidth = tradePill.offsetWidth || 56;
-        const desiredPillOffset = -(pillWidth + 8);
-        const minClippedOffset = -visibleEntryX + 8;
-        const pillLeftOffset = Math.max(desiredPillOffset, minClippedOffset);
+        const canFitLeft = visibleEntryX > pillWidth + 14;
+        const pillLeftOffset = canFitLeft ? -(pillWidth + 9) : 10;
         tradePill.style.top = "-5px";
         tradePill.style.left = `${pillLeftOffset}px`;
         tradePill.style.transform = "translateY(-100%)";
 
         entryDot.style.left = "0px";
         entryDot.style.top = "0px";
+        entryDot.style.width = "7px";
+        entryDot.style.height = "7px";
         entryDot.style.background = "#ff8a34";
         entryDot.style.border = "2px solid #ffffff";
-        entryDot.style.boxShadow = `0 0 0 2px ${hexToRgba(accent, 0.18)}, 0 0 12px rgba(255,138,52,0.42)`;
+        entryDot.style.boxShadow = `0 0 0 2px ${hexToRgba(accent, 0.16)}, 0 0 10px rgba(255,138,52,0.42)`;
 
         activeDot.style.left = `${activeWidth}px`;
         activeDot.style.top = "0px";
-        activeDot.style.background = accent;
-        activeDot.style.border = `2px solid ${accent}`;
-        activeDot.style.boxShadow = `0 0 8px ${hexToRgba(accent, 0.24)}`;
+        activeDot.style.width = "0px";
+        activeDot.style.height = "0px";
+        activeDot.style.opacity = "0";
+        activeDot.style.background = "transparent";
+        activeDot.style.border = "0";
+        activeDot.style.boxShadow = "none";
       });
 
       reqId = requestAnimationFrame(loop);

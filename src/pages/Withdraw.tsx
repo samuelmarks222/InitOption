@@ -321,8 +321,8 @@ const Withdraw = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,#1e2330_0%,#1e2330_42%,#1c1f2d_100%)] p-3 text-white sm:p-4 md:p-8">
-      <div className="mx-auto mt-4 w-full max-w-[1220px] space-y-5 sm:mt-6 sm:space-y-6 md:mt-10">
+    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,#23283b_0%,#1e2131_48%,#141726_100%)] p-2 text-white sm:p-3 md:p-5">
+      <div className="mx-auto mt-3 w-full max-w-[1080px] space-y-3 sm:mt-4 sm:space-y-4 md:mt-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
           <SiteLogo to="/" subtitle="Payout access" />
           <Link to="/trade" className="flex w-fit items-center gap-2 text-[#9ab7c9] transition-colors hover:text-white">
@@ -331,29 +331,29 @@ const Withdraw = () => {
           </Link>
         </div>
 
-        <Card className="overflow-hidden border border-[#1e2330] bg-[#1c1f2d] shadow-[0_24px_80px_rgba(0,0,0,0.36)]">
-          <CardHeader className="border-b border-white/8 bg-[linear-gradient(180deg,rgba(30,35,48,0.96)_0%,rgba(28,31,45,0.98)_100%)] px-4 py-5 sm:px-5 sm:py-6 md:px-8">
+        <Card className="overflow-hidden rounded-[16px] border border-white/10 bg-[#23283b] shadow-[0_18px_44px_rgba(0,0,0,0.32)]">
+          <CardHeader className="border-b border-white/8 bg-[#23283b] px-4 py-4 sm:px-5 md:px-6">
             <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Payout desk</div>
-            <CardTitle className="mt-2 text-2xl text-white sm:text-3xl md:text-4xl">Withdraw Funds</CardTitle>
-            <CardDescription className="mt-2 max-w-[780px] text-sm leading-6 text-[#9dc2c8]">
+            <CardTitle className="mt-1 text-xl text-white sm:text-2xl md:text-[28px]">Withdraw Funds</CardTitle>
+            <CardDescription className="mt-1 max-w-[760px] text-xs leading-5 text-[#9dc2c8] sm:text-sm">
               Choose the payout method, enter the amount, confirm the destination details, and submit your request.
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="px-4 py-5 sm:px-5 sm:py-6 md:px-8 md:py-8">
-            <form onSubmit={handleWithdraw} className="grid gap-6 xl:grid-cols-[340px,minmax(0,1fr)]">
-              <div className="space-y-6">
-                <div className="rounded-[22px] border border-[#1e2330] bg-[#1e2330] p-5 text-sm leading-6 text-slate-200">
+          <CardContent className="px-4 py-4 sm:px-5 md:px-6 md:py-5">
+            <form onSubmit={handleWithdraw} className="grid gap-4 xl:grid-cols-[280px,minmax(0,1fr)]">
+              <div className="space-y-4">
+                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4 text-sm leading-6 text-slate-200">
                   {methodCopy}
                 </div>
 
-                <div className="rounded-[22px] border border-white/8 bg-[#1e2330] p-5">
+                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
                   <label className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Select withdrawal method</label>
-                  <div className="mt-4 grid gap-3">
+                  <div className="mt-3 grid gap-2.5">
                     <button
                       type="button"
                       onClick={() => setMethod("mpesa")}
-                      className={`flex flex-col items-start gap-3 rounded-[18px] border p-4 text-left transition sm:flex-row sm:items-center sm:gap-4 ${
+                      className={`flex flex-col items-start gap-3 rounded-[14px] border p-3 text-left transition sm:flex-row sm:items-center sm:gap-3 ${
                         method === "mpesa"
                           ? "border-[#0fa053]/60 bg-[#1e2330] shadow-[0_12px_26px_rgba(15,160,83,0.2)]"
                           : "border-white/10 bg-[#1e2330] hover:border-white/20"
@@ -369,7 +369,7 @@ const Withdraw = () => {
                     <button
                       type="button"
                       onClick={() => setMethod("bank")}
-                      className={`flex flex-col items-start gap-3 rounded-[18px] border p-4 text-left transition sm:flex-row sm:items-center sm:gap-4 ${
+                      className={`flex flex-col items-start gap-3 rounded-[14px] border p-3 text-left transition sm:flex-row sm:items-center sm:gap-3 ${
                         method === "bank"
                           ? "border-[#1e2330] bg-[#1e2330] shadow-[0_12px_26px_rgba(35,110,223,0.16)]"
                           : "border-white/10 bg-[#1e2330] hover:border-white/20"
@@ -387,7 +387,7 @@ const Withdraw = () => {
                     <button
                       type="button"
                       onClick={() => setMethod("crypto")}
-                      className={`flex flex-col items-start gap-3 rounded-[18px] border p-4 text-left transition sm:flex-row sm:items-center sm:gap-4 ${
+                      className={`flex flex-col items-start gap-3 rounded-[14px] border p-3 text-left transition sm:flex-row sm:items-center sm:gap-3 ${
                         method === "crypto"
                           ? "border-[#f5a524]/60 bg-[#3b2a0f] shadow-[0_12px_26px_rgba(245,165,36,0.12)]"
                           : "border-white/10 bg-[#1e2330] hover:border-white/20"
@@ -404,7 +404,7 @@ const Withdraw = () => {
                   </div>
                 </div>
 
-                <div className="rounded-[22px] border border-white/8 bg-[#1e2330] p-5">
+                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
                   <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Account snapshot</div>
                   <div className="mt-4 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
@@ -422,16 +422,16 @@ const Withdraw = () => {
                   </div>
                 </div>
 
-                <div className="rounded-[22px] border border-white/8 bg-[#1e2330] p-5 text-sm leading-6 text-[#cde3ea]">
+                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4 text-sm leading-6 text-[#cde3ea]">
                   Minimum withdrawal is $10.00. M-PESA withdrawals stay reserved until finance approves and completes the manual payout, or rejects the request.
                 </div>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="space-y-4">
                   <label className="text-sm font-medium text-white">Amount (USD)</label>
-                  <div className="rounded-[22px] border border-border bg-[#1e2330] p-4 shadow-[0_20px_48px_rgba(0,0,0,0.18)]">
-                    <div className="flex flex-col gap-4 rounded-[16px] bg-[#1e2330] p-4 lg:flex-row lg:items-center">
+                  <div className="rounded-[14px] border border-white/10 bg-[#1e2131] p-3.5 shadow-[0_16px_34px_rgba(0,0,0,0.2)]">
+                    <div className="flex flex-col gap-3 rounded-[12px] bg-[#23283b] p-3 lg:flex-row lg:items-center">
                       <div className="flex min-w-0 flex-1 items-center gap-3">
                         <span className="shrink-0 text-[18px] font-black text-[#0fa053] sm:text-[22px]">USD</span>
                         <input
@@ -471,7 +471,7 @@ const Withdraw = () => {
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-col gap-3 rounded-[16px] bg-[#1e2330] px-4 py-3 text-sm text-[#a7bdd9] sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mt-3 flex flex-col gap-3 rounded-[12px] bg-[#23283b] px-3 py-3 text-sm text-[#a7bdd9] sm:flex-row sm:items-center sm:justify-between">
                       <span>
                         {bonusBlocksWithdrawal && withdrawWithoutBonus ? "Withdrawable after bonus removal" : "Available balance"}
                       </span>
@@ -490,7 +490,7 @@ const Withdraw = () => {
                 </div>
 
                 {hasBonus && (
-                  <div className="rounded-[22px] border border-[#f5a524]/35 bg-[#211f2b] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.22)]">
+                  <div className="rounded-[14px] border border-[#f5a524]/30 bg-[#211f2b] p-4 shadow-[0_14px_34px_rgba(0,0,0,0.22)]">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex min-w-0 items-start gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#f5a524]/14 text-[#f5a524]">
@@ -512,7 +512,7 @@ const Withdraw = () => {
                       </div>
                     </div>
 
-                    <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                       <div className="rounded-[16px] bg-[#1e2330] px-4 py-3">
                         <div className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8eb3bf]">Active bonus</div>
                         <div className="mt-2 text-lg font-bold text-white">${bonusStatus.bonusTotal.toFixed(2)}</div>
@@ -545,7 +545,7 @@ const Withdraw = () => {
                     </div>
 
                     {bonusBlocksWithdrawal ? (
-                      <label className="mt-5 flex cursor-pointer flex-col gap-3 rounded-[18px] border border-white/10 bg-[#1e2330] p-4 transition hover:border-[#86c9d4]/35 sm:flex-row sm:items-start">
+                      <label className="mt-4 flex cursor-pointer flex-col gap-3 rounded-[14px] border border-white/10 bg-[#1e2131] p-4 transition hover:border-[#86c9d4]/35 sm:flex-row sm:items-start">
                         <input
                           type="checkbox"
                           checked={withdrawWithoutBonus}
@@ -559,7 +559,7 @@ const Withdraw = () => {
                         </span>
                       </label>
                     ) : (
-                      <div className="mt-5 rounded-[18px] border border-[#0b7557]/30 bg-[#0b7557]/12 p-4 text-sm leading-6 text-[#c7fff0]">
+                      <div className="mt-4 rounded-[14px] border border-[#0b7557]/30 bg-[#0b7557]/12 p-4 text-sm leading-6 text-[#c7fff0]">
                         Bonus turnover is complete. You can withdraw normally without removing the bonus.
                       </div>
                     )}
@@ -567,7 +567,7 @@ const Withdraw = () => {
                 )}
 
                 {method === "crypto" && (
-                  <div className="rounded-[22px] border border-white/8 bg-[#1e2330] p-5">
+                  <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
                     <div className="text-sm font-semibold text-white">Select withdrawal cryptocurrency</div>
                     {cryptoMethods.length === 0 ? (
                       <div className="mt-4 rounded-[16px] border border-[#1e2330] bg-[#1e2330] px-4 py-4 text-sm text-slate-200">
@@ -608,7 +608,7 @@ const Withdraw = () => {
                 )}
 
                 {method === "mpesa" ? (
-                  <div className="rounded-[22px] border border-white/8 bg-[#1e2330] p-5">
+                  <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       <MpesaIcon className="h-8 w-[74px] shrink-0" />
                       <div className="min-w-0">
@@ -623,7 +623,7 @@ const Withdraw = () => {
                       placeholder="e.g. 0712345678 or 254712345678"
                       className="mt-4 w-full rounded-[16px] border border-white/10 bg-[#1e2330] px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-500 focus:border-[#0fa053]/60"
                     />
-                    <div className="mt-4 rounded-[16px] border border-white/8 bg-[#1e2330] p-4">
+                    <div className="mt-3 rounded-[12px] border border-white/8 bg-[#23283b] p-3">
                       <div className="flex flex-col gap-2 text-sm text-[#9dc2c8] sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                         <span>Estimated M-PESA payout</span>
                         <span className="break-all font-semibold text-white">{formatCurrencyAmount(amountKes, "KES")}</span>
@@ -634,7 +634,7 @@ const Withdraw = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-[22px] border border-white/8 bg-[#1e2330] p-5">
+                  <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
                     <div className="text-sm font-semibold text-white">
                       {method === "bank" ? "Bank destination" : "Wallet destination"}
                     </div>
@@ -653,7 +653,7 @@ const Withdraw = () => {
                   </div>
                 )}
 
-                <div className="rounded-[22px] border border-white/8 bg-[#1e2330] px-5 py-4">
+                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] px-4 py-3">
                   <div className="text-sm font-medium text-white">Payout summary</div>
                   <div className="text-xs text-[#9dc2c8]">
                     {method === "mpesa"
@@ -663,7 +663,7 @@ const Withdraw = () => {
                   <div className="mt-3 text-2xl font-bold text-white">{amountValue.toFixed(2)} $</div>
                 </div>
 
-                <div className="rounded-[22px] border border-white/8 bg-[#1e2330] p-5">
+                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
                   <Button
                     type="submit"
                     disabled={
@@ -675,7 +675,7 @@ const Withdraw = () => {
                       (method === "mpesa" ? !mpesaPhoneNumber.trim() : !address.trim()) ||
                       (method === "crypto" && !selectedCrypto)
                     }
-                    className="w-full px-4 py-5 text-base gradient-primary sm:py-6 sm:text-lg"
+                    className="w-full px-4 py-4 text-base gradient-primary sm:py-5"
                   >
                     {loading
                       ? method === "mpesa"

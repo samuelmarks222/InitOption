@@ -2328,7 +2328,7 @@ const TradingChart = ({
     const nextSpan = direction === "in"
       ? currentSpan * 0.76
       : currentSpan * 1.34;
-    const minSpan = Math.max(22 + rightOffset, Math.round(defaultVisibleBars * 0.36) + rightOffset);
+    const minSpan = Math.max(12 + Math.min(rightOffset, 18), Math.round(defaultVisibleBars * 0.22) + Math.min(rightOffset, 18));
     const maxVisibleBySpacing = Math.max(
       defaultSpan,
       Math.floor(containerWidth / getMinBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale)) + rightOffset,
@@ -2346,11 +2346,22 @@ const TradingChart = ({
       Math.min(Math.round(clampedSpan * 0.52), trendContextBars),
     );
     const maxTo = dataPointCount + maxFutureWhitespace;
+    const currentTo = currentRange?.to ?? dataPointCount + rightOffset;
     const currentCenter = currentRange
       ? (currentRange.from + currentRange.to) / 2
       : Math.max(clampedSpan / 2, dataPointCount + rightOffset - defaultSpan / 2);
-    let nextFrom = currentCenter - clampedSpan / 2;
-    let nextTo = currentCenter + clampedSpan / 2;
+    const liveEdgeThreshold = dataPointCount - Math.max(4, rightOffset * 0.75);
+    const keepRightEdgeAnchored = !currentRange || currentTo >= liveEdgeThreshold;
+    let nextFrom: number;
+    let nextTo: number;
+
+    if (keepRightEdgeAnchored) {
+      nextTo = Math.min(maxTo, Math.max(clampedSpan, currentTo));
+      nextFrom = nextTo - clampedSpan;
+    } else {
+      nextFrom = currentCenter - clampedSpan / 2;
+      nextTo = currentCenter + clampedSpan / 2;
+    }
 
     if (nextFrom < 0) {
       nextTo -= nextFrom;
