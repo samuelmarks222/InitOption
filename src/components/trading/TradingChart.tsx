@@ -3657,7 +3657,7 @@ const TradingChart = ({
                  timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60}
                />
              )}
-             {!mobileHistoryOpen && !overlayUiSuppressed && (
+             {chartType === "line" && !mobileHistoryOpen && !overlayUiSuppressed && (
                <LiveChartBeacon
                  chart={syncChart}
                  series={syncSeries}
