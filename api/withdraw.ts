@@ -293,16 +293,45 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   }
 
   try {
-    const body = (await readJsonRequestBody(request)) as RequestPayload;
-    const amount = asNumber(body.amount ?? 0);
-    const destination = asString(body.destination ?? null);
-    const method = asString(body.method ?? null);
+    const body = (await readJsonRequestBody(request)) as RequestPayload & { action?: string; requestId?: string };
     const accessToken = parseBearerToken(getHeaderValue(request.headers, "authorization"));
 
     if (!accessToken) {
       sendJson(response, 401, { error: "Missing Bearer token." });
       return;
     }
+
+    const userClient = getSupabaseUserClient(accessToken);
+    const authResponse = await userClient.auth.getUser();
+
+    if (authResponse.error || !authResponse.data.user?.id) {
+      sendJson(response, 401, { error: "Invalid authentication token." });
+      return;
+    }
+
+    if (body.action === "cancel") {
+      const requestId = body.requestId;
+      if (!requestId) {
+        sendJson(response, 400, { error: "Cancellation requires a requestId." });
+        return;
+      }
+
+      const adminClient = getSupabaseAdminClient();
+      const rpcResponse = await adminClient.rpc("cancel_withdrawal", {
+        p_request_id: requestId,
+      });
+
+      if (rpcResponse.error) {
+        throw rpcResponse.error;
+      }
+
+      sendJson(response, 200, { result: "cancelled", request_id: requestId });
+      return;
+    }
+
+    const amount = asNumber(body.amount ?? 0);
+    const destination = asString(body.destination ?? null);
+    const method = asString(body.method ?? null);
 
     if (!Number.isFinite(amount) || Number(amount) <= 0) {
       sendJson(response, 400, { error: "amount must be a positive number." });
@@ -321,14 +350,6 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     if (!method) {
       sendJson(response, 400, { error: "Withdrawal method is required." });
-      return;
-    }
-
-    const userClient = getSupabaseUserClient(accessToken);
-    const authResponse = await userClient.auth.getUser();
-
-    if (authResponse.error || !authResponse.data.user?.id) {
-      sendJson(response, 401, { error: "Invalid authentication token." });
       return;
     }
 

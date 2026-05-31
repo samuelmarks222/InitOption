@@ -96,7 +96,8 @@ export const adminUpdateWithdrawalStatus = async ({
 };
 
 export const cancelWithdrawal = async (requestId: string): Promise<WithdrawalRequestPayload> => {
-  return postAuthenticatedJson<WithdrawalRequestPayload>("/api/withdraw/cancel", {
+  return postAuthenticatedJson<WithdrawalRequestPayload>("/api/withdraw", {
+    action: "cancel",
     requestId,
   });
 };
