@@ -32,6 +32,8 @@ const getUnixTime = (value: unknown) => {
 };
 
 const MARKER_VIEW_PADDING = 160;
+const DOT_SIZE = 10;
+const DOT_HALF = DOT_SIZE / 2;
 
 const isUsableCoordinate = (value: number | null | undefined): value is number =>
   typeof value === "number" && Number.isFinite(value) && !Number.isNaN(value);
@@ -56,11 +58,31 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
       const visibleTrades = tradesRef.current;
 
       while (el.children.length < visibleTrades.length) {
+        const group = document.createElement("div");
+        group.className = "absolute pointer-events-none";
+        group.style.overflow = "visible";
+
+        const dot = document.createElement("div");
+        dot.className = "absolute rounded-full border-2";
+        dot.style.width = `${DOT_SIZE}px`;
+        dot.style.height = `${DOT_SIZE}px`;
+        dot.style.left = `${-DOT_HALF}px`;
+        dot.style.top = `${-DOT_HALF}px`;
+        dot.style.boxSizing = "border-box";
+        dot.style.animation = "trade-blink 1.2s ease-in-out infinite";
+        dot.style.background = "transparent";
+        group.appendChild(dot);
+
         const line = document.createElement("div");
         line.className = "absolute";
-        line.style.height = "1px";
-        line.style.transform = "translateY(-50%)";
-        el.appendChild(line);
+        line.style.height = "0";
+        line.style.borderTopStyle = "dotted";
+        line.style.borderTopWidth = "1.5px";
+        line.style.left = `${DOT_HALF}px`;
+        line.style.top = "0";
+        group.appendChild(line);
+
+        el.appendChild(group);
       }
 
       while (el.children.length > visibleTrades.length) {
@@ -74,7 +96,10 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
       }
 
       visibleTrades.forEach((trade, index) => {
-        const line = el.children[index] as HTMLElement;
+        const group = el.children[index] as HTMLElement;
+        const dot = group.children[0] as HTMLElement;
+        const line = group.children[1] as HTMLElement;
+
         const entryTime = getUnixTime(trade.marker_time) ?? getUnixTime(trade.opened_at) ?? Math.floor(Date.now() / 1000);
         let entryX = chart.timeScale().timeToCoordinate(entryTime as never);
         if (!isUsableCoordinate(entryX) && isUsableCoordinate(trade.marker_logical)) {
@@ -83,7 +108,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         const entryY = series.priceToCoordinate(trade.entry_price);
 
         if (!isUsableCoordinate(entryX) || !isUsableCoordinate(entryY)) {
-          line.style.opacity = "0";
+          group.style.opacity = "0";
           return;
         }
 
@@ -93,26 +118,39 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
           entryY < -MARKER_VIEW_PADDING ||
           entryY > el.clientHeight + MARKER_VIEW_PADDING
         ) {
-          line.style.opacity = "0";
+          group.style.opacity = "0";
           return;
         }
 
         const isHigher = trade.direction === "higher";
         const accent = isHigher ? TRADING_UP_COLOR : TRADING_DOWN_COLOR;
 
-        line.style.opacity = "1";
-        line.style.left = `${entryX}px`;
-        line.style.top = `${entryY}px`;
-        line.style.width = `${el.clientWidth - entryX}px`;
-        line.style.height = "0";
-        line.style.borderTop = `1px dotted ${accent}`;
+        group.style.opacity = "1";
+        group.style.left = `${entryX}px`;
+        group.style.top = `${entryY}px`;
+
+        dot.style.borderColor = accent;
+
+        line.style.width = `${Math.max(0, el.clientWidth - entryX - DOT_HALF)}px`;
+        line.style.borderTopColor = accent;
       });
 
       reqId = requestAnimationFrame(loop);
     };
 
+    if (!document.getElementById("trade-blink-style")) {
+      const style = document.createElement("style");
+      style.id = "trade-blink-style";
+      style.textContent = `@keyframes trade-blink{0%,100%{opacity:1}50%{opacity:0.08}}`;
+      document.head.appendChild(style);
+    }
+
     reqId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(reqId);
+    return () => {
+      cancelAnimationFrame(reqId);
+      const s = document.getElementById("trade-blink-style");
+      if (s) s.remove();
+    };
   }, [assetSymbol, chart, series]);
 
   return <div ref={containerRef} className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 92 }} />;
