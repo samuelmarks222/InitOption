@@ -2279,8 +2279,6 @@ const TradingChart = ({
     [activeMobileMenu, dismissMobileMenu],
   );
 
-  const zoomAnimationRef = useRef<number | null>(null);
-
   const adjustChartZoom = useCallback((direction: "in" | "out") => {
     const chart = chartRef.current;
     if (!chart) return;
@@ -2331,53 +2329,31 @@ const TradingChart = ({
       : Math.max(clampedSpan / 2, dataPointCount + rightOffset - defaultSpan / 2);
     const liveEdgeThreshold = dataPointCount - Math.max(4, rightOffset * 0.75);
     const keepRightEdgeAnchored = !currentRange || currentTo >= liveEdgeThreshold;
-    let targetFrom: number;
-    let targetTo: number;
+    let nextFrom: number;
+    let nextTo: number;
 
     if (keepRightEdgeAnchored) {
-      targetTo = Math.min(maxTo, Math.max(clampedSpan, currentTo));
-      targetFrom = targetTo - clampedSpan;
+      nextTo = Math.min(maxTo, Math.max(clampedSpan, currentTo));
+      nextFrom = nextTo - clampedSpan;
     } else {
-      targetFrom = currentCenter - clampedSpan / 2;
-      targetTo = currentCenter + clampedSpan / 2;
+      nextFrom = currentCenter - clampedSpan / 2;
+      nextTo = currentCenter + clampedSpan / 2;
     }
 
-    if (targetFrom < 0) {
-      targetTo -= targetFrom;
-      targetFrom = 0;
+    if (nextFrom < 0) {
+      nextTo -= nextFrom;
+      nextFrom = 0;
     }
 
-    if (targetTo > maxTo) {
-      targetFrom = Math.max(0, targetFrom - (targetTo - maxTo));
-      targetTo = maxTo;
+    if (nextTo > maxTo) {
+      nextFrom = Math.max(0, nextFrom - (nextTo - maxTo));
+      nextTo = maxTo;
     }
 
-    if (zoomAnimationRef.current !== null) {
-      cancelAnimationFrame(zoomAnimationRef.current);
-    }
-
-    const startFrom = currentRange?.from ?? targetFrom;
-    const startTo = currentRange?.to ?? targetTo;
-    const duration = 180;
-    const startTime = performance.now();
-
-    const animate = (now: number) => {
-      const elapsed = now - startTime;
-      const t = Math.min(elapsed / duration, 1);
-      const ease = 1 - Math.pow(1 - t, 3);
-      const from = startFrom + (targetFrom - startFrom) * ease;
-      const to = startTo + (targetTo - startTo) * ease;
-
-      timeScale.setVisibleLogicalRange({ from, to });
-
-      if (t < 1) {
-        zoomAnimationRef.current = requestAnimationFrame(animate);
-      } else {
-        zoomAnimationRef.current = null;
-      }
-    };
-
-    zoomAnimationRef.current = requestAnimationFrame(animate);
+    timeScale.setVisibleLogicalRange({
+      from: nextFrom,
+      to: nextTo,
+    });
   }, [selectedTf]);
 
   const adjustChartZoomRef = useRef(adjustChartZoom);
@@ -2650,9 +2626,6 @@ const TradingChart = ({
     obs.observe(chartContainer);
 
     return () => {
-      if (zoomAnimationRef.current !== null) {
-        cancelAnimationFrame(zoomAnimationRef.current);
-      }
       chartContainer.removeEventListener("wheel", handleChartWheel, true);
       obs.disconnect();
       chart.remove();
