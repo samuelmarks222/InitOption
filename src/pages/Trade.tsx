@@ -579,7 +579,9 @@ const Trade = () => {
       direction: latestSettlement.direction,
       amount: latestSettlement.amount,
       expirySeconds: latestSettlement.expiry_seconds,
-      profit: latestSettlement.profit,
+      profit: latestSettlement.status === "won"
+        ? latestSettlement.amount + latestSettlement.profit
+        : latestSettlement.profit,
       status: latestSettlement.status,
     });
     clearLatestSettlement();
@@ -654,7 +656,9 @@ const Trade = () => {
           direction: latestSettledTrade.direction,
           amount: latestSettledTrade.amount,
           expirySeconds: latestSettledTrade.expiry_seconds,
-          profit: latestSettledTrade.profit ?? 0,
+          profit: latestSettledTrade.status === "won"
+            ? latestSettledTrade.amount + (latestSettledTrade.profit ?? 0)
+            : (latestSettledTrade.profit ?? 0),
           status: latestSettledTrade.status === "won" ? "won" : "lost",
         });
       }
