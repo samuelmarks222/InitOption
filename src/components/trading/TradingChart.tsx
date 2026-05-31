@@ -1912,7 +1912,7 @@ const TradingChart = ({
   const chartGridColor = useMemo(() => getTradingGridColor(tradingPreferences), [tradingPreferences]);
   const chartViewportStyle = useMemo<React.CSSProperties>(() => {
     const mobileTouchSurface: React.CSSProperties = {
-      touchAction: "none",
+      touchAction: "pan-y",
       overscrollBehavior: "contain",
       WebkitUserSelect: "none",
       userSelect: "none",
