@@ -6,6 +6,7 @@ interface Props {
   series: ISeriesApi<any>;
   timeframeSeconds: number;
   livePrice?: number | null;
+  liveTime?: number | null;
   liveLogical?: number | null;
 }
 
@@ -33,13 +34,13 @@ const getUnixTime = (value: unknown) => {
   return null;
 };
 
-export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, liveLogical }: Props) => {
+export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, liveTime, liveLogical }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const liveRef = useRef({ livePrice, liveLogical });
+  const liveRef = useRef({ livePrice, liveTime, liveLogical });
 
   useEffect(() => {
-    liveRef.current = { livePrice, liveLogical };
-  }, [liveLogical, livePrice]);
+    liveRef.current = { livePrice, liveTime, liveLogical };
+  }, [liveLogical, livePrice, liveTime]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -83,8 +84,8 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
       const needsFallback =
         typeof liveSnapshot.livePrice !== "number" ||
         !Number.isFinite(liveSnapshot.livePrice) ||
-        typeof liveSnapshot.liveLogical !== "number" ||
-        !Number.isFinite(liveSnapshot.liveLogical);
+        typeof liveSnapshot.liveTime !== "number" ||
+        !Number.isFinite(liveSnapshot.liveTime);
       const lastPoint = needsFallback ? getLastPoint() : null;
       const lastTime = lastPoint ? getUnixTime(lastPoint.time) : null;
       const lastPrice = lastPoint
@@ -103,14 +104,23 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
           ? liveSnapshot.livePrice
           : lastPrice;
       const x =
-        typeof liveSnapshot.liveLogical === "number" && Number.isFinite(liveSnapshot.liveLogical)
-          ? chart.timeScale().logicalToCoordinate(liveSnapshot.liveLogical as never)
-          : lastTime !== null
+        typeof liveSnapshot.liveTime === "number" && Number.isFinite(liveSnapshot.liveTime)
+          ? chart.timeScale().timeToCoordinate(liveSnapshot.liveTime as Time)
+          : typeof liveSnapshot.liveLogical === "number" && Number.isFinite(liveSnapshot.liveLogical)
+            ? chart.timeScale().logicalToCoordinate(liveSnapshot.liveLogical as never)
+            : lastTime !== null
             ? chart.timeScale().timeToCoordinate(lastTime as Time)
             : null;
       const y = resolvedPrice !== null ? series.priceToCoordinate(resolvedPrice) : null;
 
-      if (x === null || y === null || Number.isNaN(x) || Number.isNaN(y)) {
+      if (
+        x === null ||
+        y === null ||
+        Number.isNaN(x) ||
+        Number.isNaN(y) ||
+        x < -18 ||
+        x > host.clientWidth + 18
+      ) {
         marker.style.opacity = "0";
         reqId = requestAnimationFrame(loop);
         return;
@@ -118,11 +128,10 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
 
       const pulseMix = (Math.sin(performance.now() / 210) + 1) / 2;
       const pulseScale = 0.8 + pulseMix * 1.45;
-      const clampedX = Math.min(Math.max(12, x), Math.max(12, host.clientWidth - 62));
       const clampedY = Math.min(Math.max(12, y), Math.max(12, host.clientHeight - 12));
 
       marker.style.opacity = "1";
-      marker.style.left = `${clampedX}px`;
+      marker.style.left = `${x}px`;
       marker.style.top = `${clampedY}px`;
 
       pulse.style.opacity = `${0.48 * (1 - pulseMix)}`;

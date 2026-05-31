@@ -179,6 +179,7 @@ type PriceAlert = {
 
 type LivePriceBeaconState = {
   price: number;
+  time: number;
   logical: number | null;
 };
 
@@ -2912,7 +2913,7 @@ const TradingChart = ({
     // Freeze trades to the visible live candle anchor shown on the chart.
     setCurrentPrice(seedCandle.close);
     setPriceChange(((seedCandle.close - seedCandle.open) / Math.max(seedCandle.open, 0.000001)) * 100);
-    setLivePriceBeacon({ price: seedCandle.close, logical: history.length });
+    setLivePriceBeacon({ price: seedCandle.close, time: seedCandle.time, logical: history.length });
 
     // Apply timeframe-appropriate bar spacing so candles look correct at each interval
     const containerWidth = mainRef.current?.clientWidth ?? 960;
@@ -2959,7 +2960,7 @@ const TradingChart = ({
         tf.seconds > 0 ? (effectiveMarkerTime - candle.time) / tf.seconds : 0;
       const markerLogical =
         historyRef.current.length + getIntrabarLogicalOffset(intrabarFraction);
-      setLivePriceBeacon({ price: candle.close, logical: markerLogical });
+      setLivePriceBeacon({ price: candle.close, time: candle.time, logical: markerLogical });
       onPriceUpdateRef.current?.(
         candle.close,
         effectiveMarkerTime,
@@ -3663,6 +3664,7 @@ const TradingChart = ({
                  series={syncSeries}
                  timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60}
                  livePrice={livePriceBeacon?.price ?? currentPrice}
+                 liveTime={livePriceBeacon?.time ?? liveRef.current?.time ?? null}
                  liveLogical={livePriceBeacon?.logical ?? null}
                />
              )}
