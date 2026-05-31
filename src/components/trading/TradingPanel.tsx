@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ChevronDown, Plus, Minus, ArrowUp, ArrowDown,
   Clock, Briefcase,
-  X, Check, TrendingUp, TrendingDown, Loader2
+  X, Check, TrendingUp, TrendingDown
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ActiveTrade, OpenTradeHandler, TradeDirection, TradeHistoryEntry, useTrading } from "@/hooks/useTrading";
@@ -595,7 +595,6 @@ const TradingPanel = ({
 
   // Tabs
   const [activeTab, setActiveTab] = useState<ActiveTab>("trades");
-  const [isLoading, setIsLoading] = useState<"up" | "down" | null>(null);
   const [expandedHistoryTradeId, setExpandedHistoryTradeId] = useState<string | null>(null);
   const [selectedHistoryTrade, setSelectedHistoryTrade] = useState<TradeHistoryEntry | null>(null);
   const [queuedPendingTrades, setQueuedPendingTrades] = useState<QueuedPendingTrade[]>([]);
@@ -721,7 +720,6 @@ const TradingPanel = ({
       queuedPendingTimeoutRef.current = null;
       queuedPendingTradeIdRef.current = null;
       setQueuedPendingTrades([]);
-      setIsLoading(null);
       toast({
         title: "Pending trade canceled",
         description: "Pending execution was canceled.",
@@ -730,7 +728,6 @@ const TradingPanel = ({
   };
 
   const placeTrade = async (direction: "higher" | "lower") => {
-    if (isLoading) return;
     if (effectiveInvestment <= 0) return;
 
     if (!tradingPreferences.oneClickTrade) {
@@ -763,7 +760,6 @@ const TradingPanel = ({
           opened_at: createdAt,
         },
       ]);
-      setIsLoading(direction === "higher" ? "up" : "down");
       focusPendingTab();
       toast({
         title: "Pending trade armed",
@@ -781,21 +777,15 @@ const TradingPanel = ({
             queuedPendingTimeoutRef.current = null;
             queuedPendingTradeIdRef.current = null;
             setQueuedPendingTrades([]);
-            setIsLoading(null);
           }
         })();
       }, PENDING_TRADE_DELAY_MS);
       return;
     }
 
-    setIsLoading(direction === "higher" ? "up" : "down");
-    try {
-      const didOpenTrade = await executeTradeNow(direction);
-      if (didOpenTrade) {
-        focusTradesTab();
-      }
-    } finally {
-      setIsLoading(null);
+    const didOpenTrade = await executeTradeNow(direction);
+    if (didOpenTrade) {
+      focusTradesTab();
     }
   };
 
@@ -1102,7 +1092,6 @@ const TradingPanel = ({
             ref={higherButtonRef}
             type="button"
             onClick={() => placeTrade("higher")}
-            disabled={!!isLoading}
             className={`flex h-[36px] items-center justify-between rounded-[4px] px-3 text-[14px] font-bold text-white transition-all active:scale-[0.98] focus:outline-none lg:h-[48px] lg:rounded-[6px] lg:px-4 lg:text-[15px] ${
               higherButtonFocused ? "scale-[1.01]" : ""
             }`}
@@ -1113,7 +1102,7 @@ const TradingPanel = ({
             }}>
             <span>Up</span>
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
-              {isLoading === "up" ? <Loader2 className="w-3.5 h-3.5 animate-spin lg:h-4 lg:w-4" /> : <ArrowUp className="w-3.5 h-3.5 lg:h-4 lg:w-4" strokeWidth={2.8} />}
+              <ArrowUp className="w-3.5 h-3.5 lg:h-4 lg:w-4" strokeWidth={2.8} />
             </span>
           </button>
 
@@ -1121,7 +1110,6 @@ const TradingPanel = ({
             ref={lowerButtonRef}
             type="button"
             onClick={() => placeTrade("lower")}
-            disabled={!!isLoading}
             className={`flex h-[36px] items-center justify-between rounded-[4px] px-3 text-[14px] font-bold text-white transition-all active:scale-[0.98] focus:outline-none lg:h-[48px] lg:rounded-[6px] lg:px-4 lg:text-[15px] ${
               lowerButtonFocused ? "scale-[1.01]" : ""
             }`}
@@ -1132,7 +1120,7 @@ const TradingPanel = ({
             }}>
             <span>Down</span>
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
-              {isLoading === "down" ? <Loader2 className="w-3.5 h-3.5 animate-spin lg:h-4 lg:w-4" /> : <ArrowDown className="w-3.5 h-3.5 lg:h-4 lg:w-4" strokeWidth={2.8} />}
+              <ArrowDown className="w-3.5 h-3.5 lg:h-4 lg:w-4" strokeWidth={2.8} />
             </span>
           </button>
         </div>
