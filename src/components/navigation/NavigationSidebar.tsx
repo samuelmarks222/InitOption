@@ -1,5 +1,5 @@
-import { Headset, User, Trophy, Grid, Handshake, HelpCircle, BarChart, Settings } from "lucide-react";
-import { TradeDeskShortcut } from "@/components/navigation/TradeDeskShortcut";
+import { useEffect, useState } from "react";
+import { Headset, User, Trophy, Grid, HelpCircle, LineChart, DollarSign } from "lucide-react";
 
 export type WorkspaceModule = "support" | "account" | "tournaments" | "leaderboard" | "more" | "settings" | "join" | "help" | null;
 
@@ -8,78 +8,133 @@ interface NavigationSidebarProps {
   onSelectWorkspace: (module: WorkspaceModule) => void;
 }
 
+type AccountTabTarget = "personal" | "deposit";
+type PrimaryNavKey = "trading" | "finance" | "profile";
+
+const ACCOUNT_TAB_STORAGE_KEY = "initoption:account-tab";
+const ACCOUNT_TAB_CHANGE_EVENT = "initoption:account-tab-change";
+
+const getStoredAccountPrimaryKey = (): Exclude<PrimaryNavKey, "trading"> => {
+  if (typeof window === "undefined") return "profile";
+  return window.sessionStorage.getItem(ACCOUNT_TAB_STORAGE_KEY) === "deposit" ? "finance" : "profile";
+};
+
 export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: NavigationSidebarProps) => {
-  const MENU_ITEMS = [
-    { id: "support",      label: "CHAT",        icon: Headset },
-    { id: "account",      label: "ACCOUNT",     icon: User },
-    { id: "tournaments",  label: "TOURNAMENTS", icon: Trophy },
-    { id: "leaderboard",  label: "LEADERS",     icon: BarChart },
-    { id: "more",         label: "... MORE",    icon: Grid },
+  const [accountPrimaryKey, setAccountPrimaryKey] = useState<Exclude<PrimaryNavKey, "trading">>(getStoredAccountPrimaryKey);
+
+  const PRIMARY_ITEMS = [
+    { key: "trading", label: "Trading", icon: LineChart, workspace: null },
+    { key: "finance", label: "Finance", icon: DollarSign, workspace: "account", accountTab: "deposit" },
+    { key: "profile", label: "Profile", icon: User, workspace: "account", accountTab: "personal" },
   ] as const;
 
-  const BOTTOM_ITEMS = [
-    { id: "settings", label: "SETTINGS", icon: Settings },
-    { id: "join", label: "JOIN US", icon: Handshake },
-    { id: "help", label: "HELP", icon: HelpCircle },
+  const SECONDARY_ITEMS = [
+    { id: "support", label: "Chat", icon: Headset },
+    { id: "leaderboard", label: "Leaders", icon: Trophy },
+    { id: "more", label: "More", icon: Grid },
+    { id: "help", label: "Help", icon: HelpCircle },
   ] as const;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleAccountTabChange = (event: Event) => {
+      const tab = (event as CustomEvent<AccountTabTarget>).detail;
+      setAccountPrimaryKey(tab === "deposit" ? "finance" : "profile");
+    };
+
+    window.addEventListener(ACCOUNT_TAB_CHANGE_EVENT, handleAccountTabChange);
+    return () => window.removeEventListener(ACCOUNT_TAB_CHANGE_EVENT, handleAccountTabChange);
+  }, []);
+
+  const selectPrimaryItem = (item: (typeof PRIMARY_ITEMS)[number]) => {
+    if (item.accountTab && typeof window !== "undefined") {
+      const accountTab = item.accountTab as AccountTabTarget;
+      setAccountPrimaryKey(accountTab === "deposit" ? "finance" : "profile");
+      window.sessionStorage.setItem(ACCOUNT_TAB_STORAGE_KEY, accountTab);
+      window.dispatchEvent(new CustomEvent(ACCOUNT_TAB_CHANGE_EVENT, { detail: accountTab }));
+    }
+
+    onSelectWorkspace(item.workspace);
+  };
+
+  const getPrimaryActiveKey = (): PrimaryNavKey | null => {
+    if (activeWorkspace === null) return "trading";
+    if (activeWorkspace === "account") return accountPrimaryKey;
+
+    return null;
+  };
+
+  const primaryActiveKey = getPrimaryActiveKey();
 
   return (
     <div
-      className="relative w-[85px] h-full flex flex-col items-center border-r border-[#ffffff10] z-40 shrink-0 pb-4 overflow-hidden"
-      style={{ background: "var(--trading-sidebar-bg)", borderRightColor: "var(--trading-border-color)" }}
+      className="relative z-40 flex h-full w-[74px] shrink-0 flex-col items-center overflow-hidden border-r"
+      style={{ background: "#202638", borderRightColor: "#101522" }}
     >
-      <div className="absolute inset-0" style={{ background: "var(--trading-sidebar-bg)" }} />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/25" />
       <div className="relative z-10 flex h-full w-full flex-col items-center">
-      
-      {/* Quick Trade Widget */}
-      <TradeDeskShortcut onClick={() => onSelectWorkspace(null)} />
+        <nav className="w-full pt-1" aria-label="Primary workspace navigation">
+          {PRIMARY_ITEMS.map((item) => {
+            const isActive = primaryActiveKey === item.key;
+            const Icon = item.icon;
 
-      {/* Middle Navigation Menu */}
-      <div className="flex-1 w-full flex flex-col items-center space-y-2 overflow-y-auto no-scrollbar mt-3">
-        {MENU_ITEMS.map((item) => {
-          const isActive = activeWorkspace === item.id;
-          return (
-            <button
-              key={item.id}
-              id={`tour-${item.id}`}
-              onClick={() => onSelectWorkspace(isActive ? null : item.id)}
-              className={`w-full flex flex-col items-center justify-center py-3 group relative transition-all ${
-                isActive ? "text-[#00C076]" : "text-gray-400 hover:text-white"
-              }`}
-            >
-              {isActive && (
-                <div className="absolute left-0 top-1/2 h-[60%] w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--trading-success-color)] shadow-[0_0_8px_var(--trading-success-color)]" />
-              )}
-              <item.icon className={`w-[26px] h-[26px] mb-1.5 text-white/90 transition-transform duration-200 ${isActive ? "scale-110 text-white" : "group-hover:scale-110 group-hover:text-white"}`} strokeWidth={2.6} />
-              <span className="text-[9px] font-extrabold tracking-wider relative top-[1px] text-white/90">{item.label}</span>
-            </button>
-          )
-        })}
-      </div>
+            return (
+              <button
+                key={item.key}
+                id={item.key === "trading" ? "tour-trading" : item.key === "finance" ? "tour-account" : undefined}
+                type="button"
+                onClick={() => selectPrimaryItem(item)}
+                aria-pressed={isActive}
+                className={`group relative flex h-[74px] w-full flex-col items-center justify-center gap-1.5 transition-colors ${
+                  isActive
+                    ? "bg-[#2a3144] text-white"
+                    : "text-[#8fa6d6] hover:bg-white/[0.045] hover:text-white"
+                }`}
+              >
+                {isActive && (
+                  <>
+                    <span className="absolute left-0 top-0 h-full w-[3px] rounded-r-full bg-[#f5f8ff]" />
+                    <span className="absolute inset-x-0 top-0 h-px bg-[#6f86ba]" />
+                  </>
+                )}
+                <Icon
+                  className={`h-[25px] w-[25px] transition-transform duration-200 ${isActive ? "text-white" : "text-current group-hover:-translate-y-0.5"}`}
+                  strokeWidth={item.key === "finance" ? 2.7 : 2.45}
+                />
+                <span className={`text-[13px] leading-none ${isActive ? "font-bold" : "font-semibold"}`}>
+                  {item.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
 
-      {/* Bottom User Engagement Widgets */}
-      <div className="w-full flex items-center justify-center">
-        <div className="w-[50px] h-[1px] mb-4" style={{ background: "var(--trading-border-color)" }} />
-      </div>
-      
-      <div className="w-full flex flex-col items-center space-y-3 pb-2">
-        {BOTTOM_ITEMS.map((item) => {
-          const isActive = activeWorkspace === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onSelectWorkspace(isActive ? null : item.id)}
-              className={`w-full flex flex-col items-center justify-center py-2 group relative transition-all ${
-                isActive ? "text-[#00C076]" : "text-gray-400 hover:text-white"
-              }`}
-            >
-              <item.icon className="w-[24px] h-[24px] mb-1 text-white/85 transition-transform group-hover:scale-110 group-hover:text-white" strokeWidth={2.4} />
-              <span className="text-[8px] font-extrabold tracking-wider text-white/85">{item.label}</span>
-            </button>
-          )
-        })}
-      </div>
-
+        <div className="mt-2 h-px w-[52px] bg-[#111827]" />
+        <nav className="mt-2 flex w-full flex-1 flex-col items-center overflow-y-auto pb-3 no-scrollbar" aria-label="Secondary workspace navigation">
+          {SECONDARY_ITEMS.map((item) => {
+            const isActive = activeWorkspace === item.id;
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onSelectWorkspace(isActive ? null : item.id)}
+                aria-label={item.label}
+                aria-pressed={isActive}
+                className={`group relative flex h-[58px] w-full flex-col items-center justify-center gap-1 transition-colors ${
+                  isActive
+                    ? "bg-white/[0.06] text-white"
+                    : "text-[#7f91bd] hover:bg-white/[0.04] hover:text-white"
+                }`}
+              >
+                {isActive && <span className="absolute left-0 top-1/2 h-8 w-[2px] -translate-y-1/2 rounded-r-full bg-[#6f86ba]" />}
+                <Icon className="h-[20px] w-[20px] transition-transform duration-200 group-hover:-translate-y-0.5" strokeWidth={2.35} />
+                <span className="text-[10px] font-semibold leading-none">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
       </div>
     </div>
   );

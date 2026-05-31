@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Camera, User, BadgeDollarSign, Clock, History, Settings, LogOut, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProfileUploadPhoto } from "../profile/ProfileUploadPhoto";
@@ -10,6 +10,7 @@ import { ProfileSettings } from "../profile/ProfileSettings";
 
 type AccountTab = "upload" | "personal" | "deposit" | "balance_history" | "trading_history" | "settings";
 const ACCOUNT_TAB_STORAGE_KEY = "initoption:account-tab";
+const ACCOUNT_TAB_CHANGE_EVENT = "initoption:account-tab-change";
 
 const isAccountTab = (value: string | null): value is AccountTab =>
   value === "upload" ||
@@ -32,9 +33,24 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
     return isAccountTab(storedTab) ? storedTab : initialTab;
   });
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleAccountTabChange = (event: Event) => {
+      const nextTab = (event as CustomEvent<string>).detail;
+      if (isAccountTab(nextTab)) {
+        setActiveTab(nextTab);
+      }
+    };
+
+    window.addEventListener(ACCOUNT_TAB_CHANGE_EVENT, handleAccountTabChange);
+    return () => window.removeEventListener(ACCOUNT_TAB_CHANGE_EVENT, handleAccountTabChange);
+  }, []);
+
   const changeTab = (tab: AccountTab) => {
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(ACCOUNT_TAB_STORAGE_KEY, tab);
+      window.dispatchEvent(new CustomEvent(ACCOUNT_TAB_CHANGE_EVENT, { detail: tab }));
     }
     setActiveTab(tab);
   };
