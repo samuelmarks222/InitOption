@@ -1172,7 +1172,7 @@ const TradingPanel = ({
           <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-2.5 py-3">
             {activeTab === "pending" ? (
               queuedPendingTrades.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 border border-white/6 bg-[#2b3040] p-6 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2b3040] p-6 text-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
                     <Clock className="h-7 w-7 text-gray-600" />
                   </div>
@@ -1181,9 +1181,9 @@ const TradingPanel = ({
                   </p>
                 </div>
               ) : (
-                <div className="overflow-hidden border border-white/6 bg-[#2b3040] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                <div className="overflow-hidden bg-[#2b3040] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
                   {pendingTradeGroups.map((group, groupIndex) => (
-                    <section key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/6" : ""}>
+                    <section key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/2" : ""}>
                       <TradeGroupHeader label={group.label} count={group.items.length} />
                       <div>
                         {group.items.map((trade) => (
@@ -1202,14 +1202,14 @@ const TradingPanel = ({
               )
             ) : (
               tradesTabCount === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 border border-white/6 bg-[#2b3040] p-6 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2b3040] p-6 text-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
                     <Briefcase className="h-7 w-7 text-gray-600" />
                   </div>
                   <p className="text-[11px] leading-relaxed text-gray-500">No trades yet. Ongoing and completed trades will appear here.</p>
                 </div>
               ) : (
-                <div className="overflow-hidden border border-white/6 bg-[#2b3040] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                <div className="overflow-hidden bg-[#2b3040] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
                   {sortedActiveTrades.length > 0 ? (
                     <section>
                       <TradeGroupHeader label="OPEN TRADES" count={sortedActiveTrades.length} />
@@ -1232,9 +1232,9 @@ const TradingPanel = ({
                   ) : null}
 
                   {sortedTradeHistory.length > 0 ? (
-                    <section className={sortedActiveTrades.length > 0 ? "border-t border-white/6" : ""}>
+                    <section className={sortedActiveTrades.length > 0 ? "border-t border-white/2" : ""}>
                       {historyGroups.map((group, groupIndex) => (
-                        <div key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/6" : ""}>
+                        <div key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/2" : ""}>
                           <TradeGroupHeader label={group.label} count={group.items.length} />
                           <div>
                             {group.items.map((trade) => (
