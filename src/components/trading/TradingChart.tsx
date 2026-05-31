@@ -3573,9 +3573,9 @@ const TradingChart = ({
       )}
 
       <div
-        className="relative flex-1 min-h-0"
+        className="relative flex-1 min-h-0 overflow-hidden"
         ref={mainRef}
-        style={{ ...chartViewportStyle, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.35))" }}
+        style={chartViewportStyle}
         onMouseMove={handleChartMouseMove}
         onMouseLeave={handleChartMouseLeave}
         onClick={handleChartClick}
