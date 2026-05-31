@@ -1,8 +1,166 @@
-Re-optimizing dependencies because lockfile has changed
 
-  [32m[1mVITE[22m v5.4.19[39m  [2mready in [0m[1m1753[22m[2m[0m ms[22m
+  [32m[1mVITE[22m v5.4.19[39m  [2mready in [0m[1m330[22m[2m[0m ms[22m
 
   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
-  [32m➜[39m  [1mNetwork[22m: [36mhttp://10.16.1.115:[1m5173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://10.16.0.181:[1m5173[22m/[39m
   [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.137.1:[1m5173[22m/[39m
-[2m12:40:51 AM[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mindex.html[22m
+[2m16:22:29[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:22:35[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:22:42[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:22:48[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:22:55[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:23:03[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:23:08[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:23:16[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:29:05[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.dev-server/chrome-cdp/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.106.1_0/offscreendocument.html[22m
+[2m16:29:06[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.dev-server/chrome-cdp/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/html/craw_window.html[22m
+[2m16:31:02[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:31:10[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:31:14[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:31:18[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:31:30[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:31:35[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:31:39[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:34:33[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.dev-server/chrome-cdp-shot/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.106.1_0/offscreendocument.html[22m
+[2m16:34:33[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.dev-server/chrome-cdp-shot/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/html/craw_window.html[22m
+[2m16:35:29[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Deposit.tsx, /src/index.css[22m
+[2m16:35:39[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Withdraw.tsx, /src/index.css[22m
+[2m16:39:17[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:39:25[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:39:34[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:39:39[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:39:43[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:39:47[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:39:52[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:39:56[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:44:37[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.dev-server/chrome-cdp-shot2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/html/craw_window.html[22m
+[2m16:44:37[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.dev-server/chrome-cdp-shot2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.106.1_0/offscreendocument.html[22m
+[2m16:44:38[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:44:54[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:48:38[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.dev-server/chrome-cdp-diag2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.106.1_0/offscreendocument.html[22m
+[2m16:48:38[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.dev-server/chrome-cdp-diag2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/html/craw_window.html[22m
+[2m16:50:27[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.dev-server/chrome-cdp-deposit-shot/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.106.1_0/offscreendocument.html[22m
+[2m16:50:28[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.dev-server/chrome-cdp-deposit-shot/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/html/craw_window.html[22m
+[2m16:53:10[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:53:14[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:53:19[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:53:24[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:53:28[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:53:36[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m16:53:41[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:00:42[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:06:43[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingHeader.tsx[22m
+[2m17:10:59[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.dev-server/chrome-cdp-mobile2/Default/Extensions/ghbmnnjooekpmoecnnnilnnbdlolhkhi/1.106.1_0/offscreendocument.html[22m
+[2m17:10:59[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.dev-server/chrome-cdp-mobile2/Default/Extensions/nmmhkkegccagdldgiimedpiccmgmieda/1.0.0.6_0/html/craw_window.html[22m
+[2m17:11:28[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+[2m17:13:42[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m17:13:47[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Deposit.tsx, /src/index.css[22m
+[2m17:13:57[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Withdraw.tsx, /src/index.css[22m
+[2m17:14:06[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m17:14:12[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m17:14:22[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m17:14:44[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m17:19:33[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m17:19:45[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m17:22:54[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:23:00[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:24:24[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m17:24:33[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m17:32:08[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m17:40:49[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m17:40:59[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m17:44:23[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/navigation/NavigationSidebar.tsx[22m
+[2m17:46:54[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingHeader.tsx[22m
+[2m17:47:00[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingHeader.tsx[22m
+[2m17:48:42[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/navigation/NavigationSidebar.tsx[22m
+[2m17:48:53[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:48:55[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/workspace/AccountGridOverlay.tsx[22m
+[2m17:48:58[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:49:03[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:49:05[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/workspace/WorkspaceAccount.tsx[22m
+[2m17:49:08[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:49:52[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msidebar-qa.html[22m
+[2m17:51:34[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msidebar-qa.html[22m
+[2m17:52:36[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:52:42[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:52:47[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:52:52[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:52:57[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:55:57[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:56:12[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:56:37[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:56:40[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:56:44[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m17:56:51[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m18:02:29[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/navigation/NavigationSidebar.tsx, /src/index.css[22m
+[2m18:03:24[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/navigation/NavigationSidebar.tsx, /src/index.css[22m
+[2m18:03:58[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msidebar-qa.html[22m
+[2m18:04:53[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msidebar-qa.html[22m
+[2m18:07:56[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/navigation/NavigationSidebar.tsx, /src/index.css[22m
+[2m18:12:12[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m18:15:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/components/navigation/NavigationSidebar.tsx, /src/index.css[22m
+[2m18:18:20[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m18:21:47[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m18:22:28[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m18:22:32[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m22:36:23[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m22:38:42[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/lib/tradingPreferences.ts[22m
+[2m22:38:46[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m22:38:50[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingPanel.tsx[22m
+[2m22:44:42[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m22:48:22[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m22:48:50[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m22:52:42[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m22:52:50[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m22:53:57[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m22:54:02[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m22:54:07[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m22:59:21[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradeMarkersOverlay.tsx[22m
+[2m23:18:45[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/LiveChartBeacon.tsx[22m
+[2m23:19:01[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m23:23:46[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/LiveChartBeacon.tsx[22m
+[2m23:30:22[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m23:49:06[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/LiveChartBeacon.tsx[22m
+[2m23:49:15[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m00:21:22[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m00:21:31[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m00:21:41[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m01:04:30[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/engine/priceEngine.ts[22m
+[2m01:04:34[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/engine/priceEngine.ts[22m
+[2m01:04:38[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m01:04:42[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m01:04:45[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m01:04:57[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m01:05:01[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m01:33:25[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/contexts/DynamicAssetContext.tsx[22m
+[2m01:33:33[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m01:33:38[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m01:33:42[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m01:33:47[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m01:36:15[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/contexts/DynamicAssetContext.tsx[22m
+[2m01:36:15[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingChart.tsx[22m
+[2m01:45:11[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingHeader.tsx[22m
+[2m01:45:15[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingHeader.tsx[22m
+[2m01:45:20[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingHeader.tsx[22m
+[2m01:45:29[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/trading/TradingHeader.tsx[22m
+[2m01:52:50[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/Withdraw.tsx[22m
+[2m01:52:56[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/hooks/useStatistics.ts[22m
+[2m01:53:01[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/hooks/useStatistics.ts[22m
+[2m01:53:19[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/hooks/useStatistics.ts[22m
+[2m01:53:25[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/hooks/useStatistics.ts[22m
+[2m01:53:29[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/profile/ProfileBalanceHistory.tsx[22m
+[2m01:53:33[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/profile/ProfileBalanceHistory.tsx[22m
+[2m01:53:37[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/profile/ProfileBalanceHistory.tsx[22m
+[2m01:53:40[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/profile/ProfileBalanceHistory.tsx[22m
+[2m01:53:44[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/profile/ProfileBalanceHistory.tsx[22m
+[2m01:53:48[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/profile/ProfileBalanceHistory.tsx[22m
+[2m01:53:52[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/profile/ProfileBalanceHistory.tsx[22m
+[2m01:54:02[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/profile/ProfileBalanceHistory.tsx[22m
+[2m01:54:06[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/profile/ProfileBalanceHistory.tsx[22m
+[2m01:54:14[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/profile/ProfileBalanceHistory.tsx[22m
+[2m02:08:48[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.vercel/output/static/google33980bba6be7b9eb.html[22m
+[2m02:08:48[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2m.vercel/output/static/index.html[22m
+[2m02:10:54[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/integrations/supabase/types.ts[22m
+[2m02:20:00[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css, /src/pages/Withdraw.tsx[22m
+[2m02:26:02[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/workspace/WorkspaceReferral.tsx[22m
+[2m02:26:07[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/workspace/DynamicWorkspace.tsx[22m
