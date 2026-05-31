@@ -1140,7 +1140,7 @@ const TradingPanel = ({
           >
             <button
               onClick={() => setActiveTab("trades")}
-              className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "trades" ? "bg-[#2b3040] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
+              className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "trades" ? "bg-[#33394a] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
             >
               {activeTab === "trades" && <div className="absolute left-0 right-0 top-0 h-[2px] rounded-full bg-[#3391ff]" />}
               <span>Trades</span>
@@ -1152,7 +1152,7 @@ const TradingPanel = ({
             <button
               onClick={() => setActiveTab("pending")}
               aria-label="Pending trades"
-              className={`relative flex h-[44px] w-[78px] shrink-0 items-center justify-center gap-2 rounded-t-[10px] px-3 text-[12px] font-black transition-colors ${activeTab === "pending" ? "bg-[#2b3040] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
+              className={`relative flex h-[44px] w-[78px] shrink-0 items-center justify-center gap-2 rounded-t-[10px] px-3 text-[12px] font-black transition-colors ${activeTab === "pending" ? "bg-[#33394a] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
             >
               {activeTab === "pending" && <div className="absolute left-0 right-0 top-0 h-[2px] rounded-full bg-[#3391ff]" />}
               <Clock className="h-4 w-4" />
@@ -1172,7 +1172,7 @@ const TradingPanel = ({
           <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-2.5 py-3">
             {activeTab === "pending" ? (
               queuedPendingTrades.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2b3040] p-6 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#33394a] p-6 text-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
                     <Clock className="h-7 w-7 text-gray-600" />
                   </div>
@@ -1181,7 +1181,7 @@ const TradingPanel = ({
                   </p>
                 </div>
               ) : (
-                <div className="overflow-hidden bg-[#2b3040] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                <div className="overflow-hidden bg-[#34394a] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
                   {pendingTradeGroups.map((group, groupIndex) => (
                     <section key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/2" : ""}>
                       <TradeGroupHeader label={group.label} count={group.items.length} />
@@ -1202,14 +1202,14 @@ const TradingPanel = ({
               )
             ) : (
               tradesTabCount === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2b3040] p-6 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#33394a] p-6 text-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
                     <Briefcase className="h-7 w-7 text-gray-600" />
                   </div>
                   <p className="text-[11px] leading-relaxed text-gray-500">No trades yet. Ongoing and completed trades will appear here.</p>
                 </div>
               ) : (
-                <div className="overflow-hidden bg-[#2b3040] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                <div className="overflow-hidden bg-[#34394a] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
                   {sortedActiveTrades.length > 0 ? (
                     <section>
                       <TradeGroupHeader label="OPEN TRADES" count={sortedActiveTrades.length} />
