@@ -999,7 +999,7 @@ const TradingPanel = ({
                     </button>
                   </div>
 
-                  <span className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 bg-[#1e2330] px-1 text-[7px] font-bold uppercase leading-none tracking-[0.07em] text-[#0fa053]">
+                  <span className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 bg-[#1e2330] px-1.5 text-[10px] font-bold uppercase leading-none tracking-[0.07em] text-[#0fa053]" style={{ fontFamily: "Arial, sans-serif" }}>
                     SWITCH TIME
                   </span>
                 </div>
