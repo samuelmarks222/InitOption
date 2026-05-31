@@ -24,6 +24,10 @@ type PrimaryNavKey = "trading" | "finance" | "profile";
 
 const ACCOUNT_TAB_STORAGE_KEY = "initoption:account-tab";
 const ACCOUNT_TAB_CHANGE_EVENT = "initoption:account-tab-change";
+const navItemClassName =
+  "group relative flex h-[62px] w-full flex-col items-center justify-center gap-1.5 rounded-[2px] transition-colors";
+const navIconClassName = "h-[25px] w-[25px] transition-transform duration-200 group-hover:-translate-y-0.5";
+const navLabelClassName = "text-center text-[12px] font-semibold leading-tight";
 
 const getStoredAccountPrimaryKey = (): Exclude<PrimaryNavKey, "trading"> => {
   if (typeof window === "undefined") return "profile";
@@ -91,7 +95,7 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/25" />
       <div className="relative z-10 flex h-full w-full flex-col items-center">
-        <nav className="w-full space-y-1.5 px-1.5 pt-2" aria-label="Primary workspace navigation">
+        <nav className="w-full space-y-1 px-1.5 pt-2" aria-label="Primary workspace navigation">
           {PRIMARY_ITEMS.map((item) => {
             const isActive = primaryActiveKey === item.key;
             const Icon = item.icon;
@@ -103,7 +107,7 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
                 type="button"
                 onClick={() => selectPrimaryItem(item)}
                 aria-pressed={isActive}
-                className={`group relative flex h-[84px] w-full flex-col items-center justify-center gap-2 rounded-[2px] transition-colors ${
+                className={`${navItemClassName} ${
                   isActive
                     ? "bg-[#2a3144] text-white"
                     : "text-[#8fa6d6] hover:bg-white/[0.045] hover:text-white"
@@ -116,10 +120,10 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
                   </>
                 )}
                 <Icon
-                  className={`h-[32px] w-[32px] transition-transform duration-200 ${isActive ? "text-white" : "text-current group-hover:-translate-y-0.5"}`}
-                  strokeWidth={item.key === "finance" ? 2.65 : 2.35}
+                  className={`${navIconClassName} ${isActive ? "text-white" : "text-current"}`}
+                  strokeWidth={item.key === "finance" ? 2.55 : 2.35}
                 />
-                <span className={`text-[14px] leading-none ${isActive ? "font-bold" : "font-semibold"}`}>
+                <span className={`${navLabelClassName} ${isActive ? "font-bold text-white" : ""}`}>
                   {item.label}
                 </span>
               </button>
@@ -127,8 +131,8 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
           })}
         </nav>
 
-        <div className="my-2.5 h-px w-[68px] shrink-0 bg-[#111827]" />
-        <nav className="flex w-full flex-1 flex-col items-center gap-1.5 overflow-y-auto px-1.5 pb-4 no-scrollbar" aria-label="Secondary workspace navigation">
+        <div className="my-2 h-px w-[68px] shrink-0 bg-[#111827]" />
+        <nav className="flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto px-1.5 pb-3 no-scrollbar" aria-label="Secondary workspace navigation">
           {SECONDARY_ITEMS.map((item) => {
             const isActive = activeWorkspace === item.id;
             const Icon = item.icon;
@@ -139,21 +143,21 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
                 onClick={() => onSelectWorkspace(isActive ? null : item.id)}
                 aria-label={item.label}
                 aria-pressed={isActive}
-                className={`group relative flex min-h-[56px] w-full flex-col items-center justify-center gap-1.5 rounded-[2px] transition-colors ${
+                className={`${navItemClassName} ${
                   isActive
                     ? "bg-white/[0.06] text-white"
                     : "text-[#7f91bd] hover:bg-white/[0.04] hover:text-white"
                 }`}
               >
                 {isActive && <span className="absolute left-0 top-1/2 h-9 w-[2px] -translate-y-1/2 rounded-r-full bg-[#6f86ba]" />}
-                <Icon className="h-[23px] w-[23px] transition-transform duration-200 group-hover:-translate-y-0.5" strokeWidth={2.3} />
-                <span className="text-center text-[11px] font-semibold leading-tight">{item.label}</span>
+                <Icon className={navIconClassName} strokeWidth={2.35} />
+                <span className={navLabelClassName}>{item.label}</span>
               </button>
             );
           })}
         </nav>
 
-        <div className="w-full shrink-0 border-t border-[#111827] px-1.5 pb-3 pt-2">
+        <div className="w-full shrink-0 border-t border-[#111827] px-1.5 pb-2 pt-2">
           <nav className="flex w-full flex-col items-center gap-1" aria-label="Utility workspace navigation">
             {UTILITY_ITEMS.map((item) => {
               const isActive = activeWorkspace === item.id;
@@ -165,15 +169,15 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
                   onClick={() => onSelectWorkspace(isActive ? null : item.id)}
                   aria-label={item.label}
                   aria-pressed={isActive}
-                  className={`group relative flex min-h-[54px] w-full flex-col items-center justify-center gap-1.5 rounded-[2px] transition-colors ${
+                  className={`${navItemClassName} ${
                     isActive
                       ? "bg-[#2a3144] text-white"
                       : "text-[#93a7d3] hover:bg-white/[0.045] hover:text-white"
                   }`}
                 >
                   {isActive && <span className="absolute left-0 top-1/2 h-9 w-[2px] -translate-y-1/2 rounded-r-full bg-[#f5f8ff]" />}
-                  <Icon className="h-[24px] w-[24px] transition-transform duration-200 group-hover:-translate-y-0.5" strokeWidth={2.35} />
-                  <span className="text-center text-[11px] font-semibold leading-tight">{item.label}</span>
+                  <Icon className={navIconClassName} strokeWidth={2.35} />
+                  <span className={navLabelClassName}>{item.label}</span>
                 </button>
               );
             })}
