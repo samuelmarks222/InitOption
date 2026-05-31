@@ -140,13 +140,13 @@ const TradingHeader = ({
     "Live account";
   const accountNameTextClass =
     accountType === "demo"
-      ? "text-[#0fa053]"
+      ? "text-[#8f9bb3] font-bold"
       : accountType === "tournament"
         ? "text-[#4e89ff]"
         : "text-[#00C076]";
   const balanceTextClass =
     accountType === "demo"
-      ? "text-[#0fa053]"
+      ? "text-white"
       : accountType === "tournament"
         ? "text-[#00C076]"
         : "text-white";
@@ -157,7 +157,7 @@ const TradingHeader = ({
     "LIVE";
   const mobileAccountAmountClass =
     accountType === "demo"
-      ? "text-[#f7bb46]"
+      ? "text-white"
       : accountType === "tournament"
         ? "text-[#7eb6ff]"
         : "text-white";
