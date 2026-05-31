@@ -744,20 +744,13 @@ const SettlementCloneOverlay = ({
           <X className="h-5 w-5" style={{ color: "#ff7b72" }} strokeWidth={2.5} />
         )}
         <AssetSymbolMark symbol={announcement.assetSymbol} size={20} />
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2.5">
-            <span className="h-4 w-px bg-white/15" />
-            <span className="text-[14px] font-black uppercase tracking-[0.14em]" style={{ color: accent }}>
-              {won ? "Win" : "Loss"}
-            </span>
-            <span className="text-[14px] font-bold tabular-nums text-white">
-              {formatSettlementProfit(announcement.profit)}
-            </span>
-          </div>
-          <span className="mt-0.5 text-[9px] font-medium tracking-wide text-white/40" style={{ paddingLeft: "13px" }}>
-            #{announcement.id.slice(0, 8).toUpperCase()}
-          </span>
-        </div>
+        <span className="h-4 w-px bg-white/15" />
+        <span className="text-[14px] font-black uppercase tracking-[0.14em]" style={{ color: accent }}>
+          {won ? "Win" : "Loss"}
+        </span>
+        <span className="text-[14px] font-bold tabular-nums text-white">
+          {formatSettlementProfit(announcement.profit)}
+        </span>
       </div>
     </div>
   );
