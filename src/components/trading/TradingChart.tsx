@@ -978,8 +978,8 @@ const getCandlestickDisplaySettings = (
   const minimalPreset = styles.displayPreset === "secondary";
   const upColor = minimalPreset ? toRgba(baseUpColor, 0.92) : mixHexColors(baseUpColor, "#ffffff", 0.03);
   const downColor = minimalPreset ? toRgba(baseDownColor, 0.92) : mixHexColors(baseDownColor, "#ffffff", 0.03);
-  const borderUpColor = toRgba(baseUpColor, 0.72);
-  const borderDownColor = toRgba(baseDownColor, 0.72);
+  const borderUpColor = toRgba(baseUpColor, 0.95);
+  const borderDownColor = toRgba(baseDownColor, 0.95);
   const wickUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.02 : 0.08), 0.88);
   const wickDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", minimalPreset ? 0.02 : 0.06), 0.88);
 
@@ -990,7 +990,7 @@ const getCandlestickDisplaySettings = (
     borderDownColor,
     wickUpColor,
     wickDownColor,
-    borderVisible: false,
+    borderVisible: true,
     wickVisible: true,
     priceLineVisible: styles.priceLineVisible,
   };
@@ -3584,9 +3584,9 @@ const TradingChart = ({
       )}
 
       <div
-        className="relative flex-1 min-h-0 overflow-hidden"
+        className="relative flex-1 min-h-0"
         ref={mainRef}
-        style={chartViewportStyle}
+        style={{ ...chartViewportStyle, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.35))" }}
         onMouseMove={handleChartMouseMove}
         onMouseLeave={handleChartMouseLeave}
         onClick={handleChartClick}
