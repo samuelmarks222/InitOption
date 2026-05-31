@@ -3,6 +3,14 @@ import { ArrowDownRight, ArrowUpRight, ArrowRightLeft, DollarSign, Info } from "
 import { useStatistics, Transaction } from "@/hooks/useStatistics";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
+const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+const toTxRef = (id: string): string => {
+  const n = CHARS.length;
+  const h = id.split("").reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) >>> 0, 0);
+  return Array.from({ length: 9 }, (_, i) => CHARS[((h >>> (i * 4)) + i * 7) % n]).join("");
+};
+
 const STATUS_BADGE_STYLES: Record<string, string> = {
   approved: "bg-green-500/10 text-green-400",
   completed: "bg-green-500/10 text-green-400",
@@ -159,7 +167,7 @@ export const ProfileBalanceHistory = () => {
               return (
                 <div key={tx.id} className="space-y-2 px-4 py-4 text-[13px] text-[#d9e2f1]">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold">{String(tx.id ?? "").match(/\d+/)?.[0]?.padStart(9, "0") || "—"}</span>
+                    <span className="font-semibold">{tx.id ? toTxRef(tx.id) : "—"}</span>
                     <span className={`text-right text-[14px] font-bold ${getAmountClass(tx)}`}>
                       {tx.amount > 0 ? "+" : tx.amount < 0 ? "-" : ""}{formatMoney(Math.abs(tx.amount))}
                     </span>
@@ -188,7 +196,7 @@ export const ProfileBalanceHistory = () => {
 
             return (
               <div key={tx.id} className="hidden grid-cols-[1.1fr_1.2fr_1fr_1.2fr_1.2fr_1fr] items-center px-6 py-4 text-[14px] text-[#d9e2f1] md:grid">
-                <span className="font-semibold">{String(tx.id ?? "").match(/\d+/)?.[0]?.padStart(9, "0") || "—"}</span>
+                <span className="font-semibold">{tx.id ? toTxRef(tx.id) : "—"}</span>
                 <div className="text-[13px] text-[#c0cadd]">
                   {new Date(tx.date).toLocaleDateString("en-GB")}, {new Date(tx.date).toLocaleTimeString("en-GB")}
                 </div>
