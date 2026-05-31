@@ -159,7 +159,7 @@ export const ProfileBalanceHistory = () => {
               return (
                 <div key={tx.id} className="space-y-2 px-4 py-4 text-[13px] text-[#d9e2f1]">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold">{String(tx.id ?? "").replace(/-(approved|rejected|pending|completed|failed)$/, "") || "—"}</span>
+                    <span className="font-semibold">{String(tx.id ?? "").match(/\d+/)?.[0]?.padStart(9, "0") || "—"}</span>
                     <span className={`text-right text-[14px] font-bold ${getAmountClass(tx)}`}>
                       {tx.amount > 0 ? "+" : tx.amount < 0 ? "-" : ""}{formatMoney(Math.abs(tx.amount))}
                     </span>
@@ -188,7 +188,7 @@ export const ProfileBalanceHistory = () => {
 
             return (
               <div key={tx.id} className="hidden grid-cols-[1.1fr_1.2fr_1fr_1.2fr_1.2fr_1fr] items-center px-6 py-4 text-[14px] text-[#d9e2f1] md:grid">
-                <span className="font-semibold">{String(tx.id ?? "").replace(/-(approved|rejected|pending|completed|failed)$/, "") || "—"}</span>
+                <span className="font-semibold">{String(tx.id ?? "").match(/\d+/)?.[0]?.padStart(9, "0") || "—"}</span>
                 <div className="text-[13px] text-[#c0cadd]">
                   {new Date(tx.date).toLocaleDateString("en-GB")}, {new Date(tx.date).toLocaleTimeString("en-GB")}
                 </div>
