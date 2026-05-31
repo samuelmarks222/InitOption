@@ -63,6 +63,8 @@ import {
   ArrowRight,
   Plus,
   Minus,
+  CheckCheck,
+  X,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ActiveTrade, TradeDirection } from "@/hooks/useTrading";
@@ -726,54 +728,29 @@ const SettlementCloneOverlay = ({
   compact: boolean;
 }) => {
   const won = announcement.status === "won";
-  const floatingCardSurface = won
-    ? "border-[#495064] bg-[linear-gradient(180deg,rgba(63,69,89,0.96)_0%,rgba(54,60,78,0.96)_100%)]"
-    : "border-[#5b4650] bg-[linear-gradient(180deg,rgba(75,60,71,0.96)_0%,rgba(61,46,57,0.96)_100%)]";
-  const statusPillSurface = won
-    ? "border-[#30b66f]/45 bg-[rgba(27,191,98,0.16)] text-[#7af0aa]"
-    : "border-[#d56a63]/45 bg-[rgba(236,96,84,0.16)] text-[#ff9b92]";
-  const detailColor = won ? "text-[#33cd77]" : "text-[#ff7b72]";
-  const leftOffset = compact ? 10 : DESKTOP_TOOLBAR_MAIN_LEFT_OFFSET + 12;
-  const bottomOffset = compact ? 10 : 18;
+  const accent = won ? "#33cd77" : "#ff7b72";
+  const leftOffset = 100;
+  const bottomOffset = 100;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[66] overflow-visible">
       <div
-        className={cn(
-          "absolute overflow-hidden rounded-[12px] border text-white shadow-[0_16px_30px_rgba(0,0,0,0.34)] backdrop-blur-sm",
-          compact ? "w-[150px]" : "w-[186px]",
-          floatingCardSurface,
-        )}
-        style={{ left: leftOffset, bottom: bottomOffset }}
+        className="absolute flex items-center gap-3 rounded-[14px] px-5 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
+        style={{ left: leftOffset, bottom: bottomOffset, background: "#293145" }}
       >
-        <div className="flex items-center justify-between gap-2 border-b border-white/6 px-2.5 py-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <span
-              className={cn(
-                "inline-flex shrink-0 items-center rounded-full border px-1.5 py-[2px] text-[8px] font-black uppercase tracking-[0.14em]",
-                statusPillSurface,
-              )}
-            >
-              {won ? "Win" : "Loss"}
-            </span>
-            <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-white/14 bg-[#1f2940]">
-              <AssetSymbolMark symbol={announcement.assetSymbol} size={10} />
-            </div>
-            <span className="truncate text-[10px] font-medium text-white/92">{announcement.assetSymbol}</span>
-          </div>
-          <span className="shrink-0 text-[10px] font-normal tabular-nums text-white/50">
-            {formatSettlementClock(announcement.expirySeconds)}
-          </span>
-        </div>
-
-        <div className="px-2.5 pb-2.5 pt-2">
-          <div className={cn("font-medium leading-none tracking-[-0.02em]", compact ? "text-[16px]" : "text-[18px]", detailColor)}>
-            {formatSettlementProfit(announcement.profit)}
-          </div>
-          <div className="mt-1.5 text-[9px] font-normal uppercase tracking-[0.1em] text-white/56">
-            {announcement.direction === "higher" ? "Higher" : "Lower"} • {announcement.amount.toFixed(2)} $
-          </div>
-        </div>
+        {won ? (
+          <CheckCheck className="h-5 w-5" style={{ color: "#33cd77" }} strokeWidth={2.5} />
+        ) : (
+          <X className="h-5 w-5" style={{ color: "#ff7b72" }} strokeWidth={2.5} />
+        )}
+        <AssetSymbolMark symbol={announcement.assetSymbol} size={20} />
+        <span className="h-4 w-px bg-white/15" />
+        <span className="text-[14px] font-black uppercase tracking-[0.14em]" style={{ color: accent }}>
+          {won ? "Win" : "Loss"}
+        </span>
+        <span className="text-[14px] font-bold tabular-nums text-white">
+          {formatSettlementProfit(announcement.profit)}
+        </span>
       </div>
     </div>
   );
