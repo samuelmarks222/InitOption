@@ -976,8 +976,8 @@ const getCandlestickDisplaySettings = (
   const baseUpColor = getCandleUpColor(chartType, styles, globalTheme.up);
   const baseDownColor = getCandleDownColor(chartType, styles, globalTheme.down);
   const minimalPreset = styles.displayPreset === "secondary";
-  const upColor = minimalPreset ? toRgba(baseUpColor, 0.85) : toRgba(mixHexColors(baseUpColor, "#ffffff", 0.06), 0.90);
-  const downColor = minimalPreset ? toRgba(baseDownColor, 0.85) : toRgba(mixHexColors(baseDownColor, "#ffffff", 0.04), 0.90);
+  const upColor = minimalPreset ? toRgba(baseUpColor, 0.92) : mixHexColors(baseUpColor, "#ffffff", 0.03);
+  const downColor = minimalPreset ? toRgba(baseDownColor, 0.92) : mixHexColors(baseDownColor, "#ffffff", 0.03);
   const borderUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", 0.15), 0.92);
   const borderDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", 0.08), 0.92);
   const wickUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.04 : 0.10), 0.92);
@@ -2682,7 +2682,8 @@ const TradingChart = ({
         } catch (_) {}
       }
     }
-  }, [asset.basePrice, asset.symbol, chartStyles, chartType]);
+    scrollChartToLiveEdge();
+  }, [asset.basePrice, asset.symbol, chartStyles, chartType, scrollChartToLiveEdge]);
 
   useEffect(() => {
     if (!mainSeriesRef.current) return;
