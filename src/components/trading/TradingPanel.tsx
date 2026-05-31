@@ -1152,7 +1152,7 @@ const TradingPanel = ({
             <button
               onClick={() => setActiveTab("pending")}
               aria-label="Pending trades"
-              className={`relative flex h-[44px] w-[78px] shrink-0 items-center justify-center gap-2 rounded-t-[10px] px-3 text-[12px] font-black transition-colors ${activeTab === "pending" ? "bg-[#33394a] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
+              className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "pending" ? "bg-[#33394a] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
             >
               {activeTab === "pending" && <div className="absolute left-0 right-0 top-0 h-[2px] rounded-full bg-[#3391ff]" />}
               <Clock className="h-4 w-4" />
