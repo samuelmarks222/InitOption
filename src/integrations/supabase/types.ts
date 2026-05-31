@@ -385,6 +385,7 @@ export type Database = {
           deposit_bonus_min: number
           deposit_bonus_percent: number
           id: string
+          referred_deposit_bonus_percent: number
           referral_commission_enabled: boolean
           referral_commission_payout_timing: string
           referral_commission_percent: number
@@ -401,6 +402,7 @@ export type Database = {
           deposit_bonus_min?: number
           deposit_bonus_percent?: number
           id?: string
+          referred_deposit_bonus_percent?: number
           referral_commission_enabled?: boolean
           referral_commission_payout_timing?: string
           referral_commission_percent?: number
@@ -417,6 +419,7 @@ export type Database = {
           deposit_bonus_min?: number
           deposit_bonus_percent?: number
           id?: string
+          referred_deposit_bonus_percent?: number
           referral_commission_enabled?: boolean
           referral_commission_payout_timing?: string
           referral_commission_percent?: number
