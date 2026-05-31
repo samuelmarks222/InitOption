@@ -3,8 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Bitcoin, Building2, Gift, Minus, Plus } from "lucide-react";
+import { ArrowLeft, Bitcoin, Building2, ChevronDown, Gift } from "lucide-react";
 import { MpesaIcon } from "@/components/ui/MpesaIcon";
 import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
@@ -166,22 +165,6 @@ const Withdraw = () => {
     }
   }, [bonusBlocksWithdrawal]);
 
-  const methodCopy =
-    method === "mpesa"
-      ? "Choose M-PESA, enter the amount and phone number, then submit the payout request for finance review and manual sending."
-      : method === "bank"
-        ? "Choose bank transfer, enter the amount and destination details, then submit your request."
-        : !selectedCrypto
-          ? "Choose cryptocurrency, enter the amount, then select the payout coin and wallet address."
-          : "Choose cryptocurrency, enter the amount, confirm the payout coin, and provide the destination wallet address.";
-
-  const handleAdjustAmount = (direction: -1 | 1) => {
-    const stepAmount = amountValue >= 300 ? 50 : amountValue >= 150 ? 25 : 10;
-    const baseAmount = amountValue > 0 ? amountValue : minimumWithdrawalAmount;
-    const nextAmount = Math.max(minimumWithdrawalAmount, baseAmount + stepAmount * direction);
-    setAmount(nextAmount);
-  };
-
   const handleAmountChange = (value: string) => {
     if (value === "") {
       setAmount("");
@@ -321,387 +304,236 @@ const Withdraw = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,#23283b_0%,#1e2131_48%,#141726_100%)] p-2 text-white sm:p-3 md:p-5">
-      <div className="mx-auto mt-3 w-full max-w-[1080px] space-y-3 sm:mt-4 sm:space-y-4 md:mt-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
-          <SiteLogo to="/" subtitle="Payout access" />
-          <Link to="/trade" className="flex w-fit items-center gap-2 text-[#9ab7c9] transition-colors hover:text-white">
-            <ArrowLeft className="h-5 w-5" />
+    <div className="min-h-screen overflow-x-hidden bg-[#171f2b] text-white">
+      <div className="border-b border-white/10 bg-[#192230]/92">
+        <div className="mx-auto flex min-h-[68px] w-full max-w-[1360px] items-center justify-between gap-4 px-5 sm:px-8">
+          <SiteLogo to="/" imageClassName="h-9 sm:h-10" />
+          <Link to="/trade" className="flex shrink-0 items-center gap-2 text-sm text-white/90 transition hover:text-white">
+            <ArrowLeft className="h-4 w-4" />
             Back to Trading
           </Link>
         </div>
+      </div>
 
-        <Card className="overflow-hidden rounded-[16px] border border-white/10 bg-[#23283b] shadow-[0_18px_44px_rgba(0,0,0,0.32)]">
-          <CardHeader className="border-b border-white/8 bg-[#23283b] px-4 py-4 sm:px-5 md:px-6">
-            <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Payout desk</div>
-            <CardTitle className="mt-1 text-xl text-white sm:text-2xl md:text-[28px]">Withdraw Funds</CardTitle>
-            <CardDescription className="mt-1 max-w-[760px] text-xs leading-5 text-[#9dc2c8] sm:text-sm">
-              Choose the payout method, enter the amount, confirm the destination details, and submit your request.
-            </CardDescription>
-          </CardHeader>
+      <form onSubmit={handleWithdraw} className="mx-auto grid w-full max-w-[900px] gap-10 px-5 py-10 sm:px-6 md:grid-cols-[minmax(0,466px)_368px] md:items-start md:py-14">
+        <main className="min-w-0">
+          <h1 className="text-[34px] font-bold leading-tight text-white sm:text-[38px]">Withdraw Funds</h1>
+          <p className="mt-3 text-base leading-6 text-white/62">Withdraw funds for the application and, withdraw funds.</p>
 
-          <CardContent className="px-4 py-4 sm:px-5 md:px-6 md:py-5">
-            <form onSubmit={handleWithdraw} className="grid gap-4 xl:grid-cols-[280px,minmax(0,1fr)]">
-              <div className="space-y-4">
-                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4 text-sm leading-6 text-slate-200">
-                  {methodCopy}
-                </div>
+          <section className="mt-11">
+            <div className="text-lg font-bold text-white">Select Withdrawal Method</div>
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={() => setMethod("mpesa")}
+                className={`flex min-h-[96px] flex-col items-center justify-center rounded-lg border bg-white px-4 text-center text-[#111827] shadow-[0_12px_22px_rgba(0,0,0,0.12)] transition hover:-translate-y-0.5 ${
+                  method === "mpesa" ? "border-[#1ec677] ring-2 ring-[#1ec677]/45" : "border-white/70"
+                }`}
+              >
+                <MpesaIcon className="h-8 w-[92px]" />
+                <span className="mt-2 text-base font-bold">Mobile Money</span>
+              </button>
 
-                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
-                  <label className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Select withdrawal method</label>
-                  <div className="mt-3 grid gap-2.5">
-                    <button
-                      type="button"
-                      onClick={() => setMethod("mpesa")}
-                      className={`flex flex-col items-start gap-3 rounded-[14px] border p-3 text-left transition sm:flex-row sm:items-center sm:gap-3 ${
-                        method === "mpesa"
-                          ? "border-[#0fa053]/60 bg-[#1e2330] shadow-[0_12px_26px_rgba(15,160,83,0.2)]"
-                          : "border-white/10 bg-[#1e2330] hover:border-white/20"
-                      }`}
-                    >
-                      <MpesaIcon className="h-9 w-[84px] shrink-0 sm:h-10 sm:w-[92px]" />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-bold leading-tight text-white sm:text-[15px]">M-PESA Mobile Money</div>
-                        <div className="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#9dc2c8]">Send to phone number</div>
-                      </div>
-                    </button>
+              <button
+                type="button"
+                onClick={() => setMethod("bank")}
+                className={`flex min-h-[96px] flex-col items-center justify-center rounded-lg border bg-white px-4 text-center text-[#111827] shadow-[0_12px_22px_rgba(0,0,0,0.12)] transition hover:-translate-y-0.5 ${
+                  method === "bank" ? "border-[#2f82ff] ring-2 ring-[#2f82ff]/35" : "border-white/70"
+                }`}
+              >
+                <Building2 className="h-9 w-9 text-[#475569]" />
+                <span className="mt-2 text-base font-bold">Bank Transfer</span>
+              </button>
 
-                    <button
-                      type="button"
-                      onClick={() => setMethod("bank")}
-                      className={`flex flex-col items-start gap-3 rounded-[14px] border p-3 text-left transition sm:flex-row sm:items-center sm:gap-3 ${
-                        method === "bank"
-                          ? "border-[#1e2330] bg-[#1e2330] shadow-[0_12px_26px_rgba(35,110,223,0.16)]"
-                          : "border-white/10 bg-[#1e2330] hover:border-white/20"
-                      }`}
-                    >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1e2330] text-slate-200">
-                        <Building2 className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-bold leading-tight text-white sm:text-[15px]">Bank Transfer</div>
-                        <div className="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#9dc2c8]">Send to account details</div>
-                      </div>
-                    </button>
+              <button
+                type="button"
+                onClick={() => setMethod("crypto")}
+                className={`flex min-h-[96px] flex-col items-center justify-center rounded-lg border bg-white px-4 text-center text-[#111827] shadow-[0_12px_22px_rgba(0,0,0,0.12)] transition hover:-translate-y-0.5 ${
+                  method === "crypto" ? "border-[#f1a526] ring-2 ring-[#f1a526]/35" : "border-white/70"
+                }`}
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ee9f26] text-white">
+                  <Bitcoin className="h-6 w-6" />
+                </span>
+                <span className="mt-2 text-base font-bold">Cryptocurrency</span>
+              </button>
+            </div>
+          </section>
 
-                    <button
-                      type="button"
-                      onClick={() => setMethod("crypto")}
-                      className={`flex flex-col items-start gap-3 rounded-[14px] border p-3 text-left transition sm:flex-row sm:items-center sm:gap-3 ${
-                        method === "crypto"
-                          ? "border-[#f5a524]/60 bg-[#3b2a0f] shadow-[0_12px_26px_rgba(245,165,36,0.12)]"
-                          : "border-white/10 bg-[#1e2330] hover:border-white/20"
-                      }`}
-                    >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1e2330] text-slate-200">
-                        <Bitcoin className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-bold leading-tight text-white sm:text-[15px]">Cryptocurrency</div>
-                        <div className="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#9dc2c8]">Send to wallet address</div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
+          <section className="mt-10">
+            <label className="text-lg font-bold text-white">Enter Amount (USD)</label>
+            <div className="mt-3 flex min-h-[48px] overflow-hidden rounded-lg bg-white shadow-[0_14px_28px_rgba(0,0,0,0.12)]">
+              <input
+                type="number"
+                step="1"
+                value={amount}
+                onChange={(event) => handleAmountChange(event.target.value)}
+                placeholder=""
+                className="min-w-0 flex-1 bg-transparent px-4 text-base font-semibold text-[#111827] outline-none placeholder:text-slate-400"
+              />
+              <button
+                type="button"
+                onClick={() => setAmount(Number(effectiveWithdrawalBalance.toFixed(2)))}
+                className="m-2 rounded-md bg-[#eef0f4] px-3 text-sm font-bold text-[#111827] transition hover:bg-[#e2e5eb]"
+              >
+                MAX
+              </button>
+            </div>
+            <p className="mt-3 text-sm text-white/68">
+              Available balance: <span className="font-bold text-white">{effectiveWithdrawalBalance.toFixed(2)} USD</span>
+            </p>
+            {reservedWithdrawalBalance > 0 ? (
+              <p className="mt-1 text-xs text-white/52">${reservedWithdrawalBalance.toFixed(2)} is reserved for pending M-PESA withdrawals.</p>
+            ) : null}
+          </section>
 
-                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
-                  <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Account snapshot</div>
-                  <div className="mt-4 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                      <div className="text-sm text-[#9dc2c8]">Available Balance</div>
-                      <div className="mt-2 break-all text-3xl font-bold text-white">${availableBalance.toFixed(2)}</div>
-                      {reservedWithdrawalBalance > 0 ? (
-                        <div className="mt-2 text-xs text-[#9dc2c8]">
-                          ${reservedWithdrawalBalance.toFixed(2)} currently reserved for pending M-PESA withdrawals.
-                        </div>
-                      ) : null}
-                    </div>
-                    <div className="rounded-full bg-[#0fa053]/12 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#0fa053]">
-                      Live account
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4 text-sm leading-6 text-[#cde3ea]">
-                  Minimum withdrawal is $10.00. M-PESA withdrawals stay reserved until finance approves and completes the manual payout, or rejects the request.
-                </div>
+          <section className="mt-10">
+            <label className="text-lg font-bold text-white">Select Account/Address</label>
+            {method === "mpesa" ? (
+              <div className="mt-3 flex min-h-[48px] overflow-hidden rounded-lg bg-white text-[#111827] shadow-[0_14px_28px_rgba(0,0,0,0.12)]">
+                <div className="flex shrink-0 items-center border-r border-slate-200 px-4 text-lg text-[#424854]">M-PESA</div>
+                <input
+                  type="tel"
+                  value={mpesaPhoneNumber}
+                  onChange={(event) => setMpesaPhoneNumber(event.target.value)}
+                  placeholder="Select Account/Address"
+                  className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none placeholder:text-[#7b7f87]"
+                />
               </div>
-
-              <div className="space-y-4">
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-white">Amount (USD)</label>
-                  <div className="rounded-[14px] border border-white/10 bg-[#1e2131] p-3.5 shadow-[0_16px_34px_rgba(0,0,0,0.2)]">
-                    <div className="flex flex-col gap-3 rounded-[12px] bg-[#23283b] p-3 lg:flex-row lg:items-center">
-                      <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <span className="shrink-0 text-[18px] font-black text-[#0fa053] sm:text-[22px]">USD</span>
-                        <input
-                          type="number"
-                          step="1"
-                          value={amount}
-                          onChange={(event) => handleAmountChange(event.target.value)}
-                          placeholder={`Enter amount (Min $${minimumWithdrawalAmount})`}
-                          className="min-w-0 w-full bg-transparent text-[22px] font-bold text-white outline-none placeholder:text-slate-500 sm:text-[26px]"
-                        />
-                      </div>
-
-                      <div className="min-w-0 text-left lg:min-w-[124px] lg:text-right">
-                        <div className="text-sm font-bold text-[#0fa053]">
-                          {method === "mpesa" ? formatCurrencyAmount(amountKes, "KES") : `${amountValue.toFixed(2)} $`}
-                        </div>
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-[#a7bdd9]">
-                          {method === "mpesa" ? "Estimated payout" : "Requested payout"}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 self-start lg:self-auto">
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustAmount(-1)}
-                          className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/15"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustAmount(1)}
-                          className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/15"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 flex flex-col gap-3 rounded-[12px] bg-[#23283b] px-3 py-3 text-sm text-[#a7bdd9] sm:flex-row sm:items-center sm:justify-between">
-                      <span>
-                        {bonusBlocksWithdrawal && withdrawWithoutBonus ? "Withdrawable after bonus removal" : "Available balance"}
-                      </span>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="break-all font-semibold text-white">${effectiveWithdrawalBalance.toFixed(2)}</span>
-                        <button
-                          type="button"
-                          onClick={() => setAmount(Number(effectiveWithdrawalBalance.toFixed(2)))}
-                          className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/15"
-                        >
-                          MAX
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+            ) : (
+              <div className="mt-3 flex min-h-[48px] overflow-hidden rounded-lg bg-white text-[#111827] shadow-[0_14px_28px_rgba(0,0,0,0.12)]">
+                <div className="flex shrink-0 items-center border-r border-slate-200 px-4 text-lg text-[#424854]">
+                  {method === "bank" ? "BANK" : selectedCrypto?.symbol.toUpperCase() ?? "CRYPTO"}
                 </div>
+                <input
+                  type="text"
+                  value={address}
+                  onChange={(event) => setAddress(event.target.value)}
+                  placeholder={method === "bank" ? "Enter bank account details" : "Enter wallet address"}
+                  className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none placeholder:text-[#7b7f87]"
+                />
+              </div>
+            )}
 
-                {hasBonus && (
-                  <div className="rounded-[14px] border border-[#f5a524]/30 bg-[#211f2b] p-4 shadow-[0_14px_34px_rgba(0,0,0,0.22)]">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="flex min-w-0 items-start gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#f5a524]/14 text-[#f5a524]">
-                          <Gift className="h-5 w-5" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="text-sm font-bold text-white">Bonus turnover status</div>
-                          <div className="mt-1 text-xs leading-5 text-[#b7c8d6]">
-                            This appears because your account used a deposit or welcome bonus.
-                          </div>
-                        </div>
-                      </div>
-                      <div
-                        className={`w-fit rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] ${
-                          bonusTurnoverComplete ? "bg-[#0b7557]/18 text-[#5ee0bd]" : "bg-[#f5a524]/14 text-[#ffc66d]"
+            {method === "crypto" ? (
+              <div className="mt-3 rounded-lg border border-white/10 bg-white/7 p-3">
+                {cryptoMethods.length === 0 ? (
+                  <div className="text-sm text-white/72">Cryptocurrency withdrawals are temporarily unavailable right now.</div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {cryptoMethods.map((crypto) => (
+                      <button
+                        key={crypto.id}
+                        type="button"
+                        onClick={() => setSelectedCryptoId(crypto.id)}
+                        className={`rounded-md border px-3 py-2 text-left text-sm transition ${
+                          selectedCryptoId === crypto.id
+                            ? "border-[#f1a526] bg-[#f1a526]/18 text-white"
+                            : "border-white/12 bg-white/8 text-white/82 hover:border-white/28"
                         }`}
                       >
-                        {bonusTurnoverComplete ? "Turnover complete" : "Turnover active"}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                      <div className="rounded-[16px] bg-[#1e2330] px-4 py-3">
-                        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8eb3bf]">Active bonus</div>
-                        <div className="mt-2 text-lg font-bold text-white">${bonusStatus.bonusTotal.toFixed(2)}</div>
-                      </div>
-                      <div className="rounded-[16px] bg-[#1e2330] px-4 py-3">
-                        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8eb3bf]">Required volume</div>
-                        <div className="mt-2 text-lg font-bold text-white">${bonusStatus.requiredTurnover.toFixed(2)}</div>
-                      </div>
-                      <div className="rounded-[16px] bg-[#1e2330] px-4 py-3">
-                        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8eb3bf]">Completed</div>
-                        <div className="mt-2 text-lg font-bold text-[#5ee0bd]">${bonusStatus.completedTurnover.toFixed(2)}</div>
-                      </div>
-                      <div className="rounded-[16px] bg-[#1e2330] px-4 py-3">
-                        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8eb3bf]">Remaining</div>
-                        <div className="mt-2 text-lg font-bold text-[#ffc66d]">${bonusStatus.remainingTurnover.toFixed(2)}</div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between gap-3 text-xs text-[#9dc2c8]">
-                        <span>{bonusStatus.isLoading ? "Checking turnover..." : `${bonusProgress.toFixed(0)}% completed`}</span>
-                        <span>{BONUS_TURNOVER_MULTIPLIER}x rule</span>
-                      </div>
-                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/25">
-                        <div
-                          className="h-full rounded-full bg-[#0b7557] transition-[width] duration-500"
-                          style={{ width: `${bonusProgress}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {bonusBlocksWithdrawal ? (
-                      <label className="mt-4 flex cursor-pointer flex-col gap-3 rounded-[14px] border border-white/10 bg-[#1e2131] p-4 transition hover:border-[#86c9d4]/35 sm:flex-row sm:items-start">
-                        <input
-                          type="checkbox"
-                          checked={withdrawWithoutBonus}
-                          onChange={(event) => setWithdrawWithoutBonus(event.target.checked)}
-                          className="mt-1 h-4 w-4 shrink-0 accent-[#0b7557]"
-                        />
-                        <span className="min-w-0 text-sm leading-6 text-[#d9e8ef]">
-                          <span className="block font-bold text-white">Withdraw without bonus</span>
-                          Remove the active bonus of <strong>${bonusStatus.bonusTotal.toFixed(2)}</strong> from your live balance and continue withdrawing your own funds now. Your max withdrawable balance becomes{" "}
-                          <strong>${Math.max(0, availableBalance - bonusStatus.bonusTotal).toFixed(2)}</strong>.
-                        </span>
-                      </label>
-                    ) : (
-                      <div className="mt-4 rounded-[14px] border border-[#0b7557]/30 bg-[#0b7557]/12 p-4 text-sm leading-6 text-[#c7fff0]">
-                        Bonus turnover is complete. You can withdraw normally without removing the bonus.
-                      </div>
-                    )}
+                        <span className="block truncate font-bold">{crypto.symbol.toUpperCase()}</span>
+                        <span className="block truncate text-[11px] uppercase text-white/56">{crypto.network}</span>
+                      </button>
+                    ))}
                   </div>
                 )}
-
-                {method === "crypto" && (
-                  <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
-                    <div className="text-sm font-semibold text-white">Select withdrawal cryptocurrency</div>
-                    {cryptoMethods.length === 0 ? (
-                      <div className="mt-4 rounded-[16px] border border-[#1e2330] bg-[#1e2330] px-4 py-4 text-sm text-slate-200">
-                        Cryptocurrency withdrawals are temporarily unavailable right now.
-                      </div>
-                    ) : (
-                      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                        {cryptoMethods.map((crypto) => (
-                          <button
-                            key={crypto.id}
-                            type="button"
-                            onClick={() => setSelectedCryptoId(crypto.id)}
-                            className={`flex items-center gap-3 rounded-[16px] border px-4 py-4 text-left transition ${
-                              selectedCryptoId === crypto.id
-                                ? "border-[#f5a524]/60 bg-[#3b2a0f] text-white shadow-[0_12px_24px_rgba(245,165,36,0.12)]"
-                                : "border-white/10 bg-[#1e2330] text-white hover:border-white/20"
-                            }`}
-                          >
-                            <img
-                              src={`https://assets.coincap.io/assets/icons/${crypto.symbol.toLowerCase().replace("usdt", "tether")}@2x.png`}
-                              className="h-7 w-7 rounded-full bg-white p-[1px]"
-                              onError={(event) => {
-                                event.currentTarget.style.display = "none";
-                              }}
-                              alt=""
-                            />
-                            <div className="min-w-0">
-                              <div className="truncate text-sm font-bold">{crypto.symbol.toUpperCase()}</div>
-                              <div className="truncate text-[10px] uppercase tracking-[0.14em] text-[#9dc2c8]">
-                                {crypto.network}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {method === "mpesa" ? (
-                  <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                      <MpesaIcon className="h-8 w-[74px] shrink-0" />
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold text-white">M-PESA number</div>
-                        <div className="text-xs text-[#9dc2c8]">Enter the phone number that should receive this payout.</div>
-                      </div>
-                    </div>
-                    <input
-                      type="tel"
-                      value={mpesaPhoneNumber}
-                      onChange={(event) => setMpesaPhoneNumber(event.target.value)}
-                      placeholder="e.g. 0712345678 or 254712345678"
-                      className="mt-4 w-full rounded-[16px] border border-white/10 bg-[#1e2330] px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-500 focus:border-[#0fa053]/60"
-                    />
-                    <div className="mt-3 rounded-[12px] border border-white/8 bg-[#23283b] p-3">
-                      <div className="flex flex-col gap-2 text-sm text-[#9dc2c8] sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                        <span>Estimated M-PESA payout</span>
-                        <span className="break-all font-semibold text-white">{formatCurrencyAmount(amountKes, "KES")}</span>
-                      </div>
-                      <div className="mt-2 text-xs leading-5 text-[#9dc2c8]">
-                        The payout is sent to this number in the KES equivalent of the USD amount entered above.
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
-                    <div className="text-sm font-semibold text-white">
-                      {method === "bank" ? "Bank destination" : "Wallet destination"}
-                    </div>
-                    <div className="mt-1 text-xs text-[#9dc2c8]">
-                      {method === "bank"
-                        ? "Enter the account details that should receive the transfer."
-                        : "Enter the wallet address that should receive the payout."}
-                    </div>
-                    <input
-                      type="text"
-                      value={address}
-                      onChange={(event) => setAddress(event.target.value)}
-                      placeholder={method === "bank" ? "Enter bank account details" : "Enter wallet address"}
-                      className="mt-4 w-full rounded-[16px] border border-white/10 bg-[#1e2330] px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-500 focus:border-[#0fa053]/60"
-                    />
-                  </div>
-                )}
-
-                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] px-4 py-3">
-                  <div className="text-sm font-medium text-white">Payout summary</div>
-                  <div className="text-xs text-[#9dc2c8]">
-                    {method === "mpesa"
-                      ? `${amountValue.toFixed(2)} $ requested, approximately ${formatCurrencyAmount(amountKes, "KES")} to M-PESA`
-                      : `${amountValue.toFixed(2)} $ requested to the selected destination`}
-                  </div>
-                  <div className="mt-3 text-2xl font-bold text-white">{amountValue.toFixed(2)} $</div>
-                </div>
-
-                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
-                  <Button
-                    type="submit"
-                    disabled={
-                      loading ||
-                      !amount ||
-                      amountValue < minimumWithdrawalAmount ||
-                      (bonusBlocksWithdrawal && !withdrawWithoutBonus) ||
-                      amountValue > effectiveWithdrawalBalance ||
-                      (method === "mpesa" ? !mpesaPhoneNumber.trim() : !address.trim()) ||
-                      (method === "crypto" && !selectedCrypto)
-                    }
-                    className="w-full px-4 py-4 text-base gradient-primary sm:py-5"
-                  >
-                    {loading
-                      ? method === "mpesa"
-                        ? "Sending payout..."
-                        : "Submitting withdrawal..."
-                      : method === "mpesa"
-                        ? "Withdraw to M-PESA"
-                        : "Submit Withdrawal"}
-                  </Button>
-                  <p className="mt-4 text-center text-xs leading-5 text-[#9dc2c8]">
-                    {method === "mpesa"
-                      ? "Make sure the M-PESA number is correct before you continue."
-                      : "Make sure the destination details are correct before you continue."}
-                  </p>
-                  <p className="mt-2 text-center text-xs leading-5 text-[#9dc2c8]">
-                    {bonusBlocksWithdrawal
-                      ? "Your bonus turnover is still active. Choose Withdraw without bonus if you want to remove the bonus and continue now."
-                      : "If your account has active bonus conditions, the bonus panel will show your turnover progress here."}
-                  </p>
-                </div>
               </div>
-            </form>
-          </CardContent>
-        </Card>
+            ) : null}
+          </section>
+        </main>
 
-      </div>
+        <aside className="min-w-0 space-y-4">
+          <section className="rounded-lg bg-white p-5 text-[#0f1117] shadow-[0_16px_34px_rgba(0,0,0,0.16)]">
+            <h2 className="text-lg font-bold">Payout Summary</h2>
+            <div className="mt-5 space-y-3 text-base">
+              <div className="flex items-center justify-between gap-4">
+                <span>Requested Amount:</span>
+                <span className="font-bold">{amountValue.toFixed(2)} $</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span>Estimated Fees:</span>
+                <span className="font-bold">0.00 $</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span>Estimated Payout in KES:</span>
+                <span className="font-bold">{method === "mpesa" ? formatCurrencyAmount(amountKes, "KES") : "0.00 KES"}</span>
+              </div>
+            </div>
+            <div className="mt-4 border-t border-slate-200 pt-5">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-2xl font-bold">Total Payout:</span>
+                <span className="text-2xl font-bold">{amountValue.toFixed(2)} $</span>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-lg bg-white p-4 text-[#0f1117] shadow-[0_16px_34px_rgba(0,0,0,0.16)]">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-bold">Bonus Turnover Status</h2>
+              <ChevronDown className="h-5 w-5 rotate-180" />
+            </div>
+            <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+              <span>Requested Amount: {amountValue.toFixed(2)} $</span>
+              <span>Estimated Fees: 0.00 $</span>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#e7e9ef]">
+              <div className="h-full rounded-full bg-[#2f72f6]" style={{ width: `${bonusProgress}%` }} />
+            </div>
+
+            {hasBonus ? (
+              <div className="mt-4 space-y-3 text-xs leading-5 text-slate-600">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="inline-flex items-center gap-2 font-bold text-slate-800">
+                    <Gift className="h-4 w-4 text-[#f1a526]" />
+                    {bonusTurnoverComplete ? "Turnover complete" : "Turnover active"}
+                  </span>
+                  <span>{bonusStatus.isLoading ? "Checking..." : `${bonusProgress.toFixed(0)}%`}</span>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-1">
+                  <div>Active bonus: <strong>${bonusStatus.bonusTotal.toFixed(2)}</strong></div>
+                  <div>Required volume: <strong>${bonusStatus.requiredTurnover.toFixed(2)}</strong></div>
+                  <div>Remaining: <strong>${bonusStatus.remainingTurnover.toFixed(2)}</strong></div>
+                </div>
+                {bonusBlocksWithdrawal ? (
+                  <label className="flex cursor-pointer items-start gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={withdrawWithoutBonus}
+                      onChange={(event) => setWithdrawWithoutBonus(event.target.checked)}
+                      className="mt-1 h-4 w-4 shrink-0 accent-[#2f72f6]"
+                    />
+                    <span>
+                      Withdraw without bonus. Your max withdrawable balance becomes{" "}
+                      <strong>${Math.max(0, availableBalance - bonusStatus.bonusTotal).toFixed(2)}</strong>.
+                    </span>
+                  </label>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+
+          <Button
+            type="submit"
+            disabled={
+              loading ||
+              !amount ||
+              amountValue < minimumWithdrawalAmount ||
+              (bonusBlocksWithdrawal && !withdrawWithoutBonus) ||
+              amountValue > effectiveWithdrawalBalance ||
+              (method === "mpesa" ? !mpesaPhoneNumber.trim() : !address.trim()) ||
+              (method === "crypto" && !selectedCrypto)
+            }
+            className="h-12 w-full rounded-lg bg-[#2f72f6] text-lg font-bold text-white shadow-[0_18px_36px_rgba(47,114,246,0.35)] transition hover:bg-[#3980ff] disabled:cursor-not-allowed disabled:bg-[#2f72f6] disabled:text-white/85 disabled:opacity-100"
+          >
+            {loading ? (method === "mpesa" ? "Sending payout..." : "Submitting withdrawal...") : method === "mpesa" ? "Withdraw to M-PESA" : "Submit Withdrawal"}
+          </Button>
+
+          <p className="mx-auto max-w-[320px] text-center text-xs leading-5 text-white/62">
+            <Link to="/terms" className="underline underline-offset-2 hover:text-white">Terms and Conditions</Link> are priority considerations to terms and condition-in matterity.
+          </p>
+        </aside>
+      </form>
     </div>
   );
 };

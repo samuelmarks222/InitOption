@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, BadgeCheck, CircleHelp, Clock3, Minus, Plus, ShieldCheck, Smartphone, XCircle } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Bitcoin, CircleHelp, Clock3, ShieldCheck, Smartphone, XCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MpesaIcon } from "@/components/ui/MpesaIcon";
 import { toast } from "@/hooks/use-toast";
 import { SiteLogo } from "@/components/branding/SiteLogo";
@@ -40,27 +39,6 @@ const getCryptoAutomationPriority = (method: Pick<CryptoPaymentMethod, "attribut
   if (method.attribution_mode === "memo") return 1;
   return 2;
 };
-
-const GENERIC_CRYPTO_ICONS = [
-  "https://assets.coincap.io/assets/icons/btc@2x.png",
-  "https://assets.coincap.io/assets/icons/eth@2x.png",
-  "https://assets.coincap.io/assets/icons/usdt@2x.png",
-  "https://assets.coincap.io/assets/icons/bnb@2x.png",
-];
-
-const GenericCryptoMethodBadge = () => (
-  <div className="flex shrink-0 items-center">
-    {GENERIC_CRYPTO_ICONS.map((icon, index) => (
-      <span
-        key={icon}
-        className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-[#22364a] bg-white"
-        style={{ marginLeft: index === 0 ? 0 : -8, zIndex: 10 - index }}
-      >
-        <img src={icon} alt="" className="h-7 w-7 rounded-full object-cover" />
-      </span>
-    ))}
-  </div>
-);
 
 const Deposit = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -416,18 +394,6 @@ const Deposit = () => {
     window.location.assign(checkoutUrl);
   };
 
-  const handleAdjustAmount = (direction: -1 | 1) => {
-    const stepAmount = amountValue >= 300 ? 50 : amountValue >= 150 ? 25 : 10;
-    const baseAmount = amountValue > 0 ? amountValue : minimumDepositAmount;
-    const nextAmount = Math.max(minimumDepositAmount, baseAmount + stepAmount * direction);
-
-    if (selectedBonusOffer && !doesDepositAmountMatchBonusOffer({ amount: nextAmount, offer: selectedBonusOffer })) {
-      setSelectedBonusOfferId("");
-    }
-
-    setAmount(nextAmount);
-  };
-
   const handleAmountChange = (value: string) => {
     if (value === "") {
       setAmount("");
@@ -528,13 +494,6 @@ const Deposit = () => {
       setLoading(false);
     }
   };
-
-  const automationCopy =
-    selectedMethod === "mpesa"
-      ? "Choose M-PESA, enter the amount and phone number, then confirm the payment prompt on that device."
-      : !selectedCryptoMethod
-        ? "Cryptocurrency deposits are temporarily unavailable right now."
-        : "Choose cryptocurrency here, set the amount, optionally attach a bonus offer, then press Next to continue.";
 
   const bonusAvailabilityCopy = hasEligibleBonusOffers
     ? "The matching bonus tier is applied from the amount you enter, and you can tap any tier below to jump to its starting amount."
@@ -640,377 +599,324 @@ const Deposit = () => {
           };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,#23283b_0%,#1e2131_48%,#141726_100%)] p-2 text-white sm:p-3 md:p-5">
-      <div className="mx-auto mt-3 w-full max-w-[1080px] space-y-3 sm:mt-4 sm:space-y-4 md:mt-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
-          <SiteLogo to="/" subtitle="Secure funding" />
-          <Link to="/trade" className="flex w-fit items-center gap-2 text-[#9ab7c9] transition-colors hover:text-white">
-            <ArrowLeft className="h-5 w-5" />
-            Back to Trading
-          </Link>
+    <div className="min-h-screen overflow-x-hidden bg-[#0f1624] text-white">
+      <div className="border-b border-white/10 bg-[#121927]/95">
+        <div className="mx-auto flex min-h-[64px] w-full max-w-[1360px] flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <div className="flex min-w-0 items-center gap-5">
+            <SiteLogo to="/" imageClassName="h-9 sm:h-10" />
+            <div className="hidden h-8 w-px bg-white/12 sm:block" />
+            <Link to="/trade" className="flex w-fit items-center gap-2 text-sm text-white/86 transition-colors hover:text-white">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Trading
+            </Link>
+          </div>
         </div>
-
-        <Card className="overflow-hidden rounded-[16px] border border-white/10 bg-[#23283b] shadow-[0_18px_44px_rgba(0,0,0,0.32)]">
-          <CardHeader className="border-b border-white/8 bg-[#23283b] px-4 py-4 sm:px-5 md:px-6">
-            <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Funding desk</div>
-            <CardTitle className="mt-1 text-xl text-white sm:text-2xl md:text-[28px]">Top up your balance</CardTitle>
-            <CardDescription className="mt-1 max-w-[760px] text-xs leading-5 text-[#9dc2c8] sm:text-sm">
-              Choose the payment method, enter the amount, attach any available bonus, and continue to payment.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="px-4 py-4 sm:px-5 md:px-6 md:py-5">
-            <form onSubmit={handleDeposit} className="grid gap-4 xl:grid-cols-[280px,minmax(0,1fr)]">
-              <div className="space-y-4">
-                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4 text-sm leading-6 text-slate-200">
-                  {automationCopy}
-                </div>
-
-                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
-                  <label className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Select payment method</label>
-                  <div className="mt-3 grid gap-2.5">
-                    <button
-                      type="button"
-                      onClick={() => handleSelectMethod("mpesa")}
-                      className={`flex flex-col items-start gap-3 rounded-[14px] border p-3 text-left transition sm:flex-row sm:items-center sm:gap-3 ${
-                        selectedMethod === "mpesa"
-                          ? "border-[#0fa053]/60 bg-[#1e2330] shadow-[0_12px_26px_rgba(15,160,83,0.2)]"
-                          : "border-white/10 bg-[#1e2330] hover:border-white/20"
-                      }`}
-                    >
-                      <MpesaIcon className="h-9 w-[84px] shrink-0 sm:h-10 sm:w-[92px]" />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-bold leading-tight text-white sm:text-[15px]">M-PESA Mobile Money</div>
-                        <div className="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#9dc2c8]">Pay from your phone</div>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={cryptoMethods.length === 0}
-                      onClick={() => handleSelectMethod("crypto")}
-                      className={`flex flex-col items-start gap-3 rounded-[14px] border p-3 text-left transition disabled:cursor-not-allowed disabled:opacity-60 sm:flex-row sm:items-center sm:gap-3 ${
-                        selectedMethod === "crypto"
-                          ? "border-white/12 bg-[#1e2330] shadow-[0_12px_26px_rgba(255,255,255,0.04)]"
-                          : "border-white/10 bg-[#1e2330] hover:border-white/20"
-                      }`}
-                    >
-                      <GenericCryptoMethodBadge />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-bold leading-tight text-white sm:text-[15px]">Cryptocurrency</div>
-                        <div className="mt-1 text-[11px] uppercase tracking-[0.14em] text-[#9dc2c8]">Choose coin on next step</div>
-                      </div>
-                    </button>
-                  </div>
-                  <p className="mt-3 text-xs leading-5 text-[#9dc2c8]">
-                    {selectedMethod === "mpesa"
-                      ? "M-PESA charges the exact KES equivalent of the USD amount you choose here."
-                      : "After you press Next, you will choose the cryptocurrency on the payment page."}
-                  </p>
-                </div>
-
-                {cryptoMethods.length === 0 && (
-                  <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4 text-sm leading-6 text-slate-200">
-                    Cryptocurrency deposits are temporarily unavailable right now.
-                  </div>
-                )}
-
-                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
-                  <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Account snapshot</div>
-                  <div className="mt-4 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                      <div className="text-sm text-[#9dc2c8]">Live Balance</div>
-                      <div className="mt-2 break-all text-3xl font-bold text-white">${storedLiveBalance.toFixed(2)}</div>
-                      {reservedWithdrawalBalance > 0 ? (
-                        <div className="mt-2 text-xs leading-5 text-[#9dc2c8]">
-                          ${availableLiveBalance.toFixed(2)} available for trading. ${reservedWithdrawalBalance.toFixed(2)} reserved for pending withdrawals.
-                        </div>
-                      ) : null}
-                    </div>
-                    <div className="rounded-full bg-[#0fa053]/12 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-[#0fa053]">
-                      Live account
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-4">
-                  <label className="text-sm font-medium text-white">Amount (USD)</label>
-                  <div className="rounded-[14px] border border-white/10 bg-[#1e2131] p-3.5 shadow-[0_16px_34px_rgba(0,0,0,0.2)]">
-                    <div className="flex flex-col gap-3 rounded-[12px] bg-[#23283b] p-3 lg:flex-row lg:items-center">
-                      <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <span className="shrink-0 text-[18px] font-black text-[#0fa053] sm:text-[22px]">USD</span>
-                        <input
-                          type="number"
-                          step="1"
-                          value={amount}
-                          onChange={(event) => handleAmountChange(event.target.value)}
-                          placeholder={`Enter amount (Min $${minimumDepositAmount})`}
-                          className="min-w-0 w-full bg-transparent text-[22px] font-bold text-white outline-none placeholder:text-slate-500 sm:text-[26px]"
-                        />
-                      </div>
-
-                      <div className="min-w-0 text-left lg:min-w-[124px] lg:text-right">
-                        <div className="text-sm font-bold text-[#ff9a3d]">
-                          {bonusEnabled && bonusAmount > 0 ? `+${bonusAmount.toFixed(2)} $` : "Bonus off"}
-                        </div>
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-[#a7bdd9]">
-                          {bonusEnabled && bonusPercent > 0 ? `${bonusPercent}% reward` : "Base deposit"}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 self-start lg:self-auto">
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustAmount(-1)}
-                          className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/15"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustAmount(1)}
-                          className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/15"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 flex flex-col gap-3 rounded-[12px] bg-[#23283b] px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex min-w-0 items-start gap-3">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={bonusEnabled}
-                          aria-disabled={!hasEligibleBonusOffers}
-                          onClick={() => {
-                            if (!hasEligibleBonusOffers) return;
-                            setBonusEnabled((current) => !current);
-                          }}
-                          className={`relative inline-flex h-7 w-12 items-center rounded-full border transition ${
-                            bonusEnabled && hasEligibleBonusOffers
-                              ? "border-[#ff9a3d]/70 bg-[#ff9a3d]"
-                              : "border-white/12 bg-white/10"
-                          } ${!hasEligibleBonusOffers ? "cursor-not-allowed opacity-60" : ""}`}
-                        >
-                          <span
-                            className={`inline-block h-5 w-5 rounded-full bg-white shadow transition ${
-                              bonusEnabled && hasEligibleBonusOffers ? "translate-x-6" : "translate-x-1"
-                            }`}
-                          />
-                        </button>
-
-                        <div className="min-w-0">
-                          <div className="font-semibold text-[#ffc27a]">Activate bonus</div>
-                          <div className="break-words text-xs leading-5 text-[#a7bdd9]">
-                            {bonusEnabled && bonusPercent > 0
-                              ? `${bonusPercent}% bonus applied for the current amount range`
-                              : hasEligibleBonusOffers
-                              ? "Enter any amount and the matching range bonus will apply automatically"
-                              : bonusAvailabilityCopy}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-[#a7bdd9]">
-                        <CircleHelp className="h-4 w-4" />
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                        <div className="text-sm font-medium text-white">Available deposit bonuses</div>
-                        {loadingBonuses ? <div className="text-xs text-[#9dc2c8]">Refreshing offers...</div> : null}
-                      </div>
-
-                      {resolvedBonusCatalog.length === 0 ? (
-                        <div className="mt-3 rounded-[12px] border border-white/8 bg-[#23283b] px-3 py-3 text-sm text-[#9dc2c8]">
-                          No deposit bonus offers are available right now.
-                        </div>
-                      ) : (
-                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                          {resolvedBonusCatalog.map((offer) => {
-                            const isSelected = appliedBonusOffer?.id === offer.id;
-                            const offerMatchesCurrentAmount = doesDepositAmountMatchBonusOffer({ amount: amountValue, offer });
-                            const previewAmount = offerMatchesCurrentAmount ? amountValue : resolveDepositBonusOfferMinimumAmount(offer);
-                            const currentBonusAmount = calculateDepositBonusAmountFromOffer({ amount: previewAmount, offer });
-                            const projectedCredit = previewAmount + currentBonusAmount;
-                            const badgeLabel = offer.eligible ? `+${Number(offer.bonus_percent ?? 0)}%` : "USED";
-                            const rangeLabel = formatDepositBonusOfferRange({ offer });
-                            const maximumBonusAmount = Number(offer.maximum_bonus_amount_resolved ?? 0);
-
-                            return (
-                              <button
-                                key={offer.id}
-                                type="button"
-                                disabled={!offer.eligible}
-                                onClick={() => handleSelectBonusOffer(offer)}
-                                className={`rounded-[12px] border px-3 py-3 text-left transition ${
-                                  isSelected
-                                    ? "border-[#ff9a3d] bg-[#1e2330] text-white shadow-[0_16px_26px_rgba(255,154,61,0.18)]"
-                                    : offer.eligible
-                                      ? "border-transparent bg-[#1e2330] text-white hover:border-[#ffc27a]/40"
-                                      : "border-white/5 bg-[#1e2330] text-white/60"
-                                } ${!offer.eligible ? "cursor-not-allowed opacity-80" : ""}`}
-                              >
-                                <div className="flex items-start justify-between gap-3">
-                                  <span className="min-w-0 break-words text-base font-bold sm:text-lg">{rangeLabel.replace(/\$/g, "")} USD</span>
-                                  <span
-                                    className={`rounded-[10px] px-2.5 py-1 text-xs font-bold ${
-                                      isSelected
-                                        ? "bg-[#ff9a3d] text-[#1c1f2d]"
-                                        : offer.eligible
-                                          ? "bg-[#1e2330] text-[#ff9a3d]"
-                                          : "bg-white/10 text-white/70"
-                                    }`}
-                                  >
-                                    {badgeLabel}
-                                  </span>
-                                </div>
-                                <div className={`mt-3 break-words text-xs leading-5 ${isSelected ? "text-white/90" : offer.eligible ? "text-[#a7bdd9]" : "text-white/55"}`}>
-                                  {offer.eligible
-                                    ? offerMatchesCurrentAmount
-                                      ? `${projectedCredit.toFixed(2)} $ credited at this amount`
-                                      : `From ${projectedCredit.toFixed(2)} $ credited`
-                                    : offer.reason ?? "Unavailable"}
-                                </div>
-                                {offer.eligible && maximumBonusAmount > 0 ? (
-                                  <div className={`mt-1 text-[11px] ${isSelected ? "text-white/80" : "text-[#87a5c3]"}`}>
-                                    Max bonus {maximumBonusAmount.toFixed(2)} $
-                                  </div>
-                                ) : null}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {selectedMethod === "mpesa" ? (
-                  <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                      <MpesaIcon className="h-8 w-[74px] shrink-0" />
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold text-white">M-PESA number</div>
-                        <div className="text-xs text-[#9dc2c8]">Enter the phone number that will receive the STK prompt.</div>
-                      </div>
-                    </div>
-                    <input
-                      type="tel"
-                      value={mpesaPhoneNumber}
-                      onChange={(event) => setMpesaPhoneNumber(event.target.value)}
-                      placeholder="e.g. 0712345678 or 254712345678"
-                      className="mt-4 w-full rounded-[16px] border border-white/10 bg-[#1e2330] px-4 py-3 text-base text-white outline-none transition placeholder:text-slate-500 focus:border-[#0fa053]/60"
-                    />
-                    <div className="mt-3 rounded-[12px] border border-white/8 bg-[#23283b] p-3">
-                      <div className="flex flex-col gap-2 text-sm text-[#9dc2c8] sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                        <span>Mobile money charge</span>
-                        <span className="break-all font-semibold text-white">{formatCurrencyAmount(amountKes, "KES")}</span>
-                      </div>
-                      <div className="mt-2 text-xs leading-5 text-[#9dc2c8]">
-                        The exact KES equivalent is requested on M-PESA, then the platform credits the USD amount shown here.
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="grid gap-4">
-                  <div className="rounded-[14px] border border-white/8 bg-[#1e2131] px-4 py-3">
-                    <div className="text-sm font-medium text-white">Will be credited</div>
-                    <div className="text-xs leading-5 text-[#9dc2c8]">
-                      {bonusEnabled && bonusAmount > 0
-                        ? `${amountValue.toFixed(2)} $ + ${bonusAmount.toFixed(2)} $ bonus`
-                        : "Base deposit only"}
-                    </div>
-                    <div className="mt-3 text-2xl font-bold text-white">{receiveAmount.toFixed(2)} $</div>
-                  </div>
-                </div>
-
-                <div className="rounded-[14px] border border-white/8 bg-[#1e2131] p-4">
-                  <Button
-                    type="submit"
-                    disabled={
-                      loading ||
-                      !amount ||
-                      amountValue < minimumDepositAmount ||
-                      (selectedMethod === "mpesa" && !mpesaPhoneNumber.trim()) ||
-                      (selectedMethod === "crypto" && !selectedCryptoMethod)
-                    }
-                    className="w-full px-4 py-4 text-base gradient-primary sm:py-5"
-                  >
-                    {loading
-                      ? selectedMethod === "mpesa"
-                        ? "Sending payment prompt..."
-                        : "Opening payment page..."
-                      : selectedMethod === "mpesa"
-                        ? "Send Payment Prompt"
-                        : !selectedCryptoMethod
-                          ? "Select payment method first"
-                          : "Next"}
-                  </Button>
-                  <p className="mt-4 text-center text-xs leading-5 text-[#9dc2c8]">
-                    {selectedMethod === "mpesa"
-                      ? "Approve the prompt on your M-PESA phone, and the platform will update automatically after the payment clears."
-                      : "After you click Next, you will choose the cryptocurrency on the payment page."}
-                  </p>
-                  {selectedMethod === "mpesa" && lastMobileMoneyRequest ? (
-                    <div className={`mt-4 overflow-hidden rounded-[18px] ${mobileMoneyStatusTone.cardClassName}`}>
-                      <div className="flex flex-col gap-4 p-4 sm:p-5">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${mobileMoneyStatusTone.iconClassName}`}>
-                            <MobileMoneyStatusIcon className="h-5 w-5" />
-                          </div>
-
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <div className="text-sm font-bold text-white">{mobileMoneyStatusTone.title}</div>
-                              <span
-                                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.16em] ${mobileMoneyStatusTone.badgeClassName}`}
-                              >
-                                {mobileMoneyStatusTone.label}
-                              </span>
-                            </div>
-                            <p className="mt-2 text-sm leading-6 text-white/90">{mobileMoneyStatusTone.description}</p>
-                          </div>
-                        </div>
-
-                        <div className="grid gap-3 sm:grid-cols-3">
-                          <div className="rounded-[16px] border border-white/10 bg-black/10 px-4 py-3">
-                            <div className="text-[11px] font-black uppercase tracking-[0.16em] text-white/65">Phone</div>
-                            <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-white">
-                              <Smartphone className="h-4 w-4 text-white/70" />
-                              {lastMobileMoneyRequest.masked_phone_number}
-                            </div>
-                          </div>
-
-                          <div className="rounded-[16px] border border-white/10 bg-black/10 px-4 py-3">
-                            <div className="text-[11px] font-black uppercase tracking-[0.16em] text-white/65">KES request</div>
-                            <div className="mt-2 text-sm font-semibold text-white">
-                              {formatCurrencyAmount(lastMobileMoneyKesAmount || amountKes, "KES")}
-                            </div>
-                          </div>
-
-                          <div className="rounded-[16px] border border-white/10 bg-black/10 px-4 py-3">
-                            <div className="text-[11px] font-black uppercase tracking-[0.16em] text-white/65">USD credit</div>
-                            <div className="mt-2 text-sm font-semibold text-white">
-                              {(lastMobileMoneyUsdAmount || receiveAmount).toFixed(2)} $
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
       </div>
+
+      <form onSubmit={handleDeposit} className="mx-auto grid w-full max-w-[1360px] gap-0 lg:grid-cols-[480px,minmax(0,1fr)]">
+        <aside className="border-b border-white/10 px-5 py-8 sm:px-6 lg:min-h-[calc(100vh-65px)] lg:border-b-0 lg:border-r lg:border-white/10 lg:px-8 lg:py-12">
+          <div className="mx-auto w-full max-w-[320px] space-y-9 lg:mx-0 lg:ml-auto">
+            <section>
+              <div className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#aab5c6]">Payment method</div>
+              <div className="mt-5 grid gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleSelectMethod("mpesa")}
+                  className={`flex min-h-[76px] items-center gap-4 rounded-lg border px-4 text-left transition ${
+                    selectedMethod === "mpesa"
+                      ? "border-[#22b978]/80 bg-[#123e35] shadow-[0_0_0_1px_rgba(34,185,120,0.18),0_16px_34px_rgba(10,126,79,0.18)]"
+                      : "border-white/12 bg-[#202838] hover:border-white/24"
+                  }`}
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#20b87a]">
+                    <MpesaIcon className="h-8 w-8" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-base font-bold leading-tight text-white">M-PESA Mobile Money</span>
+                    <span className="mt-1 block text-[11px] font-bold uppercase tracking-[0.08em] text-white/76">Pay from your phone</span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={cryptoMethods.length === 0}
+                  onClick={() => handleSelectMethod("crypto")}
+                  className={`flex min-h-[76px] items-center gap-4 rounded-lg border px-4 text-left transition disabled:cursor-not-allowed disabled:opacity-55 ${
+                    selectedMethod === "crypto"
+                      ? "border-[#2f8cff]/80 bg-[#1d314a] shadow-[0_0_0_1px_rgba(47,140,255,0.18),0_16px_34px_rgba(24,92,176,0.14)]"
+                      : "border-white/12 bg-[#202838] hover:border-white/24"
+                  }`}
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#287bff] text-white">
+                    <Bitcoin className="h-7 w-7" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-base font-bold leading-tight text-white">Cryptocurrency</span>
+                    <span className="mt-1 block text-[11px] font-bold uppercase tracking-[0.08em] text-white/76">Choose coin</span>
+                  </span>
+                </button>
+              </div>
+              {cryptoMethods.length === 0 ? (
+                <p className="mt-3 text-xs leading-5 text-[#8ea0b7]">Cryptocurrency deposits are temporarily unavailable right now.</p>
+              ) : null}
+            </section>
+
+            <section>
+              <div className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#aab5c6]">Account snapshot</div>
+              <div className="mt-5 rounded-lg border border-white/8 bg-[#202838] p-5">
+                <div className="text-sm text-white">Live Balance</div>
+                <div className="mt-3 break-all text-[40px] font-bold leading-none text-white">${storedLiveBalance.toFixed(2)}</div>
+                <div className="mt-4 inline-flex rounded-full bg-[#19b872]/14 px-3 py-1 text-xs font-bold uppercase tracking-[0.06em] text-[#35d891]">
+                  Live account
+                </div>
+                {reservedWithdrawalBalance > 0 ? (
+                  <p className="mt-4 text-xs leading-5 text-[#96a8c0]">
+                    ${availableLiveBalance.toFixed(2)} available. ${reservedWithdrawalBalance.toFixed(2)} reserved for pending withdrawals.
+                  </p>
+                ) : null}
+              </div>
+            </section>
+          </div>
+        </aside>
+
+        <main className="px-5 py-8 sm:px-8 lg:px-9 lg:py-12 xl:px-10">
+          <div className="mx-auto w-full max-w-[690px] lg:mx-0">
+            <div>
+              <h1 className="text-[32px] font-bold leading-tight text-white sm:text-[38px]">Top Up Your Balance</h1>
+            </div>
+
+            <div className="mt-8 grid gap-4 md:grid-cols-[minmax(0,1fr)_310px] md:items-start">
+              <div className="min-w-0">
+                <label className="text-sm font-medium text-white">Amount (USD)</label>
+                <div className="mt-2 flex min-h-[44px] overflow-hidden rounded-lg border border-[#39445a] bg-[#202838] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                  <div className="flex shrink-0 items-center gap-2 border-r border-[#39445a] px-3">
+                    <span className="relative h-6 w-6 overflow-hidden rounded-full bg-white shadow-[0_0_0_1px_rgba(255,255,255,0.22)]">
+                      <span className="absolute inset-0 bg-[repeating-linear-gradient(to_bottom,#c63b3b_0_2px,#ffffff_2px_4px)]" />
+                      <span className="absolute left-0 top-0 h-[52%] w-[46%] bg-[#23477f]" />
+                    </span>
+                    <span className="text-base font-bold text-white">USD</span>
+                  </div>
+                  <input
+                    type="number"
+                    step="1"
+                    value={amount}
+                    onChange={(event) => handleAmountChange(event.target.value)}
+                    placeholder={`Enter amount (Min $${minimumDepositAmount})`}
+                    className="min-w-0 flex-1 bg-transparent px-4 text-sm text-white outline-none placeholder:text-[#8c96a9]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex min-w-0 items-start gap-3 pt-0 md:pt-[28px]">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={bonusEnabled}
+                  aria-disabled={!hasEligibleBonusOffers}
+                  onClick={() => {
+                    if (!hasEligibleBonusOffers) return;
+                    setBonusEnabled((current) => !current);
+                  }}
+                  className={`relative mt-0.5 inline-flex h-7 w-12 shrink-0 items-center rounded-full transition ${
+                    bonusEnabled && hasEligibleBonusOffers ? "bg-[#20be7a]" : "bg-white/18"
+                  } ${!hasEligibleBonusOffers ? "cursor-not-allowed opacity-60" : ""}`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 rounded-full bg-white shadow transition ${
+                      bonusEnabled && hasEligibleBonusOffers ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-white">Activate bonus</span>
+                    <CircleHelp className="h-4 w-4 text-[#8fa0b7]" />
+                  </div>
+                  <p className="mt-2 text-sm leading-5 text-[#a6b2c5]">
+                    {bonusEnabled && bonusPercent > 0
+                      ? `${bonusPercent}% bonus applied to this amount range`
+                      : hasEligibleBonusOffers
+                        ? "Enter any amount and the matching range bonus will apply automatically"
+                        : bonusAvailabilityCopy}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              {loadingBonuses ? <div className="mb-3 text-xs text-[#8fa0b7]">Refreshing offers...</div> : null}
+              {resolvedBonusCatalog.length === 0 ? (
+                <div className="rounded-lg border border-white/10 bg-[#202838] px-4 py-3 text-sm text-[#aab6c8]">
+                  No deposit bonus offers are available right now.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {resolvedBonusCatalog.map((offer) => {
+                    const isSelected = appliedBonusOffer?.id === offer.id;
+                    const offerMatchesCurrentAmount = doesDepositAmountMatchBonusOffer({ amount: amountValue, offer });
+                    const previewAmount = offerMatchesCurrentAmount ? amountValue : resolveDepositBonusOfferMinimumAmount(offer);
+                    const currentBonusAmount = calculateDepositBonusAmountFromOffer({ amount: previewAmount, offer });
+                    const projectedCredit = previewAmount + currentBonusAmount;
+                    const badgeLabel = offer.eligible ? `+${Number(offer.bonus_percent ?? 0)}% bonus` : "USED";
+                    const rangeLabel = formatDepositBonusOfferRange({ offer }).replace(/\$/g, "");
+
+                    return (
+                      <button
+                        key={offer.id}
+                        type="button"
+                        disabled={!offer.eligible}
+                        onClick={() => handleSelectBonusOffer(offer)}
+                        className={`min-h-[74px] rounded-lg border px-4 py-3 text-left transition ${
+                          isSelected
+                            ? "border-[#2f9aff] bg-[#20324a] shadow-[0_0_0_1px_rgba(47,154,255,0.42),0_14px_28px_rgba(14,95,190,0.18)]"
+                            : offer.eligible
+                              ? "border-white/22 bg-[#3a4151] hover:border-[#5ea8ff]"
+                              : "border-white/12 bg-[#3a4151]/80 opacity-70"
+                        } ${!offer.eligible ? "cursor-not-allowed" : ""}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="min-w-0 break-words text-lg font-bold leading-tight text-white">{rangeLabel} USD</span>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                              isSelected ? "bg-[#2f9aff]/18 text-[#75bdff]" : "bg-white/14 text-[#c5ccd8]"
+                            }`}
+                          >
+                            {badgeLabel}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-xs leading-4 text-[#c7cfdb]">
+                          {offer.eligible
+                            ? offerMatchesCurrentAmount
+                              ? `${projectedCredit.toFixed(2)} $ credited at this amount`
+                              : `From ${projectedCredit.toFixed(2)} $`
+                            : offer.reason ?? "Unavailable"}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {selectedMethod === "mpesa" ? (
+              <div className="mt-7">
+                <label className="text-sm font-medium text-white">M-PESA number</label>
+                <div className="mt-2 flex min-h-[44px] items-center rounded-lg border border-[#39445a] bg-[#202838] px-4 focus-within:border-[#20be7a]/70">
+                  <input
+                    type="tel"
+                    value={mpesaPhoneNumber}
+                    onChange={(event) => setMpesaPhoneNumber(event.target.value)}
+                    placeholder="e.g., 0712345678 or 254712345678"
+                    className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#8c96a9]"
+                  />
+                  <MpesaIcon className="ml-3 h-7 w-[58px] shrink-0" />
+                </div>
+              </div>
+            ) : null}
+
+            {selectedMethod === "crypto" ? (
+              <div className="mt-7 rounded-lg border border-white/12 bg-[#202838] px-4 py-4 text-sm leading-6 text-[#c7d0df]">
+                {selectedCryptoMethod
+                  ? `${selectedCryptoMethod.coin_name} checkout will open after you press Next.`
+                  : "Cryptocurrency deposits are temporarily unavailable right now."}
+              </div>
+            ) : null}
+
+            <div className="mt-5 grid gap-4 rounded-lg border border-white/12 bg-[#202838] px-4 py-4 sm:grid-cols-[minmax(0,1fr)_minmax(160px,220px)]">
+              <div>
+                <div className="text-sm text-white">Mobile money charge</div>
+                <div className="mt-1 text-lg font-bold text-white">{selectedMethod === "mpesa" ? formatCurrencyAmount(amountKes, "KES") : "0.00 $"}</div>
+                <p className="mt-1 max-w-[360px] text-xs leading-4 text-[#8fa0b7]">
+                  {selectedMethod === "mpesa"
+                    ? "M-PESA requests the KES equivalent and the platform credits the USD amount."
+                    : "Crypto network charges are handled on the hosted checkout page."}
+                </p>
+              </div>
+              <div className="border-white/12 sm:border-l sm:pl-5 sm:text-right">
+                <div className="text-sm text-white">Will be credited</div>
+                <div className="mt-1 text-lg font-bold text-white">{receiveAmount.toFixed(2)} $</div>
+                <p className="mt-1 text-xs leading-4 text-[#8fa0b7]">
+                  {bonusEnabled && bonusAmount > 0 ? `${amountValue.toFixed(2)} $ + ${bonusAmount.toFixed(2)} $ bonus` : "Base deposit only"}
+                </p>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={
+                loading ||
+                !amount ||
+                amountValue < minimumDepositAmount ||
+                (selectedMethod === "mpesa" && !mpesaPhoneNumber.trim()) ||
+                (selectedMethod === "crypto" && !selectedCryptoMethod)
+              }
+              className="mt-5 h-12 w-full rounded-lg bg-[#20be7a] text-base font-bold text-white shadow-[0_14px_32px_rgba(32,190,122,0.28)] transition hover:bg-[#28c985] disabled:cursor-not-allowed disabled:bg-[#20be7a] disabled:text-white/85 disabled:opacity-100"
+            >
+              {loading
+                ? selectedMethod === "mpesa"
+                  ? "Sending payment prompt..."
+                  : "Opening payment page..."
+                : selectedMethod === "mpesa"
+                  ? "Send Payment Prompt"
+                  : !selectedCryptoMethod
+                    ? "Select payment method first"
+                    : "Next"}
+            </Button>
+
+            <p className="mt-3 text-center text-sm leading-5 text-[#a6b2c5]">
+              {selectedMethod === "mpesa"
+                ? "Instructions for your Send Payment Prompt will appear after submission."
+                : "After you click Next, you will choose the cryptocurrency on the payment page."}
+            </p>
+
+            {selectedMethod === "mpesa" && lastMobileMoneyRequest ? (
+              <div className={`mt-5 overflow-hidden rounded-lg ${mobileMoneyStatusTone.cardClassName}`}>
+                <div className="flex flex-col gap-4 p-4 sm:p-5">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${mobileMoneyStatusTone.iconClassName}`}>
+                      <MobileMoneyStatusIcon className="h-5 w-5" />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="text-sm font-bold text-white">{mobileMoneyStatusTone.title}</div>
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] ${mobileMoneyStatusTone.badgeClassName}`}>
+                          {mobileMoneyStatusTone.label}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-white/90">{mobileMoneyStatusTone.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-lg border border-white/10 bg-black/10 px-4 py-3">
+                      <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-white/65">Phone</div>
+                      <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-white">
+                        <Smartphone className="h-4 w-4 text-white/70" />
+                        {lastMobileMoneyRequest.masked_phone_number}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-white/10 bg-black/10 px-4 py-3">
+                      <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-white/65">KES request</div>
+                      <div className="mt-2 text-sm font-semibold text-white">
+                        {formatCurrencyAmount(lastMobileMoneyKesAmount || amountKes, "KES")}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-white/10 bg-black/10 px-4 py-3">
+                      <div className="text-[11px] font-bold uppercase tracking-[0.08em] text-white/65">USD credit</div>
+                      <div className="mt-2 text-sm font-semibold text-white">
+                        {(lastMobileMoneyUsdAmount || receiveAmount).toFixed(2)} $
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </main>
+      </form>
     </div>
   );
 };
