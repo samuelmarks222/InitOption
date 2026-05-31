@@ -35,6 +35,7 @@ import {
 import { CandleAggregator } from "./CandleAggregator";
 import ChartToolbar, { ChartType, CandleIcon } from "./ChartToolbar";
 import { TradeMarkersOverlay } from "./TradeMarkersOverlay";
+import { LiveChartBeacon } from "./LiveChartBeacon";
 import { TRADING_DOWN_COLOR, TRADING_UP_COLOR } from "./tradingPalette";
 import { ActiveIndicator } from "./indicators/types";
 import { calculateIndicator } from "./indicators/engine";
@@ -174,6 +175,11 @@ type PriceAlert = {
   id: string;
   price: number;
   triggered: boolean;
+};
+
+type LivePriceBeaconState = {
+  price: number;
+  logical: number | null;
 };
 
 const toLineChartData = (candles: OHLCCandle[]): LineData<Time>[] =>
@@ -1996,6 +2002,7 @@ const TradingChart = ({
 
   const [syncSeries, setSyncSeries] = useState<ChartSeriesApi | null>(null);
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
+  const [livePriceBeacon, setLivePriceBeacon] = useState<LivePriceBeaconState | null>(null);
   const [hoverPriceData, setHoverPriceData] = useState<{ price: number; top: number } | null>(null);
   const alertLineRefs = useRef<Record<string, IPriceLine>>({});
   const alertSeriesRef = useRef<ChartSeriesApi | null>(null);
@@ -2905,6 +2912,7 @@ const TradingChart = ({
     // Freeze trades to the visible live candle anchor shown on the chart.
     setCurrentPrice(seedCandle.close);
     setPriceChange(((seedCandle.close - seedCandle.open) / Math.max(seedCandle.open, 0.000001)) * 100);
+    setLivePriceBeacon({ price: seedCandle.close, logical: history.length });
 
     // Apply timeframe-appropriate bar spacing so candles look correct at each interval
     const containerWidth = mainRef.current?.clientWidth ?? 960;
@@ -2951,6 +2959,7 @@ const TradingChart = ({
         tf.seconds > 0 ? (effectiveMarkerTime - candle.time) / tf.seconds : 0;
       const markerLogical =
         historyRef.current.length + getIntrabarLogicalOffset(intrabarFraction);
+      setLivePriceBeacon({ price: candle.close, logical: markerLogical });
       onPriceUpdateRef.current?.(
         candle.close,
         effectiveMarkerTime,
@@ -3646,6 +3655,15 @@ const TradingChart = ({
                  assetSymbol={asset.symbol}
                  trades={activeTrades}
                  timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60}
+               />
+             )}
+             {!mobileHistoryOpen && !overlayUiSuppressed && (
+               <LiveChartBeacon
+                 chart={syncChart}
+                 series={syncSeries}
+                 timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60}
+                 livePrice={livePriceBeacon?.price ?? currentPrice}
+                 liveLogical={livePriceBeacon?.logical ?? null}
                />
              )}
            </>

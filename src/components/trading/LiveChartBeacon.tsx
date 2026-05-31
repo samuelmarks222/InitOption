@@ -1,12 +1,16 @@
 import { useEffect, useRef } from "react";
 import { IChartApi, ISeriesApi, Time } from "lightweight-charts";
-import { TRADING_UP_COLOR, TRADING_UP_RGB } from "./tradingPalette";
 
 interface Props {
   chart: IChartApi;
   series: ISeriesApi<any>;
   timeframeSeconds: number;
+  livePrice?: number | null;
+  liveLogical?: number | null;
 }
+
+const BEACON_COLOR = "#159bff";
+const BEACON_RGB = "21,155,255";
 
 const getUnixTime = (value: unknown) => {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -28,37 +32,13 @@ const getUnixTime = (value: unknown) => {
   return null;
 };
 
-const formatCountdown = (seconds: number) => {
-  const totalSeconds = Math.max(0, seconds);
-  if (totalSeconds < 10) {
-    return `${totalSeconds.toFixed(1)}s`;
-  }
-
-  const total = Math.max(0, Math.ceil(totalSeconds));
-  const days = Math.floor(total / 86400);
-  const hours = Math.floor((total % 86400) / 3600)
-    .toString()
-    .padStart(2, "0");
-  const minutes = Math.floor((total % 3600) / 60)
-    .toString()
-    .padStart(2, "0");
-  const remainder = Math.floor(total % 60)
-    .toString()
-    .padStart(2, "0");
-
-  if (days > 0) {
-    return `${days}d ${hours}:${minutes}`;
-  }
-
-  if (total >= 3600) {
-    return `${hours}:${minutes}:${remainder}`;
-  }
-
-  return `${minutes}:${remainder}`;
-};
-
-export const LiveChartBeacon = ({ chart, series, timeframeSeconds }: Props) => {
+export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, liveLogical }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const liveRef = useRef({ livePrice, liveLogical });
+
+  useEffect(() => {
+    liveRef.current = { livePrice, liveLogical };
+  }, [liveLogical, livePrice]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -68,26 +48,19 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds }: Props) => {
     marker.className = "absolute pointer-events-none";
 
     const pulse = document.createElement("div");
-    pulse.className = "absolute rounded-[8px]";
-    pulse.style.width = "12px";
-    pulse.style.height = "12px";
+    pulse.className = "absolute rounded-full";
+    pulse.style.width = "24px";
+    pulse.style.height = "24px";
     pulse.style.transform = "translate(-50%, -50%) scale(1)";
     marker.appendChild(pulse);
 
     const dot = document.createElement("div");
-    dot.className = "absolute rounded-[5px]";
-    dot.style.width = "6px";
-    dot.style.height = "6px";
+    dot.className = "absolute rounded-full";
+    dot.style.width = "10px";
+    dot.style.height = "10px";
     dot.style.transform = "translate(-50%, -50%)";
+    dot.style.border = "2px solid rgba(198,232,255,0.92)";
     marker.appendChild(dot);
-
-    const label = document.createElement("div");
-    label.className = "absolute rounded-md px-2 py-1 text-[11px] font-medium text-white";
-    label.style.transform = "translate(14px, -50%)";
-    label.style.background = "rgba(22, 26, 35, 0.88)";
-    label.style.border = "1px solid rgba(255,255,255,0.08)";
-    label.style.boxShadow = "0 8px 20px rgba(0,0,0,0.24)";
-    marker.appendChild(label);
 
     el.appendChild(marker);
 
@@ -118,8 +91,18 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds }: Props) => {
                 ? lastPoint.open
                 : null;
 
-      const x = lastTime !== null ? chart.timeScale().timeToCoordinate(lastTime as Time) : null;
-      const y = lastPrice !== null ? series.priceToCoordinate(lastPrice) : null;
+      const liveSnapshot = liveRef.current;
+      const resolvedPrice =
+        typeof liveSnapshot.livePrice === "number" && Number.isFinite(liveSnapshot.livePrice)
+          ? liveSnapshot.livePrice
+          : lastPrice;
+      const x =
+        typeof liveSnapshot.liveLogical === "number" && Number.isFinite(liveSnapshot.liveLogical)
+          ? chart.timeScale().logicalToCoordinate(liveSnapshot.liveLogical as never)
+          : lastTime !== null
+            ? chart.timeScale().timeToCoordinate(lastTime as Time)
+            : null;
+      const y = resolvedPrice !== null ? series.priceToCoordinate(resolvedPrice) : null;
 
       if (x === null || y === null || Number.isNaN(x) || Number.isNaN(y)) {
         marker.style.opacity = "0";
@@ -127,24 +110,22 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds }: Props) => {
         return;
       }
 
-      const nowSeconds = Date.now() / 1000;
-      const timeLeft = lastTime !== null ? Math.max(0, timeframeSeconds - (nowSeconds - lastTime)) : 0;
       const pulseMix = (Math.sin(performance.now() / 210) + 1) / 2;
+      const pulseScale = 0.74 + pulseMix * 1.35;
 
       marker.style.opacity = "1";
       marker.style.left = `${x}px`;
       marker.style.top = `${y}px`;
 
-      pulse.style.opacity = "0";
-      pulse.style.transform = "translate(-50%, -50%) scale(1)";
+      pulse.style.opacity = `${0.36 * (1 - pulseMix)}`;
+      pulse.style.transform = `translate(-50%, -50%) scale(${pulseScale})`;
+      pulse.style.background = `rgba(${BEACON_RGB},0.28)`;
+      pulse.style.border = `1px solid rgba(${BEACON_RGB},0.5)`;
+      pulse.style.boxShadow = `0 0 ${10 + pulseMix * 16}px rgba(${BEACON_RGB},0.5)`;
 
-      dot.style.background = TRADING_UP_COLOR;
-      dot.style.opacity = `${0.42 + pulseMix * 0.58}`;
-      dot.style.boxShadow = `0 0 0 ${0.4 + pulseMix * 0.9}px rgba(${TRADING_UP_RGB},0.14), 0 0 ${3 + pulseMix * 6}px rgba(${TRADING_UP_RGB},0.6)`;
-
-      label.textContent = formatCountdown(timeLeft);
-      label.style.top = "0";
-      label.style.opacity = "0.84";
+      dot.style.background = BEACON_COLOR;
+      dot.style.opacity = `${0.74 + pulseMix * 0.26}`;
+      dot.style.boxShadow = `0 0 0 ${2.5 + pulseMix * 2.5}px rgba(${BEACON_RGB},0.15), 0 0 ${8 + pulseMix * 10}px rgba(${BEACON_RGB},0.8)`;
 
       reqId = requestAnimationFrame(loop);
     };
@@ -157,5 +138,5 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds }: Props) => {
     };
   }, [chart, series, timeframeSeconds]);
 
-  return <div ref={containerRef} className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 46 }} />;
+  return <div ref={containerRef} className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 48 }} />;
 };
