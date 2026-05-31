@@ -954,6 +954,7 @@ const getAreaDisplaySettings = (styles: ChartStylePreferences) => {
     crosshairMarkerBackgroundColor: "#182131",
     crosshairMarkerRadius: 3,
     priceLineVisible: styles.priceLineVisible,
+    lastValueVisible: true,
   };
 };
 
@@ -2684,6 +2685,21 @@ const TradingChart = ({
     }
     scrollChartToLiveEdge();
   }, [asset.basePrice, asset.symbol, chartStyles, chartType, scrollChartToLiveEdge]);
+
+  // ─── Blinking dot on area chart ─────────────────────────────
+  useEffect(() => {
+    if (chartType !== "line" || !mainSeriesRef.current) return;
+    let visible = true;
+    const blink = setInterval(() => {
+      if (!mainSeriesRef.current) return;
+      visible = !visible;
+      mainSeriesRef.current.applyOptions({ lastValueVisible: visible });
+    }, 800);
+    return () => {
+      clearInterval(blink);
+      mainSeriesRef.current?.applyOptions({ lastValueVisible: true });
+    };
+  }, [chartType]);
 
   useEffect(() => {
     if (!mainSeriesRef.current) return;
