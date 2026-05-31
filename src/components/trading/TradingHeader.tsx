@@ -208,7 +208,8 @@ const TradingHeader = ({
           >
             <div className="min-w-0 flex flex-1 items-center gap-2 px-3">
               <span
-                className={`shrink-0 font-copy text-[10px] font-black uppercase tracking-[0.1em] ${accountNameTextClass}`}
+                className={`shrink-0 text-[11px] font-bold uppercase tracking-[0.1em] ${accountNameTextClass}`}
+                style={{ fontFamily: "Arial, sans-serif" }}
               >
                 {accountLabel}
               </span>
