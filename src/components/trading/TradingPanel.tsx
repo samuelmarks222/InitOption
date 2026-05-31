@@ -970,7 +970,7 @@ const TradingPanel = ({
                   onClick={() => setShowTimeSwitcher((value) => !value)}
                   className="relative hidden h-[42px] w-full cursor-pointer flex-col justify-center rounded-[5px] border border-[#596278] bg-[#2e3444] px-2 pb-1 pt-1 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex"
                 >
-                  <span className="absolute -top-[6px] left-2.5 bg-[#1e2330] px-1 text-[8px] font-medium leading-none text-[#8fb0cf]">
+                  <span className="absolute -top-[6px] left-2.5 bg-[#1e2330] px-1.5 text-[11px] font-medium leading-none text-[#8fb0cf]" style={{ fontFamily: "Arial, sans-serif" }}>
                     Time
                   </span>
                   <div className="mt-0.5 flex items-center justify-between gap-1.5">
@@ -1033,7 +1033,7 @@ const TradingPanel = ({
                 </div>
 
                 <div className="relative hidden h-[42px] w-full flex-col justify-center rounded-[5px] border border-[#596278] bg-[#2e3444] px-2 pb-1 pt-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex">
-                  <span className="absolute -top-[6px] left-2.5 bg-[#1e2330] px-1 text-[8px] font-medium leading-none text-[#8fb0cf]">
+                  <span className="absolute -top-[6px] left-2.5 bg-[#1e2330] px-1.5 text-[11px] font-medium leading-none text-[#8fb0cf]" style={{ fontFamily: "Arial, sans-serif" }}>
                     Investment
                   </span>
                   <div className="mt-0.5 flex items-center justify-between gap-1.5">
