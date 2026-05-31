@@ -1521,6 +1521,12 @@ export type Database = {
         }
         Returns: Json
       }
+      cancel_withdrawal: {
+        Args: {
+          p_request_id: string
+        }
+        Returns: Json
+      }
       claim_mobile_money_withdrawal: {
         Args: {
           p_request_id?: string | null
