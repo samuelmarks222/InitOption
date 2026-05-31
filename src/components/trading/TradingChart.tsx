@@ -345,60 +345,60 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 15.4,
-  "5s": 15.8,
-  "15s": 16.1,
-  "30s": 16.3,
-  "1m": 16.5,
-  "2m": 14.8,
-  "3m": 13.8,
-  "4m": 12.9,
-  "5m": 12.2,
-  "10m": 8.9,
-  "15m": 9.3,
-  "30m": 9.8,
-  "1h": 10.3,
-  "2h": 10.8,
-  "4h": 11.6,
-  "1D": 13.2,
+  "1s": 7.2,
+  "5s": 7.4,
+  "15s": 7.6,
+  "30s": 7.8,
+  "1m": 8.0,
+  "2m": 7.6,
+  "3m": 7.2,
+  "4m": 6.8,
+  "5m": 6.4,
+  "10m": 5.8,
+  "15m": 5.4,
+  "30m": 5.0,
+  "1h": 4.6,
+  "2h": 4.2,
+  "4h": 3.8,
+  "1D": 3.2,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
-  "1s": 78,
-  "5s": 78,
-  "15s": 80,
-  "30s": 82,
-  "1m": 84,
-  "2m": 90,
-  "3m": 94,
-  "4m": 96,
-  "5m": 98,
-  "10m": 98,
-  "15m": 92,
-  "30m": 86,
-  "1h": 80,
-  "2h": 74,
-  "4h": 66,
-  "1D": 46,
+  "1s": 120,
+  "5s": 120,
+  "15s": 120,
+  "30s": 120,
+  "1m": 120,
+  "2m": 120,
+  "3m": 120,
+  "4m": 120,
+  "5m": 120,
+  "10m": 110,
+  "15m": 110,
+  "30m": 100,
+  "1h": 90,
+  "2h": 80,
+  "4h": 70,
+  "1D": 50,
 };
 
 const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
-  "1s": 128,
-  "5s": 126,
-  "15s": 124,
-  "30s": 122,
-  "1m": 120,
-  "2m": 136,
-  "3m": 148,
-  "4m": 158,
-  "5m": 168,
-  "10m": 176,
-  "15m": 166,
-  "30m": 156,
-  "1h": 146,
-  "2h": 136,
-  "4h": 122,
-  "1D": 92,
+  "1s": 300,
+  "5s": 300,
+  "15s": 300,
+  "30s": 300,
+  "1m": 300,
+  "2m": 300,
+  "3m": 300,
+  "4m": 300,
+  "5m": 300,
+  "10m": 280,
+  "15m": 260,
+  "30m": 240,
+  "1h": 200,
+  "2h": 160,
+  "4h": 130,
+  "1D": 100,
 };
 
 const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
@@ -574,14 +574,14 @@ const getInitialVisibleBars = (
   const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
   const pocketStyleContextMultiplier =
     seconds < 60
-      ? 1.02
+      ? 1.8
       : seconds < 5 * 60
-        ? 1.04
+        ? 2.0
         : seconds < 30 * 60
-          ? 1.14
+          ? 1.8
           : seconds < 4 * 60 * 60
-            ? 1.18
-            : 1.22;
+            ? 1.5
+            : 1.3;
   const pocketStyleContextBars = Math.round(defaultVisibleBars * pocketStyleContextMultiplier);
 
   return Math.max(defaultVisibleBars, Math.min(availableBars, pocketStyleContextBars));
