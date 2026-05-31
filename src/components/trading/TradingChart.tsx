@@ -359,9 +359,7 @@ const BAR_SPACING_MAP: Record<string, number> = {
   "30m": 9.8,
   "1h": 10.3,
   "2h": 10.8,
-  "3h": 11.2,
   "4h": 11.6,
-  "12h": 12.5,
   "1D": 13.2,
 };
 
@@ -380,9 +378,7 @@ const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
   "30m": 86,
   "1h": 80,
   "2h": 74,
-  "3h": 70,
   "4h": 66,
-  "12h": 54,
   "1D": 46,
 };
 
@@ -401,9 +397,7 @@ const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>
   "30m": 156,
   "1h": 146,
   "2h": 136,
-  "3h": 128,
   "4h": 122,
-  "12h": 104,
   "1D": 92,
 };
 
@@ -422,9 +416,7 @@ const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, n
   "30m": 188,
   "1h": 174,
   "2h": 160,
-  "3h": 150,
   "4h": 140,
-  "12h": 118,
   "1D": 106,
 };
 
@@ -443,9 +435,7 @@ const MIN_BAR_SPACING_MAP: Record<string, number> = {
   "30m": 2.68,
   "1h": 2.88,
   "2h": 3.08,
-  "3h": 3.24,
   "4h": 3.38,
-  "12h": 3.68,
   "1D": 3.95,
 };
 

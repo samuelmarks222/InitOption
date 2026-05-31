@@ -37,9 +37,7 @@ export const SUPPORTED_CHART_TIMEFRAMES = [
   "30m",
   "1h",
   "2h",
-  "3h",
   "4h",
-  "12h",
   "1D",
 ] as const;
 
@@ -60,9 +58,7 @@ export const TIMEFRAMES: Record<string, TimeframeConfig> = {
   "30m": { label: "30m", seconds: 1800, updateIntervalMs: 1000, historical: 180, bodyPips: 34, wickPips: 18 },
   "1h": { label: "1h", seconds: 3600, updateIntervalMs: 1500, historical: 160, bodyPips: 46, wickPips: 24 },
   "2h": { label: "2h", seconds: 7200, updateIntervalMs: 2000, historical: 150, bodyPips: 58, wickPips: 30 },
-  "3h": { label: "3h", seconds: 10800, updateIntervalMs: 2500, historical: 145, bodyPips: 66, wickPips: 34 },
   "4h": { label: "4h", seconds: 14400, updateIntervalMs: 3000, historical: 140, bodyPips: 74, wickPips: 38 },
-  "12h": { label: "12h", seconds: 43200, updateIntervalMs: 4000, historical: 120, bodyPips: 96, wickPips: 48 },
   "1D": { label: "1D", seconds: 86400, updateIntervalMs: 5000, historical: 110, bodyPips: 116, wickPips: 58 },
 };
 
