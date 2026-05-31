@@ -961,7 +961,7 @@ const TradingPanel = ({
                       <span>Timer</span>
                       <Clock className="h-3 w-3 text-[#1e2330]" strokeWidth={2.4} />
                     </span>
-                    <span className="text-[15px] font-semibold tracking-[0.01em] tabular-nums text-white min-[360px]:text-[16px]">
+                    <span className="text-[15px] font-bold tracking-[0.01em] tabular-nums text-white min-[360px]:text-[16px]" style={{ fontFamily: "Arial, sans-serif" }}>
                       {formatTradeClock(expirySeconds)}
                     </span>
                   </button>
@@ -984,7 +984,7 @@ const TradingPanel = ({
                     >
                       <Minus className="h-2.5 w-2.5" strokeWidth={2.8} />
                     </button>
-                    <div className="flex-1 text-center text-[12px] font-semibold tracking-[0.01em] text-white">
+                    <div className="flex-1 text-center text-[12px] font-bold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>
                       {formatTradeClock(expirySeconds)}
                     </div>
                     <button
@@ -1024,9 +1024,10 @@ const TradingPanel = ({
                       step={0.01}
                       inputMode="decimal"
                       onChange={(event) => handleInvestmentInput(event.target.value)}
-                      className="hide-number-spin min-w-0 max-w-[72px] bg-transparent text-[15px] font-semibold tracking-[0.01em] text-white outline-none min-[360px]:text-[16px]"
+                      className="hide-number-spin min-w-0 max-w-[72px] bg-transparent text-[15px] font-bold tracking-[0.01em] text-white outline-none min-[360px]:text-[16px]"
+                      style={{ fontFamily: "Arial, sans-serif" }}
                     />
-                    <span className="shrink-0 text-[15px] font-semibold tracking-[0.01em] text-white min-[360px]:text-[16px]">
+                    <span className="shrink-0 text-[15px] font-bold tracking-[0.01em] text-white min-[360px]:text-[16px]" style={{ fontFamily: "Arial, sans-serif" }}>
                       {investmentUnit}
                     </span>
                   </div>
@@ -1053,9 +1054,10 @@ const TradingPanel = ({
                         step={0.01}
                         inputMode="decimal"
                         onChange={(event) => handleInvestmentInput(event.target.value)}
-                        className="hide-number-spin w-8 bg-transparent text-right text-[12px] font-semibold text-white outline-none"
+                        className="hide-number-spin w-8 bg-transparent text-right text-[12px] font-bold text-white outline-none"
+                        style={{ fontFamily: "Arial, sans-serif" }}
                       />
-                      <span className="text-[12px] font-semibold text-white">{investmentUnit}</span>
+                      <span className="text-[12px] font-bold text-white" style={{ fontFamily: "Arial, sans-serif" }}>{investmentUnit}</span>
                     </div>
                     <button
                       type="button"
@@ -1083,7 +1085,7 @@ const TradingPanel = ({
         <div className="flex items-center justify-between px-2.5 pb-2 text-white lg:px-4 lg:pb-3">
           <span className="text-[10px] font-medium text-[#9aa3b5] lg:text-[12px]">Your payout:</span>
           <div className="mx-2 flex-1 translate-y-[-1px] border-b border-dashed border-[#5f677c]" />
-          <span className="text-[12px] font-semibold tracking-[0.01em] lg:text-[14px]">{payout.toFixed(2)} $</span>
+          <span className="text-[12px] font-bold tracking-[0.01em] lg:text-[14px]" style={{ fontFamily: "Arial, sans-serif" }}>{payout.toFixed(2)} $</span>
         </div>
 
         {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
