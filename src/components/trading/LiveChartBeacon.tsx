@@ -11,6 +11,7 @@ interface Props {
 
 const BEACON_COLOR = "#159bff";
 const BEACON_RGB = "21,155,255";
+type SeriesPoint = { time?: unknown; value?: number; close?: number; high?: number; low?: number; open?: number };
 
 const getUnixTime = (value: unknown) => {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -66,22 +67,28 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
 
     let reqId = 0;
 
+    const getLastPoint = () => {
+      const getData = (series as unknown as { data?: () => SeriesPoint[] }).data;
+      if (typeof getData !== "function") return null;
+
+      const data = getData.call(series);
+      return data[data.length - 1] ?? null;
+    };
+
     const loop = () => {
       const host = containerRef.current;
       if (!host) return;
 
-      const data = series.data() as Array<{ time?: unknown; value?: number; close?: number; high?: number; low?: number; open?: number }>;
-      const lastPoint = data[data.length - 1];
-
-      if (!lastPoint) {
-        marker.style.opacity = "0";
-        reqId = requestAnimationFrame(loop);
-        return;
-      }
-
-      const lastTime = getUnixTime(lastPoint.time);
-      const lastPrice =
-        typeof lastPoint.value === "number"
+      const liveSnapshot = liveRef.current;
+      const needsFallback =
+        typeof liveSnapshot.livePrice !== "number" ||
+        !Number.isFinite(liveSnapshot.livePrice) ||
+        typeof liveSnapshot.liveLogical !== "number" ||
+        !Number.isFinite(liveSnapshot.liveLogical);
+      const lastPoint = needsFallback ? getLastPoint() : null;
+      const lastTime = lastPoint ? getUnixTime(lastPoint.time) : null;
+      const lastPrice = lastPoint
+        ? typeof lastPoint.value === "number"
           ? lastPoint.value
           : typeof lastPoint.close === "number"
             ? lastPoint.close
@@ -89,9 +96,8 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
               ? lastPoint.high
               : typeof lastPoint.open === "number"
                 ? lastPoint.open
-                : null;
-
-      const liveSnapshot = liveRef.current;
+                : null
+        : null;
       const resolvedPrice =
         typeof liveSnapshot.livePrice === "number" && Number.isFinite(liveSnapshot.livePrice)
           ? liveSnapshot.livePrice
@@ -111,21 +117,23 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
       }
 
       const pulseMix = (Math.sin(performance.now() / 210) + 1) / 2;
-      const pulseScale = 0.74 + pulseMix * 1.35;
+      const pulseScale = 0.8 + pulseMix * 1.45;
+      const clampedX = Math.min(Math.max(12, x), Math.max(12, host.clientWidth - 62));
+      const clampedY = Math.min(Math.max(12, y), Math.max(12, host.clientHeight - 12));
 
       marker.style.opacity = "1";
-      marker.style.left = `${x}px`;
-      marker.style.top = `${y}px`;
+      marker.style.left = `${clampedX}px`;
+      marker.style.top = `${clampedY}px`;
 
-      pulse.style.opacity = `${0.36 * (1 - pulseMix)}`;
+      pulse.style.opacity = `${0.48 * (1 - pulseMix)}`;
       pulse.style.transform = `translate(-50%, -50%) scale(${pulseScale})`;
-      pulse.style.background = `rgba(${BEACON_RGB},0.28)`;
-      pulse.style.border = `1px solid rgba(${BEACON_RGB},0.5)`;
-      pulse.style.boxShadow = `0 0 ${10 + pulseMix * 16}px rgba(${BEACON_RGB},0.5)`;
+      pulse.style.background = `rgba(${BEACON_RGB},0.34)`;
+      pulse.style.border = `1px solid rgba(${BEACON_RGB},0.68)`;
+      pulse.style.boxShadow = `0 0 ${14 + pulseMix * 20}px rgba(${BEACON_RGB},0.72)`;
 
       dot.style.background = BEACON_COLOR;
-      dot.style.opacity = `${0.74 + pulseMix * 0.26}`;
-      dot.style.boxShadow = `0 0 0 ${2.5 + pulseMix * 2.5}px rgba(${BEACON_RGB},0.15), 0 0 ${8 + pulseMix * 10}px rgba(${BEACON_RGB},0.8)`;
+      dot.style.opacity = `${0.82 + pulseMix * 0.18}`;
+      dot.style.boxShadow = `0 0 0 ${3 + pulseMix * 3}px rgba(${BEACON_RGB},0.2), 0 0 ${12 + pulseMix * 14}px rgba(${BEACON_RGB},0.9)`;
 
       reqId = requestAnimationFrame(loop);
     };
@@ -138,5 +146,5 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
     };
   }, [chart, series, timeframeSeconds]);
 
-  return <div ref={containerRef} className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 48 }} />;
+  return <div ref={containerRef} className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 86 }} />;
 };
