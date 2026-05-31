@@ -709,6 +709,18 @@ const buildMainSeriesUpdatePayload = (
   };
 };
 
+const getLiveBeaconPrice = (chartType: ChartType, candle: OHLCCandle, history: OHLCCandle[]) => {
+  if (chartType === "heikinAshi" && history.length > 0) {
+    const hist = calcHeikinAshi(history);
+    const prev = hist[hist.length - 1];
+    const haOpen = (prev.open + prev.close) / 2;
+    const haClose = (candle.open + candle.high + candle.low + candle.close) / 4;
+    return Math.max(Math.min(haClose, Math.max(candle.high, haOpen, haClose)), Math.min(candle.low, haOpen, haClose));
+  }
+
+  return candle.close;
+};
+
 const getPricePrecision = (price: number) => {
   if (price > 10000) return 2;
   if (price > 100) return 3;
@@ -2689,6 +2701,11 @@ const TradingChart = ({
         try {
           mainSeriesRef.current.update(buildMainSeriesUpdatePayload(chartType, liveRef.current, historyRef.current));
         } catch (_) {}
+        setLivePriceBeacon((current) => ({
+          price: getLiveBeaconPrice(chartType, liveRef.current, historyRef.current),
+          time: liveRef.current.time,
+          logical: current?.logical ?? historyRef.current.length,
+        }));
       }
     }
     scrollChartToLiveEdge();
@@ -2913,7 +2930,11 @@ const TradingChart = ({
     // Freeze trades to the visible live candle anchor shown on the chart.
     setCurrentPrice(seedCandle.close);
     setPriceChange(((seedCandle.close - seedCandle.open) / Math.max(seedCandle.open, 0.000001)) * 100);
-    setLivePriceBeacon({ price: seedCandle.close, time: seedCandle.time, logical: history.length });
+    setLivePriceBeacon({
+      price: getLiveBeaconPrice(chartTypeRef.current, seedCandle, historyRef.current),
+      time: seedCandle.time,
+      logical: history.length,
+    });
 
     // Apply timeframe-appropriate bar spacing so candles look correct at each interval
     const containerWidth = mainRef.current?.clientWidth ?? 960;
@@ -2960,7 +2981,11 @@ const TradingChart = ({
         tf.seconds > 0 ? (effectiveMarkerTime - candle.time) / tf.seconds : 0;
       const markerLogical =
         historyRef.current.length + getIntrabarLogicalOffset(intrabarFraction);
-      setLivePriceBeacon({ price: candle.close, time: candle.time, logical: markerLogical });
+      setLivePriceBeacon({
+        price: getLiveBeaconPrice(chartTypeRef.current, candle, historyRef.current),
+        time: candle.time,
+        logical: markerLogical,
+      });
       onPriceUpdateRef.current?.(
         candle.close,
         effectiveMarkerTime,
@@ -3658,7 +3683,7 @@ const TradingChart = ({
                  timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60}
                />
              )}
-             {chartType === "line" && !mobileHistoryOpen && !overlayUiSuppressed && (
+             {!mobileHistoryOpen && !overlayUiSuppressed && (
                <LiveChartBeacon
                  chart={syncChart}
                  series={syncSeries}
