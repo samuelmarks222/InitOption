@@ -2686,21 +2686,6 @@ const TradingChart = ({
     scrollChartToLiveEdge();
   }, [asset.basePrice, asset.symbol, chartStyles, chartType, scrollChartToLiveEdge]);
 
-  // ─── Blinking dot on area chart ─────────────────────────────
-  useEffect(() => {
-    if (chartType !== "line" || !mainSeriesRef.current) return;
-    let visible = true;
-    const blink = setInterval(() => {
-      if (!mainSeriesRef.current) return;
-      visible = !visible;
-      mainSeriesRef.current.applyOptions({ lastValueVisible: visible });
-    }, 800);
-    return () => {
-      clearInterval(blink);
-      mainSeriesRef.current?.applyOptions({ lastValueVisible: true });
-    };
-  }, [chartType]);
-
   useEffect(() => {
     if (!mainSeriesRef.current) return;
 
@@ -3743,6 +3728,13 @@ const TradingChart = ({
                 <Plus className="h-[11px] w-[11px]" strokeWidth={2.6} />
               </button>
             </div>
+          </div>
+        )}
+
+        {chartType === "line" && (
+          <div className="pointer-events-none absolute bottom-[18px] right-0 z-[55]">
+            <div className="h-2.5 w-2.5 animate-ping rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
+            <div className="absolute inset-0 h-2.5 w-2.5 rounded-full bg-white" />
           </div>
         )}
       </div>
