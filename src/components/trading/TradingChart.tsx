@@ -2279,6 +2279,8 @@ const TradingChart = ({
     [activeMobileMenu, dismissMobileMenu],
   );
 
+  const zoomAnimationRef = useRef<number | null>(null);
+
   const adjustChartZoom = useCallback((direction: "in" | "out") => {
     const chart = chartRef.current;
     if (!chart) return;
@@ -2303,8 +2305,8 @@ const TradingChart = ({
       ? Math.max(12, currentRange.to - currentRange.from)
       : defaultSpan;
     const nextSpan = direction === "in"
-      ? currentSpan * 0.76
-      : currentSpan * 1.34;
+      ? currentSpan * 0.88
+      : currentSpan * 1.15;
     const minSpan = Math.max(12 + Math.min(rightOffset, 18), Math.round(defaultVisibleBars * 0.22) + Math.min(rightOffset, 18));
     const maxVisibleBySpacing = Math.max(
       defaultSpan,
@@ -2329,31 +2331,53 @@ const TradingChart = ({
       : Math.max(clampedSpan / 2, dataPointCount + rightOffset - defaultSpan / 2);
     const liveEdgeThreshold = dataPointCount - Math.max(4, rightOffset * 0.75);
     const keepRightEdgeAnchored = !currentRange || currentTo >= liveEdgeThreshold;
-    let nextFrom: number;
-    let nextTo: number;
+    let targetFrom: number;
+    let targetTo: number;
 
     if (keepRightEdgeAnchored) {
-      nextTo = Math.min(maxTo, Math.max(clampedSpan, currentTo));
-      nextFrom = nextTo - clampedSpan;
+      targetTo = Math.min(maxTo, Math.max(clampedSpan, currentTo));
+      targetFrom = targetTo - clampedSpan;
     } else {
-      nextFrom = currentCenter - clampedSpan / 2;
-      nextTo = currentCenter + clampedSpan / 2;
+      targetFrom = currentCenter - clampedSpan / 2;
+      targetTo = currentCenter + clampedSpan / 2;
     }
 
-    if (nextFrom < 0) {
-      nextTo -= nextFrom;
-      nextFrom = 0;
+    if (targetFrom < 0) {
+      targetTo -= targetFrom;
+      targetFrom = 0;
     }
 
-    if (nextTo > maxTo) {
-      nextFrom = Math.max(0, nextFrom - (nextTo - maxTo));
-      nextTo = maxTo;
+    if (targetTo > maxTo) {
+      targetFrom = Math.max(0, targetFrom - (targetTo - maxTo));
+      targetTo = maxTo;
     }
 
-    timeScale.setVisibleLogicalRange({
-      from: nextFrom,
-      to: nextTo,
-    });
+    if (zoomAnimationRef.current !== null) {
+      cancelAnimationFrame(zoomAnimationRef.current);
+    }
+
+    const startFrom = currentRange?.from ?? targetFrom;
+    const startTo = currentRange?.to ?? targetTo;
+    const duration = 180;
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const from = startFrom + (targetFrom - startFrom) * ease;
+      const to = startTo + (targetTo - startTo) * ease;
+
+      timeScale.setVisibleLogicalRange({ from, to });
+
+      if (t < 1) {
+        zoomAnimationRef.current = requestAnimationFrame(animate);
+      } else {
+        zoomAnimationRef.current = null;
+      }
+    };
+
+    zoomAnimationRef.current = requestAnimationFrame(animate);
   }, [selectedTf]);
 
   const adjustChartZoomRef = useRef(adjustChartZoom);
@@ -2626,6 +2650,9 @@ const TradingChart = ({
     obs.observe(chartContainer);
 
     return () => {
+      if (zoomAnimationRef.current !== null) {
+        cancelAnimationFrame(zoomAnimationRef.current);
+      }
       chartContainer.removeEventListener("wheel", handleChartWheel, true);
       obs.disconnect();
       chart.remove();
