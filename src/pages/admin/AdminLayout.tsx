@@ -20,6 +20,7 @@ import {
   Trophy,
   Menu,
   LifeBuoy,
+  TrendingUp,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
@@ -161,6 +162,14 @@ const AdminLayout = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <Link
+              to="/trade"
+              className="flex items-center gap-2 rounded-lg border border-[#0fa053]/30 bg-[#0fa053]/10 px-3 py-1.5 text-sm font-semibold text-[#0fa053] transition-colors hover:bg-[#0fa053]/20"
+              title="Switch to Trading Area"
+            >
+              <TrendingUp size={16} />
+              <span className="hidden sm:inline">Go to Trade</span>
+            </Link>
             <button className="relative rounded-full p-2 text-[#a7bfd8] transition-colors hover:bg-[#1e2330] hover:text-[#ffc27a]">
               <Bell size={20} />
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500"></span>

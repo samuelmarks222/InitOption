@@ -14,7 +14,8 @@ export interface Transaction {
   description: string;
   amount: number;
   balanceAfter: number;
-  status?: "approved" | "completed" | "failed" | "pending" | "processing" | "rejected";
+  status?: "approved" | "completed" | "failed" | "pending" | "processing" | "rejected" | "cancelled";
+  requestId?: string;
 }
 
 export interface Trade {
@@ -280,6 +281,7 @@ export const useStatistics = () => {
               : `Withdrawal submitted - ${methodName}`,
           amount: -amount,
           balanceImpact: -amount,
+          requestId: request.id,
         },
       ];
 
@@ -289,6 +291,17 @@ export const useStatistics = () => {
           date: request.processed_at,
           type: "withdrawal",
           description: `Withdrawal refund - ${methodName}`,
+          amount,
+          balanceImpact: amount,
+        });
+      }
+
+      if (request.status === "cancelled" && request.cancelled_at) {
+        entries.push({
+          id: `WD-${request.id}-cancelled-refund`,
+          date: request.cancelled_at,
+          type: "withdrawal",
+          description: `Withdrawal cancelled refund - ${methodName}`,
           amount,
           balanceImpact: amount,
         });

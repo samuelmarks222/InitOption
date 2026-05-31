@@ -95,6 +95,12 @@ export const adminUpdateWithdrawalStatus = async ({
   return (response.data ?? {}) as WithdrawalRequestPayload;
 };
 
+export const cancelWithdrawal = async (requestId: string): Promise<WithdrawalRequestPayload> => {
+  return postAuthenticatedJson<WithdrawalRequestPayload>("/api/withdraw/cancel", {
+    requestId,
+  });
+};
+
 export const reviewMobileMoneyWithdrawal = async ({
   adminNote = null,
   requestId,

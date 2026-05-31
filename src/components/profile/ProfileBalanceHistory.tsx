@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { ArrowDownRight, ArrowUpRight, ArrowRightLeft, DollarSign, Info } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ArrowRightLeft, DollarSign, Info, X } from "lucide-react";
 import { useStatistics, Transaction } from "@/hooks/useStatistics";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { cancelWithdrawal } from "@/lib/withdrawals";
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -13,6 +14,7 @@ const toTxRef = (id: string): string => {
 
 const STATUS_BADGE_STYLES: Record<string, string> = {
   approved: "bg-green-500/10 text-green-400",
+  cancelled: "bg-yellow-500/10 text-yellow-400",
   completed: "bg-green-500/10 text-green-400",
   failed: "bg-red-500/10 text-red-400",
   pending: "bg-[#0fa053]/10 text-[#8be0af]",
@@ -47,6 +49,7 @@ const resolveStatusLabel = (status?: Transaction["status"]) => {
   if (!status) return "Completed";
   if (status === "pending" || status === "approved" || status === "processing") return "Processing";
   if (status === "failed" || status === "rejected") return "Failed";
+  if (status === "cancelled") return "Cancelled";
   return "Completed";
 };
 
@@ -54,6 +57,7 @@ const resolveStatusTone = (status?: Transaction["status"]) => {
   if (!status) return "text-emerald-300";
   if (status === "pending" || status === "approved" || status === "processing") return "text-yellow-300";
   if (status === "failed" || status === "rejected") return "text-red-400";
+  if (status === "cancelled") return "text-yellow-300";
   return "text-emerald-300";
 };
 
@@ -83,6 +87,9 @@ const resolveStatusNote = (status?: Transaction["status"]) => {
   if (status === "failed" || status === "rejected") {
     return "This transaction did not complete. If you need help, please contact support.";
   }
+  if (status === "cancelled") {
+    return "You cancelled this withdrawal and the funds have been returned to your balance.";
+  }
   return "This transaction is completed and already reflected on your balance.";
 };
 
@@ -96,7 +103,19 @@ const TxIcon = ({ type }: { type: Transaction["type"] }) => {
 export const ProfileBalanceHistory = () => {
   const { transactions } = useStatistics();
   const [filter, setFilter] = useState<"all" | "deposit" | "withdrawal">("all");
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const { formatMoney } = useCurrency();
+
+  const handleCancel = async (requestId: string) => {
+    setCancellingId(requestId);
+    try {
+      await cancelWithdrawal(requestId);
+    } catch (error) {
+      console.error("Failed to cancel withdrawal", error);
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   const filteredTransactions = useMemo(
     () => transactions.filter((tx) => filter === "all" || tx.type === filter),
@@ -145,13 +164,14 @@ export const ProfileBalanceHistory = () => {
       </div>
 
       <div className="flex-1 rounded-[18px] border border-[#283142] bg-[#1d2433] shadow-[0_20px_60px_rgba(7,11,20,0.35)]">
-        <div className="hidden grid-cols-[1.1fr_1.2fr_1fr_1.2fr_1.2fr_1fr] gap-0 border-b border-[#2a3142] px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#9aa6bf] md:grid">
+        <div className="hidden grid-cols-[1.1fr_1.2fr_1fr_1.2fr_1.2fr_1fr_0.5fr] gap-0 border-b border-[#2a3142] px-6 py-4 text-[12px] font-semibold uppercase tracking-[0.08em] text-[#9aa6bf] md:grid">
           <span>Transaction ID</span>
           <span>Date and time</span>
           <span>Status</span>
           <span>Transaction type</span>
           <span>Payment system</span>
           <span className="text-right">Amount</span>
+          <span></span>
         </div>
         <div className="divide-y divide-[#243047]">
           {filteredTransactions.length === 0 && (
@@ -184,6 +204,17 @@ export const ProfileBalanceHistory = () => {
                     <span>•</span>
                     <span>{paymentSystem}</span>
                   </div>
+                  {tx.requestId && tx.description.startsWith("Withdrawal pending") && (
+                    <button
+                      type="button"
+                      disabled={cancellingId === tx.requestId}
+                      onClick={() => handleCancel(tx.requestId!)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-[11px] font-semibold text-red-400 transition hover:bg-red-500/20 disabled:opacity-50"
+                    >
+                      <X className="h-3 w-3" />
+                      {cancellingId === tx.requestId ? "Cancelling..." : "Cancel"}
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -195,7 +226,7 @@ export const ProfileBalanceHistory = () => {
             const statusTone = resolveStatusTone(tx.status);
 
             return (
-              <div key={tx.id} className="hidden grid-cols-[1.1fr_1.2fr_1fr_1.2fr_1.2fr_1fr] items-center px-6 py-4 text-[14px] text-[#d9e2f1] md:grid">
+              <div key={tx.id} className="hidden grid-cols-[1.1fr_1.2fr_1fr_1.2fr_1.2fr_1fr_0.5fr] items-center px-6 py-4 text-[14px] text-[#d9e2f1] md:grid">
                 <span className="font-semibold">{tx.id ? toTxRef(tx.id) : "—"}</span>
                 <div className="text-[13px] text-[#c0cadd]">
                   {new Date(tx.date).toLocaleDateString("en-GB")}, {new Date(tx.date).toLocaleTimeString("en-GB")}
@@ -214,6 +245,19 @@ export const ProfileBalanceHistory = () => {
                 <span className="text-[13px] text-[#c7d1e6]">{paymentSystem}</span>
                 <span className={`text-right text-[14px] font-bold ${getAmountClass(tx)}`}>
                   {tx.amount > 0 ? "+" : tx.amount < 0 ? "-" : ""}{formatMoney(Math.abs(tx.amount))}
+                </span>
+                <span>
+                  {tx.requestId && tx.description.startsWith("Withdrawal pending") && (
+                    <button
+                      type="button"
+                      disabled={cancellingId === tx.requestId}
+                      onClick={() => handleCancel(tx.requestId!)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-[11px] font-semibold text-red-400 transition hover:bg-red-500/20 disabled:opacity-50"
+                    >
+                      <X className="h-3 w-3" />
+                      {cancellingId === tx.requestId ? "Cancelling..." : "Cancel"}
+                    </button>
+                  )}
                 </span>
               </div>
             );
