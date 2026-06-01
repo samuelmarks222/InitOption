@@ -396,22 +396,22 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 15.4,
-  "5s": 15.8,
-  "15s": 16.1,
-  "30s": 16.3,
-  "1m": 16.5,
-  "2m": 14.8,
-  "3m": 13.8,
-  "4m": 12.9,
-  "5m": 12.2,
-  "10m": 8.9,
-  "15m": 9.3,
-  "30m": 9.8,
-  "1h": 10.3,
-  "2h": 10.8,
-  "4h": 11.6,
-  "1D": 13.2,
+  "1s": 8,
+  "5s": 8.5,
+  "15s": 9,
+  "30s": 9.5,
+  "1m": 10,
+  "2m": 9,
+  "3m": 8.5,
+  "4m": 8,
+  "5m": 7.5,
+  "10m": 5.5,
+  "15m": 5.5,
+  "30m": 5.5,
+  "1h": 5.5,
+  "2h": 5.5,
+  "4h": 6,
+  "1D": 7,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
@@ -2387,9 +2387,9 @@ const TradingChart = ({
       Math.max(1, dataPointCount),
     );
     const maxReadableSpan = maxReadableBars + getChartRightOffset(maxReadableBars);
-    const fortyPctBars = Math.max(1, dataPointCount * 0.4);
-    const fortyPctSpan = fortyPctBars + getChartRightOffset(fortyPctBars);
-    const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing, fortyPctSpan));
+    const fiftyPctBars = Math.max(1, dataPointCount * 0.5);
+    const fiftyPctSpan = fiftyPctBars + getChartRightOffset(fiftyPctBars);
+    const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing, fiftyPctSpan));
     const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
     const maxFutureWhitespace = Math.max(
       rightOffset,
