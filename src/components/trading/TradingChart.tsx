@@ -162,8 +162,8 @@ type PlatformThemeRow = Pick<Tables<"platform_settings">, "chart_bg_color" | "ch
 const toChartTime = (time: number) => time as Time;
 const INTRABAR_LOGICAL_SPAN = 0.72;
 const LIVE_FOLLOW_MIN_DELTA = 0.012;
-const CANDLE_ANIMATION_DURATION_MS = 280;
-const CANDLE_VISUAL_FRAME_MS = 1000;
+const CANDLE_ANIMATION_DURATION_MS = 320;
+const CANDLE_VISUAL_FRAME_MS = 30;
 const getIntrabarLogicalOffset = (fraction: number) =>
   (Math.min(1, Math.max(0, fraction)) - 0.5) * INTRABAR_LOGICAL_SPAN;
 const getLiveCandleProgressLogical = (historyLength: number, fraction: number) =>
@@ -177,7 +177,8 @@ const getAnimationClockMs = () =>
   typeof performance !== "undefined" && typeof performance.now === "function"
     ? performance.now()
     : Date.now();
-const linearAnimationEase = (progress: number) => Math.min(1, Math.max(0, progress));
+const clampProgress = (t: number) => Math.min(1, Math.max(0, t));
+const easeOutCubic = (t: number) => { const c = clampProgress(t); return 1 - Math.pow(1 - c, 3); };
 const interpolateNumber = (from: number, to: number, progress: number) => from + (to - from) * progress;
 const normalizeOhlcBounds = (candle: OHLCCandle): OHLCCandle => {
   const upperBody = Math.max(candle.open, candle.close);
@@ -3080,16 +3081,16 @@ const TradingChart = ({
     // Destroy previous aggregator and create a new one
 
     // onClose: called synchronously when a period ends — push the closed candle to history
-    const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimationClockMs()) => {
-      const rawProgress = (nowMs - state.startedAt) / CANDLE_ANIMATION_DURATION_MS;
-      const easedProgress = linearAnimationEase(rawProgress);
+const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimationClockMs()) => {
+  const rawProgress = (nowMs - state.startedAt) / CANDLE_ANIMATION_DURATION_MS;
+  const easedProgress = easeOutCubic(rawProgress);
 
-      return {
-        candle: interpolateOhlcCandle(state.from, state.to, easedProgress),
-        sourceTimestamp: interpolateNumber(state.fromTimestamp, state.toTimestamp, easedProgress),
-        done: easedProgress >= 1,
-      };
-    };
+  return {
+    candle: interpolateOhlcCandle(state.from, state.to, easedProgress),
+    sourceTimestamp: interpolateNumber(state.fromTimestamp, state.toTimestamp, easedProgress),
+    done: easedProgress >= 1,
+  };
+};
 
     const applyVisualCandleFrame = (candle: OHLCCandle, sourceTimestamp?: number) => {
       if (!mainSeriesRef.current) return;
@@ -3121,26 +3122,31 @@ const TradingChart = ({
     const scheduleLiveCandleAnimation = () => {
       if (liveCandleAnimationFrameRef.current !== null) return;
 
-      liveCandleAnimationFrameRef.current = window.requestAnimationFrame(() => {
+      const animate = () => {
         liveCandleAnimationFrameRef.current = null;
-        const animationState = liveCandleAnimationRef.current;
-        if (!animationState) return;
+        const state = liveCandleAnimationRef.current;
+        if (!state) return;
 
         const nowMs = getAnimationClockMs();
-        const shouldRenderFrame =
-          lastCandleVisualFrameAtRef.current === 0 ||
-          nowMs - lastCandleVisualFrameAtRef.current >= CANDLE_VISUAL_FRAME_MS;
+        const elapsed = nowMs - lastCandleVisualFrameAtRef.current;
 
-        if (!shouldRenderFrame) {
+        if (lastCandleVisualFrameAtRef.current !== 0 && elapsed < CANDLE_VISUAL_FRAME_MS) {
           scheduleLiveCandleAnimation();
           return;
         }
 
         lastCandleVisualFrameAtRef.current = nowMs;
-        applyVisualCandleFrame(animationState.to, animationState.toTimestamp);
+        const snapshot = getAnimationSnapshot(state, nowMs);
+        applyVisualCandleFrame(snapshot.candle, snapshot.sourceTimestamp);
 
-        liveCandleAnimationRef.current = null;
-      });
+        if (!snapshot.done) {
+          scheduleLiveCandleAnimation();
+        } else {
+          liveCandleAnimationRef.current = null;
+        }
+      };
+
+      liveCandleAnimationFrameRef.current = window.requestAnimationFrame(animate);
     };
 
     const cancelLiveCandleAnimation = () => {
