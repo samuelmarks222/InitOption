@@ -63,7 +63,7 @@ export const TIMEFRAMES: Record<string, TimeframeConfig> = {
 };
 
 const HIGH_TIMEFRAME_DIRECT_SECONDS = 30 * 60;
-const HISTORY_CACHE_VERSION = 11;
+const HISTORY_CACHE_VERSION = 12;
 const HISTORY_MEMORY_CACHE_LIMIT = 48;
 const historyMemoryCache = new Map<string, OHLCCandle[]>();
 

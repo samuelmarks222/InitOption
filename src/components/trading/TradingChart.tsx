@@ -3080,7 +3080,8 @@ const TradingChart = ({
       followLiveTimeframeMotion(liveProgressLogical);
     };
 
-    const TICK_LERP_RATE = 0.15;
+    const TICK_LERP_RATE = 0.025;
+    const LERP_EPSILON = 1e-8;
 
     const tickLerpLoop = () => {
       lerpFrameRef.current = null;
@@ -3105,7 +3106,10 @@ const TradingChart = ({
 
       applyVisualCandleFrame(lerped, target.timestamp);
 
-      if (Math.abs(lerped.close - target.candle.close) > 0.000001) {
+      const closeDiff = Math.abs(lerped.close - target.candle.close);
+      const highDiff = Math.abs(lerped.high - target.candle.high);
+      const lowDiff = Math.abs(lerped.low - target.candle.low);
+      if (closeDiff > LERP_EPSILON || highDiff > LERP_EPSILON || lowDiff > LERP_EPSILON) {
         scheduleLerpLoop();
       }
     };
