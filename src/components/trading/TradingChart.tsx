@@ -163,7 +163,7 @@ const toChartTime = (time: number) => time as Time;
 const INTRABAR_LOGICAL_SPAN = 0.72;
 const LIVE_FOLLOW_MIN_DELTA = 0.012;
 const CANDLE_ANIMATION_DURATION_MS = 280;
-const CANDLE_VISUAL_FRAME_MS = 90;
+const CANDLE_VISUAL_FRAME_MS = 1000;
 const getIntrabarLogicalOffset = (fraction: number) =>
   (Math.min(1, Math.max(0, fraction)) - 0.5) * INTRABAR_LOGICAL_SPAN;
 const getLiveCandleProgressLogical = (historyLength: number, fraction: number) =>
@@ -3127,9 +3127,8 @@ const TradingChart = ({
         if (!animationState) return;
 
         const nowMs = getAnimationClockMs();
-        const elapsedMs = nowMs - animationState.startedAt;
         const shouldRenderFrame =
-          elapsedMs >= CANDLE_ANIMATION_DURATION_MS ||
+          lastCandleVisualFrameAtRef.current === 0 ||
           nowMs - lastCandleVisualFrameAtRef.current >= CANDLE_VISUAL_FRAME_MS;
 
         if (!shouldRenderFrame) {
@@ -3138,15 +3137,9 @@ const TradingChart = ({
         }
 
         lastCandleVisualFrameAtRef.current = nowMs;
-        const snapshot = getAnimationSnapshot(animationState, nowMs);
-        applyVisualCandleFrame(snapshot.candle, snapshot.sourceTimestamp);
+        applyVisualCandleFrame(animationState.to, animationState.toTimestamp);
 
-        if (snapshot.done) {
-          liveCandleAnimationRef.current = null;
-          return;
-        }
-
-        scheduleLiveCandleAnimation();
+        liveCandleAnimationRef.current = null;
       });
     };
 
