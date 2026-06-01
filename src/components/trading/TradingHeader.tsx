@@ -5,7 +5,7 @@ import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { AccountType, AccountDropdown } from "./AccountModals";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
-
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useVip } from "@/contexts/VipContext";
 import { VipBadge } from "@/components/vip/VipBadge";
 import type { ProfileTab } from "@/components/profile/ProfileDrawer";
