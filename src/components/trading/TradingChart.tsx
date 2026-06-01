@@ -1837,6 +1837,41 @@ const OscillatorPane = ({
   );
 };
 
+/**
+ * SmoothUpdateScheduler batches rapid series updates and throttles them to 60fps (requestAnimationFrame)
+ * This prevents jumpy/aggressive candlestick movements by collecting pending updates and flushing once per frame
+ */
+class SmoothUpdateScheduler {
+  constructor(series) {
+    this.series = series;
+    this.pendingUpdate = null;
+    this.rafId = null;
+  }
+
+  update(updateData) {
+    this.pendingUpdate = updateData;
+    if (this.rafId === null) {
+      this.rafId = requestAnimationFrame(() => this.flush());
+    }
+  }
+
+  flush() {
+    if (this.pendingUpdate && this.series) {
+      try {
+        this.series.update(this.pendingUpdate);
+      } catch (_) {}
+      this.pendingUpdate = null;
+    }
+    this.rafId = null;
+  }
+
+  cleanup() {
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+  }
+}
 
 const TradingChart = ({
   asset,
@@ -1861,6 +1896,7 @@ const TradingChart = ({
 
   const chartRef = useRef<IChartApi | null>(null);
   const mainSeriesRef = useRef<ChartSeriesApi | null>(null);
+  const mainUpdateSchedulerRef = useRef<SmoothUpdateScheduler | null>(null);
   const roundedPluginRef = useRef<RoundedCandlePlugin | null>(null);
 
   // Overlay Indicators Refs Map
@@ -2660,8 +2696,10 @@ const TradingChart = ({
         !mainSeriesRef.current || mainSeriesKindRef.current !== nextSeriesKind;
 
       if (shouldRecreateSeries && mainSeriesRef.current) {
+        mainUpdateSchedulerRef.current?.cleanup();
         chartRef.current.removeSeries(mainSeriesRef.current);
         mainSeriesRef.current = null;
+        mainUpdateSchedulerRef.current = null;
         mainSeriesKindRef.current = null;
       }
 
@@ -2674,6 +2712,7 @@ const TradingChart = ({
           globalThemeRef.current,
         );
         mainSeriesRef.current = series;
+        mainUpdateSchedulerRef.current = new SmoothUpdateScheduler(series);
         mainSeriesKindRef.current = kind;
         setSyncSeries(series);
         if (kind === "candlestick") {
@@ -2720,9 +2759,13 @@ const TradingChart = ({
     if (historyRef.current.length > 0 && mainSeriesRef.current) {
       mainSeriesRef.current.setData(getMainSeriesData(chartType, historyRef.current));
       if (liveRef.current) {
-        try {
-          mainSeriesRef.current.update(buildMainSeriesUpdatePayload(chartType, liveRef.current, historyRef.current));
-        } catch (_) {}
+        if (mainUpdateSchedulerRef.current) {
+          mainUpdateSchedulerRef.current.update(buildMainSeriesUpdatePayload(chartType, liveRef.current, historyRef.current));
+        } else {
+          try {
+            mainSeriesRef.current.update(buildMainSeriesUpdatePayload(chartType, liveRef.current, historyRef.current));
+          } catch (_) {}
+        }
         setLivePriceBeacon((current) => ({
           price: getLiveBeaconPrice(chartType, liveRef.current, historyRef.current),
           time: liveRef.current.time,
@@ -2892,7 +2935,11 @@ const TradingChart = ({
 
       if (liveRef.current) {
         try {
-          mainSeries.update(buildMainSeriesUpdatePayload(chartTypeRef.current, liveRef.current, historyRef.current));
+          if (mainUpdateSchedulerRef.current) {
+            mainUpdateSchedulerRef.current.update(buildMainSeriesUpdatePayload(chartTypeRef.current, liveRef.current, historyRef.current));
+          } else {
+            mainSeries.update(buildMainSeriesUpdatePayload(chartTypeRef.current, liveRef.current, historyRef.current));
+          }
         } catch (_) {
           // Ignore transient redraw issues while the chart prepends older candles.
         }
@@ -3017,7 +3064,9 @@ const TradingChart = ({
 
       const updatePayload = buildMainSeriesUpdatePayload(chartTypeRef.current, candle, historyRef.current);
 
-      try { mainSeriesRef.current.update(updatePayload); } catch (_) {}
+      if (mainUpdateSchedulerRef.current) {
+        mainUpdateSchedulerRef.current.update(updatePayload);
+      }
       renderOverlayIndicators(getIndicatorHistory());
     };
 
@@ -3050,6 +3099,7 @@ const TradingChart = ({
 
     // ── Dedicated overlay indicator refresh every 3s ────────────────────────
     return () => {
+      mainUpdateSchedulerRef.current?.cleanup();
       marketFeedRef.current?.disconnect();
       marketFeedRef.current = null;
       engineRef.current = null;
