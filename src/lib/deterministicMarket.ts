@@ -151,11 +151,20 @@ const HIGH_TIMEFRAME_PROFESSIONAL_SECONDS = 30 * 60;
 const resolveProfile = (symbol: string, category?: string | null) =>
   CATEGORY_PROFILES[normalizeAssetCategory(category, symbol)];
 
-const getLowFreqScale = (timeframeSeconds?: number) => {
-  if (typeof timeframeSeconds !== "number" || !Number.isFinite(timeframeSeconds) || timeframeSeconds <= 60) {
-    return 1;
+const getHighTimeframeSmoothingWeight = (timeframeSeconds?: number) => {
+  if (
+    typeof timeframeSeconds !== "number" ||
+    !Number.isFinite(timeframeSeconds) ||
+    timeframeSeconds < HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
+  ) {
+    return 0;
   }
-  return Math.max(0.01, 60 / timeframeSeconds);
+
+  return clamp(
+    0.15 + Math.log2(timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) / 5,
+    0.15,
+    1,
+  );
 };
 
 const getDeterministicRelativeOffset = (
@@ -166,18 +175,36 @@ const getDeterministicRelativeOffset = (
 ) => {
   const primaryPhase = hashUnit(normalizedSymbol, "primary-phase") * TAU;
   const secondaryPhase = hashUnit(normalizedSymbol, "secondary-phase") * TAU;
-  const lowFreqScale = getLowFreqScale(timeframeSeconds);
+  const smoothingWeight = getHighTimeframeSmoothingWeight(timeframeSeconds);
+  const driftWeight = 1 + smoothingWeight * 0.2;
+  const swingWeight = 1 + smoothingWeight * 0.85;
+  const pulseWeight = 1 - smoothingWeight * 0.65;
+  const microWeight = 1 - smoothingWeight * 0.96;
+  const tickWeight = 1 - smoothingWeight;
+  const cycleWeight = 1 + smoothingWeight * 0.42;
+  const secondaryCycleWeight = 1 + smoothingWeight * 0.28;
+  const macroShape =
+    smoothingWeight *
+    (
+      noiseAt(normalizedSymbol, "macro-drift", timestampSec / (profile.driftScaleSeconds * 1.7)) *
+        profile.driftAmplitude *
+        0.3 +
+      Math.sin((timestampSec / (profile.cycleSeconds * 2.35)) * TAU + hashUnit(normalizedSymbol, "macro-phase") * TAU) *
+        profile.swingAmplitude *
+        0.55
+    );
 
   return (
-    noiseAt(normalizedSymbol, "drift", timestampSec / profile.driftScaleSeconds) * profile.driftAmplitude * lowFreqScale +
-    noiseAt(normalizedSymbol, "swing", timestampSec / profile.swingScaleSeconds) * profile.swingAmplitude * lowFreqScale +
-    noiseAt(normalizedSymbol, "pulse", timestampSec / profile.pulseScaleSeconds) * profile.pulseAmplitude +
-    noiseAt(normalizedSymbol, "micro", timestampSec / profile.microScaleSeconds) * profile.microAmplitude +
-    noiseAt(normalizedSymbol, "tick", timestampSec / profile.tickScaleSeconds) * profile.tickAmplitude +
-    Math.sin((timestampSec / profile.cycleSeconds) * TAU + primaryPhase) * profile.cycleAmplitude * lowFreqScale +
+    noiseAt(normalizedSymbol, "drift", timestampSec / profile.driftScaleSeconds) * profile.driftAmplitude * driftWeight +
+    noiseAt(normalizedSymbol, "swing", timestampSec / profile.swingScaleSeconds) * profile.swingAmplitude * swingWeight +
+    noiseAt(normalizedSymbol, "pulse", timestampSec / profile.pulseScaleSeconds) * profile.pulseAmplitude * pulseWeight +
+    noiseAt(normalizedSymbol, "micro", timestampSec / profile.microScaleSeconds) * profile.microAmplitude * microWeight +
+    noiseAt(normalizedSymbol, "tick", timestampSec / profile.tickScaleSeconds) * profile.tickAmplitude * tickWeight +
+    Math.sin((timestampSec / profile.cycleSeconds) * TAU + primaryPhase) * profile.cycleAmplitude * cycleWeight +
     Math.sin((timestampSec / profile.secondaryCycleSeconds) * TAU + secondaryPhase) *
       profile.secondaryCycleAmplitude *
-      lowFreqScale
+      secondaryCycleWeight +
+    macroShape
   );
 };
 
@@ -262,7 +289,8 @@ const getSampleStepSeconds = (timeframeSeconds: number) => {
 
 const getInteriorProbeCount = (timeframeSeconds: number) => {
   if (timeframeSeconds <= 1) return 2;
-  return 1;
+  if (timeframeSeconds <= 60) return 1;
+  return 0;
 };
 
 const getTargetWickDelta = (
@@ -281,7 +309,14 @@ const getTargetWickDelta = (
           : timeframeSeconds <= 60
             ? 4
             : 6;
-  const wickMultiplier = timeframeSeconds <= 1 ? 1.18 : 0.98;
+  const wickMultiplier =
+    timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
+      ? 0.52
+      : timeframeSeconds <= 1
+        ? 1.18
+        : timeframeSeconds <= 60
+          ? 0.98
+          : 0.86;
 
   return priceStep * configuredPips * wickMultiplier;
 };
@@ -297,11 +332,22 @@ const getMaxWickLength = ({
   targetWickDelta: number;
   timeframeSeconds: number;
 }) => {
-  const bodyFactor = timeframeSeconds <= 1 ? 0.34 : 0.54;
+  const bodyFactor =
+    timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
+      ? 0.42
+      : timeframeSeconds <= 1
+        ? 0.34
+        : timeframeSeconds <= 60
+          ? 0.54
+          : 0.72;
   const wickFactor =
-    timeframeSeconds <= 1
-      ? 0.26
-      : 0.42;
+    timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
+      ? 0.3
+      : timeframeSeconds <= 1
+        ? 0.26
+        : timeframeSeconds <= 60
+          ? 0.42
+          : 0.58;
   const minimumWick = priceStep * (timeframeSeconds <= 1 ? 1.1 : 1.6);
 
   return Math.max(minimumWick, bodySize * bodyFactor + targetWickDelta * wickFactor);

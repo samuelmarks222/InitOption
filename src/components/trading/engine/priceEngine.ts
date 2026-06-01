@@ -45,9 +45,9 @@ export type SupportedChartTimeframe = (typeof SUPPORTED_CHART_TIMEFRAMES)[number
 
 export const TIMEFRAMES: Record<string, TimeframeConfig> = {
   "1s": { label: "1s", seconds: 1, updateIntervalMs: 40, historical: 360, bodyPips: 1.5, wickPips: 1 },
-  "5s": { label: "5s", seconds: 5, updateIntervalMs: 50, historical: 320, bodyPips: 3, wickPips: 6 },
-  "15s": { label: "15s", seconds: 15, updateIntervalMs: 60, historical: 280, bodyPips: 5, wickPips: 6 },
-  "30s": { label: "30s", seconds: 30, updateIntervalMs: 80, historical: 260, bodyPips: 6, wickPips: 6 },
+  "5s": { label: "5s", seconds: 5, updateIntervalMs: 50, historical: 320, bodyPips: 3, wickPips: 2 },
+  "15s": { label: "15s", seconds: 15, updateIntervalMs: 60, historical: 280, bodyPips: 5, wickPips: 4 },
+  "30s": { label: "30s", seconds: 30, updateIntervalMs: 80, historical: 260, bodyPips: 6, wickPips: 5 },
   "1m": { label: "1m", seconds: 60, updateIntervalMs: 100, historical: 240, bodyPips: 8, wickPips: 6 },
   "2m": { label: "2m", seconds: 120, updateIntervalMs: 150, historical: 232, bodyPips: 11, wickPips: 8 },
   "3m": { label: "3m", seconds: 180, updateIntervalMs: 190, historical: 228, bodyPips: 13, wickPips: 9 },
@@ -55,11 +55,11 @@ export const TIMEFRAMES: Record<string, TimeframeConfig> = {
   "5m": { label: "5m", seconds: 300, updateIntervalMs: 250, historical: 220, bodyPips: 18, wickPips: 12 },
   "10m": { label: "10m", seconds: 600, updateIntervalMs: 350, historical: 200, bodyPips: 24, wickPips: 16 },
   "15m": { label: "15m", seconds: 900, updateIntervalMs: 500, historical: 190, bodyPips: 30, wickPips: 20 },
-  "30m": { label: "30m", seconds: 1800, updateIntervalMs: 1000, historical: 180, bodyPips: 34, wickPips: 6 },
-  "1h": { label: "1h", seconds: 3600, updateIntervalMs: 1500, historical: 160, bodyPips: 46, wickPips: 6 },
-  "2h": { label: "2h", seconds: 7200, updateIntervalMs: 2000, historical: 150, bodyPips: 58, wickPips: 6 },
-  "4h": { label: "4h", seconds: 14400, updateIntervalMs: 3000, historical: 140, bodyPips: 74, wickPips: 6 },
-  "1D": { label: "1D", seconds: 86400, updateIntervalMs: 5000, historical: 110, bodyPips: 116, wickPips: 6 },
+  "30m": { label: "30m", seconds: 1800, updateIntervalMs: 1000, historical: 180, bodyPips: 34, wickPips: 18 },
+  "1h": { label: "1h", seconds: 3600, updateIntervalMs: 1500, historical: 160, bodyPips: 46, wickPips: 24 },
+  "2h": { label: "2h", seconds: 7200, updateIntervalMs: 2000, historical: 150, bodyPips: 58, wickPips: 30 },
+  "4h": { label: "4h", seconds: 14400, updateIntervalMs: 3000, historical: 140, bodyPips: 74, wickPips: 38 },
+  "1D": { label: "1D", seconds: 86400, updateIntervalMs: 5000, historical: 110, bodyPips: 116, wickPips: 58 },
 };
 
 const HIGH_TIMEFRAME_DIRECT_SECONDS = 30 * 60;
@@ -204,7 +204,7 @@ export class OTCPriceEngine {
     if (effectiveConfig.seconds >= HIGH_TIMEFRAME_DIRECT_SECONDS) {
       candles = this.getClosedHistory(effectiveConfig, effectiveConfig.historical, nowSec);
     } else if (effectiveConfig.seconds < TIMEFRAMES["1m"].seconds) {
-      candles = this.getClosedHistory(effectiveConfig, effectiveConfig.historical, nowSec);
+      candles = this.aggregateFromBase(effectiveConfig, TIMEFRAMES["1s"], nowSec);
     } else if (effectiveConfig.seconds <= TIMEFRAMES["1h"].seconds) {
       candles = this.aggregateFromBase(effectiveConfig, TIMEFRAMES["1m"], nowSec);
     } else if (effectiveConfig.seconds <= TIMEFRAMES["1D"].seconds) {
