@@ -138,6 +138,9 @@ const AssetInfo = ({
         borderBottom: "1px solid var(--trading-border-color)",
       }}
     >
+      <style>{`
+        @keyframes sparkline-draw { to { stroke-dashoffset: 0; } }
+      `}</style>
       <div
         className="pointer-events-none absolute inset-0 opacity-80"
         style={{
@@ -229,19 +232,31 @@ const AssetInfo = ({
                 onClick={() => (onSelectTab ? onSelectTab(tab.symbol) : onOpenSelector())}
               >
                 <svg
-                  className="pointer-events-none absolute inset-x-0 bottom-0 h-[34px] w-full opacity-95"
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-[34px] w-full"
                   viewBox="0 0 120 44"
                   preserveAspectRatio="none"
                   aria-hidden="true"
                 >
-                  <polygon points={sparklineFillPoints} fill={sparklineFill} />
+                  <polygon points={sparklineFillPoints} fill={sparklineFill} opacity={0.4} />
                   <polyline
                     points={sparklinePoints}
                     fill="none"
                     stroke={sparklineColor}
-                    strokeWidth="1.4"
+                    strokeWidth="3"
+                    opacity={0.08}
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                  />
+                  <polyline
+                    points={sparklinePoints}
+                    fill="none"
+                    stroke={sparklineColor}
+                    strokeWidth="0.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeDasharray="1000"
+                    strokeDashoffset="1000"
+                    style={{ animation: "sparkline-draw 1.2s ease-out forwards" }}
                   />
                 </svg>
 
