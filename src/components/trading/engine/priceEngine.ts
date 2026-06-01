@@ -45,9 +45,9 @@ export type SupportedChartTimeframe = (typeof SUPPORTED_CHART_TIMEFRAMES)[number
 
 export const TIMEFRAMES: Record<string, TimeframeConfig> = {
   "1s": { label: "1s", seconds: 1, updateIntervalMs: 40, historical: 360, bodyPips: 1.5, wickPips: 1 },
-  "5s": { label: "5s", seconds: 5, updateIntervalMs: 50, historical: 320, bodyPips: 3, wickPips: 2 },
-  "15s": { label: "15s", seconds: 15, updateIntervalMs: 60, historical: 280, bodyPips: 5, wickPips: 4 },
-  "30s": { label: "30s", seconds: 30, updateIntervalMs: 80, historical: 260, bodyPips: 6, wickPips: 5 },
+  "5s": { label: "5s", seconds: 5, updateIntervalMs: 50, historical: 320, bodyPips: 3, wickPips: 6 },
+  "15s": { label: "15s", seconds: 15, updateIntervalMs: 60, historical: 280, bodyPips: 5, wickPips: 6 },
+  "30s": { label: "30s", seconds: 30, updateIntervalMs: 80, historical: 260, bodyPips: 6, wickPips: 6 },
   "1m": { label: "1m", seconds: 60, updateIntervalMs: 100, historical: 240, bodyPips: 8, wickPips: 6 },
   "2m": { label: "2m", seconds: 120, updateIntervalMs: 150, historical: 232, bodyPips: 11, wickPips: 8 },
   "3m": { label: "3m", seconds: 180, updateIntervalMs: 190, historical: 228, bodyPips: 13, wickPips: 9 },
@@ -204,7 +204,7 @@ export class OTCPriceEngine {
     if (effectiveConfig.seconds >= HIGH_TIMEFRAME_DIRECT_SECONDS) {
       candles = this.getClosedHistory(effectiveConfig, effectiveConfig.historical, nowSec);
     } else if (effectiveConfig.seconds < TIMEFRAMES["1m"].seconds) {
-      candles = this.aggregateFromBase(effectiveConfig, TIMEFRAMES["1s"], nowSec);
+      candles = this.getClosedHistory(effectiveConfig, effectiveConfig.historical, nowSec);
     } else if (effectiveConfig.seconds <= TIMEFRAMES["1h"].seconds) {
       candles = this.aggregateFromBase(effectiveConfig, TIMEFRAMES["1m"], nowSec);
     } else if (effectiveConfig.seconds <= TIMEFRAMES["1D"].seconds) {
