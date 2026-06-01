@@ -142,10 +142,6 @@ const buildTradeGroups = <T extends { closed_at?: string; opened_at?: string }>(
 
 // Preset durations in seconds
 const TIME_PRESETS = [
-  { label: "5s",   val: 5      },
-  { label: "10s",  val: 10     },
-  { label: "15s",  val: 15     },
-  { label: "30s",  val: 30     },
   { label: "1m",   val: 60     },
   { label: "2m",   val: 120    },
   { label: "3m",   val: 180    },
@@ -159,7 +155,7 @@ const TIME_PRESETS = [
 ];
 
 const MAX_MANUAL_INVESTMENT = 3000;
-const MIN_MANUAL_EXPIRY_SECONDS = 5;
+const MIN_MANUAL_EXPIRY_SECONDS = 60;
 const MAX_MANUAL_EXPIRY_SECONDS = 24 * 60 * 60;
 const PENDING_TRADE_DELAY_MS = 3000;
 const PENDING_TRADE_MODE_KEY = "trade_pending_mode_enabled";
@@ -266,7 +262,7 @@ const TimeSwitcher = ({
                 Custom Time
               </div>
               <div className="text-[10px] text-white/60">
-                Enter any duration from 5 seconds to 24 hours.
+                Enter any duration from 1 minute to 24 hours.
               </div>
             </div>
             <div className="rounded-full bg-[#1e2330] px-2 py-1 text-[10px] font-bold text-white">
