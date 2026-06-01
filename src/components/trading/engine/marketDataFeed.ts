@@ -119,12 +119,12 @@ const getPricePrecision = (price: number) => {
 };
 
 const getSyntheticStepRatio = (timeframeSeconds: number) => {
-  if (timeframeSeconds <= 1) return 0.0000055;
-  if (timeframeSeconds <= 5) return 0.0000065;
-  if (timeframeSeconds <= 15) return 0.000008;
-  if (timeframeSeconds <= 30) return 0.0000105;
-  if (timeframeSeconds <= 60) return 0.0000135;
-  return 0.000016;
+  if (timeframeSeconds <= 1) return 0.0000024;
+  if (timeframeSeconds <= 5) return 0.000003;
+  if (timeframeSeconds <= 15) return 0.0000038;
+  if (timeframeSeconds <= 30) return 0.000005;
+  if (timeframeSeconds <= 60) return 0.0000065;
+  return 0.000008;
 };
 
 const LIVE_MARKET_MICROSTRUCTURE_SECONDS = 1;
@@ -215,14 +215,14 @@ export const simulateDeterministicTickPrice = ({
   const shock =
     safeBasePrice *
     stepRatio *
-    (fastNoise * 0.9 + slowNoise * 0.42 + waveOne * 0.38 + waveTwo * 0.2 + microPulse * 0.58);
+    (fastNoise * 0.6 + slowNoise * 0.28 + waveOne * 0.26 + waveTwo * 0.14 + microPulse * 0.38);
   const intrabarShock =
     safeBasePrice *
     stepRatio *
-    0.78 *
-    (intrabarSwing * 0.66 + intrabarNoise * 0.4);
-  const nextVelocity = velocity * 0.5 + shock * 0.72 + intrabarShock;
-  const meanReversionStrength = clamp(0.035 + marketTimeframeSeconds / 1600, 0.035, 0.11);
+    0.52 *
+    (intrabarSwing * 0.44 + intrabarNoise * 0.26);
+  const nextVelocity = velocity * 0.35 + shock * 0.48 + intrabarShock;
+  const meanReversionStrength = clamp(0.06 + marketTimeframeSeconds / 1600, 0.06, 0.15);
   const meanReversion = (safeAnchorPrice - referencePrice) * meanReversionStrength;
   const anchorDistanceRatio =
     Math.abs(safeAnchorPrice - referencePrice) / Math.max(safeBasePrice * stepRatio * 6, 1e-9);
