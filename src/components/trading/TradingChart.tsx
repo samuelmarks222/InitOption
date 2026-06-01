@@ -33,7 +33,6 @@ import {
   type MarketDataFeed,
 } from "./engine/marketDataFeed";
 import { CandleAggregator } from "./CandleAggregator";
-import { RoundedCandlePlugin } from "./RoundedCandlePlugin";
 import ChartToolbar, { ChartType, CandleIcon } from "./ChartToolbar";
 import { TradeMarkersOverlay } from "./TradeMarkersOverlay";
 import { LiveChartBeacon } from "./LiveChartBeacon";
@@ -989,19 +988,17 @@ const getCandlestickDisplaySettings = (
   const minimalPreset = styles.displayPreset === "secondary";
   const upColor = minimalPreset ? toRgba(baseUpColor, 0.85) : mixHexColors(baseUpColor, "#ffffff", 0.02);
   const downColor = minimalPreset ? toRgba(baseDownColor, 0.85) : mixHexColors(baseDownColor, "#ffffff", 0.02);
-  const borderUpColor = upColor;
-  const borderDownColor = downColor;
   const wickUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.02 : 0.04), 0.88);
   const wickDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", minimalPreset ? 0.02 : 0.04), 0.88);
 
   return {
     upColor,
     downColor,
-    borderUpColor,
-    borderDownColor,
+    borderUpColor: baseUpColor,
+    borderDownColor: baseDownColor,
     wickUpColor,
     wickDownColor,
-    borderVisible: false,
+    borderVisible: true,
     wickVisible: true,
     priceLineVisible: styles.priceLineVisible,
   };
@@ -1956,8 +1953,6 @@ const TradingChart = ({
   const chartRef = useRef<IChartApi | null>(null);
   const mainSeriesRef = useRef<ChartSeriesApi | null>(null);
   const mainUpdateSchedulerRef = useRef<SmoothUpdateScheduler | null>(null);
-  const roundedPluginRef = useRef<RoundedCandlePlugin | null>(null);
-
   // Overlay Indicators Refs Map
   const overlaySeriesMap = useRef<Record<string, ChartSeriesApi>>({});
   const indicatorDataMap = useRef<Record<string, OverlayIndicatorPoint[]>>({});
@@ -2027,12 +2022,9 @@ const TradingChart = ({
       userSelect: "none",
     };
 
-    const shadow = { filter: "drop-shadow(0 0 3px rgba(0,0,0,0.3)) drop-shadow(0 1px 1px rgba(0,0,0,0.15))" };
-
     if (!activeChartBackgroundImage) {
       return {
         ...mobileTouchSurface,
-        ...shadow,
         background: effectiveChartTheme.bg,
       };
     }
@@ -2775,19 +2767,6 @@ const TradingChart = ({
         mainUpdateSchedulerRef.current = new SmoothUpdateScheduler(series);
         mainSeriesKindRef.current = kind;
         setSyncSeries(series);
-        if (kind === "candlestick") {
-          const upColor = getCandleUpColor(chartType, chartStyles, globalThemeRef.current.up);
-          const downColor = getCandleDownColor(chartType, chartStyles, globalThemeRef.current.down);
-          series.applyOptions({
-            upColor: "transparent",
-            downColor: "transparent",
-            borderVisible: false,
-            priceLineColor: upColor,
-          });
-          const plugin = new RoundedCandlePlugin(upColor, downColor);
-          series.attachPrimitive(plugin);
-          roundedPluginRef.current = plugin;
-        }
       } else {
         applyMainSeriesOptions(
           mainSeriesRef.current,
@@ -2796,19 +2775,6 @@ const TradingChart = ({
           chartStyles,
           globalThemeRef.current,
         );
-        if (mainSeriesKindRef.current === "candlestick") {
-          const upColor = getCandleUpColor(chartType, chartStyles, globalThemeRef.current.up);
-          const downColor = getCandleDownColor(chartType, chartStyles, globalThemeRef.current.down);
-          mainSeriesRef.current.applyOptions({
-            upColor: "transparent",
-            downColor: "transparent",
-            borderVisible: false,
-            priceLineColor: upColor,
-          });
-          if (roundedPluginRef.current) {
-            roundedPluginRef.current.setColors(upColor, downColor);
-          }
-        }
       }
       setChartError(null);
     } catch (error) {

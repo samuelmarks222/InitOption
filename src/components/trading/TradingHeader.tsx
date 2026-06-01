@@ -5,6 +5,7 @@ import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { AccountType, AccountDropdown } from "./AccountModals";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { CurrencySelector } from "./CurrencySelector";
 import { useVip } from "@/contexts/VipContext";
 import { VipBadge } from "@/components/vip/VipBadge";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -422,6 +423,8 @@ const TradingHeader = ({
               <ChevronDown className="h-3.5 w-3.5 shrink-0 text-gray-500 transition-colors group-hover:text-gray-300" />
             </button>
           </div>
+
+          <CurrencySelector />
 
           <div className="relative h-[46px] flex items-center">
             <button
