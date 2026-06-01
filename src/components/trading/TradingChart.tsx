@@ -396,41 +396,41 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 15.4,
-  "5s": 15.8,
-  "15s": 16.1,
-  "30s": 16.3,
-  "1m": 16.5,
-  "2m": 14.8,
-  "3m": 13.8,
-  "4m": 12.9,
-  "5m": 12.2,
-  "10m": 8.9,
-  "15m": 9.3,
-  "30m": 9.8,
-  "1h": 10.3,
-  "2h": 10.8,
-  "4h": 11.6,
-  "1D": 13.2,
+  "1s": 10,
+  "5s": 10.5,
+  "15s": 11,
+  "30s": 11.5,
+  "1m": 12,
+  "2m": 11,
+  "3m": 10.5,
+  "4m": 10,
+  "5m": 9.5,
+  "10m": 6,
+  "15m": 6.5,
+  "30m": 7,
+  "1h": 7.5,
+  "2h": 8,
+  "4h": 8.5,
+  "1D": 9.5,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
-  "1s": 78,
-  "5s": 78,
-  "15s": 80,
-  "30s": 82,
-  "1m": 84,
-  "2m": 90,
-  "3m": 94,
-  "4m": 96,
-  "5m": 98,
-  "10m": 98,
-  "15m": 92,
-  "30m": 86,
-  "1h": 80,
-  "2h": 74,
-  "4h": 66,
-  "1D": 46,
+  "1s": 40,
+  "5s": 40,
+  "15s": 42,
+  "30s": 44,
+  "1m": 46,
+  "2m": 48,
+  "3m": 50,
+  "4m": 52,
+  "5m": 54,
+  "10m": 54,
+  "15m": 50,
+  "30m": 46,
+  "1h": 42,
+  "2h": 38,
+  "4h": 34,
+  "1D": 26,
 };
 
 const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
@@ -596,7 +596,7 @@ const getTrendContextBarCount = (
 };
 
 const getHistoryBackfillThreshold = (containerWidth: number, timeframe: SupportedChartTimeframe) =>
-  Math.max(18, Math.round(getTrendContextBarCount(containerWidth, timeframe) * 0.18));
+  Math.max(12, Math.round(getTrendContextBarCount(containerWidth, timeframe) * 0.12));
 
 const getHistoryBackfillIncrement = (containerWidth: number, timeframe: SupportedChartTimeframe) => {
   const trendContextBars = getTrendContextBarCount(containerWidth, timeframe);
@@ -605,7 +605,7 @@ const getHistoryBackfillIncrement = (containerWidth: number, timeframe: Supporte
   return Math.max(trendContextBars, Math.round(historicalBaseline * 0.55));
 };
 
-const getChartRightOffset = (visibleBars: number) => Math.max(18, Math.min(58, Math.round(visibleBars * 0.18)));
+const getChartRightOffset = (visibleBars: number) => Math.max(12, Math.min(32, Math.round(visibleBars * 0.12)));
 
 const getDefaultVisibleBars = (
   containerWidth: number,
