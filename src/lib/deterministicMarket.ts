@@ -10,6 +10,10 @@ export interface DeterministicMarketCandle {
 }
 
 interface MarketProfile {
+  visibleRangeMultiplier: number;
+  counterRangeMultiplier: number;
+  fastRangeMultiplier: number;
+  microRangeMultiplier: number;
   driftAmplitude: number;
   driftScaleSeconds: number;
   swingAmplitude: number;
@@ -31,6 +35,10 @@ const TAU = Math.PI * 2;
 
 const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
   OTC: {
+    visibleRangeMultiplier: 11.5,
+    counterRangeMultiplier: 7.2,
+    fastRangeMultiplier: 8.4,
+    microRangeMultiplier: 3.2,
     driftAmplitude: 0.004,
     driftScaleSeconds: 18 * 60 * 60,
     swingAmplitude: 0.0018,
@@ -48,6 +56,10 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
     volumeBase: 320,
   },
   CRYPTO: {
+    visibleRangeMultiplier: 1,
+    counterRangeMultiplier: 1,
+    fastRangeMultiplier: 1,
+    microRangeMultiplier: 1,
     driftAmplitude: 0.055,
     driftScaleSeconds: 20 * 60 * 60,
     swingAmplitude: 0.024,
@@ -65,6 +77,10 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
     volumeBase: 720,
   },
   STOCKS: {
+    visibleRangeMultiplier: 1,
+    counterRangeMultiplier: 1,
+    fastRangeMultiplier: 1,
+    microRangeMultiplier: 1,
     driftAmplitude: 0.022,
     driftScaleSeconds: 24 * 60 * 60,
     swingAmplitude: 0.009,
@@ -82,6 +98,10 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
     volumeBase: 460,
   },
   COMMODITIES: {
+    visibleRangeMultiplier: 1,
+    counterRangeMultiplier: 1,
+    fastRangeMultiplier: 1,
+    microRangeMultiplier: 1,
     driftAmplitude: 0.015,
     driftScaleSeconds: 22 * 60 * 60,
     swingAmplitude: 0.006,
@@ -176,11 +196,15 @@ const getDeterministicRelativeOffset = (
   const primaryPhase = hashUnit(normalizedSymbol, "primary-phase") * TAU;
   const secondaryPhase = hashUnit(normalizedSymbol, "secondary-phase") * TAU;
   const smoothingWeight = getHighTimeframeSmoothingWeight(timeframeSeconds);
+  const isHighTimeframe =
+    typeof timeframeSeconds === "number" &&
+    timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS;
   const driftWeight = 1 + smoothingWeight * 0.2;
   const swingWeight = 1 + smoothingWeight * 0.85;
-  const pulseWeight = 1 - smoothingWeight * 0.65;
-  const microWeight = 1 - smoothingWeight * 0.96;
-  const tickWeight = 1 - smoothingWeight;
+  const bodyBoost = isHighTimeframe ? 6 : 0;
+  const pulseWeight = Math.max(1 - smoothingWeight * 0.65, bodyBoost * 0.35);
+  const microWeight = Math.max(1 - smoothingWeight * 0.96, bodyBoost * 0.55);
+  const tickWeight = Math.max(1 - smoothingWeight, bodyBoost);
   const cycleWeight = 1 + smoothingWeight * 0.42;
   const secondaryCycleWeight = 1 + smoothingWeight * 0.28;
   const macroShape =
@@ -194,17 +218,35 @@ const getDeterministicRelativeOffset = (
         0.55
     );
 
-  return (
+  const trendOffset =
     noiseAt(normalizedSymbol, "drift", timestampSec / profile.driftScaleSeconds) * profile.driftAmplitude * driftWeight +
     noiseAt(normalizedSymbol, "swing", timestampSec / profile.swingScaleSeconds) * profile.swingAmplitude * swingWeight +
-    noiseAt(normalizedSymbol, "pulse", timestampSec / profile.pulseScaleSeconds) * profile.pulseAmplitude * pulseWeight +
-    noiseAt(normalizedSymbol, "micro", timestampSec / profile.microScaleSeconds) * profile.microAmplitude * microWeight +
-    noiseAt(normalizedSymbol, "tick", timestampSec / profile.tickScaleSeconds) * profile.tickAmplitude * tickWeight +
     Math.sin((timestampSec / profile.cycleSeconds) * TAU + primaryPhase) * profile.cycleAmplitude * cycleWeight +
     Math.sin((timestampSec / profile.secondaryCycleSeconds) * TAU + secondaryPhase) *
       profile.secondaryCycleAmplitude *
       secondaryCycleWeight +
-    macroShape
+    macroShape;
+  const counterTrendOffset =
+    noiseAt(normalizedSymbol, "counter-swing", timestampSec / Math.max(45, profile.pulseScaleSeconds * 0.44)) *
+      profile.pulseAmplitude *
+      Math.max(0.45, 1.15 - smoothingWeight * 0.4) +
+    Math.sin(
+      (timestampSec / Math.max(60, profile.secondaryCycleSeconds * 0.18)) * TAU +
+        hashUnit(normalizedSymbol, "counter-cycle-phase") * TAU,
+    ) *
+      profile.secondaryCycleAmplitude *
+      Math.max(0.35, 0.95 - smoothingWeight * 0.22);
+  const fastOffset =
+    noiseAt(normalizedSymbol, "pulse", timestampSec / profile.pulseScaleSeconds) * profile.pulseAmplitude * pulseWeight;
+  const microOffset =
+    noiseAt(normalizedSymbol, "micro", timestampSec / profile.microScaleSeconds) * profile.microAmplitude * microWeight +
+    noiseAt(normalizedSymbol, "tick", timestampSec / profile.tickScaleSeconds) * profile.tickAmplitude * tickWeight;
+
+  return (
+    trendOffset * profile.visibleRangeMultiplier +
+    counterTrendOffset * profile.counterRangeMultiplier +
+    fastOffset * profile.fastRangeMultiplier +
+    microOffset * profile.microRangeMultiplier
   );
 };
 
@@ -291,14 +333,30 @@ const getSampleStepSeconds = (timeframeSeconds: number) => {
 const getInteriorProbeCount = (timeframeSeconds: number) => {
   if (timeframeSeconds <= 1) return 3;
   if (timeframeSeconds <= 5) return 2;
-  if (timeframeSeconds <= 15) return 2;
-  if (timeframeSeconds <= 60) return 1;
-  return 0;
+  if (timeframeSeconds <= 15) return 4;
+  if (timeframeSeconds <= 60) return 5;
+  if (timeframeSeconds <= 5 * 60) return 5;
+  if (timeframeSeconds <= 15 * 60) return 6;
+  if (timeframeSeconds <= 60 * 60) return 6;
+  if (timeframeSeconds <= 4 * 60 * 60) return 8;
+  if (timeframeSeconds <= 12 * 60 * 60) return 10;
+  return 12;
+};
+
+const getOtcWickFloorRatio = (timeframeSeconds: number) => {
+  if (timeframeSeconds <= 1) return 0.0006;
+  if (timeframeSeconds <= 15) return 0.001;
+  if (timeframeSeconds <= 60) return 0.0015;
+  if (timeframeSeconds <= 5 * 60) return 0.002;
+  if (timeframeSeconds <= 15 * 60) return 0.0025;
+  if (timeframeSeconds <= 60 * 60) return 0.003;
+  return 0.0035;
 };
 
 const getTargetWickDelta = (
   referencePrice: number,
   timeframeSeconds: number,
+  category?: string | null,
   targetWickPips?: number,
 ) => {
   const priceStep = getPriceStep(referencePrice);
@@ -322,8 +380,12 @@ const getTargetWickDelta = (
           : timeframeSeconds <= 60
             ? 0.98
             : 0.86;
+  const pipWickDelta = priceStep * configuredPips * wickMultiplier;
+  const normalizedCategory = normalizeAssetCategory(category);
+  const otcWickFloor =
+    normalizedCategory === "OTC" ? referencePrice * getOtcWickFloorRatio(timeframeSeconds) : 0;
 
-  return priceStep * configuredPips * wickMultiplier;
+  return Math.max(pipWickDelta, otcWickFloor);
 };
 
 const getMaxWickLength = ({
@@ -339,24 +401,24 @@ const getMaxWickLength = ({
 }) => {
   const bodyFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 0.42
+      ? 3.0
       : timeframeSeconds <= 1
-        ? 0.34
+        ? 1.5
         : timeframeSeconds <= 5
-          ? 0.4
+          ? 1.5
           : timeframeSeconds <= 60
-            ? 0.54
-            : 0.72;
+            ? 2.0
+            : 2.5;
   const wickFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 0.3
+      ? 2.0
       : timeframeSeconds <= 1
-        ? 0.26
+        ? 1.0
         : timeframeSeconds <= 5
-          ? 0.32
+          ? 1.0
           : timeframeSeconds <= 60
-            ? 0.42
-            : 0.58;
+            ? 1.2
+            : 1.5;
   const minimumWick = priceStep * (timeframeSeconds <= 1 ? 1.1 : timeframeSeconds <= 5 ? 1.3 : 1.6);
 
   return Math.max(minimumWick, bodySize * bodyFactor + targetWickDelta * wickFactor);
@@ -401,7 +463,7 @@ const buildInteriorProbePrices = ({
     const oscillation = Math.sin(fraction * TAU * wickFrequency + wickPhase);
     const jitter = noiseAt(symbol, "wick-noise", timestamp / Math.max(0.04, durationSeconds / 5));
     const impulse = noiseAt(symbol, "wick-impulse", (startTimeSec + index) / Math.max(1, timeframeSeconds));
-    const displacement = targetWickDelta * (oscillation * 0.28 + jitter * 0.18 + impulse * 0.1);
+    const displacement = targetWickDelta * (oscillation * 0.54 + jitter * 0.34 + impulse * 0.22);
 
     return clampPriceToBounds(basePriceAtTime + displacement, basePrice);
   });
@@ -447,7 +509,7 @@ export const buildDeterministicCandle = ({
   const rawClose = prices[prices.length - 1];
   const referencePrice = Math.max(rawOpen, rawClose, basePrice);
   const priceStep = getPriceStep(referencePrice);
-  const targetWickDelta = getTargetWickDelta(referencePrice, timeframeSeconds, targetWickPips);
+  const targetWickDelta = getTargetWickDelta(referencePrice, timeframeSeconds, category, targetWickPips);
   const interiorProbePrices = buildInteriorProbePrices({
     symbol,
     basePrice,
@@ -469,8 +531,8 @@ export const buildDeterministicCandle = ({
     timeframeSeconds,
   });
   const wickBias = signedHash(symbol, `wick-bias:${startTimeSec}`);
-  const upperWickMultiplier = wickBias > 0.72 ? 0.08 : wickBias < -0.08 ? 0.58 : 0.42;
-  const lowerWickMultiplier = wickBias < -0.72 ? 0.08 : wickBias > 0.08 ? 0.58 : 0.42;
+  const upperWickMultiplier = wickBias > 0.72 ? 0.22 : wickBias < -0.08 ? 0.78 : 0.52;
+  const lowerWickMultiplier = wickBias < -0.72 ? 0.22 : wickBias > 0.08 ? 0.78 : 0.52;
   const upperWickLength = Math.min(
     maxWickLength,
     Math.max(sampledHigh - upperBody, targetWickDelta * upperWickMultiplier),
