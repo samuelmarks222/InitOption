@@ -31,17 +31,17 @@ const TAU = Math.PI * 2;
 
 const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
   OTC: {
-    driftAmplitude: 0.004,
+    driftAmplitude: 0.016,
     driftScaleSeconds: 18 * 60 * 60,
-    swingAmplitude: 0.0018,
+    swingAmplitude: 0.0072,
     swingScaleSeconds: 3 * 60 * 60,
     pulseAmplitude: 0.0009,
     pulseScaleSeconds: 8 * 60,
     microAmplitude: 0.00035,
     microScaleSeconds: 28,
-    cycleAmplitude: 0.0013,
+    cycleAmplitude: 0.0052,
     cycleSeconds: 6 * 60 * 60,
-    secondaryCycleAmplitude: 0.0007,
+    secondaryCycleAmplitude: 0.0028,
     secondaryCycleSeconds: 75 * 60,
     tickAmplitude: 0.00022,
     tickScaleSeconds: 1.1,
