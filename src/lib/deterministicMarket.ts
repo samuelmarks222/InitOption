@@ -151,7 +151,21 @@ const HIGH_TIMEFRAME_PROFESSIONAL_SECONDS = 30 * 60;
 const resolveProfile = (symbol: string, category?: string | null) =>
   CATEGORY_PROFILES[normalizeAssetCategory(category, symbol)];
 
-const getHighTimeframeSmoothingWeight = (_timeframeSeconds?: number) => 0;
+const getHighTimeframeSmoothingWeight = (timeframeSeconds?: number) => {
+  if (
+    typeof timeframeSeconds !== "number" ||
+    !Number.isFinite(timeframeSeconds) ||
+    timeframeSeconds < HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
+  ) {
+    return 0;
+  }
+
+  return clamp(
+    0.2 + Math.log2(timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS + 1) / 6,
+    0.2,
+    0.6,
+  );
+};
 
 const getDeterministicRelativeOffset = (
   normalizedSymbol: string,
