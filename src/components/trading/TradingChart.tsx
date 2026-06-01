@@ -3302,19 +3302,13 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
 
       const containerWidth = mainRef.current?.clientWidth ?? 960;
       const dataPointCount = mainSeriesRef.current?.data()?.length ?? historyRef.current.length;
-      const maxReadableBars = getMaxReadableZoomBars(
-        containerWidth,
-        selectedTf,
-        Math.max(1, dataPointCount),
-      );
-      const maxReadableRightOffset = getChartRightOffset(maxReadableBars);
-      const maxReadableSpan = maxReadableBars + maxReadableRightOffset;
-      const visibleSpan = range.to - range.from;
+      const maxReadableRightOffset = getChartRightOffset(dataPointCount);
+      const maxTo = dataPointCount + maxReadableRightOffset;
 
-      if (range.from < -0.5 || visibleSpan > maxReadableSpan + 0.5) {
-        const targetSpan = Math.max(1, Math.min(visibleSpan, maxReadableSpan));
-        const center = range.from < -0.5 ? targetSpan / 2 : (Math.max(0, range.from) + Math.min(dataPointCount, range.to)) / 2;
-        const maxTo = dataPointCount + maxReadableRightOffset;
+      if (range.from < -0.5) {
+        const visibleSpan = range.to - range.from;
+        const targetSpan = Math.max(1, visibleSpan);
+        const center = targetSpan / 2;
         let nextFrom = Math.max(0, center - targetSpan / 2);
         let nextTo = nextFrom + targetSpan;
 
