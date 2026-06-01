@@ -5,10 +5,9 @@ import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { AccountType, AccountDropdown } from "./AccountModals";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
-import { CurrencySelector } from "./CurrencySelector";
+
 import { useVip } from "@/contexts/VipContext";
 import { VipBadge } from "@/components/vip/VipBadge";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import type { ProfileTab } from "@/components/profile/ProfileDrawer";
 import { KycAvatarBadge } from "@/components/profile/KycAvatarBadge";
 import { getStoredLiveBalance } from "@/lib/live-balance";
@@ -389,7 +388,6 @@ const TradingHeader = ({
             )}
           </div>
 
-          <CurrencySelector />
         </div>
 
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 pr-2 xl:flex-nowrap">
