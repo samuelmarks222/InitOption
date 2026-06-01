@@ -1928,7 +1928,8 @@ const TradingChart = ({
       userSelect: "none",
     };
 
-    const shadow = { filter: "drop-shadow(0 0 3px rgba(0,0,0,0.3)) drop-shadow(0 1px 1px rgba(0,0,0,0.2))" };
+    const chartFilter = "url(#crc) drop-shadow(0 0 3px rgba(0,0,0,0.3)) drop-shadow(0 1px 1px rgba(0,0,0,0.15))";
+    const shadow = { filter: chartFilter };
 
     if (!activeChartBackgroundImage) {
       return {
@@ -3611,6 +3612,17 @@ const TradingChart = ({
         onMouseLeave={handleChartMouseLeave}
         onClick={handleChartClick}
       >
+        <svg style={{ position: "absolute", width: 0, height: 0, overflow: "hidden", pointerEvents: "none" }}>
+          <defs>
+            <filter id="crc">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="0.5" result="b"/>
+              <feComponentTransfer in="b" result="c">
+                <feFuncA type="linear" slope="2.5" intercept="-0.4"/>
+              </feComponentTransfer>
+              <feComposite in="SourceGraphic" in2="c" operator="in"/>
+            </filter>
+          </defs>
+        </svg>
         {showDesktopChartTools && !overlayUiSuppressed && (
           <>
             <div className="pointer-events-none absolute inset-y-0 left-0 z-[80] hidden sm:flex items-stretch">
