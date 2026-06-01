@@ -3301,34 +3301,6 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
       }
 
       const containerWidth = mainRef.current?.clientWidth ?? 960;
-      const dataPointCount = mainSeriesRef.current?.data()?.length ?? historyRef.current.length;
-      const maxReadableRightOffset = getChartRightOffset(dataPointCount);
-      const maxTo = dataPointCount + maxReadableRightOffset;
-
-      if (range.from < -0.5) {
-        const visibleSpan = range.to - range.from;
-        const targetSpan = Math.max(1, visibleSpan);
-        const center = targetSpan / 2;
-        let nextFrom = Math.max(0, center - targetSpan / 2);
-        let nextTo = nextFrom + targetSpan;
-
-        if (nextTo > maxTo) {
-          nextFrom = Math.max(0, nextFrom - (nextTo - maxTo));
-          nextTo = maxTo;
-        }
-
-        if (Math.abs(range.from - nextFrom) > 0.01 || Math.abs(range.to - nextTo) > 0.01) {
-          isNormalizingVisibleRangeRef.current = true;
-          timeScale.setVisibleLogicalRange({
-            from: nextFrom,
-            to: nextTo,
-          });
-          window.requestAnimationFrame(() => {
-            isNormalizingVisibleRangeRef.current = false;
-          });
-        }
-        return;
-      }
 
       if (isBackfillingHistoryRef.current || !engineRef.current) {
         return;
