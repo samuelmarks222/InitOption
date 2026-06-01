@@ -162,8 +162,8 @@ type PlatformThemeRow = Pick<Tables<"platform_settings">, "chart_bg_color" | "ch
 const toChartTime = (time: number) => time as Time;
 const INTRABAR_LOGICAL_SPAN = 0.72;
 const LIVE_FOLLOW_MIN_DELTA = 0.012;
-const CANDLE_ANIMATION_DURATION_MS = 320;
-const CANDLE_VISUAL_FRAME_MS = 30;
+const CANDLE_ANIMATION_DURATION_MS = 640;
+const CANDLE_VISUAL_FRAME_MS = 16;
 const getIntrabarLogicalOffset = (fraction: number) =>
   (Math.min(1, Math.max(0, fraction)) - 0.5) * INTRABAR_LOGICAL_SPAN;
 const getLiveCandleProgressLogical = (historyLength: number, fraction: number) =>
@@ -178,7 +178,10 @@ const getAnimationClockMs = () =>
     ? performance.now()
     : Date.now();
 const clampProgress = (t: number) => Math.min(1, Math.max(0, t));
-const easeOutCubic = (t: number) => { const c = clampProgress(t); return 1 - Math.pow(1 - c, 3); };
+const easeOutCubic = (t: number) => {
+  const c = clampProgress(t);
+  return c * c * (3 - 2 * c);
+};
 const interpolateNumber = (from: number, to: number, progress: number) => from + (to - from) * progress;
 const normalizeOhlcBounds = (candle: OHLCCandle): OHLCCandle => {
   const upperBody = Math.max(candle.open, candle.close);
@@ -397,26 +400,30 @@ const IndicatorControlStrip = ({
 
 const BAR_SPACING_MAP: Record<string, number> = {
   "1s": 12,
-  "5s": 12.5,
-  "15s": 13,
-  "30s": 13.5,
-  "1m": 14,
-  "2m": 13,
-  "3m": 12.5,
-  "4m": 12,
-  "5m": 11.5,
-  "10m": 11,
-  "15m": 11.5,
-  "30m": 12,
-  "1h": 12,
-  "2h": 12,
-  "4h": 12,
-  "1D": 12,
+  "5s": 12,
+  "10s": 12,
+  "15s": 12,
+  "30s": 12,
+  "1m": 12,
+  "2m": 10,
+  "3m": 10,
+  "4m": 10,
+  "5m": 10,
+  "10m": 8,
+  "15m": 8,
+  "30m": 6,
+  "1h": 6,
+  "2h": 4,
+  "3h": 4,
+  "4h": 4,
+  "12h": 4,
+  "1D": 4,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
   "1s": 30,
   "5s": 30,
+  "10s": 31,
   "15s": 32,
   "30s": 34,
   "1m": 36,
@@ -429,13 +436,16 @@ const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
   "30m": 36,
   "1h": 32,
   "2h": 28,
+  "3h": 26,
   "4h": 24,
+  "12h": 20,
   "1D": 18,
 };
 
 const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
   "1s": 128,
   "5s": 126,
+  "10s": 125,
   "15s": 124,
   "30s": 122,
   "1m": 120,
@@ -448,13 +458,16 @@ const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>
   "30m": 156,
   "1h": 146,
   "2h": 136,
+  "3h": 128,
   "4h": 122,
+  "12h": 104,
   "1D": 92,
 };
 
 const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
   "1s": 3000,
   "5s": 2400,
+  "10s": 2200,
   "15s": 2000,
   "30s": 1800,
   "1m": 1600,
@@ -467,13 +480,16 @@ const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, n
   "30m": 500,
   "1h": 400,
   "2h": 300,
+  "3h": 275,
   "4h": 250,
+  "12h": 225,
   "1D": 200,
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
   "1s": 1,
   "5s": 1,
+  "10s": 1,
   "15s": 1,
   "30s": 1,
   "1m": 1,
@@ -486,52 +502,20 @@ const MIN_BAR_SPACING_MAP: Record<string, number> = {
   "30m": 1,
   "1h": 1,
   "2h": 1,
+  "3h": 1,
   "4h": 1,
+  "12h": 1,
   "1D": 1,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
 
-const getMainPriceScaleMargins = (timeframe: SupportedChartTimeframe) => {
-  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
+const getMainPriceScaleMargins = () => ({ top: 0.1, bottom: 0.1 });
 
-  if (seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS) {
-    return { top: 0.16, bottom: 0.17 };
-  }
-
-  return { top: 0.14, bottom: 0.15 };
-};
-
-const getZoomResponsivePriceScaleMargins = (
-  timeframe: SupportedChartTimeframe,
-  visibleSpan: number | null | undefined,
-  containerWidth: number,
-) => {
-  const baseMargins = getMainPriceScaleMargins(timeframe);
-  const targetVisibleBars = getTargetVisibleBars(containerWidth, timeframe);
-  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
-
-  if (!Number.isFinite(visibleSpan) || !visibleSpan || visibleSpan <= 0 || targetVisibleBars <= 0) {
-    return baseMargins;
-  }
-
-  const zoomRatio = visibleSpan / targetVisibleBars;
-  const zoomPadding = Math.max(-0.08, Math.min(0.2, (zoomRatio - 1) * 0.11));
-  const maxMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.32 : 0.34;
-  const minMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.055 : 0.06;
-  const margin = Math.max(minMargin, Math.min(maxMargin, baseMargins.top + zoomPadding));
-
-  return { top: margin, bottom: margin };
-};
-
-const getMainPriceScaleOptions = (
-  timeframe: SupportedChartTimeframe,
-  visibleSpan?: number | null,
-  containerWidth = 960,
-) => ({
+const getMainPriceScaleOptions = () => ({
   autoScale: true,
   borderColor: THEME.border,
-  scaleMargins: getZoomResponsivePriceScaleMargins(timeframe, visibleSpan, containerWidth),
+  scaleMargins: getMainPriceScaleMargins(),
   minimumWidth: SYNCED_PRICE_SCALE_MIN_WIDTH,
   entireTextOnly: true,
   ticksVisible: true,
@@ -2431,9 +2415,9 @@ const TradingChart = ({
       const chart = chartRef.current;
       if (!chart) return;
 
-      const containerWidth = mainRef.current?.clientWidth ?? 960;
-      const options = getMainPriceScaleOptions(selectedTf, visibleSpan, containerWidth);
-      const marginKey = `${selectedTf}:${options.scaleMargins.top.toFixed(3)}:${options.scaleMargins.bottom.toFixed(3)}`;
+      const options = getMainPriceScaleOptions();
+      const spanKey = Number.isFinite(visibleSpan) ? Number(visibleSpan).toFixed(2) : "auto";
+      const marginKey = `${selectedTf}:${spanKey}:${options.scaleMargins.top.toFixed(3)}:${options.scaleMargins.bottom.toFixed(3)}`;
 
       if (!force && priceScaleMarginKeyRef.current === marginKey) {
         return;
@@ -2703,7 +2687,7 @@ const TradingChart = ({
             style: LineStyle.Dashed,
           },
         },
-        rightPriceScale: getMainPriceScaleOptions("1m", DEFAULT_VISIBLE_BARS, 960),
+        rightPriceScale: getMainPriceScaleOptions(),
         timeScale: { 
           borderColor: THEME.border, 
           timeVisible: true, 

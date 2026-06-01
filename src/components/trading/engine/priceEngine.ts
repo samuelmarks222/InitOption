@@ -25,6 +25,7 @@ export interface TimeframeConfig {
 
 export const SUPPORTED_CHART_TIMEFRAMES = [
   "5s",
+  "10s",
   "15s",
   "30s",
   "1m",
@@ -37,7 +38,9 @@ export const SUPPORTED_CHART_TIMEFRAMES = [
   "30m",
   "1h",
   "2h",
+  "3h",
   "4h",
+  "12h",
   "1D",
 ] as const;
 
@@ -46,6 +49,7 @@ export type SupportedChartTimeframe = (typeof SUPPORTED_CHART_TIMEFRAMES)[number
 export const TIMEFRAMES: Record<string, TimeframeConfig> = {
   "1s": { label: "1s", seconds: 1, updateIntervalMs: 40, historical: 360, bodyPips: 1.5, wickPips: 1 },
   "5s": { label: "5s", seconds: 5, updateIntervalMs: 50, historical: 320, bodyPips: 3, wickPips: 2 },
+  "10s": { label: "10s", seconds: 10, updateIntervalMs: 55, historical: 300, bodyPips: 4, wickPips: 3 },
   "15s": { label: "15s", seconds: 15, updateIntervalMs: 60, historical: 280, bodyPips: 5, wickPips: 4 },
   "30s": { label: "30s", seconds: 30, updateIntervalMs: 80, historical: 260, bodyPips: 6, wickPips: 5 },
   "1m": { label: "1m", seconds: 60, updateIntervalMs: 100, historical: 240, bodyPips: 8, wickPips: 6 },
@@ -58,12 +62,14 @@ export const TIMEFRAMES: Record<string, TimeframeConfig> = {
   "30m": { label: "30m", seconds: 1800, updateIntervalMs: 1000, historical: 180, bodyPips: 34, wickPips: 18 },
   "1h": { label: "1h", seconds: 3600, updateIntervalMs: 1500, historical: 160, bodyPips: 46, wickPips: 24 },
   "2h": { label: "2h", seconds: 7200, updateIntervalMs: 2000, historical: 150, bodyPips: 58, wickPips: 30 },
+  "3h": { label: "3h", seconds: 10800, updateIntervalMs: 2500, historical: 145, bodyPips: 66, wickPips: 34 },
   "4h": { label: "4h", seconds: 14400, updateIntervalMs: 3000, historical: 140, bodyPips: 74, wickPips: 38 },
+  "12h": { label: "12h", seconds: 43200, updateIntervalMs: 4000, historical: 120, bodyPips: 96, wickPips: 48 },
   "1D": { label: "1D", seconds: 86400, updateIntervalMs: 5000, historical: 110, bodyPips: 116, wickPips: 58 },
 };
 
 const HIGH_TIMEFRAME_DIRECT_SECONDS = 30 * 60;
-const HISTORY_CACHE_VERSION = 10;
+const HISTORY_CACHE_VERSION = 11;
 const HISTORY_MEMORY_CACHE_LIMIT = 48;
 const historyMemoryCache = new Map<string, OHLCCandle[]>();
 

@@ -11,6 +11,8 @@ export interface DeterministicMarketCandle {
 
 interface MarketProfile {
   visibleRangeMultiplier: number;
+  fastRangeMultiplier: number;
+  microRangeMultiplier: number;
   driftAmplitude: number;
   driftScaleSeconds: number;
   swingAmplitude: number;
@@ -32,7 +34,9 @@ const TAU = Math.PI * 2;
 
 const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
   OTC: {
-    visibleRangeMultiplier: 11,
+    visibleRangeMultiplier: 13.5,
+    fastRangeMultiplier: 4.8,
+    microRangeMultiplier: 1.8,
     driftAmplitude: 0.004,
     driftScaleSeconds: 18 * 60 * 60,
     swingAmplitude: 0.0018,
@@ -51,6 +55,8 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
   },
   CRYPTO: {
     visibleRangeMultiplier: 1,
+    fastRangeMultiplier: 1,
+    microRangeMultiplier: 1,
     driftAmplitude: 0.055,
     driftScaleSeconds: 20 * 60 * 60,
     swingAmplitude: 0.024,
@@ -69,6 +75,8 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
   },
   STOCKS: {
     visibleRangeMultiplier: 1,
+    fastRangeMultiplier: 1,
+    microRangeMultiplier: 1,
     driftAmplitude: 0.022,
     driftScaleSeconds: 24 * 60 * 60,
     swingAmplitude: 0.009,
@@ -87,6 +95,8 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
   },
   COMMODITIES: {
     visibleRangeMultiplier: 1,
+    fastRangeMultiplier: 1,
+    microRangeMultiplier: 1,
     driftAmplitude: 0.015,
     driftScaleSeconds: 22 * 60 * 60,
     swingAmplitude: 0.006,
@@ -203,19 +213,25 @@ const getDeterministicRelativeOffset = (
         0.55
     );
 
-  const relativeOffset =
+  const trendOffset =
     noiseAt(normalizedSymbol, "drift", timestampSec / profile.driftScaleSeconds) * profile.driftAmplitude * driftWeight +
     noiseAt(normalizedSymbol, "swing", timestampSec / profile.swingScaleSeconds) * profile.swingAmplitude * swingWeight +
-    noiseAt(normalizedSymbol, "pulse", timestampSec / profile.pulseScaleSeconds) * profile.pulseAmplitude * pulseWeight +
-    noiseAt(normalizedSymbol, "micro", timestampSec / profile.microScaleSeconds) * profile.microAmplitude * microWeight +
-    noiseAt(normalizedSymbol, "tick", timestampSec / profile.tickScaleSeconds) * profile.tickAmplitude * tickWeight +
     Math.sin((timestampSec / profile.cycleSeconds) * TAU + primaryPhase) * profile.cycleAmplitude * cycleWeight +
     Math.sin((timestampSec / profile.secondaryCycleSeconds) * TAU + secondaryPhase) *
       profile.secondaryCycleAmplitude *
       secondaryCycleWeight +
     macroShape;
+  const fastOffset =
+    noiseAt(normalizedSymbol, "pulse", timestampSec / profile.pulseScaleSeconds) * profile.pulseAmplitude * pulseWeight;
+  const microOffset =
+    noiseAt(normalizedSymbol, "micro", timestampSec / profile.microScaleSeconds) * profile.microAmplitude * microWeight +
+    noiseAt(normalizedSymbol, "tick", timestampSec / profile.tickScaleSeconds) * profile.tickAmplitude * tickWeight;
 
-  return relativeOffset * profile.visibleRangeMultiplier;
+  return (
+    trendOffset * profile.visibleRangeMultiplier +
+    fastOffset * profile.fastRangeMultiplier +
+    microOffset * profile.microRangeMultiplier
+  );
 };
 
 const getDeterministicPriceAtForTimeframe = ({

@@ -71,6 +71,29 @@ describe("deterministic market feed", () => {
     expect(high - low).toBeGreaterThan(basePrice * 0.16);
   });
 
+  it("keeps requested chart timeframes visibly ranged", () => {
+    const nowSec = 1_711_111_111;
+    const basePrice = 1.08452;
+    const requestedTimeframes = ["5s", "10s", "15s", "30s", "1m", "5m", "15m", "30m", "1h", "4h", "1D"];
+    const minimumRangeRatioForSeconds = (seconds: number) => {
+      if (seconds <= 15) return 0.004;
+      if (seconds <= 60) return 0.008;
+      if (seconds <= 5 * 60) return 0.018;
+      if (seconds <= 15 * 60) return 0.035;
+      return 0.06;
+    };
+
+    requestedTimeframes.forEach((timeframe) => {
+      const config = TIMEFRAMES[timeframe];
+      const engine = new OTCPriceEngine("EUR/JPY", basePrice, "OTC");
+      const history = engine.generateHistory(config, nowSec);
+      const high = Math.max(...history.map((candle) => candle.high));
+      const low = Math.min(...history.map((candle) => candle.low));
+
+      expect(high - low).toBeGreaterThan(basePrice * minimumRangeRatioForSeconds(config.seconds));
+    });
+  });
+
   it("keeps 1s candles readable with visible wicks", () => {
     const nowSec = 1_711_111_111;
     const engine = new OTCPriceEngine("EUR/USD", 1.08452, "OTC");
