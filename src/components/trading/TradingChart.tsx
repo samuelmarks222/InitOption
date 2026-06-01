@@ -2387,9 +2387,9 @@ const TradingChart = ({
       Math.max(1, dataPointCount),
     );
     const maxReadableSpan = maxReadableBars + getChartRightOffset(maxReadableBars);
-    const fiftyPctBars = Math.max(1, dataPointCount * 0.5);
-    const fiftyPctSpan = fiftyPctBars + getChartRightOffset(fiftyPctBars);
-    const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing, fiftyPctSpan));
+    const twentyFivePctBars = Math.max(1, dataPointCount * 0.25);
+    const twentyFivePctSpan = twentyFivePctBars + getChartRightOffset(twentyFivePctBars);
+    const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing, twentyFivePctSpan));
     const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
     const maxFutureWhitespace = Math.max(
       rightOffset,
