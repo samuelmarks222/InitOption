@@ -151,20 +151,11 @@ const HIGH_TIMEFRAME_PROFESSIONAL_SECONDS = 30 * 60;
 const resolveProfile = (symbol: string, category?: string | null) =>
   CATEGORY_PROFILES[normalizeAssetCategory(category, symbol)];
 
-const getHighTimeframeSmoothingWeight = (timeframeSeconds?: number) => {
-  if (
-    typeof timeframeSeconds !== "number" ||
-    !Number.isFinite(timeframeSeconds) ||
-    timeframeSeconds < HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-  ) {
-    return 0;
+const getLowFreqScale = (timeframeSeconds?: number) => {
+  if (typeof timeframeSeconds !== "number" || !Number.isFinite(timeframeSeconds) || timeframeSeconds <= 60) {
+    return 1;
   }
-
-  return clamp(
-    0.2 + Math.log2(timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS + 1) / 6,
-    0.2,
-    0.6,
-  );
+  return Math.max(0.01, 60 / timeframeSeconds);
 };
 
 const getDeterministicRelativeOffset = (
@@ -175,36 +166,18 @@ const getDeterministicRelativeOffset = (
 ) => {
   const primaryPhase = hashUnit(normalizedSymbol, "primary-phase") * TAU;
   const secondaryPhase = hashUnit(normalizedSymbol, "secondary-phase") * TAU;
-  const smoothingWeight = getHighTimeframeSmoothingWeight(timeframeSeconds);
-  const driftWeight = 1 + smoothingWeight * 0.2;
-  const swingWeight = 1 + smoothingWeight * 0.85;
-  const pulseWeight = 1 - smoothingWeight * 0.65;
-  const microWeight = 1 - smoothingWeight * 0.96;
-  const tickWeight = 1 - smoothingWeight;
-  const cycleWeight = 1 + smoothingWeight * 0.42;
-  const secondaryCycleWeight = 1 + smoothingWeight * 0.28;
-  const macroShape =
-    smoothingWeight *
-    (
-      noiseAt(normalizedSymbol, "macro-drift", timestampSec / (profile.driftScaleSeconds * 1.7)) *
-        profile.driftAmplitude *
-        0.3 +
-      Math.sin((timestampSec / (profile.cycleSeconds * 2.35)) * TAU + hashUnit(normalizedSymbol, "macro-phase") * TAU) *
-        profile.swingAmplitude *
-        0.55
-    );
+  const lowFreqScale = getLowFreqScale(timeframeSeconds);
 
   return (
-    noiseAt(normalizedSymbol, "drift", timestampSec / profile.driftScaleSeconds) * profile.driftAmplitude * driftWeight +
-    noiseAt(normalizedSymbol, "swing", timestampSec / profile.swingScaleSeconds) * profile.swingAmplitude * swingWeight +
-    noiseAt(normalizedSymbol, "pulse", timestampSec / profile.pulseScaleSeconds) * profile.pulseAmplitude * pulseWeight +
-    noiseAt(normalizedSymbol, "micro", timestampSec / profile.microScaleSeconds) * profile.microAmplitude * microWeight +
-    noiseAt(normalizedSymbol, "tick", timestampSec / profile.tickScaleSeconds) * profile.tickAmplitude * tickWeight +
-    Math.sin((timestampSec / profile.cycleSeconds) * TAU + primaryPhase) * profile.cycleAmplitude * cycleWeight +
+    noiseAt(normalizedSymbol, "drift", timestampSec / profile.driftScaleSeconds) * profile.driftAmplitude * lowFreqScale +
+    noiseAt(normalizedSymbol, "swing", timestampSec / profile.swingScaleSeconds) * profile.swingAmplitude * lowFreqScale +
+    noiseAt(normalizedSymbol, "pulse", timestampSec / profile.pulseScaleSeconds) * profile.pulseAmplitude +
+    noiseAt(normalizedSymbol, "micro", timestampSec / profile.microScaleSeconds) * profile.microAmplitude +
+    noiseAt(normalizedSymbol, "tick", timestampSec / profile.tickScaleSeconds) * profile.tickAmplitude +
+    Math.sin((timestampSec / profile.cycleSeconds) * TAU + primaryPhase) * profile.cycleAmplitude * lowFreqScale +
     Math.sin((timestampSec / profile.secondaryCycleSeconds) * TAU + secondaryPhase) *
       profile.secondaryCycleAmplitude *
-      secondaryCycleWeight +
-    macroShape
+      lowFreqScale
   );
 };
 
