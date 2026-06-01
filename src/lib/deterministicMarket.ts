@@ -35,15 +35,15 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
     driftScaleSeconds: 18 * 60 * 60,
     swingAmplitude: 0.0018,
     swingScaleSeconds: 3 * 60 * 60,
-    pulseAmplitude: 0.0012,
+    pulseAmplitude: 0.00105,
     pulseScaleSeconds: 8 * 60,
-    microAmplitude: 0.0006,
+    microAmplitude: 0.00045,
     microScaleSeconds: 20,
     cycleAmplitude: 0.0013,
     cycleSeconds: 6 * 60 * 60,
     secondaryCycleAmplitude: 0.0007,
     secondaryCycleSeconds: 75 * 60,
-    tickAmplitude: 0.00045,
+    tickAmplitude: 0.00033,
     tickScaleSeconds: 1.1,
     volumeBase: 320,
   },
@@ -124,7 +124,7 @@ const lerp = (from: number, to: number, amount: number) => from + (to - from) * 
 const noiseAt = (symbol: string, salt: string, position: number) => {
   const leftIndex = Math.floor(position);
   const rightIndex = leftIndex + 1;
-  const amount = position - leftIndex;
+  const amount = smoothstep(position - leftIndex);
   const leftNoise = signedHash(symbol, `${salt}:${leftIndex}`);
   const rightNoise = signedHash(symbol, `${salt}:${rightIndex}`);
 
