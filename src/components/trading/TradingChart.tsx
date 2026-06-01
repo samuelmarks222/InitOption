@@ -1929,7 +1929,6 @@ const TradingChart = ({
   const loadedHistoryCountRef = useRef(0);
   const isBackfillingHistoryRef = useRef(false);
   const isNormalizingVisibleRangeRef = useRef(false);
-  const zoomClampTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastLiveFollowTargetRef = useRef<number | null>(null);
   const priceScaleMarginKeyRef = useRef("");
   const aggregatorRef = useRef<CandleAggregator | null>(null);
@@ -2389,7 +2388,9 @@ const TradingChart = ({
       Math.max(1, dataPointCount),
     );
     const maxReadableSpan = maxReadableBars + getChartRightOffset(maxReadableBars);
-    const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing));
+    const fortyPctBars = Math.max(1, dataPointCount * 0.4);
+    const fortyPctSpan = fortyPctBars + getChartRightOffset(fortyPctBars);
+    const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing, fortyPctSpan));
     const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
     const maxFutureWhitespace = Math.max(
       rightOffset,
@@ -3307,36 +3308,6 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
         return;
       }
 
-      // Debounced clamp to 40% of total data on max zoom-out
-      if (zoomClampTimerRef.current) {
-        clearTimeout(zoomClampTimerRef.current);
-      }
-      zoomClampTimerRef.current = setTimeout(() => {
-        const chart = chartRef.current;
-        if (!chart) return;
-        const dataPointCount = mainSeriesRef.current?.data()?.length ?? historyRef.current.length;
-        if (dataPointCount <= 0) return;
-        const currentRange = chart.timeScale().getVisibleLogicalRange();
-        if (!currentRange) return;
-        const visibleSpan = currentRange.to - currentRange.from;
-        const maxSpan = dataPointCount * 0.4;
-        if (visibleSpan <= maxSpan + 0.5) return;
-        isNormalizingVisibleRangeRef.current = true;
-        const center = (Math.max(0, currentRange.from) + Math.min(dataPointCount, currentRange.to)) / 2;
-        const halfSpan = maxSpan / 2;
-        let from = Math.max(0, center - halfSpan);
-        let to = from + maxSpan;
-        const maxTo = dataPointCount + getChartRightOffset(dataPointCount);
-        if (to > maxTo) {
-          from = Math.max(0, from - (to - maxTo));
-          to = maxTo;
-        }
-        chart.timeScale().setVisibleLogicalRange({ from, to });
-        requestAnimationFrame(() => {
-          isNormalizingVisibleRangeRef.current = false;
-        });
-      }, 200);
-
       const threshold = getHistoryBackfillThreshold(containerWidth, selectedTf);
 
       if (range.from > threshold) {
@@ -3360,12 +3331,7 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
     };
 
     timeScale.subscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
-    return () => {
-      timeScale.unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
-      if (zoomClampTimerRef.current) {
-        clearTimeout(zoomClampTimerRef.current);
-      }
-    };
+    return () => timeScale.unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
   }, [applyResponsivePriceScale, reloadHistoricalCandles, selectedTf]);
 
   useEffect(() => {
