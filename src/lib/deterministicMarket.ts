@@ -151,21 +151,7 @@ const HIGH_TIMEFRAME_PROFESSIONAL_SECONDS = 30 * 60;
 const resolveProfile = (symbol: string, category?: string | null) =>
   CATEGORY_PROFILES[normalizeAssetCategory(category, symbol)];
 
-const getHighTimeframeSmoothingWeight = (timeframeSeconds?: number) => {
-  if (
-    typeof timeframeSeconds !== "number" ||
-    !Number.isFinite(timeframeSeconds) ||
-    timeframeSeconds < HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-  ) {
-    return 0;
-  }
-
-  return clamp(
-    0.15 + Math.log2(timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) / 5,
-    0.15,
-    1,
-  );
-};
+const getHighTimeframeSmoothingWeight = (_timeframeSeconds?: number) => 0;
 
 const getDeterministicRelativeOffset = (
   normalizedSymbol: string,
@@ -289,8 +275,7 @@ const getSampleStepSeconds = (timeframeSeconds: number) => {
 
 const getInteriorProbeCount = (timeframeSeconds: number) => {
   if (timeframeSeconds <= 1) return 2;
-  if (timeframeSeconds <= 60) return 1;
-  return 0;
+  return 1;
 };
 
 const getTargetWickDelta = (
@@ -309,14 +294,7 @@ const getTargetWickDelta = (
           : timeframeSeconds <= 60
             ? 4
             : 6;
-  const wickMultiplier =
-    timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 0.52
-      : timeframeSeconds <= 1
-        ? 1.18
-        : timeframeSeconds <= 60
-          ? 0.98
-          : 0.86;
+  const wickMultiplier = timeframeSeconds <= 1 ? 1.18 : 0.98;
 
   return priceStep * configuredPips * wickMultiplier;
 };
@@ -332,22 +310,11 @@ const getMaxWickLength = ({
   targetWickDelta: number;
   timeframeSeconds: number;
 }) => {
-  const bodyFactor =
-    timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 0.42
-      : timeframeSeconds <= 1
-        ? 0.34
-        : timeframeSeconds <= 60
-          ? 0.54
-          : 0.72;
+  const bodyFactor = timeframeSeconds <= 1 ? 0.34 : 0.54;
   const wickFactor =
-    timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 0.3
-      : timeframeSeconds <= 1
-        ? 0.26
-        : timeframeSeconds <= 60
-          ? 0.42
-          : 0.58;
+    timeframeSeconds <= 1
+      ? 0.26
+      : 0.42;
   const minimumWick = priceStep * (timeframeSeconds <= 1 ? 1.1 : 1.6);
 
   return Math.max(minimumWick, bodySize * bodyFactor + targetWickDelta * wickFactor);
