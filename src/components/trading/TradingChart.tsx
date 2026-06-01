@@ -2782,6 +2782,7 @@ const TradingChart = ({
             upColor: "transparent",
             downColor: "transparent",
             borderVisible: false,
+            priceLineColor: upColor,
           });
           const plugin = new RoundedCandlePlugin(upColor, downColor);
           series.attachPrimitive(plugin);
@@ -2802,6 +2803,7 @@ const TradingChart = ({
             upColor: "transparent",
             downColor: "transparent",
             borderVisible: false,
+            priceLineColor: upColor,
           });
           if (roundedPluginRef.current) {
             roundedPluginRef.current.setColors(upColor, downColor);
