@@ -271,6 +271,8 @@ class DeterministicTickFeed implements MarketDataFeed {
   private connected = false;
   private nextTickAtMs = 0;
   private timer: TimerHandle | null = null;
+  private previousPrice: number = 0;
+  private velocity: number = 0;
 
   constructor(subscription: MarketFeedSubscription, callbacks: MarketFeedCallbacks) {
     this.subscription = subscription;
@@ -284,6 +286,11 @@ class DeterministicTickFeed implements MarketDataFeed {
     this.connected = true;
     this.nextTickAtMs = Date.now();
     this.callbacks.onStatusChange?.("fallback");
+
+    const seedPrice = getSharedLivePriceAt(this.engine, this.nextTickAtMs / 1000);
+    this.previousPrice = seedPrice;
+    this.velocity = 0;
+
     this.schedulePump(0);
   }
 
@@ -312,7 +319,20 @@ class DeterministicTickFeed implements MarketDataFeed {
 
     while (this.nextTickAtMs <= nowMs && guard < 64) {
       const timestamp = this.nextTickAtMs / 1000;
-      const price = getSharedLivePriceAt(this.engine, timestamp);
+      const anchorPrice = getSharedLivePriceAt(this.engine, timestamp);
+
+      const { price, velocity } = simulateDeterministicTickPrice({
+        symbol: this.subscription.symbol,
+        basePrice: this.subscription.basePrice,
+        timeframeSeconds: this.subscription.timeframe.seconds,
+        timestamp,
+        previousPrice: this.previousPrice,
+        anchorPrice,
+        velocity: this.velocity,
+      });
+
+      this.previousPrice = price;
+      this.velocity = velocity;
 
       this.callbacks.onTick({
         symbol: this.subscription.symbol,
