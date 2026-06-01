@@ -35,15 +35,15 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
     driftScaleSeconds: 18 * 60 * 60,
     swingAmplitude: 0.0018,
     swingScaleSeconds: 3 * 60 * 60,
-    pulseAmplitude: 0.0004,
+    pulseAmplitude: 0.0009,
     pulseScaleSeconds: 8 * 60,
-    microAmplitude: 0.00015,
+    microAmplitude: 0.00035,
     microScaleSeconds: 28,
     cycleAmplitude: 0.0013,
     cycleSeconds: 6 * 60 * 60,
     secondaryCycleAmplitude: 0.0007,
     secondaryCycleSeconds: 75 * 60,
-    tickAmplitude: 0.0001,
+    tickAmplitude: 0.00022,
     tickScaleSeconds: 1.1,
     volumeBase: 320,
   },
@@ -52,15 +52,15 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
     driftScaleSeconds: 20 * 60 * 60,
     swingAmplitude: 0.024,
     swingScaleSeconds: 4 * 60 * 60,
-    pulseAmplitude: 0.004,
+    pulseAmplitude: 0.011,
     pulseScaleSeconds: 12 * 60,
-    microAmplitude: 0.0015,
+    microAmplitude: 0.0045,
     microScaleSeconds: 24,
     cycleAmplitude: 0.014,
     cycleSeconds: 8 * 60 * 60,
     secondaryCycleAmplitude: 0.007,
     secondaryCycleSeconds: 90 * 60,
-    tickAmplitude: 0.0008,
+    tickAmplitude: 0.0021,
     tickScaleSeconds: 1.3,
     volumeBase: 720,
   },
@@ -69,15 +69,15 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
     driftScaleSeconds: 24 * 60 * 60,
     swingAmplitude: 0.009,
     swingScaleSeconds: 5 * 60 * 60,
-    pulseAmplitude: 0.0015,
+    pulseAmplitude: 0.0035,
     pulseScaleSeconds: 15 * 60,
-    microAmplitude: 0.0006,
+    microAmplitude: 0.0016,
     microScaleSeconds: 32,
     cycleAmplitude: 0.0065,
     cycleSeconds: 7 * 60 * 60,
     secondaryCycleAmplitude: 0.003,
     secondaryCycleSeconds: 2 * 60 * 60,
-    tickAmplitude: 0.0003,
+    tickAmplitude: 0.0008,
     tickScaleSeconds: 1.5,
     volumeBase: 460,
   },
@@ -86,15 +86,15 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
     driftScaleSeconds: 22 * 60 * 60,
     swingAmplitude: 0.006,
     swingScaleSeconds: 4 * 60 * 60,
-    pulseAmplitude: 0.001,
+    pulseAmplitude: 0.0025,
     pulseScaleSeconds: 12 * 60,
-    microAmplitude: 0.0004,
+    microAmplitude: 0.0011,
     microScaleSeconds: 30,
     cycleAmplitude: 0.0042,
     cycleSeconds: 6 * 60 * 60,
     secondaryCycleAmplitude: 0.0021,
     secondaryCycleSeconds: 90 * 60,
-    tickAmplitude: 0.0002,
+    tickAmplitude: 0.0005,
     tickScaleSeconds: 1.4,
     volumeBase: 390,
   },
@@ -161,8 +161,8 @@ const getHighTimeframeSmoothingWeight = (timeframeSeconds?: number) => {
   }
 
   return clamp(
-    0.15 + Math.log2(timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) / 5,
-    0.15,
+    0.38 + Math.log2(timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) / 3.4,
+    0.38,
     1,
   );
 };
@@ -276,7 +276,8 @@ const clampPriceToBounds = (price: number, basePrice: number) =>
 
 const getSampleStepSeconds = (timeframeSeconds: number) => {
   if (timeframeSeconds <= 1) return 0.1;
-  if (timeframeSeconds <= 5) return 1;
+  if (timeframeSeconds <= 5) return 0.25;
+  if (timeframeSeconds <= 15) return 1;
   if (timeframeSeconds <= 60) return 5;
   if (timeframeSeconds <= 15 * 60) return 15;
   if (timeframeSeconds < HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) return 60;
@@ -288,7 +289,9 @@ const getSampleStepSeconds = (timeframeSeconds: number) => {
 };
 
 const getInteriorProbeCount = (timeframeSeconds: number) => {
-  if (timeframeSeconds <= 1) return 2;
+  if (timeframeSeconds <= 1) return 3;
+  if (timeframeSeconds <= 5) return 2;
+  if (timeframeSeconds <= 15) return 2;
   if (timeframeSeconds <= 60) return 1;
   return 0;
 };
@@ -314,9 +317,11 @@ const getTargetWickDelta = (
       ? 0.52
       : timeframeSeconds <= 1
         ? 1.18
-        : timeframeSeconds <= 60
-          ? 0.98
-          : 0.86;
+        : timeframeSeconds <= 5
+          ? 1.08
+          : timeframeSeconds <= 60
+            ? 0.98
+            : 0.86;
 
   return priceStep * configuredPips * wickMultiplier;
 };
@@ -337,18 +342,22 @@ const getMaxWickLength = ({
       ? 0.42
       : timeframeSeconds <= 1
         ? 0.34
-        : timeframeSeconds <= 60
-          ? 0.54
-          : 0.72;
+        : timeframeSeconds <= 5
+          ? 0.4
+          : timeframeSeconds <= 60
+            ? 0.54
+            : 0.72;
   const wickFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
       ? 0.3
       : timeframeSeconds <= 1
         ? 0.26
-        : timeframeSeconds <= 60
-          ? 0.42
-          : 0.58;
-  const minimumWick = priceStep * (timeframeSeconds <= 1 ? 1.1 : 1.6);
+        : timeframeSeconds <= 5
+          ? 0.32
+          : timeframeSeconds <= 60
+            ? 0.42
+            : 0.58;
+  const minimumWick = priceStep * (timeframeSeconds <= 1 ? 1.1 : timeframeSeconds <= 5 ? 1.3 : 1.6);
 
   return Math.max(minimumWick, bodySize * bodyFactor + targetWickDelta * wickFactor);
 };
