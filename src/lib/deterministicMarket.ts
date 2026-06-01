@@ -344,13 +344,13 @@ const getInteriorProbeCount = (timeframeSeconds: number) => {
 };
 
 const getOtcWickFloorRatio = (timeframeSeconds: number) => {
-  if (timeframeSeconds <= 1) return 0;
-  if (timeframeSeconds <= 15) return 0.00014;
-  if (timeframeSeconds <= 60) return 0.00034;
-  if (timeframeSeconds <= 5 * 60) return 0.00042;
-  if (timeframeSeconds <= 15 * 60) return 0.00055;
-  if (timeframeSeconds <= 60 * 60) return 0.0007;
-  return 0.0009;
+  if (timeframeSeconds <= 1) return 0.0006;
+  if (timeframeSeconds <= 15) return 0.001;
+  if (timeframeSeconds <= 60) return 0.0015;
+  if (timeframeSeconds <= 5 * 60) return 0.002;
+  if (timeframeSeconds <= 15 * 60) return 0.0025;
+  if (timeframeSeconds <= 60 * 60) return 0.003;
+  return 0.0035;
 };
 
 const getTargetWickDelta = (
