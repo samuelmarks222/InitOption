@@ -124,7 +124,7 @@ const lerp = (from: number, to: number, amount: number) => from + (to - from) * 
 const noiseAt = (symbol: string, salt: string, position: number) => {
   const leftIndex = Math.floor(position);
   const rightIndex = leftIndex + 1;
-  const amount = smoothstep(position - leftIndex);
+  const amount = position - leftIndex;
   const leftNoise = signedHash(symbol, `${salt}:${leftIndex}`);
   const rightNoise = signedHash(symbol, `${salt}:${rightIndex}`);
 
