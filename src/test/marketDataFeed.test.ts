@@ -161,7 +161,7 @@ describe("simulateDeterministicTickPrice", () => {
 
     expect(average(topWicks)).toBeGreaterThan(priceStep * 0.2);
     expect(average(bottomWicks)).toBeGreaterThan(priceStep * 0.2);
-    expect(wickCoverage).toBeGreaterThanOrEqual(0.25);
+    expect(wickCoverage).toBeGreaterThanOrEqual(0.3);
     expect(average(topWicks)).toBeLessThan(average(bodies) * 0.58);
     expect(average(bottomWicks)).toBeLessThan(average(bodies) * 0.58);
   });

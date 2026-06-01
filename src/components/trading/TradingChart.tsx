@@ -161,54 +161,8 @@ type MainChartPoint = LineData<Time> | BarData<Time> | CandlestickData<Time>;
 type PlatformThemeRow = Pick<Tables<"platform_settings">, "chart_bg_color" | "chart_up_color" | "chart_down_color">;
 const toChartTime = (time: number) => time as Time;
 const INTRABAR_LOGICAL_SPAN = 0.72;
-const LIVE_FOLLOW_MIN_DELTA = 0.012;
-const CANDLE_ANIMATION_DURATION_MS = 640;
-const CANDLE_VISUAL_FRAME_MS = 16;
 const getIntrabarLogicalOffset = (fraction: number) =>
   (Math.min(1, Math.max(0, fraction)) - 0.5) * INTRABAR_LOGICAL_SPAN;
-const getLiveCandleProgressLogical = (historyLength: number, fraction: number) =>
-  Math.max(0, historyLength) + Math.min(1, Math.max(0, fraction));
-const getLiveTimeScaleFollowOptions = (enabled: boolean) => ({
-  rightBarStaysOnScroll: enabled,
-  shiftVisibleRangeOnNewBar: enabled,
-  allowShiftVisibleRangeOnWhitespaceReplacement: enabled,
-});
-const getAnimationClockMs = () =>
-  typeof performance !== "undefined" && typeof performance.now === "function"
-    ? performance.now()
-    : Date.now();
-const clampProgress = (t: number) => Math.min(1, Math.max(0, t));
-const easeOutCubic = (t: number) => {
-  const c = clampProgress(t);
-  return c * c * (3 - 2 * c);
-};
-const interpolateNumber = (from: number, to: number, progress: number) => from + (to - from) * progress;
-const normalizeOhlcBounds = (candle: OHLCCandle): OHLCCandle => {
-  const upperBody = Math.max(candle.open, candle.close);
-  const lowerBody = Math.min(candle.open, candle.close);
-
-  return {
-    ...candle,
-    high: Math.max(candle.high, upperBody),
-    low: Math.min(candle.low, lowerBody),
-  };
-};
-const buildCandleAnimationBaseline = (target: OHLCCandle): OHLCCandle =>
-  normalizeOhlcBounds({
-    ...target,
-    high: target.open,
-    low: target.open,
-    close: target.open,
-  });
-const interpolateOhlcCandle = (from: OHLCCandle, to: OHLCCandle, progress: number): OHLCCandle =>
-  normalizeOhlcBounds({
-    time: to.time,
-    open: interpolateNumber(from.open, to.open, progress),
-    high: interpolateNumber(from.high, to.high, progress),
-    low: interpolateNumber(from.low, to.low, progress),
-    close: interpolateNumber(from.close, to.close, progress),
-    volume: interpolateNumber(from.volume, to.volume, progress),
-  });
 
 const clampLineWidth = (value: number): LineWidth => {
   if (value >= 4) return 4;
@@ -227,14 +181,6 @@ type LivePriceBeaconState = {
   price: number;
   time: number;
   logical: number | null;
-};
-
-type LiveCandleAnimationState = {
-  from: OHLCCandle;
-  to: OHLCCandle;
-  fromTimestamp: number;
-  toTimestamp: number;
-  startedAt: number;
 };
 
 const toLineChartData = (candles: OHLCCandle[]): LineData<Time>[] =>
@@ -399,53 +345,46 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 12,
-  "5s": 12,
-  "10s": 12,
-  "15s": 12,
-  "30s": 12,
-  "1m": 12,
-  "2m": 10,
-  "3m": 10,
-  "4m": 10,
-  "5m": 10,
-  "10m": 8,
-  "15m": 8,
-  "30m": 6,
-  "1h": 6,
-  "2h": 4,
-  "3h": 4,
-  "4h": 4,
-  "12h": 4,
-  "1D": 4,
+  "1s": 15.4,
+  "5s": 15.8,
+  "15s": 16.1,
+  "30s": 16.3,
+  "1m": 16.5,
+  "2m": 14.8,
+  "3m": 13.8,
+  "4m": 12.9,
+  "5m": 12.2,
+  "10m": 8.9,
+  "15m": 9.3,
+  "30m": 9.8,
+  "1h": 10.3,
+  "2h": 10.8,
+  "4h": 11.6,
+  "1D": 13.2,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
-  "1s": 30,
-  "5s": 30,
-  "10s": 31,
-  "15s": 32,
-  "30s": 34,
-  "1m": 36,
-  "2m": 38,
-  "3m": 40,
-  "4m": 42,
-  "5m": 44,
-  "10m": 44,
-  "15m": 40,
-  "30m": 36,
-  "1h": 32,
-  "2h": 28,
-  "3h": 26,
-  "4h": 24,
-  "12h": 20,
-  "1D": 18,
+  "1s": 78,
+  "5s": 78,
+  "15s": 80,
+  "30s": 82,
+  "1m": 84,
+  "2m": 90,
+  "3m": 94,
+  "4m": 96,
+  "5m": 98,
+  "10m": 98,
+  "15m": 92,
+  "30m": 86,
+  "1h": 80,
+  "2h": 74,
+  "4h": 66,
+  "1D": 46,
 };
 
 const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
   "1s": 128,
   "5s": 126,
-  "10s": 125,
   "15s": 124,
   "30s": 122,
   "1m": 120,
@@ -458,64 +397,89 @@ const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>
   "30m": 156,
   "1h": 146,
   "2h": 136,
-  "3h": 128,
   "4h": 122,
-  "12h": 104,
   "1D": 92,
 };
 
 const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
-  "1s": 3000,
-  "5s": 2400,
-  "10s": 2200,
-  "15s": 2000,
-  "30s": 1800,
-  "1m": 1600,
-  "2m": 1400,
-  "3m": 1200,
-  "4m": 1000,
-  "5m": 900,
-  "10m": 700,
-  "15m": 600,
-  "30m": 500,
-  "1h": 400,
-  "2h": 300,
-  "3h": 275,
-  "4h": 250,
-  "12h": 225,
-  "1D": 200,
+  "1s": 180,
+  "5s": 176,
+  "15s": 172,
+  "30s": 168,
+  "1m": 164,
+  "2m": 184,
+  "3m": 198,
+  "4m": 210,
+  "5m": 220,
+  "10m": 214,
+  "15m": 202,
+  "30m": 188,
+  "1h": 174,
+  "2h": 160,
+  "4h": 140,
+  "1D": 106,
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 1,
-  "5s": 1,
-  "10s": 1,
-  "15s": 1,
-  "30s": 1,
-  "1m": 1,
-  "2m": 1,
-  "3m": 1,
-  "4m": 1,
-  "5m": 1,
-  "10m": 1,
-  "15m": 1,
-  "30m": 1,
-  "1h": 1,
-  "2h": 1,
-  "3h": 1,
-  "4h": 1,
-  "12h": 1,
-  "1D": 1,
+  "1s": 7.8,
+  "5s": 8,
+  "15s": 8.2,
+  "30s": 8.4,
+  "1m": 8.6,
+  "2m": 7.4,
+  "3m": 6.8,
+  "4m": 6.2,
+  "5m": 5.8,
+  "10m": 2.38,
+  "15m": 2.52,
+  "30m": 2.68,
+  "1h": 2.88,
+  "2h": 3.08,
+  "4h": 3.38,
+  "1D": 3.95,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
 
-const getMainPriceScaleMargins = () => ({ top: 0.1, bottom: 0.1 });
+const getMainPriceScaleMargins = (timeframe: SupportedChartTimeframe) => {
+  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
 
-const getMainPriceScaleOptions = () => ({
-  autoScale: true,
+  if (seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS) {
+    return { top: 0.16, bottom: 0.17 };
+  }
+
+  return { top: 0.14, bottom: 0.15 };
+};
+
+const getZoomResponsivePriceScaleMargins = (
+  timeframe: SupportedChartTimeframe,
+  visibleSpan: number | null | undefined,
+  containerWidth: number,
+) => {
+  const baseMargins = getMainPriceScaleMargins(timeframe);
+  const targetVisibleBars = getTargetVisibleBars(containerWidth, timeframe);
+  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
+
+  if (!Number.isFinite(visibleSpan) || !visibleSpan || visibleSpan <= 0 || targetVisibleBars <= 0) {
+    return baseMargins;
+  }
+
+  const zoomRatio = visibleSpan / targetVisibleBars;
+  const zoomPadding = Math.max(-0.08, Math.min(0.2, (zoomRatio - 1) * 0.11));
+  const maxMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.32 : 0.34;
+  const minMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.055 : 0.06;
+  const margin = Math.max(minMargin, Math.min(maxMargin, baseMargins.top + zoomPadding));
+
+  return { top: margin, bottom: margin };
+};
+
+const getMainPriceScaleOptions = (
+  timeframe: SupportedChartTimeframe,
+  visibleSpan?: number | null,
+  containerWidth = 960,
+) => ({
   borderColor: THEME.border,
-  scaleMargins: getMainPriceScaleMargins(),
+  scaleMargins: getZoomResponsivePriceScaleMargins(timeframe, visibleSpan, containerWidth),
   minimumWidth: SYNCED_PRICE_SCALE_MIN_WIDTH,
   entireTextOnly: true,
   ticksVisible: true,
@@ -581,7 +545,7 @@ const getTrendContextBarCount = (
 };
 
 const getHistoryBackfillThreshold = (containerWidth: number, timeframe: SupportedChartTimeframe) =>
-  Math.max(12, Math.round(getTrendContextBarCount(containerWidth, timeframe) * 0.12));
+  Math.max(18, Math.round(getTrendContextBarCount(containerWidth, timeframe) * 0.18));
 
 const getHistoryBackfillIncrement = (containerWidth: number, timeframe: SupportedChartTimeframe) => {
   const trendContextBars = getTrendContextBarCount(containerWidth, timeframe);
@@ -590,7 +554,7 @@ const getHistoryBackfillIncrement = (containerWidth: number, timeframe: Supporte
   return Math.max(trendContextBars, Math.round(historicalBaseline * 0.55));
 };
 
-const getChartRightOffset = (visibleBars: number) => Math.max(12, Math.min(32, Math.round(visibleBars * 0.12)));
+const getChartRightOffset = (visibleBars: number) => Math.max(18, Math.min(58, Math.round(visibleBars * 0.18)));
 
 const getDefaultVisibleBars = (
   containerWidth: number,
@@ -1022,14 +986,12 @@ const getCandlestickDisplaySettings = (
   const baseUpColor = getCandleUpColor(chartType, styles, globalTheme.up);
   const baseDownColor = getCandleDownColor(chartType, styles, globalTheme.down);
   const minimalPreset = styles.displayPreset === "secondary";
-  const upBodyColor = mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.02 : 0.06);
-  const downBodyColor = mixHexColors(baseDownColor, "#ffffff", minimalPreset ? 0.02 : 0.05);
-  const upColor = toRgba(upBodyColor, minimalPreset ? 0.88 : 0.94);
-  const downColor = toRgba(downBodyColor, minimalPreset ? 0.88 : 0.94);
-  const borderUpColor = toRgba(upBodyColor, 0.58);
-  const borderDownColor = toRgba(downBodyColor, 0.58);
-  const wickUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.02 : 0.07), minimalPreset ? 0.72 : 0.78);
-  const wickDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", minimalPreset ? 0.02 : 0.06), minimalPreset ? 0.72 : 0.78);
+  const upColor = minimalPreset ? toRgba(baseUpColor, 0.92) : mixHexColors(baseUpColor, "#ffffff", 0.03);
+  const downColor = minimalPreset ? toRgba(baseDownColor, 0.92) : mixHexColors(baseDownColor, "#ffffff", 0.03);
+  const borderUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", 0.15), 0.92);
+  const borderDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", 0.08), 0.92);
+  const wickUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.04 : 0.10), 0.92);
+  const wickDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", minimalPreset ? 0.04 : 0.08), 0.92);
 
   return {
     upColor,
@@ -1038,7 +1000,7 @@ const getCandlestickDisplaySettings = (
     borderDownColor,
     wickUpColor,
     wickDownColor,
-    borderVisible: false,
+    borderVisible: true,
     wickVisible: true,
     priceLineVisible: styles.priceLineVisible,
   };
@@ -1906,15 +1868,9 @@ const TradingChart = ({
   const engineRef = useRef<OTCPriceEngine | null>(null);
   const historyRef = useRef<OHLCCandle[]>([]);
   const liveRef = useRef<OHLCCandle | null>(null);
-  const visualLiveCandleRef = useRef<OHLCCandle | null>(null);
-  const visualLiveTimestampRef = useRef<number | null>(null);
-  const liveCandleAnimationRef = useRef<LiveCandleAnimationState | null>(null);
-  const liveCandleAnimationFrameRef = useRef<number | null>(null);
-  const lastCandleVisualFrameAtRef = useRef(0);
   const loadedHistoryCountRef = useRef(0);
   const isBackfillingHistoryRef = useRef(false);
   const isNormalizingVisibleRangeRef = useRef(false);
-  const lastLiveFollowTargetRef = useRef<number | null>(null);
   const priceScaleMarginKeyRef = useRef("");
   const aggregatorRef = useRef<CandleAggregator | null>(null);
   // Always-fresh ref for activeIndicators so stale closures see latest value
@@ -1951,8 +1907,6 @@ const TradingChart = ({
     down: PROFESSIONAL_DOWN_COLOR,
   });
   const { preferences: tradingPreferences } = useTradingPreferences();
-  const autoScrollingRef = useRef(tradingPreferences.autoScrolling);
-  autoScrollingRef.current = tradingPreferences.autoScrolling;
   const { data: websiteContent } = useWebsiteContent();
   const defaultChartBackgroundImage = websiteContent.tradingDefaults.chartBackgroundImage.trim();
   const activeChartBackgroundImage = tradingPreferences.chartBackgroundImage || defaultChartBackgroundImage || null;
@@ -2373,9 +2327,7 @@ const TradingChart = ({
       Math.max(1, dataPointCount),
     );
     const maxReadableSpan = maxReadableBars + getChartRightOffset(maxReadableBars);
-    const fortyPctBars = Math.max(1, dataPointCount * 0.4);
-    const fortyPctSpan = fortyPctBars + getChartRightOffset(fortyPctBars);
-    const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing, fortyPctSpan));
+    const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing));
     const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
     const maxFutureWhitespace = Math.max(
       rightOffset,
@@ -2415,9 +2367,9 @@ const TradingChart = ({
       const chart = chartRef.current;
       if (!chart) return;
 
-      const options = getMainPriceScaleOptions();
-      const spanKey = Number.isFinite(visibleSpan) ? Number(visibleSpan).toFixed(2) : "auto";
-      const marginKey = `${selectedTf}:${spanKey}:${options.scaleMargins.top.toFixed(3)}:${options.scaleMargins.bottom.toFixed(3)}`;
+      const containerWidth = mainRef.current?.clientWidth ?? 960;
+      const options = getMainPriceScaleOptions(selectedTf, visibleSpan, containerWidth);
+      const marginKey = `${selectedTf}:${options.scaleMargins.top.toFixed(3)}:${options.scaleMargins.bottom.toFixed(3)}`;
 
       if (!force && priceScaleMarginKeyRef.current === marginKey) {
         return;
@@ -2430,7 +2382,7 @@ const TradingChart = ({
   );
 
   const scrollChartToLiveEdge = useCallback(
-    (historyCountOverride?: number, liveLogicalOverride?: number) => {
+    (historyCountOverride?: number) => {
       const chart = chartRef.current;
       if (!chart) return;
 
@@ -2440,24 +2392,19 @@ const TradingChart = ({
           mainSeriesRef.current?.data()?.length ??
           historyRef.current.length,
       );
-      const liveLogical =
-        typeof liveLogicalOverride === "number" && Number.isFinite(liveLogicalOverride)
-          ? Math.max(0, liveLogicalOverride)
-          : dataPointCount;
       const containerWidth = mainRef.current?.clientWidth ?? 960;
       const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, dataPointCount);
+      const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, dataPointCount);
       const rightOffset = getChartRightOffset(trendContextBars);
-      const bodyScale = chartStylesRef.current.bodyScale;
-      const effectiveBarSpacing = (BAR_SPACING_MAP[selectedTf] ?? BAR_SPACING_MAP["1m"]) * clampBodyScale(bodyScale);
-      const targetVisibleBars = Math.floor(containerWidth / Math.max(1, effectiveBarSpacing));
-      const visibleSpan = Math.max(1, targetVisibleBars);
-      const targetTo = liveLogical + rightOffset;
+      const visibleSpan = initialVisibleBars + rightOffset;
+      const targetTo = dataPointCount + rightOffset;
 
       chart.timeScale().applyOptions({
         rightOffset,
-        ...getLiveTimeScaleFollowOptions(autoScrollingRef.current),
+        rightBarStaysOnScroll: false,
+        shiftVisibleRangeOnNewBar: false,
+        allowShiftVisibleRangeOnWhitespaceReplacement: false,
       });
-      lastLiveFollowTargetRef.current = targetTo;
       applyResponsivePriceScale(visibleSpan, true);
       chart.timeScale().setVisibleLogicalRange({
         from: Math.max(0, targetTo - visibleSpan),
@@ -2465,60 +2412,6 @@ const TradingChart = ({
       });
     },
     [applyResponsivePriceScale, selectedTf],
-  );
-
-  const followLiveTimeframeMotion = useCallback(
-    (liveLogical: number) => {
-      const chart = chartRef.current;
-      if (!chart || !autoScrollingRef.current || isBackfillingHistoryRef.current) return;
-      if (!Number.isFinite(liveLogical)) return;
-
-      const timeScale = chart.timeScale();
-      const currentRange = timeScale.getVisibleLogicalRange();
-      if (!currentRange) {
-        scrollChartToLiveEdge(Math.ceil(liveLogical), liveLogical);
-        return;
-      }
-
-      const containerWidth = mainRef.current?.clientWidth ?? 960;
-      const bodyScale = chartStylesRef.current.bodyScale;
-      const effectiveBarSpacing = (BAR_SPACING_MAP[selectedTf] ?? BAR_SPACING_MAP["1m"]) * clampBodyScale(bodyScale);
-      const targetVisibleBars = Math.floor(containerWidth / Math.max(1, effectiveBarSpacing));
-      const visibleSpan = Math.max(1, targetVisibleBars);
-
-      const dataPointCount = Math.max(
-        1,
-        Math.ceil(liveLogical),
-        mainSeriesRef.current?.data()?.length ?? historyRef.current.length,
-      );
-      const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, dataPointCount);
-      const rightOffset = getChartRightOffset(trendContextBars);
-      const targetTo = liveLogical + rightOffset;
-      const liveEdgeTolerance = Math.max(6, rightOffset * 0.75);
-
-      if (currentRange.to < targetTo - liveEdgeTolerance) {
-        return;
-      }
-
-      if (
-        lastLiveFollowTargetRef.current !== null &&
-        Math.abs(lastLiveFollowTargetRef.current - targetTo) < LIVE_FOLLOW_MIN_DELTA
-      ) {
-        return;
-      }
-
-      lastLiveFollowTargetRef.current = targetTo;
-      timeScale.applyOptions({
-        rightOffset,
-        ...getLiveTimeScaleFollowOptions(true),
-      });
-      applyResponsivePriceScale(visibleSpan);
-      timeScale.setVisibleLogicalRange({
-        from: Math.max(0, targetTo - visibleSpan),
-        to: targetTo,
-      });
-    },
-    [applyResponsivePriceScale, scrollChartToLiveEdge, selectedTf],
   );
 
   // ─── FETCH THEME GLOBALS ──────────────────────────────────────────
@@ -2665,7 +2558,7 @@ const TradingChart = ({
           vertTouchDrag: false,
         },
         handleScale: {
-          mouseWheel: true,
+          mouseWheel: false,
           pinch: true,
           axisPressedMouseMove: true,
           axisDoubleClickReset: true,
@@ -2687,7 +2580,7 @@ const TradingChart = ({
             style: LineStyle.Dashed,
           },
         },
-        rightPriceScale: getMainPriceScaleOptions(),
+        rightPriceScale: getMainPriceScaleOptions("1m", DEFAULT_VISIBLE_BARS, 960),
         timeScale: { 
           borderColor: THEME.border, 
           timeVisible: true, 
@@ -2698,7 +2591,9 @@ const TradingChart = ({
           minBarSpacing: getMinBarSpacingForScale("1m", chartStylesRef.current.bodyScale),
           fixLeftEdge: true,
           fixRightEdge: false,
-          ...getLiveTimeScaleFollowOptions(true),
+          rightBarStaysOnScroll: false,
+          shiftVisibleRangeOnNewBar: false,
+          allowShiftVisibleRangeOnWhitespaceReplacement: false,
           lockVisibleTimeRangeOnResize: true,
         },
       });
@@ -2792,14 +2687,13 @@ const TradingChart = ({
 
     if (historyRef.current.length > 0 && mainSeriesRef.current) {
       mainSeriesRef.current.setData(getMainSeriesData(chartType, historyRef.current));
-      const visibleLiveCandle = visualLiveCandleRef.current ?? liveRef.current;
-      if (visibleLiveCandle) {
+      if (liveRef.current) {
         try {
-          mainSeriesRef.current.update(buildMainSeriesUpdatePayload(chartType, visibleLiveCandle, historyRef.current));
+          mainSeriesRef.current.update(buildMainSeriesUpdatePayload(chartType, liveRef.current, historyRef.current));
         } catch (_) {}
         setLivePriceBeacon((current) => ({
-          price: getLiveBeaconPrice(chartType, visibleLiveCandle, historyRef.current),
-          time: visibleLiveCandle.time,
+          price: getLiveBeaconPrice(chartType, liveRef.current, historyRef.current),
+          time: liveRef.current.time,
           logical: current?.logical ?? historyRef.current.length,
         }));
       }
@@ -2964,10 +2858,9 @@ const TradingChart = ({
       historyRef.current = nextHistory;
       mainSeries.setData(getMainSeriesData(chartTypeRef.current, historyRef.current));
 
-      const visibleLiveCandle = visualLiveCandleRef.current ?? liveRef.current;
-      if (visibleLiveCandle) {
+      if (liveRef.current) {
         try {
-          mainSeries.update(buildMainSeriesUpdatePayload(chartTypeRef.current, visibleLiveCandle, historyRef.current));
+          mainSeries.update(buildMainSeriesUpdatePayload(chartTypeRef.current, liveRef.current, historyRef.current));
         } catch (_) {
           // Ignore transient redraw issues while the chart prepends older candles.
         }
@@ -3023,27 +2916,13 @@ const TradingChart = ({
     const seedCandle = seedReplay.candle;
     liveRef.current = seedCandle;
     const startPrice = seedCandle.open;
-    const seedVisualCandle = buildCandleAnimationBaseline(seedCandle);
-
-    if (liveCandleAnimationFrameRef.current !== null) {
-      window.cancelAnimationFrame(liveCandleAnimationFrameRef.current);
-      liveCandleAnimationFrameRef.current = null;
-    }
-
-    liveCandleAnimationRef.current = null;
-    lastCandleVisualFrameAtRef.current = 0;
-    visualLiveCandleRef.current = seedVisualCandle;
-    visualLiveTimestampRef.current = seedCandle.time;
-    try {
-      mainSeriesRef.current?.update(buildMainSeriesUpdatePayload(chartTypeRef.current, seedVisualCandle, historyRef.current));
-    } catch (_) {}
 
     // Freeze trades to the visible live candle anchor shown on the chart.
-    setCurrentPrice(seedVisualCandle.close);
-    setPriceChange(((seedVisualCandle.close - startPrice) / Math.max(startPrice, 0.000001)) * 100);
+    setCurrentPrice(seedCandle.close);
+    setPriceChange(((seedCandle.close - seedCandle.open) / Math.max(seedCandle.open, 0.000001)) * 100);
     setLivePriceBeacon({
-      price: getLiveBeaconPrice(chartTypeRef.current, seedVisualCandle, historyRef.current),
-      time: seedVisualCandle.time,
+      price: getLiveBeaconPrice(chartTypeRef.current, seedCandle, historyRef.current),
+      time: seedCandle.time,
       logical: history.length,
     });
 
@@ -3061,7 +2940,9 @@ const TradingChart = ({
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
       fixLeftEdge: true,
       fixRightEdge: false,
-      ...getLiveTimeScaleFollowOptions(autoScrollingRef.current),
+      rightBarStaysOnScroll: false,
+      shiftVisibleRangeOnNewBar: false,
+      allowShiftVisibleRangeOnWhitespaceReplacement: false,
     });
     scrollChartToLiveEdge(history.length);
 
@@ -3072,127 +2953,8 @@ const TradingChart = ({
     // Destroy previous aggregator and create a new one
 
     // onClose: called synchronously when a period ends — push the closed candle to history
-const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimationClockMs()) => {
-  const rawProgress = (nowMs - state.startedAt) / CANDLE_ANIMATION_DURATION_MS;
-  const easedProgress = easeOutCubic(rawProgress);
-
-  return {
-    candle: interpolateOhlcCandle(state.from, state.to, easedProgress),
-    sourceTimestamp: interpolateNumber(state.fromTimestamp, state.toTimestamp, easedProgress),
-    done: easedProgress >= 1,
-  };
-};
-
-    const applyVisualCandleFrame = (candle: OHLCCandle, sourceTimestamp?: number) => {
-      if (!mainSeriesRef.current) return;
-
-      const effectiveMarkerTime =
-        typeof sourceTimestamp === "number" && Number.isFinite(sourceTimestamp) ? sourceTimestamp : candle.time;
-      const intrabarFraction =
-        tf.seconds > 0 ? (effectiveMarkerTime - candle.time) / tf.seconds : 0;
-      const markerLogical =
-        historyRef.current.length + getIntrabarLogicalOffset(intrabarFraction);
-      const liveProgressLogical = getLiveCandleProgressLogical(historyRef.current.length, intrabarFraction);
-
-      visualLiveCandleRef.current = candle;
-      visualLiveTimestampRef.current = effectiveMarkerTime;
-      setCurrentPrice(candle.close);
-      setPriceChange(((candle.close - startPrice) / Math.max(startPrice, 0.000001)) * 100);
-      setLivePriceBeacon({
-        price: getLiveBeaconPrice(chartTypeRef.current, candle, historyRef.current),
-        time: candle.time,
-        logical: markerLogical,
-      });
-
-      const updatePayload = buildMainSeriesUpdatePayload(chartTypeRef.current, candle, historyRef.current);
-
-      try { mainSeriesRef.current.update(updatePayload); } catch (_) {}
-      followLiveTimeframeMotion(liveProgressLogical);
-    };
-
-    const scheduleLiveCandleAnimation = () => {
-      if (liveCandleAnimationFrameRef.current !== null) return;
-
-      const animate = () => {
-        liveCandleAnimationFrameRef.current = null;
-        const state = liveCandleAnimationRef.current;
-        if (!state) return;
-
-        const nowMs = getAnimationClockMs();
-        const elapsed = nowMs - lastCandleVisualFrameAtRef.current;
-
-        if (lastCandleVisualFrameAtRef.current !== 0 && elapsed < CANDLE_VISUAL_FRAME_MS) {
-          scheduleLiveCandleAnimation();
-          return;
-        }
-
-        lastCandleVisualFrameAtRef.current = nowMs;
-        const snapshot = getAnimationSnapshot(state, nowMs);
-        applyVisualCandleFrame(snapshot.candle, snapshot.sourceTimestamp);
-
-        if (!snapshot.done) {
-          scheduleLiveCandleAnimation();
-        } else {
-          liveCandleAnimationRef.current = null;
-        }
-      };
-
-      liveCandleAnimationFrameRef.current = window.requestAnimationFrame(animate);
-    };
-
-    const cancelLiveCandleAnimation = () => {
-      if (liveCandleAnimationFrameRef.current !== null) {
-        window.cancelAnimationFrame(liveCandleAnimationFrameRef.current);
-        liveCandleAnimationFrameRef.current = null;
-      }
-
-      liveCandleAnimationRef.current = null;
-      lastCandleVisualFrameAtRef.current = 0;
-    };
-
-    const queueLiveCandleAnimation = (targetCandle: OHLCCandle, sourceTimestamp?: number) => {
-      const nowMs = getAnimationClockMs();
-      const target = normalizeOhlcBounds(targetCandle);
-      const animationState = liveCandleAnimationRef.current;
-      const snapshot =
-        animationState && animationState.to.time === target.time
-          ? getAnimationSnapshot(animationState, nowMs)
-          : null;
-      const visibleCandle =
-        snapshot?.candle ??
-        (visualLiveCandleRef.current?.time === target.time ? visualLiveCandleRef.current : null);
-      const from = visibleCandle ?? buildCandleAnimationBaseline(target);
-      const fromTimestamp =
-        snapshot?.sourceTimestamp ??
-        (visualLiveCandleRef.current?.time === target.time ? visualLiveTimestampRef.current : null) ??
-        target.time;
-      const toTimestamp =
-        typeof sourceTimestamp === "number" && Number.isFinite(sourceTimestamp) ? sourceTimestamp : target.time;
-
-      liveCandleAnimationRef.current = {
-        from,
-        to: target,
-        fromTimestamp,
-        toTimestamp,
-        startedAt: nowMs,
-      };
-
-      if (!visibleCandle) {
-        applyVisualCandleFrame(from, fromTimestamp);
-      }
-
-      scheduleLiveCandleAnimation();
-    };
-
     const handleCandleClose = (closed: OHLCCandle) => {
-      cancelLiveCandleAnimation();
-      const closedForDisplay = normalizeOhlcBounds(closed);
-      historyRef.current = [...historyRef.current, closedForDisplay].slice(-MAX_CANDLES_IN_MEMORY);
-      visualLiveCandleRef.current = null;
-      visualLiveTimestampRef.current = null;
-      try {
-        mainSeriesRef.current?.update(buildMainSeriesUpdatePayload(chartTypeRef.current, closedForDisplay, historyRef.current));
-      } catch (_) {}
+      historyRef.current = [...historyRef.current, closed].slice(-MAX_CANDLES_IN_MEMORY);
       renderOverlayIndicators(getIndicatorHistory());
       setForceOscillatorRender((current) => current + 1);
     };
@@ -3201,12 +2963,19 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
     const handleCandleUpdate = (candle: OHLCCandle, sourceTimestamp?: number) => {
       if (!mainSeriesRef.current) return;
       liveRef.current = candle;
+      setCurrentPrice(candle.close);
+      setPriceChange(((candle.close - startPrice) / Math.max(startPrice, 0.000001)) * 100);
       const effectiveMarkerTime =
         typeof sourceTimestamp === "number" && Number.isFinite(sourceTimestamp) ? sourceTimestamp : candle.time;
       const intrabarFraction =
         tf.seconds > 0 ? (effectiveMarkerTime - candle.time) / tf.seconds : 0;
       const markerLogical =
         historyRef.current.length + getIntrabarLogicalOffset(intrabarFraction);
+      setLivePriceBeacon({
+        price: getLiveBeaconPrice(chartTypeRef.current, candle, historyRef.current),
+        time: candle.time,
+        logical: markerLogical,
+      });
       onPriceUpdateRef.current?.(
         candle.close,
         effectiveMarkerTime,
@@ -3214,7 +2983,9 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
         markerLogical,
       );
 
-      queueLiveCandleAnimation(candle, effectiveMarkerTime);
+      const updatePayload = buildMainSeriesUpdatePayload(chartTypeRef.current, candle, historyRef.current);
+
+      try { mainSeriesRef.current.update(updatePayload); } catch (_) {}
       renderOverlayIndicators(getIndicatorHistory());
     };
 
@@ -3250,14 +3021,12 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
       marketFeedRef.current?.disconnect();
       marketFeedRef.current = null;
       engineRef.current = null;
-      cancelLiveCandleAnimation();
       if (aggregatorRef.current) { aggregatorRef.current.destroy(); aggregatorRef.current = null; }
     };
   }, [
     applyResponsivePriceScale,
     asset.basePrice,
     asset.symbol,
-    followLiveTimeframeMotion,
     getIndicatorHistory,
     renderOverlayIndicators,
     scrollChartToLiveEdge,
@@ -3292,6 +3061,40 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
       }
 
       const containerWidth = mainRef.current?.clientWidth ?? 960;
+      const dataPointCount = mainSeriesRef.current?.data()?.length ?? historyRef.current.length;
+      const maxReadableBars = getMaxReadableZoomBars(
+        containerWidth,
+        selectedTf,
+        Math.max(1, dataPointCount),
+      );
+      const maxReadableRightOffset = getChartRightOffset(maxReadableBars);
+      const maxReadableSpan = maxReadableBars + maxReadableRightOffset;
+      const visibleSpan = range.to - range.from;
+
+      if (range.from < -0.5 || visibleSpan > maxReadableSpan + 0.5) {
+        const targetSpan = Math.max(1, Math.min(visibleSpan, maxReadableSpan));
+        const center = range.from < -0.5 ? targetSpan / 2 : (Math.max(0, range.from) + Math.min(dataPointCount, range.to)) / 2;
+        const maxTo = dataPointCount + maxReadableRightOffset;
+        let nextFrom = Math.max(0, center - targetSpan / 2);
+        let nextTo = nextFrom + targetSpan;
+
+        if (nextTo > maxTo) {
+          nextFrom = Math.max(0, nextFrom - (nextTo - maxTo));
+          nextTo = maxTo;
+        }
+
+        if (Math.abs(range.from - nextFrom) > 0.01 || Math.abs(range.to - nextTo) > 0.01) {
+          isNormalizingVisibleRangeRef.current = true;
+          timeScale.setVisibleLogicalRange({
+            from: nextFrom,
+            to: nextTo,
+          });
+          window.requestAnimationFrame(() => {
+            isNormalizingVisibleRangeRef.current = false;
+          });
+        }
+        return;
+      }
 
       if (isBackfillingHistoryRef.current || !engineRef.current) {
         return;
@@ -3358,7 +3161,9 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
       fixLeftEdge: true,
       fixRightEdge: false,
-      ...getLiveTimeScaleFollowOptions(tradingPreferences.autoScrolling),
+      rightBarStaysOnScroll: false,
+      shiftVisibleRangeOnNewBar: false,
+      allowShiftVisibleRangeOnWhitespaceReplacement: false,
     });
     applyResponsivePriceScale(currentRange ? currentRange.to - currentRange.from : initialVisibleBars + rightOffset, true);
 

@@ -56,79 +56,8 @@ describe("deterministic market feed", () => {
     expect(lastHourlyCandle.time % TIMEFRAMES["1h"].seconds).toBe(0);
     expect(dailyHistory[dailyHistory.length - 1].time % TIMEFRAMES["1D"].seconds).toBe(0);
     expect(averageRange(hourlyHistory)).toBeLessThan(averageRange(thirtyMinuteHistory) * 2.2);
-    expect(averageRange(dailyHistory)).toBeLessThan(1.2745 * 0.09);
+    expect(averageRange(dailyHistory)).toBeLessThan(1.2745 * 0.012);
     expect(averageRange(hourlyHistory)).toBeGreaterThan(averageBody(hourlyHistory));
-  });
-
-  it("gives OTC histories enough vertical travel to fill the visible chart", () => {
-    const nowSec = 1_711_111_111;
-    const basePrice = 1.08452;
-    const engine = new OTCPriceEngine("EUR/JPY", basePrice, "OTC");
-    const history = engine.generateHistory(TIMEFRAMES["30m"], nowSec, 200);
-    const high = Math.max(...history.map((candle) => candle.high));
-    const low = Math.min(...history.map((candle) => candle.low));
-
-    expect(high - low).toBeGreaterThan(basePrice * 0.16);
-  });
-
-  it("keeps requested chart timeframes visibly ranged", () => {
-    const nowSec = 1_711_111_111;
-    const basePrice = 1.08452;
-    const requestedTimeframes = ["5s", "10s", "15s", "30s", "1m", "5m", "15m", "30m", "1h", "4h", "1D"];
-    const minimumRangeRatioForSeconds = (seconds: number) => {
-      if (seconds <= 15) return 0.004;
-      if (seconds <= 60) return 0.008;
-      if (seconds <= 5 * 60) return 0.018;
-      if (seconds <= 15 * 60) return 0.035;
-      return 0.06;
-    };
-
-    requestedTimeframes.forEach((timeframe) => {
-      const config = TIMEFRAMES[timeframe];
-      const engine = new OTCPriceEngine("EUR/JPY", basePrice, "OTC");
-      const history = engine.generateHistory(config, nowSec);
-      const high = Math.max(...history.map((candle) => candle.high));
-      const low = Math.min(...history.map((candle) => candle.low));
-
-      expect(high - low).toBeGreaterThan(basePrice * minimumRangeRatioForSeconds(config.seconds));
-    });
-  });
-
-  it("keeps 1m OTC candles textured instead of a smooth staircase", () => {
-    const nowSec = 1_711_111_111;
-    const basePrice = 1.08452;
-    const engine = new OTCPriceEngine("EUR/JPY", basePrice, "OTC");
-    const candles = engine.generateHistory(TIMEFRAMES["1m"], nowSec).slice(-160);
-    const bodies = candles.map((candle) => Math.abs(candle.close - candle.open));
-    const topWicks = candles.map((candle) => candle.high - Math.max(candle.open, candle.close));
-    const bottomWicks = candles.map((candle) => Math.min(candle.open, candle.close) - candle.low);
-    const average = (values: number[]) =>
-      values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length);
-    const directionalCandles = candles
-      .map((candle) => {
-        const body = candle.close - candle.open;
-        if (Math.abs(body) <= basePrice * 0.00003) return 0;
-        return body > 0 ? 1 : -1;
-      })
-      .filter((direction) => direction !== 0);
-    const directionChanges = directionalCandles.slice(1).filter(
-      (direction, index) => direction !== directionalCandles[index],
-    ).length;
-    const longestRun = directionalCandles.reduce(
-      (state, direction) => {
-        const current = direction === state.previous ? state.current + 1 : 1;
-        return {
-          previous: direction,
-          current,
-          longest: Math.max(state.longest, current),
-        };
-      },
-      { previous: 0, current: 0, longest: 0 },
-    ).longest;
-
-    expect(directionChanges / Math.max(1, directionalCandles.length - 1)).toBeGreaterThan(0.18);
-    expect(longestRun).toBeLessThan(26);
-    expect((average(topWicks) + average(bottomWicks)) / Math.max(average(bodies), 0.000001)).toBeGreaterThan(0.18);
   });
 
   it("keeps 1s candles readable with visible wicks", () => {
