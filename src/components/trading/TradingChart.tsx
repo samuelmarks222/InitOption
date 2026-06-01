@@ -2461,9 +2461,11 @@ const TradingChart = ({
           : dataPointCount;
       const containerWidth = mainRef.current?.clientWidth ?? 960;
       const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, dataPointCount);
-      const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, dataPointCount);
       const rightOffset = getChartRightOffset(trendContextBars);
-      const visibleSpan = initialVisibleBars + rightOffset;
+      const bodyScale = chartStylesRef.current.bodyScale;
+      const effectiveBarSpacing = (BAR_SPACING_MAP[selectedTf] ?? BAR_SPACING_MAP["1m"]) * clampBodyScale(bodyScale);
+      const targetVisibleBars = Math.floor(containerWidth / Math.max(1, effectiveBarSpacing));
+      const visibleSpan = Math.max(1, targetVisibleBars);
       const targetTo = liveLogical + rightOffset;
 
       chart.timeScale().applyOptions({
@@ -2493,10 +2495,12 @@ const TradingChart = ({
         return;
       }
 
-      const visibleSpan = currentRange.to - currentRange.from;
-      if (!Number.isFinite(visibleSpan) || visibleSpan <= 0) return;
-
       const containerWidth = mainRef.current?.clientWidth ?? 960;
+      const bodyScale = chartStylesRef.current.bodyScale;
+      const effectiveBarSpacing = (BAR_SPACING_MAP[selectedTf] ?? BAR_SPACING_MAP["1m"]) * clampBodyScale(bodyScale);
+      const targetVisibleBars = Math.floor(containerWidth / Math.max(1, effectiveBarSpacing));
+      const visibleSpan = Math.max(1, targetVisibleBars);
+
       const dataPointCount = Math.max(
         1,
         Math.ceil(liveLogical),
