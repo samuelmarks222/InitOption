@@ -1838,18 +1838,76 @@ const OscillatorPane = ({
 };
 
 /**
- * SmoothUpdateScheduler batches rapid series updates and throttles them to 60fps (requestAnimationFrame)
- * This prevents jumpy/aggressive candlestick movements by collecting pending updates and flushing once per frame
+ * Calculates dynamic animation duration based on market conditions
+ * Larger price movements and high volatility trigger shorter, more responsive animations
+ * Stable periods use longer animations for smooth, natural movement
+ * This creates organic market feel similar to TradingView
+ */
+const calculateAdaptiveAnimationDuration = (
+  current: { open: number; high: number; low: number; close: number },
+  previous: { open: number; high: number; low: number; close: number } | null,
+  basePrice: number,
+): number => {
+  if (!previous || basePrice <= 0) return 600; // Default smooth duration
+
+  // Calculate price metrics
+  const priceChange = Math.abs(current.close - previous.close);
+  const candleRange = current.high - current.low;
+  const prevCandleRange = previous.high - previous.low;
+  const volatility = (candleRange + prevCandleRange) / 2 / basePrice;
+  const changePercent = (priceChange / basePrice) * 100;
+
+  // Velocity: how fast is price changing relative to candle size
+  const velocity = candleRange > 0 ? priceChange / candleRange : 0;
+
+  // Base duration: responsive to velocity
+  // High velocity (rapid price movement) = 300ms (responsive)
+  // Low velocity (stable price) = 800ms (smooth)
+  // Medium velocity = adaptive between them
+  const velocityFactor = Math.min(velocity, 2.0); // Clamp to 0-2
+  let duration = 800 - velocityFactor * 300; // Range: 500-800ms
+
+  // Volatility adjustment: high volatility = shorter duration for responsiveness
+  if (volatility > 0.01) {
+    duration *= 0.8; // 20% faster for high volatility
+  }
+
+  // Stability bonus: if price barely moved, extend for extra smoothness
+  if (priceChange < basePrice * 0.0005) {
+    // Less than 0.05% movement
+    duration *= 1.2; // 20% longer for silky smooth stability
+  }
+
+  // Clamp to realistic range
+  return Math.max(200, Math.min(duration, 900));
+};
+
+/**
+ * Enhanced SmoothUpdateScheduler with market-responsive animation
+ * Batches rapid updates and applies dynamic animation duration based on price action
  */
 class SmoothUpdateScheduler {
   constructor(series) {
     this.series = series;
     this.pendingUpdate = null;
+    this.animationDuration = 600;
     this.rafId = null;
+    this.previousCandle = null;
   }
 
-  update(updateData) {
+  update(updateData, currentCandle = null, previousCandle = null, basePrice = 1, timeframeSeconds = 60) {
     this.pendingUpdate = updateData;
+
+    // Calculate adaptive animation duration if candle data provided
+    if (currentCandle && basePrice > 0) {
+      this.animationDuration = calculateAdaptiveAnimationDuration(
+        currentCandle,
+        previousCandle || this.previousCandle,
+        basePrice,
+      );
+      this.previousCandle = { ...currentCandle };
+    }
+
     if (this.rafId === null) {
       this.rafId = requestAnimationFrame(() => this.flush());
     }
@@ -1870,6 +1928,7 @@ class SmoothUpdateScheduler {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
+    this.previousCandle = null;
   }
 }
 
@@ -1907,6 +1966,7 @@ const TradingChart = ({
   const engineRef = useRef<OTCPriceEngine | null>(null);
   const historyRef = useRef<OHLCCandle[]>([]);
   const liveRef = useRef<OHLCCandle | null>(null);
+  const previousCandleRef = useRef<OHLCCandle | null>(null);
   const loadedHistoryCountRef = useRef(0);
   const isBackfillingHistoryRef = useRef(false);
   const isNormalizingVisibleRangeRef = useRef(false);
@@ -2759,8 +2819,15 @@ const TradingChart = ({
     if (historyRef.current.length > 0 && mainSeriesRef.current) {
       mainSeriesRef.current.setData(getMainSeriesData(chartType, historyRef.current));
       if (liveRef.current) {
+        const tf = TIMEFRAMES[selectedTf] || { seconds: 60 };
         if (mainUpdateSchedulerRef.current) {
-          mainUpdateSchedulerRef.current.update(buildMainSeriesUpdatePayload(chartType, liveRef.current, historyRef.current));
+          mainUpdateSchedulerRef.current.update(
+            buildMainSeriesUpdatePayload(chartType, liveRef.current, historyRef.current),
+            liveRef.current,
+            previousCandleRef.current,
+            referencePrice,
+            tf.seconds,
+          );
         } else {
           try {
             mainSeriesRef.current.update(buildMainSeriesUpdatePayload(chartType, liveRef.current, historyRef.current));
@@ -2936,7 +3003,16 @@ const TradingChart = ({
       if (liveRef.current) {
         try {
           if (mainUpdateSchedulerRef.current) {
-            mainUpdateSchedulerRef.current.update(buildMainSeriesUpdatePayload(chartTypeRef.current, liveRef.current, historyRef.current));
+            mainUpdateSchedulerRef.current.update(
+              buildMainSeriesUpdatePayload(chartTypeRef.current, liveRef.current, historyRef.current),
+              liveRef.current,
+              previousCandleRef.current,
+              assetSnapshotRef.current.price > 0 ? assetSnapshotRef.current.price : liveRef.current.close,
+              tf.seconds,
+            );
+            if (previousCandleRef.current) {
+              // Don't update previousCandleRef here as it's already tracking in handleCandleUpdate
+            }
           } else {
             mainSeries.update(buildMainSeriesUpdatePayload(chartTypeRef.current, liveRef.current, historyRef.current));
           }
@@ -3065,7 +3141,15 @@ const TradingChart = ({
       const updatePayload = buildMainSeriesUpdatePayload(chartTypeRef.current, candle, historyRef.current);
 
       if (mainUpdateSchedulerRef.current) {
-        mainUpdateSchedulerRef.current.update(updatePayload);
+        // Pass candle data for market-responsive animation duration
+        mainUpdateSchedulerRef.current.update(
+          updatePayload,
+          candle,
+          previousCandleRef.current,
+          startPrice,
+          tf.seconds,
+        );
+        previousCandleRef.current = { ...candle };
       }
       renderOverlayIndicators(getIndicatorHistory());
     };
