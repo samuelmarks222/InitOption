@@ -1895,8 +1895,8 @@ const TradingChart = ({
   const liveRef = useRef<OHLCCandle | null>(null);
   const visualLiveCandleRef = useRef<OHLCCandle | null>(null);
   const visualLiveTimestampRef = useRef<number | null>(null);
-  const pendingLiveUpdateRef = useRef<{ candle: OHLCCandle; timestamp: number } | null>(null);
-  const pendingUpdateFrameRef = useRef<number | null>(null);
+  const targetCandleRef = useRef<{ candle: OHLCCandle; timestamp: number } | null>(null);
+  const lerpFrameRef = useRef<number | null>(null);
 
   const loadedHistoryCountRef = useRef(0);
   const isBackfillingHistoryRef = useRef(false);
@@ -3008,11 +3008,11 @@ const TradingChart = ({
     const startPrice = seedCandle.open;
     const seedVisualCandle = normalizeOhlcBounds(seedCandle);
 
-    if (pendingUpdateFrameRef.current !== null) {
-      window.cancelAnimationFrame(pendingUpdateFrameRef.current);
-      pendingUpdateFrameRef.current = null;
+    if (lerpFrameRef.current !== null) {
+      window.cancelAnimationFrame(lerpFrameRef.current);
+      lerpFrameRef.current = null;
     }
-    pendingLiveUpdateRef.current = null;
+    targetCandleRef.current = null;
     visualLiveCandleRef.current = seedVisualCandle;
     visualLiveTimestampRef.current = seedCandle.time;
     try {
@@ -3080,29 +3080,51 @@ const TradingChart = ({
       followLiveTimeframeMotion(liveProgressLogical);
     };
 
-    const flushPendingLiveUpdate = () => {
-      pendingUpdateFrameRef.current = null;
-      const pending = pendingLiveUpdateRef.current;
-      if (!pending) return;
-      pendingLiveUpdateRef.current = null;
-      applyVisualCandleFrame(normalizeOhlcBounds(pending.candle), pending.timestamp);
-    };
+    const TICK_LERP_RATE = 0.15;
 
-    const scheduleLiveUpdate = () => {
-      if (pendingUpdateFrameRef.current !== null) return;
-      pendingUpdateFrameRef.current = window.requestAnimationFrame(flushPendingLiveUpdate);
-    };
+    const tickLerpLoop = () => {
+      lerpFrameRef.current = null;
+      const target = targetCandleRef.current;
+      if (!target) return;
 
-    const cancelLiveUpdate = () => {
-      if (pendingUpdateFrameRef.current !== null) {
-        window.cancelAnimationFrame(pendingUpdateFrameRef.current);
-        pendingUpdateFrameRef.current = null;
+      const current = visualLiveCandleRef.current;
+      if (!current || current.time !== target.candle.time || current.time === 0) {
+        applyVisualCandleFrame(normalizeOhlcBounds(target.candle), target.timestamp);
+        scheduleLerpLoop();
+        return;
       }
-      pendingLiveUpdateRef.current = null;
+
+      const lerped = normalizeOhlcBounds({
+        time: target.candle.time,
+        open: target.candle.open,
+        high: current.high + (target.candle.high - current.high) * TICK_LERP_RATE,
+        low: current.low + (target.candle.low - current.low) * TICK_LERP_RATE,
+        close: current.close + (target.candle.close - current.close) * TICK_LERP_RATE,
+        volume: target.candle.volume,
+      });
+
+      applyVisualCandleFrame(lerped, target.timestamp);
+
+      if (Math.abs(lerped.close - target.candle.close) > 0.000001) {
+        scheduleLerpLoop();
+      }
+    };
+
+    const scheduleLerpLoop = () => {
+      if (lerpFrameRef.current !== null) return;
+      lerpFrameRef.current = window.requestAnimationFrame(tickLerpLoop);
+    };
+
+    const stopLerpLoop = () => {
+      if (lerpFrameRef.current !== null) {
+        window.cancelAnimationFrame(lerpFrameRef.current);
+        lerpFrameRef.current = null;
+      }
+      targetCandleRef.current = null;
     };
 
     const handleCandleClose = (closed: OHLCCandle) => {
-      cancelLiveUpdate();
+      stopLerpLoop();
       const closedForDisplay = normalizeOhlcBounds(closed);
       historyRef.current = [...historyRef.current, closedForDisplay].slice(-MAX_CANDLES_IN_MEMORY);
       visualLiveCandleRef.current = null;
@@ -3131,8 +3153,8 @@ const TradingChart = ({
         markerLogical,
       );
 
-      pendingLiveUpdateRef.current = { candle: normalizeOhlcBounds(candle), timestamp: effectiveMarkerTime };
-      scheduleLiveUpdate();
+      targetCandleRef.current = { candle: normalizeOhlcBounds(candle), timestamp: effectiveMarkerTime };
+      scheduleLerpLoop();
       renderOverlayIndicators(getIndicatorHistory());
     };
 
@@ -3168,7 +3190,7 @@ const TradingChart = ({
       marketFeedRef.current?.disconnect();
       marketFeedRef.current = null;
       engineRef.current = null;
-      cancelLiveUpdate();
+      stopLerpLoop();
       if (aggregatorRef.current) { aggregatorRef.current.destroy(); aggregatorRef.current = null; }
     };
   }, [
