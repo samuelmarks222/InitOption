@@ -529,6 +529,7 @@ const getMainPriceScaleOptions = (
   visibleSpan?: number | null,
   containerWidth = 960,
 ) => ({
+  autoScale: true,
   borderColor: THEME.border,
   scaleMargins: getZoomResponsivePriceScaleMargins(timeframe, visibleSpan, containerWidth),
   minimumWidth: SYNCED_PRICE_SCALE_MIN_WIDTH,
