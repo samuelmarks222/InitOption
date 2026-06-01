@@ -276,8 +276,7 @@ const clampPriceToBounds = (price: number, basePrice: number) =>
 
 const getSampleStepSeconds = (timeframeSeconds: number) => {
   if (timeframeSeconds <= 1) return 0.1;
-  if (timeframeSeconds <= 5) return 0.25;
-  if (timeframeSeconds <= 15) return 1;
+  if (timeframeSeconds <= 5) return 1;
   if (timeframeSeconds <= 60) return 5;
   if (timeframeSeconds <= 15 * 60) return 15;
   if (timeframeSeconds < HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) return 60;
@@ -289,9 +288,7 @@ const getSampleStepSeconds = (timeframeSeconds: number) => {
 };
 
 const getInteriorProbeCount = (timeframeSeconds: number) => {
-  if (timeframeSeconds <= 1) return 3;
-  if (timeframeSeconds <= 5) return 2;
-  if (timeframeSeconds <= 15) return 2;
+  if (timeframeSeconds <= 1) return 2;
   if (timeframeSeconds <= 60) return 1;
   return 0;
 };
@@ -317,11 +314,9 @@ const getTargetWickDelta = (
       ? 0.52
       : timeframeSeconds <= 1
         ? 1.18
-        : timeframeSeconds <= 5
-          ? 1.08
-          : timeframeSeconds <= 60
-            ? 0.98
-            : 0.86;
+        : timeframeSeconds <= 60
+          ? 0.98
+          : 0.86;
 
   return priceStep * configuredPips * wickMultiplier;
 };
@@ -342,22 +337,18 @@ const getMaxWickLength = ({
       ? 0.42
       : timeframeSeconds <= 1
         ? 0.34
-        : timeframeSeconds <= 5
-          ? 0.4
-          : timeframeSeconds <= 60
-            ? 0.54
-            : 0.72;
+        : timeframeSeconds <= 60
+          ? 0.54
+          : 0.72;
   const wickFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
       ? 0.3
       : timeframeSeconds <= 1
         ? 0.26
-        : timeframeSeconds <= 5
-          ? 0.32
-          : timeframeSeconds <= 60
-            ? 0.42
-            : 0.58;
-  const minimumWick = priceStep * (timeframeSeconds <= 1 ? 1.1 : timeframeSeconds <= 5 ? 1.3 : 1.6);
+        : timeframeSeconds <= 60
+          ? 0.42
+          : 0.58;
+  const minimumWick = priceStep * (timeframeSeconds <= 1 ? 1.1 : 1.6);
 
   return Math.max(minimumWick, bodySize * bodyFactor + targetWickDelta * wickFactor);
 };
