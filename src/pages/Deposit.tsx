@@ -25,7 +25,7 @@ import {
 import { formatCurrencyAmount } from "@/lib/currency";
 import { getEffectiveLiveBalance, getReservedWithdrawalBalance, getStoredLiveBalance } from "@/lib/live-balance";
 import { requestMobileMoneyDeposit, type MobileMoneyDepositPayload } from "@/lib/mobileMoney";
-import { convertUsdToKesAmount } from "@/lib/mobileMoneyShared";
+import { convertUsdToKesDepositAmount } from "@/lib/mobileMoneyShared";
 import { isPlisioSupportedCryptoMethod } from "@/lib/plisio";
 
 type CryptoPaymentMethod = Tables<"crypto_payment_methods">;
@@ -207,7 +207,7 @@ const Deposit = () => {
     selectedMethod === "mpesa"
       ? 5
       : Math.max(Number(selectedCryptoMethod?.minimum_deposit_amount ?? 10), 10);
-  const amountKes = convertUsdToKesAmount(amountValue);
+  const amountKes = convertUsdToKesDepositAmount(amountValue);
 
   const resolvedBonusCatalog = useMemo(
     () =>

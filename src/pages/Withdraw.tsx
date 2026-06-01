@@ -11,7 +11,7 @@ import { SiteLogo } from "@/components/branding/SiteLogo";
 import { formatCurrencyAmount } from "@/lib/currency";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { requestMobileMoneyWithdrawal } from "@/lib/mobileMoney";
-import { convertUsdToKesAmount, MPESA_METHOD_LABEL } from "@/lib/mobileMoneyShared";
+import { convertUsdToKesWithdrawalAmount, MPESA_METHOD_LABEL } from "@/lib/mobileMoneyShared";
 import { requestWithdrawal } from "@/lib/withdrawals";
 
 type CryptoMethod = Tables<"crypto_payment_methods">;
@@ -138,7 +138,7 @@ const Withdraw = () => {
 
   const minimumWithdrawalAmount = 10;
   const amountValue = Number(amount) || 0;
-  const amountKes = convertUsdToKesAmount(amountValue);
+  const amountKes = convertUsdToKesWithdrawalAmount(amountValue);
   const selectedCrypto = useMemo(
     () => cryptoMethods.find((crypto) => crypto.id === selectedCryptoId) ?? null,
     [cryptoMethods, selectedCryptoId],

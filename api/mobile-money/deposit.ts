@@ -8,7 +8,7 @@ import {
   formatDepositBonusOfferRange,
 } from "../../src/lib/depositBonusOffers.js";
 import {
-  convertUsdToKesAmount,
+  convertUsdToKesDepositAmount,
   maskKenyanPhoneNumber,
   MPESA_CHANNEL_CODE,
   MPESA_METHOD_LABEL,
@@ -173,7 +173,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     }
 
     const amountUsd = Number(amount);
-    amountKes = convertUsdToKesAmount(amountUsd);
+    amountKes = convertUsdToKesDepositAmount(amountUsd);
 
     if (amountUsd < 5) {
       sendJson(response, 400, { error: "Minimum M-PESA deposit is $5." });

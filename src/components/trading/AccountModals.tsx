@@ -37,7 +37,7 @@ import { formatCurrencyAmount } from "@/lib/currency";
 import { clearCryptoDepositCheckoutCache } from "@/lib/cryptoDepositCheckoutCache";
 import { requestDepositReview } from "@/lib/deposits";
 import { requestMobileMoneyWithdrawal } from "@/lib/mobileMoney";
-import { convertUsdToKesAmount, MPESA_METHOD_LABEL } from "@/lib/mobileMoneyShared";
+import { convertUsdToKesWithdrawalAmount, MPESA_METHOD_LABEL } from "@/lib/mobileMoneyShared";
 import { requestWithdrawal } from "@/lib/withdrawals";
 import {
   createCryptoDepositInstruction,
@@ -1436,7 +1436,7 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
   }, []);
 
   const amountValue = Number(amount) || 0;
-  const amountKes = convertUsdToKesAmount(amountValue);
+  const amountKes = convertUsdToKesWithdrawalAmount(amountValue);
   const selectedCrypto = cryptoMethods.find((entry) => entry.id === selectedCryptoId) ?? null;
   const destination =
     method === "mpesa"

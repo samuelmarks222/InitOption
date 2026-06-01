@@ -6,6 +6,26 @@ export const MOBILE_MONEY_CURRENCY = "KES";
 export const MPESA_CHANNEL_CODE = "63902";
 export const MPESA_METHOD_LABEL = "M-PESA Mobile Money";
 
+const MPESA_DEPOSIT_RATE = 135;
+const MPESA_WITHDRAWAL_RATE = 124;
+
+export const convertUsdToKesDepositAmount = (amountUsd: number) => {
+  if (!Number.isFinite(amountUsd) || amountUsd <= 0) {
+    return 0;
+  }
+
+  return roundToTwo(amountUsd * MPESA_DEPOSIT_RATE);
+};
+
+export const convertUsdToKesWithdrawalAmount = (amountUsd: number) => {
+  if (!Number.isFinite(amountUsd) || amountUsd <= 0) {
+    return 0;
+  }
+
+  return roundToTwo(amountUsd * MPESA_WITHDRAWAL_RATE);
+};
+
+/** @deprecated Use convertUsdToKesDepositAmount or convertUsdToKesWithdrawalAmount instead */
 export const convertUsdToKesAmount = (amountUsd: number) => {
   if (!Number.isFinite(amountUsd) || amountUsd <= 0) {
     return 0;

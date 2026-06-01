@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { getHeaderValue } from "../../src/lib/cryptoWebhook.js";
 import {
-  convertUsdToKesAmount,
+  convertUsdToKesWithdrawalAmount,
   maskKenyanPhoneNumber,
   MPESA_CHANNEL_CODE,
   MPESA_METHOD_LABEL,
@@ -412,7 +412,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     }
 
     const amountUsd = Number(amount);
-    const amountKes = convertUsdToKesAmount(amountUsd);
+    const amountKes = convertUsdToKesWithdrawalAmount(amountUsd);
     const userClient = getSupabaseUserClient(accessToken);
     const authResponse = await userClient.auth.getUser();
 
