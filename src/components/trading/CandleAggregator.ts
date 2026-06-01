@@ -174,7 +174,7 @@ export class CandleAggregator {
     const timeframeWeight = Math.min(1, Math.log2(this.timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS + 1) / 5);
     const maxWick = Math.max(
       priceStep * 2,
-      bodySize * 0.45 + referencePrice * (0.00008 + timeframeWeight * 0.00006),
+      bodySize * 4 + referencePrice * (0.0005 + timeframeWeight * 0.0003),
     );
 
     return {
