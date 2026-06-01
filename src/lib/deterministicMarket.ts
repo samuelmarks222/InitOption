@@ -401,24 +401,24 @@ const getMaxWickLength = ({
 }) => {
   const bodyFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 1.5
+      ? 3.0
       : timeframeSeconds <= 1
-        ? 0.34
+        ? 1.5
         : timeframeSeconds <= 5
-          ? 0.4
+          ? 1.5
           : timeframeSeconds <= 60
-            ? 0.54
-            : 0.72;
+            ? 2.0
+            : 2.5;
   const wickFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 1.0
+      ? 2.0
       : timeframeSeconds <= 1
-        ? 0.26
+        ? 1.0
         : timeframeSeconds <= 5
-          ? 0.32
+          ? 1.0
           : timeframeSeconds <= 60
-            ? 0.42
-            : 0.58;
+            ? 1.2
+            : 1.5;
   const minimumWick = priceStep * (timeframeSeconds <= 1 ? 1.1 : timeframeSeconds <= 5 ? 1.3 : 1.6);
 
   return Math.max(minimumWick, bodySize * bodyFactor + targetWickDelta * wickFactor);
