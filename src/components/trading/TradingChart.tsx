@@ -162,8 +162,8 @@ type PlatformThemeRow = Pick<Tables<"platform_settings">, "chart_bg_color" | "ch
 const toChartTime = (time: number) => time as Time;
 const INTRABAR_LOGICAL_SPAN = 0.72;
 const LIVE_FOLLOW_MIN_DELTA = 0.012;
-const CANDLE_ANIMATION_DURATION_MS = 640;
-const CANDLE_VISUAL_FRAME_MS = 16;
+const CANDLE_ANIMATION_DURATION_MS = 320;
+const CANDLE_VISUAL_FRAME_MS = 30;
 const getIntrabarLogicalOffset = (fraction: number) =>
   (Math.min(1, Math.max(0, fraction)) - 0.5) * INTRABAR_LOGICAL_SPAN;
 const getLiveCandleProgressLogical = (historyLength: number, fraction: number) =>
@@ -178,10 +178,7 @@ const getAnimationClockMs = () =>
     ? performance.now()
     : Date.now();
 const clampProgress = (t: number) => Math.min(1, Math.max(0, t));
-const easeOutCubic = (t: number) => {
-  const c = clampProgress(t);
-  return c * c * (3 - 2 * c);
-};
+const easeOutCubic = (t: number) => { const c = clampProgress(t); return 1 - Math.pow(1 - c, 3); };
 const interpolateNumber = (from: number, to: number, progress: number) => from + (to - from) * progress;
 const normalizeOhlcBounds = (candle: OHLCCandle): OHLCCandle => {
   const upperBody = Math.max(candle.open, candle.close);
@@ -399,53 +396,46 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 12,
-  "5s": 12,
-  "10s": 12,
-  "15s": 12,
-  "30s": 12,
-  "1m": 12,
-  "2m": 10,
-  "3m": 10,
-  "4m": 10,
-  "5m": 10,
-  "10m": 8,
-  "15m": 8,
-  "30m": 6,
-  "1h": 6,
-  "2h": 4,
-  "3h": 4,
-  "4h": 4,
-  "12h": 4,
-  "1D": 4,
+  "1s": 15.4,
+  "5s": 15.8,
+  "15s": 16.1,
+  "30s": 16.3,
+  "1m": 16.5,
+  "2m": 14.8,
+  "3m": 13.8,
+  "4m": 12.9,
+  "5m": 12.2,
+  "10m": 8.9,
+  "15m": 9.3,
+  "30m": 9.8,
+  "1h": 10.3,
+  "2h": 10.8,
+  "4h": 11.6,
+  "1D": 13.2,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
-  "1s": 30,
-  "5s": 30,
-  "10s": 31,
-  "15s": 32,
-  "30s": 34,
-  "1m": 36,
-  "2m": 38,
-  "3m": 40,
-  "4m": 42,
-  "5m": 44,
-  "10m": 44,
-  "15m": 40,
-  "30m": 36,
-  "1h": 32,
-  "2h": 28,
-  "3h": 26,
-  "4h": 24,
-  "12h": 20,
-  "1D": 18,
+  "1s": 78,
+  "5s": 78,
+  "15s": 80,
+  "30s": 82,
+  "1m": 84,
+  "2m": 90,
+  "3m": 94,
+  "4m": 96,
+  "5m": 98,
+  "10m": 98,
+  "15m": 92,
+  "30m": 86,
+  "1h": 80,
+  "2h": 74,
+  "4h": 66,
+  "1D": 46,
 };
 
 const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
   "1s": 128,
   "5s": 126,
-  "10s": 125,
   "15s": 124,
   "30s": 122,
   "1m": 120,
@@ -458,16 +448,13 @@ const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>
   "30m": 156,
   "1h": 146,
   "2h": 136,
-  "3h": 128,
   "4h": 122,
-  "12h": 104,
   "1D": 92,
 };
 
 const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
   "1s": 3000,
   "5s": 2400,
-  "10s": 2200,
   "15s": 2000,
   "30s": 1800,
   "1m": 1600,
@@ -480,16 +467,13 @@ const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, n
   "30m": 500,
   "1h": 400,
   "2h": 300,
-  "3h": 275,
   "4h": 250,
-  "12h": 225,
   "1D": 200,
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
   "1s": 1,
   "5s": 1,
-  "10s": 1,
   "15s": 1,
   "30s": 1,
   "1m": 1,
@@ -502,20 +486,51 @@ const MIN_BAR_SPACING_MAP: Record<string, number> = {
   "30m": 1,
   "1h": 1,
   "2h": 1,
-  "3h": 1,
   "4h": 1,
-  "12h": 1,
   "1D": 1,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
 
-const getMainPriceScaleMargins = () => ({ top: 0.1, bottom: 0.1 });
+const getMainPriceScaleMargins = (timeframe: SupportedChartTimeframe) => {
+  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
 
-const getMainPriceScaleOptions = () => ({
-  autoScale: true,
+  if (seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS) {
+    return { top: 0.16, bottom: 0.17 };
+  }
+
+  return { top: 0.14, bottom: 0.15 };
+};
+
+const getZoomResponsivePriceScaleMargins = (
+  timeframe: SupportedChartTimeframe,
+  visibleSpan: number | null | undefined,
+  containerWidth: number,
+) => {
+  const baseMargins = getMainPriceScaleMargins(timeframe);
+  const targetVisibleBars = getTargetVisibleBars(containerWidth, timeframe);
+  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
+
+  if (!Number.isFinite(visibleSpan) || !visibleSpan || visibleSpan <= 0 || targetVisibleBars <= 0) {
+    return baseMargins;
+  }
+
+  const zoomRatio = visibleSpan / targetVisibleBars;
+  const zoomPadding = Math.max(-0.08, Math.min(0.2, (zoomRatio - 1) * 0.11));
+  const maxMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.32 : 0.34;
+  const minMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.055 : 0.06;
+  const margin = Math.max(minMargin, Math.min(maxMargin, baseMargins.top + zoomPadding));
+
+  return { top: margin, bottom: margin };
+};
+
+const getMainPriceScaleOptions = (
+  timeframe: SupportedChartTimeframe,
+  visibleSpan?: number | null,
+  containerWidth = 960,
+) => ({
   borderColor: THEME.border,
-  scaleMargins: getMainPriceScaleMargins(),
+  scaleMargins: getZoomResponsivePriceScaleMargins(timeframe, visibleSpan, containerWidth),
   minimumWidth: SYNCED_PRICE_SCALE_MIN_WIDTH,
   entireTextOnly: true,
   ticksVisible: true,
@@ -581,7 +596,7 @@ const getTrendContextBarCount = (
 };
 
 const getHistoryBackfillThreshold = (containerWidth: number, timeframe: SupportedChartTimeframe) =>
-  Math.max(12, Math.round(getTrendContextBarCount(containerWidth, timeframe) * 0.12));
+  Math.max(18, Math.round(getTrendContextBarCount(containerWidth, timeframe) * 0.18));
 
 const getHistoryBackfillIncrement = (containerWidth: number, timeframe: SupportedChartTimeframe) => {
   const trendContextBars = getTrendContextBarCount(containerWidth, timeframe);
@@ -590,7 +605,7 @@ const getHistoryBackfillIncrement = (containerWidth: number, timeframe: Supporte
   return Math.max(trendContextBars, Math.round(historicalBaseline * 0.55));
 };
 
-const getChartRightOffset = (visibleBars: number) => Math.max(12, Math.min(32, Math.round(visibleBars * 0.12)));
+const getChartRightOffset = (visibleBars: number) => Math.max(18, Math.min(58, Math.round(visibleBars * 0.18)));
 
 const getDefaultVisibleBars = (
   containerWidth: number,
@@ -2415,9 +2430,9 @@ const TradingChart = ({
       const chart = chartRef.current;
       if (!chart) return;
 
-      const options = getMainPriceScaleOptions();
-      const spanKey = Number.isFinite(visibleSpan) ? Number(visibleSpan).toFixed(2) : "auto";
-      const marginKey = `${selectedTf}:${spanKey}:${options.scaleMargins.top.toFixed(3)}:${options.scaleMargins.bottom.toFixed(3)}`;
+      const containerWidth = mainRef.current?.clientWidth ?? 960;
+      const options = getMainPriceScaleOptions(selectedTf, visibleSpan, containerWidth);
+      const marginKey = `${selectedTf}:${options.scaleMargins.top.toFixed(3)}:${options.scaleMargins.bottom.toFixed(3)}`;
 
       if (!force && priceScaleMarginKeyRef.current === marginKey) {
         return;
@@ -2446,11 +2461,9 @@ const TradingChart = ({
           : dataPointCount;
       const containerWidth = mainRef.current?.clientWidth ?? 960;
       const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, dataPointCount);
+      const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, dataPointCount);
       const rightOffset = getChartRightOffset(trendContextBars);
-      const bodyScale = chartStylesRef.current.bodyScale;
-      const effectiveBarSpacing = (BAR_SPACING_MAP[selectedTf] ?? BAR_SPACING_MAP["1m"]) * clampBodyScale(bodyScale);
-      const targetVisibleBars = Math.floor(containerWidth / Math.max(1, effectiveBarSpacing));
-      const visibleSpan = Math.max(1, targetVisibleBars);
+      const visibleSpan = initialVisibleBars + rightOffset;
       const targetTo = liveLogical + rightOffset;
 
       chart.timeScale().applyOptions({
@@ -2480,12 +2493,10 @@ const TradingChart = ({
         return;
       }
 
-      const containerWidth = mainRef.current?.clientWidth ?? 960;
-      const bodyScale = chartStylesRef.current.bodyScale;
-      const effectiveBarSpacing = (BAR_SPACING_MAP[selectedTf] ?? BAR_SPACING_MAP["1m"]) * clampBodyScale(bodyScale);
-      const targetVisibleBars = Math.floor(containerWidth / Math.max(1, effectiveBarSpacing));
-      const visibleSpan = Math.max(1, targetVisibleBars);
+      const visibleSpan = currentRange.to - currentRange.from;
+      if (!Number.isFinite(visibleSpan) || visibleSpan <= 0) return;
 
+      const containerWidth = mainRef.current?.clientWidth ?? 960;
       const dataPointCount = Math.max(
         1,
         Math.ceil(liveLogical),
@@ -2687,7 +2698,7 @@ const TradingChart = ({
             style: LineStyle.Dashed,
           },
         },
-        rightPriceScale: getMainPriceScaleOptions(),
+        rightPriceScale: getMainPriceScaleOptions("1m", DEFAULT_VISIBLE_BARS, 960),
         timeScale: { 
           borderColor: THEME.border, 
           timeVisible: true, 
