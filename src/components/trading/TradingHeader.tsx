@@ -388,10 +388,13 @@ const TradingHeader = ({
               </div>
             )}
           </div>
+
+          <CurrencySelector />
         </div>
 
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 pr-2 xl:flex-nowrap">
           <div
+
             className="rounded-[14px] border shadow-[0_12px_30px_rgba(7,12,22,0.24)]"
             style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
           >
@@ -423,9 +426,6 @@ const TradingHeader = ({
               <ChevronDown className="h-3.5 w-3.5 shrink-0 text-gray-500 transition-colors group-hover:text-gray-300" />
             </button>
           </div>
-
-          <CurrencySelector />
-
           <div className="relative h-[46px] flex items-center">
             <button
               id="tour-account-switch"
