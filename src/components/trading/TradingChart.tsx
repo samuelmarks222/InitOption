@@ -2674,7 +2674,7 @@ const TradingChart = ({
           vertTouchDrag: false,
         },
         handleScale: {
-          mouseWheel: false,
+          mouseWheel: true,
           pinch: true,
           axisPressedMouseMove: true,
           axisDoubleClickReset: true,
