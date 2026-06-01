@@ -56,8 +56,19 @@ describe("deterministic market feed", () => {
     expect(lastHourlyCandle.time % TIMEFRAMES["1h"].seconds).toBe(0);
     expect(dailyHistory[dailyHistory.length - 1].time % TIMEFRAMES["1D"].seconds).toBe(0);
     expect(averageRange(hourlyHistory)).toBeLessThan(averageRange(thirtyMinuteHistory) * 2.2);
-    expect(averageRange(dailyHistory)).toBeLessThan(1.2745 * 0.012);
+    expect(averageRange(dailyHistory)).toBeLessThan(1.2745 * 0.09);
     expect(averageRange(hourlyHistory)).toBeGreaterThan(averageBody(hourlyHistory));
+  });
+
+  it("gives OTC histories enough vertical travel to fill the visible chart", () => {
+    const nowSec = 1_711_111_111;
+    const basePrice = 1.08452;
+    const engine = new OTCPriceEngine("EUR/JPY", basePrice, "OTC");
+    const history = engine.generateHistory(TIMEFRAMES["30m"], nowSec, 200);
+    const high = Math.max(...history.map((candle) => candle.high));
+    const low = Math.min(...history.map((candle) => candle.low));
+
+    expect(high - low).toBeGreaterThan(basePrice * 0.16);
   });
 
   it("keeps 1s candles readable with visible wicks", () => {

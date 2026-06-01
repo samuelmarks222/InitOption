@@ -10,6 +10,7 @@ export interface DeterministicMarketCandle {
 }
 
 interface MarketProfile {
+  visibleRangeMultiplier: number;
   driftAmplitude: number;
   driftScaleSeconds: number;
   swingAmplitude: number;
@@ -31,6 +32,7 @@ const TAU = Math.PI * 2;
 
 const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
   OTC: {
+    visibleRangeMultiplier: 11,
     driftAmplitude: 0.004,
     driftScaleSeconds: 18 * 60 * 60,
     swingAmplitude: 0.0018,
@@ -48,6 +50,7 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
     volumeBase: 320,
   },
   CRYPTO: {
+    visibleRangeMultiplier: 1,
     driftAmplitude: 0.055,
     driftScaleSeconds: 20 * 60 * 60,
     swingAmplitude: 0.024,
@@ -65,6 +68,7 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
     volumeBase: 720,
   },
   STOCKS: {
+    visibleRangeMultiplier: 1,
     driftAmplitude: 0.022,
     driftScaleSeconds: 24 * 60 * 60,
     swingAmplitude: 0.009,
@@ -82,6 +86,7 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
     volumeBase: 460,
   },
   COMMODITIES: {
+    visibleRangeMultiplier: 1,
     driftAmplitude: 0.015,
     driftScaleSeconds: 22 * 60 * 60,
     swingAmplitude: 0.006,
@@ -198,7 +203,7 @@ const getDeterministicRelativeOffset = (
         0.55
     );
 
-  return (
+  const relativeOffset =
     noiseAt(normalizedSymbol, "drift", timestampSec / profile.driftScaleSeconds) * profile.driftAmplitude * driftWeight +
     noiseAt(normalizedSymbol, "swing", timestampSec / profile.swingScaleSeconds) * profile.swingAmplitude * swingWeight +
     noiseAt(normalizedSymbol, "pulse", timestampSec / profile.pulseScaleSeconds) * profile.pulseAmplitude * pulseWeight +
@@ -208,8 +213,9 @@ const getDeterministicRelativeOffset = (
     Math.sin((timestampSec / profile.secondaryCycleSeconds) * TAU + secondaryPhase) *
       profile.secondaryCycleAmplitude *
       secondaryCycleWeight +
-    macroShape
-  );
+    macroShape;
+
+  return relativeOffset * profile.visibleRangeMultiplier;
 };
 
 const getDeterministicPriceAtForTimeframe = ({
