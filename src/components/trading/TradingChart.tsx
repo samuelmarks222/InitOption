@@ -162,7 +162,8 @@ type PlatformThemeRow = Pick<Tables<"platform_settings">, "chart_bg_color" | "ch
 const toChartTime = (time: number) => time as Time;
 const INTRABAR_LOGICAL_SPAN = 0.72;
 const LIVE_FOLLOW_MIN_DELTA = 0.012;
-const CANDLE_ANIMATION_DURATION_MS = 420;
+const CANDLE_ANIMATION_DURATION_MS = 280;
+const CANDLE_VISUAL_FRAME_MS = 90;
 const getIntrabarLogicalOffset = (fraction: number) =>
   (Math.min(1, Math.max(0, fraction)) - 0.5) * INTRABAR_LOGICAL_SPAN;
 const getLiveCandleProgressLogical = (historyLength: number, fraction: number) =>
@@ -1035,12 +1036,14 @@ const getCandlestickDisplaySettings = (
   const baseUpColor = getCandleUpColor(chartType, styles, globalTheme.up);
   const baseDownColor = getCandleDownColor(chartType, styles, globalTheme.down);
   const minimalPreset = styles.displayPreset === "secondary";
-  const upColor = minimalPreset ? toRgba(baseUpColor, 0.92) : mixHexColors(baseUpColor, "#ffffff", 0.03);
-  const downColor = minimalPreset ? toRgba(baseDownColor, 0.92) : mixHexColors(baseDownColor, "#ffffff", 0.03);
-  const borderUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", 0.15), 0.92);
-  const borderDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", 0.08), 0.92);
-  const wickUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.04 : 0.10), 0.92);
-  const wickDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", minimalPreset ? 0.04 : 0.08), 0.92);
+  const upBodyColor = mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.02 : 0.06);
+  const downBodyColor = mixHexColors(baseDownColor, "#ffffff", minimalPreset ? 0.02 : 0.05);
+  const upColor = toRgba(upBodyColor, minimalPreset ? 0.88 : 0.94);
+  const downColor = toRgba(downBodyColor, minimalPreset ? 0.88 : 0.94);
+  const borderUpColor = toRgba(upBodyColor, 0.58);
+  const borderDownColor = toRgba(downBodyColor, 0.58);
+  const wickUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.02 : 0.07), minimalPreset ? 0.72 : 0.78);
+  const wickDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", minimalPreset ? 0.02 : 0.06), minimalPreset ? 0.72 : 0.78);
 
   return {
     upColor,
@@ -1049,7 +1052,7 @@ const getCandlestickDisplaySettings = (
     borderDownColor,
     wickUpColor,
     wickDownColor,
-    borderVisible: true,
+    borderVisible: false,
     wickVisible: true,
     priceLineVisible: styles.priceLineVisible,
   };
@@ -1921,6 +1924,7 @@ const TradingChart = ({
   const visualLiveTimestampRef = useRef<number | null>(null);
   const liveCandleAnimationRef = useRef<LiveCandleAnimationState | null>(null);
   const liveCandleAnimationFrameRef = useRef<number | null>(null);
+  const lastCandleVisualFrameAtRef = useRef(0);
   const loadedHistoryCountRef = useRef(0);
   const isBackfillingHistoryRef = useRef(false);
   const isNormalizingVisibleRangeRef = useRef(false);
@@ -3035,6 +3039,7 @@ const TradingChart = ({
     }
 
     liveCandleAnimationRef.current = null;
+    lastCandleVisualFrameAtRef.current = 0;
     visualLiveCandleRef.current = seedVisualCandle;
     visualLiveTimestampRef.current = seedCandle.time;
     try {
@@ -3121,7 +3126,19 @@ const TradingChart = ({
         const animationState = liveCandleAnimationRef.current;
         if (!animationState) return;
 
-        const snapshot = getAnimationSnapshot(animationState);
+        const nowMs = getAnimationClockMs();
+        const elapsedMs = nowMs - animationState.startedAt;
+        const shouldRenderFrame =
+          elapsedMs >= CANDLE_ANIMATION_DURATION_MS ||
+          nowMs - lastCandleVisualFrameAtRef.current >= CANDLE_VISUAL_FRAME_MS;
+
+        if (!shouldRenderFrame) {
+          scheduleLiveCandleAnimation();
+          return;
+        }
+
+        lastCandleVisualFrameAtRef.current = nowMs;
+        const snapshot = getAnimationSnapshot(animationState, nowMs);
         applyVisualCandleFrame(snapshot.candle, snapshot.sourceTimestamp);
 
         if (snapshot.done) {
@@ -3140,6 +3157,7 @@ const TradingChart = ({
       }
 
       liveCandleAnimationRef.current = null;
+      lastCandleVisualFrameAtRef.current = 0;
     };
 
     const queueLiveCandleAnimation = (targetCandle: OHLCCandle, sourceTimestamp?: number) => {
