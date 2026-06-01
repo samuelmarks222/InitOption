@@ -162,8 +162,8 @@ type PlatformThemeRow = Pick<Tables<"platform_settings">, "chart_bg_color" | "ch
 const toChartTime = (time: number) => time as Time;
 const INTRABAR_LOGICAL_SPAN = 0.72;
 const LIVE_FOLLOW_MIN_DELTA = 0.012;
-const CANDLE_ANIMATION_DURATION_MS = 320;
-const CANDLE_VISUAL_FRAME_MS = 30;
+
+
 const getIntrabarLogicalOffset = (fraction: number) =>
   (Math.min(1, Math.max(0, fraction)) - 0.5) * INTRABAR_LOGICAL_SPAN;
 const getLiveCandleProgressLogical = (historyLength: number, fraction: number) =>
@@ -173,13 +173,7 @@ const getLiveTimeScaleFollowOptions = (enabled: boolean) => ({
   shiftVisibleRangeOnNewBar: enabled,
   allowShiftVisibleRangeOnWhitespaceReplacement: enabled,
 });
-const getAnimationClockMs = () =>
-  typeof performance !== "undefined" && typeof performance.now === "function"
-    ? performance.now()
-    : Date.now();
-const clampProgress = (t: number) => Math.min(1, Math.max(0, t));
-const easeOutCubic = (t: number) => { const c = clampProgress(t); return 1 - Math.pow(1 - c, 3); };
-const interpolateNumber = (from: number, to: number, progress: number) => from + (to - from) * progress;
+
 const normalizeOhlcBounds = (candle: OHLCCandle): OHLCCandle => {
   const upperBody = Math.max(candle.open, candle.close);
   const lowerBody = Math.min(candle.open, candle.close);
@@ -190,22 +184,7 @@ const normalizeOhlcBounds = (candle: OHLCCandle): OHLCCandle => {
     low: Math.min(candle.low, lowerBody),
   };
 };
-const buildCandleAnimationBaseline = (target: OHLCCandle): OHLCCandle =>
-  normalizeOhlcBounds({
-    ...target,
-    high: target.open,
-    low: target.open,
-    close: target.open,
-  });
-const interpolateOhlcCandle = (from: OHLCCandle, to: OHLCCandle, progress: number): OHLCCandle =>
-  normalizeOhlcBounds({
-    time: to.time,
-    open: interpolateNumber(from.open, to.open, progress),
-    high: interpolateNumber(from.high, to.high, progress),
-    low: interpolateNumber(from.low, to.low, progress),
-    close: interpolateNumber(from.close, to.close, progress),
-    volume: interpolateNumber(from.volume, to.volume, progress),
-  });
+
 
 const clampLineWidth = (value: number): LineWidth => {
   if (value >= 4) return 4;
@@ -226,13 +205,7 @@ type LivePriceBeaconState = {
   logical: number | null;
 };
 
-type LiveCandleAnimationState = {
-  from: OHLCCandle;
-  to: OHLCCandle;
-  fromTimestamp: number;
-  toTimestamp: number;
-  startedAt: number;
-};
+
 
 const toLineChartData = (candles: OHLCCandle[]): LineData<Time>[] =>
   candles.map((candle) => ({ time: toChartTime(candle.time), value: candle.close }));
@@ -1922,9 +1895,9 @@ const TradingChart = ({
   const liveRef = useRef<OHLCCandle | null>(null);
   const visualLiveCandleRef = useRef<OHLCCandle | null>(null);
   const visualLiveTimestampRef = useRef<number | null>(null);
-  const liveCandleAnimationRef = useRef<LiveCandleAnimationState | null>(null);
-  const liveCandleAnimationFrameRef = useRef<number | null>(null);
-  const lastCandleVisualFrameAtRef = useRef(0);
+  const pendingLiveUpdateRef = useRef<{ candle: OHLCCandle; timestamp: number } | null>(null);
+  const pendingUpdateFrameRef = useRef<number | null>(null);
+
   const loadedHistoryCountRef = useRef(0);
   const isBackfillingHistoryRef = useRef(false);
   const isNormalizingVisibleRangeRef = useRef(false);
@@ -3033,15 +3006,13 @@ const TradingChart = ({
     const seedCandle = seedReplay.candle;
     liveRef.current = seedCandle;
     const startPrice = seedCandle.open;
-    const seedVisualCandle = buildCandleAnimationBaseline(seedCandle);
+    const seedVisualCandle = normalizeOhlcBounds(seedCandle);
 
-    if (liveCandleAnimationFrameRef.current !== null) {
-      window.cancelAnimationFrame(liveCandleAnimationFrameRef.current);
-      liveCandleAnimationFrameRef.current = null;
+    if (pendingUpdateFrameRef.current !== null) {
+      window.cancelAnimationFrame(pendingUpdateFrameRef.current);
+      pendingUpdateFrameRef.current = null;
     }
-
-    liveCandleAnimationRef.current = null;
-    lastCandleVisualFrameAtRef.current = 0;
+    pendingLiveUpdateRef.current = null;
     visualLiveCandleRef.current = seedVisualCandle;
     visualLiveTimestampRef.current = seedCandle.time;
     try {
@@ -3082,17 +3053,6 @@ const TradingChart = ({
     // Destroy previous aggregator and create a new one
 
     // onClose: called synchronously when a period ends — push the closed candle to history
-const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimationClockMs()) => {
-  const rawProgress = (nowMs - state.startedAt) / CANDLE_ANIMATION_DURATION_MS;
-  const easedProgress = easeOutCubic(rawProgress);
-
-  return {
-    candle: interpolateOhlcCandle(state.from, state.to, easedProgress),
-    sourceTimestamp: interpolateNumber(state.fromTimestamp, state.toTimestamp, easedProgress),
-    done: easedProgress >= 1,
-  };
-};
-
     const applyVisualCandleFrame = (candle: OHLCCandle, sourceTimestamp?: number) => {
       if (!mainSeriesRef.current) return;
 
@@ -3120,82 +3080,29 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
       followLiveTimeframeMotion(liveProgressLogical);
     };
 
-    const scheduleLiveCandleAnimation = () => {
-      if (liveCandleAnimationFrameRef.current !== null) return;
-
-      const animate = () => {
-        liveCandleAnimationFrameRef.current = null;
-        const state = liveCandleAnimationRef.current;
-        if (!state) return;
-
-        const nowMs = getAnimationClockMs();
-        const elapsed = nowMs - lastCandleVisualFrameAtRef.current;
-
-        if (lastCandleVisualFrameAtRef.current !== 0 && elapsed < CANDLE_VISUAL_FRAME_MS) {
-          scheduleLiveCandleAnimation();
-          return;
-        }
-
-        lastCandleVisualFrameAtRef.current = nowMs;
-        const snapshot = getAnimationSnapshot(state, nowMs);
-        applyVisualCandleFrame(snapshot.candle, snapshot.sourceTimestamp);
-
-        if (!snapshot.done) {
-          scheduleLiveCandleAnimation();
-        } else {
-          liveCandleAnimationRef.current = null;
-        }
-      };
-
-      liveCandleAnimationFrameRef.current = window.requestAnimationFrame(animate);
+    const flushPendingLiveUpdate = () => {
+      pendingUpdateFrameRef.current = null;
+      const pending = pendingLiveUpdateRef.current;
+      if (!pending) return;
+      pendingLiveUpdateRef.current = null;
+      applyVisualCandleFrame(normalizeOhlcBounds(pending.candle), pending.timestamp);
     };
 
-    const cancelLiveCandleAnimation = () => {
-      if (liveCandleAnimationFrameRef.current !== null) {
-        window.cancelAnimationFrame(liveCandleAnimationFrameRef.current);
-        liveCandleAnimationFrameRef.current = null;
-      }
-
-      liveCandleAnimationRef.current = null;
-      lastCandleVisualFrameAtRef.current = 0;
+    const scheduleLiveUpdate = () => {
+      if (pendingUpdateFrameRef.current !== null) return;
+      pendingUpdateFrameRef.current = window.requestAnimationFrame(flushPendingLiveUpdate);
     };
 
-    const queueLiveCandleAnimation = (targetCandle: OHLCCandle, sourceTimestamp?: number) => {
-      const nowMs = getAnimationClockMs();
-      const target = normalizeOhlcBounds(targetCandle);
-      const animationState = liveCandleAnimationRef.current;
-      const snapshot =
-        animationState && animationState.to.time === target.time
-          ? getAnimationSnapshot(animationState, nowMs)
-          : null;
-      const visibleCandle =
-        snapshot?.candle ??
-        (visualLiveCandleRef.current?.time === target.time ? visualLiveCandleRef.current : null);
-      const from = visibleCandle ?? buildCandleAnimationBaseline(target);
-      const fromTimestamp =
-        snapshot?.sourceTimestamp ??
-        (visualLiveCandleRef.current?.time === target.time ? visualLiveTimestampRef.current : null) ??
-        target.time;
-      const toTimestamp =
-        typeof sourceTimestamp === "number" && Number.isFinite(sourceTimestamp) ? sourceTimestamp : target.time;
-
-      liveCandleAnimationRef.current = {
-        from,
-        to: target,
-        fromTimestamp,
-        toTimestamp,
-        startedAt: nowMs,
-      };
-
-      if (!visibleCandle) {
-        applyVisualCandleFrame(from, fromTimestamp);
+    const cancelLiveUpdate = () => {
+      if (pendingUpdateFrameRef.current !== null) {
+        window.cancelAnimationFrame(pendingUpdateFrameRef.current);
+        pendingUpdateFrameRef.current = null;
       }
-
-      scheduleLiveCandleAnimation();
+      pendingLiveUpdateRef.current = null;
     };
 
     const handleCandleClose = (closed: OHLCCandle) => {
-      cancelLiveCandleAnimation();
+      cancelLiveUpdate();
       const closedForDisplay = normalizeOhlcBounds(closed);
       historyRef.current = [...historyRef.current, closedForDisplay].slice(-MAX_CANDLES_IN_MEMORY);
       visualLiveCandleRef.current = null;
@@ -3207,7 +3114,7 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
       setForceOscillatorRender((current) => current + 1);
     };
 
-    // onUpdate: called via RAF — update the live candle in the chart
+    // onUpdate: called on each tick — update the live candle in the chart
     const handleCandleUpdate = (candle: OHLCCandle, sourceTimestamp?: number) => {
       if (!mainSeriesRef.current) return;
       liveRef.current = candle;
@@ -3224,7 +3131,8 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
         markerLogical,
       );
 
-      queueLiveCandleAnimation(candle, effectiveMarkerTime);
+      pendingLiveUpdateRef.current = { candle: normalizeOhlcBounds(candle), timestamp: effectiveMarkerTime };
+      scheduleLiveUpdate();
       renderOverlayIndicators(getIndicatorHistory());
     };
 
@@ -3260,7 +3168,7 @@ const getAnimationSnapshot = (state: LiveCandleAnimationState, nowMs = getAnimat
       marketFeedRef.current?.disconnect();
       marketFeedRef.current = null;
       engineRef.current = null;
-      cancelLiveCandleAnimation();
+      cancelLiveUpdate();
       if (aggregatorRef.current) { aggregatorRef.current.destroy(); aggregatorRef.current = null; }
     };
   }, [
