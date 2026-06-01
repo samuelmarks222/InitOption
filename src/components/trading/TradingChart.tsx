@@ -988,10 +988,10 @@ const getCandlestickDisplaySettings = (
   const minimalPreset = styles.displayPreset === "secondary";
   const upColor = minimalPreset ? toRgba(baseUpColor, 0.85) : mixHexColors(baseUpColor, "#ffffff", 0.02);
   const downColor = minimalPreset ? toRgba(baseDownColor, 0.85) : mixHexColors(baseDownColor, "#ffffff", 0.02);
-  const borderUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", 0.08), 0.85);
-  const borderDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", 0.04), 0.85);
-  const wickUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.02 : 0.06), 0.88);
-  const wickDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", minimalPreset ? 0.02 : 0.05), 0.88);
+  const borderUpColor = upColor;
+  const borderDownColor = downColor;
+  const wickUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.02 : 0.04), 0.88);
+  const wickDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", minimalPreset ? 0.02 : 0.04), 0.88);
 
   return {
     upColor,
@@ -1000,7 +1000,7 @@ const getCandlestickDisplaySettings = (
     borderDownColor,
     wickUpColor,
     wickDownColor,
-    borderVisible: true,
+    borderVisible: false,
     wickVisible: true,
     priceLineVisible: styles.priceLineVisible,
   };
@@ -1928,7 +1928,7 @@ const TradingChart = ({
       userSelect: "none",
     };
 
-    const shadow = { filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.35))" };
+    const shadow = { filter: "drop-shadow(0 0 3px rgba(0,0,0,0.3)) drop-shadow(0 1px 1px rgba(0,0,0,0.2))" };
 
     if (!activeChartBackgroundImage) {
       return {
