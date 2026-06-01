@@ -309,7 +309,7 @@ const TradingHeader = ({
                 <div className="flex min-w-0 items-center gap-3 xl:gap-4">
                   <span className="truncate text-white font-black text-[24px] tracking-[0.12em] uppercase">{platformName}</span>
                   <span className="hidden h-1.5 w-1.5 shrink-0 rounded-full bg-white/14 xl:block" />
-                  <span className="hidden whitespace-nowrap text-gray-500 text-[11px] tracking-[0.22em] uppercase font-medium xl:block">
+                  <span className="hidden whitespace-nowrap text-gray-500 text-[11px] tracking-[0.22em] uppercase font-black xl:block">
                     {headerSubtitle}
                   </span>
                 </div>
