@@ -10,6 +10,7 @@ type PendingVisualUpdate = {
 };
 
 type TimerHandle = ReturnType<typeof setTimeout>;
+const HIGH_TIMEFRAME_PROFESSIONAL_SECONDS = 30 * 60;
 
 const getAnimationFrameScheduler = () => {
   if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
@@ -161,7 +162,26 @@ export class CandleAggregator {
   }
 
   private normalizeCandleForDisplay(candle: OHLCCandle): OHLCCandle {
-    return { ...candle };
+    if (this.timeframeSeconds < HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) {
+      return { ...candle };
+    }
+
+    const upperBody = Math.max(candle.open, candle.close);
+    const lowerBody = Math.min(candle.open, candle.close);
+    const referencePrice = Math.max(upperBody, 0.000001);
+    const priceStep = this.getPriceStep(referencePrice);
+    const bodySize = Math.abs(candle.close - candle.open);
+    const timeframeWeight = Math.min(1, Math.log2(this.timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS + 1) / 5);
+    const maxWick = Math.max(
+      priceStep * 2,
+      bodySize * 0.45 + referencePrice * (0.00008 + timeframeWeight * 0.00006),
+    );
+
+    return {
+      ...candle,
+      high: Math.max(upperBody, Math.min(candle.high, upperBody + maxWick)),
+      low: Math.min(lowerBody, Math.max(candle.low, lowerBody - maxWick)),
+    };
   }
 
   private queueVisualUpdate(candle: OHLCCandle, sourceTimestamp = candle.time) {
