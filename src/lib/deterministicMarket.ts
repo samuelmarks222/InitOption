@@ -333,9 +333,14 @@ const getSampleStepSeconds = (timeframeSeconds: number) => {
 const getInteriorProbeCount = (timeframeSeconds: number) => {
   if (timeframeSeconds <= 1) return 3;
   if (timeframeSeconds <= 5) return 2;
-  if (timeframeSeconds <= 15) return 2;
-  if (timeframeSeconds <= 60) return 3;
-  return 0;
+  if (timeframeSeconds <= 15) return 4;
+  if (timeframeSeconds <= 60) return 5;
+  if (timeframeSeconds <= 5 * 60) return 5;
+  if (timeframeSeconds <= 15 * 60) return 6;
+  if (timeframeSeconds <= 60 * 60) return 6;
+  if (timeframeSeconds <= 4 * 60 * 60) return 8;
+  if (timeframeSeconds <= 12 * 60 * 60) return 10;
+  return 12;
 };
 
 const getOtcWickFloorRatio = (timeframeSeconds: number) => {
