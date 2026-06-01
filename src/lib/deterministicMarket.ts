@@ -161,8 +161,8 @@ const getHighTimeframeSmoothingWeight = (timeframeSeconds?: number) => {
   }
 
   return clamp(
-    0.38 + Math.log2(timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) / 3.4,
-    0.38,
+    0.15 + Math.log2(timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) / 5,
+    0.15,
     1,
   );
 };

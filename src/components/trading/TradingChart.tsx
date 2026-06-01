@@ -496,10 +496,10 @@ const getMainPriceScaleMargins = (timeframe: SupportedChartTimeframe) => {
   const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
 
   if (seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS) {
-    return { top: 0.16, bottom: 0.17 };
+    return { top: 0.08, bottom: 0.09 };
   }
 
-  return { top: 0.14, bottom: 0.15 };
+  return { top: 0.08, bottom: 0.09 };
 };
 
 const getZoomResponsivePriceScaleMargins = (
@@ -509,16 +509,15 @@ const getZoomResponsivePriceScaleMargins = (
 ) => {
   const baseMargins = getMainPriceScaleMargins(timeframe);
   const targetVisibleBars = getTargetVisibleBars(containerWidth, timeframe);
-  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
 
   if (!Number.isFinite(visibleSpan) || !visibleSpan || visibleSpan <= 0 || targetVisibleBars <= 0) {
     return baseMargins;
   }
 
   const zoomRatio = visibleSpan / targetVisibleBars;
-  const zoomPadding = Math.max(-0.08, Math.min(0.2, (zoomRatio - 1) * 0.11));
-  const maxMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.32 : 0.34;
-  const minMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.055 : 0.06;
+  const zoomPadding = Math.max(-0.08, Math.min(0.08, (zoomRatio - 1) * 0.06));
+  const maxMargin = 0.18;
+  const minMargin = 0.04;
   const margin = Math.max(minMargin, Math.min(maxMargin, baseMargins.top + zoomPadding));
 
   return { top: margin, bottom: margin };
