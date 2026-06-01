@@ -161,8 +161,16 @@ type MainChartPoint = LineData<Time> | BarData<Time> | CandlestickData<Time>;
 type PlatformThemeRow = Pick<Tables<"platform_settings">, "chart_bg_color" | "chart_up_color" | "chart_down_color">;
 const toChartTime = (time: number) => time as Time;
 const INTRABAR_LOGICAL_SPAN = 0.72;
+const LIVE_FOLLOW_MIN_DELTA = 0.012;
 const getIntrabarLogicalOffset = (fraction: number) =>
   (Math.min(1, Math.max(0, fraction)) - 0.5) * INTRABAR_LOGICAL_SPAN;
+const getLiveCandleProgressLogical = (historyLength: number, fraction: number) =>
+  Math.max(0, historyLength) + Math.min(1, Math.max(0, fraction));
+const getLiveTimeScaleFollowOptions = (enabled: boolean) => ({
+  rightBarStaysOnScroll: enabled,
+  shiftVisibleRangeOnNewBar: enabled,
+  allowShiftVisibleRangeOnWhitespaceReplacement: enabled,
+});
 
 const clampLineWidth = (value: number): LineWidth => {
   if (value >= 4) return 4;
@@ -1871,6 +1879,7 @@ const TradingChart = ({
   const loadedHistoryCountRef = useRef(0);
   const isBackfillingHistoryRef = useRef(false);
   const isNormalizingVisibleRangeRef = useRef(false);
+  const lastLiveFollowTargetRef = useRef<number | null>(null);
   const priceScaleMarginKeyRef = useRef("");
   const aggregatorRef = useRef<CandleAggregator | null>(null);
   // Always-fresh ref for activeIndicators so stale closures see latest value
@@ -1907,6 +1916,8 @@ const TradingChart = ({
     down: PROFESSIONAL_DOWN_COLOR,
   });
   const { preferences: tradingPreferences } = useTradingPreferences();
+  const autoScrollingRef = useRef(tradingPreferences.autoScrolling);
+  autoScrollingRef.current = tradingPreferences.autoScrolling;
   const { data: websiteContent } = useWebsiteContent();
   const defaultChartBackgroundImage = websiteContent.tradingDefaults.chartBackgroundImage.trim();
   const activeChartBackgroundImage = tradingPreferences.chartBackgroundImage || defaultChartBackgroundImage || null;
@@ -2382,7 +2393,7 @@ const TradingChart = ({
   );
 
   const scrollChartToLiveEdge = useCallback(
-    (historyCountOverride?: number) => {
+    (historyCountOverride?: number, liveLogicalOverride?: number) => {
       const chart = chartRef.current;
       if (!chart) return;
 
@@ -2392,19 +2403,22 @@ const TradingChart = ({
           mainSeriesRef.current?.data()?.length ??
           historyRef.current.length,
       );
+      const liveLogical =
+        typeof liveLogicalOverride === "number" && Number.isFinite(liveLogicalOverride)
+          ? Math.max(0, liveLogicalOverride)
+          : dataPointCount;
       const containerWidth = mainRef.current?.clientWidth ?? 960;
       const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, dataPointCount);
       const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, dataPointCount);
       const rightOffset = getChartRightOffset(trendContextBars);
       const visibleSpan = initialVisibleBars + rightOffset;
-      const targetTo = dataPointCount + rightOffset;
+      const targetTo = liveLogical + rightOffset;
 
       chart.timeScale().applyOptions({
         rightOffset,
-        rightBarStaysOnScroll: false,
-        shiftVisibleRangeOnNewBar: false,
-        allowShiftVisibleRangeOnWhitespaceReplacement: false,
+        ...getLiveTimeScaleFollowOptions(autoScrollingRef.current),
       });
+      lastLiveFollowTargetRef.current = targetTo;
       applyResponsivePriceScale(visibleSpan, true);
       chart.timeScale().setVisibleLogicalRange({
         from: Math.max(0, targetTo - visibleSpan),
@@ -2412,6 +2426,58 @@ const TradingChart = ({
       });
     },
     [applyResponsivePriceScale, selectedTf],
+  );
+
+  const followLiveTimeframeMotion = useCallback(
+    (liveLogical: number) => {
+      const chart = chartRef.current;
+      if (!chart || !autoScrollingRef.current || isBackfillingHistoryRef.current) return;
+      if (!Number.isFinite(liveLogical)) return;
+
+      const timeScale = chart.timeScale();
+      const currentRange = timeScale.getVisibleLogicalRange();
+      if (!currentRange) {
+        scrollChartToLiveEdge(Math.ceil(liveLogical), liveLogical);
+        return;
+      }
+
+      const visibleSpan = currentRange.to - currentRange.from;
+      if (!Number.isFinite(visibleSpan) || visibleSpan <= 0) return;
+
+      const containerWidth = mainRef.current?.clientWidth ?? 960;
+      const dataPointCount = Math.max(
+        1,
+        Math.ceil(liveLogical),
+        mainSeriesRef.current?.data()?.length ?? historyRef.current.length,
+      );
+      const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, dataPointCount);
+      const rightOffset = getChartRightOffset(trendContextBars);
+      const targetTo = liveLogical + rightOffset;
+      const liveEdgeTolerance = Math.max(6, rightOffset * 0.75);
+
+      if (currentRange.to < targetTo - liveEdgeTolerance) {
+        return;
+      }
+
+      if (
+        lastLiveFollowTargetRef.current !== null &&
+        Math.abs(lastLiveFollowTargetRef.current - targetTo) < LIVE_FOLLOW_MIN_DELTA
+      ) {
+        return;
+      }
+
+      lastLiveFollowTargetRef.current = targetTo;
+      timeScale.applyOptions({
+        rightOffset,
+        ...getLiveTimeScaleFollowOptions(true),
+      });
+      applyResponsivePriceScale(visibleSpan);
+      timeScale.setVisibleLogicalRange({
+        from: Math.max(0, targetTo - visibleSpan),
+        to: targetTo,
+      });
+    },
+    [applyResponsivePriceScale, scrollChartToLiveEdge, selectedTf],
   );
 
   // ─── FETCH THEME GLOBALS ──────────────────────────────────────────
@@ -2591,9 +2657,7 @@ const TradingChart = ({
           minBarSpacing: getMinBarSpacingForScale("1m", chartStylesRef.current.bodyScale),
           fixLeftEdge: true,
           fixRightEdge: false,
-          rightBarStaysOnScroll: false,
-          shiftVisibleRangeOnNewBar: false,
-          allowShiftVisibleRangeOnWhitespaceReplacement: false,
+          ...getLiveTimeScaleFollowOptions(true),
           lockVisibleTimeRangeOnResize: true,
         },
       });
@@ -2940,9 +3004,7 @@ const TradingChart = ({
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
       fixLeftEdge: true,
       fixRightEdge: false,
-      rightBarStaysOnScroll: false,
-      shiftVisibleRangeOnNewBar: false,
-      allowShiftVisibleRangeOnWhitespaceReplacement: false,
+      ...getLiveTimeScaleFollowOptions(autoScrollingRef.current),
     });
     scrollChartToLiveEdge(history.length);
 
@@ -2971,6 +3033,7 @@ const TradingChart = ({
         tf.seconds > 0 ? (effectiveMarkerTime - candle.time) / tf.seconds : 0;
       const markerLogical =
         historyRef.current.length + getIntrabarLogicalOffset(intrabarFraction);
+      const liveProgressLogical = getLiveCandleProgressLogical(historyRef.current.length, intrabarFraction);
       setLivePriceBeacon({
         price: getLiveBeaconPrice(chartTypeRef.current, candle, historyRef.current),
         time: candle.time,
@@ -2986,6 +3049,7 @@ const TradingChart = ({
       const updatePayload = buildMainSeriesUpdatePayload(chartTypeRef.current, candle, historyRef.current);
 
       try { mainSeriesRef.current.update(updatePayload); } catch (_) {}
+      followLiveTimeframeMotion(liveProgressLogical);
       renderOverlayIndicators(getIndicatorHistory());
     };
 
@@ -3027,6 +3091,7 @@ const TradingChart = ({
     applyResponsivePriceScale,
     asset.basePrice,
     asset.symbol,
+    followLiveTimeframeMotion,
     getIndicatorHistory,
     renderOverlayIndicators,
     scrollChartToLiveEdge,
@@ -3161,9 +3226,7 @@ const TradingChart = ({
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
       fixLeftEdge: true,
       fixRightEdge: false,
-      rightBarStaysOnScroll: false,
-      shiftVisibleRangeOnNewBar: false,
-      allowShiftVisibleRangeOnWhitespaceReplacement: false,
+      ...getLiveTimeScaleFollowOptions(tradingPreferences.autoScrolling),
     });
     applyResponsivePriceScale(currentRange ? currentRange.to - currentRange.from : initialVisibleBars + rightOffset, true);
 
