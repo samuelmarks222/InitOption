@@ -5,6 +5,7 @@ import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { getLiveAssetTradeSummary } from "@/lib/liveTradeSummary";
 import { Asset } from "./data/assets";
+import { AssetSymbolMark } from "./AssetSymbolMark";
 
 interface AssetInfoProps {
   asset: Asset & { price: number; change: number };
@@ -259,7 +260,8 @@ const AssetInfo = ({
                     </button>
                   )}
 
-                  <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                    <AssetSymbolMark symbol={tab.symbol} category={tab.type} size={18} />
                     <div className="truncate text-[12px] font-black uppercase leading-[1.05] text-white">
                       {getChipTitle(tab)}
                     </div>
