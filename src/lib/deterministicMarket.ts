@@ -401,7 +401,7 @@ const getMaxWickLength = ({
 }) => {
   const bodyFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 0.42
+      ? 1.5
       : timeframeSeconds <= 1
         ? 0.34
         : timeframeSeconds <= 5
@@ -411,7 +411,7 @@ const getMaxWickLength = ({
             : 0.72;
   const wickFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 0.3
+      ? 1.0
       : timeframeSeconds <= 1
         ? 0.26
         : timeframeSeconds <= 5
