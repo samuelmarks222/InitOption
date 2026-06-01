@@ -94,6 +94,43 @@ describe("deterministic market feed", () => {
     });
   });
 
+  it("keeps 1m OTC candles textured instead of a smooth staircase", () => {
+    const nowSec = 1_711_111_111;
+    const basePrice = 1.08452;
+    const engine = new OTCPriceEngine("EUR/JPY", basePrice, "OTC");
+    const candles = engine.generateHistory(TIMEFRAMES["1m"], nowSec).slice(-160);
+    const bodies = candles.map((candle) => Math.abs(candle.close - candle.open));
+    const topWicks = candles.map((candle) => candle.high - Math.max(candle.open, candle.close));
+    const bottomWicks = candles.map((candle) => Math.min(candle.open, candle.close) - candle.low);
+    const average = (values: number[]) =>
+      values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length);
+    const directionalCandles = candles
+      .map((candle) => {
+        const body = candle.close - candle.open;
+        if (Math.abs(body) <= basePrice * 0.00003) return 0;
+        return body > 0 ? 1 : -1;
+      })
+      .filter((direction) => direction !== 0);
+    const directionChanges = directionalCandles.slice(1).filter(
+      (direction, index) => direction !== directionalCandles[index],
+    ).length;
+    const longestRun = directionalCandles.reduce(
+      (state, direction) => {
+        const current = direction === state.previous ? state.current + 1 : 1;
+        return {
+          previous: direction,
+          current,
+          longest: Math.max(state.longest, current),
+        };
+      },
+      { previous: 0, current: 0, longest: 0 },
+    ).longest;
+
+    expect(directionChanges / Math.max(1, directionalCandles.length - 1)).toBeGreaterThan(0.18);
+    expect(longestRun).toBeLessThan(26);
+    expect((average(topWicks) + average(bottomWicks)) / Math.max(average(bodies), 0.000001)).toBeGreaterThan(0.18);
+  });
+
   it("keeps 1s candles readable with visible wicks", () => {
     const nowSec = 1_711_111_111;
     const engine = new OTCPriceEngine("EUR/USD", 1.08452, "OTC");
