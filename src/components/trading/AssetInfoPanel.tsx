@@ -41,7 +41,7 @@ const AssetInfoPanel = ({ asset, onClose }: AssetInfoPanelProps) => {
       {/* Asset Header */}
       <div
         className="p-4 border-b border-white/10 relative bg-cover bg-center"
-        style={{ background: "linear-gradient(135deg, #1a2035 0%, #0d1526 100%)" }}
+        style={{ background: "linear-gradient(135deg, var(--trading-panel-bg) 0%, var(--trading-workspace-bg) 100%)" }}
       >
         {/* Flags */}
         <div className="flex items-center gap-3 mb-2">

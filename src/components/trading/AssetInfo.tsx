@@ -134,7 +134,7 @@ const AssetInfo = ({
     <div
       className="relative h-[60px] shrink-0 overflow-hidden"
       style={{
-        background: "linear-gradient(180deg, #1e2131 0%, var(--trading-tabs-bg) 100%)",
+        background: "linear-gradient(180deg, var(--trading-panel-bg) 0%, var(--trading-tabs-bg) 100%)",
         borderBottom: "1px solid var(--trading-border-color)",
       }}
     >
@@ -207,13 +207,13 @@ const AssetInfo = ({
                 style={{
                   background: hasActiveTrade
                     ? isWinningTrade
-                      ? "linear-gradient(180deg,#153b36 0%,#192535 100%)"
+                      ? "var(--trading-success-soft-color)"
                       : isLosingTrade
-                        ? "linear-gradient(180deg,#3a2631 0%,#202435 100%)"
-                        : "linear-gradient(180deg,#232b3d 0%,#1d2434 100%)"
+                        ? "var(--trading-danger-soft-color)"
+                        : "var(--trading-panel-soft-bg)"
                     : isActive
-                      ? "linear-gradient(180deg,#243149 0%,#1e2538 100%)"
-                      : "linear-gradient(180deg,#202638 0%,#1b2030 100%)",
+                      ? "var(--trading-accent-soft-color)"
+                      : "var(--trading-panel-soft-bg)",
                   borderColor: hasActiveTrade
                     ? isWinningTrade
                       ? "rgba(24,216,125,0.72)"

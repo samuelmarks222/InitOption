@@ -28,7 +28,7 @@ const PromoPanel = ({ onClose }: PromoPanelProps) => {
       {/* List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Card 1 */}
-        <div className="relative rounded-xl p-5 overflow-hidden border border-[#1e2330]" style={{ background: "linear-gradient(135deg, #1e2330 0%, #1c1f2d 100%)" }}>
+        <div className="relative rounded-xl p-5 overflow-hidden border border-[var(--trading-border-color)]" style={{ background: "linear-gradient(135deg, var(--trading-panel-bg) 0%, var(--trading-workspace-panel-bg) 100%)" }}>
            <div className="relative z-10">
              <div className="flex flex-col mb-1">
                <span className="text-xs text-gray-400">Promo code <span className="text-[#a87fff] font-medium ml-1 opacity-80">Exclusive</span></span>

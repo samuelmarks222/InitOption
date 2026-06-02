@@ -100,7 +100,7 @@ const PANEL_TITLES: Record<NonNullable<SidebarPanel>, string> = {
 const PanelHeader = ({ title, onClose }: { title: string; onClose: () => void }) => (
   <div
     className="flex items-center justify-between px-4 py-3 border-b shrink-0"
-    style={{ borderColor: "hsl(228 15% 14%)", background: "hsl(228 22% 11%)" }}
+    style={{ borderColor: "var(--trading-border-color)", background: "var(--trading-header-bg)" }}
   >
     <span className="text-[13px] font-semibold text-white">{title}</span>
     <button onClick={onClose} className="text-gray-500 hover:text-gray-200 transition-colors ml-2">
@@ -184,7 +184,7 @@ const LeaderboardPanel = () => {
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowInstrDrop(false)} />
               <div className="absolute left-0 right-0 top-full mt-1 rounded shadow-xl z-20 border border-white/10 overflow-hidden"
-                style={{ background: "hsl(228 22% 14%)" }}>
+                style={{ background: "var(--trading-panel-bg)" }}>
                 {INSTRUMENTS.map(ins => (
                   <button
                     key={ins}
@@ -248,8 +248,8 @@ const PromoPanel = () => {
       {tab === "available" ? (
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
           {/* Exclusive promo */}
-          <div className="relative rounded-xl p-4 overflow-hidden border border-[#1e2330]"
-            style={{ background: "linear-gradient(135deg, #1e2330 0%, #1c1f2d 100%)" }}>
+          <div className="relative rounded-xl p-4 overflow-hidden border border-[var(--trading-border-color)]"
+            style={{ background: "linear-gradient(135deg, var(--trading-panel-bg) 0%, var(--trading-workspace-panel-bg) 100%)" }}>
             <div className="relative z-10">
               <span className="text-[10px] text-gray-400">
                 Promo code <span className="text-[#8fb0cf] font-medium ml-1">Exclusive</span>
@@ -373,13 +373,13 @@ const EarningsCalendarPanel = () => {
       <div className="flex-1 overflow-y-auto">
         {/* Date section header */}
         <div className="px-4 py-2 flex items-center justify-between sticky top-0 z-10"
-          style={{ background: "hsl(228 20% 9%)" }}>
+          style={{ background: "var(--trading-panel-soft-bg)" }}>
           <span className="text-[11px] font-bold text-white">{activeDate}</span>
           <span className="text-[10px] text-[#0fa053]">TODAY</span>
         </div>
 
         {events.map((ev, i) => (
-          <div key={i} className="px-4 py-3 border-b" style={{ borderColor: "hsl(228 15% 13%)" }}>
+          <div key={i} className="px-4 py-3 border-b" style={{ borderColor: "var(--trading-border-color)" }}>
             {/* Company header */}
             <div className="flex items-center gap-2 mb-2">
               <div
@@ -463,7 +463,7 @@ const TradingSidebar = ({ onOpenHistory, onOpenAssetInfo, onOpenPromo }: Trading
       {/* ── Icon Rail ─────────────────────────────────────────────── */}
       <aside
         className="w-[72px] flex flex-col items-center shrink-0"
-        style={{ background: "#1a1e2b", borderRight: "1px solid hsl(228 15% 14%)" }}
+        style={{ background: "var(--trading-sidebar-bg)", borderRight: "1px solid var(--trading-border-color)" }}
       >
         <nav className="flex-1 w-full overflow-y-auto scrollbar-hide pt-1">
           <ul className="flex flex-col items-center gap-0 w-full">

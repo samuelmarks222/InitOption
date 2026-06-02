@@ -745,7 +745,7 @@ const SettlementCloneOverlay = ({
     <div className="pointer-events-none absolute inset-0 z-[66] overflow-visible">
       <div
         className="absolute flex items-center gap-3 rounded-[14px] px-5 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
-        style={{ left: leftOffset, bottom: bottomOffset, background: "#293145" }}
+        style={{ left: leftOffset, bottom: bottomOffset, background: "var(--trading-panel-soft-bg)" }}
       >
         {won ? (
           <CheckCheck className="h-5 w-5" style={{ color: "#33cd77" }} strokeWidth={2.5} />
@@ -3515,7 +3515,7 @@ const TradingChart = ({
 
       {showStaticPriceBadge && (
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center justify-center px-5 py-2.5 rounded-xl pointer-events-none shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
-        style={{ background: "#11161d", border: "1px solid #202532" }}>
+        style={{ background: "var(--trading-panel-bg)", border: "1px solid var(--trading-border-strong-color)" }}>
         <div className="flex items-center gap-3">
           <span className="text-white font-black text-[22px] tracking-tight leading-none">{currentPrice.toFixed(dec)}</span>
           <div className="flex flex-col items-center justify-center leading-none">
