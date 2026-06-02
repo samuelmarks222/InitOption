@@ -49,8 +49,14 @@ export const TRADING_TEMPLATE_OPTIONS: Array<{
   },
 ];
 
+export type TradingLanguage = "en" | "zh" | "hi" | "es" | "fr" | "ar" | "bn" | "pt" | "ru" | "ur" | "id" | "de" | "ja" | "sw" | "tr";
+
+export const LANGUAGE_CODES: readonly TradingLanguage[] = [
+  "en", "zh", "hi", "es", "fr", "ar", "bn", "pt", "ru", "ur", "id", "de", "ja", "sw", "tr",
+] as const;
+
 export interface TradingPreferences {
-  language: "en";
+  language: TradingLanguage;
   timezone: string;
   template: TradingTemplate;
   gridOpacity: number;
@@ -107,7 +113,10 @@ const normalizeColor = (value: unknown, fallback: string, legacyDefaults: string
 export const normalizeTradingPreferences = (
   value?: Partial<TradingPreferences> | null,
 ): TradingPreferences => ({
-  language: "en",
+  language:
+    typeof value?.language === "string" && LANGUAGE_CODES.includes(value.language as TradingLanguage)
+      ? (value.language as TradingLanguage)
+      : "en",
   timezone:
     typeof value?.timezone === "string" && TIMEZONE_PATTERN.test(value.timezone)
       ? value.timezone

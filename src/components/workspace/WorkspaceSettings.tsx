@@ -25,39 +25,39 @@ const LANGUAGE_OPTIONS = [
 ];
 
 const TIMEZONE_OPTIONS = [
-  "(UTC-12) Baker Island",
-  "(UTC-11) American Samoa",
-  "(UTC-10) Hawaii",
-  "(UTC-9) Alaska",
-  "(UTC-8) Los Angeles, Vancouver",
-  "(UTC-7) Denver, Phoenix",
-  "(UTC-6) Chicago, Mexico City",
-  "(UTC-5) New York, Miami, Toronto",
-  "(UTC-4) Santiago, Caracas",
-  "(UTC-3) Buenos Aires, São Paulo",
-  "(UTC-2) Fernando de Noronha",
-  "(UTC-1) Azores",
-  "(UTC+0) London, Lisbon, Accra",
-  "(UTC+1) Paris, Berlin, Rome, Madrid, Lagos",
-  "(UTC+2) Cairo, Johannesburg, Athens, Istanbul",
-  "(UTC+3) Nairobi, Moscow, Riyadh, Baghdad",
-  "(UTC+3:30) Tehran",
-  "(UTC+4) Dubai, Baku",
-  "(UTC+4:30) Kabul",
-  "(UTC+5) Karachi, Islamabad, Tashkent",
-  "(UTC+5:30) Mumbai, New Delhi, Colombo",
-  "(UTC+5:45) Kathmandu",
-  "(UTC+6) Dhaka, Almaty",
-  "(UTC+6:30) Yangon",
-  "(UTC+7) Bangkok, Jakarta, Hanoi",
-  "(UTC+8) Beijing, Singapore, Perth, Manila",
-  "(UTC+9) Tokyo, Seoul",
-  "(UTC+9:30) Adelaide, Darwin",
-  "(UTC+10) Sydney, Melbourne, Guam",
-  "(UTC+11) Solomon Islands, Nouméa",
-  "(UTC+12) Auckland, Fiji",
-  "(UTC+13) Samoa, Tonga",
-  "(UTC+14) Kiribati",
+  { value: "UTC-12:00", label: "(UTC-12) Baker Island" },
+  { value: "UTC-11:00", label: "(UTC-11) American Samoa" },
+  { value: "UTC-10:00", label: "(UTC-10) Hawaii" },
+  { value: "UTC-09:00", label: "(UTC-9) Alaska" },
+  { value: "UTC-08:00", label: "(UTC-8) Los Angeles, Vancouver" },
+  { value: "UTC-07:00", label: "(UTC-7) Denver, Phoenix" },
+  { value: "UTC-06:00", label: "(UTC-6) Chicago, Mexico City" },
+  { value: "UTC-05:00", label: "(UTC-5) New York, Miami, Toronto" },
+  { value: "UTC-04:00", label: "(UTC-4) Santiago, Caracas" },
+  { value: "UTC-03:00", label: "(UTC-3) Buenos Aires, São Paulo" },
+  { value: "UTC-02:00", label: "(UTC-2) Fernando de Noronha" },
+  { value: "UTC-01:00", label: "(UTC-1) Azores" },
+  { value: "UTC+00:00", label: "(UTC+0) London, Lisbon, Accra" },
+  { value: "UTC+01:00", label: "(UTC+1) Paris, Berlin, Rome, Madrid, Lagos" },
+  { value: "UTC+02:00", label: "(UTC+2) Cairo, Johannesburg, Athens, Istanbul" },
+  { value: "UTC+03:00", label: "(UTC+3) Nairobi, Moscow, Riyadh, Baghdad" },
+  { value: "UTC+03:30", label: "(UTC+3:30) Tehran" },
+  { value: "UTC+04:00", label: "(UTC+4) Dubai, Baku" },
+  { value: "UTC+04:30", label: "(UTC+4:30) Kabul" },
+  { value: "UTC+05:00", label: "(UTC+5) Karachi, Islamabad, Tashkent" },
+  { value: "UTC+05:30", label: "(UTC+5:30) Mumbai, New Delhi, Colombo" },
+  { value: "UTC+05:45", label: "(UTC+5:45) Kathmandu" },
+  { value: "UTC+06:00", label: "(UTC+6) Dhaka, Almaty" },
+  { value: "UTC+06:30", label: "(UTC+6:30) Yangon" },
+  { value: "UTC+07:00", label: "(UTC+7) Bangkok, Jakarta, Hanoi" },
+  { value: "UTC+08:00", label: "(UTC+8) Beijing, Singapore, Perth, Manila" },
+  { value: "UTC+09:00", label: "(UTC+9) Tokyo, Seoul" },
+  { value: "UTC+09:30", label: "(UTC+9:30) Adelaide, Darwin" },
+  { value: "UTC+10:00", label: "(UTC+10) Sydney, Melbourne, Guam" },
+  { value: "UTC+11:00", label: "(UTC+11) Solomon Islands, Nouméa" },
+  { value: "UTC+12:00", label: "(UTC+12) Auckland, Fiji" },
+  { value: "UTC+13:00", label: "(UTC+13) Samoa, Tonga" },
+  { value: "UTC+14:00", label: "(UTC+14) Kiribati" },
 ];
 
 const UP_COLOR_OPTIONS = ["#10a055", "#0faf59", "#21a566", "#35b977", "#6fa7e8", "#54c8c6"];
@@ -114,7 +114,7 @@ export const WorkspaceSettings = () => {
             }}
           >
             {LANGUAGE_OPTIONS.map((lang) => (
-              <option key={lang.code} value={lang.label}>
+              <option key={lang.code} value={lang.code}>
                 {lang.label}
               </option>
             ))}
@@ -134,8 +134,8 @@ export const WorkspaceSettings = () => {
             }}
           >
             {TIMEZONE_OPTIONS.map((tz) => (
-              <option key={tz} value={tz}>
-                {tz}
+              <option key={tz.value} value={tz.value}>
+                {tz.label}
               </option>
             ))}
           </select>
