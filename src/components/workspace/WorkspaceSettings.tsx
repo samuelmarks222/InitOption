@@ -6,13 +6,58 @@ import {
   useTradingPreferences,
 } from "@/lib/tradingPreferences";
 
+const LANGUAGE_OPTIONS = [
+  { code: "en", label: "English", flag: "GB" },
+  { code: "zh", label: "中文 (Mandarin)", flag: "CN" },
+  { code: "hi", label: "हिन्दी (Hindi)", flag: "IN" },
+  { code: "es", label: "Español (Spanish)", flag: "ES" },
+  { code: "fr", label: "Français (French)", flag: "FR" },
+  { code: "ar", label: "العربية (Arabic)", flag: "SA" },
+  { code: "bn", label: "বাংলা (Bengali)", flag: "BD" },
+  { code: "pt", label: "Português (Portuguese)", flag: "PT" },
+  { code: "ru", label: "Русский (Russian)", flag: "RU" },
+  { code: "ur", label: "اردو (Urdu)", flag: "PK" },
+  { code: "id", label: "Bahasa Indonesia", flag: "ID" },
+  { code: "de", label: "Deutsch (German)", flag: "DE" },
+  { code: "ja", label: "日本語 (Japanese)", flag: "JP" },
+  { code: "sw", label: "Kiswahili (Swahili)", flag: "KE" },
+  { code: "tr", label: "Türkçe (Turkish)", flag: "TR" },
+];
+
 const TIMEZONE_OPTIONS = [
-  "UTC-05:00",
-  "UTC+00:00",
-  "UTC+01:00",
-  "UTC+02:00",
-  "UTC+03:00",
-  "UTC+04:00",
+  "(UTC-12) Baker Island",
+  "(UTC-11) American Samoa",
+  "(UTC-10) Hawaii",
+  "(UTC-9) Alaska",
+  "(UTC-8) Los Angeles, Vancouver",
+  "(UTC-7) Denver, Phoenix",
+  "(UTC-6) Chicago, Mexico City",
+  "(UTC-5) New York, Miami, Toronto",
+  "(UTC-4) Santiago, Caracas",
+  "(UTC-3) Buenos Aires, São Paulo",
+  "(UTC-2) Fernando de Noronha",
+  "(UTC-1) Azores",
+  "(UTC+0) London, Lisbon, Accra",
+  "(UTC+1) Paris, Berlin, Rome, Madrid, Lagos",
+  "(UTC+2) Cairo, Johannesburg, Athens, Istanbul",
+  "(UTC+3) Nairobi, Moscow, Riyadh, Baghdad",
+  "(UTC+3:30) Tehran",
+  "(UTC+4) Dubai, Baku",
+  "(UTC+4:30) Kabul",
+  "(UTC+5) Karachi, Islamabad, Tashkent",
+  "(UTC+5:30) Mumbai, New Delhi, Colombo",
+  "(UTC+5:45) Kathmandu",
+  "(UTC+6) Dhaka, Almaty",
+  "(UTC+6:30) Yangon",
+  "(UTC+7) Bangkok, Jakarta, Hanoi",
+  "(UTC+8) Beijing, Singapore, Perth, Manila",
+  "(UTC+9) Tokyo, Seoul",
+  "(UTC+9:30) Adelaide, Darwin",
+  "(UTC+10) Sydney, Melbourne, Guam",
+  "(UTC+11) Solomon Islands, Nouméa",
+  "(UTC+12) Auckland, Fiji",
+  "(UTC+13) Samoa, Tonga",
+  "(UTC+14) Kiribati",
 ];
 
 const UP_COLOR_OPTIONS = ["#10a055", "#0faf59", "#21a566", "#35b977", "#6fa7e8", "#54c8c6"];
@@ -60,7 +105,7 @@ export const WorkspaceSettings = () => {
           <FieldLabel>Language</FieldLabel>
           <select
             value={preferences.language}
-            onChange={() => updatePreferences({ language: "en" })}
+            onChange={(event) => updatePreferences({ language: event.target.value })}
             className="h-10 w-full rounded-[3px] border px-3 text-[12px] font-semibold outline-none"
             style={{
               background: "var(--trading-panel-bg)",
@@ -68,7 +113,11 @@ export const WorkspaceSettings = () => {
               color: "var(--trading-text-color)",
             }}
           >
-            <option value="en">English</option>
+            {LANGUAGE_OPTIONS.map((lang) => (
+              <option key={lang.code} value={lang.label}>
+                {lang.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -84,9 +133,9 @@ export const WorkspaceSettings = () => {
               color: "var(--trading-text-color)",
             }}
           >
-            {TIMEZONE_OPTIONS.map((timezone) => (
-              <option key={timezone} value={timezone}>
-                ({timezone})
+            {TIMEZONE_OPTIONS.map((tz) => (
+              <option key={tz} value={tz}>
+                {tz}
               </option>
             ))}
           </select>
