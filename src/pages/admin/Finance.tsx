@@ -644,11 +644,18 @@ const Finance = () => {
                           <td className="px-6 py-4">
                             {isAutoMonitored ? (
                               <div className="flex items-center justify-end gap-2">
-                                <div className="text-right text-[11px] leading-5 text-[#0fa053]">
-                                  Auto-monitored deposit.
-                                  <br />
-                                  Wait for provider callback.
-                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (!window.confirm("Cancel this deposit request?")) return;
+                                    void handleDepositDecision(request.id, "rejected");
+                                  }}
+                                  disabled={isBusy}
+                                  className="flex items-center gap-1 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-bold uppercase text-red-300 transition-colors hover:bg-red-500/20 disabled:opacity-60"
+                                >
+                                  <XCircle size={14} />
+                                  Cancel
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => {
