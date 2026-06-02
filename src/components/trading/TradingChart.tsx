@@ -737,6 +737,7 @@ const SettlementCloneOverlay = ({
   announcement: ChartSettlementAnnouncement;
   compact: boolean;
 }) => {
+  const { t } = useTranslation();
   const won = announcement.status === "won";
   const accent = won ? "#33cd77" : "#ff7b72";
   const leftOffset = 100;
@@ -1462,6 +1463,7 @@ const TradeSentimentRail = ({
   lowerPercent: number;
   onSelectDirection: (direction: TradeDeskDirection) => void;
 }) => {
+  const { t } = useTranslation();
   const clampedHigher = Math.max(0, Math.min(100, Math.round(higherPercent)));
   const clampedLower = Math.max(0, Math.min(100, Math.round(lowerPercent)));
 

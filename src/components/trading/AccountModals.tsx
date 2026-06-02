@@ -1957,6 +1957,7 @@ const DemoBalanceModal = ({
   onClose: () => void;
   onSave: (value: number) => void;
 }) => {
+  const { t } = useTranslation();
   const [value, setValue] = useState(String(Math.round(currentValue)));
 
   useEffect(() => {
