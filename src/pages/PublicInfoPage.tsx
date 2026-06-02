@@ -23,13 +23,15 @@ const SectionBlock = ({
   <section className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(15,25,37,0.96),rgba(10,18,28,0.96))] p-6 shadow-[0_24px_60px_rgba(0,0,0,0.22)] sm:p-8">
     <h2 className="font-display text-2xl font-bold text-white">{interpolate(section.title, platformName)}</h2>
 
-    <div className="mt-4 space-y-4">
-      {section.paragraphs.map((paragraph) => (
-        <p key={paragraph} className="font-copy text-sm leading-8 text-slate-300 sm:text-base">
-          {interpolate(paragraph, platformName)}
-        </p>
-      ))}
-    </div>
+    {section.paragraphs?.length ? (
+      <div className="mt-4 space-y-4">
+        {section.paragraphs.map((paragraph) => (
+          <p key={paragraph} className="font-copy text-sm leading-8 text-slate-300 sm:text-base">
+            {interpolate(paragraph, platformName)}
+          </p>
+        ))}
+      </div>
+    ) : null}
 
     {section.bullets?.length ? (
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
