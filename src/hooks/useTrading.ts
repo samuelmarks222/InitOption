@@ -256,7 +256,8 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       (trade.direction === "higher" && exitPrice > trade.entry_price) ||
       (trade.direction === "lower" && exitPrice < trade.entry_price);
 
-    const profit = won ? trade.amount * trade.payout_rate : -trade.amount;
+    const profit = won ? trade.amount + trade.amount * trade.payout_rate : 0;
+    const netProfit = won ? trade.amount * trade.payout_rate : -trade.amount;
     const status: "won" | "lost" = won ? "won" : "lost";
     const settledAt = new Date().toISOString();
 
@@ -299,9 +300,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (participant) {
         const tournamentBalanceBefore = Number(participant.current_balance ?? 0);
-        const newTournamentBalance = won
-          ? tournamentBalanceBefore + trade.amount + trade.amount * trade.payout_rate
-          : tournamentBalanceBefore;
+        const newTournamentBalance = tournamentBalanceBefore + profit;
 
         await supabase
           .from("tournament_participants")
@@ -323,7 +322,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
             amount: trade.amount,
             payout_rate: trade.payout_rate,
             profit,
-            change_amount: won ? trade.amount + trade.amount * trade.payout_rate : 0,
+            change_amount: profit,
             balance_before: tournamentBalanceBefore,
             balance_after: newTournamentBalance,
             available_balance_before: tournamentBalanceBefore,
@@ -342,7 +341,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       }
     } else if (user && profile) {
       const fundedLiveAccount = hasFundedLiveAccount(profile);
-      const creditedAmount = won ? trade.amount + trade.amount * trade.payout_rate : 0;
+      const creditedAmount = profit;
       const { data: liveProfileSnapshot } = await supabase
         .from("profiles")
         .select("balance, reserved_withdrawal_balance, total_trades, total_wins, total_profit")
@@ -366,7 +365,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
           balance: nextStoredLiveBalance,
           total_trades: totalTrades + (fundedLiveAccount ? 1 : 0),
           total_wins: totalWins + (fundedLiveAccount && won ? 1 : 0),
-          total_profit: totalProfit + (fundedLiveAccount ? profit : 0),
+          total_profit: totalProfit + (fundedLiveAccount ? netProfit : 0),
           updated_at: settledAt,
         })
         .eq("id", user.id);

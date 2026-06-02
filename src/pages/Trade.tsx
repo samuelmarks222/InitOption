@@ -582,9 +582,7 @@ const Trade = () => {
       direction: latestSettlement.direction,
       amount: latestSettlement.amount,
       expirySeconds: latestSettlement.expiry_seconds,
-      profit: latestSettlement.status === "won"
-        ? latestSettlement.amount + latestSettlement.profit
-        : latestSettlement.profit,
+      profit: latestSettlement.profit,
       status: latestSettlement.status,
     });
     clearLatestSettlement();
@@ -618,10 +616,10 @@ const Trade = () => {
           const won =
             (trade.direction === "higher" && exitPrice > trade.entry_price) ||
             (trade.direction === "lower" && exitPrice < trade.entry_price);
-          const profit = won ? trade.amount * trade.payout_rate : -trade.amount;
+          const profit = won ? trade.amount + trade.amount * trade.payout_rate : 0;
 
           if (won) {
-            creditedAmount += trade.amount + trade.amount * trade.payout_rate;
+            creditedAmount += profit;
           }
 
           settledTrades.push({
@@ -659,9 +657,7 @@ const Trade = () => {
           direction: latestSettledTrade.direction,
           amount: latestSettledTrade.amount,
           expirySeconds: latestSettledTrade.expiry_seconds,
-          profit: latestSettledTrade.status === "won"
-            ? latestSettledTrade.amount + (latestSettledTrade.profit ?? 0)
-            : (latestSettledTrade.profit ?? 0),
+          profit: latestSettledTrade.profit ?? 0,
           status: latestSettledTrade.status === "won" ? "won" : "lost",
         });
       }
