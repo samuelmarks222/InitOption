@@ -91,6 +91,7 @@ type TradeTabAsset = {
   isTradersChoice: boolean;
   price: number;
   change: number;
+  available: boolean;
 };
 
 // ─── Extracted to top-level to prevent remount on every Trade re-render ───
@@ -116,7 +117,7 @@ const TRADE_ASSET_BOOT_TIMEOUT_MS = 4500;
 const buildTradeTabAsset = (assetRow: TradeAssetConfigRow): TradeTabAsset => {
   const category = normalizeAssetCategory(assetRow.category, assetRow.symbol);
   const basePrice = getAssetBasePrice(assetRow.symbol, category);
-  const { profit1m } = getDynamicAssetPayoutProfile({
+  const { profit1m, available } = getDynamicAssetPayoutProfile({
     symbol: assetRow.symbol,
     category,
     basePayout: Number(assetRow.payout_pct),
@@ -133,6 +134,7 @@ const buildTradeTabAsset = (assetRow: TradeAssetConfigRow): TradeTabAsset => {
     stockLogo: getAssetStockLogo(assetRow.symbol, assetRow.stockLogo ?? assetRow.stock_logo),
     commodityIcon: getAssetCommodityIcon(assetRow.symbol, assetRow.commodityIcon ?? assetRow.commodity_icon),
     maxProfit: profit1m,
+    available,
     change5min: "0.00%",
     category: category === "STOCKS" ? "Stocks" : "Options",
     isTradersChoice: false,
@@ -364,6 +366,7 @@ const Trade = () => {
     price: dynamicSelectedAsset.price,
     change: dynamicSelectedAsset.change24h,
     maxProfit: dynamicSelectedAsset.maxProfit,
+    available: dynamicSelectedAsset.available,
   } : selectedAssetSaved;
 
   useEffect(() => {
@@ -1078,6 +1081,7 @@ const Trade = () => {
           price: livePrice ?? dynamicTab.price,
           change: dynamicTab.change24h,
           maxProfit: dynamicTab.maxProfit,
+          available: dynamicTab.available,
         };
       }),
     [chartLayoutMode, getAsset, liveChartPrices, orderedChartTabs],

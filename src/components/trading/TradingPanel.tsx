@@ -26,7 +26,7 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TradingPanelProps {
-  asset: { symbol: string; name?: string; price: number; maxProfit?: number };
+  asset: { symbol: string; name?: string; price: number; maxProfit?: number; available?: boolean };
   balance?: number;
   demoBalance: number;
   accountType: AccountType;

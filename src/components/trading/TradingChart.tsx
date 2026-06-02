@@ -82,7 +82,7 @@ import {
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 
 interface TradingChartProps {
-  asset: { symbol: string; name?: string; price: number; basePrice?: number; type?: string; change?: number; maxProfit?: number; };
+  asset: { symbol: string; name?: string; price: number; basePrice?: number; type?: string; change?: number; maxProfit?: number; available?: boolean };
   onPriceUpdate?: (
     price: number,
     markerTime?: number,
@@ -3509,6 +3509,14 @@ const TradingChart = ({
 
   return (
     <div ref={rootRef} className="flex-1 flex flex-col min-h-0 relative" style={{ background: effectiveChartTheme.bg }}>
+      {asset.available === false && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center" style={{ background: "var(--trading-workspace-bg, var(--trading-panel-bg))" }}>
+          <div className="text-center">
+            <div className="text-[16px] font-bold text-white">Not available</div>
+            <div className="text-[12px] text-gray-400 mt-1">This asset is cooling down. Please wait for the next cycle.</div>
+          </div>
+        </div>
+      )}
       {settlementAnnouncement && settlementAnnouncement.assetSymbol === asset.symbol ? (
         <SettlementCloneOverlay announcement={settlementAnnouncement} compact={compactPane || miniOverlay} />
       ) : null}

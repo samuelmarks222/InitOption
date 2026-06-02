@@ -340,7 +340,7 @@ export const getDynamicAssetPayoutProfile = ({
   const normalizedCategory = normalizeAssetCategory(category, normalizedSymbol);
   const seed = hashStringToUnitInterval(`payout:${normalizedCategory}:${normalizedSymbol}`);
 
-  const cycleDuration = 60 + seed * 90; // 60-150 seconds per cycle
+  const cycleDuration = 300 + seed * 300; // 300-600 seconds per cycle (5-10 min)
   const cyclePhase = (timestampSec % cycleDuration) / cycleDuration; // 0 to 1
   const declineFraction = 0.75; // 75% declining, 25% N/A dead zone
   const highPayout = clampAssetPayout(basePayout + 5 + (seed - 0.5) * 10, basePayout);
