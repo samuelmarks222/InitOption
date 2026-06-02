@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useMemo } from "react";
 import { ChevronDown, Search, Star, Flame, Zap, DollarSign, Building2, Bitcoin, Droplet, PieChart, Briefcase, Bell, Info } from "lucide-react";
 import { allAssets, Asset } from "./data/assets";
@@ -13,14 +14,14 @@ interface AssetSelectorProps {
   onSelectAsset: (asset: Asset & { price: number; change: number }) => void;
 }
 
-const CATEGORIES = [
-  { id: "Trending", label: "Trending", icon: Flame },
+const useCategories = (t: (key: string) => string) => [
+  { id: "Trending", label: t("assetSelector.trending"), icon: Flame },
   { 
-    id: "Options", label: "Options", icon: Zap,
+    id: "Options", label: t("assetSelector.options"), icon: Zap,
     subItems: [
       { id: "Blitz", label: "Blitz", count: 132 },
       { id: "Trade", label: "Trade", count: 149 },
-      { id: "Digital", label: "Digital", count: 139 },
+      { id: "Digital", label: t("assetSelector.digital"), count: 139 },
     ]
   },
   { id: "Forex", label: "Forex", icon: DollarSign, count: 36 },
@@ -33,6 +34,7 @@ const CATEGORIES = [
 ];
 
 export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorProps) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("Options");
@@ -40,6 +42,8 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
 
   const currentFullAsset = allAssets.find(a => a.symbol === selectedAsset.symbol);
   const flags = currentFullAsset?.flags || [selectedAsset.symbol.charAt(0)];
+
+  const CATEGORIES = useMemo(() => useCategories(t), [t]);
 
   const filteredAssets = useMemo(() => {
     return allAssets.filter((asset) => {
@@ -76,7 +80,7 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
              <span className="font-bold text-foreground leading-tight tracking-wide">{selectedAsset.symbol}</span>
              <ChevronDown className={`w-3 h-3 text-white transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </div>
-          <span className="text-xs text-muted-foreground leading-none">Digital</span>
+           <span className="text-xs text-muted-foreground leading-none">{t("assetSelector.digital")}</span>
         </div>
       </button>
 
@@ -135,7 +139,7 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                    <input 
                      type="text" 
-                     placeholder="Search by name or ticker" 
+                      placeholder={t("assetSelector.searchPlaceholder")}
                      value={searchQuery}
                      onChange={(e) => setSearchQuery(e.target.value)}
                      className="w-full bg-transparent border-none text-[13px] text-white placeholder:text-gray-500 py-2 pl-10 pr-4 focus:outline-none transition-colors"
@@ -148,10 +152,10 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
                 <table className="w-full text-left text-[13px] text-gray-400">
                   <thead className="sticky top-0 bg-[#141820] z-10 border-b border-white/5">
                     <tr>
-                      <th className="py-3 px-6 font-medium">Sort by name</th>
-                      <th className="py-3 px-4 font-medium text-right hover:text-white cursor-pointer transition-colors">Price</th>
-                      <th className="py-3 px-4 font-medium text-right hover:text-white cursor-pointer transition-colors">Hourly</th>
-                      <th className="py-3 px-6 font-medium text-right hover:text-white cursor-pointer transition-colors">Profit</th>
+                      <th className="py-3 px-6 font-medium">{t("assetSelector.sortByName")}</th>
+                      <th className="py-3 px-4 font-medium text-right hover:text-white cursor-pointer transition-colors">{t("assetSelector.price")}</th>
+                      <th className="py-3 px-4 font-medium text-right hover:text-white cursor-pointer transition-colors">{t("assetSelector.hourly")}</th>
+                      <th className="py-3 px-6 font-medium text-right hover:text-white cursor-pointer transition-colors">{t("assetSelector.profit")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -195,7 +199,7 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
                     {filteredAssets.length === 0 && (
                       <tr>
                         <td colSpan={4} className="py-8 text-center text-gray-500">
-                          No assets found
+                          {t("assetSelector.noAssetsFound")}
                         </td>
                       </tr>
                     )}

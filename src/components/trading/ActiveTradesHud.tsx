@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ArrowDownRight, ArrowUpRight, Clock3 } from "lucide-react";
 import type { ActiveTrade } from "@/hooks/useTrading";
 import { TRADING_DOWN_COLOR, TRADING_UP_COLOR } from "./tradingPalette";
@@ -24,25 +25,6 @@ const formatDuration = (seconds: number) => {
   return `${seconds}s`;
 };
 
-const getFocusedTradeStatus = (trade: ActiveTrade, currentPrice?: number) => {
-  if (typeof currentPrice !== "number" || !Number.isFinite(currentPrice) || currentPrice <= 0) {
-    return null;
-  }
-
-  if (Math.abs(currentPrice - trade.entry_price) < 0.0000001) {
-    return { label: "At Entry", color: "#94a3b8" };
-  }
-
-  const winningNow =
-    (trade.direction === "higher" && currentPrice > trade.entry_price) ||
-    (trade.direction === "lower" && currentPrice < trade.entry_price);
-
-  return {
-    label: winningNow ? "Winning Now" : "Losing Now",
-    color: winningNow ? TRADING_UP_COLOR : TRADING_DOWN_COLOR,
-  };
-};
-
 export const ActiveTradesHud = ({
   assetSymbol,
   trades,
@@ -52,6 +34,27 @@ export const ActiveTradesHud = ({
   trades: ActiveTrade[];
   currentPrice?: number;
 }) => {
+  const { t } = useTranslation();
+
+  const getFocusedTradeStatus = (trade: ActiveTrade, currentPrice?: number) => {
+    if (typeof currentPrice !== "number" || !Number.isFinite(currentPrice) || currentPrice <= 0) {
+      return null;
+    }
+
+    if (Math.abs(currentPrice - trade.entry_price) < 0.0000001) {
+      return { label: t("activeTrades.atEntry"), color: "#94a3b8" };
+    }
+
+    const winningNow =
+      (trade.direction === "higher" && currentPrice > trade.entry_price) ||
+      (trade.direction === "lower" && currentPrice < trade.entry_price);
+
+    return {
+      label: winningNow ? t("activeTrades.winningNow") : t("activeTrades.losingNow"),
+      color: winningNow ? TRADING_UP_COLOR : TRADING_DOWN_COLOR,
+    };
+  };
+
   if (trades.length === 0) {
     return null;
   }
@@ -114,7 +117,7 @@ export const ActiveTradesHud = ({
               <div className="mt-2 flex items-end justify-between gap-3">
                 <div className="min-w-0">
                   <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#8290a8]">
-                    {isHigher ? "Higher" : "Lower"}
+                    {isHigher ? t("activeTrades.higher") : t("activeTrades.lower")}
                   </div>
                   <div className="mt-1 text-[16px] font-black leading-none text-white">
                     ${trade.amount.toFixed(2)}
@@ -123,7 +126,7 @@ export const ActiveTradesHud = ({
 
                 <div className="text-right">
                   <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#8290a8]">
-                    Potential
+                    {t("activeTrades.potential")}
                   </div>
                   <div
                     className="mt-1 rounded-md px-2 py-1 text-[13px] font-black leading-none text-white"
@@ -154,7 +157,7 @@ export const ActiveTradesHud = ({
                     }}
                   />
                   <span style={{ color: focusedStatus?.color ?? "#8190a9" }}>
-                    {focusedStatus?.label ?? "Live Now"}
+                    {focusedStatus?.label ?? t("activeTrades.liveNow")}
                   </span>
                 </span>
                 <span className="inline-flex items-center gap-1">

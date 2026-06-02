@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import {
   ArrowDown,
@@ -579,6 +580,7 @@ export const TradeResultDetailModal = ({
   trade: TradeResultPresentationData | null;
   onClose: () => void;
 }) => {
+  const { t } = useTranslation();
   const [auditEntries, setAuditEntries] = useState<TradeBalanceAuditEntry[]>([]);
 
   useEffect(() => {
@@ -633,7 +635,7 @@ export const TradeResultDetailModal = ({
     <div className="fixed inset-0 z-[420] flex items-center justify-center px-3 py-4">
       <button
         type="button"
-        aria-label="Close trade result"
+        aria-label={t("tradeResult.closeTradeResultAria")}
         onClick={onClose}
         className="absolute inset-0 bg-[rgba(11,16,28,0.68)] backdrop-blur-[9px]"
       />
@@ -641,7 +643,7 @@ export const TradeResultDetailModal = ({
       <div className="relative z-[421] max-h-[calc(100vh-32px)] w-full max-w-[620px] overflow-x-hidden overflow-y-auto rounded-[16px] border border-white/7 bg-[#30384c] shadow-[0_34px_80px_rgba(0,0,0,0.42)]">
         <div className="flex items-start justify-between gap-3 border-b border-white/8 px-4 py-3">
           <div className="min-w-0">
-            <div className="text-[16px] font-bold text-white">Trade ID</div>
+            <div className="text-[16px] font-bold text-white">{t("tradeResult.tradeIdHeader")}</div>
             <div className="mt-1.5 break-all text-[12px] font-semibold text-[#eef4ff]">{trade.id}</div>
           </div>
 
@@ -657,7 +659,7 @@ export const TradeResultDetailModal = ({
         <div className="px-4 py-3">
           <div className="grid gap-3 sm:grid-cols-4">
             <div>
-              <div className="text-[12px] font-semibold text-[#a8b2c7]">Asset:</div>
+              <div className="text-[12px] font-semibold text-[#a8b2c7]">{t("tradeResult.assetLabel")}</div>
               <div className="mt-1.5 flex items-center gap-2.5">
                 <AssetSymbolMark symbol={trade.assetSymbol} size={24} />
                 <span className="text-[15px] font-bold text-white">{trade.assetSymbol}</span>
@@ -665,7 +667,7 @@ export const TradeResultDetailModal = ({
             </div>
 
             <div>
-              <div className="text-[12px] font-semibold text-[#a8b2c7]">Type:</div>
+              <div className="text-[12px] font-semibold text-[#a8b2c7]">{t("tradeResult.typeLabel")}</div>
               <div className="mt-1.5 inline-flex items-center gap-2 text-[14px] font-bold" style={{ color: directionColor }}>
                 <span
                   className="inline-flex h-[24px] w-[24px] items-center justify-center rounded-full"
@@ -678,7 +680,7 @@ export const TradeResultDetailModal = ({
             </div>
 
             <div>
-              <div className="text-[12px] font-semibold text-[#a8b2c7]">Duration:</div>
+              <div className="text-[12px] font-semibold text-[#a8b2c7]">{t("tradeResult.durationLabel")}</div>
               <div className="mt-1.5 inline-flex items-center gap-2 text-[14px] font-bold text-white">
                 <Clock3 className="h-4.5 w-4.5 text-[#cfd8eb]" />
                 <span>{formatTradeClock(trade.expirySeconds)}</span>
@@ -686,7 +688,7 @@ export const TradeResultDetailModal = ({
             </div>
 
             <div>
-              <div className="text-[12px] font-semibold text-[#a8b2c7]">Result:</div>
+              <div className="text-[12px] font-semibold text-[#a8b2c7]">{t("tradeResult.resultLabel")}</div>
               <div className="mt-1.5 text-[14px] font-bold" style={{ color: resultColor }}>
                 {formatMoneySuffix(trade.profit, true)}
               </div>
@@ -699,28 +701,28 @@ export const TradeResultDetailModal = ({
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div>
-              <div className="text-[12px] font-semibold text-[#a8b2c7]">Opening quote:</div>
+              <div className="text-[12px] font-semibold text-[#a8b2c7]">{t("tradeResult.openingQuoteLabel")}</div>
               <div className="mt-1.5 text-[14px] font-bold text-white">{formatQuote(trade.entryPrice, quotePrecision)}</div>
               <div className="mt-1 text-[12px] text-[#ced8eb]">{formatTradeTimestamp(trade.openedAt)}</div>
             </div>
 
             <div>
-              <div className="text-[12px] font-semibold text-[#a8b2c7]">Closing quote:</div>
+              <div className="text-[12px] font-semibold text-[#a8b2c7]">{t("tradeResult.closingQuoteLabel")}</div>
               <div className="mt-1.5 text-[14px] font-bold text-white">{formatQuote(trade.exitPrice, quotePrecision)}</div>
               <div className="mt-1 text-[12px] text-[#ced8eb]">{formatTradeTimestamp(trade.closedAt)}</div>
             </div>
 
             <div>
-              <div className="text-[12px] font-semibold text-[#a8b2c7]">Difference:</div>
+              <div className="text-[12px] font-semibold text-[#a8b2c7]">{t("tradeResult.differenceLabel")}</div>
               <div className="mt-1.5 text-[14px] font-bold text-white">
-                {differencePoints > 0 ? "+" : ""}{differencePoints} points
+                {differencePoints > 0 ? "+" : ""}{differencePoints} {t("tradeResult.pointsSuffix")}
               </div>
             </div>
           </div>
 
           {auditEntries.length > 0 ? (
             <div className="mt-4 rounded-[14px] border border-white/7 bg-[#2a3243] px-3 py-3">
-              <div className="text-[12px] font-black uppercase tracking-[0.14em] text-[#a8b2c7]">Balance trail</div>
+              <div className="text-[12px] font-black uppercase tracking-[0.14em] text-[#a8b2c7]">{t("tradeResult.balanceTrailHeader")}</div>
               <div className="mt-2 space-y-2">
                 {auditEntries.map((entry) => (
                   <div
@@ -729,27 +731,27 @@ export const TradeResultDetailModal = ({
                   >
                     <div>
                       <div className="font-black uppercase tracking-[0.08em] text-white">
-                        {entry.event_type === "trade_open" ? "Trade open" : "Trade close"}
+                        {entry.event_type === "trade_open" ? t("tradeResult.tradeOpenLabel") : t("tradeResult.tradeCloseLabel")}
                       </div>
                       <div className="mt-1 text-[11px] text-[#97a5bf]">{formatInlineTimestamp(entry.created_at)}</div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-[#97a5bf]">Balance</div>
+                      <div className="text-[11px] text-[#97a5bf]">{t("tradeResult.balanceColumn")}</div>
                       <div className="font-semibold text-white">
                         {`${entry.balance_before.toFixed(2)} $ -> ${entry.balance_after.toFixed(2)} $`}
                       </div>
                       <div className="mt-1 text-[11px] text-[#97a5bf]">
-                        {`Available ${entry.available_balance_before.toFixed(2)} $ -> ${entry.available_balance_after.toFixed(2)} $`}
+                        {`${t("tradeResult.availablePrefix")} ${entry.available_balance_before.toFixed(2)} $ -> ${entry.available_balance_after.toFixed(2)} $`}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-[#97a5bf]">Change</div>
+                      <div className="text-[11px] text-[#97a5bf]">{t("tradeResult.changeColumn")}</div>
                       <div className="font-semibold" style={{ color: entry.change_amount >= 0 ? TRADING_UP_COLOR : TRADING_DOWN_COLOR }}>
                         {formatAuditMoney(entry.change_amount)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[11px] text-[#97a5bf]">Reserved</div>
+                      <div className="text-[11px] text-[#97a5bf]">{t("tradeResult.reservedColumn")}</div>
                       <div className="font-semibold text-white">{entry.reserved_withdrawal_balance.toFixed(2)} $</div>
                     </div>
                   </div>

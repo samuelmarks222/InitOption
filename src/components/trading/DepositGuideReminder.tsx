@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { CheckCircle2, Wallet, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
@@ -26,6 +27,7 @@ const getVisibleDepositTarget = () => {
 };
 
 export const DepositGuideReminder = ({ open, reason, onClose, onDeposit }: DepositGuideReminderProps) => {
+  const { t } = useTranslation();
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [cardSize, setCardSize] = useState(CARD_DEFAULT_SIZE);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -85,14 +87,14 @@ export const DepositGuideReminder = ({ open, reason, onClose, onDeposit }: Depos
   const content = useMemo(() => {
     if (reason === "insufficient_balance") {
       return {
-        title: "Top up before this trade",
-        message: "Your live balance is too low for this order. Use the highlighted Deposit button to add funds and continue.",
+        title: t("depositGuide.insufficientBalanceTitle"),
+        message: t("depositGuide.insufficientBalanceMessage"),
       };
     }
 
     return {
-      title: "Live trading needs a deposit",
-      message: "Before placing trades on the live account, make your first deposit. The Deposit button is highlighted for you above.",
+      title: t("depositGuide.depositRequiredTitle"),
+      message: t("depositGuide.depositRequiredMessage"),
     };
   }, [reason]);
 
@@ -167,7 +169,7 @@ export const DepositGuideReminder = ({ open, reason, onClose, onDeposit }: Depos
               <Wallet className="h-5 w-5" />
             </div>
             <div>
-              <div className="text-[12px] font-black uppercase tracking-[0.2em] text-[#7fd6a5]">Deposit Guide</div>
+              <div className="text-[12px] font-black uppercase tracking-[0.2em] text-[#7fd6a5]">{t("depositGuide.title")}</div>
               <div className="mt-1 text-[20px] font-bold leading-tight text-white">{content.title}</div>
             </div>
           </div>
@@ -176,7 +178,7 @@ export const DepositGuideReminder = ({ open, reason, onClose, onDeposit }: Depos
             type="button"
             onClick={onClose}
             className="rounded-full p-1 text-[#91a0b8] transition-colors hover:bg-white/5 hover:text-white"
-            aria-label="Dismiss deposit guide"
+            aria-label={t("depositGuide.dismissAria")}
           >
             <X className="h-5 w-5" />
           </button>
@@ -186,7 +188,7 @@ export const DepositGuideReminder = ({ open, reason, onClose, onDeposit }: Depos
 
         <div className="mt-5 flex items-center gap-2 rounded-[14px] border border-[#2b3649] bg-[#1a2230] px-4 py-3 text-[13px] text-[#9eb0ca]">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-[#74f0a8]" />
-          <span>The Deposit button is now highlighted so the next step is clear.</span>
+          <span>{t("depositGuide.hintText")}</span>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -200,14 +202,14 @@ export const DepositGuideReminder = ({ open, reason, onClose, onDeposit }: Depos
               boxShadow: "var(--trading-success-shadow)",
             }}
           >
-            Open deposit
+            {t("depositGuide.openDeposit")}
           </button>
           <button
             type="button"
             onClick={onClose}
             className="rounded-[12px] border border-white/10 px-5 py-3 text-[14px] font-semibold text-[#d4dced] transition-colors hover:bg-white/5"
           >
-            Not now
+            {t("depositGuide.notNow")}
           </button>
         </div>
       </div>

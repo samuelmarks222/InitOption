@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { X, Bell, Star, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface AssetInfoPanelProps {
@@ -6,7 +7,7 @@ interface AssetInfoPanelProps {
   onClose: () => void;
 }
 
-const TABS = ["Information", "News", "Economic Events", "Trading Conditions"];
+
 
 const ECONOMIC_EVENTS = [
   { time: "18:45", flag: "🇺🇸", name: "S&P Global Manufacturing PMI Final", current: "49.7", forecast: "48.8", previous: "48.5", impact: 3, isPositive: true },
@@ -25,16 +26,19 @@ const NEWS_ITEMS = [
   { time: "8 hours ago", headline: "Fed officials signal cautious approach to rate cuts", source: "FT" },
 ];
 
-const WEEKS = [
-  { label: "Previous week", events: 88, isActive: false },
-  { label: "This week", date: "2 Dec – 8 Dec", isActive: true },
-  { label: "Next week", events: 68, isActive: false },
-];
-
 const AssetInfoPanel = ({ asset, onClose }: AssetInfoPanelProps) => {
-  const [activeTab, setActiveTab] = useState("Economic Events");
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState(2);
   const changePercent = -0.27;
   const isPositiveChange = changePercent >= 0;
+
+  const TABS = [t("assetInfoPanel.tabInformation"), t("assetInfoPanel.tabNews"), t("assetInfoPanel.tabEconomicEvents"), t("assetInfoPanel.tabTradingConditions")];
+
+  const WEEKS = [
+    { label: t("assetInfoPanel.previousWeek"), events: 88, isActive: false },
+    { label: t("assetInfoPanel.thisWeek"), date: "2 Dec – 8 Dec", isActive: true },
+    { label: t("assetInfoPanel.nextWeek"), events: 68, isActive: false },
+  ];
 
   return (
     <div className="w-[320px] bg-[#1a1b20] border-r border-white/5 flex flex-col shrink-0 h-full overflow-hidden">
@@ -56,7 +60,7 @@ const AssetInfoPanel = ({ asset, onClose }: AssetInfoPanelProps) => {
             <div className="flex items-center gap-2">
               <span className="text-white font-bold text-lg">{asset.symbol}</span>
             </div>
-            <span className="text-xs text-gray-400">Closes tomorrow at 00:00</span>
+            <span className="text-xs text-gray-400">{t("assetInfoPanel.closesTomorrow")}</span>
           </div>
           <button onClick={onClose} className="ml-auto text-gray-500 hover:text-white transition-colors">
             <X className="w-4 h-4" />
@@ -64,18 +68,18 @@ const AssetInfoPanel = ({ asset, onClose }: AssetInfoPanelProps) => {
         </div>
         <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-green-500/20 border border-[#0fa053]/30">
           <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-green-400 text-xs font-medium">Open now</span>
+          <span className="text-green-400 text-xs font-medium">{t("assetInfoPanel.openNow")}</span>
         </div>
 
         {/* Price Bar */}
         <div className="mt-3 flex items-center gap-6">
           <div>
-            <div className="text-xs text-gray-400">Price</div>
+            <div className="text-xs text-gray-400">{t("assetInfoPanel.priceLabel")}</div>
             <div className="text-2xl font-bold text-white">{asset.price.toFixed(4)}</div>
           </div>
           <div>
             <div className="text-xs text-gray-400 flex items-center gap-1">
-              Session Change <span className="text-[10px] text-gray-500 ml-1">ⓘ</span>
+              {t("assetInfoPanel.sessionChange")} <span className="text-[10px] text-gray-500 ml-1">ⓘ</span>
             </div>
             <div className={`text-2xl font-bold ${isPositiveChange ? "text-trading-green" : "text-red-400"}`}>
               {changePercent > 0 ? "+" : ""}{changePercent}%
@@ -89,7 +93,7 @@ const AssetInfoPanel = ({ asset, onClose }: AssetInfoPanelProps) => {
               <Star className="w-4 h-4 text-trading-orange fill-trading-orange" />
             </button>
             <button className="px-4 py-2 bg-trading-orange hover:bg-trading-orange/80 text-white text-sm font-bold rounded transition-colors">
-              TRADE NOW
+              {t("assetInfoPanel.tradeNow")}
             </button>
           </div>
         </div>
@@ -97,12 +101,12 @@ const AssetInfoPanel = ({ asset, onClose }: AssetInfoPanelProps) => {
 
       {/* Tabs */}
       <div className="flex border-b border-white/5 bg-[#1a1b20]">
-        {TABS.map(tab => (
+        {TABS.map((tab, idx) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+            key={idx}
+            onClick={() => setActiveTab(idx)}
             className={`flex-1 py-3 text-xs font-medium transition-colors border-b-2 ${
-              activeTab === tab
+              activeTab === idx
                 ? "text-foreground border-trading-orange"
                 : "text-muted-foreground border-transparent hover:text-foreground"
             }`}
@@ -114,7 +118,7 @@ const AssetInfoPanel = ({ asset, onClose }: AssetInfoPanelProps) => {
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto scrollbar-hide">
-        {activeTab === "Economic Events" && (
+        {activeTab === 2 && (
           <div>
             {/* Week Selector */}
             <div className="flex items-stretch border-b border-white/5">
@@ -131,7 +135,7 @@ const AssetInfoPanel = ({ asset, onClose }: AssetInfoPanelProps) => {
                   }`}
                 >
                   <div className="font-medium">{w.label}</div>
-                  {w.events && <div className="text-xs text-muted-foreground">{w.events} events</div>}
+                  {w.events && <div className="text-xs text-muted-foreground">{w.events}{t("assetInfoPanel.eventsCount")}</div>}
                   {w.date && <div className="text-xs text-muted-foreground">{w.date}</div>}
                 </button>
               ))}
@@ -145,9 +149,9 @@ const AssetInfoPanel = ({ asset, onClose }: AssetInfoPanelProps) => {
               <span className="font-semibold text-foreground text-base">2 December</span>
               <div className="flex mt-1 text-xs text-muted-foreground">
                 <span className="flex-1"></span>
-                <span className="w-20 text-right">Currently</span>
-                <span className="w-20 text-right">Forecast</span>
-                <span className="w-20 text-right">Previous</span>
+                <span className="w-20 text-right">{t("assetInfoPanel.currentlyHeader")}</span>
+                <span className="w-20 text-right">{t("assetInfoPanel.forecastHeader")}</span>
+                <span className="w-20 text-right">{t("assetInfoPanel.previousHeader")}</span>
               </div>
             </div>
 
@@ -178,7 +182,7 @@ const AssetInfoPanel = ({ asset, onClose }: AssetInfoPanelProps) => {
           </div>
         )}
 
-        {activeTab === "News" && (
+        {activeTab === 1 && (
           <div className="p-4 space-y-4">
             {NEWS_ITEMS.map((item, i) => (
               <div key={i} className="border-b border-white/5 pb-4 last:border-0">
@@ -189,38 +193,38 @@ const AssetInfoPanel = ({ asset, onClose }: AssetInfoPanelProps) => {
           </div>
         )}
 
-        {activeTab === "Information" && (
+        {activeTab === 0 && (
           <div className="p-4 space-y-4">
             <div className="trading-card p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider text-trading-orange">About {asset.symbol}</h3>
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider text-trading-orange">{t("assetInfoPanel.aboutAsset")} {asset.symbol}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {asset.symbol} is a major currency pair traded on global forex markets. The NZD (New Zealand Dollar) is the official currency of New Zealand, while the USD (US Dollar) is the world's primary reserve currency.
               </p>
             </div>
             <div className="trading-card p-4 space-y-2">
-              <h3 className="text-sm font-semibold text-foreground">Key Facts</h3>
+              <h3 className="text-sm font-semibold text-foreground">{t("assetInfoPanel.keyFacts")}</h3>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Market Hours</span><span className="text-foreground">24/5 (Forex)</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Minimum Trade</span><span className="text-foreground">$1.00</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Max Payout</span><span className="text-trading-green">85%</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Volatility</span><span className="text-foreground">Medium</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("assetInfoPanel.marketHours")}</span><span className="text-foreground">{t("assetInfoPanel.marketHoursValue")}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("assetInfoPanel.minimumTrade")}</span><span className="text-foreground">{t("assetInfoPanel.minimumTradeValue")}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("assetInfoPanel.maxPayout")}</span><span className="text-trading-green">{t("assetInfoPanel.maxPayoutValue")}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("assetInfoPanel.volatility")}</span><span className="text-foreground">{t("assetInfoPanel.volatilityValue")}</span></div>
               </div>
             </div>
           </div>
         )}
 
-        {activeTab === "Trading Conditions" && (
+        {activeTab === 3 && (
           <div className="p-4 space-y-4">
             <div className="trading-card p-4 space-y-3">
               {[
-                { label: "Instrument", value: asset.symbol },
-                { label: "Type", value: "Currency Pair" },
-                { label: "Max Profit", value: "85%", green: true },
-                { label: "Min Investment", value: "$1.00" },
-                { label: "Max Investment", value: "$20,000" },
-                { label: "Trade Duration", value: "5s – 4h" },
-                { label: "Spread", value: "0.8 pips" },
-                { label: "Leverage (Margin)", value: "1:100" },
+                { label: t("assetInfoPanel.conditionInstrument"), value: asset.symbol },
+                { label: t("assetInfoPanel.conditionType"), value: t("assetInfoPanel.conditionTypeValue") },
+                { label: t("assetInfoPanel.conditionMaxProfit"), value: "85%", green: true },
+                { label: t("assetInfoPanel.conditionMinInvestment"), value: "$1.00" },
+                { label: t("assetInfoPanel.conditionMaxInvestment"), value: "$20,000" },
+                { label: t("assetInfoPanel.conditionTradeDuration"), value: t("assetInfoPanel.conditionTradeDurationValue") },
+                { label: t("assetInfoPanel.conditionSpread"), value: t("assetInfoPanel.conditionSpreadValue") },
+                { label: t("assetInfoPanel.conditionLeverage"), value: t("assetInfoPanel.conditionLeverageValue") },
               ].map(item => (
                 <div key={item.label} className="flex justify-between text-sm border-b border-white/5 pb-2 last:border-0 last:pb-0">
                   <span className="text-muted-foreground">{item.label}</span>

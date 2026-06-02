@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -338,6 +339,7 @@ const GenericCryptoMethodBadge = () => (
 );
 
 export const DepositModal = ({ onClose }: { onClose: () => void }) => {
+  const { t } = useTranslation();
   const { user, profile, refreshProfile } = useAuth();
   const [step, setStep] = useState<DepositStep>("methods");
   const [activeCategory, setActiveCategory] = useState<DepositCategory>("crypto");
@@ -367,7 +369,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
 
       if (methodsResponse.error) {
         toast({
-          title: "Payment methods unavailable",
+          title: t("accountModals.paymentMethodsUnavailable"),
           description: methodsResponse.error.message,
           variant: "destructive",
         });
@@ -491,7 +493,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
   );
   const activeInstructionIsPlisio = Boolean(activeInstruction && isPlisioInstructionAddress(activeInstruction.address));
 
-  const headerSubtitle = step === "methods" ? "Select payment method" : "Complete the payment in Plisio";
+  const headerSubtitle = step === "methods" ? t("accountModals.selectPaymentMethod") : "Complete the payment in Plisio";
   const amountValue = Number(amount) || 0;
   const bonusPercent = bonusEnabled ? getDepositBonusPercent(amountValue) : 0;
   const bonusAmount = calculateDepositBonus(amountValue, bonusEnabled);
@@ -690,7 +692,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
             clearCryptoDepositCheckoutCache(nextInstruction.id);
             void refreshProfile();
             toast({
-              title: "Deposit credited",
+              title: t("accountModals.depositCredited"),
               description: "This crypto transfer reached the required confirmations and was credited automatically.",
             });
           }
@@ -714,7 +716,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
   const openHostedCheckout = (checkoutUrl: string | null | undefined) => {
     if (!checkoutUrl) {
       toast({
-        title: "Checkout link unavailable",
+        title: t("accountModals.checkoutLinkUnavailable"),
         description: "This deposit is active, but the Plisio invoice link is no longer available on this device.",
         variant: "destructive",
       });
@@ -802,7 +804,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
   const handleSelectMethod = (method: DepositMethodOption) => {
     if (!method.available) {
       toast({
-        title: `${method.name} is coming soon`,
+        title: t("accountModals.methodComingSoon", { method: method.name }),
         description: "Only one-time-address crypto deposits are live right now. More deposit channels can be enabled next.",
       });
       return;
@@ -851,7 +853,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
       });
     } catch {
       toast({
-        title: "Copy failed",
+        title: t("accountModals.copyFailed"),
         description: "Clipboard access is blocked in this browser.",
         variant: "destructive",
       });
@@ -860,13 +862,13 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
 
   const handleProceedToCheckout = async () => {
     if (!selectedMethod) {
-      toast({ title: "Choose a deposit method first", variant: "destructive" });
+      toast({ title: t("accountModals.chooseMethodFirst"), variant: "destructive" });
       return;
     }
 
     if (!selectedMethod.available || (!selectedMethodIsAutomated && !selectedMethod.walletAddress)) {
       toast({
-        title: "This method is not ready",
+        title: t("accountModals.methodNotReady"),
         description: "Choose one of the active crypto methods to continue.",
         variant: "destructive",
       });
@@ -895,8 +897,8 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
           openHostedCheckout(restoredInstruction?.hosted_checkout_url);
         } catch (error) {
           toast({
-            title: "Unable to restore Plisio checkout",
-            description: error instanceof Error ? error.message : "Could not restore the hosted checkout link.",
+            title: t("accountModals.restorePlisioFailed"),
+            description: error instanceof Error ? error.message : t("accountModals.plisioRestoreFailedDesc"),
             variant: "destructive",
           });
         }
@@ -931,7 +933,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
         }
       } catch (error) {
         toast({
-          title: "Unable to create Plisio checkout",
+          title: t("accountModals.plisioCheckoutUnavailable"),
           description: error instanceof Error ? error.message : "Something went wrong while reserving the hosted crypto invoice.",
           variant: "destructive",
         });
@@ -948,7 +950,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
   const handleConfirmDeposit = async () => {
     if (!user || !profile) {
       toast({
-        title: "Sign in required",
+        title: t("accountModals.depositSignInRequired"),
         description: "Please sign in again before confirming this deposit.",
         variant: "destructive",
       });
@@ -956,7 +958,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
     }
 
     if (!selectedMethod || !selectedMethod.available) {
-      toast({ title: "Choose an active deposit method", variant: "destructive" });
+      toast({ title: t("accountModals.chooseMethodFirst"), variant: "destructive" });
       return;
     }
 
@@ -983,7 +985,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
 
       const appliedPromoBonus = Number(payload.promo_bonus ?? 0);
       showDepositStatusToast({
-        title: "Deposit submitted",
+        title: t("accountModals.depositSubmitted"),
         badge: "Pending review",
         description:
           appliedPromoBonus > 0
@@ -996,7 +998,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
       onClose();
     } catch (error) {
       showDepositStatusToast({
-        title: "Deposit failed",
+        title: t("accountModals.depositFailed"),
         badge: "Action needed",
         description: error instanceof Error ? error.message : "Something went wrong while confirming the deposit.",
         icon: ShieldAlert,
@@ -1009,8 +1011,8 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
 
   const headerTitle =
     step === "checkout" && selectedMethod
-      ? `Deposit ${formatCurrency(amountValue)} via Cryptocurrency`
-      : "Top up your balance";
+      ? `${t("accountModals.depositTitle")} ${formatCurrency(amountValue)} via Cryptocurrency`
+      : t("accountModals.depositTitle");
 
   return (
     <div className="fixed inset-0 z-50 bg-[#05070d]/82 p-3 backdrop-blur-sm sm:p-4">
@@ -1065,7 +1067,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
                 ) : (
                   <div className="space-y-4">
                     <div>
-                      <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Select payment method</div>
+                      <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">{t("accountModals.selectPaymentMethod")}</div>
                       <h3 className="mt-2 text-[20px] font-bold text-white sm:text-[22px]">Choose how you want to deposit</h3>
                       <p className="mt-2 text-sm leading-6 text-[#9dc2c8]">
                         Start with cryptocurrency here, then Plisio will handle the exact coin and network choice on the hosted invoice.
@@ -1178,7 +1180,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
                     </div>
 
                     <div className="mt-5">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9dc2c8]">Select your deposit</div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9dc2c8]">{t("accountModals.selectPaymentMethod")}</div>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         {bonusPresetOptions.map((option) => {
                           const isSelected = amountValue === option.amount;
@@ -1323,9 +1325,9 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
                                 openHostedCheckout(restoredInstruction?.hosted_checkout_url);
                               } catch (error) {
                                 toast({
-                                  title: "Unable to restore Plisio checkout",
+                                  title: t("accountModals.restorePlisioFailed"),
                                   description:
-                                    error instanceof Error ? error.message : "Could not restore the hosted checkout link.",
+                                    error instanceof Error ? error.message : t("accountModals.plisioRestoreFailedDesc"),
                                   variant: "destructive",
                                 });
                               }
@@ -1385,6 +1387,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
 };
 
 export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose: () => void }) => {
+  const { t } = useTranslation();
   const { refreshProfile } = useAuth();
   const [amount, setAmount] = useState("50");
   const [method, setMethod] = useState<"mpesa" | "bank" | "crypto">("mpesa");
@@ -1412,7 +1415,7 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
 
       if (error) {
         toast({
-          title: "Crypto methods unavailable",
+          title: t("accountModals.cryptoMethodsUnavailable"),
           description: error.message,
           variant: "destructive",
         });
@@ -1461,18 +1464,18 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
 
   const handleSubmit = async () => {
     if (amountValue <= 0) {
-      toast({ title: "Enter a valid amount", variant: "destructive" });
+      toast({ title: t("accountModals.withdrawalEnterValidAmount"), variant: "destructive" });
       return;
     }
 
     if (amountValue < 10) {
-      toast({ title: "Minimum withdrawal is $10", variant: "destructive" });
+      toast({ title: t("accountModals.withdrawalMinAmount"), variant: "destructive" });
       return;
     }
 
     if (amountValue > balance) {
       toast({
-        title: "Insufficient funds",
+        title: t("accountModals.withdrawalInsufficientFunds"),
         description: `Your live balance is ${formatCurrency(balance)}.`,
         variant: "destructive",
       });
@@ -1482,7 +1485,7 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
     if (method === "mpesa") {
       if (!mpesaPhoneNumber.trim()) {
         toast({
-          title: "Enter your M-PESA number",
+          title: t("accountModals.enterMpesaNumber"),
           description: "Provide the phone number that should receive the payout.",
           variant: "destructive",
         });
@@ -1491,7 +1494,7 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
     } else if (method === "bank") {
       if (!bankAccountName.trim() || !bankAccountNumber.trim()) {
         toast({
-          title: "Add full bank details",
+          title: t("accountModals.addBankDetails"),
           description: "Enter both the account holder name and the account number.",
           variant: "destructive",
         });
@@ -1499,12 +1502,12 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
       }
     } else {
       if (!selectedCrypto) {
-        toast({ title: "Choose a crypto method", variant: "destructive" });
+        toast({ title: t("accountModals.chooseCryptoMethod"), variant: "destructive" });
         return;
       }
 
       if (!walletAddress.trim()) {
-        toast({ title: "Enter your wallet address", variant: "destructive" });
+        toast({ title: t("accountModals.enterWalletAddress"), variant: "destructive" });
         return;
       }
     }
@@ -1522,10 +1525,10 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
         toast({
           title:
             payoutResponse.status === "pending"
-              ? "Withdrawal awaiting approval"
+              ? t("accountModals.withdrawalAwaitingApproval")
               : payoutResponse.status === "processing"
-                ? "Withdrawal processing"
-                : "Withdrawal request received",
+                ? t("accountModals.withdrawalProcessing")
+                : t("accountModals.withdrawalRequestReceived"),
           description:
             payoutResponse.detail ||
             (payoutResponse.status === "pending"
@@ -1544,13 +1547,13 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
 
       await refreshProfile();
       toast({
-        title: "Withdrawal submitted",
+        title: t("accountModals.withdrawalSubmitted"),
         description: `${formatCurrency(amountValue)} is now pending admin review.`,
       });
       onClose();
     } catch (error) {
       toast({
-        title: "Withdrawal failed",
+        title: t("accountModals.withdrawalFailed"),
         description: error instanceof Error ? error.message : "Something went wrong while submitting the withdrawal request.",
         variant: "destructive",
       });
@@ -1570,7 +1573,7 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
           style={{ backgroundColor: MODAL_BG, borderColor: PANEL_BORDER }}
         >
           <div className="min-w-0">
-            <div className="text-[22px] font-semibold text-white sm:text-[30px]">Withdraw Funds</div>
+            <div className="text-[22px] font-semibold text-white sm:text-[30px]">{t("accountModals.withdrawFunds")}</div>
             <div className="mt-1 text-sm text-[#9dc2c8]">
               Medium full-screen withdrawal desk with clear payout details and quick confirmation.
             </div>
@@ -1750,7 +1753,7 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
             >
               <div className="space-y-4">
                 <div className="rounded-[22px] border bg-white/5 p-5 sm:p-6" style={{ borderColor: PANEL_BORDER }}>
-                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#86c9d4]">Available Balance</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#86c9d4]">{t("accountModals.availableBalance")}</div>
                   <div className="mt-2 text-[34px] font-bold text-white">{formatCurrency(balance)}</div>
                   <div className="mt-2 text-sm leading-6 text-[#9dc2c8]">
                     {method === "mpesa"
@@ -1823,6 +1826,7 @@ export const RealAccountWelcomeModal = ({
   onWithdraw: () => void;
   onUseDemo: () => void;
 }) => {
+  const { t } = useTranslation();
   const stackLayers = [
     { translateX: -14, translateY: 32, scale: 0.86, opacity: 0.46 },
     { translateX: -6, translateY: 18, scale: 0.93, opacity: 0.62 },
@@ -1916,7 +1920,7 @@ export const RealAccountWelcomeModal = ({
                 borderColor: "rgba(155, 183, 236, 0.18)",
               }}
             >
-              Withdraw
+              {t("accountModals.withdrawalTitle")}
             </button>
             <button
               onClick={onDeposit}
@@ -1926,7 +1930,7 @@ export const RealAccountWelcomeModal = ({
                 boxShadow: "0 14px 30px rgba(52, 140, 236, 0.32)",
               }}
             >
-              Deposit
+              {t("accountModals.depositTitle")}
             </button>
           </div>
 
@@ -1934,7 +1938,7 @@ export const RealAccountWelcomeModal = ({
             onClick={onUseDemo}
             className="mt-4 w-full text-center text-[12px] font-medium text-[#55b7ff] transition hover:text-[#86cbff] sm:mt-6 sm:text-[15px]"
           >
-            Trade on Demo Account
+            {t("accountModals.demoAccountLabel")}
           </button>
         </div>
       </div>
@@ -2016,7 +2020,7 @@ const DemoBalanceModal = ({
             onClick={onClose}
             className="h-[52px] rounded-[12px] border border-white/10 bg-white/5 text-[15px] font-semibold text-white transition-colors hover:bg-white/10"
           >
-            Cancel
+            {t("accountModals.cancel")}
           </button>
           <button
             type="button"
@@ -2058,6 +2062,7 @@ export const AccountDropdown = ({
   onResetDemoBalance: () => void;
   onClose: () => void;
 }) => {
+  const { t } = useTranslation();
   const { profile, signOut } = useAuth();
   const { vip } = useVip();
   const { currency, formatMoney } = useCurrency();
@@ -2086,17 +2091,17 @@ export const AccountDropdown = ({
   };
 
   const quickActions = [
-    { label: "Deposit", action: () => openQuickAction(onOpenDeposit) },
-    { label: "Withdrawal", action: () => openQuickAction(onOpenWithdrawal) },
-    { label: "Transactions", action: () => openQuickAction(() => onOpenProfile("balance_history")) },
-    { label: "Trades", action: () => openQuickAction(() => onOpenProfile("trading_history")) },
-    { label: "My account", action: () => openQuickAction(() => onOpenProfile("personal")) },
+    { label: t("accountModals.quickActionDeposit"), action: () => openQuickAction(onOpenDeposit) },
+    { label: t("accountModals.quickActionWithdrawal"), action: () => openQuickAction(onOpenWithdrawal) },
+    { label: t("accountModals.quickActionTransactions"), action: () => openQuickAction(() => onOpenProfile("balance_history")) },
+    { label: t("accountModals.quickActionTrades"), action: () => openQuickAction(() => onOpenProfile("trading_history")) },
+    { label: t("accountModals.quickActionMyAccount"), action: () => openQuickAction(() => onOpenProfile("personal")) },
   ];
 
   const profileEmail = profile?.email || "trader@platform.com";
   const accountId = profile?.id?.slice(0, 8).toUpperCase() || "--------";
   const accountBadgeLabel =
-    accountType === "tournament" ? "Tournament" : accountType === "demo" ? "Demo" : "Live";
+    accountType === "tournament" ? t("accountModals.accountBadgeTournament") : accountType === "demo" ? t("accountModals.accountBadgeDemo") : t("accountModals.accountBadgeLive");
 
   return (
     <>
@@ -2121,7 +2126,7 @@ export const AccountDropdown = ({
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
                   <div className="min-w-0">
-                    <div className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-400">Current VIP tier</div>
+                    <div className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-400">{t("accountModals.currentVipTier")}</div>
                     <div className="mt-1 flex min-w-0 items-center gap-2">
                       <span className="truncate font-display text-[15px] font-bold leading-tight text-white">{vip.currentTier.name} VIP</span>
                       <VipBadge tierId={vip.currentTier.id} size={18} />
@@ -2138,12 +2143,12 @@ export const AccountDropdown = ({
 
               <div className="mt-2.5 flex items-end justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-gray-500">Account ID</div>
+                  <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-gray-500">{t("accountModals.accountId")}</div>
                   <div className="mt-1 font-display text-[12px] font-semibold text-[#d5d9e5]">{accountId}</div>
                 </div>
 
                 <div className="min-w-0 text-right">
-                  <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-gray-500">Currency</div>
+                  <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-gray-500">{t("accountModals.currency")}</div>
                   <div className="mt-1 flex items-center justify-end gap-2">
                     <span className="font-display text-[12px] font-bold text-white">{currency}</span>
                     <button
@@ -2154,7 +2159,7 @@ export const AccountDropdown = ({
                       }}
                       className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#86c9d4] transition-colors hover:text-white"
                     >
-                      Change
+                      {t("accountModals.changeCurrency")}
                     </button>
                   </div>
                 </div>
@@ -2188,7 +2193,7 @@ export const AccountDropdown = ({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="text-[14px] font-bold leading-tight text-white">Live Account</div>
+                        <div className="text-[14px] font-bold leading-tight text-white">{t("accountModals.liveAccountLabel")}</div>
                         <div className={`mt-0.5 font-display text-[17px] font-bold ${accountType === "live" ? "text-white" : "text-gray-300"}`}>
                           {formatMoney(balance)}
                         </div>
@@ -2225,7 +2230,7 @@ export const AccountDropdown = ({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="text-[14px] font-bold leading-tight text-white">Demo Account</div>
+                        <div className="text-[14px] font-bold leading-tight text-white">{t("accountModals.demoAccountLabel")}</div>
                         <div className={`mt-0.5 font-display text-[17px] font-bold ${accountType === "demo" ? "text-white" : "text-gray-300"}`}>
                           {formatMoney(demoBalance)}
                         </div>
@@ -2285,9 +2290,9 @@ export const AccountDropdown = ({
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="text-[14px] font-bold leading-tight text-[#00C076]">Tournament Account</div>
+                    <div className="text-[14px] font-bold leading-tight text-[#00C076]">{t("accountModals.tournamentAccountLabel")}</div>
                     <div className="mt-0.5 font-display text-[14px] font-semibold text-white">
-                      {accountType === "tournament" ? "Active now" : "Join a tournament"}
+                      {accountType === "tournament" ? t("accountModals.tournamentActive") : t("accountModals.tournamentJoin")}
                     </div>
                     <div className="mt-1 text-[10.5px] leading-relaxed text-gray-500">Use event balances for tournament trading.</div>
                   </div>
@@ -2298,7 +2303,7 @@ export const AccountDropdown = ({
 
           <div className="flex flex-col gap-3 bg-[#121824] p-3 lg:bg-transparent">
             <div>
-              <div className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#7f8ea8]">Quick actions</div>
+              <div className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#7f8ea8]">{t("accountModals.quickActions")}</div>
               <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
                 {quickActions.map((item) => (
                   <button
@@ -2321,7 +2326,7 @@ export const AccountDropdown = ({
               className="flex w-full items-center justify-center gap-2 rounded-[12px] border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-[13px] font-extrabold text-red-300 transition-colors hover:bg-red-500/15 hover:text-white disabled:opacity-60"
             >
               <LogOut className="h-4 w-4" />
-              {isSigningOut ? "Logging out..." : "Log out"}
+              {isSigningOut ? t("accountModals.loggingOut") : t("accountModals.logOut")}
             </button>
           </div>
         </div>

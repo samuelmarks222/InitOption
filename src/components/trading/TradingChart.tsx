@@ -80,6 +80,7 @@ import {
   useTradingPreferences,
 } from "@/lib/tradingPreferences";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
+import { useTranslation } from "react-i18next";
 
 interface TradingChartProps {
   asset: { symbol: string; name?: string; price: number; basePrice?: number; type?: string; change?: number; maxProfit?: number; available?: boolean };
@@ -755,7 +756,7 @@ const SettlementCloneOverlay = ({
         <AssetSymbolMark symbol={announcement.assetSymbol} size={20} />
         <span className="h-4 w-px bg-white/15" />
         <span className="text-[14px] font-black uppercase tracking-[0.14em]" style={{ color: accent }}>
-          {won ? "Win" : "Loss"}
+          {won ? t("tradingChart.settlementWin") : t("tradingChart.settlementLoss")}
         </span>
         <span className="text-[14px] font-bold tabular-nums text-white">
           {formatSettlementProfit(announcement.profit)}
@@ -1191,12 +1192,12 @@ const formatChangeCardPercent = (value: number) => {
   return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 };
 
-const buildPairChangeCards = (candles: OHLCCandle[], timeframeSeconds: number) => {
+const buildPairChangeCards = (candles: OHLCCandle[], timeframeSeconds: number, t: (key: string) => string) => {
   const safeSeconds = Math.max(1, timeframeSeconds);
   const specs = [
-    { label: "5 min change", seconds: 300 },
-    { label: "60 min change", seconds: 3600 },
-    { label: "1 day change", seconds: 86400 },
+    { label: t("tradingChart.change5min"), seconds: 300 },
+    { label: t("tradingChart.change60min"), seconds: 3600 },
+    { label: t("tradingChart.change1day"), seconds: 86400 },
   ];
 
   const latestClose = candles[candles.length - 1]?.close ?? 0;
@@ -1215,12 +1216,12 @@ const buildPairChangeCards = (candles: OHLCCandle[], timeframeSeconds: number) =
   });
 };
 
-const buildPairLongChangeCards = (candles: OHLCCandle[], timeframeSeconds: number) => {
+const buildPairLongChangeCards = (candles: OHLCCandle[], timeframeSeconds: number, t: (key: string) => string) => {
   const safeSeconds = Math.max(1, timeframeSeconds);
   const specs = [
-    { label: "1 month change", seconds: 30 * 86400 },
-    { label: "1 year change", seconds: 365 * 86400 },
-    { label: "YTD change", seconds: 365 * 86400 },
+    { id: "month" as const, label: t("tradingChart.change1month"), seconds: 30 * 86400 },
+    { id: "year" as const, label: t("tradingChart.change1year"), seconds: 365 * 86400 },
+    { id: "ytd" as const, label: t("tradingChart.changeYtd"), seconds: 365 * 86400 },
   ];
 
   const latestClose = candles[candles.length - 1]?.close ?? 0;
@@ -1228,7 +1229,7 @@ const buildPairLongChangeCards = (candles: OHLCCandle[], timeframeSeconds: numbe
 
   return specs.map((spec) => {
     const lookback = Math.max(1, Math.round(spec.seconds / safeSeconds));
-    const referenceIndex = spec.label === "YTD change"
+    const referenceIndex = spec.id === "ytd"
       ? 0
       : Math.max(0, candles.length - 1 - lookback);
     const referenceClose = candles[referenceIndex]?.close ?? firstClose;
@@ -1264,7 +1265,7 @@ const buildPairTrendGeometry = (trend: PairInfoTrendPoint[]) => {
   };
 };
 
-const getPairSessionState = (now = new Date()) => {
+const getPairSessionState = (t: (key: string) => string, now = new Date()) => {
   const day = now.getDay();
   const minutes = now.getHours() * 60 + now.getMinutes();
   const isWeekend = day === 0 || day === 6;
@@ -1274,7 +1275,7 @@ const getPairSessionState = (now = new Date()) => {
   if (isWeekend) {
     return {
       isOpen: false,
-      label: "Closed now",
+      label: t("tradingChart.closedNow"),
       detail: day === 6 ? "Opens Monday at 05:00" : "Weekend session pause",
     };
   }
@@ -1282,7 +1283,7 @@ const getPairSessionState = (now = new Date()) => {
   if (minutes < openMinutes) {
     return {
       isOpen: false,
-      label: "Opens at 05:00",
+      label: t("tradingChart.opensAt"),
       detail: "Session has not started yet",
     };
   }
@@ -1290,15 +1291,15 @@ const getPairSessionState = (now = new Date()) => {
   if (minutes >= closeMinutes) {
     return {
       isOpen: false,
-      label: "Closed now",
+      label: t("tradingChart.closedNow"),
       detail: day === 5 ? "Reopens Monday at 05:00" : "Reopens tomorrow at 05:00",
     };
   }
 
   return {
     isOpen: true,
-    label: "Open now",
-    detail: "Closes today at 23:00",
+    label: t("tradingChart.openNow"),
+    detail: t("tradingChart.closesTodayAt"),
   };
 };
 
@@ -1472,7 +1473,7 @@ const TradeSentimentRail = ({
         aria-label={`Trade lower at ${clampedLower}%`}
         className="absolute inset-x-0 top-0 z-20 h-[45%] rounded-[6px] pointer-events-auto transition-colors hover:bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6f6f]/60"
       >
-        <span className="sr-only">Lower</span>
+        <span className="sr-only">{t("tradingChart.lower")}</span>
       </button>
 
       <button
@@ -1481,7 +1482,7 @@ const TradeSentimentRail = ({
         aria-label={`Trade higher at ${clampedHigher}%`}
         className="absolute inset-x-0 bottom-0 z-20 h-[45%] rounded-[6px] pointer-events-auto transition-colors hover:bg-white/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#35d07f]/60"
       >
-        <span className="sr-only">Higher</span>
+        <span className="sr-only">{t("tradingChart.higher")}</span>
       </button>
 
       <div className="pointer-events-none relative z-10 flex h-full w-full flex-col justify-between">
@@ -1950,6 +1951,7 @@ const TradingChart = ({
   liveEdgeRequestKey,
   settlementAnnouncement = null,
 }: TradingChartProps) => {
+  const { t } = useTranslation();
   const rootRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
 
@@ -2157,7 +2159,7 @@ const TradingChart = ({
     (price: number) => {
       const normalized = roundAlertPrice(price);
       if (priceAlerts.some((alert) => Math.abs(alert.price - normalized) < 0.0000001)) {
-        toast.info("Price alert already exists", {
+        toast.info(t("tradingChart.alertAlreadyExists"), {
           description: `${asset.symbol} already has an alert at ${formatAlertPrice(normalized)}.`,
         });
         return;
@@ -2174,7 +2176,7 @@ const TradingChart = ({
         },
       ]);
 
-      toast.success("Price alert set", {
+      toast.success(t("tradingChart.alertSet"), {
         description: `${asset.symbol} will ring when price crosses ${formatAlertPrice(normalized)}.`,
       });
     },
@@ -2187,7 +2189,7 @@ const TradingChart = ({
       setPriceAlerts((current) => current.filter((item) => item.id !== id));
 
       if (alert) {
-        toast.info("Price alert removed", {
+        toast.info(t("tradingChart.alertRemoved"), {
           description: `${asset.symbol} alert at ${formatAlertPrice(alert.price)} was deleted.`,
         });
       }
@@ -2252,7 +2254,7 @@ const TradingChart = ({
       setPriceAlerts((currentAlerts) => currentAlerts.filter((alert) => !triggeredIds.has(alert.id)));
       playAlertTone();
       triggeredAlerts.forEach((alert) => {
-        toast.success("Price alert reached", {
+        toast.success(t("tradingChart.alertReached"), {
           description: `${asset.symbol} crossed ${formatAlertPrice(alert.price)}. The alert was removed automatically.`,
         });
       });
@@ -3396,11 +3398,11 @@ const TradingChart = ({
     );
   }, [currentPrice, pairHistory]);
   const pairChangeCards = useMemo(
-    () => buildPairChangeCards(pairHistory, timeframeSeconds),
+    () => buildPairChangeCards(pairHistory, timeframeSeconds, t),
     [pairHistory, timeframeSeconds],
   );
   const pairLongChangeCards = useMemo(
-    () => buildPairLongChangeCards(pairHistory, timeframeSeconds),
+    () => buildPairLongChangeCards(pairHistory, timeframeSeconds, t),
     [pairHistory, timeframeSeconds],
   );
   const pairTrendSvg = useMemo(() => buildPairTrendGeometry(pairTrend), [pairTrend]);
@@ -3408,11 +3410,11 @@ const TradingChart = ({
     () => asset.symbol.replace(/[^a-z0-9]/gi, "-").toLowerCase() || "pair-trend",
     [asset.symbol],
   );
-  const pairSession = getPairSessionState();
+  const pairSession = getPairSessionState(t);
   const pairSessionDisplayLabel = pairSession.label.replace(/\b\w/g, (char) => char.toUpperCase());
   const shortPayout = Math.min(95, Math.max(30, asset.maxProfit ?? 79));
   const extendedPayout = Math.min(92, shortPayout + 15);
-  const dominantBias = pairSentiment.buy >= pairSentiment.sell ? "Buy" : "Sell";
+  const dominantBias = pairSentiment.buy >= pairSentiment.sell ? t("tradingChart.buy") : t("tradingChart.sell");
   const marketClockLabel = useMemo(() => {
     const { offsetMinutes } = getTradingTimezone(tradingPreferences.timezone);
     const zonedDate = new Date(marketClockMs + offsetMinutes * 60 * 1000);
@@ -3423,8 +3425,8 @@ const TradingChart = ({
     ].map((part) => String(part).padStart(2, "0")).join(":");
     return `${timeLabel} ${tradingPreferences.timezone.replace(":00", "")}`;
   }, [marketClockMs, tradingPreferences.timezone]);
-  const minimumStakeLabel = "$1";
-  const expiryWindowLabel = "5 sec - 4 hour";
+  const minimumStakeLabel = t("tradingChart.minimumStakeLabel");
+  const expiryWindowLabel = t("tradingChart.expiryWindowLabel");
   const rangeSpan = Math.max(0, pairDayRange.high - pairDayRange.low);
   const updateChartStyle = useCallback((updates: Partial<ChartStylePreferences>) => {
     setChartStyles((current) => ({ ...current, ...updates }));
@@ -3446,58 +3448,51 @@ const TradingChart = ({
   const isUp = priceChange >= 0;
   const showStaticPriceBadge = false;
   const chartTypeOptions: Array<{ id: ChartType; label: string; caption: string }> = [
-    { id: "candles", label: "Candles", caption: "Classic body and wick" },
-    { id: "heikinAshi", label: "Heikin-Ashi", caption: "Smoothed trend bodies" },
-    { id: "line", label: "Area", caption: "Filled momentum ribbon" },
-    { id: "bars", label: "Bars", caption: "OHLC bar structure" },
+    { id: "candles", label: t("tradingChart.chartTypeCandles"), caption: t("tradingChart.chartTypeCandlesCaption") },
+    { id: "heikinAshi", label: t("tradingChart.chartTypeHeikinAshi"), caption: t("tradingChart.chartTypeHeikinAshiCaption") },
+    { id: "line", label: t("tradingChart.chartTypeArea"), caption: t("tradingChart.chartTypeAreaCaption") },
+    { id: "bars", label: t("tradingChart.chartTypeBars"), caption: t("tradingChart.chartTypeBarsCaption") },
   ];
   const displayPresetOptions: Array<{ id: ChartDisplayPreset; label: string }> =
     chartType === "line"
       ? [
-          { id: "primary", label: "Filled area" },
-          { id: "secondary", label: "Line only" },
+          { id: "primary", label: t("tradingChart.presetFilledArea") },
+          { id: "secondary", label: t("tradingChart.presetLineOnly") },
         ]
       : chartType === "bars"
         ? [
-            { id: "primary", label: "Standard bars" },
-            { id: "secondary", label: "Thin bars" },
+            { id: "primary", label: t("tradingChart.presetStandardBars") },
+            { id: "secondary", label: t("tradingChart.presetThinBars") },
           ]
         : [
-            { id: "primary", label: "Classic" },
-            { id: "secondary", label: "Minimal" },
+            { id: "primary", label: t("tradingChart.presetClassic") },
+            { id: "secondary", label: t("tradingChart.presetMinimal") },
           ];
   const styleColorFields =
     chartType === "bars"
       ? [
-          { key: "barUpColor" as const, label: "Up bars" },
-          { key: "barDownColor" as const, label: "Down bars" },
+          { key: "barUpColor" as const, label: t("tradingChart.colorUpBars") },
+          { key: "barDownColor" as const, label: t("tradingChart.colorDownBars") },
         ]
       : chartType === "heikinAshi"
         ? [
-            { key: "heikinUpColor" as const, label: "Up trend" },
-            { key: "heikinDownColor" as const, label: "Down trend" },
+            { key: "heikinUpColor" as const, label: t("tradingChart.colorUpTrend") },
+            { key: "heikinDownColor" as const, label: t("tradingChart.colorDownTrend") },
           ]
         : [
-            { key: "candleUpColor" as const, label: "Up candles" },
-            { key: "candleDownColor" as const, label: "Down candles" },
+            { key: "candleUpColor" as const, label: t("tradingChart.colorUpCandles") },
+            { key: "candleDownColor" as const, label: t("tradingChart.colorDownCandles") },
           ];
-  const styleSectionTitle =
-    chartType === "line"
-      ? "Display settings"
-      : chartType === "bars"
-        ? "Display settings"
-        : chartType === "heikinAshi"
-          ? "Display settings"
-          : "Display settings";
-  const bodyScaleLabel = chartType === "bars" ? "Bar density" : "Body width";
+  const styleSectionTitle = t("tradingChart.displaySettings");
+  const bodyScaleLabel = chartType === "bars" ? t("tradingChart.barDensity") : t("tradingChart.bodyWidth");
 
   if (chartError) {
     return (
       <div className="flex-1 flex items-center justify-center p-6" style={{ background: THEME.bg }}>
         <div className="w-full max-w-2xl rounded-xl p-5" style={{ background: THEME.panel, border: `1px solid ${THEME.border}` }}>
-          <h2 className="text-lg font-semibold text-white">Chart failed to render</h2>
+          <h2 className="text-lg font-semibold text-white">{t("tradingChart.chartErrorTitle")}</h2>
           <p className="mt-2 text-sm" style={{ color: THEME.mutedText }}>
-            The page is alive, but the trading chart hit a runtime error.
+            {t("tradingChart.chartErrorMessage")}
           </p>
           <pre className="mt-4 overflow-auto rounded-lg bg-black/30 p-4 text-xs text-red-300 whitespace-pre-wrap">
             {chartError}
@@ -3512,8 +3507,8 @@ const TradingChart = ({
       {asset.available === false && (
         <div className="absolute inset-0 z-50 flex items-center justify-center" style={{ background: "var(--trading-workspace-bg, var(--trading-panel-bg))" }}>
           <div className="text-center">
-            <div className="text-[16px] font-bold text-white">Not available</div>
-            <div className="text-[12px] text-gray-400 mt-1">This asset is cooling down. Please wait for the next cycle.</div>
+            <div className="text-[16px] font-bold text-white">{t("tradingChart.notAvailable")}</div>
+            <div className="text-[12px] text-gray-400 mt-1">{t("tradingChart.assetCoolingDown")}</div>
           </div>
         </div>
       )}
@@ -3544,7 +3539,7 @@ const TradingChart = ({
         {mobileToolsOpen && (
           <button
             type="button"
-            aria-label="Close chart tools"
+            aria-label={t("tradingChart.closeChartTools")}
             onClick={() => {
               closeMobileTools();
             }}
@@ -3607,10 +3602,10 @@ const TradingChart = ({
                   >
                     <div className="grid gap-2 p-1">
                       {[
-                        { id: "line" as const, label: "Area", icon: <Activity className="w-4 h-4" /> },
-                        { id: "candles" as const, label: "Candles", icon: <CandleIcon className="w-4 h-4" /> },
-                        { id: "bars" as const, label: "Bars", icon: <CandleIcon className="w-4 h-4" /> },
-                        { id: "heikinAshi" as const, label: "Heiken Ashi", icon: <CandleIcon className="w-4 h-4" /> },
+                        { id: "line" as const, label: t("tradingChart.mobileChartTypeArea"), icon: <Activity className="w-4 h-4" /> },
+                        { id: "candles" as const, label: t("tradingChart.mobileChartTypeCandles"), icon: <CandleIcon className="w-4 h-4" /> },
+                        { id: "bars" as const, label: t("tradingChart.mobileChartTypeBars"), icon: <CandleIcon className="w-4 h-4" /> },
+                        { id: "heikinAshi" as const, label: t("tradingChart.mobileChartTypeHeikenAshi"), icon: <CandleIcon className="w-4 h-4" /> },
                       ].map((item) => (
                         <button
                           key={item.id}
@@ -3731,13 +3726,13 @@ const TradingChart = ({
                     ? "border-white/15 bg-[#697286]/92 text-white"
                     : "border-white/10 bg-[#5f697d]/76 text-[#edf2ff] hover:bg-[#6a7285]/84"
                 }`}
-                title="Info"
-                aria-label="Info"
+                title={t("tradingChart.info")}
+                aria-label={t("tradingChart.info")}
               >
                 <span className={`flex items-center justify-center rounded-full bg-white/12 text-white/85 ${miniOverlay ? "h-[15px] w-[15px]" : "h-[18px] w-[18px]"}`}>
                   <Info className={`${miniOverlay ? "h-2.5 w-2.5" : "h-3 w-3"}`} />
                 </span>
-                Info
+                {t("tradingChart.info")}
               </button>
             </div>
           </div>
@@ -3844,7 +3839,7 @@ const TradingChart = ({
               }}
               className="pointer-events-auto absolute right-2 z-[88] inline-flex items-center gap-2 rounded-full border border-[#8fa4d2]/40 bg-[#121826]/95 px-3 py-2 text-xs font-black text-white shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:border-[#c7d6f4] hover:bg-[#1b2232]"
               style={{ top: hoverPriceData.top - 12 }}
-              title="Set alert at this price"
+              title={t("tradingChart.setAlertAtPrice")}
             >
               <Bell className="h-4 w-4 text-[#b9c8ea]" />
               <span>{formatAlertPrice(hoverPriceData.price)}</span>
@@ -3868,7 +3863,7 @@ const TradingChart = ({
                         removePriceAlert(alert.id);
                       }}
                       className="pointer-events-auto group relative inline-flex items-center gap-2 rounded-full border border-[#8fa4d2]/45 bg-[#121826]/95 px-3 py-2 text-[11px] font-black text-[#d9e4ff] shadow-[0_8px_24px_rgba(0,0,0,0.35)] transition hover:border-rose-300/70 hover:bg-rose-500/15"
-                      title="Click to remove alert"
+                      title={t("tradingChart.clickToRemoveAlert")}
                       aria-label={`Remove alert at ${formatAlertPrice(alert.price)}`}
                     >
                       <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#8fa4d2]/30 bg-slate-900/90 text-[#b9c8ea]">
@@ -3893,8 +3888,8 @@ const TradingChart = ({
                 type="button"
                 onClick={() => adjustChartZoom("out")}
                 className="flex h-[20px] w-[20px] items-center justify-center rounded-[2px] border border-white/6 bg-[#2a3040]/96 text-[#b8c1d2] shadow-[0_6px_14px_rgba(0,0,0,0.22)] transition-colors hover:bg-[#333a4b]"
-                title="Zoom out"
-                aria-label="Zoom out"
+                title={t("tradingChart.zoomOut")}
+                aria-label={t("tradingChart.zoomOut")}
               >
                 <Minus className="h-[11px] w-[11px]" strokeWidth={2.6} />
               </button>
@@ -3902,8 +3897,8 @@ const TradingChart = ({
                 type="button"
                 onClick={() => adjustChartZoom("in")}
                 className="flex h-[20px] w-[20px] items-center justify-center rounded-[2px] border border-white/6 bg-[#2a3040]/96 text-[#b8c1d2] shadow-[0_6px_14px_rgba(0,0,0,0.22)] transition-colors hover:bg-[#333a4b]"
-                title="Zoom in"
-                aria-label="Zoom in"
+                title={t("tradingChart.zoomIn")}
+                aria-label={t("tradingChart.zoomIn")}
               >
                 <Plus className="h-[11px] w-[11px]" strokeWidth={2.6} />
               </button>
@@ -3924,7 +3919,7 @@ const TradingChart = ({
           <div className="absolute inset-0 bg-[#111724]/70 backdrop-blur-[3px]" />
           <button
             type="button"
-            aria-label="Close pair info"
+            aria-label={t("tradingChart.closePairInfo")}
             onClick={() => setPairInfoOpen(false)}
             className="absolute inset-0 pointer-events-auto"
           />
@@ -3933,7 +3928,7 @@ const TradingChart = ({
               type="button"
               onClick={() => setPairInfoOpen(false)}
               className="absolute -left-[17px] -top-[17px] z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full border-[3px] border-[#2d3446] bg-white text-[#2d3446] shadow-[0_12px_24px_rgba(0,0,0,0.35)] transition-transform hover:scale-[1.04]"
-              aria-label="Close pair info"
+              aria-label={t("tradingChart.closePairInfo")}
             >
               <X className="h-4 w-4" strokeWidth={3} />
             </button>
@@ -3963,11 +3958,11 @@ const TradingChart = ({
               <div className="mt-5 grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_180px]">
                 <div className="grid max-w-[430px] grid-cols-2 divide-x divide-white/12">
                   <div className="pr-10">
-                    <div className="text-[14px] font-semibold text-slate-400">Price Now</div>
+                    <div className="text-[14px] font-semibold text-slate-400">{t("tradingChart.priceNow")}</div>
                     <div className="mt-1 text-[17px] font-black text-white">{currentPrice.toFixed(dec)}</div>
                   </div>
                   <div className="pl-10">
-                    <div className="text-[14px] font-semibold text-slate-400">Session Change</div>
+                    <div className="text-[14px] font-semibold text-slate-400">{t("tradingChart.sessionChange")}</div>
                     <div className={`mt-1 text-[17px] font-black ${isUp ? "text-[#18d67b]" : "text-[#ff4c45]"}`}>
                       {formatSignedPercent(priceChange)}
                     </div>
@@ -3978,7 +3973,7 @@ const TradingChart = ({
                   onClick={handleOpenTradeDesk}
                   className="inline-flex h-11 items-center justify-center gap-3 rounded-[4px] bg-[#1684e8] px-6 text-[15px] font-black text-white shadow-[0_14px_30px_rgba(22,132,232,0.26)] transition-colors hover:bg-[#2394fb]"
                 >
-                  Trade Now
+                  {t("tradingChart.tradeNow")}
                   <ArrowRight className="h-4 w-4 rounded-full bg-white/20 p-0.5" />
                 </button>
               </div>
@@ -3987,7 +3982,7 @@ const TradingChart = ({
                 <div className="grid grid-cols-[140px_auto_minmax(0,1fr)_auto] items-center gap-3">
                   <div>
                     <div className="text-[21px] font-medium leading-none text-white">{dominantBias}</div>
-                    <div className="mt-2 text-[14px] font-medium text-slate-500">Traders&apos; Sentiment</div>
+                    <div className="mt-2 text-[14px] font-medium text-slate-500">{t("tradingChart.tradersSentiment")}</div>
                   </div>
                   <span className="text-[18px] font-black text-white">{pairSentiment.sell}%</span>
                   <div className="flex h-1 overflow-hidden rounded-full bg-[#252b3a]">
@@ -4000,19 +3995,19 @@ const TradingChart = ({
 
               <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-400">Minimum investment</div>
+                  <div className="text-[12px] font-semibold text-slate-400">{t("tradingChart.minimumInvestment")}</div>
                   <div className="mt-1 text-[16px] font-black text-white">{minimumStakeLabel}</div>
                 </div>
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-400">Profit - 1 min</div>
+                  <div className="text-[12px] font-semibold text-slate-400">{t("tradingChart.profit1min")}</div>
                   <div className="mt-1 text-[16px] font-black text-[#18d67b]">{shortPayout}%</div>
                 </div>
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-400">Profit - 5+ min</div>
+                  <div className="text-[12px] font-semibold text-slate-400">{t("tradingChart.profit5plusMin")}</div>
                   <div className="mt-1 text-[16px] font-black text-[#18d67b]">{extendedPayout}%</div>
                 </div>
                 <div>
-                  <div className="text-[12px] font-semibold text-slate-400">Expiry time</div>
+                  <div className="text-[12px] font-semibold text-slate-400">{t("tradingChart.expiryTime")}</div>
                   <div className="mt-1 text-[16px] font-black text-white">{expiryWindowLabel}</div>
                 </div>
               </div>
@@ -4098,12 +4093,12 @@ const TradingChart = ({
                 </div>
 
                 <div>
-                  <div className="text-center text-[16px] font-black text-white">Trading Schedule</div>
+                  <div className="text-center text-[16px] font-black text-white">{t("tradingChart.tradingSchedule")}</div>
                   <div className="mt-5 space-y-0">
                     <div className="grid grid-cols-[92px_minmax(90px,1fr)_112px] gap-3 px-3 pb-3 text-[12px] font-black text-slate-500">
-                      <span>Date</span>
-                      <span>Weekday</span>
-                      <span className="text-right">Trading Time</span>
+                      <span>{t("tradingChart.scheduleDate")}</span>
+                      <span>{t("tradingChart.scheduleWeekday")}</span>
+                      <span className="text-right">{t("tradingChart.scheduleTradingTime")}</span>
                     </div>
                     {tradingSchedule.slice(0, 7).map((row, index) => (
                       <div
@@ -4129,15 +4124,15 @@ const TradingChart = ({
         <div className="absolute inset-0 z-[70] hidden sm:block pointer-events-none">
           <button
             type="button"
-            aria-label="Close chart style editor"
+            aria-label={t("tradingChart.closeStyleEditor")}
             onClick={() => setStyleEditorOpen(false)}
             className="absolute inset-0 pointer-events-auto"
           />
           <div className="pointer-events-auto absolute left-[72px] top-4 w-[540px] max-h-[calc(100%-32px)] max-w-[calc(100%-80px)] overflow-y-auto rounded-[4px] border border-[#353d50] bg-[#252c3b] shadow-[0_20px_48px_rgba(0,0,0,0.48)]">
             <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#343b4a] px-4 py-3">
-              <div className="text-[12px] font-black uppercase tracking-[0.08em] text-white">Chart Type</div>
+              <div className="text-[12px] font-black uppercase tracking-[0.08em] text-white">{t("tradingChart.chartType")}</div>
               <label className="ml-auto flex max-w-[280px] items-center justify-end gap-2 text-right text-[11px] font-medium leading-tight text-slate-300">
-                <span>Full-width current price line</span>
+                <span>{t("tradingChart.fullWidthPriceLine")}</span>
                 <button
                   type="button"
                   onClick={() => updateChartStyle({ priceLineVisible: !chartStyles.priceLineVisible })}
@@ -4146,7 +4141,7 @@ const TradingChart = ({
                       ? "border-[#10a055] bg-[#2f3545]"
                       : "border-[#5a6272] bg-[#232937]"
                   }`}
-                  aria-label="Toggle full-width current price line"
+                  aria-label={t("tradingChart.toggleFullWidthPriceLine")}
                 >
                   {chartStyles.priceLineVisible ? (
                     <span className="block h-2 w-2 rounded-[1px] bg-[#10a055]" />
@@ -4190,7 +4185,7 @@ const TradingChart = ({
                     <div className="flex h-6 w-6 items-center justify-center rounded-[4px] border border-[#434b5d] bg-[#2a3142]">
                       <SlidersHorizontal className="h-3.5 w-3.5" />
                     </div>
-                    Live preview
+                    {t("tradingChart.livePreview")}
                   </div>
                 </div>
 
@@ -4220,7 +4215,7 @@ const TradingChart = ({
                         <label className="relative flex min-h-[48px] cursor-pointer items-start justify-between gap-3 rounded-[4px] bg-[#4c5567] px-3 py-2 text-white">
                           <span className="flex min-w-0 items-center gap-3">
                             <span className="h-5 w-5 rounded-[2px] border border-white/10" style={{ background: chartStyles.areaLineColor }} />
-                            <span className="min-w-0 whitespace-normal text-[12px] font-semibold leading-tight">Line color</span>
+                            <span className="min-w-0 whitespace-normal text-[12px] font-semibold leading-tight">{t("tradingChart.lineColor")}</span>
                           </span>
                           <span className="text-[12px] text-white/70">▼</span>
                           <input
@@ -4233,7 +4228,7 @@ const TradingChart = ({
                         <label className="relative flex min-h-[48px] cursor-pointer items-start justify-between gap-3 rounded-[4px] bg-[#4c5567] px-3 py-2 text-white">
                           <span className="flex min-w-0 items-center gap-3">
                             <span className="h-5 w-5 rounded-[2px] border border-white/10" style={{ background: chartStyles.areaFillColor }} />
-                            <span className="min-w-0 whitespace-normal text-[12px] font-semibold leading-tight">Fill color</span>
+                            <span className="min-w-0 whitespace-normal text-[12px] font-semibold leading-tight">{t("tradingChart.fillColor")}</span>
                           </span>
                           <span className="text-[12px] text-white/70">▼</span>
                           <input
@@ -4253,10 +4248,10 @@ const TradingChart = ({
                             onChange={(event) => updateChartStyle({ areaFillEnabled: event.target.checked })}
                             className="h-4 w-4 accent-[#10a055]"
                           />
-                          Area fill
+                          {t("tradingChart.areaFill")}
                         </label>
                         <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-medium text-slate-400">Thickness</span>
+                          <span className="text-[11px] font-medium text-slate-400">{t("tradingChart.thickness")}</span>
                           {[1, 2, 3, 4].map((width) => (
                             <button
                               key={width}
@@ -4315,13 +4310,13 @@ const TradingChart = ({
                                   ? "border-[#8fb3e7] bg-[#34394a] text-white"
                                   : "border-[#4a5264] bg-[#313848] text-slate-300 hover:bg-[#373f51]"
                               }`}
-                              aria-label={`Use ${preset.label} candle colors`}
+                              aria-label={t("tradingChart.candlePreset" + preset.id.charAt(0).toUpperCase() + preset.id.slice(1))}
                             >
                               <span className="flex shrink-0 overflow-hidden rounded-[2px] border border-white/10">
                                 <span className="h-5 w-3" style={{ background: preset.up }} />
                                 <span className="h-5 w-3" style={{ background: preset.down }} />
                               </span>
-                              <span className="min-w-0 truncate text-[11px] font-black">{preset.label}</span>
+                              <span className="min-w-0 truncate text-[11px] font-black">{t("tradingChart.candlePreset" + preset.id.charAt(0).toUpperCase() + preset.id.slice(1))}</span>
                             </button>
                           );
                         })}
@@ -4356,14 +4351,14 @@ const TradingChart = ({
                       }}
                       className="rounded-[4px] border border-[#4a5264] bg-[#313848] px-3 py-2 text-[11px] font-black uppercase tracking-[0.08em] text-slate-200"
                     >
-                      Reset
+                      {t("tradingChart.reset")}
                     </button>
                     <button
                       type="button"
                       onClick={() => setStyleEditorOpen(false)}
                       className="rounded-[4px] border border-[#4a5264] bg-[#313848] px-3 py-2 text-[11px] font-black uppercase tracking-[0.08em] text-slate-200"
                     >
-                      Close
+                      {t("tradingChart.close")}
                     </button>
                   </div>
                 </div>

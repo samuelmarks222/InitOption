@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Camera, User, DollarSign, HelpCircle, Clock, History, Settings, LogOut, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,17 +12,18 @@ interface ProfileDropdownProps {
 }
 
 const MENU_ITEMS = [
-  { icon: Camera, label: "Upload a Photo", action: "photo" },
-  { icon: User, label: "Personal Data", action: "personal" },
-  { icon: DollarSign, label: "Deposit Funds", action: "deposit" },
-  { icon: HelpCircle, label: "Contact Support", action: "support" },
-  { icon: Clock, label: "Balance History", action: "balance" },
-  { icon: History, label: "Trading History", action: "history" },
-  { icon: Settings, label: "Settings", action: "settings" },
-  { icon: LogOut, label: "Log Out", action: "logout" },
+  { icon: Camera, label: "profileDropdown.uploadPhoto", action: "photo" },
+  { icon: User, label: "profileDropdown.personalData", action: "personal" },
+  { icon: DollarSign, label: "profileDropdown.depositFunds", action: "deposit" },
+  { icon: HelpCircle, label: "profileDropdown.contactSupport", action: "support" },
+  { icon: Clock, label: "profileDropdown.balanceHistory", action: "balance" },
+  { icon: History, label: "profileDropdown.tradingHistory", action: "history" },
+  { icon: Settings, label: "profileDropdown.settings", action: "settings" },
+  { icon: LogOut, label: "profileDropdown.logOut", action: "logout" },
 ];
 
 const ProfileDropdown = ({ balance, onClose, onOpenSettings, onOpenHistory }: ProfileDropdownProps) => {
+  const { t } = useTranslation();
   const { signOut, profile, user } = useAuth();
   const navigate = useNavigate();
   const profileData: AuthProfile | null = profile;
@@ -43,14 +45,14 @@ const ProfileDropdown = ({ balance, onClose, onOpenSettings, onOpenHistory }: Pr
     Math.round((completionChecks.filter(Boolean).length / completionChecks.length) * 100),
   );
   const displayName = profileData?.username?.trim() || user?.email || "My account";
-  const countryLabel = profileData?.nationality?.trim() || "Not set";
+  const countryLabel = profileData?.nationality?.trim() || t("profileDropdown.countryNotSet");
   const registeredAt = profileData?.created_at
     ? new Date(profileData.created_at).toLocaleDateString("en-GB", {
         day: "numeric",
         month: "short",
         year: "numeric",
       })
-    : "Not available";
+    : t("profileDropdown.dateNotAvailable");
   const accountId = (profile?.id ?? user?.id ?? "").replace(/-/g, "").slice(0, 8).toUpperCase() || "--------";
 
   const handleAction = async (action: string) => {
@@ -115,22 +117,22 @@ const ProfileDropdown = ({ balance, onClose, onOpenSettings, onOpenHistory }: Pr
               {completionPercent}%
             </div>
             <div>
-              <div className="text-sm text-foreground">Take the platform tour before</div>
-              <div className="text-sm font-semibold text-foreground">your first real trade</div>
+              <div className="text-sm text-foreground">{t("profileDropdown.tourPrompt1")}</div>
+              <div className="text-sm font-semibold text-foreground">{t("profileDropdown.tourPrompt2")}</div>
             </div>
           </div>
 
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Country:</span>
+            <span className="text-sm text-muted-foreground">{t("profileDropdown.countryLabel")}</span>
             <span className="text-sm text-foreground">{countryLabel}</span>
           </div>
           <div className="mt-2 flex gap-8 text-xs">
             <div>
-              <div className="text-muted-foreground">Date registered</div>
+                <div className="text-muted-foreground">{t("profileDropdown.dateRegistered")}</div>
               <div className="mt-0.5 text-foreground">{registeredAt}</div>
             </div>
             <div>
-              <div className="text-muted-foreground">User ID</div>
+                <div className="text-muted-foreground">{t("profileDropdown.userId")}</div>
               <div className="mt-0.5 text-foreground">{accountId}</div>
             </div>
           </div>
@@ -148,7 +150,7 @@ const ProfileDropdown = ({ balance, onClose, onOpenSettings, onOpenHistory }: Pr
               }`}
             >
               <item.icon className="h-4 w-4 text-muted-foreground" />
-              {item.label}
+              {t(item.label)}
             </button>
           ))}
         </div>

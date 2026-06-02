@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   PieChart, Clock, MessageSquare, Trophy, Gift, Tv,
   BookOpen, MoreHorizontal, X, ChevronDown, Globe, Award,
@@ -71,30 +72,7 @@ const EARNINGS_EVENTS: Record<string, { date: string; company: string; timing: s
 // ─── Leaderboard Instrument Filters ───────────────────────────────────────────
 const INSTRUMENTS = ["All instruments", "Forex", "CFD", "Crypto", "Options"];
 
-// ─── Sidebar Nav Items ─────────────────────────────────────────────────────────
-const NAV_ITEMS = [
-  { icon: PieChart,      label: "TOTAL\nPORTFOLIO",   action: "portfolio"  as SidebarPanel },
-  { icon: Clock,         label: "TRADING\nHISTORY",   action: "history"    as SidebarPanel },
-  { icon: MessageSquare, label: "CHAT",               action: "chat"       as SidebarPanel },
-  { icon: Trophy,        label: "LEADER\nBOARD",      action: "leaders"    as SidebarPanel },
-  { icon: Gift,          label: "PROMO",               action: "promo"      as SidebarPanel, badge: "1" },
-  { icon: Tv,            label: "WEBINARS",            action: "webinars"   as SidebarPanel },
-  { icon: BarChart2,     label: "MARKET\nANALYSIS",   action: "analysis"   as SidebarPanel },
-  { icon: BookOpen,      label: "TUTORIALS",           action: "tutorials"  as SidebarPanel },
-  { icon: MoreHorizontal,label: "MORE",                action: "more"       as SidebarPanel },
-];
 
-const PANEL_TITLES: Record<NonNullable<SidebarPanel>, string> = {
-  portfolio: "Total Portfolio",
-  history:   "Trading History",
-  chat:      "Chat",
-  leaders:   "Leaders of the Week",
-  promo:     "Promo",
-  webinars:  "Webinars",
-  analysis:  "Earnings Calendar",
-  tutorials: "Tutorials",
-  more:      "More",
-};
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 const PanelHeader = ({ title, onClose }: { title: string; onClose: () => void }) => (
@@ -110,11 +88,13 @@ const PanelHeader = ({ title, onClose }: { title: string; onClose: () => void })
 );
 
 // ─── Panel: Trading History ────────────────────────────────────────────────────
-const HistoryPanel = () => (
+const HistoryPanel = () => {
+  const { t } = useTranslation();
+  return (
   <div>
     <div className="px-3 py-2 border-b" style={{ borderColor: "hsl(228 15% 14%)" }}>
       <button className="w-full flex items-center justify-between bg-[#1d2133] rounded px-3 py-2 text-xs text-white hover:bg-[#232640] transition-colors">
-        All Positions <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+        {t("sidebar.history.allPositions")} <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
       </button>
     </div>
     {HISTORY_DATA.map((item, i) => (
@@ -146,13 +126,26 @@ const HistoryPanel = () => (
       </div>
     ))}
   </div>
-);
+  );
+};
 
 // ─── Panel: Leaderboard ────────────────────────────────────────────────────────
 const LeaderboardPanel = () => {
+  const { t } = useTranslation();
   const [region, setRegion] = useState("Worldwide");
   const [instrument, setInstrument] = useState("All instruments");
   const [showInstrDrop, setShowInstrDrop] = useState(false);
+
+  const getInstrumentLabel = (ins: string) => {
+    const map: Record<string, string> = {
+      "All instruments": t("sidebar.allInstruments"),
+      "Forex": t("sidebar.forex"),
+      "CFD": t("sidebar.cfd"),
+      "Crypto": t("sidebar.crypto"),
+      "Options": t("sidebar.options"),
+    };
+    return map[ins] ?? ins;
+  };
 
   return (
     <div className="flex flex-col">
@@ -162,7 +155,7 @@ const LeaderboardPanel = () => {
         <button className="w-full flex items-center justify-between bg-[#1d2133] rounded px-3 py-2 text-xs text-white hover:bg-[#232640] transition-colors">
           <div className="flex items-center gap-2">
             <Globe className="w-3.5 h-3.5 text-gray-400" />
-            {region}
+            {t("sidebar.worldwide")}
           </div>
           <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
         </button>
@@ -175,7 +168,7 @@ const LeaderboardPanel = () => {
           >
             <div className="flex items-center gap-2">
               <span className="text-gray-400 text-base leading-none">≡</span>
-              {instrument}
+              {getInstrumentLabel(instrument)}
             </div>
             <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showInstrDrop ? "rotate-180" : ""}`} />
           </button>
@@ -185,14 +178,14 @@ const LeaderboardPanel = () => {
               <div className="fixed inset-0 z-10" onClick={() => setShowInstrDrop(false)} />
               <div className="absolute left-0 right-0 top-full mt-1 rounded shadow-xl z-20 border border-white/10 overflow-hidden"
                 style={{ background: "var(--trading-panel-bg)" }}>
-                {INSTRUMENTS.map(ins => (
+                  {INSTRUMENTS.map(ins => (
                   <button
                     key={ins}
                     onClick={() => { setInstrument(ins); setShowInstrDrop(false); }}
                     className={`w-full flex items-center gap-2 px-4 py-2.5 text-[11px] transition-colors hover:bg-white/5 ${instrument === ins ? "text-white bg-white/5" : "text-gray-400"}`}
                   >
                     <span className="text-gray-400 text-base leading-none">≡</span>
-                    {ins}
+                    {getInstrumentLabel(ins)}
                   </button>
                 ))}
               </div>
@@ -209,14 +202,14 @@ const LeaderboardPanel = () => {
         <span className="text-[11px] text-white font-semibold">$0.00</span>
       </div>
       <div className="px-3 py-2 border-b" style={{ borderColor: "hsl(228 15% 14%)" }}>
-        <p className="text-[10px] text-gray-500">You have made no profitable trades this week yet</p>
+        <p className="text-[10px] text-gray-500">{t("sidebar.leaderboard.noProfitableTrades")}</p>
       </div>
 
       {/* Empty state */}
       <div className="flex flex-col items-center justify-center p-8 text-center gap-3">
         <Award className="w-12 h-12 text-gray-700" />
         <p className="text-[11px] text-gray-500 leading-relaxed">
-          There are no traders on<br />the leaderboard yet.<br />Become the first one!
+          {t("sidebar.leaderboard.empty")}
         </p>
       </div>
     </div>
@@ -225,6 +218,7 @@ const LeaderboardPanel = () => {
 
 // ─── Panel: Promo ─────────────────────────────────────────────────────────────
 const PromoPanel = () => {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<"available" | "history">("available");
 
   return (
@@ -237,7 +231,7 @@ const PromoPanel = () => {
             onClick={() => setTab(t)}
             className={`text-[10px] font-bold tracking-widest pb-3 pt-2 mr-5 border-b-2 transition-colors ${tab === t ? "text-[#0fa053] border-[#0fa053]" : "text-gray-500 border-transparent hover:text-gray-300"}`}
           >
-            {t.toUpperCase()}
+            {t === "available" ? t("sidebar.promo.available") : t("sidebar.promo.history")}
           </button>
         ))}
         <button className="ml-auto text-gray-500 hover:text-gray-300 transition-colors pb-2">
@@ -252,9 +246,9 @@ const PromoPanel = () => {
             style={{ background: "linear-gradient(135deg, var(--trading-panel-bg) 0%, var(--trading-workspace-panel-bg) 100%)" }}>
             <div className="relative z-10">
               <span className="text-[10px] text-gray-400">
-                Promo code <span className="text-[#8fb0cf] font-medium ml-1">Exclusive</span>
+                {t("sidebar.promo.promoCode")} <span className="text-[#8fb0cf] font-medium ml-1">{t("sidebar.promo.exclusive")}</span>
               </span>
-              <h3 className="text-[16px] font-bold text-white leading-tight mt-1">Bonus up to 110%</h3>
+              <h3 className="text-[16px] font-bold text-white leading-tight mt-1">{t("sidebar.promo.bonusUpTo")}</h3>
             </div>
             <div className="absolute bottom-3 right-3 bg-white/10 p-2 rounded-lg text-white backdrop-blur rotate-12">
               <Ticket className="w-4 h-4" />
@@ -264,15 +258,15 @@ const PromoPanel = () => {
           {/* NEW promo */}
           <div className="relative rounded-xl p-4 overflow-hidden border border-white/5 bg-[#22242a]">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] text-gray-400">Promo code</span>
-              <span className="bg-[#0fa053] text-white text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">NEW</span>
+              <span className="text-[10px] text-gray-400">{t("sidebar.promo.promoCode")}</span>
+              <span className="bg-[#0fa053] text-white text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">{t("sidebar.promo.new")}</span>
             </div>
             <p className="text-[12px] font-semibold text-white leading-snug mb-3">
-              Discover powerful trading strategies based on technic...
+              {t("sidebar.promo.discoverStrategies")}
             </p>
             <div className="flex items-center gap-1.5 text-gray-400">
               <Check className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-medium">Activated</span>
+              <span className="text-[10px] font-medium">{t("sidebar.promo.activated")}</span>
             </div>
             <div className="absolute bottom-3 right-3 bg-white/5 p-2 rounded-lg text-gray-500 rotate-12">
               <Ticket className="w-4 h-4" />
@@ -281,7 +275,7 @@ const PromoPanel = () => {
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center p-6 text-center">
-          <p className="text-[11px] text-gray-500">No promo history yet.</p>
+          <p className="text-[11px] text-gray-500">{t("sidebar.promo.noHistory")}</p>
         </div>
       )}
     </div>
@@ -289,40 +283,71 @@ const PromoPanel = () => {
 };
 
 // ─── Panel: Webinars ──────────────────────────────────────────────────────────
-const WebinarsPanel = () => (
+const WebinarsPanel = () => {
+  const { t } = useTranslation();
+  return (
   <div className="p-4">
     <div className="flex items-center justify-between mb-3">
-      <span className="text-[11px] text-white font-semibold">Upcoming</span>
-      <span className="text-[10px] bg-[#1d2133] px-2 py-0.5 rounded-full text-gray-400">30d</span>
+      <span className="text-[11px] text-white font-semibold">{t("sidebar.webinars.upcoming")}</span>
+      <span className="text-[10px] bg-[#1d2133] px-2 py-0.5 rounded-full text-gray-400">{t("sidebar.webinars.period30d")}</span>
     </div>
     <div className="flex flex-col items-center justify-center py-10 text-center gap-3">
       <Tv className="w-10 h-10 text-gray-700" />
-      <p className="text-[11px] text-gray-500 leading-relaxed">No upcoming webinars<br />scheduled at this time.</p>
+      <p className="text-[11px] text-gray-500 leading-relaxed">{t("sidebar.webinars.empty")}</p>
     </div>
   </div>
-);
+  );
+};
 
 // ─── Panel: Tutorials ─────────────────────────────────────────────────────────
-const TutorialsPanel = () => (
+const TutorialsPanel = () => {
+  const { t } = useTranslation();
+
+  const getTutorialTitle = (id: string) => {
+    switch (id) {
+      case "how": return t("sidebar.howToTrade");
+      case "guide": return t("sidebar.interfaceGuide");
+      default: return "";
+    }
+  };
+  const getTutorialSub = (id: string) => {
+    switch (id) {
+      case "how": return t("sidebar.tradingGuide");
+      case "guide": return t("sidebar.quickIntro");
+      default: return "";
+    }
+  };
+  const getVideoCategoryTitle = (id: string) => {
+    switch (id) {
+      case "all": return t("sidebar.allVideos");
+      case "basics": return t("sidebar.basics");
+      case "contracts": return t("sidebar.contractsTrading");
+      case "margin": return t("sidebar.marginTrading");
+      case "tech": return t("sidebar.technicalAnalysis");
+      default: return "";
+    }
+  };
+
+  return (
   <div className="flex-1 overflow-y-auto">
     {/* Top cards */}
-    {TUTORIALS.map(t => (
-      <button key={t.id}
+    {TUTORIALS.map(tu => (
+      <button key={tu.id}
         className="w-full flex items-center gap-3 px-4 py-3.5 border-b text-left hover:bg-white/[0.03] transition-colors group"
         style={{ borderColor: "hsl(228 15% 14%)" }}>
         <div className="w-8 h-8 rounded-full bg-[#1d2133] flex items-center justify-center text-base shrink-0 group-hover:bg-[#232640] transition-colors">
-          {t.icon}
+          {tu.icon}
         </div>
         <div>
-          <div className="text-[13px] font-semibold text-white">{t.title}</div>
-          <div className="text-[10px] text-gray-500">{t.sub}</div>
+          <div className="text-[13px] font-semibold text-white">{getTutorialTitle(tu.id)}</div>
+          <div className="text-[10px] text-gray-500">{getTutorialSub(tu.id)}</div>
         </div>
       </button>
     ))}
 
     {/* Video Tutorials section */}
     <div className="px-4 py-2 mt-1">
-      <span className="text-[11px] text-gray-500 font-medium">Video Tutorials</span>
+      <span className="text-[11px] text-gray-500 font-medium">{t("sidebar.tutorials.videoTutorials")}</span>
     </div>
 
     {VIDEO_CATEGORIES.map(cat => (
@@ -333,16 +358,18 @@ const TutorialsPanel = () => (
           <cat.icon className="w-4 h-4 text-gray-400" />
         </div>
         <div>
-          <div className="text-[13px] font-semibold text-white">{cat.title}</div>
-          <div className="text-[10px] text-gray-500">{cat.count} videos</div>
+          <div className="text-[13px] font-semibold text-white">{getVideoCategoryTitle(cat.id)}</div>
+          <div className="text-[10px] text-gray-500">{cat.count}{t("sidebar.tutorials.videosCount")}</div>
         </div>
       </button>
     ))}
   </div>
-);
+  );
+};
 
 // ─── Panel: Earnings Calendar (Market Analysis) ────────────────────────────────
 const EarningsCalendarPanel = () => {
+  const { t } = useTranslation();
   const [activeDate, setActiveDate] = useState("12 MARCH");
 
   const events = EARNINGS_EVENTS[activeDate] ?? [];
@@ -375,7 +402,7 @@ const EarningsCalendarPanel = () => {
         <div className="px-4 py-2 flex items-center justify-between sticky top-0 z-10"
           style={{ background: "var(--trading-panel-soft-bg)" }}>
           <span className="text-[11px] font-bold text-white">{activeDate}</span>
-          <span className="text-[10px] text-[#0fa053]">TODAY</span>
+          <span className="text-[10px] text-[#0fa053]">{t("sidebar.earnings.today")}</span>
         </div>
 
         {events.map((ev, i) => (
@@ -396,15 +423,15 @@ const EarningsCalendarPanel = () => {
             {/* Stats row */}
             <div className="grid grid-cols-3 gap-2 mt-2">
               <div>
-                <div className="text-[9px] text-gray-500 mb-0.5">Currently</div>
+                <div className="text-[9px] text-gray-500 mb-0.5">{t("sidebar.earnings.currently")}</div>
                 <div className="text-[12px] font-semibold text-white">{ev.current ?? "—"}</div>
               </div>
               <div>
-                <div className="text-[9px] text-gray-500 mb-0.5">Forecast</div>
+                <div className="text-[9px] text-gray-500 mb-0.5">{t("sidebar.earnings.forecast")}</div>
                 <div className="text-[12px] font-semibold text-green-400">{ev.forecast}</div>
               </div>
               <div>
-                <div className="text-[9px] text-gray-500 mb-0.5">Previous</div>
+                <div className="text-[9px] text-gray-500 mb-0.5">{t("sidebar.earnings.previous")}</div>
                 <div className="text-[12px] font-semibold text-gray-300">{ev.previous || "—"}</div>
               </div>
             </div>
@@ -414,7 +441,7 @@ const EarningsCalendarPanel = () => {
         {events.length === 0 && (
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <TrendingUp className="w-8 h-8 text-gray-700 mb-2" />
-            <p className="text-[11px] text-gray-500">No earnings events on this date.</p>
+            <p className="text-[11px] text-gray-500">{t("sidebar.earnings.empty")}</p>
           </div>
         )}
       </div>
@@ -426,19 +453,47 @@ const EarningsCalendarPanel = () => {
 const ChatPanel = () => <div className="h-full"><ProfileSupport mode="compact" /></div>;
 
 // ─── Panel: Total Portfolio ────────────────────────────────────────────────────
-const PortfolioPanel = () => (
+const PortfolioPanel = () => {
+  const { t } = useTranslation();
+  return (
   <div className="flex flex-col items-center justify-center p-8 text-center gap-3">
     <PieChart className="w-10 h-10 text-gray-700" />
     <p className="text-[11px] text-gray-500">
-      Your portfolio is empty.<br />Start trading to see your positions here.
+      {t("sidebar.portfolio.empty")}
     </p>
   </div>
-);
+  );
+};
 
 // ─── Main Sidebar Component ────────────────────────────────────────────────────
 const TradingSidebar = ({ onOpenHistory, onOpenAssetInfo, onOpenPromo }: TradingSidebarProps) => {
   const [activePanel, setActivePanel] = useState<SidebarPanel>(null);
   const isChatPanel = activePanel === "chat";
+  const { t } = useTranslation();
+
+  const NAV_ITEMS = [
+    { icon: PieChart,      label: t("sidebar.navLabels.totalPortfolio"),   action: "portfolio"  as SidebarPanel },
+    { icon: Clock,         label: t("sidebar.navLabels.tradingHistory"),   action: "history"    as SidebarPanel },
+    { icon: MessageSquare, label: t("sidebar.navLabels.chat"),             action: "chat"       as SidebarPanel },
+    { icon: Trophy,        label: t("sidebar.navLabels.leaderBoard"),      action: "leaders"    as SidebarPanel },
+    { icon: Gift,          label: t("sidebar.navLabels.promo"),            action: "promo"      as SidebarPanel, badge: "1" },
+    { icon: Tv,            label: t("sidebar.navLabels.webinars"),         action: "webinars"   as SidebarPanel },
+    { icon: BarChart2,     label: t("sidebar.navLabels.marketAnalysis"),   action: "analysis"   as SidebarPanel },
+    { icon: BookOpen,      label: t("sidebar.navLabels.tutorials"),        action: "tutorials"  as SidebarPanel },
+    { icon: MoreHorizontal,label: t("sidebar.navLabels.more"),             action: "more"       as SidebarPanel },
+  ];
+
+  const PANEL_TITLES: Record<NonNullable<SidebarPanel>, string> = {
+    portfolio: t("sidebar.panelTitles.totalPortfolio"),
+    history:   t("sidebar.panelTitles.tradingHistory"),
+    chat:      t("sidebar.panelTitles.chat"),
+    leaders:   t("sidebar.panelTitles.leadersOfWeek"),
+    promo:     t("sidebar.panelTitles.promo"),
+    webinars:  t("sidebar.panelTitles.webinars"),
+    analysis:  t("sidebar.panelTitles.earningsCalendar"),
+    tutorials: t("sidebar.panelTitles.tutorials"),
+    more:      t("sidebar.panelTitles.more"),
+  };
 
   const togglePanel = (panel: SidebarPanel) => {
     setActivePanel(prev => (prev === panel ? null : panel));
@@ -512,7 +567,7 @@ const TradingSidebar = ({ onOpenHistory, onOpenAssetInfo, onOpenPromo }: Trading
             style={{ background: "var(--trading-success-color)", color: "var(--trading-success-contrast-color)" }}
           >
             <Zap className="w-3 h-3" />
-            CHAT
+            {t("sidebar.navLabels.chat")}
           </button>
         </div>
       </aside>

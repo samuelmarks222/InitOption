@@ -719,8 +719,8 @@ const TradingPanel = ({
       queuedPendingTradeIdRef.current = null;
       setQueuedPendingTrades([]);
       toast({
-        title: "Pending trade canceled",
-        description: "Pending execution was canceled.",
+        title: t("tradingPanel.pendingTradeCanceled"),
+        description: t("tradingPanel.pendingTradeCanceledDesc"),
       });
     }
   };
@@ -761,8 +761,8 @@ const TradingPanel = ({
       ]);
       focusPendingTab();
       toast({
-        title: "Pending trade armed",
-        description: `${direction === "higher" ? "Up" : "Down"} trade will execute in 3 seconds.`,
+        title: t("tradingPanel.pendingTradeArmed"),
+        description: t("tradingPanel.pendingTradeArmedDesc", { direction: direction === "higher" ? "Up" : "Down" }),
       });
 
       queuedPendingTimeoutRef.current = window.setTimeout(() => {
@@ -873,8 +873,8 @@ const TradingPanel = ({
     if (nextValue) {
       focusPendingTab();
       toast({
-        title: "Pending trade enabled",
-        description: "New trades will execute after a short delay.",
+        title: t("tradingPanel.pendingTradeEnabled"),
+        description: t("tradingPanel.pendingTradeEnabledDesc"),
       });
     }
   };
@@ -957,7 +957,7 @@ const TradingPanel = ({
                     className="relative flex h-[44px] w-full flex-col justify-between rounded-[4px] border border-[#596278] bg-[#2e3444] px-2.5 py-1.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-[#69738a] lg:hidden"
                   >
                     <span className="flex items-center justify-between gap-2 text-[9px] font-medium leading-none text-[#8fb0cf]">
-                      <span>Timer</span>
+                      <span>{t("tradingPanel.timer")}</span>
                       <Clock className="h-3 w-3 text-[#1e2330]" strokeWidth={2.4} />
                     </span>
                     <span className="text-[15px] font-bold tracking-[0.01em] tabular-nums text-white min-[360px]:text-[16px]" style={{ fontFamily: "Arial, sans-serif" }}>
@@ -1102,7 +1102,7 @@ const TradingPanel = ({
               color: "var(--trading-success-contrast-color)",
               boxShadow: higherButtonFocused ? "var(--trading-success-focus-shadow)" : "var(--trading-success-shadow)",
             }}>
-            <span>{asset.available === false ? "Unavailable" : t("tradingPanel.up")}</span>
+            <span>{asset.available === false ? t("tradingPanel.unavailable") : t("tradingPanel.up")}</span>
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
               <ArrowUp className="w-3.5 h-3.5 lg:h-4 lg:w-4" strokeWidth={2.8} />
             </span>
@@ -1121,7 +1121,7 @@ const TradingPanel = ({
               color: "var(--trading-danger-contrast-color)",
               boxShadow: lowerButtonFocused ? "var(--trading-danger-focus-shadow)" : "var(--trading-danger-shadow)",
             }}>
-            <span>{asset.available === false ? "Unavailable" : t("tradingPanel.down")}</span>
+            <span>{asset.available === false ? t("tradingPanel.unavailable") : t("tradingPanel.down")}</span>
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
               <ArrowDown className="w-3.5 h-3.5 lg:h-4 lg:w-4" strokeWidth={2.8} />
             </span>
@@ -1144,7 +1144,7 @@ const TradingPanel = ({
               className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "trades" ? "bg-[#33394a] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
             >
               {activeTab === "trades" && <div className="absolute left-0 right-0 top-0 h-[2px] rounded-full bg-[#3391ff]" />}
-              <span>Trades</span>
+              <span>{t("tradingPanel.trades")}</span>
               <span className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-black ${activeTab === "trades" ? "bg-[#515a70] text-white" : "bg-black/20 text-[#c1c8d7]"}`}>
                 {tradesTabCount}
               </span>
@@ -1152,7 +1152,7 @@ const TradingPanel = ({
 
             <button
               onClick={() => setActiveTab("pending")}
-              aria-label="Pending trades"
+              aria-label={t("tradingPanel.pendingTrades")}
               className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "pending" ? "bg-[#33394a] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
             >
               {activeTab === "pending" && <div className="absolute left-0 right-0 top-0 h-[2px] rounded-full bg-[#3391ff]" />}
@@ -1213,7 +1213,7 @@ const TradingPanel = ({
                 <div className="overflow-hidden bg-[#34394a] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
                   {sortedActiveTrades.length > 0 ? (
                     <section>
-                      <TradeGroupHeader label="OPEN TRADES" count={sortedActiveTrades.length} />
+                      <TradeGroupHeader label={t("tradingPanel.openTrades")} count={sortedActiveTrades.length} />
                       <div>
                         {sortedActiveTrades.map((trade) => (
                           <div
