@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Outlet, Link, Navigate, useLocation } from "react-router-dom";
 import {
   ShieldAlert,
@@ -29,31 +30,32 @@ import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { getRoleLabel, roleAllowsAdminPath } from "@/lib/adminRoles";
 
-const NAV_ITEMS = [
-  { label: "Dashboard", href: "/admin", icon: <LayoutDashboard size={18} />, exact: true },
-  { label: "Support Inbox", href: "/admin/support", icon: <LifeBuoy size={18} /> },
-  { label: "User Management", href: "/admin/users", icon: <Users size={18} /> },
-  { label: "Trade Management", href: "/admin/trades", icon: <LineChart size={18} /> },
-  { label: "Transactions", href: "/admin/finance", icon: <Wallet size={18} /> },
-  { label: "Asset Management", href: "/admin/assets", icon: <CandlestickChart size={18} /> },
-  { label: "Tournaments", href: "/admin/tournaments", icon: <Trophy size={18} /> },
-  { label: "Blog", href: "/admin/blog", icon: <NotebookPen size={18} /> },
-  { label: "Platform Settings", href: "/admin/settings", icon: <Settings size={18} /> },
-  { label: "Promo Codes", href: "/admin/promos", icon: <Tag size={18} /> },
-  { label: "Risk Management", href: "/admin/risk", icon: <AlertTriangle size={18} /> },
-  { label: "Reports", href: "/admin/reports", icon: <FileText size={18} /> },
-  { label: "Notification", href: "/admin/notifications", icon: <Bell size={18} /> },
-  { label: "Audit Logs", href: "/admin/audit", icon: <ScrollText size={18} /> },
-  { label: "Admin Users", href: "/admin/admins", icon: <ShieldCheck size={18} /> },
-  { label: "Crypto Payments", href: "/admin/crypto-payments", icon: <Bitcoin size={18} /> },
-  { label: "Profit Analytics", href: "/admin/analytics", icon: <LineChart size={18} /> },
-];
-
 const AdminLayout = () => {
+  const { t } = useTranslation();
   const { profile, signOut } = useAuth();
   const { isStaff, loading: staffLoading, primaryRole } = useStaffAccess();
   const location = useLocation();
   const { logoUrl, platformName } = useSiteBranding();
+
+  const NAV_ITEMS = [
+    { label: t("admin.nav.dashboard"), href: "/admin", icon: <LayoutDashboard size={18} />, exact: true },
+    { label: t("admin.nav.supportInbox"), href: "/admin/support", icon: <LifeBuoy size={18} /> },
+    { label: t("admin.nav.userManagement"), href: "/admin/users", icon: <Users size={18} /> },
+    { label: t("admin.nav.tradeManagement"), href: "/admin/trades", icon: <LineChart size={18} /> },
+    { label: t("admin.nav.transactions"), href: "/admin/finance", icon: <Wallet size={18} /> },
+    { label: t("admin.nav.assetManagement"), href: "/admin/assets", icon: <CandlestickChart size={18} /> },
+    { label: t("admin.nav.tournaments"), href: "/admin/tournaments", icon: <Trophy size={18} /> },
+    { label: t("admin.nav.blog"), href: "/admin/blog", icon: <NotebookPen size={18} /> },
+    { label: t("admin.nav.platformSettings"), href: "/admin/settings", icon: <Settings size={18} /> },
+    { label: t("admin.nav.promoCodes"), href: "/admin/promos", icon: <Tag size={18} /> },
+    { label: t("admin.nav.riskManagement"), href: "/admin/risk", icon: <AlertTriangle size={18} /> },
+    { label: t("admin.nav.reports"), href: "/admin/reports", icon: <FileText size={18} /> },
+    { label: t("admin.nav.notification"), href: "/admin/notifications", icon: <Bell size={18} /> },
+    { label: t("admin.nav.auditLogs"), href: "/admin/audit", icon: <ScrollText size={18} /> },
+    { label: t("admin.nav.adminUsers"), href: "/admin/admins", icon: <ShieldCheck size={18} /> },
+    { label: t("admin.nav.cryptoPayments"), href: "/admin/crypto-payments", icon: <Bitcoin size={18} /> },
+    { label: t("admin.nav.profitAnalytics"), href: "/admin/analytics", icon: <LineChart size={18} /> },
+  ];
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminTheme, setAdminTheme] = useState(() => localStorage.getItem("adminTheme") || "dark");
@@ -100,14 +102,14 @@ const AdminLayout = () => {
         <Link
           to="/"
           className="flex h-16 shrink-0 cursor-pointer items-center gap-3 border-b border-[#2a2f42] bg-[#1a1e2b] px-6 transition-colors hover:bg-[#1a1e2b]"
-          title="Return to Main Site"
+          title={t("admin.returnToSite")}
         >
           {logoUrl ? (
             <img src={logoUrl} alt={platformName} className="h-8 object-contain" />
           ) : (
             <>
               <ShieldAlert className="h-6 w-6 shrink-0 text-[#ffc27a]" />
-              <span className="truncate text-lg font-bold tracking-wide text-white">Admin Portal</span>
+              <span className="truncate text-lg font-bold tracking-wide text-white">{t("admin.portal")}</span>
             </>
           )}
         </Link>
@@ -141,7 +143,7 @@ const AdminLayout = () => {
               {profile?.display_name?.charAt(0) || "A"}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-white">{profile?.display_name || "Admin User"}</p>
+              <p className="truncate text-sm font-bold text-white">{profile?.display_name || t("admin.adminUser")}</p>
               <p className="truncate text-xs text-[#ffc27a]">{getRoleLabel(primaryRole)}</p>
             </div>
             <button onClick={signOut} className="shrink-0 text-[#a7bfd8] transition-colors hover:text-[#ffc27a]">
@@ -162,11 +164,11 @@ const AdminLayout = () => {
             </button>
             <div>
               <div className="hidden text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ffc27a] sm:block">
-                Admin Desk
+                {t("admin.desk")}
               </div>
               <h1 className="truncate text-lg font-bold text-white sm:text-xl">
                 {visibleNavItems.find((item) => (item.exact ? location.pathname === item.href : location.pathname.startsWith(item.href)))?.label ||
-                  "Dashboard"}
+                  t("admin.nav.dashboard")}
               </h1>
             </div>
           </div>
@@ -174,15 +176,15 @@ const AdminLayout = () => {
             <Link
               to="/trade"
               className="flex items-center gap-2 rounded-lg border border-[#0fa053]/30 bg-[#0fa053]/10 px-3 py-1.5 text-sm font-semibold text-[#0fa053] transition-colors hover:bg-[#0fa053]/20"
-              title="Switch to Trading Area"
+              title={t("admin.returnToSite")}
             >
               <TrendingUp size={16} />
-              <span className="hidden sm:inline">Go to Trade</span>
+              <span className="hidden sm:inline">{t("admin.goToTrade")}</span>
             </Link>
             <button
               onClick={toggleAdminTheme}
               className="rounded-full p-2 text-[var(--admin-text-secondary)] transition-colors hover:bg-[var(--admin-hover)] hover:text-[var(--admin-orange-soft)]"
-              title={adminTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              title={adminTheme === "dark" ? t("admin.switchLight") : t("admin.switchDark")}
             >
               {adminTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             </button>

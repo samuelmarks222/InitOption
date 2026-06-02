@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle2, ChevronDown, Plus, TrendingDown, Shield } from "lucide-react";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
@@ -84,6 +85,7 @@ const TradingHeader = ({
   const { vip } = useVip();
   const { formatMoney } = useCurrency();
   const { logoUrl, platformName, initials } = useSiteBranding();
+  const { t } = useTranslation();
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent("mobile_account_dropdown", { detail: { open: showAccountDrop } }));
@@ -138,9 +140,9 @@ const TradingHeader = ({
   const profileDisplayName = profileAlias?.trim() || profile?.email?.split("@")[0]?.trim() || "My account";
   const profileInitial = profileDisplayName.charAt(0).toUpperCase();
   const accountTitle =
-    accountType === "demo" ? "Demo account" :
-    accountType === "tournament" ? "Tournament account" :
-    "Live account";
+    accountType === "demo" ? t("tradingHeader.demoAccount") :
+    accountType === "tournament" ? t("tradingHeader.tournamentAccount") :
+    t("tradingHeader.liveAccount");
   const accountNameTextClass =
     accountType === "demo"
       ? "text-[#8f9bb3] font-bold"
@@ -164,7 +166,7 @@ const TradingHeader = ({
       : accountType === "tournament"
         ? "text-[#7eb6ff]"
         : "text-white";
-  const headerSubtitle = "WEB TRADING PLATFORM";
+  const headerSubtitle = t("tradingHeader.subtitle");
   const applyChartLayoutMode = (mode: ChartLayoutMode) => {
     setChartLayoutMode(mode);
     setShowChartLayoutMenu(false);
@@ -266,9 +268,9 @@ const TradingHeader = ({
             onClick={() => navigate("/admin")}
             className="flex h-[34px] shrink-0 items-center gap-1 rounded-lg px-2.5 text-[12px] font-bold text-white"
             style={{ background: "var(--trading-control-bg)", border: "1px solid var(--trading-control-border)" }}
-            title="Admin panel"
+            title={t("tradingHeader.adminPanel")}
           >
-            <Shield className="h-3.5 w-3.5" /> Admin
+            <Shield className="h-3.5 w-3.5" /> {t("tradingHeader.admin")}
           </button>
         )}
       </div>
@@ -292,7 +294,7 @@ const TradingHeader = ({
                 </div>
                 <span className="hidden h-1.5 w-1.5 shrink-0 rounded-full bg-white/14 xl:block" />
                 <span className="hidden whitespace-nowrap font-copy text-[12px] uppercase tracking-[0.13em] text-slate-500 xl:block" style={{ fontWeight: 900 }}>
-                  {headerSubtitle}
+                  {t("tradingHeader.subtitle")}
                 </span>
               </div>
             ) : (
@@ -310,7 +312,7 @@ const TradingHeader = ({
                   <span className="truncate text-white font-black text-[24px] tracking-[0.12em] uppercase">{platformName}</span>
                   <span className="hidden h-1.5 w-1.5 shrink-0 rounded-full bg-white/14 xl:block" />
                   <span className="hidden whitespace-nowrap text-gray-500 text-[11px] tracking-[0.22em] uppercase xl:block" style={{ fontWeight: 900 }}>
-                    {headerSubtitle}
+                    {t("tradingHeader.subtitle")}
                   </span>
                 </div>
               </div>
@@ -334,8 +336,8 @@ const TradingHeader = ({
                 background: showChartLayoutMenu ? "var(--trading-tool-active-bg)" : "var(--trading-control-bg)",
                 borderColor: showChartLayoutMenu ? "var(--trading-tool-active-border)" : "var(--trading-control-border)",
               }}
-              title="Multi-screen layout"
-              aria-label="Multi-screen layout"
+              title={t("tradingHeader.multiScreenLayout")}
+              aria-label={t("tradingHeader.multiScreenLayout")}
             >
               <SplitScreenIcon active={showChartLayoutMenu || chartLayoutMode > 1} />
             </button>
@@ -346,7 +348,7 @@ const TradingHeader = ({
                 style={{ background: "var(--trading-menu-bg)", borderColor: "var(--trading-menu-border)" }}
               >
                 <div className="px-2 pb-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
-                  Multi-screen
+                  {t("tradingHeader.multiScreen")}
                 </div>
                 <div className="grid gap-1.5">
                   {CHART_LAYOUT_OPTIONS.map((option) => {
@@ -417,7 +419,7 @@ const TradingHeader = ({
               </div>
 
               <div className="min-w-0 text-left">
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7f8ea8]">Profile</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7f8ea8]">{t("tradingHeader.profile")}</div>
                 <div className="max-w-[92px] truncate text-[13px] font-semibold text-white xl:max-w-[126px]">{profileDisplayName}</div>
               </div>
 
@@ -475,7 +477,7 @@ const TradingHeader = ({
               boxShadow: highlightDepositButton ? "var(--trading-success-focus-shadow)" : "var(--trading-success-shadow)",
             }}
           >
-            <Plus className="w-3.5 h-3.5" /> Deposit
+            <Plus className="w-3.5 h-3.5" /> {t("tradingHeader.deposit")}
             {highlightDepositButton && (
               <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[#18a038] shadow-[0_8px_18px_rgba(0,0,0,0.32)]">
                 <CheckCircle2 className="h-4 w-4" />
@@ -488,7 +490,7 @@ const TradingHeader = ({
             className="flex h-[38px] items-center gap-1.5 rounded px-3 text-[13px] font-bold text-white xl:px-4"
             style={{ background: "var(--trading-control-bg)", border: "1px solid var(--trading-control-border)" }}
           >
-            Withdrawal
+            {t("tradingHeader.withdrawal")}
           </button>
 
           {isStaff && (
@@ -496,9 +498,9 @@ const TradingHeader = ({
               onClick={() => navigate("/admin")}
               className="flex h-[38px] items-center gap-1.5 rounded px-3 text-[13px] font-bold text-white xl:px-4"
               style={{ background: "var(--trading-control-bg)", border: "1px solid var(--trading-control-border)" }}
-              title="Admin panel"
+              title={t("tradingHeader.adminPanel")}
             >
-              <Shield className="h-3.5 w-3.5" /> Admin
+              <Shield className="h-3.5 w-3.5" /> {t("tradingHeader.admin")}
             </button>
           )}
         </div>
@@ -508,5 +510,7 @@ const TradingHeader = ({
 };
 
 export default TradingHeader;
+
+
 
 

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useRef } from "react";
 import { Check, Image, Minus, Plus, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -65,6 +66,7 @@ const DOWN_COLOR_OPTIONS = ["#e85b4e", "#db4635", "#d96059", "#e47670", "#d8a441
 const MAX_BACKGROUND_BYTES = 2 * 1024 * 1024;
 
 export const WorkspaceSettings = () => {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { preferences, updatePreferences, resetPreferences } = useTradingPreferences();
 
@@ -76,12 +78,12 @@ export const WorkspaceSettings = () => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast({ title: "Background not changed", description: "Choose an image file." });
+      toast({ title: t("workspace.bgNotChanged"), description: t("workspace.bgNotChangedDesc") });
       return;
     }
 
     if (file.size > MAX_BACKGROUND_BYTES) {
-      toast({ title: "Background too large", description: "Choose an image up to 2 MB." });
+      toast({ title: t("workspace.bgTooLarge"), description: t("workspace.bgTooLargeDesc") });
       return;
     }
 
@@ -89,7 +91,7 @@ export const WorkspaceSettings = () => {
     reader.onload = () => {
       if (typeof reader.result === "string") {
         updatePreferences({ chartBackgroundImage: reader.result });
-        toast({ title: "Chart background updated" });
+        toast({ title: t("workspace.bgUpdated") });
       }
     };
     reader.readAsDataURL(file);
@@ -102,7 +104,7 @@ export const WorkspaceSettings = () => {
     >
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <FieldLabel>Language</FieldLabel>
+          <FieldLabel>{t("workspace.language")}</FieldLabel>
           <select
             value={preferences.language}
             onChange={(event) => updatePreferences({ language: event.target.value })}
@@ -122,7 +124,7 @@ export const WorkspaceSettings = () => {
         </div>
 
         <div className="space-y-1.5">
-          <FieldLabel>Timezone</FieldLabel>
+          <FieldLabel>{t("workspace.timezone")}</FieldLabel>
           <select
             value={preferences.timezone}
             onChange={(event) => updatePreferences({ timezone: event.target.value })}
@@ -141,7 +143,7 @@ export const WorkspaceSettings = () => {
           </select>
         </div>
 
-        <SectionLabel>Theme Settings</SectionLabel>
+        <SectionLabel>{t("workspace.themeSettings")}</SectionLabel>
         <div className="grid grid-cols-2 gap-2">
           {TRADING_TEMPLATE_OPTIONS.map((option) => {
             const selected = preferences.template === option.id;
@@ -185,10 +187,10 @@ export const WorkspaceSettings = () => {
           })}
         </div>
 
-        <SectionLabel>Platform</SectionLabel>
+        <SectionLabel>{t("workspace.platform")}</SectionLabel>
         <div className="space-y-3">
           <div>
-            <FieldLabel>Grid&apos;s opacity</FieldLabel>
+            <FieldLabel>{t("workspace.gridOpacity")}</FieldLabel>
             <div
               className="flex h-9 items-center justify-between rounded-[3px] border px-2"
               style={{ background: "var(--trading-panel-bg)", borderColor: "var(--trading-tool-border)" }}
@@ -215,45 +217,45 @@ export const WorkspaceSettings = () => {
 
           <SettingsCheck
             checked={preferences.autoScrolling}
-            title="Auto-scrolling"
-            caption="Keep the chart locked to the live price edge"
+            title={t("workspace.autoScrolling")}
+            caption={t("workspace.autoScrollingCaption")}
             onClick={() => updatePreferences({ autoScrolling: !preferences.autoScrolling })}
           />
           <SettingsCheck
             checked={preferences.oneClickTrade}
-            title="1-click trade"
-            caption="Open trades without confirmation"
+            title={t("workspace.oneClickTrade")}
+            caption={t("workspace.oneClickTradeCaption")}
             onClick={() => updatePreferences({ oneClickTrade: !preferences.oneClickTrade })}
           />
           <SettingsCheck
             checked={preferences.performanceMode}
-            title="Performance Mode"
-            caption="Use optimized rendering for chart and candles"
+            title={t("workspace.performanceMode")}
+            caption={t("workspace.performanceModeCaption")}
             onClick={() => updatePreferences({ performanceMode: !preferences.performanceMode })}
           />
           <SettingsCheck
             checked={preferences.shortOrderLabel}
-            title="Short order label"
-            caption="Use shorter labels in the trade list"
+            title={t("workspace.shortOrderLabel")}
+            caption={t("workspace.shortOrderLabelCaption")}
             onClick={() => updatePreferences({ shortOrderLabel: !preferences.shortOrderLabel })}
           />
         </div>
 
-        <SectionLabel>Trade Button Colors</SectionLabel>
+        <SectionLabel>{t("workspace.tradeButtonColors")}</SectionLabel>
         <ColorPalette
-          label="Up Button"
+          label={t("workspace.upButton")}
           activeColor={preferences.upTrendColor}
           colors={UP_COLOR_OPTIONS}
           onSelect={(color) => updatePreferences({ upTrendColor: color })}
         />
         <ColorPalette
-          label="Down Button"
+          label={t("workspace.downButton")}
           activeColor={preferences.downTrendColor}
           colors={DOWN_COLOR_OPTIONS}
           onSelect={(color) => updatePreferences({ downTrendColor: color })}
         />
 
-        <SectionLabel>Background</SectionLabel>
+        <SectionLabel>{t("workspace.background")}</SectionLabel>
         <div className="space-y-2">
           <input
             ref={fileInputRef}
@@ -274,15 +276,15 @@ export const WorkspaceSettings = () => {
           >
             <Image className="h-5 w-5 text-[var(--trading-accent-color)]" />
             <span>
-              Choose file
-              <span className="ml-1 text-[10px] font-semibold text-[var(--trading-muted-color)]">(Max size - 2 MB)</span>
+              {t("workspace.chooseFile")}
+              <span className="ml-1 text-[10px] font-semibold text-[var(--trading-muted-color)]">{t("workspace.maxSizeHint")}</span>
             </span>
           </button>
 
           {preferences.chartBackgroundImage ? (
             <>
               <div className="space-y-1.5">
-                <FieldLabel>Image opacity</FieldLabel>
+                <FieldLabel>{t("workspace.imageOpacity")}</FieldLabel>
                 <input
                   type="range"
                   min={0}
@@ -306,7 +308,7 @@ export const WorkspaceSettings = () => {
                 }}
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Remove chart background
+                {t("workspace.removeBackground")}
               </button>
             </>
           ) : null}
@@ -321,7 +323,7 @@ export const WorkspaceSettings = () => {
               color: "var(--trading-text-color)",
             }}
           >
-            Restore defaults
+            {t("workspace.restoreDefaults")}
           </button>
         </div>
       </div>

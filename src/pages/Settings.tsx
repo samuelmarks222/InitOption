@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Monitor, BarChart2, Keyboard, Bell, Shield, UserCog, ChevronDown } from "lucide-react";
 import { SiteLogo } from "@/components/branding/SiteLogo";
@@ -6,15 +7,6 @@ import { useDrawingPreferences } from "@/hooks/useDrawingPreferences";
 import { getDrawingToolFillColor, resolveDrawingToolColor } from "@/components/trading/drawings/toolCatalog";
 import { getTradeSoundEffectsEnabled, playTradeOpenSound, setTradeSoundEffectsEnabled } from "@/lib/tradeSounds";
 import { TRADING_TEMPLATE_OPTIONS, useTradingPreferences } from "@/lib/tradingPreferences";
-
-const LEFT_TABS = [
-  { id: "appearance", label: "Appearance", icon: Monitor },
-  { id: "trading", label: "Trading", icon: BarChart2 },
-  { id: "shortcuts", label: "Keyboard shortcuts", icon: Keyboard },
-  { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "privacy", label: "Privacy", icon: Shield },
-  { id: "account", label: "Account settings", icon: UserCog },
-];
 
 const DRAWING_COLOR_PRESETS = [
   "#52d38c",
@@ -86,6 +78,7 @@ const TIMEZONE_OPTIONS = [
 ];
 
 const Settings = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("appearance");
   const [scale, setScale] = useState("100%");
@@ -99,6 +92,14 @@ const Settings = () => {
   const [tradeSoundEffectsEnabled, setTradeSoundEffectsEnabledState] = useState(() => getTradeSoundEffectsEnabled());
   const { preferences: drawingPreferences, updatePreferences: updateDrawingPreferences, resetPreferences: resetDrawingPreferences } = useDrawingPreferences();
 
+  const LEFT_TABS = [
+    { id: "appearance", label: t("settings.leftTabs.appearance"), icon: Monitor },
+    { id: "trading", label: t("settings.leftTabs.trading"), icon: BarChart2 },
+    { id: "shortcuts", label: t("settings.leftTabs.shortcuts"), icon: Keyboard },
+    { id: "notifications", label: t("settings.leftTabs.notifications"), icon: Bell },
+    { id: "privacy", label: t("settings.leftTabs.privacy"), icon: Shield },
+    { id: "account", label: t("settings.leftTabs.account"), icon: UserCog },
+  ];
 
   const SCALES = ["80%", "90%", "100%", "110%", "120%"];
   const activeLinePreviewColor = resolveDrawingToolColor("trend", drawingPreferences.defaultColor);
@@ -123,7 +124,7 @@ const Settings = () => {
         className="flex min-h-[72px] flex-wrap items-center justify-between gap-4 border-b px-4 py-3 sm:px-6"
         style={{ background: "var(--trading-header-bg)", borderColor: "var(--trading-border-color)" }}
       >
-        <SiteLogo to="/" subtitle="Platform settings" />
+        <SiteLogo to="/" subtitle={t("settings.platformSettings")} />
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/trade")}
@@ -131,9 +132,9 @@ const Settings = () => {
             style={{ color: "var(--trading-muted-color)" }}
           >
             <ChevronLeft className="w-5 h-5" />
-            <span className="text-sm">Back to Trading</span>
+            <span className="text-sm">{t("settings.backToTrading")}</span>
           </button>
-          <span className="font-semibold text-[var(--trading-text-color)]">Settings</span>
+          <span className="font-semibold text-[var(--trading-text-color)]">{t("settings.pageTitle")}</span>
         </div>
       </div>
 
@@ -164,7 +165,7 @@ const Settings = () => {
             className="border-t p-4 text-xs"
             style={{ borderColor: "var(--trading-border-color)", color: "var(--trading-muted-color)" }}
           >
-            Site version: 3452.4.8216 (official build)
+            {t("settings.siteVersion")}
           </div>
         </div>
 
@@ -208,7 +209,7 @@ const Settings = () => {
 
               {/* Theme Settings */}
               <div className="mb-8">
-                <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-[var(--trading-text-color)]">THEME SETTINGS</h3>
+                <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-[var(--trading-text-color)]">{t("settings.appearance.themeSettings")}</h3>
                 <div className="flex gap-4">
                   {TRADING_TEMPLATE_OPTIONS.map((theme) => {
                     const selected = tradingPreferences.template === theme.id;
@@ -248,7 +249,7 @@ const Settings = () => {
 
               {/* Interface Scale */}
               <div className="mb-8">
-                <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-[var(--trading-text-color)]">INTERFACE SCALE</h3>
+                <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-[var(--trading-text-color)]">{t("settings.appearance.interfaceScale")}</h3>
                 <div className="flex gap-4">
                   {SCALES.map(s => (
                     <label key={s} className="flex items-center gap-2 cursor-pointer">
@@ -276,23 +277,23 @@ const Settings = () => {
                   className="rounded px-5 py-2 text-sm transition-colors hover:bg-[var(--trading-control-hover-bg)]"
                   style={{ background: "var(--trading-panel-soft-bg)", color: "var(--trading-text-color)" }}
                 >
-                  Customize Menu...
+                  {t("settings.appearance.customizeMenu")}
                 </button>
-                <span className="text-sm text-[var(--trading-muted-color)]">Location and visibility of menu items for quick access to the desired sections</span>
+                <span className="text-sm text-[var(--trading-muted-color)]">{t("settings.appearance.customizeMenuDesc")}</span>
               </div>
             </div>
           )}
 
           {activeTab === "trading" && (
             <div className="max-w-[600px]">
-              <h2 className="text-xl font-semibold text-foreground mb-6">Trading Preferences</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">{t("settings.trading.heading")}</h2>
               <div className="space-y-4">
                 <div className="rounded-2xl border border-white/5 bg-[#22242a] p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-sm font-medium text-foreground">Drawing tool color</div>
+                      <div className="text-sm font-medium text-foreground">{t("settings.trading.drawingToolColor")}</div>
                       <div className="mt-1 text-xs text-muted-foreground">
-                        New chart tools now inherit this color automatically, and filled tools keep a matching background tint.
+                        {t("settings.trading.drawingToolColorDesc")}
                       </div>
                     </div>
                     <span
@@ -309,7 +310,7 @@ const Settings = () => {
                           : "var(--trading-muted-color)",
                       }}
                     >
-                      {drawingPreferences.defaultColor ? "Custom" : "Auto"}
+                      {drawingPreferences.defaultColor ? t("settings.trading.custom") : t("settings.trading.auto")}
                     </span>
                   </div>
 
@@ -328,17 +329,17 @@ const Settings = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm text-foreground">
-                        {drawingPreferences.defaultColor ? drawingPreferences.defaultColor.toUpperCase() : "Automatic per-tool colors"}
+                        {drawingPreferences.defaultColor ? drawingPreferences.defaultColor.toUpperCase() : t("settings.trading.autoColorDesc")}
                       </div>
                       <div className="mt-0.5 text-xs text-muted-foreground">
-                        Pick a single default here, or switch back to automatic colors at any time.
+                        {t("settings.trading.colorHelper")}
                       </div>
                     </div>
                     <button
                       onClick={resetDrawingPreferences}
                       className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-white/10"
                     >
-                      Use automatic
+                      {t("settings.trading.useAutomatic")}
                     </button>
                   </div>
 
@@ -351,14 +352,14 @@ const Settings = () => {
                           drawingPreferences.defaultColor === color ? "border-white" : "border-transparent"
                         }`}
                         style={{ backgroundColor: color }}
-                        aria-label={`Use ${color} for drawing tools`}
+                        aria-label={`Use ${color} for ${t("settings.trading.drawingToolColor")}`}
                       />
                     ))}
                   </div>
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div className="rounded-xl border border-white/5 bg-[#1b1e25] p-3">
-                      <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Line Preview</div>
+                      <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{t("settings.trading.linePreview")}</div>
                       <svg viewBox="0 0 120 48" className="mt-2 h-14 w-full">
                         <path d="M12 34L102 14" stroke={activeLinePreviewColor} strokeWidth="3" strokeLinecap="round" />
                         <circle cx="12" cy="34" r="4" fill="#ffffff" stroke={activeLinePreviewColor} strokeWidth="2" />
@@ -366,7 +367,7 @@ const Settings = () => {
                       </svg>
                     </div>
                     <div className="rounded-xl border border-white/5 bg-[#1b1e25] p-3">
-                      <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Zone Preview</div>
+                      <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{t("settings.trading.zonePreview")}</div>
                       <svg viewBox="0 0 120 48" className="mt-2 h-14 w-full">
                         <rect
                           x="16"
@@ -384,21 +385,21 @@ const Settings = () => {
 
                   <div className="mt-3 text-xs text-muted-foreground">
                     {drawingPreferences.defaultColor
-                      ? "Your custom color is now used for newly placed drawing tools."
-                      : "Automatic mode keeps each tool on its own default accent until a user chooses an override."}
+                      ? t("settings.trading.customColorActive")
+                      : t("settings.trading.autoModeActive")}
                   </div>
                 </div>
 
                 {[
-                  { label: "Confirm trades before executing", desc: "Show a confirmation dialog before placing each trade", enabled: true },
-                  { label: "Show trade notifications", desc: "Display desktop notifications for trade results", enabled: true },
+                  { label: t("settings.trading.confirmTrades"), desc: t("settings.trading.confirmTradesDesc"), enabled: true },
+                  { label: t("settings.trading.showNotifications"), desc: t("settings.trading.showNotificationsDesc"), enabled: true },
                   {
-                    label: "Sound effects",
-                    desc: "Play sounds on trade open and close events",
+                    label: t("settings.trading.soundEffects"),
+                    desc: t("settings.trading.soundEffectsDesc"),
                     enabled: tradeSoundEffectsEnabled,
                     onToggle: handleTradeSoundEffectsToggle,
                   },
-                  { label: "Auto-invest same amount", desc: "Automatically use the same investment for each trade", enabled: true },
+                  { label: t("settings.trading.autoInvest"), desc: t("settings.trading.autoInvestDesc"), enabled: true },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-4 bg-[#22242a] rounded-lg border border-white/5">
                     <div>
@@ -422,15 +423,15 @@ const Settings = () => {
 
           {activeTab === "notifications" && (
             <div className="max-w-[600px]">
-              <h2 className="text-xl font-semibold text-foreground mb-6">Notification Settings</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">{t("settings.notifications.heading")}</h2>
               <div className="space-y-4">
                 {[
-                  "Deposit and withdrawal emails",
-                  "Trade result emails",
-                  "Tournament lifecycle emails",
-                  "Promo and bonus emails",
-                  "KYC and security emails",
-                  "In-app bell alerts",
+                  t("settings.notifications.depositEmails"),
+                  t("settings.notifications.tradeResultEmails"),
+                  t("settings.notifications.tournamentEmails"),
+                  t("settings.notifications.promoEmails"),
+                  t("settings.notifications.kycEmails"),
+                  t("settings.notifications.inAppAlerts"),
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between p-4 bg-[#22242a] rounded-lg border border-white/5">
                     <span className="text-sm text-foreground">{item}</span>
@@ -449,7 +450,7 @@ const Settings = () => {
                 {LEFT_TABS.find(t => t.id === activeTab)?.label}
               </h2>
               <div className="p-6 bg-[#22242a] rounded-lg border border-white/5 text-muted-foreground text-sm">
-                Settings for this section are coming soon. Contact support for any questions.
+                {t("settings.appearance.comingSoon")}
               </div>
             </div>
           )}

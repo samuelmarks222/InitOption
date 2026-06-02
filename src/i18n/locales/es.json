@@ -1,0 +1,33 @@
+{
+  "settings": {
+    "pageTitle": "Ajustes", "backToTrading": "Volver a Trading", "platformSettings": "Configuración de la plataforma",
+    "leftTabs": { "appearance": "Apariencia", "trading": "Trading", "shortcuts": "Atajos de teclado", "notifications": "Notificaciones", "privacy": "Privacidad", "account": "Configuración de cuenta" },
+    "appearance": { "themeSettings": "CONFIGURACIÓN DE TEMA", "interfaceScale": "ESCALA DE INTERFAZ", "customizeMenu": "Personalizar menú...", "comingSoon": "Próximamente. Contacte a soporte." },
+    "trading": { "heading": "Preferencias de Trading", "drawingToolColor": "Color de herramienta de dibujo", "custom": "Personalizado", "auto": "Automático", "useAutomatic": "Usar automático", "linePreview": "Vista previa de línea", "zonePreview": "Vista previa de zona", "confirmTrades": "Confirmar operaciones antes de ejecutar", "showNotifications": "Mostrar notificaciones", "soundEffects": "Efectos de sonido", "autoInvest": "Auto-invertir mismo monto" },
+    "notifications": { "heading": "Configuración de Notificaciones", "depositEmails": "Correos de depósito y retiro", "tradeResultEmails": "Correos de resultados", "tournamentEmails": "Correos de torneos", "promoEmails": "Correos promocionales", "kycEmails": "Correos de KYC y seguridad", "inAppAlerts": "Alertas en la app" }
+  },
+  "workspace": { "language": "Idioma", "timezone": "Zona horaria", "themeSettings": "Configuración de tema", "platform": "Plataforma", "gridOpacity": "Opacidad de la cuadrícula", "autoScrolling": "Desplazamiento automático", "oneClickTrade": "Operación con 1 clic", "performanceMode": "Modo rendimiento", "shortOrderLabel": "Etiqueta corta", "tradeButtonColors": "Colores de botones", "upButton": "Botón Subida", "downButton": "Botón Bajada", "background": "Fondo", "chooseFile": "Elegir archivo", "maxSizeHint": "(Máx. 2 MB)", "imageOpacity": "Opacidad de imagen", "removeBackground": "Eliminar fondo", "restoreDefaults": "Restaurar valores" },
+  "tradingHeader": { "singleChart": "1 pantalla", "dualChart": "2 pantallas", "tripleChart": "3 pantallas", "quadChart": "4 pantallas", "demo": "DEMO", "tour": "TORNEO", "live": "REAL", "deposit": "Depositar", "admin": "Admin", "profile": "Perfil", "withdrawal": "Retirar", "multiScreen": "Multi-pantalla", "multiScreenLayout": "Diseño multi-pantalla", "subtitle": "WEB TRADING PLATFORM", "demoAccount": "Cuenta demo", "tournamentAccount": "Cuenta de torneo", "liveAccount": "Cuenta real", "adminPanel": "Panel de admin" },
+  "tradingPanel": { "up": "Subida", "down": "Bajada", "trades": "Operaciones", "investment": "Inversión", "yourPayout": "Su pago:", "timer": "Temporizador", "time": "Tiempo", "insufficientBalance": "Saldo de demo insuficiente", "customTime": "Tiempo personalizado", "applyCustomTime": "Aplicar tiempo personalizado", "openTrades": "OPERACIONES ABIERTAS", "noTrades": "Aún no hay operaciones.", "noPendingTrades": "No hay operaciones pendientes." },
+  "assetSelector": { "selectPair": "Seleccionar par", "currencies": "DIVISAS", "crypto": "CRIPTO", "commodities": "MATERIAS PRIMAS", "stocks": "ACCIONES", "search": "Buscar", "name": "Nombre", "change24h": "Cambio 24h", "profit1min": "Ganancia 1+ min", "profit5min": "5+ min", "added": "AGREGADO" },
+  "admin": { "portal": "Portal Admin", "desk": "Escritorio Admin", "returnToSite": "Volver al sitio", "goToTrade": "Ir a Trading", "switchLight": "Cambiar a modo claro", "switchDark": "Cambiar a modo oscuro", "adminUser": "Usuario Admin", "nav": { "dashboard": "Panel", "supportInbox": "Bandeja de soporte", "userManagement": "Gestión de usuarios", "tradeManagement": "Gestión de operaciones", "transactions": "Transacciones", "assetManagement": "Gestión de activos", "tournaments": "Torneos", "blog": "Blog", "platformSettings": "Configuración", "promoCodes": "Códigos promocionales", "riskManagement": "Gestión de riesgos", "reports": "Informes", "notification": "Notificaciones", "auditLogs": "Registros de auditoría", "adminUsers": "Usuarios admin", "cryptoPayments": "Pagos cripto", "profitAnalytics": "Análisis de ganancias" } },
+  "languages": { "en": "English", "zh": "中文", "hi": "हिन्दी", "es": "Español", "fr": "Français", "ar": "العربية", "bn": "বাংলা", "pt": "Português", "ru": "Русский", "ur": "اردو", "id": "Bahasa Indonesia", "de": "Deutsch", "ja": "日本語", "sw": "Kiswahili", "tr": "Türkçe" },
+  "timezones": {
+    "UTC-12:00": "(UTC-12) Isla Baker", "UTC-11:00": "(UTC-11) Samoa Americana", "UTC-10:00": "(UTC-10) Hawái",
+    "UTC-09:00": "(UTC-9) Alaska", "UTC-08:00": "(UTC-8) Los Ángeles, Vancouver",
+    "UTC-07:00": "(UTC-7) Denver, Phoenix", "UTC-06:00": "(UTC-6) Chicago, Ciudad de México",
+    "UTC-05:00": "(UTC-5) Nueva York, Miami, Toronto", "UTC-04:00": "(UTC-4) Santiago, Caracas",
+    "UTC-03:00": "(UTC-3) Buenos Aires, São Paulo", "UTC-02:00": "(UTC-2) Fernando de Noronha",
+    "UTC-01:00": "(UTC-1) Azores", "UTC+00:00": "(UTC+0) Londres, Lisboa, Acra",
+    "UTC+01:00": "(UTC+1) París, Berlín, Roma, Madrid, Lagos", "UTC+02:00": "(UTC+2) El Cairo, Johannesburgo, Atenas, Estambul",
+    "UTC+03:00": "(UTC+3) Nairobi, Moscú, Riad, Bagdad", "UTC+03:30": "(UTC+3:30) Teherán",
+    "UTC+04:00": "(UTC+4) Dubái, Bakú", "UTC+04:30": "(UTC+4:30) Kabul",
+    "UTC+05:00": "(UTC+5) Karachi, Islamabad, Taskent", "UTC+05:30": "(UTC+5:30) Mumbai, Nueva Delhi, Colombo",
+    "UTC+05:45": "(UTC+5:45) Katmandú", "UTC+06:00": "(UTC+6) Daca, Almaty",
+    "UTC+06:30": "(UTC+6:30) Rangún", "UTC+07:00": "(UTC+7) Bangkok, Yakarta, Hanói",
+    "UTC+08:00": "(UTC+8) Pekín, Singapur, Perth, Manila", "UTC+09:00": "(UTC+9) Tokio, Seúl",
+    "UTC+09:30": "(UTC+9:30) Adelaida, Darwin", "UTC+10:00": "(UTC+10) Sídney, Melbourne, Guam",
+    "UTC+11:00": "(UTC+11) Islas Salomón, Numea", "UTC+12:00": "(UTC+12) Auckland, Fiyi",
+    "UTC+13:00": "(UTC+13) Samoa, Tonga", "UTC+14:00": "(UTC+14) Kiribati"
+  }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import i18n from "@/i18n";
 
 export type TradingTemplate = "default" | "graphite" | "amber" | "white";
 
@@ -181,6 +182,11 @@ const applyTradingPreferencesToDocument = (preferences: TradingPreferences) => {
   document.documentElement.dataset.tradingPerformanceMode = preferences.performanceMode ? "on" : "off";
   document.documentElement.style.setProperty("--trading-up-color", preferences.upTrendColor);
   document.documentElement.style.setProperty("--trading-down-color", preferences.downTrendColor);
+
+  const supportedLocales = ["en", "zh", "es"];
+  if (supportedLocales.includes(preferences.language) && i18n.language !== preferences.language) {
+    i18n.changeLanguage(preferences.language);
+  }
 };
 
 const persistTradingPreferences = (next: TradingPreferences) => {
