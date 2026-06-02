@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ChevronDown, Plus, Minus, ArrowUp, ArrowDown,
@@ -579,6 +580,7 @@ const TradingPanel = ({
   mobileDocked = false,
 }: TradingPanelProps) => {
   const { profile } = useAuth();
+  const { t } = useTranslation();
   const { activeTrades, tradeHistory, openTrade } = useTrading();
   const { preferences: tradingPreferences } = useTradingPreferences();
   const executeTrade = onTrade ?? openTrade;
