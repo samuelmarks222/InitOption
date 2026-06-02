@@ -3,14 +3,8 @@ import { IChartApi, ISeriesApi, type SeriesType } from "lightweight-charts";
 import type { ActiveTrade } from "@/hooks/useTrading";
 import { TRADING_DOWN_COLOR, TRADING_UP_COLOR } from "./tradingPalette";
 
-interface Props {
-  chart: IChartApi;
-  series: ISeriesApi<SeriesType>;
-  assetSymbol: string;
-  trades: ActiveTrade[];
-  timeframeSeconds: number;
-}
-
+// Utility functions for trade marker calculations
+/** Convert various time representations to Unix timestamp (seconds) */
 const getUnixTime = (value: unknown) => {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value > 1_000_000_000_000 ? Math.floor(value / 1000) : Math.floor(value);
@@ -31,6 +25,114 @@ const getUnixTime = (value: unknown) => {
   return null;
 };
 
+/** Compute display times for a trade marker */
+export const getTradeDisplayTimes = (
+  trade: { marker_time?: unknown; opened_at?: unknown; expiry_seconds?: number },
+  nowUnix: number,
+) => {
+  const entryTime =
+    getUnixTime(trade.marker_time) ??
+    getUnixTime(trade.opened_at) ??
+    Math.floor(Date.now() / 1000);
+  const expiryTime = trade.expiry_seconds != null ? entryTime + trade.expiry_seconds : entryTime;
+  const activeLineEndTime = Math.min(nowUnix, expiryTime);
+  return { entryTime, expiryTime, activeLineEndTime };
+};
+
+/** Compute progress fraction of an active line */
+export const getTradeProgress = (start: number, end: number, now: number) => {
+  if (end <= start) return 0;
+  const fraction = (now - start) / (end - start);
+  if (fraction <= 0) return 0;
+  if (fraction >= 1) return 1;
+  return fraction;
+};
+
+/** Interpolate logical position for a trade marker */
+export const getTradeMarkerLogicalTime = (
+  candles: { time: number; logical: number }[],
+  tradeTime: number,
+  timeframeSeconds: number,
+): number | null => {
+  if (!candles.length) return null;
+  // Ensure sorted
+  const sorted = candles.slice().sort((a, b) => a.time - b.time);
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  // Before first candle
+  if (tradeTime < first.time) return first.logical;
+  // After last candle - extrapolate using last two points if possible
+  if (tradeTime > last.time) {
+    if (sorted.length >= 2) {
+      const prev = sorted[sorted.length - 2];
+      const slope = (last.logical - prev.logical) / (last.time - prev.time);
+      return last.logical + (tradeTime - last.time) * slope;
+    }
+    return last.logical;
+  }
+  // Find surrounding candles
+  for (let i = 1; i < sorted.length; i++) {
+    const left = sorted[i - 1];
+    const right = sorted[i];
+    if (tradeTime >= left.time && tradeTime < right.time) {
+      const interval = right.time - left.time;
+      const proportion = (tradeTime - left.time) / interval;
+      // If interval matches timeframe, limit to half progress to avoid jumping ahead of live candle
+      const adjusted = interval === timeframeSeconds ? proportion * 0.5 : proportion;
+      return left.logical + adjusted * (right.logical - left.logical);
+    } else if (tradeTime === right.time) {
+      // If it's exactly the boundary, we return the logical of the right candle (which is the start of the next interval)
+      return right.logical;
+    }
+  }
+  // If we get here, tradeTime equals first.time (handled by the first condition?) Actually we already handled tradeTime < first.time and tradeTime > last.time.
+  // The only remaining case is tradeTime equals first.time, which we want to return first.logical.
+  return first.logical;
+};
+
+/** Get coordinate for a trade marker on the chart */
+export const getTradeMarkerCoordinate = (
+  chart: { timeScale: () => { timeToCoordinate: (time: number) => number; logicalToCoordinate: (logical: number) => number } },
+  candles: { time: number; logical: number }[],
+  tradeTime: number,
+  timeframeSeconds: number,
+): number | null => {
+  const logical = getTradeMarkerLogicalTime(candles, tradeTime, timeframeSeconds);
+  if (logical === null) return null;
+  return chart.timeScale().logicalToCoordinate(logical as never);
+};
+
+/** Resolve which logical anchor to use for a trade entry */
+export const resolveTradeMarkerEntryLogicalAnchor = (params: {
+  fixedEntryLogical: number;
+  isFreshActiveTrade: boolean;
+  latestLogicalAnchor: number;
+  storedLogicalAnchor: number;
+  timeframeSeconds: number;
+  timeBasedLogicalAnchor: number;
+}) => {
+  const { fixedEntryLogical, isFreshActiveTrade, latestLogicalAnchor, timeBasedLogicalAnchor } = params;
+  if (isFreshActiveTrade) {
+    // If the fixed logical matches the current timeframe bucket, reuse it
+    if (Math.floor(fixedEntryLogical) === Math.floor(timeBasedLogicalAnchor)) {
+      return fixedEntryLogical;
+    }
+    // Otherwise prefer the latest logical anchor derived from timestamps
+    return latestLogicalAnchor;
+  }
+  // Fallback to stored logical anchor
+  return params.storedLogicalAnchor;
+};
+
+interface Props {
+  chart: IChartApi;
+  series: ISeriesApi<SeriesType>;
+  assetSymbol: string;
+  trades: ActiveTrade[];
+  timeframeSeconds: number;
+}
+
+// Duplicate getUnixTime removed – using the implementation defined earlier
 const MARKER_VIEW_PADDING = 160;
 const DOT_SIZE = 10;
 const DOT_HALF = DOT_SIZE / 2;
