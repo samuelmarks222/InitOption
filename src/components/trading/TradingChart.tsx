@@ -3410,7 +3410,7 @@ const TradingChart = ({
   );
   const pairSession = getPairSessionState();
   const pairSessionDisplayLabel = pairSession.label.replace(/\b\w/g, (char) => char.toUpperCase());
-  const shortPayout = Math.min(95, Math.max(60, asset.maxProfit ?? 79));
+  const shortPayout = Math.min(95, Math.max(30, asset.maxProfit ?? 79));
   const extendedPayout = Math.min(92, shortPayout + 15);
   const dominantBias = pairSentiment.buy >= pairSentiment.sell ? "Buy" : "Sell";
   const marketClockLabel = useMemo(() => {

@@ -317,7 +317,7 @@ export const getAssetDefaultPayout = (category: AssetCategory) => {
 export const clampAssetPayout = (value?: number | string | null, fallback = 85) => {
   const numericValue = Number(value);
   const safeValue = Number.isFinite(numericValue) ? numericValue : fallback;
-  return Math.min(95, Math.max(60, Math.round(safeValue)));
+  return Math.min(95, Math.max(30, Math.round(safeValue)));
 };
 
 const clampNumericRange = (value: number, minimum: number, maximum: number) =>
@@ -347,9 +347,9 @@ export const getDynamicAssetPayoutProfile = ({
         : normalizedCategory === "STOCKS"
           ? -0.8
           : 0.4;
-  const symbolBias = (seed - 0.5) * 12;
-  const slowWave = Math.sin(timestampSec / (280 + seed * 260) + seed * Math.PI * 2) * 2.8;
-  const fastWave = Math.sin(timestampSec / (45 + seed * 35) + seed * 21.7) * 1.35;
+  const symbolBias = (seed - 0.5) * 32;
+  const slowWave = Math.sin(timestampSec / (280 + seed * 260) + seed * Math.PI * 2) * 5.0;
+  const fastWave = Math.sin(timestampSec / (120 + seed * 120) + seed * 21.7) * 3.0;
   const marketBias = clampNumericRange(marketBiasPercent * 0.24, -2.4, 2.4);
 
   const profit1m = clampAssetPayout(
@@ -363,7 +363,7 @@ export const getDynamicAssetPayoutProfile = ({
       : normalizedCategory === "STOCKS"
         ? -1.7
         : -1.1;
-  const maturityWave = Math.cos(timestampSec / (180 + seed * 210) + seed * 9.4) * 1.2;
+  const maturityWave = Math.cos(timestampSec / (180 + seed * 210) + seed * 9.4) * 3.0;
 
   const profit5m = clampAssetPayout(
     basePayout + categoryBias + symbolBias * 0.92 + slowWave * 0.78 + maturityWave + marketBias * 0.72 + durationBias,

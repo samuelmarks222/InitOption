@@ -137,7 +137,9 @@ export const DynamicAssetProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const assetRows = (data ?? []) as AssetConfigRow[];
       const syncAssets = () => {
         const nowSec = Date.now() / 1000;
-        const nextAssets = assetRows.map((assetRow) => buildDynamicAsset(assetRow, nowSec));
+        const nextAssets = assetRows
+          .map((assetRow) => buildDynamicAsset(assetRow, nowSec))
+          .sort((a, b) => b.maxProfit - a.maxProfit);
         assetsRef.current = nextAssets;
         setAssets(nextAssets);
       };
