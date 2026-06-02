@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type TradingTemplate = "default" | "graphite" | "amber" | "ivory";
+export type TradingTemplate = "default" | "graphite" | "amber" | "white";
 
 export const TRADING_TEMPLATE_OPTIONS: Array<{
   id: TradingTemplate;
@@ -39,13 +39,13 @@ export const TRADING_TEMPLATE_OPTIONS: Array<{
     text: "#f3f7ff",
   },
   {
-    id: "ivory",
-    label: "Ivory",
-    surface: "#efe6d6",
-    panel: "#fff4df",
-    line: "#477564",
-    grid: "#d4b98f",
-    text: "#2a2118",
+    id: "white",
+    label: "White",
+    surface: "#ffffff",
+    panel: "#f7f8fa",
+    line: "#1a1a2e",
+    grid: "#e2e5ea",
+    text: "#111827",
   },
 ];
 
@@ -86,14 +86,14 @@ const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 const TIMEZONE_PATTERN = /^UTC[+-](0\d|1[0-4]):[03]0$/;
 
 const isTradingTemplate = (value: unknown): value is TradingTemplate =>
-  value === "default" || value === "graphite" || value === "amber" || value === "ivory";
+  value === "default" || value === "graphite" || value === "amber" || value === "white";
 
 const normalizeTemplate = (value: unknown): TradingTemplate => {
   if (isTradingTemplate(value)) return value;
   if (value === "fullNight" || value === "dark") return "default";
   if (value === "twilight" || value === "darker") return "graphite";
   if (value === "dark-orange") return "amber";
-  if (value === "light") return "ivory";
+  if (value === "light") return "white";
   return DEFAULT_TRADING_PREFERENCES.template;
 };
 
@@ -205,18 +205,18 @@ export const getTradingTimezone = (timezone: string) => {
 
 export const getTradingChartSurfaceColor = (preferences: TradingPreferences, _fallback: string) => {
   if (preferences.chartBackgroundImage) return "rgba(0,0,0,0)";
-  if (preferences.template === "ivory") return "#efe6d6";
+  if (preferences.template === "white") return "#ffffff";
   if (preferences.template === "graphite") return "#101215";
   if (preferences.template === "amber") return "#1e2131";
   return "#1e2131";
 };
 
 export const getTradingChartTextColor = (preferences: TradingPreferences) =>
-  preferences.template === "ivory" ? "#2a2118" : "#eef3fb";
+  preferences.template === "white" ? "#111827" : "#eef3fb";
 
 export const getTradingGridColor = (preferences: TradingPreferences) => {
   const alpha = Math.max(0, Math.min(0.12, preferences.gridOpacity * 0.011));
-  if (preferences.template === "ivory") return `rgba(86, 57, 22, ${alpha + 0.03})`;
+  if (preferences.template === "white") return `rgba(0, 0, 0, ${alpha + 0.02})`;
   if (preferences.template === "amber") return `rgba(143, 164, 210, ${alpha + 0.01})`;
   if (preferences.template === "graphite") return `rgba(255, 255, 255, ${alpha + 0.02})`;
   return `rgba(143, 164, 210, ${alpha + 0.01})`;

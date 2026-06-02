@@ -2033,8 +2033,8 @@ const TradingChart = ({
     }
 
     const imageBaseColor =
-      tradingPreferences.template === "ivory"
-        ? "#efe6d6"
+      tradingPreferences.template === "white"
+        ? "#ffffff"
         : tradingPreferences.template === "amber"
           ? "#1e2131"
           : tradingPreferences.template === "graphite"
@@ -2043,8 +2043,8 @@ const TradingChart = ({
     const imageOpacity = Math.max(0, Math.min(100, activeChartBackgroundOpacity)) / 100;
     const overlayAlpha = Math.max(0.08, Math.min(0.94, 1 - imageOpacity));
     const imageOverlay =
-      tradingPreferences.template === "ivory"
-        ? `rgba(239,230,214,${overlayAlpha}), rgba(239,230,214,${overlayAlpha})`
+      tradingPreferences.template === "white"
+        ? `rgba(255,255,255,${overlayAlpha}), rgba(255,255,255,${overlayAlpha})`
         : `rgba(11,16,24,${overlayAlpha}), rgba(11,16,24,${overlayAlpha})`;
 
     return {
