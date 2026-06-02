@@ -24,6 +24,7 @@ export interface DynamicAsset {
   change24h: number;          // As a percentage number (e.g. 4.2 for 4.2%)
   maxProfit: number;          // e.g. 85 for 85%
   profit5m: number;           // e.g. 87 for 87%
+  available: boolean;         // false when in dead zone (N/A)
   flags: string[];
   stockLogo?: string | null;
   commodityIcon?: CommodityIcon;
@@ -76,7 +77,7 @@ const buildDynamicAsset = (assetRow: AssetConfigRow, timestampSec: number): Dyna
     timestamp: timestampSec,
     category,
   });
-  const { profit1m, profit5m } = getDynamicAssetPayoutProfile({
+  const { profit1m, profit5m, available } = getDynamicAssetPayoutProfile({
     symbol: assetRow.symbol,
     category,
     basePayout: configuredPayout,
@@ -93,6 +94,7 @@ const buildDynamicAsset = (assetRow: AssetConfigRow, timestampSec: number): Dyna
     change24h,
     maxProfit: profit1m,
     profit5m,
+    available,
     flags: getAssetFlags(assetRow.symbol, [assetRow.base_country, assetRow.quote_country]),
     stockLogo: getAssetStockLogo(assetRow.symbol, assetRow.stock_logo),
     commodityIcon: getAssetCommodityIcon(assetRow.symbol, assetRow.commodity_icon),

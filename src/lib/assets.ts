@@ -339,40 +339,38 @@ export const getDynamicAssetPayoutProfile = ({
   const normalizedSymbol = normalizeAssetSymbol(symbol) || "ASSET";
   const normalizedCategory = normalizeAssetCategory(category, normalizedSymbol);
   const seed = hashStringToUnitInterval(`payout:${normalizedCategory}:${normalizedSymbol}`);
-  const categoryBias =
-    normalizedCategory === "CRYPTO"
-      ? 1.6
-      : normalizedCategory === "COMMODITIES"
-        ? 0.9
-        : normalizedCategory === "STOCKS"
-          ? -0.8
-          : 0.4;
-  const symbolBias = (seed - 0.5) * 32;
-  const slowWave = Math.sin(timestampSec / (280 + seed * 260) + seed * Math.PI * 2) * 5.0;
-  const fastWave = Math.sin(timestampSec / (120 + seed * 120) + seed * 21.7) * 3.0;
-  const marketBias = clampNumericRange(marketBiasPercent * 0.24, -2.4, 2.4);
 
-  const profit1m = clampAssetPayout(
-    basePayout + categoryBias + symbolBias + slowWave + fastWave + marketBias,
-    basePayout,
-  );
+  const cycleDuration = 60 + seed * 90; // 60-150 seconds per cycle
+  const cyclePhase = (timestampSec % cycleDuration) / cycleDuration; // 0 to 1
+  const declineFraction = 0.75; // 75% declining, 25% N/A dead zone
+  const highPayout = clampAssetPayout(basePayout + 5 + (seed - 0.5) * 10, basePayout);
 
-  const durationBias =
-    normalizedCategory === "CRYPTO"
-      ? -1.3
-      : normalizedCategory === "STOCKS"
-        ? -1.7
-        : -1.1;
-  const maturityWave = Math.cos(timestampSec / (180 + seed * 210) + seed * 9.4) * 3.0;
+  let profit1m: number;
+  let profit5m: number;
+  let available: boolean;
 
-  const profit5m = clampAssetPayout(
-    basePayout + categoryBias + symbolBias * 0.92 + slowWave * 0.78 + maturityWave + marketBias * 0.72 + durationBias,
-    basePayout,
-  );
+  if (cyclePhase < declineFraction) {
+    // Decline phase: smooth decrease from high down to 30
+    const progress = cyclePhase / declineFraction; // 0 to 1
+    const rawValue = highPayout - progress * (highPayout - 30);
+    const microJitter = Math.sin(timestampSec * 0.8 + seed * 100) * 0.4;
+    profit1m = clampAssetPayout(rawValue + microJitter, basePayout);
+    available = true;
+
+    // profit5m slightly lower than profit1m with its own micro-jitter
+    const raw5m = rawValue - 2 + Math.cos(timestampSec * 0.6 + seed * 50) * 0.4;
+    profit5m = clampAssetPayout(raw5m, basePayout);
+  } else {
+    // Dead zone: show 30 (floor) and mark unavailable
+    profit1m = 30;
+    profit5m = 30;
+    available = false;
+  }
 
   return {
     profit1m,
     profit5m,
+    available,
   };
 };
 

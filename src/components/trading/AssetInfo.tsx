@@ -194,7 +194,7 @@ const AssetInfo = ({
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}`
-              : `${payout}%`;
+              : dynamicTab?.available === false ? "N/A" : `${payout}%`;
             const sparklinePoints = getTabSparklinePoints(tab.symbol, Number(dynamicTab?.change24h ?? tab.change ?? 0));
             const sparklineFillPoints = `${sparklinePoints} 120,44 0,44`;
             const sparklineColor = hasActiveTrade ? accent : TAB_SPARKLINE_COLOR;

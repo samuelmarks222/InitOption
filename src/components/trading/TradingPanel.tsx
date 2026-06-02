@@ -725,6 +725,7 @@ const TradingPanel = ({
 
   const placeTrade = async (direction: "higher" | "lower") => {
     if (effectiveInvestment <= 0) return;
+    if (asset.available === false) return;
 
     if (!tradingPreferences.oneClickTrade) {
       const confirmed = window.confirm(
@@ -893,7 +894,7 @@ const TradingPanel = ({
             <SymbolFlags symbol={asset.symbol} />
             <div className="flex min-w-0 items-center gap-1 text-[11px] font-extrabold tracking-[0.01em] text-white sm:text-[12px] lg:text-[14px]">
               <span className="max-w-[112px] truncate sm:max-w-[180px] lg:max-w-[150px]">{asset.symbol}</span>
-              <span className="text-[#0fa053] shrink-0">{asset.maxProfit ?? 79}%</span>
+              <span className={`shrink-0 ${asset.available === false ? "text-red-400" : "text-[#0fa053]"}`}>{asset.available === false ? "N/A" : `${asset.maxProfit ?? 79}%`}</span>
               <ChevronDown className="w-3.5 h-3.5 text-gray-400 lg:hidden" strokeWidth={3} />
             </div>
           </button>
@@ -1081,7 +1082,7 @@ const TradingPanel = ({
         <div className="flex items-center justify-between px-2.5 pb-2 text-white lg:px-4 lg:pb-3">
           <span className="text-[10px] font-medium text-[#9aa3b5] lg:text-[12px]">Your payout:</span>
           <div className="mx-2 flex-1 translate-y-[-1px] border-b border-dashed border-[#5f677c]" />
-          <span className="text-[12px] font-bold tracking-[0.01em] lg:text-[14px]" style={{ fontFamily: "Arial, sans-serif" }}>{payout.toFixed(2)} $</span>
+          <span className="text-[12px] font-bold tracking-[0.01em] lg:text-[14px]" style={{ fontFamily: "Arial, sans-serif" }}>{asset.available === false ? "N/A" : `${payout.toFixed(2)} $`}</span>
         </div>
 
         {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
@@ -1090,15 +1091,16 @@ const TradingPanel = ({
             ref={higherButtonRef}
             type="button"
             onClick={() => placeTrade("higher")}
+            disabled={asset.available === false}
             className={`flex h-[36px] items-center justify-between rounded-[4px] px-3 text-[14px] font-bold text-white transition-all active:scale-[0.98] focus:outline-none lg:h-[48px] lg:rounded-[6px] lg:px-4 lg:text-[15px] ${
               higherButtonFocused ? "scale-[1.01]" : ""
-            }`}
+            } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
             style={{
-              background: "var(--trading-up-color, var(--trading-success-color))",
+              background: asset.available === false ? "var(--trading-muted-color, #3a4055)" : "var(--trading-up-color, var(--trading-success-color))",
               color: "var(--trading-success-contrast-color)",
               boxShadow: higherButtonFocused ? "var(--trading-success-focus-shadow)" : "var(--trading-success-shadow)",
             }}>
-            <span>Up</span>
+            <span>{asset.available === false ? "Unavailable" : t("tradingPanel.up")}</span>
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
               <ArrowUp className="w-3.5 h-3.5 lg:h-4 lg:w-4" strokeWidth={2.8} />
             </span>
@@ -1108,15 +1110,16 @@ const TradingPanel = ({
             ref={lowerButtonRef}
             type="button"
             onClick={() => placeTrade("lower")}
+            disabled={asset.available === false}
             className={`flex h-[36px] items-center justify-between rounded-[4px] px-3 text-[14px] font-bold text-white transition-all active:scale-[0.98] focus:outline-none lg:h-[48px] lg:rounded-[6px] lg:px-4 lg:text-[15px] ${
               lowerButtonFocused ? "scale-[1.01]" : ""
-            }`}
+            } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
             style={{
-              background: "var(--trading-down-color, var(--trading-danger-color))",
+              background: asset.available === false ? "var(--trading-muted-color, #3a4055)" : "var(--trading-down-color, var(--trading-danger-color))",
               color: "var(--trading-danger-contrast-color)",
               boxShadow: lowerButtonFocused ? "var(--trading-danger-focus-shadow)" : "var(--trading-danger-shadow)",
             }}>
-            <span>Down</span>
+            <span>{asset.available === false ? "Unavailable" : t("tradingPanel.down")}</span>
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
               <ArrowDown className="w-3.5 h-3.5 lg:h-4 lg:w-4" strokeWidth={2.8} />
             </span>
