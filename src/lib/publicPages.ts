@@ -666,36 +666,151 @@ export const PUBLIC_PAGE_DEFINITIONS: Record<PublicPageKey, PublicPageDefinition
       "privacy policy trading platform, init option privacy policy, user rights, cookies policy, data retention",
     sections: [
       {
-        title: "1. What data we collect",
+        title: "1. Introduction",
         paragraphs: [
-          "{platformName} may collect registration information, support communications, account activity, device information, payment-related records, and verification documents where required.",
+          "{platformName} ('we', 'us', 'our', 'the Company') is committed to protecting your privacy. This Privacy Policy explains how we collect, use, store, share, and protect your personal information when you use our website, trading platform, and related services.",
+          "By using {platformName}, you consent to the practices described in this Privacy Policy. If you do not agree, please do not use our services.",
         ],
       },
       {
-        title: "2. How data is collected and used",
+        title: "2. Data Controller and Contact Information",
         paragraphs: [
-          "Data can be collected during registration, platform interaction, support requests, payment processing, and optional consent-driven marketing activity.",
-          "It is used to operate the platform, secure accounts, process transactions, prevent abuse, improve service reliability, and meet legal obligations.",
+          "Data Controller: {platformName}, Nairobi, Kenya",
+          "Data Protection Officer (DPO): dpo@initoption.com",
+          "For any privacy-related questions or requests, contact our DPO. General privacy inquiries: privacy@initoption.com. Customer support: support@initoption.com or live chat available 24/7 on the platform.",
         ],
       },
       {
-        title: "3. Sharing, retention, and international handling",
-        paragraphs: [
-          "Information may be shared with payment processors, identity verification providers, hosting providers, and legal authorities where required by law or platform safety obligations.",
-          "Certain records may be retained after account closure for fraud prevention, compliance, or dispute management purposes.",
+        title: "3. Definitions",
+        bullets: [
+          "Personal Data — Any information relating to an identified or identifiable natural person (e.g., name, email, IP address).",
+          "Processing — Any operation performed on personal data, including collection, storage, use, disclosure, deletion.",
+          "Data Controller — The entity that determines the purposes and means of processing personal data ({platformName}).",
+          "Data Processor — A third party that processes personal data on behalf of the Data Controller.",
+          "Data Subject — You, the individual whose personal data is being processed.",
         ],
       },
       {
-        title: "4. User rights and security",
+        title: "4. Personal Data We Collect",
         paragraphs: [
-          "Users may request access to their information, ask for corrections, raise deletion questions where applicable, and contact the platform regarding privacy concerns.",
-          "The platform uses encrypted transport, access controls, and ongoing operational safeguards to reduce unauthorized access risk.",
+          "4.1 Registration Data — Email address, password (hashed, never stored in plain text), full name (optional, required for KYC), date of birth, country of residence, and phone number (required for M-PESA transactions).",
+          "4.2 KYC and Verification Data — Government-issued ID (passport, national ID, driver's licence), proof of address (utility bill or bank statement dated within 3 months), selfie holding your ID, and source of funds information if required.",
+          "4.3 Financial and Transaction Data — Deposit amounts and methods (M-PESA phone number, crypto wallet addresses), withdrawal amounts and destinations, trade history (assets, stakes, directions, expiry times, outcomes), balance changes including bonus credits, and affiliate commissions earned and paid.",
+          "4.4 Technical and Usage Data — IP address, device type (desktop, mobile, tablet), operating system, browser type and version, login and logout timestamps, pages visited and features used, and session duration.",
+          "4.5 Communication Data — Support tickets (subject, message, attachments), live chat transcripts, emails exchanged with our support, finance, or legal teams, and feedback and survey responses.",
+          "4.6 Cookies and Similar Technologies — Essential cookies (authentication, security, load balancing), analytics cookies (usage statistics), and preference cookies (language, theme).",
         ],
       },
       {
-        title: "5. Cookies and analytics",
+        title: "5. How We Collect Your Data",
+        bullets: [
+          "Directly from you — Registration form, KYC uploads, deposit and withdrawal forms, support tickets, and live chat.",
+          "Automatically via technology — Cookies, log files, and IP tracking.",
+          "From third parties — Payment processors (SasaPay sends transaction confirmation; Plisio sends payment status) and KYC providers (verification status).",
+        ],
+      },
+      {
+        title: "6. How We Use Your Data",
         paragraphs: [
-          "Essential cookies may be used for login continuity, preference storage, and site operation. Additional analytics or marketing tools may depend on platform configuration and user consent requirements.",
+          "Account creation and management — Contract performance using registration data.",
+          "Trading execution — Contract performance using trade data.",
+          "Processing deposits and withdrawals — Contract performance using financial data and KYC data.",
+          "Preventing fraud and money laundering — Legal obligation using KYC data and transaction history.",
+          "Customer support — Legitimate interest using communication data and account data.",
+          "Improving our services (analytics) — Legitimate interest or consent using technical data and usage data.",
+          "Marketing and promotions (email) — Consent using email address.",
+          "Tournament administration — Contract performance using account data and trade data.",
+          "Affiliate programme — Contract performance using referral data and commission data.",
+          "Legal compliance (tax, AML, court orders) — Legal obligation using any relevant data.",
+          "Security and fraud monitoring — Legitimate interest using IP address and login data.",
+        ],
+      },
+      {
+        title: "7. Legal Basis for Processing (GDPR)",
+        paragraphs: [
+          "If you are a resident of the European Economic Area (EEA), we process your personal data based on the following legal grounds:",
+          "Performance of a contract — To provide you with the trading platform and related services.",
+          "Compliance with a legal obligation — To comply with anti-money laundering (AML) and know-your-customer (KYC) regulations.",
+          "Legitimate interests — To improve our services, prevent fraud, and ensure platform security.",
+          "Consent — For marketing emails and non-essential cookies. You may withdraw consent at any time.",
+        ],
+      },
+      {
+        title: "8. Cookies and Tracking Technologies",
+        paragraphs: [
+          "Cookies are small text files placed on your device when you visit a website. We use the following types: essential cookies for authentication, security, and load balancing (no opt-out available); analytics cookies via Google Analytics to understand how users interact with the platform (opt-out available); and preference cookies to remember language selection and theme (opt-out available).",
+          "You can disable non-essential cookies through your browser settings. Disabling essential cookies will prevent the platform from functioning correctly.",
+        ],
+      },
+      {
+        title: "9. Data Sharing and Disclosure",
+        paragraphs: [
+          "We never sell your personal data to third parties. We may share your data with:",
+          "Payment Processors — SasaPay for M-PESA deposits and withdrawals (shared data: phone number, amount, transaction reference). Plisio for crypto deposits and withdrawals (shared data: crypto wallet address, amount, transaction hash).",
+          "KYC Verification Providers — Third-party services to verify your identity (shared data: name, date of birth, ID document images, selfie, proof of address).",
+          "Cloud Hosting and Infrastructure — Amazon Web Services (AWS) with servers located in Kenya, Ireland (EU), and Virginia (USA). DigitalOcean for backup and ancillary services.",
+          "Law Enforcement and Regulators — We may disclose your data if required by law, court order, or regulatory authority.",
+          "Professional Advisors — Lawyers, accountants, and auditors bound by confidentiality obligations.",
+          "Business Transfers — In the event of a merger, acquisition, or sale of assets, your data may be transferred to a successor entity.",
+        ],
+      },
+      {
+        title: "10. International Data Transfers",
+        paragraphs: [
+          "Your personal data may be transferred to and processed in countries outside your country of residence, including Kenya (primary servers), Ireland (EU for GDPR compliance), and the United States (Virginia for backup).",
+          "When we transfer data to countries without an adequacy decision, we rely on Standard Contractual Clauses (SCCs) approved by the European Commission.",
+        ],
+      },
+      {
+        title: "11. Data Security",
+        bullets: [
+          "Encryption in transit — All data transmitted over TLS 1.3.",
+          "Encryption at rest — Sensitive data encrypted with AES-256.",
+          "Password hashing — Passwords hashed using bcrypt (cost factor 12).",
+          "Access controls — Only authorized personnel can access user data.",
+          "Two-factor authentication — Mandatory for admin accounts; available for users.",
+          "Regular audits — Penetration testing and vulnerability scans.",
+          "Data minimization — Only collect data necessary for stated purposes.",
+          "Despite these measures, no system is 100% secure. You are responsible for keeping your password and 2FA codes safe.",
+        ],
+      },
+      {
+        title: "12. Data Retention",
+        paragraphs: [
+          "Active account data is retained until you close your account. After account closure, data is retained for 5 years for AML and tax compliance. KYC documents are kept for 5 years after account closure. Trade history is retained for 7 years for financial audit purposes. Chat logs are kept for 1 year, support tickets for 3 years, marketing consent records until withdrawal plus 1 year. Cookie duration is described in the cookies section.",
+          "After the retention period, your data is permanently deleted or anonymized.",
+        ],
+      },
+      {
+        title: "13. Your Rights",
+        paragraphs: [
+          "Depending on your jurisdiction, you may have the following rights: access (request a copy of all data we hold about you), rectification (correct inaccurate or incomplete data), erasure (request deletion of your data, subject to legal retention), restriction of processing, data portability (receive your data in a machine-readable format), objection (opt out of marketing or certain processing activities), and withdrawal of consent for consent-based processing.",
+          "To exercise your rights, contact dpo@initoption.com. We will respond within 30 days.",
+        ],
+      },
+      {
+        title: "14. Children's Privacy",
+        paragraphs: [
+          "Our platform is not intended for anyone under 18 years old. We do not knowingly collect data from minors. If we become aware of such data, we will delete it immediately.",
+        ],
+      },
+      {
+        title: "15. Third-Party Links",
+        paragraphs: [
+          "The platform may contain links to third-party websites. We are not responsible for their privacy practices. Read their privacy policies separately.",
+        ],
+      },
+      {
+        title: "16. Changes to This Privacy Policy",
+        paragraphs: [
+          "We may update this Privacy Policy from time to time. Material changes will be notified via email to the address associated with your account and a prominent notice on the platform. The 'Last Updated' date at the top will be revised. Continued use of the platform after changes constitutes acceptance.",
+        ],
+      },
+      {
+        title: "17. How to File a Complaint",
+        paragraphs: [
+          "If you are not satisfied with our response, you may lodge a complaint with your local supervisory authority (for users outside Kenya).",
+          "General Privacy Inquiries: privacy@initoption.com. Customer Support: support@initoption.com or live chat available 24/7 on the platform.",
         ],
       },
     ],
