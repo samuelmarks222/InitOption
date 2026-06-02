@@ -91,7 +91,7 @@ const PromoCodes = () => {
         <div className="flex items-center gap-3">
           <button 
              onClick={() => setIsCreating(!isCreating)}
-             className="flex items-center gap-2 bg-[#0fa053] hover:bg-[#1e2330] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-[#0fa053]/20"
+             className="flex items-center gap-2 bg-[#0fa053] hover:bg-[#1a1e2b] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-[#0fa053]/20"
           >
             <Plus size={16} /> {isCreating ? "Cancel" : "Create Code"}
           </button>
@@ -99,31 +99,31 @@ const PromoCodes = () => {
       </div>
 
       {isCreating && (
-        <div className="bg-[#1e2330] border border-[#1e2330] rounded-2xl p-6 shadow-lg">
+        <div className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl p-6 shadow-lg">
           <h3 className="text-lg font-bold text-white mb-4">Create New Promo</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 items-end">
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Code</label>
-              <input type="text" value={newPromo.code} onChange={e => setNewPromo({...newPromo, code: e.target.value})} placeholder="WELCOME100" className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+              <input type="text" value={newPromo.code} onChange={e => setNewPromo({...newPromo, code: e.target.value})} placeholder="WELCOME100" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Type</label>
-              <select value={newPromo.type} onChange={e => setNewPromo({...newPromo, type: e.target.value})} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none">
+              <select value={newPromo.type} onChange={e => setNewPromo({...newPromo, type: e.target.value})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none">
                 <option value="Percentage">Percentage</option>
                 <option value="Fixed Bonus">Fixed Bonus</option>
               </select>
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Value</label>
-              <input type="text" value={newPromo.reward_value} onChange={e => setNewPromo({...newPromo, reward_value: e.target.value})} placeholder="e.g. 50% or $100" className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+              <input type="text" value={newPromo.reward_value} onChange={e => setNewPromo({...newPromo, reward_value: e.target.value})} placeholder="e.g. 50% or $100" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Max Usages</label>
-              <input type="number" value={newPromo.max_usages} onChange={e => setNewPromo({...newPromo, max_usages: Number(e.target.value)})} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+              <input type="number" value={newPromo.max_usages} onChange={e => setNewPromo({...newPromo, max_usages: Number(e.target.value)})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Expiry Date</label>
-              <input type="date" value={newPromo.expiry_date} onChange={e => setNewPromo({...newPromo, expiry_date: e.target.value})} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+              <input type="date" value={newPromo.expiry_date} onChange={e => setNewPromo({...newPromo, expiry_date: e.target.value})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
             </div>
             <div className="md:col-span-5 flex justify-end mt-2">
                <button onClick={handleCreatePromo} className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg text-sm font-bold transition-colors">
@@ -134,16 +134,16 @@ const PromoCodes = () => {
         </div>
       )}
 
-      <div className="bg-[#1e2330] border border-[#1e2330] rounded-2xl overflow-hidden shadow-lg">
-        <div className="p-4 border-b border-[#1e2330] flex justify-between items-center bg-[#1e2330]">
+      <div className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl overflow-hidden shadow-lg">
+        <div className="p-4 border-b border-[#2a2f42] flex justify-between items-center bg-[#1a1e2b]">
           <div className="flex gap-2 relative w-full max-w-sm">
              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-             <input type="text" placeholder="Search code..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+             <input type="text" placeholder="Search code..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-left text-sm text-slate-200">
-            <thead className="text-xs uppercase bg-[#1e2330] text-slate-300 border-b border-[#1e2330]">
+            <thead className="text-xs uppercase bg-[#1a1e2b] text-slate-300 border-b border-[#2a2f42]">
               <tr>
                 <th className="px-6 py-3 font-semibold">Promo Code</th>
                 <th className="px-6 py-3 font-semibold">Reward Value</th>
@@ -160,7 +160,7 @@ const PromoCodes = () => {
                  <tr><td colSpan={6} className="text-center py-8 text-slate-400">No promo codes found in database.</td></tr>
                ) : filteredPromos.map((promo) => (
                 <tr key={promo.id} className="hover:bg-white/[0.02]">
-                  <td className="px-6 py-4 font-mono font-bold text-white text-lg tracking-wider bg-gradient-to-r from-[#0fa053] to-[#1e2330] bg-clip-text text-transparent w-fit inline-block">
+                  <td className="px-6 py-4 font-mono font-bold text-white text-lg tracking-wider bg-gradient-to-r from-[#0fa053] to-[#1a1e2b] bg-clip-text text-transparent w-fit inline-block">
                     {promo.code}
                   </td>
                   <td className="px-6 py-4">

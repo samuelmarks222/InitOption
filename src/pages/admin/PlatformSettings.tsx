@@ -23,11 +23,11 @@ import {
 
 type UploadTarget = "logo" | "favicon" | "social" | "twitter" | "chartBackground" | `guide:${GuideMediaKey}`;
 
-const CARD_CLASS = "rounded-2xl border border-[#1e2330] bg-[#1e2330] p-6 shadow-lg";
+const CARD_CLASS = "rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-6 shadow-lg";
 const INPUT_CLASS =
-  "w-full rounded-lg border border-[#1e2330] bg-[#1c1f2d] px-4 py-2 text-sm text-white outline-none transition-colors focus:border-[#0fa053]";
+  "w-full rounded-lg border border-[#2a2f42] bg-[#0e1017] px-4 py-2 text-sm text-white outline-none transition-colors focus:border-[#0fa053]";
 const TEXTAREA_CLASS =
-  "min-h-[110px] rounded-lg border border-[#1e2330] bg-[#1c1f2d] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#0fa053]";
+  "min-h-[110px] rounded-lg border border-[#2a2f42] bg-[#0e1017] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#0fa053]";
 
 const MAX_META_DESCRIPTION_LENGTH = 160;
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -369,7 +369,7 @@ const PlatformSettings = () => {
     <div className="space-y-6">
       <div className="grid gap-6 lg:grid-cols-2">
         <div className={CARD_CLASS}>
-          <h3 className="mb-4 border-b border-[#1e2330] pb-2 text-lg font-bold text-white">General Info</h3>
+          <h3 className="mb-4 border-b border-[#2a2f42] pb-2 text-lg font-bold text-white">General Info</h3>
           <div className="space-y-4">
             <div>
               <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-300">Platform Name</label>
@@ -405,7 +405,7 @@ const PlatformSettings = () => {
         </div>
 
         <div className={CARD_CLASS}>
-          <h3 className="mb-4 border-b border-[#1e2330] pb-2 text-lg font-bold text-white">Trading Limits</h3>
+          <h3 className="mb-4 border-b border-[#2a2f42] pb-2 text-lg font-bold text-white">Trading Limits</h3>
           <div className="space-y-4">
             <div>
               <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-300">Min Trade Amount ($)</label>
@@ -425,12 +425,12 @@ const PlatformSettings = () => {
                 className={INPUT_CLASS}
               />
             </div>
-            <label className="flex items-center gap-3 rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3">
+            <label className="flex items-center gap-3 rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
               <input
                 type="checkbox"
                 checked={settings.enforce_max_exposure}
                 onChange={(event) => updateSetting("enforce_max_exposure", event.target.checked)}
-                className="h-4 w-4 rounded border-[#1e2330] bg-[#1c1f2d] accent-[#0fa053]"
+                className="h-4 w-4 rounded border-[#2a2f42] bg-[#0e1017] accent-[#0fa053]"
               />
               <span className="text-sm font-medium text-slate-200">Enforce max exposure per asset</span>
             </label>
@@ -438,7 +438,7 @@ const PlatformSettings = () => {
         </div>
 
         <div className={CARD_CLASS}>
-          <h3 className="mb-4 border-b border-[#1e2330] pb-2 text-lg font-bold text-white">Security Settings</h3>
+          <h3 className="mb-4 border-b border-[#2a2f42] pb-2 text-lg font-bold text-white">Security Settings</h3>
           <div className="space-y-3">
             <div>
               <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-300">
@@ -457,38 +457,38 @@ const PlatformSettings = () => {
                 Withdrawals above this KES amount stay pending until a finance admin approves them.
               </p>
             </div>
-            <label className="flex items-center justify-between gap-3 rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3">
+            <label className="flex items-center justify-between gap-3 rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
               <span className="text-sm font-medium text-slate-200">Enforce 2FA for all users</span>
               <input
                 type="checkbox"
                 checked={settings.enforce_2fa}
                 onChange={(event) => updateSetting("enforce_2fa", event.target.checked)}
-                className="h-4 w-4 rounded border-[#1e2330] bg-[#1c1f2d] accent-[#0fa053]"
+                className="h-4 w-4 rounded border-[#2a2f42] bg-[#0e1017] accent-[#0fa053]"
               />
             </label>
-            <label className="flex items-center justify-between gap-3 rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3">
+            <label className="flex items-center justify-between gap-3 rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
               <span className="text-sm font-medium text-slate-200">Require KYC before withdrawal</span>
               <input
                 type="checkbox"
                 checked={settings.require_kyc_withdrawal}
                 onChange={(event) => updateSetting("require_kyc_withdrawal", event.target.checked)}
-                className="h-4 w-4 rounded border-[#1e2330] bg-[#1c1f2d] accent-[#0fa053]"
+                className="h-4 w-4 rounded border-[#2a2f42] bg-[#0e1017] accent-[#0fa053]"
               />
             </label>
-            <label className="flex items-center justify-between gap-3 rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3">
+            <label className="flex items-center justify-between gap-3 rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
               <span className="text-sm font-medium text-slate-200">Strict password policy</span>
               <input
                 type="checkbox"
                 checked={settings.strict_password}
                 onChange={(event) => updateSetting("strict_password", event.target.checked)}
-                className="h-4 w-4 rounded border-[#1e2330] bg-[#1c1f2d] accent-[#0fa053]"
+                className="h-4 w-4 rounded border-[#2a2f42] bg-[#0e1017] accent-[#0fa053]"
               />
             </label>
           </div>
         </div>
 
         <div className={CARD_CLASS}>
-          <h3 className="mb-4 border-b border-[#1e2330] pb-2 text-lg font-bold text-white">Bonuses & Referrals</h3>
+          <h3 className="mb-4 border-b border-[#2a2f42] pb-2 text-lg font-bold text-white">Bonuses & Referrals</h3>
           <div className="space-y-4">
             <div>
               <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-300">Welcome Bonus (%)</label>
@@ -513,7 +513,7 @@ const PlatformSettings = () => {
       </div>
 
       <div className={CARD_CLASS}>
-        <h3 className="mb-4 border-b border-[#1e2330] pb-2 text-lg font-bold text-white">Chart Theming & Colors</h3>
+        <h3 className="mb-4 border-b border-[#2a2f42] pb-2 text-lg font-bold text-white">Chart Theming & Colors</h3>
         <div className="grid gap-6 md:grid-cols-3">
           {[
             { key: "chart_up_color", label: "Bull Candle (Up)" },
@@ -544,7 +544,7 @@ const PlatformSettings = () => {
           ))}
         </div>
 
-        <div className="mt-6 rounded-2xl border border-[#1e2330] bg-[#1c1f2d] p-4">
+        <div className="mt-6 rounded-2xl border border-[#2a2f42] bg-[#0e1017] p-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 flex-1">
               <h4 className="text-base font-bold text-white">Default Trading Background</h4>
@@ -618,11 +618,11 @@ const PlatformSettings = () => {
             </div>
 
             <div
-              className="min-h-[148px] overflow-hidden rounded-xl border border-[#1e2330] bg-[#111827]"
+              className="min-h-[148px] overflow-hidden rounded-xl border border-[#2a2f42] bg-[#111827]"
               style={{
                 backgroundImage: websiteContent.tradingDefaults.chartBackgroundImage
                   ? `linear-gradient(rgba(17,24,39,${Math.max(0.05, 1 - websiteContent.tradingDefaults.chartBackgroundOpacity / 100)}), rgba(17,24,39,${Math.max(0.05, 1 - websiteContent.tradingDefaults.chartBackgroundOpacity / 100)})), url("${websiteContent.tradingDefaults.chartBackgroundImage}")`
-                  : "linear-gradient(135deg, #111827 0%, #1c1f2d 100%)",
+                  : "linear-gradient(135deg, #111827 0%, #0e1017 100%)",
                 backgroundPosition: "center",
                 backgroundSize: "cover",
               }}
@@ -636,7 +636,7 @@ const PlatformSettings = () => {
       </div>
 
       <div className={CARD_CLASS}>
-        <h3 className="mb-4 flex items-center gap-2 border-b border-[#1e2330] pb-2 text-lg font-bold text-white">
+        <h3 className="mb-4 flex items-center gap-2 border-b border-[#2a2f42] pb-2 text-lg font-bold text-white">
           <ImageIcon className="h-5 w-5 text-[#0fa053]" />
           Site Branding & Appearance
         </h3>
@@ -665,7 +665,7 @@ const PlatformSettings = () => {
             <div key={field.label} className="space-y-3">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">{field.label}</label>
               <div className="flex items-center gap-4">
-                <div className="flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#1e2330] bg-[#1c1f2d]">
+                <div className="flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#2a2f42] bg-[#0e1017]">
                   {field.value ? (
                     <img src={field.value} alt={field.label} className="h-full w-full object-contain p-1" />
                   ) : (
@@ -781,7 +781,7 @@ const PlatformSettings = () => {
       </div>
 
       <div className={CARD_CLASS}>
-        <div className="flex flex-col gap-3 border-b border-[#1e2330] pb-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-[#2a2f42] pb-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="flex items-center gap-2 text-lg font-bold text-white">
               <Globe className="h-5 w-5 text-emerald-400" />
@@ -798,7 +798,7 @@ const PlatformSettings = () => {
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <div className="lg:col-span-2">
-            <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] p-4">
+            <div className="rounded-xl border border-[#2a2f42] bg-[#0e1017] p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="text-xs font-bold uppercase tracking-wider text-slate-300">Social Share Image</div>
@@ -826,7 +826,7 @@ const PlatformSettings = () => {
               />
 
               <div className="mt-4 flex items-center gap-4">
-                <div className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#1e2330] bg-[#1e2330]">
+                <div className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#2a2f42] bg-[#1a1e2b]">
                   {settings.og_image_url.trim() ? (
                     <img src={settings.og_image_url} alt="Social share preview" className="h-full w-full object-cover" />
                   ) : (
@@ -986,7 +986,7 @@ const PlatformSettings = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] p-4">
+            <div className="rounded-xl border border-[#2a2f42] bg-[#0e1017] p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <div className="text-xs font-bold uppercase tracking-wider text-slate-300">Twitter Image</div>
@@ -1040,16 +1040,16 @@ const PlatformSettings = () => {
           <Search className="h-5 w-5 text-[#0fa053]" />
           Search Preview
         </h3>
-        <div className="rounded-2xl border border-[#1e2330] bg-[#1c1f2d] p-5">
+        <div className="rounded-2xl border border-[#2a2f42] bg-[#0e1017] p-5">
           <div className="text-sm text-[#8ab4f8] sm:text-[20px]">{seoPreview.siteTitle}</div>
           <div className="mt-1 text-xs text-emerald-400">{googlePreviewDomain}</div>
           <p className="mt-2 text-sm leading-6 text-slate-300">{seoPreview.metaDescription}</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <span className="rounded-full border border-[#1e2330] bg-[#1e2330] px-2.5 py-1 text-[11px] text-slate-300">
+            <span className="rounded-full border border-[#2a2f42] bg-[#1a1e2b] px-2.5 py-1 text-[11px] text-slate-300">
               {seoPreview.robotsDirective}
             </span>
             {seoPreview.metaKeywords ? (
-              <span className="rounded-full border border-[#1e2330] bg-[#1e2330] px-2.5 py-1 text-[11px] text-slate-300">
+              <span className="rounded-full border border-[#2a2f42] bg-[#1a1e2b] px-2.5 py-1 text-[11px] text-slate-300">
                 Keywords set
               </span>
             ) : null}
@@ -1064,7 +1064,7 @@ const PlatformSettings = () => {
         </h3>
 
         <div className="space-y-4">
-          <div className="overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1c1f2d]">
+          <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#0e1017]">
             <div className="aspect-[1.91/1] bg-[#162029]">
               {seoPreview.ogImageUrl ? (
                 <img src={seoPreview.ogImageUrl} alt="Open Graph preview" className="h-full w-full object-cover" />
@@ -1072,14 +1072,14 @@ const PlatformSettings = () => {
                 <div className="flex h-full items-center justify-center text-sm text-slate-400">No OG image selected</div>
               )}
             </div>
-            <div className="border-t border-[#1e2330] px-4 py-3">
+            <div className="border-t border-[#2a2f42] px-4 py-3">
               <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">{socialPreviewDomain}</div>
               <div className="mt-1 text-sm font-semibold text-white">{seoPreview.ogTitle}</div>
               <p className="mt-1 text-sm leading-6 text-slate-300">{seoPreview.ogDescription}</p>
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1c1f2d]">
+          <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#0e1017]">
             <div className={`grid ${twitterUsesLargeImage ? "grid-cols-1" : "grid-cols-[1fr_110px]"} gap-0`}>
               <div className={`px-4 py-3 ${twitterUsesLargeImage ? "order-2" : "order-1"}`}>
                 <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Twitter / X</div>
@@ -1105,15 +1105,15 @@ const PlatformSettings = () => {
       <div className={CARD_CLASS}>
         <h3 className="text-lg font-bold text-white">Resolved Metadata</h3>
         <div className="mt-4 space-y-3 text-sm text-slate-300">
-          <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3">
+          <div className="rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
             <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Canonical URL</div>
             <div className="mt-1 break-all text-white">{seoPreview.canonicalUrl}</div>
           </div>
-          <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3">
+          <div className="rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
             <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Site Title Used</div>
             <div className="mt-1 text-white">{seoPreview.siteTitle}</div>
           </div>
-          <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3">
+          <div className="rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
             <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Fallback Behavior</div>
             <p className="mt-1 text-slate-300">
               Empty social titles and descriptions inherit from the site metadata, and Twitter/X reuses the shared
@@ -1142,7 +1142,7 @@ const PlatformSettings = () => {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="inline-flex items-center gap-2 rounded-lg bg-[#0fa053] px-4 py-2 text-sm font-medium text-white transition-colors shadow-lg shadow-[#0fa053]/20 hover:bg-[#1e2330] disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg bg-[#0fa053] px-4 py-2 text-sm font-medium text-white transition-colors shadow-lg shadow-[#0fa053]/20 hover:bg-[#1a1e2b] disabled:opacity-50"
         >
           <Save size={16} />
           {saving ? "Saving..." : "Save & Publish"}

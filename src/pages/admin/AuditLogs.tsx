@@ -274,15 +274,15 @@ const AuditLogs = () => {
           type="button"
           onClick={() => void loadAuditEntries()}
           disabled={loading}
-          className="flex items-center gap-2 rounded-lg border border-[#1e2330] bg-[#1e2330] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1e2330] disabled:opacity-70"
+          className="flex items-center gap-2 rounded-lg border border-[#2a2f42] bg-[#1a1e2b] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1a1e2b] disabled:opacity-70"
         >
           <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           Refresh
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
-        <div className="border-b border-[#1e2330] bg-[#1e2330] p-4">
+      <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
+        <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full max-w-sm">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -291,7 +291,7 @@ const AuditLogs = () => {
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search request, actor, note or status..."
-                className="w-full rounded-lg border border-[#1e2330] bg-[#1c1f2d] py-2 pl-9 pr-4 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
+                className="w-full rounded-lg border border-[#2a2f42] bg-[#0e1017] py-2 pl-9 pr-4 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
               />
             </div>
           </div>
@@ -324,7 +324,7 @@ const AuditLogs = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1080px] text-left text-sm text-slate-200">
-              <thead className="border-b border-[#1e2330] bg-[#1e2330] text-xs uppercase text-slate-300">
+              <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
                 <tr>
                   <th className="px-6 py-3 font-semibold">Time</th>
                   <th className="px-6 py-3 font-semibold">Action</th>
@@ -373,8 +373,8 @@ const AuditLogs = () => {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
-        <div className="border-b border-[#1e2330] bg-[#1e2330] p-4">
+      <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
+        <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
           <div className="text-lg font-bold text-white">Trade Balance Audit</div>
           <div className="mt-1 text-sm text-slate-300">
             Every trade open and close records the exact balance before, change amount, and balance after.
@@ -388,7 +388,7 @@ const AuditLogs = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1120px] text-left text-sm text-slate-200">
-              <thead className="border-b border-[#1e2330] bg-[#1e2330] text-xs uppercase text-slate-300">
+              <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
                 <tr>
                   <th className="px-6 py-3 font-semibold">Time</th>
                   <th className="px-6 py-3 font-semibold">Event</th>

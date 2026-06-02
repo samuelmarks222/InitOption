@@ -77,8 +77,8 @@ const EmptyState = ({
   description: string;
   title: string;
 }) => (
-  <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-8 text-center shadow-lg">
-    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#1e2330]">
+  <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-8 text-center shadow-lg">
+    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#1a1e2b]">
       <Clock3 className="h-5 w-5 text-slate-300" />
     </div>
     <h3 className="mt-4 text-lg font-bold text-white">{title}</h3>
@@ -496,7 +496,7 @@ const Finance = () => {
         </button>
       </div>
 
-      <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-5 shadow-lg">
+      <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-5 shadow-lg">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <h3 className="text-lg font-bold text-white">M-PESA Approval Settings</h3>
@@ -515,7 +515,7 @@ const Finance = () => {
                 min="0"
                 value={mpesaApprovalThresholdKes}
                 onChange={(event) => setMpesaApprovalThresholdKes(Number(event.target.value))}
-                className="w-full rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-2.5 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
+                className="w-full rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-2.5 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
               />
             </label>
             <button
@@ -530,7 +530,7 @@ const Finance = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 rounded-xl border border-[#1e2330] bg-[#1e2330] p-1 w-fit">
+      <div className="flex items-center gap-2 rounded-xl border border-[#2a2f42] bg-[#1a1e2b] p-1 w-fit">
         <button
           onClick={() => setActiveTab("deposits")}
           className={`flex items-center gap-2 rounded-lg px-6 py-2 text-sm font-bold transition-colors ${
@@ -538,18 +538,18 @@ const Finance = () => {
           }`}
         >
           <ArrowDownToLine size={16} /> Pending Deposits
-          <span className="ml-1 rounded-full bg-[#ff9a3d] px-1.5 py-0.5 text-[10px] text-[#1c1f2d]">
+          <span className="ml-1 rounded-full bg-[#ff9a3d] px-1.5 py-0.5 text-[10px] text-[#0e1017]">
             {deposits.filter((request) => request.status === "pending").length}
           </span>
         </button>
         <button
           onClick={() => setActiveTab("withdrawals")}
           className={`flex items-center gap-2 rounded-lg px-6 py-2 text-sm font-bold transition-colors ${
-            activeTab === "withdrawals" ? "bg-[#ff9a3d] text-[#1c1f2d] shadow-lg shadow-[#ff9a3d]/20" : "text-[#a7bfd8] hover:text-white"
+            activeTab === "withdrawals" ? "bg-[#ff9a3d] text-[#0e1017] shadow-lg shadow-[#ff9a3d]/20" : "text-[#a7bfd8] hover:text-white"
           }`}
         >
           <ArrowUpFromLine size={16} /> Withdrawal Desk
-          <span className="ml-1 rounded-full bg-[#ff9a3d] px-1.5 py-0.5 text-[10px] text-[#1c1f2d]">
+          <span className="ml-1 rounded-full bg-[#ff9a3d] px-1.5 py-0.5 text-[10px] text-[#0e1017]">
             {
               withdrawals.filter((request) =>
                 request.provider_name === "sasapay"
@@ -562,7 +562,7 @@ const Finance = () => {
         <button
           onClick={() => setActiveTab("history")}
           className={`flex items-center gap-2 rounded-lg px-6 py-2 text-sm font-bold transition-colors ${
-            activeTab === "history" ? "bg-[#1e2330] text-[#ffc27a] shadow-lg shadow-[#ff9a3d]/10" : "text-[#a7bfd8] hover:text-white"
+            activeTab === "history" ? "bg-[#1a1e2b] text-[#ffc27a] shadow-lg shadow-[#ff9a3d]/10" : "text-[#a7bfd8] hover:text-white"
           }`}
         >
           <Filter size={16} /> Processed History
@@ -576,7 +576,7 @@ const Finance = () => {
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
           placeholder="Search request ID, user, method or status..."
-          className="w-full rounded-xl border border-[#1e2330] bg-[#1c1f2d] py-2.5 pl-9 pr-4 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
+          className="w-full rounded-xl border border-[#2a2f42] bg-[#0e1017] py-2.5 pl-9 pr-4 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
         />
       </div>
 
@@ -593,13 +593,13 @@ const Finance = () => {
               description="New pending deposit requests will appear here after traders submit them from the deposit flow."
             />
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
-              <div className="border-b border-[#1e2330] bg-[#1e2330] p-4">
+            <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
+              <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
                 <h3 className="font-bold text-white">Deposit Requests</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[1080px] text-left text-sm text-slate-200">
-                  <thead className="border-b border-[#1e2330] bg-[#1e2330] text-xs uppercase text-slate-300">
+                  <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
                     <tr>
                       <th className="px-6 py-3 font-semibold">Request ID</th>
                       <th className="px-6 py-3 font-semibold">User</th>
@@ -710,7 +710,7 @@ const Finance = () => {
             />
           ) : (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-4 text-sm leading-6 text-slate-200 shadow-lg">
+              <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4 text-sm leading-6 text-slate-200 shadow-lg">
                 Finance sees the payout method, the requested payout number, and the most recent M-PESA deposit number for the same user.
                 Set the approval threshold to <span className="font-bold text-white">0 KES</span> if every M-PESA withdrawal
                 should wait for manual review before it is sent from the merchant dashboard.
@@ -725,8 +725,8 @@ const Finance = () => {
                   const isLegacyProcessing = isSasaPay && request.status === "processing";
 
                   return (
-                    <div key={request.id} className="overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
-                      <div className="border-b border-[#1e2330] bg-[#1e2330] p-4">
+                    <div key={request.id} className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
+                      <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                           <div>
                             <div className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Request</div>
@@ -775,28 +775,28 @@ const Finance = () => {
                         ) : null}
 
                         <div className="grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-xl border border-[#1e2330] bg-[#0f141c] p-4">
+                          <div className="rounded-xl border border-[#2a2f42] bg-[#0f141c] p-4">
                             <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Method</div>
                             <div className="mt-2 text-base font-semibold text-white">{request.method}</div>
                           </div>
 
-                          <div className="rounded-xl border border-[#1e2330] bg-[#0f141c] p-4">
+                          <div className="rounded-xl border border-[#2a2f42] bg-[#0f141c] p-4">
                             <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Submitted</div>
                             <div className="mt-2 text-base font-semibold text-white">{formatDateTime(request.created_at)}</div>
                           </div>
 
-                          <div className="rounded-xl border border-[#1e2330] bg-[#0f141c] p-4">
+                          <div className="rounded-xl border border-[#2a2f42] bg-[#0f141c] p-4">
                             <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Payout Number</div>
                             <div className="mt-2 break-all text-base font-semibold text-white">{request.payoutPhone ?? request.destination}</div>
                           </div>
 
-                          <div className="rounded-xl border border-[#1e2330] bg-[#0f141c] p-4">
+                          <div className="rounded-xl border border-[#2a2f42] bg-[#0f141c] p-4">
                             <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Last Deposit Number</div>
                             <div className="mt-2 break-all text-base font-semibold text-white">{request.referenceMpesaPhone ?? "-"}</div>
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-2 border-t border-[#1e2330] pt-4">
+                        <div className="flex flex-wrap gap-2 border-t border-[#2a2f42] pt-4">
                           {isWaitingReview ? (
                             <>
                               <button
@@ -904,13 +904,13 @@ const Finance = () => {
                 })}
               </div>
 
-              <div className="hidden overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
-              <div className="border-b border-[#1e2330] bg-[#1e2330] p-4">
+              <div className="hidden overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
+              <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
                 <h3 className="font-bold text-white">Withdrawal Requests</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[1220px] text-left text-sm text-slate-200">
-                  <thead className="border-b border-[#1e2330] bg-[#1e2330] text-xs uppercase text-slate-300">
+                  <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
                     <tr>
                       <th className="px-6 py-3 font-semibold">Request ID</th>
                       <th className="px-6 py-3 font-semibold">User</th>
@@ -1102,8 +1102,8 @@ const Finance = () => {
             />
           ) : (
             <div className="space-y-6">
-              <div className="overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
-                <div className="border-b border-[#1e2330] bg-[#1e2330] p-4">
+              <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
+                <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
                   <h3 className="font-bold text-white">Deposit History</h3>
                 </div>
                 {processedDeposits.length === 0 ? (
@@ -1111,7 +1111,7 @@ const Finance = () => {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[1040px] text-left text-sm text-slate-200">
-                      <thead className="border-b border-[#1e2330] bg-[#1e2330] text-xs uppercase text-slate-300">
+                      <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
                         <tr>
                           <th className="px-6 py-3 font-semibold">Request ID</th>
                           <th className="px-6 py-3 font-semibold">User</th>
@@ -1160,8 +1160,8 @@ const Finance = () => {
                 )}
               </div>
 
-              <div className="overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
-                <div className="border-b border-[#1e2330] bg-[#1e2330] p-4">
+              <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
+                <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
                   <h3 className="font-bold text-white">Withdrawal History</h3>
                 </div>
                 {processedWithdrawals.length === 0 ? (
@@ -1169,7 +1169,7 @@ const Finance = () => {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[980px] text-left text-sm text-slate-200">
-                      <thead className="border-b border-[#1e2330] bg-[#1e2330] text-xs uppercase text-slate-300">
+                      <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
                         <tr>
                           <th className="px-6 py-3 font-semibold">Request ID</th>
                           <th className="px-6 py-3 font-semibold">User</th>

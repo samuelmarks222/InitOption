@@ -202,13 +202,13 @@ const RiskManagement = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg md:col-span-2">
-          <div className="border-b border-[#1e2330] bg-[#1e2330] p-4">
+        <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg md:col-span-2">
+          <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
             <h3 className="font-bold text-white">Current Asset Exposure</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm text-slate-200">
-              <thead className="border-b border-[#1e2330] bg-[#1e2330] text-xs uppercase text-slate-300">
+              <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
                 <tr>
                   <th className="px-6 py-3 font-semibold">Asset</th>
                   <th className="px-6 py-3 font-semibold">Total Higher</th>
@@ -246,24 +246,24 @@ const RiskManagement = () => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-6 shadow-lg">
-          <h3 className="mb-4 border-b border-[#1e2330] pb-2 text-lg font-bold text-white">Connected Controls</h3>
+        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-6 shadow-lg">
+          <h3 className="mb-4 border-b border-[#2a2f42] pb-2 text-lg font-bold text-white">Connected Controls</h3>
           <div className="space-y-4 text-sm">
-            <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] p-4">
+            <div className="rounded-xl border border-[#2a2f42] bg-[#0e1017] p-4">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Max Exposure Guard</div>
               <div className="mt-2 text-base font-semibold text-white">
                 {controls?.enforce_max_exposure ? "Enabled" : "Disabled"}
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] p-4">
+            <div className="rounded-xl border border-[#2a2f42] bg-[#0e1017] p-4">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Min Trade Amount</div>
               <div className="mt-2 text-base font-semibold text-white">
                 {controls ? formatMoney(Number(controls.min_trade_amount ?? 0)) : "Not configured"}
               </div>
             </div>
 
-            <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] p-4">
+            <div className="rounded-xl border border-[#2a2f42] bg-[#0e1017] p-4">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Max Trade Amount</div>
               <div className="mt-2 text-base font-semibold text-white">
                 {controls ? formatMoney(Number(controls.max_trade_amount ?? 0)) : "Not configured"}
@@ -277,7 +277,7 @@ const RiskManagement = () => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-l-4 border-l-yellow-500 border-[#1e2330] bg-[#1e2330] p-6 shadow-lg">
+      <div className="rounded-2xl border border-l-4 border-l-yellow-500 border-[#2a2f42] bg-[#1a1e2b] p-6 shadow-lg">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h4 className="font-bold text-white">Trading Watchlist</h4>
@@ -287,7 +287,7 @@ const RiskManagement = () => {
           </div>
           <Link
             to="/admin/users"
-            className="inline-flex w-fit items-center gap-2 rounded-lg border border-[#1e2330] bg-[#1e2330] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1e2330]"
+            className="inline-flex w-fit items-center gap-2 rounded-lg border border-[#2a2f42] bg-[#1a1e2b] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1a1e2b]"
           >
             <Users className="h-4 w-4" />
             Review Users
@@ -298,18 +298,18 @@ const RiskManagement = () => {
           {loading ? (
             <div className="text-sm text-slate-400">Loading trading watchlist...</div>
           ) : watchlist.length === 0 ? (
-            <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] p-4 text-sm text-slate-300">
+            <div className="rounded-xl border border-[#2a2f42] bg-[#0e1017] p-4 text-sm text-slate-300">
               No traders currently meet the trading watchlist threshold.
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {watchlist.map((trader) => (
-                <div key={trader.id} className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] p-4">
+                <div key={trader.id} className="rounded-xl border border-[#2a2f42] bg-[#0e1017] p-4">
                   <div className="font-bold text-white">{trader.label}</div>
                   <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-300">
-                    <span className="rounded-full bg-[#1e2330] px-2.5 py-1">{trader.trades} trades</span>
-                    <span className="rounded-full bg-[#1e2330] px-2.5 py-1">{trader.winRate}% win rate</span>
-                    <span className="rounded-full bg-[#1e2330] px-2.5 py-1">{formatSignedMoney(trader.profit)}</span>
+                    <span className="rounded-full bg-[#1a1e2b] px-2.5 py-1">{trader.trades} trades</span>
+                    <span className="rounded-full bg-[#1a1e2b] px-2.5 py-1">{trader.winRate}% win rate</span>
+                    <span className="rounded-full bg-[#1a1e2b] px-2.5 py-1">{formatSignedMoney(trader.profit)}</span>
                   </div>
                 </div>
               ))}
@@ -342,13 +342,13 @@ const StatCard = ({
           : "bg-[#0fa053]/10";
 
   return (
-    <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-5 shadow-lg">
+    <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-5 shadow-lg">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-sm font-medium text-slate-300">{title}</div>
           <div className="mt-2 text-2xl font-bold text-white">{value}</div>
         </div>
-        <div className={`rounded-xl border border-[#1e2330] p-3 ${toneClass}`}>{icon}</div>
+        <div className={`rounded-xl border border-[#2a2f42] p-3 ${toneClass}`}>{icon}</div>
       </div>
     </div>
   );

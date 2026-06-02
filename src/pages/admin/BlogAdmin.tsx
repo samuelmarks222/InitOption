@@ -19,15 +19,15 @@ import { slugifyBlogText, type BlogPostStatus } from "@/lib/blogPosts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 
-const CARD_CLASS = "rounded-[28px] border border-[#1e2330] bg-[#1e2330] shadow-[0_28px_80px_rgba(0,0,0,0.28)]";
+const CARD_CLASS = "rounded-[28px] border border-[#2a2f42] bg-[#1a1e2b] shadow-[0_28px_80px_rgba(0,0,0,0.28)]";
 const INPUT_CLASS =
-  "w-full rounded-2xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#D5006C]/60";
+  "w-full rounded-2xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#D5006C]/60";
 const BUTTON_PRIMARY =
   "inline-flex items-center justify-center gap-2 rounded-full bg-[#D5006C] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#ef2a8a] disabled:cursor-not-allowed disabled:opacity-60";
 const BUTTON_SECONDARY =
   "inline-flex items-center justify-center gap-2 rounded-full border border-[#D5006C]/50 bg-transparent px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#D5006C]/12 disabled:cursor-not-allowed disabled:opacity-60";
 const BUTTON_GHOST =
-  "inline-flex items-center justify-center gap-2 rounded-full border border-[#1e2330] bg-white/[0.03] px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-[#D5006C]/40 hover:bg-[#D5006C]/10 hover:text-white";
+  "inline-flex items-center justify-center gap-2 rounded-full border border-[#2a2f42] bg-white/[0.03] px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-[#D5006C]/40 hover:bg-[#D5006C]/10 hover:text-white";
 const TEXTAREA_CLASS = `${INPUT_CLASS} min-h-[120px] resize-y`;
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
@@ -452,10 +452,10 @@ const BlogAdmin = () => {
           </label>
 
           <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as "all" | BlogPostStatus)}>
-            <SelectTrigger className="h-[50px] rounded-2xl border-[#1e2330] bg-[#1c1f2d] text-white">
+            <SelectTrigger className="h-[50px] rounded-2xl border-[#2a2f42] bg-[#0e1017] text-white">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent className="border-[#1e2330] bg-[#1e2330] text-white">
+            <SelectContent className="border-[#2a2f42] bg-[#1a1e2b] text-white">
               <SelectItem value="all">All statuses</SelectItem>
               <SelectItem value="published">Published</SelectItem>
               <SelectItem value="draft">Draft</SelectItem>
@@ -463,10 +463,10 @@ const BlogAdmin = () => {
           </Select>
 
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="h-[50px] rounded-2xl border-[#1e2330] bg-[#1c1f2d] text-white">
+            <SelectTrigger className="h-[50px] rounded-2xl border-[#2a2f42] bg-[#0e1017] text-white">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
-            <SelectContent className="border-[#1e2330] bg-[#1e2330] text-white">
+            <SelectContent className="border-[#2a2f42] bg-[#1a1e2b] text-white">
               <SelectItem value="all">All categories</SelectItem>
               {categories.map((category) => (
                 <SelectItem key={category.id} value={category.id}>
@@ -479,7 +479,7 @@ const BlogAdmin = () => {
       </div>
 
       <div className={`${CARD_CLASS} overflow-hidden`}>
-        <div className="border-b border-[#1e2330] px-6 py-5">
+        <div className="border-b border-[#2a2f42] px-6 py-5">
           <h3 className="text-lg font-semibold">All Blog Posts</h3>
         </div>
 
@@ -492,7 +492,7 @@ const BlogAdmin = () => {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-3">
                     <h4 className="truncate text-lg font-semibold text-white">{post.title}</h4>
-                    <span className="rounded-full border border-[#1e2330] bg-white/[0.03] px-3 py-1 text-xs font-semibold uppercase text-slate-300">
+                    <span className="rounded-full border border-[#2a2f42] bg-white/[0.03] px-3 py-1 text-xs font-semibold uppercase text-slate-300">
                       {post.status}
                     </span>
                   </div>
@@ -543,7 +543,7 @@ const BlogAdmin = () => {
 
       {editorOpen ? (
         <div className={`${CARD_CLASS} overflow-hidden`}>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#1e2330] px-6 py-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#2a2f42] px-6 py-5">
             <div>
               <h3 className="text-lg font-semibold">{draft.id ? "Edit Blog Post" : "Create Blog Post"}</h3>
               <p className="mt-1 text-sm text-slate-400">
@@ -635,7 +635,7 @@ const BlogAdmin = () => {
                 </div>
 
                 {draft.featuredImageUrl ? (
-                  <div className="overflow-hidden rounded-2xl border border-[#1e2330]">
+                  <div className="overflow-hidden rounded-2xl border border-[#2a2f42]">
                     <img src={draft.featuredImageUrl} alt={draft.featuredImageAlt || draft.title} className="h-56 w-full object-cover" />
                   </div>
                 ) : null}
@@ -648,7 +648,7 @@ const BlogAdmin = () => {
                 </div>
 
                 <div
-                  className="prose prose-invert mt-5 max-w-none rounded-2xl border border-[#1e2330] bg-[#1c1f2d] p-5 prose-headings:text-white prose-a:text-[#ff4da0] prose-strong:text-white prose-li:text-slate-200"
+                  className="prose prose-invert mt-5 max-w-none rounded-2xl border border-[#2a2f42] bg-[#0e1017] p-5 prose-headings:text-white prose-a:text-[#ff4da0] prose-strong:text-white prose-li:text-slate-200"
                   dangerouslySetInnerHTML={renderTrustedBlogHtml(draft.contentHtml)}
                 />
               </div>
@@ -663,10 +663,10 @@ const BlogAdmin = () => {
                       Status
                     </label>
                     <Select value={draft.status} onValueChange={(value) => handleDraftChange("status", value as BlogPostStatus)}>
-                      <SelectTrigger className="h-[50px] rounded-2xl border-[#1e2330] bg-[#1c1f2d] text-white">
+                      <SelectTrigger className="h-[50px] rounded-2xl border-[#2a2f42] bg-[#0e1017] text-white">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="border-[#1e2330] bg-[#1e2330] text-white">
+                      <SelectContent className="border-[#2a2f42] bg-[#1a1e2b] text-white">
                         <SelectItem value="draft">Draft</SelectItem>
                         <SelectItem value="published">Published</SelectItem>
                       </SelectContent>
@@ -716,7 +716,7 @@ const BlogAdmin = () => {
                   </label>
                 </div>
 
-                <div className="mt-4 overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1c1f2d]">
+                <div className="mt-4 overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#0e1017]">
                   {draft.featuredImageUrl ? (
                     <img src={draft.featuredImageUrl} alt={draft.featuredImageAlt || draft.title} className="h-44 w-full object-cover" />
                   ) : (
@@ -767,7 +767,7 @@ const BlogAdmin = () => {
                   {categories.map((category) => (
                     <label
                       key={category.id}
-                      className="flex items-center gap-3 rounded-2xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3 text-sm text-slate-200"
+                      className="flex items-center gap-3 rounded-2xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3 text-sm text-slate-200"
                     >
                       <input
                         type="checkbox"
@@ -780,7 +780,7 @@ const BlogAdmin = () => {
                               : draft.categoryIds.filter((value) => value !== category.id),
                           )
                         }
-                        className="h-4 w-4 rounded border-[#1e2330] accent-[#D5006C]"
+                        className="h-4 w-4 rounded border-[#2a2f42] accent-[#D5006C]"
                       />
                       <span>{category.name}</span>
                     </label>
@@ -790,7 +790,7 @@ const BlogAdmin = () => {
 
               <div className={`${CARD_CLASS} p-5`}>
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Preview</div>
-                <div className="mt-4 rounded-[24px] border border-[#1e2330] bg-[#1c1f2d] p-5">
+                <div className="mt-4 rounded-[24px] border border-[#2a2f42] bg-[#0e1017] p-5">
                   <div className="text-sm text-[#ff7db8]">{draft.metaTitle.trim() || draft.title || "Blog post title"}</div>
                   <div className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-500">
                     https://initoption.com/blog/{draft.slug || "post-slug"}
@@ -799,10 +799,10 @@ const BlogAdmin = () => {
                     {draft.metaDescription.trim() || draft.excerpt.trim() || "Your search preview will appear here."}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="rounded-full border border-[#1e2330] bg-white/[0.03] px-3 py-1 text-xs font-semibold uppercase text-slate-300">
+                    <span className="rounded-full border border-[#2a2f42] bg-white/[0.03] px-3 py-1 text-xs font-semibold uppercase text-slate-300">
                       {draft.status}
                     </span>
-                    <span className="rounded-full border border-[#1e2330] bg-white/[0.03] px-3 py-1 text-xs font-semibold uppercase text-slate-300">
+                    <span className="rounded-full border border-[#2a2f42] bg-white/[0.03] px-3 py-1 text-xs font-semibold uppercase text-slate-300">
                       {draft.categoryIds.length} categories
                     </span>
                   </div>
@@ -844,7 +844,7 @@ const BlogAdmin = () => {
               return (
                 <div
                   key={category.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-4 md:flex-row md:items-center md:justify-between"
+                  className="flex flex-col gap-3 rounded-2xl border border-[#2a2f42] bg-[#0e1017] px-4 py-4 md:flex-row md:items-center md:justify-between"
                 >
                   <div className="min-w-0 flex-1">
                     {editingCategoryId === category.id ? (

@@ -142,7 +142,7 @@ const TournamentsAdmin = () => {
         <div className="flex items-center gap-3">
           <button 
              onClick={() => setIsCreating(!isCreating)}
-             className="flex items-center gap-2 bg-[#0fa053] hover:bg-[#1e2330] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-[#0fa053]/20"
+             className="flex items-center gap-2 bg-[#0fa053] hover:bg-[#1a1e2b] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-[#0fa053]/20"
           >
             <Plus size={16} /> {isCreating ? "Cancel" : "Create Tournament"}
           </button>
@@ -150,42 +150,42 @@ const TournamentsAdmin = () => {
       </div>
 
       {isCreating && (
-        <div className="bg-[#1e2330] border border-[#1e2330] rounded-2xl p-6 shadow-lg">
+        <div className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl p-6 shadow-lg">
           <h3 className="text-lg font-bold text-white mb-4">New Tournament Config</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 items-end">
             <div className="col-span-2">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Title</label>
-              <input type="text" value={newTour.title} onChange={e => setNewTour({...newTour, title: e.target.value})} placeholder="Weekend Alpha Cup" className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+              <input type="text" value={newTour.title} onChange={e => setNewTour({...newTour, title: e.target.value})} placeholder="Weekend Alpha Cup" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
             </div>
             <div className="col-span-2 lg:col-span-5">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Description / Rules</label>
-              <input type="text" value={newTour.description} onChange={e => setNewTour({...newTour, description: e.target.value})} placeholder="Top 10 traders win cash prizes." className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+              <input type="text" value={newTour.description} onChange={e => setNewTour({...newTour, description: e.target.value})} placeholder="Top 10 traders win cash prizes." className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
             </div>
             
-            <div className="col-span-1 border-t border-[#1e2330] pt-4">
+            <div className="col-span-1 border-t border-[#2a2f42] pt-4">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Entry Fee ($)</label>
-              <input type="number" value={newTour.entry_fee} onChange={e => setNewTour({...newTour, entry_fee: Number(e.target.value)})} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+              <input type="number" value={newTour.entry_fee} onChange={e => setNewTour({...newTour, entry_fee: Number(e.target.value)})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
             </div>
-            <div className="col-span-1 border-t border-[#1e2330] pt-4">
+            <div className="col-span-1 border-t border-[#2a2f42] pt-4">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Rebuy Cost ($)</label>
-              <input type="number" min="0" value={newTour.rebuy_cost} onChange={e => setNewTour({...newTour, rebuy_cost: Number(e.target.value)})} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+              <input type="number" min="0" value={newTour.rebuy_cost} onChange={e => setNewTour({...newTour, rebuy_cost: Number(e.target.value)})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
             </div>
-            <div className="col-span-1 border-t border-[#1e2330] pt-4">
+            <div className="col-span-1 border-t border-[#2a2f42] pt-4">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Prize Pool ($)</label>
-              <input type="number" value={newTour.prize_pool} onChange={e => setNewTour({...newTour, prize_pool: Number(e.target.value)})} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-yellow-500 font-bold focus:border-[#0fa053] outline-none" />
+              <input type="number" value={newTour.prize_pool} onChange={e => setNewTour({...newTour, prize_pool: Number(e.target.value)})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-yellow-500 font-bold focus:border-[#0fa053] outline-none" />
             </div>
-             <div className="col-span-1 border-t border-[#1e2330] pt-4">
+             <div className="col-span-1 border-t border-[#2a2f42] pt-4">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Start Balance ($)</label>
-              <input type="number" value={newTour.starting_balance} onChange={e => setNewTour({...newTour, starting_balance: Number(e.target.value)})} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-green-400 font-bold focus:border-[#0fa053] outline-none" />
+              <input type="number" value={newTour.starting_balance} onChange={e => setNewTour({...newTour, starting_balance: Number(e.target.value)})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-green-400 font-bold focus:border-[#0fa053] outline-none" />
             </div>
 
-            <div className="col-span-1 lg:col-span-1 border-t border-[#1e2330] pt-4">
+            <div className="col-span-1 lg:col-span-1 border-t border-[#2a2f42] pt-4">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Starts (Local)</label>
-              <input type="datetime-local" value={newTour.start_date} onChange={e => setNewTour({...newTour, start_date: e.target.value})} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-2 py-2 text-xs text-white focus:border-[#0fa053] outline-none" />
+              <input type="datetime-local" value={newTour.start_date} onChange={e => setNewTour({...newTour, start_date: e.target.value})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-2 text-xs text-white focus:border-[#0fa053] outline-none" />
             </div>
-            <div className="col-span-1 lg:col-span-1 border-t border-[#1e2330] pt-4">
+            <div className="col-span-1 lg:col-span-1 border-t border-[#2a2f42] pt-4">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Ends (Local)</label>
-              <input type="datetime-local" value={newTour.end_date} onChange={e => setNewTour({...newTour, end_date: e.target.value})} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-2 py-2 text-xs text-white focus:border-[#0fa053] outline-none" />
+              <input type="datetime-local" value={newTour.end_date} onChange={e => setNewTour({...newTour, end_date: e.target.value})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-2 text-xs text-white focus:border-[#0fa053] outline-none" />
             </div>
 
             <div className="col-span-1 lg:col-span-1 flex justify-end">
@@ -197,16 +197,16 @@ const TournamentsAdmin = () => {
         </div>
       )}
 
-      <div className="bg-[#1e2330] border border-[#1e2330] rounded-2xl overflow-hidden shadow-lg">
-        <div className="p-4 border-b border-[#1e2330] flex justify-between items-center bg-[#1e2330]">
+      <div className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl overflow-hidden shadow-lg">
+        <div className="p-4 border-b border-[#2a2f42] flex justify-between items-center bg-[#1a1e2b]">
           <div className="flex gap-2 relative w-full max-w-sm">
              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-             <input type="text" placeholder="Search tournaments..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+             <input type="text" placeholder="Search tournaments..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-left text-sm text-slate-200">
-            <thead className="text-xs uppercase bg-[#1e2330] text-slate-300 border-b border-[#1e2330]">
+            <thead className="text-xs uppercase bg-[#1a1e2b] text-slate-300 border-b border-[#2a2f42]">
               <tr>
                 <th className="px-6 py-3 font-semibold">Tournament Title</th>
                 <th className="px-6 py-3 font-semibold">Entry Fee</th>
@@ -237,7 +237,7 @@ const TournamentsAdmin = () => {
                         min="0"
                         value={rebuyDrafts[t.id] ?? Number(t.rebuy_cost ?? 0)}
                         onChange={(e) => setRebuyDrafts((current) => ({ ...current, [t.id]: Number(e.target.value) }))}
-                        className="w-28 bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-3 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
+                        className="w-28 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
                       />
                     ) : (
                       t.rebuy_cost === 0 ? <span className="text-green-400">FREE</span> : `$${t.rebuy_cost}`
@@ -253,7 +253,7 @@ const TournamentsAdmin = () => {
                     <select 
                       value={t.status}
                       onChange={(e) => handleUpdateStatus(t.id, e.target.value)}
-                      className={`px-2 py-1 rounded bg-[#1c1f2d] border text-xs font-bold uppercase tracking-wider outline-none ${
+                      className={`px-2 py-1 rounded bg-[#0e1017] border text-xs font-bold uppercase tracking-wider outline-none ${
                         t.status === 'active' ? 'text-green-400 border-[#0fa053]/30' : 
                         t.status === 'completed' ? 'text-[#0fa053] border-[#0fa053]/30' : 
                         t.status === 'cancelled' ? 'text-red-400 border-red-500/30' : 
@@ -271,7 +271,7 @@ const TournamentsAdmin = () => {
                       {editingRebuyId === t.id ? (
                         <button
                           onClick={() => handleSaveRebuyCost(t.id)}
-                          className="p-1.5 bg-[#1e2330] text-slate-300 hover:text-green-400 rounded transition-colors"
+                          className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-green-400 rounded transition-colors"
                           title="Save Rebuy Cost"
                         >
                           <Save size={16} />
@@ -282,13 +282,13 @@ const TournamentsAdmin = () => {
                             setEditingRebuyId(t.id);
                             setRebuyDrafts((current) => ({ ...current, [t.id]: Number(t.rebuy_cost ?? 0) }));
                           }}
-                          className="p-1.5 bg-[#1e2330] text-slate-300 hover:text-[#0fa053] rounded transition-colors"
+                          className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-[#0fa053] rounded transition-colors"
                           title="Edit Rebuy Cost"
                         >
                           <Edit size={16} />
                         </button>
                       )}
-                      <button onClick={() => handleDelete(t.id)} className="p-1.5 bg-[#1e2330] text-slate-300 hover:text-red-400 rounded transition-colors" title="Delete Tournament">
+                      <button onClick={() => handleDelete(t.id)} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-red-400 rounded transition-colors" title="Delete Tournament">
                         <Trash2 size={16} />
                       </button>
                     </div>

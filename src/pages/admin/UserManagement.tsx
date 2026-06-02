@@ -242,7 +242,7 @@ const UserManagement = () => {
         </div>
       </div>
 
-      <div className="bg-[#1e2330] border border-[#1e2330] shadow-lg rounded-2xl p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="bg-[#1a1e2b] border border-[#2a2f42] shadow-lg rounded-2xl p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex-1 max-w-md relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#ffc27a]" />
           <input
@@ -250,7 +250,7 @@ const UserManagement = () => {
             placeholder="Search by ID, username, or display name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#1e2330] border border-[#1e2330] rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-[#0fa053] transition-colors"
+            className="w-full bg-[#1a1e2b] border border-[#2a2f42] rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-[#0fa053] transition-colors"
           />
         </div>
 
@@ -260,7 +260,7 @@ const UserManagement = () => {
             <select
               value={selectedTier}
               onChange={(e) => setSelectedTier(e.target.value)}
-              className="bg-[#1e2330] border border-[#1e2330] rounded-lg pl-9 pr-8 py-2 text-sm text-white appearance-none focus:outline-none focus:border-[#0fa053] transition-colors"
+              className="bg-[#1a1e2b] border border-[#2a2f42] rounded-lg pl-9 pr-8 py-2 text-sm text-white appearance-none focus:outline-none focus:border-[#0fa053] transition-colors"
             >
               <option value="all">All VIP tiers</option>
               {VIP_TIER_SEQUENCE.map((tier) => (
@@ -272,7 +272,7 @@ const UserManagement = () => {
           <select
             value={selectedKyc}
             onChange={(e) => setSelectedKyc(e.target.value as "all" | KycStatus)}
-            className="bg-[#1e2330] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white appearance-none focus:outline-none focus:border-[#0fa053] transition-colors"
+            className="bg-[#1a1e2b] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white appearance-none focus:outline-none focus:border-[#0fa053] transition-colors"
           >
             <option value="all">All KYC statuses</option>
             <option value="Pending">Pending</option>
@@ -283,7 +283,7 @@ const UserManagement = () => {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-5 shadow-lg">
+        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-5 shadow-lg">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#ff9a3d]/12 text-[#ffc27a]">
               <Users size={20} />
@@ -294,7 +294,7 @@ const UserManagement = () => {
             </div>
           </div>
         </div>
-        <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-5 shadow-lg">
+        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-5 shadow-lg">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0fa053]/10 text-[#9be1bc]">
               <FileText size={20} />
@@ -305,7 +305,7 @@ const UserManagement = () => {
             </div>
           </div>
         </div>
-        <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-5 shadow-lg">
+        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-5 shadow-lg">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10 text-amber-300">
               <Loader2 size={20} />
@@ -316,7 +316,7 @@ const UserManagement = () => {
             </div>
           </div>
         </div>
-        <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-5 shadow-lg">
+        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-5 shadow-lg">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-500/10 text-green-300">
               <CheckCircle2 size={20} />
@@ -329,10 +329,10 @@ const UserManagement = () => {
         </div>
       </div>
 
-      <div className="bg-[#1e2330] border border-[#1e2330] rounded-2xl overflow-hidden shadow-lg">
+      <div className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl overflow-hidden shadow-lg">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-left text-sm text-slate-200">
-            <thead className="text-xs uppercase bg-[#1e2330] text-slate-300 border-b border-[#1e2330]">
+            <thead className="text-xs uppercase bg-[#1a1e2b] text-slate-300 border-b border-[#2a2f42]">
               <tr>
                 <th className="px-6 py-4 font-semibold">User</th>
                 <th className="px-6 py-4 font-semibold">VIP</th>
@@ -350,7 +350,7 @@ const UserManagement = () => {
                   <tr key={user.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#0fa053] to-[#1e2330] flex items-center justify-center font-bold text-white text-xs shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#0fa053] to-[#1a1e2b] flex items-center justify-center font-bold text-white text-xs shrink-0">
                           {user.name.charAt(0)}
                         </div>
                         <div>
@@ -390,7 +390,7 @@ const UserManagement = () => {
                             value={user.manualOverride ?? "auto"}
                             onChange={(e) => handleOverride(user.id, e.target.value as VipTierId | "auto")}
                             disabled={!canEditVip}
-                            className="bg-[#1e2330] border border-[#1e2330] rounded-lg pl-8 pr-8 py-2 text-xs text-white appearance-none focus:outline-none focus:border-[#0fa053] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                            className="bg-[#1a1e2b] border border-[#2a2f42] rounded-lg pl-8 pr-8 py-2 text-xs text-white appearance-none focus:outline-none focus:border-[#0fa053] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {TIER_OPTIONS.map((option) => (
                               <option key={option.value} value={option.value}>{option.label}</option>
@@ -402,7 +402,7 @@ const UserManagement = () => {
                             setSelectedUser(user);
                             setKycAdminNote("");
                           }}
-                          className="p-1.5 text-slate-300 hover:text-white hover:bg-[#1e2330] rounded-md transition-colors"
+                          className="p-1.5 text-slate-300 hover:text-white hover:bg-[#1a1e2b] rounded-md transition-colors"
                           title="Review KYC"
                         >
                           <Eye size={16} />
@@ -437,7 +437,7 @@ const UserManagement = () => {
           </table>
         </div>
 
-        <div className="px-6 py-4 border-t border-[#1e2330] flex items-center justify-between text-sm text-slate-300 bg-[#1e2330]">
+        <div className="px-6 py-4 border-t border-[#2a2f42] flex items-center justify-between text-sm text-slate-300 bg-[#1a1e2b]">
           <span>Showing 1 to {filteredUsers.length} of {users.length} entries</span>
           <div className="text-xs text-slate-400">KYC review now reads directly from the shared profile record.</div>
         </div>
@@ -445,20 +445,20 @@ const UserManagement = () => {
 
       {selectedUser && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-5xl rounded-3xl border border-[#1e2330] bg-[#1e2330] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#1e2330] px-6 py-5">
+          <div className="w-full max-w-5xl rounded-3xl border border-[#2a2f42] bg-[#1a1e2b] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#2a2f42] px-6 py-5">
               <div>
                 <h3 className="text-xl font-bold text-white">KYC Review</h3>
                 <p className="mt-1 text-sm text-slate-300">{selectedUser.name} - {selectedUser.username}</p>
               </div>
-              <button onClick={() => setSelectedUser(null)} className="rounded-full bg-[#1e2330] p-2 text-slate-300 transition-colors hover:bg-[#1e2330] hover:text-white">
+              <button onClick={() => setSelectedUser(null)} className="rounded-full bg-[#1a1e2b] p-2 text-slate-300 transition-colors hover:bg-[#1a1e2b] hover:text-white">
                 <X size={18} />
               </button>
             </div>
 
             <div className="grid gap-6 px-6 py-6 lg:grid-cols-[0.9fr_1.4fr]">
               <div className="space-y-4">
-                <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-4">
+                <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4">
                     <div className="text-xs uppercase tracking-[0.18em] text-[#ffc27a]">Profile Snapshot</div>
                   <div className="mt-3 space-y-2 text-sm text-slate-200">
                     <div className="flex items-center justify-between gap-3"><span>User ID</span><span className="text-white">{selectedUser.id.slice(0, 8)}...</span></div>
@@ -468,7 +468,7 @@ const UserManagement = () => {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-4">
+                <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-xs uppercase tracking-[0.18em] text-[#ffc27a]">Current KYC Status</div>
                     <div className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${STATUS_STYLES[selectedUser.kycStatus]}`}>
@@ -484,7 +484,7 @@ const UserManagement = () => {
                         onChange={(event) => setKycAdminNote(event.target.value)}
                         rows={3}
                         placeholder="Optional note for the user or internal review context..."
-                        className="w-full rounded-xl border border-[#1e2330] bg-[#1e2330] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#0fa053]"
+                        className="w-full rounded-xl border border-[#2a2f42] bg-[#1a1e2b] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#0fa053]"
                       />
                     </label>
                     <button
@@ -535,7 +535,7 @@ const KycDocumentPanel = ({ title, document }: { title: string; document: KycDoc
   const isPdf = document?.mimeType === "application/pdf";
 
   return (
-    <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-4">
+    <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="text-sm font-bold text-white">{title}</div>
         {document?.url ? (
@@ -545,7 +545,7 @@ const KycDocumentPanel = ({ title, document }: { title: string; document: KycDoc
         ) : null}
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-[#1e2330] bg-black/20">
+      <div className="mt-4 overflow-hidden rounded-2xl border border-[#2a2f42] bg-black/20">
         {document?.url ? (
           isPdf ? (
             <div className="flex min-h-[320px] items-center justify-center">

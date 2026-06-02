@@ -65,8 +65,8 @@ const EmptyState = ({
   icon: LucideIcon;
   title: string;
 }) => (
-  <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-8 text-center shadow-lg">
-    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#1e2330]">
+  <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-8 text-center shadow-lg">
+    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#1a1e2b]">
       <Icon className="h-5 w-5 text-slate-300" />
     </div>
     <h3 className="mt-4 text-lg font-bold text-white">{title}</h3>
@@ -361,22 +361,22 @@ const SupportInbox = () => {
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#1e2330] bg-[#1e2330] p-4 shadow-lg">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4 shadow-lg">
         <div className="rounded-xl border border-[#ff9a3d]/20 bg-[#ff9a3d]/10 px-4 py-3">
           <div className="text-[11px] uppercase tracking-wider text-[#ffc27a]">Your Desk Role</div>
           <div className="mt-1 text-sm font-bold text-white">{getRoleLabel(primaryRole)}</div>
         </div>
-        <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3">
+        <div className="rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
           <div className="text-[11px] uppercase tracking-wider text-[#ffc27a]">Open Threads</div>
           <div className="mt-1 text-sm font-bold text-white">{threads.filter((thread) => thread.status !== "resolved").length}</div>
         </div>
-        <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3">
+        <div className="rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
           <div className="text-[11px] uppercase tracking-wider text-[#9be1bc]">Pending Tickets</div>
           <div className="mt-1 text-sm font-bold text-white">{tickets.filter((ticket) => ticket.status !== "resolved").length}</div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 rounded-xl border border-[#1e2330] bg-[#1e2330] p-1 w-fit">
+      <div className="flex items-center gap-2 rounded-xl border border-[#2a2f42] bg-[#1a1e2b] p-1 w-fit">
         <button
           onClick={() => setActiveTab("live")}
           className={`flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition-colors ${
@@ -388,7 +388,7 @@ const SupportInbox = () => {
         <button
           onClick={() => setActiveTab("tickets")}
           className={`flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition-colors ${
-            activeTab === "tickets" ? "bg-[#ff9a3d] text-[#1c1f2d] shadow-lg shadow-[#ff9a3d]/20" : "text-[#a7bfd8] hover:text-white"
+            activeTab === "tickets" ? "bg-[#ff9a3d] text-[#0e1017] shadow-lg shadow-[#ff9a3d]/20" : "text-[#a7bfd8] hover:text-white"
           }`}
         >
           <Ticket size={16} /> Tickets
@@ -402,7 +402,7 @@ const SupportInbox = () => {
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}
           placeholder={activeTab === "live" ? "Search threads by trader, subject, or status..." : "Search tickets..."}
-          className="w-full rounded-xl border border-[#1e2330] bg-[#1e2330] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-slate-400 focus:border-[#0fa053]"
+          className="w-full rounded-xl border border-[#2a2f42] bg-[#1a1e2b] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-slate-400 focus:border-[#0fa053]"
         />
       </div>
 
@@ -421,8 +421,8 @@ const SupportInbox = () => {
           />
         ) : (
           <div className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
-            <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
-              <div className="border-b border-[#1e2330] px-4 py-3">
+            <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
+              <div className="border-b border-[#2a2f42] px-4 py-3">
                 <h3 className="text-sm font-bold text-white">Active Conversations</h3>
                 <p className="mt-1 text-xs text-[#a7bfd8]">Pick a trader thread to continue the conversation.</p>
               </div>
@@ -434,7 +434,7 @@ const SupportInbox = () => {
                       key={thread.id}
                       type="button"
                       onClick={() => setSelectedThreadId(thread.id)}
-                      className={`w-full border-b border-[#1e2330] px-4 py-4 text-left transition-colors ${
+                      className={`w-full border-b border-[#2a2f42] px-4 py-4 text-left transition-colors ${
                         isActive ? "bg-[#0fa053]/10" : "hover:bg-white/[0.03]"
                       }`}
                     >
@@ -445,7 +445,7 @@ const SupportInbox = () => {
                         </div>
                         <div
                           className={`rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-wider ${
-                            THREAD_STATUS_STYLES[thread.status] ?? "border-[#1e2330] bg-[#1e2330] text-slate-200"
+                            THREAD_STATUS_STYLES[thread.status] ?? "border-[#2a2f42] bg-[#1a1e2b] text-slate-200"
                           }`}
                         >
                           {thread.status}
@@ -462,15 +462,15 @@ const SupportInbox = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
+            <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
               {selectedThread ? (
                 <>
-                  <div className="border-b border-[#1e2330] px-5 py-4">
+                  <div className="border-b border-[#2a2f42] px-5 py-4">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="text-lg font-bold text-white">{selectedThread.userName}</h3>
-                          <div className="rounded-full border border-[#1e2330] bg-[#1e2330] px-2.5 py-1 text-[11px] text-slate-200">
+                          <div className="rounded-full border border-[#2a2f42] bg-[#1a1e2b] px-2.5 py-1 text-[11px] text-slate-200">
                             @{selectedThread.userHandle}
                           </div>
                         </div>
@@ -494,7 +494,7 @@ const SupportInbox = () => {
                             className={`rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
                               selectedThread.status === status
                                 ? THREAD_STATUS_STYLES[status]
-                                : "border-[#1e2330] bg-[#1c1f2d] text-slate-200 hover:bg-[#1e2330]"
+                                : "border-[#2a2f42] bg-[#0e1017] text-slate-200 hover:bg-[#1a1e2b]"
                             }`}
                           >
                             {updatingThreadStatus === selectedThread.id ? "Saving..." : formatStatusLabel(status)}
@@ -525,7 +525,7 @@ const SupportInbox = () => {
                                 className={`max-w-[78%] rounded-2xl px-4 py-3 ${
                                   isStaff
                                     ? "rounded-br-sm bg-[#0fa053] text-white"
-                                    : "rounded-bl-sm border border-[#1e2330] bg-[#1c1f2d] text-gray-100"
+                                    : "rounded-bl-sm border border-[#2a2f42] bg-[#0e1017] text-gray-100"
                                 }`}
                               >
                                 <div className="mb-1 flex items-center gap-2 text-[11px]">
@@ -545,14 +545,14 @@ const SupportInbox = () => {
                     )}
                   </div>
 
-                  <div className="border-t border-[#1e2330] p-4">
+                  <div className="border-t border-[#2a2f42] p-4">
                     <form onSubmit={handleSendReply} className="flex items-center gap-3">
                       <input
                         type="text"
                         value={reply}
                         onChange={(event) => setReply(event.target.value)}
                         placeholder="Reply professionally and clearly..."
-                        className="flex-1 rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-400 focus:border-[#0fa053]"
+                        className="flex-1 rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-400 focus:border-[#0fa053]"
                       />
                       <button
                         type="submit"
@@ -583,14 +583,14 @@ const SupportInbox = () => {
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
           {filteredTickets.map((ticket) => (
-            <div key={ticket.id} className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-5 shadow-lg">
+            <div key={ticket.id} className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-5 shadow-lg">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="truncate text-lg font-bold text-white">{ticket.subject}</h3>
                     <div
                       className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${
-                        THREAD_STATUS_STYLES[ticket.status] ?? "border-[#1e2330] bg-[#1e2330] text-slate-200"
+                        THREAD_STATUS_STYLES[ticket.status] ?? "border-[#2a2f42] bg-[#1a1e2b] text-slate-200"
                       }`}
                     >
                       {ticket.status}
@@ -613,7 +613,7 @@ const SupportInbox = () => {
                       className={`rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
                         ticket.status === status
                           ? THREAD_STATUS_STYLES[status]
-                          : "border-[#1e2330] bg-[#1c1f2d] text-slate-200 hover:bg-[#1e2330]"
+                          : "border-[#2a2f42] bg-[#0e1017] text-slate-200 hover:bg-[#1a1e2b]"
                       }`}
                     >
                       {updatingTicketStatus === ticket.id ? "Saving..." : formatStatusLabel(status)}

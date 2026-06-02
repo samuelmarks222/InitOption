@@ -55,17 +55,19 @@ type DashboardData = {
 const PALETTE = {
   accent: "#0fa053",
   accentStrong: "#0fa053",
-  border: "#1e2330",
-  card: "#1e2330",
+  border: "#2a2f42",
+  card: "#1a1e2b",
+  canvas: "#0e1017",
+  elevated: "#222738",
   orange: "#ff9a3d",
   orangeSoft: "#ffc27a",
-  surface: "#1c1f2d",
+  surface: "#13161e",
 };
 
 const panelClass =
-  "rounded-[28px] border border-[#1e2330] bg-[linear-gradient(180deg,#1e2330_0%,#1c1f2d_100%)] shadow-[0_24px_70px_rgba(6,14,24,0.42)] backdrop-blur-xl";
+  "rounded-[28px] border border-[#2a2f42] bg-[linear-gradient(180deg,#1a1e2b_0%,#13161e_100%)] shadow-[0_24px_70px_rgba(6,14,24,0.42)] backdrop-blur-xl";
 
-const innerCardClass = "rounded-[22px] border border-[#1e2330] bg-[#1e2330]/70";
+const innerCardClass = "rounded-[22px] border border-[#2a2f42] bg-[#222738]";
 const ADMIN_DASHBOARD_CHART_ROW_LIMIT = 5000;
 
 const formatMoney = (value: number) =>
@@ -108,8 +110,8 @@ const MetricCard = ({
 }) => {
   const toneStyles = {
     accent: "border border-[#0fa053]/25 bg-[#0fa053]/12 text-[#9be1bc]",
-    deep: "border border-[#ff9a3d]/20 bg-[#1e2330]/65 text-[#ffc27a]",
-    soft: "border border-[#1e2330] bg-[#1e2330] text-[#a7bfd8]",
+    deep: "border border-[#ff9a3d]/20 bg-[#222738] text-[#ffc27a]",
+    soft: "border border-[#2a2f42] bg-[#1a1e2b] text-[#a7bfd8]",
     strong: "border border-[#ff9a3d]/24 bg-[#ff9a3d]/10 text-[#ffc27a]",
   }[tone];
 
@@ -277,7 +279,7 @@ const AdminDashboard = () => {
       { label: "Ready payouts", value: data.readyWithdrawals, color: "#8fb0cf" },
     ];
     return raw.every((entry) => entry.value === 0)
-      ? [{ label: "No queue", value: 1, color: "#1e2330" }]
+      ? [{ label: "No queue", value: 1, color: "#222738" }]
       : raw.filter((entry) => entry.value > 0);
   }, [data.pendingDeposits, data.readyWithdrawals, data.reviewWithdrawals]);
 
@@ -329,7 +331,7 @@ const AdminDashboard = () => {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#ff9a3d]/20 bg-[#1e2330] px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#ff9a3d]/20 bg-[#1a1e2b] px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">
             Admin / Overview
           </div>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Dashboard</h1>
@@ -410,7 +412,7 @@ const AdminDashboard = () => {
                   value={virtualAmount}
                   onChange={(e) => setVirtualAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full rounded-xl border border-[#1e2330] bg-[#1c1f2d] py-2 pl-7 pr-3 text-base font-bold text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#0fa053]"
+                  className="w-full rounded-xl border border-[#2a2f42] bg-[#13161e] py-2 pl-7 pr-3 text-base font-bold text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#0fa053]"
                 />
               </div>
               <button
@@ -427,7 +429,7 @@ const AdminDashboard = () => {
                 <button
                   key={preset}
                   onClick={() => setVirtualAmount(String(preset))}
-                  className="rounded-lg border border-[#1e2330] bg-[#1c1f2d] px-2 py-1 text-[11px] font-semibold text-slate-300 transition-colors hover:border-white/10 hover:text-white"
+                  className="rounded-lg border border-[#2a2f42] bg-[#13161e] px-2 py-1 text-[11px] font-semibold text-slate-300 transition-colors hover:border-white/10 hover:text-white"
                 >
                   ${preset.toLocaleString()}
                 </button>
@@ -552,13 +554,13 @@ const AdminDashboard = () => {
                 <Loader2 className="h-6 w-6 animate-spin text-[#0fa053]" />
               </div>
             ) : data.recentActivity.length === 0 ? (
-              <div className="col-span-full flex h-[140px] items-center justify-center rounded-[24px] border border-dashed border-[#1e2330] text-xs text-slate-500">
+              <div className="col-span-full flex h-[140px] items-center justify-center rounded-[24px] border border-dashed border-[#2a2f42] text-xs text-slate-500">
                 No recent activity yet.
               </div>
             ) : (
               data.recentActivity.map((activity) => (
                 <div key={activity.id} className={`flex items-start gap-3 ${innerCardClass} px-3 py-3`}>
-                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border border-[#1e2330] bg-[#1c1f2d]">
+                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border border-[#2a2f42] bg-[#13161e]">
                     {activity.type === "deposit" ? (
                       <ArrowDownCircle className="h-4 w-4 text-[#0fa053]" />
                     ) : activity.type === "withdrawal" ? (

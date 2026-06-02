@@ -249,7 +249,7 @@ const Notifications = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-[1.1fr,0.9fr] gap-6">
         <div className="space-y-6">
-          <section className="bg-[#1e2330] border border-[#1e2330] rounded-2xl p-6 shadow-lg space-y-4">
+          <section className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl p-6 shadow-lg space-y-4">
             <div className="flex items-center gap-3">
               <Megaphone className="w-5 h-5 text-[#0fa053]" />
               <div>
@@ -266,7 +266,7 @@ const Notifications = () => {
                   value={form.title}
                   onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))}
                   placeholder="New Tournament Live"
-                  className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
+                  className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
                 />
               </div>
 
@@ -277,7 +277,7 @@ const Notifications = () => {
                   value={form.message}
                   onChange={(e) => setForm((current) => ({ ...current, message: e.target.value }))}
                   placeholder="Write your announcement here..."
-                  className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none resize-none"
+                  className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none resize-none"
                 />
               </div>
 
@@ -286,7 +286,7 @@ const Notifications = () => {
                 <select
                   value={form.audienceMode}
                   onChange={(e) => setForm((current) => ({ ...current, audienceMode: e.target.value as typeof form.audienceMode }))}
-                  className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
+                  className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
                 >
                   <option value="all">All users</option>
                   <option value="tiers">Specific VIP tiers</option>
@@ -301,7 +301,7 @@ const Notifications = () => {
                   value={form.linkUrl}
                   onChange={(e) => setForm((current) => ({ ...current, linkUrl: e.target.value }))}
                   placeholder="/trade or https://..."
-                  className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
+                  className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
                 />
               </div>
 
@@ -313,7 +313,7 @@ const Notifications = () => {
                     value={form.tiersCsv}
                     onChange={(e) => setForm((current) => ({ ...current, tiersCsv: e.target.value }))}
                     placeholder="gold, platinum"
-                    className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
+                    className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
                   />
                 </div>
               )}
@@ -326,7 +326,7 @@ const Notifications = () => {
                     value={form.userIdsCsv}
                     onChange={(e) => setForm((current) => ({ ...current, userIdsCsv: e.target.value }))}
                     placeholder="Paste one or more user UUIDs separated by commas or spaces"
-                    className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none resize-none"
+                    className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none resize-none"
                   />
                 </div>
               )}
@@ -337,7 +337,7 @@ const Notifications = () => {
                   type="datetime-local"
                   value={form.scheduledAt}
                   onChange={(e) => setForm((current) => ({ ...current, scheduledAt: e.target.value }))}
-                  className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
+                  className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
                 />
               </div>
 
@@ -347,7 +347,7 @@ const Notifications = () => {
                   type="datetime-local"
                   value={form.expiresAt}
                   onChange={(e) => setForm((current) => ({ ...current, expiresAt: e.target.value }))}
-                  className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
+                  className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
                 />
               </div>
             </div>
@@ -356,7 +356,7 @@ const Notifications = () => {
               <button
                 onClick={() => void handleSendAnnouncement()}
                 disabled={sending}
-                className="flex items-center gap-2 bg-[#0fa053] hover:bg-[#1e2330] text-white px-6 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg shadow-[#0fa053]/20 disabled:opacity-60"
+                className="flex items-center gap-2 bg-[#0fa053] hover:bg-[#1a1e2b] text-white px-6 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg shadow-[#0fa053]/20 disabled:opacity-60"
               >
                 <Send size={16} />
                 {sending ? "Sending..." : form.scheduledAt ? "Save Announcement" : "Send Now"}
@@ -364,7 +364,7 @@ const Notifications = () => {
             </div>
           </section>
 
-          <section className="bg-[#1e2330] border border-[#1e2330] rounded-2xl p-6 shadow-lg space-y-4">
+          <section className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl p-6 shadow-lg space-y-4">
             <div className="flex items-center gap-3">
               <Sparkles className="w-5 h-5 text-emerald-400" />
               <div>
@@ -377,56 +377,56 @@ const Notifications = () => {
               <div className="text-sm text-slate-300">Loading bonus settings...</div>
             ) : bonusSettings ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex items-center justify-between rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3">
+                <label className="flex items-center justify-between rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
                   <span className="text-sm text-slate-200">Enable welcome bonus</span>
                   <input type="checkbox" checked={bonusSettings.welcome_bonus_enabled} onChange={(e) => setBonusSettings((current) => current ? { ...current, welcome_bonus_enabled: e.target.checked } : current)} className="accent-[#0fa053]" />
                 </label>
 
-                <label className="flex items-center justify-between rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3">
+                <label className="flex items-center justify-between rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
                   <span className="text-sm text-slate-200">Enable deposit bonus</span>
                   <input type="checkbox" checked={bonusSettings.deposit_bonus_enabled} onChange={(e) => setBonusSettings((current) => current ? { ...current, deposit_bonus_enabled: e.target.checked } : current)} className="accent-[#0fa053]" />
                 </label>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Welcome bonus amount</label>
-                  <input type="number" value={bonusSettings.welcome_bonus_amount} onChange={(e) => setBonusSettings((current) => current ? { ...current, welcome_bonus_amount: Number(e.target.value) } : current)} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white font-mono focus:border-[#0fa053] outline-none" />
+                  <input type="number" value={bonusSettings.welcome_bonus_amount} onChange={(e) => setBonusSettings((current) => current ? { ...current, welcome_bonus_amount: Number(e.target.value) } : current)} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white font-mono focus:border-[#0fa053] outline-none" />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Welcome trigger</label>
-                  <select value="first_deposit" disabled className="w-full cursor-not-allowed bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white/80 focus:border-[#0fa053] outline-none disabled:opacity-100">
+                  <select value="first_deposit" disabled className="w-full cursor-not-allowed bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white/80 focus:border-[#0fa053] outline-none disabled:opacity-100">
                     <option value="first_deposit">On first deposit</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Deposit bonus %</label>
-                  <input type="number" value={bonusSettings.deposit_bonus_percent} onChange={(e) => setBonusSettings((current) => current ? { ...current, deposit_bonus_percent: Number(e.target.value) } : current)} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white font-mono focus:border-[#0fa053] outline-none" />
+                  <input type="number" value={bonusSettings.deposit_bonus_percent} onChange={(e) => setBonusSettings((current) => current ? { ...current, deposit_bonus_percent: Number(e.target.value) } : current)} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white font-mono focus:border-[#0fa053] outline-none" />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Minimum deposit</label>
-                  <input type="number" value={bonusSettings.deposit_bonus_min} onChange={(e) => setBonusSettings((current) => current ? { ...current, deposit_bonus_min: Number(e.target.value) } : current)} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white font-mono focus:border-[#0fa053] outline-none" />
+                  <input type="number" value={bonusSettings.deposit_bonus_min} onChange={(e) => setBonusSettings((current) => current ? { ...current, deposit_bonus_min: Number(e.target.value) } : current)} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white font-mono focus:border-[#0fa053] outline-none" />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Maximum bonus</label>
-                  <input type="number" value={bonusSettings.deposit_bonus_max} onChange={(e) => setBonusSettings((current) => current ? { ...current, deposit_bonus_max: Number(e.target.value) } : current)} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white font-mono focus:border-[#0fa053] outline-none" />
+                  <input type="number" value={bonusSettings.deposit_bonus_max} onChange={(e) => setBonusSettings((current) => current ? { ...current, deposit_bonus_max: Number(e.target.value) } : current)} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white font-mono focus:border-[#0fa053] outline-none" />
                 </div>
 
-                <label className="flex items-center justify-between rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-3 md:col-span-2">
+                <label className="flex items-center justify-between rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3 md:col-span-2">
                   <span className="text-sm text-slate-200">Enable referral commissions</span>
                   <input type="checkbox" checked={bonusSettings.referral_commission_enabled} onChange={(e) => setBonusSettings((current) => current ? { ...current, referral_commission_enabled: e.target.checked } : current)} className="accent-[#0fa053]" />
                 </label>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Referral commission %</label>
-                  <input type="number" value={bonusSettings.referral_commission_percent} onChange={(e) => setBonusSettings((current) => current ? { ...current, referral_commission_percent: Number(e.target.value) } : current)} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white font-mono focus:border-[#0fa053] outline-none" />
+                  <input type="number" value={bonusSettings.referral_commission_percent} onChange={(e) => setBonusSettings((current) => current ? { ...current, referral_commission_percent: Number(e.target.value) } : current)} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white font-mono focus:border-[#0fa053] outline-none" />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Commission basis</label>
-                  <select value={bonusSettings.referral_commission_type} onChange={(e) => setBonusSettings((current) => current ? { ...current, referral_commission_type: e.target.value } : current)} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none">
+                  <select value={bonusSettings.referral_commission_type} onChange={(e) => setBonusSettings((current) => current ? { ...current, referral_commission_type: e.target.value } : current)} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none">
                     <option value="deposit">Deposit</option>
                     <option value="trade_volume">Trade volume</option>
                   </select>
@@ -434,7 +434,7 @@ const Notifications = () => {
 
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Payout timing</label>
-                  <select value={bonusSettings.referral_commission_payout_timing} onChange={(e) => setBonusSettings((current) => current ? { ...current, referral_commission_payout_timing: e.target.value } : current)} className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none">
+                  <select value={bonusSettings.referral_commission_payout_timing} onChange={(e) => setBonusSettings((current) => current ? { ...current, referral_commission_payout_timing: e.target.value } : current)} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none">
                     <option value="immediate">Immediate</option>
                     <option value="after_trade_close">After trade closes</option>
                   </select>
@@ -452,7 +452,7 @@ const Notifications = () => {
                 <p>Bonus settings could not be loaded.</p>
                 <p className="text-red-200/80">{bonusError}</p>
                 {hasAdminDbRole === false && user?.id ? (
-                  <div className="rounded-lg border border-[#1e2330] bg-black/20 p-3 text-xs text-red-100/85 space-y-2">
+                  <div className="rounded-lg border border-[#2a2f42] bg-black/20 p-3 text-xs text-red-100/85 space-y-2">
                     <p>Run this once in Supabase SQL editor to grant this account the database admin role:</p>
                     <code className="block whitespace-pre-wrap break-all rounded bg-black/30 p-3 font-mono text-[11px] text-red-50">
                       {`insert into public.user_roles (user_id, role)\nvalues ('${user.id}', 'admin')\non conflict (user_id, role) do nothing;`}
@@ -469,15 +469,15 @@ const Notifications = () => {
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-4 text-sm text-slate-300">
+              <div className="rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-4 text-sm text-slate-300">
                 No bonus settings were found. Reload this page to initialize the default rules.
               </div>
             )}
           </section>
         </div>
 
-        <section className="bg-[#1e2330] border border-[#1e2330] rounded-2xl overflow-hidden shadow-lg flex flex-col min-h-[520px]">
-          <div className="p-4 border-b border-[#1e2330] bg-[#1e2330]">
+        <section className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl overflow-hidden shadow-lg flex flex-col min-h-[520px]">
+          <div className="p-4 border-b border-[#2a2f42] bg-[#1a1e2b]">
             <h3 className="text-white font-bold">Recent Broadcasts</h3>
             <p className="mt-1 text-xs text-slate-400">Latest sent and scheduled announcements.</p>
           </div>
@@ -489,7 +489,7 @@ const Notifications = () => {
               <div className="text-sm text-slate-300">No announcements have been created yet.</div>
             ) : (
               announcements.map((announcement) => (
-                <div key={announcement.id} className="bg-[#1c1f2d] border border-[#1e2330] rounded-xl p-4 relative">
+                <div key={announcement.id} className="bg-[#0e1017] border border-[#2a2f42] rounded-xl p-4 relative">
                   <div className="absolute top-4 right-4 text-slate-400 text-xs flex items-center gap-1">
                     <CheckCircle size={12} className={announcement.status === "sent" ? "text-green-500" : "text-yellow-500"} />
                     {announcement.status === "sent" ? "Sent" : "Scheduled"}

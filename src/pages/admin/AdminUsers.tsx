@@ -33,8 +33,8 @@ const EmptyState = ({
   description: string;
   title: string;
 }) => (
-  <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-8 text-center shadow-lg">
-    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#1e2330]">
+  <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-8 text-center shadow-lg">
+    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#1a1e2b]">
       <ShieldCheck className="h-5 w-5 text-slate-300" />
     </div>
     <h3 className="mt-4 text-lg font-bold text-white">{title}</h3>
@@ -237,7 +237,7 @@ const AdminUsers = () => {
         <>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
             {CO_ADMIN_ROLE_OPTIONS.map((option) => (
-              <div key={option.value} className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-4 shadow-lg">
+              <div key={option.value} className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4 shadow-lg">
                 <div className="text-[11px] uppercase tracking-wider text-slate-400">{option.label}</div>
                 <div className="mt-2 text-2xl font-bold text-white">{roleCounts[option.value] ?? 0}</div>
                 <p className="mt-2 text-xs leading-5 text-slate-300">{option.description}</p>
@@ -246,8 +246,8 @@ const AdminUsers = () => {
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-            <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
-              <div className="border-b border-[#1e2330] p-4">
+            <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
+              <div className="border-b border-[#2a2f42] p-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0fa053]/10 text-[#0fa053]">
                     <Users className="h-5 w-5" />
@@ -264,7 +264,7 @@ const AdminUsers = () => {
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
                     placeholder="Search by name, username, or ID..."
-                    className="w-full rounded-xl border border-[#1e2330] bg-[#1c1f2d] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-slate-400 focus:border-[#0fa053]"
+                    className="w-full rounded-xl border border-[#2a2f42] bg-[#0e1017] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-slate-400 focus:border-[#0fa053]"
                   />
                 </div>
               </div>
@@ -279,7 +279,7 @@ const AdminUsers = () => {
                       key={profile.id}
                       type="button"
                       onClick={() => setSelectedUserId(profile.id)}
-                      className={`w-full border-b border-[#1e2330] px-4 py-4 text-left transition-colors ${
+                      className={`w-full border-b border-[#2a2f42] px-4 py-4 text-left transition-colors ${
                         isActive ? "bg-[#0fa053]/10" : "hover:bg-white/[0.03]"
                       }`}
                     >
@@ -288,7 +288,7 @@ const AdminUsers = () => {
                           <div className="truncate text-sm font-bold text-white">{getUserName(profile)}</div>
                           <div className="mt-1 text-xs text-slate-400">@{getUserHandle(profile)}</div>
                         </div>
-                        <div className="rounded-full border border-[#1e2330] bg-[#1e2330] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-200">
+                        <div className="rounded-full border border-[#2a2f42] bg-[#1a1e2b] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-200">
                           {currentRole ? getRoleLabel(currentRole) : "No staff role"}
                         </div>
                       </div>
@@ -300,7 +300,7 @@ const AdminUsers = () => {
             </div>
 
             <div className="space-y-6">
-              <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-5 shadow-lg">
+              <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-5 shadow-lg">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-300">
                     <ShieldPlus className="h-5 w-5" />
@@ -313,11 +313,11 @@ const AdminUsers = () => {
 
                 {selectedUser ? (
                   <div className="mt-5 space-y-5">
-                    <div className="rounded-2xl border border-[#1e2330] bg-[#1c1f2d] p-4">
+                    <div className="rounded-2xl border border-[#2a2f42] bg-[#0e1017] p-4">
                       <div className="text-[11px] uppercase tracking-wider text-slate-400">Selected User</div>
                       <div className="mt-2 text-lg font-bold text-white">{getUserName(selectedUser)}</div>
                       <div className="mt-1 text-sm text-slate-300">@{getUserHandle(selectedUser)}</div>
-                      <div className="mt-3 inline-flex rounded-full border border-[#1e2330] bg-[#1e2330] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-200">
+                      <div className="mt-3 inline-flex rounded-full border border-[#2a2f42] bg-[#1a1e2b] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-200">
                         Current role: {selectedUserCurrentRole ? getRoleLabel(selectedUserCurrentRole) : "No staff role"}
                       </div>
                     </div>
@@ -331,7 +331,7 @@ const AdminUsers = () => {
                           className={`rounded-2xl border p-4 text-left transition-colors ${
                             selectedRole === option.value
                               ? "border-[#0fa053]/50 bg-[#0fa053]/10"
-                              : "border-[#1e2330] bg-[#1c1f2d] hover:border-[#1e2330] hover:bg-white/[0.03]"
+                              : "border-[#2a2f42] bg-[#0e1017] hover:border-[#2a2f42] hover:bg-white/[0.03]"
                           }`}
                         >
                           <div className="flex items-center justify-between gap-3">
@@ -347,21 +347,21 @@ const AdminUsers = () => {
                       type="button"
                       onClick={() => void handleAssignRole()}
                       disabled={assigning}
-                      className="inline-flex items-center justify-center rounded-xl bg-[#0fa053] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1e2330] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex items-center justify-center rounded-xl bg-[#0fa053] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1a1e2b] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {assigning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCog className="mr-2 h-4 w-4" />}
                       Save Role
                     </button>
                   </div>
                 ) : (
-                  <div className="mt-5 rounded-2xl border border-dashed border-[#1e2330] bg-[#1c1f2d] p-8 text-center text-sm text-slate-300">
+                  <div className="mt-5 rounded-2xl border border-dashed border-[#2a2f42] bg-[#0e1017] p-8 text-center text-sm text-slate-300">
                     Pick a user from the directory to assign a co-admin role.
                   </div>
                 )}
               </div>
 
-              <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
-                <div className="border-b border-[#1e2330] p-4">
+              <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
+                <div className="border-b border-[#2a2f42] p-4">
                   <h3 className="text-lg font-bold text-white">Current Staff</h3>
                   <p className="mt-1 text-sm text-slate-300">Review every elevated account and revoke access when it is no longer needed.</p>
                 </div>
@@ -376,7 +376,7 @@ const AdminUsers = () => {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[760px] text-left text-sm text-slate-200">
-                      <thead className="bg-[#1c1f2d] text-xs uppercase text-slate-400">
+                      <thead className="bg-[#0e1017] text-xs uppercase text-slate-400">
                         <tr>
                           <th className="px-6 py-4 font-semibold">Staff User</th>
                           <th className="px-6 py-4 font-semibold">Role</th>
@@ -399,7 +399,7 @@ const AdminUsers = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              <span className="inline-flex rounded-full border border-[#1e2330] bg-[#1e2330] px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-gray-200">
+                              <span className="inline-flex rounded-full border border-[#2a2f42] bg-[#1a1e2b] px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-gray-200">
                                 {getRoleLabel(staffUser.role)}
                               </span>
                             </td>

@@ -192,7 +192,7 @@ const TradeManagement = () => {
           <button
             onClick={() => void fetchTrades()}
             disabled={loading}
-            className="flex items-center gap-2 rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-4 py-2.5 text-sm text-slate-300 transition-colors hover:border-white/10 hover:text-white disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-2.5 text-sm text-slate-300 transition-colors hover:border-white/10 hover:text-white disabled:opacity-50"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
             Refresh
@@ -201,28 +201,28 @@ const TradeManagement = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-4 shadow-lg">
+        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4 shadow-lg">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
             <Activity size={14} />
             Open Trades
           </div>
           <div className="mt-2 text-2xl font-bold text-white">{stats.totalOpen}</div>
         </div>
-        <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-4 shadow-lg">
+        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4 shadow-lg">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
             <DollarSign size={14} />
             Open Volume
           </div>
           <div className="mt-2 text-2xl font-bold text-white">{formatMoney(stats.totalVolume)}</div>
         </div>
-        <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-4 shadow-lg">
+        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4 shadow-lg">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
             <Target size={14} />
             Potential Payout
           </div>
           <div className="mt-2 text-2xl font-bold text-[#0fa053]">{formatMoney(stats.totalPayout)}</div>
         </div>
-        <div className="rounded-2xl border border-[#1e2330] bg-[#1e2330] p-4 shadow-lg">
+        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4 shadow-lg">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
             <Users size={14} />
             Active Users
@@ -232,7 +232,7 @@ const TradeManagement = () => {
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex w-fit items-center gap-2 rounded-xl border border-[#1e2330] bg-[#1e2330] p-1">
+        <div className="flex w-fit items-center gap-2 rounded-xl border border-[#2a2f42] bg-[#1a1e2b] p-1">
           <button
             onClick={() => setActiveTab("live")}
             className={`flex items-center gap-2 rounded-lg px-6 py-2 text-sm font-bold transition-colors ${
@@ -261,13 +261,13 @@ const TradeManagement = () => {
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search by trade ID, user, or asset..."
-              className="w-full rounded-xl border border-[#1e2330] bg-[#1c1f2d] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-slate-400 focus:border-[#0fa053]"
+              className="w-full rounded-xl border border-[#2a2f42] bg-[#0e1017] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-slate-400 focus:border-[#0fa053]"
             />
           </div>
           <select
             value={userFilter}
             onChange={(e) => setUserFilter(e.target.value)}
-            className="rounded-xl border border-[#1e2330] bg-[#1c1f2d] px-3 py-2.5 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
+            className="rounded-xl border border-[#2a2f42] bg-[#0e1017] px-3 py-2.5 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
           >
             <option value="">All Users</option>
             {users.map((u) => (
@@ -280,8 +280,8 @@ const TradeManagement = () => {
       </div>
 
       {activeTab === "live" ? (
-        <div className="overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
-          <div className="border-b border-[#1e2330] bg-[#1e2330] p-4">
+        <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
+          <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
             <h3 className="flex items-center gap-2 font-bold text-white">
               <span className="h-2 w-2 rounded-full bg-green-500" />
               Active Positions
@@ -290,7 +290,7 @@ const TradeManagement = () => {
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm text-slate-200">
-              <thead className="border-b border-[#1e2330] bg-[#1e2330] text-xs uppercase text-slate-300">
+              <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
                 <tr>
                   <th className="px-6 py-3 font-semibold">User</th>
                   <th className="px-6 py-3 font-semibold">Asset & Direction</th>
@@ -346,14 +346,14 @@ const TradeManagement = () => {
           </div>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-[#1e2330] bg-[#1e2330] shadow-lg">
-          <div className="border-b border-[#1e2330] bg-[#1e2330] p-4">
+        <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
+          <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
             <h3 className="font-bold text-white">Historical Trades</h3>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm text-slate-200">
-              <thead className="border-b border-[#1e2330] bg-[#1e2330] text-xs uppercase text-slate-300">
+              <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
                 <tr>
                   <th className="px-6 py-3 font-semibold">User</th>
                   <th className="px-6 py-3 font-semibold">Asset / Dir</th>

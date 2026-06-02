@@ -65,7 +65,7 @@ const AdminLayout = () => {
 
   if (staffLoading) {
     return (
-      <div className="admin-theme flex h-screen items-center justify-center bg-[#1c1f2d] text-white">
+      <div className="admin-theme flex h-screen items-center justify-center bg-[#0e1017] text-white">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0fa053] border-t-transparent" />
       </div>
     );
@@ -80,17 +80,17 @@ const AdminLayout = () => {
   }
 
   return (
-    <div className="admin-theme flex h-[100dvh] overflow-hidden bg-[#1c1f2d] font-sans text-gray-200">
+    <div className="admin-theme flex h-[100dvh] overflow-hidden bg-[#0e1017] font-sans text-gray-200">
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       <aside
-        className={`fixed md:relative top-0 bottom-0 left-0 z-50 md:z-auto w-64 bg-[#1e2330] border-r border-[#1e2330] flex flex-col pt-1 transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+        className={`fixed md:relative top-0 bottom-0 left-0 z-50 md:z-auto w-64 bg-[#1a1e2b] border-r border-[#2a2f42] flex flex-col pt-1 transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
         <Link
           to="/"
-          className="flex h-16 shrink-0 cursor-pointer items-center gap-3 border-b border-[#1e2330] bg-[#1e2330] px-6 transition-colors hover:bg-[#1e2330]"
+          className="flex h-16 shrink-0 cursor-pointer items-center gap-3 border-b border-[#2a2f42] bg-[#1a1e2b] px-6 transition-colors hover:bg-[#1a1e2b]"
           title="Return to Main Site"
         >
           {logoUrl ? (
@@ -116,7 +116,7 @@ const AdminLayout = () => {
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   isActive
                     ? "border border-[#ff9a3d]/20 bg-[linear-gradient(90deg,rgba(255,154,61,0.16),rgba(55,163,114,0.14))] text-white shadow-[0_18px_40px_rgba(255,154,61,0.08)]"
-                    : "text-[#a7bfd8] hover:bg-[#1e2330] hover:text-white"
+                    : "text-[#a7bfd8] hover:bg-[#1a1e2b] hover:text-white"
                 }`}
               >
                 {item.icon}
@@ -126,9 +126,9 @@ const AdminLayout = () => {
           })}
         </div>
 
-        <div className="shrink-0 border-t border-[#1e2330] p-4">
-          <div className="flex items-center gap-3 rounded-xl bg-[#1e2330] px-3 py-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#0fa053] to-[#1e2330] text-xs font-bold text-white">
+        <div className="shrink-0 border-t border-[#2a2f42] p-4">
+          <div className="flex items-center gap-3 rounded-xl bg-[#1a1e2b] px-3 py-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#0fa053] to-[#1a1e2b] text-xs font-bold text-white">
               {profile?.display_name?.charAt(0) || "A"}
             </div>
             <div className="min-w-0 flex-1">
@@ -142,11 +142,11 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      <main className="md:ml-0 flex min-w-0 flex-1 flex-col bg-[#1c1f2d]">
-        <header className="z-10 flex h-16 shrink-0 items-center justify-between border-b border-[#1e2330] bg-[#1e2330]/50 px-4 backdrop-blur sm:px-8">
+      <main className="md:ml-0 flex min-w-0 flex-1 flex-col bg-[#0e1017]">
+        <header className="z-10 flex h-16 shrink-0 items-center justify-between border-b border-[#2a2f42] bg-[#1a1e2b]/50 px-4 backdrop-blur sm:px-8">
           <div className="flex items-center gap-3">
             <button
-              className="rounded-lg p-2 text-[#a7bfd8] transition-colors hover:bg-[#1e2330] hover:text-white md:hidden"
+              className="rounded-lg p-2 text-[#a7bfd8] transition-colors hover:bg-[#1a1e2b] hover:text-white md:hidden"
               onClick={() => setSidebarOpen((value) => !value)}
             >
               <Menu size={20} />
@@ -170,7 +170,7 @@ const AdminLayout = () => {
               <TrendingUp size={16} />
               <span className="hidden sm:inline">Go to Trade</span>
             </Link>
-            <button className="relative rounded-full p-2 text-[#a7bfd8] transition-colors hover:bg-[#1e2330] hover:text-[#ffc27a]">
+            <button className="relative rounded-full p-2 text-[#a7bfd8] transition-colors hover:bg-[#1a1e2b] hover:text-[#ffc27a]">
               <Bell size={20} />
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500"></span>
             </button>

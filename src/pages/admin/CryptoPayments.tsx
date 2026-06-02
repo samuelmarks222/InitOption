@@ -268,7 +268,7 @@ const CryptoPayments = () => {
         {(["static", "memo", "dynamic_address"] as const).map((mode) => {
           const copy = getAutomationCopy(mode);
           return (
-            <div key={mode} className="rounded-2xl border border-white/8 bg-[#1e2330] p-5">
+            <div key={mode} className="rounded-2xl border border-white/8 bg-[#1a1e2b] p-5">
               <div className="text-[11px] font-black uppercase tracking-[0.18em] text-[#0fa053]">{copy.label}</div>
               <p className="mt-2 text-sm font-semibold text-white">{copy.adminSteps}</p>
               <p className="mt-2 text-xs leading-6 text-slate-300">{copy.routingHint}</p>
@@ -281,8 +281,8 @@ const CryptoPayments = () => {
         Prefer <strong>Auto with Plisio</strong> for most chains. Use <strong>Auto with memo/tag</strong> only where the network requires it.
       </div>
 
-      <div className="bg-[#1e2330] border border-[#1e2330] rounded-2xl overflow-hidden shadow-lg">
-        <div className="p-4 border-b border-[#1e2330] flex justify-between items-center bg-[#1e2330]">
+      <div className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl overflow-hidden shadow-lg">
+        <div className="p-4 border-b border-[#2a2f42] flex justify-between items-center bg-[#1a1e2b]">
           <div className="flex gap-2 relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
             <input
@@ -290,13 +290,13 @@ const CryptoPayments = () => {
               placeholder="Search by name, symbol or network..."
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              className="w-full bg-[#1c1f2d] border border-[#1e2330] rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
+              className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
             />
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1180px] text-left text-sm text-slate-200">
-            <thead className="text-xs uppercase bg-[#1e2330] text-slate-300 border-b border-[#1e2330]">
+            <thead className="text-xs uppercase bg-[#1a1e2b] text-slate-300 border-b border-[#2a2f42]">
               <tr>
                 <th className="px-6 py-3 font-semibold">Coin</th>
                 <th className="px-6 py-3 font-semibold">Setup Type</th>
@@ -341,7 +341,7 @@ const CryptoPayments = () => {
                           {method.coin_name}
                         </div>
                         <div className="text-xs text-[#0fa053] font-bold mt-1 tracking-wider">{method.symbol}</div>
-                        <div className="mt-2 inline-flex rounded-full border border-[#1e2330] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-slate-300">
+                        <div className="mt-2 inline-flex rounded-full border border-[#2a2f42] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-slate-300">
                           {method.network}
                         </div>
                       </td>
@@ -354,13 +354,13 @@ const CryptoPayments = () => {
                             <select
                               value={editForm.attribution_mode}
                               onChange={(event) => setEditForm((current) => ({ ...current, attribution_mode: event.target.value }))}
-                              className="w-full rounded-lg border border-[#0fa053]/40 bg-[#1c1f2d] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
+                              className="w-full rounded-lg border border-[#0fa053]/40 bg-[#0e1017] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
                             >
                               <option value="static">Manual approval</option>
                               <option value="memo">Auto with memo/tag</option>
                               <option value="dynamic_address">Auto with Plisio</option>
                             </select>
-                            <div className="rounded-xl border border-white/8 bg-[#1c1f2d] px-3 py-3">
+                            <div className="rounded-xl border border-white/8 bg-[#0e1017] px-3 py-3">
                               <div className="text-sm font-semibold text-white">{automationCopy.label}</div>
                               <div className="mt-1 text-xs leading-6 text-slate-300">{automationCopy.adminSteps}</div>
                               <div className="mt-2 text-[11px] text-[#d8f6e5]">{automationCopy.details}</div>
@@ -375,7 +375,7 @@ const CryptoPayments = () => {
                                   value={editForm.memo_label}
                                   onChange={(event) => setEditForm((current) => ({ ...current, memo_label: event.target.value }))}
                                   placeholder="Example: Memo, Tag, Destination Tag"
-                                  className="w-full rounded-lg border border-[#0fa053]/40 bg-[#1c1f2d] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
+                                  className="w-full rounded-lg border border-[#0fa053]/40 bg-[#0e1017] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
                                 />
                                 <div className="text-[11px] leading-5 text-slate-400">
                                   Use this only when the selected chain needs memo/tag routing.
@@ -423,7 +423,7 @@ const CryptoPayments = () => {
                                     value={editForm.wallet_address}
                                     onChange={(event) => setEditForm((current) => ({ ...current, wallet_address: event.target.value }))}
                                     placeholder={editForm.attribution_mode === "memo" ? "Legacy fixed wallet used together with memo/tag" : "Wallet address used for manual deposits"}
-                                    className="w-full bg-[#1c1f2d] border border-[#0fa053]/50 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:border-[#0fa053] outline-none"
+                                    className="w-full bg-[#0e1017] border border-[#0fa053]/50 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:border-[#0fa053] outline-none"
                                   />
                                 </div>
                               </div>
@@ -439,7 +439,7 @@ const CryptoPayments = () => {
                                 value={editForm.qr_code_url}
                                 onChange={(event) => setEditForm((current) => ({ ...current, qr_code_url: event.target.value }))}
                                 placeholder="QR code image URL (optional)"
-                                className="w-full bg-[#1c1f2d] border border-[#0fa053]/50 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:border-[#0fa053] outline-none"
+                                className="w-full bg-[#0e1017] border border-[#0fa053]/50 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:border-[#0fa053] outline-none"
                               />
                             </div>
                             {editForm.attribution_mode === "dynamic_address" ? (
@@ -452,7 +452,7 @@ const CryptoPayments = () => {
                                   onChange={(event) => setEditForm((current) => ({ ...current, addressPoolEntries: event.target.value }))}
                                   placeholder={"Paste one unique deposit address per line\nExample:\naddr_1\naddr_2\naddr_3"}
                                   rows={5}
-                                  className="w-full rounded-lg border border-[#0fa053]/50 bg-[#1c1f2d] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
+                                  className="w-full rounded-lg border border-[#0fa053]/50 bg-[#0e1017] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
                                 />
                                 <div className="text-[11px] leading-5 text-slate-400">
                                   {importedAddressCount > 0
@@ -503,7 +503,7 @@ const CryptoPayments = () => {
                                   }))
                                 }
                                 placeholder="Minimum USD amount"
-                                className="w-full rounded-lg border border-[#0fa053]/40 bg-[#1c1f2d] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
+                                className="w-full rounded-lg border border-[#0fa053]/40 bg-[#0e1017] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
                               />
                             </div>
                             <div className="space-y-2">
@@ -521,7 +521,7 @@ const CryptoPayments = () => {
                                   }))
                                 }
                                 placeholder="Required confirmations"
-                                className="w-full rounded-lg border border-[#0fa053]/40 bg-[#1c1f2d] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
+                                className="w-full rounded-lg border border-[#0fa053]/40 bg-[#0e1017] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
                               />
                             </div>
                             <div className="text-[11px] leading-5 text-slate-400">
@@ -564,7 +564,7 @@ const CryptoPayments = () => {
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="p-1.5 bg-[#1e2330] text-slate-300 hover:text-white rounded transition-colors"
+                              className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-white rounded transition-colors"
                               title="Cancel"
                             >
                               <X size={16} />
@@ -574,7 +574,7 @@ const CryptoPayments = () => {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => startEdit(method)}
-                              className="p-1.5 bg-[#1e2330] text-slate-300 hover:text-white rounded transition-colors"
+                              className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-white rounded transition-colors"
                               title="Edit automation settings"
                             >
                               <Edit2 size={16} />
