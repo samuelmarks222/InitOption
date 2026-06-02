@@ -2415,7 +2415,7 @@ const TradingChart = ({
       : defaultSpan;
     const nextSpan = direction === "in"
       ? currentSpan * 0.88
-      : currentSpan * 1.05;
+      : currentSpan * 1.15;
     const minSpan = Math.max(12 + Math.min(rightOffset, 18), Math.round(defaultVisibleBars * 0.22) + Math.min(rightOffset, 18));
     const maxVisibleBySpacing = Math.max(
       defaultSpan,
