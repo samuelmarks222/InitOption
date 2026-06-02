@@ -21,6 +21,8 @@ import {
   Menu,
   LifeBuoy,
   TrendingUp,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
@@ -54,6 +56,13 @@ const AdminLayout = () => {
   const { logoUrl, platformName } = useSiteBranding();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [adminTheme, setAdminTheme] = useState(() => localStorage.getItem("adminTheme") || "dark");
+
+  const toggleAdminTheme = () => {
+    const next = adminTheme === "dark" ? "light" : "dark";
+    setAdminTheme(next);
+    localStorage.setItem("adminTheme", next);
+  };
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -80,7 +89,7 @@ const AdminLayout = () => {
   }
 
   return (
-    <div className="admin-theme flex h-[100dvh] overflow-hidden bg-[#0e1017] font-sans text-gray-200">
+    <div className={`admin-theme-${adminTheme} flex h-[100dvh] overflow-hidden bg-[var(--admin-canvas)] font-sans text-gray-200`}>
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
@@ -170,7 +179,14 @@ const AdminLayout = () => {
               <TrendingUp size={16} />
               <span className="hidden sm:inline">Go to Trade</span>
             </Link>
-            <button className="relative rounded-full p-2 text-[#a7bfd8] transition-colors hover:bg-[#1a1e2b] hover:text-[#ffc27a]">
+            <button
+              onClick={toggleAdminTheme}
+              className="rounded-full p-2 text-[var(--admin-text-secondary)] transition-colors hover:bg-[var(--admin-hover)] hover:text-[var(--admin-orange-soft)]"
+              title={adminTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {adminTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+            <button className="relative rounded-full p-2 text-[var(--admin-text-secondary)] transition-colors hover:bg-[var(--admin-hover)] hover:text-[var(--admin-orange-soft)]">
               <Bell size={20} />
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500"></span>
             </button>
