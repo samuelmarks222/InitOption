@@ -31,11 +31,65 @@ const DRAWING_COLOR_PRESETS = [
   "#ffffff",
 ];
 
+const LANGUAGE_OPTIONS = [
+  { code: "en", label: "English", flag: "GB" },
+  { code: "zh", label: "中文 (Mandarin)", flag: "CN" },
+  { code: "hi", label: "हिन्दी (Hindi)", flag: "IN" },
+  { code: "es", label: "Español (Spanish)", flag: "ES" },
+  { code: "fr", label: "Français (French)", flag: "FR" },
+  { code: "ar", label: "العربية (Arabic)", flag: "SA" },
+  { code: "bn", label: "বাংলা (Bengali)", flag: "BD" },
+  { code: "pt", label: "Português (Portuguese)", flag: "PT" },
+  { code: "ru", label: "Русский (Russian)", flag: "RU" },
+  { code: "ur", label: "اردو (Urdu)", flag: "PK" },
+  { code: "id", label: "Bahasa Indonesia", flag: "ID" },
+  { code: "de", label: "Deutsch (German)", flag: "DE" },
+  { code: "ja", label: "日本語 (Japanese)", flag: "JP" },
+  { code: "sw", label: "Kiswahili (Swahili)", flag: "KE" },
+  { code: "tr", label: "Türkçe (Turkish)", flag: "TR" },
+];
+
+const TIMEZONE_OPTIONS = [
+  "(UTC-12) Baker Island",
+  "(UTC-11) American Samoa",
+  "(UTC-10) Hawaii",
+  "(UTC-9) Alaska",
+  "(UTC-8) Los Angeles, Vancouver",
+  "(UTC-7) Denver, Phoenix",
+  "(UTC-6) Chicago, Mexico City",
+  "(UTC-5) New York, Miami, Toronto",
+  "(UTC-4) Santiago, Caracas",
+  "(UTC-3) Buenos Aires, São Paulo",
+  "(UTC-2) Fernando de Noronha",
+  "(UTC-1) Azores",
+  "(UTC+0) London, Lisbon, Accra",
+  "(UTC+1) Paris, Berlin, Rome, Madrid, Lagos",
+  "(UTC+2) Cairo, Johannesburg, Athens, Istanbul",
+  "(UTC+3) Nairobi, Moscow, Riyadh, Baghdad",
+  "(UTC+3:30) Tehran",
+  "(UTC+4) Dubai, Baku",
+  "(UTC+4:30) Kabul",
+  "(UTC+5) Karachi, Islamabad, Tashkent",
+  "(UTC+5:30) Mumbai, New Delhi, Colombo",
+  "(UTC+5:45) Kathmandu",
+  "(UTC+6) Dhaka, Almaty",
+  "(UTC+6:30) Yangon",
+  "(UTC+7) Bangkok, Jakarta, Hanoi",
+  "(UTC+8) Beijing, Singapore, Perth, Manila",
+  "(UTC+9) Tokyo, Seoul",
+  "(UTC+9:30) Adelaide, Darwin",
+  "(UTC+10) Sydney, Melbourne, Guam",
+  "(UTC+11) Solomon Islands, Nouméa",
+  "(UTC+12) Auckland, Fiji",
+  "(UTC+13) Samoa, Tonga",
+  "(UTC+14) Kiribati",
+];
+
 const Settings = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("appearance");
   const [scale, setScale] = useState("100%");
-  const [timezone, setTimezone] = useState("(UTC+3) Nairobi");
+  const [timezone, setTimezone] = useState("(UTC+3) Nairobi, Moscow, Riyadh, Baghdad");
   const [language, setLanguage] = useState("English");
   const [tradeSoundEffectsEnabled, setTradeSoundEffectsEnabledState] = useState(() => getTradeSoundEffectsEnabled());
   const { preferences: drawingPreferences, updatePreferences: updateDrawingPreferences, resetPreferences: resetDrawingPreferences } = useDrawingPreferences();
@@ -116,25 +170,28 @@ const Settings = () => {
               {/* Timezone + Language */}
               <div className="flex gap-4 mb-8">
                 <div className="flex-1">
-                  <button
-                    className="flex w-full items-center justify-between rounded border p-3 transition-colors hover:bg-[var(--trading-control-hover-bg)]"
-                    style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
+                  <select
+                    value={timezone}
+                    onChange={(e) => setTimezone(e.target.value)}
+                    className="w-full cursor-pointer rounded border p-3 text-sm transition-colors hover:bg-[var(--trading-control-hover-bg)]"
+                    style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)", color: "var(--trading-text-color)" }}
                   >
-                    <span className="text-sm text-[var(--trading-text-color)]">{timezone}</span>
-                    <ChevronDown className="w-4 h-4 text-[var(--trading-muted-color)]" />
-                  </button>
+                    {TIMEZONE_OPTIONS.map((tz) => (
+                      <option key={tz} value={tz} className="bg-[#1c1f2d]">{tz}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="flex-1">
-                  <button
-                    className="flex w-full items-center justify-between rounded border p-3 transition-colors hover:bg-[var(--trading-control-hover-bg)]"
-                    style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="w-full cursor-pointer rounded border p-3 text-sm transition-colors hover:bg-[var(--trading-control-hover-bg)]"
+                    style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)", color: "var(--trading-text-color)" }}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--trading-muted-color)]">GB</span>
-                      <span className="text-sm text-[var(--trading-text-color)]">{language}</span>
-                    </div>
-                    <ChevronDown className="w-4 h-4 text-[var(--trading-muted-color)]" />
-                  </button>
+                    {LANGUAGE_OPTIONS.map((lang) => (
+                      <option key={lang.code} value={lang.label} className="bg-[#1c1f2d]">{lang.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

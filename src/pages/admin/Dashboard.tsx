@@ -6,11 +6,14 @@ import {
   ArrowUpCircle,
   ChevronRight,
   Clock3,
+  DollarSign,
   Loader2,
   PlusCircle,
   TrendingUp,
   Users,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { readDemoBalanceStorage, writeDemoBalanceStorage, DEFAULT_DEMO_BALANCE } from "@/lib/onboarding";
 import {
   Bar,
   BarChart,
@@ -25,7 +28,6 @@ import {
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { useAuth } from "@/contexts/AuthContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 
 type ProfileRow = Pick<Tables<"profiles">, "id" | "username" | "display_name" | "created_at">;
@@ -112,14 +114,14 @@ const MetricCard = ({
   }[tone];
 
   return (
-    <div className={`${panelClass} flex min-h-[220px] flex-col justify-between p-6`}>
-      <div className="flex items-start justify-between gap-4">
-        <div className={`flex h-14 w-14 items-center justify-center rounded-[18px] ${toneStyles}`}>{icon}</div>
-        <div className={`rounded-full px-3 py-1 text-xs font-semibold ${toneStyles}`}>{chip}</div>
+    <div className={`${panelClass} flex min-h-[140px] flex-col justify-between p-4`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-[14px] ${toneStyles}`}>{icon}</div>
+        <div className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${toneStyles}`}>{chip}</div>
       </div>
       <div>
-        <p className="text-sm text-[#a7bfd8]">{label}</p>
-        <h3 className="mt-3 text-[2rem] font-semibold tracking-tight text-white">{value}</h3>
+        <p className="text-xs text-[#a7bfd8]">{label}</p>
+        <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">{value}</h3>
       </div>
     </div>
   );
@@ -279,83 +281,173 @@ const AdminDashboard = () => {
       : raw.filter((entry) => entry.value > 0);
   }, [data.pendingDeposits, data.readyWithdrawals, data.reviewWithdrawals]);
 
+  const [virtualAmount, setVirtualAmount] = useState("");
+  const [virtualStatus, setVirtualStatus] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [virtualLoading, setVirtualLoading] = useState(false);
+
+  const handleAddVirtualFunds = async () => {
+    const amount = Number(virtualAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setVirtualStatus({ ok: false, msg: "Enter a valid amount." });
+      return;
+    }
+    if (!profile?.id) {
+      setVirtualStatus({ ok: false, msg: "Profile not found." });
+      return;
+    }
+    setVirtualLoading(true);
+    setVirtualStatus(null);
+    try {
+      const { data: currentProfile, error: readError } = await supabase
+        .from("profiles")
+        .select("balance, total_deposit")
+        .eq("id", profile.id)
+        .single();
+      if (readError) throw readError;
+      const currentBalance = Number(currentProfile?.balance ?? 0);
+      const currentTotalDeposit = Number(currentProfile?.total_deposit ?? 0);
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          balance: currentBalance + amount,
+          total_deposit: currentTotalDeposit + amount,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", profile.id);
+      if (updateError) throw updateError;
+      setVirtualStatus({ ok: true, msg: `$${amount.toLocaleString()} added to your live balance.` });
+      setVirtualAmount("");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to add funds.";
+      setVirtualStatus({ ok: false, msg: message });
+    } finally {
+      setVirtualLoading(false);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#ff9a3d]/20 bg-[#1e2330] px-3 py-1.5 text-[11px] uppercase tracking-[0.28em] text-[#ffc27a]">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#ff9a3d]/20 bg-[#1e2330] px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">
             Admin / Overview
           </div>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Dashboard</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-[#a7bfd8] sm:text-base">
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Dashboard</h1>
+          <p className="mt-1.5 max-w-3xl text-xs leading-6 text-[#a7bfd8] sm:text-sm">
             Track growth, funding queues, and live trading pressure across {platformName}.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             to="/admin/finance"
-            className="admin-button-primary inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold"
+            className="admin-button-primary inline-flex items-center gap-1.5 rounded-2xl px-3 py-2 text-xs font-semibold"
           >
-            Open finance desk <ChevronRight className="h-4 w-4" />
+            Open finance desk <ChevronRight className="h-3.5 w-3.5" />
           </Link>
           <Link
             to="/admin/users"
-            className="admin-button-secondary inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold"
+            className="admin-button-secondary inline-flex items-center gap-1.5 rounded-2xl px-3 py-2 text-xs font-semibold"
           >
-            View users <ChevronRight className="h-4 w-4" />
+            View users <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-12">
-        <div className={`${panelClass} relative col-span-12 overflow-hidden p-6 sm:p-8 xl:col-span-6`}>
+      <div className="grid gap-4 xl:grid-cols-12">
+        <div className={`${panelClass} relative col-span-12 overflow-hidden p-4 sm:p-5 xl:col-span-6`}>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(35,58,89,0.55),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(48,168,106,0.18),transparent_34%)]" />
-          <div className="relative flex h-full flex-col justify-between gap-8">
+          <div className="relative flex h-full flex-col justify-between gap-4">
             <div>
-              <div className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ffc27a]">Welcome back</div>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight break-all text-white sm:text-[2.45rem]">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#ffc27a]">Welcome back</div>
+              <h2 className="mt-1.5 text-2xl font-semibold tracking-tight break-all text-white sm:text-[1.8rem]">
                 {greetingName}
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-[#a7bfd8]">
+              <p className="mt-1.5 max-w-2xl text-xs leading-6 text-[#a7bfd8]">
                 The command center is ready. Review finance activity, user growth, and live trading flow from one place.
               </p>
             </div>
-            <div className="grid gap-5 sm:grid-cols-3">
-              <div className={`${innerCardClass} p-4`}>
-                <p className="text-[11px] uppercase tracking-[0.26em] text-[#ffc27a]">Trades today</p>
-                <div className="mt-3 text-3xl font-semibold text-white">{data.tradesToday.toLocaleString()}</div>
-                <div className="mt-2 text-sm text-[#a7bfd8]">Live trading demand today.</div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className={`${innerCardClass} p-3`}>
+                <p className="text-[10px] uppercase tracking-[0.26em] text-[#ffc27a]">Trades today</p>
+                <div className="mt-2 text-2xl font-semibold text-white">{data.tradesToday.toLocaleString()}</div>
+                <div className="mt-1 text-xs text-[#a7bfd8]">Live trading demand today.</div>
               </div>
-              <div className={`${innerCardClass} p-4`}>
-                <p className="text-[11px] uppercase tracking-[0.26em] text-[#8fb0cf]">New users today</p>
-                <div className="mt-3 text-3xl font-semibold text-white">{data.signupsToday.toLocaleString()}</div>
-                <div className="mt-2 text-sm text-[#a7bfd8]">Fresh registrations joining the platform.</div>
+              <div className={`${innerCardClass} p-3`}>
+                <p className="text-[10px] uppercase tracking-[0.26em] text-[#8fb0cf]">New users today</p>
+                <div className="mt-2 text-2xl font-semibold text-white">{data.signupsToday.toLocaleString()}</div>
+                <div className="mt-1 text-xs text-[#a7bfd8]">Fresh registrations joining the platform.</div>
               </div>
-              <div className={`${innerCardClass} p-4`}>
-                <p className="text-[11px] uppercase tracking-[0.26em] text-[#9be1bc]">Platform P&amp;L</p>
-                <div className={`mt-3 text-3xl font-semibold ${data.platformProfitToday >= 0 ? "text-[#0fa053]" : "text-slate-200"}`}>
+              <div className={`${innerCardClass} p-3`}>
+                <p className="text-[10px] uppercase tracking-[0.26em] text-[#9be1bc]">Platform P&amp;L</p>
+                <div className={`mt-2 text-2xl font-semibold ${data.platformProfitToday >= 0 ? "text-[#0fa053]" : "text-slate-200"}`}>
                   {loading ? "..." : `${data.platformProfitToday >= 0 ? "+" : "-"}${formatMoney(data.platformProfitToday)}`}
                 </div>
-                <div className="mt-2 text-sm text-[#a7bfd8]">Closed-trade result for today.</div>
+                <div className="mt-1 text-xs text-[#a7bfd8]">Closed-trade result for today.</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="col-span-12 grid gap-6 sm:grid-cols-2 xl:col-span-6 xl:grid-cols-2">
+        <div className="col-span-12 grid gap-4 sm:grid-cols-2 xl:col-span-6 xl:grid-cols-2">
           <MetricCard chip={`+${data.signupsToday.toLocaleString()} today`} icon={<Activity className="h-6 w-6" />} label="Active Traders" tone="accent" value={loading ? "..." : formatCompact(data.activeTraders30d)} />
           <MetricCard chip={`${formatCompact(data.totalUsers)} total`} icon={<Users className="h-6 w-6" />} label="Total Users" tone="deep" value={loading ? "..." : formatCompact(data.totalUsers)} />
           <MetricCard chip={`${data.pendingDeposits.toLocaleString()} waiting`} icon={<ArrowDownCircle className="h-6 w-6" />} label="Pending Deposits" tone="soft" value={loading ? "..." : data.pendingDeposits.toLocaleString()} />
           <MetricCard chip={`${data.reviewWithdrawals.toLocaleString()} queued`} icon={<ArrowUpCircle className="h-6 w-6" />} label="Withdrawal Review" tone="strong" value={loading ? "..." : data.reviewWithdrawals.toLocaleString()} />
         </div>
 
-        <div className={`${panelClass} col-span-12 p-6 xl:col-span-6`}>
-          <div className="mb-6">
-            <div className="text-[11px] uppercase tracking-[0.28em] text-[#ffc27a]">Activity bar</div>
-            <h3 className="mt-2 text-[2rem] font-semibold tracking-tight text-white">Weekly platform activity</h3>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#a7bfd8]">Trades and registrations over the last seven days.</p>
+        <div className={`${panelClass} col-span-12 p-4 xl:col-span-6`}>
+          <div className="mb-3">
+            <div className="text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">Virtual funds</div>
+            <h3 className="mt-1 text-lg font-semibold tracking-tight text-white">Add credit to your account</h3>
+            <p className="mt-1 text-xs leading-5 text-[#a7bfd8]">Credit your live balance directly without going through the deposit flow.</p>
           </div>
-          <div className="h-[340px]">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">$</span>
+                <input
+                  type="number"
+                  value={virtualAmount}
+                  onChange={(e) => setVirtualAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full rounded-xl border border-[#1e2330] bg-[#1c1f2d] py-2 pl-7 pr-3 text-base font-bold text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#0fa053]"
+                />
+              </div>
+              <button
+                onClick={() => void handleAddVirtualFunds()}
+                disabled={virtualLoading}
+                className="flex h-[38px] items-center gap-1.5 rounded-xl bg-[#0fa053] px-4 text-xs font-bold text-white transition-colors hover:bg-[#0d8f47] disabled:opacity-50"
+              >
+                {virtualLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlusCircle className="h-3.5 w-3.5" />}
+                Add Funds
+              </button>
+            </div>
+            <div className="flex gap-1.5">
+              {[500, 1000, 5000, 10000].map((preset) => (
+                <button
+                  key={preset}
+                  onClick={() => setVirtualAmount(String(preset))}
+                  className="rounded-lg border border-[#1e2330] bg-[#1c1f2d] px-2 py-1 text-[11px] font-semibold text-slate-300 transition-colors hover:border-white/10 hover:text-white"
+                >
+                  ${preset.toLocaleString()}
+                </button>
+              ))}
+            </div>
+            {virtualStatus && (
+              <div className={`text-xs ${virtualStatus.ok ? "text-[#0fa053]" : "text-red-400"}`}>
+                {virtualStatus.msg}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className={`${panelClass} col-span-12 p-4 xl:col-span-6`}>
+          <div className="mb-3">
+            <div className="text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">Activity bar</div>
+            <h3 className="mt-1 text-lg font-semibold tracking-tight text-white">Weekly platform activity</h3>
+            <p className="mt-1 text-xs leading-5 text-[#a7bfd8]">Trades and registrations over the last seven days.</p>
+          </div>
+          <div className="h-[220px]">
             {loading ? (
               <div className="flex h-full items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-[#0fa053]" />
@@ -379,12 +471,12 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className={`${panelClass} col-span-12 p-6 xl:col-span-3`}>
-          <div className="mb-6">
-            <div className="text-[11px] uppercase tracking-[0.28em] text-[#ffc27a]">Desk balance</div>
-            <h3 className="mt-2 text-[2rem] font-semibold tracking-tight text-white">Operations mix</h3>
+        <div className={`${panelClass} col-span-12 p-4 xl:col-span-3`}>
+          <div className="mb-3">
+            <div className="text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">Desk balance</div>
+            <h3 className="mt-1 text-lg font-semibold tracking-tight text-white">Operations mix</h3>
           </div>
-          <div className="mx-auto h-[240px] w-full max-w-[240px]">
+          <div className="mx-auto h-[180px] w-full max-w-[200px]">
             {loading ? (
               <div className="flex h-full items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-[#0fa053]" />
@@ -405,80 +497,80 @@ const AdminDashboard = () => {
               </ResponsiveContainer>
             )}
           </div>
-          <div className="space-y-3">
+          <div className="space-y-1.5 mt-2">
             {queueMix.map((entry) => (
-              <div key={entry.label} className={`flex items-center justify-between ${innerCardClass} px-4 py-3`}>
-                <div className="flex items-center gap-3">
-                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: entry.color }} />
-                  <span className="text-sm font-medium text-[#a7bfd8]">{entry.label}</span>
+              <div key={entry.label} className={`flex items-center justify-between ${innerCardClass} px-3 py-2`}>
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                  <span className="text-xs font-medium text-[#a7bfd8]">{entry.label}</span>
                 </div>
-                <span className="text-sm font-semibold text-white">{entry.value.toLocaleString()}</span>
+                <span className="text-xs font-semibold text-white">{entry.value.toLocaleString()}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className={`${panelClass} col-span-12 p-6 xl:col-span-3`}>
-          <div className="mb-6">
-            <div className="text-[11px] uppercase tracking-[0.28em] text-[#ffc27a]">Payout watch</div>
-            <h3 className="mt-2 text-[2rem] font-semibold tracking-tight text-white">Withdrawal desk</h3>
+        <div className={`${panelClass} col-span-12 p-4 xl:col-span-3`}>
+          <div className="mb-3">
+            <div className="text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">Payout watch</div>
+            <h3 className="mt-1 text-lg font-semibold tracking-tight text-white">Withdrawal desk</h3>
           </div>
-          <div className="space-y-4">
-            <div className={`${innerCardClass} px-4 py-4`}>
-              <div className="text-[11px] uppercase tracking-[0.26em] text-[#ffc27a]">Needs review</div>
-              <div className="mt-2 text-3xl font-semibold text-[#ffc27a]">{data.reviewWithdrawals.toLocaleString()}</div>
+          <div className="space-y-3">
+            <div className={`${innerCardClass} px-3 py-3`}>
+              <div className="text-[10px] uppercase tracking-[0.26em] text-[#ffc27a]">Needs review</div>
+              <div className="mt-1 text-2xl font-semibold text-[#ffc27a]">{data.reviewWithdrawals.toLocaleString()}</div>
             </div>
-            <div className={`${innerCardClass} px-4 py-4`}>
-              <div className="text-[11px] uppercase tracking-[0.26em] text-[#9be1bc]">Ready to send</div>
-              <div className="mt-2 text-3xl font-semibold text-[#0fa053]">{data.readyWithdrawals.toLocaleString()}</div>
+            <div className={`${innerCardClass} px-3 py-3`}>
+              <div className="text-[10px] uppercase tracking-[0.26em] text-[#9be1bc]">Ready to send</div>
+              <div className="mt-1 text-2xl font-semibold text-[#0fa053]">{data.readyWithdrawals.toLocaleString()}</div>
             </div>
-            <div className={`${innerCardClass} px-4 py-4`}>
-              <div className="text-[11px] uppercase tracking-[0.26em] text-[#8fb0cf]">Platform P&amp;L</div>
-              <div className={`mt-2 text-3xl font-semibold ${data.platformProfitToday >= 0 ? "text-[#0fa053]" : "text-slate-200"}`}>
+            <div className={`${innerCardClass} px-3 py-3`}>
+              <div className="text-[10px] uppercase tracking-[0.26em] text-[#8fb0cf]">Platform P&amp;L</div>
+              <div className={`mt-1 text-2xl font-semibold ${data.platformProfitToday >= 0 ? "text-[#0fa053]" : "text-slate-200"}`}>
                 {loading ? "..." : `${data.platformProfitToday >= 0 ? "+" : "-"}${formatMoney(data.platformProfitToday)}`}
               </div>
             </div>
           </div>
         </div>
 
-        <div className={`${panelClass} col-span-12 p-6`}>
-          <div className="mb-6 flex items-start justify-between gap-4">
+        <div className={`${panelClass} col-span-12 p-4`}>
+          <div className="mb-3 flex items-start justify-between gap-4">
             <div>
-              <div className="text-[11px] uppercase tracking-[0.28em] text-[#ffc27a]">Live feed</div>
-              <h3 className="mt-2 text-[2rem] font-semibold tracking-tight text-white">Recent admin-visible activity</h3>
+              <div className="text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">Live feed</div>
+              <h3 className="mt-1 text-lg font-semibold tracking-tight text-white">Recent admin-visible activity</h3>
             </div>
             <Link
               to="/admin/finance"
-              className="admin-button-secondary inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold"
+              className="admin-button-secondary inline-flex items-center gap-1.5 rounded-2xl px-3 py-2 text-xs font-semibold"
             >
-              View queues <ChevronRight className="h-4 w-4" />
+              View queues <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid gap-2 lg:grid-cols-2">
             {loading ? (
-              <div className="col-span-full flex h-[220px] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-[#0fa053]" />
+              <div className="col-span-full flex h-[140px] items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-[#0fa053]" />
               </div>
             ) : data.recentActivity.length === 0 ? (
-              <div className="col-span-full flex h-[220px] items-center justify-center rounded-[24px] border border-dashed border-[#1e2330] text-sm text-slate-500">
+              <div className="col-span-full flex h-[140px] items-center justify-center rounded-[24px] border border-dashed border-[#1e2330] text-xs text-slate-500">
                 No recent activity yet.
               </div>
             ) : (
               data.recentActivity.map((activity) => (
-                <div key={activity.id} className={`flex items-start gap-4 ${innerCardClass} px-4 py-4`}>
-                  <div className="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border border-[#1e2330] bg-[#1c1f2d]">
+                <div key={activity.id} className={`flex items-start gap-3 ${innerCardClass} px-3 py-3`}>
+                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border border-[#1e2330] bg-[#1c1f2d]">
                     {activity.type === "deposit" ? (
-                      <ArrowDownCircle className="h-5 w-5 text-[#0fa053]" />
+                      <ArrowDownCircle className="h-4 w-4 text-[#0fa053]" />
                     ) : activity.type === "withdrawal" ? (
-                      <ArrowUpCircle className="h-5 w-5 text-[#ffc27a]" />
+                      <ArrowUpCircle className="h-4 w-4 text-[#ffc27a]" />
                     ) : activity.type === "trade" ? (
-                      <TrendingUp className="h-5 w-5 text-[#8fb0cf]" />
+                      <TrendingUp className="h-4 w-4 text-[#8fb0cf]" />
                     ) : (
-                      <PlusCircle className="h-5 w-5 text-[#ffc27a]" />
+                      <PlusCircle className="h-4 w-4 text-[#ffc27a]" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm leading-7 text-slate-200">
+                    <p className="text-xs leading-6 text-slate-200">
                       {activity.type === "deposit" ? (
                         <>
                           <span className="font-semibold text-[#0fa053]">{formatMoney(activity.amount)}</span> deposit request from{" "}
@@ -501,8 +593,8 @@ const AdminDashboard = () => {
                         </>
                       )}
                     </p>
-                    <div className="mt-2 flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-slate-500">
-                      <Clock3 className="h-3.5 w-3.5" />
+                    <div className="mt-1 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.24em] text-slate-500">
+                      <Clock3 className="h-3 w-3" />
                       {formatRelativeTime(activity.createdAt)}
                     </div>
                   </div>
