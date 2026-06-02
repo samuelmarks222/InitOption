@@ -66,7 +66,7 @@ const DOWN_COLOR_OPTIONS = ["#e85b4e", "#db4635", "#d96059", "#e47670", "#d8a441
 const MAX_BACKGROUND_BYTES = 2 * 1024 * 1024;
 
 export const WorkspaceSettings = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { preferences, updatePreferences, resetPreferences } = useTradingPreferences();
 
@@ -107,7 +107,11 @@ export const WorkspaceSettings = () => {
           <FieldLabel>{t("workspace.language")}</FieldLabel>
           <select
             value={preferences.language}
-            onChange={(event) => updatePreferences({ language: event.target.value })}
+            onChange={(event) => {
+              const lang = event.target.value;
+              i18n.changeLanguage(lang);
+              updatePreferences({ language: lang });
+            }}
             className="h-10 w-full rounded-[3px] border px-3 text-[12px] font-semibold outline-none"
             style={{
               background: "var(--trading-panel-bg)",

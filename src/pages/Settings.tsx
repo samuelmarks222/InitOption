@@ -78,7 +78,7 @@ const TIMEZONE_OPTIONS = [
 ];
 
 const Settings = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("appearance");
   const [scale, setScale] = useState("100%");
@@ -194,8 +194,10 @@ const Settings = () => {
                   <select
                     value={language}
                     onChange={(e) => {
-                      setLanguage(e.target.value);
-                      updateTradingPreferences({ language: e.target.value as any });
+                      const lang = e.target.value;
+                      setLanguage(lang);
+                      i18n.changeLanguage(lang);
+                      updateTradingPreferences({ language: lang as any });
                     }}
                     className="w-full cursor-pointer rounded border p-3 text-sm transition-colors hover:bg-[var(--trading-control-hover-bg)]"
                     style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)", color: "var(--trading-text-color)" }}

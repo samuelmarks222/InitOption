@@ -183,8 +183,7 @@ const applyTradingPreferencesToDocument = (preferences: TradingPreferences) => {
   document.documentElement.style.setProperty("--trading-up-color", preferences.upTrendColor);
   document.documentElement.style.setProperty("--trading-down-color", preferences.downTrendColor);
 
-  const supportedLocales = ["en", "zh", "es"];
-  if (supportedLocales.includes(preferences.language) && i18n.language !== preferences.language) {
+  if (i18n.language !== preferences.language) {
     i18n.changeLanguage(preferences.language);
   }
 };
