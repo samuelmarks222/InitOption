@@ -1,0 +1,140 @@
+{
+  "settings": {
+    "pageTitle": "Pengaturan",
+    "backToTrading": "Kembali ke Trading",
+    "platformSettings": "Pengaturan platform",
+    "siteVersion": "Versi situs: 3452.4.8216 (build resmi)",
+    "leftTabs": { "appearance": "Tampilan", "trading": "Trading", "shortcuts": "Pintasan keyboard", "notifications": "Notifikasi", "privacy": "Privasi", "account": "Pengaturan akun" },
+    "appearance": { "themeSettings": "PENGATURAN TEMA", "interfaceScale": "SKALA ANTARMUKA", "customizeMenu": "Sesuaikan Menu...", "customizeMenuDesc": "Lokasi dan visibilitas item menu", "comingSoon": "Pengaturan segmen ini segera hadir. Hubungi dukungan." },
+    "trading": {
+      "heading": "Preferensi Trading", "drawingToolColor": "Warna alat gambar", "drawingToolColorDesc": "Alat gambar baru mewarisi warna ini secara otomatis.",
+      "custom": "Kustom", "auto": "Otomatis", "autoColorDesc": "Warna otomatis per alat",
+      "colorHelper": "Pilih warna default atau kembali ke warna otomatis kapan saja.",
+      "useAutomatic": "Gunakan otomatis", "linePreview": "Pratinjau Garis", "zonePreview": "Pratinjau Zona",
+      "customColorActive": "Warna kustom Anda sekarang digunakan untuk alat gambar baru.",
+      "autoModeActive": "Mode otomatis menjaga setiap alat pada warna defaultnya.",
+      "confirmTrades": "Konfirmasi trading sebelum eksekusi", "confirmTradesDesc": "Tampilkan dialog konfirmasi sebelum setiap trading",
+      "showNotifications": "Tampilkan notifikasi trading", "showNotificationsDesc": "Tampilkan notifikasi desktop untuk hasil trading",
+      "soundEffects": "Efek suara", "soundEffectsDesc": "Putar suara saat membuka dan menutup trading",
+      "autoInvest": "Investasi otomatis jumlah sama", "autoInvestDesc": "Gunakan jumlah investasi yang sama untuk setiap trading"
+    },
+    "notifications": {
+      "heading": "Pengaturan Notifikasi",
+      "depositEmails": "Email deposit dan penarikan", "tradeResultEmails": "Email hasil trading",
+      "tournamentEmails": "Email turnamen", "promoEmails": "Email promo dan bonus",
+      "kycEmails": "Email KYC dan keamanan", "inAppAlerts": "Peringatan dalam aplikasi"
+    }
+  },
+  "workspace": {
+    "language": "Bahasa", "timezone": "Zona waktu", "themeSettings": "Pengaturan tema", "platform": "Platform",
+    "gridOpacity": "Opasitas grid", "autoScrolling": "Gulir otomatis", "autoScrollingCaption": "Kunci grafik ke tepi harga langsung",
+    "oneClickTrade": "Trading 1-klik", "oneClickTradeCaption": "Buka trading tanpa konfirmasi",
+    "performanceMode": "Mode Kinerja", "performanceModeCaption": "Gunakan rendering optimal untuk grafik dan lilin",
+    "shortOrderLabel": "Label pesanan pendek", "shortOrderLabelCaption": "Gunakan label lebih pendek di daftar trading",
+    "tradeButtonColors": "Warna Tombol Trading", "upButton": "Tombol Naik", "downButton": "Tombol Turun",
+    "background": "Latar belakang", "chooseFile": "Pilih file", "maxSizeHint": "(Ukuran maks - 2 MB)",
+    "imageOpacity": "Opasitas gambar", "removeBackground": "Hapus latar grafik",
+    "restoreDefaults": "Kembalikan default",
+    "bgNotChanged": "Latar tidak berubah", "bgNotChangedDesc": "Pilih file gambar.",
+    "bgTooLarge": "Latar terlalu besar", "bgTooLargeDesc": "Pilih gambar hingga 2 MB.",
+    "bgUpdated": "Latar grafik diperbarui"
+  },
+  "assetInfo": { "addAsset": "Tambah aset", "showPrevious": "Tampilkan aset sebelumnya", "showMore": "Tampilkan lebih banyak aset" },
+  "sidebar": {
+    "howToTrade": "Bagaimana cara trading?", "tradingGuide": "Panduan Trading", "interfaceGuide": "Panduan antarmuka",
+    "quickIntro": "Pengantar singkat", "allVideos": "Semua Video",
+    "basics": "Dasar", "contractsTrading": "Trading Kontrak", "marginTrading": "Trading Margin", "technicalAnalysis": "Analisis Teknis",
+    "allInstruments": "Semua instrumen", "forex": "Forex", "cfd": "CFD", "crypto": "Kripto", "options": "Opsi",
+    "navLabels": {
+      "totalPortfolio": "TOTAL PORTOFOLIO", "tradingHistory": "RIWAYAT TRADING", "chat": "CHAT",
+      "leaderBoard": "PAPAN PERINGKAT", "promo": "PROMO", "webinars": "WEBINAR",
+      "marketAnalysis": "ANALISIS PASAR", "tutorials": "TUTORIAL", "more": "LAINNYA"
+    },
+    "panelTitles": {
+      "totalPortfolio": "Total Portofolio", "tradingHistory": "Riwayat Trading",
+      "chat": "Chat", "leadersOfWeek": "Pemimpin Minggu Ini", "promo": "Promo",
+      "webinars": "Webinar", "earningsCalendar": "Kalender Pendapatan", "tutorials": "Tutorial", "more": "Lainnya"
+    },
+    "history": { "allPositions": "Semua Posisi" },
+    "leaderboard": { "noProfitableTrades": "Anda belum melakukan trading menguntungkan minggu ini", "empty": "Belum ada trader di papan peringkat.\nJadilah yang pertama!" },
+    "promo": {
+      "available": "TERSEDIA", "history": "RIWAYAT", "promoCode": "Kode promo",
+      "exclusive": "Eksklusif", "bonusUpTo": "Bonus hingga 110%", "new": "BARU",
+      "discoverStrategies": "Temukan strategi trading yang powerful...", "activated": "Diaktifkan", "noHistory": "Belum ada riwayat promo."
+    },
+    "webinars": { "upcoming": "Mendatang", "period30d": "30h", "empty": "Tidak ada webinar yang dijadwalkan saat ini." },
+    "tutorials": { "videoTutorials": "Tutorial Video", "videosCount": "video" },
+    "earnings": { "today": "HARI INI", "currently": "Saat ini", "forecast": "Perkiraan", "previous": "Sebelumnya", "empty": "Tidak ada acara pendapatan pada tanggal ini." },
+    "portfolio": { "empty": "Portofolio Anda kosong.\nMulai trading untuk melihat posisi Anda di sini." },
+    "worldwide": "Seluruh Dunia"
+  },
+  "tradingHeader": {
+    "singleChart": "1 layar", "singleChartCaption": "Grafik tunggal", "dualChart": "2 layar", "dualChartCaption": "Tata letak ganda",
+    "tripleChart": "3 layar", "tripleChartCaption": "Tata letak tiga", "quadChart": "4 layar", "quadChartCaption": "Tata letak empat",
+    "myAccount": "Akun saya", "demoAccount": "Akun demo", "tournamentAccount": "Akun turnamen", "liveAccount": "Akun langsung",
+    "demo": "DEMO", "tour": "TURNAMEN", "live": "LIVE", "subtitle": "PLATFORM TRADING WEB",
+    "avatar": "Avatar", "deposit": "Deposit", "adminPanel": "Panel admin", "admin": "Admin",
+    "multiScreen": "Multi-layar", "multiScreenLayout": "Tata letak multi-layar", "profile": "Profil",
+    "withdrawal": "Penarikan", "goToTrade": "Ke Trading"
+  },
+  "tradingPanel": {
+    "timePresets": { "1m": "1m", "2m": "2m", "3m": "3m", "4m": "4m", "5m": "5m", "10m": "10m", "15m": "15m", "30m": "30m", "1h": "1j", "4h": "4j" },
+    "customTime": "Waktu Kustom", "customTimeHelper": "Masukkan durasi dari 1 menit hingga 24 jam.",
+    "sec": "Detik", "min": "Menit", "hour": "Jam", "applyCustomTime": "Terapkan Waktu Kustom",
+    "directionUp": "▲ NAIK", "directionDown": "▼ TURUN",
+    "queued": "Dalam antrian", "insufficientBalance": "Saldo demo tidak mencukupi",
+    "pendingTradeCanceled": "Trading tertunda dibatalkan", "pendingTradeCanceledDesc": "Eksekusi tertunda telah dibatalkan.",
+    "pendingTradeArmed": "Trading tertunda siap", "pendingTradeEnabled": "Trading tertunda diaktifkan",
+    "pendingTradeEnabledDesc": "Trading baru akan dieksekusi setelah penundaan singkat.",
+    "pendingTradeLabel": "Trading tertunda", "pendingTradeLabelMobile": "TRADING TERTUNDA",
+    "tournamentBanner": "Mode turnamen aktif. Posisi terbuka terbatas pada akun turnamen ini.",
+    "timer": "Pengatur waktu", "time": "Waktu", "switchTime": "GANTI WAKTU",
+    "investment": "Investasi", "usd": "USD", "yourPayout": "Pembayaran Anda:",
+    "up": "Naik", "down": "Turun", "trades": "Trading",
+    "pendingTrades": "Trading tertunda", "noPendingTrades": "Belum ada trading tertunda.",
+    "noTrades": "Belum ada trading.",
+    "openTrades": "TRADING TERBUKA", "recent": "TERBARU"
+  },
+  "assetSelector": {
+    "selectPair": "Pilih pasangan",
+    "currencies": "MATA UANG", "crypto": "KRIPTO", "commodities": "KOMODITAS", "stocks": "SAHAM",
+    "showAllAssets": "Tampilkan semua aset", "showFavorites": "Tampilkan aset favorit",
+    "search": "Cari", "name": "Nama", "change24h": "Perubahan 24j", "profit1min": "Profit 1+ mnt", "profit5min": "5+ mnt",
+    "added": "DITAMBAHKAN",
+    "noFavorites": "Belum ada aset favorit. Ketuk bintang untuk menambahkan.",
+    "noFavoritesMatch": "Tidak ada favorit yang cocok dengan pencarian Anda.",
+    "noAssetsMatch": "Tidak ada aset yang ditemukan."
+  },
+  "admin": {
+    "portal": "Portal Admin", "desk": "Meja Admin", "returnToSite": "Kembali ke Situs Utama",
+    "goToTrade": "Ke Trading", "switchLight": "Beralih ke mode terang", "switchDark": "Beralih ke mode gelap",
+    "adminUser": "Pengguna Admin",
+    "nav": {
+      "dashboard": "Dasbor", "supportInbox": "Kotak Masuk Dukungan", "userManagement": "Manajemen Pengguna",
+      "tradeManagement": "Manajemen Trading", "transactions": "Transaksi", "assetManagement": "Manajemen Aset",
+      "tournaments": "Turnamen", "blog": "Blog", "platformSettings": "Pengaturan Platform",
+      "promoCodes": "Kode Promo", "riskManagement": "Manajemen Risiko", "reports": "Laporan",
+      "notification": "Notifikasi", "auditLogs": "Log Audit", "adminUsers": "Pengguna Admin",
+      "cryptoPayments": "Pembayaran Kripto", "profitAnalytics": "Analisis Profit"
+    }
+  },
+  "languages": { "en": "English", "zh": "中文", "hi": "हिन्दी", "es": "Español", "fr": "Français", "ar": "العربية", "bn": "বাংলা", "pt": "Português", "ru": "Русский", "ur": "اردو", "id": "Bahasa Indonesia", "de": "Deutsch", "ja": "日本語", "sw": "Kiswahili", "tr": "Türkçe" },
+  "timezones": {
+    "UTC-12:00": "(UTC-12) Pulau Baker", "UTC-11:00": "(UTC-11) Samoa Amerika", "UTC-10:00": "(UTC-10) Hawaii",
+    "UTC-09:00": "(UTC-9) Alaska", "UTC-08:00": "(UTC-8) Los Angeles, Vancouver",
+    "UTC-07:00": "(UTC-7) Denver, Phoenix", "UTC-06:00": "(UTC-6) Chicago, Kota Meksiko",
+    "UTC-05:00": "(UTC-5) New York, Miami, Toronto", "UTC-04:00": "(UTC-4) Santiago, Caracas",
+    "UTC-03:00": "(UTC-3) Buenos Aires, São Paulo", "UTC-02:00": "(UTC-2) Fernando de Noronha",
+    "UTC-01:00": "(UTC-1) Azores", "UTC+00:00": "(UTC+0) London, Lisbon, Accra",
+    "UTC+01:00": "(UTC+1) Paris, Berlin, Roma, Madrid, Lagos", "UTC+02:00": "(UTC+2) Kairo, Johannesburg, Athena, Istanbul",
+    "UTC+03:00": "(UTC+3) Nairobi, Moskow, Riyadh, Baghdad", "UTC+03:30": "(UTC+3:30) Tehran",
+    "UTC+04:00": "(UTC+4) Dubai, Baku", "UTC+04:30": "(UTC+4:30) Kabul",
+    "UTC+05:00": "(UTC+5) Karachi, Islamabad, Tashkent", "UTC+05:30": "(UTC+5:30) Mumbai, New Delhi, Kolombo",
+    "UTC+05:45": "(UTC+5:45) Kathmandu", "UTC+06:00": "(UTC+6) Dhaka, Almaty",
+    "UTC+06:30": "(UTC+6:30) Yangon", "UTC+07:00": "(UTC+7) Bangkok, Jakarta, Hanoi",
+    "UTC+08:00": "(UTC+8) Beijing, Singapura, Perth, Manila", "UTC+09:00": "(UTC+9) Tokyo, Seoul",
+    "UTC+09:30": "(UTC+9:30) Adelaide, Darwin", "UTC+10:00": "(UTC+10) Sydney, Melbourne, Guam",
+    "UTC+11:00": "(UTC+11) Kepulauan Solomon, Nouméa", "UTC+12:00": "(UTC+12) Auckland, Fiji",
+    "UTC+13:00": "(UTC+13) Samoa, Tonga", "UTC+14:00": "(UTC+14) Kiribati"
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "settings": {
+    "pageTitle": "الإعدادات",
+    "backToTrading": "العودة إلى التداول",
+    "platformSettings": "إعدادات المنصة",
+    "siteVersion": "إصدار الموقع: 3452.4.8216 (إصدار رسمي)",
+    "leftTabs": { "appearance": "المظهر", "trading": "التداول", "shortcuts": "اختصارات لوحة المفاتيح", "notifications": "الإشعارات", "privacy": "الخصوصية", "account": "إعدادات الحساب" },
+    "appearance": { "themeSettings": "إعدادات السمة", "interfaceScale": "مقياس الواجهة", "customizeMenu": "تخصيص القائمة...", "customizeMenuDesc": "موقع ورؤية عناصر القائمة للوصول السريع", "comingSoon": "إعدادات هذا القسم قريباً. اتصل بالدعم." },
+    "trading": {
+      "heading": "تفضيلات التداول", "drawingToolColor": "لون أداة الرسم", "drawingToolColorDesc": "الأدوات الجديدة ترث هذا اللون تلقائياً.",
+      "custom": "مخصص", "auto": "تلقائي", "autoColorDesc": "ألوان تلقائية لكل أداة",
+      "colorHelper": "اختر لوناً افتراضياً أو ارجع إلى الألوان التلقائية في أي وقت.",
+      "useAutomatic": "استخدام التلقائي", "linePreview": "معاينة الخط", "zonePreview": "معاينة المنطقة",
+      "customColorActive": "اللون المخصص يستخدم الآن للأدوات الجديدة.",
+      "autoModeActive": "الوضع التلقائي يحافظ على اللون الافتراضي لكل أداة.",
+      "confirmTrades": "تأكيد الصفقات قبل التنفيذ", "confirmTradesDesc": "إظهار مربع تأكيد قبل كل صفقة",
+      "showNotifications": "إظهار إشعارات التداول", "showNotificationsDesc": "عرض إشعارات سطح المكتب لنتائج الصفقات",
+      "soundEffects": "المؤثرات الصوتية", "soundEffectsDesc": "تشغيل الأصوات عند فتح وإغلاق الصفقات",
+      "autoInvest": "استثمار نفس المبلغ تلقائياً", "autoInvestDesc": "استخدام نفس المبلغ تلقائياً لكل صفقة"
+    },
+    "notifications": {
+      "heading": "إعدادات الإشعارات",
+      "depositEmails": "رسائل الإيداع والسحب", "tradeResultEmails": "رسائل نتائج التداول",
+      "tournamentEmails": "رسائل البطولات", "promoEmails": "رسائل العروض",
+      "kycEmails": "رسائل KYC والأمان", "inAppAlerts": "تنبيهات التطبيق"
+    }
+  },
+  "workspace": {
+    "language": "اللغة", "timezone": "المنطقة الزمنية", "themeSettings": "إعدادات السمة", "platform": "المنصة",
+    "gridOpacity": "شفافية الشبكة", "autoScrolling": "التمرير التلقائي", "autoScrollingCaption": "إبقاء الرسم البياني على حافة السعر المباشر",
+    "oneClickTrade": "تداول بنقرة واحدة", "oneClickTradeCaption": "فتح الصفقات دون تأكيد",
+    "performanceMode": "وضع الأداء", "performanceModeCaption": "استخدام عرض محسّن للرسم البياني والشموع",
+    "shortOrderLabel": "تسمية قصيرة", "shortOrderLabelCaption": "استخدام تسميات أقصر في قائمة الصفقات",
+    "tradeButtonColors": "ألوان أزرار التداول", "upButton": "زر الارتفاع", "downButton": "زر الانخفاض",
+    "background": "الخلفية", "chooseFile": "اختيار ملف", "maxSizeHint": "(الحد الأقصى - 2 ميغابايت)",
+    "imageOpacity": "شفافية الصورة", "removeBackground": "إزالة خلفية الرسم البياني",
+    "restoreDefaults": "استعادة الإعدادات الافتراضية",
+    "bgNotChanged": "لم يتم تغيير الخلفية", "bgNotChangedDesc": "اختر ملف صورة.",
+    "bgTooLarge": "الخلفية كبيرة جداً", "bgTooLargeDesc": "اختر صورة حتى 2 ميغابايت.",
+    "bgUpdated": "تم تحديث خلفية الرسم البياني"
+  },
+  "assetInfo": { "addAsset": "إضافة أصل", "showPrevious": "عرض الأصول السابقة", "showMore": "عرض المزيد" },
+  "sidebar": {
+    "howToTrade": "كيف تتداول؟", "tradingGuide": "دليل التداول", "interfaceGuide": "دليل الواجهة",
+    "quickIntro": "مقدمة سريعة", "allVideos": "جميع الفيديوهات",
+    "basics": "أساسيات", "contractsTrading": "تداول العقود", "marginTrading": "تداول الهامش", "technicalAnalysis": "التحليل الفني",
+    "allInstruments": "جميع الأدوات", "forex": "فوركس", "cfd": "CFD", "crypto": "عملات رقمية", "options": "خيارات",
+    "navLabels": {
+      "totalPortfolio": "إجمالي المحفظة", "tradingHistory": "سجل التداول", "chat": "الدردشة",
+      "leaderBoard": "لوحة المتصدرين", "promo": "العروض", "webinars": "الندوات",
+      "marketAnalysis": "تحليل السوق", "tutorials": "الدروس", "more": "المزيد"
+    },
+    "panelTitles": {
+      "totalPortfolio": "إجمالي المحفظة", "tradingHistory": "سجل التداول",
+      "chat": "الدردشة", "leadersOfWeek": "قادة الأسبوع", "promo": "العروض",
+      "webinars": "الندوات", "earningsCalendar": "تقويم الأرباح", "tutorials": "الدروس", "more": "المزيد"
+    },
+    "history": { "allPositions": "جميع المراكز" },
+    "leaderboard": { "noProfitableTrades": "لم تقم بأي صفقات مربحة هذا الأسبوع", "empty": "لا يوجد متداولون في لوحة المتصدرين بعد.\nكن أولهم!" },
+    "promo": {
+      "available": "متاح", "history": "السجل", "promoCode": "رمز العرض",
+      "exclusive": "حصري", "bonusUpTo": "مكافأة تصل إلى 110%", "new": "جديد",
+      "discoverStrategies": "اكتشف استراتيجيات تداول قوية...", "activated": "مفعل", "noHistory": "لا يوجد سجل عروض."
+    },
+    "webinars": { "upcoming": "القادمة", "period30d": "30يوماً", "empty": "لا توجد ندوات مجدولة حالياً." },
+    "tutorials": { "videoTutorials": "دروس فيديو", "videosCount": "فيديو" },
+    "earnings": { "today": "اليوم", "currently": "حالياً", "forecast": "التوقعات", "previous": "السابق", "empty": "لا توجد أحداث أرباح في هذا التاريخ." },
+    "portfolio": { "empty": "محفظتك فارغة.\nابدأ التداول لرؤية مراكزك هنا." },
+    "worldwide": "جميع أنحاء العالم"
+  },
+  "tradingHeader": {
+    "singleChart": "شاشة 1", "singleChartCaption": "رسم بياني واحد", "dualChart": "شاشتان", "dualChartCaption": "تخطيط مزدوج",
+    "tripleChart": "3 شاشات", "tripleChartCaption": "تخطيط ثلاثي", "quadChart": "4 شاشات", "quadChartCaption": "تخطيط رباعي",
+    "myAccount": "حسابي", "demoAccount": "حساب تجريبي", "tournamentAccount": "حساب البطولة", "liveAccount": "حساب حقيقي",
+    "demo": "تجريبي", "tour": "بطولة", "live": "حقيقي", "subtitle": "منصة تداول ويب",
+    "avatar": "الصورة الرمزية", "deposit": "إيداع", "adminPanel": "لوحة الإدارة", "admin": "مشرف",
+    "multiScreen": "شاشات متعددة", "multiScreenLayout": "تخطيط متعدد الشاشات", "profile": "الملف الشخصي",
+    "withdrawal": "سحب", "goToTrade": "الذهاب إلى التداول"
+  },
+  "tradingPanel": {
+    "timePresets": { "1m": "1د", "2m": "2د", "3m": "3د", "4m": "4د", "5m": "5د", "10m": "10د", "15m": "15د", "30m": "30د", "1h": "1س", "4h": "4س" },
+    "customTime": "وقت مخصص", "customTimeHelper": "أدخل مدة من دقيقة واحدة إلى 24 ساعة.",
+    "sec": "ثانية", "min": "دقيقة", "hour": "ساعة", "applyCustomTime": "تطبيق الوقت المخصص",
+    "directionUp": "▲ صعود", "directionDown": "▼ هبوط",
+    "queued": "في الانتظار", "insufficientBalance": "رصيد تجريبي غير كافٍ",
+    "pendingTradeCanceled": "تم إلغاء الصفقة المعلقة", "pendingTradeCanceledDesc": "تم إلغاء التنفيذ المعلق.",
+    "pendingTradeArmed": "الصفقة المعلقة جاهزة", "pendingTradeEnabled": "الصفقة المعلقة مفعلة",
+    "pendingTradeEnabledDesc": "سيتم تنفيذ الصفقات الجديدة بعد تأخير قصير.",
+    "pendingTradeLabel": "صفقة معلقة", "pendingTradeLabelMobile": "صفقة معلقة",
+    "tournamentBanner": "وضع البطولة نشط. المراكز المفتوحة مقتصرة على حساب البطولة هذا.",
+    "timer": "مؤقت", "time": "الوقت", "switchTime": "تغيير الوقت",
+    "investment": "الاستثمار", "usd": "USD", "yourPayout": "دفعتك:",
+    "up": "صعود", "down": "هبوط", "trades": "صفقات",
+    "pendingTrades": "صفقات معلقة", "noPendingTrades": "لا توجد صفقات معلقة بعد.",
+    "noTrades": "لا توجد صفقات بعد.",
+    "openTrades": "صفقات مفتوحة", "recent": "الأخيرة"
+  },
+  "assetSelector": {
+    "selectPair": "اختر زوج التداول",
+    "currencies": "عملات", "crypto": "عملات رقمية", "commodities": "سلع", "stocks": "أسهم",
+    "showAllAssets": "عرض جميع الأصول", "showFavorites": "عرض الأصول المفضلة",
+    "search": "بحث", "name": "الاسم", "change24h": "التغير 24س", "profit1min": "ربح 1+ دقيقة", "profit5min": "5+ دقائق",
+    "added": "تمت الإضافة",
+    "noFavorites": "لا توجد أصول مفضلة بعد. اضغط على النجمة للإضافة.",
+    "noFavoritesMatch": "لا توجد مفضلة تطابق بحثك.",
+    "noAssetsMatch": "لم يتم العثور على أصول."
+  },
+  "admin": {
+    "portal": "بوابة المشرف", "desk": "مكتب المشرف", "returnToSite": "العودة إلى الموقع الرئيسي",
+    "goToTrade": "الذهاب إلى التداول", "switchLight": "التبديل إلى الوضع الفاتح", "switchDark": "التبديل إلى الوضع الداكن",
+    "adminUser": "مستخدم المشرف",
+    "nav": {
+      "dashboard": "لوحة المعلومات", "supportInbox": "صندوق الدعم", "userManagement": "إدارة المستخدمين",
+      "tradeManagement": "إدارة الصفقات", "transactions": "المعاملات", "assetManagement": "إدارة الأصول",
+      "tournaments": "البطولات", "blog": "المدونة", "platformSettings": "إعدادات المنصة",
+      "promoCodes": "رموز العروض", "riskManagement": "إدارة المخاطر", "reports": "التقارير",
+      "notification": "الإشعارات", "auditLogs": "سجلات التدقيق", "adminUsers": "المشرفين",
+      "cryptoPayments": "المدفوعات الرقمية", "profitAnalytics": "تحليل الأرباح"
+    }
+  },
+  "languages": { "en": "English", "zh": "中文", "hi": "हिन्दी", "es": "Español", "fr": "Français", "ar": "العربية", "bn": "বাংলা", "pt": "Português", "ru": "Русский", "ur": "اردو", "id": "Bahasa Indonesia", "de": "Deutsch", "ja": "日本語", "sw": "Kiswahili", "tr": "Türkçe" },
+  "timezones": {
+    "UTC-12:00": "(UTC-12) جزيرة بيكر", "UTC-11:00": "(UTC-11) ساموا الأمريكية", "UTC-10:00": "(UTC-10) هاواي",
+    "UTC-09:00": "(UTC-9) ألاسكا", "UTC-08:00": "(UTC-8) لوس أنجلوس، فانكوفر",
+    "UTC-07:00": "(UTC-7) دنفر، فينيكس", "UTC-06:00": "(UTC-6) شيكاغو، مكسيكو سيتي",
+    "UTC-05:00": "(UTC-5) نيويورك، ميامي، تورونتو", "UTC-04:00": "(UTC-4) سانتياغو، كاراكاس",
+    "UTC-03:00": "(UTC-3) بوينس آيرس، ساو باولو", "UTC-02:00": "(UTC-2) فرناندو دي نورونيا",
+    "UTC-01:00": "(UTC-1) جزر الأزور", "UTC+00:00": "(UTC+0) لندن، لشبونة، أكرا",
+    "UTC+01:00": "(UTC+1) باريس، برلين، روما، مدريد، لاغوس", "UTC+02:00": "(UTC+2) القاهرة، جوهانسبرغ، أثينا، إسطنبول",
+    "UTC+03:00": "(UTC+3) نيروبي، موسكو، الرياض، بغداد", "UTC+03:30": "(UTC+3:30) طهران",
+    "UTC+04:00": "(UTC+4) دبي، باكو", "UTC+04:30": "(UTC+4:30) كابول",
+    "UTC+05:00": "(UTC+5) كراتشي، إسلام آباد، طشقند", "UTC+05:30": "(UTC+5:30) مومباي، نيودلهي، كولومبو",
+    "UTC+05:45": "(UTC+5:45) كاتماندو", "UTC+06:00": "(UTC+6) دكا، ألماتي",
+    "UTC+06:30": "(UTC+6:30) يانغون", "UTC+07:00": "(UTC+7) بانكوك، جاكرتا، هانوي",
+    "UTC+08:00": "(UTC+8) بكين، سنغافورة، بيرث، مانيلا", "UTC+09:00": "(UTC+9) طوكيو، سول",
+    "UTC+09:30": "(UTC+9:30) أديلايد، داروين", "UTC+10:00": "(UTC+10) سيدني، ملبورن، غوام",
+    "UTC+11:00": "(UTC+11) جزر سليمان، نوميا", "UTC+12:00": "(UTC+12) أوكلاند، فيجي",
+    "UTC+13:00": "(UTC+13) ساموا، تونغا", "UTC+14:00": "(UTC+14) كيريباتي"
+  }
+}

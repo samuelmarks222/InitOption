@@ -1,0 +1,140 @@
+{
+  "settings": {
+    "pageTitle": "सेटिंग्स",
+    "backToTrading": "ट्रेडिंग पर वापस जाएँ",
+    "platformSettings": "प्लेटफ़ॉर्म सेटिंग्स",
+    "siteVersion": "साइट संस्करण: 3452.4.8216 (आधिकारिक बिल्ड)",
+    "leftTabs": { "appearance": "दिखावट", "trading": "ट्रेडिंग", "shortcuts": "कीबोर्ड शॉर्टकट", "notifications": "सूचनाएँ", "privacy": "गोपनीयता", "account": "खाता सेटिंग्स" },
+    "appearance": { "themeSettings": "थीम सेटिंग्स", "interfaceScale": "इंटरफ़ेस स्केल", "customizeMenu": "मेनू कस्टमाइज़ करें...", "customizeMenuDesc": "त्वरित पहुँच के लिए मेनू आइटम का स्थान और दृश्यता", "comingSoon": "इस अनुभाग की सेटिंग्स जल्द आ रही हैं। सहायता से संपर्क करें।" },
+    "trading": {
+      "heading": "ट्रेडिंग प्राथमिकताएँ", "drawingToolColor": "ड्राइंग टूल का रंग", "drawingToolColorDesc": "नए ड्राइंग टूल स्वचालित रूप से यह रंग अपनाते हैं।",
+      "custom": "कस्टम", "auto": "ऑटो", "autoColorDesc": "प्रति टूल स्वचालित रंग",
+      "colorHelper": "डिफ़ॉल्ट रंग चुनें या कभी भी स्वचालित रंगों पर वापस जाएँ।",
+      "useAutomatic": "स्वचालित का उपयोग करें", "linePreview": "लाइन पूर्वावलोकन", "zonePreview": "ज़ोन पूर्वावलोकन",
+      "customColorActive": "आपका कस्टम रंग अब नए ड्राइंग टूल के लिए उपयोग होता है।",
+      "autoModeActive": "स्वचालित मोड प्रत्येक टूल को उसके डिफ़ॉल्ट रंग पर रखता है।",
+      "confirmTrades": "निष्पादन से पहले ट्रेड की पुष्टि करें", "confirmTradesDesc": "प्रत्येक ट्रेड से पहले पुष्टिकरण डायलॉग दिखाएँ",
+      "showNotifications": "ट्रेड सूचनाएँ दिखाएँ", "showNotificationsDesc": "ट्रेड परिणामों के लिए डेस्कटॉप सूचनाएँ दिखाएँ",
+      "soundEffects": "ध्वनि प्रभाव", "soundEffectsDesc": "ट्रेड खोलने और बंद करने पर ध्वनियाँ बजाएँ",
+      "autoInvest": "समान राशि स्वचालित निवेश", "autoInvestDesc": "प्रत्येक ट्रेड के लिए स्वचालित रूप से समान राशि का उपयोग करें"
+    },
+    "notifications": {
+      "heading": "सूचना सेटिंग्स",
+      "depositEmails": "जमा और निकासी ईमेल", "tradeResultEmails": "ट्रेड परिणाम ईमेल",
+      "tournamentEmails": "टूर्नामेंट ईमेल", "promoEmails": "प्रोमो और बोनस ईमेल",
+      "kycEmails": "KYC और सुरक्षा ईमेल", "inAppAlerts": "इन-ऐप अलर्ट"
+    }
+  },
+  "workspace": {
+    "language": "भाषा", "timezone": "समय क्षेत्र", "themeSettings": "थीम सेटिंग्स", "platform": "प्लेटफ़ॉर्म",
+    "gridOpacity": "ग्रिड की अपारदर्शिता", "autoScrolling": "स्वचालित स्क्रॉलिंग", "autoScrollingCaption": "चार्ट को लाइव मूल्य किनारे पर रखें",
+    "oneClickTrade": "1-क्लिक ट्रेड", "oneClickTradeCaption": "बिना पुष्टि के ट्रेड खोलें",
+    "performanceMode": "प्रदर्शन मोड", "performanceModeCaption": "चार्ट और कैंडल के लिए अनुकूलित रेंडरिंग का उपयोग करें",
+    "shortOrderLabel": "छोटा ऑर्डर लेबल", "shortOrderLabelCaption": "ट्रेड सूची में छोटे लेबल का उपयोग करें",
+    "tradeButtonColors": "ट्रेड बटन रंग", "upButton": "ऊपर बटन", "downButton": "नीचे बटन",
+    "background": "पृष्ठभूमि", "chooseFile": "फ़ाइल चुनें", "maxSizeHint": "(अधिकतम आकार - 2 MB)",
+    "imageOpacity": "छवि अपारदर्शिता", "removeBackground": "चार्ट पृष्ठभूमि हटाएँ",
+    "restoreDefaults": "डिफ़ॉल्ट पुनर्स्थापित करें",
+    "bgNotChanged": "पृष्ठभूमि नहीं बदली", "bgNotChangedDesc": "एक छवि फ़ाइल चुनें।",
+    "bgTooLarge": "पृष्ठभूमि बहुत बड़ी है", "bgTooLargeDesc": "2 MB तक की छवि चुनें।",
+    "bgUpdated": "चार्ट पृष्ठभूमि अपडेट की गई"
+  },
+  "assetInfo": { "addAsset": "एसेट जोड़ें", "showPrevious": "पिछले एसेट दिखाएँ", "showMore": "और एसेट दिखाएँ" },
+  "sidebar": {
+    "howToTrade": "ट्रेड कैसे करें?", "tradingGuide": "ट्रेडिंग गाइड", "interfaceGuide": "इंटरफ़ेस गाइड",
+    "quickIntro": "त्वरित परिचय", "allVideos": "सभी वीडियो",
+    "basics": "मूल बातें", "contractsTrading": "कॉन्ट्रैक्ट ट्रेडिंग", "marginTrading": "मार्जिन ट्रेडिंग", "technicalAnalysis": "तकनीकी विश्लेषण",
+    "allInstruments": "सभी उपकरण", "forex": "फ़ॉरेक्स", "cfd": "CFD", "crypto": "क्रिप्टो", "options": "ऑप्शंस",
+    "navLabels": {
+      "totalPortfolio": "कुल पोर्टफोलियो", "tradingHistory": "ट्रेडिंग इतिहास", "chat": "चैट",
+      "leaderBoard": "लीडरबोर्ड", "promo": "प्रोमो", "webinars": "वेबिनार",
+      "marketAnalysis": "बाज़ार विश्लेषण", "tutorials": "ट्यूटोरियल", "more": "और"
+    },
+    "panelTitles": {
+      "totalPortfolio": "कुल पोर्टफोलियो", "tradingHistory": "ट्रेडिंग इतिहास",
+      "chat": "चैट", "leadersOfWeek": "सप्ताह के नेता", "promo": "प्रोमो",
+      "webinars": "वेबिनार", "earningsCalendar": "आय कैलेंडर", "tutorials": "ट्यूटोरियल", "more": "और"
+    },
+    "history": { "allPositions": "सभी पोज़िशन" },
+    "leaderboard": { "noProfitableTrades": "इस सप्ताह आपने कोई लाभदायक ट्रेड नहीं किया", "empty": "लीडरबोर्ड पर अभी कोई ट्रेडर नहीं है।\nपहले बनें!" },
+    "promo": {
+      "available": "उपलब्ध", "history": "इतिहास", "promoCode": "प्रोमो कोड",
+      "exclusive": "एक्सक्लूसिव", "bonusUpTo": "110% तक बोनस", "new": "नया",
+      "discoverStrategies": "शक्तिशाली ट्रेडिंग रणनीतियाँ खोजें...", "activated": "सक्रिय", "noHistory": "कोई प्रोमो इतिहास नहीं।"
+    },
+    "webinars": { "upcoming": "आगामी", "period30d": "30दिन", "empty": "अभी कोई वेबिनार निर्धारित नहीं है।" },
+    "tutorials": { "videoTutorials": "वीडियो ट्यूटोरियल", "videosCount": "वीडियो" },
+    "earnings": { "today": "आज", "currently": "वर्तमान", "forecast": "पूर्वानुमान", "previous": "पिछला", "empty": "इस तिथि पर कोई आय इवेंट नहीं।" },
+    "portfolio": { "empty": "आपका पोर्टफोलियो खाली है।\nअपनी पोज़िशन देखने के लिए ट्रेडिंग शुरू करें।" },
+    "worldwide": "दुनिया भर में"
+  },
+  "tradingHeader": {
+    "singleChart": "1 स्क्रीन", "singleChartCaption": "एकल चार्ट", "dualChart": "2 स्क्रीन", "dualChartCaption": "ड्युअल लेआउट",
+    "tripleChart": "3 स्क्रीन", "tripleChartCaption": "ट्रिपल लेआउट", "quadChart": "4 स्क्रीन", "quadChartCaption": "क्वाड लेआउट",
+    "myAccount": "मेरा खाता", "demoAccount": "डेमो खाता", "tournamentAccount": "टूर्नामेंट खाता", "liveAccount": "लाइव खाता",
+    "demo": "डेमो", "tour": "टूर्नामेंट", "live": "लाइव", "subtitle": "वेब ट्रेडिंग प्लेटफ़ॉर्म",
+    "avatar": "अवतार", "deposit": "जमा करें", "adminPanel": "एडमिन पैनल", "admin": "एडमिन",
+    "multiScreen": "मल्टी-स्क्रीन", "multiScreenLayout": "मल्टी-स्क्रीन लेआउट", "profile": "प्रोफ़ाइल",
+    "withdrawal": "निकासी", "goToTrade": "ट्रेडिंग पर जाएँ"
+  },
+  "tradingPanel": {
+    "timePresets": { "1m": "1मि", "2m": "2मि", "3m": "3मि", "4m": "4मि", "5m": "5मि", "10m": "10मि", "15m": "15मि", "30m": "30मि", "1h": "1घं", "4h": "4घं" },
+    "customTime": "कस्टम समय", "customTimeHelper": "1 मिनट से 24 घंटे तक की अवधि दर्ज करें।",
+    "sec": "सेकंड", "min": "मिनट", "hour": "घंटा", "applyCustomTime": "कस्टम समय लागू करें",
+    "directionUp": "▲ ऊपर", "directionDown": "▼ नीचे",
+    "queued": "कतार में", "insufficientBalance": "डेमो बैलेंस अपर्याप्त",
+    "pendingTradeCanceled": "लंबित ट्रेड रद्द", "pendingTradeCanceledDesc": "लंबित निष्पादन रद्द कर दिया गया।",
+    "pendingTradeArmed": "लंबित ट्रेड तैयार", "pendingTradeEnabled": "लंबित ट्रेड सक्रिय",
+    "pendingTradeEnabledDesc": "नए ट्रेड थोड़ी देरी के बाद निष्पादित होंगे।",
+    "pendingTradeLabel": "लंबित ट्रेड", "pendingTradeLabelMobile": "लंबित ट्रेड",
+    "tournamentBanner": "टूर्नामेंट मोड सक्रिय है। खुली पोज़िशन इस टूर्नामेंट खाते तक सीमित हैं।",
+    "timer": "टाइमर", "time": "समय", "switchTime": "समय बदलें",
+    "investment": "निवेश", "usd": "USD", "yourPayout": "आपका भुगतान:",
+    "up": "ऊपर", "down": "नीचे", "trades": "ट्रेड",
+    "pendingTrades": "लंबित ट्रेड", "noPendingTrades": "अभी कोई लंबित ट्रेड नहीं।",
+    "noTrades": "अभी कोई ट्रेड नहीं।",
+    "openTrades": "खुले ट्रेड", "recent": "हाल ही के"
+  },
+  "assetSelector": {
+    "selectPair": "ट्रेड पेयर चुनें",
+    "currencies": "मुद्राएँ", "crypto": "क्रिप्टो", "commodities": "कमोडिटीज़", "stocks": "स्टॉक",
+    "showAllAssets": "सभी एसेट दिखाएँ", "showFavorites": "पसंदीदा एसेट दिखाएँ",
+    "search": "खोजें", "name": "नाम", "change24h": "24 घंटे परिवर्तन", "profit1min": "लाभ 1+ मिनट", "profit5min": "5+ मिनट",
+    "added": "जोड़ा गया",
+    "noFavorites": "अभी कोई पसंदीदा एसेट नहीं। जोड़ने के लिए स्टार पर टैप करें।",
+    "noFavoritesMatch": "आपकी खोज से कोई पसंदीदा मेल नहीं खाता।",
+    "noAssetsMatch": "कोई एसेट नहीं मिला।"
+  },
+  "admin": {
+    "portal": "एडमिन पोर्टल", "desk": "एडमिन डेस्क", "returnToSite": "मुख्य साइट पर वापस जाएँ",
+    "goToTrade": "ट्रेडिंग पर जाएँ", "switchLight": "लाइट मोड में बदलें", "switchDark": "डार्क मोड में बदलें",
+    "adminUser": "एडमिन उपयोगकर्ता",
+    "nav": {
+      "dashboard": "डैशबोर्ड", "supportInbox": "सहायता इनबॉक्स", "userManagement": "उपयोगकर्ता प्रबंधन",
+      "tradeManagement": "ट्रेड प्रबंधन", "transactions": "लेन-देन", "assetManagement": "एसेट प्रबंधन",
+      "tournaments": "टूर्नामेंट", "blog": "ब्लॉग", "platformSettings": "प्लेटफ़ॉर्म सेटिंग्स",
+      "promoCodes": "प्रोमो कोड", "riskManagement": "जोखिम प्रबंधन", "reports": "रिपोर्ट",
+      "notification": "सूचनाएँ", "auditLogs": "ऑडिट लॉग", "adminUsers": "एडमिन उपयोगकर्ता",
+      "cryptoPayments": "क्रिप्टो भुगतान", "profitAnalytics": "लाभ विश्लेषण"
+    }
+  },
+  "languages": { "en": "English", "zh": "中文", "hi": "हिन्दी", "es": "Español", "fr": "Français", "ar": "العربية", "bn": "বাংলা", "pt": "Português", "ru": "Русский", "ur": "اردو", "id": "Bahasa Indonesia", "de": "Deutsch", "ja": "日本語", "sw": "Kiswahili", "tr": "Türkçe" },
+  "timezones": {
+    "UTC-12:00": "(UTC-12) बेकर द्वीप", "UTC-11:00": "(UTC-11) अमेरिकी समोआ", "UTC-10:00": "(UTC-10) हवाई",
+    "UTC-09:00": "(UTC-9) अलास्का", "UTC-08:00": "(UTC-8) लॉस एंजेलिस, वैंकूवर",
+    "UTC-07:00": "(UTC-7) डेनवर, फ़ीनिक्स", "UTC-06:00": "(UTC-6) शिकागो, मेक्सिको सिटी",
+    "UTC-05:00": "(UTC-5) न्यूयॉर्क, मियामी, टोरंटो", "UTC-04:00": "(UTC-4) सैंटियागो, काराकस",
+    "UTC-03:00": "(UTC-3) ब्यूनस आयर्स, साओ पाउलो", "UTC-02:00": "(UTC-2) फर्नांडो डी नोरोन्हा",
+    "UTC-01:00": "(UTC-1) अज़ोरेस", "UTC+00:00": "(UTC+0) लंदन, लिस्बन, अक्रा",
+    "UTC+01:00": "(UTC+1) पेरिस, बर्लिन, रोम, मैड्रिड, लागोस", "UTC+02:00": "(UTC+2) काहिरा, जोहान्सबर्ग, एथेंस, इस्तांबुल",
+    "UTC+03:00": "(UTC+3) नैरोबी, मॉस्को, रियाद, बगदाद", "UTC+03:30": "(UTC+3:30) तेहरान",
+    "UTC+04:00": "(UTC+4) दुबई, बाकू", "UTC+04:30": "(UTC+4:30) काबुल",
+    "UTC+05:00": "(UTC+5) कराची, इस्लामाबाद, ताशकंद", "UTC+05:30": "(UTC+5:30) मुंबई, नई दिल्ली, कोलंबो",
+    "UTC+05:45": "(UTC+5:45) काठमांडू", "UTC+06:00": "(UTC+6) ढाका, अल्माटी",
+    "UTC+06:30": "(UTC+6:30) यांगून", "UTC+07:00": "(UTC+7) बैंकॉक, जकार्ता, हनोई",
+    "UTC+08:00": "(UTC+8) बीजिंग, सिंगापुर, पर्थ, मनीला", "UTC+09:00": "(UTC+9) टोक्यो, सियोल",
+    "UTC+09:30": "(UTC+9:30) एडिलेड, डार्विन", "UTC+10:00": "(UTC+10) सिडनी, मेलबर्न, गुआम",
+    "UTC+11:00": "(UTC+11) सोलोमन द्वीप, नूमिया", "UTC+12:00": "(UTC+12) ऑकलैंड, फ़िजी",
+    "UTC+13:00": "(UTC+13) समोआ, टोंगा", "UTC+14:00": "(UTC+14) किरिबाती"
+  }
+}

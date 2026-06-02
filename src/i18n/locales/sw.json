@@ -1,0 +1,140 @@
+{
+  "settings": {
+    "pageTitle": "Mipangilio",
+    "backToTrading": "Rudi kwenye Biashara",
+    "platformSettings": "Mipangilio ya jukwaa",
+    "siteVersion": "Toleo la tovuti: 3452.4.8216 (toleo rasmi)",
+    "leftTabs": { "appearance": "Mwonekano", "trading": "Biashara", "shortcuts": "Mikato ya kibodi", "notifications": "Arifa", "privacy": "Faragha", "account": "Mipangilio ya akaunti" },
+    "appearance": { "themeSettings": "MIPANGILIO YA MANDHARI", "interfaceScale": "KIWANGO CHA KITUMIO", "customizeMenu": "Badilisha Menyu...", "customizeMenuDesc": "Mahali na mwonekano wa vipengee vya menyu", "comingSoon": "Mipangilio ya sehemu hii inakuja hivi karibuni. Wasiliana na usaidizi." },
+    "trading": {
+      "heading": "Mapendeleo ya Biashara", "drawingToolColor": "Rangi ya zana ya kuchora", "drawingToolColorDesc": "Zana mpya za kuchora hurithi rangi hii kiotomatiki.",
+      "custom": "Maalum", "auto": "Otomatiki", "autoColorDesc": "Rangi otomatiki kwa kila zana",
+      "colorHelper": "Chagua rangi chaguomsingi au rudi kwenye rangi otomatiki wakati wowote.",
+      "useAutomatic": "Tumia otomatiki", "linePreview": "Onyesho la Mstari", "zonePreview": "Onyesho la Eneo",
+      "customColorActive": "Rangi yako maalum sasa inatumika kwa zana mpya za kuchora.",
+      "autoModeActive": "Hali otomatiki huweka kila zana kwenye rangi yake chaguomsingi.",
+      "confirmTrades": "Thibitisha biashara kabla ya kutekeleza", "confirmTradesDesc": "Onyesha kidirisha cha uthibitisho kabla ya kila biashara",
+      "showNotifications": "Onyesha arifa za biashara", "showNotificationsDesc": "Onyesha arifa za matokeo ya biashara",
+      "soundEffects": "Sauti za athari", "soundEffectsDesc": "Cheza sauti wakati wa kufungua na kufunga biashara",
+      "autoInvest": "Weka kiasi sawa kiotomatiki", "autoInvestDesc": "Tumia kiasi sawa kiotomatiki kwa kila biashara"
+    },
+    "notifications": {
+      "heading": "Mipangilio ya Arifa",
+      "depositEmails": "Barua pepe za amana na uondoaji", "tradeResultEmails": "Barua pepe za matokeo ya biashara",
+      "tournamentEmails": "Barua pepe za mashindano", "promoEmails": "Barua pepe za ofa",
+      "kycEmails": "Barua pepe za KYC na usalama", "inAppAlerts": "Arifa za ndani ya programu"
+    }
+  },
+  "workspace": {
+    "language": "Lugha", "timezone": "Saa za eneo", "themeSettings": "Mipangilio ya mandhari", "platform": "Jukwaa",
+    "gridOpacity": "Uwazi wa gridi", "autoScrolling": "Kusonga kiotomatiki", "autoScrollingCaption": "Funga chati kwenye ukingo wa bei ya moja kwa moja",
+    "oneClickTrade": "Biashara kwa mbofyo 1", "oneClickTradeCaption": "Fungua biashara bila uthibitisho",
+    "performanceMode": "Hali ya Utendaji", "performanceModeCaption": "Tumia utoaji ulioboreshwa kwa chati na mishumaa",
+    "shortOrderLabel": "Lebo fupi ya agizo", "shortOrderLabelCaption": "Tumia lebo fupi kwenye orodha ya biashara",
+    "tradeButtonColors": "Rangi za Vitufe vya Biashara", "upButton": "Kitufe cha Juu", "downButton": "Kitufe cha Chini",
+    "background": "Usuli", "chooseFile": "Chagua faili", "maxSizeHint": "(Ukubwa wa juu - 2 MB)",
+    "imageOpacity": "Uwazi wa picha", "removeBackground": "Ondoa usuli wa chati",
+    "restoreDefaults": "Rejesha chaguomsingi",
+    "bgNotChanged": "Usuli haujabadilishwa", "bgNotChangedDesc": "Chagua faili ya picha.",
+    "bgTooLarge": "Usuli ni mkubwa sana", "bgTooLargeDesc": "Chagua picha hadi 2 MB.",
+    "bgUpdated": "Usuli wa chati umesasishwa"
+  },
+  "assetInfo": { "addAsset": "Ongeza mali", "showPrevious": "Onyesha mali zilizotangulia", "showMore": "Onyesha mali zaidi" },
+  "sidebar": {
+    "howToTrade": "Jinsi ya kufanya biashara?", "tradingGuide": "Mwongozo wa Biashara", "interfaceGuide": "Mwongozo wa kiolesura",
+    "quickIntro": "Utangulizi wa haraka", "allVideos": "Video Zote",
+    "basics": "Misingi", "contractsTrading": "Biashara ya Mikataba", "marginTrading": "Biashara ya Pembamoto", "technicalAnalysis": "Uchambuzi wa Kiufundi",
+    "allInstruments": "Vyombo vyote", "forex": "Forex", "cfd": "CFD", "crypto": "Crypto", "options": "Chaguo",
+    "navLabels": {
+      "totalPortfolio": "JUMLA YA KANDA", "tradingHistory": "HISTORIA YA BIASHARA", "chat": "MAZUNGUMZO",
+      "leaderBoard": "UBORA WA WAFANYABIASHARA", "promo": "OFA", "webinars": "WENDAJI WA MTANDAO",
+      "marketAnalysis": "UCHAMBUZI WA SOKO", "tutorials": "MAFUNZO", "more": "ZAIDI"
+    },
+    "panelTitles": {
+      "totalPortfolio": "Jumla ya Kanda", "tradingHistory": "Historia ya Biashara",
+      "chat": "Mazungumzo", "leadersOfWeek": "Viongozi wa Wiki", "promo": "Ofa",
+      "webinars": "Wendaji wa Mtandao", "earningsCalendar": "Kalenda ya Mapato", "tutorials": "Mafunzo", "more": "Zaidi"
+    },
+    "history": { "allPositions": "Nafasi Zote" },
+    "leaderboard": { "noProfitableTrades": "Hujafanya biashara yenye faida wiki hii", "empty": "Hakuna wafanyabiashara kwenye ubao bora.\nKuwa wa kwanza!" },
+    "promo": {
+      "available": "INAPATIKANA", "history": "HISTORIA", "promoCode": "Msimbo wa ofa",
+      "exclusive": "Kipekee", "bonusUpTo": "Bonasi hadi 110%", "new": "MPYA",
+      "discoverStrategies": "Gundua mikakati yenye nguvu ya biashara...", "activated": "Imewashwa", "noHistory": "Hakuna historia ya ofa."
+    },
+    "webinars": { "upcoming": "Ijayo", "period30d": "S30", "empty": "Hakuna wendaji waliopangwa kwa sasa." },
+    "tutorials": { "videoTutorials": "Mafunzo ya Video", "videosCount": "video" },
+    "earnings": { "today": "LEO", "currently": "Kwa sasa", "forecast": "Utabiri", "previous": "Iliyopita", "empty": "Hakuna tukio la mapato kwenye tarehe hii." },
+    "portfolio": { "empty": "Kanda yako haina kitu.\nAnza biashara ili kuona nafasi zako hapa." },
+    "worldwide": "Ulimwenguni Pote"
+  },
+  "tradingHeader": {
+    "singleChart": "Skrini 1", "singleChartCaption": "Chati moja", "dualChart": "Skrini 2", "dualChartCaption": "Mpangilio mbili",
+    "tripleChart": "Skrini 3", "tripleChartCaption": "Mpangilio tatu", "quadChart": "Skrini 4", "quadChartCaption": "Mpangilio nne",
+    "myAccount": "Akaunti yangu", "demoAccount": "Akaunti ya demo", "tournamentAccount": "Akaunti ya mashindano", "liveAccount": "Akaunti halisi",
+    "demo": "DEMO", "tour": "MASHINDANO", "live": "HALISI", "subtitle": "JUKWAA LA BIASHARA LA WAVU",
+    "avatar": "Picha", "deposit": "Amana", "adminPanel": "Paneli ya msimamizi", "admin": "Msimamizi",
+    "multiScreen": "Skrini nyingi", "multiScreenLayout": "Mpangilio wa skrini nyingi", "profile": "Wasifu",
+    "withdrawal": "Uondoaji", "goToTrade": "Nenda kwa Biashara"
+  },
+  "tradingPanel": {
+    "timePresets": { "1m": "1d", "2m": "2d", "3m": "3d", "4m": "4d", "5m": "5d", "10m": "10d", "15m": "15d", "30m": "30d", "1h": "1s", "4h": "4s" },
+    "customTime": "Muda Maalum", "customTimeHelper": "Weka muda kutoka dakika 1 hadi saa 24.",
+    "sec": "Sek", "min": "Dak", "hour": "Saa", "applyCustomTime": "Tumia Muda Maalum",
+    "directionUp": "▲ JUU", "directionDown": "▼ CHINI",
+    "queued": "Kwenye foleni", "insufficientBalance": "Salio la demo haitoshi",
+    "pendingTradeCanceled": "Biashara inayosubiri imefutwa", "pendingTradeCanceledDesc": "Utekelezaji unaosubiri umefutwa.",
+    "pendingTradeArmed": "Biashara inayosubiri iko tayari", "pendingTradeEnabled": "Biashara inayosubiri imewashwa",
+    "pendingTradeEnabledDesc": "Biashara mpya zitatekelezwa baada ya kuchelewa kidogo.",
+    "pendingTradeLabel": "Biashara inayosubiri", "pendingTradeLabelMobile": "BIASHARA INAYOSUBIRI",
+    "tournamentBanner": "Hali ya mashindano imewashwa. Nafasi zilizo wazi zinahusiana na akaunti hii ya mashindano.",
+    "timer": "Kipima muda", "time": "Muda", "switchTime": "BADILISHA MUDA",
+    "investment": "Uwekezaji", "usd": "USD", "yourPayout": "Malipo yako:",
+    "up": "Juu", "down": "Chini", "trades": "Biashara",
+    "pendingTrades": "Biashara zinazosubiri", "noPendingTrades": "Hakuna biashara zinazosubiri bado.",
+    "noTrades": "Hakuna biashara bado.",
+    "openTrades": "BIASHARA ZILIZO WAZI", "recent": "Hivi KARIBUNI"
+  },
+  "assetSelector": {
+    "selectPair": "Chagua jozi ya biashara",
+    "currencies": "SARAFU", "crypto": "CRYPTO", "commodities": "BIDHAA", "stocks": "HISA",
+    "showAllAssets": "Onyesha mali zote", "showFavorites": "Onyesha mali unazopenda",
+    "search": "Tafuta", "name": "Jina", "change24h": "Mabadiliko 24s", "profit1min": "Faida 1+ dk", "profit5min": "5+ dk",
+    "added": "IMEONGEZWA",
+    "noFavorites": "Hakuna mali unazozipenda bado. Gusa nyota ili kuongeza.",
+    "noFavoritesMatch": "Hakuna pendwa linalolingana na utafutaji wako.",
+    "noAssetsMatch": "Hakuna mali iliyopatikana."
+  },
+  "admin": {
+    "portal": "Lango la Msimamizi", "desk": "Dawati la Msimamizi", "returnToSite": "Rudi kwenye Tovuti Kuu",
+    "goToTrade": "Nenda kwa Biashara", "switchLight": "Badilisha hadi hali nyepesi", "switchDark": "Badilisha hadi hali nyeusi",
+    "adminUser": "Mtumiaji Msimamizi",
+    "nav": {
+      "dashboard": "Dashibodi", "supportInbox": "Kikasha cha Usaidizi", "userManagement": "Usimamizi wa Watumiaji",
+      "tradeManagement": "Usimamizi wa Biashara", "transactions": "Miamala", "assetManagement": "Usimamizi wa Mali",
+      "tournaments": "Mashindano", "blog": "Blogu", "platformSettings": "Mipangilio ya Jukwaa",
+      "promoCodes": "Misimbo ya Ofa", "riskManagement": "Usimamizi wa Hatari", "reports": "Ripoti",
+      "notification": "Arifa", "auditLogs": "Kumbukumbu za Ukaguzi", "adminUsers": "Watumiaji Msimamizi",
+      "cryptoPayments": "Malipo ya Crypto", "profitAnalytics": "Uchambuzi wa Faida"
+    }
+  },
+  "languages": { "en": "English", "zh": "中文", "hi": "हिन्दी", "es": "Español", "fr": "Français", "ar": "العربية", "bn": "বাংলা", "pt": "Português", "ru": "Русский", "ur": "اردو", "id": "Bahasa Indonesia", "de": "Deutsch", "ja": "日本語", "sw": "Kiswahili", "tr": "Türkçe" },
+  "timezones": {
+    "UTC-12:00": "(UTC-12) Kisiwa cha Baker", "UTC-11:00": "(UTC-11) Samoa ya Marekani", "UTC-10:00": "(UTC-10) Hawaii",
+    "UTC-09:00": "(UTC-9) Alaska", "UTC-08:00": "(UTC-8) Los Angeles, Vancouver",
+    "UTC-07:00": "(UTC-7) Denver, Phoenix", "UTC-06:00": "(UTC-6) Chicago, Mexico City",
+    "UTC-05:00": "(UTC-5) New York, Miami, Toronto", "UTC-04:00": "(UTC-4) Santiago, Caracas",
+    "UTC-03:00": "(UTC-3) Buenos Aires, São Paulo", "UTC-02:00": "(UTC-2) Fernando de Noronha",
+    "UTC-01:00": "(UTC-1) Azores", "UTC+00:00": "(UTC+0) London, Lisbon, Accra",
+    "UTC+01:00": "(UTC+1) Paris, Berlin, Rome, Madrid, Lagos", "UTC+02:00": "(UTC+2) Cairo, Johannesburg, Athens, Istanbul",
+    "UTC+03:00": "(UTC+3) Nairobi, Moscow, Riyadh, Baghdad", "UTC+03:30": "(UTC+3:30) Tehran",
+    "UTC+04:00": "(UTC+4) Dubai, Baku", "UTC+04:30": "(UTC+4:30) Kabul",
+    "UTC+05:00": "(UTC+5) Karachi, Islamabad, Tashkent", "UTC+05:30": "(UTC+5:30) Mumbai, New Delhi, Colombo",
+    "UTC+05:45": "(UTC+5:45) Kathmandu", "UTC+06:00": "(UTC+6) Dhaka, Almaty",
+    "UTC+06:30": "(UTC+6:30) Yangon", "UTC+07:00": "(UTC+7) Bangkok, Jakarta, Hanoi",
+    "UTC+08:00": "(UTC+8) Beijing, Singapore, Perth, Manila", "UTC+09:00": "(UTC+9) Tokyo, Seoul",
+    "UTC+09:30": "(UTC+9:30) Adelaide, Darwin", "UTC+10:00": "(UTC+10) Sydney, Melbourne, Guam",
+    "UTC+11:00": "(UTC+11) Solomon Islands, Nouméa", "UTC+12:00": "(UTC+12) Auckland, Fiji",
+    "UTC+13:00": "(UTC+13) Samoa, Tonga", "UTC+14:00": "(UTC+14) Kiribati"
+  }
+}

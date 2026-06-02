@@ -1,0 +1,140 @@
+{
+  "settings": {
+    "pageTitle": "Ayarlar",
+    "backToTrading": "Alım Satıma Dön",
+    "platformSettings": "Platform ayarları",
+    "siteVersion": "Site sürümü: 3452.4.8216 (resmi yapı)",
+    "leftTabs": { "appearance": "Görünüm", "trading": "Alım Satım", "shortcuts": "Klavye kısayolları", "notifications": "Bildirimler", "privacy": "Gizlilik", "account": "Hesap ayarları" },
+    "appearance": { "themeSettings": "TEMA AYARLARI", "interfaceScale": "ARAYÜZ ÖLÇEĞİ", "customizeMenu": "Menüyü özelleştir...", "customizeMenuDesc": "Menü öğelerinin konumu ve görünürlüğü", "comingSoon": "Bu bölümün ayarları yakında gelecek. Destek ile iletişime geçin." },
+    "trading": {
+      "heading": "Alım Satım Tercihleri", "drawingToolColor": "Çizim aracı rengi", "drawingToolColorDesc": "Yeni çizim araçları bu rengi otomatik olarak devralır.",
+      "custom": "Özel", "auto": "Otomatik", "autoColorDesc": "Araç başına otomatik renkler",
+      "colorHelper": "Varsayılan bir renk seçin veya istediğiniz zaman otomatik renklere dönün.",
+      "useAutomatic": "Otomatik kullan", "linePreview": "Çizgi Önizleme", "zonePreview": "Bölge Önizleme",
+      "customColorActive": "Özel renginiz artık yeni çizim araçları için kullanılıyor.",
+      "autoModeActive": "Otomatik mod, her aracı varsayılan renginde tutar.",
+      "confirmTrades": "İşlemleri yürütmeden önce onayla", "confirmTradesDesc": "Her işlemden önce onay iletişim kutusu göster",
+      "showNotifications": "İşlem bildirimlerini göster", "showNotificationsDesc": "İşlem sonuçları için masaüstü bildirimleri göster",
+      "soundEffects": "Ses efektleri", "soundEffectsDesc": "İşlem açılış ve kapanışında ses çal",
+      "autoInvest": "Aynı tutarı otomatik yatır", "autoInvestDesc": "Her işlem için aynı yatırım tutarını otomatik kullan"
+    },
+    "notifications": {
+      "heading": "Bildirim Ayarları",
+      "depositEmails": "Para yatırma ve çekme e-postaları", "tradeResultEmails": "İşlem sonuç e-postaları",
+      "tournamentEmails": "Turnuva e-postaları", "promoEmails": "Promosyon e-postaları",
+      "kycEmails": "KYC ve güvenlik e-postaları", "inAppAlerts": "Uygulama içi uyarılar"
+    }
+  },
+  "workspace": {
+    "language": "Dil", "timezone": "Saat dilimi", "themeSettings": "Tema Ayarları", "platform": "Platform",
+    "gridOpacity": "Izgara opaklığı", "autoScrolling": "Otomatik kaydırma", "autoScrollingCaption": "Grafiği canlı fiyat kenarında kilitle",
+    "oneClickTrade": "1 tıkla işlem", "oneClickTradeCaption": "İşlemleri onaysız aç",
+    "performanceMode": "Performans Modu", "performanceModeCaption": "Grafik ve mumlar için optimize edilmiş oluşturma kullan",
+    "shortOrderLabel": "Kısa sipariş etiketi", "shortOrderLabelCaption": "İşlem listesinde daha kısa etiketler kullan",
+    "tradeButtonColors": "İşlem Buton Renkleri", "upButton": "Yukarı Butonu", "downButton": "Aşağı Butonu",
+    "background": "Arka plan", "chooseFile": "Dosya seç", "maxSizeHint": "(Maks. boyut - 2 MB)",
+    "imageOpacity": "Görüntü opaklığı", "removeBackground": "Grafik arka planını kaldır",
+    "restoreDefaults": "Varsayılanları geri yükle",
+    "bgNotChanged": "Arka plan değiştirilmedi", "bgNotChangedDesc": "Bir görüntü dosyası seçin.",
+    "bgTooLarge": "Arka plan çok büyük", "bgTooLargeDesc": "2 MB'a kadar bir görüntü seçin.",
+    "bgUpdated": "Grafik arka planı güncellendi"
+  },
+  "assetInfo": { "addAsset": "Varlık ekle", "showPrevious": "Önceki varlıkları göster", "showMore": "Daha fazla varlık göster" },
+  "sidebar": {
+    "howToTrade": "Nasıl işlem yapılır?", "tradingGuide": "İşlem Rehberi", "interfaceGuide": "Arayüz rehberi",
+    "quickIntro": "Hızlı giriş", "allVideos": "Tüm Videolar",
+    "basics": "Temel", "contractsTrading": "Sözleşmeli İşlem", "marginTrading": "Marjlı İşlem", "technicalAnalysis": "Teknik Analiz",
+    "allInstruments": "Tüm enstrümanlar", "forex": "Forex", "cfd": "CFD", "crypto": "Kripto", "options": "Opsiyonlar",
+    "navLabels": {
+      "totalPortfolio": "TOPLAM PORTFÖY", "tradingHistory": "İŞLEM GEÇMİŞİ", "chat": "SOHBET",
+      "leaderBoard": "LİDER TAHTASI", "promo": "PROMO", "webinars": "WEBİNARLAR",
+      "marketAnalysis": "PİYASA ANALİZİ", "tutorials": "EĞİTİMLER", "more": "DAHA FAZLA"
+    },
+    "panelTitles": {
+      "totalPortfolio": "Toplam Portföy", "tradingHistory": "İşlem Geçmişi",
+      "chat": "Sohbet", "leadersOfWeek": "Haftanın Liderleri", "promo": "Promo",
+      "webinars": "Webinarlar", "earningsCalendar": "Kazanç Takvimi", "tutorials": "Eğitimler", "more": "Daha Fazla"
+    },
+    "history": { "allPositions": "Tüm Pozisyonlar" },
+    "leaderboard": { "noProfitableTrades": "Bu hafta henüz kârlı işlem yapmadınız", "empty": "Lider tahtasında henüz trader yok.\nİlk siz olun!" },
+    "promo": {
+      "available": "MEVCUT", "history": "GEÇMİŞ", "promoCode": "Promosyon kodu",
+      "exclusive": "Özel", "bonusUpTo": "%110'a varan bonus", "new": "YENİ",
+      "discoverStrategies": "Güçlü alım satım stratejilerini keşfedin...", "activated": "Etkinleştirildi", "noHistory": "Henüz promosyon geçmişi yok."
+    },
+    "webinars": { "upcoming": "Yaklaşan", "period30d": "30g", "empty": "Şu anda planlanmış webinar yok." },
+    "tutorials": { "videoTutorials": "Video Eğitimleri", "videosCount": "video" },
+    "earnings": { "today": "BUGÜN", "currently": "Şu an", "forecast": "Tahmin", "previous": "Önceki", "empty": "Bu tarihte kazanç etkinliği yok." },
+    "portfolio": { "empty": "Portföyünüz boş.\nPozisyonlarınızı görmek için işlem yapmaya başlayın." },
+    "worldwide": "Dünya Çapında"
+  },
+  "tradingHeader": {
+    "singleChart": "1 ekran", "singleChartCaption": "Tek grafik", "dualChart": "2 ekran", "dualChartCaption": "Çift düzen",
+    "tripleChart": "3 ekran", "tripleChartCaption": "Üçlü düzen", "quadChart": "4 ekran", "quadChartCaption": "Dörtlü düzen",
+    "myAccount": "Hesabım", "demoAccount": "Demo hesap", "tournamentAccount": "Turnuva hesabı", "liveAccount": "Canlı hesap",
+    "demo": "DEMO", "tour": "TURNUVA", "live": "CANLI", "subtitle": "WEB ALIM SATIM PLATFORMU",
+    "avatar": "Avatar", "deposit": "Para Yatır", "adminPanel": "Yönetici paneli", "admin": "Yönetici",
+    "multiScreen": "Çoklu ekran", "multiScreenLayout": "Çoklu ekran düzeni", "profile": "Profil",
+    "withdrawal": "Para Çek", "goToTrade": "Alım Satıma Git"
+  },
+  "tradingPanel": {
+    "timePresets": { "1m": "1d", "2m": "2d", "3m": "3d", "4m": "4d", "5m": "5d", "10m": "10d", "15m": "15d", "30m": "30d", "1h": "1s", "4h": "4s" },
+    "customTime": "Özel Süre", "customTimeHelper": "1 dakikadan 24 saate kadar süre girin.",
+    "sec": "Sn", "min": "Dk", "hour": "Saat", "applyCustomTime": "Özel Süreyi Uygula",
+    "directionUp": "▲ YUKARI", "directionDown": "▼ AŞAĞI",
+    "queued": "Sırada", "insufficientBalance": "Yetersiz demo bakiyesi",
+    "pendingTradeCanceled": "Bekleyen işlem iptal edildi", "pendingTradeCanceledDesc": "Bekleyen yürütme iptal edildi.",
+    "pendingTradeArmed": "Bekleyen işlem hazır", "pendingTradeEnabled": "Bekleyen işlem etkin",
+    "pendingTradeEnabledDesc": "Yeni işlemler kısa bir gecikmeden sonra yürütülecek.",
+    "pendingTradeLabel": "Bekleyen işlem", "pendingTradeLabelMobile": "BEKLEYEN İŞLEM",
+    "tournamentBanner": "Turnuva modu etkin. Açık pozisyonlar bu turnuva hesabına aittir.",
+    "timer": "Zamanlayıcı", "time": "Süre", "switchTime": "SÜREYİ DEĞİŞTİR",
+    "investment": "Yatırım", "usd": "USD", "yourPayout": "Ödemeniz:",
+    "up": "Yukarı", "down": "Aşağı", "trades": "İşlemler",
+    "pendingTrades": "Bekleyen işlemler", "noPendingTrades": "Henüz bekleyen işlem yok.",
+    "noTrades": "Henüz işlem yok.",
+    "openTrades": "AÇIK İŞLEMLER", "recent": "SON"
+  },
+  "assetSelector": {
+    "selectPair": "İşlem çifti seç",
+    "currencies": "PARALAR", "crypto": "KRİPTO", "commodities": "EMTİALAR", "stocks": "HİSSELER",
+    "showAllAssets": "Tüm varlıkları göster", "showFavorites": "Favori varlıkları göster",
+    "search": "Ara", "name": "Ad", "change24h": "24s değişim", "profit1min": "Kâr 1+ dk", "profit5min": "5+ dk",
+    "added": "EKLENDİ",
+    "noFavorites": "Henüz favori varlık yok. Eklemek için yıldıza dokunun.",
+    "noFavoritesMatch": "Aramanızla eşleşen favori varlık yok.",
+    "noAssetsMatch": "Kriterlerinize uyan varlık bulunamadı."
+  },
+  "admin": {
+    "portal": "Yönetici Portalı", "desk": "Yönetici Masası", "returnToSite": "Ana Siteye Dön",
+    "goToTrade": "Alım Satıma Git", "switchLight": "Açık moda geç", "switchDark": "Koyu moda geç",
+    "adminUser": "Yönetici Kullanıcı",
+    "nav": {
+      "dashboard": "Gösterge Paneli", "supportInbox": "Destek Gelen Kutusu", "userManagement": "Kullanıcı Yönetimi",
+      "tradeManagement": "İşlem Yönetimi", "transactions": "İşlemler", "assetManagement": "Varlık Yönetimi",
+      "tournaments": "Turnuvalar", "blog": "Blog", "platformSettings": "Platform Ayarları",
+      "promoCodes": "Promosyon Kodları", "riskManagement": "Risk Yönetimi", "reports": "Raporlar",
+      "notification": "Bildirimler", "auditLogs": "Denetim Günlükleri", "adminUsers": "Yönetici Kullanıcılar",
+      "cryptoPayments": "Kripto Ödemeleri", "profitAnalytics": "Kâr Analizi"
+    }
+  },
+  "languages": { "en": "English", "zh": "中文", "hi": "हिन्दी", "es": "Español", "fr": "Français", "ar": "العربية", "bn": "বাংলা", "pt": "Português", "ru": "Русский", "ur": "اردو", "id": "Bahasa Indonesia", "de": "Deutsch", "ja": "日本語", "sw": "Kiswahili", "tr": "Türkçe" },
+  "timezones": {
+    "UTC-12:00": "(UTC-12) Baker Adası", "UTC-11:00": "(UTC-11) Amerikan Samoası", "UTC-10:00": "(UTC-10) Hawaii",
+    "UTC-09:00": "(UTC-9) Alaska", "UTC-08:00": "(UTC-8) Los Angeles, Vancouver",
+    "UTC-07:00": "(UTC-7) Denver, Phoenix", "UTC-06:00": "(UTC-6) Chicago, Mexico City",
+    "UTC-05:00": "(UTC-5) New York, Miami, Toronto", "UTC-04:00": "(UTC-4) Santiago, Caracas",
+    "UTC-03:00": "(UTC-3) Buenos Aires, São Paulo", "UTC-02:00": "(UTC-2) Fernando de Noronha",
+    "UTC-01:00": "(UTC-1) Azorlar", "UTC+00:00": "(UTC+0) Londra, Lizbon, Accra",
+    "UTC+01:00": "(UTC+1) Paris, Berlin, Roma, Madrid, Lagos", "UTC+02:00": "(UTC+2) Kahire, Johannesburg, Atina, İstanbul",
+    "UTC+03:00": "(UTC+3) Nairobi, Moskova, Riyad, Bağdat", "UTC+03:30": "(UTC+3:30) Tahran",
+    "UTC+04:00": "(UTC+4) Dubai, Bakü", "UTC+04:30": "(UTC+4:30) Kabil",
+    "UTC+05:00": "(UTC+5) Karaçi, İslamabad, Taşkent", "UTC+05:30": "(UTC+5:30) Mumbai, Yeni Delhi, Kolombo",
+    "UTC+05:45": "(UTC+5:45) Katmandu", "UTC+06:00": "(UTC+6) Dakka, Almatı",
+    "UTC+06:30": "(UTC+6:30) Yangon", "UTC+07:00": "(UTC+7) Bangkok, Cakarta, Hanoi",
+    "UTC+08:00": "(UTC+8) Pekin, Singapur, Perth, Manila", "UTC+09:00": "(UTC+9) Tokyo, Seul",
+    "UTC+09:30": "(UTC+9:30) Adelaide, Darwin", "UTC+10:00": "(UTC+10) Sidney, Melbourne, Guam",
+    "UTC+11:00": "(UTC+11) Solomon Adaları, Nouméa", "UTC+12:00": "(UTC+12) Auckland, Fiji",
+    "UTC+13:00": "(UTC+13) Samoa, Tonga", "UTC+14:00": "(UTC+14) Kiribati"
+  }
+}

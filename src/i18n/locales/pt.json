@@ -1,0 +1,140 @@
+{
+  "settings": {
+    "pageTitle": "Configurações",
+    "backToTrading": "Voltar ao Trading",
+    "platformSettings": "Configurações da plataforma",
+    "siteVersion": "Versão do site: 3452.4.8216 (versão oficial)",
+    "leftTabs": { "appearance": "Aparência", "trading": "Trading", "shortcuts": "Atalhos de teclado", "notifications": "Notificações", "privacy": "Privacidade", "account": "Configurações da conta" },
+    "appearance": { "themeSettings": "CONFIGURAÇÕES DE TEMA", "interfaceScale": "ESCALA DA INTERFACE", "customizeMenu": "Personalizar menu...", "customizeMenuDesc": "Localização e visibilidade dos itens do menu", "comingSoon": "Configurações em breve. Contate o suporte." },
+    "trading": {
+      "heading": "Preferências de Trading", "drawingToolColor": "Cor da ferramenta de desenho", "drawingToolColorDesc": "Novas ferramentas herdam esta cor automaticamente.",
+      "custom": "Personalizado", "auto": "Auto", "autoColorDesc": "Cores automáticas por ferramenta",
+      "colorHelper": "Escolha uma cor padrão ou volte para cores automáticas.",
+      "useAutomatic": "Usar automático", "linePreview": "Visualização da linha", "zonePreview": "Visualização da zona",
+      "customColorActive": "Sua cor personalizada agora é usada para novas ferramentas.",
+      "autoModeActive": "O modo automático mantém cada ferramenta com seu padrão.",
+      "confirmTrades": "Confirmar negociações antes de executar", "confirmTradesDesc": "Mostrar diálogo de confirmação antes de cada negociação",
+      "showNotifications": "Mostrar notificações de trading", "showNotificationsDesc": "Exibir notificações para resultados de negociações",
+      "soundEffects": "Efeitos sonoros", "soundEffectsDesc": "Reproduzir sons ao abrir e fechar negociações",
+      "autoInvest": "Auto-investir mesmo valor", "autoInvestDesc": "Usar automaticamente o mesmo valor para cada negociação"
+    },
+    "notifications": {
+      "heading": "Configurações de Notificação",
+      "depositEmails": "E-mails de depósito e retirada", "tradeResultEmails": "E-mails de resultados",
+      "tournamentEmails": "E-mails de torneio", "promoEmails": "E-mails promocionais",
+      "kycEmails": "E-mails KYC e segurança", "inAppAlerts": "Alertas no aplicativo"
+    }
+  },
+  "workspace": {
+    "language": "Idioma", "timezone": "Fuso horário", "themeSettings": "Configurações de tema", "platform": "Plataforma",
+    "gridOpacity": "Opacidade da grade", "autoScrolling": "Rolagem automática", "autoScrollingCaption": "Manter gráfico na borda do preço ao vivo",
+    "oneClickTrade": "Negociação com 1 clique", "oneClickTradeCaption": "Abrir negociações sem confirmação",
+    "performanceMode": "Modo desempenho", "performanceModeCaption": "Usar renderização otimizada para gráficos",
+    "shortOrderLabel": "Rótulo curto", "shortOrderLabelCaption": "Usar rótulos mais curtos na lista de negociações",
+    "tradeButtonColors": "Cores dos botões", "upButton": "Botão Subida", "downButton": "Botão Descida",
+    "background": "Fundo", "chooseFile": "Escolher arquivo", "maxSizeHint": "(Tamanho máx. - 2 MB)",
+    "imageOpacity": "Opacidade da imagem", "removeBackground": "Remover fundo do gráfico",
+    "restoreDefaults": "Restaurar padrões",
+    "bgNotChanged": "Fundo não alterado", "bgNotChangedDesc": "Escolha um arquivo de imagem.",
+    "bgTooLarge": "Fundo muito grande", "bgTooLargeDesc": "Escolha uma imagem de até 2 MB.",
+    "bgUpdated": "Fundo do gráfico atualizado"
+  },
+  "assetInfo": { "addAsset": "Adicionar ativo", "showPrevious": "Mostrar ativos anteriores", "showMore": "Mostrar mais ativos" },
+  "sidebar": {
+    "howToTrade": "Como negociar?", "tradingGuide": "Guia de Trading", "interfaceGuide": "Guia da interface",
+    "quickIntro": "Introdução rápida", "allVideos": "Todos os vídeos",
+    "basics": "Básico", "contractsTrading": "Negociação de contratos", "marginTrading": "Negociação com margem", "technicalAnalysis": "Análise técnica",
+    "allInstruments": "Todos os instrumentos", "forex": "Forex", "cfd": "CFD", "crypto": "Crypto", "options": "Opções",
+    "navLabels": {
+      "totalPortfolio": "PORTFÓLIO TOTAL", "tradingHistory": "HISTÓRICO", "chat": "CHAT",
+      "leaderBoard": "RANKING", "promo": "PROMO", "webinars": "WEBINARS",
+      "marketAnalysis": "ANÁLISE DE MERCADO", "tutorials": "TUTORIAIS", "more": "MAIS"
+    },
+    "panelTitles": {
+      "totalPortfolio": "Portfólio total", "tradingHistory": "Histórico de negociações",
+      "chat": "Chat", "leadersOfWeek": "Líderes da semana", "promo": "Promo",
+      "webinars": "Webinars", "earningsCalendar": "Calendário de lucros", "tutorials": "Tutoriais", "more": "Mais"
+    },
+    "history": { "allPositions": "Todas as posições" },
+    "leaderboard": { "noProfitableTrades": "Você não fez negociações lucrativas esta semana", "empty": "Não há traders no ranking.\nSeja o primeiro!" },
+    "promo": {
+      "available": "DISPONÍVEL", "history": "HISTÓRICO", "promoCode": "Código promocional",
+      "exclusive": "Exclusivo", "bonusUpTo": "Bônus de até 110%", "new": "NOVO",
+      "discoverStrategies": "Descubra estratégias de trading poderosas...", "activated": "Ativado", "noHistory": "Nenhum histórico de promoções."
+    },
+    "webinars": { "upcoming": "Próximos", "period30d": "30d", "empty": "Nenhum webinar agendado no momento." },
+    "tutorials": { "videoTutorials": "Vídeo Tutoriais", "videosCount": "vídeos" },
+    "earnings": { "today": "HOJE", "currently": "Atualmente", "forecast": "Previsão", "previous": "Anterior", "empty": "Nenhum evento de lucros nesta data." },
+    "portfolio": { "empty": "Seu portfólio está vazio.\nComece a negociar para ver suas posições aqui." },
+    "worldwide": "Mundial"
+  },
+  "tradingHeader": {
+    "singleChart": "1 tela", "singleChartCaption": "Gráfico único", "dualChart": "2 telas", "dualChartCaption": "Layout duplo",
+    "tripleChart": "3 telas", "tripleChartCaption": "Layout triplo", "quadChart": "4 telas", "quadChartCaption": "Layout quádruplo",
+    "myAccount": "Minha conta", "demoAccount": "Conta demo", "tournamentAccount": "Conta de torneio", "liveAccount": "Conta real",
+    "demo": "DEMO", "tour": "TORNEIO", "live": "REAL", "subtitle": "PLATAFORMA DE TRADING WEB",
+    "avatar": "Avatar", "deposit": "Depositar", "adminPanel": "Painel admin", "admin": "Admin",
+    "multiScreen": "Multi-tela", "multiScreenLayout": "Layout multi-tela", "profile": "Perfil",
+    "withdrawal": "Retirar", "goToTrade": "Ir para Trading"
+  },
+  "tradingPanel": {
+    "timePresets": { "1m": "1m", "2m": "2m", "3m": "3m", "4m": "4m", "5m": "5m", "10m": "10m", "15m": "15m", "30m": "30m", "1h": "1h", "4h": "4h" },
+    "customTime": "Tempo personalizado", "customTimeHelper": "Insira qualquer duração de 1 minuto a 24 horas.",
+    "sec": "Seg", "min": "Min", "hour": "Hora", "applyCustomTime": "Aplicar tempo personalizado",
+    "directionUp": "▲ SUBIDA", "directionDown": "▼ DESCIDA",
+    "queued": "Na fila", "insufficientBalance": "Saldo demo insuficiente",
+    "pendingTradeCanceled": "Negociação pendente cancelada", "pendingTradeCanceledDesc": "A execução pendente foi cancelada.",
+    "pendingTradeArmed": "Negociação pendente armada", "pendingTradeEnabled": "Negociação pendente ativada",
+    "pendingTradeEnabledDesc": "Novas negociações serão executadas após um breve atraso.",
+    "pendingTradeLabel": "Negociação pendente", "pendingTradeLabelMobile": "NEGOCIAÇÃO PENDENTE",
+    "tournamentBanner": "O modo torneio está ativo. As posições abertas referem-se a esta conta de torneio.",
+    "timer": "Temporizador", "time": "Tempo", "switchTime": "ALTERAR TEMPO",
+    "investment": "Investimento", "usd": "USD", "yourPayout": "Seu pagamento:",
+    "up": "Subida", "down": "Descida", "trades": "Negociações",
+    "pendingTrades": "Negociações pendentes", "noPendingTrades": "Nenhuma negociação pendente.",
+    "noTrades": "Nenhuma negociação ainda.",
+    "openTrades": "NEGOCIAÇÕES ABERTAS", "recent": "RECENTE"
+  },
+  "assetSelector": {
+    "selectPair": "Selecionar par",
+    "currencies": "MOEDAS", "crypto": "CRIPTO", "commodities": "COMMODITIES", "stocks": "AÇÕES",
+    "showAllAssets": "Mostrar todos os ativos", "showFavorites": "Mostrar favoritos",
+    "search": "Pesquisar", "name": "Nome", "change24h": "Variação 24h", "profit1min": "Lucro 1+ min", "profit5min": "5+ min",
+    "added": "ADICIONADO",
+    "noFavorites": "Nenhum favorito. Toque na estrela para adicionar um ativo.",
+    "noFavoritesMatch": "Nenhum favorito corresponde à sua pesquisa.",
+    "noAssetsMatch": "Nenhum ativo encontrado."
+  },
+  "admin": {
+    "portal": "Portal Admin", "desk": "Mesa Admin", "returnToSite": "Voltar ao site principal",
+    "goToTrade": "Ir para Trading", "switchLight": "Mudar para modo claro", "switchDark": "Mudar para modo escuro",
+    "adminUser": "Usuário Admin",
+    "nav": {
+      "dashboard": "Painel", "supportInbox": "Caixa de entrada", "userManagement": "Gestão de usuários",
+      "tradeManagement": "Gestão de negociações", "transactions": "Transações", "assetManagement": "Gestão de ativos",
+      "tournaments": "Torneios", "blog": "Blog", "platformSettings": "Configurações da plataforma",
+      "promoCodes": "Códigos promocionais", "riskManagement": "Gestão de riscos", "reports": "Relatórios",
+      "notification": "Notificações", "auditLogs": "Registros de auditoria", "adminUsers": "Administradores",
+      "cryptoPayments": "Pagamentos crypto", "profitAnalytics": "Análise de lucros"
+    }
+  },
+  "languages": { "en": "English", "zh": "中文", "hi": "हिन्दी", "es": "Español", "fr": "Français", "ar": "العربية", "bn": "বাংলা", "pt": "Português", "ru": "Русский", "ur": "اردو", "id": "Bahasa Indonesia", "de": "Deutsch", "ja": "日本語", "sw": "Kiswahili", "tr": "Türkçe" },
+  "timezones": {
+    "UTC-12:00": "(UTC-12) Ilha Baker", "UTC-11:00": "(UTC-11) Samoa Americana", "UTC-10:00": "(UTC-10) Havaí",
+    "UTC-09:00": "(UTC-9) Alasca", "UTC-08:00": "(UTC-8) Los Angeles, Vancouver",
+    "UTC-07:00": "(UTC-7) Denver, Phoenix", "UTC-06:00": "(UTC-6) Chicago, Cidade do México",
+    "UTC-05:00": "(UTC-5) Nova York, Miami, Toronto", "UTC-04:00": "(UTC-4) Santiago, Caracas",
+    "UTC-03:00": "(UTC-3) Buenos Aires, São Paulo", "UTC-02:00": "(UTC-2) Fernando de Noronha",
+    "UTC-01:00": "(UTC-1) Açores", "UTC+00:00": "(UTC+0) Londres, Lisboa, Acra",
+    "UTC+01:00": "(UTC+1) Paris, Berlim, Roma, Madrid, Lagos", "UTC+02:00": "(UTC+2) Cairo, Joanesburgo, Atenas, Istambul",
+    "UTC+03:00": "(UTC+3) Nairóbi, Moscou, Riade, Bagdá", "UTC+03:30": "(UTC+3:30) Teerã",
+    "UTC+04:00": "(UTC+4) Dubai, Baku", "UTC+04:30": "(UTC+4:30) Cabul",
+    "UTC+05:00": "(UTC+5) Carachi, Islamabade, Tashkent", "UTC+05:30": "(UTC+5:30) Mumbai, Nova Déli, Colombo",
+    "UTC+05:45": "(UTC+5:45) Catmandu", "UTC+06:00": "(UTC+6) Daca, Almaty",
+    "UTC+06:30": "(UTC+6:30) Rangum", "UTC+07:00": "(UTC+7) Bangcoc, Jacarta, Hanói",
+    "UTC+08:00": "(UTC+8) Pequim, Singapura, Perth, Manila", "UTC+09:00": "(UTC+9) Tóquio, Seul",
+    "UTC+09:30": "(UTC+9:30) Adelaide, Darwin", "UTC+10:00": "(UTC+10) Sydney, Melbourne, Guam",
+    "UTC+11:00": "(UTC+11) Ilhas Salomão, Nouméa", "UTC+12:00": "(UTC+12) Auckland, Fiji",
+    "UTC+13:00": "(UTC+13) Samoa, Tonga", "UTC+14:00": "(UTC+14) Kiribati"
+  }
+}

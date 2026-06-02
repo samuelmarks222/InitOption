@@ -1,0 +1,140 @@
+{
+  "settings": {
+    "pageTitle": "ترتیبات",
+    "backToTrading": "واپس ٹریڈنگ پر جائیں",
+    "platformSettings": "پلیٹ فارم کی ترتیبات",
+    "siteVersion": "سائٹ ورژن: 3452.4.8216 (سرکاری بلڈ)",
+    "leftTabs": { "appearance": "ظاہری شکل", "trading": "ٹریڈنگ", "shortcuts": "کی بورڈ شارٹ کٹس", "notifications": "اطلاعات", "privacy": "رازداری", "account": "اکاؤنٹ کی ترتیبات" },
+    "appearance": { "themeSettings": "تھیم کی ترتیبات", "interfaceScale": "انٹرفیس کا پیمانہ", "customizeMenu": "مینو کو اپنی مرضی کے مطابق بنائیں...", "customizeMenuDesc": "فوری رسائی کے لیے مینو آئٹمز کا مقام اور نمائش", "comingSoon": "اس سیکشن کی ترتیبات جلد آرہی ہیں۔ سپورٹ سے رابطہ کریں۔" },
+    "trading": {
+      "heading": "ٹریڈنگ کی ترجیحات", "drawingToolColor": "ڈرائنگ ٹول کا رنگ", "drawingToolColorDesc": "نئے ڈرائنگ ٹول خود بخود یہ رنگ اپنا لیتے ہیں۔",
+      "custom": "اپنی مرضی کا", "auto": "خودکار", "autoColorDesc": "فی ٹول خودکار رنگ",
+      "colorHelper": "ڈیفالٹ رنگ منتخب کریں یا کسی بھی وقت خودکار رنگوں پر واپس جائیں۔",
+      "useAutomatic": "خودکار استعمال کریں", "linePreview": "لائن کا پیش منظر", "zonePreview": "زون کا پیش منظر",
+      "customColorActive": "آپ کا اپنی مرضی کا رنگ اب نئے ڈرائنگ ٹولز کے لیے استعمال ہوتا ہے۔",
+      "autoModeActive": "خودکار موڈ ہر ٹول کو اس کے ڈیفالٹ رنگ پر رکھتا ہے۔",
+      "confirmTrades": "عملدرآمد سے پہلے ٹریڈ کی تصدیق کریں", "confirmTradesDesc": "ہر ٹریڈ سے پہلے تصدیقی ڈائیلاگ دکھائیں",
+      "showNotifications": "ٹریڈ اطلاعات دکھائیں", "showNotificationsDesc": "ٹریڈ کے نتائج کے لیے ڈیسک ٹاپ اطلاعات دکھائیں",
+      "soundEffects": "صوتی اثرات", "soundEffectsDesc": "ٹریڈ کھولنے اور بند کرنے پر آوازیں چلائیں",
+      "autoInvest": "خودکار طور پر ایک ہی رقم کی سرمایہ کاری", "autoInvestDesc": "ہر ٹریڈ کے لیے خود بخود ایک ہی رقم استعمال کریں"
+    },
+    "notifications": {
+      "heading": "اطلاع کی ترتیبات",
+      "depositEmails": "جمع اور نکالنے کی ای میلز", "tradeResultEmails": "ٹریڈ کے نتائج کی ای میلز",
+      "tournamentEmails": "ٹورنامنٹ کی ای میلز", "promoEmails": "پرومو ای میلز",
+      "kycEmails": "KYC اور سیکیورٹی ای میلز", "inAppAlerts": "ایپ میں الرٹس"
+    }
+  },
+  "workspace": {
+    "language": "زبان", "timezone": "ٹائم زون", "themeSettings": "تھیم کی ترتیبات", "platform": "پلیٹ فارم",
+    "gridOpacity": "گرڈ کی دھندلاپن", "autoScrolling": "خودکار اسکرولنگ", "autoScrollingCaption": "چارٹ کو لائیو قیمت کے کنارے پر رکھیں",
+    "oneClickTrade": "1 کلک میں ٹریڈ", "oneClickTradeCaption": "تصدیق کے بغیر ٹریڈ کھولیں",
+    "performanceMode": "کارکردگی موڈ", "performanceModeCaption": "چارٹ اور کینڈل کے لیے بہتر رینڈرنگ استعمال کریں",
+    "shortOrderLabel": "مختصر آرڈر لیبل", "shortOrderLabelCaption": "ٹریڈ کی فہرست میں چھوٹے لیبل استعمال کریں",
+    "tradeButtonColors": "ٹریڈ بٹن کے رنگ", "upButton": "اوپر کا بٹن", "downButton": "نیچے کا بٹن",
+    "background": "پس منظر", "chooseFile": "فائل منتخب کریں", "maxSizeHint": "(زیادہ سے زیادہ سائز - 2 MB)",
+    "imageOpacity": "تصویر کی دھندلاپن", "removeBackground": "چارٹ کا پس منظر ہٹائیں",
+    "restoreDefaults": "ڈیفالٹ بحال کریں",
+    "bgNotChanged": "پس منظر تبدیل نہیں ہوا", "bgNotChangedDesc": "ایک تصویری فائل منتخب کریں۔",
+    "bgTooLarge": "پس منظر بہت بڑا ہے", "bgTooLargeDesc": "2 MB تک کی تصویر منتخب کریں۔",
+    "bgUpdated": "چارٹ کا پس منظر اپ ڈیٹ ہو گیا"
+  },
+  "assetInfo": { "addAsset": "اثاثہ شامل کریں", "showPrevious": "پچھلے اثاثے دکھائیں", "showMore": "مزید اثاثے دکھائیں" },
+  "sidebar": {
+    "howToTrade": "کیسے ٹریڈ کریں؟", "tradingGuide": "ٹریڈنگ گائیڈ", "interfaceGuide": "انٹرفیس گائیڈ",
+    "quickIntro": "فوری تعارف", "allVideos": "تمام ویڈیوز",
+    "basics": "بنیادی باتیں", "contractsTrading": "کنٹریکٹ ٹریڈنگ", "marginTrading": "مارجن ٹریڈنگ", "technicalAnalysis": "تکنیکی تجزیہ",
+    "allInstruments": "تمام آلات", "forex": "فاریکس", "cfd": "CFD", "crypto": "کرپٹو", "options": "آپشنز",
+    "navLabels": {
+      "totalPortfolio": "کل پورٹ فولیو", "tradingHistory": "ٹریڈنگ ہسٹری", "chat": "چیٹ",
+      "leaderBoard": "لیڈر بورڈ", "promo": "پرومو", "webinars": "ویبینار",
+      "marketAnalysis": "مارکیٹ تجزیہ", "tutorials": "سبق", "more": "مزید"
+    },
+    "panelTitles": {
+      "totalPortfolio": "کل پورٹ فولیو", "tradingHistory": "ٹریڈنگ ہسٹری",
+      "chat": "چیٹ", "leadersOfWeek": "ہفتے کے رہنما", "promo": "پرومو",
+      "webinars": "ویبینار", "earningsCalendar": "آمدنی کا کیلنڈر", "tutorials": "سبق", "more": "مزید"
+    },
+    "history": { "allPositions": "تمام پوزیشنیں" },
+    "leaderboard": { "noProfitableTrades": "آپ نے اس ہفتے کوئی منافع بخش ٹریڈ نہیں کیا", "empty": "لیڈر بورڈ پر ابھی کوئی ٹریڈر نہیں ہے۔\nپہلے بنیں!" },
+    "promo": {
+      "available": "دستیاب", "history": "ہسٹری", "promoCode": "پرومو کوڈ",
+      "exclusive": "خصوصی", "bonusUpTo": "110% تک بونس", "new": "نیا",
+      "discoverStrategies": "طاقتور ٹریڈنگ حکمت عملی دریافت کریں...", "activated": "فعال", "noHistory": "کوئی پرومو ہسٹری نہیں۔"
+    },
+    "webinars": { "upcoming": "آنے والے", "period30d": "30دن", "empty": "اس وقت کوئی ویبینار طے شدہ نہیں ہے۔" },
+    "tutorials": { "videoTutorials": "ویڈیو سبق", "videosCount": "ویڈیوز" },
+    "earnings": { "today": "آج", "currently": "موجودہ", "forecast": "پیشن گوئی", "previous": "پچھلا", "empty": "اس تاریخ پر کوئی آمدنی کا ایونٹ نہیں۔" },
+    "portfolio": { "empty": "آپ کا پورٹ فولیو خالی ہے۔\nاپنی پوزیشنیں دیکھنے کے لیے ٹریڈنگ شروع کریں۔" },
+    "worldwide": "دنیا بھر میں"
+  },
+  "tradingHeader": {
+    "singleChart": "1 اسکرین", "singleChartCaption": "ایک چارٹ", "dualChart": "2 اسکرین", "dualChartCaption": "ڈوئل لے آؤٹ",
+    "tripleChart": "3 اسکرین", "tripleChartCaption": "ٹرپل لے آؤٹ", "quadChart": "4 اسکرین", "quadChartCaption": "کواڈ لے آؤٹ",
+    "myAccount": "میرا اکاؤنٹ", "demoAccount": "ڈیمو اکاؤنٹ", "tournamentAccount": "ٹورنامنٹ اکاؤنٹ", "liveAccount": "لائیو اکاؤنٹ",
+    "demo": "ڈیمو", "tour": "ٹورنامنٹ", "live": "لائیو", "subtitle": "ویب ٹریڈنگ پلیٹ فارم",
+    "avatar": "اوتار", "deposit": "جمع کریں", "adminPanel": "ایڈمن پینل", "admin": "ایڈمن",
+    "multiScreen": "ملٹی اسکرین", "multiScreenLayout": "ملٹی اسکرین لے آؤٹ", "profile": "پروفائل",
+    "withdrawal": "نکالیں", "goToTrade": "ٹریڈنگ پر جائیں"
+  },
+  "tradingPanel": {
+    "timePresets": { "1m": "1منٹ", "2m": "2منٹ", "3m": "3منٹ", "4m": "4منٹ", "5m": "5منٹ", "10m": "10منٹ", "15m": "15منٹ", "30m": "30منٹ", "1h": "1گھنٹہ", "4h": "4گھنٹے" },
+    "customTime": "اپنی مرضی کا وقت", "customTimeHelper": "1 منٹ سے 24 گھنٹے تک کا دورانیہ درج کریں۔",
+    "sec": "سیکنڈ", "min": "منٹ", "hour": "گھنٹہ", "applyCustomTime": "اپنی مرضی کا وقت لاگو کریں",
+    "directionUp": "▲ اوپر", "directionDown": "▼ نیچے",
+    "queued": "قطار میں", "insufficientBalance": "ڈیمو بیلنس ناکافی",
+    "pendingTradeCanceled": "زیر التواء ٹریڈ منسوخ", "pendingTradeCanceledDesc": "زیر التواء عملدرآمد منسوخ کر دیا گیا۔",
+    "pendingTradeArmed": "زیر التواء ٹریڈ تیار", "pendingTradeEnabled": "زیر التواء ٹریڈ فعال",
+    "pendingTradeEnabledDesc": "نئے ٹریڈ تھوڑی تاخیر کے بعد عمل میں آئیں گے۔",
+    "pendingTradeLabel": "زیر التواء ٹریڈ", "pendingTradeLabelMobile": "زیر التواء ٹریڈ",
+    "tournamentBanner": "ٹورنامنٹ موڈ فعال ہے۔ کھلی پوزیشنیں اس ٹورنامنٹ اکاؤنٹ تک محدود ہیں۔",
+    "timer": "ٹائمر", "time": "وقت", "switchTime": "وقت تبدیل کریں",
+    "investment": "سرمایہ کاری", "usd": "USD", "yourPayout": "آپ کی ادائیگی:",
+    "up": "اوپر", "down": "نیچے", "trades": "ٹریڈز",
+    "pendingTrades": "زیر التواء ٹریڈز", "noPendingTrades": "ابھی کوئی زیر التواء ٹریڈ نہیں۔",
+    "noTrades": "ابھی کوئی ٹریڈ نہیں۔",
+    "openTrades": "کھلے ٹریڈز", "recent": "حالیہ"
+  },
+  "assetSelector": {
+    "selectPair": "ٹریڈ جوڑا منتخب کریں",
+    "currencies": "کرنسیاں", "crypto": "کرپٹو", "commodities": "اجناس", "stocks": "اسٹاک",
+    "showAllAssets": "تمام اثاثے دکھائیں", "showFavorites": "پسندیدہ اثاثے دکھائیں",
+    "search": "تلاش", "name": "نام", "change24h": "24گھنٹے تبدیلی", "profit1min": "منافع 1+ منٹ", "profit5min": "5+ منٹ",
+    "added": "شامل کیا گیا",
+    "noFavorites": "ابھی کوئی پسندیدہ اثاثہ نہیں۔ ستارے پر ٹیپ کریں۔",
+    "noFavoritesMatch": "آپ کی تلاش سے کوئی پسندیدہ مماثل نہیں۔",
+    "noAssetsMatch": "کوئی اثاثہ نہیں ملا۔"
+  },
+  "admin": {
+    "portal": "ایڈمن پورٹل", "desk": "ایڈمن ڈیسک", "returnToSite": "مرکزی سائٹ پر واپس جائیں",
+    "goToTrade": "ٹریڈنگ پر جائیں", "switchLight": "روشن موڈ پر جائیں", "switchDark": "تاریک موڈ پر جائیں",
+    "adminUser": "ایڈمن صارف",
+    "nav": {
+      "dashboard": "ڈیش بورڈ", "supportInbox": "سپورٹ ان باکس", "userManagement": "صارف کا انتظام",
+      "tradeManagement": "ٹریڈ کا انتظام", "transactions": "لین دین", "assetManagement": "اثاثہ جات کا انتظام",
+      "tournaments": "ٹورنامنٹ", "blog": "بلاگ", "platformSettings": "پلیٹ فارم کی ترتیبات",
+      "promoCodes": "پرومو کوڈز", "riskManagement": "رسک مینجمنٹ", "reports": "رپورٹس",
+      "notification": "اطلاعات", "auditLogs": "آڈٹ لاگز", "adminUsers": "ایڈمن صارفین",
+      "cryptoPayments": "کرپٹو ادائیگیاں", "profitAnalytics": "منافع کا تجزیہ"
+    }
+  },
+  "languages": { "en": "English", "zh": "中文", "hi": "हिन्दी", "es": "Español", "fr": "Français", "ar": "العربية", "bn": "বাংলা", "pt": "Português", "ru": "Русский", "ur": "اردو", "id": "Bahasa Indonesia", "de": "Deutsch", "ja": "日本語", "sw": "Kiswahili", "tr": "Türkçe" },
+  "timezones": {
+    "UTC-12:00": "(UTC-12) بیکر آئی لینڈ", "UTC-11:00": "(UTC-11) امریکن ساموا", "UTC-10:00": "(UTC-10) ہوائی",
+    "UTC-09:00": "(UTC-9) الاسکا", "UTC-08:00": "(UTC-8) لاس اینجلس، وینکوور",
+    "UTC-07:00": "(UTC-7) ڈینور، فینکس", "UTC-06:00": "(UTC-6) شکاگو، میکسیکو سٹی",
+    "UTC-05:00": "(UTC-5) نیویارک، میامی، ٹورنٹو", "UTC-04:00": "(UTC-4) سینٹیاگو، کاراکاس",
+    "UTC-03:00": "(UTC-3) بیونس آئرس، ساؤ پاؤلو", "UTC-02:00": "(UTC-2) فرنینڈو ڈی نورونہا",
+    "UTC-01:00": "(UTC-1) ایزورس", "UTC+00:00": "(UTC+0) لندن، لزبن، اکرا",
+    "UTC+01:00": "(UTC+1) پیرس، برلن، روم، میڈرڈ، لاگوس", "UTC+02:00": "(UTC+2) قاہرہ، جوہانسبرگ، ایتھنز، استنبول",
+    "UTC+03:00": "(UTC+3) نیروبی، ماسکو، ریاض، بغداد", "UTC+03:30": "(UTC+3:30) تہران",
+    "UTC+04:00": "(UTC+4) دبئی، باکو", "UTC+04:30": "(UTC+4:30) کابل",
+    "UTC+05:00": "(UTC+5) کراچی، اسلام آباد، تاشقند", "UTC+05:30": "(UTC+5:30) ممبئی، نئی دہلی، کولمبو",
+    "UTC+05:45": "(UTC+5:45) کھٹمنڈو", "UTC+06:00": "(UTC+6) ڈھاکہ، الماتی",
+    "UTC+06:30": "(UTC+6:30) یانگون", "UTC+07:00": "(UTC+7) بنکاک، جکارتہ، ہنوئی",
+    "UTC+08:00": "(UTC+8) بیجنگ، سنگاپور، پرتھ، منیلا", "UTC+09:00": "(UTC+9) ٹوکیو، سیول",
+    "UTC+09:30": "(UTC+9:30) ایڈیلیڈ، ڈارون", "UTC+10:00": "(UTC+10) سڈنی، میلبورن، گوام",
+    "UTC+11:00": "(UTC+11) سولومن آئی لینڈز، نومیا", "UTC+12:00": "(UTC+12) آکلینڈ، فجی",
+    "UTC+13:00": "(UTC+13) ساموا، ٹونگا", "UTC+14:00": "(UTC+14) کیریباتی"
+  }
+}
