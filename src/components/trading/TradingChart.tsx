@@ -964,6 +964,7 @@ const getAreaDisplaySettings = (styles: ChartStylePreferences) => {
     crosshairMarkerRadius: 3,
     priceLineVisible: styles.priceLineVisible,
     lastValueVisible: true,
+    autoScale: true,
   };
 };
 
@@ -976,6 +977,7 @@ const getBarDisplaySettings = (
   openVisible: true,
   thinBars: styles.displayPreset === "secondary",
   priceLineVisible: styles.priceLineVisible,
+  autoScale: true,
 });
 
 const getCandlestickDisplaySettings = (
@@ -1001,6 +1003,7 @@ const getCandlestickDisplaySettings = (
     borderVisible: true,
     wickVisible: true,
     priceLineVisible: styles.priceLineVisible,
+    autoScale: true,
   };
 };
 
