@@ -53,7 +53,7 @@ export interface PublicPageDefinition {
 const cloneSections = (sections: PublicPageSection[]) =>
   sections.map((section) => ({
     ...section,
-    paragraphs: [...section.paragraphs],
+    paragraphs: section.paragraphs ? [...section.paragraphs] : undefined,
     bullets: section.bullets ? [...section.bullets] : undefined,
   }));
 
@@ -1160,8 +1160,8 @@ export const resolvePublicPageDefinition = (
     keywords: override.keywords,
     sections: override.sections.map((section) => ({
       title: section.title,
-      paragraphs: [...section.paragraphs],
-      bullets: section.bullets.length ? [...section.bullets] : undefined,
+      paragraphs: section.paragraphs?.length ? [...section.paragraphs] : undefined,
+      bullets: section.bullets?.length ? [...section.bullets] : undefined,
     })),
     faqItems: override.faqItems.length ? override.faqItems.map((item) => ({ ...item })) : page.faqItems,
     relatedLinks: page.relatedLinks ? page.relatedLinks.map((item) => ({ ...item })) : undefined,
