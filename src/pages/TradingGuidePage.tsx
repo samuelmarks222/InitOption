@@ -974,11 +974,13 @@ const useGuideMedia = (platformName: string) => {
 };
 
 const GuideMediaPlaceholder = ({ title }: { title: string }) => (
-  <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#33415f] bg-[#151a2a] px-6 py-10 text-center">
-    <ImageIcon className="h-10 w-10 text-[#8aa4c8]" />
+  <div className="flex min-h-[280px] flex-col items-center justify-center gap-4 rounded-[14px] border border-dashed border-white/20 bg-gradient-to-br from-white/[0.02] to-white/[0.01] px-6 py-10 text-center backdrop-blur-sm hover:border-white/30 transition-colors duration-300">
+    <div className="rounded-lg bg-[#00C076]/10 p-3">
+      <ImageIcon className="h-10 w-10 text-[#00C076]" />
+    </div>
     <div>
       <p className="text-sm font-semibold text-white">Guide image not assigned</p>
-      <p className="mt-1 text-xs text-[#8fa2c2]">Upload the real {title} image from Admin Settings.</p>
+      <p className="mt-1.5 text-xs text-[#9fb4cf]">Upload the real <span className="text-[#00C076]">{title}</span> image from Admin Settings.</p>
     </div>
   </div>
 );
@@ -989,9 +991,11 @@ const GuideMockup = ({ title, mediaUrl }: { title: string; mediaUrl?: string }) 
   }
 
   return (
-    <div className="rounded-2xl border border-[#33415f] bg-[#151a2a] p-3">
-      <img src={mediaUrl} alt={title} className="h-auto w-full rounded-xl object-contain" loading="lazy" />
-    </div>
+    <figure className="rounded-[14px] border border-white/10 bg-gradient-to-br from-white/[0.03] to-white/[0.01] overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+      <div className="bg-gradient-to-br from-[#1a2438] to-[#0f1826] p-1.5">
+        <img src={mediaUrl} alt={title} className="h-auto w-full rounded-[10px] object-contain hover:scale-105 transition-transform duration-300" loading="lazy" />
+      </div>
+    </figure>
   );
 };
 
@@ -1565,14 +1569,18 @@ const TradingGuidePage = () => {
                         />
                       ) : null}
 
-                      <div className="mt-9 grid gap-3 sm:grid-cols-2">
+                      <div className="mt-10 flex flex-col sm:flex-row gap-3 pt-8 border-t border-white/10">
                         {previousTopic ? (
                           <button
                             type="button"
                             onClick={() => selectTopic(previousTopic.id)}
-                            className="rounded-[7px] border border-[#2b354d] bg-[#1b2336] px-5 py-3 text-sm font-bold text-[#e9effd] hover:bg-[#24304a]"
+                            className="group flex-1 rounded-[10px] border border-white/20 bg-white/[0.03] px-5 py-3.5 text-sm font-semibold text-[#c5cfe1] hover:bg-white/[0.08] hover:border-white/30 transition-all duration-300 flex items-center gap-2 hover:text-white"
                           >
-                            {previousTopic.number}. {previousTopic.title}
+                            <ArrowRight className="h-4 w-4 rotate-180 transition-transform group-hover:-translate-x-1" />
+                            <div className="text-left">
+                              <div className="text-xs text-[#9fb4cf] mb-0.5">Previous</div>
+                              <div>{previousTopic.number}. {previousTopic.title}</div>
+                            </div>
                           </button>
                         ) : (
                           <div />
@@ -1581,9 +1589,13 @@ const TradingGuidePage = () => {
                           <button
                             type="button"
                             onClick={() => selectTopic(nextTopic.id)}
-                            className="rounded-[7px] border border-[#2b354d] bg-[#1b2336] px-5 py-3 text-sm font-bold text-[#e9effd] hover:bg-[#24304a]"
+                            className="group flex-1 rounded-[10px] border border-[#00C076]/50 bg-[#00C076]/10 px-5 py-3.5 text-sm font-semibold text-[#00C076] hover:bg-[#00C076]/20 hover:border-[#00C076] transition-all duration-300 flex items-center gap-2 justify-end hover:justify-end hover:text-white"
                           >
-                            {nextTopic.number}. {nextTopic.title}
+                            <div className="text-left sm:text-right">
+                              <div className="text-xs text-[#00C076]/70 mb-0.5">Next</div>
+                              <div>{nextTopic.number}. {nextTopic.title}</div>
+                            </div>
+                            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                           </button>
                         ) : null}
                       </div>
@@ -1593,7 +1605,7 @@ const TradingGuidePage = () => {
               </>
             ) : null}
 
-            <footer className="mt-12 flex flex-wrap justify-between gap-4 text-sm text-[#7182a0]">
+            <footer className="mt-16 pt-8 border-t border-white/10 flex flex-wrap justify-center gap-6 text-xs text-[#8fa8ce]">
               {[
                 ["About us", "/about"],
                 ["Help", "/trading-guide"],
@@ -1603,7 +1615,7 @@ const TradingGuidePage = () => {
                 ["Payment policy", "/terms"],
                 ["Information disclosure", "/risk-disclaimer"],
               ].map(([label, to]) => (
-                <Link key={label} to={to} className="underline-offset-4 hover:text-white hover:underline">
+                <Link key={label} to={to} className="hover:text-[#00C076] transition-colors duration-200">
                   {label}
                 </Link>
               ))}
