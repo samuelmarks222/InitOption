@@ -323,6 +323,11 @@ const getTargetWickDelta = (
             ? 0.98
             : 0.86;
 
+  if (timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) {
+    const effectivePipValue = referencePrice * 0.0001;
+    return effectivePipValue * configuredPips * wickMultiplier;
+  }
+
   return priceStep * configuredPips * wickMultiplier;
 };
 
