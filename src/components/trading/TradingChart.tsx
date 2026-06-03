@@ -2718,6 +2718,7 @@ const TradingChart = ({
       if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
 
       event.preventDefault();
+      event.stopPropagation();
       adjustChartZoomRef.current(event.deltaY < 0 ? "in" : "out");
     };
 
