@@ -341,7 +341,7 @@ export const getDynamicAssetPayoutProfile = ({
   const seed = hashStringToUnitInterval(`payout:${normalizedCategory}:${normalizedSymbol}`);
 
   const cycleDuration = 60;
-  const cyclePhase = (timestampSec % cycleDuration) / cycleDuration;
+  const cyclePhase = ((timestampSec + seed * cycleDuration) % cycleDuration) / cycleDuration;
   const highPayout = clampAssetPayout(basePayout + 5 + (seed - 0.5) * 10, basePayout);
 
   const driftRad = (timestampSec % 3600) / 3600 * Math.PI * 2;
