@@ -323,7 +323,7 @@ const getTargetWickDelta = (
             : 0.86;
 
   if (timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) {
-    const effectivePipValue = referencePrice * 0.00015;
+    const effectivePipValue = referencePrice * 0.00006;
     return effectivePipValue * configuredPips * wickMultiplier;
   }
 
@@ -343,7 +343,7 @@ const getMaxWickLength = ({
 }) => {
   const bodyFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 1.0
+      ? 0.7
       : timeframeSeconds <= 1
         ? 0.34
         : timeframeSeconds <= 5
@@ -353,7 +353,7 @@ const getMaxWickLength = ({
             : 0.72;
   const wickFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 0.8
+      ? 0.5
       : timeframeSeconds <= 1
         ? 0.26
         : timeframeSeconds <= 5
@@ -405,7 +405,7 @@ const buildInteriorProbePrices = ({
     const oscillation = Math.sin(fraction * TAU * wickFrequency + wickPhase);
     const jitter = noiseAt(symbol, "wick-noise", timestamp / Math.max(0.04, durationSeconds / 5));
     const impulse = noiseAt(symbol, "wick-impulse", (startTimeSec + index) / Math.max(1, timeframeSeconds));
-    const displacement = targetWickDelta * (oscillation * 0.3 + jitter * 0.2 + impulse * 0.1);
+    const displacement = targetWickDelta * (oscillation * 0.15 + jitter * 0.1 + impulse * 0.05);
 
     return clampPriceToBounds(basePriceAtTime + displacement, basePrice);
   });
@@ -472,8 +472,8 @@ export const buildDeterministicCandle = ({
     targetWickDelta,
     timeframeSeconds,
   });
-  const upperWickMultiplier = Math.abs(signedHash(symbol, `wick-upper:${startTimeSec}`)) * 0.7 + 0.03;
-  const lowerWickMultiplier = Math.abs(signedHash(symbol, `wick-lower:${startTimeSec}`)) * 0.7 + 0.03;
+  const upperWickMultiplier = Math.abs(signedHash(symbol, `wick-upper:${startTimeSec}`)) * 0.35 + 0.02;
+  const lowerWickMultiplier = Math.abs(signedHash(symbol, `wick-lower:${startTimeSec}`)) * 0.35 + 0.02;
   const upperWickLength = Math.min(
     maxWickLength,
     Math.max(sampledHigh - upperBody, targetWickDelta * upperWickMultiplier),
