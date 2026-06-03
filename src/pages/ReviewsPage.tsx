@@ -89,7 +89,7 @@ const COUNTRY_CODES: Record<string, string> = {
 };
 
 const pageStyle = {
-  background: "var(--trading-workspace-bg, #0d1b2a)",
+  background: "linear-gradient(to bottom right, #0f1826, #1a2438, #0f1826)",
   color: "var(--trading-text-color, #ffffff)",
 };
 
@@ -108,7 +108,8 @@ const panelSoftStyle = {
   borderColor: "var(--trading-border-color, rgba(255,255,255,0.08))",
 };
 
-const accentBlue = "var(--trading-accent-blue, #2f9cf5)";
+const accentGreen = "#00C076";
+const accentGreenHover = "#00a85e";
 
 const resolveSocialHref = (url: string) => {
   const trimmed = url.trim();
@@ -214,12 +215,12 @@ const mergeReviews = (localReviews: CustomerReview[], databaseReviews: CustomerR
 };
 
 const StarRating = ({ rating, onChange }: { rating: number; onChange?: (rating: number) => void }) => (
-  <div className="flex items-center gap-1">
+  <div className="flex items-center gap-1.5">
     {[1, 2, 3, 4, 5].map((value) => {
       const active = value <= rating;
       const content = (
         <Star
-          className={`h-5 w-5 ${active ? "text-[#ffbd2e]" : "text-[#56647c]"}`}
+          className={`h-5 w-5 ${active ? "text-[#FFB800]" : "text-[#4a5568]"}`}
           fill={active ? "currentColor" : "none"}
           strokeWidth={2.2}
         />
@@ -250,7 +251,7 @@ const FlagBadge = ({ country, className = "" }: { country: string | null | undef
 
   return (
     <span
-      className={`flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1b2537] text-[11px] font-black text-white ring-2 ring-[#253047] ${className}`}
+      className={`flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 border border-white/20 text-[11px] font-black text-white ring-1 ring-white/10 ${className}`}
       title={country ?? code ?? "Country"}
     >
       {code ? (
@@ -277,16 +278,16 @@ const ReviewAvatar = ({
   name: string;
   size?: "sm" | "md" | "lg";
 }) => {
-  const sizeClass = size === "lg" ? "h-[72px] w-[72px]" : size === "sm" ? "h-[56px] w-[56px]" : "h-[64px] w-[64px]";
+  const sizeClass = size === "lg" ? "h-[72px] w-[72px]" : size === "sm" ? "h-[48px] w-[48px]" : "h-[64px] w-[64px]";
 
   return (
-    <div className={`relative flex ${sizeClass} shrink-0 items-center justify-center rounded-full border border-[#3c4b68] bg-[#29344b] text-lg font-black text-white`}>
+    <div className={`relative flex ${sizeClass} shrink-0 items-center justify-center rounded-full border border-[#00C076]/30 bg-gradient-to-br from-[#00C076]/10 to-[#00a85e]/5 text-lg font-black text-[#00C076]`}>
       {avatarUrl ? (
         <img src={avatarUrl} alt={name} className="h-full w-full rounded-full object-cover" />
       ) : (
         <span>{initialsFromName(name)}</span>
       )}
-      <FlagBadge country={country} className="absolute -bottom-0.5 -left-0.5" />
+      <FlagBadge country={country} className="absolute -bottom-1 -right-1" />
     </div>
   );
 };
@@ -311,10 +312,9 @@ const AccountRail = ({
 
   return (
     <aside
-      className="hidden min-h-screen w-[282px] shrink-0 flex-col border-l px-7 py-5 xl:flex"
+      className="hidden min-h-screen w-[282px] shrink-0 flex-col border-l px-7 py-5 xl:flex bg-gradient-to-b from-white/[0.05] to-white/[0.02] backdrop-blur-sm"
       style={{
-        background: "#252e48",
-        borderColor: "var(--trading-border-color, rgba(255,255,255,0.08))",
+        borderColor: "rgba(255,255,255,0.1)",
       }}
     >
       <div className="flex items-center gap-4">
@@ -326,18 +326,18 @@ const AccountRail = ({
         </div>
       </div>
 
-      <div className="mt-6 flex h-[40px] items-center rounded-[7px] bg-[#303a5b] text-white">
-        <div className="flex h-[40px] w-[44px] items-center justify-center rounded-l-[7px] bg-white/8">
-          <Wallet className="h-4 w-4 text-[#b7c7dd]" />
+      <div className="mt-6 flex h-[40px] items-center rounded-[10px] border border-[#00C076]/30 bg-gradient-to-r from-[#00C076]/10 to-[#00a85e]/5 text-white">
+        <div className="flex h-[40px] w-[44px] items-center justify-center rounded-l-[7px]">
+          <Wallet className="h-4 w-4 text-[#00C076]" />
         </div>
-        <div className="flex-1 text-center text-xl font-bold">${balance.toFixed(0)}</div>
+        <div className="flex-1 text-center text-xl font-bold text-[#00C076]">${balance.toFixed(0)}</div>
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <Link to="/deposit" className="rounded-[9px] px-4 py-2.5 text-center text-[13px] font-bold uppercase text-[#173153]" style={{ background: "#e9effd" }}>
+        <Link to="/deposit" className="rounded-[9px] px-4 py-2.5 text-center text-[13px] font-bold uppercase text-white border border-[#00C076]/30 hover:bg-[#00C076]/10 transition-all" style={{ background: "rgba(0, 192, 118, 0.1)" }}>
           Deposit
         </Link>
-        <Link to="/trade" className="rounded-[9px] px-4 py-2.5 text-center text-[13px] font-bold uppercase text-white" style={{ background: "#0b7557" }}>
+        <Link to="/trade" className="rounded-[9px] px-4 py-2.5 text-center text-[13px] font-bold uppercase text-white hover:bg-[#00a85e] transition-all" style={{ background: accentGreen }}>
           Trade now
         </Link>
       </div>
@@ -506,8 +506,8 @@ const ReviewsPage = () => {
   return (
     <div className="min-h-screen" style={pageStyle}>
       <div className="flex min-h-screen">
-        <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-40 border-b" style={headerStyle}>
+    <div className="min-h-screen flex-1">
+          <header className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-r from-white/[0.03] to-white/[0.01] backdrop-blur-sm">
             <div className="flex min-h-[62px] w-full items-center justify-between gap-4 px-6 xl:px-8">
               <SiteLogo
                 to="/"
@@ -525,8 +525,8 @@ const ReviewsPage = () => {
               </nav>
               <Link
                 to="/trade"
-                className="inline-flex h-10 items-center gap-2 rounded-[9px] px-4 text-sm font-black text-white transition-opacity hover:opacity-90 lg:hidden"
-                style={{ background: accentBlue }}
+                className="inline-flex h-10 items-center gap-2 rounded-[9px] px-4 text-sm font-black text-white transition-all hover:bg-[#00a85e] lg:hidden"
+                style={{ background: accentGreen }}
               >
                 Trade now
                 <ArrowRight className="h-4 w-4" />
@@ -537,111 +537,124 @@ const ReviewsPage = () => {
 
           <main className="w-full px-6 pb-14 pt-12 xl:px-8">
             <section className="pb-20">
-              <h1 className="text-[42px] font-black leading-tight tracking-[0.01em] text-white md:text-[48px]">Real reviews 2026</h1>
-              <div className="mt-4 text-xs font-medium text-[#9eb4d0]">
-                <Link to="/" className="text-white underline decoration-[#2f9cf5] underline-offset-4">Home</Link>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-1.5 w-1.5 rounded-full bg-[#00C076]" />
+                <span className="text-sm font-bold text-[#00C076] uppercase tracking-widest">REVIEWS</span>
+              </div>
+              <h1 className="text-[42px] font-black leading-tight tracking-[0.01em] text-white md:text-[48px]">Customer Reviews 2026</h1>
+              <div className="mt-4 text-xs font-medium text-[#8fa8ce]">
+                <Link to="/" className="text-white underline decoration-[#00C076] underline-offset-4">Home</Link>
                 <span className="mx-1">/</span>
-                <span>Real reviews 2026</span>
+                <span>Customer Reviews</span>
               </div>
 
-              <p className="mt-24 max-w-[1120px] text-base font-semibold leading-6 text-white">
-                Your feedback helps us to improve our platform and provide you with the best trading experience tailored to your needs.
-                View ratings and post your own suggestions. We appreciate your feedback!
+              <p className="mt-10 max-w-[1120px] text-base font-semibold leading-6 text-[#c5cfe1]">
+                Real feedback from our trading community. Your experience matters to us. Share your thoughts and help us improve the platform every day.
               </p>
 
               <Link
                 to="/trade"
-                className="mt-5 inline-flex h-[48px] items-center gap-2 rounded-[10px] px-5 text-sm font-black uppercase tracking-[0.04em] text-white transition-opacity hover:opacity-90"
-                style={{ background: "#1e5eea" }}
+                className="mt-5 inline-flex h-[48px] items-center gap-2 rounded-[10px] px-5 text-sm font-black uppercase tracking-[0.04em] text-white transition-all hover:bg-[#00a85e]"
+                style={{ background: accentGreen }}
               >
                 <BarChart3 className="h-4 w-4" />
-                Go back to trading
+                Start Trading
               </Link>
             </section>
 
             <section className="grid items-start gap-10 lg:grid-cols-[minmax(520px,1fr)_minmax(390px,460px)] xl:gap-12 2xl:gap-16">
               <div>
                 <div className="mb-8 flex items-center justify-between gap-4">
-                  <h2 className="text-[26px] font-black uppercase tracking-[0.06em] text-white">Customer Reviews</h2>
+                  <div>
+                    <h2 className="text-[26px] font-black uppercase tracking-[0.06em] text-white">All Reviews</h2>
+                    <p className="mt-2 text-sm text-[#8fa8ce]">{reviews.length} traders shared their experience</p>
+                  </div>
                   <button
                     type="button"
                     onClick={copyCurrentUrl}
-                    className="hidden h-10 items-center gap-2 rounded-lg border px-4 text-sm font-bold text-[#b8cbe4] hover:text-white sm:inline-flex"
-                    style={panelStyle}
+                    className="hidden h-10 items-center gap-2 rounded-lg border border-[#00C076]/30 px-4 text-sm font-bold text-[#00C076] hover:bg-[#00C076]/10 transition-all sm:inline-flex"
                   >
                     <Copy className="h-4 w-4" />
-                    Share page
+                    Share
                   </button>
                 </div>
 
-                <div className="space-y-9">
+                <div className="space-y-4">
                   {reviews.length ? (
                     reviews.map((review) => (
-                      <article key={`${review.source}-${review.id}`} className="grid min-h-[172px] overflow-hidden rounded-[4px]" style={panelStyle}>
-                        <div className="grid sm:grid-cols-[162px_minmax(0,1fr)]">
-                          <aside className="flex flex-col items-center justify-center px-6 py-7 text-center" style={panelSoftStyle}>
-                            <ReviewAvatar avatarUrl={review.avatarUrl} country={review.country} name={review.reviewerName} />
-                            <div className="mt-4 flex w-full min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#8ec3ff]">
+                      <article key={`${review.source}-${review.id}`} className="grid overflow-hidden rounded-[14px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-sm hover:border-[#00C076]/50 transition-all hover:shadow-lg hover:shadow-[#00C076]/10">
+                        <div className="grid sm:grid-cols-[140px_minmax(0,1fr)]">
+                          <aside className="flex flex-col items-center justify-center px-5 py-6 text-center border-b sm:border-b-0 sm:border-r border-white/5">
+                            <ReviewAvatar avatarUrl={review.avatarUrl} country={review.country} name={review.reviewerName} size="sm" />
+                            <div className="mt-3 flex w-full min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#00C076]">
                               <FlagBadge country={review.country} className="h-4 w-4 ring-0" />
-                              <span className="block max-w-[132px] truncate text-center" title={review.reviewerName}>
+                              <span className="block max-w-[100px] truncate text-center text-xs" title={review.reviewerName}>
                                 {review.reviewerName}
                               </span>
                             </div>
-                            <div className="mt-2 text-xs text-[#b4c4dc]">UID {review.reviewerUid}</div>
-                            {review.country ? <div className="mt-1 text-[11px] uppercase tracking-[0.16em] text-[#7f93b0]">{review.country}</div> : null}
+                            <div className="mt-2 text-xs text-[#7f93b0]">UID {review.reviewerUid}</div>
                           </aside>
-                          <div className="px-6 py-7">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="px-6 py-5">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                               <StarRating rating={review.rating} />
-                              <time className="text-xs font-medium text-[#8db1dc]">{formatReviewDate(review.createdAt)}</time>
+                              <time className="text-xs font-medium text-[#8fa8ce]">{formatReviewDate(review.createdAt)}</time>
                             </div>
-                            <p className="mt-8 text-sm font-semibold leading-7 text-white">{review.text}</p>
-                            <p className="mt-8 text-xs text-[#b6c2d6]">Reviews are published with no changes to the original text.</p>
+                            <p className="mt-3 text-sm font-semibold leading-6 text-[#c5cfe1]">{review.text}</p>
                           </div>
                         </div>
                       </article>
                     ))
                   ) : (
-                    <div className="rounded-[4px] border border-dashed p-8 text-sm leading-7 text-[#b8cbe4]" style={panelSoftStyle}>
-                      No real customer reviews are published yet. The first approved review will appear here with the trader profile photo and country flag.
+                    <div className="rounded-[14px] border border-dashed border-white/10 bg-gradient-to-br from-white/[0.02] to-white/[0.01] p-8 text-center text-sm leading-7 text-[#8fa8ce]">
+                      <div className="mb-2 text-2xl">✨</div>
+                      No reviews yet. Be the first to share your experience!
                     </div>
                   )}
                 </div>
               </div>
 
               <div>
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-[#00C076]" />
+                  <span className="text-sm font-bold text-[#00C076] uppercase tracking-widest">SHARE YOUR FEEDBACK</span>
+                </div>
                 <h2 className="text-[26px] font-black uppercase leading-tight tracking-[0.06em] text-white">
-                  Submit a review for {platformName}
+                  Submit Your Review
                 </h2>
 
-                <form onSubmit={submitReview} className="mt-8 rounded-[4px] p-8" style={panelStyle}>
-                  <div className="rounded-[3px] px-6 py-4" style={{ background: "var(--trading-workspace-bg, #0e1e2f)" }}>
+                <form onSubmit={submitReview} className="mt-8 rounded-[14px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-8 backdrop-blur-sm">
+                  <div className="rounded-[10px] border border-white/10 px-5 py-4 bg-white/[0.02]">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <span className="text-sm font-bold">Your rating:</span>
+                      <span className="text-sm font-bold text-white">Your Rating:</span>
                       <StarRating rating={rating} onChange={setRating} />
                     </div>
                   </div>
 
-                  <label className="mt-8 block text-sm font-bold">Your text</label>
+                  <label className="mt-6 block text-sm font-bold text-white">Your Review</label>
                   <textarea
                     value={reviewText}
                     onChange={(event) => setReviewText(event.target.value)}
-                    className="mt-3 h-[242px] w-full resize-none rounded-[3px] border p-4 text-sm font-semibold leading-6 text-white outline-none transition-colors placeholder:text-[#63758f] focus:border-[#2f9cf5]"
-                    style={{ background: "var(--trading-workspace-bg, #0e1e2f)", borderColor: "var(--trading-border-color, #314159)" }}
-                    placeholder="Tell other traders what your experience with Init Option has been like..."
+                    className="mt-3 h-[180px] w-full resize-none rounded-[10px] border border-white/10 bg-white/[0.02] px-4 py-3 text-sm font-semibold leading-6 text-white outline-none transition-all placeholder:text-[#5a6b88] focus:border-[#00C076] focus:ring-1 focus:ring-[#00C076]/50"
+                    placeholder="Share your experience with Init Option. What do you like most about our platform?"
                   />
 
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="mt-8 h-[52px] rounded-[10px] px-7 text-sm font-black uppercase tracking-[0.08em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                    style={{ background: accentBlue }}
+                    className="mt-6 h-[48px] w-full rounded-[10px] px-7 text-sm font-black uppercase tracking-[0.08em] text-white transition-all hover:bg-[#00a85e] disabled:cursor-not-allowed disabled:opacity-60"
+                    style={{ background: accentGreen }}
                   >
-                    {submitting ? "Publishing..." : "Create"}
+                    {submitting ? "Publishing..." : "Publish Review"}
                   </button>
+
+                  <p className="mt-4 text-xs text-[#7f93b0]">
+                    ✓ Your review will be published exactly as written. No edits or changes.
+                  </p>
                 </form>
               </div>
             </section>
+          </main>
+    </div>
           </main>
         </div>
 
