@@ -28,6 +28,7 @@ const BlogPage = lazy(() => import("./pages/BlogPage"));
 const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
 const ReviewsPage = lazy(() => import("./pages/ReviewsPage"));
 const TradingGuidePage = lazy(() => import("./pages/TradingGuidePage"));
+const GuideBrowserPage = lazy(() => import("./pages/GuideBrowserPage"));
 const Trade = lazy(() => import("./pages/Trade"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Deposit = lazy(() => import("./pages/Deposit"));
@@ -53,6 +54,7 @@ const Analytics = lazy(() => import("./pages/admin/Analytics"));
 const TournamentsAdmin = lazy(() => import("./pages/admin/TournamentsAdmin"));
 const SupportInbox = lazy(() => import("./pages/admin/SupportInbox"));
 const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
+const GuideAdmin = lazy(() => import("./pages/admin/GuideAdmin"));
 
 const RouteLoadingScreen = () => (
   <div className="flex min-h-screen items-center justify-center bg-background px-6 py-16 text-center">
@@ -126,6 +128,8 @@ const App = () => {
                         <Route path="/features" element={withRouteSuspense(<PublicInfoPage pageKey="features" />)} />
                         <Route path="/how-it-works" element={withRouteSuspense(<PublicInfoPage pageKey="how-it-works" />)} />
                         <Route path="/trading-guide" element={withRouteSuspense(<TradingGuidePage />)} />
+                        <Route path="/guides" element={withRouteSuspense(<GuideBrowserPage />)} />
+                        <Route path="/guides/:category/:slug" element={withRouteSuspense(<GuideBrowserPage />)} />
                         <Route path="/why-choose-init-option" element={withRouteSuspense(<PublicInfoPage pageKey="why-choose-init-option" />)} />
                         <Route path="/faq" element={withRouteSuspense(<PublicInfoPage pageKey="faq" />)} />
                         <Route path="/terms" element={withRouteSuspense(<TermsAndConditions />)} />
@@ -169,6 +173,7 @@ const App = () => {
                           <Route path="crypto-payments" element={withRouteSuspense(<CryptoPayments />)} />
                           <Route path="analytics" element={withRouteSuspense(<Analytics />)} />
                           <Route path="tournaments" element={withRouteSuspense(<TournamentsAdmin />)} />
+                          <Route path="guides" element={withRouteSuspense(<GuideAdmin />)} />
                         </Route>
 
                         <Route path="*" element={withRouteSuspense(<NotFound />)} />

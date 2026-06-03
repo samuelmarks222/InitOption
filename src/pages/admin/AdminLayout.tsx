@@ -24,6 +24,7 @@ import {
   TrendingUp,
   Sun,
   Moon,
+  BookOpen,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
@@ -46,6 +47,7 @@ const AdminLayout = () => {
     { label: t("admin.nav.assetManagement"), href: "/admin/assets", icon: <CandlestickChart size={18} /> },
     { label: t("admin.nav.tournaments"), href: "/admin/tournaments", icon: <Trophy size={18} /> },
     { label: t("admin.nav.blog"), href: "/admin/blog", icon: <NotebookPen size={18} /> },
+    { label: t("admin.nav.guides"), href: "/admin/guides", icon: <BookOpen size={18} /> },
     { label: t("admin.nav.platformSettings"), href: "/admin/settings", icon: <Settings size={18} /> },
     { label: t("admin.nav.promoCodes"), href: "/admin/promos", icon: <Tag size={18} /> },
     { label: t("admin.nav.riskManagement"), href: "/admin/risk", icon: <AlertTriangle size={18} /> },

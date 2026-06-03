@@ -478,6 +478,14 @@ const Trade = () => {
   const balance = getEffectiveLiveBalance(profile);
   const isNewUser = useMemo(() => isNewUserProfile(profile), [profile]);
 
+  // Handle guides navigation
+  useEffect(() => {
+    if (activeWorkspace === "guides") {
+      navigate("/guides");
+      setActiveWorkspace(null);
+    }
+  }, [activeWorkspace, navigate]);
+
   useEffect(() => {
     if (!user?.id) {
       setDemoBalance(DEFAULT_DEMO_BALANCE);
