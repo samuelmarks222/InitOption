@@ -53,13 +53,13 @@ export const TIMEFRAMES: Record<string, TimeframeConfig> = {
   "3m": { label: "3m", seconds: 180, updateIntervalMs: 190, historical: 228, bodyPips: 13, wickPips: 9 },
   "4m": { label: "4m", seconds: 240, updateIntervalMs: 220, historical: 224, bodyPips: 15, wickPips: 10 },
   "5m": { label: "5m", seconds: 300, updateIntervalMs: 250, historical: 220, bodyPips: 18, wickPips: 12 },
-  "10m": { label: "10m", seconds: 600, updateIntervalMs: 350, historical: 200, bodyPips: 24, wickPips: 16 },
-  "15m": { label: "15m", seconds: 900, updateIntervalMs: 500, historical: 190, bodyPips: 30, wickPips: 20 },
-  "30m": { label: "30m", seconds: 1800, updateIntervalMs: 1000, historical: 180, bodyPips: 34, wickPips: 18 },
-  "1h": { label: "1h", seconds: 3600, updateIntervalMs: 1500, historical: 160, bodyPips: 46, wickPips: 24 },
-  "2h": { label: "2h", seconds: 7200, updateIntervalMs: 2000, historical: 150, bodyPips: 58, wickPips: 30 },
-  "4h": { label: "4h", seconds: 14400, updateIntervalMs: 3000, historical: 140, bodyPips: 74, wickPips: 38 },
-  "1D": { label: "1D", seconds: 86400, updateIntervalMs: 5000, historical: 110, bodyPips: 116, wickPips: 58 },
+  "10m": { label: "10m", seconds: 600, updateIntervalMs: 350, historical: 260, bodyPips: 24, wickPips: 16 },
+  "15m": { label: "15m", seconds: 900, updateIntervalMs: 500, historical: 250, bodyPips: 30, wickPips: 20 },
+  "30m": { label: "30m", seconds: 1800, updateIntervalMs: 1000, historical: 240, bodyPips: 34, wickPips: 18 },
+  "1h": { label: "1h", seconds: 3600, updateIntervalMs: 1500, historical: 220, bodyPips: 46, wickPips: 24 },
+  "2h": { label: "2h", seconds: 7200, updateIntervalMs: 2000, historical: 210, bodyPips: 58, wickPips: 30 },
+  "4h": { label: "4h", seconds: 14400, updateIntervalMs: 3000, historical: 200, bodyPips: 74, wickPips: 38 },
+  "1D": { label: "1D", seconds: 86400, updateIntervalMs: 5000, historical: 180, bodyPips: 116, wickPips: 58 },
 };
 
 const HIGH_TIMEFRAME_DIRECT_SECONDS = 30 * 60;
