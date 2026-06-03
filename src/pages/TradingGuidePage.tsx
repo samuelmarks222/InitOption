@@ -1004,28 +1004,28 @@ const VideoPreview = ({
   duration: string;
   mediaUrl?: string;
 }) => (
-  <div className="mt-7 overflow-hidden rounded-[18px] border border-white/8 bg-[#111527]">
-    <div className="relative aspect-video overflow-hidden bg-[#0e1324]">
+  <div className="mt-8 overflow-hidden rounded-[14px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] shadow-lg hover:shadow-2xl transition-all duration-300 group">
+    <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-[#1a2438] to-[#0f1826]">
       {mediaUrl ? (
-        <img src={mediaUrl} alt={title} className="h-full w-full object-cover opacity-80" loading="lazy" />
+        <img src={mediaUrl} alt={title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90" loading="lazy" />
       ) : (
         <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-[#8fa2c2]">
-          <PlaySquare className="h-10 w-10 text-[#2d9cff]" />
+          <PlaySquare className="h-12 w-12 text-[#00C076] opacity-80" />
           <p className="text-sm font-semibold text-white">Video thumbnail not assigned</p>
-          <p className="max-w-sm text-xs">Upload this thumbnail from Admin Settings.</p>
+          <p className="max-w-sm text-xs text-[#8fa2c2]">Upload this thumbnail from Admin Settings.</p>
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0b1020]/70 via-transparent to-transparent" />
-      <div className="absolute left-6 top-6 rounded-xl bg-[#16233a]/90 px-3 py-2 text-xs font-bold uppercase tracking-[0.22em] text-[#75c7ff]">
-        Trading tutorial
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0f1826]/80 via-transparent to-transparent" />
+      <div className="absolute left-6 top-6 rounded-lg bg-[#00C076]/15 backdrop-blur-sm border border-[#00C076]/30 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-[#00C076]">
+        Video Tutorial
       </div>
-      <div className="absolute right-6 top-6 grid h-12 w-12 place-items-center rounded-full bg-[#2d9cff] text-white shadow-[0_0_30px_rgba(45,156,255,0.42)]">
+      <div className="absolute right-6 top-6 grid h-14 w-14 place-items-center rounded-full bg-[#00C076] text-white shadow-lg shadow-[#00C076]/50 group-hover:scale-110 transition-transform duration-300">
         <PlaySquare className="h-6 w-6" />
       </div>
     </div>
-    <div className="px-4 py-4">
-      <div className="text-base font-bold text-white">{title}</div>
-      <div className="mt-2 text-sm font-semibold text-[#8fa8ce]">{duration}</div>
+    <div className="px-5 py-5">
+      <div className="text-base font-bold text-white leading-snug">{title}</div>
+      <div className="mt-2.5 text-sm font-medium text-[#9fb4cf]">{duration}</div>
     </div>
   </div>
 );
@@ -1058,21 +1058,24 @@ const GuideTreeNode = ({
           if (hasChildren) onToggle(topic.id);
         }}
         className={[
-          "group flex w-full items-center gap-2 rounded-[3px] px-3 py-1.5 text-left leading-tight transition-colors",
-          isActive ? "bg-[#293246] text-white" : "text-[#94a8ca] hover:bg-[#242c3f] hover:text-white",
-          depth === 0 ? "text-[17px] font-bold text-white" : depth === 1 ? "text-[15px] font-semibold" : "text-[13px] font-medium",
+          "group relative flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left leading-tight transition-all duration-200",
+          isActive 
+            ? "bg-[#00C076]/15 text-[#00C076] border border-[#00C076]/30" 
+            : "text-[#9fb4cf] hover:bg-white/5 hover:text-white hover:border border border-transparent",
+          depth === 0 ? "text-[16px] font-bold text-white mt-3 mb-1" : depth === 1 ? "text-[14px] font-semibold" : "text-[13px] font-medium",
         ].join(" ")}
-        style={{ paddingLeft: `${12 + depth * 18}px` }}
+        style={{ paddingLeft: `${12 + depth * 16}px` }}
       >
         <span className="min-w-0 flex-1">
-          <span className={depth === 0 ? "text-white" : ""}>{topic.number}.</span> {topic.title}
+          <span className={`font-semibold ${depth === 0 ? "text-[#00C076]" : ""}`}>{topic.number}.</span> {topic.title}
         </span>
         {hasChildren ? (
-          <ChevronDown className={`h-4 w-4 shrink-0 text-white transition-transform ${isOpen ? "rotate-180" : ""}`} />
+          <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#00C076]" : "text-[#9fb4cf]"}`} />
         ) : null}
+        {isActive && depth === 0 && <div className="absolute left-0 top-1/2 h-[60%] w-1 -translate-y-1/2 rounded-r-full bg-[#00C076]"/>}
       </button>
       {hasChildren && isOpen ? (
-        <div className="mt-0.5 space-y-0.5">
+        <div className="mt-1 space-y-1">
           {topic.children?.map((child) => (
             <GuideTreeNode
               key={child.id}
@@ -1091,12 +1094,19 @@ const GuideTreeNode = ({
 };
 
 const SupportPanel = ({ platformName }: { platformName: string }) => (
-  <div className="rounded-[18px] bg-[#111527] p-8">
-    <h1 className="text-4xl font-bold text-white">Support Service</h1>
-    <p className="mt-4 max-w-3xl text-lg leading-8 text-[#a9b7d1]">
-      Choose the topic that matches your issue. {platformName} support can help with account access, deposits,
-      withdrawals, verification, platform settings, and trading workspace questions.
-    </p>
+  <div className="rounded-[16px] bg-gradient-to-b from-white/[0.03] to-white/[0.01] border border-white/10 p-8 backdrop-blur-sm">
+    <div className="flex items-start gap-4">
+      <div className="flex-1">
+        <div className="flex items-center gap-2 mb-2">
+          <Headset className="h-6 w-6 text-[#00C076]"/>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white">Support Service</h1>
+        </div>
+        <p className="mt-3 max-w-3xl text-base leading-relaxed text-[#c5cfe1]">
+          Choose the topic that matches your issue. {platformName} support can help with account access, deposits,
+          withdrawals, verification, platform settings, and trading workspace questions.
+        </p>
+      </div>
+    </div>
     <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {[
         { title: "Account access", icon: User, text: "Login, profile, security, and verification support." },
@@ -1412,7 +1422,7 @@ const TradingGuidePage = () => {
 
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1540px]">
-            <div className="mb-6 flex flex-wrap gap-4">
+            <div className="mb-8 flex flex-wrap gap-3 border-b border-white/10 pb-6">
               {helpTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = tab.id === activePanel || (tab.id === "reviews" && false);
@@ -1421,14 +1431,14 @@ const TradingGuidePage = () => {
                     key={tab.id}
                     type="button"
                     onClick={() => handleTabClick(tab.id)}
-                    className={`inline-flex min-h-[54px] items-center gap-3 rounded-[8px] px-6 text-sm font-bold uppercase tracking-[0.02em] transition-colors ${
+                    className={`inline-flex min-h-[48px] items-center gap-2.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
                       isActive
-                        ? "bg-[#586174] text-white"
-                        : "bg-[#202942] text-[#91a7c8] hover:bg-[#2a344d] hover:text-white"
+                        ? "bg-gradient-to-r from-[#00C076] to-[#00a85e] text-white shadow-lg shadow-[#00C076]/30"
+                        : "bg-white/5 text-[#b0b8c8] hover:bg-white/10 hover:text-white border border-white/10"
                     }`}
                   >
-                    <Icon className="h-5 w-5" />
-                    {tab.label}
+                    <Icon className="h-4.5 w-4.5" />
+                    <span className="hidden sm:inline">{tab.label}</span>
                   </button>
                 );
               })}
@@ -1440,7 +1450,7 @@ const TradingGuidePage = () => {
 
             {activePanel === "guides" ? (
               <>
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                   {guideCategories.map((category) => {
                     const Icon = category.icon;
                     const isActive = activeCategory === category.id;
@@ -1449,23 +1459,26 @@ const TradingGuidePage = () => {
                         key={category.id}
                         type="button"
                         onClick={() => switchCategory(category.id)}
-                        className={`rounded-[8px] border p-6 text-center transition-colors ${
+                        className={`group relative rounded-[14px] overflow-hidden border p-6 text-center transition-all duration-300 hover:shadow-lg ${
                           isActive
-                            ? "border-[#5d6a86] bg-[#3a465f] text-white"
-                            : "border-transparent bg-[#2c354b] text-[#8fa8ce] hover:bg-[#354058] hover:text-white"
+                            ? "border-[#00C076] bg-gradient-to-br from-[#00C076]/10 to-[#00a85e]/5 text-white shadow-lg shadow-[#00C076]/20"
+                            : "border-white/10 bg-white/[0.03] text-[#9fb4cf] hover:border-white/20 hover:bg-white/[0.07]"
                         }`}
                       >
-                        <Icon className={`mx-auto h-14 w-14 ${isActive ? "text-white" : "text-[#9fb4cf]"}`} />
-                        <div className="mt-4 text-lg font-semibold">{category.label}</div>
-                        <div className="mt-2 text-xs font-medium text-[#8fa8ce]">{category.description}</div>
+                        <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{background: "radial-gradient(circle at 30% 30%, rgba(0, 192, 118, 0.1), transparent 50%)"}}/>
+                        <Icon className={`mx-auto h-12 w-12 transition-all duration-300 ${isActive ? "text-[#00C076] scale-110" : "text-[#9fb4cf] group-hover:text-white group-hover:scale-105"}`} />
+                        <div className="mt-5 text-lg font-bold leading-tight">{category.label}</div>
+                        <div className="mt-2.5 text-xs font-medium leading-relaxed text-[#9fb4cf]">{category.description}</div>
+                        {isActive && <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-[#00C076] animate-pulse"/>}
                       </button>
                     );
                   })}
                 </div>
 
-                <div className="mt-6 grid gap-6 xl:grid-cols-[430px_minmax(0,1fr)]">
-                  <aside className="rounded-[18px] bg-[#111527] p-7">
-                    <div className="max-h-[calc(100vh-170px)] overflow-y-auto pr-2 [scrollbar-color:#3a465f_#111527] [scrollbar-width:thin]">
+                <div className="mt-8 grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+                  <aside className="rounded-[16px] bg-gradient-to-b from-white/[0.05] to-white/[0.02] border border-white/10 p-6 backdrop-blur-sm">
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-[#00C076] mb-4">Topics</h2>
+                    <div className="max-h-[calc(100vh-220px)] overflow-y-auto pr-2 [scrollbar-color:#3a465f_transparent] [scrollbar-width:thin]">
                       <div className="space-y-1">
                         {currentTopics.map((topic) => (
                           <GuideTreeNode
@@ -1488,25 +1501,29 @@ const TradingGuidePage = () => {
                     </div>
                   </aside>
 
-                  <article className="rounded-[18px] bg-[#111527] px-6 py-8 sm:px-10 lg:px-14">
+                  <article className="rounded-[16px] bg-gradient-to-b from-white/[0.03] to-white/[0.01] border border-white/10 px-6 py-8 sm:px-10 lg:px-14 backdrop-blur-sm">
                     <div className="mx-auto max-w-3xl">
-                      <h1 className="text-5xl font-light leading-[1.05] tracking-tight text-white sm:text-6xl">
+                      <div className="mb-2 flex items-center gap-2">
+                        <div className="h-1 w-1 rounded-full bg-[#00C076]"/>
+                        <span className="text-xs font-bold uppercase tracking-widest text-[#00C076]">Guide</span>
+                      </div>
+                      <h1 className="text-4xl sm:text-5xl font-bold leading-[1.1] tracking-tight text-white mt-2">
                         {selectedContent.heading}
                       </h1>
 
-                      <p className="mt-8 text-xl leading-8 text-[#b9c5dc]">{selectedContent.intro}</p>
+                      <p className="mt-6 text-lg leading-relaxed text-[#c5cfe1]">{selectedContent.intro}</p>
 
                       {selectedContent.paragraphs?.map((paragraph) => (
-                        <p key={paragraph} className="mt-5 text-lg leading-8 text-[#aebbd4]">
+                        <p key={paragraph} className="mt-4 text-base leading-relaxed text-[#b8c3d5]">
                           {paragraph}
                         </p>
                       ))}
 
                       {selectedContent.bullets?.length ? (
-                        <ul className="mt-6 space-y-3 text-lg leading-8 text-[#aebbd4]">
+                        <ul className="mt-7 space-y-3">
                           {selectedContent.bullets.map((bullet) => (
-                            <li key={bullet} className="flex gap-3">
-                              <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-[#2d9cff]" />
+                            <li key={bullet} className="flex gap-3 text-base leading-relaxed text-[#b8c3d5]">
+                              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#00C076] flex-shrink-0" />
                               <span>{bullet}</span>
                             </li>
                           ))}
@@ -1514,8 +1531,9 @@ const TradingGuidePage = () => {
                       ) : null}
 
                       {selectedContent.note ? (
-                        <div className="mt-7 rounded-[8px] border border-[#2d9cff] bg-[#123154]/55 px-6 py-5 text-center text-base font-semibold leading-7 text-[#d8eeff]">
-                          Attention: {selectedContent.note}
+                        <div className="mt-8 rounded-[12px] border border-[#FFB800]/30 bg-[#FFB800]/8 px-6 py-4 text-base font-medium leading-7 text-[#FFD966] flex items-start gap-3">
+                          <div className="mt-1 h-1.5 w-1.5 rounded-full bg-[#FFB800] shrink-0 flex-shrink-0"/>
+                          <div><span className="font-semibold">Note:</span> {selectedContent.note}</div>
                         </div>
                       ) : null}
 
