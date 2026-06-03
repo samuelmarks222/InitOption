@@ -412,13 +412,13 @@ const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, n
   "3m": 198,
   "4m": 210,
   "5m": 220,
-  "10m": 164,
-  "15m": 164,
-  "30m": 164,
-  "1h": 164,
-  "2h": 164,
-  "4h": 164,
-  "1D": 164,
+  "10m": 300,
+  "15m": 300,
+  "30m": 300,
+  "1h": 280,
+  "2h": 260,
+  "4h": 240,
+  "1D": 220,
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
@@ -431,13 +431,13 @@ const MIN_BAR_SPACING_MAP: Record<string, number> = {
   "3m": 6.8,
   "4m": 6.2,
   "5m": 5.8,
-  "10m": 8.6,
-  "15m": 8.6,
-  "30m": 8.6,
-  "1h": 8.6,
-  "2h": 8.6,
-  "4h": 8.6,
-  "1D": 8.6,
+  "10m": 3.8,
+  "15m": 4.0,
+  "30m": 4.2,
+  "1h": 4.5,
+  "2h": 4.8,
+  "4h": 5.2,
+  "1D": 5.6,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
