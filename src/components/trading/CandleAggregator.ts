@@ -172,9 +172,10 @@ export class CandleAggregator {
     const priceStep = this.getPriceStep(referencePrice);
     const bodySize = Math.abs(candle.close - candle.open);
     const timeframeWeight = Math.min(1, Math.log2(this.timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS + 1) / 5);
+    // Increase maxWick coefficients to preserve visible wicks on high timeframes
     const maxWick = Math.max(
-      priceStep * 2,
-      bodySize * 0.45 + referencePrice * (0.00008 + timeframeWeight * 0.00006),
+      priceStep * 10,
+      bodySize * 0.8 + referencePrice * (0.005 + timeframeWeight * 0.005),
     );
 
     return {
