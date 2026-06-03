@@ -340,29 +340,27 @@ export const getDynamicAssetPayoutProfile = ({
   const normalizedCategory = normalizeAssetCategory(category, normalizedSymbol);
   const seed = hashStringToUnitInterval(`payout:${normalizedCategory}:${normalizedSymbol}`);
 
-  const cycleDuration = 60; // 60 seconds per cycle
-  const cyclePhase = (timestampSec % cycleDuration) / cycleDuration; // 0 to 1
+  const cycleDuration = 60;
+  const cyclePhase = (timestampSec % cycleDuration) / cycleDuration;
+  const declineFraction = 0.75;
   const highPayout = clampAssetPayout(basePayout + 5 + (seed - 0.5) * 10, basePayout);
 
-  // Slow drift over a 1-hour period so payouts aren't identical across cycles
   const driftRad = (timestampSec % 3600) / 3600 * Math.PI * 2;
-  const driftAmount = 3 * Math.sin(driftRad + seed * 100); // ±3% drift
+  const driftAmount = 3 * Math.sin(driftRad + seed * 100);
 
-  // Smooth decline from high down to a floor (never below 60), always available
-  const progress = cyclePhase; // 0 to 1 over the full 60s
-  const rawValue = highPayout - progress * (highPayout - 60) + driftAmount;
-  const microJitter = Math.sin(timestampSec * 0.8 + seed * 100) * 0.4;
-  const profit1m = clampAssetPayout(rawValue + microJitter, basePayout);
+  if (cyclePhase < declineFraction) {
+    const progress = cyclePhase / declineFraction;
+    const rawValue = highPayout - progress * (highPayout - 30) + driftAmount;
+    const microJitter = Math.sin(timestampSec * 0.8 + seed * 100) * 0.4;
+    const profit1m = clampAssetPayout(rawValue + microJitter, basePayout);
 
-  // profit5m slightly lower than profit1m with its own micro-jitter
-  const raw5m = rawValue - 2 + Math.cos(timestampSec * 0.6 + seed * 50) * 0.4;
-  const profit5m = clampAssetPayout(raw5m, basePayout);
+    const raw5m = rawValue - 2 + Math.cos(timestampSec * 0.6 + seed * 50) * 0.4;
+    const profit5m = clampAssetPayout(raw5m, basePayout);
 
-  return {
-    profit1m,
-    profit5m,
-    available: true,
-  };
+    return { profit1m, profit5m, available: true };
+  }
+
+  return { profit1m: 30, profit5m: 30, available: false };
 };
 
 export const getAssetBasePrice = (symbol?: string | null, category?: string | null) => {

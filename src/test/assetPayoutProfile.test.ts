@@ -11,9 +11,9 @@ describe("dynamic asset payout profile", () => {
       marketBiasPercent: 6.4,
     });
 
-    expect(profile.profit1m).toBeGreaterThanOrEqual(60);
+    expect(profile.profit1m).toBeGreaterThanOrEqual(30);
     expect(profile.profit1m).toBeLessThanOrEqual(95);
-    expect(profile.profit5m).toBeGreaterThanOrEqual(60);
+    expect(profile.profit5m).toBeGreaterThanOrEqual(30);
     expect(profile.profit5m).toBeLessThanOrEqual(95);
   });
 
