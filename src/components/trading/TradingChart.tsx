@@ -2443,13 +2443,13 @@ const TradingChart = ({
     let nextTo = currentCenter + clampedSpan / 2;
 
     if (nextFrom < 0) {
-      nextTo -= nextFrom;
       nextFrom = 0;
+      nextTo = Math.min(clampedSpan, maxTo);
     }
 
     if (nextTo > maxTo) {
-      nextFrom = Math.max(0, nextFrom - (nextTo - maxTo));
       nextTo = maxTo;
+      nextFrom = Math.max(0, maxTo - clampedSpan);
     }
 
     timeScale.setVisibleLogicalRange({
