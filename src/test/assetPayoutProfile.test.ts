@@ -46,7 +46,7 @@ describe("dynamic asset payout profile", () => {
       symbol: "AUD/CAD",
       category: "OTC",
       basePayout: 85,
-      timestampSec: 1_711_111_231,
+      timestampSec: 1_711_111_141,
     });
 
     expect(initial.profit1m).not.toBe(later.profit1m);

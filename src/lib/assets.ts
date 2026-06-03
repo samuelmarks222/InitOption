@@ -342,25 +342,21 @@ export const getDynamicAssetPayoutProfile = ({
 
   const cycleDuration = 60;
   const cyclePhase = (timestampSec % cycleDuration) / cycleDuration;
-  const declineFraction = 0.75;
   const highPayout = clampAssetPayout(basePayout + 5 + (seed - 0.5) * 10, basePayout);
 
   const driftRad = (timestampSec % 3600) / 3600 * Math.PI * 2;
   const driftAmount = 3 * Math.sin(driftRad + seed * 100);
 
-  if (cyclePhase < declineFraction) {
-    const progress = cyclePhase / declineFraction;
-    const rawValue = highPayout - progress * (highPayout - 30) + driftAmount;
-    const microJitter = Math.sin(timestampSec * 0.8 + seed * 100) * 0.4;
-    const profit1m = clampAssetPayout(rawValue + microJitter, basePayout);
+  const amplitude = (highPayout - 30) / 2;
+  const midpoint = (highPayout + 30) / 2;
+  const rawValue = midpoint + amplitude * Math.cos(cyclePhase * 2 * Math.PI) + driftAmount;
+  const microJitter = Math.sin(timestampSec * 0.8 + seed * 100) * 0.4;
+  const profit1m = clampAssetPayout(rawValue + microJitter, basePayout);
 
-    const raw5m = rawValue - 2 + Math.cos(timestampSec * 0.6 + seed * 50) * 0.4;
-    const profit5m = clampAssetPayout(raw5m, basePayout);
+  const raw5m = rawValue - 2 + Math.cos(timestampSec * 0.6 + seed * 50) * 0.4;
+  const profit5m = clampAssetPayout(raw5m, basePayout);
 
-    return { profit1m, profit5m, available: true };
-  }
-
-  return { profit1m: 30, profit5m: 30, available: false };
+  return { profit1m, profit5m, available: true };
 };
 
 export const getAssetBasePrice = (symbol?: string | null, category?: string | null) => {
