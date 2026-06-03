@@ -30,6 +30,7 @@ interface AuthContextType {
     status: string | null;
     verifiedAt: string | null;
   }>;
+  resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -631,6 +632,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setProfile(null);
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      return { error };
+    } catch {
+      return {
+        error: toAuthError("Password reset request failed. Please try again.", 503),
+      };
+    }
+  };
+
   const emailVerifiedAt = getEmailVerifiedAt(user);
   const emailVerified = Boolean(emailVerifiedAt);
 
@@ -651,6 +665,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         sendEmailVerificationCode,
         updateProfile,
         verifyEmailCode,
+        resetPassword,
       }}
     >
       {children}

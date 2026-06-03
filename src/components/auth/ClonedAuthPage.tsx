@@ -30,7 +30,7 @@ const bottomStats = [
 const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, signUp, signInWithGoogle, user, loading: authLoading } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resetPassword, user, loading: authLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -42,6 +42,10 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     setIsLogin(initialMode === "login");
@@ -136,6 +140,35 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
     });
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!resetEmail) {
+      toast({ title: "Please enter your email address", variant: "destructive" });
+      return;
+    }
+
+    setResetLoading(true);
+    const { error } = await resetPassword(resetEmail);
+    setResetLoading(false);
+
+    if (error) {
+      const isServiceUnavailable = (error as { status?: number }).status === 503;
+      toast({
+        title: isServiceUnavailable ? "Request taking longer" : "Password reset failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setResetSent(true);
+    toast({
+      title: "Password reset email sent",
+      description: `Check ${resetEmail} for instructions to reset your password.`,
+    });
+  };
+
   if (authLoading) {
     return <AuthLoadingScreen message="Checking your session..." />;
   }
@@ -216,18 +249,22 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
           </div>
 
           <h2 className="font-heading text-2xl font-bold text-foreground">
-            {showVerificationPrompt
-              ? "Verify your email"
-              : isLogin
-                ? "Welcome back"
-                : "Create your account"}
+            {showPasswordReset
+              ? "Reset your password"
+              : showVerificationPrompt
+                ? "Verify your email"
+                : isLogin
+                  ? "Welcome back"
+                  : "Create your account"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {showVerificationPrompt
-              ? `We've sent a verification link to ${verificationEmail}. Check your inbox and click the link to confirm your email.`
-              : isLogin
-                ? "Sign in to access your trading dashboard"
-                : "Start trading with a free demo account"}
+            {showPasswordReset
+              ? "Enter your email address and we'll send you a link to reset your password"
+              : showVerificationPrompt
+                ? `We've sent a verification link to ${verificationEmail}. Check your inbox and click the link to confirm your email.`
+                : isLogin
+                  ? "Sign in to access your trading dashboard"
+                  : "Start trading with a free demo account"}
           </p>
 
           {showVerificationPrompt ? (
@@ -266,6 +303,85 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
               >
                 Back to Sign Up
               </Button>
+            </div>
+          ) : showPasswordReset ? (
+            <div className="mt-6 space-y-4">
+              {resetSent ? (
+                <>
+                  <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4">
+                    <p className="text-sm text-foreground">
+                      <strong>Reset link sent</strong> to <strong>{resetEmail}</strong>
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Check your email for a link to reset your password. The link will expire in 24 hours.
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-border bg-card/50 p-4">
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Didn't receive the email?</strong>
+                    </p>
+                    <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                      <li>• Check your spam or junk folder</li>
+                      <li>• Wait a few moments and refresh your inbox</li>
+                      <li>• Make sure you entered the correct email address</li>
+                    </ul>
+                  </div>
+
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-primary/25"
+                    onClick={() => {
+                      setShowPasswordReset(false);
+                      setResetEmail("");
+                      setResetSent(false);
+                    }}
+                  >
+                    Back to Sign In
+                  </Button>
+                </>
+              ) : (
+                <form onSubmit={handleResetPassword} className="mt-6 space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
+                      <Input
+                        type="email"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="h-11 border-border bg-card pl-10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-primary/25"
+                    disabled={resetLoading}
+                  >
+                    {resetLoading ? "Sending..." : "Send Reset Link"} <ArrowRight size={16} />
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    className="h-11 w-full text-sm font-semibold"
+                    onClick={() => {
+                      setShowPasswordReset(false);
+                      setResetEmail("");
+                    }}
+                  >
+                    Back to Sign In
+                  </Button>
+                </form>
+              )}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -306,6 +422,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                 {isLogin ? (
                   <button
                     type="button"
+                    onClick={() => setShowPasswordReset(true)}
                     className="text-xs text-primary transition-colors hover:text-primary/80"
                   >
                     Forgot password?
@@ -375,7 +492,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
             </form>
           )}
 
-          {!showVerificationPrompt ? (
+          {!showVerificationPrompt && !showPasswordReset ? (
             <>
               <div className="my-6 flex items-center gap-3">
                 <div className="h-px flex-1 bg-border" />
