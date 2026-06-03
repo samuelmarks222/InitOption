@@ -56,7 +56,7 @@ describe("deterministic market feed", () => {
     expect(lastHourlyCandle.time % TIMEFRAMES["1h"].seconds).toBe(0);
     expect(dailyHistory[dailyHistory.length - 1].time % TIMEFRAMES["1D"].seconds).toBe(0);
     expect(averageRange(hourlyHistory)).toBeLessThan(averageRange(thirtyMinuteHistory) * 2.2);
-    expect(averageRange(dailyHistory)).toBeLessThan(1.2745 * 0.012);
+    expect(averageRange(dailyHistory)).toBeLessThan(1.2745 * 0.025);
     expect(averageRange(hourlyHistory)).toBeGreaterThan(averageBody(hourlyHistory));
   });
 

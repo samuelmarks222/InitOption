@@ -289,11 +289,10 @@ const getSampleStepSeconds = (timeframeSeconds: number) => {
 };
 
 const getInteriorProbeCount = (timeframeSeconds: number) => {
-  if (timeframeSeconds <= 1) return 3;
-  if (timeframeSeconds <= 5) return 2;
-  if (timeframeSeconds <= 15) return 2;
-  if (timeframeSeconds <= 60) return 1;
-  return 0;
+  if (timeframeSeconds <= 1) return 5;
+  if (timeframeSeconds <= 5) return 3;
+  if (timeframeSeconds <= 60) return 2;
+  return 2;
 };
 
 const getTargetWickDelta = (
@@ -324,7 +323,7 @@ const getTargetWickDelta = (
             : 0.86;
 
   if (timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) {
-    const effectivePipValue = referencePrice * 0.0001;
+    const effectivePipValue = referencePrice * 0.0003;
     return effectivePipValue * configuredPips * wickMultiplier;
   }
 
@@ -344,7 +343,7 @@ const getMaxWickLength = ({
 }) => {
   const bodyFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 0.8
+      ? 1.5
       : timeframeSeconds <= 1
         ? 0.34
         : timeframeSeconds <= 5
@@ -354,7 +353,7 @@ const getMaxWickLength = ({
             : 0.72;
   const wickFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 0.7
+      ? 1.2
       : timeframeSeconds <= 1
         ? 0.26
         : timeframeSeconds <= 5
@@ -406,7 +405,7 @@ const buildInteriorProbePrices = ({
     const oscillation = Math.sin(fraction * TAU * wickFrequency + wickPhase);
     const jitter = noiseAt(symbol, "wick-noise", timestamp / Math.max(0.04, durationSeconds / 5));
     const impulse = noiseAt(symbol, "wick-impulse", (startTimeSec + index) / Math.max(1, timeframeSeconds));
-    const displacement = targetWickDelta * (oscillation * 0.28 + jitter * 0.18 + impulse * 0.1);
+    const displacement = targetWickDelta * (oscillation * 0.45 + jitter * 0.3 + impulse * 0.15);
 
     return clampPriceToBounds(basePriceAtTime + displacement, basePrice);
   });
@@ -473,9 +472,8 @@ export const buildDeterministicCandle = ({
     targetWickDelta,
     timeframeSeconds,
   });
-  const wickBias = signedHash(symbol, `wick-bias:${startTimeSec}`);
-  const upperWickMultiplier = wickBias > 0.72 ? 0.08 : wickBias < -0.08 ? 0.58 : 0.42;
-  const lowerWickMultiplier = wickBias < -0.72 ? 0.08 : wickBias > 0.08 ? 0.58 : 0.42;
+  const upperWickMultiplier = 0.2 + Math.abs(signedHash(symbol, `wick-upper:${startTimeSec}`)) * 0.6;
+  const lowerWickMultiplier = 0.2 + Math.abs(signedHash(symbol, `wick-lower:${startTimeSec}`)) * 0.6;
   const upperWickLength = Math.min(
     maxWickLength,
     Math.max(sampledHigh - upperBody, targetWickDelta * upperWickMultiplier),
