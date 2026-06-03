@@ -1972,6 +1972,7 @@ const TradingChart = ({
   const loadedHistoryCountRef = useRef(0);
   const isBackfillingHistoryRef = useRef(false);
   const isNormalizingVisibleRangeRef = useRef(false);
+  const isZoomingRef = useRef(false);
   const priceScaleMarginKeyRef = useRef("");
   const aggregatorRef = useRef<CandleAggregator | null>(null);
   // Always-fresh ref for activeIndicators so stale closures see latest value
@@ -2398,54 +2399,26 @@ const TradingChart = ({
 
     const timeScale = chart.timeScale();
     const containerWidth = mainRef.current?.clientWidth ?? 960;
+    const currentBarSpacing = timeScale.options().barSpacing;
+    if (!currentBarSpacing || currentBarSpacing <= 0) return;
+
+    const factor = direction === "in" ? 1.12 : 0.88;
+    const newBarSpacing = currentBarSpacing * factor;
+
+    const minSpacing = getMinBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale);
     const dataPointCount = mainSeriesRef.current?.data()?.length ?? historyRef.current.length;
-    const trendContextBars = getTrendContextBarCount(
-      containerWidth,
-      selectedTf,
-      Math.max(1, dataPointCount),
-    );
-    const defaultVisibleBars = getInitialVisibleBars(
-      containerWidth,
-      selectedTf,
-      Math.max(1, dataPointCount),
-    );
-    const rightOffset = getChartRightOffset(trendContextBars);
-    const defaultSpan = defaultVisibleBars + rightOffset;
-    const currentRange = timeScale.getVisibleLogicalRange();
-    const currentSpan = currentRange
-      ? Math.max(12, currentRange.to - currentRange.from)
-      : defaultSpan;
-    const nextSpan = direction === "in"
-      ? currentSpan * 0.88
-      : currentSpan * 1.15;
-    const minSpan = Math.max(12 + Math.min(rightOffset, 18), Math.round(defaultVisibleBars * 0.22) + Math.min(rightOffset, 18));
-    const maxVisibleBySpacing = Math.max(
-      defaultSpan,
-      Math.floor(containerWidth / getMinBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale)) + rightOffset,
-    );
-    const maxReadableBars = getMaxReadableZoomBars(
-      containerWidth,
-      selectedTf,
-      Math.max(1, dataPointCount),
-    );
-    const maxReadableSpan = maxReadableBars + getChartRightOffset(maxReadableBars);
-    const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing));
-    const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
-    const currentCenter = currentRange
-      ? (currentRange.from + currentRange.to) / 2
-      : Math.max(clampedSpan / 2, dataPointCount + rightOffset - defaultSpan / 2);
-    let nextFrom = currentCenter - clampedSpan / 2;
-    let nextTo = currentCenter + clampedSpan / 2;
+    const defaultVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, Math.max(1, dataPointCount));
+    const maxSpacing = containerWidth / Math.max(12, Math.round(defaultVisibleBars * 0.22));
 
-    if (nextFrom < 0) {
-      nextFrom = 0;
-      nextTo = clampedSpan;
+    const clamped = Math.max(minSpacing, Math.min(newBarSpacing, maxSpacing));
+
+    if (Math.abs(clamped - currentBarSpacing) >= 0.5) {
+      isZoomingRef.current = true;
+      timeScale.applyOptions({ barSpacing: clamped });
+      window.requestAnimationFrame(() => {
+        isZoomingRef.current = false;
+      });
     }
-
-    timeScale.setVisibleLogicalRange({
-      from: nextFrom,
-      to: nextTo,
-    });
   }, [selectedTf]);
 
   const adjustChartZoomRef = useRef(adjustChartZoom);
@@ -3188,7 +3161,7 @@ const TradingChart = ({
 
       applyResponsivePriceScale(range.to - range.from);
 
-      if (isNormalizingVisibleRangeRef.current) {
+      if (isNormalizingVisibleRangeRef.current || isZoomingRef.current) {
         return;
       }
 
