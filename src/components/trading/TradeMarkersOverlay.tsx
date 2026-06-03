@@ -1,127 +1,35 @@
 import React, { useEffect, useRef } from "react";
-import { IChartApi, ISeriesApi, type SeriesType } from "lightweight-charts";
+import { IChartApi, ISeriesApi, type SeriesType, IPriceLine, LineStyle } from "lightweight-charts";
 import type { ActiveTrade } from "@/hooks/useTrading";
-import { TRADING_DOWN_COLOR, TRADING_UP_COLOR } from "./tradingPalette";
 
-// Utility functions for trade marker calculations
-/** Convert various time representations to Unix timestamp (seconds) */
+const LINE_COLOR_UP = "#00C076";
+const LINE_COLOR_DOWN = "#F6465D";
+const LINE_DOWN_COLOR_FADED = "#887a7a";
+const BG_COLOR = "#1A1A2A";
+const TEXT_COLOR = "#FFFFFF";
+const PILL_OFFSET_Y = 20;
+const PILL_X_OFFSET = 12;
+
 const getUnixTime = (value: unknown) => {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value > 1_000_000_000_000 ? Math.floor(value / 1000) : Math.floor(value);
   }
-
   if (typeof value === "string") {
     const numericValue = Number(value);
     if (Number.isFinite(numericValue)) {
       return numericValue > 1_000_000_000_000 ? Math.floor(numericValue / 1000) : Math.floor(numericValue);
     }
-
     const parsed = Date.parse(value);
-    if (!Number.isNaN(parsed)) {
-      return Math.floor(parsed / 1000);
-    }
+    if (!Number.isNaN(parsed)) return Math.floor(parsed / 1000);
   }
-
   return null;
 };
 
-/** Compute display times for a trade marker */
-export const getTradeDisplayTimes = (
-  trade: { marker_time?: unknown; opened_at?: unknown; expiry_seconds?: number },
-  nowUnix: number,
-) => {
-  const entryTime =
-    getUnixTime(trade.marker_time) ??
-    getUnixTime(trade.opened_at) ??
-    Math.floor(Date.now() / 1000);
-  const expiryTime = trade.expiry_seconds != null ? entryTime + trade.expiry_seconds : entryTime;
-  const activeLineEndTime = Math.min(nowUnix, expiryTime);
-  return { entryTime, expiryTime, activeLineEndTime };
-};
-
-/** Compute progress fraction of an active line */
-export const getTradeProgress = (start: number, end: number, now: number) => {
-  if (end <= start) return 0;
-  const fraction = (now - start) / (end - start);
-  if (fraction <= 0) return 0;
-  if (fraction >= 1) return 1;
-  return fraction;
-};
-
-/** Interpolate logical position for a trade marker */
-export const getTradeMarkerLogicalTime = (
-  candles: { time: number; logical: number }[],
-  tradeTime: number,
-  timeframeSeconds: number,
-): number | null => {
-  if (!candles.length) return null;
-  // Ensure sorted
-  const sorted = candles.slice().sort((a, b) => a.time - b.time);
-  const first = sorted[0];
-  const last = sorted[sorted.length - 1];
-  // Before first candle
-  if (tradeTime < first.time) return first.logical;
-  // After last candle - extrapolate using last two points if possible
-  if (tradeTime > last.time) {
-    if (sorted.length >= 2) {
-      const prev = sorted[sorted.length - 2];
-      const slope = (last.logical - prev.logical) / (last.time - prev.time);
-      return last.logical + (tradeTime - last.time) * slope;
-    }
-    return last.logical;
-  }
-  // Find surrounding candles
-  for (let i = 1; i < sorted.length; i++) {
-    const left = sorted[i - 1];
-    const right = sorted[i];
-    if (tradeTime >= left.time && tradeTime < right.time) {
-      const interval = right.time - left.time;
-      const proportion = (tradeTime - left.time) / interval;
-      // If interval matches timeframe, limit to half progress to avoid jumping ahead of live candle
-      const adjusted = interval === timeframeSeconds ? proportion * 0.5 : proportion;
-      return left.logical + adjusted * (right.logical - left.logical);
-    } else if (tradeTime === right.time) {
-      // If it's exactly the boundary, we return the logical of the right candle (which is the start of the next interval)
-      return right.logical;
-    }
-  }
-  // If we get here, tradeTime equals first.time (handled by the first condition?) Actually we already handled tradeTime < first.time and tradeTime > last.time.
-  // The only remaining case is tradeTime equals first.time, which we want to return first.logical.
-  return first.logical;
-};
-
-/** Get coordinate for a trade marker on the chart */
-export const getTradeMarkerCoordinate = (
-  chart: { timeScale: () => { timeToCoordinate: (time: number) => number; logicalToCoordinate: (logical: number) => number } },
-  candles: { time: number; logical: number }[],
-  tradeTime: number,
-  timeframeSeconds: number,
-): number | null => {
-  const logical = getTradeMarkerLogicalTime(candles, tradeTime, timeframeSeconds);
-  if (logical === null) return null;
-  return chart.timeScale().logicalToCoordinate(logical as never);
-};
-
-/** Resolve which logical anchor to use for a trade entry */
-export const resolveTradeMarkerEntryLogicalAnchor = (params: {
-  fixedEntryLogical: number;
-  isFreshActiveTrade: boolean;
-  latestLogicalAnchor: number;
-  storedLogicalAnchor: number;
-  timeframeSeconds: number;
-  timeBasedLogicalAnchor: number;
-}) => {
-  const { fixedEntryLogical, isFreshActiveTrade, latestLogicalAnchor, timeBasedLogicalAnchor } = params;
-  if (isFreshActiveTrade) {
-    // If the fixed logical matches the current timeframe bucket, reuse it
-    if (Math.floor(fixedEntryLogical) === Math.floor(timeBasedLogicalAnchor)) {
-      return fixedEntryLogical;
-    }
-    // Otherwise prefer the latest logical anchor derived from timestamps
-    return latestLogicalAnchor;
-  }
-  // Fallback to stored logical anchor
-  return params.storedLogicalAnchor;
+const formatCountdown = (seconds: number) => {
+  if (seconds <= 0) return "00:00";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 };
 
 interface Props {
@@ -132,57 +40,105 @@ interface Props {
   timeframeSeconds: number;
 }
 
-// Duplicate getUnixTime removed – using the implementation defined earlier
-const MARKER_VIEW_PADDING = 160;
-const DOT_SIZE = 10;
-const DOT_HALF = DOT_SIZE / 2;
-
-const isUsableCoordinate = (value: number | null | undefined): value is number =>
-  typeof value === "number" && Number.isFinite(value) && !Number.isNaN(value);
-
 export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const tradesRef = useRef<ActiveTrade[]>([]);
+  const priceLineRefs = useRef<Record<string, IPriceLine>>({});
+  const seriesRef = useRef(series);
+  const blinkRef = useRef(false);
 
   useEffect(() => {
-    tradesRef.current = trades.filter((trade) => trade.asset_symbol === assetSymbol);
-  }, [assetSymbol, trades]);
+    seriesRef.current = series;
+  }, [series]);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const id = setInterval(() => { blinkRef.current = !blinkRef.current; }, 500);
+    return () => clearInterval(id);
+  }, []);
 
-    let reqId = 0;
+  const assetTrades = trades.filter((t) => t.asset_symbol === assetSymbol);
+
+  // Manage price lines
+  useEffect(() => {
+    const currentSeries = seriesRef.current;
+    if (!currentSeries) return;
+
+    const lines = priceLineRefs.current;
+    const tradeIds = new Set(assetTrades.map((t) => t.id));
+
+    // Remove stale lines
+    Object.keys(lines).forEach((id) => {
+      if (!tradeIds.has(id)) {
+        try { currentSeries.removePriceLine(lines[id]); } catch { /* ignore */ }
+        delete lines[id];
+      }
+    });
+
+    // Create/update lines
+    assetTrades.forEach((trade) => {
+      const isUp = trade.direction === "higher";
+      const isExpired = trade.timeLeft <= 0;
+      const color = isExpired ? LINE_DOWN_COLOR_FADED : (isUp ? LINE_COLOR_UP : LINE_COLOR_DOWN);
+      const options = {
+        price: trade.entry_price,
+        color,
+        lineStyle: LineStyle.Dashed as const,
+        lineWidth: 2,
+        axisLabelVisible: false,
+      };
+
+      if (lines[trade.id]) {
+        lines[trade.id].applyOptions(options);
+      } else {
+        try {
+          lines[trade.id] = currentSeries.createPriceLine(options);
+        } catch { /* ignore */ }
+      }
+    });
+
+  }, [assetTrades]);
+
+  // Separate unmount-only cleanup for price lines
+  useEffect(() => {
+    return () => {
+      const s = seriesRef.current;
+      const lines = priceLineRefs.current;
+      Object.keys(lines).forEach((id) => {
+        try { s?.removePriceLine(lines[id]); } catch { /* ignore */ }
+      });
+      priceLineRefs.current = {};
+    };
+  }, []);
+
+  // RAF loop for pill label positioning
+  const animRef = useRef(0);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
 
     const loop = () => {
-      const el = containerRef.current;
-      if (!el) return;
-
-      const visibleTrades = tradesRef.current;
+      const visibleTrades = assetTrades;
 
       while (el.children.length < visibleTrades.length) {
         const group = document.createElement("div");
-        group.className = "absolute pointer-events-none";
+        group.className = "absolute pointer-events-none flex items-center whitespace-nowrap";
         group.style.overflow = "visible";
+        group.style.transition = "opacity 0.15s ease";
 
-        const dot = document.createElement("div");
-        dot.className = "absolute rounded-full border-2";
-        dot.style.width = `${DOT_SIZE}px`;
-        dot.style.height = `${DOT_SIZE}px`;
-        dot.style.left = `${-DOT_HALF}px`;
-        dot.style.top = `${-DOT_HALF}px`;
-        dot.style.boxSizing = "border-box";
-        dot.style.animation = "trade-blink 1.2s ease-in-out infinite";
-        dot.style.background = "transparent";
-        group.appendChild(dot);
-
-        const line = document.createElement("div");
-        line.className = "absolute";
-        line.style.height = "0";
-        line.style.borderTopStyle = "dotted";
-        line.style.borderTopWidth = "1.5px";
-        line.style.left = `${DOT_HALF}px`;
-        line.style.top = "0";
-        group.appendChild(line);
+        const pill = document.createElement("div");
+        pill.className = "flex items-center gap-1 px-3 py-1";
+        pill.style.height = `${PILL_OFFSET_Y}px`;
+        pill.style.borderRadius = "20px";
+        pill.style.borderWidth = "1px";
+        pill.style.borderStyle = "solid";
+        pill.style.background = BG_COLOR;
+        pill.style.fontSize = "12px";
+        pill.style.fontWeight = "700";
+        pill.style.fontFamily = "Inter, Roboto, sans-serif";
+        pill.style.color = TEXT_COLOR;
+        pill.style.boxShadow = "0 2px 8px rgba(0,0,0,0.35)";
+        pill.style.transition = "border-color 0.15s ease";
+        group.appendChild(pill);
 
         el.appendChild(group);
       }
@@ -191,69 +147,54 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         el.removeChild(el.lastChild!);
       }
 
-      const seriesData = series.data();
-      if (!seriesData || seriesData.length === 0) {
-        reqId = requestAnimationFrame(loop);
-        return;
-      }
-
       visibleTrades.forEach((trade, index) => {
         const group = el.children[index] as HTMLElement;
-        const dot = group.children[0] as HTMLElement;
-        const line = group.children[1] as HTMLElement;
+        const pill = group.children[0] as HTMLElement;
 
         const entryTime = getUnixTime(trade.marker_time) ?? getUnixTime(trade.opened_at) ?? Math.floor(Date.now() / 1000);
         let entryX = chart.timeScale().timeToCoordinate(entryTime as never);
-        if (!isUsableCoordinate(entryX) && isUsableCoordinate(trade.marker_logical)) {
-          entryX = chart.timeScale().logicalToCoordinate(trade.marker_logical as never);
+        if (entryX === null && typeof trade.marker_logical === "number") {
+          entryX = chart.timeScale().logicalToCoordinate(trade.marker_logical);
         }
         const entryY = series.priceToCoordinate(trade.entry_price);
 
-        if (!isUsableCoordinate(entryX) || !isUsableCoordinate(entryY)) {
+        if (entryX === null || entryY === null || !Number.isFinite(entryX) || !Number.isFinite(entryY)) {
           group.style.opacity = "0";
           return;
         }
 
-        if (
-          entryX < -MARKER_VIEW_PADDING ||
-          entryX > el.clientWidth + MARKER_VIEW_PADDING ||
-          entryY < -MARKER_VIEW_PADDING ||
-          entryY > el.clientHeight + MARKER_VIEW_PADDING
-        ) {
-          group.style.opacity = "0";
-          return;
-        }
+        const isUp = trade.direction === "higher";
+        const isExpired = trade.timeLeft <= 0;
+        const accent = isExpired ? LINE_DOWN_COLOR_FADED : (isUp ? LINE_COLOR_UP : LINE_COLOR_DOWN);
+        const arrow = isUp ? "\u25B2" : "\u25BC";
 
-        const isHigher = trade.direction === "higher";
-        const accent = isHigher ? TRADING_UP_COLOR : TRADING_DOWN_COLOR;
-
+        // Position pill
+        const offsetY = isUp ? -(PILL_OFFSET_Y + 6) : PILL_OFFSET_Y + 6;
         group.style.opacity = "1";
-        group.style.left = `${entryX}px`;
-        group.style.top = `${entryY}px`;
+        group.style.left = `${entryX + PILL_X_OFFSET}px`;
+        group.style.top = `${entryY + offsetY}px`;
 
-        dot.style.borderColor = accent;
+        // Build label text
+        const amountStr = `$${trade.amount.toFixed(2)}`;
+        const timeStr = formatCountdown(trade.timeLeft);
+        const labelText = `${arrow} ${amountStr} ${timeStr}`;
 
-        line.style.width = `${Math.max(0, el.clientWidth - entryX - DOT_HALF)}px`;
-        line.style.borderTopColor = accent;
+        pill.textContent = labelText;
+
+        // Border color with blinking
+        const blinkOn = blinkRef.current;
+        const borderColor = (!isExpired && !blinkOn) ? "#FFFFFF" : accent;
+        pill.style.borderColor = borderColor;
       });
 
-      reqId = requestAnimationFrame(loop);
+      animRef.current = requestAnimationFrame(loop);
     };
 
-    if (!document.getElementById("trade-blink-style")) {
-      const style = document.createElement("style");
-      style.id = "trade-blink-style";
-      style.textContent = `@keyframes trade-blink{0%,100%{opacity:1}50%{opacity:0.08}}`;
-      document.head.appendChild(style);
-    }
+    animRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [chart, series, assetTrades]);
 
-    reqId = requestAnimationFrame(loop);
-    return () => {
-      cancelAnimationFrame(reqId);
-      const s = document.getElementById("trade-blink-style");
-      if (s) s.remove();
-    };
-  }, [assetSymbol, chart, series]);
+  if (!assetTrades.length) return null;
 
   return <div ref={containerRef} className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 92 }} />;
 };
