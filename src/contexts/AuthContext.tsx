@@ -31,6 +31,8 @@ interface AuthContextType {
     verifiedAt: string | null;
   }>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
+  verifyPasswordResetCode: (email: string, code: string) => Promise<{ error: AuthError | null }>;
+  updatePasswordAfterReset: (newPassword: string) => Promise<{ error: AuthError | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -634,13 +636,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
       });
       return { error };
     } catch {
       return {
         error: toAuthError("Password reset request failed. Please try again.", 503),
+      };
+    }
+  };
+
+  const verifyPasswordResetCode = async (email: string, code: string) => {
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: code,
+        type: "recovery",
+      });
+      return { error };
+    } catch {
+      return {
+        error: toAuthError("Invalid code. Please try again.", 400),
+      };
+    }
+  };
+
+  const updatePasswordAfterReset = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      return { error };
+    } catch {
+      return {
+        error: toAuthError("Password update failed. Please try again.", 503),
       };
     }
   };
@@ -666,6 +696,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updateProfile,
         verifyEmailCode,
         resetPassword,
+        verifyPasswordResetCode,
+        updatePasswordAfterReset,
       }}
     >
       {children}

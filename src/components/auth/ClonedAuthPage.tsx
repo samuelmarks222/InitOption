@@ -30,7 +30,7 @@ const bottomStats = [
 const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, signUp, signInWithGoogle, resetPassword, user, loading: authLoading } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resetPassword, verifyPasswordResetCode, updatePasswordAfterReset, user, loading: authLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -46,6 +46,10 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [resetCode, setResetCode] = useState("");
+  const [newResetPassword, setNewResetPassword] = useState("");
+  const [showResetPasswordForm, setShowResetPasswordForm] = useState(false);
+  const [resetCodeVerified, setResetCodeVerified] = useState(false);
 
   useEffect(() => {
     setIsLogin(initialMode === "login");
@@ -164,8 +168,71 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
 
     setResetSent(true);
     toast({
-      title: "Password reset email sent",
-      description: `Check ${resetEmail} for instructions to reset your password.`,
+      title: "Verification code sent",
+      description: `Check ${resetEmail} for a 6-digit verification code.`,
+    });
+  };
+
+  const handleVerifyResetCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!resetCode || resetCode.length !== 6) {
+      toast({ title: "Please enter a valid 6-digit code", variant: "destructive" });
+      return;
+    }
+
+    setResetLoading(true);
+    const { error } = await verifyPasswordResetCode(resetEmail, resetCode);
+    setResetLoading(false);
+
+    if (error) {
+      toast({
+        title: "Invalid code",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setResetCodeVerified(true);
+    setShowResetPasswordForm(true);
+    toast({
+      title: "Code verified",
+      description: "Please enter your new password.",
+    });
+  };
+
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newResetPassword || newResetPassword.length < 6) {
+      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+
+    setResetLoading(true);
+    const { error } = await updatePasswordAfterReset(newResetPassword);
+    setResetLoading(false);
+
+    if (error) {
+      toast({
+        title: "Password update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setShowPasswordReset(false);
+    setResetEmail("");
+    setResetCode("");
+    setNewResetPassword("");
+    setResetSent(false);
+    setResetCodeVerified(false);
+    setShowResetPasswordForm(false);
+    toast({
+      title: "Password reset successful",
+      description: "You can now sign in with your new password.",
     });
   };
 
@@ -259,7 +326,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {showPasswordReset
-              ? "Enter your email address and we'll send you a link to reset your password"
+              ? "Enter your email address and we'll send you a 6-digit verification code"
               : showVerificationPrompt
                 ? `We've sent a verification link to ${verificationEmail}. Check your inbox and click the link to confirm your email.`
                 : isLogin
@@ -306,43 +373,8 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
             </div>
           ) : showPasswordReset ? (
             <div className="mt-6 space-y-4">
-              {resetSent ? (
-                <>
-                  <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4">
-                    <p className="text-sm text-foreground">
-                      <strong>Reset link sent</strong> to <strong>{resetEmail}</strong>
-                    </p>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Check your email for a link to reset your password. The link will expire in 24 hours.
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border border-border bg-card/50 p-4">
-                    <p className="text-xs text-muted-foreground">
-                      <strong>Didn't receive the email?</strong>
-                    </p>
-                    <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                      <li>• Check your spam or junk folder</li>
-                      <li>• Wait a few moments and refresh your inbox</li>
-                      <li>• Make sure you entered the correct email address</li>
-                    </ul>
-                  </div>
-
-                  <Button
-                    type="button"
-                    size="lg"
-                    className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-primary/25"
-                    onClick={() => {
-                      setShowPasswordReset(false);
-                      setResetEmail("");
-                      setResetSent(false);
-                    }}
-                  >
-                    Back to Sign In
-                  </Button>
-                </>
-              ) : (
-                <form onSubmit={handleResetPassword} className="mt-6 space-y-4">
+              {!resetSent ? (
+                <form onSubmit={handleResetPassword} className="space-y-4">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                       Email Address
@@ -365,7 +397,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                     className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-primary/25"
                     disabled={resetLoading}
                   >
-                    {resetLoading ? "Sending..." : "Send Reset Link"} <ArrowRight size={16} />
+                    {resetLoading ? "Sending..." : "Send Verification Code"} <ArrowRight size={16} />
                   </Button>
 
                   <Button
@@ -381,6 +413,133 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                     Back to Sign In
                   </Button>
                 </form>
+              ) : !resetCodeVerified ? (
+                <>
+                  <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
+                    <p className="text-sm text-foreground">
+                      <strong>Verification code sent</strong> to <strong>{resetEmail}</strong>
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Check your email for a 6-digit verification code and enter it below.
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleVerifyResetCode} className="space-y-4">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                        Verification Code
+                      </label>
+                      <Input
+                        type="text"
+                        value={resetCode}
+                        onChange={(e) => setResetCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder="000000"
+                        maxLength={6}
+                        className="h-11 border-border bg-card text-center text-lg font-mono tracking-widest text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-primary/25"
+                      disabled={resetLoading || resetCode.length !== 6}
+                    >
+                      {resetLoading ? "Verifying..." : "Verify Code"} <ArrowRight size={16} />
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="lg"
+                      className="h-11 w-full text-sm font-semibold"
+                      onClick={() => {
+                        setResetSent(false);
+                        setResetCode("");
+                        setResetEmail("");
+                      }}
+                    >
+                      Back
+                    </Button>
+                  </form>
+
+                  <div className="rounded-lg border border-border bg-card/50 p-4">
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Didn't receive the code?</strong>
+                    </p>
+                    <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                      <li>• Check your spam or junk folder</li>
+                      <li>• Wait a few moments and refresh your inbox</li>
+                      <li>• The code expires in 10 minutes</li>
+                    </ul>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4">
+                    <p className="text-sm text-foreground">
+                      <strong>Code verified</strong>
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Now enter your new password below.
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleSetNewPassword} className="space-y-4">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                        New Password
+                      </label>
+                      <div className="relative">
+                        <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          value={newResetPassword}
+                          onChange={(e) => setNewResetPassword(e.target.value)}
+                          placeholder="Enter new password"
+                          className="h-11 border-border bg-card pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+                        >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Minimum 6 characters
+                      </p>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-primary/25"
+                      disabled={resetLoading || newResetPassword.length < 6}
+                    >
+                      {resetLoading ? "Updating..." : "Update Password"} <ArrowRight size={16} />
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="lg"
+                      className="h-11 w-full text-sm font-semibold"
+                      onClick={() => {
+                        setShowPasswordReset(false);
+                        setResetEmail("");
+                        setResetCode("");
+                        setNewResetPassword("");
+                        setResetSent(false);
+                        setResetCodeVerified(false);
+                        setShowResetPasswordForm(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </form>
+                </>
               )}
             </div>
           ) : (
