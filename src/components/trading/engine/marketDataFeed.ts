@@ -119,7 +119,7 @@ const getPricePrecision = (price: number) => {
 };
 
 const getSyntheticStepRatio = (timeframeSeconds: number) => {
-  if (timeframeSeconds <= 1) return 0.00002;
+  if (timeframeSeconds <= 1) return 0.000012;
   if (timeframeSeconds <= 5) return 0.000003;
   if (timeframeSeconds <= 15) return 0.0000038;
   if (timeframeSeconds <= 30) return 0.000005;
