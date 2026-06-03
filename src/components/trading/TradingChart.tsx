@@ -2431,11 +2431,6 @@ const TradingChart = ({
     const maxReadableSpan = maxReadableBars + getChartRightOffset(maxReadableBars);
     const maxSpan = Math.max(defaultSpan, Math.min(maxReadableSpan, maxVisibleBySpacing));
     const clampedSpan = Math.max(minSpan, Math.min(nextSpan, maxSpan));
-    const maxFutureWhitespace = Math.max(
-      rightOffset,
-      Math.min(Math.round(clampedSpan * 0.52), trendContextBars),
-    );
-    const maxTo = dataPointCount + maxFutureWhitespace;
     const currentCenter = currentRange
       ? (currentRange.from + currentRange.to) / 2
       : Math.max(clampedSpan / 2, dataPointCount + rightOffset - defaultSpan / 2);
@@ -2444,12 +2439,7 @@ const TradingChart = ({
 
     if (nextFrom < 0) {
       nextFrom = 0;
-      nextTo = Math.min(clampedSpan, maxTo);
-    }
-
-    if (nextTo > maxTo) {
-      nextTo = maxTo;
-      nextFrom = Math.max(0, maxTo - clampedSpan);
+      nextTo = clampedSpan;
     }
 
     timeScale.setVisibleLogicalRange({
