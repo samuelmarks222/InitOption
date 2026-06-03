@@ -431,13 +431,13 @@ const MIN_BAR_SPACING_MAP: Record<string, number> = {
   "3m": 6.8,
   "4m": 6.2,
   "5m": 5.8,
-  "10m": 2.38,
-  "15m": 2.52,
-  "30m": 2.68,
-  "1h": 2.88,
-  "2h": 3.08,
-  "4h": 3.38,
-  "1D": 3.95,
+  "10m": 4.5,
+  "15m": 4.8,
+  "30m": 5.2,
+  "1h": 5.5,
+  "2h": 5.8,
+  "4h": 6.2,
+  "1D": 6.5,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
