@@ -119,7 +119,7 @@ const getPricePrecision = (price: number) => {
 };
 
 const getSyntheticStepRatio = (timeframeSeconds: number) => {
-  if (timeframeSeconds <= 1) return 0.0000024;
+  if (timeframeSeconds <= 1) return 0.00008;
   if (timeframeSeconds <= 5) return 0.000003;
   if (timeframeSeconds <= 15) return 0.0000038;
   if (timeframeSeconds <= 30) return 0.000005;
@@ -222,7 +222,7 @@ export const simulateDeterministicTickPrice = ({
     0.52 *
     (intrabarSwing * 0.44 + intrabarNoise * 0.26);
   const nextVelocity = velocity * 0.35 + shock * 0.48 + intrabarShock;
-  const meanReversionStrength = clamp(0.06 + marketTimeframeSeconds / 1600, 0.06, 0.15);
+  const meanReversionStrength = clamp(0.03 + marketTimeframeSeconds / 1600, 0.03, 0.10);
   const meanReversion = (safeAnchorPrice - referencePrice) * meanReversionStrength;
   const anchorDistanceRatio =
     Math.abs(safeAnchorPrice - referencePrice) / Math.max(safeBasePrice * stepRatio * 6, 1e-9);
@@ -313,7 +313,7 @@ class DeterministicTickFeed implements MarketDataFeed {
   private pump() {
     if (!this.connected) return;
 
-    const tickIntervalMs = Math.max(25, this.subscription.timeframe.updateIntervalMs);
+    const tickIntervalMs = 50;
     const nowMs = Date.now();
     let guard = 0;
 
