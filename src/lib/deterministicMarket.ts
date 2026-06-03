@@ -292,7 +292,7 @@ const getInteriorProbeCount = (timeframeSeconds: number) => {
   if (timeframeSeconds <= 1) return 5;
   if (timeframeSeconds <= 5) return 3;
   if (timeframeSeconds <= 60) return 2;
-  return 2;
+  return 1;
 };
 
 const getTargetWickDelta = (
@@ -323,7 +323,7 @@ const getTargetWickDelta = (
             : 0.86;
 
   if (timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) {
-    const effectivePipValue = referencePrice * 0.0003;
+    const effectivePipValue = referencePrice * 0.00015;
     return effectivePipValue * configuredPips * wickMultiplier;
   }
 
@@ -343,7 +343,7 @@ const getMaxWickLength = ({
 }) => {
   const bodyFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 1.5
+      ? 1.0
       : timeframeSeconds <= 1
         ? 0.34
         : timeframeSeconds <= 5
@@ -353,7 +353,7 @@ const getMaxWickLength = ({
             : 0.72;
   const wickFactor =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 1.2
+      ? 0.8
       : timeframeSeconds <= 1
         ? 0.26
         : timeframeSeconds <= 5
@@ -405,7 +405,7 @@ const buildInteriorProbePrices = ({
     const oscillation = Math.sin(fraction * TAU * wickFrequency + wickPhase);
     const jitter = noiseAt(symbol, "wick-noise", timestamp / Math.max(0.04, durationSeconds / 5));
     const impulse = noiseAt(symbol, "wick-impulse", (startTimeSec + index) / Math.max(1, timeframeSeconds));
-    const displacement = targetWickDelta * (oscillation * 0.45 + jitter * 0.3 + impulse * 0.15);
+    const displacement = targetWickDelta * (oscillation * 0.3 + jitter * 0.2 + impulse * 0.1);
 
     return clampPriceToBounds(basePriceAtTime + displacement, basePrice);
   });
@@ -472,8 +472,8 @@ export const buildDeterministicCandle = ({
     targetWickDelta,
     timeframeSeconds,
   });
-  const upperWickMultiplier = 0.2 + Math.abs(signedHash(symbol, `wick-upper:${startTimeSec}`)) * 0.6;
-  const lowerWickMultiplier = 0.2 + Math.abs(signedHash(symbol, `wick-lower:${startTimeSec}`)) * 0.6;
+  const upperWickMultiplier = Math.abs(signedHash(symbol, `wick-upper:${startTimeSec}`)) * 0.7 + 0.03;
+  const lowerWickMultiplier = Math.abs(signedHash(symbol, `wick-lower:${startTimeSec}`)) * 0.7 + 0.03;
   const upperWickLength = Math.min(
     maxWickLength,
     Math.max(sampledHigh - upperBody, targetWickDelta * upperWickMultiplier),
