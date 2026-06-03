@@ -149,7 +149,7 @@ export const DynamicAssetProvider: React.FC<{ children: React.ReactNode }> = ({ 
       syncAssets();
       setLoading(false);
 
-      intervalId = setInterval(syncAssets, 1000);
+      intervalId = setInterval(syncAssets, 60000);
     };
 
     initAssets();

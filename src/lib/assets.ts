@@ -340,37 +340,28 @@ export const getDynamicAssetPayoutProfile = ({
   const normalizedCategory = normalizeAssetCategory(category, normalizedSymbol);
   const seed = hashStringToUnitInterval(`payout:${normalizedCategory}:${normalizedSymbol}`);
 
-  const cycleDuration = 40; // 40 seconds per cycle
+  const cycleDuration = 60; // 60 seconds per cycle
   const cyclePhase = (timestampSec % cycleDuration) / cycleDuration; // 0 to 1
-  const declineFraction = 0.75; // 75% declining, 25% N/A dead zone
   const highPayout = clampAssetPayout(basePayout + 5 + (seed - 0.5) * 10, basePayout);
 
-  let profit1m: number;
-  let profit5m: number;
-  let available: boolean;
+  // Slow drift over a 1-hour period so payouts aren't identical across cycles
+  const driftRad = (timestampSec % 3600) / 3600 * Math.PI * 2;
+  const driftAmount = 3 * Math.sin(driftRad + seed * 100); // ±3% drift
 
-  if (cyclePhase < declineFraction) {
-    // Decline phase: smooth decrease from high down to 30
-    const progress = cyclePhase / declineFraction; // 0 to 1
-    const rawValue = highPayout - progress * (highPayout - 30);
-    const microJitter = Math.sin(timestampSec * 0.8 + seed * 100) * 0.4;
-    profit1m = clampAssetPayout(rawValue + microJitter, basePayout);
-    available = true;
+  // Smooth decline from high down to a floor (never below 60), always available
+  const progress = cyclePhase; // 0 to 1 over the full 60s
+  const rawValue = highPayout - progress * (highPayout - 60) + driftAmount;
+  const microJitter = Math.sin(timestampSec * 0.8 + seed * 100) * 0.4;
+  const profit1m = clampAssetPayout(rawValue + microJitter, basePayout);
 
-    // profit5m slightly lower than profit1m with its own micro-jitter
-    const raw5m = rawValue - 2 + Math.cos(timestampSec * 0.6 + seed * 50) * 0.4;
-    profit5m = clampAssetPayout(raw5m, basePayout);
-  } else {
-    // Dead zone: show 30 (floor) and mark unavailable
-    profit1m = 30;
-    profit5m = 30;
-    available = false;
-  }
+  // profit5m slightly lower than profit1m with its own micro-jitter
+  const raw5m = rawValue - 2 + Math.cos(timestampSec * 0.6 + seed * 50) * 0.4;
+  const profit5m = clampAssetPayout(raw5m, basePayout);
 
   return {
     profit1m,
     profit5m,
-    available,
+    available: true,
   };
 };
 
