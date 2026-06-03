@@ -347,9 +347,9 @@ const IndicatorControlStrip = ({
 
 const BAR_SPACING_MAP: Record<string, number> = {
   "1s": 15.4,
-  "5s": 15.8,
+  "5s": 16.5,
   "15s": 16.1,
-  "30s": 16.3,
+  "30s": 16.5,
   "1m": 16.5,
   "2m": 14.8,
   "3m": 13.8,
@@ -366,9 +366,9 @@ const BAR_SPACING_MAP: Record<string, number> = {
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
   "1s": 78,
-  "5s": 78,
+  "5s": 84,
   "15s": 80,
-  "30s": 82,
+  "30s": 84,
   "1m": 84,
   "2m": 90,
   "3m": 94,
@@ -385,9 +385,9 @@ const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
 
 const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
   "1s": 128,
-  "5s": 126,
+  "5s": 120,
   "15s": 124,
-  "30s": 122,
+  "30s": 120,
   "1m": 120,
   "2m": 136,
   "3m": 148,
@@ -404,9 +404,9 @@ const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>
 
 const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
   "1s": 180,
-  "5s": 176,
+  "5s": 164,
   "15s": 172,
-  "30s": 168,
+  "30s": 164,
   "1m": 164,
   "2m": 184,
   "3m": 198,
@@ -423,9 +423,9 @@ const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, n
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
   "1s": 7.8,
-  "5s": 8,
+  "5s": 8.6,
   "15s": 8.2,
-  "30s": 8.4,
+  "30s": 8.6,
   "1m": 8.6,
   "2m": 7.4,
   "3m": 6.8,
