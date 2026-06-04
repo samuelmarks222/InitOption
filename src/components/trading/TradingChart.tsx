@@ -3170,11 +3170,28 @@ const TradingChart = ({
       const maxReadableBars = getMaxReadableZoomBars(
         containerWidth,
         selectedTf,
-        Math.max(1, dataPointCount),
+        Math.max(1, MAX_CANDLES_IN_MEMORY),
       );
       const maxReadableRightOffset = getChartRightOffset(maxReadableBars);
       const maxReadableSpan = maxReadableBars + maxReadableRightOffset;
       const visibleSpan = range.to - range.from;
+
+      if (!isBackfillingHistoryRef.current && engineRef.current) {
+        const loadedCount = loadedHistoryCountRef.current;
+        if (visibleSpan > loadedCount * 0.85 && loadedCount < MAX_CANDLES_IN_MEMORY) {
+          const nextHistoryCount = Math.min(
+            MAX_CANDLES_IN_MEMORY,
+            loadedCount + Math.round(visibleSpan * 1.5),
+          );
+          if (nextHistoryCount > loadedCount) {
+            isBackfillingHistoryRef.current = true;
+            reloadHistoricalCandles(nextHistoryCount, { from: range.from, to: range.to });
+            window.requestAnimationFrame(() => {
+              isBackfillingHistoryRef.current = false;
+            });
+          }
+        }
+      }
 
       if (range.from < -0.5 || visibleSpan > maxReadableSpan + 0.5) {
         const targetSpan = Math.max(1, Math.min(visibleSpan, maxReadableSpan));
@@ -3208,21 +3225,6 @@ const TradingChart = ({
       const threshold = getHistoryBackfillThreshold(containerWidth, selectedTf);
 
       if (range.from > threshold) {
-        const loadedCount = loadedHistoryCountRef.current;
-        const visibleCount = range.to - range.from;
-        if (visibleCount > loadedCount * 0.85 && loadedCount < MAX_CANDLES_IN_MEMORY) {
-          const nextHistoryCount = Math.min(
-            MAX_CANDLES_IN_MEMORY,
-            loadedCount + Math.round(visibleCount * 1.5),
-          );
-          if (nextHistoryCount > loadedCount) {
-            isBackfillingHistoryRef.current = true;
-            reloadHistoricalCandles(nextHistoryCount, { from: range.from, to: range.to });
-            window.requestAnimationFrame(() => {
-              isBackfillingHistoryRef.current = false;
-            });
-          }
-        }
         return;
       }
 
