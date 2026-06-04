@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Edit2, Trash2, Upload, Eye, EyeOff, FileText, Image, Video } from "lucide-react";
+import { Plus, Edit2, Trash2, Upload, Eye, EyeOff, FileText, Image, Video, Link as LinkIcon, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,6 +22,14 @@ interface GuideMedia {
   media_url: string;
   alt_text: string;
   storage_path: string;
+  youtube_url?: string;
+}
+
+interface VideoEntry {
+  id: string;
+  youtube_url: string;
+  thumbnail_url: string | null;
+  title: string;
 }
 
 const GuideAdmin = () => {
@@ -34,6 +42,8 @@ const GuideAdmin = () => {
   const [guideMedia, setGuideMedia] = useState<GuideMedia[]>([]);
   const [uploading, setUploading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
 
   const CATEGORIES = ["Platform", "Strategies", "Glossary", "Videos", "Risk Management"];
 
@@ -76,6 +86,24 @@ const GuideAdmin = () => {
     } catch (error) {
       console.error("Failed to load guide media:", error);
     }
+  };
+
+  const extractYoutubeVideoId = (url: string): string | null => {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      /^([a-zA-Z0-9_-]{11})$/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  };
+
+  const getYoutubeThumbnail = (videoId: string): string => {
+    return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
   };
 
   const handleSelectGuide = async (guide: Guide) => {
@@ -283,12 +311,14 @@ const GuideAdmin = () => {
     if (!confirm("Delete this media?")) return;
 
     try {
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from("guide-media")
-        .remove([storagePath]);
+      // Delete from storage only if it has a path (uploaded file)
+      if (storagePath && storagePath.startsWith("guides/")) {
+        const { error: storageError } = await supabase.storage
+          .from("guide-media")
+          .remove([storagePath]);
 
-      if (storageError) throw storageError;
+        if (storageError) throw storageError;
+      }
 
       // Delete from database
       const { error: dbError } = await supabase
@@ -311,6 +341,84 @@ const GuideAdmin = () => {
         description: "Failed to delete media",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleAddYoutubeVideo = async () => {
+    if (!selectedGuide || !youtubeUrl.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a YouTube URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const videoId = extractYoutubeVideoId(youtubeUrl);
+    if (!videoId) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid YouTube URL or video ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      const thumbnailUrl = getYoutubeThumbnail(videoId);
+
+      // Save YouTube video record
+      const { error: dbError } = await supabase
+        .from("guide_media")
+        .insert([
+          {
+            guide_id: selectedGuide.id,
+            media_type: "video",
+            media_url: embedUrl,
+            alt_text: videoTitle || `YouTube Video - ${videoId}`,
+            youtube_url: youtubeUrl,
+            storage_path: `youtube/${videoId}`,
+            created_by: (await supabase.auth.getUser()).data.user?.id,
+          },
+        ]);
+
+      if (dbError) throw dbError;
+
+      // Also save thumbnail for preview
+      const { error: thumbError } = await supabase
+        .from("guide_media")
+        .insert([
+          {
+            guide_id: selectedGuide.id,
+            media_type: "thumbnail",
+            media_url: thumbnailUrl,
+            alt_text: `Thumbnail - ${videoTitle || videoId}`,
+            storage_path: `youtube/${videoId}/thumbnail`,
+            created_by: (await supabase.auth.getUser()).data.user?.id,
+          },
+        ]);
+
+      // Reload media
+      await loadGuideMedia(selectedGuide.id);
+
+      setYoutubeUrl("");
+      setVideoTitle("");
+
+      toast({
+        title: "Success",
+        description: "YouTube video added successfully",
+      });
+    } catch (error) {
+      console.error("Failed to add YouTube video:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add YouTube video",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -552,7 +660,7 @@ const GuideAdmin = () => {
               </div>
 
               {/* Media Management */}
-              <div className="rounded-lg border border-[#2a2f42] bg-[#1a1e2b] p-6">
+              <div className="rounded-lg border border-[#2a2f42] bg-[#1a1e2b] p-6 mt-6">
                 <h3 className="mb-4 text-lg font-bold text-white">
                   Media & Resources
                 </h3>
@@ -587,58 +695,106 @@ const GuideAdmin = () => {
                   </label>
                 </div>
 
+                {/* YouTube Video Section */}
+                <div className="mb-6 rounded-lg border border-[#2a2f42] bg-[#0e1017] p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <LinkIcon size={16} className="text-[#00C076]" />
+                    <h4 className="font-semibold text-white">Add YouTube Video</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      placeholder="YouTube URL (e.g., https://youtube.com/watch?v=xxx or just video ID)"
+                      value={youtubeUrl}
+                      onChange={(e) => setYoutubeUrl(e.target.value)}
+                      className="w-full rounded-lg border border-[#2a2f42] bg-[#1a1e2b] px-4 py-2 text-white placeholder-gray-500 focus:border-[#00C076] focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Video Title (optional)"
+                      value={videoTitle}
+                      onChange={(e) => setVideoTitle(e.target.value)}
+                      className="w-full rounded-lg border border-[#2a2f42] bg-[#1a1e2b] px-4 py-2 text-white placeholder-gray-500 focus:border-[#00C076] focus:outline-none"
+                    />
+                    <button
+                      onClick={handleAddYoutubeVideo}
+                      disabled={uploading}
+                      className="w-full rounded-lg bg-[#00C076] px-4 py-2 font-semibold text-white hover:bg-[#00a85e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {uploading ? "Adding..." : "Add YouTube Video"}
+                    </button>
+                    <p className="text-xs text-gray-400">
+                      ℹ️ Videos are linked from YouTube, not stored on our platform. Thumbnail is auto-generated.
+                    </p>
+                  </div>
+                </div>
+
                 {guideMedia.length === 0 ? (
                   <p className="text-sm text-gray-500">
-                    No media uploaded yet. Upload images or videos to enhance your guide.
+                    No media added yet. Upload images or add YouTube videos to enhance your guide.
                   </p>
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-2">
-                    {guideMedia.map((media) => (
-                      <div
-                        key={media.id}
-                        className="relative rounded-lg border border-[#2a2f42] overflow-hidden group"
-                      >
-                        {media.media_type === "image" ? (
-                          <img
-                            src={media.media_url}
-                            alt={media.alt_text}
-                            className="h-32 w-full object-cover"
-                          />
-                        ) : (
-                          <div className="h-32 w-full bg-[#0e1017] flex items-center justify-center">
-                            <Video className="text-gray-500" size={32} />
+                    {guideMedia.map((media) => {
+                      const isYoutube = media.storage_path?.startsWith("youtube/");
+                      const isThumbnail = media.media_type === "thumbnail";
+                      if (isThumbnail) return null; // Skip thumbnails in list
+                      
+                      return (
+                        <div
+                          key={media.id}
+                          className="relative rounded-lg border border-[#2a2f42] overflow-hidden group"
+                        >
+                          {media.media_type === "image" || isYoutube ? (
+                            <img
+                              src={media.media_url}
+                              alt={media.alt_text}
+                              className="h-32 w-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-32 w-full bg-[#0e1017] flex items-center justify-center">
+                              <Video className="text-gray-500" size={32} />
+                            </div>
+                          )}
+
+                          {isYoutube && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="h-12 w-12 rounded-full bg-red-600 flex items-center justify-center">
+                                <div className="h-0 w-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-6 border-t-white ml-1" />
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <a
+                              href={isYoutube ? media.media_url : media.media_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="rounded-lg bg-[#00C076] p-2 hover:bg-[#00a85e] transition-colors"
+                            >
+                              <FileText size={16} />
+                            </a>
+                            <button
+                              onClick={() =>
+                                handleDeleteMedia(media.id, media.storage_path || "")
+                              }
+                              className="rounded-lg bg-red-500 p-2 hover:bg-red-600 transition-colors"
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           </div>
-                        )}
 
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                          <a
-                            href={media.media_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="rounded-lg bg-[#00C076] p-2 hover:bg-[#00a85e] transition-colors"
-                          >
-                            <FileText size={16} />
-                          </a>
-                          <button
-                            onClick={() =>
-                              handleDeleteMedia(media.id, media.storage_path)
-                            }
-                            className="rounded-lg bg-red-500 p-2 hover:bg-red-600 transition-colors"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          <div className="p-2 text-xs bg-[#0e1017] border-t border-[#2a2f42]">
+                            <p className="font-semibold text-white truncate">
+                              {media.alt_text}
+                            </p>
+                            <p className="text-gray-400">
+                              {isYoutube ? "YouTube" : `${(media.file_size ? media.file_size / 1024 / 1024 : 0).toFixed(2)} MB`}
+                            </p>
+                          </div>
                         </div>
-
-                        <div className="p-2 text-xs">
-                          <p className="font-semibold text-white truncate">
-                            {media.alt_text}
-                          </p>
-                          <p className="text-gray-400">
-                            {(media.file_size ? media.file_size / 1024 / 1024 : 0).toFixed(2)} MB
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

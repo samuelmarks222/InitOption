@@ -16,7 +16,24 @@ interface GuideMedia {
   id: string;
   media_type: "image" | "video" | "thumbnail";
   media_url: string;
+  youtube_url?: string;
+  alt_text?: string;
 }
+
+const extractYoutubeVideoId = (value?: string): string | null => {
+  if (!value) return null;
+
+  const match = value.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/);
+  if (match?.[1]) return match[1];
+
+  const shortMatch = value.match(/^([a-zA-Z0-9_-]{11})$/);
+  return shortMatch?.[1] ?? null;
+};
+
+const getYoutubeThumbnail = (value?: string): string | null => {
+  const videoId = extractYoutubeVideoId(value);
+  return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+};
 
 const GuideBrowserPage = () => {
   const { category, slug } = useParams();
@@ -247,45 +264,48 @@ const GuideBrowserPage = () => {
                 </div>
 
                 {/* Media Gallery */}
-                {guideMedia.length > 0 && (
+                {guideMedia.filter((media) => media.media_type !== "thumbnail").length > 0 && (
                   <div className="rounded-lg border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-8 backdrop-blur-sm">
                     <h2 className="mb-6 text-2xl font-bold text-white">
                       Resources & Examples
                     </h2>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      {guideMedia.map((media) => (
-                        <a
-                          key={media.id}
-                          href={media.media_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group relative rounded-lg border border-white/10 overflow-hidden hover:border-[#00C076] transition-all"
-                        >
-                          {media.media_type === "image" ? (
-                            <img
-                              src={media.media_url}
-                              alt="Guide resource"
-                              className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          ) : (
-                            <div className="h-48 w-full bg-gradient-to-br from-[#1a2438] to-[#0f1826] flex items-center justify-center">
-                              <div className="flex flex-col items-center gap-2">
-                                <div className="h-12 w-12 rounded-full bg-[#00C076]/20 flex items-center justify-center">
-                                  <div className="h-8 w-8 rounded-full bg-[#00C076] flex items-center justify-center">
-                                    <div className="h-0 w-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-white ml-1" />
-                                  </div>
+                      {guideMedia
+                        .filter((media) => media.media_type !== "thumbnail")
+                        .map((media) => {
+                          const isVideo = media.media_type === "video";
+                          const thumbnailUrl = isVideo
+                            ? getYoutubeThumbnail(media.youtube_url || media.media_url) || media.media_url
+                            : media.media_url;
+
+                          return (
+                            <a
+                              key={media.id}
+                              href={media.youtube_url || media.media_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group relative overflow-hidden rounded-lg border border-white/10 transition-all hover:border-[#00C076]"
+                            >
+                              <img
+                                src={thumbnailUrl}
+                                alt={media.alt_text || (isVideo ? "Guide video" : "Guide resource")}
+                                className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
+                              {isVideo && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity group-hover:bg-black/35">
+                                  <span className="rounded-full bg-red-600/90 px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-lg shadow-red-900/30">
+                                    Watch video
+                                  </span>
                                 </div>
-                                <p className="text-sm text-gray-400">Video</p>
+                              )}
+                              <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/70 via-transparent to-transparent p-4 opacity-0 transition-opacity group-hover:opacity-100">
+                                <p className="text-center text-sm font-semibold text-white">
+                                  {isVideo ? "Open on YouTube" : "Open image"}
+                                </p>
                               </div>
-                            </div>
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-4">
-                            <p className="text-white font-semibold text-center">
-                              View
-                            </p>
-                          </div>
-                        </a>
-                      ))}
+                            </a>
+                          );
+                        })}
                     </div>
                   </div>
                 )}

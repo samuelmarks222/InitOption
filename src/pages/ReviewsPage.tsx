@@ -506,7 +506,7 @@ const ReviewsPage = () => {
   return (
     <div className="min-h-screen" style={pageStyle}>
       <div className="flex min-h-screen">
-    <div className="min-h-screen flex-1">
+        <div className="min-w-0 flex-1">
           <header className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-r from-white/[0.03] to-white/[0.01] backdrop-blur-sm">
             <div className="flex min-h-[62px] w-full items-center justify-between gap-4 px-6 xl:px-8">
               <SiteLogo
@@ -653,8 +653,6 @@ const ReviewsPage = () => {
                 </form>
               </div>
             </section>
-          </main>
-    </div>
           </main>
         </div>
 

@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS guide_media (
   mime_type TEXT,
   storage_bucket TEXT DEFAULT 'guide-media',
   storage_path TEXT,
+  youtube_url TEXT,
   created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
