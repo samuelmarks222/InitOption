@@ -2624,7 +2624,7 @@ const TradingChart = ({
           vertTouchDrag: false,
         },
         handleScale: {
-          mouseWheel: false,
+          mouseWheel: true,
           pinch: true,
           axisPressedMouseMove: true,
           axisDoubleClickReset: true,
@@ -2681,8 +2681,6 @@ const TradingChart = ({
       if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
 
       event.preventDefault();
-      event.stopPropagation();
-      adjustChartZoomRef.current(event.deltaY < 0 ? "in" : "out");
     };
 
     chartContainer.addEventListener("wheel", handleChartWheel, { capture: true, passive: false });
