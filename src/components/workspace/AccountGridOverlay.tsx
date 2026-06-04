@@ -68,7 +68,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
 
   return (
     <div
-      className="quotex-glow-home trading-terminal absolute inset-0 z-40 flex flex-col overflow-hidden text-[var(--trading-text-color)]"
+      className="quotex-glow-home trading-terminal relative z-40 flex h-full w-full flex-col overflow-hidden text-[var(--trading-text-color)]"
       style={{ background: "radial-gradient(circle at top, rgba(38, 75, 120, 0.18), transparent 30%), linear-gradient(180deg, #161d2b 0%, #0f1723 45%, #0a0f17 100%)" }}
     >
 

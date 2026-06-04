@@ -264,7 +264,8 @@ const MobileModuleOverlay = ({
 }: MobileModuleOverlayProps) => {
   if (!mobileOverlay) return null;
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-[56px] z-[200] bg-[#0a0d14] flex flex-col">
+    <div className="fixed inset-x-0 bottom-[56px] top-0 z-[200] flex items-end justify-center bg-black/60 p-2 sm:p-3">
+      <div className="relative flex h-[92dvh] w-full max-w-md overflow-hidden rounded-[28px] border border-white/8 bg-[#0a0d14] shadow-[0_24px_60px_rgba(0,0,0,0.45)]">
       {mobileOverlay === "account" && <AccountGridOverlay onClose={() => setMobileOverlay(null)} />}
       {mobileOverlay === "tournaments" && (
         <div className="flex flex-col h-full bg-[#0a0d14]">
@@ -308,6 +309,7 @@ const MobileModuleOverlay = ({
           }}
         />
       )}
+      </div>
     </div>
   );
 };
