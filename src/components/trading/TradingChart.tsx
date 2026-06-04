@@ -153,7 +153,7 @@ const THEME = {
 };
 
 const DEFAULT_VISIBLE_BARS = 80;
-const MAX_CANDLES_IN_MEMORY = 2400;
+const MAX_CANDLES_IN_MEMORY = 7200;
 const DEFAULT_CHART_TYPE: ChartType = "candles";
 const SYNCED_PRICE_SCALE_MIN_WIDTH = 58;
 type ChartSeriesApi = ISeriesApi<SeriesType>;
@@ -384,60 +384,60 @@ const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
 };
 
 const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
-  "1s": 128,
-  "5s": 120,
-  "15s": 124,
-  "30s": 120,
-  "1m": 120,
-  "2m": 136,
-  "3m": 148,
-  "4m": 158,
-  "5m": 168,
-  "10m": 120,
-  "15m": 120,
-  "30m": 120,
-  "1h": 120,
-  "2h": 120,
-  "4h": 120,
-  "1D": 120,
+  "1s": 300,
+  "5s": 300,
+  "15s": 300,
+  "30s": 300,
+  "1m": 300,
+  "2m": 300,
+  "3m": 300,
+  "4m": 300,
+  "5m": 300,
+  "10m": 300,
+  "15m": 300,
+  "30m": 300,
+  "1h": 250,
+  "2h": 200,
+  "4h": 200,
+  "1D": 180,
 };
 
 const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
-  "1s": 180,
-  "5s": 164,
-  "15s": 172,
-  "30s": 164,
-  "1m": 164,
-  "2m": 184,
-  "3m": 198,
-  "4m": 210,
-  "5m": 220,
-  "10m": 164,
-  "15m": 164,
-  "30m": 164,
-  "1h": 164,
-  "2h": 164,
-  "4h": 164,
-  "1D": 164,
+  "1s": 600,
+  "5s": 600,
+  "15s": 600,
+  "30s": 600,
+  "1m": 600,
+  "2m": 600,
+  "3m": 600,
+  "4m": 600,
+  "5m": 600,
+  "10m": 600,
+  "15m": 600,
+  "30m": 600,
+  "1h": 480,
+  "2h": 360,
+  "4h": 360,
+  "1D": 300,
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 7.8,
-  "5s": 8.6,
-  "15s": 8.2,
-  "30s": 8.6,
-  "1m": 8.6,
-  "2m": 7.4,
-  "3m": 6.8,
-  "4m": 6.2,
-  "5m": 5.8,
-  "10m": 8.6,
-  "15m": 8.6,
-  "30m": 8.6,
-  "1h": 8.6,
-  "2h": 8.6,
-  "4h": 8.6,
-  "1D": 8.6,
+  "1s": 2.0,
+  "5s": 2.0,
+  "15s": 2.0,
+  "30s": 2.0,
+  "1m": 2.0,
+  "2m": 2.0,
+  "3m": 2.0,
+  "4m": 2.0,
+  "5m": 2.0,
+  "10m": 2.0,
+  "15m": 2.0,
+  "30m": 2.0,
+  "1h": 2.0,
+  "2h": 2.0,
+  "4h": 2.0,
+  "1D": 2.0,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
@@ -3208,6 +3208,21 @@ const TradingChart = ({
       const threshold = getHistoryBackfillThreshold(containerWidth, selectedTf);
 
       if (range.from > threshold) {
+        const loadedCount = loadedHistoryCountRef.current;
+        const visibleCount = range.to - range.from;
+        if (visibleCount > loadedCount * 0.85 && loadedCount < MAX_CANDLES_IN_MEMORY) {
+          const nextHistoryCount = Math.min(
+            MAX_CANDLES_IN_MEMORY,
+            loadedCount + Math.round(visibleCount * 1.5),
+          );
+          if (nextHistoryCount > loadedCount) {
+            isBackfillingHistoryRef.current = true;
+            reloadHistoricalCandles(nextHistoryCount, { from: range.from, to: range.to });
+            window.requestAnimationFrame(() => {
+              isBackfillingHistoryRef.current = false;
+            });
+          }
+        }
         return;
       }
 
