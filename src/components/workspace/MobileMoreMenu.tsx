@@ -24,10 +24,13 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay }: MobileMoreMenuProps) 
   };
 
   return (
-    <div className="quotex-glow-home trading-terminal flex h-full flex-col bg-[linear-gradient(180deg,#131b27_0%,#0e131d_100%)]">
+    <div className="quotex-glow-home trading-terminal flex h-full flex-col bg-[radial-gradient(circle_at_top,rgba(38,75,120,0.18),transparent_25%),linear-gradient(180deg,#151d2a_0%,#0e141d_100%)]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-white/8 bg-[linear-gradient(135deg,rgba(11,17,28,0.98),rgba(20,29,43,0.98))] px-5 py-4 shrink-0">
-        <span className="text-white font-bold text-[18px]">More</span>
+      <div className="flex items-center justify-between border-b border-white/10 bg-[linear-gradient(135deg,rgba(11,17,28,0.98),rgba(20,29,43,0.98))] px-5 py-4 shrink-0">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-[#89e5b0]">Quick access</p>
+          <span className="text-white font-black text-[18px]">More</span>
+        </div>
         <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#0b2f3a] flex items-center justify-center text-gray-300 hover:text-white transition-colors">
           <X className="w-4 h-4" />
         </button>
@@ -63,7 +66,7 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay }: MobileMoreMenuProps) 
             onClose();
             navigate("/deposit");
           }}
-          className="w-full flex items-center gap-3 rounded-2xl border border-white/8 bg-[linear-gradient(145deg,rgba(17,24,39,0.92),rgba(10,14,22,0.96))] px-3 py-3 text-left shadow-[0_12px_30px_rgba(0,0,0,0.25)] transition hover:-translate-y-0.5 hover:border-[#3bcf8d]/30 hover:bg-[#182130] group"
+          className="w-full flex items-center gap-3 rounded-3xl border border-white/10 bg-[linear-gradient(145deg,rgba(16,23,36,0.96),rgba(8,12,19,0.98))] px-3 py-3 text-left shadow-[0_18px_35px_rgba(0,0,0,0.30)] transition duration-200 hover:-translate-y-0.5 hover:border-[#4ddf96]/25 hover:bg-[linear-gradient(145deg,rgba(21,31,46,0.98),rgba(11,15,23,0.99))] hover:shadow-[0_20px_40px_rgba(16,185,129,0.12)] group"
         >
           <Wallet className="w-4 h-4 text-[#6d8790] group-hover:text-[#86c9d4] transition-colors shrink-0" />
           <span className="text-[15px] font-semibold text-gray-200 group-hover:text-white transition-colors">Deposit</span>
@@ -73,21 +76,21 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay }: MobileMoreMenuProps) 
             onClose();
             navigate("/withdraw");
           }}
-          className="w-full flex items-center gap-3 rounded-2xl border border-white/8 bg-[linear-gradient(145deg,rgba(17,24,39,0.92),rgba(10,14,22,0.96))] px-3 py-3 text-left shadow-[0_12px_30px_rgba(0,0,0,0.25)] transition hover:-translate-y-0.5 hover:border-[#3bcf8d]/30 hover:bg-[#182130] group"
+          className="w-full flex items-center gap-3 rounded-3xl border border-white/10 bg-[linear-gradient(145deg,rgba(16,23,36,0.96),rgba(8,12,19,0.98))] px-3 py-3 text-left shadow-[0_18px_35px_rgba(0,0,0,0.30)] transition duration-200 hover:-translate-y-0.5 hover:border-[#4ddf96]/25 hover:bg-[linear-gradient(145deg,rgba(21,31,46,0.98),rgba(11,15,23,0.99))] hover:shadow-[0_20px_40px_rgba(16,185,129,0.12)] group"
         >
           <ArrowDownLeft className="w-4 h-4 text-[#6d8790] group-hover:text-[#86c9d4] transition-colors shrink-0" />
           <span className="text-[15px] font-semibold text-gray-200 group-hover:text-white transition-colors">Withdrawal</span>
         </button>
         <button
           onClick={() => handleSection("balance_history")}
-          className="w-full flex items-center gap-3 rounded-2xl border border-white/8 bg-[linear-gradient(145deg,rgba(17,24,39,0.92),rgba(10,14,22,0.96))] px-3 py-3 text-left shadow-[0_12px_30px_rgba(0,0,0,0.25)] transition hover:-translate-y-0.5 hover:border-[#3bcf8d]/30 hover:bg-[#182130] group"
+          className="w-full flex items-center gap-3 rounded-3xl border border-white/10 bg-[linear-gradient(145deg,rgba(16,23,36,0.96),rgba(8,12,19,0.98))] px-3 py-3 text-left shadow-[0_18px_35px_rgba(0,0,0,0.30)] transition duration-200 hover:-translate-y-0.5 hover:border-[#4ddf96]/25 hover:bg-[linear-gradient(145deg,rgba(21,31,46,0.98),rgba(11,15,23,0.99))] hover:shadow-[0_20px_40px_rgba(16,185,129,0.12)] group"
         >
           <List className="w-4 h-4 text-[#6d8790] group-hover:text-[#86c9d4] transition-colors shrink-0" />
           <span className="text-[15px] font-semibold text-gray-200 group-hover:text-white transition-colors">Transactions</span>
         </button>
         <button
           onClick={() => handleSection("trading_history")}
-          className="w-full flex items-center gap-3 rounded-2xl border border-white/8 bg-[linear-gradient(145deg,rgba(17,24,39,0.92),rgba(10,14,22,0.96))] px-3 py-3 text-left shadow-[0_12px_30px_rgba(0,0,0,0.25)] transition hover:-translate-y-0.5 hover:border-[#3bcf8d]/30 hover:bg-[#182130] group"
+          className="w-full flex items-center gap-3 rounded-3xl border border-white/10 bg-[linear-gradient(145deg,rgba(16,23,36,0.96),rgba(8,12,19,0.98))] px-3 py-3 text-left shadow-[0_18px_35px_rgba(0,0,0,0.30)] transition duration-200 hover:-translate-y-0.5 hover:border-[#4ddf96]/25 hover:bg-[linear-gradient(145deg,rgba(21,31,46,0.98),rgba(11,15,23,0.99))] hover:shadow-[0_20px_40px_rgba(16,185,129,0.12)] group"
         >
           <History className="w-4 h-4 text-[#6d8790] group-hover:text-[#86c9d4] transition-colors shrink-0" />
           <span className="text-[15px] font-semibold text-gray-200 group-hover:text-white transition-colors">Trades</span>

@@ -69,20 +69,20 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
   return (
     <div
       className="quotex-glow-home trading-terminal absolute inset-0 z-40 flex flex-col overflow-hidden text-[var(--trading-text-color)]"
-      style={{ background: "linear-gradient(180deg, #141a26 0%, #10151f 45%, #0c111b 100%)" }}
+      style={{ background: "radial-gradient(circle at top, rgba(38, 75, 120, 0.18), transparent 30%), linear-gradient(180deg, #161d2b 0%, #0f1723 45%, #0a0f17 100%)" }}
     >
 
       {/* ── TOP HEADER ── */}
       <div
-        className="flex shrink-0 items-center justify-between border-b border-white/8 px-4 py-4 md:px-7"
-        style={{ background: "linear-gradient(135deg, rgba(10,15,22,0.98) 0%, rgba(17,24,37,0.98) 100%)" }}
+        className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-4 md:px-7"
+        style={{ background: "linear-gradient(135deg, rgba(9,13,20,0.98) 0%, rgba(17,24,39,0.98) 45%, rgba(10,14,22,0.98) 100%)" }}
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#2bbd7f]/30 bg-[linear-gradient(145deg,#17312a,#10231d)] text-[15px] font-black text-[#bdf2db] shadow-[0_10px_25px_rgba(16,185,129,0.18)]">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#4ddf96]/25 bg-[linear-gradient(145deg,#113328,#081a12)] text-[16px] font-black text-[#d8ffe9] shadow-[0_18px_30px_rgba(16,185,129,0.16)] ring-1 ring-white/6">
             {profile?.username?.charAt(0)?.toUpperCase() ?? "U"}
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7ad9a8]">Account overview</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#87e4af]">Premium account</p>
             <h1 className="truncate text-[16px] font-black text-white md:text-[18px]">{profile?.username ?? "Your Account"}</h1>
             <p className="hidden truncate text-[11px] text-[#a8b4c8] md:block">{user?.email ?? "Manage your profile & settings"}</p>
           </div>
@@ -102,7 +102,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
         </div>
       </div>
 
-      <div className="border-b border-white/8 px-4 py-4 md:px-7" style={{ background: "linear-gradient(180deg, rgba(16,24,38,0.96), rgba(12,17,27,0.98))" }}>
+      <div className="border-b border-white/8 px-4 py-4 md:px-7" style={{ background: "linear-gradient(180deg, rgba(14,20,31,0.96), rgba(10,14,21,0.98))" }}>
         <div className="grid gap-3 sm:grid-cols-3">
           {[
             { label: "Deposit", icon: Wallet, action: () => { onClose?.(); navigate("/deposit"); }, accent: "from-[#1f8d5d] to-[#0ea86a]" },
@@ -115,7 +115,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
                 key={item.label}
                 type="button"
                 onClick={item.action}
-                className={`rounded-2xl border border-white/8 bg-[linear-gradient(145deg,rgba(17,24,39,0.92),rgba(10,14,22,0.96))] p-3 text-left shadow-[0_12px_30px_rgba(0,0,0,0.25)] transition hover:-translate-y-0.5 hover:border-[#3bcf8d]/30 hover:bg-[#182130]`}
+                className={`rounded-3xl border border-white/10 bg-[linear-gradient(145deg,rgba(16,23,36,0.96),rgba(8,12,19,0.98))] p-3 text-left shadow-[0_18px_35px_rgba(0,0,0,0.30)] transition duration-200 hover:-translate-y-0.5 hover:border-[#4ddf96]/25 hover:bg-[linear-gradient(145deg,rgba(21,31,46,0.98),rgba(11,15,23,0.99))] hover:shadow-[0_20px_40px_rgba(16,185,129,0.12)]`}
               >
                 <div className={`mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${item.accent} text-white shadow-[0_10px_18px_rgba(15,23,42,0.35)]`}>
                   <Icon className="h-4 w-4" />
@@ -171,13 +171,13 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
               <button
                 key={item.id}
                 onClick={() => changeTab(item.id as AccountTab)}
-                className={`mx-2 my-0.5 flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all ${
+                className={`mx-2 my-1 flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all ${
                   isActive
-                    ? "border border-[#2f80ed]/28 bg-[#263044] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.02)]"
-                    : "text-[var(--trading-muted-color)] hover:bg-white/[0.045] hover:text-white"
+                    ? "border-[#2f80ed]/35 bg-[linear-gradient(135deg,rgba(30,41,59,0.98),rgba(18,25,38,0.98))] text-white shadow-[0_16px_30px_rgba(15,23,42,0.35)]"
+                    : "border-transparent text-[var(--trading-muted-color)] hover:border-white/8 hover:bg-white/[0.04] hover:text-white"
                 }`}
               >
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${isActive ? "bg-[#2f80ed]/15 text-[#78b8ff]" : "bg-black/20 text-[#748197]"}`}>
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${isActive ? "bg-[linear-gradient(145deg,#1f3b53,#183144)] text-[#8ecbff]" : "bg-white/[0.04] text-[#9eb2cc]"}`}>
                   <item.icon className="w-4 h-4" />
                 </div>
                 <div>
