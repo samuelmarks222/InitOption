@@ -24,9 +24,9 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay }: MobileMoreMenuProps) 
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#121f27]">
+    <div className="quotex-glow-home trading-terminal flex h-full flex-col bg-[linear-gradient(180deg,#131b27_0%,#0e131d_100%)]">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-[#0b2f3a] shrink-0 bg-[#13232d]">
+      <div className="flex items-center justify-between border-b border-white/8 bg-[linear-gradient(135deg,rgba(11,17,28,0.98),rgba(20,29,43,0.98))] px-5 py-4 shrink-0">
         <span className="text-white font-bold text-[18px]">More</span>
         <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#0b2f3a] flex items-center justify-center text-gray-300 hover:text-white transition-colors">
           <X className="w-4 h-4" />
@@ -34,16 +34,16 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay }: MobileMoreMenuProps) 
       </div>
 
       {/* Section Rows */}
-      <div className="divide-y divide-[#0b2f3a] shrink-0">
+      <div className="divide-y divide-white/6 shrink-0 bg-[linear-gradient(180deg,rgba(15,23,36,0.96),rgba(10,14,22,0.98))]">
         {SECTIONS.map(section => {
           const Icon = section.icon;
           return (
             <button
               key={section.id}
               onClick={() => handleSection(section.action)}
-              className="w-full flex items-center gap-4 px-5 py-4 hover:bg-[#13232d] transition-colors group"
+              className="w-full flex items-center gap-4 px-5 py-4 transition-colors group hover:bg-white/[0.04]"
             >
-              <div className="w-9 h-9 rounded-xl bg-[#13232d] flex items-center justify-center shrink-0 group-hover:bg-[#0b2f3a] transition-colors">
+              <div className="w-9 h-9 rounded-xl bg-[linear-gradient(145deg,#17312a,#10231d)] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#19392a]">
                 <Icon className="w-5 h-5 text-[#86c9d4]" />
               </div>
               <span className="flex-1 text-left text-[15px] font-semibold text-white">{section.label}</span>
@@ -57,40 +57,40 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay }: MobileMoreMenuProps) 
       <div className="h-px bg-[#0b2f3a] my-1" />
 
       {/* Quick Links */}
-      <div className="px-5 py-2 space-y-0.5 shrink-0">
+      <div className="shrink-0 space-y-2 px-4 py-3">
         <button
           onClick={() => {
             onClose();
             navigate("/deposit");
           }}
-          className="w-full flex items-center gap-3 py-3 text-left hover:text-white transition-colors group"
+          className="w-full flex items-center gap-3 rounded-2xl border border-white/8 bg-[linear-gradient(145deg,rgba(17,24,39,0.92),rgba(10,14,22,0.96))] px-3 py-3 text-left shadow-[0_12px_30px_rgba(0,0,0,0.25)] transition hover:-translate-y-0.5 hover:border-[#3bcf8d]/30 hover:bg-[#182130] group"
         >
           <Wallet className="w-4 h-4 text-[#6d8790] group-hover:text-[#86c9d4] transition-colors shrink-0" />
-          <span className="text-[15px] font-semibold text-gray-300 group-hover:text-[#d8f4f8] transition-colors">Deposit</span>
+          <span className="text-[15px] font-semibold text-gray-200 group-hover:text-white transition-colors">Deposit</span>
         </button>
         <button
           onClick={() => {
             onClose();
             navigate("/withdraw");
           }}
-          className="w-full flex items-center gap-3 py-3 text-left hover:text-white transition-colors group"
+          className="w-full flex items-center gap-3 rounded-2xl border border-white/8 bg-[linear-gradient(145deg,rgba(17,24,39,0.92),rgba(10,14,22,0.96))] px-3 py-3 text-left shadow-[0_12px_30px_rgba(0,0,0,0.25)] transition hover:-translate-y-0.5 hover:border-[#3bcf8d]/30 hover:bg-[#182130] group"
         >
           <ArrowDownLeft className="w-4 h-4 text-[#6d8790] group-hover:text-[#86c9d4] transition-colors shrink-0" />
-          <span className="text-[15px] font-semibold text-gray-300 group-hover:text-[#d8f4f8] transition-colors">Withdrawal</span>
+          <span className="text-[15px] font-semibold text-gray-200 group-hover:text-white transition-colors">Withdrawal</span>
         </button>
         <button
           onClick={() => handleSection("balance_history")}
-          className="w-full flex items-center gap-3 py-3 text-left hover:text-white transition-colors group"
+          className="w-full flex items-center gap-3 rounded-2xl border border-white/8 bg-[linear-gradient(145deg,rgba(17,24,39,0.92),rgba(10,14,22,0.96))] px-3 py-3 text-left shadow-[0_12px_30px_rgba(0,0,0,0.25)] transition hover:-translate-y-0.5 hover:border-[#3bcf8d]/30 hover:bg-[#182130] group"
         >
           <List className="w-4 h-4 text-[#6d8790] group-hover:text-[#86c9d4] transition-colors shrink-0" />
-          <span className="text-[15px] font-semibold text-gray-300 group-hover:text-[#d8f4f8] transition-colors">Transactions</span>
+          <span className="text-[15px] font-semibold text-gray-200 group-hover:text-white transition-colors">Transactions</span>
         </button>
         <button
           onClick={() => handleSection("trading_history")}
-          className="w-full flex items-center gap-3 py-3 text-left hover:text-white transition-colors group"
+          className="w-full flex items-center gap-3 rounded-2xl border border-white/8 bg-[linear-gradient(145deg,rgba(17,24,39,0.92),rgba(10,14,22,0.96))] px-3 py-3 text-left shadow-[0_12px_30px_rgba(0,0,0,0.25)] transition hover:-translate-y-0.5 hover:border-[#3bcf8d]/30 hover:bg-[#182130] group"
         >
           <History className="w-4 h-4 text-[#6d8790] group-hover:text-[#86c9d4] transition-colors shrink-0" />
-          <span className="text-[15px] font-semibold text-gray-300 group-hover:text-[#d8f4f8] transition-colors">Trades</span>
+          <span className="text-[15px] font-semibold text-gray-200 group-hover:text-white transition-colors">Trades</span>
         </button>
       </div>
 
