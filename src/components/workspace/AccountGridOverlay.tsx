@@ -74,11 +74,11 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
 
       {/* ── TOP HEADER ── */}
       <div
-        className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-4 md:px-7"
+        className="flex shrink-0 items-center justify-between border-b border-white/10 px-3 py-3 md:px-5"
         style={{ background: "linear-gradient(135deg, rgba(9,13,20,0.98) 0%, rgba(17,24,39,0.98) 45%, rgba(10,14,22,0.98) 100%)" }}
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#4ddf96]/25 bg-[linear-gradient(145deg,#113328,#081a12)] text-[16px] font-black text-[#d8ffe9] shadow-[0_18px_30px_rgba(16,185,129,0.16)] ring-1 ring-white/6">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#4ddf96]/25 bg-[linear-gradient(145deg,#113328,#081a12)] text-[14px] font-black text-[#d8ffe9] shadow-[0_14px_24px_rgba(16,185,129,0.16)] ring-1 ring-white/6">
             {profile?.username?.charAt(0)?.toUpperCase() ?? "U"}
           </div>
           <div className="min-w-0">
@@ -102,8 +102,8 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
         </div>
       </div>
 
-      <div className="border-b border-white/8 px-4 py-4 md:px-7" style={{ background: "linear-gradient(180deg, rgba(14,20,31,0.96), rgba(10,14,21,0.98))" }}>
-        <div className="grid gap-3 sm:grid-cols-3">
+      <div className="border-b border-white/8 px-3 py-3 md:px-5" style={{ background: "linear-gradient(180deg, rgba(14,20,31,0.96), rgba(10,14,21,0.98))" }}>
+        <div className="grid gap-2 sm:grid-cols-3">
           {[
             { label: "Deposit", icon: Wallet, action: () => { onClose?.(); navigate("/deposit"); }, accent: "from-[#1f8d5d] to-[#0ea86a]" },
             { label: "Withdraw", icon: ArrowDownLeft, action: () => { onClose?.(); navigate("/withdraw"); }, accent: "from-[#2a6dbe] to-[#4c90ff]" },
@@ -115,9 +115,9 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
                 key={item.label}
                 type="button"
                 onClick={item.action}
-                className={`rounded-3xl border border-white/10 bg-[linear-gradient(145deg,rgba(16,23,36,0.96),rgba(8,12,19,0.98))] p-3 text-left shadow-[0_18px_35px_rgba(0,0,0,0.30)] transition duration-200 hover:-translate-y-0.5 hover:border-[#4ddf96]/25 hover:bg-[linear-gradient(145deg,rgba(21,31,46,0.98),rgba(11,15,23,0.99))] hover:shadow-[0_20px_40px_rgba(16,185,129,0.12)]`}
+                className={`rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(16,23,36,0.96),rgba(8,12,19,0.98))] p-2.5 text-left shadow-[0_12px_24px_rgba(0,0,0,0.26)] transition duration-200 hover:-translate-y-0.5 hover:border-[#4ddf96]/25 hover:bg-[linear-gradient(145deg,rgba(21,31,46,0.98),rgba(11,15,23,0.99))] hover:shadow-[0_14px_28px_rgba(16,185,129,0.10)]`}
               >
-                <div className={`mb-2 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${item.accent} text-white shadow-[0_10px_18px_rgba(15,23,42,0.35)]`}>
+                <div className={`mb-1.5 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${item.accent} text-white shadow-[0_8px_14px_rgba(15,23,42,0.30)]`}>
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="text-[13px] font-semibold text-white">{item.label}</div>
@@ -130,7 +130,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
 
       {/* ── MOBILE: Scrollable Tab Strip ── */}
       <div
-        className="grid shrink-0 grid-cols-3 gap-2 border-b border-white/8 px-3 py-3 md:hidden"
+        className="grid shrink-0 grid-cols-3 gap-1.5 border-b border-white/8 px-2 py-2 md:hidden"
         style={{ background: "linear-gradient(180deg, rgba(16,24,38,0.98), rgba(12,17,27,0.98))" }}
       >
         {MENU_ITEMS.map(item => {
@@ -139,7 +139,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
             <button
               key={item.id}
               onClick={() => changeTab(item.id as AccountTab)}
-              className={`flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center transition-colors ${
+              className={`flex min-h-[64px] flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1.5 text-center transition-colors ${
                 isActive ? "border border-[#2f80ed]/35 bg-[#263044] text-white" : "border border-white/[0.04] bg-white/[0.035] text-[var(--trading-muted-color)]"
               }`}
             >
@@ -171,13 +171,13 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
               <button
                 key={item.id}
                 onClick={() => changeTab(item.id as AccountTab)}
-                className={`mx-2 my-1 flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all ${
+                className={`mx-2 my-0.5 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all ${
                   isActive
                     ? "border-[#2f80ed]/35 bg-[linear-gradient(135deg,rgba(30,41,59,0.98),rgba(18,25,38,0.98))] text-white shadow-[0_16px_30px_rgba(15,23,42,0.35)]"
                     : "border-transparent text-[var(--trading-muted-color)] hover:border-white/8 hover:bg-white/[0.04] hover:text-white"
                 }`}
               >
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${isActive ? "bg-[linear-gradient(145deg,#1f3b53,#183144)] text-[#8ecbff]" : "bg-white/[0.04] text-[#9eb2cc]"}`}>
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${isActive ? "bg-[linear-gradient(145deg,#1f3b53,#183144)] text-[#8ecbff]" : "bg-white/[0.04] text-[#9eb2cc]"}`}>
                   <item.icon className="w-4 h-4" />
                 </div>
                 <div>
@@ -192,7 +192,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-3 md:p-4">
+          <div className="flex-1 overflow-y-auto p-2 md:p-3">
             {activeTab === "upload" && <ProfileUploadPhoto />}
             {activeTab === "personal" && <ProfilePersonalData compact />}
             {activeTab === "deposit" && <ProfileDeposit />}

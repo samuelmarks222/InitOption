@@ -26,7 +26,7 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay }: MobileMoreMenuProps) 
   return (
     <div className="quotex-glow-home trading-terminal flex h-full flex-col bg-[radial-gradient(circle_at_top,rgba(38,75,120,0.18),transparent_25%),linear-gradient(180deg,#151d2a_0%,#0e141d_100%)]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-white/10 bg-[linear-gradient(135deg,rgba(11,17,28,0.98),rgba(20,29,43,0.98))] px-5 py-4 shrink-0">
+      <div className="flex items-center justify-between border-b border-white/10 bg-[linear-gradient(135deg,rgba(11,17,28,0.98),rgba(20,29,43,0.98))] px-4 py-3 shrink-0">
         <div>
           <p className="text-[11px] uppercase tracking-[0.24em] text-[#89e5b0]">Quick access</p>
           <span className="text-white font-black text-[18px]">More</span>
@@ -44,7 +44,7 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay }: MobileMoreMenuProps) 
             <button
               key={section.id}
               onClick={() => handleSection(section.action)}
-              className="w-full flex items-center gap-4 px-5 py-4 transition-colors group hover:bg-white/[0.04]"
+              className="w-full flex items-center gap-3 px-4 py-3 transition-colors group hover:bg-white/[0.04]"
             >
               <div className="w-9 h-9 rounded-xl bg-[linear-gradient(145deg,#17312a,#10231d)] flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#19392a]">
                 <Icon className="w-5 h-5 text-[#86c9d4]" />
@@ -60,7 +60,7 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay }: MobileMoreMenuProps) 
       <div className="h-px bg-[#0b2f3a] my-1" />
 
       {/* Quick Links */}
-      <div className="shrink-0 space-y-2 px-4 py-3">
+      <div className="shrink-0 space-y-1.5 px-3 py-2">
         <button
           onClick={() => {
             onClose();
@@ -101,7 +101,7 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay }: MobileMoreMenuProps) 
       <div className="h-px bg-[#0b2f3a] my-1" />
 
       {/* Logout only */}
-      <div className="flex items-center px-5 py-4 shrink-0">
+      <div className="flex items-center px-4 py-3 shrink-0">
         <div className="flex-1" />
         <button
           onClick={() => { onClose(); signOut(); }}
