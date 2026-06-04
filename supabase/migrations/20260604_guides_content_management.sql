@@ -59,54 +59,41 @@ ALTER TABLE guide_media ENABLE ROW LEVEL SECURITY;
 -- Policies for guides
 CREATE POLICY "Allow reading published guides"
   ON guides FOR SELECT
-  USING (is_published = true OR (SELECT EXISTS (
-    SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'content-manager')
-  )));
+  USING (
+    is_published = true
+    OR COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager')
+  );
 
 CREATE POLICY "Allow staff to manage guides"
   ON guides FOR ALL
-  USING ((SELECT EXISTS (
-    SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'content-manager')
-  )))
-  WITH CHECK ((SELECT EXISTS (
-    SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'content-manager')
-  )));
+  USING (COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'))
+  WITH CHECK (COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'));
 
 -- Policies for guide content
 CREATE POLICY "Allow reading published guide content"
   ON guide_content FOR SELECT
-  USING ((SELECT EXISTS (
-    SELECT 1 FROM guides WHERE id = guide_id AND is_published = true
-  )) OR (SELECT EXISTS (
-    SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'content-manager')
-  )));
+  USING (
+    EXISTS (SELECT 1 FROM guides WHERE id = guide_id AND is_published = true)
+    OR COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager')
+  );
 
 CREATE POLICY "Allow staff to manage guide content"
   ON guide_content FOR ALL
-  USING ((SELECT EXISTS (
-    SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'content-manager')
-  )))
-  WITH CHECK ((SELECT EXISTS (
-    SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'content-manager')
-  )));
+  USING (COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'))
+  WITH CHECK (COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'));
 
 -- Policies for guide media
 CREATE POLICY "Allow reading media from published guides"
   ON guide_media FOR SELECT
-  USING ((SELECT EXISTS (
-    SELECT 1 FROM guides WHERE id = guide_id AND is_published = true
-  )) OR (SELECT EXISTS (
-    SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'content-manager')
-  )));
+  USING (
+    EXISTS (SELECT 1 FROM guides WHERE id = guide_id AND is_published = true)
+    OR COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager')
+  );
 
 CREATE POLICY "Allow staff to manage guide media"
   ON guide_media FOR ALL
-  USING ((SELECT EXISTS (
-    SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'content-manager')
-  )))
-  WITH CHECK ((SELECT EXISTS (
-    SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'content-manager')
-  )));
+  USING (COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'))
+  WITH CHECK (COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'));
 
 -- Trigger to update updated_at
 CREATE OR REPLACE FUNCTION update_guide_timestamp()
