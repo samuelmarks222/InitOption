@@ -8,12 +8,6 @@ const RESULT_MS = 4000;
 
 type ExInfo = { direction: "higher" | "lower"; amount: number; entry_price: number; payout_rate: number; opened_at: string; expiry_seconds: number; expiresAtMs: number; isWin: boolean };
 
-const tfLabel = (s: number) => {
-  if (s === 60) return "M1"; if (s === 300) return "M5"; if (s === 900) return "M15";
-  if (s === 1800) return "M30"; if (s === 3600) return "H1"; if (s === 14400) return "H4";
-  if (s === 86400) return "D1"; return `${s}s`;
-};
-
 type DP = { time?: unknown; close?: number };
 const lastClose = (s: ISeriesApi<SeriesType>) => {
   try { const d = (s as unknown as { data?: () => DP[] }).data?.(); if (d?.length) { const c = d[d.length - 1].close; if (typeof c === "number" && Number.isFinite(c)) return c; } return null; } catch { return null; }
@@ -101,7 +95,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     myTrades.forEach((t) => {
       if (pills.has(t.id)) return;
       const e = document.createElement("div");
-      e.style.cssText = "position:absolute;pointer-events:none;white-space:nowrap;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:Inter,monospace;color:#FFF;background:rgba(26,26,42,0.88);border:1px solid;z-index:5;display:none";
+      e.style.cssText = "position:absolute;pointer-events:none;white-space:nowrap;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700;font-family:Inter,monospace;color:#FFF;background:rgba(26,26,42,0.88);border:1px solid;z-index:5;display:none";
       el.appendChild(e);
       pills.set(t.id, e);
     });
@@ -132,7 +126,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         e.style.display = ""; e.style.left = "12px";
         if (info.isWin) { e.textContent = `${arrow} +$${(info.amount * info.payout_rate).toFixed(2)}`; e.style.borderColor = UP; }
         else { e.textContent = `${arrow} -$${info.amount.toFixed(2)}`; e.style.borderColor = DN; }
-        const ey = y + (up ? -22 : 22);
+        const ey = y + (up ? -16 : 0);
         e.style.top = `${Math.max(4, Math.min(ey, container.clientHeight - 20))}px`;
       });
 
@@ -161,11 +155,11 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         } else {
           const mins = Math.floor(rem / 60);
           const secs = Math.floor(rem % 60);
-          e.textContent = `${arrow} $${trade.amount.toFixed(2)}  ${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}  ${tfLabel(trade.expiry_seconds)}  ${secs.toString().padStart(2, "0")}`;
+          e.textContent = `${arrow} $${trade.amount.toFixed(2)}  ${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
         }
 
         e.style.left = `${clampX}px`;
-        const ty = y + (up ? -22 : 22);
+        const ty = y + (up ? -16 : 0);
         e.style.top = `${Math.max(4, Math.min(ty, container.clientHeight - 20))}px`;
       });
 
