@@ -47,16 +47,20 @@ const isBoxTool = (tool: string) => BOX_TOOL_IDS.has(tool);
 
 const getBoxCorners = (points: Point[]) => {
   const [p1, p2] = points;
-  const leftTime = Math.min(Number(p1?.time) || 0, Number(p2?.time) || 0) as any;
-  const rightTime = Math.max(Number(p1?.time) || 0, Number(p2?.time) || 0) as any;
+  const t1 = Number(p1?.time) || 0;
+  const t2 = Number(p2?.time) || 0;
+  const leftTime = Math.min(t1, t2) as any;
+  const rightTime = Math.max(t1, t2) as any;
   const topPrice = Math.max(p1?.price ?? 0, p2?.price ?? 0);
   const bottomPrice = Math.min(p1?.price ?? 0, p2?.price ?? 0);
+  const leftPt = t1 <= t2 ? p1 : p2;
+  const rightPt = t1 > t2 ? p1 : p2;
 
   return {
-    topLeft: { time: leftTime, price: topPrice },
-    topRight: { time: rightTime, price: topPrice },
-    bottomRight: { time: rightTime, price: bottomPrice },
-    bottomLeft: { time: leftTime, price: bottomPrice },
+    topLeft: { time: leftTime, price: topPrice, logical: leftPt?.logical },
+    topRight: { time: rightTime, price: topPrice, logical: rightPt?.logical },
+    bottomRight: { time: rightTime, price: bottomPrice, logical: rightPt?.logical },
+    bottomLeft: { time: leftTime, price: bottomPrice, logical: leftPt?.logical },
   } satisfies Record<BoxCornerId, Point>;
 };
 
@@ -385,12 +389,15 @@ export const DrawingOverlay = ({
   const roundToBar = (time: number) =>
     timeframeSeconds > 0 ? Math.floor(Math.max(0, time) / timeframeSeconds) * timeframeSeconds : time;
 
-  const resolveSvgXFromTime = (time: number) => {
+  const resolveSvgXFromPoint = (p: Point) => {
     if (!chart) return -9999;
-    const barTime = roundToBar(time);
+    if (p.logical != null) {
+      const coord = chart.timeScale().logicalToCoordinate(p.logical as never);
+      if (coord != null && Number.isFinite(coord)) return coord;
+    }
+    const barTime = roundToBar(p.time);
     const direct = chart.timeScale().timeToCoordinate(barTime as Time);
     if (direct !== null) return direct;
-    // Fallback for times outside chart data range
     if (timeframeSeconds > 0) {
       const reference = getLogicalTimeReference();
       if (reference) {
@@ -405,7 +412,7 @@ export const DrawingOverlay = ({
   const toSvg = (p: Point) => {
     if (!chart || !series) return { x: -9999, y: -9999 };
     return {
-      x: resolveSvgXFromTime(Number(p.time) || 0),
+      x: resolveSvgXFromPoint(p),
       y: series.priceToCoordinate(p.price) ?? -9999,
     };
   };
@@ -428,12 +435,14 @@ export const DrawingOverlay = ({
     };
   };
 
-  const resolveTimeFromSvgX = (svgX: number, options: { clamp?: boolean } = {}) => {
+  const resolveTimeFromSvgX = (svgX: number, options: { clamp?: boolean } = {}): { time: number; logical: number } | null => {
     if (!chart || !svgRef.current) return null;
     const width = svgRef.current.clientWidth ?? 0;
     const resolvedX = options.clamp === false ? svgX : clampViewportCoordinate(svgX, width);
     const time = chart.timeScale().coordinateToTime(resolvedX);
-    return time === null ? null : Number(time);
+    const logical = chart.timeScale().coordinateToLogical(resolvedX);
+    if (time === null) return null;
+    return { time: Number(time), logical: logical !== null ? Number(logical) : 0 };
   };
 
   const resolvePriceFromSvgY = (svgY: number, options: { clamp?: boolean } = {}) => {
@@ -447,10 +456,10 @@ export const DrawingOverlay = ({
 
   const toAbstractFromSvg = (svgX: number, svgY: number, options: { clamp?: boolean } = {}): Point | null => {
     const resolvedPoint = options.clamp === false ? { x: svgX, y: svgY } : clampSvgPoint({ x: svgX, y: svgY });
-    const time = resolveTimeFromSvgX(resolvedPoint.x, options);
+    const timeResult = resolveTimeFromSvgX(resolvedPoint.x, options);
     const price = resolvePriceFromSvgY(resolvedPoint.y, options);
-    if (time === null || price === null) return null;
-    return { time, price };
+    if (timeResult === null || price === null) return null;
+    return { time: timeResult.time, logical: timeResult.logical, price };
   };
 
   /** Get abstract chart point from raw screen coordinates */
