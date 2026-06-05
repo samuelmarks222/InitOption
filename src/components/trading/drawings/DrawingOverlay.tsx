@@ -385,9 +385,13 @@ export const DrawingOverlay = ({
   const roundToBar = (time: number) =>
     timeframeSeconds > 0 ? Math.floor(Math.max(0, time) / timeframeSeconds) * timeframeSeconds : time;
 
-  const resolveSvgXFromTime = (time: number) => {
+  const resolveSvgXFromPoint = (p: Point) => {
     if (!chart) return -9999;
-    const barTime = roundToBar(time);
+    if (p.logical != null) {
+      const coord = chart.timeScale().logicalToCoordinate(p.logical as never);
+      if (coord != null && Number.isFinite(coord)) return coord;
+    }
+    const barTime = roundToBar(p.time);
     const direct = chart.timeScale().timeToCoordinate(barTime as Time);
     if (direct !== null) return direct;
     return -9999;
@@ -396,7 +400,7 @@ export const DrawingOverlay = ({
   const toSvg = (p: Point) => {
     if (!chart || !series) return { x: -9999, y: -9999 };
     return {
-      x: resolveSvgXFromTime(Number(p.time) || 0),
+      x: resolveSvgXFromPoint(p),
       y: series.priceToCoordinate(p.price) ?? -9999,
     };
   };
@@ -419,12 +423,14 @@ export const DrawingOverlay = ({
     };
   };
 
-  const resolveTimeFromSvgX = (svgX: number, options: { clamp?: boolean } = {}) => {
+  const resolveTimeFromSvgX = (svgX: number, options: { clamp?: boolean } = {}): { time: number; logical: number } | null => {
     if (!chart || !svgRef.current) return null;
     const width = svgRef.current.clientWidth ?? 0;
     const resolvedX = options.clamp === false ? svgX : clampViewportCoordinate(svgX, width);
     const time = chart.timeScale().coordinateToTime(resolvedX);
-    return time === null ? null : Number(time);
+    const logical = chart.timeScale().coordinateToLogical(resolvedX);
+    if (time === null) return null;
+    return { time: Number(time), logical: logical !== null ? Number(logical) : Number(time) };
   };
 
   const resolvePriceFromSvgY = (svgY: number, options: { clamp?: boolean } = {}) => {
@@ -438,10 +444,10 @@ export const DrawingOverlay = ({
 
   const toAbstractFromSvg = (svgX: number, svgY: number, options: { clamp?: boolean } = {}): Point | null => {
     const resolvedPoint = options.clamp === false ? { x: svgX, y: svgY } : clampSvgPoint({ x: svgX, y: svgY });
-    const time = resolveTimeFromSvgX(resolvedPoint.x, options);
+    const timeResult = resolveTimeFromSvgX(resolvedPoint.x, options);
     const price = resolvePriceFromSvgY(resolvedPoint.y, options);
-    if (time === null || price === null) return null;
-    return { time, price };
+    if (timeResult === null || price === null) return null;
+    return { time: timeResult.time, logical: timeResult.logical, price };
   };
 
   /** Get abstract chart point from raw screen coordinates */
@@ -461,11 +467,18 @@ export const DrawingOverlay = ({
     if (!preview) return;
 
     dragPreviewRef.current = null;
-    const nextPoints = preview.svgPoints
-      .map((point) => toAbstractFromSvg(point.x, point.y, { clamp: true }))
+    let nextPoints = preview.svgPoints
+      .map((point) => toAbstractFromSvg(point.x, point.y, { clamp: false }))
       .filter((point): point is Point => point !== null);
 
-    if (nextPoints.length === 0) {
+    if (nextPoints.length !== preview.svgPoints.length) {
+      // Some points off-screen — retry with clamp
+      nextPoints = preview.svgPoints
+        .map((point) => toAbstractFromSvg(point.x, point.y, { clamp: true }))
+        .filter((point): point is Point => point !== null);
+    }
+
+    if (nextPoints.length !== preview.svgPoints.length) {
       setRenderTick((tick) => tick + 1);
       return;
     }
