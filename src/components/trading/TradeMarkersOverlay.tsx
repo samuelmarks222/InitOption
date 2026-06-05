@@ -14,32 +14,23 @@ const parseTime = (v: unknown): number | null => {
 
 const getX = (chart: IChartApi, trade: ActiveTrade) => {
   try {
-    if (trade.marker_time != null && Number.isFinite(trade.marker_time)) {
-      const x = chart.timeScale().timeToCoordinate(trade.marker_time as Time);
+    const t = trade.marker_time != null && Number.isFinite(trade.marker_time)
+      ? trade.marker_time
+      : parseTime(trade.opened_at);
+    if (t != null) {
+      const x = chart.timeScale().timeToCoordinate(t as Time);
       if (x != null && Number.isFinite(x)) return x;
+      const idx = chart.timeScale().timeToIndex(t as Time, true);
+      if (idx != null) {
+        const x2 = chart.timeScale().logicalToCoordinate(idx as never);
+        if (x2 != null && Number.isFinite(x2)) return x2;
+      }
     }
   } catch {}
   try {
     if (trade.marker_logical != null && Number.isFinite(trade.marker_logical)) {
       const x = chart.timeScale().logicalToCoordinate(trade.marker_logical as never);
       if (x != null && Number.isFinite(x)) return x;
-    }
-  } catch {}
-  try {
-    const t = parseTime(trade.opened_at);
-    if (t != null) {
-      const x = chart.timeScale().timeToCoordinate(t as Time);
-      if (x != null && Number.isFinite(x)) return x;
-    }
-  } catch {}
-  try {
-    const t = trade.marker_time != null && Number.isFinite(trade.marker_time) ? trade.marker_time : parseTime(trade.opened_at);
-    if (t != null) {
-      const idx = chart.timeScale().timeToIndex(t as Time, true);
-      if (idx != null) {
-        const x = chart.timeScale().logicalToCoordinate(idx as never);
-        if (x != null && Number.isFinite(x)) return x;
-      }
     }
   } catch {}
   try {
@@ -76,7 +67,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     myTrades.forEach((t) => {
       if (markers[t.id]) return;
       const d = document.createElement("div");
-      d.style.cssText = "position:absolute;pointer-events:none;height:2px;width:28px;border-radius:1px;display:none";
+      d.style.cssText = "position:absolute;pointer-events:none;height:2px;width:24px;display:none";
       el.appendChild(d);
       markers[t.id] = d;
     });
