@@ -462,10 +462,10 @@ export const DrawingOverlay = ({
 
     dragPreviewRef.current = null;
     const nextPoints = preview.svgPoints
-      .map((point) => toAbstractFromSvg(point.x, point.y, { clamp: false }))
+      .map((point) => toAbstractFromSvg(point.x, point.y, { clamp: true }))
       .filter((point): point is Point => point !== null);
 
-    if (nextPoints.length !== preview.svgPoints.length) {
+    if (nextPoints.length === 0) {
       setRenderTick((tick) => tick + 1);
       return;
     }
@@ -1009,6 +1009,7 @@ export const DrawingOverlay = ({
           : undefined,
       };
       svgRef.current!.setPointerCapture(e.pointerId);
+      setRenderTick(t => t + 1);
     };
 
     const svgPts = previewSvgPoints ?? d.points.map(toSvg);
