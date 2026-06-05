@@ -1,9 +1,24 @@
 import { useEffect, useRef } from "react";
-import { IChartApi, ISeriesApi, type SeriesType } from "lightweight-charts";
+import { IChartApi, ISeriesApi, type SeriesType, Time } from "lightweight-charts";
 import type { ActiveTrade } from "@/hooks/useTrading";
 
 const UP = "#00C076";
 const DN = "#F6465D";
+
+const getCandleX = (chart: IChartApi, trade: ActiveTrade): number | null => {
+  try {
+    const t = trade.marker_time != null && Number.isFinite(trade.marker_time) ? trade.marker_time : null;
+    if (t == null) return null;
+    const x = chart.timeScale().timeToCoordinate(t as Time);
+    if (x != null && Number.isFinite(x)) return x;
+    const idx = chart.timeScale().timeToIndex(t as Time, true);
+    if (idx != null) {
+      const x2 = chart.timeScale().logicalToCoordinate(idx as never);
+      if (x2 != null && Number.isFinite(x2)) return x2;
+    }
+  } catch {}
+  return null;
+};
 
 interface Props { chart: IChartApi; series: ISeriesApi<SeriesType>; assetSymbol: string; trades: ActiveTrade[]; timeframeSeconds: number; }
 
@@ -11,14 +26,15 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
   const cRef = useRef<HTMLDivElement>(null);
   const barMap = useRef<Record<string, HTMLDivElement>>({});
   const trRef = useRef(trades);
+  const chRef = useRef(chart);
   const srRef = useRef(series);
 
   useEffect(() => { trRef.current = trades; }, [trades]);
+  useEffect(() => { chRef.current = chart; }, [chart]);
   useEffect(() => { srRef.current = series; }, [series]);
 
   const myTrades = trades.filter((t) => t.asset_symbol === assetSymbol);
 
-  // Create/remove bar elements
   useEffect(() => {
     const container = cRef.current;
     if (!container) return;
@@ -32,7 +48,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     myTrades.forEach((t) => {
       if (map[t.id]) return;
       const bar = document.createElement("div");
-      bar.style.cssText = "position:absolute;pointer-events:none;height:3px;width:40px;border-radius:2px;display:none;z-index:9999";
+      bar.style.cssText = "position:absolute;pointer-events:none;height:3px;width:44px;border-radius:2px;display:none;z-index:9999";
       container.appendChild(bar);
       map[t.id] = bar;
     });
@@ -40,15 +56,16 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     return () => { Object.values(map).forEach((e) => e.remove()); barMap.current = {}; };
   }, [myTrades]);
 
-  // RAF loop: position bars at FIXED X (left edge), Y tracks entry price
   useEffect(() => {
     let rafId = 0;
     const tick = () => {
       const container = cRef.current;
       const map = barMap.current;
       const allTrades = trRef.current;
+      const chartApi = chRef.current;
       const seriesApi = srRef.current;
-      if (!container || !seriesApi) { rafId = requestAnimationFrame(tick); return; }
+      if (!container || !chartApi || !seriesApi) { rafId = requestAnimationFrame(tick); return; }
+      const cw = container.clientWidth;
       const ch = container.clientHeight;
 
       allTrades.forEach((trade) => {
@@ -56,13 +73,18 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         const bar = map[trade.id];
         if (!bar) return;
 
+        let x: number | null = null;
         let y: number | null = null;
+        try { x = getCandleX(chartApi, trade); } catch {}
         try { y = seriesApi.priceToCoordinate(trade.entry_price); } catch {}
-        if (y == null || !Number.isFinite(y)) { bar.style.display = "none"; return; }
+        if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) {
+          bar.style.display = "none";
+          return;
+        }
 
         bar.style.display = "block";
         bar.style.background = trade.direction === "higher" ? UP : DN;
-        bar.style.left = "4px";
+        bar.style.left = `${Math.max(2, Math.min(x - 2, cw - 46))}px`;
         bar.style.top = `${Math.max(1, Math.min(y - 1, ch - 3))}px`;
       });
 
