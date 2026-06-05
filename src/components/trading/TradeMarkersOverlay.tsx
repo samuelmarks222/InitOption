@@ -106,7 +106,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
     myTrades.forEach((t) => {
       if (pills.has(t.id)) return;
       const e = document.createElement("div");
-      e.style.cssText = "position:absolute;pointer-events:none;white-space:nowrap;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700;font-family:Inter,monospace;color:#FFF;background:rgba(26,26,42,0.88);border:1px solid;z-index:5;display:none";
+      e.style.cssText = "position:absolute;pointer-events:none;white-space:nowrap;padding:1px 5px;border-radius:8px;font-size:10px;font-weight:700;font-family:Inter,monospace;color:#FFF;background:rgba(26,26,42,0.88);border:1px solid;z-index:5;display:none";
       el.appendChild(e);
       pills.set(t.id, e);
     });
@@ -140,7 +140,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         e.style.display = ""; e.style.left = "12px";
         if (info.isWin) { e.textContent = `${arrow} +$${(info.amount * info.payout_rate).toFixed(2)}`; e.style.borderColor = UP; }
         else { e.textContent = `${arrow} -$${info.amount.toFixed(2)}`; e.style.borderColor = DN; }
-        const ey = y + (up ? -16 : 0);
+        const ey = y + (up ? -14 : 0);
         e.style.top = `${Math.max(4, Math.min(ey, ch - 20))}px`;
       });
 
@@ -169,13 +169,11 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
           if (won) { e.textContent = `${arrow} +$${(trade.amount * trade.payout_rate).toFixed(2)}`; e.style.borderColor = UP; }
           else { e.textContent = `${arrow} -$${trade.amount.toFixed(2)}`; e.style.borderColor = DN; }
         } else {
-          const mins = Math.floor(rem / 60);
-          const secs = Math.floor(rem % 60);
-          e.textContent = `${arrow} $${trade.amount.toFixed(2)}  ${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+          e.textContent = `${arrow} $${trade.amount.toFixed(2)}`;
         }
 
         e.style.left = `${clampX}px`;
-        const ty = y + (up ? -16 : 0);
+        const ty = y + (up ? -14 : 0);
         e.style.top = `${Math.max(4, Math.min(ty, ch - 20))}px`;
       });
 
@@ -185,23 +183,5 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  return (
-    <div ref={cRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 85 }}>
-      {myTrades.length > 0 && (
-        <div
-          className="absolute"
-          style={{
-            top: 20,
-            right: 20,
-            width: 12,
-            height: 12,
-            borderRadius: "50%",
-            background: "#00C076",
-            border: "2px solid #fff",
-            zIndex: 999,
-          }}
-        />
-      )}
-    </div>
-  );
+  return <div ref={cRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 85 }} />;
 };
