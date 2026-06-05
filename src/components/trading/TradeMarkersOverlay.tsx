@@ -1,98 +1,70 @@
 import { useEffect, useRef } from "react";
-import { IChartApi, ISeriesApi, type SeriesType, Time } from "lightweight-charts";
+import { IChartApi, ISeriesApi, type SeriesType, Time, IPriceLine, LineStyle, createSeriesMarkers } from "lightweight-charts";
 import type { ActiveTrade } from "@/hooks/useTrading";
 
 const UP = "#00C076";
 const DN = "#F6465D";
 
-const getCandleX = (chart: IChartApi, trade: ActiveTrade): number | null => {
-  try {
-    const t = trade.marker_time != null && Number.isFinite(trade.marker_time) ? trade.marker_time : null;
-    if (t == null) return null;
-    const x = chart.timeScale().timeToCoordinate(t as Time);
-    if (x != null && Number.isFinite(x)) return x;
-    const idx = chart.timeScale().timeToIndex(t as Time, true);
-    if (idx != null) {
-      const x2 = chart.timeScale().logicalToCoordinate(idx as never);
-      if (x2 != null && Number.isFinite(x2)) return x2;
-    }
-  } catch {}
-  return null;
-};
-
 interface Props { chart: IChartApi; series: ISeriesApi<SeriesType>; assetSymbol: string; trades: ActiveTrade[]; timeframeSeconds: number; }
 
-export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Props) => {
-  const cRef = useRef<HTMLDivElement>(null);
-  const barMap = useRef<Record<string, HTMLDivElement>>({});
-  const trRef = useRef(trades);
-  const chRef = useRef(chart);
-  const srRef = useRef(series);
+export const TradeMarkersOverlay = ({ series, assetSymbol, trades }: Props) => {
+  const sRef = useRef(series);
+  const plRef = useRef<Record<string, IPriceLine>>({});
+  const pluginRef = useRef<ReturnType<typeof createSeriesMarkers> | null>(null);
 
-  useEffect(() => { trRef.current = trades; }, [trades]);
-  useEffect(() => { chRef.current = chart; }, [chart]);
-  useEffect(() => { srRef.current = series; }, [series]);
+  useEffect(() => { sRef.current = series; }, [series]);
+
+  // Init markers plugin once
+  useEffect(() => {
+    const s = sRef.current;
+    if (!s) return;
+    pluginRef.current = createSeriesMarkers(s);
+    return () => { pluginRef.current?.setMarkers([]); pluginRef.current = null; };
+  }, [series]);
 
   const myTrades = trades.filter((t) => t.asset_symbol === assetSymbol);
 
+  // Price line at entry price — locked, never moves
   useEffect(() => {
-    const container = cRef.current;
-    if (!container) return;
-    const cur = new Set(myTrades.map((t) => t.id));
-    const map = barMap.current;
+    const s = sRef.current;
+    if (!s) return;
+    const lines = plRef.current;
+    const ids = new Set(myTrades.map((t) => t.id));
 
-    Object.keys(map).forEach((id) => {
-      if (!cur.has(id)) { map[id].remove(); delete map[id]; }
+    Object.keys(lines).forEach((id) => {
+      if (!ids.has(id)) { try { s.removePriceLine(lines[id]); } catch {} delete lines[id]; }
     });
 
     myTrades.forEach((t) => {
-      if (map[t.id]) return;
-      const bar = document.createElement("div");
-      bar.style.cssText = "position:absolute;pointer-events:none;height:1px;width:36px;border-radius:0;display:none;z-index:9999";
-      container.appendChild(bar);
-      map[t.id] = bar;
+      const c = t.direction === "higher" ? UP : DN;
+      const o = { price: t.entry_price, color: c, lineStyle: LineStyle.Solid as const, lineWidth: 1, axisLabelVisible: false };
+      if (lines[t.id]) try { lines[t.id].applyOptions(o); } catch {}
+      else try { lines[t.id] = s.createPriceLine(o); } catch {}
     });
 
-    return () => { Object.values(map).forEach((e) => e.remove()); barMap.current = {}; };
+    return () => {
+      Object.values(plRef.current).forEach((l) => { try { s.removePriceLine(l); } catch {} });
+      plRef.current = {};
+    };
   }, [myTrades]);
 
+  // Circle dot on the entry candle
   useEffect(() => {
-    let rafId = 0;
-    const tick = () => {
-      const container = cRef.current;
-      const map = barMap.current;
-      const allTrades = trRef.current;
-      const chartApi = chRef.current;
-      const seriesApi = srRef.current;
-      if (!container || !chartApi || !seriesApi) { rafId = requestAnimationFrame(tick); return; }
-      const cw = container.clientWidth;
-      const ch = container.clientHeight;
+    const plugin = pluginRef.current;
+    if (!plugin) return;
 
-      allTrades.forEach((trade) => {
-        if (trade.asset_symbol !== assetSymbol) return;
-        const bar = map[trade.id];
-        if (!bar) return;
+    plugin.setMarkers(
+      myTrades.map((t) => ({
+        time: (t.marker_time ?? Math.floor(new Date(t.opened_at).getTime() / 1000)) as Time,
+        shape: "circle",
+        position: "inBar",
+        color: t.direction === "higher" ? UP : DN,
+        size: 1,
+      }))
+    );
 
-        let x: number | null = null;
-        let y: number | null = null;
-        try { x = getCandleX(chartApi, trade); } catch {}
-        try { y = seriesApi.priceToCoordinate(trade.entry_price); } catch {}
-        if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) {
-          bar.style.display = "none";
-          return;
-        }
+    return () => { plugin.setMarkers([]); };
+  }, [myTrades]);
 
-        bar.style.display = "block";
-        bar.style.background = trade.direction === "higher" ? UP : DN;
-        bar.style.left = `${Math.max(2, Math.min(x - 2, cw - 38))}px`;
-        bar.style.top = `${Math.max(0, Math.min(y, ch - 1))}px`;
-      });
-
-      rafId = requestAnimationFrame(tick);
-    };
-    rafId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafId);
-  }, [assetSymbol]);
-
-  return <div ref={cRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 9999 }} />;
+  return null;
 };
