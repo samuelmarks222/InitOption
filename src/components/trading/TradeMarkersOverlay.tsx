@@ -2,326 +2,178 @@ import { useEffect, useRef } from "react";
 import { IChartApi, ISeriesApi, type SeriesType, IPriceLine, LineStyle, Time } from "lightweight-charts";
 import type { ActiveTrade } from "@/hooks/useTrading";
 
-const LINE_COLOR_UP = "#00C076";
-const LINE_COLOR_DOWN = "#F6465D";
+const UP = "#00C076";
+const DN = "#F6465D";
+const RESULT_MS = 4000;
 
-const RESULT_DISPLAY_MS = 4000;
+type ExInfo = { direction: "higher" | "lower"; amount: number; entry_price: number; payout_rate: number; opened_at: string; expiry_seconds: number; expiresAtMs: number; isWin: boolean };
 
-type ExpiredTradeInfo = {
-  id: string;
-  direction: "higher" | "lower";
-  amount: number;
-  entry_price: number;
-  payout_rate: number;
-  marker_time?: number;
-  expiry_seconds: number;
-  expiresAtMs: number;
-  isWin: boolean;
+const tfLabel = (s: number) => {
+  if (s === 60) return "M1"; if (s === 300) return "M5"; if (s === 900) return "M15";
+  if (s === 1800) return "M30"; if (s === 3600) return "H1"; if (s === 14400) return "H4";
+  if (s === 86400) return "D1"; return `${s}s`;
 };
 
-const getTimeframeLabel = (seconds: number) => {
-  if (seconds === 60) return "M1";
-  if (seconds === 120) return "M2";
-  if (seconds === 180) return "M3";
-  if (seconds === 240) return "M4";
-  if (seconds === 300) return "M5";
-  if (seconds === 600) return "M10";
-  if (seconds === 900) return "M15";
-  if (seconds === 1800) return "M30";
-  if (seconds === 3600) return "H1";
-  if (seconds === 7200) return "H2";
-  if (seconds === 14400) return "H4";
-  if (seconds === 86400) return "D1";
-  return `${seconds}s`;
+type DP = { time?: unknown; close?: number };
+const lastClose = (s: ISeriesApi<SeriesType>) => {
+  try { const d = (s as unknown as { data?: () => DP[] }).data?.(); if (d?.length) { const c = d[d.length - 1].close; if (typeof c === "number" && Number.isFinite(c)) return c; } return null; } catch { return null; }
 };
 
-type SeriesDataPoint = { time?: unknown; close?: number };
+const parseTime = (v: unknown): number | null => {
+  if (typeof v === "number" && Number.isFinite(v)) return v > 1_000_000_000_000 ? Math.floor(v / 1000) : Math.floor(v);
+  if (typeof v === "string") { const n = Number(v); if (Number.isFinite(n)) return n > 1_000_000_000_000 ? Math.floor(n / 1000) : Math.floor(n); const p = Date.parse(v); if (!Number.isNaN(p)) return Math.floor(p / 1000); }
+  if (v instanceof Date) return Math.floor(v.getTime() / 1000);
+  return null;
+};
 
-const getLastClose = (s: ISeriesApi<SeriesType>): number | null => {
-  try {
-    const data = (s as unknown as { data?: () => SeriesDataPoint[] }).data?.();
-    if (!data || data.length === 0) return null;
-    const last = data[data.length - 1];
-    if (typeof last.close === "number" && Number.isFinite(last.close)) return last.close;
-    return null;
-  } catch {
-    return null;
+const getX = (chart: IChartApi, trade: ActiveTrade) => {
+  if (trade.marker_time != null && Number.isFinite(trade.marker_time)) {
+    const x = chart.timeScale().timeToCoordinate(trade.marker_time as Time);
+    if (x != null && Number.isFinite(x)) return x;
   }
+  if (trade.marker_logical != null && Number.isFinite(trade.marker_logical)) {
+    const x = chart.timeScale().logicalToCoordinate(trade.marker_logical as never);
+    if (x != null && Number.isFinite(x)) return x;
+  }
+  const t = parseTime(trade.opened_at);
+  if (t != null) {
+    const x = chart.timeScale().timeToCoordinate(t as Time);
+    if (x != null && Number.isFinite(x)) return x;
+  }
+  const vr = chart.timeScale().getVisibleLogicalRange();
+  if (vr) return chart.timeScale().logicalToCoordinate(vr.from + 2 as never);
+  return null;
 };
 
-interface Props {
-  chart: IChartApi;
-  series: ISeriesApi<SeriesType>;
-  assetSymbol: string;
-  trades: ActiveTrade[];
-  timeframeSeconds: number;
-}
+interface Props { chart: IChartApi; series: ISeriesApi<SeriesType>; assetSymbol: string; trades: ActiveTrade[]; timeframeSeconds: number; }
 
 export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Props) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const priceLineRefs = useRef<Record<string, IPriceLine>>({});
-  const seriesRef = useRef(series);
-  const markersRef = useRef<Map<string, HTMLDivElement>>(new Map());
-  const tradesRef = useRef(trades);
-  const recentlyExpiredRef = useRef<Map<string, ExpiredTradeInfo>>(new Map());
+  const cRef = useRef<HTMLDivElement>(null);
+  const plRef = useRef<Record<string, IPriceLine>>({});
+  const sRef = useRef(series);
+  const chRef = useRef(chart);
+  const pillsRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const trRef = useRef(trades);
+  const exRef = useRef<Map<string, ExInfo>>(new Map());
+
+  useEffect(() => { sRef.current = series; }, [series]);
+  useEffect(() => { chRef.current = chart; }, [chart]);
+  useEffect(() => { trRef.current = trades; }, [trades]);
+
+  const myTrades = trades.filter((t) => t.asset_symbol === assetSymbol);
 
   useEffect(() => {
-    seriesRef.current = series;
-  }, [series]);
-
-  useEffect(() => {
-    tradesRef.current = trades;
-  }, [trades]);
-
-  const assetTrades = trades.filter((t) => t.asset_symbol === assetSymbol);
-
-  // Price lines (dashed entry lines)
-  useEffect(() => {
-    const currentSeries = seriesRef.current;
-    if (!currentSeries) return;
-
-    const lines = priceLineRefs.current;
-    const tradeIds = new Set(assetTrades.map((t) => t.id));
-
-    Object.keys(lines).forEach((id) => {
-      if (!tradeIds.has(id)) {
-        try { currentSeries.removePriceLine(lines[id]); } catch { }
-        delete lines[id];
-      }
+    const s = sRef.current; if (!s) return;
+    const lines = plRef.current;
+    const ids = new Set(myTrades.map((t) => t.id));
+    Object.keys(lines).forEach((id) => { if (!ids.has(id)) { try { s.removePriceLine(lines[id]); } catch {} delete lines[id]; } });
+    myTrades.forEach((t) => {
+      const c = t.direction === "higher" ? UP : DN;
+      const o = { price: t.entry_price, color: c, lineStyle: LineStyle.Solid as const, lineWidth: 1, axisLabelVisible: false };
+      if (lines[t.id]) lines[t.id].applyOptions(o);
+      else try { lines[t.id] = s.createPriceLine(o); } catch {}
     });
+  }, [myTrades]);
 
-    assetTrades.forEach((trade) => {
-      const isUp = trade.direction === "higher";
-      const color = isUp ? LINE_COLOR_UP : LINE_COLOR_DOWN;
-      const options = {
-        price: trade.entry_price,
-        color,
-        lineStyle: LineStyle.Dashed as const,
-        lineWidth: 1,
-        axisLabelVisible: false,
-      };
-
-      if (lines[trade.id]) {
-        lines[trade.id].applyOptions(options);
-      } else {
-        try {
-          lines[trade.id] = currentSeries.createPriceLine(options);
-        } catch { }
-      }
-    });
-  }, [assetTrades]);
+  useEffect(() => { return () => { const s = sRef.current; Object.values(plRef.current).forEach((l) => { try { s?.removePriceLine(l); } catch {} }); plRef.current = {}; }; }, []);
 
   useEffect(() => {
-    return () => {
-      const s = seriesRef.current;
-      const lines = priceLineRefs.current;
-      Object.keys(lines).forEach((id) => {
-        try { s?.removePriceLine(lines[id]); } catch { }
-      });
-      priceLineRefs.current = {};
-    };
-  }, []);
-
-  // HTML pill markers
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const markers = markersRef.current;
-    const expired = recentlyExpiredRef.current;
-    const tradeIds = new Set(assetTrades.map((t) => t.id));
+    const el = cRef.current; if (!el) return;
+    const pills = pillsRef.current;
+    const expired = exRef.current;
+    const cur = new Set(myTrades.map((t) => t.id));
     const now = Date.now();
 
-    const getLastCloseSafe = () => getLastClose(seriesRef.current);
-
-    markers.forEach((el, id) => {
-      if (tradeIds.has(id)) return;
-
-      if (!expired.has(id)) {
-        const liveTrade = tradesRef.current.find((t) => t.id === id);
-        if (liveTrade) {
-          const remaining = liveTrade.expiry_seconds - (now - new Date(liveTrade.opened_at).getTime()) / 1000;
-          if (remaining <= 0) {
-            const lastClose = getLastCloseSafe();
-            const isUp = liveTrade.direction === "higher";
-            const won =
-              lastClose !== null && Number.isFinite(lastClose)
-                ? isUp
-                  ? lastClose > liveTrade.entry_price
-                  : lastClose < liveTrade.entry_price
-                : false;
-            expired.set(id, {
-              id: liveTrade.id,
-              direction: liveTrade.direction,
-              amount: liveTrade.amount,
-              entry_price: liveTrade.entry_price,
-              payout_rate: liveTrade.payout_rate,
-              marker_time: liveTrade.marker_time,
-              expiry_seconds: liveTrade.expiry_seconds,
-              expiresAtMs: now + RESULT_DISPLAY_MS,
-              isWin: won,
-            });
-          } else {
-            el.remove();
-            markers.delete(id);
-            return;
-          }
-        } else {
-          el.remove();
-          markers.delete(id);
-          return;
-        }
-      }
+    pills.forEach((e, id) => {
+      if (cur.has(id) || expired.has(id)) return;
+      const live = trRef.current.find((t) => t.id === id);
+      if (live) {
+        const rem = live.expiry_seconds - (now - new Date(live.opened_at).getTime()) / 1000;
+        if (rem <= 0) {
+          const lc = lastClose(sRef.current);
+          const up = live.direction === "higher";
+          const won = lc !== null ? (up ? lc > live.entry_price : lc < live.entry_price) : false;
+          expired.set(id, { direction: live.direction, amount: live.amount, entry_price: live.entry_price, payout_rate: live.payout_rate, opened_at: live.opened_at, expiry_seconds: live.expiry_seconds, expiresAtMs: now + RESULT_MS, isWin: won });
+        } else { e.remove(); pills.delete(id); }
+      } else { e.remove(); pills.delete(id); }
     });
 
-    assetTrades.forEach((trade) => {
-      if (markers.has(trade.id)) return;
-
-      const el = document.createElement("div");
-      el.style.position = "absolute";
-      el.style.pointerEvents = "none";
-      el.style.whiteSpace = "nowrap";
-      el.style.padding = "3px 10px";
-      el.style.borderRadius = "20px";
-      el.style.fontSize = "11px";
-      el.style.fontWeight = "700";
-      el.style.fontFamily = "Inter, monospace";
-      el.style.color = "#FFFFFF";
-      el.style.background = "rgba(26, 26, 42, 0.88)";
-      el.style.border = "1px solid";
-      el.style.zIndex = "5";
-      container.appendChild(el);
-      markers.set(trade.id, el);
+    myTrades.forEach((t) => {
+      if (pills.has(t.id)) return;
+      const e = document.createElement("div");
+      e.style.cssText = "position:absolute;pointer-events:none;white-space:nowrap;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:Inter,monospace;color:#FFF;background:rgba(26,26,42,0.88);border:1px solid;z-index:5;display:none";
+      el.appendChild(e);
+      pills.set(t.id, e);
     });
 
-    return () => {
-      markers.forEach((el) => el.remove());
-      markers.clear();
-      expired.clear();
-    };
-  }, [assetTrades]);
+    return () => { pills.forEach((e) => e.remove()); pills.clear(); expired.clear(); };
+  }, [myTrades]);
 
-  // Position and update markers every frame
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    let reqId = 0;
-
+    let raf = 0;
     const loop = () => {
-      const markers = markersRef.current;
-      const currentTrades = tradesRef.current;
-      const expired = recentlyExpiredRef.current;
+      const container = cRef.current; if (!container) { raf = requestAnimationFrame(loop); return; }
+      const cw = container.clientWidth;
+      const pills = pillsRef.current;
+      const current = trRef.current;
+      const expired = exRef.current;
       const now = Date.now();
+      const ch = chRef.current;
+      const sr = sRef.current;
 
       expired.forEach((info, id) => {
-        const el = markers.get(id);
-        if (!el) {
-          expired.delete(id);
-          return;
-        }
-
-        if (now > info.expiresAtMs) {
-          el.remove();
-          markers.delete(id);
-          expired.delete(id);
-          return;
-        }
-
-        const x =
-          info.marker_time != null && Number.isFinite(info.marker_time)
-            ? chart.timeScale().timeToCoordinate(info.marker_time as Time)
-            : null;
-        const y = series.priceToCoordinate(info.entry_price);
-        const isUp = info.direction === "higher";
-        const arrow = isUp ? "▲" : "▼";
-
-        if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) {
-          el.style.display = "none";
-          return;
-        }
-
-        el.style.display = "";
-        if (info.isWin) {
-          const profit = info.amount * info.payout_rate;
-          el.textContent = `${arrow} +$${profit.toFixed(2)}`;
-          el.style.borderColor = LINE_COLOR_UP;
-        } else {
-          el.textContent = `${arrow} -$${info.amount.toFixed(2)}`;
-          el.style.borderColor = LINE_COLOR_DOWN;
-        }
-
-        const offsetY = isUp ? -22 : 22;
-        el.style.left = `${x + 12}px`;
-        el.style.top = `${y + offsetY}px`;
+        const e = pills.get(id);
+        if (!e) { expired.delete(id); return; }
+        if (now > info.expiresAtMs) { e.remove(); pills.delete(id); expired.delete(id); return; }
+        const y = sr.priceToCoordinate(info.entry_price);
+        if (y == null || !Number.isFinite(y)) { e.style.display = "none"; return; }
+        const up = info.direction === "higher";
+        const arrow = up ? "▲" : "▼";
+        e.style.display = ""; e.style.left = "12px";
+        if (info.isWin) { e.textContent = `${arrow} +$${(info.amount * info.payout_rate).toFixed(2)}`; e.style.borderColor = UP; }
+        else { e.textContent = `${arrow} -$${info.amount.toFixed(2)}`; e.style.borderColor = DN; }
+        const ey = y + (up ? -22 : 22);
+        e.style.top = `${Math.max(4, Math.min(ey, container.clientHeight - 20))}px`;
       });
 
-      markers.forEach((el, id) => {
+      pills.forEach((e, id) => {
         if (expired.has(id)) return;
+        const trade = current.find((t) => t.id === id);
+        if (!trade) { e.style.display = "none"; return; }
 
-        const trade = currentTrades.find((t) => t.id === id);
-        if (!trade) return;
+        let x: number | null = getX(ch, trade);
+        let y = sr.priceToCoordinate(trade.entry_price);
+        if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) { e.style.display = "none"; return; }
+        const clampX = Math.max(4, Math.min(x, cw - 4));
 
-        const x =
-          trade.marker_time != null && Number.isFinite(trade.marker_time)
-            ? chart.timeScale().timeToCoordinate(trade.marker_time as Time)
-            : null;
-        const y = series.priceToCoordinate(trade.entry_price);
-        const isUp = trade.direction === "higher";
-        const color = isUp ? LINE_COLOR_UP : LINE_COLOR_DOWN;
-        const arrow = isUp ? "▲" : "▼";
+        const up = trade.direction === "higher";
+        const arrow = up ? "▲" : "▼";
+        const col = up ? UP : DN;
+        e.style.display = ""; e.style.borderColor = col;
 
-        if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) {
-          el.style.display = "none";
-          return;
-        }
+        const rem = Math.max(0, trade.expiry_seconds - (now - new Date(trade.opened_at).getTime()) / 1000);
 
-        el.style.display = "";
-        el.style.borderColor = color;
-
-        const remaining = Math.max(0, trade.expiry_seconds - (now - new Date(trade.opened_at).getTime()) / 1000);
-
-        if (remaining <= 0) {
-          const lastClose = getLastClose(series);
-          const won =
-            lastClose !== null && Number.isFinite(lastClose)
-              ? isUp
-                ? lastClose > trade.entry_price
-                : lastClose < trade.entry_price
-              : false;
-          if (won) {
-            const profit = trade.amount * trade.payout_rate;
-            el.textContent = `${arrow} +$${profit.toFixed(2)}`;
-            el.style.borderColor = LINE_COLOR_UP;
-          } else {
-            el.textContent = `${arrow} -$${trade.amount.toFixed(2)}`;
-            el.style.borderColor = LINE_COLOR_DOWN;
-          }
+        if (rem <= 0) {
+          const lc = lastClose(sr);
+          const won = lc !== null ? (up ? lc > trade.entry_price : lc < trade.entry_price) : false;
+          if (won) { e.textContent = `${arrow} +$${(trade.amount * trade.payout_rate).toFixed(2)}`; e.style.borderColor = UP; }
+          else { e.textContent = `${arrow} -$${trade.amount.toFixed(2)}`; e.style.borderColor = DN; }
         } else {
-          const mins = Math.floor(remaining / 60);
-          const secs = Math.floor(remaining % 60);
-          const tfLabel = getTimeframeLabel(trade.expiry_seconds);
-          el.textContent = `${arrow} $${trade.amount.toFixed(2)}  ${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}  ${tfLabel}  ${secs.toString().padStart(2, "0")}`;
+          const mins = Math.floor(rem / 60);
+          const secs = Math.floor(rem % 60);
+          e.textContent = `${arrow} $${trade.amount.toFixed(2)}  ${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}  ${tfLabel(trade.expiry_seconds)}  ${secs.toString().padStart(2, "0")}`;
         }
 
-        const offsetY = isUp ? -22 : 22;
-        el.style.left = `${x + 12}px`;
-        el.style.top = `${y + offsetY}px`;
+        e.style.left = `${clampX}px`;
+        const ty = y + (up ? -22 : 22);
+        e.style.top = `${Math.max(4, Math.min(ty, container.clientHeight - 20))}px`;
       });
 
-      reqId = requestAnimationFrame(loop);
+      raf = requestAnimationFrame(loop);
     };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
-    reqId = requestAnimationFrame(loop);
-
-    return () => cancelAnimationFrame(reqId);
-  }, [chart, series]);
-
-  return (
-    <div
-      ref={containerRef}
-      className="absolute inset-0 overflow-hidden pointer-events-none"
-      style={{ zIndex: 85 }}
-    />
-  );
+  return <div ref={cRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 85 }} />;
 };
