@@ -33,6 +33,16 @@ const getX = (chart: IChartApi, trade: ActiveTrade) => {
     }
   } catch {}
   try {
+    const t = trade.marker_time != null && Number.isFinite(trade.marker_time) ? trade.marker_time : parseTime(trade.opened_at);
+    if (t != null) {
+      const idx = chart.timeScale().timeToIndex(t as Time, true);
+      if (idx != null) {
+        const x = chart.timeScale().logicalToCoordinate(idx as never);
+        if (x != null && Number.isFinite(x)) return x;
+      }
+    }
+  } catch {}
+  try {
     const vr = chart.timeScale().getVisibleLogicalRange();
     if (vr) return chart.timeScale().logicalToCoordinate(vr.from + 2 as never);
   } catch {}
