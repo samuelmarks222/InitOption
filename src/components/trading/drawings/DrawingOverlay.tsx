@@ -504,37 +504,8 @@ export const DrawingOverlay = ({
   }, []);
 
   useEffect(() => {
-    if (!chart || !series || !svgRef.current) {
-      previousTimeframeSecondsRef.current = timeframeSeconds;
-      return;
-    }
-
-    if (previousTimeframeSecondsRef.current === timeframeSeconds) return;
-
     previousTimeframeSecondsRef.current = timeframeSeconds;
-    const savedSvgPoints = lastVisibleSvgPointsRef.current;
-
-    const frame = window.requestAnimationFrame(() => {
-      drawings.forEach((drawing) => {
-        const snapshot = savedSvgPoints[drawing.id];
-        if (!snapshot || snapshot.length !== drawing.points.length) return;
-
-        const nextPoints = snapshot
-          .map((point) => toAbstractFromSvg(point.x, point.y, { clamp: false }))
-          .filter((point): point is Point => point !== null);
-
-        if (nextPoints.length !== drawing.points.length) return;
-
-        updateDrawing(drawing.id, {
-          points: isBoxTool(drawing.tool) ? normalizeBoxPoints(nextPoints) : nextPoints,
-        });
-      });
-
-      setRenderTick((tick) => tick + 1);
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [chart, drawings, series, timeframeSeconds, updateDrawing]);
+  }, [timeframeSeconds]);
 
   useEffect(() => {
     if (!chart || !series || !svgRef.current) return;
