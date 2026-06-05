@@ -44,7 +44,7 @@ interface Props { chart: IChartApi; series: ISeriesApi<SeriesType>; assetSymbol:
 
 export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Props) => {
   const cRef = useRef<HTMLDivElement>(null);
-  const markersRef = useRef<Record<string, HTMLDivElement>>({});
+  const elRefs = useRef<Record<string, HTMLDivElement>>({});
   const trRef = useRef(trades);
   const chRef = useRef(chart);
   const srRef = useRef(series);
@@ -55,62 +55,79 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
 
   const myTrades = trades.filter((t) => t.asset_symbol === assetSymbol);
 
+  // Create fixed test marker on mount to verify overlay rendering
   useEffect(() => {
-    const el = cRef.current; if (!el) return;
+    const container = cRef.current;
+    if (!container) return;
+    const testEl = document.createElement("div");
+    testEl.style.cssText = "position:absolute;pointer-events:none;top:30px;left:30px;width:20px;height:20px;border-radius:50%;background:red;border:3px solid yellow;z-index:9999";
+    container.appendChild(testEl);
+    return () => testEl.remove();
+  }, []);
+
+  // Sync markers: create/remove elements when myTrades changes
+  useEffect(() => {
+    const container = cRef.current;
+    if (!container) return;
     const cur = new Set(myTrades.map((t) => t.id));
-    const markers = markersRef.current;
+    const elMap = elRefs.current;
 
-    Object.keys(markers).forEach((id) => {
-      if (!cur.has(id)) { markers[id].remove(); delete markers[id]; }
+    // Remove stale markers
+    Object.keys(elMap).forEach((id) => {
+      if (!cur.has(id)) { elMap[id].remove(); delete elMap[id]; }
     });
 
+    // Create new markers
     myTrades.forEach((t) => {
-      if (markers[t.id]) return;
+      if (elMap[t.id]) return;
       const d = document.createElement("div");
-      d.style.cssText = "position:absolute;pointer-events:none;width:10px;height:10px;border-radius:50%;display:none";
-      el.appendChild(d);
-      markers[t.id] = d;
+      d.style.cssText = "position:absolute;pointer-events:none;height:2px;width:24px;border-radius:1px;display:none";
+      container.appendChild(d);
+      elMap[t.id] = d;
     });
 
-    return () => { Object.values(markers).forEach((e) => e.remove()); markersRef.current = {}; };
+    return () => { Object.values(elMap).forEach((e) => e.remove()); elRefs.current = {}; };
   }, [myTrades]);
 
+  // RAF loop: update positions
   useEffect(() => {
-    let raf = 0;
-    const loop = () => {
+    let rafId = 0;
+    const tick = () => {
       const container = cRef.current;
-      if (!container) { raf = requestAnimationFrame(loop); return; }
+      if (!container) { rafId = requestAnimationFrame(tick); return; }
       const ch = container.clientHeight;
-      const markers = markersRef.current;
-      const current = trRef.current;
-      const cr = chRef.current;
-      const sr = srRef.current;
-      if (!cr || !sr) { raf = requestAnimationFrame(loop); return; }
+      const elMap = elRefs.current;
+      const allTrades = trRef.current;
+      const chartApi = chRef.current;
+      const seriesApi = srRef.current;
+      if (!chartApi || !seriesApi) { rafId = requestAnimationFrame(tick); return; }
 
-      current.forEach((trade) => {
+      allTrades.forEach((trade) => {
         if (trade.asset_symbol !== assetSymbol) return;
-        const e = markers[trade.id];
-        if (!e) return;
+        const el = elMap[trade.id];
+        if (!el) return;
 
         let x: number | null = null;
         let y: number | null = null;
-        try { x = getX(cr, trade); } catch {}
-        try { y = sr.priceToCoordinate(trade.entry_price); } catch {}
-        if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) { e.style.display = "none"; return; }
+        try { x = getX(chartApi, trade); } catch {}
+        try { y = seriesApi.priceToCoordinate(trade.entry_price); } catch {}
+        if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) {
+          el.style.display = "none";
+          return;
+        }
 
         const col = trade.direction === "higher" ? UP : DN;
-        e.style.display = "";
-        e.style.background = col;
-        e.style.border = "2px solid #fff";
-        e.style.left = `${x - 5}px`;
-        e.style.top = `${Math.max(1, Math.min(y - 5, ch - 10))}px`;
+        el.style.display = "block";
+        el.style.background = col;
+        el.style.left = `${x}px`;
+        el.style.top = `${Math.max(1, Math.min(y - 1, ch - 2))}px`;
       });
 
-      raf = requestAnimationFrame(loop);
+      rafId = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, []);
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [assetSymbol]);
 
   return <div ref={cRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 85 }} />;
 };
