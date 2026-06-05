@@ -382,21 +382,14 @@ export const DrawingOverlay = ({
     return null;
   };
 
+  const roundToBar = (time: number) =>
+    timeframeSeconds > 0 ? Math.floor(Math.max(0, time) / timeframeSeconds) * timeframeSeconds : time;
+
   const resolveSvgXFromTime = (time: number) => {
     if (!chart) return -9999;
-
-    const direct = chart.timeScale().timeToCoordinate(time as Time);
+    const barTime = roundToBar(time);
+    const direct = chart.timeScale().timeToCoordinate(barTime as Time);
     if (direct !== null) return direct;
-
-    if (timeframeSeconds > 0) {
-      const reference = getLogicalTimeReference();
-      if (reference) {
-        const logical = logicalFromTimeValue(time, reference.logical, reference.time, timeframeSeconds);
-        const coordinate = chart.timeScale().logicalToCoordinate(logical as any);
-        if (coordinate !== null) return coordinate;
-      }
-    }
-
     return -9999;
   };
 
@@ -430,19 +423,8 @@ export const DrawingOverlay = ({
     if (!chart || !svgRef.current) return null;
     const width = svgRef.current.clientWidth ?? 0;
     const resolvedX = options.clamp === false ? svgX : clampViewportCoordinate(svgX, width);
-    const logical = chart.timeScale().coordinateToLogical(resolvedX);
-    const reference = timeframeSeconds > 0 ? getLogicalTimeReference() : null;
-
-    if (logical !== null && reference) {
-      return timeFromLogicalCoordinate(Number(logical), reference.logical, reference.time, timeframeSeconds);
-    }
-
-    const samples = buildAxisSampleCoordinates(width, clampViewportCoordinate(resolvedX, width));
-
-    return resolveAxisValue(resolvedX, samples, (coordinate) => {
-      const time = chart.timeScale().coordinateToTime(coordinate);
-      return time === null ? null : Number(time);
-    });
+    const time = chart.timeScale().coordinateToTime(resolvedX);
+    return time === null ? null : Number(time);
   };
 
   const resolvePriceFromSvgY = (svgY: number, options: { clamp?: boolean } = {}) => {
