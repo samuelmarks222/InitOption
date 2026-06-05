@@ -1,17 +1,9 @@
 import { useEffect, useRef } from "react";
-import { IChartApi, ISeriesApi, type SeriesType, IPriceLine, LineStyle, Time } from "lightweight-charts";
+import { IChartApi, ISeriesApi, type SeriesType, Time } from "lightweight-charts";
 import type { ActiveTrade } from "@/hooks/useTrading";
 
 const UP = "#00C076";
 const DN = "#F6465D";
-const RESULT_MS = 4000;
-
-type ExInfo = { direction: "higher" | "lower"; amount: number; entry_price: number; payout_rate: number; opened_at: string; expiry_seconds: number; expiresAtMs: number; isWin: boolean };
-
-type DP = { time?: unknown; close?: number };
-const lastClose = (s: ISeriesApi<SeriesType>) => {
-  try { const d = (s as unknown as { data?: () => DP[] }).data?.(); if (d?.length) { const c = d[d.length - 1].close; if (typeof c === "number" && Number.isFinite(c)) return c; } return null; } catch { return null; }
-};
 
 const parseTime = (v: unknown): number | null => {
   if (typeof v === "number" && Number.isFinite(v)) return v > 1_000_000_000_000 ? Math.floor(v / 1000) : Math.floor(v);
@@ -49,132 +41,67 @@ const getX = (chart: IChartApi, trade: ActiveTrade) => {
 
 interface Props { chart: IChartApi; series: ISeriesApi<SeriesType>; assetSymbol: string; trades: ActiveTrade[]; timeframeSeconds: number; }
 
-export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timeframeSeconds }: Props) => {
+export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Props) => {
   const cRef = useRef<HTMLDivElement>(null);
-  const plRef = useRef<Record<string, IPriceLine>>({});
-  const sRef = useRef(series);
-  const chRef = useRef(chart);
-  const pillsRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const markersRef = useRef<Record<string, HTMLDivElement>>({});
   const trRef = useRef(trades);
-  const exRef = useRef<Map<string, ExInfo>>(new Map());
+  const chRef = useRef(chart);
+  const srRef = useRef(series);
 
-  useEffect(() => { sRef.current = series; }, [series]);
-  useEffect(() => { chRef.current = chart; }, [chart]);
   useEffect(() => { trRef.current = trades; }, [trades]);
+  useEffect(() => { chRef.current = chart; }, [chart]);
+  useEffect(() => { srRef.current = series; }, [series]);
 
   const myTrades = trades.filter((t) => t.asset_symbol === assetSymbol);
 
   useEffect(() => {
-    const s = sRef.current; if (!s) return;
-    const lines = plRef.current;
-    const ids = new Set(myTrades.map((t) => t.id));
-    Object.keys(lines).forEach((id) => { if (!ids.has(id)) { try { s.removePriceLine(lines[id]); } catch {} delete lines[id]; } });
-    myTrades.forEach((t) => {
-      const c = t.direction === "higher" ? UP : DN;
-      const o = { price: t.entry_price, color: c, lineStyle: LineStyle.Solid as const, lineWidth: 1, axisLabelVisible: false };
-      if (lines[t.id]) try { lines[t.id].applyOptions(o); } catch {}
-      else try { lines[t.id] = s.createPriceLine(o); } catch {}
-    });
-    return () => {
-      const s2 = sRef.current;
-      Object.values(plRef.current).forEach((l) => { try { s2?.removePriceLine(l); } catch {} });
-      plRef.current = {};
-    };
-  }, [myTrades]);
-
-  useEffect(() => {
     const el = cRef.current; if (!el) return;
-    const pills = pillsRef.current;
-    const expired = exRef.current;
     const cur = new Set(myTrades.map((t) => t.id));
-    const now = Date.now();
+    const markers = markersRef.current;
 
-    pills.forEach((e, id) => {
-      if (cur.has(id) || expired.has(id)) return;
-      const live = trRef.current.find((t) => t.id === id);
-      if (live) {
-        const rem = live.expiry_seconds - (now - new Date(live.opened_at).getTime()) / 1000;
-        if (rem <= 0) {
-          const lc = lastClose(sRef.current);
-          const up = live.direction === "higher";
-          const won = lc !== null ? (up ? lc > live.entry_price : lc < live.entry_price) : false;
-          expired.set(id, { direction: live.direction, amount: live.amount, entry_price: live.entry_price, payout_rate: live.payout_rate, opened_at: live.opened_at, expiry_seconds: live.expiry_seconds, expiresAtMs: now + RESULT_MS, isWin: won });
-        } else { e.remove(); pills.delete(id); }
-      } else { e.remove(); pills.delete(id); }
+    Object.keys(markers).forEach((id) => {
+      if (!cur.has(id)) { markers[id].remove(); delete markers[id]; }
     });
 
     myTrades.forEach((t) => {
-      if (pills.has(t.id)) return;
-      const e = document.createElement("div");
-      e.style.cssText = "position:absolute;pointer-events:none;white-space:nowrap;padding:0 3px;border-radius:4px;font-size:11px;font-weight:700;font-family:Inter,monospace;color:#FFF;background:rgba(26,26,42,0.88);border:1px solid;z-index:5;display:none";
-      el.appendChild(e);
-      pills.set(t.id, e);
+      if (markers[t.id]) return;
+      const d = document.createElement("div");
+      d.style.cssText = "position:absolute;pointer-events:none;height:2px;width:28px;border-radius:1px;display:none";
+      el.appendChild(d);
+      markers[t.id] = d;
     });
 
-    return () => { pills.forEach((e) => e.remove()); pills.clear(); expired.clear(); };
+    return () => { Object.values(markers).forEach((e) => e.remove()); markersRef.current = {}; };
   }, [myTrades]);
 
   useEffect(() => {
     let raf = 0;
     const loop = () => {
-      const container = cRef.current; if (!container) { raf = requestAnimationFrame(loop); return; }
-      const cw = container.clientWidth;
+      const container = cRef.current;
+      if (!container) { raf = requestAnimationFrame(loop); return; }
       const ch = container.clientHeight;
-      const pills = pillsRef.current;
+      const markers = markersRef.current;
       const current = trRef.current;
-      const expired = exRef.current;
-      const now = Date.now();
-      const sr = sRef.current;
       const cr = chRef.current;
-      if (!sr || !cr) { raf = requestAnimationFrame(loop); return; }
+      const sr = srRef.current;
+      if (!cr || !sr) { raf = requestAnimationFrame(loop); return; }
 
-      expired.forEach((info, id) => {
-        const e = pills.get(id);
-        if (!e) { expired.delete(id); return; }
-        if (now > info.expiresAtMs) { e.remove(); pills.delete(id); expired.delete(id); return; }
-        let y: number | null = null;
-        try { y = sr.priceToCoordinate(info.entry_price); } catch {}
-        if (y == null || !Number.isFinite(y)) { e.style.display = "none"; return; }
-        const up = info.direction === "higher";
-        const arrow = up ? "▲" : "▼";
-        e.style.display = ""; e.style.left = "12px";
-        if (info.isWin) { e.textContent = `${arrow}`; e.style.borderColor = UP; }
-        else { e.textContent = `${arrow}`; e.style.borderColor = DN; }
-        const ey = y + (up ? -12 : 0);
-        e.style.top = `${Math.max(4, Math.min(ey, ch - 20))}px`;
-      });
-
-      pills.forEach((e, id) => {
-        if (expired.has(id)) return;
-        const trade = current.find((t) => t.id === id);
-        if (!trade) { e.style.display = "none"; return; }
+      current.forEach((trade) => {
+        if (trade.asset_symbol !== assetSymbol) return;
+        const e = markers[trade.id];
+        if (!e) return;
 
         let x: number | null = null;
         let y: number | null = null;
         try { x = getX(cr, trade); } catch {}
         try { y = sr.priceToCoordinate(trade.entry_price); } catch {}
         if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) { e.style.display = "none"; return; }
-        const clampX = Math.max(4, Math.min(x, cw - 4));
 
-        const up = trade.direction === "higher";
-        const arrow = up ? "▲" : "▼";
-        const col = up ? UP : DN;
-        e.style.display = ""; e.style.borderColor = col;
-
-        const rem = Math.max(0, trade.expiry_seconds - (now - new Date(trade.opened_at).getTime()) / 1000);
-
-        if (rem <= 0) {
-          const lc = lastClose(sr);
-          const won = lc !== null ? (up ? lc > trade.entry_price : lc < trade.entry_price) : false;
-          if (won) { e.textContent = `${arrow}`; e.style.borderColor = UP; }
-          else { e.textContent = `${arrow}`; e.style.borderColor = DN; }
-        } else {
-          e.textContent = `${arrow}`;
-        }
-
-        e.style.left = `${clampX}px`;
-        const ty = y + (up ? -12 : 0);
-        e.style.top = `${Math.max(4, Math.min(ty, ch - 20))}px`;
+        const col = trade.direction === "higher" ? UP : DN;
+        e.style.display = "";
+        e.style.background = col;
+        e.style.left = `${x}px`;
+        e.style.top = `${Math.max(1, Math.min(y - 1, ch - 2))}px`;
       });
 
       raf = requestAnimationFrame(loop);
