@@ -21,27 +21,35 @@ const parseTime = (v: unknown): number | null => {
 };
 
 const getX = (chart: IChartApi, trade: ActiveTrade) => {
-  if (trade.marker_time != null && Number.isFinite(trade.marker_time)) {
-    const x = chart.timeScale().timeToCoordinate(trade.marker_time as Time);
-    if (x != null && Number.isFinite(x)) return x;
-  }
-  if (trade.marker_logical != null && Number.isFinite(trade.marker_logical)) {
-    const x = chart.timeScale().logicalToCoordinate(trade.marker_logical as never);
-    if (x != null && Number.isFinite(x)) return x;
-  }
-  const t = parseTime(trade.opened_at);
-  if (t != null) {
-    const x = chart.timeScale().timeToCoordinate(t as Time);
-    if (x != null && Number.isFinite(x)) return x;
-  }
-  const vr = chart.timeScale().getVisibleLogicalRange();
-  if (vr) return chart.timeScale().logicalToCoordinate(vr.from + 2 as never);
+  try {
+    if (trade.marker_time != null && Number.isFinite(trade.marker_time)) {
+      const x = chart.timeScale().timeToCoordinate(trade.marker_time as Time);
+      if (x != null && Number.isFinite(x)) return x;
+    }
+  } catch {}
+  try {
+    if (trade.marker_logical != null && Number.isFinite(trade.marker_logical)) {
+      const x = chart.timeScale().logicalToCoordinate(trade.marker_logical as never);
+      if (x != null && Number.isFinite(x)) return x;
+    }
+  } catch {}
+  try {
+    const t = parseTime(trade.opened_at);
+    if (t != null) {
+      const x = chart.timeScale().timeToCoordinate(t as Time);
+      if (x != null && Number.isFinite(x)) return x;
+    }
+  } catch {}
+  try {
+    const vr = chart.timeScale().getVisibleLogicalRange();
+    if (vr) return chart.timeScale().logicalToCoordinate(vr.from + 2 as never);
+  } catch {}
   return null;
 };
 
 interface Props { chart: IChartApi; series: ISeriesApi<SeriesType>; assetSymbol: string; trades: ActiveTrade[]; timeframeSeconds: number; }
 
-export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Props) => {
+export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timeframeSeconds }: Props) => {
   const cRef = useRef<HTMLDivElement>(null);
   const plRef = useRef<Record<string, IPriceLine>>({});
   const sRef = useRef(series);
@@ -64,12 +72,15 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     myTrades.forEach((t) => {
       const c = t.direction === "higher" ? UP : DN;
       const o = { price: t.entry_price, color: c, lineStyle: LineStyle.Solid as const, lineWidth: 1, axisLabelVisible: false };
-      if (lines[t.id]) lines[t.id].applyOptions(o);
+      if (lines[t.id]) try { lines[t.id].applyOptions(o); } catch {}
       else try { lines[t.id] = s.createPriceLine(o); } catch {}
     });
+    return () => {
+      const s2 = sRef.current;
+      Object.values(plRef.current).forEach((l) => { try { s2?.removePriceLine(l); } catch {} });
+      plRef.current = {};
+    };
   }, [myTrades]);
-
-  useEffect(() => { return () => { const s = sRef.current; Object.values(plRef.current).forEach((l) => { try { s?.removePriceLine(l); } catch {} }); plRef.current = {}; }; }, []);
 
   useEffect(() => {
     const el = cRef.current; if (!el) return;
@@ -108,18 +119,21 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     const loop = () => {
       const container = cRef.current; if (!container) { raf = requestAnimationFrame(loop); return; }
       const cw = container.clientWidth;
+      const ch = container.clientHeight;
       const pills = pillsRef.current;
       const current = trRef.current;
       const expired = exRef.current;
       const now = Date.now();
-      const ch = chRef.current;
       const sr = sRef.current;
+      const cr = chRef.current;
+      if (!sr || !cr) { raf = requestAnimationFrame(loop); return; }
 
       expired.forEach((info, id) => {
         const e = pills.get(id);
         if (!e) { expired.delete(id); return; }
         if (now > info.expiresAtMs) { e.remove(); pills.delete(id); expired.delete(id); return; }
-        const y = sr.priceToCoordinate(info.entry_price);
+        let y: number | null = null;
+        try { y = sr.priceToCoordinate(info.entry_price); } catch {}
         if (y == null || !Number.isFinite(y)) { e.style.display = "none"; return; }
         const up = info.direction === "higher";
         const arrow = up ? "▲" : "▼";
@@ -127,7 +141,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         if (info.isWin) { e.textContent = `${arrow} +$${(info.amount * info.payout_rate).toFixed(2)}`; e.style.borderColor = UP; }
         else { e.textContent = `${arrow} -$${info.amount.toFixed(2)}`; e.style.borderColor = DN; }
         const ey = y + (up ? -16 : 0);
-        e.style.top = `${Math.max(4, Math.min(ey, container.clientHeight - 20))}px`;
+        e.style.top = `${Math.max(4, Math.min(ey, ch - 20))}px`;
       });
 
       pills.forEach((e, id) => {
@@ -135,8 +149,10 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         const trade = current.find((t) => t.id === id);
         if (!trade) { e.style.display = "none"; return; }
 
-        let x: number | null = getX(ch, trade);
-        let y = sr.priceToCoordinate(trade.entry_price);
+        let x: number | null = null;
+        let y: number | null = null;
+        try { x = getX(cr, trade); } catch {}
+        try { y = sr.priceToCoordinate(trade.entry_price); } catch {}
         if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) { e.style.display = "none"; return; }
         const clampX = Math.max(4, Math.min(x, cw - 4));
 
@@ -160,7 +176,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
 
         e.style.left = `${clampX}px`;
         const ty = y + (up ? -16 : 0);
-        e.style.top = `${Math.max(4, Math.min(ty, container.clientHeight - 20))}px`;
+        e.style.top = `${Math.max(4, Math.min(ty, ch - 20))}px`;
       });
 
       raf = requestAnimationFrame(loop);
