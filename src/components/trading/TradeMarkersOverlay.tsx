@@ -48,7 +48,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     myTrades.forEach((t) => {
       if (map[t.id]) return;
       const bar = document.createElement("div");
-      bar.style.cssText = "position:absolute;pointer-events:none;height:3px;width:44px;border-radius:2px;display:none;z-index:9999";
+      bar.style.cssText = "position:absolute;pointer-events:none;height:1px;width:36px;border-radius:0;display:none;z-index:9999";
       container.appendChild(bar);
       map[t.id] = bar;
     });
@@ -84,8 +84,8 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
 
         bar.style.display = "block";
         bar.style.background = trade.direction === "higher" ? UP : DN;
-        bar.style.left = `${Math.max(2, Math.min(x - 2, cw - 46))}px`;
-        bar.style.top = `${Math.max(1, Math.min(y - 1, ch - 3))}px`;
+        bar.style.left = `${Math.max(2, Math.min(x - 2, cw - 38))}px`;
+        bar.style.top = `${Math.max(0, Math.min(y, ch - 1))}px`;
       });
 
       rafId = requestAnimationFrame(tick);
