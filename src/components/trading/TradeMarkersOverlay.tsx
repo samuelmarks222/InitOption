@@ -5,6 +5,20 @@ import type { ActiveTrade } from "@/hooks/useTrading";
 const LINE_COLOR_UP = "#00C076";
 const LINE_COLOR_DOWN = "#F6465D";
 
+const RESULT_DISPLAY_MS = 4000;
+
+type ExpiredTradeInfo = {
+  id: string;
+  direction: "higher" | "lower";
+  amount: number;
+  entry_price: number;
+  payout_rate: number;
+  marker_time?: number;
+  expiry_seconds: number;
+  expiresAtMs: number;
+  isWin: boolean;
+};
+
 const getTimeframeLabel = (seconds: number) => {
   if (seconds === 60) return "M1";
   if (seconds === 120) return "M2";
@@ -49,6 +63,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
   const seriesRef = useRef(series);
   const markersRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const tradesRef = useRef(trades);
+  const recentlyExpiredRef = useRef<Map<string, ExpiredTradeInfo>>(new Map());
 
   useEffect(() => {
     seriesRef.current = series;
@@ -113,12 +128,49 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     if (!container) return;
 
     const markers = markersRef.current;
+    const expired = recentlyExpiredRef.current;
     const tradeIds = new Set(assetTrades.map((t) => t.id));
+    const now = Date.now();
+
+    const getLastCloseSafe = () => getLastClose(seriesRef.current);
 
     markers.forEach((el, id) => {
-      if (!tradeIds.has(id)) {
-        el.remove();
-        markers.delete(id);
+      if (tradeIds.has(id)) return;
+
+      if (!expired.has(id)) {
+        const liveTrade = tradesRef.current.find((t) => t.id === id);
+        if (liveTrade) {
+          const remaining = liveTrade.expiry_seconds - (now - new Date(liveTrade.opened_at).getTime()) / 1000;
+          if (remaining <= 0) {
+            const lastClose = getLastCloseSafe();
+            const isUp = liveTrade.direction === "higher";
+            const won =
+              lastClose !== null && Number.isFinite(lastClose)
+                ? isUp
+                  ? lastClose > liveTrade.entry_price
+                  : lastClose < liveTrade.entry_price
+                : false;
+            expired.set(id, {
+              id: liveTrade.id,
+              direction: liveTrade.direction,
+              amount: liveTrade.amount,
+              entry_price: liveTrade.entry_price,
+              payout_rate: liveTrade.payout_rate,
+              marker_time: liveTrade.marker_time,
+              expiry_seconds: liveTrade.expiry_seconds,
+              expiresAtMs: now + RESULT_DISPLAY_MS,
+              isWin: won,
+            });
+          } else {
+            el.remove();
+            markers.delete(id);
+            return;
+          }
+        } else {
+          el.remove();
+          markers.delete(id);
+          return;
+        }
       }
     });
 
@@ -145,6 +197,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     return () => {
       markers.forEach((el) => el.remove());
       markers.clear();
+      expired.clear();
     };
   }, [assetTrades]);
 
@@ -158,8 +211,54 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     const loop = () => {
       const markers = markersRef.current;
       const currentTrades = tradesRef.current;
+      const expired = recentlyExpiredRef.current;
+      const now = Date.now();
+
+      expired.forEach((info, id) => {
+        const el = markers.get(id);
+        if (!el) {
+          expired.delete(id);
+          return;
+        }
+
+        if (now > info.expiresAtMs) {
+          el.remove();
+          markers.delete(id);
+          expired.delete(id);
+          return;
+        }
+
+        const x =
+          info.marker_time != null && Number.isFinite(info.marker_time)
+            ? chart.timeScale().timeToCoordinate(info.marker_time as Time)
+            : null;
+        const y = series.priceToCoordinate(info.entry_price);
+        const isUp = info.direction === "higher";
+        const arrow = isUp ? "▲" : "▼";
+
+        if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) {
+          el.style.display = "none";
+          return;
+        }
+
+        el.style.display = "";
+        if (info.isWin) {
+          const profit = info.amount * info.payout_rate;
+          el.textContent = `${arrow} +$${profit.toFixed(2)}`;
+          el.style.borderColor = LINE_COLOR_UP;
+        } else {
+          el.textContent = `${arrow} -$${info.amount.toFixed(2)}`;
+          el.style.borderColor = LINE_COLOR_DOWN;
+        }
+
+        const offsetY = isUp ? -22 : 22;
+        el.style.left = `${x + 12}px`;
+        el.style.top = `${y + offsetY}px`;
+      });
 
       markers.forEach((el, id) => {
+        if (expired.has(id)) return;
+
         const trade = currentTrades.find((t) => t.id === id);
         if (!trade) return;
 
@@ -180,7 +279,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         el.style.display = "";
         el.style.borderColor = color;
 
-        const remaining = Math.max(0, trade.expiry_seconds - (Date.now() - new Date(trade.opened_at).getTime()) / 1000);
+        const remaining = Math.max(0, trade.expiry_seconds - (now - new Date(trade.opened_at).getTime()) / 1000);
 
         if (remaining <= 0) {
           const lastClose = getLastClose(series);
