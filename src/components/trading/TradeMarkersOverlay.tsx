@@ -185,5 +185,23 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  return <div ref={cRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 85 }} />;
+  return (
+    <div ref={cRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 85 }}>
+      {myTrades.length > 0 && (
+        <div
+          className="absolute"
+          style={{
+            top: 20,
+            right: 20,
+            width: 12,
+            height: 12,
+            borderRadius: "50%",
+            background: "#00C076",
+            border: "2px solid #fff",
+            zIndex: 999,
+          }}
+        />
+      )}
+    </div>
+  );
 };
