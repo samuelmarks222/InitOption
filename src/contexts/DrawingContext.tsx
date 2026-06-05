@@ -3,7 +3,6 @@ import { createContext, useContext, useState, useRef, useCallback, useEffect, Di
 export interface Point {
   time: number;
   price: number;
-  logical?: number;
 }
 
 export interface DrawingStyle {
