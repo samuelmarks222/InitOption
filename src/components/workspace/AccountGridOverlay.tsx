@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Camera, User, BadgeDollarSign, Clock, History, Settings, LogOut, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProfileUploadPhoto } from "../profile/ProfileUploadPhoto";
@@ -28,7 +27,6 @@ interface AccountGridOverlayProps {
 
 export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: AccountGridOverlayProps) => {
   const { profile, user, signOut } = useAuth();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<AccountTab>(() => {
     if (typeof window === "undefined") return initialTab;
     const storedTab = window.sessionStorage.getItem(ACCOUNT_TAB_STORAGE_KEY);
@@ -69,23 +67,14 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
   return (
     <div
       className="quotex-glow-home trading-terminal relative z-40 flex h-full w-full flex-col overflow-hidden text-[var(--trading-text-color)]"
-      style={{ background: "radial-gradient(circle at top, rgba(38, 75, 120, 0.18), transparent 30%), linear-gradient(180deg, #161d2b 0%, #0f1723 45%, #0a0f17 100%)" }}
+      style={{ background: "var(--trading-workspace-bg)" }}
     >
 
       {/* ── TOP HEADER ── */}
       <div
-        className="flex shrink-0 items-center justify-between border-b border-white/10 px-3 py-3 md:px-5"
-        style={{ background: "linear-gradient(135deg, rgba(9,13,20,0.98) 0%, rgba(17,24,39,0.98) 45%, rgba(10,14,22,0.98) 100%)" }}
+        className="flex shrink-0 items-center justify-end border-b border-white/8 px-3 py-3 md:px-5"
+        style={{ background: "var(--trading-header-bg)" }}
       >
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#4ddf96]/25 bg-[linear-gradient(145deg,#113328,#081a12)] text-[14px] font-black text-[#d8ffe9] shadow-[0_14px_24px_rgba(16,185,129,0.16)] ring-1 ring-white/6">
-            {profile?.username?.charAt(0)?.toUpperCase() ?? "U"}
-          </div>
-          <div className="min-w-0">
-            <h1 className="truncate text-[16px] font-black text-white md:text-[18px]">{profile?.username ?? "Your Account"}</h1>
-            <p className="hidden truncate text-[11px] text-[#a8b4c8] md:block">{user?.email ?? "Manage your profile & settings"}</p>
-          </div>
-        </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => { signOut(); onClose?.(); }}
@@ -106,7 +95,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
       {/* ── MOBILE: Scrollable Tab Strip ── */}
       <div
         className="grid shrink-0 grid-cols-3 gap-1.5 border-b border-white/8 px-2 py-2 md:hidden"
-        style={{ background: "linear-gradient(180deg, rgba(16,24,38,0.98), rgba(12,17,27,0.98))" }}
+        style={{ background: "var(--trading-header-bg)" }}
       >
         {MENU_ITEMS.map(item => {
           const isActive = activeTab === item.id;
@@ -148,7 +137,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
                 onClick={() => changeTab(item.id as AccountTab)}
                 className={`mx-2 my-0.5 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all ${
                   isActive
-                    ? "border-[#2f80ed]/35 bg-[linear-gradient(135deg,rgba(30,41,59,0.98),rgba(18,25,38,0.98))] text-white shadow-[0_16px_30px_rgba(15,23,42,0.35)]"
+                    ? "border-[#2f80ed]/35 bg-[var(--trading-header-bg)] text-white shadow-[0_10px_20px_rgba(15,23,42,0.18)]"
                     : "border-transparent text-[var(--trading-muted-color)] hover:border-white/8 hover:bg-white/[0.04] hover:text-white"
                 }`}
               >

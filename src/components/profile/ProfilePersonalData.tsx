@@ -390,7 +390,7 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
 
   return (
     <div className={`w-full text-white ${compact ? "profile-personal-data-compact" : ""}`}>
-      <div className="profile-personal-data-card overflow-hidden rounded-[24px] border border-white/8 bg-[#242a39] shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
+      <div className="profile-personal-data-card overflow-hidden rounded-[24px] border border-white/8 bg-[var(--trading-header-bg)] shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
         <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
           <form onSubmit={handleSave} className="profile-personal-data-form border-b border-white/6 p-4 md:p-6 lg:border-b-0 lg:border-r lg:border-white/6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -535,11 +535,11 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
                         onChange={handlePhoneCountryCodeChange}
                         className="h-[58px] w-full appearance-none bg-transparent px-5 text-[15px] text-white outline-none sm:h-[66px]"
                       >
-                        <option value="" className="bg-[#242a39]">
+                        <option value="" className="bg-[var(--trading-header-bg)]">
                           Select code
                         </option>
                         {PHONE_COUNTRY_OPTIONS.map((country) => (
-                          <option key={country.code} value={country.code} className="bg-[#242a39]">
+                          <option key={country.code} value={country.code} className="bg-[var(--trading-header-bg)]">
                             {country.name} ({country.dialCode})
                           </option>
                         ))}
@@ -582,11 +582,11 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
                   onChange={handleCountryChange}
                   className="h-[66px] w-full appearance-none bg-transparent px-5 text-[18px] text-white outline-none"
                 >
-                  <option value="" className="bg-[#242a39]">
+                  <option value="" className="bg-[var(--trading-header-bg)]">
                     Select country
                   </option>
                   {COUNTRY_OPTIONS.map((country) => (
-                    <option key={country.code} value={country.name} className="bg-[#242a39]">
+                    <option key={country.code} value={country.name} className="bg-[var(--trading-header-bg)]">
                       {country.name}
                     </option>
                   ))}
@@ -654,11 +654,11 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
                   onChange={handleInputChange}
                   className="h-[66px] w-full appearance-none bg-transparent px-5 text-[18px] text-white outline-none"
                 >
-                  <option value="" className="bg-[#242a39]">
+                  <option value="" className="bg-[var(--trading-header-bg)]">
                     Select document
                   </option>
                   {ID_OPTIONS.map((option) => (
-                    <option key={option} value={option} className="bg-[#242a39]">
+                    <option key={option} value={option} className="bg-[var(--trading-header-bg)]">
                       {option}
                     </option>
                   ))}
@@ -737,8 +737,8 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
 };
 
 const FieldShell = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="profile-field-shell relative rounded-[12px] border border-[#535d73] bg-[#242a39]">
-    <div className="profile-field-label absolute left-4 top-0 -translate-y-1/2 bg-[#242a39] px-2 text-[12px] font-medium text-[#737e94]">
+  <div className="profile-field-shell relative rounded-[12px] border border-[var(--trading-border-color)] bg-[var(--trading-header-bg)]">
+    <div className="profile-field-label absolute left-4 top-0 -translate-y-1/2 bg-[var(--trading-header-bg)] px-2 text-[12px] font-medium text-[#737e94]">
       {label}
     </div>
     {children}
@@ -760,7 +760,7 @@ const DocumentRow = ({
   onUpload: () => void;
   onRemove: () => void;
 }) => (
-  <div className="profile-document-row rounded-[14px] border border-[#535d73] bg-[#242a39] p-4">
+  <div className="profile-document-row rounded-[14px] border border-[var(--trading-border-color)] bg-[var(--trading-header-bg)] p-4">
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">
         <div className="text-[15px] font-semibold text-white">{label}</div>
