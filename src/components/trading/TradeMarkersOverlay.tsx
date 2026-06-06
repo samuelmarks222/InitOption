@@ -15,8 +15,9 @@ interface Props {
 
 const MARKER_STYLES = {
   pillBg: "rgba(13, 17, 28, 0.96)",
+  pillGlow: "rgba(67, 97, 238, 0.18)",
   textColor: "#FFFFFF",
-  borderRadius: 20,
+  borderRadius: 18,
   fontFamily: "Inter, Arial, sans-serif",
   offsetY: 18,
 };
@@ -206,7 +207,13 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
 
     return myTrades.map((trade) => {
       const markerTime = (trade.marker_time ?? Math.floor(new Date(trade.opened_at).getTime() / 1000)) as Time;
-      const x = chartRef.current.timeScale().timeToCoordinate(markerTime);
+      const logicalAnchor = typeof trade.marker_logical === "number" && Number.isFinite(trade.marker_logical)
+        ? trade.marker_logical
+        : null;
+      const x =
+        logicalAnchor !== null && typeof chartRef.current.timeScale().logicalToCoordinate === "function"
+          ? chartRef.current.timeScale().logicalToCoordinate(logicalAnchor)
+          : chartRef.current.timeScale().timeToCoordinate(markerTime);
       const y = series.priceToCoordinate(trade.entry_price);
 
       if (typeof x !== "number" || typeof y !== "number" || !Number.isFinite(x) || !Number.isFinite(y)) {
@@ -215,7 +222,9 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
 
       const left = Math.min(Math.max(x - 12, 8), width - 8);
       const top = Math.min(Math.max(y - MARKER_STYLES.offsetY, 8), height - 8);
-      const timeLeft = Math.max(0, trade.expiry_seconds - (Date.now() - new Date(trade.opened_at).getTime()) / 1000);
+      const { activeLineEndTime } = getTradeDisplayTimes(trade, Math.floor(Date.now() / 1000));
+      const timeLeft = Math.max(0, activeLineEndTime - Math.floor(Date.now() / 1000));
+      const progress = getTradeProgress(Math.floor(new Date(trade.opened_at).getTime() / 1000), activeLineEndTime, Math.floor(Date.now() / 1000));
       const isHigher = trade.direction === "higher";
       const label = `${isHigher ? "▲" : "▼"} $${trade.amount.toFixed(2)}  ${formatCountdown(timeLeft)}  ${getTimeframeLabel(trade.expiry_seconds)}  ${formatRemainingSeconds(timeLeft)}`;
 
@@ -225,6 +234,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         top,
         label,
         borderColor: isHigher ? UP : DN,
+        progress,
       };
     }).filter(Boolean);
   }, [chart, myTrades, series, tick]);
@@ -246,7 +256,9 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
               borderRadius: MARKER_STYLES.borderRadius,
               fontFamily: MARKER_STYLES.fontFamily,
               whiteSpace: "nowrap",
+              boxShadow: `0 16px 32px ${MARKER_STYLES.pillGlow}, inset 0 0 0 1px rgba(255,255,255,0.04)`,
               transform: "translate(-50%, -50%)",
+              opacity: 0.92 + 0.06 * Math.max(0, Math.min(1, position.progress ?? 0)),
             }}
           >
             {position.label}
