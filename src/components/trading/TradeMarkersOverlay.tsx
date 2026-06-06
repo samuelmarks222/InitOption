@@ -41,6 +41,11 @@ const getTimeframeLabel = (seconds: number) => {
   return `${seconds}s`;
 };
 
+const formatTradeOpenPrice = (price: number) => {
+  const normalized = Number.isFinite(price) ? price : 0;
+  return normalized.toFixed(5).replace(/0+$/, "").replace(/\.$/, "");
+};
+
 export const getTradeProgress = (start: number, end: number, now: number) => {
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 1;
   return Math.min(1, Math.max(0, (now - start) / (end - start)));
@@ -226,7 +231,8 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
       const timeLeft = Math.max(0, activeLineEndTime - Math.floor(Date.now() / 1000));
       const progress = getTradeProgress(Math.floor(new Date(trade.opened_at).getTime() / 1000), activeLineEndTime, Math.floor(Date.now() / 1000));
       const isHigher = trade.direction === "higher";
-      const label = `${isHigher ? "▲" : "▼"} $${trade.amount.toFixed(2)}  ${formatCountdown(timeLeft)}  ${getTimeframeLabel(trade.expiry_seconds)}  ${formatRemainingSeconds(timeLeft)}`;
+      const tradeOpenMessage = `TRADE OPENED WITH PRICE: ${formatTradeOpenPrice(trade.entry_price)} ${trade.asset_symbol} (OTC)`;
+      const label = `${tradeOpenMessage}\n${isHigher ? "▲" : "▼"} $${trade.amount.toFixed(2)}  ${formatCountdown(timeLeft)}  ${getTimeframeLabel(trade.expiry_seconds)}  ${formatRemainingSeconds(timeLeft)}`;
 
       return {
         id: trade.id,
@@ -255,8 +261,10 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
               borderWidth: 1.5,
               borderRadius: MARKER_STYLES.borderRadius,
               fontFamily: MARKER_STYLES.fontFamily,
-              whiteSpace: "nowrap",
-              lineHeight: 1.1,
+              whiteSpace: "pre-line",
+              lineHeight: 1.15,
+              maxWidth: 320,
+              textAlign: "left",
               boxShadow: `0 18px 34px ${MARKER_STYLES.pillGlow}, inset 0 0 0 1px rgba(255,255,255,0.04)`,
               transform: "translate(-50%, -50%)",
               opacity: 0.94 + 0.05 * Math.max(0, Math.min(1, position.progress ?? 0)),

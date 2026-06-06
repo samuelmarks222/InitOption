@@ -743,6 +743,11 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         });
       }
 
+      toast({
+        title: "Trade opened",
+        description: `Trade opened with price: ${actualEntryPrice.toFixed(5)} ${assetSymbol} (OTC)`,
+      });
+
       setActiveTrades((prev) =>
         prev.map((trade) =>
           trade.id === optimisticId

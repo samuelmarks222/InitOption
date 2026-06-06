@@ -48,6 +48,7 @@ import {
   writeDemoBalanceStorage,
 } from "@/lib/onboarding";
 import { playTradeCloseSound, playTradeOpenSound } from "@/lib/tradeSounds";
+import { toast } from "@/hooks/use-toast";
 import {
   assetCategoryToRuntimeType,
   type CommodityIcon,
@@ -971,6 +972,10 @@ const Trade = () => {
     ]);
 
     void playTradeOpenSound();
+    toast({
+      title: "Trade opened",
+      description: `Trade opened with price: ${currentEntryPrice.toFixed(5)} ${assetSymbol} (OTC)`,
+    });
 
     return true;
   };
