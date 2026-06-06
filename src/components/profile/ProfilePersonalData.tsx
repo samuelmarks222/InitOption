@@ -3,7 +3,6 @@ import { AlertCircle, Camera, CheckCircle2, FileText, ShieldCheck, Trash2, Uploa
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { KycAvatarBadge } from "./KycAvatarBadge";
 import {
   COUNTRY_OPTIONS,
@@ -15,7 +14,6 @@ import {
   splitStoredPhoneNumber,
 } from "@/lib/countries";
 import { getProfileKycLabel, hasCompleteKycDocuments, hasUploadedKycDocuments, normalizeKycStatus } from "@/lib/kyc";
-import { AccountCurrencyModal } from "./AccountCurrencyModal";
 import { EmailVerificationPanel } from "./EmailVerificationPanel";
 
 type GuideField =
@@ -82,8 +80,6 @@ const readFileAsDataUrl = (file: File) =>
 
 export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: ProfilePersonalDataProps) => {
   const { emailVerified, profile, updateProfile, user } = useAuth();
-  const { currency, formatMoney } = useCurrency();
-  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const p = profile as any;
   const initialPhoneState = getPhoneStateFromProfile(p);
   const initialDocuments = ((p?.kyc_documents ?? p?.kycDocuments) ?? {}) as KycDocuments;
@@ -164,7 +160,6 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
   const documentsUploaded = hasUploadedKycDocuments(documents);
   const documentsReady = hasCompleteKycDocuments(documents);
   const verificationReady = Boolean(identityReady && formData.idType && formData.idNumber && documentsReady);
-  const accountBalance = profile?.balance ?? 0;
   const nicknameFallback = `#${(profile?.id ?? "00000000").replace(/-/g, "").slice(0, 8).toUpperCase()}`;
   const profileStatus = getProfileKycLabel(kycStatus, documents);
 
@@ -395,22 +390,7 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
 
   return (
     <div className={`w-full text-white ${compact ? "profile-personal-data-compact" : ""}`}>
-      <AccountCurrencyModal isOpen={showCurrencyModal} onClose={() => setShowCurrencyModal(false)} />
-
       <div className="profile-personal-data-card overflow-hidden rounded-[24px] border border-white/8 bg-[#242a39] shadow-[0_24px_70px_rgba(0,0,0,0.28)]">
-        <div className="profile-personal-data-summary border-b border-white/6 bg-[#262d3d] px-4 py-4 md:px-6">
-          <div className="grid gap-4 md:grid-cols-[1.2fr_1fr_1fr]">
-            <SummaryCard
-              label="My current currency"
-              value={currency}
-              actionLabel="Change"
-              onAction={() => setShowCurrencyModal(true)}
-            />
-            <SummaryCard label="Available for withdrawal" value={formatMoney(accountBalance)} />
-            <SummaryCard label="In the account" value={formatMoney(accountBalance)} />
-          </div>
-        </div>
-
         <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
           <form onSubmit={handleSave} className="profile-personal-data-form border-b border-white/6 p-4 md:p-6 lg:border-b-0 lg:border-r lg:border-white/6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -755,34 +735,6 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
     </div>
   );
 };
-
-const SummaryCard = ({
-  label,
-  value,
-  actionLabel,
-  onAction,
-}: {
-  label: string;
-  value: string;
-  actionLabel?: string;
-  onAction?: () => void;
-}) => (
-  <div className="profile-summary-card rounded-[14px] border border-white/6 bg-[#242a39] px-4 py-4">
-    <div className="text-[13px] text-[#8e9ab0]">{label}</div>
-    <div className="mt-2 flex items-center gap-3">
-      <div className="text-[18px] font-bold text-white">{value}</div>
-      {actionLabel && onAction && (
-        <button
-          type="button"
-          onClick={onAction}
-          className="rounded-[8px] bg-[#1175d5] px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-white transition-colors hover:bg-[#0d69c2]"
-        >
-          {actionLabel}
-        </button>
-      )}
-    </div>
-  </div>
-);
 
 const FieldShell = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="profile-field-shell relative rounded-[12px] border border-[#535d73] bg-[#242a39]">
