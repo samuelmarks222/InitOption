@@ -1851,7 +1851,7 @@ const calculateAdaptiveAnimationDuration = (
   previous: { open: number; high: number; low: number; close: number } | null,
   basePrice: number,
 ): number => {
-  if (!previous || basePrice <= 0) return 600; // Default smooth duration
+  if (!previous || basePrice <= 0) return 700; // Smoother default, less aggressive feel
 
   // Calculate price metrics
   const priceChange = Math.abs(current.close - previous.close);
@@ -1863,26 +1863,23 @@ const calculateAdaptiveAnimationDuration = (
   // Velocity: how fast is price changing relative to candle size
   const velocity = candleRange > 0 ? priceChange / candleRange : 0;
 
-  // Base duration: responsive to velocity
-  // High velocity (rapid price movement) = 300ms (responsive)
-  // Low velocity (stable price) = 800ms (smooth)
-  // Medium velocity = adaptive between them
-  const velocityFactor = Math.min(velocity, 2.0); // Clamp to 0-2
-  let duration = 800 - velocityFactor * 300; // Range: 500-800ms
+  // Keep the live candle motion smooth and less abrupt.
+  // High velocity only shortens the animation slightly; the overall movement stays calm.
+  const velocityFactor = Math.min(velocity, 1.2);
+  let duration = 900 - velocityFactor * 170; // Range: ~700-900ms
 
-  // Volatility adjustment: high volatility = shorter duration for responsiveness
-  if (volatility > 0.01) {
-    duration *= 0.8; // 20% faster for high volatility
+  // Only a small volatility push, so the candle does not feel jumpy.
+  if (volatility > 0.008) {
+    duration *= 0.94;
   }
 
-  // Stability bonus: if price barely moved, extend for extra smoothness
-  if (priceChange < basePrice * 0.0005) {
-    // Less than 0.05% movement
-    duration *= 1.2; // 20% longer for silky smooth stability
+  // Slightly longer motion when the price is stable, for a softer live edge.
+  if (priceChange < basePrice * 0.0008) {
+    duration *= 1.04;
   }
 
-  // Clamp to realistic range
-  return Math.max(200, Math.min(duration, 900));
+  // Clamp to a softer, less aggressive range.
+  return Math.max(500, Math.min(duration, 1000));
 };
 
 /**
@@ -1919,6 +1916,9 @@ class SmoothUpdateScheduler {
   flush() {
     if (this.pendingUpdate && this.series) {
       try {
+        this.series.applyOptions({
+          animation: { enabled: true, duration: Math.max(500, Math.min(1000, this.animationDuration)) },
+        });
         this.series.update(this.pendingUpdate);
       } catch (_) {}
       this.pendingUpdate = null;

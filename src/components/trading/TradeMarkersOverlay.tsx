@@ -1,18 +1,147 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IChartApi, ISeriesApi, type SeriesType, Time, IPriceLine, LineStyle, createSeriesMarkers } from "lightweight-charts";
 import type { ActiveTrade } from "@/hooks/useTrading";
 
 const UP = "#00C076";
 const DN = "#F6465D";
 
-interface Props { chart: IChartApi; series: ISeriesApi<SeriesType>; assetSymbol: string; trades: ActiveTrade[]; timeframeSeconds: number; }
+interface Props {
+  chart: IChartApi;
+  series: ISeriesApi<SeriesType>;
+  assetSymbol: string;
+  trades: ActiveTrade[];
+  timeframeSeconds: number;
+}
 
-export const TradeMarkersOverlay = ({ series, assetSymbol, trades }: Props) => {
+const MARKER_STYLES = {
+  pillBg: "rgba(13, 17, 28, 0.96)",
+  textColor: "#FFFFFF",
+  borderRadius: 20,
+  fontFamily: "Inter, Arial, sans-serif",
+  offsetY: 18,
+};
+
+const formatCountdown = (seconds: number) => {
+  const total = Math.max(0, Math.ceil(seconds));
+  const minutes = Math.floor(total / 60);
+  const remainingSeconds = total % 60;
+  return minutes > 0 ? `${minutes}:${String(remainingSeconds).padStart(2, "0")}` : `${total}s`;
+};
+
+const formatRemainingSeconds = (seconds: number) => {
+  const total = Math.max(0, Math.ceil(seconds));
+  return String(total % 60).padStart(2, "0");
+};
+
+const getTimeframeLabel = (seconds: number) => {
+  if (seconds >= 86400) return "1D";
+  if (seconds >= 3600) return `${Math.round(seconds / 3600)}H`;
+  if (seconds >= 60) return `${Math.round(seconds / 60)}M`;
+  return `${seconds}s`;
+};
+
+export const getTradeProgress = (start: number, end: number, now: number) => {
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 1;
+  return Math.min(1, Math.max(0, (now - start) / (end - start)));
+};
+
+export const getTradeDisplayTimes = (
+  trade: Pick<ActiveTrade, "marker_time" | "opened_at" | "expiry_seconds">,
+  nowSec: number,
+) => {
+  const entryTime =
+    typeof trade.marker_time === "number" && Number.isFinite(trade.marker_time)
+      ? Math.floor(trade.marker_time)
+      : Math.floor(new Date(trade.opened_at).getTime() / 1000);
+  const expiryTime = entryTime + Math.max(1, Math.floor(trade.expiry_seconds || 0));
+
+  return {
+    entryTime,
+    expiryTime,
+    activeLineEndTime: Math.min(nowSec, expiryTime),
+  };
+};
+
+export const getTradeMarkerLogicalTime = (
+  history: Array<{ time: number; logical: number }>,
+  markerTime: number,
+  timeframeSeconds: number,
+) => {
+  const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds || 1));
+  const sortedHistory = [...history].sort((left, right) => left.time - right.time);
+
+  if (sortedHistory.length === 0) return null;
+
+  const first = sortedHistory[0];
+  const last = sortedHistory[sortedHistory.length - 1];
+
+  if (markerTime <= first.time) return first.logical;
+
+  if (markerTime >= last.time) {
+    return last.logical + Math.max(0, markerTime - last.time) / safeTimeframe * 0.5;
+  }
+
+  for (let index = 0; index < sortedHistory.length - 1; index += 1) {
+    const current = sortedHistory[index];
+    const next = sortedHistory[index + 1];
+
+    if (markerTime >= current.time && markerTime < next.time) {
+      const span = Math.max(1, next.time - current.time);
+      const fraction = (markerTime - current.time) / span;
+      return current.logical + fraction * (next.logical - current.logical) * 0.5;
+    }
+  }
+
+  return last.logical;
+};
+
+export const resolveTradeMarkerEntryLogicalAnchor = ({
+  fixedEntryLogical,
+  timeBasedLogicalAnchor,
+}: {
+  fixedEntryLogical: number;
+  isFreshActiveTrade: boolean;
+  latestLogicalAnchor: number;
+  storedLogicalAnchor: number;
+  timeframeSeconds: number;
+  timeBasedLogicalAnchor: number;
+}) => {
+  if (typeof fixedEntryLogical === "number" && Number.isFinite(fixedEntryLogical)) {
+    const gap = Math.abs(fixedEntryLogical - timeBasedLogicalAnchor);
+    if (gap < 1.5) return fixedEntryLogical;
+  }
+
+  return timeBasedLogicalAnchor;
+};
+
+export const getTradeMarkerCoordinate = (
+  chart: Pick<IChartApi, "timeScale">,
+  history: Array<{ time: number; logical: number }>,
+  markerTime: number,
+  timeframeSeconds: number,
+) => {
+  const logical = getTradeMarkerLogicalTime(history, markerTime, timeframeSeconds);
+  if (typeof logical !== "number" || !Number.isFinite(logical)) return null;
+
+  return typeof chart.timeScale().logicalToCoordinate === "function"
+    ? chart.timeScale().logicalToCoordinate(logical)
+    : null;
+};
+
+export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Props) => {
   const sRef = useRef(series);
+  const chartRef = useRef(chart);
   const plRef = useRef<Record<string, IPriceLine>>({});
   const pluginRef = useRef<ReturnType<typeof createSeriesMarkers> | null>(null);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => { sRef.current = series; }, [series]);
+  useEffect(() => { chartRef.current = chart; }, [chart]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setTick((value) => value + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   // Init markers plugin once
   useEffect(() => {
@@ -56,15 +185,74 @@ export const TradeMarkersOverlay = ({ series, assetSymbol, trades }: Props) => {
     plugin.setMarkers(
       myTrades.map((t) => ({
         time: (t.marker_time ?? Math.floor(new Date(t.opened_at).getTime() / 1000)) as Time,
-        shape: "circle",
+        shape: t.direction === "higher" ? "arrowUp" : "arrowDown",
         position: "inBar",
         color: t.direction === "higher" ? UP : DN,
-        size: 1,
+        size: 1.2,
+        text: `${t.direction === "higher" ? "▲" : "▼"} $${t.amount.toFixed(2)}`,
       }))
     );
 
     return () => { plugin.setMarkers([]); };
   }, [myTrades]);
 
-  return null;
+  const markerPositions = useMemo(() => {
+    const container = chartRef.current?.container?.();
+    if (!container) return [];
+
+    const rect = container.getBoundingClientRect();
+    const width = rect.width || container.clientWidth || 1;
+    const height = rect.height || container.clientHeight || 1;
+
+    return myTrades.map((trade) => {
+      const markerTime = (trade.marker_time ?? Math.floor(new Date(trade.opened_at).getTime() / 1000)) as Time;
+      const x = chartRef.current.timeScale().timeToCoordinate(markerTime);
+      const y = series.priceToCoordinate(trade.entry_price);
+
+      if (typeof x !== "number" || typeof y !== "number" || !Number.isFinite(x) || !Number.isFinite(y)) {
+        return null;
+      }
+
+      const left = Math.min(Math.max(x - 12, 8), width - 8);
+      const top = Math.min(Math.max(y - MARKER_STYLES.offsetY, 8), height - 8);
+      const timeLeft = Math.max(0, trade.expiry_seconds - (Date.now() - new Date(trade.opened_at).getTime()) / 1000);
+      const isHigher = trade.direction === "higher";
+      const label = `${isHigher ? "▲" : "▼"} $${trade.amount.toFixed(2)}  ${formatCountdown(timeLeft)}  ${getTimeframeLabel(trade.expiry_seconds)}  ${formatRemainingSeconds(timeLeft)}`;
+
+      return {
+        id: trade.id,
+        left,
+        top,
+        label,
+        borderColor: isHigher ? UP : DN,
+      };
+    }).filter(Boolean);
+  }, [chart, myTrades, series, tick]);
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[75]">
+      {markerPositions.map((position) => (
+        position ? (
+          <div
+            key={position.id}
+            className="absolute rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] shadow-[0_12px_26px_rgba(0,0,0,0.35)]"
+            style={{
+              left: position.left,
+              top: position.top,
+              background: MARKER_STYLES.pillBg,
+              color: MARKER_STYLES.textColor,
+              borderColor: position.borderColor,
+              borderWidth: 1,
+              borderRadius: MARKER_STYLES.borderRadius,
+              fontFamily: MARKER_STYLES.fontFamily,
+              whiteSpace: "nowrap",
+              transform: "translate(-50%, -50%)",
+            }}
+          >
+            {position.label}
+          </div>
+        ) : null
+      ))}
+    </div>
+  );
 };
