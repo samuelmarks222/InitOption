@@ -745,7 +745,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
 
       toast({
         title: "Trade opened",
-        description: `Trade opened with price: ${actualEntryPrice.toFixed(5)} ${assetSymbol} (OTC)`,
+        description: <span style={{ color: "#0faf59" }}>Trade opened with price: {actualEntryPrice.toFixed(5)} {assetSymbol} (OTC)</span>,
       });
 
       setActiveTrades((prev) =>
