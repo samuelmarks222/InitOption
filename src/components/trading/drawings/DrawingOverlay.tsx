@@ -274,6 +274,8 @@ export const DrawingOverlay = ({
   const rangeFrameRef = useRef<number | null>(null);
   const lastVisibleSvgPointsRef = useRef<Record<string, SvgPoint[]>>({});
   const previousTimeframeSecondsRef = useRef(timeframeSeconds);
+  // Stores smooth logical positions for recently-committed drags
+  const smoothLogicalRef = useRef<Record<string, (number | null)[]>>({});
 
   // Action bar opens the left panel color editor
   const [showColorEditor, setShowColorEditor] = useState(false);
@@ -385,8 +387,13 @@ export const DrawingOverlay = ({
   const roundToBar = (time: number) =>
     timeframeSeconds > 0 ? Math.floor(Math.max(0, time) / timeframeSeconds) * timeframeSeconds : time;
 
-  const resolveSvgXFromTime = (time: number) => {
+  const resolveSvgXFromTime = (time: number, extraLogical?: number | null) => {
     if (!chart) return -9999;
+    // Prefer smooth logical override when available
+    if (extraLogical != null) {
+      const coord = chart.timeScale().logicalToCoordinate(extraLogical as never);
+      if (coord != null && Number.isFinite(coord)) return coord;
+    }
     const barTime = roundToBar(time);
     const direct = chart.timeScale().timeToCoordinate(barTime as Time);
     if (direct !== null) return direct;
@@ -399,6 +406,16 @@ export const DrawingOverlay = ({
       }
     }
     return -9999;
+  };
+
+  const toSvgWithSmooth = (p: Point, drawingId: string, pointIdx: number) => {
+    if (!chart || !series) return { x: -9999, y: -9999 };
+    const overrides = smoothLogicalRef.current[drawingId];
+    const extra = overrides?.[pointIdx];
+    return {
+      x: resolveSvgXFromTime(Number(p.time) || 0, extra),
+      y: series.priceToCoordinate(p.price) ?? -9999,
+    };
   };
 
   const toSvg = (p: Point) => {
@@ -488,6 +505,13 @@ export const DrawingOverlay = ({
     updateDrawing(preview.id, {
       points: isBoxTool(preview.tool) ? normalizeBoxPoints(nextPoints) : nextPoints,
     });
+    // Store smooth logical positions for sub-bar rendering
+    const logicals = preview.svgPoints.map(p => {
+      if (!chart) return null;
+      const logical = chart.timeScale().coordinateToLogical(p.x);
+      return logical !== null ? Number(logical) : null;
+    });
+    smoothLogicalRef.current = { ...smoothLogicalRef.current, [preview.id]: logicals };
     setRenderTick((tick) => tick + 1);
   }, [updateDrawing]);
 
@@ -515,7 +539,7 @@ export const DrawingOverlay = ({
       if (!drawing.visible || drawing.points.length === 0) return;
 
       const preview = dragPreviewRef.current;
-      const svgPoints = preview?.id === drawing.id ? preview.svgPoints : drawing.points.map(toSvg);
+      const svgPoints = preview?.id === drawing.id ? preview.svgPoints : drawing.points.map((p, i) => toSvgWithSmooth(p, drawing.id, i));
       const hasUsablePoints = svgPoints.every((point) => (
         Number.isFinite(point.x) &&
         Number.isFinite(point.y) &&
@@ -1027,7 +1051,7 @@ export const DrawingOverlay = ({
       setRenderTick(t => t + 1);
     };
 
-    const svgPts = previewSvgPoints ?? d.points.map(toSvg);
+    const svgPts = previewSvgPoints ?? d.points.map((p, i) => toSvgWithSmooth(p, d.id, i));
     if (svgPts.length === 0) return null;
     const p1 = svgPts[0];
 
@@ -1561,7 +1585,7 @@ export const DrawingOverlay = ({
     const d = drawings.find(dd => dd.id === selectedId);
     if (!d || d.points.length === 0) return null;
     const preview = dragPreviewRef.current;
-    const pts = preview?.id === d.id ? preview.svgPoints : d.points.map(toSvg);
+    const pts = preview?.id === d.id ? preview.svgPoints : d.points.map((p, i) => toSvgWithSmooth(p, d.id, i));
     const xs = pts.map(p => p.x);
     const ys = pts.map(p => p.y);
     return {
