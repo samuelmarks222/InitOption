@@ -140,6 +140,11 @@ const getIntraBucketFraction = (timestamp: number, timeframeSeconds: number) => 
   return remainder / safePeriod;
 };
 
+export const getTickIntervalMsForTimeframe = (timeframe: TimeframeConfig | undefined) => {
+  const configured = Number.isFinite(timeframe?.updateIntervalMs) ? timeframe!.updateIntervalMs : 50;
+  return Math.max(16, Math.floor(configured));
+};
+
 export interface DeterministicTickSimulationInput {
   symbol: string;
   basePrice: number;
@@ -313,7 +318,7 @@ class DeterministicTickFeed implements MarketDataFeed {
   private pump() {
     if (!this.connected) return;
 
-    const tickIntervalMs = 50;
+    const tickIntervalMs = getTickIntervalMsForTimeframe(this.subscription.timeframe);
     const nowMs = Date.now();
     let guard = 0;
 

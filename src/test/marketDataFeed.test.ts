@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getClampedPriceAt } from "@/lib/deterministicMarket";
 import {
+  getTickIntervalMsForTimeframe,
   replayDeterministicTickState,
   simulateDeterministicTickPrice,
 } from "@/components/trading/engine/marketDataFeed";
@@ -164,6 +165,15 @@ describe("simulateDeterministicTickPrice", () => {
     expect(wickCoverage).toBeGreaterThanOrEqual(0);
     expect(average(topWicks)).toBeLessThan(average(bodies) * 0.58);
     expect(average(bottomWicks)).toBeLessThan(average(bodies) * 0.58);
+  });
+});
+
+describe("getTickIntervalMsForTimeframe", () => {
+  it("uses each timeframe's configured update cadence instead of a shared tick speed", () => {
+    expect(getTickIntervalMsForTimeframe(TIMEFRAMES["1s"])).toBe(40);
+    expect(getTickIntervalMsForTimeframe(TIMEFRAMES["1m"])).toBe(100);
+    expect(getTickIntervalMsForTimeframe(TIMEFRAMES["1h"])).toBe(1500);
+    expect(getTickIntervalMsForTimeframe(TIMEFRAMES["1D"])).toBe(5000);
   });
 });
 

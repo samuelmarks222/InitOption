@@ -158,6 +158,22 @@ const createTenXMobileMoneyWithdrawal = async ({
   const reservedBalance = Number(profile.reserved_withdrawal_balance ?? 0);
   const availableBalance = Math.max(0, balance - reservedBalance);
 
+  const pendingResponse = await adminClient
+    .from("withdrawal_requests")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("status", "pending")
+    .limit(1)
+    .maybeSingle();
+
+  if (pendingResponse.error) {
+    throw pendingResponse.error;
+  }
+
+  if (pendingResponse.data) {
+    throw new Error("You already have a pending withdrawal request");
+  }
+
   const settingsResponse = await adminClient
     .from("platform_settings")
     .select("require_kyc_withdrawal,mpesa_withdrawal_approval_threshold_kes")

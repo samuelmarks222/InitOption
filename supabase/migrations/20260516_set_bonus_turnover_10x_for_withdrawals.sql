@@ -206,6 +206,15 @@ begin
     raise exception 'Profile not found';
   end if;
 
+  if exists (
+    select 1
+    from public.withdrawal_requests wr
+    where wr.user_id = auth.uid()
+      and wr.status = 'pending'
+  ) then
+    raise exception 'You already have a pending withdrawal request';
+  end if;
+
   select
     coalesce(ps.require_kyc_withdrawal, true),
     coalesce(ps.mpesa_withdrawal_approval_threshold_kes, 10000)
