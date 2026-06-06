@@ -14,10 +14,10 @@ interface Props {
 }
 
 const MARKER_STYLES = {
-  pillBg: "rgba(13, 17, 28, 0.96)",
-  pillGlow: "rgba(67, 97, 238, 0.18)",
+  pillBg: "linear-gradient(135deg, rgba(12, 16, 28, 0.98) 0%, rgba(18, 24, 38, 0.98) 100%)",
+  pillGlow: "rgba(67, 97, 238, 0.22)",
   textColor: "#FFFFFF",
-  borderRadius: 18,
+  borderRadius: 16,
   fontFamily: "Inter, Arial, sans-serif",
   offsetY: 18,
 };
@@ -245,20 +245,21 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         position ? (
           <div
             key={position.id}
-            className="absolute rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] shadow-[0_12px_26px_rgba(0,0,0,0.35)]"
+            className="absolute rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] shadow-[0_18px_32px_rgba(0,0,0,0.38)]"
             style={{
               left: position.left,
               top: position.top,
               background: MARKER_STYLES.pillBg,
               color: MARKER_STYLES.textColor,
               borderColor: position.borderColor,
-              borderWidth: 1,
+              borderWidth: 1.5,
               borderRadius: MARKER_STYLES.borderRadius,
               fontFamily: MARKER_STYLES.fontFamily,
               whiteSpace: "nowrap",
-              boxShadow: `0 16px 32px ${MARKER_STYLES.pillGlow}, inset 0 0 0 1px rgba(255,255,255,0.04)`,
+              lineHeight: 1.1,
+              boxShadow: `0 18px 34px ${MARKER_STYLES.pillGlow}, inset 0 0 0 1px rgba(255,255,255,0.04)`,
               transform: "translate(-50%, -50%)",
-              opacity: 0.92 + 0.06 * Math.max(0, Math.min(1, position.progress ?? 0)),
+              opacity: 0.94 + 0.05 * Math.max(0, Math.min(1, position.progress ?? 0)),
             }}
           >
             {position.label}
