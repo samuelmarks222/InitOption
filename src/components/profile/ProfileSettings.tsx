@@ -3,6 +3,7 @@ import { Lock, Shield, Bell, Monitor, Smartphone, Wallet, Users } from "lucide-r
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_NOTIFICATION_PREFERENCES, normalizeNotificationPreferences } from "@/lib/profileSettings";
 import type { NotificationPreferences } from "@/types/profile";
 import { AccountCurrencyModal } from "./AccountCurrencyModal";
@@ -13,12 +14,87 @@ export const ProfileSettings = () => {
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
   const [savingNotificationKey, setSavingNotificationKey] = useState<keyof NotificationPreferences | null>(null);
-  const { profile, updateProfile } = useAuth();
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [language, setLanguage] = useState("English");
+  const [timezone, setTimezone] = useState("UTC+03:00 (Tbilisi, Georgia)");
+  const [darkMode, setDarkMode] = useState(() => typeof window !== "undefined" && document.documentElement.classList.contains("dark"));
+  const { profile, updateProfile, user, signOut } = useAuth();
   const { currency, currencyOption } = useCurrency();
 
   useEffect(() => {
     setNotificationPreferences(normalizeNotificationPreferences(profile?.notificationPreferences));
   }, [profile?.notificationPreferences]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const storedLanguage = window.localStorage.getItem("profile.language");
+    const storedTimezone = window.localStorage.getItem("profile.timezone");
+    const storedDarkMode = window.localStorage.getItem("profile.darkMode");
+
+    if (storedLanguage) setLanguage(storedLanguage);
+    if (storedTimezone) setTimezone(storedTimezone);
+    if (storedDarkMode !== null) setDarkMode(storedDarkMode === "true");
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.localStorage.setItem("profile.language", language);
+    window.localStorage.setItem("profile.timezone", timezone);
+    window.localStorage.setItem("profile.darkMode", String(darkMode));
+    document.documentElement.classList.toggle("dark", darkMode);
+  }, [darkMode, language, timezone]);
+
+  const handlePasswordUpdate = async () => {
+    if (!user?.email) {
+      toast({ title: "Sign in required", description: "Please sign in again to update your password.", variant: "destructive" });
+      return;
+    }
+
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      toast({ title: "Missing fields", description: "Fill in your current password, new password, and confirmation.", variant: "destructive" });
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast({ title: "Passwords do not match", description: "Please confirm your new password correctly.", variant: "destructive" });
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      toast({ title: "Password too short", description: "Use at least 8 characters for your new password.", variant: "destructive" });
+      return;
+    }
+
+    setUpdatingPassword(true);
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: passwordForm.currentPassword,
+      });
+
+      if (signInError) {
+        throw signInError;
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({ password: passwordForm.newPassword });
+      if (updateError) throw updateError;
+
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      toast({ title: "Password updated", description: "Your password has been changed successfully.", variant: "default" });
+    } catch (error) {
+      toast({
+        title: "Password update failed",
+        description: error instanceof Error ? error.message : "Please verify your current password and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
 
   const handleNotificationToggle = async (key: keyof NotificationPreferences) => {
     if (savingNotificationKey) return;
@@ -87,16 +163,47 @@ export const ProfileSettings = () => {
 
             <SettingsSection title="Change Password">
               <div className="space-y-4">
-                <input type="password" placeholder="Current Password" className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-[14px] text-white focus:outline-none focus:border-[#0b65c2]" />
-                <input type="password" placeholder="New Password" className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-[14px] text-white focus:outline-none focus:border-[#0b65c2]" />
-                <input type="password" placeholder="Confirm New Password" className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-[14px] text-white focus:outline-none focus:border-[#0b65c2]" />
-                <button className="bg-[#0b65c2] hover:bg-[#094e96] text-white px-6 py-2.5 rounded text-[14px] font-bold transition-colors">Update Password</button>
+                <input
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(event) => setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))}
+                  placeholder="Current Password"
+                  className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-[14px] text-white focus:outline-none focus:border-[#0b65c2]"
+                />
+                <input
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(event) => setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))}
+                  placeholder="New Password"
+                  className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-[14px] text-white focus:outline-none focus:border-[#0b65c2]"
+                />
+                <input
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))}
+                  placeholder="Confirm New Password"
+                  className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-[14px] text-white focus:outline-none focus:border-[#0b65c2]"
+                />
+                <button
+                  type="button"
+                  onClick={handlePasswordUpdate}
+                  disabled={updatingPassword}
+                  className="bg-[#0b65c2] hover:bg-[#094e96] text-white px-6 py-2.5 rounded text-[14px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {updatingPassword ? "Updating..." : "Update Password"}
+                </button>
               </div>
             </SettingsSection>
 
             <SettingsSection title="Danger Zone">
-              <p className="text-[13px] text-gray-400 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
-              <button className="bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/30 px-6 py-2.5 rounded text-[14px] font-bold transition-colors">Close Account</button>
+              <p className="text-[13px] text-gray-400 mb-4">Use this to end your current sign-in session and clear all active devices from the app.</p>
+              <button
+                type="button"
+                onClick={() => void signOut().then(() => supabase.auth.signOut({ scope: "global" }))}
+                className="bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/30 px-6 py-2.5 rounded text-[14px] font-bold transition-colors"
+              >
+                Sign out from all devices
+              </button>
             </SettingsSection>
           </div>
         )}
@@ -133,9 +240,19 @@ export const ProfileSettings = () => {
                       <p className="text-[11px] text-gray-400">Tbilisi, Georgia • Last active 2h ago</p>
                     </div>
                   </div>
-                  <button className="text-[12px] text-red-400 font-bold hover:underline">Log Out</button>
+                  <button
+                    type="button"
+                    onClick={() => void signOut()}
+                    className="text-[12px] text-red-400 font-bold hover:underline"
+                  >
+                    Log Out
+                  </button>
                 </div>
-                <button className="w-full mt-2 py-2 text-center text-[12px] text-[#0b65c2] font-bold border border-[#0b65c2]/20 rounded-lg hover:bg-[#0b65c2]/10 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => void supabase.auth.signOut({ scope: "global" })}
+                  className="w-full mt-2 py-2 text-center text-[12px] text-[#0b65c2] font-bold border border-[#0b65c2]/20 rounded-lg hover:bg-[#0b65c2]/10 transition-colors"
+                >
                   Log Out of All Other Sessions
                 </button>
               </div>
@@ -223,7 +340,11 @@ export const ProfileSettings = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-400 mb-1">Language</label>
-                  <select className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[14px] text-white focus:outline-none focus:border-[#0b65c2] appearance-none">
+                  <select
+                    value={language}
+                    onChange={(event) => setLanguage(event.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[14px] text-white focus:outline-none focus:border-[#0b65c2] appearance-none"
+                  >
                     <option>English</option>
                     <option>Spanish</option>
                     <option>German</option>
@@ -232,13 +353,22 @@ export const ProfileSettings = () => {
                 </div>
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-400 mb-1">Timezone</label>
-                  <select className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[14px] text-white focus:outline-none focus:border-[#0b65c2] appearance-none">
+                  <select
+                    value={timezone}
+                    onChange={(event) => setTimezone(event.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[14px] text-white focus:outline-none focus:border-[#0b65c2] appearance-none"
+                  >
                     <option>UTC+03:00 (Tbilisi, Georgia)</option>
                     <option>UTC+00:00 (London, UK)</option>
                     <option>UTC-05:00 (New York, USA)</option>
                   </select>
                 </div>
-                <ToggleRow title="Dark Mode" description="The platform is optimized for dark mode by default." enabled={true} disabled={true} />
+                <ToggleRow
+                  title="Dark Mode"
+                  description="Switch the interface theme for this browser session."
+                  enabled={darkMode}
+                  onToggle={() => setDarkMode((current) => !current)}
+                />
               </div>
             </SettingsSection>
           </div>
