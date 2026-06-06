@@ -2092,9 +2092,6 @@ export const AccountDropdown = ({
   };
 
   const quickActions = [
-    { label: t("accountModals.quickActionDeposit"), action: () => openQuickAction(onOpenDeposit) },
-    { label: t("accountModals.quickActionWithdrawal"), action: () => openQuickAction(onOpenWithdrawal) },
-    { label: t("accountModals.quickActionTransactions"), action: () => openQuickAction(() => onOpenProfile("balance_history")) },
     { label: t("accountModals.quickActionTrades"), action: () => openQuickAction(() => onOpenProfile("trading_history")) },
     { label: t("accountModals.quickActionMyAccount"), action: () => openQuickAction(() => onOpenProfile("personal")) },
   ];

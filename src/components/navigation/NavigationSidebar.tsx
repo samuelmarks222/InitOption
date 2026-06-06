@@ -45,7 +45,6 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
 
   const SECONDARY_ITEMS = [
     { id: "tournaments", label: "Tournament", icon: Trophy },
-    { id: "guides", label: "Guides", icon: HelpCircle },
     { id: "support", label: "Chat", icon: Headset },
     { id: "leaderboard", label: "Leaders", icon: BarChart3 },
     { id: "more", label: "More", icon: Grid },
