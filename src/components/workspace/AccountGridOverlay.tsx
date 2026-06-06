@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, User, BadgeDollarSign, Clock, History, Settings, LogOut, X, Wallet, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { Camera, User, BadgeDollarSign, Clock, History, Settings, LogOut, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProfileUploadPhoto } from "../profile/ProfileUploadPhoto";
 import { ProfilePersonalData } from "../profile/ProfilePersonalData";
@@ -82,7 +82,6 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
             {profile?.username?.charAt(0)?.toUpperCase() ?? "U"}
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#87e4af]">Premium account</p>
             <h1 className="truncate text-[16px] font-black text-white md:text-[18px]">{profile?.username ?? "Your Account"}</h1>
             <p className="hidden truncate text-[11px] text-[#a8b4c8] md:block">{user?.email ?? "Manage your profile & settings"}</p>
           </div>
@@ -102,31 +101,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
         </div>
       </div>
 
-      <div className="border-b border-white/8 px-3 py-3 md:px-5" style={{ background: "linear-gradient(180deg, rgba(14,20,31,0.96), rgba(10,14,21,0.98))" }}>
-        <div className="grid gap-2 sm:grid-cols-3">
-          {[
-            { label: "Deposit", icon: Wallet, action: () => { onClose?.(); navigate("/deposit"); }, accent: "from-[#1f8d5d] to-[#0ea86a]" },
-            { label: "Withdraw", icon: ArrowDownLeft, action: () => { onClose?.(); navigate("/withdraw"); }, accent: "from-[#2a6dbe] to-[#4c90ff]" },
-            { label: "Transactions", icon: ArrowUpRight, action: () => changeTab("balance_history"), accent: "from-[#8b5cf6] to-[#a78bfa]" },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.label}
-                type="button"
-                onClick={item.action}
-                className={`rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(16,23,36,0.96),rgba(8,12,19,0.98))] p-2.5 text-left shadow-[0_12px_24px_rgba(0,0,0,0.26)] transition duration-200 hover:-translate-y-0.5 hover:border-[#4ddf96]/25 hover:bg-[linear-gradient(145deg,rgba(21,31,46,0.98),rgba(11,15,23,0.99))] hover:shadow-[0_14px_28px_rgba(16,185,129,0.10)]`}
-              >
-                <div className={`mb-1.5 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${item.accent} text-white shadow-[0_8px_14px_rgba(15,23,42,0.30)]`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="text-[13px] font-semibold text-white">{item.label}</div>
-                <div className="text-[11px] text-[#9eb0cb]">Quick access</div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+
 
       {/* ── MOBILE: Scrollable Tab Strip ── */}
       <div
