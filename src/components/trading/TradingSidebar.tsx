@@ -508,7 +508,7 @@ const TradingSidebar = ({ onOpenHistory, onOpenAssetInfo, onOpenPromo }: Trading
       case "tutorials": return <TutorialsPanel />;
       case "analysis":  return <EarningsCalendarPanel />;
       case "chat":      return <ChatPanel />;
-      case "portfolio": return <PortfolioPanel />;
+      case "portfolio": return <div className="hidden lg:block"><PortfolioPanel /></div>;
       default:          return null;
     }
   };
@@ -525,7 +525,7 @@ const TradingSidebar = ({ onOpenHistory, onOpenAssetInfo, onOpenPromo }: Trading
             {NAV_ITEMS.map((item, index) => {
               const isActive = activePanel === item.action;
               return (
-                <li key={index} className="w-full">
+                <li key={index} className={"w-full" + (item.action === "portfolio" ? " hidden lg:block" : "")}>
                   <button
                     onClick={() => {
                       togglePanel(item.action);
