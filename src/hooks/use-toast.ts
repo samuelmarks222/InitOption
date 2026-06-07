@@ -71,6 +71,12 @@ const addToRemoveQueue = (toastId: string) => {
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
+      if (state.toasts.some((t) => t.id === action.toast.id)) {
+        return {
+          ...state,
+          toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast, open: true } : t)),
+        };
+      }
       return {
         ...state,
         toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
@@ -132,10 +138,10 @@ function dispatch(action: Action) {
   });
 }
 
-type Toast = Omit<ToasterToast, "id">;
+type Toast = Omit<ToasterToast, "id"> & { id?: string };
 
-function toast({ ...props }: Toast) {
-  const id = genId();
+function toast({ id: customId, ...props }: Toast) {
+  const id = customId || genId();
 
   const update = (props: ToasterToast) =>
     dispatch({
