@@ -275,7 +275,7 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
         return true;
       }
 
-      toast({ title: "Copy trade opened" });
+      toast({ title: "Copy trade opened", description: "The position has been added to your account." });
       await refreshSocial();
       await refreshProfile();
       return true;

@@ -474,7 +474,7 @@ const Trade = () => {
   const [demoBalance, setDemoBalance] = useState(DEFAULT_DEMO_BALANCE);
   const [demoActiveTrades, setDemoActiveTrades] = useState<ActiveTrade[]>([]);
   const [demoTradeHistory, setDemoTradeHistory] = useState<TradeHistoryEntry[]>([]);
-  const [chartSettlementAnnouncements, setChartSettlementAnnouncements] = useState<ChartSettlementAnnouncement[]>([]);
+  const [chartSettlementAnnouncements, setChartSettlementAnnouncements] = useState<Record<string, ChartSettlementAnnouncement | null>>({});
   const [mobileOverlay, setMobileOverlayRaw] = useState<string | null>(null);
   const setMobileOverlay = (v: string | null) => setMobileOverlayRaw(v);
 
@@ -551,19 +551,28 @@ const Trade = () => {
   }, [demoTradeHistory.length]);
 
   const showChartSettlementAnnouncement = useCallback((announcement: ChartSettlementAnnouncement) => {
-    setChartSettlementAnnouncements((current) => {
-      const alreadyVisible = current.some((item) => item.id === announcement.id);
-      return alreadyVisible ? current : [announcement, ...current].slice(0, 8);
-    });
+    setChartSettlementAnnouncements((current) => ({
+      ...current,
+      [announcement.assetSymbol]: announcement,
+    }));
 
-    const existingTimer = settlementHideTimersRef.current[announcement.id];
+    const existingTimer = settlementHideTimersRef.current[announcement.assetSymbol];
     if (existingTimer) {
       window.clearTimeout(existingTimer);
     }
 
-    settlementHideTimersRef.current[announcement.id] = window.setTimeout(() => {
-      setChartSettlementAnnouncements((current) => current.filter((item) => item.id !== announcement.id));
-      delete settlementHideTimersRef.current[announcement.id];
+    settlementHideTimersRef.current[announcement.assetSymbol] = window.setTimeout(() => {
+      setChartSettlementAnnouncements((current) => {
+        if (current[announcement.assetSymbol]?.id !== announcement.id) {
+          return current;
+        }
+
+        const nextState = { ...current };
+        delete nextState[announcement.assetSymbol];
+        return nextState;
+      });
+
+      delete settlementHideTimersRef.current[announcement.assetSymbol];
     }, 3400);
   }, []);
 
@@ -964,8 +973,8 @@ const Trade = () => {
 
     void playTradeOpenSound();
     toast({
-      title: `${assetSymbol} @ ${currentEntryPrice.toFixed(5)}`,
-      variant: "funding",
+      title: "Trade opened",
+      description: <span style={{ color: "#0faf59" }}>Trade opened with price: {currentEntryPrice.toFixed(5)} {assetSymbol} (OTC)</span>,
     });
 
     return true;
@@ -1297,7 +1306,7 @@ const Trade = () => {
                             compactPane={!isPrimaryPane}
                             miniOverlay={chartLayoutMode > 1 && isPrimaryPane}
                             liveEdgeRequestKey={`${chartAsset.symbol}:${chartLiveEdgeRequestKey}`}
-                            settlementAnnouncements={chartSettlementAnnouncements}
+                            settlementAnnouncement={chartSettlementAnnouncements[chartAsset.symbol] ?? null}
                           />
                         </div>
                       );
@@ -1377,7 +1386,7 @@ const Trade = () => {
                       onToggleMobileHistory={() => setShowMobileHistory(true)}
                       mobileHistoryOpen={showMobileHistory}
                       liveEdgeRequestKey={`${selectedAsset.symbol}:${chartLiveEdgeRequestKey}`}
-                      settlementAnnouncements={chartSettlementAnnouncements} />
+                      settlementAnnouncement={chartSettlementAnnouncements[selectedAsset.symbol] ?? null} />
 
                     {/* Mobile Indicator and Drawing Panels */}
                     {showIndicatorsPanel && (
