@@ -37,7 +37,7 @@ import { AnalyticsGridOverlay } from "@/components/workspace/AnalyticsGridOverla
 import { WorkspaceReferral } from "@/components/workspace/WorkspaceReferral";
 import type { AnalyticsSignalAsset } from "@/components/workspace/analytics/AnalyticsSignals";
 import { HelpCenterOverlay } from "@/components/workspace/HelpCenterOverlay";
-import { Image, HelpCircle, User, Trophy, MoreHorizontal, X } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Image, HelpCircle, User, Trophy, MoreHorizontal, X } from "lucide-react";
 import { MobileMoreMenu, MobileLeaderboardOverlay } from "@/components/workspace/MobileMoreMenu";
 import {
   DEFAULT_DEMO_BALANCE,
@@ -349,6 +349,8 @@ const Trade = () => {
   const [isDesktopViewport, setIsDesktopViewport] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth >= 1024 : true,
   );
+  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [chartLayoutMode, setChartLayoutMode] = useState<ChartLayoutMode>(() => loadChartLayoutMode());
 
   const [openTabs, setOpenTabs] = useState<TradeTabAsset[]>([]);
@@ -1213,11 +1215,16 @@ const Trade = () => {
           onOpenSettings={() => handleOpenProfile("settings")} onOpenHistory={() => {}}
           highlightDepositButton={Boolean(depositGuideReason)} />
 
-        <div className="flex-1 flex overflow-hidden min-h-0" style={{ background: "var(--trading-workspace-bg)" }}>
+        <div className="flex-1 flex w-full overflow-hidden min-h-0" style={{ background: "var(--trading-workspace-bg)" }}>
           {/* Left sidebar — desktop only */}
           {isDesktopViewport && (
-          <div className="shrink-0">
-            <NavigationSidebar activeWorkspace={activeWorkspace} onSelectWorkspace={setActiveWorkspace} />
+          <div className="shrink-0 transition-[width] duration-300 ease-out">
+            <NavigationSidebar
+              activeWorkspace={activeWorkspace}
+              onSelectWorkspace={setActiveWorkspace}
+              collapsed={!leftPanelOpen}
+              onToggleCollapsed={() => setLeftPanelOpen((current) => !current)}
+            />
           </div>
           )}
 
@@ -1245,16 +1252,16 @@ const Trade = () => {
             <>
               {/* ── DESKTOP & TABLET: side-by-side chart + panel ── */}
               {isDesktopViewport ? (
-              <div className="flex flex-1 overflow-hidden min-h-0">
-                <div id="tour-chart" className="flex-1 flex flex-col relative min-w-0" style={{ background: "var(--trading-workspace-bg)" }}>
-                  <div>
+              <div className="relative flex w-full min-w-0 flex-1 overflow-hidden min-h-0">
+                <div id="tour-chart" className="relative flex w-full min-w-0 flex-1 min-h-0 flex-col" style={{ background: "var(--trading-workspace-bg)" }}>
+                  <div className="w-full min-w-0">
                     <AssetInfo asset={selectedAsset} onSelectAsset={() => {}} onOpenSelector={() => setShowAssetSelector(true)}
                       openTabs={openTabs} activeTabId={activeTabId} onSelectTab={handleSelectTab}
                       onRemoveTab={handleRemoveTab} onAddAssetClick={() => setShowAssetSelector(true)}
                       activeTrades={visibleActiveTrades} livePrices={liveChartPrices} />
                   </div>
                   <div
-                    className={`grid flex-1 min-h-0 gap-[1px] ${getDesktopChartGridClass(chartLayoutMode)}`}
+                    className={`grid w-full min-w-0 flex-1 min-h-0 gap-[1px] ${getDesktopChartGridClass(chartLayoutMode)}`}
                     style={{ background: "var(--trading-chart-divider-bg)" }}
                   >
                     {desktopChartAssets.map((chartAsset, index) => {
@@ -1264,7 +1271,7 @@ const Trade = () => {
                       return (
                         <div
                           key={chartAsset.symbol}
-                          className={`relative flex min-h-0 flex-col overflow-hidden ${
+                          className={`relative flex w-full min-w-0 min-h-0 flex-col overflow-hidden ${
                             chartLayoutMode > 1 ? "border border-transparent" : ""
                           } ${isActivePane && chartLayoutMode > 1 ? "border-[#4f86c8]/55 shadow-[inset_0_0_0_1px_rgba(104,166,255,0.18)]" : ""}`}
                           style={{ background: "var(--trading-chart-pane-bg)" }}
@@ -1346,13 +1353,34 @@ const Trade = () => {
                     </div>
                   )}
                 </div>
-                <div id="tour-trade-panel" className="flex flex-col shrink-0 z-20 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
-                  <TradingPanel asset={selectedAsset} balance={currentBalance} demoBalance={demoBalance}
-                    accountType={accountType} onDemoBalanceChange={setDemoBalance} onTrade={handleLiveTradeFromChart} onDemoTrade={handleOpenDemoTrade}
-                    activeTradesOverride={visibleActiveTrades} tradeHistoryOverride={visibleTradeHistory}
-                    onOpenAssetSelector={() => setShowAssetSelector(true)}
-                    onOpenMobileHistory={() => setShowMobileHistory(true)} />
-                </div>
+                {rightPanelOpen ? (
+                  <div id="tour-trade-panel" className="relative z-20 flex shrink-0 flex-col shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-[width,opacity] duration-300 ease-out">
+                    <button
+                      type="button"
+                      onClick={() => setRightPanelOpen(false)}
+                      aria-label="Collapse trade panel"
+                      title="Collapse trade panel"
+                      className="absolute -left-4 top-3 z-30 flex h-8 w-8 items-center justify-center rounded-[6px] border border-white/10 bg-[#2a3144]/95 text-[#d7e4ff] shadow-[0_10px_22px_rgba(0,0,0,0.32)] transition-colors hover:border-white/20 hover:bg-[#343b50] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8fa6d6]/50"
+                    >
+                      <ChevronsRight className="h-4 w-4" strokeWidth={2.7} />
+                    </button>
+                    <TradingPanel asset={selectedAsset} balance={currentBalance} demoBalance={demoBalance}
+                      accountType={accountType} onDemoBalanceChange={setDemoBalance} onTrade={handleLiveTradeFromChart} onDemoTrade={handleOpenDemoTrade}
+                      activeTradesOverride={visibleActiveTrades} tradeHistoryOverride={visibleTradeHistory}
+                      onOpenAssetSelector={() => setShowAssetSelector(true)}
+                      onOpenMobileHistory={() => setShowMobileHistory(true)} />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setRightPanelOpen(true)}
+                    aria-label="Expand trade panel"
+                    title="Expand trade panel"
+                    className="absolute right-3 top-1/2 z-[88] flex h-11 w-9 -translate-y-1/2 items-center justify-center rounded-[6px] border border-white/10 bg-[#2a3144]/95 text-[#d7e4ff] shadow-[0_10px_24px_rgba(0,0,0,0.34)] transition-colors hover:border-white/20 hover:bg-[#343b50] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8fa6d6]/50"
+                  >
+                    <ChevronsLeft className="h-4 w-4" strokeWidth={2.7} />
+                  </button>
+                )}
               </div>
               ) : (
               <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>

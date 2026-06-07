@@ -7,6 +7,7 @@ import {
   Headset,
   HelpCircle,
   LineChart,
+  Menu,
   Settings,
   Trophy,
   User,
@@ -17,6 +18,8 @@ export type WorkspaceModule = "support" | "account" | "tournaments" | "leaderboa
 interface NavigationSidebarProps {
   activeWorkspace: WorkspaceModule;
   onSelectWorkspace: (module: WorkspaceModule) => void;
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
 }
 
 type AccountTabTarget = "personal" | "deposit";
@@ -24,8 +27,10 @@ type PrimaryNavKey = "trading" | "finance" | "profile";
 
 const ACCOUNT_TAB_STORAGE_KEY = "initoption:account-tab";
 const ACCOUNT_TAB_CHANGE_EVENT = "initoption:account-tab-change";
-const navItemClassName =
-  "group relative flex h-[62px] w-full flex-col items-center justify-center gap-1.5 rounded-[2px] transition-colors";
+const getNavItemClassName = (collapsed: boolean) =>
+  `group relative flex w-full flex-col items-center justify-center rounded-[2px] transition-colors ${
+    collapsed ? "h-[48px] gap-0" : "h-[62px] gap-1.5"
+  }`;
 const navIconClassName = "h-[25px] w-[25px] transition-transform duration-200 group-hover:-translate-y-0.5";
 const navLabelClassName = "text-center text-[12px] font-semibold leading-tight";
 
@@ -34,7 +39,12 @@ const getStoredAccountPrimaryKey = (): Exclude<PrimaryNavKey, "trading"> => {
   return window.sessionStorage.getItem(ACCOUNT_TAB_STORAGE_KEY) === "deposit" ? "finance" : "profile";
 };
 
-export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: NavigationSidebarProps) => {
+export const NavigationSidebar = ({
+  activeWorkspace,
+  onSelectWorkspace,
+  collapsed = false,
+  onToggleCollapsed,
+}: NavigationSidebarProps) => {
   const [accountPrimaryKey, setAccountPrimaryKey] = useState<Exclude<PrimaryNavKey, "trading">>(getStoredAccountPrimaryKey);
 
   const PRIMARY_ITEMS = [
@@ -90,12 +100,26 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
 
   return (
     <div
-      className="relative z-40 flex h-full w-[92px] shrink-0 flex-col items-center overflow-hidden border-r"
+      className={`relative z-40 flex h-full shrink-0 flex-col items-center overflow-hidden border-r transition-[width] duration-300 ease-out ${
+        collapsed ? "w-[56px]" : "w-[92px]"
+      }`}
       style={{ background: "#202638", borderRightColor: "#101522" }}
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/25" />
       <div className="relative z-10 flex h-full w-full flex-col items-center">
-        <nav className="w-full space-y-1 px-1.5 pt-2" aria-label="Primary workspace navigation">
+        <div className={`w-full ${collapsed ? "px-1 pt-2" : "px-1.5 pt-2"}`}>
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            aria-label={collapsed ? "Expand navigation menu" : "Collapse navigation menu"}
+            title={collapsed ? "Expand navigation menu" : "Collapse navigation menu"}
+            className="group flex h-10 w-full items-center justify-center rounded-[2px] text-[#a7b9df] transition-colors hover:bg-white/[0.055] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8fa6d6]/45"
+          >
+            <Menu className="h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5" strokeWidth={2.45} />
+          </button>
+        </div>
+
+        <nav className={`w-full space-y-1 ${collapsed ? "px-1 pt-1" : "px-1.5 pt-2"}`} aria-label="Primary workspace navigation">
           {PRIMARY_ITEMS.map((item) => {
             const isActive = primaryActiveKey === item.key;
             const Icon = item.icon;
@@ -107,7 +131,9 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
                 type="button"
                 onClick={() => selectPrimaryItem(item)}
                 aria-pressed={isActive}
-                className={`${navItemClassName} ${
+                aria-label={item.label}
+                title={collapsed ? item.label : undefined}
+                className={`${getNavItemClassName(collapsed)} ${
                   isActive
                     ? "bg-[#2a3144] text-white"
                     : "text-[#8fa6d6] hover:bg-white/[0.045] hover:text-white"
@@ -123,7 +149,7 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
                   className={`${navIconClassName} ${isActive ? "text-white" : "text-current"}`}
                   strokeWidth={item.key === "finance" ? 2.55 : 2.35}
                 />
-                <span className={`${navLabelClassName} ${isActive ? "font-bold text-white" : ""}`}>
+                <span className={`${collapsed ? "sr-only" : navLabelClassName} ${isActive ? "font-bold text-white" : ""}`}>
                   {item.label}
                 </span>
               </button>
@@ -131,8 +157,8 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
           })}
         </nav>
 
-        <div className="my-2 h-px w-[68px] shrink-0 bg-[#111827]" />
-        <nav className="flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto px-1.5 pb-3 no-scrollbar" aria-label="Secondary workspace navigation">
+        <div className={`my-2 h-px shrink-0 bg-[#111827] ${collapsed ? "w-[36px]" : "w-[68px]"}`} />
+        <nav className={`flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto pb-3 no-scrollbar ${collapsed ? "px-1" : "px-1.5"}`} aria-label="Secondary workspace navigation">
           {SECONDARY_ITEMS.map((item) => {
             const isActive = activeWorkspace === item.id;
             const Icon = item.icon;
@@ -143,7 +169,8 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
                 onClick={() => onSelectWorkspace(isActive ? null : item.id)}
                 aria-label={item.label}
                 aria-pressed={isActive}
-                className={`${navItemClassName} ${
+                title={collapsed ? item.label : undefined}
+                className={`${getNavItemClassName(collapsed)} ${
                   isActive
                     ? "bg-white/[0.06] text-white"
                     : "text-[#7f91bd] hover:bg-white/[0.04] hover:text-white"
@@ -151,13 +178,13 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
               >
                 {isActive && <span className="absolute left-0 top-1/2 h-9 w-[2px] -translate-y-1/2 rounded-r-full bg-[#6f86ba]" />}
                 <Icon className={navIconClassName} strokeWidth={2.35} />
-                <span className={navLabelClassName}>{item.label}</span>
+                <span className={collapsed ? "sr-only" : navLabelClassName}>{item.label}</span>
               </button>
             );
           })}
         </nav>
 
-        <div className="w-full shrink-0 border-t border-[#111827] px-1.5 pb-2 pt-2">
+        <div className={`w-full shrink-0 border-t border-[#111827] pb-2 pt-2 ${collapsed ? "px-1" : "px-1.5"}`}>
           <nav className="flex w-full flex-col items-center gap-1" aria-label="Utility workspace navigation">
             {UTILITY_ITEMS.map((item) => {
               const isActive = activeWorkspace === item.id;
@@ -169,7 +196,8 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
                   onClick={() => onSelectWorkspace(isActive ? null : item.id)}
                   aria-label={item.label}
                   aria-pressed={isActive}
-                  className={`${navItemClassName} ${
+                  title={collapsed ? item.label : undefined}
+                  className={`${getNavItemClassName(collapsed)} ${
                     isActive
                       ? "bg-[#2a3144] text-white"
                       : "text-[#93a7d3] hover:bg-white/[0.045] hover:text-white"
@@ -177,7 +205,7 @@ export const NavigationSidebar = ({ activeWorkspace, onSelectWorkspace }: Naviga
                 >
                   {isActive && <span className="absolute left-0 top-1/2 h-9 w-[2px] -translate-y-1/2 rounded-r-full bg-[#f5f8ff]" />}
                   <Icon className={navIconClassName} strokeWidth={2.35} />
-                  <span className={navLabelClassName}>{item.label}</span>
+                  <span className={collapsed ? "sr-only" : navLabelClassName}>{item.label}</span>
                 </button>
               );
             })}

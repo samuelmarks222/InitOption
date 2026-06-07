@@ -65,7 +65,6 @@ import {
   Plus,
   Minus,
   CheckCheck,
-  X,
 } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ActiveTrade, TradeDirection } from "@/hooks/useTrading";
@@ -3484,7 +3483,7 @@ const TradingChart = ({
   }
 
   return (
-    <div ref={rootRef} className="flex-1 flex flex-col min-h-0 relative" style={{ background: effectiveChartTheme.bg }}>
+    <div ref={rootRef} className="relative flex w-full min-w-0 flex-1 flex-col min-h-0" style={{ background: effectiveChartTheme.bg }}>
       {asset.available === false && (
         <div className="absolute inset-0 z-50 flex items-center justify-center" style={{ background: "var(--trading-workspace-bg, var(--trading-panel-bg))" }}>
           <div className="text-center">
@@ -3721,7 +3720,7 @@ const TradingChart = ({
       )}
 
       <div
-        className="relative flex-1 min-h-0 overflow-hidden"
+        className="relative w-full min-w-0 flex-1 min-h-0 overflow-hidden"
         ref={mainRef}
         style={chartViewportStyle}
         onMouseMove={handleChartMouseMove}
