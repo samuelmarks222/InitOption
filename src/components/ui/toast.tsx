@@ -14,7 +14,7 @@ const ToastViewport = React.forwardRef<
   <ToastPrimitives.Viewport
     ref={ref}
     className={cn(
-      "fixed left-0 top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:left-0 sm:right-auto sm:top-auto sm:flex-col md:max-w-[420px]",
+      "fixed left-0 top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:left-[50px] sm:right-auto sm:top-auto sm:flex-col md:max-w-[420px]",
       className,
     )}
     {...props}
@@ -32,7 +32,7 @@ const toastVariants = cva(
         funding:
           "funding group border-[#5ec893]/35 bg-[#245b47] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)]",
         tradeOpen:
-          "tradeOpen group border-[#5ec893]/35 bg-[#245b47] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] py-2 px-3 text-xs",
+          "tradeOpen group border-[#16b760]/35 bg-[#16b760] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] py-2 px-3 text-xs",
       },
     },
     defaultVariants: {
