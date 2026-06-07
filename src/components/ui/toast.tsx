@@ -32,7 +32,7 @@ const toastVariants = cva(
         funding:
           "funding group border-[#5ec893]/35 bg-[#245b47] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)]",
         tradeOpen:
-          "tradeOpen group border-[#16b760]/35 bg-[#16b760] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] py-2 px-3 text-xs",
+          "tradeOpen group border-[#16b760]/35 bg-[#16b760] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] py-2 px-3",
       },
     },
     defaultVariants: {
