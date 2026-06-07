@@ -31,6 +31,8 @@ const toastVariants = cva(
         destructive: "destructive group border-destructive bg-destructive text-destructive-foreground",
         funding:
           "funding group border-[#5ec893]/35 bg-[#245b47] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)]",
+        tradeOpen:
+          "tradeOpen group border-[#5ec893]/35 bg-[#245b47] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] py-2 px-3 text-xs",
       },
     },
     defaultVariants: {
