@@ -27,12 +27,12 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground",
-        destructive: "destructive group border-destructive bg-destructive text-destructive-foreground",
+        default: "border bg-background text-foreground font-semibold",
+        destructive: "destructive group border-destructive bg-destructive text-destructive-foreground font-semibold",
         funding:
-          "funding group border-[#5ec893]/35 bg-[#245b47] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)]",
+          "funding group border-[#5ec893]/35 bg-[#245b47] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] font-semibold",
         tradeOpen:
-          "tradeOpen group border-[#16b760]/35 bg-[#16b760] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] py-2 px-3",
+          "tradeOpen group border-[#16b760]/35 bg-[#16b760] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] py-2 px-3 font-normal text-xs",
       },
     },
     defaultVariants: {
@@ -86,7 +86,7 @@ const ToastTitle = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Title>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
 >(({ className, ...props }, ref) => (
-  <ToastPrimitives.Title ref={ref} className={cn("text-sm font-semibold", className)} {...props} />
+  <ToastPrimitives.Title ref={ref} className={cn("text-sm", className)} {...props} />
 ));
 ToastTitle.displayName = ToastPrimitives.Title.displayName;
 

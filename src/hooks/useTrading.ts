@@ -744,11 +744,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       }
 
       toast({
-        title: (
-          <span className="text-xs font-normal" style={{ fontFamily: "Arial, sans-serif" }}>
-            Trade opened with price: {actualEntryPrice.toFixed(5)} {assetSymbol} (OTC)
-          </span>
-        ),
+        title: `Trade opened with price: ${actualEntryPrice.toFixed(5)} ${assetSymbol} (OTC)`,
         variant: "tradeOpen",
       });
 
