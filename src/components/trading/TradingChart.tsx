@@ -103,7 +103,7 @@ interface TradingChartProps {
   compactPane?: boolean;
   miniOverlay?: boolean;
   liveEdgeRequestKey?: number | string;
-  settlementAnnouncement?: ChartSettlementAnnouncement | null;
+  settlementAnnouncements?: ChartSettlementAnnouncement[];
 }
 
 export interface ChartSettlementAnnouncement {
@@ -731,37 +731,44 @@ const formatSettlementClock = (seconds: number) => {
 };
 
 const SettlementCloneOverlay = ({
-  announcement,
+  announcements,
   compact,
 }: {
-  announcement: ChartSettlementAnnouncement;
+  announcements: ChartSettlementAnnouncement[];
   compact: boolean;
 }) => {
   const { t } = useTranslation();
-  const won = announcement.status === "won";
-  const accent = won ? "#33cd77" : "#ff7b72";
-  const leftOffset = 100;
-  const bottomOffset = 100;
+
+  if (!announcements || announcements.length === 0) {
+    return null;
+  }
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[66] overflow-visible">
-      <div
-        className="absolute flex items-center gap-3 rounded-[14px] px-5 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
-        style={{ left: leftOffset, bottom: bottomOffset, background: "var(--trading-panel-soft-bg)" }}
-      >
-        {won ? (
-          <CheckCheck className="h-5 w-5" style={{ color: "#33cd77" }} strokeWidth={2.5} />
-        ) : (
-          <X className="h-5 w-5" style={{ color: "#ff7b72" }} strokeWidth={2.5} />
-        )}
-        <AssetSymbolMark symbol={announcement.assetSymbol} size={20} />
-        <span className="h-4 w-px bg-white/15" />
-        <span className="text-[14px] font-black uppercase tracking-[0.14em]" style={{ color: accent }}>
-          {won ? t("tradingChart.settlementWin") : t("tradingChart.settlementLoss")}
-        </span>
-        <span className="text-[14px] font-bold tabular-nums text-white">
-          {formatSettlementProfit(announcement.profit)}
-        </span>
+      <div className="absolute flex flex-col gap-1.5" style={{ left: 100, bottom: compact ? 12 : 14 }}>
+        {announcements.map((announcement) => {
+          const won = announcement.status === "won";
+          const accent = won ? "#33cd77" : "#ff7b72";
+          const badgeBg = won ? "rgba(8, 16, 12, 0.94)" : "rgba(18, 10, 10, 0.94)";
+
+          return (
+            <div
+              key={announcement.id}
+              className="flex items-center gap-1.5 rounded-full border px-2 py-1 text-[9px] font-black uppercase tracking-[0.10em] shadow-[0_8px_18px_rgba(0,0,0,0.30)]"
+              style={{
+                background: badgeBg,
+                borderColor: "rgba(255,255,255,0.08)",
+                color: "#ffffff",
+              }}
+            >
+              <span className="text-[9px]" style={{ color: accent }}>
+                {won ? t("tradingChart.settlementWin") : t("tradingChart.settlementLoss")}
+              </span>
+              <span className="h-3 w-px bg-white/12" />
+              <span className="text-[9px] font-bold tabular-nums text-white">{formatSettlementProfit(announcement.profit)}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -1951,7 +1958,7 @@ const TradingChart = ({
   compactPane = false,
   miniOverlay = false,
   liveEdgeRequestKey,
-  settlementAnnouncement = null,
+  settlementAnnouncements = [],
 }: TradingChartProps) => {
   const { t } = useTranslation();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -3493,8 +3500,8 @@ const TradingChart = ({
           </div>
         </div>
       )}
-      {settlementAnnouncement && settlementAnnouncement.assetSymbol === asset.symbol ? (
-        <SettlementCloneOverlay announcement={settlementAnnouncement} compact={compactPane || miniOverlay} />
+      {settlementAnnouncements && settlementAnnouncements.length > 0 ? (
+        <SettlementCloneOverlay announcements={settlementAnnouncements} compact={compactPane || miniOverlay} />
       ) : null}
 
       {showStaticPriceBadge && (

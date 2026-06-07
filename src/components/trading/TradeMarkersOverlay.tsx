@@ -17,9 +17,9 @@ const MARKER_STYLES = {
   pillBg: "linear-gradient(135deg, rgba(12, 16, 28, 0.98) 0%, rgba(18, 24, 38, 0.98) 100%)",
   pillGlow: "rgba(67, 97, 238, 0.22)",
   textColor: "#FFFFFF",
-  borderRadius: 16,
+  borderRadius: 999,
   fontFamily: "Inter, Arial, sans-serif",
-  offsetY: 18,
+  offsetY: 10,
 };
 
 const formatCountdown = (seconds: number) => {
@@ -230,9 +230,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
       const { activeLineEndTime } = getTradeDisplayTimes(trade, Math.floor(Date.now() / 1000));
       const timeLeft = Math.max(0, activeLineEndTime - Math.floor(Date.now() / 1000));
       const progress = getTradeProgress(Math.floor(new Date(trade.opened_at).getTime() / 1000), activeLineEndTime, Math.floor(Date.now() / 1000));
-      const isHigher = trade.direction === "higher";
-      const tradeOpenMessage = `TRADE OPENED WITH PRICE: ${formatTradeOpenPrice(trade.entry_price)} ${trade.asset_symbol} (OTC)`;
-      const label = `${tradeOpenMessage}\n${isHigher ? "▲" : "▼"} $${trade.amount.toFixed(2)}  ${formatCountdown(timeLeft)}  ${getTimeframeLabel(trade.expiry_seconds)}  ${formatRemainingSeconds(timeLeft)}`;
+      const label = "OPEN";
 
       return {
         id: trade.id,
@@ -251,7 +249,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         position ? (
           <div
             key={position.id}
-            className="absolute rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] shadow-[0_18px_32px_rgba(0,0,0,0.38)]"
+            className="absolute rounded-full border px-0.5 py-0 text-[6px] font-black uppercase tracking-[0.04em] shadow-[0_4px_8px_rgba(0,0,0,0.18)]"
             style={{
               left: position.left,
               top: position.top,
@@ -261,11 +259,11 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
               borderWidth: 1.5,
               borderRadius: MARKER_STYLES.borderRadius,
               fontFamily: MARKER_STYLES.fontFamily,
-              whiteSpace: "pre-line",
-              lineHeight: 1.15,
-              maxWidth: 320,
+              whiteSpace: "nowrap",
+              lineHeight: 0.9,
+              maxWidth: 92,
               textAlign: "left",
-              boxShadow: `0 18px 34px ${MARKER_STYLES.pillGlow}, inset 0 0 0 1px rgba(255,255,255,0.04)`,
+              boxShadow: `0 12px 24px ${MARKER_STYLES.pillGlow}, inset 0 0 0 1px rgba(255,255,255,0.04)`,
               transform: "translate(-50%, -50%)",
               opacity: 0.94 + 0.05 * Math.max(0, Math.min(1, position.progress ?? 0)),
             }}
