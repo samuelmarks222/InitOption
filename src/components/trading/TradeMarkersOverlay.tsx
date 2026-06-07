@@ -191,11 +191,11 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     plugin.setMarkers(
       myTrades.map((t) => ({
         time: (t.marker_time ?? Math.floor(new Date(t.opened_at).getTime() / 1000)) as Time,
-        shape: t.direction === "higher" ? "arrowUp" : "arrowDown",
+        shape: "circle",
         position: "inBar",
         color: t.direction === "higher" ? UP : DN,
         size: 1.2,
-        text: `${t.direction === "higher" ? "▲" : "▼"} $${t.amount.toFixed(2)}`,
+        text: `$${t.amount.toFixed(2)}`,
       }))
     );
 
@@ -232,7 +232,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
       const progress = getTradeProgress(Math.floor(new Date(trade.opened_at).getTime() / 1000), activeLineEndTime, Math.floor(Date.now() / 1000));
       const isHigher = trade.direction === "higher";
       const tradeOpenMessage = `TRADE OPENED WITH PRICE: ${formatTradeOpenPrice(trade.entry_price)} ${trade.asset_symbol} (OTC)`;
-      const label = `${tradeOpenMessage}\n${isHigher ? "▲" : "▼"} $${trade.amount.toFixed(2)}  ${formatCountdown(timeLeft)}  ${getTimeframeLabel(trade.expiry_seconds)}  ${formatRemainingSeconds(timeLeft)}`;
+      const label = `${tradeOpenMessage}\n$${trade.amount.toFixed(2)}  ${formatCountdown(timeLeft)}  ${getTimeframeLabel(trade.expiry_seconds)}  ${formatRemainingSeconds(timeLeft)}`;
 
       return {
         id: trade.id,

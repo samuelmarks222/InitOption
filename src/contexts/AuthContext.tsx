@@ -36,8 +36,10 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const AUTH_SESSION_RESTORE_TIMEOUT_MS = 3500;
-const OAUTH_SESSION_RESTORE_TIMEOUT_MS = 8000;
+const MAX_SESSION_RETRIES = 3;
+const SESSION_RETRY_DELAY_MS = 2000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const getProfileCacheKey = (userId: string) => `profile_cache_${userId}`;
 
@@ -171,6 +173,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const activeProfileUserIdRef = useRef<string | null>(null);
+  const isIntentionalSignOutRef = useRef(false);
 
   const ensureProfileRow = useCallback(async (userId: string, authUser?: User | null) => {
     const { data, error } = await supabase
@@ -432,81 +435,73 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       hashParams.has("access_token") ||
       hashParams.has("error") ||
       hashParams.has("error_description");
-    let fallbackTimeout: ReturnType<typeof setTimeout> | undefined;
     let isActive = true;
 
-    const clearFallbackTimeout = () => {
-      if (!fallbackTimeout) return;
-      clearTimeout(fallbackTimeout);
-      fallbackTimeout = undefined;
-    };
-
-    fallbackTimeout = setTimeout(() => {
+    const attemptGetSession = async (attempt = 0): Promise<void> => {
       if (!isActive) return;
-      console.warn("Auth session restore timed out. Continuing with a guest session.");
-      setLoading(false);
-    }, isOAuthRedirect ? OAUTH_SESSION_RESTORE_TIMEOUT_MS : AUTH_SESSION_RESTORE_TIMEOUT_MS);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, nextSession) => {
-        if (event === "SIGNED_IN") clearFallbackTimeout();
+      try {
+        const { data: { session: nextSession } } = await supabase.auth.getSession();
+
+        if (!isActive) return;
 
         setSession(nextSession);
         setUser(nextSession?.user ?? null);
         activeProfileUserIdRef.current = nextSession?.user?.id ?? null;
 
         if (nextSession?.user) {
-          clearFallbackTimeout();
+          setProfile((current) => (current?.id === nextSession.user.id ? current : null));
+          void fetchProfile(nextSession.user.id, nextSession.user);
+          setLoading(false);
+        } else if (!isOAuthRedirect) {
+          setProfile(null);
+          setLoading(false);
+        } else if (isOAuthRedirect && !nextSession?.user) {
+          setLoading(false);
+        }
+      } catch (error) {
+        if (!isActive) return;
+
+        if (attempt < MAX_SESSION_RETRIES) {
+          console.warn(`Auth session restore failed (attempt ${attempt + 1}/${MAX_SESSION_RETRIES}). Retrying...`, error);
+          await sleep(SESSION_RETRY_DELAY_MS);
+          return attemptGetSession(attempt + 1);
+        }
+
+        console.error("Failed to restore auth session after retries", error);
+        setLoading(false);
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, nextSession) => {
+        if (event === "SIGNED_OUT" && !isIntentionalSignOutRef.current) {
+          return;
+        }
+        isIntentionalSignOutRef.current = false;
+
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
+        activeProfileUserIdRef.current = nextSession?.user?.id ?? null;
+
+        if (nextSession?.user) {
           setProfile((current) => (current?.id === nextSession.user.id ? current : null));
           setTimeout(() => {
             void fetchProfile(nextSession.user.id, nextSession.user);
           }, 0);
           setLoading(false);
-        } else {
+        } else if (!isOAuthRedirect) {
           setProfile(null);
-          if (!isOAuthRedirect) {
-            clearFallbackTimeout();
-            setLoading(false);
-          }
+          setLoading(false);
         }
       }
     );
 
-    void supabase.auth.getSession()
-      .then(({ data: { session: nextSession } }) => {
-        if (!isActive) return;
-
-        setSession(nextSession);
-        setUser(nextSession?.user ?? null);
-        activeProfileUserIdRef.current = nextSession?.user?.id ?? null;
-
-        if (nextSession?.user) {
-          clearFallbackTimeout();
-          setProfile((current) => (current?.id === nextSession.user.id ? current : null));
-          void fetchProfile(nextSession.user.id, nextSession.user);
-          setLoading(false);
-        } else if (!isOAuthRedirect) {
-          clearFallbackTimeout();
-          setProfile(null);
-          setLoading(false);
-        }
-      })
-      .catch((error) => {
-        if (!isActive) return;
-
-        clearFallbackTimeout();
-        console.error("Failed to restore auth session", error);
-        activeProfileUserIdRef.current = null;
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
-      });
+    void attemptGetSession();
 
     return () => {
       isActive = false;
       subscription.unsubscribe();
-      clearFallbackTimeout();
     };
   }, [fetchProfile]);
 
@@ -626,6 +621,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    isIntentionalSignOutRef.current = true;
     await supabase.auth.signOut();
     clearAuthRestorePath();
     activeProfileUserIdRef.current = null;
