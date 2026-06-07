@@ -973,7 +973,6 @@ const Trade = () => {
 
     void playTradeOpenSound();
     toast({
-      id: "trade-opened",
       title: `Trade opened with price: ${currentEntryPrice.toFixed(5)} ${assetSymbol} (OTC)`,
       variant: "tradeOpen",
     });
