@@ -183,24 +183,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     };
   }, [myTrades]);
 
-  // Circle dot on the entry candle
-  useEffect(() => {
-    const plugin = pluginRef.current;
-    if (!plugin) return;
-
-    plugin.setMarkers(
-      myTrades.map((t) => ({
-        time: (t.marker_time ?? Math.floor(new Date(t.opened_at).getTime() / 1000)) as Time,
-        shape: "circle",
-        position: "inBar",
-        color: t.direction === "higher" ? UP : DN,
-        size: 1.2,
-        text: `$${t.amount.toFixed(2)}`,
-      }))
-    );
-
-    return () => { plugin.setMarkers([]); };
-  }, [myTrades]);
+  // No marker shapes on the entry candle
 
   const markerPositions = useMemo(() => {
     const container = chartRef.current?.container?.();
