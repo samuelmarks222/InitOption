@@ -32,7 +32,7 @@ const toastVariants = cva(
         funding:
           "funding group border-[#5ec893]/35 bg-[#245b47] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] font-semibold",
         tradeOpen:
-          "tradeOpen group !h-[36px] !w-[320px] shrink-0 !rounded-[4px] !border-0 bg-[#13b966] !px-[14px] !py-0 !pr-[36px] text-[12px] font-bold leading-none text-white shadow-[0_8px_18px_rgba(5,128,68,0.32)]",
+          "tradeOpen group !h-[36px] !w-[320px] shrink-0 !space-x-0 !rounded-[4px] !border-0 bg-[#13b966] !px-[14px] !py-0 !pr-[36px] text-[12px] font-bold leading-none text-white shadow-[0_8px_18px_rgba(5,128,68,0.32)]",
         tradeWin:
           "tradeWin group border-[#00C076]/35 bg-[#00C076] text-white w-[245px] h-[44px] shrink-0 py-2 px-3 font-normal text-[10px]",
         tradeLoss:

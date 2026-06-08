@@ -222,11 +222,12 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
   }, [chart, myTrades, series, tick]);
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[75]">
+    <div className="pointer-events-none absolute inset-0 z-[75]" data-trade-markers-overlay="true">
       {markerPositions.map((position) => (
         position ? (
           <div key={position.id}>
             <div
+              data-trade-entry-marker="true"
               className="absolute z-[2] inline-flex items-center gap-[3px] rounded-full pl-[4px] pr-[6px] text-white shadow-[0_2px_5px_rgba(0,0,0,0.18)]"
               style={{
                 left: position.left,
@@ -245,7 +246,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
                   <ArrowDown className="h-[9px] w-[9px] stroke-[3]" />
                 )}
               </span>
-              <span className="whitespace-nowrap text-[12px] font-black leading-none tracking-[-0.01em]">
+              <span className="whitespace-nowrap text-[12px] font-black leading-none tracking-normal">
                 {position.amountLabel}
               </span>
               <span className="whitespace-nowrap pt-[1px] text-[9px] font-bold leading-none text-white/82">
