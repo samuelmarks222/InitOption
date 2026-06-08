@@ -34,12 +34,17 @@ const LEGACY_DEFAULT_COLORS: Record<string, string> = {
 };
 
 type SvgPoint = { x: number; y: number };
+type CoordinateResolveOptions = { clamp?: boolean };
 type BoxCornerId = "topLeft" | "topRight" | "bottomRight" | "bottomLeft";
 type DragKind = "move" | "point" | "box-corner";
 type IndicatorValuePoint = { time: any; value: number };
 
 const HEX_WITH_ALPHA_PATTERN = /^#[0-9a-fA-F]{8}$/;
 const DEFAULT_SHAPE_FILL_OPACITY = 0.3;
+const SHAPE_HIT_TOLERANCE = 14;
+const LINE_HIT_STROKE_WIDTH = 28;
+const ANCHOR_RADIUS = 6;
+const ANCHOR_HIT_RADIUS = 14;
 
 const BOX_TOOL_IDS = new Set(["rect", "disjoint", "flat", "priceRange", "dateRange", "datePriceRange", "gannBox", "cyclic"]);
 
@@ -444,15 +449,38 @@ export const DrawingOverlay = ({
     };
   };
 
-  const resolveTimeFromSvgX = (svgX: number, options: { clamp?: boolean } = {}) => {
-    if (!chart || !svgRef.current) return null;
+  const resolveSvgXCoordinate = (svgX: number, options: CoordinateResolveOptions = {}) => {
+    if (!svgRef.current) return null;
     const width = svgRef.current.clientWidth ?? 0;
-    const resolvedX = options.clamp === false ? svgX : clampViewportCoordinate(svgX, width);
-    const time = chart.timeScale().coordinateToTime(resolvedX);
-    return time === null ? null : Number(time);
+    return options.clamp === false ? svgX : clampViewportCoordinate(svgX, width);
   };
 
-  const resolvePriceFromSvgY = (svgY: number, options: { clamp?: boolean } = {}) => {
+  const resolveLogicalFromSvgX = (svgX: number, options: CoordinateResolveOptions = {}) => {
+    if (!chart) return null;
+    const resolvedX = resolveSvgXCoordinate(svgX, options);
+    if (resolvedX === null) return null;
+    const logical = chart.timeScale().coordinateToLogical(resolvedX);
+    const logicalNumber = logical === null ? null : Number(logical);
+    return logicalNumber !== null && Number.isFinite(logicalNumber) ? logicalNumber : null;
+  };
+
+  const resolveTimeFromSvgX = (svgX: number, options: CoordinateResolveOptions = {}) => {
+    if (!chart) return null;
+    const resolvedX = resolveSvgXCoordinate(svgX, options);
+    if (resolvedX === null) return null;
+    const time = chart.timeScale().coordinateToTime(resolvedX);
+    if (time !== null) return Number(time);
+
+    const logical = resolveLogicalFromSvgX(svgX, options);
+    if (logical === null || timeframeSeconds <= 0) return null;
+
+    const reference = getLogicalTimeReference();
+    return reference
+      ? timeFromLogicalCoordinate(logical, reference.logical, reference.time, timeframeSeconds)
+      : null;
+  };
+
+  const resolvePriceFromSvgY = (svgY: number, options: CoordinateResolveOptions = {}) => {
     if (!series || !svgRef.current) return null;
     const height = svgRef.current.clientHeight ?? 0;
     const resolvedY = options.clamp === false ? svgY : clampViewportCoordinate(svgY, height);
@@ -461,7 +489,7 @@ export const DrawingOverlay = ({
     return resolveAxisValue(resolvedY, samples, (coordinate) => series.coordinateToPrice(coordinate));
   };
 
-  const toAbstractFromSvg = (svgX: number, svgY: number, options: { clamp?: boolean } = {}): Point | null => {
+  const toAbstractFromSvg = (svgX: number, svgY: number, options: CoordinateResolveOptions = {}): Point | null => {
     const resolvedPoint = options.clamp === false ? { x: svgX, y: svgY } : clampSvgPoint({ x: svgX, y: svgY });
     const time = resolveTimeFromSvgX(resolvedPoint.x, options);
     const price = resolvePriceFromSvgY(resolvedPoint.y, options);
@@ -470,10 +498,10 @@ export const DrawingOverlay = ({
   };
 
   /** Get abstract chart point from raw screen coordinates */
-  const toAbstract = (clientX: number, clientY: number): Point | null => {
+  const toAbstract = (clientX: number, clientY: number, options: CoordinateResolveOptions = {}): Point | null => {
     const relativePoint = getRelativeSvgPoint(clientX, clientY);
     if (!relativePoint) return null;
-    return toAbstractFromSvg(relativePoint.x, relativePoint.y);
+    return toAbstractFromSvg(relativePoint.x, relativePoint.y, options);
   };
 
   const flushPendingDragUpdate = useCallback(() => {
@@ -506,14 +534,10 @@ export const DrawingOverlay = ({
       points: isBoxTool(preview.tool) ? normalizeBoxPoints(nextPoints) : nextPoints,
     });
     // Store smooth logical positions for sub-bar rendering
-    const logicals = preview.svgPoints.map(p => {
-      if (!chart) return null;
-      const logical = chart.timeScale().coordinateToLogical(p.x);
-      return logical !== null ? Number(logical) : null;
-    });
+    const logicals = preview.svgPoints.map(p => resolveLogicalFromSvgX(p.x, { clamp: false }));
     smoothLogicalRef.current = { ...smoothLogicalRef.current, [preview.id]: logicals };
     setRenderTick((tick) => tick + 1);
-  }, [updateDrawing]);
+  }, [chart, series, timeframeSeconds, updateDrawing]);
 
   const queueDragSvgPreview = useCallback((id: string, tool: string, svgPoints: SvgPoint[]) => {
     dragPreviewRef.current = { id, tool, svgPoints };
@@ -759,7 +783,7 @@ export const DrawingOverlay = ({
       if (!d.visible || d.locked || d.id !== selectedId) continue; // anchors only for selected editable drawings
       const svgPts = d.points.map(toSvg);
       for (let j = 0; j < svgPts.length; j++) {
-        if (Math.hypot(svgX - svgPts[j].x, svgY - svgPts[j].y) < 14) {
+        if (Math.hypot(svgX - svgPts[j].x, svgY - svgPts[j].y) < ANCHOR_HIT_RADIUS) {
           return { drawingId: d.id, pointIdx: j, drawing: d };
         }
       }
@@ -773,9 +797,9 @@ export const DrawingOverlay = ({
 
       const lineHit = (ax: number, ay: number, bx: number, by: number) => {
         const l2 = (bx - ax) ** 2 + (by - ay) ** 2;
-        if (l2 === 0) return Math.hypot(svgX - ax, svgY - ay) < 12;
+        if (l2 === 0) return Math.hypot(svgX - ax, svgY - ay) < SHAPE_HIT_TOLERANCE;
         const t = Math.max(0, Math.min(1, ((svgX - ax) * (bx - ax) + (svgY - ay) * (by - ay)) / l2));
-        return Math.hypot(svgX - (ax + t * (bx - ax)), svgY - (ay + t * (by - ay))) < 10;
+        return Math.hypot(svgX - (ax + t * (bx - ax)), svgY - (ay + t * (by - ay))) < SHAPE_HIT_TOLERANCE;
       };
       const boxHit = (ax: number, ay: number, bx: number, by: number) => {
         const l = Math.min(ax, bx), r = Math.max(ax, bx);
@@ -784,9 +808,9 @@ export const DrawingOverlay = ({
       };
 
       let hit = false;
-      if (d.tool === "hline") hit = Math.abs(svgY - p1.y) < 10;
-      else if (d.tool === "vline") hit = Math.abs(svgX - p1.x) < 10;
-      else if (d.tool === "cross") hit = Math.abs(svgY - p1.y) < 10 || Math.abs(svgX - p1.x) < 10;
+      if (d.tool === "hline") hit = Math.abs(svgY - p1.y) < SHAPE_HIT_TOLERANCE;
+      else if (d.tool === "vline") hit = Math.abs(svgX - p1.x) < SHAPE_HIT_TOLERANCE;
+      else if (d.tool === "cross") hit = Math.abs(svgY - p1.y) < SHAPE_HIT_TOLERANCE || Math.abs(svgX - p1.x) < SHAPE_HIT_TOLERANCE;
       else if (d.points.length >= 2) {
         const p2 = svgPts[1];
         const boxTools = ["rect", "disjoint", "flat", "priceRange", "dateRange", "datePriceRange", "gannBox", "cyclic"];
@@ -813,14 +837,14 @@ export const DrawingOverlay = ({
           const l2 = dx * dx + dy * dy;
           if (l2 > 0) {
             const t = Math.max(0, ((svgX - p1.x) * dx + (svgY - p1.y) * dy) / l2);
-            hit = Math.hypot(svgX - (p1.x + t * dx), svgY - (p1.y + t * dy)) < 10;
+            hit = Math.hypot(svgX - (p1.x + t * dx), svgY - (p1.y + t * dy)) < SHAPE_HIT_TOLERANCE;
           }
         } else if (d.tool === "extended") {
           const dx = p2.x - p1.x, dy = p2.y - p1.y;
           const l2 = dx * dx + dy * dy;
           if (l2 > 0) {
             const t = ((svgX - p1.x) * dx + (svgY - p1.y) * dy) / l2; // unclamped
-            hit = Math.hypot(svgX - (p1.x + t * dx), svgY - (p1.y + t * dy)) < 10;
+            hit = Math.hypot(svgX - (p1.x + t * dx), svgY - (p1.y + t * dy)) < SHAPE_HIT_TOLERANCE;
           }
         } else if (d.tool === "curve" && d.points.length >= 3) {
           const p3 = svgPts[2];
@@ -829,7 +853,7 @@ export const DrawingOverlay = ({
           for (let t = 0; t <= 1; t += 0.05) {
             const bx = (1-t)*(1-t)*p1.x + 2*(1-t)*t*p2.x + t*t*p3.x;
             const by = (1-t)*(1-t)*p1.y + 2*(1-t)*t*p2.y + t*t*p3.y;
-            if (Math.hypot(svgX - bx, svgY - by) < 12) {
+            if (Math.hypot(svgX - bx, svgY - by) < SHAPE_HIT_TOLERANCE) {
               hit = true;
               break;
             }
@@ -848,7 +872,7 @@ export const DrawingOverlay = ({
     if (!relativePoint) return;
     const svgX = relativePoint.x;
     const svgY = relativePoint.y;
-    const apt = toAbstract(e.clientX, e.clientY);
+    const apt = activeTool ? toAbstractFromSvg(svgX, svgY, { clamp: false }) : null;
 
     if (activeTool) {
       e.preventDefault();
@@ -900,7 +924,7 @@ export const DrawingOverlay = ({
 
     // No active tool: hit test
     const hit = hitTest(svgX, svgY);
-    if (hit && apt) {
+    if (hit) {
       e.preventDefault();
       setSelectedId(hit.drawingId);
       if (hit.drawing.locked) {
@@ -943,7 +967,10 @@ export const DrawingOverlay = ({
     if (isDrawing && previewPts.current.length > 0) {
       e.preventDefault();
       e.stopPropagation();
-      const apt = toAbstract(e.clientX, e.clientY);
+      const relativePoint = getRelativeSvgPoint(e.clientX, e.clientY);
+      const apt = relativePoint
+        ? toAbstractFromSvg(relativePoint.x, relativePoint.y, { clamp: false })
+        : null;
       if (apt) {
         previewPts.current[previewPts.current.length - 1] = apt;
         setRenderTick(t => t + 1);
@@ -1023,9 +1050,8 @@ export const DrawingOverlay = ({
         setSelectedId(d.id);
         return;
       }
-      const apt = toAbstract(e.clientX, e.clientY);
       const relativePoint = getRelativeSvgPoint(e.clientX, e.clientY);
-      if (!apt || !relativePoint) return;
+      if (!relativePoint) return;
       setSelectedId(d.id);
       svgRef.current?.focus();
       setChartPointerNavigationEnabled(false);
@@ -1055,15 +1081,38 @@ export const DrawingOverlay = ({
     if (svgPts.length === 0) return null;
     const p1 = svgPts[0];
 
+    const renderAnchorHandle = (
+      key: string | number,
+      point: SvgPoint,
+      cursor: string,
+      onPointerDown: (event: React.PointerEvent<SVGCircleElement>) => void,
+    ) => (
+      <g key={key}>
+        <circle
+          cx={point.x}
+          cy={point.y}
+          r={ANCHOR_HIT_RADIUS}
+          fill="transparent"
+          style={{ cursor, pointerEvents: "all" }}
+          onPointerDown={onPointerDown}
+        />
+        <circle
+          cx={point.x}
+          cy={point.y}
+          r={ANCHOR_RADIUS}
+          fill="white"
+          stroke={color}
+          strokeWidth={2}
+          style={{ pointerEvents: "none" }}
+        />
+      </g>
+    );
+
     // Anchor circles (only when selected)
     const anchors = sel ? (
       <>
         {svgPts.map((p, i) => (
-          <circle key={`anc-${i}`} cx={p.x} cy={p.y} r={6}
-            fill="white" stroke={color} strokeWidth={2}
-            style={{ cursor: "crosshair", pointerEvents: "all" }}
-            onPointerDown={e => shapeDown(e, i)}
-          />
+          renderAnchorHandle(`anc-${i}`, p, "crosshair", e => shapeDown(e, i))
         ))}
       </>
     ) : null;
@@ -1072,7 +1121,7 @@ export const DrawingOverlay = ({
     if (d.tool === "hline") return (
       <g key={d.id}>
         <line x1={0} y1={p1.y} x2="100%" y2={p1.y} stroke={color} strokeWidth={lw} strokeDasharray={dash} style={{ pointerEvents: "none" }} />
-        <line x1={0} y1={p1.y} x2="100%" y2={p1.y} stroke="transparent" strokeWidth={18}
+        <line x1={0} y1={p1.y} x2="100%" y2={p1.y} stroke="transparent" strokeWidth={LINE_HIT_STROKE_WIDTH}
           style={{ pointerEvents: "stroke", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
         {anchors}
       </g>
@@ -1080,7 +1129,7 @@ export const DrawingOverlay = ({
     if (d.tool === "vline") return (
       <g key={d.id}>
         <line x1={p1.x} y1={0} x2={p1.x} y2="100%" stroke={color} strokeWidth={lw} strokeDasharray={dash} style={{ pointerEvents: "none" }} />
-        <line x1={p1.x} y1={0} x2={p1.x} y2="100%" stroke="transparent" strokeWidth={18}
+        <line x1={p1.x} y1={0} x2={p1.x} y2="100%" stroke="transparent" strokeWidth={LINE_HIT_STROKE_WIDTH}
           style={{ pointerEvents: "stroke", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
         {anchors}
       </g>
@@ -1089,7 +1138,9 @@ export const DrawingOverlay = ({
       <g key={d.id}>
         <line x1={0} y1={p1.y} x2="100%" y2={p1.y} stroke={color} strokeWidth={lw} strokeDasharray={dash} style={{ pointerEvents: "none" }} />
         <line x1={p1.x} y1={0} x2={p1.x} y2="100%" stroke={color} strokeWidth={lw} strokeDasharray={dash} style={{ pointerEvents: "none" }} />
-        <line x1={0} y1={p1.y} x2="100%" y2={p1.y} stroke="transparent" strokeWidth={18}
+        <line x1={0} y1={p1.y} x2="100%" y2={p1.y} stroke="transparent" strokeWidth={LINE_HIT_STROKE_WIDTH}
+          style={{ pointerEvents: "stroke", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
+        <line x1={p1.x} y1={0} x2={p1.x} y2="100%" stroke="transparent" strokeWidth={LINE_HIT_STROKE_WIDTH}
           style={{ pointerEvents: "stroke", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
         {anchors}
       </g>
@@ -1112,7 +1163,7 @@ export const DrawingOverlay = ({
       return (
         <g key={d.id}>
           <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={color} strokeWidth={lw} strokeDasharray={dash} style={{ pointerEvents: "none" }} />
-          <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="transparent" strokeWidth={18}
+          <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="transparent" strokeWidth={LINE_HIT_STROKE_WIDTH}
             style={{ pointerEvents: "stroke", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
           {anchors}
         </g>
@@ -1123,7 +1174,7 @@ export const DrawingOverlay = ({
       return (
         <g key={d.id}>
           <line x1={e2.x1} y1={e2.y1} x2={e2.x2} y2={e2.y2} stroke={color} strokeWidth={lw} strokeDasharray={dash} style={{ pointerEvents: "none" }} />
-          <line x1={e2.x1} y1={e2.y1} x2={e2.x2} y2={e2.y2} stroke="transparent" strokeWidth={18}
+          <line x1={e2.x1} y1={e2.y1} x2={e2.x2} y2={e2.y2} stroke="transparent" strokeWidth={LINE_HIT_STROKE_WIDTH}
             style={{ pointerEvents: "stroke", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
           {anchors}
         </g>
@@ -1134,7 +1185,7 @@ export const DrawingOverlay = ({
       return (
         <g key={d.id}>
           <line x1={e2.x1} y1={e2.y1} x2={e2.x2} y2={e2.y2} stroke={color} strokeWidth={lw} strokeDasharray={dash} style={{ pointerEvents: "none" }} />
-          <line x1={e2.x1} y1={e2.y1} x2={e2.x2} y2={e2.y2} stroke="transparent" strokeWidth={18}
+          <line x1={e2.x1} y1={e2.y1} x2={e2.x2} y2={e2.y2} stroke="transparent" strokeWidth={LINE_HIT_STROKE_WIDTH}
             style={{ pointerEvents: "stroke", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
           {anchors}
         </g>
@@ -1240,14 +1291,11 @@ export const DrawingOverlay = ({
           {sel && (
             <>
               {cornerEntries.map(({ id, point, cursor }) => (
-                <circle key={id} cx={point.x} cy={point.y} r={6} fill="white" stroke={color} strokeWidth={2}
-                  style={{ cursor, pointerEvents: "all" }}
-                  onPointerDown={e => {
+                renderAnchorHandle(id, point, cursor, e => {
                     e.preventDefault();
                     e.stopPropagation();
-                    const apt = toAbstract(e.clientX, e.clientY);
                     const relativePoint = getRelativeSvgPoint(e.clientX, e.clientY);
-                    if (!apt || !relativePoint) return;
+                    if (!relativePoint) return;
                     setSelectedId(d.id);
                     svgRef.current?.focus();
                     setChartPointerNavigationEnabled(false);
@@ -1264,8 +1312,7 @@ export const DrawingOverlay = ({
                     };
                     svgRef.current!.setPointerCapture(e.pointerId);
                     setRenderTick(t => t + 1);
-                  }}
-                />
+                  })
               ))}
             </>
           )}
@@ -1309,7 +1356,7 @@ export const DrawingOverlay = ({
               x2={p2.x}
               y2={p2.y}
               stroke="transparent"
-              strokeWidth={24}
+              strokeWidth={LINE_HIT_STROKE_WIDTH}
               style={{ pointerEvents: "stroke", cursor: "grab" }}
               onPointerDown={e => shapeDown(e)}
             />
@@ -1376,7 +1423,7 @@ export const DrawingOverlay = ({
             x2={p1.x + dxM * 9999}
             y2={p1.y + dyM * 9999}
             stroke="transparent"
-            strokeWidth={24}
+            strokeWidth={LINE_HIT_STROKE_WIDTH}
             style={{ pointerEvents: "stroke", cursor: "grab" }}
             onPointerDown={e => shapeDown(e)}
           />
@@ -1395,14 +1442,11 @@ export const DrawingOverlay = ({
           })}
           <line x1={p2.x} y1={p2.y} x2={p3.x} y2={p3.y} stroke={color} strokeWidth={1} strokeDasharray="4 4" strokeOpacity={0.4} style={{ pointerEvents: "none" }} />
           {sel && [p1, p2, p3].map((p, i) => (
-            <circle key={i} cx={p.x} cy={p.y} r={6} fill="white" stroke={color} strokeWidth={2}
-              style={{ cursor: "crosshair", pointerEvents: "all" }}
-              onPointerDown={e => {
+            renderAnchorHandle(`pitch-${i}`, p, "crosshair", e => {
                 e.preventDefault();
                 e.stopPropagation();
-                const apt = toAbstract(e.clientX, e.clientY);
                 const relativePoint = getRelativeSvgPoint(e.clientX, e.clientY);
-                if (!apt || !relativePoint) return;
+                if (!relativePoint) return;
                 svgRef.current?.focus();
                 setChartPointerNavigationEnabled(false);
                 drag.current = {
@@ -1417,8 +1461,7 @@ export const DrawingOverlay = ({
                 };
                 svgRef.current!.setPointerCapture(e.pointerId);
                 setRenderTick(t => t + 1);
-              }}
-            />
+              })
           ))}
         </g>
       );
@@ -1431,17 +1474,14 @@ export const DrawingOverlay = ({
       return (
         <g key={d.id}>
           <path d={pathD} fill="none" stroke={color} strokeWidth={lw} strokeDasharray={dash} style={{ pointerEvents: "none" }} />
-          <path d={pathD} fill="none" stroke="transparent" strokeWidth={18}
+          <path d={pathD} fill="none" stroke="transparent" strokeWidth={LINE_HIT_STROKE_WIDTH}
             style={{ pointerEvents: "stroke", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
           {sel && [p1, p2, p3].map((p, i) => (
-            <circle key={i} cx={p.x} cy={p.y} r={6} fill="white" stroke={color} strokeWidth={2}
-              style={{ cursor: "crosshair", pointerEvents: "all" }}
-              onPointerDown={e => {
+            renderAnchorHandle(`curve-${i}`, p, "crosshair", e => {
                 e.preventDefault();
                 e.stopPropagation();
-                const apt = toAbstract(e.clientX, e.clientY);
                 const relativePoint = getRelativeSvgPoint(e.clientX, e.clientY);
-                if (!apt || !relativePoint) return;
+                if (!relativePoint) return;
                 svgRef.current?.focus();
                 setChartPointerNavigationEnabled(false);
                 drag.current = {
@@ -1456,8 +1496,7 @@ export const DrawingOverlay = ({
                 };
                 svgRef.current!.setPointerCapture(e.pointerId);
                 setRenderTick(t => t + 1);
-              }}
-            />
+              })
           ))}
         </g>
       );
@@ -1483,7 +1522,7 @@ export const DrawingOverlay = ({
     return (
       <g key={d.id}>
         <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={color} strokeWidth={lw} strokeDasharray={dash} style={{ pointerEvents: "none" }} />
-        <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="transparent" strokeWidth={18}
+        <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="transparent" strokeWidth={LINE_HIT_STROKE_WIDTH}
           style={{ pointerEvents: "stroke", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
         {anchors}
       </g>
