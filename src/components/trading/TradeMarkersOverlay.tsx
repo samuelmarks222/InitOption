@@ -14,10 +14,14 @@ interface Props {
   timeframeSeconds: number;
 }
 
+const MARKER_WIDTH = 82;
 const MARKER_HEIGHT = 18;
-const MARKER_MIN_VISIBLE_X = 84;
+const MARKER_DOT_GAP = 24;
+const CONNECTOR_DOT_OFFSET = 7;
+const MARKER_MIN_VISIBLE_X = MARKER_WIDTH + MARKER_DOT_GAP + 8;
 const MARKER_EDGE_GAP = 8;
 const ENTRY_DOT_SIZE = 9;
+const CONNECTOR_DOT_SIZE = 8;
 
 const formatMarkerClock = (seconds: number) => {
   const total = Math.max(0, Math.ceil(seconds));
@@ -205,12 +209,14 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
       const color = isHigher ? UP : DN;
       const clampedX = Math.min(Math.max(x, MARKER_MIN_VISIBLE_X), width - MARKER_EDGE_GAP);
       const clampedY = Math.min(Math.max(y, MARKER_EDGE_GAP), height - MARKER_EDGE_GAP);
+      const pillLeft = clampedX - MARKER_WIDTH - MARKER_DOT_GAP;
 
       return {
         id: trade.id,
-        left: clampedX - 5,
+        left: pillLeft,
         top: clampedY,
-        dotLeft: Math.min(Math.max(x, MARKER_EDGE_GAP), width - MARKER_EDGE_GAP),
+        connectorDotLeft: pillLeft + MARKER_WIDTH + CONNECTOR_DOT_OFFSET,
+        dotLeft: clampedX,
         dotTop: clampedY,
         amountLabel: formatMarkerAmount(trade.amount),
         clockLabel: formatMarkerClock(timeLeft),
@@ -228,14 +234,14 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
           <div key={position.id}>
             <div
               data-trade-entry-marker="true"
-              className="absolute z-[2] inline-flex items-center gap-[3px] rounded-full pl-[4px] pr-[6px] text-white shadow-[0_2px_5px_rgba(0,0,0,0.18)]"
+              className="absolute z-[2] inline-flex items-center gap-[3px] rounded-full pl-[4px] pr-[5px] text-white shadow-[0_2px_5px_rgba(0,0,0,0.18)]"
               style={{
                 left: position.left,
                 top: position.top,
+                width: MARKER_WIDTH,
                 height: MARKER_HEIGHT,
-                minWidth: 78,
                 background: position.color,
-                transform: "translate(-100%, -50%)",
+                transform: "translateY(-50%)",
                 opacity: 0.96 + 0.04 * Math.max(0, Math.min(1, position.progress ?? 0)),
               }}
             >
@@ -254,13 +260,27 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
               </span>
             </div>
             <div
+              data-trade-entry-connector-dot="true"
               className="absolute z-[3] rounded-full border-2 border-white"
+              style={{
+                left: position.connectorDotLeft - CONNECTOR_DOT_SIZE / 2,
+                top: position.dotTop - CONNECTOR_DOT_SIZE / 2,
+                width: CONNECTOR_DOT_SIZE,
+                height: CONNECTOR_DOT_SIZE,
+                background: position.color,
+                boxShadow: `0 0 0 1px ${position.color}`,
+              }}
+            />
+            <div
+              data-trade-entry-end-dot="true"
+              className="absolute z-[4] rounded-full border-2"
               style={{
                 left: position.dotLeft - ENTRY_DOT_SIZE / 2,
                 top: position.dotTop - ENTRY_DOT_SIZE / 2,
                 width: ENTRY_DOT_SIZE,
                 height: ENTRY_DOT_SIZE,
-                background: position.color,
+                borderColor: position.color,
+                background: "#ffffff",
                 boxShadow: `0 0 0 1px ${position.color}`,
               }}
             />
