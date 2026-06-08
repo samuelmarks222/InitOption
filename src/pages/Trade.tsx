@@ -6,7 +6,7 @@ import { NavigationSidebar, WorkspaceModule } from "@/components/navigation/Navi
 import { DynamicWorkspace } from "@/components/workspace/DynamicWorkspace";
 import { TournamentDetailOverlay } from "@/components/workspace/TournamentDetailOverlay";
 import TradingHeader from "@/components/trading/TradingHeader";
-import TradingChart, { type ChartSettlementAnnouncement } from "@/components/trading/TradingChart";
+import TradingChart, { type ChartOrderAnnouncement, type ChartSettlementAnnouncement } from "@/components/trading/TradingChart";
 import TradingPanel from "@/components/trading/TradingPanel";
 import {
   type ChartLayoutMode,
@@ -345,6 +345,7 @@ const Trade = () => {
   const latestChartMarkerTimesBySymbolRef = useRef<Record<string, number>>({});
   const latestChartMarkerLogicalBySymbolRef = useRef<Record<string, number>>({});
   const latestChartTimeframesBySymbolRef = useRef<Record<string, number>>({});
+  const orderHideTimersRef = useRef<Record<string, number>>({});
   const settlementHideTimersRef = useRef<Record<string, number>>({});
   const [isDesktopViewport, setIsDesktopViewport] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth >= 1024 : true,
@@ -358,6 +359,7 @@ const Trade = () => {
   const [selectedAssetSaved, setSelectedAssetSaved] = useState<TradeTabAsset | null>(null);
   const [liveChartPrices, setLiveChartPrices] = useState<Record<string, number>>({});
   const [chartLiveEdgeRequestKey, setChartLiveEdgeRequestKey] = useState(0);
+  const [chartOrderAnnouncements, setChartOrderAnnouncements] = useState<Record<string, ChartOrderAnnouncement | null>>({});
   const { getAsset } = useDynamicAssets();
 
   const dynamicSelectedAsset = getAsset(activeTabId);
@@ -578,8 +580,35 @@ const Trade = () => {
     }, 3400);
   }, []);
 
+  const showChartOrderAnnouncement = useCallback((announcement: ChartOrderAnnouncement) => {
+    setChartOrderAnnouncements((current) => ({
+      ...current,
+      [announcement.assetSymbol]: announcement,
+    }));
+
+    const existingTimer = orderHideTimersRef.current[announcement.assetSymbol];
+    if (existingTimer) {
+      window.clearTimeout(existingTimer);
+    }
+
+    orderHideTimersRef.current[announcement.assetSymbol] = window.setTimeout(() => {
+      setChartOrderAnnouncements((current) => {
+        if (current[announcement.assetSymbol]?.id !== announcement.id) {
+          return current;
+        }
+
+        const nextState = { ...current };
+        delete nextState[announcement.assetSymbol];
+        return nextState;
+      });
+
+      delete orderHideTimersRef.current[announcement.assetSymbol];
+    }, 2200);
+  }, []);
+
   useEffect(() => {
     return () => {
+      Object.values(orderHideTimersRef.current).forEach((timerId) => window.clearTimeout(timerId));
       Object.values(settlementHideTimersRef.current).forEach((timerId) => window.clearTimeout(timerId));
     };
   }, []);
@@ -657,6 +686,11 @@ const Trade = () => {
 
       if (settledTrades.length > 0) {
         const latestSettledTrade = settledTrades[settledTrades.length - 1];
+        const totalPayout = settledTrades.reduce((sum, trade) => sum + Number(trade.profit ?? 0), 0);
+        const totalProfit = settledTrades.reduce(
+          (sum, trade) => sum + Math.max(0, Number(trade.profit ?? 0) - Number(trade.amount ?? 0)),
+          0,
+        );
         void playTradeCloseSound();
         if (creditedAmount > 0) {
           setDemoBalance((current) => current + creditedAmount);
@@ -672,6 +706,9 @@ const Trade = () => {
           expirySeconds: latestSettledTrade.expiry_seconds,
           profit: latestSettledTrade.profit ?? 0,
           status: latestSettledTrade.status === "won" ? "won" : "lost",
+          closedCount: settledTrades.length,
+          totalPayout,
+          totalProfit,
         });
       }
     }, 100);
@@ -890,7 +927,7 @@ const Trade = () => {
       const markerTimeOverride = liveChartMarkerTime ?? clickTimestampSec;
       const markerLogicalOverride = latestChartMarkerLogicalBySymbolRef.current[assetSymbol] ?? null;
 
-      return openTrade(
+      const opened = await openTrade(
         assetSymbol,
         direction,
         amount,
@@ -901,8 +938,19 @@ const Trade = () => {
         markerLogicalOverride,
         timeframeSeconds,
       );
+
+      if (opened) {
+        showChartOrderAnnouncement({
+          id: `order_${assetSymbol}_${Date.now()}`,
+          assetSymbol,
+          direction,
+          amount,
+        });
+      }
+
+      return opened;
     },
-    [openTrade],
+    [openTrade, showChartOrderAnnouncement],
   );
 
   useEffect(() => {
@@ -973,11 +1021,14 @@ const Trade = () => {
       ...current,
     ]);
 
-    void playTradeOpenSound();
-    toast({
-      title: `Trade opened with price: ${currentEntryPrice.toFixed(5)} ${assetSymbol} (OTC)`,
-      variant: "tradeOpen",
+    showChartOrderAnnouncement({
+      id: `demo_order_${assetSymbol}_${Date.now()}`,
+      assetSymbol,
+      direction,
+      amount,
     });
+
+    void playTradeOpenSound();
 
     return true;
   };
@@ -1313,6 +1364,7 @@ const Trade = () => {
                             compactPane={!isPrimaryPane}
                             miniOverlay={chartLayoutMode > 1 && isPrimaryPane}
                             liveEdgeRequestKey={`${chartAsset.symbol}:${chartLiveEdgeRequestKey}`}
+                            orderAnnouncement={chartOrderAnnouncements[chartAsset.symbol] ?? null}
                             settlementAnnouncement={chartSettlementAnnouncements[chartAsset.symbol] ?? null}
                           />
                         </div>
@@ -1411,6 +1463,7 @@ const Trade = () => {
                       onToggleMobileHistory={() => setShowMobileHistory(true)}
                       mobileHistoryOpen={showMobileHistory}
                       liveEdgeRequestKey={`${selectedAsset.symbol}:${chartLiveEdgeRequestKey}`}
+                      orderAnnouncement={chartOrderAnnouncements[selectedAsset.symbol] ?? null}
                       settlementAnnouncement={chartSettlementAnnouncements[selectedAsset.symbol] ?? null} />
 
                     {/* Mobile Indicator and Drawing Panels */}

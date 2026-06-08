@@ -402,11 +402,6 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
 
     void playTradeCloseSound();
 
-    toast({
-      title: `${won ? "Won" : "Lost"} ${won ? (trade.amount * trade.payout_rate).toFixed(2) : trade.amount.toFixed(2)} ${trade.asset_symbol}`,
-      variant: won ? "tradeWin" : "tradeLoss",
-    });
-
     if (trade.showSettlementOverlay) {
       setLatestSettlement({
         id: trade.id,
@@ -747,11 +742,6 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
           },
         });
       }
-
-      toast({
-        title: `Trade opened with price: ${actualEntryPrice.toFixed(5)} ${assetSymbol} (OTC)`,
-        variant: "tradeOpen",
-      });
 
       setActiveTrades((prev) =>
         prev.map((trade) =>

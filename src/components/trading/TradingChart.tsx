@@ -103,6 +103,7 @@ interface TradingChartProps {
   miniOverlay?: boolean;
   liveEdgeRequestKey?: number | string;
   settlementAnnouncement?: ChartSettlementAnnouncement | null;
+  orderAnnouncement?: ChartOrderAnnouncement | null;
 }
 
 export interface ChartSettlementAnnouncement {
@@ -113,6 +114,16 @@ export interface ChartSettlementAnnouncement {
   expirySeconds: number;
   profit: number;
   status: "won" | "lost";
+  closedCount?: number;
+  totalPayout?: number;
+  totalProfit?: number;
+}
+
+export interface ChartOrderAnnouncement {
+  id: string;
+  assetSymbol: string;
+  direction: TradeDirection;
+  amount: number;
 }
 
 const PROFESSIONAL_CHART_BG = "#1e2131";
@@ -718,50 +729,154 @@ const getPricePrecision = (price: number) => {
   return 6;
 };
 
-const formatSettlementProfit = (amount: number) =>
-  `${amount >= 0 ? "+" : "-"}${Math.abs(amount).toFixed(2)} $`;
+const formatCloneMoney = (amount: number) => {
+  const safeAmount = Number.isFinite(amount) ? Math.max(0, amount) : 0;
+  const formatted = Number.isInteger(safeAmount)
+    ? safeAmount.toFixed(0)
+    : safeAmount.toFixed(2).replace(/\.?0+$/, "");
 
-const formatSettlementClock = (seconds: number) => {
-  const normalized = Math.max(0, Math.floor(seconds));
-  const minutes = Math.floor((normalized % 3600) / 60);
-  const remainderSeconds = normalized % 60;
-
-  return `${String(minutes).padStart(2, "0")}:${String(remainderSeconds).padStart(2, "0")}`;
+  return `$${formatted}`;
 };
 
-const SettlementCloneOverlay = ({
-  announcement,
-  compact,
+const formatCloneAssetSymbol = (symbol: string) => {
+  const cleaned = symbol
+    .replace(/\s*\(OTC\)/gi, "")
+    .replace(/\s+OTC$/i, "")
+    .trim();
+
+  return `${cleaned || symbol} OTC`;
+};
+
+const CloneStatusDot = ({ tone }: { tone: "green" | "red" }) => (
+  <span
+    className="inline-flex h-[10px] w-[10px] items-center justify-center rounded-full"
+    style={{ background: tone === "green" ? "#19b86c" : "#ec3d3d" }}
+  >
+    {tone === "green" ? (
+      <CheckCheck className="h-[7px] w-[7px] text-white" strokeWidth={3.2} />
+    ) : (
+      <X className="h-[7px] w-[7px] text-white" strokeWidth={3.2} />
+    )}
+  </span>
+);
+
+const CloneTrendGlyph = ({ tone }: { tone: "green" | "red" }) => (
+  <span className="relative inline-flex h-[14px] w-[14px] items-end gap-[1px]">
+    <span className="h-[5px] w-[2px] rounded-sm" style={{ background: tone === "green" ? "#20c06f" : "#ec3d3d" }} />
+    <span className="h-[9px] w-[2px] rounded-sm" style={{ background: tone === "green" ? "#20c06f" : "#ec3d3d" }} />
+    <span className="h-[7px] w-[2px] rounded-sm" style={{ background: tone === "green" ? "#20c06f" : "#ec3d3d" }} />
+    <span
+      className="absolute right-0 top-0 h-[7px] w-[7px] border-r-[2px] border-t-[2px]"
+      style={{
+        borderColor: tone === "green" ? "#20c06f" : "#ec3d3d",
+        transform: tone === "green" ? "rotate(-8deg)" : "rotate(34deg)",
+      }}
+    />
+  </span>
+);
+
+const ClonePopupCard = ({
+  children,
+  className,
+  top,
 }: {
-  announcement: ChartSettlementAnnouncement;
-  compact: boolean;
-}) => {
-  const { t } = useTranslation();
-  const won = announcement.status === "won";
-  const accent = won ? "#33cd77" : "#ff7b72";
-  const leftOffset = 100;
-  const bottomOffset = 100;
+  children: React.ReactNode;
+  className?: string;
+  top: number;
+}) => (
+  <div
+    className={cn(
+      "absolute left-[32px] rounded-[4px] border border-[#4b5268] bg-[#242a3c]/96 px-[14px] py-[11px] text-white shadow-[0_10px_22px_rgba(0,0,0,0.36)]",
+      className,
+    )}
+    style={{ top }}
+  >
+    {children}
+  </div>
+);
+
+const CloneMetric = ({ label, value }: { label: string; value: string }) => (
+  <div className="min-w-[52px]">
+    <div className="text-[10px] font-medium leading-none text-[#8ea0bd]">{label}</div>
+    <div className="mt-[4px] text-[12px] font-black leading-none text-white">{value}</div>
+  </div>
+);
+
+const OrderPlacedCloneCard = ({ announcement, top }: { announcement: ChartOrderAnnouncement; top: number }) => {
+  const isHigher = announcement.direction === "higher";
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[66] overflow-visible">
-      <div
-        className="absolute flex items-center gap-3 rounded-[14px] px-5 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
-        style={{ left: leftOffset, bottom: bottomOffset, background: "var(--trading-panel-soft-bg)" }}
-      >
-        {won ? (
-          <CheckCheck className="h-5 w-5" style={{ color: "#33cd77" }} strokeWidth={2.5} />
-        ) : (
-          <X className="h-5 w-5" style={{ color: "#ff7b72" }} strokeWidth={2.5} />
-        )}
-        <AssetSymbolMark symbol={announcement.assetSymbol} size={20} />
-        <span className="h-4 w-px bg-white/15" />
-        <span className="text-[14px] font-black uppercase tracking-[0.14em]" style={{ color: accent }}>
-          {won ? t("tradingChart.settlementWin") : t("tradingChart.settlementLoss")}
-        </span>
-        <span className="text-[14px] font-bold tabular-nums text-white">
-          {formatSettlementProfit(announcement.profit)}
-        </span>
+    <ClonePopupCard top={top} className="w-[154px]">
+      <div className="flex items-center gap-[6px] text-[12px] font-black leading-none text-white">
+        <span>Trade order placed</span>
+        <CloneStatusDot tone="green" />
       </div>
+      <div className="mt-[10px] flex items-center gap-[7px] text-[15px] font-black leading-none text-white">
+        <span>{formatCloneAssetSymbol(announcement.assetSymbol)}</span>
+        <CloneTrendGlyph tone="green" />
+      </div>
+      <div className="mt-[9px] grid grid-cols-2 gap-[12px]">
+        <CloneMetric label="Forecast" value={isHigher ? "Buy" : "Sell"} />
+        <CloneMetric label="Amount" value={formatCloneMoney(announcement.amount)} />
+      </div>
+    </ClonePopupCard>
+  );
+};
+
+const SettlementCloneCard = ({ announcement, top }: { announcement: ChartSettlementAnnouncement; top: number }) => {
+  const won = announcement.status === "won";
+  const closedCount = announcement.closedCount ?? 1;
+  const payout = announcement.totalPayout ?? announcement.profit;
+  const netProfit = announcement.totalProfit ?? (won ? Math.max(0, announcement.profit - announcement.amount) : 0);
+  const tone = won ? "green" : "red";
+
+  if (closedCount > 1) {
+    return (
+      <ClonePopupCard top={top} className="w-[180px]">
+        <div className="flex items-center gap-[6px] text-[13px] font-black leading-none text-white">
+          <span>Trades closed: {closedCount}</span>
+          <CloneStatusDot tone="green" />
+        </div>
+        <div className="mt-[10px] grid grid-cols-2 gap-[14px]">
+          <CloneMetric label="Total payout" value={formatCloneMoney(payout)} />
+          <CloneMetric label="Total profit" value={formatCloneMoney(netProfit)} />
+        </div>
+      </ClonePopupCard>
+    );
+  }
+
+  return (
+    <ClonePopupCard top={top} className="w-[170px]">
+      <div className="flex items-center gap-[6px] text-[13px] font-black leading-none text-white">
+        <span>Trade closed</span>
+        <CloneStatusDot tone={tone} />
+      </div>
+      <div className="mt-[10px] flex items-center gap-[7px] text-[15px] font-black leading-none text-white">
+        <span>{formatCloneAssetSymbol(announcement.assetSymbol)}</span>
+        <CloneTrendGlyph tone={tone} />
+      </div>
+      <div className="mt-[9px] grid grid-cols-2 gap-[12px]">
+        <CloneMetric label="Payout" value={formatCloneMoney(payout)} />
+        <CloneMetric label="Profit" value={formatCloneMoney(netProfit)} />
+      </div>
+    </ClonePopupCard>
+  );
+};
+
+const TradeCloneOverlay = ({
+  orderAnnouncement,
+  settlementAnnouncement,
+}: {
+  orderAnnouncement?: ChartOrderAnnouncement | null;
+  settlementAnnouncement?: ChartSettlementAnnouncement | null;
+}) => {
+  if (!orderAnnouncement && !settlementAnnouncement) return null;
+  const settlementTop = orderAnnouncement ? 170 : 106;
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[92] overflow-visible">
+      {orderAnnouncement ? <OrderPlacedCloneCard announcement={orderAnnouncement} top={82} /> : null}
+      {settlementAnnouncement ? <SettlementCloneCard announcement={settlementAnnouncement} top={settlementTop} /> : null}
     </div>
   );
 };
@@ -1951,6 +2066,7 @@ const TradingChart = ({
   miniOverlay = false,
   liveEdgeRequestKey,
   settlementAnnouncement = null,
+  orderAnnouncement = null,
 }: TradingChartProps) => {
   const { t } = useTranslation();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -3492,9 +3608,10 @@ const TradingChart = ({
           </div>
         </div>
       )}
-      {settlementAnnouncement && settlementAnnouncement.assetSymbol === asset.symbol ? (
-        <SettlementCloneOverlay announcement={settlementAnnouncement} compact={compactPane || miniOverlay} />
-      ) : null}
+      <TradeCloneOverlay
+        orderAnnouncement={orderAnnouncement?.assetSymbol === asset.symbol ? orderAnnouncement : null}
+        settlementAnnouncement={settlementAnnouncement?.assetSymbol === asset.symbol ? settlementAnnouncement : null}
+      />
 
       {showStaticPriceBadge && (
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center justify-center px-5 py-2.5 rounded-xl pointer-events-none shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
