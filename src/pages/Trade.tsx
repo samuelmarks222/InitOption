@@ -1387,11 +1387,8 @@ const Trade = () => {
                 {/* ── MOBILE: Chart + Trading Panel combined in a fixed flex layout ── */}
                 {/* Chart block — dynamically fills remaining vertical space */}
                 <div id="tour-chart" className="flex-1 min-h-0 relative flex flex-col pb-[250px] sm:pb-[262px]">
-                  {/* Total portfolio bar matches reference immediately below tabs */}
-                  <div className="flex items-center justify-between px-4 shrink-0" style={{ height: "28px", borderBottom: "1px solid var(--trading-border-color)", background: "var(--trading-workspace-bg)" }}>
-                    <span style={{ fontSize: "11px", color: "#7f8b99" }}>
-                      {accountType === "tournament" ? "Tournament positions" : "Total portfolio"}
-                    </span>
+                  <div className="hidden">
+                    <span style={{ fontSize: "11px", color: "#7f8b99" }} />
                     <button
                       type="button"
                       onClick={() => setShowMobileHistory((current) => !current)}
@@ -1399,7 +1396,7 @@ const Trade = () => {
                     >
                       {visibleActiveTrades.length > 0
                         ? `${visibleActiveTrades.length} open ${showMobileHistory ? "▴" : "▾"}`
-                        : "No positions"}
+                        : ""}
                     </button>
                   </div>
 

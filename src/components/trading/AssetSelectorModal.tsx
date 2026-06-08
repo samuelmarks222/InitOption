@@ -246,9 +246,9 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
 
   const emptyStateMessage = showOnlyFavorites
     ? watchlist.length === 0
-      ? t("assetSelector.noFavoritesYet")
+      ? t("assetSelector.noFavorites")
       : t("assetSelector.noFavoritesMatch")
-    : t("assetSelector.noAssetsMatchingCriteria");
+    : t("assetSelector.noAssetsMatch");
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4">
@@ -257,7 +257,7 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
         
         {/* Header Title */}
         <div className="flex shrink-0 items-center justify-between px-4 py-4 sm:p-6 sm:pb-4">
-          <h2 className="text-[18px] font-bold tracking-wide text-white sm:text-[22px]">{t("assetSelector.selectTradePair")}</h2>
+          <h2 className="text-[18px] font-bold tracking-wide text-white sm:text-[22px]">{t("assetSelector.selectPair")}</h2>
           <button 
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
@@ -287,7 +287,7 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
         <div className="flex shrink-0 items-center gap-2 border-b border-[#ffffff10] px-4 py-4 sm:gap-3 sm:px-6 sm:py-5">
           <button 
             onClick={toggleFavoritesView}
-            aria-label={showOnlyFavorites ? t("assetSelector.showAllAssets") : t("assetSelector.showFavoriteAssets")}
+            aria-label={showOnlyFavorites ? t("assetSelector.showAllAssets") : t("assetSelector.showFavorites")}
             className={`flex items-center gap-2 rounded border border-white/5 px-3 py-2 transition-colors ${
               showOnlyFavorites ? "bg-white/20" : "bg-[#252A30] hover:bg-[#2A3036]"
             }`}
@@ -326,9 +326,9 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                 >
                   {t("assetSelector.name")}
                 </button>
-                <MobileSortHeader lines={[t("assetSelector.h24h"), t("assetSelector.changing")]} sortName="change24h" />
-                <MobileSortHeader lines={[t("assetSelector.profit1plus"), t("assetSelector.min")]} sortName="profit1m" />
-                <MobileSortHeader lines={[t("assetSelector.fivePlus"), t("assetSelector.min")]} sortName="profit5m" />
+                <MobileSortHeader lines={[t("assetSelector.mobile24h"), t("assetSelector.mobileChanging")]} sortName="change24h" />
+                <MobileSortHeader lines={[t("assetSelector.mobileProfit1"), t("assetSelector.mobileMin")]} sortName="profit1m" />
+                <MobileSortHeader lines={[t("assetSelector.mobile5plus"), t("assetSelector.mobileMin")]} sortName="profit5m" />
               </div>
             </div>
 
@@ -349,7 +349,11 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                     <span className="flex items-center justify-center text-[#8A939F]">
                       <span
                         role="button"
-                        aria-label={isSaved ? t("assetSelector.removeFromFavorites", { symbol: asset.symbol }) : t("assetSelector.addToFavorites", { symbol: asset.symbol })}
+                        aria-label={
+                          isSaved
+                            ? `Remove ${asset.symbol} from favorites`
+                            : `Add ${asset.symbol} to favorites`
+                        }
                         onClick={(e) => toggleWatchlist(e, asset.symbol)}
                         className="rounded p-1 opacity-70 transition-opacity hover:opacity-100"
                       >
@@ -407,9 +411,9 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                 <tr>
                   <th className="w-10 pb-3"></th>
                   <SortHeader label={t("assetSelector.name")} sortName="name" />
-                  <SortHeader label={t("assetSelector.h24hChanging")} sortName="change24h" />
-                  <SortHeader label={t("assetSelector.profit1plusMin")} sortName="profit1m" />
-                  <SortHeader label={t("assetSelector.fivePlusMin")} sortName="profit5m" />
+                  <SortHeader label={t("assetSelector.change24h")} sortName="change24h" />
+                  <SortHeader label={t("assetSelector.profit1min")} sortName="profit1m" />
+                  <SortHeader label={t("assetSelector.profit5min")} sortName="profit5m" />
                 </tr>
               </thead>
               <tbody>
@@ -428,7 +432,11 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                       <td className="w-10 py-2 text-center text-[#8A939F]" onClick={(e) => { e.stopPropagation(); toggleWatchlist(e, asset.symbol); }}>
                         <button
                           type="button"
-                          aria-label={isSaved ? t("assetSelector.removeFromFavorites", { symbol: asset.symbol }) : t("assetSelector.addToFavorites", { symbol: asset.symbol })}
+                          aria-label={
+                            isSaved
+                              ? `Remove ${asset.symbol} from favorites`
+                              : `Add ${asset.symbol} to favorites`
+                          }
                           className="rounded p-1 opacity-50 transition-opacity hover:opacity-100"
                         >
                           {isSaved ? (
