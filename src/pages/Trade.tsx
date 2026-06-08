@@ -327,6 +327,65 @@ const readJsonStorage = <T,>(key: string, fallback: T): T => {
   }
 };
 
+const getAnnouncementPayout = (announcement: ChartSettlementAnnouncement) =>
+  announcement.totalPayout ?? announcement.profit;
+
+const getAnnouncementNetProfit = (announcement: ChartSettlementAnnouncement) =>
+  announcement.totalProfit ??
+  (announcement.status === "won" ? Math.max(0, announcement.profit - announcement.amount) : 0);
+
+const mergeChartSettlementAnnouncement = (
+  current: ChartSettlementAnnouncement | null | undefined,
+  incoming: ChartSettlementAnnouncement,
+): ChartSettlementAnnouncement => {
+  if (!current) {
+    return {
+      ...incoming,
+      closedCount: incoming.closedCount ?? 1,
+      totalPayout: getAnnouncementPayout(incoming),
+      totalProfit: getAnnouncementNetProfit(incoming),
+    };
+  }
+
+  const closedCount = (current.closedCount ?? 1) + (incoming.closedCount ?? 1);
+  const totalPayout = getAnnouncementPayout(current) + getAnnouncementPayout(incoming);
+  const totalProfit = getAnnouncementNetProfit(current) + getAnnouncementNetProfit(incoming);
+
+  return {
+    ...incoming,
+    id: `${current.id}_${incoming.id}_${Date.now()}`,
+    amount: current.amount + incoming.amount,
+    closedCount,
+    totalPayout,
+    totalProfit,
+    status: totalProfit > 0 ? "won" : "lost",
+  };
+};
+
+const mergeChartOrderAnnouncement = (
+  current: ChartOrderAnnouncement | null | undefined,
+  incoming: ChartOrderAnnouncement,
+): ChartOrderAnnouncement => {
+  if (!current) {
+    return {
+      ...incoming,
+      orderCount: incoming.orderCount ?? 1,
+      totalAmount: incoming.totalAmount ?? incoming.amount,
+      mixedDirections: incoming.mixedDirections ?? false,
+    };
+  }
+
+  return {
+    ...incoming,
+    id: `${current.id}_${incoming.id}_${Date.now()}`,
+    orderCount: (current.orderCount ?? 1) + (incoming.orderCount ?? 1),
+    totalAmount: (current.totalAmount ?? current.amount) + (incoming.totalAmount ?? incoming.amount),
+    mixedDirections:
+      Boolean(current.mixedDirections || incoming.mixedDirections) ||
+      current.direction !== incoming.direction,
+  };
+};
+
 const Trade = () => {
   const { profile, user } = useAuth();
   const {
@@ -557,7 +616,7 @@ const Trade = () => {
   const showChartSettlementAnnouncement = useCallback((announcement: ChartSettlementAnnouncement) => {
     setChartSettlementAnnouncements((current) => ({
       ...current,
-      [announcement.assetSymbol]: announcement,
+      [announcement.assetSymbol]: mergeChartSettlementAnnouncement(current[announcement.assetSymbol], announcement),
     }));
 
     const existingTimer = settlementHideTimersRef.current[announcement.assetSymbol];
@@ -567,10 +626,6 @@ const Trade = () => {
 
     settlementHideTimersRef.current[announcement.assetSymbol] = window.setTimeout(() => {
       setChartSettlementAnnouncements((current) => {
-        if (current[announcement.assetSymbol]?.id !== announcement.id) {
-          return current;
-        }
-
         const nextState = { ...current };
         delete nextState[announcement.assetSymbol];
         return nextState;
@@ -583,7 +638,7 @@ const Trade = () => {
   const showChartOrderAnnouncement = useCallback((announcement: ChartOrderAnnouncement) => {
     setChartOrderAnnouncements((current) => ({
       ...current,
-      [announcement.assetSymbol]: announcement,
+      [announcement.assetSymbol]: mergeChartOrderAnnouncement(current[announcement.assetSymbol], announcement),
     }));
 
     const existingTimer = orderHideTimersRef.current[announcement.assetSymbol];
@@ -593,10 +648,6 @@ const Trade = () => {
 
     orderHideTimersRef.current[announcement.assetSymbol] = window.setTimeout(() => {
       setChartOrderAnnouncements((current) => {
-        if (current[announcement.assetSymbol]?.id !== announcement.id) {
-          return current;
-        }
-
         const nextState = { ...current };
         delete nextState[announcement.assetSymbol];
         return nextState;

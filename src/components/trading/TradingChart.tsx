@@ -124,6 +124,9 @@ export interface ChartOrderAnnouncement {
   assetSymbol: string;
   direction: TradeDirection;
   amount: number;
+  orderCount?: number;
+  totalAmount?: number;
+  mixedDirections?: boolean;
 }
 
 const PROFESSIONAL_CHART_BG = "#1e2131";
@@ -804,11 +807,14 @@ const CloneMetric = ({ label, value }: { label: string; value: string }) => (
 
 const OrderPlacedCloneCard = ({ announcement, top }: { announcement: ChartOrderAnnouncement; top: number }) => {
   const isHigher = announcement.direction === "higher";
+  const orderCount = announcement.orderCount ?? 1;
+  const totalAmount = announcement.totalAmount ?? announcement.amount;
+  const forecastLabel = announcement.mixedDirections ? "Mixed" : isHigher ? "Buy" : "Sell";
 
   return (
-    <ClonePopupCard top={top} className="w-[154px]">
+    <ClonePopupCard top={top} className={orderCount > 1 ? "w-[180px]" : "w-[154px]"}>
       <div className="flex items-center gap-[6px] text-[12px] font-black leading-none text-white">
-        <span>Trade order placed</span>
+        <span>{orderCount > 1 ? `Trade orders placed: ${orderCount}` : "Trade order placed"}</span>
         <CloneStatusDot tone="green" />
       </div>
       <div className="mt-[10px] flex items-center gap-[7px] text-[15px] font-black leading-none text-white">
@@ -816,8 +822,8 @@ const OrderPlacedCloneCard = ({ announcement, top }: { announcement: ChartOrderA
         <CloneTrendGlyph tone="green" />
       </div>
       <div className="mt-[9px] grid grid-cols-2 gap-[12px]">
-        <CloneMetric label="Forecast" value={isHigher ? "Buy" : "Sell"} />
-        <CloneMetric label="Amount" value={formatCloneMoney(announcement.amount)} />
+        <CloneMetric label="Forecast" value={forecastLabel} />
+        <CloneMetric label="Amount" value={formatCloneMoney(totalAmount)} />
       </div>
     </ClonePopupCard>
   );
@@ -835,7 +841,7 @@ const SettlementCloneCard = ({ announcement, top }: { announcement: ChartSettlem
       <ClonePopupCard top={top} className="w-[180px]">
         <div className="flex items-center gap-[6px] text-[13px] font-black leading-none text-white">
           <span>Trades closed: {closedCount}</span>
-          <CloneStatusDot tone="green" />
+          <CloneStatusDot tone={tone} />
         </div>
         <div className="mt-[10px] grid grid-cols-2 gap-[14px]">
           <CloneMetric label="Total payout" value={formatCloneMoney(payout)} />
