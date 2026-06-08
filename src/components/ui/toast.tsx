@@ -14,7 +14,7 @@ const ToastViewport = React.forwardRef<
   <ToastPrimitives.Viewport
     ref={ref}
     className={cn(
-      "fixed left-0 top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:left-[100px] sm:right-auto sm:top-[200px] sm:flex-col md:max-w-[420px]",
+      "fixed left-0 top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:left-[128px] sm:right-auto sm:top-[184px] sm:flex-col md:max-w-[420px]",
       className,
     )}
     {...props}
@@ -32,7 +32,7 @@ const toastVariants = cva(
         funding:
           "funding group border-[#5ec893]/35 bg-[#245b47] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] font-semibold",
         tradeOpen:
-          "tradeOpen group border-[#16b760]/35 bg-[#16b760] text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] w-[318px] h-[49px] shrink-0 py-2 px-3 font-normal text-[10px]",
+          "tradeOpen group !h-[36px] !w-[320px] shrink-0 !rounded-[4px] !border-0 bg-[#13b966] !px-[14px] !py-0 !pr-[36px] text-[12px] font-bold leading-none text-white shadow-[0_8px_18px_rgba(5,128,68,0.32)]",
         tradeWin:
           "tradeWin group border-[#00C076]/35 bg-[#00C076] text-white w-[245px] h-[44px] shrink-0 py-2 px-3 font-normal text-[10px]",
         tradeLoss:
@@ -75,7 +75,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.funding]:text-white/72 hover:text-foreground group-[.destructive]:hover:text-red-50 group-[.funding]:hover:bg-white/10 group-[.funding]:hover:text-white focus:opacity-100 focus:outline-none focus:ring-2 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600 group-[.funding]:focus:ring-emerald-200 group-[.funding]:focus:ring-offset-[#245b47]",
+      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.funding]:text-white/72 hover:text-foreground group-[.destructive]:hover:text-red-50 group-[.funding]:hover:bg-white/10 group-[.funding]:hover:text-white focus:opacity-100 focus:outline-none focus:ring-2 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600 group-[.funding]:focus:ring-emerald-200 group-[.funding]:focus:ring-offset-[#245b47] group-[.tradeOpen]:right-[9px] group-[.tradeOpen]:top-1/2 group-[.tradeOpen]:flex group-[.tradeOpen]:h-[16px] group-[.tradeOpen]:w-[16px] group-[.tradeOpen]:-translate-y-1/2 group-[.tradeOpen]:items-center group-[.tradeOpen]:justify-center group-[.tradeOpen]:rounded-full group-[.tradeOpen]:bg-[#2d6057]/90 group-[.tradeOpen]:p-0 group-[.tradeOpen]:text-white group-[.tradeOpen]:opacity-100 group-[.tradeOpen]:hover:bg-[#244f48]",
       className,
     )}
     toast-close=""
@@ -90,7 +90,11 @@ const ToastTitle = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Title>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
 >(({ className, ...props }, ref) => (
-  <ToastPrimitives.Title ref={ref} className={cn("text-sm", className)} {...props} />
+  <ToastPrimitives.Title
+    ref={ref}
+    className={cn("text-sm group-[.tradeOpen]:text-[12px] group-[.tradeOpen]:font-bold group-[.tradeOpen]:leading-none", className)}
+    {...props}
+  />
 ));
 ToastTitle.displayName = ToastPrimitives.Title.displayName;
 

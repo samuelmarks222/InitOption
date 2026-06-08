@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { IChartApi, ISeriesApi, type SeriesType, Time, IPriceLine, LineStyle, createSeriesMarkers } from "lightweight-charts";
+import { IChartApi, ISeriesApi, type SeriesType, Time, IPriceLine, LineStyle } from "lightweight-charts";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import type { ActiveTrade } from "@/hooks/useTrading";
 
-const UP = "#00C076";
-const DN = "#F6465D";
+const UP = "#47c58a";
+const DN = "#f26a61";
 
 interface Props {
   chart: IChartApi;
@@ -13,37 +14,23 @@ interface Props {
   timeframeSeconds: number;
 }
 
-const MARKER_STYLES = {
-  pillBg: "linear-gradient(135deg, rgba(12, 16, 28, 0.98) 0%, rgba(18, 24, 38, 0.98) 100%)",
-  pillGlow: "rgba(67, 97, 238, 0.22)",
-  textColor: "#FFFFFF",
-  borderRadius: 16,
-  fontFamily: "Inter, Arial, sans-serif",
-  offsetY: 18,
-};
+const MARKER_HEIGHT = 18;
+const MARKER_MIN_VISIBLE_X = 84;
+const MARKER_EDGE_GAP = 8;
+const ENTRY_DOT_SIZE = 9;
 
-const formatCountdown = (seconds: number) => {
+const formatMarkerClock = (seconds: number) => {
   const total = Math.max(0, Math.ceil(seconds));
   const minutes = Math.floor(total / 60);
   const remainingSeconds = total % 60;
-  return minutes > 0 ? `${minutes}:${String(remainingSeconds).padStart(2, "0")}` : `${total}s`;
+  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
 };
 
-const formatRemainingSeconds = (seconds: number) => {
-  const total = Math.max(0, Math.ceil(seconds));
-  return String(total % 60).padStart(2, "0");
-};
-
-const getTimeframeLabel = (seconds: number) => {
-  if (seconds >= 86400) return "1D";
-  if (seconds >= 3600) return `${Math.round(seconds / 3600)}H`;
-  if (seconds >= 60) return `${Math.round(seconds / 60)}M`;
-  return `${seconds}s`;
-};
-
-const formatTradeOpenPrice = (price: number) => {
-  const normalized = Number.isFinite(price) ? price : 0;
-  return normalized.toFixed(5).replace(/0+$/, "").replace(/\.$/, "");
+const formatMarkerAmount = (amount: number) => {
+  const normalized = Number.isFinite(amount) ? Math.max(0, amount) : 0;
+  return Number.isInteger(normalized)
+    ? `${normalized.toFixed(0)} $`
+    : `${normalized.toFixed(2).replace(/\.?0+$/, "")} $`;
 };
 
 export const getTradeProgress = (start: number, end: number, now: number) => {
@@ -138,7 +125,6 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
   const sRef = useRef(series);
   const chartRef = useRef(chart);
   const plRef = useRef<Record<string, IPriceLine>>({});
-  const pluginRef = useRef<ReturnType<typeof createSeriesMarkers> | null>(null);
   const [tick, setTick] = useState(0);
 
   useEffect(() => { sRef.current = series; }, [series]);
@@ -149,15 +135,10 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     return () => window.clearInterval(timer);
   }, []);
 
-  // Init markers plugin once
-  useEffect(() => {
-    const s = sRef.current;
-    if (!s) return;
-    pluginRef.current = createSeriesMarkers(s);
-    return () => { pluginRef.current?.setMarkers([]); pluginRef.current = null; };
-  }, [series]);
-
-  const myTrades = trades.filter((t) => t.asset_symbol === assetSymbol);
+  const myTrades = useMemo(
+    () => trades.filter((trade) => trade.asset_symbol === assetSymbol),
+    [assetSymbol, trades],
+  );
 
   // Price line at entry price — locked, never moves
   useEffect(() => {
@@ -172,7 +153,13 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
 
     myTrades.forEach((t) => {
       const c = t.direction === "higher" ? UP : DN;
-      const o = { price: t.entry_price, color: c, lineStyle: LineStyle.Solid as const, lineWidth: 1, axisLabelVisible: false };
+      const o = {
+        price: t.entry_price,
+        color: c,
+        lineStyle: LineStyle.Solid as const,
+        lineWidth: 1 as const,
+        axisLabelVisible: false,
+      };
       if (lines[t.id]) try { lines[t.id].applyOptions(o); } catch {}
       else try { lines[t.id] = s.createPriceLine(o); } catch {}
     });
@@ -181,7 +168,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
       Object.values(plRef.current).forEach((l) => { try { s.removePriceLine(l); } catch {} });
       plRef.current = {};
     };
-  }, [myTrades]);
+  }, [myTrades, series]);
 
   // No marker shapes on the entry candle
 
@@ -208,21 +195,27 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         return null;
       }
 
-      const left = Math.min(Math.max(x - 12, 8), width - 8);
-      const top = Math.min(Math.max(y - MARKER_STYLES.offsetY, 8), height - 8);
-      const { activeLineEndTime } = getTradeDisplayTimes(trade, Math.floor(Date.now() / 1000));
-      const timeLeft = Math.max(0, activeLineEndTime - Math.floor(Date.now() / 1000));
-      const progress = getTradeProgress(Math.floor(new Date(trade.opened_at).getTime() / 1000), activeLineEndTime, Math.floor(Date.now() / 1000));
+      const nowSec = Math.floor(Date.now() / 1000);
+      const { entryTime, expiryTime } = getTradeDisplayTimes(trade, nowSec);
+      const timeLeft = typeof trade.timeLeft === "number" && Number.isFinite(trade.timeLeft)
+        ? trade.timeLeft
+        : Math.max(0, expiryTime - nowSec);
+      const progress = getTradeProgress(entryTime, expiryTime, nowSec);
       const isHigher = trade.direction === "higher";
-      const tradeOpenMessage = `TRADE OPENED WITH PRICE: ${formatTradeOpenPrice(trade.entry_price)} ${trade.asset_symbol} (OTC)`;
-      const label = `${tradeOpenMessage}\n$${trade.amount.toFixed(2)}  ${formatCountdown(timeLeft)}  ${getTimeframeLabel(trade.expiry_seconds)}  ${formatRemainingSeconds(timeLeft)}`;
+      const color = isHigher ? UP : DN;
+      const clampedX = Math.min(Math.max(x, MARKER_MIN_VISIBLE_X), width - MARKER_EDGE_GAP);
+      const clampedY = Math.min(Math.max(y, MARKER_EDGE_GAP), height - MARKER_EDGE_GAP);
 
       return {
         id: trade.id,
-        left,
-        top,
-        label,
-        borderColor: isHigher ? UP : DN,
+        left: clampedX - 5,
+        top: clampedY,
+        dotLeft: Math.min(Math.max(x, MARKER_EDGE_GAP), width - MARKER_EDGE_GAP),
+        dotTop: clampedY,
+        amountLabel: formatMarkerAmount(trade.amount),
+        clockLabel: formatMarkerClock(timeLeft),
+        color,
+        direction: trade.direction,
         progress,
       };
     }).filter(Boolean);
@@ -232,28 +225,44 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     <div className="pointer-events-none absolute inset-0 z-[75]">
       {markerPositions.map((position) => (
         position ? (
-          <div
-            key={position.id}
-            className="absolute rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] shadow-[0_18px_32px_rgba(0,0,0,0.38)]"
-            style={{
-              left: position.left,
-              top: position.top,
-              background: MARKER_STYLES.pillBg,
-              color: MARKER_STYLES.textColor,
-              borderColor: position.borderColor,
-              borderWidth: 1.5,
-              borderRadius: MARKER_STYLES.borderRadius,
-              fontFamily: MARKER_STYLES.fontFamily,
-              whiteSpace: "pre-line",
-              lineHeight: 1.15,
-              maxWidth: 320,
-              textAlign: "left",
-              boxShadow: `0 18px 34px ${MARKER_STYLES.pillGlow}, inset 0 0 0 1px rgba(255,255,255,0.04)`,
-              transform: "translate(-50%, -50%)",
-              opacity: 0.94 + 0.05 * Math.max(0, Math.min(1, position.progress ?? 0)),
-            }}
-          >
-            {position.label}
+          <div key={position.id}>
+            <div
+              className="absolute z-[2] inline-flex items-center gap-[3px] rounded-full pl-[4px] pr-[6px] text-white shadow-[0_2px_5px_rgba(0,0,0,0.18)]"
+              style={{
+                left: position.left,
+                top: position.top,
+                height: MARKER_HEIGHT,
+                minWidth: 78,
+                background: position.color,
+                transform: "translate(-100%, -50%)",
+                opacity: 0.96 + 0.04 * Math.max(0, Math.min(1, position.progress ?? 0)),
+              }}
+            >
+              <span className="flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-full bg-white/24">
+                {position.direction === "higher" ? (
+                  <ArrowUp className="h-[9px] w-[9px] stroke-[3]" />
+                ) : (
+                  <ArrowDown className="h-[9px] w-[9px] stroke-[3]" />
+                )}
+              </span>
+              <span className="whitespace-nowrap text-[12px] font-black leading-none tracking-[-0.01em]">
+                {position.amountLabel}
+              </span>
+              <span className="whitespace-nowrap pt-[1px] text-[9px] font-bold leading-none text-white/82">
+                {position.clockLabel}
+              </span>
+            </div>
+            <div
+              className="absolute z-[3] rounded-full border-2 border-white"
+              style={{
+                left: position.dotLeft - ENTRY_DOT_SIZE / 2,
+                top: position.dotTop - ENTRY_DOT_SIZE / 2,
+                width: ENTRY_DOT_SIZE,
+                height: ENTRY_DOT_SIZE,
+                background: position.color,
+                boxShadow: `0 0 0 1px ${position.color}`,
+              }}
+            />
           </div>
         ) : null
       ))}
