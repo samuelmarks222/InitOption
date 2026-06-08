@@ -4,6 +4,7 @@ import {
   getTradeMarkerCoordinate,
   getTradeMarkerLogicalTime,
   getTradeProgress,
+  normalizeTradeMarkerSymbol,
   resolveTradeMarkerEntryLogicalAnchor,
 } from "@/components/trading/TradeMarkersOverlay";
 
@@ -41,6 +42,14 @@ describe("getTradeDisplayTimes", () => {
     expect(getTradeProgress(100, 160, 130)).toBeCloseTo(0.5, 5);
     expect(getTradeProgress(100, 160, 160)).toBe(1);
     expect(getTradeProgress(100, 160, 200)).toBe(1);
+  });
+});
+
+describe("normalizeTradeMarkerSymbol", () => {
+  it("matches display symbols and stored OTC symbols for the same asset", () => {
+    expect(normalizeTradeMarkerSymbol("EUR/USD")).toBe("EURUSD");
+    expect(normalizeTradeMarkerSymbol("EURUSD (OTC)")).toBe("EURUSD");
+    expect(normalizeTradeMarkerSymbol(" eur / usd ")).toBe("EURUSD");
   });
 });
 

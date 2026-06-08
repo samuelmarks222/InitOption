@@ -3791,6 +3791,7 @@ const TradingChart = ({
                  assetSymbol={asset.symbol}
                  trades={activeTrades}
                  timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60}
+                 liveLogical={livePriceBeacon?.logical ?? null}
                />
              )}
              {!mobileHistoryOpen && !overlayUiSuppressed && (

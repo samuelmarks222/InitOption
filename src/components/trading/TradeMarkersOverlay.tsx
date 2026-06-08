@@ -12,6 +12,7 @@ interface Props {
   assetSymbol: string;
   trades: ActiveTrade[];
   timeframeSeconds: number;
+  liveLogical?: number | null;
 }
 
 const MARKER_WIDTH = 82;
@@ -22,6 +23,21 @@ const MARKER_MIN_VISIBLE_X = MARKER_WIDTH + MARKER_DOT_GAP + 8;
 const MARKER_EDGE_GAP = 8;
 const ENTRY_DOT_SIZE = 9;
 const CONNECTOR_DOT_SIZE = 8;
+
+export const normalizeTradeMarkerSymbol = (symbol: string) =>
+  symbol
+    .toUpperCase()
+    .replace(/\(OTC\)/g, "")
+    .replace(/[^A-Z0-9]/g, "");
+
+const isSameTradeMarkerSymbol = (left: string, right: string) =>
+  normalizeTradeMarkerSymbol(left) === normalizeTradeMarkerSymbol(right);
+
+const isFiniteCoordinate = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
+const isUsableMarkerX = (value: unknown, width: number): value is number =>
+  isFiniteCoordinate(value) && value >= -MARKER_WIDTH && value <= width + MARKER_EDGE_GAP;
 
 const formatMarkerClock = (seconds: number) => {
   const total = Math.max(0, Math.ceil(seconds));
@@ -125,7 +141,7 @@ export const getTradeMarkerCoordinate = (
     : null;
 };
 
-export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Props) => {
+export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timeframeSeconds, liveLogical }: Props) => {
   const sRef = useRef(series);
   const chartRef = useRef(chart);
   const plRef = useRef<Record<string, IPriceLine>>({});
@@ -140,7 +156,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
   }, []);
 
   const myTrades = useMemo(
-    () => trades.filter((trade) => trade.asset_symbol === assetSymbol),
+    () => trades.filter((trade) => isSameTradeMarkerSymbol(trade.asset_symbol, assetSymbol)),
     [assetSymbol, trades],
   );
 
@@ -185,17 +201,23 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
     const height = rect.height || container.clientHeight || 1;
 
     return myTrades.map((trade) => {
-      const markerTime = (trade.marker_time ?? Math.floor(new Date(trade.opened_at).getTime() / 1000)) as Time;
+      const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds || 1));
+      const markerTimeNumber = trade.marker_time ?? Math.floor(new Date(trade.opened_at).getTime() / 1000);
+      const markerTime = markerTimeNumber as Time;
+      const markerBucketTime = Math.floor(markerTimeNumber / safeTimeframe) * safeTimeframe;
       const logicalAnchor = typeof trade.marker_logical === "number" && Number.isFinite(trade.marker_logical)
         ? trade.marker_logical
         : null;
-      const x =
+      const timeScale = chartRef.current.timeScale();
+      const logicalX =
         logicalAnchor !== null && typeof chartRef.current.timeScale().logicalToCoordinate === "function"
-          ? chartRef.current.timeScale().logicalToCoordinate(logicalAnchor)
-          : chartRef.current.timeScale().timeToCoordinate(markerTime);
+          ? timeScale.logicalToCoordinate(logicalAnchor as never)
+          : null;
+      const exactTimeX = timeScale.timeToCoordinate(markerTime);
+      const bucketTimeX = timeScale.timeToCoordinate(markerBucketTime as Time);
       const y = series.priceToCoordinate(trade.entry_price);
 
-      if (typeof x !== "number" || typeof y !== "number" || !Number.isFinite(x) || !Number.isFinite(y)) {
+      if (!isFiniteCoordinate(y)) {
         return null;
       }
 
@@ -205,6 +227,23 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         ? trade.timeLeft
         : Math.max(0, expiryTime - nowSec);
       const progress = getTradeProgress(entryTime, expiryTime, nowSec);
+      const elapsedSeconds = Math.max(0, Math.min(trade.expiry_seconds || safeTimeframe, (trade.expiry_seconds || safeTimeframe) - timeLeft));
+      const fallbackLogical =
+        typeof liveLogical === "number" && Number.isFinite(liveLogical)
+          ? liveLogical - elapsedSeconds / safeTimeframe
+          : null;
+      const liveFallbackX =
+        fallbackLogical !== null && typeof timeScale.logicalToCoordinate === "function"
+          ? timeScale.logicalToCoordinate(fallbackLogical as never)
+          : null;
+      const x = [logicalX, exactTimeX, bucketTimeX, liveFallbackX].find((candidate) =>
+        isUsableMarkerX(candidate, width),
+      );
+
+      if (!isFiniteCoordinate(x)) {
+        return null;
+      }
+
       const isHigher = trade.direction === "higher";
       const color = isHigher ? UP : DN;
       const clampedX = Math.min(Math.max(x, MARKER_MIN_VISIBLE_X), width - MARKER_EDGE_GAP);
@@ -225,10 +264,10 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades }: Prop
         progress,
       };
     }).filter(Boolean);
-  }, [chart, myTrades, series, tick]);
+  }, [chart, liveLogical, myTrades, series, tick, timeframeSeconds]);
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[75]" data-trade-markers-overlay="true">
+    <div className="pointer-events-none absolute inset-0 z-[90]" data-trade-markers-overlay="true">
       {markerPositions.map((position) => (
         position ? (
           <div key={position.id}>
