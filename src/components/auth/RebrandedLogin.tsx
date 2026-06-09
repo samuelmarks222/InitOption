@@ -42,6 +42,10 @@ const RebrandedLogin = () => {
 
             <h1 className="mt-6 text-center text-2xl font-extrabold text-[#0f1724]">Sign In</h1>
             <p className="mt-2 text-center text-sm text-[#6b7280]">Sign in to access your trading dashboard</p>
+            <div className="mt-3 text-center text-sm">
+              <span className="text-[#6b7280]">Not registered yet? </span>
+              <a href="/register" className="font-bold text-[#0f72f0] hover:underline">Sign Up</a>
+            </div>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
