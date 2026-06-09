@@ -140,7 +140,7 @@ const GuideBrowserPage = () => {
       <div className="border-b border-white/10 bg-gradient-to-r from-white/[0.03] to-white/[0.01] backdrop-blur-sm">
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-2">
-            <BookOpen className="h-8 w-8 text-[#00C076]" />
+            <BookOpen className="h-8 w-8 text-[#1c81f8]" />
             <h1 className="text-4xl font-bold text-white">Trading Guides</h1>
           </div>
           <p className="text-gray-400 text-lg">
@@ -162,7 +162,7 @@ const GuideBrowserPage = () => {
                   placeholder="Search guides..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-white/[0.03] pl-10 pr-4 py-2.5 text-white placeholder-gray-400 focus:border-[#00C076] focus:outline-none focus:ring-1 focus:ring-[#00C076]"
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.03] pl-10 pr-4 py-2.5 text-white placeholder-gray-400 focus:border-[#1c81f8] focus:outline-none focus:ring-1 focus:ring-[#1c81f8]"
                 />
               </div>
 
@@ -174,7 +174,7 @@ const GuideBrowserPage = () => {
                     onClick={() => handleCategoryChange("")}
                     className={`w-full rounded-lg px-4 py-2 text-left text-sm font-semibold transition-all ${
                       activeCategory === ""
-                        ? "bg-[#00C076] text-white shadow-lg shadow-[#00C076]/30"
+                        ? "bg-[#1c81f8] text-white shadow-lg shadow-[#1c81f8]/30"
                         : "text-gray-300 hover:bg-white/[0.05]"
                     }`}
                   >
@@ -186,7 +186,7 @@ const GuideBrowserPage = () => {
                       onClick={() => handleCategoryChange(cat)}
                       className={`w-full rounded-lg px-4 py-2 text-left text-sm font-semibold transition-all ${
                         activeCategory === cat
-                          ? "border-l-2 border-[#00C076] bg-[#00C076]/10 text-[#00C076]"
+                          ? "border-l-2 border-[#1c81f8] bg-[#1c81f8]/10 text-[#1c81f8]"
                           : "text-gray-300 hover:bg-white/[0.05]"
                       }`}
                     >
@@ -203,7 +203,7 @@ const GuideBrowserPage = () => {
                 </h3>
                 {loading ? (
                   <div className="flex justify-center py-8">
-                    <Loader className="h-6 w-6 animate-spin text-[#00C076]" />
+                    <Loader className="h-6 w-6 animate-spin text-[#1c81f8]" />
                   </div>
                 ) : filteredGuides.length === 0 ? (
                   <p className="text-sm text-gray-400">No guides found</p>
@@ -215,8 +215,8 @@ const GuideBrowserPage = () => {
                         onClick={() => handleSelectGuide(guide)}
                         className={`w-full rounded-lg border px-4 py-3 text-left transition-all ${
                           selectedGuide?.id === guide.id
-                            ? "border-[#00C076] bg-[#00C076]/10 text-white"
-                            : "border-white/10 text-gray-300 hover:border-[#00C076]/50 hover:bg-white/[0.03]"
+                            ? "border-[#1c81f8] bg-[#1c81f8]/10 text-white"
+                            : "border-white/10 text-gray-300 hover:border-[#1c81f8]/50 hover:bg-white/[0.03]"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
@@ -238,7 +238,7 @@ const GuideBrowserPage = () => {
           <div className="lg:col-span-2">
             {loading && !selectedGuide ? (
               <div className="flex justify-center py-12">
-                <Loader className="h-8 w-8 animate-spin text-[#00C076]" />
+                <Loader className="h-8 w-8 animate-spin text-[#1c81f8]" />
               </div>
             ) : selectedGuide ? (
               <div className="space-y-6">
@@ -246,8 +246,8 @@ const GuideBrowserPage = () => {
                 <div className="rounded-lg border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-8 backdrop-blur-sm">
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div>
-                      <div className="inline-block rounded-lg bg-[#00C076]/10 px-3 py-1 mb-3">
-                        <span className="text-sm font-semibold text-[#00C076]">
+                      <div className="inline-block rounded-lg bg-[#1c81f8]/10 px-3 py-1 mb-3">
+                        <span className="text-sm font-semibold text-[#1c81f8]">
                           GUIDE
                         </span>
                       </div>
@@ -284,7 +284,7 @@ const GuideBrowserPage = () => {
                               href={media.youtube_url || media.media_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="group relative overflow-hidden rounded-lg border border-white/10 transition-all hover:border-[#00C076]"
+                              className="group relative overflow-hidden rounded-lg border border-white/10 transition-all hover:border-[#1c81f8]"
                             >
                               <img
                                 src={thumbnailUrl}
@@ -320,7 +320,7 @@ const GuideBrowserPage = () => {
                   </p>
                   <button
                     onClick={() => navigate("/trade")}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#00C076] px-6 py-3 font-semibold text-white hover:bg-[#00a85e] transition-colors"
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#1c81f8] px-6 py-3 font-semibold text-white hover:bg-[#1565c0] transition-colors"
                   >
                     Start Trading Now
                     <ChevronRight className="h-4 w-4" />

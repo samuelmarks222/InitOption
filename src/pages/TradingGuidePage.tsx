@@ -975,12 +975,12 @@ const useGuideMedia = (platformName: string) => {
 
 const GuideMediaPlaceholder = ({ title }: { title: string }) => (
   <div className="flex min-h-[280px] flex-col items-center justify-center gap-4 rounded-[14px] border border-dashed border-white/20 bg-gradient-to-br from-white/[0.02] to-white/[0.01] px-6 py-10 text-center backdrop-blur-sm hover:border-white/30 transition-colors duration-300">
-    <div className="rounded-lg bg-[#00C076]/10 p-3">
-      <ImageIcon className="h-10 w-10 text-[#00C076]" />
+    <div className="rounded-lg bg-[#1c81f8]/10 p-3">
+      <ImageIcon className="h-10 w-10 text-[#1c81f8]" />
     </div>
     <div>
       <p className="text-sm font-semibold text-white">Guide image not assigned</p>
-      <p className="mt-1.5 text-xs text-[#9fb4cf]">Upload the real <span className="text-[#00C076]">{title}</span> image from Admin Settings.</p>
+      <p className="mt-1.5 text-xs text-[#9fb4cf]">Upload the real <span className="text-[#1c81f8]">{title}</span> image from Admin Settings.</p>
     </div>
   </div>
 );
@@ -1014,16 +1014,16 @@ const VideoPreview = ({
         <img src={mediaUrl} alt={title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90" loading="lazy" />
       ) : (
         <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-[#8fa2c2]">
-          <PlaySquare className="h-12 w-12 text-[#00C076] opacity-80" />
+          <PlaySquare className="h-12 w-12 text-[#1c81f8] opacity-80" />
           <p className="text-sm font-semibold text-white">Video thumbnail not assigned</p>
           <p className="max-w-sm text-xs text-[#8fa2c2]">Upload this thumbnail from Admin Settings.</p>
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-[#0f1826]/80 via-transparent to-transparent" />
-      <div className="absolute left-6 top-6 rounded-lg bg-[#00C076]/15 backdrop-blur-sm border border-[#00C076]/30 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-[#00C076]">
+      <div className="absolute left-6 top-6 rounded-lg bg-[#1c81f8]/15 backdrop-blur-sm border border-[#1c81f8]/30 px-3 py-2 text-xs font-bold uppercase tracking-[0.15em] text-[#1c81f8]">
         Video Tutorial
       </div>
-      <div className="absolute right-6 top-6 grid h-14 w-14 place-items-center rounded-full bg-[#00C076] text-white shadow-lg shadow-[#00C076]/50 group-hover:scale-110 transition-transform duration-300">
+      <div className="absolute right-6 top-6 grid h-14 w-14 place-items-center rounded-full bg-[#1c81f8] text-white shadow-lg shadow-[#1c81f8]/50 group-hover:scale-110 transition-transform duration-300">
         <PlaySquare className="h-6 w-6" />
       </div>
     </div>
@@ -1064,19 +1064,19 @@ const GuideTreeNode = ({
         className={[
           "group relative flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left leading-tight transition-all duration-200",
           isActive 
-            ? "bg-[#00C076]/15 text-[#00C076] border border-[#00C076]/30" 
+            ? "bg-[#1c81f8]/15 text-[#1c81f8] border border-[#1c81f8]/30" 
             : "text-[#9fb4cf] hover:bg-white/5 hover:text-white hover:border border border-transparent",
           depth === 0 ? "text-[16px] font-bold text-white mt-3 mb-1" : depth === 1 ? "text-[14px] font-semibold" : "text-[13px] font-medium",
         ].join(" ")}
         style={{ paddingLeft: `${12 + depth * 16}px` }}
       >
         <span className="min-w-0 flex-1">
-          <span className={`font-semibold ${depth === 0 ? "text-[#00C076]" : ""}`}>{topic.number}.</span> {topic.title}
+          <span className={`font-semibold ${depth === 0 ? "text-[#1c81f8]" : ""}`}>{topic.number}.</span> {topic.title}
         </span>
         {hasChildren ? (
-          <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#00C076]" : "text-[#9fb4cf]"}`} />
+          <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#1c81f8]" : "text-[#9fb4cf]"}`} />
         ) : null}
-        {isActive && depth === 0 && <div className="absolute left-0 top-1/2 h-[60%] w-1 -translate-y-1/2 rounded-r-full bg-[#00C076]"/>}
+        {isActive && depth === 0 && <div className="absolute left-0 top-1/2 h-[60%] w-1 -translate-y-1/2 rounded-r-full bg-[#1c81f8]"/>}
       </button>
       {hasChildren && isOpen ? (
         <div className="mt-1 space-y-1">
@@ -1102,7 +1102,7 @@ const SupportPanel = ({ platformName }: { platformName: string }) => (
     <div className="flex items-start gap-4">
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-2">
-          <Headset className="h-6 w-6 text-[#00C076]"/>
+          <Headset className="h-6 w-6 text-[#1c81f8]"/>
           <h1 className="text-3xl sm:text-4xl font-bold text-white">Support Service</h1>
         </div>
         <p className="mt-3 max-w-3xl text-base leading-relaxed text-[#c5cfe1]">
@@ -1332,7 +1332,7 @@ const TradingGuidePage = () => {
               style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
             >
               <div className="min-w-0 text-left">
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#00C076]">Live account&nbsp;&nbsp;USD</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#1c81f8]">Live account&nbsp;&nbsp;USD</div>
                 <div className="text-[15px] font-bold leading-tight text-white">0</div>
               </div>
             </button>
@@ -1377,11 +1377,11 @@ const TradingGuidePage = () => {
                     type="button"
                     onClick={() => openShellTarget(item.target)}
                     className={`group relative flex w-full flex-col items-center justify-center py-3 transition-all ${
-                      isActive ? "text-[#00C076]" : "text-white/85 hover:text-white"
+                      isActive ? "text-[#1c81f8]" : "text-white/85 hover:text-white"
                     }`}
                   >
                     {isActive ? (
-                      <span className="absolute left-0 top-1/2 h-[60%] w-[3px] -translate-y-1/2 rounded-r-full bg-[#00C076] shadow-[0_0_8px_#00c076]" />
+                      <span className="absolute left-0 top-1/2 h-[60%] w-[3px] -translate-y-1/2 rounded-r-full bg-[#1c81f8] shadow-[0_0_8px_#1c81f8]" />
                     ) : null}
                     <Icon className="mb-1.5 h-[26px] w-[26px] transition-transform duration-200 group-hover:scale-110" strokeWidth={2.6} />
                     <span className="relative top-[1px] text-[8px] font-extrabold tracking-wider">{item.label}</span>
@@ -1409,11 +1409,11 @@ const TradingGuidePage = () => {
                     type="button"
                     onClick={() => openShellTarget(item.target)}
                     className={`group relative flex w-full flex-col items-center justify-center py-2 transition-all ${
-                      isActive ? "text-[#00C076]" : "text-white/80 hover:text-white"
+                      isActive ? "text-[#1c81f8]" : "text-white/80 hover:text-white"
                     }`}
                   >
                     {isActive ? (
-                      <span className="absolute left-0 top-1/2 h-[60%] w-[3px] -translate-y-1/2 rounded-r-full bg-[#00C076] shadow-[0_0_8px_#00c076]" />
+                      <span className="absolute left-0 top-1/2 h-[60%] w-[3px] -translate-y-1/2 rounded-r-full bg-[#1c81f8] shadow-[0_0_8px_#1c81f8]" />
                     ) : null}
                     <Icon className="mb-1 h-[24px] w-[24px] transition-transform group-hover:scale-110" strokeWidth={2.4} />
                     <span className="text-[8px] font-extrabold tracking-wider">{item.label}</span>
@@ -1437,7 +1437,7 @@ const TradingGuidePage = () => {
                     onClick={() => handleTabClick(tab.id)}
                     className={`inline-flex min-h-[48px] items-center gap-2.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
                       isActive
-                        ? "bg-gradient-to-r from-[#00C076] to-[#00a85e] text-white shadow-lg shadow-[#00C076]/30"
+                        ? "bg-gradient-to-r from-[#1c81f8] to-[#1565c0] text-white shadow-lg shadow-[#1c81f8]/30"
                         : "bg-white/5 text-[#b0b8c8] hover:bg-white/10 hover:text-white border border-white/10"
                     }`}
                   >
@@ -1465,15 +1465,15 @@ const TradingGuidePage = () => {
                         onClick={() => switchCategory(category.id)}
                         className={`group relative rounded-[14px] overflow-hidden border p-6 text-center transition-all duration-300 hover:shadow-lg ${
                           isActive
-                            ? "border-[#00C076] bg-gradient-to-br from-[#00C076]/10 to-[#00a85e]/5 text-white shadow-lg shadow-[#00C076]/20"
+                            ? "border-[#1c81f8] bg-gradient-to-br from-[#1c81f8]/10 to-[#1565c0]/5 text-white shadow-lg shadow-[#1c81f8]/20"
                             : "border-white/10 bg-white/[0.03] text-[#9fb4cf] hover:border-white/20 hover:bg-white/[0.07]"
                         }`}
                       >
                         <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{background: "radial-gradient(circle at 30% 30%, rgba(0, 192, 118, 0.1), transparent 50%)"}}/>
-                        <Icon className={`mx-auto h-12 w-12 transition-all duration-300 ${isActive ? "text-[#00C076] scale-110" : "text-[#9fb4cf] group-hover:text-white group-hover:scale-105"}`} />
+                        <Icon className={`mx-auto h-12 w-12 transition-all duration-300 ${isActive ? "text-[#1c81f8] scale-110" : "text-[#9fb4cf] group-hover:text-white group-hover:scale-105"}`} />
                         <div className="mt-5 text-lg font-bold leading-tight">{category.label}</div>
                         <div className="mt-2.5 text-xs font-medium leading-relaxed text-[#9fb4cf]">{category.description}</div>
-                        {isActive && <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-[#00C076] animate-pulse"/>}
+                        {isActive && <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-[#1c81f8] animate-pulse"/>}
                       </button>
                     );
                   })}
@@ -1481,7 +1481,7 @@ const TradingGuidePage = () => {
 
                 <div className="mt-8 grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
                   <aside className="rounded-[16px] bg-gradient-to-b from-white/[0.05] to-white/[0.02] border border-white/10 p-6 backdrop-blur-sm">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-[#00C076] mb-4">Topics</h2>
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-[#1c81f8] mb-4">Topics</h2>
                     <div className="max-h-[calc(100vh-220px)] overflow-y-auto pr-2 [scrollbar-color:#3a465f_transparent] [scrollbar-width:thin]">
                       <div className="space-y-1">
                         {currentTopics.map((topic) => (
@@ -1508,8 +1508,8 @@ const TradingGuidePage = () => {
                   <article className="rounded-[16px] bg-gradient-to-b from-white/[0.03] to-white/[0.01] border border-white/10 px-6 py-8 sm:px-10 lg:px-14 backdrop-blur-sm">
                     <div className="mx-auto max-w-3xl">
                       <div className="mb-2 flex items-center gap-2">
-                        <div className="h-1 w-1 rounded-full bg-[#00C076]"/>
-                        <span className="text-xs font-bold uppercase tracking-widest text-[#00C076]">Guide</span>
+                        <div className="h-1 w-1 rounded-full bg-[#1c81f8]"/>
+                        <span className="text-xs font-bold uppercase tracking-widest text-[#1c81f8]">Guide</span>
                       </div>
                       <h1 className="text-4xl sm:text-5xl font-bold leading-[1.1] tracking-tight text-white mt-2">
                         {selectedContent.heading}
@@ -1527,7 +1527,7 @@ const TradingGuidePage = () => {
                         <ul className="mt-7 space-y-3">
                           {selectedContent.bullets.map((bullet) => (
                             <li key={bullet} className="flex gap-3 text-base leading-relaxed text-[#b8c3d5]">
-                              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#00C076] flex-shrink-0" />
+                              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#1c81f8] flex-shrink-0" />
                               <span>{bullet}</span>
                             </li>
                           ))}
@@ -1589,10 +1589,10 @@ const TradingGuidePage = () => {
                           <button
                             type="button"
                             onClick={() => selectTopic(nextTopic.id)}
-                            className="group flex-1 rounded-[10px] border border-[#00C076]/50 bg-[#00C076]/10 px-5 py-3.5 text-sm font-semibold text-[#00C076] hover:bg-[#00C076]/20 hover:border-[#00C076] transition-all duration-300 flex items-center gap-2 justify-end hover:justify-end hover:text-white"
+                            className="group flex-1 rounded-[10px] border border-[#1c81f8]/50 bg-[#1c81f8]/10 px-5 py-3.5 text-sm font-semibold text-[#1c81f8] hover:bg-[#1c81f8]/20 hover:border-[#1c81f8] transition-all duration-300 flex items-center gap-2 justify-end hover:justify-end hover:text-white"
                           >
                             <div className="text-left sm:text-right">
-                              <div className="text-xs text-[#00C076]/70 mb-0.5">Next</div>
+                              <div className="text-xs text-[#1c81f8]/70 mb-0.5">Next</div>
                               <div>{nextTopic.number}. {nextTopic.title}</div>
                             </div>
                             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -1615,7 +1615,7 @@ const TradingGuidePage = () => {
                 ["Payment policy", "/terms"],
                 ["Information disclosure", "/risk-disclaimer"],
               ].map(([label, to]) => (
-                <Link key={label} to={to} className="hover:text-[#00C076] transition-colors duration-200">
+                <Link key={label} to={to} className="hover:text-[#1c81f8] transition-colors duration-200">
                   {label}
                 </Link>
               ))}

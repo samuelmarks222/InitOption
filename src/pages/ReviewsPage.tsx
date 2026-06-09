@@ -108,8 +108,8 @@ const panelSoftStyle = {
   borderColor: "var(--trading-border-color, rgba(255,255,255,0.08))",
 };
 
-const accentGreen = "#00C076";
-const accentGreenHover = "#00a85e";
+const accentBlue = "#1c81f8";
+const accentBlueHover = "#1565c0";
 
 const resolveSocialHref = (url: string) => {
   const trimmed = url.trim();
@@ -281,7 +281,7 @@ const ReviewAvatar = ({
   const sizeClass = size === "lg" ? "h-[72px] w-[72px]" : size === "sm" ? "h-[48px] w-[48px]" : "h-[64px] w-[64px]";
 
   return (
-    <div className={`relative flex ${sizeClass} shrink-0 items-center justify-center rounded-full border border-[#00C076]/30 bg-gradient-to-br from-[#00C076]/10 to-[#00a85e]/5 text-lg font-black text-[#00C076]`}>
+    <div className={`relative flex ${sizeClass} shrink-0 items-center justify-center rounded-full border border-[#1c81f8]/30 bg-gradient-to-br from-[#1c81f8]/10 to-[#1565c0]/5 text-lg font-black text-[#1c81f8]`}>
       {avatarUrl ? (
         <img src={avatarUrl} alt={name} className="h-full w-full rounded-full object-cover" />
       ) : (
@@ -326,18 +326,18 @@ const AccountRail = ({
         </div>
       </div>
 
-      <div className="mt-6 flex h-[40px] items-center rounded-[10px] border border-[#00C076]/30 bg-gradient-to-r from-[#00C076]/10 to-[#00a85e]/5 text-white">
+      <div className="mt-6 flex h-[40px] items-center rounded-[10px] border border-[#1c81f8]/30 bg-gradient-to-r from-[#1c81f8]/10 to-[#1565c0]/5 text-white">
         <div className="flex h-[40px] w-[44px] items-center justify-center rounded-l-[7px]">
-          <Wallet className="h-4 w-4 text-[#00C076]" />
+          <Wallet className="h-4 w-4 text-[#1c81f8]" />
         </div>
-        <div className="flex-1 text-center text-xl font-bold text-[#00C076]">${balance.toFixed(0)}</div>
+        <div className="flex-1 text-center text-xl font-bold text-[#1c81f8]">${balance.toFixed(0)}</div>
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <Link to="/deposit" className="rounded-[9px] px-4 py-2.5 text-center text-[13px] font-bold uppercase text-white border border-[#00C076]/30 hover:bg-[#00C076]/10 transition-all" style={{ background: "rgba(0, 192, 118, 0.1)" }}>
+        <Link to="/deposit" className="rounded-[9px] px-4 py-2.5 text-center text-[13px] font-bold uppercase text-white border border-[#1c81f8]/30 hover:bg-[#1c81f8]/10 transition-all" style={{ background: "rgba(28, 129, 248, 0.1)" }}>
           Deposit
         </Link>
-        <Link to="/trade" className="rounded-[9px] px-4 py-2.5 text-center text-[13px] font-bold uppercase text-white hover:bg-[#00a85e] transition-all" style={{ background: accentGreen }}>
+        <Link to="/trade" className="rounded-[9px] px-4 py-2.5 text-center text-[13px] font-bold uppercase text-white hover:bg-[#1565c0] transition-all" style={{ background: accentBlue }}>
           Trade now
         </Link>
       </div>
@@ -525,8 +525,8 @@ const ReviewsPage = () => {
               </nav>
               <Link
                 to="/trade"
-                className="inline-flex h-10 items-center gap-2 rounded-[9px] px-4 text-sm font-black text-white transition-all hover:bg-[#00a85e] lg:hidden"
-                style={{ background: accentGreen }}
+                className="inline-flex h-10 items-center gap-2 rounded-[9px] px-4 text-sm font-black text-white transition-all hover:bg-[#1565c0] lg:hidden"
+                style={{ background: accentBlue }}
               >
                 Trade now
                 <ArrowRight className="h-4 w-4" />
@@ -538,12 +538,12 @@ const ReviewsPage = () => {
           <main className="w-full px-6 pb-14 pt-12 xl:px-8">
             <section className="pb-20">
               <div className="flex items-center gap-2 mb-3">
-                <div className="h-1.5 w-1.5 rounded-full bg-[#00C076]" />
-                <span className="text-sm font-bold text-[#00C076] uppercase tracking-widest">REVIEWS</span>
+                <div className="h-1.5 w-1.5 rounded-full bg-[#1c81f8]" />
+                <span className="text-sm font-bold text-[#1c81f8] uppercase tracking-widest">REVIEWS</span>
               </div>
               <h1 className="text-[42px] font-black leading-tight tracking-[0.01em] text-white md:text-[48px]">Customer Reviews 2026</h1>
               <div className="mt-4 text-xs font-medium text-[#8fa8ce]">
-                <Link to="/" className="text-white underline decoration-[#00C076] underline-offset-4">Home</Link>
+                <Link to="/" className="text-white underline decoration-[#1c81f8] underline-offset-4">Home</Link>
                 <span className="mx-1">/</span>
                 <span>Customer Reviews</span>
               </div>
@@ -554,8 +554,8 @@ const ReviewsPage = () => {
 
               <Link
                 to="/trade"
-                className="mt-5 inline-flex h-[48px] items-center gap-2 rounded-[10px] px-5 text-sm font-black uppercase tracking-[0.04em] text-white transition-all hover:bg-[#00a85e]"
-                style={{ background: accentGreen }}
+                className="mt-5 inline-flex h-[48px] items-center gap-2 rounded-[10px] px-5 text-sm font-black uppercase tracking-[0.04em] text-white transition-all hover:bg-[#1565c0]"
+                style={{ background: accentBlue }}
               >
                 <BarChart3 className="h-4 w-4" />
                 Start Trading
@@ -572,7 +572,7 @@ const ReviewsPage = () => {
                   <button
                     type="button"
                     onClick={copyCurrentUrl}
-                    className="hidden h-10 items-center gap-2 rounded-lg border border-[#00C076]/30 px-4 text-sm font-bold text-[#00C076] hover:bg-[#00C076]/10 transition-all sm:inline-flex"
+                    className="hidden h-10 items-center gap-2 rounded-lg border border-[#1c81f8]/30 px-4 text-sm font-bold text-[#1c81f8] hover:bg-[#1c81f8]/10 transition-all sm:inline-flex"
                   >
                     <Copy className="h-4 w-4" />
                     Share
@@ -582,11 +582,11 @@ const ReviewsPage = () => {
                 <div className="space-y-4">
                   {reviews.length ? (
                     reviews.map((review) => (
-                      <article key={`${review.source}-${review.id}`} className="grid overflow-hidden rounded-[14px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-sm hover:border-[#00C076]/50 transition-all hover:shadow-lg hover:shadow-[#00C076]/10">
+                      <article key={`${review.source}-${review.id}`} className="grid overflow-hidden rounded-[14px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-sm hover:border-[#1c81f8]/50 transition-all hover:shadow-lg hover:shadow-[#1c81f8]/10">
                         <div className="grid sm:grid-cols-[140px_minmax(0,1fr)]">
                           <aside className="flex flex-col items-center justify-center px-5 py-6 text-center border-b sm:border-b-0 sm:border-r border-white/5">
                             <ReviewAvatar avatarUrl={review.avatarUrl} country={review.country} name={review.reviewerName} size="sm" />
-                            <div className="mt-3 flex w-full min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#00C076]">
+                            <div className="mt-3 flex w-full min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#1c81f8]">
                               <FlagBadge country={review.country} className="h-4 w-4 ring-0" />
                               <span className="block max-w-[100px] truncate text-center text-xs" title={review.reviewerName}>
                                 {review.reviewerName}
@@ -615,8 +615,8 @@ const ReviewsPage = () => {
 
               <div>
                 <div className="mb-3 flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-[#00C076]" />
-                  <span className="text-sm font-bold text-[#00C076] uppercase tracking-widest">SHARE YOUR FEEDBACK</span>
+                  <div className="h-1.5 w-1.5 rounded-full bg-[#1c81f8]" />
+                  <span className="text-sm font-bold text-[#1c81f8] uppercase tracking-widest">SHARE YOUR FEEDBACK</span>
                 </div>
                 <h2 className="text-[26px] font-black uppercase leading-tight tracking-[0.06em] text-white">
                   Submit Your Review
@@ -634,15 +634,15 @@ const ReviewsPage = () => {
                   <textarea
                     value={reviewText}
                     onChange={(event) => setReviewText(event.target.value)}
-                    className="mt-3 h-[180px] w-full resize-none rounded-[10px] border border-white/10 bg-white/[0.02] px-4 py-3 text-sm font-semibold leading-6 text-white outline-none transition-all placeholder:text-[#5a6b88] focus:border-[#00C076] focus:ring-1 focus:ring-[#00C076]/50"
+                    className="mt-3 h-[180px] w-full resize-none rounded-[10px] border border-white/10 bg-white/[0.02] px-4 py-3 text-sm font-semibold leading-6 text-white outline-none transition-all placeholder:text-[#5a6b88] focus:border-[#1c81f8] focus:ring-1 focus:ring-[#1c81f8]/50"
                     placeholder="Share your experience with Init Option. What do you like most about our platform?"
                   />
 
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="mt-6 h-[48px] w-full rounded-[10px] px-7 text-sm font-black uppercase tracking-[0.08em] text-white transition-all hover:bg-[#00a85e] disabled:cursor-not-allowed disabled:opacity-60"
-                    style={{ background: accentGreen }}
+                    className="mt-6 h-[48px] w-full rounded-[10px] px-7 text-sm font-black uppercase tracking-[0.08em] text-white transition-all hover:bg-[#1565c0] disabled:cursor-not-allowed disabled:opacity-60"
+                    style={{ background: accentBlue }}
                   >
                     {submitting ? "Publishing..." : "Publish Review"}
                   </button>

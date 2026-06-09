@@ -336,7 +336,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
 
           {showVerificationPrompt ? (
             <div className="mt-6 space-y-4">
-              <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4">
+              <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
                 <p className="text-sm text-foreground">
                   <strong>Check your email</strong> at <strong>{verificationEmail}</strong>
                 </p>
@@ -476,7 +476,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                 </>
               ) : (
                 <>
-                  <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-4">
+                  <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
                     <p className="text-sm text-foreground">
                       <strong>Code verified</strong>
                     </p>
