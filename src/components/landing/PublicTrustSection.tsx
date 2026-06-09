@@ -60,13 +60,13 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
 
       <div className="container relative z-10 mx-auto px-4">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="text-xs font-medium uppercase tracking-[0.28em] text-primary">
+          <span className="text-xs font-medium uppercase tracking-[0.28em] text-[#1c81f8]">
             Public trust
           </span>
-          <h2 className="mt-4 font-display text-3xl font-bold sm:text-4xl">
+          <h2 className="mt-4 font-display text-3xl font-bold text-[#0f1419] sm:text-4xl">
             Clear services, public support details, and visible compliance pages
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#536471] sm:text-lg">
             {platformName} is set up for account funding, live trading, and published tournament entries.
             Before using a live balance, visitors can review the platform flow, funding guidance,
             and public legal pages from the main site.
@@ -78,20 +78,20 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
             {serviceCards.map((card) => (
               <div
                 key={card.title}
-                className="rounded-2xl border border-border/60 bg-gradient-card p-6 shadow-card"
+                className="rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
-                  <card.icon className="h-5 w-5 text-primary" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1c81f8]/10">
+                  <card.icon className="h-5 w-5 text-[#1c81f8]" />
                 </div>
-                <h3 className="mt-5 font-display text-xl font-semibold text-foreground">
+                <h3 className="mt-5 font-display text-xl font-semibold text-[#0f1419]">
                   {card.title}
                 </h3>
-                <p className="mt-3 text-base leading-8 text-muted-foreground">
+                <p className="mt-3 text-base leading-8 text-[#536471]">
                   {card.description}
                 </p>
                 <Link
                   to={card.ctaHref}
-                  className="mt-5 inline-flex text-sm font-semibold text-primary transition-opacity hover:opacity-85"
+                  className="mt-5 inline-flex text-sm font-semibold text-[#1c81f8] transition-opacity hover:opacity-85"
                 >
                   {card.ctaLabel}
                 </Link>
@@ -99,28 +99,28 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
             ))}
           </div>
 
-          <div className="rounded-[28px] border border-border/60 bg-[linear-gradient(180deg,rgba(14,18,24,0.98),rgba(10,14,19,0.98))] p-6 shadow-[0_22px_60px_rgba(0,0,0,0.24)] sm:p-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d9ddd2]">
-              <CircleHelp className="h-3.5 w-3.5 text-primary" />
+          <div className="rounded-[28px] border border-[#e5e7eb] bg-white p-6 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:p-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-[#f8f9fc] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#536471]">
+              <CircleHelp className="h-3.5 w-3.5 text-[#1c81f8]" />
               Contact and policy
             </div>
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+            <div className="mt-6 rounded-2xl border border-[#e5e7eb] bg-[#f8f9fc] p-5">
               <div className="flex items-start gap-3">
-                <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/12">
-                  <Mail className="h-4 w-4 text-primary" />
+                <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1c81f8]/10">
+                  <Mail className="h-4 w-4 text-[#1c81f8]" />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#536471]">
                     Support email
                   </div>
                   <a
                     href={`mailto:${supportEmail}`}
-                    className="mt-2 inline-flex text-lg font-semibold text-foreground transition-opacity hover:opacity-85"
+                    className="mt-2 inline-flex text-lg font-semibold text-[#0f1419] transition-opacity hover:opacity-85"
                   >
                     {supportEmail}
                   </a>
-                  <p className="mt-3 text-base leading-8 text-muted-foreground">
+                  <p className="mt-3 text-base leading-8 text-[#536471]">
                     Moderation teams and customers can use this address for account, funding, and
                     verification questions.
                   </p>
@@ -128,8 +128,8 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
               </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <div className="mt-5 rounded-2xl border border-[#e5e7eb] bg-[#f8f9fc] p-5">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#536471]">
                 Supported public pages
               </div>
               <div className="mt-4 grid gap-3">
@@ -137,13 +137,13 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
                   <Link
                     key={link.label}
                     to={link.href}
-                    className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3.5 text-sm font-medium text-foreground transition-colors hover:bg-white/[0.06]"
+                    className="flex items-center justify-between rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-sm font-medium text-[#0f1419] transition-colors hover:bg-[#f5f6fa]"
                   >
                     <span className="inline-flex items-center gap-3">
-                      <link.icon className="h-4 w-4 text-primary" />
+                      <link.icon className="h-4 w-4 text-[#1c81f8]" />
                       {link.label}
                     </span>
-                    <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                    <span className="text-xs uppercase tracking-[0.18em] text-[#536471]">
                       Open
                     </span>
                   </Link>
@@ -151,11 +151,11 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
               </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/[0.06] p-5">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            <div className="mt-5 rounded-2xl border border-[#1c81f8]/20 bg-[#1c81f8]/6 p-5">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#1c81f8]">
                 Payment visibility
               </div>
-              <p className="mt-3 text-base leading-8 text-foreground">
+              <p className="mt-3 text-base leading-8 text-[#0f1419]">
                 Payments on this site are used for live account funding and published tournament
                 entries where available. Visitors can review the funding flow, withdrawal guidance,
                 and risk disclosures before registering.
@@ -165,7 +165,7 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
                   {paymentMethods.map((method) => (
                     <span
                       key={method}
-                      className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#e4e7dc]"
+                      className="rounded-full border border-[#e5e7eb] bg-[#f8f9fc] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#536471]"
                     >
                       {method}
                     </span>

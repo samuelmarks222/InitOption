@@ -55,8 +55,8 @@ const FeaturesSection = () => {
   const cardsToRender = featureCards.length ? featureCards : fallbackCards;
 
   return (
-    <section id="features" className="relative overflow-hidden bg-[linear-gradient(180deg,#1e2330_0%,#1c1f2d_100%)] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.08),transparent_28%)]" />
+    <section id="features" className="relative overflow-hidden bg-[#f5f6fa] py-20 sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.04),transparent_28%)]" />
 
       <div className="container relative mx-auto px-4">
         <motion.div
@@ -65,13 +65,13 @@ const FeaturesSection = () => {
           viewport={{ once: true }}
           className="mx-auto mb-12 max-w-3xl text-center sm:mb-16"
         >
-          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-white/72">
+          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-[#536471]">
             Why Choose Init Option
           </span>
-          <h2 className="font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+          <h2 className="font-display text-3xl font-bold text-[#0f1419] sm:text-4xl lg:text-5xl">
             Built to feel <span className="text-[#1c81f8]">clean, global, and easy to trust</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl font-copy text-base leading-8 text-white/78 sm:text-lg">
+          <p className="mx-auto mt-4 max-w-3xl font-copy text-base leading-8 text-[#536471] sm:text-lg">
             The landing experience should look as polished as the platform itself, so each benefit gets a proper
             designed card instead of a plain block of text.
           </p>
@@ -81,16 +81,16 @@ const FeaturesSection = () => {
           {cardsToRender.map((feature, index) => (
             <article
               key={`${feature.title}-${index}`}
-              className="landing-lift-card relative overflow-hidden rounded-[28px] border border-white/8 bg-[#1e2330] px-6 pb-8 pt-7 text-center shadow-[0_24px_60px_rgba(0,0,0,0.22)]"
+              className="landing-lift-card relative overflow-hidden rounded-[28px] border border-[#e5e7eb] bg-white px-6 pb-8 pt-7 text-center shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
             >
-              <div className="absolute inset-x-10 top-6 h-14 rounded-full bg-white/8 blur-2xl" />
-              <div className="relative mx-auto flex h-24 w-24 items-center justify-center rounded-[24px] border border-[#1c81f8]/14 bg-[#1e2330] text-[#1c81f8] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+              <div className="absolute inset-x-10 top-6 h-14 rounded-full bg-[#f0f2f5] blur-2xl" />
+              <div className="relative mx-auto flex h-24 w-24 items-center justify-center rounded-[24px] border border-[#1c81f8]/14 bg-[#f5f6fa] text-[#1c81f8] shadow-[inset_0_1px_0_rgba(0,0,0,0.03)]">
                 {renderFeatureIllustration(index)}
               </div>
-              <h3 className="font-display mt-7 text-2xl font-bold text-white">
+              <h3 className="font-display mt-7 text-2xl font-bold text-[#0f1419]">
                 {feature.title}
               </h3>
-              <p className="mt-4 font-copy text-sm leading-7 text-white/76 sm:text-base">
+              <p className="mt-4 font-copy text-sm leading-7 text-[#536471] sm:text-base">
                 {feature.text}
               </p>
             </article>

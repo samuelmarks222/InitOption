@@ -33,8 +33,8 @@ const TestimonialsSection = () => {
   ];
 
   return (
-    <section id="reviews" className="relative overflow-hidden bg-[linear-gradient(180deg,#1e2330_0%,#1c1f2d_100%)] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.08),transparent_24%)]" />
+    <section id="reviews" className="relative overflow-hidden bg-[#f5f6fa] py-20 sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.04),transparent_24%)]" />
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -45,10 +45,10 @@ const TestimonialsSection = () => {
           <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-primary">
             Trader Rating - {review.rating}/5
           </span>
-          <h2 className="font-heading text-3xl font-bold text-foreground sm:text-4xl">
+          <h2 className="font-heading text-3xl font-bold text-[#0f1419] sm:text-4xl">
             {review.title}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">{review.subtitle}</p>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-[#536471] sm:text-lg">{review.subtitle}</p>
         </motion.div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -59,21 +59,21 @@ const TestimonialsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="rounded-[26px] border border-white/8 bg-[#1e2330] p-6 shadow-[0_24px_60px_rgba(0,0,0,0.22)]"
+              className="rounded-[26px] border border-[#e5e7eb] bg-white p-6 shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
             >
               <div className="mb-4 flex gap-1">
                 {Array.from({ length: 5 }).map((_, starIndex) => (
-                  <Star key={starIndex} size={14} className="fill-primary text-primary" />
+                  <Star key={starIndex} size={14} className="fill-[#1c81f8] text-[#1c81f8]" />
                 ))}
               </div>
-              <p className="mb-6 text-base leading-8 text-muted-foreground">"{testimonial.text}"</p>
+              <p className="mb-6 text-base leading-8 text-[#536471]">"{testimonial.text}"</p>
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 font-heading text-sm font-bold text-primary">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1c81f8]/10 font-heading text-sm font-bold text-[#1c81f8]">
                   {testimonial.initials}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">{testimonial.name}</p>
-                  <p className="text-xs text-muted-foreground">{testimonial.role}</p>
+                  <p className="text-sm font-semibold text-[#0f1419]">{testimonial.name}</p>
+                  <p className="text-xs text-[#536471]">{testimonial.role}</p>
                 </div>
               </div>
             </motion.div>

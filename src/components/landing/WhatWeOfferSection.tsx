@@ -186,8 +186,8 @@ const WhatWeOfferSection = () => {
   }, [selectedAssets, sparklineBucket]);
 
   return (
-    <section className="relative overflow-hidden bg-[linear-gradient(180deg,#1c1f2d_0%,#1e2330_100%)] py-16 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(28,129,248,0.08),transparent_24%)]" />
+    <section className="relative overflow-hidden bg-[#f5f6fa] py-16 sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(28,129,248,0.04),transparent_24%)]" />
 
       <div className="container relative mx-auto px-4">
         <motion.div
@@ -196,13 +196,13 @@ const WhatWeOfferSection = () => {
           viewport={{ once: true }}
           className="mx-auto mb-7 max-w-3xl text-center sm:mb-10"
         >
-          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-[#ffffff]">
+          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-[#536471]">
             Market Showcase
           </span>
-          <h2 className="font-display text-2xl font-bold text-white sm:text-4xl lg:text-5xl">
+          <h2 className="font-display text-2xl font-bold text-[#0f1419] sm:text-4xl lg:text-5xl">
             {markets.title}
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl font-copy text-[15px] leading-7 text-white/78 sm:text-lg sm:leading-8">
+          <p className="mx-auto mt-4 max-w-3xl font-copy text-[15px] leading-7 text-[#536471] sm:text-lg sm:leading-8">
             {markets.description}
           </p>
         </motion.div>
@@ -230,7 +230,7 @@ const WhatWeOfferSection = () => {
           className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
         >
           {!selectedAssets.length ? (
-            <div className="rounded-[24px] border border-dashed border-white/10 bg-[#1e2330] px-6 py-10 text-center text-sm text-white/72 md:col-span-2 xl:col-span-3">
+            <div className="rounded-[24px] border border-dashed border-[#e5e7eb] bg-[#f8f9fc] px-6 py-10 text-center text-sm text-[#536471] md:col-span-2 xl:col-span-3">
               Active platform assets will appear here as soon as the asset feed is available.
             </div>
           ) : selectedAssets.map((asset) => {
@@ -242,7 +242,7 @@ const WhatWeOfferSection = () => {
               <motion.article
                 key={asset.symbol}
                 variants={{ hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: 0.45 } } }}
-                className="landing-lift-card rounded-[22px] border border-white/8 bg-[#1e2330] p-3.5 shadow-[0_24px_60px_rgba(0,0,0,0.22)] sm:rounded-[26px] sm:p-5"
+                className="landing-lift-card rounded-[22px] border border-[#e5e7eb] bg-white p-3.5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[26px] sm:p-5"
               >
                 <div className="grid gap-3.5 sm:grid-cols-[1.1fr_0.9fr] sm:gap-4 sm:items-start">
                   <div>
@@ -258,10 +258,10 @@ const WhatWeOfferSection = () => {
                         className="sm:mt-0.5"
                       />
                       <div className="min-w-0">
-                        <h3 className="font-display text-[1.3rem] font-bold leading-tight text-white sm:text-[1.65rem]">
+                        <h3 className="font-display text-[1.3rem] font-bold leading-tight text-[#0f1419] sm:text-[1.65rem]">
                           {asset.symbol}
                         </h3>
-                        <p className="font-copy line-clamp-2 text-xs text-white/68 sm:text-sm">
+                        <p className="font-copy line-clamp-2 text-xs text-[#536471] sm:text-sm">
                           {asset.name}
                         </p>
                       </div>
@@ -273,10 +273,10 @@ const WhatWeOfferSection = () => {
 
                     <div className="mt-4 flex items-center justify-between gap-3">
                       <div>
-                        <div className="font-copy text-[10px] font-bold uppercase tracking-[0.16em] text-white/72">
+                        <div className="font-copy text-[10px] font-bold uppercase tracking-[0.16em] text-[#536471]">
                           Current price
                         </div>
-                        <div className="mt-1 font-display text-lg font-bold text-white">
+                        <div className="mt-1 font-display text-lg font-bold text-[#0f1419]">
                           {formatAssetPrice(asset.price)}
                         </div>
                       </div>
@@ -288,22 +288,22 @@ const WhatWeOfferSection = () => {
 
                   <div className="flex h-full flex-col justify-between">
                     <div>
-                      <div className="font-copy text-[11px] font-bold uppercase tracking-[0.18em] text-white/82">
+                      <div className="font-copy text-[11px] font-bold uppercase tracking-[0.18em] text-[#536471]">
                         Current trend
                       </div>
                       <div className="mt-2.5 flex items-center gap-2 sm:mt-3">
-                        <span className={`flex h-6 w-6 items-center justify-center rounded-md border sm:h-7 sm:w-7 ${positive ? "border-[#1c81f8] bg-[#1c81f8]" : "border-[#ffffff] bg-[#ffffff]"}`}>
-                          <TrendIcon className={`h-4 w-4 ${positive ? "text-white" : "text-[#1c1f2d]"}`} />
+                        <span className={`flex h-6 w-6 items-center justify-center rounded-md border sm:h-7 sm:w-7 ${positive ? "border-[#1c81f8] bg-[#1c81f8]" : "border-[#e5e7eb] bg-[#f0f2f5]"}`}>
+                          <TrendIcon className={`h-4 w-4 ${positive ? "text-white" : "text-[#536471]"}`} />
                         </span>
-                        <span className="font-display text-[1.55rem] font-bold leading-none text-white sm:text-[2rem]">
+                        <span className="font-display text-[1.55rem] font-bold leading-none text-[#0f1419] sm:text-[2rem]">
                           {formatTrend(asset.change24h)}
                         </span>
                       </div>
 
-                      <div className="mt-3 font-copy text-[11px] font-bold uppercase tracking-[0.18em] text-white/82 sm:mt-4">
+                      <div className="mt-3 font-copy text-[11px] font-bold uppercase tracking-[0.18em] text-[#536471] sm:mt-4">
                         Profit up to
                       </div>
-                      <div className="mt-1 font-display text-[1.7rem] font-bold leading-none text-white sm:text-[2rem]">
+                      <div className="mt-1 font-display text-[1.7rem] font-bold leading-none text-[#0f1419] sm:text-[2rem]">
                         {asset.maxProfit}%
                       </div>
                     </div>
@@ -327,16 +327,16 @@ const WhatWeOfferSection = () => {
           viewport={{ once: true }}
           className="mt-8 grid gap-4 sm:mt-10 lg:grid-cols-[1.1fr_0.9fr]"
         >
-          <div className="rounded-[24px] border border-white/8 bg-[#1e2330] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.22)] sm:rounded-[28px] sm:p-6">
-            <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em] text-white/72">
+          <div className="rounded-[24px] border border-[#e5e7eb] bg-white p-5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[28px] sm:p-6">
+            <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em] text-[#536471]">
               {markets.actionCardTitle}
             </div>
-            <p className="mt-3 max-w-2xl font-copy text-[15px] leading-7 text-white/76 sm:text-lg sm:leading-8">
+            <p className="mt-3 max-w-2xl font-copy text-[15px] leading-7 text-[#536471] sm:text-lg sm:leading-8">
               {markets.actionCardText}
             </p>
           </div>
 
-          <div className="rounded-[24px] border border-white/8 bg-[#1e2330] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.22)] sm:rounded-[28px] sm:p-6">
+          <div className="rounded-[24px] border border-[#e5e7eb] bg-white p-5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[28px] sm:p-6">
             <div className="grid gap-3 sm:grid-cols-2">
               <button
                 type="button"
@@ -346,7 +346,7 @@ const WhatWeOfferSection = () => {
               </button>
               <button
                 type="button"
-                className="rounded-[14px] border border-[#ffffff] bg-[#ffffff] px-4 py-3.5 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#1c1f2d] shadow-[0_16px_28px_rgba(255,255,255,0.14)] sm:px-5 sm:py-4 sm:text-sm"
+                className="rounded-[14px] border border-[#1c81f8] bg-[#1c81f8] px-4 py-3.5 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_24px_rgba(28,129,248,0.25)] sm:px-5 sm:py-4 sm:text-sm"
               >
                 {markets.downButtonLabel}
               </button>

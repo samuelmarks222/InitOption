@@ -11,13 +11,13 @@ const markets = [
 
 const MarketTicker = () => {
   return (
-    <section id="markets" className="relative overflow-hidden bg-[linear-gradient(180deg,#1c1f2d_0%,#1e2330_100%)] py-4 sm:py-5">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(28,129,248,0.08),transparent_24%),radial-gradient(circle_at_80%_50%,rgba(255,255,255,0.04),transparent_24%)]" />
+    <section id="markets" className="relative overflow-hidden bg-[#f5f6fa] py-4 sm:py-5">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(28,129,248,0.04),transparent_24%),radial-gradient(circle_at_80%_50%,rgba(255,255,255,0.04),transparent_24%)]" />
       <div className="container relative mx-auto px-4">
-        <div className="overflow-hidden rounded-[20px] border border-white/8 bg-[#1e2330] px-3 py-3 shadow-[0_22px_50px_rgba(0,0,0,0.2)] sm:rounded-[24px] sm:px-6 sm:py-4">
+        <div className="overflow-hidden rounded-[20px] border border-[#e5e7eb] bg-white px-3 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.04)] sm:rounded-[24px] sm:px-6 sm:py-4">
           <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide sm:gap-6">
             <div className="shrink-0">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#1c81f8]/18 bg-[#1c81f8]/10 px-2.5 py-1 font-copy text-[10px] font-bold uppercase tracking-[0.2em] text-[#1c81f8] sm:px-3 sm:text-[11px] sm:tracking-[0.24em]">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#1c81f8]/12 bg-[#f0f6ff] px-2.5 py-1 font-copy text-[10px] font-bold uppercase tracking-[0.2em] text-[#1c81f8] sm:px-3 sm:text-[11px] sm:tracking-[0.24em]">
                 <span className="h-2 w-2 rounded-full bg-[#1c81f8]" />
                 Live markets
               </span>
@@ -29,13 +29,13 @@ const MarketTicker = () => {
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                className="flex shrink-0 items-center gap-2.5 rounded-[16px] border border-white/8 bg-white/[0.04] px-3 py-2.5 sm:gap-3 sm:rounded-[18px] sm:px-4 sm:py-3"
+                className="flex shrink-0 items-center gap-2.5 rounded-[16px] border border-[#e5e7eb] bg-[#f8f9fc] px-3 py-2.5 sm:gap-3 sm:rounded-[18px] sm:px-4 sm:py-3"
               >
-                <span className="font-copy text-xs font-medium text-white sm:text-sm">{m.pair}</span>
-                <span className="rounded-full bg-[#1c81f8]/10 px-2 py-1 font-copy text-[10px] font-semibold text-[#1c81f8] sm:px-2.5 sm:text-xs">
+                <span className="font-copy text-xs font-medium text-[#0f1419] sm:text-sm">{m.pair}</span>
+                <span className="rounded-full bg-[#f0f6ff] px-2 py-1 font-copy text-[10px] font-semibold text-[#1c81f8] sm:px-2.5 sm:text-xs">
                   {m.payout}
                 </span>
-                <span className={`font-copy text-[10px] font-semibold sm:text-xs ${m.change.startsWith('+') ? 'text-[#1c81f8]' : 'text-white/82'}`}>
+                <span className={`font-copy text-[10px] font-semibold sm:text-xs ${m.change.startsWith('+') ? 'text-[#1c81f8]' : 'text-[#536471]'}`}>
                   {m.change}
                 </span>
               </motion.div>

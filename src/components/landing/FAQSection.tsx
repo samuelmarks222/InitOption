@@ -16,8 +16,8 @@ const FAQSection = () => {
   }
 
   return (
-    <section id="faq" className="relative overflow-hidden bg-[linear-gradient(180deg,#1c1f2d_0%,#1e2330_100%)] py-20 sm:py-24">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(70,214,178,0.08),transparent_24%)]" />
+    <section id="faq" className="relative overflow-hidden bg-[#f5f6fa] py-20 sm:py-24">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.04),transparent_24%)]" />
       <div className="container relative z-10 mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -25,13 +25,13 @@ const FAQSection = () => {
           viewport={{ once: true }}
           className="mb-16 text-center"
         >
-          <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-primary">
+          <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-[#1c81f8]">
             Support
           </span>
-          <h2 className="font-heading text-3xl font-bold text-foreground sm:text-4xl">
+          <h2 className="font-heading text-3xl font-bold text-[#0f1419] sm:text-4xl">
             {faq.title}
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-muted-foreground sm:text-lg">{faq.subtitle}</p>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-[#536471] sm:text-lg">{faq.subtitle}</p>
         </motion.div>
 
         <motion.div
@@ -45,12 +45,12 @@ const FAQSection = () => {
               <AccordionItem
                 key={`${item.question}-${index}`}
                 value={`faq-${index}`}
-                className="rounded-[22px] border border-white/8 bg-[#1e2330] px-6 shadow-[0_20px_40px_rgba(0,0,0,0.18)] data-[state=open]:border-primary/30"
+                className="rounded-[22px] border border-[#e5e7eb] bg-white px-6 shadow-[0_1px_6px_rgba(0,0,0,0.04)] data-[state=open]:border-[#1c81f8]/30"
               >
-                <AccordionTrigger className="text-left font-heading text-base font-semibold text-foreground hover:no-underline sm:text-lg">
+                <AccordionTrigger className="text-left font-heading text-base font-semibold text-[#0f1419] hover:no-underline sm:text-lg">
                   {item.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-base leading-8 text-muted-foreground">
+                <AccordionContent className="text-base leading-8 text-[#536471]">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>
