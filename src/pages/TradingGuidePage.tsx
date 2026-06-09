@@ -1309,121 +1309,11 @@ const TradingGuidePage = () => {
             )}
           </Link>
 
-          <div className="hidden min-w-0 items-center justify-end gap-2 md:flex">
-            <button
-              type="button"
-              onClick={() => openGuideTopic("profile")}
-              className="group hidden h-[46px] items-center gap-3 rounded-[16px] border px-3.5 shadow-[0_12px_30px_rgba(7,12,22,0.24)] transition-all hover:bg-white/[0.06] lg:flex"
-              style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2f80ed,#1e2330)] text-[15px] font-black text-white ring-1 ring-white/10">
-                <User className="h-5 w-5 text-white/85" />
-              </div>
-              <div className="min-w-0 text-left">
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7f8ea8]">Profile</div>
-                <div className="max-w-[126px] truncate text-[13px] font-semibold text-white">My account</div>
-              </div>
-            </button>
 
-            <button
-              type="button"
-              onClick={() => openGuideTopic("real-account")}
-              className="flex h-[46px] min-w-[150px] items-center rounded-[16px] border px-3.5 shadow-[0_12px_30px_rgba(7,12,22,0.24)] transition-all hover:bg-white/[0.06]"
-              style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
-            >
-              <div className="min-w-0 text-left">
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#1c81f8]">Live account&nbsp;&nbsp;USD</div>
-                <div className="text-[15px] font-bold leading-tight text-white">0</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => openGuideTopic("deposit")}
-              className="inline-flex h-[38px] items-center gap-1.5 rounded px-4 text-[13px] font-bold text-white"
-              style={{ background: "#18a038", boxShadow: "0 2px 5px rgba(24,160,56,0.2)" }}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Deposit
-            </button>
-
-            <button
-              type="button"
-              onClick={() => openGuideTopic("withdrawal")}
-              className="inline-flex h-[38px] items-center rounded px-4 text-[13px] font-bold text-white"
-              style={{ background: "var(--trading-control-bg)", border: "1px solid var(--trading-control-border)" }}
-            >
-              Withdrawal
-            </button>
-          </div>
         </div>
       </header>
 
       <div className="flex">
-        <aside
-          className="sticky top-[72px] hidden h-[calc(100vh-72px)] w-[85px] shrink-0 overflow-hidden border-r lg:block"
-          style={{ background: "var(--trading-sidebar-bg)", borderRightColor: "var(--trading-border-color)" }}
-        >
-          <nav className="flex h-full flex-col items-center pb-4">
-            <TradeDeskShortcut to="/trade" />
-
-            <div className="mt-3 flex w-full flex-1 flex-col items-center space-y-2 overflow-y-auto">
-              {railItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = isShellTargetActive(item.target);
-                return (
-                  <button
-                    key={item.label}
-                    type="button"
-                    onClick={() => openShellTarget(item.target)}
-                    className={`group relative flex w-full flex-col items-center justify-center py-3 transition-all ${
-                      isActive ? "text-[#1c81f8]" : "text-white/85 hover:text-white"
-                    }`}
-                  >
-                    {isActive ? (
-                      <span className="absolute left-0 top-1/2 h-[60%] w-[3px] -translate-y-1/2 rounded-r-full bg-[#1c81f8] shadow-[0_0_8px_#1c81f8]" />
-                    ) : null}
-                    <Icon className="mb-1.5 h-[26px] w-[26px] transition-transform duration-200 group-hover:scale-110" strokeWidth={2.6} />
-                    <span className="relative top-[1px] text-[8px] font-extrabold tracking-wider">{item.label}</span>
-                    {item.badge ? (
-                      <span className="absolute right-3 top-2 rounded-full bg-[#2098e9] px-1.5 py-0.5 text-[10px] font-bold text-white">
-                        {item.badge}
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex w-full items-center justify-center">
-              <div className="mb-4 h-px w-[50px]" style={{ background: "var(--trading-border-color)" }} />
-            </div>
-
-            <div className="flex w-full flex-col items-center space-y-3 pb-2">
-              {railBottomItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = isShellTargetActive(item.target);
-                return (
-                  <button
-                    key={item.label}
-                    type="button"
-                    onClick={() => openShellTarget(item.target)}
-                    className={`group relative flex w-full flex-col items-center justify-center py-2 transition-all ${
-                      isActive ? "text-[#1c81f8]" : "text-white/80 hover:text-white"
-                    }`}
-                  >
-                    {isActive ? (
-                      <span className="absolute left-0 top-1/2 h-[60%] w-[3px] -translate-y-1/2 rounded-r-full bg-[#1c81f8] shadow-[0_0_8px_#1c81f8]" />
-                    ) : null}
-                    <Icon className="mb-1 h-[24px] w-[24px] transition-transform group-hover:scale-110" strokeWidth={2.4} />
-                    <span className="text-[8px] font-extrabold tracking-wider">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </nav>
-        </aside>
-
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <div>
             <div className="mb-8 flex flex-wrap gap-3 border-b border-[#e5e7eb] pb-6">
@@ -1479,32 +1369,7 @@ const TradingGuidePage = () => {
                   })}
                 </div>
 
-                <div className="mt-8 grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
-                  <aside className="rounded-[16px] bg-white border border-[#e5e7eb] p-6">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-[#1c81f8] mb-4">Topics</h2>
-                    <div className="max-h-[calc(100vh-220px)] overflow-y-auto pr-2 [scrollbar-color:#3a465f_transparent] [scrollbar-width:thin]">
-                      <div className="space-y-1">
-                        {currentTopics.map((topic) => (
-                          <GuideTreeNode
-                            key={topic.id}
-                            topic={topic}
-                            activeId={selectedTopic.id}
-                            openIds={openIds}
-                            onToggle={(id) =>
-                              setOpenIds((current) => {
-                                const next = new Set(current);
-                                if (next.has(id)) next.delete(id);
-                                else next.add(id);
-                                return next;
-                              })
-                            }
-                            onSelect={selectTopic}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </aside>
-
+                <div className="mt-8 grid gap-6">
                   <article className="rounded-[16px] bg-white border border-[#e5e7eb] px-6 py-8 sm:px-10 lg:px-14">
                     <div className="mx-auto max-w-3xl">
                       <div className="mb-2 flex items-center gap-2">
@@ -1601,6 +1466,31 @@ const TradingGuidePage = () => {
                   </div>
                     </div>
                   </article>
+
+                  <aside className="rounded-[16px] bg-white border border-[#e5e7eb] p-6">
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-[#1c81f8] mb-4">More Topics</h2>
+                    <div className="max-h-[400px] overflow-y-auto pr-2 [scrollbar-color:#3a465f_transparent] [scrollbar-width:thin]">
+                      <div className="space-y-1">
+                        {currentTopics.map((topic) => (
+                          <GuideTreeNode
+                            key={topic.id}
+                            topic={topic}
+                            activeId={selectedTopic.id}
+                            openIds={openIds}
+                            onToggle={(id) =>
+                              setOpenIds((current) => {
+                                const next = new Set(current);
+                                if (next.has(id)) next.delete(id);
+                                else next.add(id);
+                                return next;
+                              })
+                            }
+                            onSelect={selectTopic}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </aside>
                 </div>
               </>
             ) : null}
