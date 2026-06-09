@@ -113,7 +113,7 @@ const RebrandedLogin = () => {
               <Link to="/privacy" className="mr-3 hover:underline">Privacy policy</Link>
               <Link to="/info-disclosure" className="hover:underline">Information disclosure</Link>
             </div>
-            <div className="mt-3 text-center text-xs text-[#9aa3b2]">Copyright ©2026 Pocket Option</div>
+            <div className="mt-3 text-center text-xs text-[#9aa3b2]">Copyright ©2026 Init Option</div>
           </div>
         </div>
       </div>
