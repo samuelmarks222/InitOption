@@ -16,8 +16,8 @@ const FAQSection = () => {
   }
 
   return (
-    <section id="faq" className="relative overflow-hidden bg-[#f0f4ff] py-20 sm:py-24">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.05),transparent_24%)]" />
+    <section id="faq" className="relative overflow-hidden bg-white py-20 sm:py-24">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.03),transparent_24%)]" />
       <div className="container relative z-10 mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

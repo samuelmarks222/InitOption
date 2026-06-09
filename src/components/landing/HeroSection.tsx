@@ -10,12 +10,12 @@ const HeroSection = () => {
   const hero = websiteContent.hero;
 
   return (
-    <section className="relative overflow-hidden bg-[linear-gradient(180deg,#f5f6fa_0%,#ffffff_38%,#ffffff_100%)] pt-16">
+    <section className="relative overflow-hidden bg-[linear-gradient(170deg,#f5f0eb_0%,#f5f7fa_38%,#ffffff_65%,#ffffff_100%)] pt-16">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-0 h-[620px] w-[860px] -translate-x-1/2 rounded-full bg-[#1c81f8]/6 blur-[160px]" />
-        <div className="absolute bottom-0 left-[4%] h-[360px] w-[360px] rounded-full bg-[#1c81f8]/4 blur-[120px]" />
-        <div className="absolute right-[8%] top-[45%] h-[240px] w-[240px] rounded-full bg-[#1c81f8]/3 blur-[100px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:78px_78px] opacity-20" />
+        <div className="absolute left-[8%] top-[10%] h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(28,129,248,0.1)_0%,transparent_70%)] blur-[100px]" />
+        <div className="absolute right-[4%] top-[35%] h-[320px] w-[320px] rounded-full bg-[radial-gradient(circle,rgba(102,126,234,0.08)_0%,transparent_70%)] blur-[90px]" />
+        <div className="absolute bottom-[10%] left-[40%] h-[200px] w-[200px] rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.06)_0%,transparent_70%)] blur-[80px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:78px_78px] opacity-[0.06]" />
       </div>
 
       <div className="container relative mx-auto px-4 pb-12 pt-10 text-center sm:pb-16 sm:pt-20 lg:pb-24 lg:pt-32">
