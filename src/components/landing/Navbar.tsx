@@ -18,12 +18,12 @@ const Navbar = () => {
 
   return (
     <nav className="fixed left-0 right-0 top-0 z-50 border-b border-[#e5e7eb]/60 bg-white/90 shadow-[0_1px_6px_rgba(0,0,0,0.04)] backdrop-blur-2xl">
-      <div className="container mx-auto flex h-16 items-center justify-between gap-2 px-3 sm:h-20 sm:gap-3 sm:px-4">
+      <div className="container mx-auto flex h-16 items-center justify-between gap-6 px-3 sm:h-20 sm:gap-10 sm:px-4">
         <Link to="/" className="shrink-0 flex items-center gap-2">
           <img src={logo} alt="Init Option" className="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11" />
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div           className="hidden items-center gap-12 md:flex">
           {navLinks.map((link) => (
             <a
               key={link.label}
