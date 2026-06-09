@@ -94,7 +94,7 @@ const AnimatedTradingChart = () => {
 
       context.clearRect(0, 0, width, height);
 
-      context.strokeStyle = "rgba(0, 0, 0, 0.06)";
+      context.strokeStyle = "rgba(255, 255, 255, 0.06)";
       context.lineWidth = 0.75;
       for (let row = 0; row < 6; row += 1) {
         const y = (height / 6) * row;
@@ -153,7 +153,7 @@ const AnimatedTradingChart = () => {
       const lastY = toY(lastCandle.close);
 
       context.setLineDash([4, 4]);
-      context.strokeStyle = "rgba(0, 0, 0, 0.1)";
+      context.strokeStyle = "rgba(255, 255, 255, 0.12)";
       context.lineWidth = 1;
       context.beginPath();
       context.moveTo(0, lastY);
@@ -268,8 +268,8 @@ const AnimatedTradingChart = () => {
   const payout = (investment * (parseFloat(activePair.payout) / 100) + investment).toFixed(2);
 
   return (
-    <div className="w-full overflow-hidden rounded-[22px] border border-[#e5e7eb] bg-white shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[28px]">
-      <div className="flex items-center justify-between gap-2 border-b border-[#e5e7eb] bg-[#f8f9fc] px-2.5 py-2 sm:px-4">
+    <div className="w-full overflow-hidden rounded-[22px] border border-white/10 bg-[#1a2538]/90 shadow-[0_8px_32px_rgba(0,0,0,0.24)] backdrop-blur sm:rounded-[28px]">
+      <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-white/[0.04] px-2.5 py-2 sm:px-4">
         <div className="flex min-w-0 items-center gap-1 overflow-x-auto scrollbar-hide sm:gap-2">
           {PAIRS.map((pair, index) => (
             <motion.button
@@ -279,7 +279,7 @@ const AnimatedTradingChart = () => {
               className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border px-2 py-1 text-[9px] font-medium transition-colors sm:text-xs ${
                 index === activePairIndex
                   ? "border-[#1c81f8]/30 bg-[#1c81f8]/10 text-[#1c81f8]"
-                  : "border-transparent text-[#536471] hover:text-[#0f1419]"
+                  : "border-transparent text-[#9aaec9] hover:text-white"
               }`}
               type="button"
             >
@@ -291,7 +291,7 @@ const AnimatedTradingChart = () => {
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <div className="hidden items-center gap-1.5 rounded-md border border-[#1c81f8]/18 bg-[#1c81f8]/10 px-2.5 py-1 sm:flex">
-            <span className="text-[10px] text-[#536471]">Balance:</span>
+            <span className="text-[10px] text-[#9aaec9]">Balance:</span>
             <motion.span
               key={balance.toFixed(2)}
               initial={{ y: -8, opacity: 0 }}
@@ -301,7 +301,7 @@ const AnimatedTradingChart = () => {
               ${balance.toFixed(2)}
             </motion.span>
           </div>
-          <div className="flex items-center gap-1.5 text-[9px] text-[#536471] sm:gap-2 sm:text-[10px]">
+          <div className="flex items-center gap-1.5 text-[9px] text-[#9aaec9] sm:gap-2 sm:text-[10px]">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#1c81f8]" />
             LIVE
           </div>
@@ -312,13 +312,13 @@ const AnimatedTradingChart = () => {
         <div className="relative flex-1 min-h-[198px] sm:min-h-[320px]">
           <canvas ref={canvasRef} className="h-[198px] w-full sm:h-[320px]" style={{ display: "block" }} />
 
-          <div className="absolute left-2 top-2 rounded-full border border-[#1c81f8]/20 bg-white/90 px-2 py-1 text-[9px] font-semibold text-[#1c81f8] backdrop-blur min-[430px]:hidden">
+          <div className="absolute left-2 top-2 rounded-full border border-[#1c81f8]/20 bg-[#1a2538]/90 px-2 py-1 text-[9px] font-semibold text-[#1c81f8] backdrop-blur min-[430px]:hidden">
             52% higher
           </div>
 
           <div className="absolute left-3 top-1/4 hidden flex-col items-center gap-0.5 min-[430px]:flex">
             <div className="text-[10px] font-bold text-[#1c81f8]">HIGHER</div>
-            <div className="text-[9px] text-[#536471]">52%</div>
+            <div className="text-[9px] text-[#9aaec9]">52%</div>
             <div className="my-1 flex flex-col gap-0.5">
               {Array.from({ length: 5 }).map((_, index) => (
                 <motion.div
