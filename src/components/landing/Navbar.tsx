@@ -23,7 +23,7 @@ const Navbar = () => {
           <img src={logo} alt="Init Option" className="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11" />
         </Link>
 
-        <div           className="hidden items-center gap-12 md:flex">
+        <div className="hidden items-center gap-16 lg:gap-20 md:flex">
           {navLinks.map((link) => (
             <a
               key={link.label}
