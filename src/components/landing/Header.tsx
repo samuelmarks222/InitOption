@@ -39,8 +39,8 @@ const Header = () => {
         <div
           className={`mx-auto max-w-7xl rounded-[30px] transition-all duration-300 ${
             scrolled
-              ? "landing-neo-card border-[rgba(20,18,24,0.1)] shadow-[0_24px_70px_rgba(16,16,24,0.12)]"
-              : "bg-[rgba(252,247,239,0.72)] shadow-[0_18px_48px_rgba(20,18,24,0.08)] backdrop-blur-xl"
+              ? "border-[#182838]/50 bg-[#182838] shadow-[0_24px_70px_rgba(0,0,0,0.22)]"
+              : "bg-[#182838]/95 shadow-[0_18px_48px_rgba(0,0,0,0.16)] backdrop-blur-xl"
           }`}
         >
           <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
@@ -65,7 +65,7 @@ const Header = () => {
                 <a
                   key={item.label}
                   href={item.href}
-                  className="rounded-full px-4 py-2.5 font-landing-copy text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5b514b] transition-colors hover:bg-white hover:text-[#17131a]"
+                  className="rounded-full px-4 py-2.5 font-landing-copy text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-white/10 hover:text-[#dbe9ff]"
                 >
                   {item.label}
                 </a>
@@ -75,13 +75,13 @@ const Header = () => {
             <div className="ml-auto hidden items-center gap-2 md:flex">
               <Link
                 to="/login"
-                className="rounded-full border border-[#1a1820]/10 bg-white/70 px-4 py-2.5 font-landing-copy text-sm font-semibold text-[#18141c] transition-colors hover:bg-white"
+                className="rounded-full border border-white/10 bg-white/10 px-4 py-2.5 font-landing-copy text-sm font-semibold text-white transition-colors hover:bg-white/15"
               >
                 Log in
               </Link>
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 rounded-full bg-[#16131a] px-5 py-2.5 font-landing-copy text-sm font-semibold text-white shadow-[0_16px_36px_rgba(18,15,24,0.22)] transition-transform hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 rounded-full bg-[#1c78f8] px-5 py-2.5 font-landing-copy text-sm font-semibold text-white shadow-[0_16px_36px_rgba(28,120,248,0.35)] transition-transform hover:-translate-y-0.5"
               >
                 Create account
                 <ArrowUpRight className="h-4 w-4" />
@@ -91,7 +91,7 @@ const Header = () => {
             <button
               type="button"
               onClick={() => setMobileOpen((value) => !value)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#1a1820]/10 bg-white/75 text-[#17131a] transition-colors hover:bg-white lg:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition-colors hover:bg-white/15 lg:hidden"
               aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
             >
               {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -101,13 +101,13 @@ const Header = () => {
           <div className="grid grid-cols-2 gap-2 border-t border-[#1a1820]/8 px-4 pb-3 pt-2 md:hidden">
             <Link
               to="/login"
-              className="rounded-full border border-[#1a1820]/10 bg-white/75 px-4 py-3 text-center font-landing-copy text-[11px] font-semibold uppercase tracking-[0.16em] text-[#17131a]"
+              className="rounded-full border border-white/15 bg-white/10 px-4 py-3 text-center font-landing-copy text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
             >
               Login
             </Link>
             <Link
               to="/register"
-              className="rounded-full bg-[#16131a] px-4 py-3 text-center font-landing-copy text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
+              className="rounded-full bg-[#1c78f8] px-4 py-3 text-center font-landing-copy text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
             >
               Sign up
             </Link>
