@@ -1301,7 +1301,7 @@ const TradingGuidePage = () => {
               </div>
             ) : (
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-[#0fa053] text-lg font-black text-white shadow-[0_0_14px_rgba(15,160,83,0.38)]">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-[#1c81f8] text-lg font-black text-white shadow-[0_0_14px_rgba(28,129,248,0.38)]">
                   {initials}
                 </div>
                 <span className="truncate text-[22px] font-black uppercase tracking-[0.08em] text-white">{platformName}</span>

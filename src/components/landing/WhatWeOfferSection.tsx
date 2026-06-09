@@ -116,12 +116,12 @@ const Sparkline = ({ points, positive }: { points: number[]; positive: boolean }
     <svg viewBox={`0 0 ${width} ${height}`} className="h-24 w-full sm:h-28" aria-hidden="true">
       <polygon
         points={`0,${height} ${linePoints} ${width},${height}`}
-        fill={positive ? "rgba(15,160,83,0.12)" : "rgba(255,255,255,0.06)"}
+        fill={positive ? "rgba(28,129,248,0.12)" : "rgba(255,255,255,0.06)"}
       />
       <polyline
         points={linePoints}
         fill="none"
-        stroke="#0fa053"
+        stroke="#1c81f8"
         strokeWidth="3.2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -187,7 +187,7 @@ const WhatWeOfferSection = () => {
 
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(180deg,#1c1f2d_0%,#1e2330_100%)] py-16 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(15,160,83,0.08),transparent_24%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(28,129,248,0.08),transparent_24%)]" />
 
       <div className="container relative mx-auto px-4">
         <motion.div
@@ -215,7 +215,7 @@ const WhatWeOfferSection = () => {
         >
           <Button
             size="lg"
-            className="h-11 rounded-[10px] border border-[#0fa053] bg-[#0fa053] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_18px_36px_rgba(15,160,83,0.22)] hover:bg-[#0fa053] hover:brightness-[1.03] sm:h-12 sm:px-8 sm:text-sm"
+            className="h-11 rounded-[10px] border border-[#1c81f8] bg-[#1c81f8] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_18px_36px_rgba(28,129,248,0.22)] hover:bg-[#1c81f8] hover:brightness-[1.03] sm:h-12 sm:px-8 sm:text-sm"
             asChild
           >
             <Link to="/register">Start Trading</Link>
@@ -280,7 +280,7 @@ const WhatWeOfferSection = () => {
                           {formatAssetPrice(asset.price)}
                         </div>
                       </div>
-                      <span className="rounded-full border border-[#0fa053] bg-transparent px-3 py-1.5 font-copy text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#0fa053]">
+                      <span className="rounded-full border border-[#1c81f8] bg-transparent px-3 py-1.5 font-copy text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#1c81f8]">
                         {asset.label}
                       </span>
                     </div>
@@ -292,7 +292,7 @@ const WhatWeOfferSection = () => {
                         Current trend
                       </div>
                       <div className="mt-2.5 flex items-center gap-2 sm:mt-3">
-                        <span className={`flex h-6 w-6 items-center justify-center rounded-md border sm:h-7 sm:w-7 ${positive ? "border-[#0fa053] bg-[#0fa053]" : "border-[#ffffff] bg-[#ffffff]"}`}>
+                        <span className={`flex h-6 w-6 items-center justify-center rounded-md border sm:h-7 sm:w-7 ${positive ? "border-[#1c81f8] bg-[#1c81f8]" : "border-[#ffffff] bg-[#ffffff]"}`}>
                           <TrendIcon className={`h-4 w-4 ${positive ? "text-white" : "text-[#1c1f2d]"}`} />
                         </span>
                         <span className="font-display text-[1.55rem] font-bold leading-none text-white sm:text-[2rem]">
@@ -309,7 +309,7 @@ const WhatWeOfferSection = () => {
                     </div>
 
                     <Button
-                      className="mt-4 h-10 rounded-[10px] border border-[#0fa053] bg-[#0fa053] font-copy text-[11px] font-extrabold uppercase tracking-[0.06em] text-[#ffffff] hover:bg-[#0fa053] hover:brightness-[1.03] sm:mt-6 sm:h-11 sm:text-sm"
+                      className="mt-4 h-10 rounded-[10px] border border-[#1c81f8] bg-[#1c81f8] font-copy text-[11px] font-extrabold uppercase tracking-[0.06em] text-[#ffffff] hover:bg-[#1c81f8] hover:brightness-[1.03] sm:mt-6 sm:h-11 sm:text-sm"
                       asChild
                     >
                       <Link to="/register">Trade</Link>
@@ -340,7 +340,7 @@ const WhatWeOfferSection = () => {
             <div className="grid gap-3 sm:grid-cols-2">
               <button
                 type="button"
-                className="rounded-[14px] border border-[#0fa053] bg-[#0fa053] px-4 py-3.5 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-white shadow-[0_16px_28px_rgba(15,160,83,0.24)] sm:px-5 sm:py-4 sm:text-sm"
+                className="rounded-[14px] border border-[#1c81f8] bg-[#1c81f8] px-4 py-3.5 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-white shadow-[0_16px_28px_rgba(28,129,248,0.24)] sm:px-5 sm:py-4 sm:text-sm"
               >
                 {markets.upButtonLabel}
               </button>

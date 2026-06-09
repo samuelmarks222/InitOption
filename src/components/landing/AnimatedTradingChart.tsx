@@ -123,7 +123,7 @@ const AnimatedTradingChart = () => {
       context.shadowColor = "rgba(15, 160, 83, 0.35)";
       context.shadowBlur = 10;
       context.beginPath();
-      context.strokeStyle = "#0fa053";
+      context.strokeStyle = "#1c81f8";
       context.lineWidth = 2.4;
       context.lineJoin = "round";
       data.forEach((value, index) => {
@@ -155,14 +155,14 @@ const AnimatedTradingChart = () => {
       context.fill();
       context.beginPath();
       context.arc(lastX, lastY, 3.2, 0, Math.PI * 2);
-      context.fillStyle = "#0fa053";
+      context.fillStyle = "#1c81f8";
       context.fill();
 
       const badgeWidth = width < 380 ? 60 : 74;
       const badgeX = Math.min(lastX + 6, width - badgeWidth - 4);
       context.beginPath();
       context.roundRect(badgeX, lastY - 11, badgeWidth, 22, 6);
-      context.fillStyle = "#0fa053";
+      context.fillStyle = "#1c81f8";
       context.fill();
       context.fillStyle = "#1c1f2d";
       context.font = width < 380 ? "700 9px Sora, sans-serif" : "700 11px Sora, sans-serif";
@@ -272,31 +272,31 @@ const AnimatedTradingChart = () => {
               transition={{ duration: 0.3 }}
               className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border px-2 py-1 text-[9px] font-medium transition-colors sm:text-xs ${
                 index === activePairIndex
-                  ? "border-[#0fa053]/30 bg-[#0fa053]/10 text-[#0fa053]"
+                  ? "border-[#1c81f8]/30 bg-[#1c81f8]/10 text-[#1c81f8]"
                   : "border-transparent text-white/64 hover:text-white"
               }`}
               type="button"
             >
               <span>{pair.name}</span>
-              <span className="text-[#0fa053]">{pair.payout}</span>
+              <span className="text-[#1c81f8]">{pair.payout}</span>
             </motion.button>
           ))}
         </div>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <div className="hidden items-center gap-1.5 rounded-md border border-[#0fa053]/18 bg-[#0fa053]/10 px-2.5 py-1 sm:flex">
+          <div className="hidden items-center gap-1.5 rounded-md border border-[#1c81f8]/18 bg-[#1c81f8]/10 px-2.5 py-1 sm:flex">
             <span className="text-[10px] text-white/64">Balance:</span>
             <motion.span
               key={balance.toFixed(2)}
               initial={{ y: -8, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="font-mono text-xs font-bold text-[#0fa053]"
+              className="font-mono text-xs font-bold text-[#1c81f8]"
             >
               ${balance.toFixed(2)}
             </motion.span>
           </div>
           <div className="flex items-center gap-1.5 text-[9px] text-white/72 sm:gap-2 sm:text-[10px]">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#0fa053]" />
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#1c81f8]" />
             LIVE
           </div>
         </div>
@@ -306,12 +306,12 @@ const AnimatedTradingChart = () => {
         <div className="relative flex-1 min-h-[198px] sm:min-h-[320px]">
           <canvas ref={canvasRef} className="h-[198px] w-full sm:h-[320px]" style={{ display: "block" }} />
 
-          <div className="absolute left-2 top-2 rounded-full border border-[#0fa053]/20 bg-[#1c1f2d]/85 px-2 py-1 text-[9px] font-semibold text-[#0fa053] backdrop-blur min-[430px]:hidden">
+          <div className="absolute left-2 top-2 rounded-full border border-[#1c81f8]/20 bg-[#1c1f2d]/85 px-2 py-1 text-[9px] font-semibold text-[#1c81f8] backdrop-blur min-[430px]:hidden">
             52% higher
           </div>
 
           <div className="absolute left-3 top-1/4 hidden flex-col items-center gap-0.5 min-[430px]:flex">
-            <div className="text-[10px] font-bold text-[#0fa053]">HIGHER</div>
+            <div className="text-[10px] font-bold text-[#1c81f8]">HIGHER</div>
             <div className="text-[9px] text-white/72">52%</div>
             <div className="my-1 flex flex-col gap-0.5">
               {Array.from({ length: 5 }).map((_, index) => (
@@ -319,7 +319,7 @@ const AnimatedTradingChart = () => {
                   key={`up-${index}`}
                   animate={{ opacity: [0.4, 0.8, 0.4] }}
                   transition={{ duration: 1.5, delay: index * 0.15, repeat: Infinity }}
-                  className="h-2 w-3 rotate-45 bg-[#0fa053]/80"
+                  className="h-2 w-3 rotate-45 bg-[#1c81f8]/80"
                 />
               ))}
             </div>
@@ -343,7 +343,7 @@ const AnimatedTradingChart = () => {
                 initial={{ opacity: 0, scale: 0.5, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.5, y: -20 }}
-                className="absolute left-1/2 top-3 flex max-w-[78vw] -translate-x-1/2 items-center gap-1.5 rounded-full bg-[#0fa053] px-3 py-1.5 text-[10px] font-bold text-[#1c1f2d] shadow-[0_18px_36px_rgba(48,168,106,0.24)] sm:top-4 sm:max-w-none sm:gap-2 sm:px-4 sm:text-sm"
+                className="absolute left-1/2 top-3 flex max-w-[78vw] -translate-x-1/2 items-center gap-1.5 rounded-full bg-[#1c81f8] px-3 py-1.5 text-[10px] font-bold text-[#1c1f2d] shadow-[0_18px_36px_rgba(28,129,248,0.24)] sm:top-4 sm:max-w-none sm:gap-2 sm:px-4 sm:text-sm"
               >
                 WIN STREAK {winStreak}
               </motion.div>
@@ -362,7 +362,7 @@ const AnimatedTradingChart = () => {
                 <div
                   className={`flex flex-col items-center gap-1 rounded-xl px-4 py-3 text-sm font-bold shadow-2xl sm:px-8 sm:py-4 sm:text-xl ${
                     showTradeResult.result === "win"
-                      ? "bg-[#0fa053] text-[#1c1f2d] shadow-[0_20px_40px_rgba(48,168,106,0.24)]"
+                      ? "bg-[#1c81f8] text-[#1c1f2d] shadow-[0_20px_40px_rgba(28,129,248,0.24)]"
                       : "border border-white/12 bg-[#1e2330] text-white shadow-[0_20px_40px_rgba(0,0,0,0.24)]"
                   }`}
                 >
@@ -386,7 +386,7 @@ const AnimatedTradingChart = () => {
               key={totalProfit.toFixed(2)}
               initial={{ scale: 1.3 }}
               animate={{ scale: 1 }}
-              className="font-mono text-[11px] font-bold text-[#0fa053]"
+              className="font-mono text-[11px] font-bold text-[#1c81f8]"
             >
               +${totalProfit.toFixed(2)}
             </motion.span>
@@ -397,17 +397,17 @@ const AnimatedTradingChart = () => {
           <div className="flex items-center justify-between">
             <div className="flex min-w-0 items-center gap-1.5">
               <span className="truncate text-xs font-bold text-white sm:text-sm">{activePair.name}</span>
-              <span className="text-[10px] font-semibold text-[#0fa053] sm:text-xs">{activePair.payout}</span>
+              <span className="text-[10px] font-semibold text-[#1c81f8] sm:text-xs">{activePair.payout}</span>
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-md border border-[#0fa053]/18 bg-[#0fa053]/10 px-2.5 py-1.5 sm:hidden">
+          <div className="flex items-center justify-between rounded-md border border-[#1c81f8]/18 bg-[#1c81f8]/10 px-2.5 py-1.5 sm:hidden">
             <span className="text-[10px] text-white/64">Balance</span>
             <motion.span
               key={balance.toFixed(2)}
               initial={{ y: -5, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="font-mono text-xs font-bold text-[#0fa053]"
+              className="font-mono text-xs font-bold text-[#1c81f8]"
             >
               ${balance.toFixed(2)}
             </motion.span>
@@ -422,14 +422,14 @@ const AnimatedTradingChart = () => {
                 <span className="text-[10px] text-white/64">+</span>
               </div>
               <div className="text-center">
-                <span className="text-[9px] font-medium text-[#0fa053]">SWITCH TIME</span>
+                <span className="text-[9px] font-medium text-[#1c81f8]">SWITCH TIME</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-white/64">Investment</span>
-                <span className="text-[9px] font-medium text-[#0fa053]">SWITCH</span>
+                <span className="text-[9px] font-medium text-[#1c81f8]">SWITCH</span>
               </div>
               <div className="flex items-center justify-between rounded-lg border border-white/8 bg-white/[0.04] px-3 py-1.5">
                 <span className="text-[10px] text-white/64">-</span>
@@ -466,7 +466,7 @@ const AnimatedTradingChart = () => {
                   : {}
               }
               transition={{ duration: 0.4 }}
-              className="flex cursor-pointer items-center justify-between rounded-lg bg-[#0fa053] px-4 py-2 text-sm font-bold text-[#1c1f2d] sm:py-2.5"
+              className="flex cursor-pointer items-center justify-between rounded-lg bg-[#1c81f8] px-4 py-2 text-sm font-bold text-[#1c1f2d] sm:py-2.5"
             >
               Up <span>&uarr;</span>
             </motion.div>
@@ -492,7 +492,7 @@ const AnimatedTradingChart = () => {
 
           <div className="mt-1 flex-1">
             <div className="mb-2 flex items-center gap-3 text-[10px] text-white/64">
-              <span className="border-b-2 border-[#0fa053] pb-0.5 font-medium text-white">Trades {tradeCount}</span>
+              <span className="border-b-2 border-[#1c81f8] pb-0.5 font-medium text-white">Trades {tradeCount}</span>
               <span>History</span>
             </div>
             <div className="max-h-[104px] space-y-1 overflow-hidden sm:max-h-[120px]">
@@ -506,14 +506,14 @@ const AnimatedTradingChart = () => {
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
                     className={`${index > 2 ? "hidden sm:flex" : "flex"} items-center justify-between rounded-md px-2 py-1.5 text-[9px] sm:text-[10px] ${
                       trade.result === "win"
-                        ? "border border-[#0fa053]/20 bg-[#0fa053]/10 text-[#0fa053]"
+                        ? "border border-[#1c81f8]/20 bg-[#1c81f8]/10 text-[#1c81f8]"
                         : trade.result === "loss"
                         ? "border border-white/12 bg-white/[0.05] text-white"
                         : "border border-white/8 bg-white/[0.04] text-white/78"
                     }`}
                   >
                     <span className="flex items-center gap-1">
-                      <span className={trade.direction === "up" ? "text-[#0fa053]" : "text-white/82"}>
+                      <span className={trade.direction === "up" ? "text-[#1c81f8]" : "text-white/82"}>
                         {trade.direction === "up" ? "\u25B2" : "\u25BC"}
                       </span>
                       <span className="font-medium">{trade.pair}</span>

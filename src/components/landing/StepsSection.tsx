@@ -15,8 +15,8 @@ const renderStepIllustration = (variant: number) => {
           <rect x="74" y="52" width="56" height="8" rx="4" fill="#ffffff" fillOpacity="0.18" />
           <rect x="68" y="72" width="70" height="10" rx="5" fill="#ffffff" fillOpacity="0.12" />
           <rect x="68" y="90" width="70" height="10" rx="5" fill="#ffffff" fillOpacity="0.12" />
-          <rect x="72" y="110" width="64" height="11" rx="5.5" fill="#0fa053" />
-          <circle cx="160" cy="110" r="12" fill="#0fa053" />
+          <rect x="72" y="110" width="64" height="11" rx="5.5" fill="#1c81f8" />
+          <circle cx="160" cy="110" r="12" fill="#1c81f8" />
           <path d="M160 104v12M154 110h12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
         </svg>
       );
@@ -28,10 +28,10 @@ const renderStepIllustration = (variant: number) => {
           <rect x="62" y="40" width="36" height="10" rx="5" fill="#ffffff" fillOpacity="0.14" />
           <rect x="102" y="40" width="28" height="10" rx="5" fill="#ffffff" fillOpacity="0.14" />
           <rect x="136" y="40" width="28" height="10" rx="5" fill="#ffffff" fillOpacity="0.14" />
-          <path d="M68 100l18-36 18 18 17-10 16 20 7-42" fill="none" stroke="#0fa053" strokeLinecap="round" strokeLinejoin="round" strokeWidth="7" />
-          <rect x="142" y="56" width="28" height="11" rx="5.5" fill="#0fa053" />
+          <path d="M68 100l18-36 18 18 17-10 16 20 7-42" fill="none" stroke="#1c81f8" strokeLinecap="round" strokeLinejoin="round" strokeWidth="7" />
+          <rect x="142" y="56" width="28" height="11" rx="5.5" fill="#1c81f8" />
           <rect x="142" y="74" width="30" height="11" rx="5.5" fill="#ffffff" />
-          <rect x="164" y="96" width="28" height="35" rx="14" fill="#0fa053" />
+          <rect x="164" y="96" width="28" height="35" rx="14" fill="#1c81f8" />
           <rect x="154" y="104" width="18" height="20" rx="8" fill="#1c1f2d" />
           <path d="M164 114h10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
           <path d="M159 124v-6M156 121h6" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
@@ -44,11 +44,11 @@ const renderStepIllustration = (variant: number) => {
           <rect x="62" y="34" width="110" height="98" rx="20" fill="#1e2330" />
           <rect x="70" y="46" width="42" height="10" rx="5" fill="#ffffff" fillOpacity="0.14" />
           <rect x="116" y="46" width="42" height="10" rx="5" fill="#ffffff" fillOpacity="0.14" />
-          <rect x="101" y="72" width="44" height="12" rx="6" fill="#0fa053" />
+          <rect x="101" y="72" width="44" height="12" rx="6" fill="#1c81f8" />
           <path d="M72 100h28c6 0 10 4 10 10s4 10 10 10h32" fill="none" stroke="#ffffff" strokeDasharray="9 8" strokeLinecap="round" strokeWidth="4" />
           <path d="M72 100h16M94 118h18M121 100h18" fill="none" stroke="#ffffff" strokeLinecap="round" strokeWidth="4" />
           <rect x="112" y="110" width="28" height="20" rx="6" fill="#1c1f2d" />
-          <circle cx="172" cy="108" r="18" fill="#0fa053" />
+          <circle cx="172" cy="108" r="18" fill="#1c81f8" />
           <path d="M172 98c-4 0-7 2-7 5 0 8 14 2 14 10 0 3-3 5-7 5s-7-2-7-5" fill="none" stroke="#ffffff" strokeLinecap="round" strokeWidth="4" />
           <path d="M172 93v30" stroke="#ffffff" strokeLinecap="round" strokeWidth="4" />
         </svg>
@@ -61,10 +61,10 @@ const renderStepIllustration = (variant: number) => {
           <circle cx="82" cy="74" r="14" fill="#1c1f2d" />
           <path d="M79 74h6M82 71v6" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" />
           <rect x="102" y="60" width="52" height="11" rx="5.5" fill="#ffffff" fillOpacity="0.14" />
-          <rect x="102" y="80" width="38" height="11" rx="5.5" fill="#0fa053" />
+          <rect x="102" y="80" width="38" height="11" rx="5.5" fill="#1c81f8" />
           <rect x="102" y="98" width="46" height="11" rx="5.5" fill="#ffffff" fillOpacity="0.14" />
-          <path d="M64 118c18-14 32-19 48-16 11 2 18 6 30 0" fill="none" stroke="#0fa053" strokeLinecap="round" strokeWidth="5" />
-          <circle cx="154" cy="116" r="12" fill="#0fa053" />
+          <path d="M64 118c18-14 32-19 48-16 11 2 18 6 30 0" fill="none" stroke="#1c81f8" strokeLinecap="round" strokeWidth="5" />
+          <circle cx="154" cy="116" r="12" fill="#1c81f8" />
           <path d="M154 109l0 14M147 116h14" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" />
         </svg>
       );
@@ -73,12 +73,12 @@ const renderStepIllustration = (variant: number) => {
         <svg viewBox="0 0 220 160" className="h-full w-full" aria-hidden="true">
           <text x="18" y="54" fill="rgba(255,255,255,0.16)" fontSize="68" fontWeight="800">5</text>
           <rect x="58" y="28" width="104" height="112" rx="24" fill="#1c1f2d" stroke="#ffffff" strokeOpacity="0.3" strokeWidth="5" />
-          <circle cx="80" cy="52" r="8" fill="#0fa053" />
+          <circle cx="80" cy="52" r="8" fill="#1c81f8" />
           <rect x="92" y="48" width="28" height="7" rx="3.5" fill="#ffffff" fillOpacity="0.82" />
           <path d="M76 104l15-25 13 16 13-9 13 19" fill="none" stroke="#ffffff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="5" />
-          <path d="M112 115l28-24" fill="none" stroke="#0fa053" strokeLinecap="round" strokeWidth="8" />
-          <path d="M140 91v13h-13" fill="none" stroke="#0fa053" strokeLinecap="round" strokeLinejoin="round" strokeWidth="8" />
-          <rect x="106" y="120" width="34" height="11" rx="5.5" fill="#0fa053" />
+          <path d="M112 115l28-24" fill="none" stroke="#1c81f8" strokeLinecap="round" strokeWidth="8" />
+          <path d="M140 91v13h-13" fill="none" stroke="#1c81f8" strokeLinecap="round" strokeLinejoin="round" strokeWidth="8" />
+          <rect x="106" y="120" width="34" height="11" rx="5.5" fill="#1c81f8" />
           <rect x="110" y="133" width="30" height="10" rx="5" fill="#ffffff" />
         </svg>
       );
@@ -89,10 +89,10 @@ const renderStepIllustration = (variant: number) => {
           <rect x="60" y="34" width="106" height="96" rx="20" fill="#1e2330" />
           <rect x="74" y="52" width="34" height="34" rx="10" fill="#1c1f2d" />
           <path d="M87 60v18M78 69h18" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
-          <path d="M122 102l10-16 12 8 14-25" fill="none" stroke="#0fa053" strokeLinecap="round" strokeLinejoin="round" strokeWidth="6" />
+          <path d="M122 102l10-16 12 8 14-25" fill="none" stroke="#1c81f8" strokeLinecap="round" strokeLinejoin="round" strokeWidth="6" />
           <path d="M130 72h22" stroke="#ffffff" strokeOpacity="0.2" strokeWidth="8" strokeLinecap="round" />
           <path d="M122 84h30" stroke="#ffffff" strokeOpacity="0.2" strokeWidth="8" strokeLinecap="round" />
-          <circle cx="160" cy="110" r="16" fill="#0fa053" />
+          <circle cx="160" cy="110" r="16" fill="#1c81f8" />
           <path d="M160 101c-3 0-6 2-6 4 0 6 12 2 12 8 0 3-3 4-6 4s-6-1-6-4" fill="none" stroke="#ffffff" strokeLinecap="round" strokeWidth="3.5" />
           <path d="M160 97v25" stroke="#ffffff" strokeLinecap="round" strokeWidth="3.5" />
         </svg>
@@ -114,7 +114,7 @@ const StepsSection = () => {
 
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(180deg,#1c1f2d_0%,#1e2330_100%)] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(15,160,83,0.08),transparent_28%),linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:auto,78px_78px,78px_78px] opacity-60" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(28,129,248,0.08),transparent_28%),linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:auto,78px_78px,78px_78px] opacity-60" />
 
       <div className="container relative mx-auto px-4">
         <motion.div
@@ -147,7 +147,7 @@ const StepsSection = () => {
               variants={cardVariant}
               className="landing-lift-card relative overflow-hidden rounded-[30px] border border-white/8 bg-[#1e2330] px-5 pb-6 pt-5 text-center shadow-[0_26px_60px_rgba(0,0,0,0.22)] sm:px-6"
             >
-              <div className="absolute inset-x-8 top-6 h-16 rounded-full bg-[#0fa053]/8 blur-3xl" />
+              <div className="absolute inset-x-8 top-6 h-16 rounded-full bg-[#1c81f8]/8 blur-3xl" />
               <div className="relative mx-auto h-40 w-full max-w-[220px]">
                 {renderStepIllustration(index)}
               </div>
@@ -159,7 +159,7 @@ const StepsSection = () => {
                 {step.text}
               </p>
 
-              <div className="mt-5 inline-flex rounded-full border border-[#0fa053] bg-transparent px-4 py-2 font-copy text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#0fa053]">
+              <div className="mt-5 inline-flex rounded-full border border-[#1c81f8] bg-transparent px-4 py-2 font-copy text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#1c81f8]">
                 {step.cta}
               </div>
             </motion.article>
@@ -174,7 +174,7 @@ const StepsSection = () => {
         >
           <Button
             size="lg"
-            className="h-12 rounded-[10px] border border-[#0fa053] bg-[#0fa053] px-8 font-copy text-sm font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_18px_36px_rgba(15,160,83,0.22)] hover:bg-[#0fa053] hover:brightness-[1.03]"
+            className="h-12 rounded-[10px] border border-[#1c81f8] bg-[#1c81f8] px-8 font-copy text-sm font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_18px_36px_rgba(28,129,248,0.22)] hover:bg-[#1c81f8] hover:brightness-[1.03]"
             asChild
           >
             <Link to="/register">

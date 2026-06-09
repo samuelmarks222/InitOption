@@ -13,7 +13,7 @@ const EarningsSection = () => {
 
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(180deg,#1e2330_0%,#1c1f2d_100%)] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(15,160,83,0.08),transparent_26%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.08),transparent_26%)]" />
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -65,9 +65,9 @@ const EarningsSection = () => {
             />
           </div>
 
-          <div className="rounded-[22px] border border-[#0fa053]/24 bg-[#0fa053]/10 p-6 text-center">
+          <div className="rounded-[22px] border border-[#1c81f8]/24 bg-[#1c81f8]/10 p-6 text-center">
             <p className="text-xs text-white/70">Estimated monthly return</p>
-            <p className="mt-1 font-heading text-4xl font-bold text-[#0fa053]">
+            <p className="mt-1 font-heading text-4xl font-bold text-[#1c81f8]">
               ${estimated.toLocaleString()}
             </p>
             <p className="mt-2 text-xs text-white/70">
@@ -75,7 +75,7 @@ const EarningsSection = () => {
             </p>
           </div>
 
-          <Button className="mt-6 w-full gap-2 border border-[#0fa053] bg-[#0fa053] font-semibold text-[#ffffff] hover:bg-[#0fa053]" size="lg" asChild>
+          <Button className="mt-6 w-full gap-2 border border-[#1c81f8] bg-[#1c81f8] font-semibold text-[#ffffff] hover:bg-[#1c81f8]" size="lg" asChild>
             <Link to="/register">
               Start Trading Today
               <ArrowRight size={18} />

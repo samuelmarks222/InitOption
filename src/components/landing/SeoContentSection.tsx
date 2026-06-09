@@ -60,7 +60,7 @@ const SeoContentSection = () => {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="overflow-hidden rounded-[34px] border border-white/8 bg-[linear-gradient(180deg,rgba(25,45,70,0.96)_0%,rgba(14,26,40,0.98)_100%)] p-6 shadow-[0_24px_70px_rgba(0,0,0,0.22)] sm:p-8 lg:p-10">
           <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-[#0fa053]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-[#1c81f8]">
               <Search className="h-3.5 w-3.5" />
               Explore {platformName}
             </div>
@@ -80,17 +80,17 @@ const SeoContentSection = () => {
               <Link
                 key={item.to}
                 to={item.to}
-                className="group flex h-full flex-col justify-between rounded-[26px] border border-white/8 bg-white/[0.03] p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#0fa053]/40 hover:bg-white/[0.05]"
+                className="group flex h-full flex-col justify-between rounded-[26px] border border-white/8 bg-white/[0.03] p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#1c81f8]/40 hover:bg-white/[0.05]"
               >
                 <div>
-                  <div className="text-[11px] font-black uppercase tracking-[0.22em] text-[#0fa053]">Public page</div>
+                  <div className="text-[11px] font-black uppercase tracking-[0.22em] text-[#1c81f8]">Public page</div>
                   <h3 className="mt-3 font-display text-2xl font-bold leading-tight text-white">{item.title}</h3>
                   <p className="mt-3 font-copy text-sm leading-7 text-[#b5c6e5] sm:text-[15px]">{item.description}</p>
                 </div>
 
                 <div className="mt-6 inline-flex items-center gap-2 font-copy text-sm font-semibold text-white/92">
                   Open page
-                  <ArrowRight className="h-4 w-4 text-[#0fa053] transition-transform duration-200 group-hover:translate-x-1" />
+                  <ArrowRight className="h-4 w-4 text-[#1c81f8] transition-transform duration-200 group-hover:translate-x-1" />
                 </div>
               </Link>
             ))}

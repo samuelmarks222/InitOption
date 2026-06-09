@@ -10,7 +10,7 @@ const CTASection = () => {
 
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(180deg,#1c1f2d_0%,#1e2330_100%)] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(15,160,83,0.08),transparent_24%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.08),transparent_24%)]" />
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -26,7 +26,7 @@ const CTASection = () => {
             </h2>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">{footer.description}</p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button size="lg" className="gap-2 border border-[#0fa053] bg-[#0fa053] px-8 text-base font-semibold text-[#ffffff] shadow-lg shadow-primary/25 hover:bg-[#0fa053]" asChild>
+              <Button size="lg" className="gap-2 border border-[#1c81f8] bg-[#1c81f8] px-8 text-base font-semibold text-[#ffffff] shadow-lg shadow-primary/25 hover:bg-[#1c81f8]" asChild>
                 <Link to="/register">
                   {finalCta.primaryButtonLabel}
                   <ArrowRight size={18} />

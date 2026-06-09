@@ -28,7 +28,7 @@ const Navbar = () => {
             <a
               key={link.label}
               href={link.href}
-              className="font-copy text-base font-medium text-white/78 transition-colors hover:text-[#0fa053] lg:text-lg"
+              className="font-copy text-base font-medium text-white/78 transition-colors hover:text-[#1c81f8] lg:text-lg"
             >
               {link.label}
             </a>
@@ -47,7 +47,7 @@ const Navbar = () => {
             </Button>
             <Button
               size="sm"
-              className="h-8 rounded-full border border-[#0fa053] bg-[#0fa053] px-2.5 text-xs font-semibold text-[#ffffff] shadow-[0_16px_32px_rgba(15,160,83,0.2)] hover:bg-[#0fa053] min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
+              className="h-8 rounded-full border border-[#1c81f8] bg-[#1c81f8] px-2.5 text-xs font-semibold text-[#ffffff] shadow-[0_16px_32px_rgba(28,129,248,0.2)] hover:bg-[#1c81f8] min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
               asChild
             >
               <Link to="/register">Sign Up</Link>

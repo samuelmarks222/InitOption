@@ -133,7 +133,7 @@ const Footer = ({ content }: FooterProps) => {
 
   return (
     <footer className="relative overflow-hidden border-t border-white/6 bg-[linear-gradient(180deg,#1e2330_0%,#1c1f2d_100%)] py-12 sm:py-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(15,160,83,0.08),transparent_24%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.08),transparent_24%)]" />
       <div className="container relative mx-auto px-4">
         <div className="flex flex-col gap-10">
           <div className="flex flex-col gap-8 border-b border-white/8 pb-10 lg:flex-row lg:items-start lg:justify-between">
@@ -153,7 +153,7 @@ const Footer = ({ content }: FooterProps) => {
                 {(socialLinks.title?.trim() || socialLinks.subtitle?.trim()) ? (
                   <div className="mb-4 lg:text-right">
                     {socialLinks.title?.trim() ? (
-                      <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em] text-[#0fa053]">
+                      <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em] text-[#1c81f8]">
                         {socialLinks.title}
                       </div>
                     ) : null}
@@ -177,7 +177,7 @@ const Footer = ({ content }: FooterProps) => {
                         rel="noreferrer"
                         aria-label={`Open ${label}`}
                         title={label}
-                        className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white transition-colors hover:border-[#0fa053]/40 hover:bg-[#0fa053]/12 hover:text-[#0fa053]"
+                        className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white transition-colors hover:border-[#1c81f8]/40 hover:bg-[#1c81f8]/12 hover:text-[#1c81f8]"
                       >
                         <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${isWhatsApp ? "text-[#25D366]" : ""}`} strokeWidth={2.25} />
                       </a>
@@ -198,11 +198,11 @@ const Footer = ({ content }: FooterProps) => {
                   {group.items.map((item) => (
                     <li key={item.label}>
                       {"to" in item ? (
-                        <Link to={item.to} className="transition-colors hover:text-[#0fa053]">
+                        <Link to={item.to} className="transition-colors hover:text-[#1c81f8]">
                           {item.label}
                         </Link>
                       ) : (
-                        <a href={item.href} className="transition-colors hover:text-[#0fa053]">
+                        <a href={item.href} className="transition-colors hover:text-[#1c81f8]">
                           {item.label}
                         </a>
                       )}
@@ -221,7 +221,7 @@ const Footer = ({ content }: FooterProps) => {
               </p>
               <Link
                 to="/risk-disclaimer"
-                className="mt-5 inline-flex font-copy text-sm font-semibold text-[#0fa053] transition-colors hover:text-white"
+                className="mt-5 inline-flex font-copy text-sm font-semibold text-[#1c81f8] transition-colors hover:text-white"
               >
                 Read full risk disclaimer
               </Link>

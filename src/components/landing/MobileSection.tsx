@@ -18,7 +18,7 @@ const MobileSection = () => {
 
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(180deg,#1c1f2d_0%,#1e2330_100%)] py-16 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(15,160,83,0.08),transparent_20%),radial-gradient(circle_at_82%_18%,rgba(255,255,255,0.05),transparent_20%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(28,129,248,0.08),transparent_20%),radial-gradient(circle_at_82%_18%,rgba(255,255,255,0.05),transparent_20%)]" />
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center gap-8 sm:gap-12 lg:flex-row">
           <motion.div
@@ -48,7 +48,7 @@ const MobileSection = () => {
               ))}
             </ul>
 
-            <Button className="mt-6 w-full gap-2 border border-[#0fa053] bg-[#0fa053] font-semibold text-[#ffffff] shadow-lg shadow-[rgba(15,160,83,0.2)] hover:bg-[#0fa053] sm:mt-8 sm:w-auto" size="lg" asChild>
+            <Button className="mt-6 w-full gap-2 border border-[#1c81f8] bg-[#1c81f8] font-semibold text-[#ffffff] shadow-lg shadow-[rgba(28,129,248,0.2)] hover:bg-[#1c81f8] sm:mt-8 sm:w-auto" size="lg" asChild>
               <Link to="/register">
                 Open live account
                 <ArrowRight size={18} />

@@ -12,8 +12,8 @@ const HeroSection = () => {
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(180deg,#1c1f2d_0%,#1e2330_38%,#1e2330_100%)] pt-16">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-0 h-[620px] w-[860px] -translate-x-1/2 rounded-full bg-[#0fa053]/10 blur-[140px]" />
-        <div className="absolute bottom-0 left-[4%] h-[360px] w-[360px] rounded-full bg-[#0fa053]/8 blur-[120px]" />
+        <div className="absolute left-1/2 top-0 h-[620px] w-[860px] -translate-x-1/2 rounded-full bg-[#1c81f8]/10 blur-[140px]" />
+        <div className="absolute bottom-0 left-[4%] h-[360px] w-[360px] rounded-full bg-[#1c81f8]/8 blur-[120px]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:78px_78px] opacity-30" />
       </div>
 
@@ -44,7 +44,7 @@ const HeroSection = () => {
         >
           <Button
             size="lg"
-            className="h-11 w-full max-w-sm rounded-[12px] border border-[#0fa053] bg-[#0fa053] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_18px_36px_rgba(15,160,83,0.22)] hover:bg-[#0fa053] hover:brightness-[1.03] sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
+            className="h-11 w-full max-w-sm rounded-[12px] border border-[#1c81f8] bg-[#1c81f8] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_18px_36px_rgba(28,129,248,0.22)] hover:bg-[#1c81f8] hover:brightness-[1.03] sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
             asChild
           >
             <Link to="/register">
@@ -87,8 +87,8 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.55 }}
           className="relative mt-8 sm:mt-14"
         >
-          <div className="absolute left-[10%] top-[8%] hidden h-32 w-32 rounded-full bg-[#0fa053]/14 blur-[90px] lg:block" />
-          <div className="absolute bottom-[8%] right-[10%] hidden h-36 w-36 rounded-full bg-[#0fa053]/14 blur-[100px] lg:block" />
+          <div className="absolute left-[10%] top-[8%] hidden h-32 w-32 rounded-full bg-[#1c81f8]/14 blur-[90px] lg:block" />
+          <div className="absolute bottom-[8%] right-[10%] hidden h-36 w-36 rounded-full bg-[#1c81f8]/14 blur-[100px] lg:block" />
           <div className="relative mx-auto max-w-6xl">
             <AnimatedTradingChart />
           </div>
