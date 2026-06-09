@@ -11,7 +11,7 @@ const CTASection = () => {
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(135deg,#1c81f8_0%,#1565c0_100%)] py-20 sm:py-24">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.12),transparent_30%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.08),transparent_30%)]" />
-      <div className="px-[110px]">
+      <div className="px-[70px]">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
