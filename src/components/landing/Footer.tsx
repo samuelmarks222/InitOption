@@ -144,7 +144,7 @@ const Footer = ({ content }: FooterProps) => {
                 className="mb-5"
                 imageClassName="h-12 sm:h-14"
               />
-              <p className="max-w-xl font-copy text-sm leading-7 text-white/72 sm:text-base">
+              <p className="max-w-xl font-copy text-sm leading-7 text-white/85 sm:text-base">
                 {websiteContent.footer.description}
               </p>
             </div>
@@ -159,7 +159,7 @@ const Footer = ({ content }: FooterProps) => {
                       </div>
                     ) : null}
                     {socialLinks.subtitle?.trim() ? (
-                      <p className="mt-2 max-w-md font-copy text-sm leading-6 text-white/60 lg:ml-auto">
+                      <p className="mt-2 max-w-md font-copy text-sm leading-6 text-white/85 lg:ml-auto">
                         {socialLinks.subtitle}
                       </p>
                     ) : null}
@@ -195,7 +195,7 @@ const Footer = ({ content }: FooterProps) => {
                 <h4 className="font-display text-[28px] font-bold text-white sm:text-[32px] lg:text-[20px]">
                   {group.title}
                 </h4>
-                <ul className="mt-5 space-y-4 font-copy text-[15px] leading-7 text-white/72 sm:text-base">
+                <ul className="mt-5 space-y-4 font-copy text-[15px] leading-7 text-white/85 sm:text-base">
                   {group.items.map((item) => (
                     <li key={item.label}>
                       {"to" in item ? (
@@ -217,7 +217,7 @@ const Footer = ({ content }: FooterProps) => {
               <h4 className="font-display text-[28px] font-bold text-white sm:text-[32px] lg:text-[20px]">
                 Risk Notifications
               </h4>
-              <p className="mt-5 max-w-3xl font-copy text-[15px] leading-8 text-white/72 sm:text-base">
+              <p className="mt-5 max-w-3xl font-copy text-[15px] leading-8 text-white/85 sm:text-base">
                 {websiteContent.footer.riskWarning}
               </p>
               <Link
@@ -229,7 +229,7 @@ const Footer = ({ content }: FooterProps) => {
             </div>
           </div>
 
-          <div className="border-t border-white/8 pt-6 text-center font-copy text-xs text-white/50 sm:text-sm">
+          <div className="border-t border-white/8 pt-6 text-center font-copy text-xs text-white/70 sm:text-sm">
             Copyright {new Date().getFullYear()} {platformName}. All rights reserved.
           </div>
         </div>
