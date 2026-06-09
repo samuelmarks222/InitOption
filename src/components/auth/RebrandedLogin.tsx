@@ -42,8 +42,9 @@ const RebrandedLogin = () => {
 
             <h1 className="mt-6 text-center text-2xl font-extrabold text-[#0f1724]">Sign In</h1>
             <p className="mt-2 text-center text-sm text-[#6b7280]">Sign in to access your trading dashboard</p>
-            <div className="mt-6 text-center text-sm">
-              <Link to="/login" className="text-[#0f72f0] hover:underline">Back to Sign In</Link>
+            <div className="mt-6 text-center text-sm text-[#6b7280]">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-[#0f72f0] font-semibold hover:underline">Sign Up</Link>
             </div>
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
@@ -86,6 +87,11 @@ const RebrandedLogin = () => {
                 {loading ? "Signing In..." : "SIGN IN"}
               </Button>
             </form>
+
+            <div className="mt-4 text-center text-sm text-[#6b7280]">
+              New to Init Option?{' '}
+              <Link to="/register" className="text-[#0f72f0] font-semibold hover:underline">Create an account</Link>
+            </div>
 
             <div className="mt-6 text-center text-sm text-[#9aa3b2]">Or login with</div>
 
