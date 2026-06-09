@@ -134,7 +134,7 @@ const Footer = ({ content }: FooterProps) => {
   return (
     <footer className="relative overflow-hidden border-t border-white/8 bg-[#1c1f2d] py-12 sm:py-16">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.06),transparent_24%)]" />
-      <div className="relative px-4">
+      <div className="relative px-[110px]">
         <div className="flex flex-col gap-10">
           <div className="flex flex-col gap-8 border-b border-white/8 pb-10 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-xl">

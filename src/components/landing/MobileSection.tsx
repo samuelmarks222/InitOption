@@ -19,7 +19,7 @@ const MobileSection = () => {
   return (
     <section className="relative overflow-hidden bg-[#f5f7fa] py-16 sm:py-24">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(28,129,248,0.05),transparent_20%),radial-gradient(circle_at_82%_18%,rgba(102,126,234,0.04),transparent_20%)]" />
-      <div className="px-4">
+      <div className="px-[110px]">
         <div className="flex flex-col items-center gap-8 sm:gap-12 lg:flex-row">
           <motion.div
             initial={{ opacity: 0, x: -40 }}

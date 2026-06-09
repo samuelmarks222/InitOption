@@ -13,7 +13,7 @@ const MarketTicker = () => {
   return (
     <section id="markets" className="relative overflow-hidden bg-[#f5f6fa] py-4 sm:py-5">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(28,129,248,0.04),transparent_24%),radial-gradient(circle_at_80%_50%,rgba(255,255,255,0.04),transparent_24%)]" />
-      <div className="relative px-4">
+      <div className="relative px-[110px]">
         <div className="overflow-hidden rounded-[20px] border border-[#e5e7eb] bg-white px-3 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.04)] sm:rounded-[24px] sm:px-6 sm:py-4">
           <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide sm:gap-6">
             <div className="shrink-0">

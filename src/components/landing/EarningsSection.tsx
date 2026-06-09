@@ -14,7 +14,7 @@ const EarningsSection = () => {
   return (
     <section className="relative overflow-hidden bg-[#faf8f5] py-20 sm:py-24">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(245,158,11,0.04),transparent_26%)]" />
-      <div className="px-4">
+      <div className="px-[110px]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

@@ -18,7 +18,7 @@ const FAQSection = () => {
   return (
     <section id="faq" className="relative overflow-hidden bg-white py-20 sm:py-24">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.03),transparent_24%)]" />
-      <div className="relative z-10 px-4">
+      <div className="relative z-10 px-[110px]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
