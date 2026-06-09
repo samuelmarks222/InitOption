@@ -51,7 +51,7 @@ export const SiteLogo = ({
       ) : (
         <div
           className={cn(
-            "flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0ea5e9,#16a34a)] text-sm font-black tracking-[0.14em] text-white shadow-[0_18px_30px_rgba(11,92,148,0.28)]",
+            "flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0ea5e9,#1c81f8)] text-sm font-black tracking-[0.14em] text-white shadow-[0_18px_30px_rgba(28,129,248,0.28)]",
             markClassName,
           )}
         >
