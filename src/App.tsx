@@ -18,6 +18,7 @@ const queryClient = new QueryClient();
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
+const Forgot = lazy(() => import("./pages/Forgot"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PublicInfoPage = lazy(() => import("./pages/PublicInfoPage"));
@@ -147,6 +148,7 @@ const App = () => {
                         />
                         <Route path="/login" element={withRouteSuspense(<Login />)} />
                         <Route path="/register" element={withRouteSuspense(<Register />)} />
+                        <Route path="/forgot" element={withRouteSuspense(<Forgot />)} />
                         <Route path="/auth/callback" element={withRouteSuspense(<AuthCallback />)} />
                         <Route path="/dashboard" element={withTradingRoute(<Dashboard />)} />
                         <Route path="/trade" element={withTradingRoute(<Trade />)} />
