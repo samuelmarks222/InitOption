@@ -90,13 +90,26 @@ const GuideMediaAdmin = () => {
   const loadData = async () => {
     try {
       setLoading(true);
+      
+      // Check user authentication and role
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        throw new Error("Not authenticated. Please log in.");
+      }
+
       const [{ data: guidesData, error: guidesError }, { data: mediaData, error: mediaError }] = await Promise.all([
         supabase.from("guides").select("id,title,slug,category,is_published").is("deleted_at", null).order("order_index", { ascending: true }),
         supabase.from("guide_media").select("*").order("created_at", { ascending: false }),
       ]);
 
-      if (guidesError) throw guidesError;
-      if (mediaError) throw mediaError;
+      if (guidesError) {
+        console.error("Guides query error:", guidesError);
+        throw new Error(`Failed to load guides: ${guidesError.message}`);
+      }
+      if (mediaError) {
+        console.error("Media query error:", mediaError);
+        throw new Error(`Failed to load media: ${mediaError.message}`);
+      }
 
       setGuides(guidesData || []);
       setGuideMedia(mediaData || []);
@@ -104,8 +117,9 @@ const GuideMediaAdmin = () => {
         setSelectedGuideId(guidesData[0].id);
       }
     } catch (error) {
-      console.error("Failed to load guide media data", error);
-      toast({ title: "Error", description: "Failed to load guide media data", variant: "destructive" });
+      const errorMessage = error instanceof Error ? error.message : "Failed to load guide media data";
+      console.error("Failed to load guide media data:", errorMessage, error);
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     } finally {
       setLoading(false);
     }
