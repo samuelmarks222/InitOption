@@ -329,22 +329,24 @@ const GuideMediaAdmin = () => {
         </aside>
 
         <section className="space-y-6">
+          {/* Section Selector and Upload Area */}
           <div className="rounded-xl border border-[#2a2f42] bg-[#11151f] p-6">
-            <h2 className="text-xl font-bold text-white">Quick upload tools</h2>
-            <p className="mt-1 text-sm text-gray-400">Upload images and videos for this guide. Each image and video is kept separate and associated only with this tutorial.</p>
-
-            <div className="mt-6 space-y-6">
-              <div className="rounded-xl border border-dashed border-[#2a2f42] bg-[#171c29] p-4">
-                <div className="grid gap-3 lg:grid-cols-[1.7fr_1fr]">
+            <h2 className="text-xl font-bold text-white mb-4">Section Management</h2>
+            
+            <div className="space-y-6">
+              {/* Create or Select Section */}
+              <div className="rounded-xl border border-[#2a2f42] bg-[#171c29] p-5">
+                <div className="grid gap-4 lg:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-semibold text-white">Guide section</label>
+                    <label className="block text-sm font-semibold text-white mb-2">Select Content Section</label>
+                    <p className="text-xs text-gray-400 mb-3">Choose which section this media belongs to</p>
                     <select
                       value={selectedSectionId}
                       onChange={(e) => setSelectedSectionId(e.target.value)}
                       disabled={!selectedGuideId}
-                      className="mt-2 w-full rounded-lg border border-[#2a2f42] bg-[#0e1117] px-4 py-2 text-white focus:border-[#00C076] focus:outline-none"
+                      className="w-full rounded-lg border border-[#00C076]/30 bg-[#0e1117] px-4 py-3 text-white focus:border-[#00C076] focus:outline-none"
                     >
-                      <option value="">Unassigned / General</option>
+                      <option value="">Unassigned / General Section</option>
                       {guideSections.map((section) => (
                         <option key={section.id} value={section.id} className="bg-[#1a1e2b]">
                           {section.section_title || `Section ${section.section_order + 1}`}
@@ -352,84 +354,120 @@ const GuideMediaAdmin = () => {
                       ))}
                     </select>
                   </div>
-                  <div className="grid gap-2">
-                    <label className="block text-sm font-semibold text-white">Create section</label>
-                    <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                  <div>
+                    <label className="block text-sm font-semibold text-white mb-2">Create New Section</label>
+                    <p className="text-xs text-gray-400 mb-3">Add a new section before uploading media</p>
+                    <div className="flex gap-2">
                       <input
                         value={newSectionTitle}
                         onChange={(e) => setNewSectionTitle(e.target.value)}
-                        placeholder="New section title"
+                        placeholder="e.g. Getting Started, Advanced Trading"
                         disabled={!selectedGuideId}
-                        className="rounded-lg border border-[#2a2f42] bg-[#0e1117] px-4 py-2 text-white focus:border-[#00C076] focus:outline-none"
+                        className="flex-1 rounded-lg border border-[#2a2f42] bg-[#0e1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-[#00C076] focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => void handleCreateSection()}
                         disabled={!selectedGuideId || uploading}
-                        className="rounded-lg bg-[#00C076] px-4 py-2 font-semibold text-white hover:bg-[#00a85e] disabled:opacity-50"
+                        className="rounded-lg bg-[#00C076] px-6 py-3 font-semibold text-white hover:bg-[#00a85e] disabled:opacity-50 transition whitespace-nowrap"
                       >
-                        Add
+                        Create
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
-              {/* Multiple Image Upload Slots */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#00C076]">Guide Images</h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {[0, 1, 2, 3].map((index) => (
-                    <label key={`image-${index}`} className="rounded-xl border border-dashed border-[#2a2f42] bg-[#171c29] p-5 transition hover:border-[#00C076] cursor-pointer">
-                      <div className="flex items-center gap-3 text-[#00C076]">
-                        <Image size={18} />
-                        <span className="font-semibold">Upload image {index + 1}</span>
-                      </div>
-                      <p className="mt-2 text-xs text-gray-500">This image will only be linked to this guide</p>
-                      <input type="file" accept="image/*" onChange={(e) => void handleUploadMedia(e, "image")} disabled={uploading || !selectedGuideId} className="mt-4 block w-full text-sm text-gray-300 file:mr-4 file:rounded-md file:border-0 file:bg-[#00C076] file:px-3 file:py-2 file:text-white" />
-                    </label>
-                  ))}
-                </div>
-              </div>
 
-              {/* Multiple Video Upload Slots */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#00C076]">Guide Videos</h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {[0, 1, 2].map((index) => (
-                    <label key={`video-${index}`} className="rounded-xl border border-dashed border-[#2a2f42] bg-[#171c29] p-5 transition hover:border-[#00C076] cursor-pointer">
-                      <div className="flex items-center gap-3 text-[#00C076]">
-                        <Video size={18} />
-                        <span className="font-semibold">Upload video {index + 1}</span>
-                      </div>
-                      <p className="mt-2 text-xs text-gray-500">This video will only be linked to this guide</p>
-                      <input type="file" accept="video/*" onChange={(e) => void handleUploadMedia(e, "video")} disabled={uploading || !selectedGuideId} className="mt-4 block w-full text-sm text-gray-300 file:mr-4 file:rounded-md file:border-0 file:bg-[#00C076] file:px-3 file:py-2 file:text-white" />
-                    </label>
-                  ))}
+              {/* Current Section Display */}
+              {selectedGuideId && (
+                <div className="rounded-lg bg-[#00C076]/5 border border-[#00C076]/20 p-4">
+                  <p className="text-sm text-white">
+                    <span className="font-semibold">Uploading to:</span>{" "}
+                    <span className="text-[#00C076]">
+                      {selectedSectionId
+                        ? guideSections.find((s) => s.id === selectedSectionId)?.section_title ||
+                          `Section ${guideSections.find((s) => s.id === selectedSectionId)?.section_order ?? 0}`
+                        : "General/Unassigned"}
+                    </span>
+                  </p>
                 </div>
-              </div>
+              )}
 
-              {/* YouTube Section */}
-              <div className="rounded-xl border border-[#2a2f42] bg-[#171c29] p-5">
-                <div className="flex items-center gap-2 text-[#00C076] mb-4">
-                  <LinkIcon size={16} />
-                  <h3 className="text-base font-semibold text-white">Add YouTube Videos</h3>
-                </div>
-                <p className="text-xs text-gray-400 mb-4">Add multiple YouTube videos - each stays linked only to this guide</p>
-                <div className="space-y-3">
-                  {[0, 1, 2].map((index) => (
-                    <div key={`youtube-${index}`} className="space-y-2">
-                      <p className="text-xs font-semibold text-gray-300">YouTube video {index + 1}</p>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <input value={index === 0 ? youtubeUrl : ""} onChange={(e) => index === 0 && setYoutubeUrl(e.target.value)} placeholder="YouTube URL or video ID" className="rounded-lg border border-[#2a2f42] bg-[#0e1117] px-4 py-2 text-white placeholder:text-gray-500 focus:border-[#00C076] focus:outline-none" />
-                        <input value={index === 0 ? videoTitle : ""} onChange={(e) => index === 0 && setVideoTitle(e.target.value)} placeholder="Video title (optional)" className="rounded-lg border border-[#2a2f42] bg-[#0e1117] px-4 py-2 text-white placeholder:text-gray-500 focus:border-[#00C076] focus:outline-none" />
-                      </div>
-                      {index === 0 && (
-                        <button onClick={() => void handleAddYoutubeVideo()} disabled={uploading || !selectedGuideId} className="mt-2 inline-flex items-center gap-2 rounded-lg bg-[#00C076] px-4 py-2 font-semibold text-white hover:bg-[#00a85e] disabled:opacity-50">
-                          <Upload size={16} /> {uploading ? "Adding..." : "Add YouTube video"}
-                        </button>
-                      )}
+              {/* Dynamic Upload Area for Selected Section */}
+              <div className="space-y-4">
+                <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                  <Upload size={18} className="text-[#00C076]" />
+                  Upload Media for This Section
+                </h3>
+
+                {/* Image Upload */}
+                <label className="block rounded-xl border-2 border-dashed border-[#2a2f42] bg-[#171c29] p-6 transition hover:border-[#00C076]/50 cursor-pointer">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="rounded-full bg-[#00C076]/10 p-3 mb-3">
+                      <Image size={24} className="text-[#00C076]" />
                     </div>
-                  ))}
+                    <p className="font-semibold text-white mb-1">Upload Image</p>
+                    <p className="text-xs text-gray-400">PNG, JPG, GIF up to 10MB</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => void handleUploadMedia(e, "image")}
+                    disabled={uploading || !selectedGuideId}
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Video Upload */}
+                <label className="block rounded-xl border-2 border-dashed border-[#2a2f42] bg-[#171c29] p-6 transition hover:border-[#00C076]/50 cursor-pointer">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="rounded-full bg-[#00C076]/10 p-3 mb-3">
+                      <Video size={24} className="text-[#00C076]" />
+                    </div>
+                    <p className="font-semibold text-white mb-1">Upload Video</p>
+                    <p className="text-xs text-gray-400">MP4, WebM up to 100MB</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => void handleUploadMedia(e, "video")}
+                    disabled={uploading || !selectedGuideId}
+                    className="hidden"
+                  />
+                </label>
+
+                {/* YouTube Video */}
+                <div className="rounded-xl border border-[#2a2f42] bg-[#171c29] p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="rounded-full bg-[#00C076]/10 p-3">
+                      <LinkIcon size={20} className="text-[#00C076]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">Add YouTube Video</p>
+                      <p className="text-xs text-gray-400">Embed YouTube links for this section</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <input
+                      value={youtubeUrl}
+                      onChange={(e) => setYoutubeUrl(e.target.value)}
+                      placeholder="Paste YouTube URL or video ID"
+                      className="w-full rounded-lg border border-[#2a2f42] bg-[#0e1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-[#00C076] focus:outline-none"
+                    />
+                    <input
+                      value={videoTitle}
+                      onChange={(e) => setVideoTitle(e.target.value)}
+                      placeholder="Video title (optional)"
+                      className="w-full rounded-lg border border-[#2a2f42] bg-[#0e1117] px-4 py-3 text-white placeholder:text-gray-500 focus:border-[#00C076] focus:outline-none"
+                    />
+                    <button
+                      onClick={() => void handleAddYoutubeVideo()}
+                      disabled={uploading || !selectedGuideId}
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#00C076] px-4 py-3 font-semibold text-white hover:bg-[#00a85e] disabled:opacity-50 transition"
+                    >
+                      <Upload size={16} /> {uploading ? "Adding..." : "Add YouTube Video"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
