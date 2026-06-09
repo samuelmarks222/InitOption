@@ -327,65 +327,6 @@ const readJsonStorage = <T,>(key: string, fallback: T): T => {
   }
 };
 
-const getAnnouncementPayout = (announcement: ChartSettlementAnnouncement) =>
-  announcement.totalPayout ?? announcement.profit;
-
-const getAnnouncementNetProfit = (announcement: ChartSettlementAnnouncement) =>
-  announcement.totalProfit ??
-  (announcement.status === "won" ? Math.max(0, announcement.profit - announcement.amount) : 0);
-
-const mergeChartSettlementAnnouncement = (
-  current: ChartSettlementAnnouncement | null | undefined,
-  incoming: ChartSettlementAnnouncement,
-): ChartSettlementAnnouncement => {
-  if (!current) {
-    return {
-      ...incoming,
-      closedCount: incoming.closedCount ?? 1,
-      totalPayout: getAnnouncementPayout(incoming),
-      totalProfit: getAnnouncementNetProfit(incoming),
-    };
-  }
-
-  const closedCount = (current.closedCount ?? 1) + (incoming.closedCount ?? 1);
-  const totalPayout = getAnnouncementPayout(current) + getAnnouncementPayout(incoming);
-  const totalProfit = getAnnouncementNetProfit(current) + getAnnouncementNetProfit(incoming);
-
-  return {
-    ...incoming,
-    id: `${current.id}_${incoming.id}_${Date.now()}`,
-    amount: current.amount + incoming.amount,
-    closedCount,
-    totalPayout,
-    totalProfit,
-    status: totalProfit > 0 ? "won" : "lost",
-  };
-};
-
-const mergeChartOrderAnnouncement = (
-  current: ChartOrderAnnouncement | null | undefined,
-  incoming: ChartOrderAnnouncement,
-): ChartOrderAnnouncement => {
-  if (!current) {
-    return {
-      ...incoming,
-      orderCount: incoming.orderCount ?? 1,
-      totalAmount: incoming.totalAmount ?? incoming.amount,
-      mixedDirections: incoming.mixedDirections ?? false,
-    };
-  }
-
-  return {
-    ...incoming,
-    id: `${current.id}_${incoming.id}_${Date.now()}`,
-    orderCount: (current.orderCount ?? 1) + (incoming.orderCount ?? 1),
-    totalAmount: (current.totalAmount ?? current.amount) + (incoming.totalAmount ?? incoming.amount),
-    mixedDirections:
-      Boolean(current.mixedDirections || incoming.mixedDirections) ||
-      current.direction !== incoming.direction,
-  };
-};
-
 const Trade = () => {
   const { profile, user } = useAuth();
   const {
@@ -418,7 +359,7 @@ const Trade = () => {
   const [selectedAssetSaved, setSelectedAssetSaved] = useState<TradeTabAsset | null>(null);
   const [liveChartPrices, setLiveChartPrices] = useState<Record<string, number>>({});
   const [chartLiveEdgeRequestKey, setChartLiveEdgeRequestKey] = useState(0);
-  const [chartOrderAnnouncements, setChartOrderAnnouncements] = useState<Record<string, ChartOrderAnnouncement | null>>({});
+  const [chartOrderAnnouncements, setChartOrderAnnouncements] = useState<ChartOrderAnnouncement[]>([]);
   const { getAsset } = useDynamicAssets();
 
   const dynamicSelectedAsset = getAsset(activeTabId);
@@ -537,7 +478,7 @@ const Trade = () => {
   const [demoBalance, setDemoBalance] = useState(DEFAULT_DEMO_BALANCE);
   const [demoActiveTrades, setDemoActiveTrades] = useState<ActiveTrade[]>([]);
   const [demoTradeHistory, setDemoTradeHistory] = useState<TradeHistoryEntry[]>([]);
-  const [chartSettlementAnnouncements, setChartSettlementAnnouncements] = useState<Record<string, ChartSettlementAnnouncement | null>>({});
+  const [chartSettlementAnnouncements, setChartSettlementAnnouncements] = useState<ChartSettlementAnnouncement[]>([]);
   const [mobileOverlay, setMobileOverlayRaw] = useState<string | null>(null);
   const setMobileOverlay = (v: string | null) => setMobileOverlayRaw(v);
 
@@ -614,46 +555,36 @@ const Trade = () => {
   }, [demoTradeHistory.length]);
 
   const showChartSettlementAnnouncement = useCallback((announcement: ChartSettlementAnnouncement) => {
-    setChartSettlementAnnouncements((current) => ({
-      ...current,
-      [announcement.assetSymbol]: mergeChartSettlementAnnouncement(current[announcement.assetSymbol], announcement),
-    }));
+    setChartSettlementAnnouncements((current) => [announcement, ...current]);
 
-    const existingTimer = settlementHideTimersRef.current[announcement.assetSymbol];
+    const existingTimer = settlementHideTimersRef.current[announcement.id];
     if (existingTimer) {
       window.clearTimeout(existingTimer);
     }
 
-    settlementHideTimersRef.current[announcement.assetSymbol] = window.setTimeout(() => {
-      setChartSettlementAnnouncements((current) => {
-        const nextState = { ...current };
-        delete nextState[announcement.assetSymbol];
-        return nextState;
-      });
+    settlementHideTimersRef.current[announcement.id] = window.setTimeout(() => {
+      setChartSettlementAnnouncements((current) =>
+        current.filter((currentAnnouncement) => currentAnnouncement.id !== announcement.id),
+      );
 
-      delete settlementHideTimersRef.current[announcement.assetSymbol];
+      delete settlementHideTimersRef.current[announcement.id];
     }, 3400);
   }, []);
 
   const showChartOrderAnnouncement = useCallback((announcement: ChartOrderAnnouncement) => {
-    setChartOrderAnnouncements((current) => ({
-      ...current,
-      [announcement.assetSymbol]: mergeChartOrderAnnouncement(current[announcement.assetSymbol], announcement),
-    }));
+    setChartOrderAnnouncements((current) => [announcement, ...current]);
 
-    const existingTimer = orderHideTimersRef.current[announcement.assetSymbol];
+    const existingTimer = orderHideTimersRef.current[announcement.id];
     if (existingTimer) {
       window.clearTimeout(existingTimer);
     }
 
-    orderHideTimersRef.current[announcement.assetSymbol] = window.setTimeout(() => {
-      setChartOrderAnnouncements((current) => {
-        const nextState = { ...current };
-        delete nextState[announcement.assetSymbol];
-        return nextState;
-      });
+    orderHideTimersRef.current[announcement.id] = window.setTimeout(() => {
+      setChartOrderAnnouncements((current) =>
+        current.filter((currentAnnouncement) => currentAnnouncement.id !== announcement.id),
+      );
 
-      delete orderHideTimersRef.current[announcement.assetSymbol];
+      delete orderHideTimersRef.current[announcement.id];
     }, 2200);
   }, []);
 
@@ -736,30 +667,24 @@ const Trade = () => {
       );
 
       if (settledTrades.length > 0) {
-        const latestSettledTrade = settledTrades[settledTrades.length - 1];
-        const totalPayout = settledTrades.reduce((sum, trade) => sum + Number(trade.profit ?? 0), 0);
-        const totalProfit = settledTrades.reduce(
-          (sum, trade) => sum + Math.max(0, Number(trade.profit ?? 0) - Number(trade.amount ?? 0)),
-          0,
-        );
         void playTradeCloseSound();
         if (creditedAmount > 0) {
           setDemoBalance((current) => current + creditedAmount);
         }
+        const settledHistory = [...settledTrades].reverse();
         setDemoTradeHistory((current) =>
-          filterRetainedTradeHistory([...settledTrades.reverse(), ...current]).slice(0, 50),
+          filterRetainedTradeHistory([...settledHistory, ...current]).slice(0, 50),
         );
-        showChartSettlementAnnouncement({
-          id: latestSettledTrade.id,
-          assetSymbol: latestSettledTrade.asset_symbol,
-          direction: latestSettledTrade.direction,
-          amount: latestSettledTrade.amount,
-          expirySeconds: latestSettledTrade.expiry_seconds,
-          profit: latestSettledTrade.profit ?? 0,
-          status: latestSettledTrade.status === "won" ? "won" : "lost",
-          closedCount: settledTrades.length,
-          totalPayout,
-          totalProfit,
+        settledTrades.forEach((settledTrade) => {
+          showChartSettlementAnnouncement({
+            id: settledTrade.id,
+            assetSymbol: settledTrade.asset_symbol,
+            direction: settledTrade.direction,
+            amount: settledTrade.amount,
+            expirySeconds: settledTrade.expiry_seconds,
+            profit: settledTrade.profit ?? 0,
+            status: settledTrade.status === "won" ? "won" : "lost",
+          });
         });
       }
     }, 100);
@@ -992,7 +917,7 @@ const Trade = () => {
 
       if (opened) {
         showChartOrderAnnouncement({
-          id: `order_${assetSymbol}_${Date.now()}`,
+          id: `order_${assetSymbol}_${Date.now()}_${crypto.randomUUID()}`,
           assetSymbol,
           direction,
           amount,
@@ -1073,7 +998,7 @@ const Trade = () => {
     ]);
 
     showChartOrderAnnouncement({
-      id: `demo_order_${assetSymbol}_${Date.now()}`,
+      id: `demo_order_${assetSymbol}_${Date.now()}_${crypto.randomUUID()}`,
       assetSymbol,
       direction,
       amount,
@@ -1415,8 +1340,12 @@ const Trade = () => {
                             compactPane={!isPrimaryPane}
                             miniOverlay={chartLayoutMode > 1 && isPrimaryPane}
                             liveEdgeRequestKey={`${chartAsset.symbol}:${chartLiveEdgeRequestKey}`}
-                            orderAnnouncement={chartOrderAnnouncements[chartAsset.symbol] ?? null}
-                            settlementAnnouncement={chartSettlementAnnouncements[chartAsset.symbol] ?? null}
+                            orderAnnouncements={chartOrderAnnouncements.filter(
+                              (announcement) => announcement.assetSymbol === chartAsset.symbol,
+                            )}
+                            settlementAnnouncements={chartSettlementAnnouncements.filter(
+                              (announcement) => announcement.assetSymbol === chartAsset.symbol,
+                            )}
                           />
                         </div>
                       );
@@ -1514,8 +1443,12 @@ const Trade = () => {
                       onToggleMobileHistory={() => setShowMobileHistory(true)}
                       mobileHistoryOpen={showMobileHistory}
                       liveEdgeRequestKey={`${selectedAsset.symbol}:${chartLiveEdgeRequestKey}`}
-                      orderAnnouncement={chartOrderAnnouncements[selectedAsset.symbol] ?? null}
-                      settlementAnnouncement={chartSettlementAnnouncements[selectedAsset.symbol] ?? null} />
+                      orderAnnouncements={chartOrderAnnouncements.filter(
+                        (announcement) => announcement.assetSymbol === selectedAsset.symbol,
+                      )}
+                      settlementAnnouncements={chartSettlementAnnouncements.filter(
+                        (announcement) => announcement.assetSymbol === selectedAsset.symbol,
+                      )} />
 
                     {/* Mobile Indicator and Drawing Panels */}
                     {showIndicatorsPanel && (
