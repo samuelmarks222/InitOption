@@ -783,7 +783,7 @@ const ClonePopupCard = ({
 }) => (
   <div
     className={cn(
-      "absolute left-[32px] rounded-[4px] border border-[#4b5268] bg-[#242a3c]/96 px-[14px] py-[11px] text-white shadow-[0_10px_22px_rgba(0,0,0,0.36)]",
+      "absolute left-[32px] rounded-[4px] border border-[#4b5268] bg-[#242a3c] px-[14px] py-[11px] text-white shadow-[0_10px_22px_rgba(0,0,0,0.36)]",
       className,
     )}
     style={{ top }}
