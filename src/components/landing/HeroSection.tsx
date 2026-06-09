@@ -10,12 +10,11 @@ const HeroSection = () => {
   const hero = websiteContent.hero;
 
   return (
-    <section className="relative overflow-hidden bg-[linear-gradient(170deg,#f5f0eb_0%,#f5f7fa_38%,#ffffff_65%,#ffffff_100%)] pt-16">
+    <section className="relative overflow-hidden bg-[#0f487c] pt-16">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute left-[8%] top-[10%] h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(28,129,248,0.1)_0%,transparent_70%)] blur-[100px]" />
-        <div className="absolute right-[4%] top-[35%] h-[320px] w-[320px] rounded-full bg-[radial-gradient(circle,rgba(102,126,234,0.08)_0%,transparent_70%)] blur-[90px]" />
-        <div className="absolute bottom-[10%] left-[40%] h-[200px] w-[200px] rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.06)_0%,transparent_70%)] blur-[80px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:78px_78px] opacity-[0.06]" />
+        <div className="absolute left-[8%] top-[10%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.07)_0%,transparent_70%)] blur-[120px]" />
+        <div className="absolute right-[4%] top-[35%] h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle,rgba(28,129,248,0.1)_0%,transparent_70%)] blur-[100px]" />
+        <div className="absolute bottom-[10%] left-[40%] h-[240px] w-[240px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.04)_0%,transparent_70%)] blur-[80px]" />
       </div>
 
       <div className="container relative mx-auto px-4 pb-12 pt-10 text-center sm:pb-16 sm:pt-20 lg:pb-24 lg:pt-32">
@@ -23,7 +22,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.08 }}
-          className="mx-auto max-w-5xl font-display text-[2.2rem] font-bold leading-[1.06] tracking-tight text-[#0f1419] sm:text-5xl sm:leading-[1.02] lg:text-7xl"
+          className="mx-auto max-w-5xl font-display text-[2.2rem] font-bold leading-[1.06] tracking-tight text-white sm:text-5xl sm:leading-[1.02] lg:text-7xl"
         >
           {hero.title}
         </motion.h1>
@@ -32,7 +31,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="mx-auto mt-4 max-w-3xl font-copy text-[15px] leading-7 text-[#536471] sm:mt-5 sm:text-xl sm:leading-8"
+          className="mx-auto mt-4 max-w-3xl font-copy text-[15px] leading-7 text-white/72 sm:mt-5 sm:text-xl sm:leading-8"
         >
           {hero.description}
         </motion.p>
@@ -58,7 +57,7 @@ const HeroSection = () => {
           <Button
             variant="outline"
             size="lg"
-            className="group h-11 w-full max-w-sm rounded-[12px] border border-[#e5e7eb] bg-white px-6 font-copy text-[11px] font-semibold text-[#536471] shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm transition-all duration-300 hover:border-[#1c81f8]/30 hover:bg-[#f0f6ff] hover:text-[#1c81f8] sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
+            className="group h-11 w-full max-w-sm rounded-[12px] border border-white/20 bg-white/10 px-6 font-copy text-[11px] font-semibold text-white/82 backdrop-blur-sm transition-all duration-300 hover:border-white/40 hover:bg-white/20 hover:text-white sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
             asChild
           >
             <Link to="/login">
@@ -77,7 +76,7 @@ const HeroSection = () => {
           {hero.trustItems.map((item, i) => (
             <div
               key={item}
-              className="rounded-full border border-[#e5e7eb] bg-white px-3 py-1.5 font-copy text-xs font-medium text-[#536471] backdrop-blur-sm transition-all duration-300 hover:border-[#1c81f8]/30 hover:bg-[#f0f6ff] hover:text-[#0f1419] sm:px-4 sm:py-2 sm:text-sm"
+              className="rounded-full border border-white/16 bg-white/8 px-3 py-1.5 font-copy text-xs font-medium text-white/76 backdrop-blur-sm transition-all duration-300 hover:border-white/30 hover:bg-white/14 hover:text-white sm:px-4 sm:py-2 sm:text-sm"
               style={{ transitionDelay: `${i * 40}ms` }}
             >
               {item}
@@ -91,8 +90,8 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.55 }}
           className="relative mt-8 sm:mt-14"
         >
-          <div className="absolute left-[10%] top-[8%] hidden h-32 w-32 rounded-full bg-[#1c81f8]/14 blur-[90px] lg:block" />
-          <div className="absolute bottom-[8%] right-[10%] hidden h-36 w-36 rounded-full bg-[#1c81f8]/14 blur-[100px] lg:block" />
+          <div className="absolute left-[10%] top-[8%] hidden h-32 w-32 rounded-full bg-white/8 blur-[90px] lg:block" />
+          <div className="absolute bottom-[8%] right-[10%] hidden h-36 w-36 rounded-full bg-white/8 blur-[100px] lg:block" />
           <div className="relative mx-auto max-w-6xl">
             <AnimatedTradingChart />
           </div>
