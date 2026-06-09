@@ -189,7 +189,7 @@ const WhatWeOfferSection = () => {
     <section className="relative overflow-hidden bg-[#f5f7fa] py-16 sm:py-24">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(28,129,248,0.05),transparent_24%)]" />
 
-      <div className="container relative mx-auto px-4">
+      <div className="relative px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
