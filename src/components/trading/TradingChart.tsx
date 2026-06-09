@@ -502,8 +502,9 @@ const getTargetVisibleBars = (containerWidth: number, timeframe: SupportedChartT
   const widthBasedBars = Math.floor(safeWidth / Math.max(1, targetSpacing));
   const cappedBars =
     typeof maximumBars === "number" ? Math.min(widthBasedBars, maximumBars) : widthBasedBars;
+  const responsiveMinimum = Math.max(12, Math.round(minimumBars * Math.min(1, safeWidth / 1440)));
 
-  return Math.max(minimumBars, cappedBars);
+  return Math.max(responsiveMinimum, cappedBars);
 };
 
 const getMaxReadableZoomBars = (
