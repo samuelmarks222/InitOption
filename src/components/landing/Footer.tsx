@@ -119,6 +119,7 @@ const Footer = ({ content }: FooterProps) => {
       title: "Regulation",
       items: [
         { label: "Terms and Conditions", to: "/terms" },
+        { label: "Information Disclosure Policy", to: "/information-disclosure" },
         { label: "Privacy Policy", to: "/privacy" },
         { label: "Risk disclaimer", to: "/risk-disclaimer" },
       ],

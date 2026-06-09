@@ -23,6 +23,7 @@ const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PublicInfoPage = lazy(() => import("./pages/PublicInfoPage"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
+const InformationDisclosure = lazy(() => import("./pages/InformationDisclosure"));
 const PublicTournamentDetailPage = lazy(() => import("./pages/PublicTournamentDetailPage"));
 const PublicTournamentsPage = lazy(() => import("./pages/PublicTournamentsPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
@@ -135,6 +136,7 @@ const App = () => {
                         <Route path="/why-choose-init-option" element={withRouteSuspense(<PublicInfoPage pageKey="why-choose-init-option" />)} />
                         <Route path="/faq" element={withRouteSuspense(<PublicInfoPage pageKey="faq" />)} />
                         <Route path="/terms" element={withRouteSuspense(<TermsAndConditions />)} />
+                        <Route path="/information-disclosure" element={withRouteSuspense(<InformationDisclosure />)} />
                         <Route path="/privacy" element={withRouteSuspense(<PublicInfoPage pageKey="privacy" />)} />
                         <Route path="/aml-kyc" element={withRouteSuspense(<PublicInfoPage pageKey="aml-kyc" />)} />
                         <Route path="/payment-policy" element={withRouteSuspense(<PublicInfoPage pageKey="payment-policy" />)} />
