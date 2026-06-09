@@ -12,8 +12,9 @@ const HeroSection = () => {
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(180deg,#1c1f2d_0%,#1e2330_38%,#1e2330_100%)] pt-16">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-0 h-[620px] w-[860px] -translate-x-1/2 rounded-full bg-[#1c81f8]/10 blur-[140px]" />
+        <div className="absolute left-1/2 top-0 h-[620px] w-[860px] -translate-x-1/2 rounded-full bg-[#1c81f8]/12 blur-[160px]" />
         <div className="absolute bottom-0 left-[4%] h-[360px] w-[360px] rounded-full bg-[#1c81f8]/8 blur-[120px]" />
+        <div className="absolute right-[8%] top-[45%] h-[240px] w-[240px] rounded-full bg-[#2563eb]/6 blur-[100px]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:78px_78px] opacity-30" />
       </div>
 
@@ -44,22 +45,24 @@ const HeroSection = () => {
         >
           <Button
             size="lg"
-            className="h-11 w-full max-w-sm rounded-[12px] border border-[#1c81f8] bg-[#1c81f8] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_18px_36px_rgba(28,129,248,0.22)] hover:bg-[#1c81f8] hover:brightness-[1.03] sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
+            className="group relative h-11 w-full max-w-sm rounded-[12px] border border-[#1c81f8] bg-[#1c81f8] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_32px_rgba(28,129,248,0.3)] transition-all duration-300 hover:shadow-[0_8px_48px_rgba(28,129,248,0.45)] hover:brightness-110 sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
             asChild
           >
             <Link to="/register">
-              {hero.primaryButtonLabel}
-              <ArrowRight size={18} />
+              <span className="relative z-10 flex items-center gap-2">
+                {hero.primaryButtonLabel}
+                <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
+              </span>
             </Link>
           </Button>
           <Button
             variant="outline"
             size="lg"
-            className="h-11 w-full max-w-sm rounded-[12px] border-white/14 bg-[#1e2330] px-6 font-copy text-[11px] font-semibold text-white hover:bg-[#1e2330] sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
+            className="group h-11 w-full max-w-sm rounded-[12px] border-white/14 bg-white/[0.04] px-6 font-copy text-[11px] font-semibold text-white/82 backdrop-blur-sm transition-all duration-300 hover:border-white/30 hover:bg-white/[0.08] hover:text-white sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
             asChild
           >
             <Link to="/login">
-              <Play size={16} />
+              <Play size={16} className="transition-transform duration-300 group-hover:scale-110" />
               {hero.secondaryButtonLabel}
             </Link>
           </Button>
@@ -71,10 +74,11 @@ const HeroSection = () => {
           transition={{ duration: 0.5, delay: 0.44 }}
           className="mt-6 flex flex-wrap items-center justify-center gap-2.5 sm:mt-8 sm:gap-3"
         >
-          {hero.trustItems.map((item) => (
+          {hero.trustItems.map((item, i) => (
             <div
               key={item}
-              className="rounded-full border border-white/12 bg-[#1e2330] px-3 py-1.5 font-copy text-xs font-medium text-white/82 backdrop-blur sm:px-4 sm:py-2 sm:text-sm"
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 font-copy text-xs font-medium text-white/72 backdrop-blur-sm transition-all duration-300 hover:border-[#1c81f8]/30 hover:bg-[#1c81f8]/6 hover:text-white/92 sm:px-4 sm:py-2 sm:text-sm"
+              style={{ transitionDelay: `${i * 40}ms` }}
             >
               {item}
             </div>

@@ -17,7 +17,7 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/8 bg-[rgba(28,31,45,0.9)] shadow-[0_18px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl">
+    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/8 bg-[rgba(28,31,45,0.72)] shadow-[0_18px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl">
       <div className="container mx-auto flex h-16 items-center justify-between gap-2 px-3 sm:h-20 sm:gap-3 sm:px-4">
         <Link to="/" className="shrink-0 flex items-center gap-2">
           <img src={logo} alt="Init Option" className="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11" />
@@ -28,7 +28,7 @@ const Navbar = () => {
             <a
               key={link.label}
               href={link.href}
-              className="font-copy text-base font-medium text-white/78 transition-colors hover:text-[#1c81f8] lg:text-lg"
+              className="relative font-copy text-base font-medium text-white/78 transition-colors hover:text-white lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[#1c81f8] after:transition-all after:duration-300 hover:after:w-full"
             >
               {link.label}
             </a>
@@ -40,14 +40,14 @@ const Navbar = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 rounded-full border border-white/14 bg-[#1e2330] px-2.5 text-xs font-medium text-[#ffffff] hover:bg-[#1e2330] hover:text-[#ffffff] min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
+              className="h-8 rounded-full border border-white/14 bg-white/[0.04] px-2.5 text-xs font-medium text-white/82 transition-all hover:bg-white/[0.08] hover:text-white min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
               asChild
             >
               <Link to="/login">Login</Link>
             </Button>
             <Button
               size="sm"
-              className="h-8 rounded-full border border-[#1c81f8] bg-[#1c81f8] px-2.5 text-xs font-semibold text-[#ffffff] shadow-[0_16px_32px_rgba(28,129,248,0.2)] hover:bg-[#1c81f8] min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
+              className="h-8 rounded-full border border-[#1c81f8] bg-[#1c81f8] px-2.5 text-xs font-semibold text-[#ffffff] shadow-[0_8px_32px_rgba(28,129,248,0.35)] transition-all duration-300 hover:shadow-[0_8px_40px_rgba(28,129,248,0.5)] hover:brightness-110 min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
               asChild
             >
               <Link to="/register">Sign Up</Link>

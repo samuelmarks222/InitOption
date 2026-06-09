@@ -145,7 +145,7 @@ const StepsSection = () => {
             <motion.article
               key={`${step.title}-${index}`}
               variants={cardVariant}
-              className="landing-lift-card relative overflow-hidden rounded-[30px] border border-white/8 bg-[#1e2330] px-5 pb-6 pt-5 text-center shadow-[0_26px_60px_rgba(0,0,0,0.22)] sm:px-6"
+              className="landing-lift-card group relative overflow-hidden rounded-[30px] border border-white/8 bg-[#1e2330] px-5 pb-6 pt-5 text-center shadow-[0_26px_60px_rgba(0,0,0,0.22)] transition-all duration-500 hover:-translate-y-1 hover:border-[#1c81f8]/20 hover:shadow-[0_26px_60px_rgba(28,129,248,0.08)] sm:px-6"
             >
               <div className="absolute inset-x-8 top-6 h-16 rounded-full bg-[#1c81f8]/8 blur-3xl" />
               <div className="relative mx-auto h-40 w-full max-w-[220px]">
@@ -159,7 +159,7 @@ const StepsSection = () => {
                 {step.text}
               </p>
 
-              <div className="mt-5 inline-flex rounded-full border border-[#1c81f8] bg-transparent px-4 py-2 font-copy text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#1c81f8]">
+              <div className="mt-5 inline-flex rounded-full border border-[#1c81f8]/50 bg-[#1c81f8]/6 px-4 py-2 font-copy text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#1c81f8] transition-all duration-300 group-hover:border-[#1c81f8] group-hover:bg-[#1c81f8]/10">
                 {step.cta}
               </div>
             </motion.article>
@@ -172,14 +172,14 @@ const StepsSection = () => {
           viewport={{ once: true }}
           className="mt-10 text-center sm:mt-12"
         >
-          <Button
+            <Button
             size="lg"
-            className="h-12 rounded-[10px] border border-[#1c81f8] bg-[#1c81f8] px-8 font-copy text-sm font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_18px_36px_rgba(28,129,248,0.22)] hover:bg-[#1c81f8] hover:brightness-[1.03]"
+            className="group h-12 rounded-[10px] border border-[#1c81f8] bg-[#1c81f8] px-8 font-copy text-sm font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_32px_rgba(28,129,248,0.3)] transition-all duration-300 hover:shadow-[0_8px_48px_rgba(28,129,248,0.45)] hover:brightness-110"
             asChild
           >
-            <Link to="/register">
+            <Link to="/register" className="flex items-center gap-2">
               Start Trading
-              <ArrowRight size={18} />
+              <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </Button>
         </motion.div>

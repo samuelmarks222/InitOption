@@ -215,7 +215,7 @@ const WhatWeOfferSection = () => {
         >
           <Button
             size="lg"
-            className="h-11 rounded-[10px] border border-[#1c81f8] bg-[#1c81f8] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_18px_36px_rgba(28,129,248,0.22)] hover:bg-[#1c81f8] hover:brightness-[1.03] sm:h-12 sm:px-8 sm:text-sm"
+            className="group h-11 rounded-[10px] border border-[#1c81f8] bg-[#1c81f8] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_32px_rgba(28,129,248,0.3)] transition-all duration-300 hover:shadow-[0_8px_48px_rgba(28,129,248,0.45)] hover:brightness-110 sm:h-12 sm:px-8 sm:text-sm"
             asChild
           >
             <Link to="/register">Start Trading</Link>
@@ -309,7 +309,7 @@ const WhatWeOfferSection = () => {
                     </div>
 
                     <Button
-                      className="mt-4 h-10 rounded-[10px] border border-[#1c81f8] bg-[#1c81f8] font-copy text-[11px] font-extrabold uppercase tracking-[0.06em] text-[#ffffff] hover:bg-[#1c81f8] hover:brightness-[1.03] sm:mt-6 sm:h-11 sm:text-sm"
+                      className="group mt-4 h-10 rounded-[10px] border border-[#1c81f8] bg-[#1c81f8] font-copy text-[11px] font-extrabold uppercase tracking-[0.06em] text-[#ffffff] shadow-[0_4px_20px_rgba(28,129,248,0.25)] transition-all duration-300 hover:shadow-[0_8px_32px_rgba(28,129,248,0.4)] hover:brightness-110 sm:mt-6 sm:h-11 sm:text-sm"
                       asChild
                     >
                       <Link to="/register">Trade</Link>

@@ -48,10 +48,10 @@ const MobileSection = () => {
               ))}
             </ul>
 
-            <Button className="mt-6 w-full gap-2 border border-[#1c81f8] bg-[#1c81f8] font-semibold text-[#ffffff] shadow-lg shadow-[rgba(28,129,248,0.2)] hover:bg-[#1c81f8] sm:mt-8 sm:w-auto" size="lg" asChild>
-              <Link to="/register">
+            <Button className="group mt-6 w-full gap-2 border border-[#1c81f8] bg-[#1c81f8] font-semibold text-[#ffffff] shadow-[0_8px_24px_rgba(28,129,248,0.25)] transition-all duration-300 hover:shadow-[0_8px_40px_rgba(28,129,248,0.4)] hover:brightness-110 sm:mt-8 sm:w-auto" size="lg" asChild>
+              <Link to="/register" className="flex items-center gap-2">
                 Open live account
-                <ArrowRight size={18} />
+                <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </Button>
           </motion.div>

@@ -26,10 +26,10 @@ const CTASection = () => {
             </h2>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">{footer.description}</p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button size="lg" className="gap-2 border border-[#1c81f8] bg-[#1c81f8] px-8 text-base font-semibold text-[#ffffff] shadow-lg shadow-primary/25 hover:bg-[#1c81f8]" asChild>
-                <Link to="/register">
+              <Button size="lg" className="group gap-2 border border-[#1c81f8] bg-[#1c81f8] px-8 text-base font-semibold text-[#ffffff] shadow-[0_8px_32px_rgba(28,129,248,0.3)] transition-all duration-300 hover:shadow-[0_8px_48px_rgba(28,129,248,0.45)] hover:brightness-110" asChild>
+                <Link to="/register" className="flex items-center gap-2">
                   {finalCta.primaryButtonLabel}
-                  <ArrowRight size={18} />
+                  <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="border-white/14 bg-[#1c1f2d] px-8 text-base text-[#ffffff] hover:bg-[#1c1f2d]" asChild>

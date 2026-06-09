@@ -198,11 +198,11 @@ const Footer = ({ content }: FooterProps) => {
                   {group.items.map((item) => (
                     <li key={item.label}>
                       {"to" in item ? (
-                        <Link to={item.to} className="transition-colors hover:text-[#1c81f8]">
+                        <Link to={item.to} className="relative inline-block transition-colors duration-200 hover:text-[#1c81f8] after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-[#1c81f8] after:transition-all after:duration-300 hover:after:w-full">
                           {item.label}
                         </Link>
                       ) : (
-                        <a href={item.href} className="transition-colors hover:text-[#1c81f8]">
+                        <a href={item.href} className="relative inline-block transition-colors duration-200 hover:text-[#1c81f8] after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-[#1c81f8] after:transition-all after:duration-300 hover:after:w-full">
                           {item.label}
                         </a>
                       )}
