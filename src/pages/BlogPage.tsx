@@ -138,7 +138,7 @@ const BlogPage = () => {
       <main>
         <section className="relative overflow-hidden border-b border-border/50 bg-background pb-16 pt-24 sm:pb-20 sm:pt-28">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,196,118,0.14),transparent_34%),radial-gradient(circle_at_78%_18%,rgba(255,255,255,0.06),transparent_24%)]" />
-          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="relative px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl">
               <div className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Blog</div>
               <h1 className="mt-5 text-4xl font-bold leading-[1.05] text-foreground sm:text-5xl lg:text-6xl">
@@ -152,7 +152,7 @@ const BlogPage = () => {
         </section>
 
         <section className="bg-background py-16 sm:py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-8">
             {loading ? (
               <div className="text-sm text-muted-foreground">Loading blog posts...</div>
             ) : error ? (
@@ -160,7 +160,7 @@ const BlogPage = () => {
                 The blog could not be loaded right now. {error}
               </div>
             ) : (
-              <div className="grid gap-8 xl:grid-cols-[minmax(0,0.72fr)_minmax(320px,0.28fr)]">
+              <div className="grid gap-8 xl:grid-cols-[minmax(0,0.75fr)_minmax(300px,0.25fr)]">
                 <div className="space-y-6">
                   <div className={`${CARD_CLASS} p-5`}>
                     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
