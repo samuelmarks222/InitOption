@@ -46,6 +46,7 @@ const TradeManagement = lazy(() => import("./pages/admin/TradeManagement"));
 const AssetManagement = lazy(() => import("./pages/admin/AssetManagement"));
 const PlatformSettings = lazy(() => import("./pages/admin/PlatformSettings"));
 const PromoCodes = lazy(() => import("./pages/admin/PromoCodes"));
+const PromoMaterials = lazy(() => import("./pages/admin/PromoMaterials"));
 const RiskManagement = lazy(() => import("./pages/admin/RiskManagement"));
 const Reports = lazy(() => import("./pages/admin/Reports"));
 const Notifications = lazy(() => import("./pages/admin/Notifications"));
@@ -171,6 +172,7 @@ const App = () => {
                           <Route path="finance" element={withRouteSuspense(<Finance />)} />
                           <Route path="assets" element={withRouteSuspense(<AssetManagement />)} />
                           <Route path="settings" element={withRouteSuspense(<PlatformSettings />)} />
+                          <Route path="promo-materials" element={withRouteSuspense(<PromoMaterials />)} />
                           <Route path="promos" element={withRouteSuspense(<PromoCodes />)} />
                           <Route path="risk" element={withRouteSuspense(<RiskManagement />)} />
                           <Route path="reports" element={withRouteSuspense(<Reports />)} />

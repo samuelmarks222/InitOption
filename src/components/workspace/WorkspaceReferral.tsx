@@ -3,7 +3,6 @@ import {
   CheckCircle2,
   Copy,
   FileText,
-  Film,
   ImageIcon,
   LockKeyhole,
   QrCode,
@@ -26,7 +25,7 @@ import type { WorkspaceModule } from "../navigation/NavigationSidebar";
 type ReferralTab = "trading" | "profile" | "loyalty" | "security" | "history" | "friends";
 type ShareMode = "link" | "code";
 type DetailMode = "calculator" | "terms";
-type PromoAssetMode = "banners" | "videos";
+type PromoAssetMode = "banners";
 type AccountTabTarget = "personal" | "settings" | "trading_history";
 type BonusSettingsRow = Pick<
   Tables<"bonus_settings">,
@@ -124,7 +123,6 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
   const { user, profile } = useAuth();
   const [activeTab, setActiveTab] = useState<ReferralTab>("friends");
   const [detailMode, setDetailMode] = useState<DetailMode>("calculator");
-  const [promoAssetMode, setPromoAssetMode] = useState<PromoAssetMode>("banners");
   const [shareMode, setShareMode] = useState<ShareMode>("link");
   const [shareOpen, setShareOpen] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -132,6 +130,8 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
   const [depositAmount, setDepositAmount] = useState(10);
   const [platformSettings, setPlatformSettings] = useState<PlatformSettingsRecord>(DEFAULT_PLATFORM_SETTINGS);
   const [bonusRules, setBonusRules] = useState<BonusSettingsRow | null>(null);
+  const [promoMaterials, setPromoMaterials] = useState<any[]>([]);
+  const [materialsLoading, setMaterialsLoading] = useState(false);
 
   const referralCode = useMemo(() => {
     const saved = String((profile as any)?.referral_code ?? "").trim().toUpperCase();
@@ -173,6 +173,29 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    const fetchPromoMaterials = async () => {
+      try {
+        setMaterialsLoading(true);
+        const { data, error } = await supabase
+          .from("promo_materials")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error && error.code !== "PGRST116") {
+          throw error;
+        }
+        setPromoMaterials(data || []);
+      } catch (error: any) {
+        console.error("Error fetching promo materials:", error);
+      } finally {
+        setMaterialsLoading(false);
+      }
+    };
+
+    void fetchPromoMaterials();
   }, []);
 
   useEffect(() => {
@@ -585,55 +608,57 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
 
               <section className="flex min-h-0 items-center justify-between rounded-[12px] border border-[#0b7557]/20 bg-[#0b7557] px-4 text-white">
                 <div className="min-w-0">
-                  <h2 className="truncate text-[18px] font-bold">Promo materials for Init Option partners</h2>
+                  <h2 className="truncate text-[18px] font-bold">Download marketing banners</h2>
                   <p className="mt-1 truncate text-[12px] font-semibold text-white/85">
-                    Switch between banners and videos. These tabs stay inside the page and are ready for real assets.
+                    Download zipped banner packs to promote {platformName} with professional marketing materials.
                   </p>
-                </div>
-                <div className="flex shrink-0 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPromoAssetMode("banners")}
-                    className={`flex h-[32px] items-center gap-2 rounded-[7px] px-4 text-[12px] font-bold ${
-                      promoAssetMode === "banners" ? "bg-white text-[#1e2330]" : "bg-white/15 text-white"
-                    }`}
-                  >
-                    <ImageIcon className="h-4 w-4" />
-                    Banners
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPromoAssetMode("videos")}
-                    className={`flex h-[32px] items-center gap-2 rounded-[7px] px-4 text-[12px] font-bold ${
-                      promoAssetMode === "videos" ? "bg-white text-[#1e2330]" : "bg-white/15 text-white"
-                    }`}
-                  >
-                    <Film className="h-4 w-4" />
-                    Videos
-                  </button>
                 </div>
               </section>
 
               <section className="min-h-0 rounded-[12px] border p-4" style={panelStyle}>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                   <div>
-                    <h2 className="text-[18px] font-bold">Your Init Friends</h2>
+                    <h2 className="text-[18px] font-bold">Available Banner Packs</h2>
                     <p className="mt-1 text-[12px] font-medium text-[var(--trading-muted-color)]">
-                      {promoAssetMode === "banners"
-                        ? "Banner materials selected. Share the referral link to start tracking signups."
-                        : "Video materials selected. Share the referral link to start tracking signups."}
+                      Download professional banner images to promote your referral link.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button type="button" className="flex h-[32px] items-center gap-2 rounded-[7px] border px-3 text-[12px] text-[var(--trading-muted-color)]" style={softPanelStyle}>
-                      <CalendarDays className="h-4 w-4" />
-                      2026-01-01 - 2026-05-15
-                    </button>
-                    <button type="button" className="h-[32px] rounded-[7px] bg-[#0b7557] px-4 text-[12px] font-bold text-white">Apply</button>
-                  </div>
                 </div>
-                <div className="mt-2 h-[calc(100%-46px)] min-h-0">
-                  <EmptyFriendsState onShare={() => setShareOpen(true)} />
+                <div className="mt-2 h-[calc(100%-62px)] min-h-0 overflow-y-auto">
+                  {materialsLoading ? (
+                    <div className="flex items-center justify-center h-full text-[var(--trading-muted-color)]">
+                      <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-[#5ee0bd]"></div>
+                    </div>
+                  ) : promoMaterials.length === 0 ? (
+                    <div className="flex h-full min-h-0 flex-col items-center justify-center text-center">
+                      <ImageIcon className="h-12 w-12 text-[var(--trading-muted-color)] mb-2 opacity-50" />
+                      <h3 className="text-[14px] font-bold text-[var(--trading-text-color)]">No banners available yet</h3>
+                      <p className="mt-1 text-[12px] text-[var(--trading-muted-color)]">
+                        Admin will upload banner packs soon. Check back later!
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {promoMaterials.map((material) => (
+                        <div key={material.id} className="flex items-center justify-between rounded-[9px] border p-3 hover:bg-white/5 transition-colors" style={softPanelStyle}>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[13px] font-bold text-[var(--trading-text-color)] truncate">{material.name}</p>
+                            <p className="text-[11px] text-[var(--trading-muted-color)] mt-1">
+                              Size: {(material.file_size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                          <a
+                            href={material.file_url}
+                            download={`${material.name}.zip`}
+                            className="ml-2 flex items-center justify-center h-[32px] w-[32px] rounded-[7px] bg-[#0b7557] hover:brightness-110 text-white transition-all"
+                            title={`Download ${material.name}`}
+                          >
+                            <FileText className="h-4 w-4" />
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </section>
             </div>
