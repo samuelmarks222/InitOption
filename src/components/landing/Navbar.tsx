@@ -17,7 +17,9 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/8 bg-[#1c1f2d] shadow-[0_1px_8px_rgba(0,0,0,0.2)] backdrop-blur-2xl">
+    <nav className="fixed left-0 right-0 top-0 z-50 bg-[#131625] shadow-[0_1px_8px_rgba(0,0,0,0.25)] backdrop-blur-2xl">
+      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#1c81f8]/40 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#7c3aed]/20 to-transparent blur-sm" />
       <div className="container mx-auto flex h-16 items-center justify-between gap-2 px-3 sm:h-20 sm:gap-3 sm:px-4">
         <Link to="/" className="shrink-0 flex items-center gap-2">
           <img src={logo} alt="Init Option" className="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11" />

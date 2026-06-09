@@ -21,7 +21,8 @@ const EarningsSection = () => {
           viewport={{ once: true }}
           className="mb-16 text-center"
         >
-          <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-primary">
+          <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#1c81f8]/20 bg-[#1c81f8]/8 px-4 py-1.5 font-copy text-[10px] font-bold uppercase tracking-[0.24em] text-[#1c81f8] sm:text-[11px]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#1c81f8]" />
             Earnings
           </span>
           <h2 className="font-heading text-3xl font-bold text-[#0f1419] sm:text-4xl">

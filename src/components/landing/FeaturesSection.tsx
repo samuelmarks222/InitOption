@@ -65,7 +65,8 @@ const FeaturesSection = () => {
           viewport={{ once: true }}
           className="mx-auto mb-12 max-w-3xl text-center sm:mb-16"
         >
-          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-[#536471]">
+          <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#1c81f8]/20 bg-[#1c81f8]/8 px-4 py-1.5 font-copy text-[10px] font-bold uppercase tracking-[0.24em] text-[#1c81f8] sm:text-[11px]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#1c81f8]" />
             Why Choose Init Option
           </span>
           <h2 className="font-display text-3xl font-bold text-[#0f1419] sm:text-4xl lg:text-5xl">
