@@ -1425,7 +1425,7 @@ const TradingGuidePage = () => {
         </aside>
 
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-[1540px]">
+          <div>
             <div className="mb-8 flex flex-wrap gap-3 border-b border-white/10 pb-6">
               {helpTabs.map((tab) => {
                 const Icon = tab.icon;

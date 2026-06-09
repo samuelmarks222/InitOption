@@ -21,7 +21,7 @@ const NotificationsPage = () => {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(244,63,94,0.12),transparent_22%),linear-gradient(180deg,#0b1017_0%,#0b1017_100%)]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0))]" />
 
-      <div className="relative mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-10">
+      <div className="relative px-4 py-6 sm:px-6 lg:px-10">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <SiteLogo to="/" subtitle="Notification center" />
         </div>

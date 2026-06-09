@@ -159,7 +159,7 @@ const TraderProfile = () => {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#18273c_0%,#0b1018_42%,#070b11_100%)] px-4 py-8 text-white md:px-6">
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="space-y-6">
         <div className="flex items-center justify-between gap-3">
           <Link to="/trade" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/[0.06] hover:text-white">
             <ArrowLeft className="h-4 w-4" />

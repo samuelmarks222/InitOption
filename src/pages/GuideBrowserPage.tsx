@@ -138,7 +138,7 @@ const GuideBrowserPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#0f1826] via-[#1a2438] to-[#0f1826]">
       {/* Header */}
       <div className="border-b border-white/10 bg-gradient-to-r from-white/[0.03] to-white/[0.01] backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="px-4 py-12 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-2">
             <BookOpen className="h-8 w-8 text-[#1c81f8]" />
             <h1 className="text-4xl font-bold text-white">Trading Guides</h1>
@@ -149,7 +149,7 @@ const GuideBrowserPage = () => {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Sidebar */}
           <div className="lg:col-span-1">

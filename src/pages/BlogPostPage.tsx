@@ -91,7 +91,7 @@ const BlogPostPage = () => {
       <main>
         <section className="relative overflow-hidden border-b border-border/50 bg-background pb-16 pt-24 sm:pb-20 sm:pt-28">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,196,118,0.14),transparent_34%),radial-gradient(circle_at_80%_22%,rgba(255,255,255,0.06),transparent_22%)]" />
-          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="relative px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <Link to="/" className="transition-colors hover:text-primary">
                 Home
@@ -151,7 +151,7 @@ const BlogPostPage = () => {
 
         {post ? (
           <section className="bg-background py-16 sm:py-20">
-            <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="px-4 sm:px-6 lg:px-8">
               <div className="grid gap-6 lg:grid-cols-[0.72fr_0.28fr]">
                 <article
                   className="prose prose-invert max-w-none rounded-[30px] border border-border/50 bg-card/95 p-6 shadow-[0_18px_44px_rgba(8,15,28,0.14)] prose-headings:text-foreground prose-a:text-primary prose-strong:text-foreground prose-li:text-foreground/90 sm:p-8"

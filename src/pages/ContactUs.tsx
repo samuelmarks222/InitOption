@@ -58,7 +58,7 @@ const ContactUs = () => {
     <div className="quotex-glow-home min-h-screen bg-background">
       <Navbar />
       <main className="pb-16 pt-20">
-        <div className="container mx-auto px-4">
+        <div className="px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

@@ -136,7 +136,7 @@ const PublicInfoPage = ({ pageKey }: PublicInfoPageProps) => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(27,65,94,0.5),transparent_36%),radial-gradient(circle_at_20%_20%,rgba(20,158,98,0.14),transparent_24%)]" />
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:72px_72px] opacity-25" />
 
-          <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="relative px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl">
               <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em] text-[#7ea4bb]">
                 {page.eyebrow}
