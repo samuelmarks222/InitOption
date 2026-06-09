@@ -1,15 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-const generatePriceData = (count: number, basePrice: number) => {
-  const data: number[] = [basePrice];
-  for (let index = 1; index < count; index += 1) {
-    const change = (Math.random() - 0.48) * 0.0008;
-    data.push(data[index - 1] + change);
-  }
-  return data;
-};
-
 const PAIRS = [
   { name: "EUR/USD", payout: "87%" },
   { name: "GBP/JPY", payout: "85%" },
@@ -32,11 +23,33 @@ interface Trade {
   result?: TradeResult;
 }
 
+interface OHLC {
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
+const generateOHLCData = (count: number, basePrice: number): OHLC[] => {
+  const data: OHLC[] = [];
+  let prevClose = basePrice;
+  for (let i = 0; i < count; i++) {
+    const change = (Math.random() - 0.48) * 0.0012;
+    const open = prevClose;
+    const close = open + change;
+    const high = Math.max(open, close) + Math.random() * 0.0004;
+    const low = Math.min(open, close) - Math.random() * 0.0004;
+    data.push({ open, high, low, close });
+    prevClose = close;
+  }
+  return data;
+};
+
 const AnimatedTradingChart = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<number>();
-  const [prices, setPrices] = useState(() => generatePriceData(120, 1.258));
-  const pricesRef = useRef(prices);
+  const [prices, setPrices] = useState(() => generateOHLCData(80, 1.258));
+  const pricesRef = useRef<OHLC[]>(prices);
   pricesRef.current = prices;
 
   const [currentPrice, setCurrentPrice] = useState(1.258);
@@ -81,7 +94,7 @@ const AnimatedTradingChart = () => {
 
       context.clearRect(0, 0, width, height);
 
-      context.strokeStyle = "rgba(0, 0, 0, 0.08)";
+      context.strokeStyle = "rgba(255, 255, 255, 0.08)";
       context.lineWidth = 0.75;
       for (let row = 0; row < 6; row += 1) {
         const y = (height / 6) * row;
@@ -98,65 +111,55 @@ const AnimatedTradingChart = () => {
         context.stroke();
       }
 
-      const min = Math.min(...data) - 0.0005;
-      const max = Math.max(...data) + 0.0005;
+      let min = Infinity;
+      let max = -Infinity;
+      data.forEach((d) => {
+        if (d.high > max) max = d.high;
+        if (d.low < min) min = d.low;
+      });
+      min -= 0.0005;
+      max += 0.0005;
       const range = Math.max(max - min, 0.0001);
       const chartWidth = Math.max(width - 62, 40);
 
       const toX = (index: number) => (index / (data.length - 1)) * chartWidth;
       const toY = (value: number) => height - ((value - min) / range) * height;
 
-      const fillGradient = context.createLinearGradient(0, 0, 0, height);
-      fillGradient.addColorStop(0, "rgba(28, 129, 248, 0.12)");
-      fillGradient.addColorStop(1, "rgba(28, 129, 248, 0)");
+      const spacing = chartWidth / (data.length - 1);
+      const bodyWidth = Math.max(2, Math.min(spacing * 0.55, 12));
 
-      context.beginPath();
-      context.moveTo(toX(0), height);
-      data.forEach((value, index) => {
-        context.lineTo(toX(index), toY(value));
+      data.forEach((candle, index) => {
+        const x = toX(index);
+        const isUp = candle.close >= candle.open;
+        const color = isUp ? "#1c81f8" : "#e85b4e";
+
+        context.strokeStyle = color;
+        context.lineWidth = 1;
+        context.beginPath();
+        context.moveTo(x, toY(candle.high));
+        context.lineTo(x, toY(candle.low));
+        context.stroke();
+
+        const openY = toY(candle.open);
+        const closeY = toY(candle.close);
+        const bodyTop = Math.min(openY, closeY);
+        const bodyH = Math.max(1, Math.abs(closeY - openY));
+        context.fillStyle = color;
+        context.fillRect(x - bodyWidth / 2, bodyTop, bodyWidth, bodyH);
       });
-      context.lineTo(toX(data.length - 1), height);
-      context.closePath();
-      context.fillStyle = fillGradient;
-      context.fill();
 
-      context.shadowColor = "rgba(28, 129, 248, 0.25)";
-      context.shadowBlur = 10;
-      context.beginPath();
-      context.strokeStyle = "#1c81f8";
-      context.lineWidth = 2.4;
-      context.lineJoin = "round";
-      data.forEach((value, index) => {
-        if (index === 0) {
-          context.moveTo(toX(index), toY(value));
-        } else {
-          context.lineTo(toX(index), toY(value));
-        }
-      });
-      context.stroke();
-      context.shadowBlur = 0;
-
-      const lastPrice = data[data.length - 1];
+      const lastCandle = data[data.length - 1];
       const lastX = toX(data.length - 1);
-      const lastY = toY(lastPrice);
+      const lastY = toY(lastCandle.close);
 
       context.setLineDash([4, 4]);
-      context.strokeStyle = "rgba(0, 0, 0, 0.12)";
+      context.strokeStyle = "rgba(255, 255, 255, 0.12)";
       context.lineWidth = 1;
       context.beginPath();
       context.moveTo(0, lastY);
       context.lineTo(width, lastY);
       context.stroke();
       context.setLineDash([]);
-
-      context.beginPath();
-      context.arc(lastX, lastY, 5.5, 0, Math.PI * 2);
-      context.fillStyle = "rgba(0, 0, 0, 0.08)";
-      context.fill();
-      context.beginPath();
-      context.arc(lastX, lastY, 3.2, 0, Math.PI * 2);
-      context.fillStyle = "#1c81f8";
-      context.fill();
 
       const badgeWidth = width < 380 ? 60 : 74;
       const badgeX = Math.min(lastX + 6, width - badgeWidth - 4);
@@ -167,7 +170,7 @@ const AnimatedTradingChart = () => {
       context.fillStyle = "#ffffff";
       context.font = width < 380 ? "700 9px Sora, sans-serif" : "700 11px Sora, sans-serif";
       context.textAlign = "center";
-      context.fillText(lastPrice.toFixed(5), badgeX + badgeWidth / 2, lastY + 4);
+      context.fillText(lastCandle.close.toFixed(5), badgeX + badgeWidth / 2, lastY + 4);
 
       frameRef.current = requestAnimationFrame(draw);
     };
@@ -184,12 +187,15 @@ const AnimatedTradingChart = () => {
     const interval = window.setInterval(() => {
       setPrices((previous) => {
         const last = previous[previous.length - 1];
-        const change = (Math.random() - 0.48) * 0.0006;
-        const next = last + change;
-        setCurrentPrice(next);
-        return [...previous.slice(1), next];
+        const change = (Math.random() - 0.48) * 0.001;
+        const open = last.close;
+        const close = open + change;
+        const high = Math.max(open, close) + Math.random() * 0.0003;
+        const low = Math.min(open, close) - Math.random() * 0.0003;
+        setCurrentPrice(close);
+        return [...previous.slice(1), { open, high, low, close }];
       });
-    }, 250);
+    }, 350);
 
     return () => window.clearInterval(interval);
   }, []);
