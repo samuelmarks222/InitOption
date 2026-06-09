@@ -10,14 +10,14 @@ const HeroSection = () => {
   const hero = websiteContent.hero;
 
   return (
-    <section className="relative overflow-hidden bg-[#f5f7fa] pt-16">
+    <section className="relative overflow-hidden bg-[#182838] pt-16">
 
       <div className="relative px-[70px] pb-12 pt-10 text-center sm:pb-16 sm:pt-20 lg:pb-24 lg:pt-32">
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.08 }}
-          className="mx-auto max-w-6xl font-display text-[2.2rem] font-bold leading-[1.06] tracking-tight text-[#0f1419] sm:text-5xl sm:leading-[1.02] lg:text-7xl lg:leading-[1.02]"
+          className="mx-auto max-w-6xl font-display text-[2.2rem] font-bold leading-[1.06] tracking-tight text-white sm:text-5xl sm:leading-[1.02] lg:text-7xl lg:leading-[1.02]"
         >
           {hero.title}
         </motion.h1>
@@ -26,7 +26,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="mx-auto mt-4 max-w-5xl font-copy text-[15px] leading-7 text-[#536471] sm:mt-5 sm:text-xl sm:leading-8"
+          className="mx-auto mt-4 max-w-5xl font-copy text-[15px] leading-7 text-[#cbd6e6] sm:mt-5 sm:text-xl sm:leading-8"
         >
           {hero.description}
         </motion.p>
@@ -52,7 +52,7 @@ const HeroSection = () => {
           <Button
             variant="outline"
             size="lg"
-            className="group h-11 w-full max-w-xs rounded-[12px] border border-[#e5e7eb] bg-white px-6 font-copy text-[11px] font-semibold text-[#536471] shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm transition-all duration-300 hover:border-[#1c81f8]/30 hover:bg-[#f0f6ff] hover:text-[#1c81f8] sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
+            className="group h-11 w-full max-w-xs rounded-[12px] border border-white/25 bg-white/10 px-6 font-copy text-[11px] font-semibold text-white shadow-none backdrop-blur-sm transition-all duration-300 hover:border-white/40 hover:bg-white/15 hover:text-white sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
             asChild
           >
             <Link to="/login">
@@ -71,7 +71,7 @@ const HeroSection = () => {
           {hero.trustItems.map((item, i) => (
             <div
               key={item}
-              className="rounded-full border border-[#e5e7eb] bg-white px-3 py-1.5 font-copy text-xs font-medium text-[#536471] backdrop-blur-sm transition-all duration-300 hover:border-[#1c81f8]/30 hover:bg-[#f0f6ff] hover:text-[#0f1419] sm:px-4 sm:py-2 sm:text-sm"
+              className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 font-copy text-xs font-medium text-white/80 backdrop-blur-sm transition-all duration-300 hover:border-white/40 hover:bg-white/15 hover:text-white sm:px-4 sm:py-2 sm:text-sm"
               style={{ transitionDelay: `${i * 40}ms` }}
             >
               {item}
