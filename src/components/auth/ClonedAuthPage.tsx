@@ -245,30 +245,31 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   }
 
   return (
-    <div className="quotex-glow-home relative flex min-h-screen bg-background">
-      <div className="relative hidden overflow-hidden lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:p-12 surface-deep">
-        <div className="absolute left-1/2 top-1/4 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary/5 blur-[150px]" />
-        <div className="absolute bottom-0 left-0 h-[300px] w-[300px] rounded-full bg-primary/5 blur-[100px]" />
+    <div className="relative flex min-h-screen bg-white">
+      <div className="relative hidden overflow-hidden bg-[linear-gradient(135deg,#1c1f2d_0%,#151829_50%,#1c2538_100%)] lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:p-12">
+        <div className="absolute left-1/2 top-1/4 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#1c81f8]/12 blur-[150px]" />
+        <div className="absolute bottom-0 left-0 h-[300px] w-[300px] rounded-full bg-[#1c81f8]/10 blur-[100px]" />
+        <div className="absolute right-0 top-1/3 h-[200px] w-[200px] rounded-full bg-[#1c81f8]/8 blur-[80px]" />
 
         <Link to="/" className="relative z-10">
           <img src={logo} alt="Init Option" className="h-10 w-auto" />
         </Link>
 
         <div className="relative z-10 max-w-md">
-          <h1 className="font-heading text-4xl font-bold leading-tight text-foreground">
-            Trade smarter with <span className="text-gradient-primary">Init Option</span>
+          <h1 className="font-heading text-4xl font-bold leading-tight text-white">
+            Trade smarter with <span className="text-[#1c81f8]">Init Option</span>
           </h1>
-          <p className="mt-4 leading-relaxed text-muted-foreground">
+          <p className="mt-4 leading-relaxed text-white/68">
             Access real-time charts, practice with demo funds, and trade with confidence on our modern platform.
           </p>
 
           <div className="mt-8 space-y-4">
             {featureItems.map((item) => (
               <div key={item.text} className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                  <item.icon size={18} className="text-primary" />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1c81f8]/14">
+                  <item.icon size={18} className="text-[#1c81f8]" />
                 </div>
-                <span className="text-sm text-secondary-foreground">{item.text}</span>
+                <span className="text-sm text-white/80">{item.text}</span>
               </div>
             ))}
           </div>
@@ -277,27 +278,27 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
         <div className="relative z-10 flex gap-8">
           {bottomStats.map((stat) => (
             <div key={stat.label}>
-              <div className="font-heading text-xl font-bold text-gradient-primary">{stat.value}</div>
-              <div className="text-xs text-muted-foreground">{stat.label}</div>
+              <div className="font-heading text-xl font-bold text-[#1c81f8]">{stat.value}</div>
+              <div className="text-xs text-white/60">{stat.label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex w-full flex-col items-center justify-center bg-background px-6 py-12 lg:w-1/2">
+      <div className="flex w-full flex-col items-center justify-center bg-white px-6 py-12 lg:w-1/2">
         <Link to="/" className="mb-8 lg:hidden">
           <img src={logo} alt="Init Option" className="h-8 w-auto" />
         </Link>
 
         <div className="w-full max-w-md">
-          <div className="mb-8 flex rounded-xl border border-border bg-card p-1">
+          <div className="mb-8 flex rounded-xl border border-[#e5e7eb] bg-[#f8f9fc] p-1">
             <button
               type="button"
               onClick={() => switchMode("login")}
               className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
                 isLogin
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-[#1c81f8] text-white shadow-lg shadow-[#1c81f8]/25"
+                  : "text-[#536471] hover:text-[#0f1419]"
               }`}
             >
               Sign In
@@ -307,15 +308,15 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
               onClick={() => switchMode("signup")}
               className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
                 !isLogin
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-[#1c81f8] text-white shadow-lg shadow-[#1c81f8]/25"
+                  : "text-[#536471] hover:text-[#0f1419]"
               }`}
             >
               Sign Up
             </button>
           </div>
 
-          <h2 className="font-heading text-2xl font-bold text-foreground">
+          <h2 className="font-heading text-2xl font-bold text-[#0f1419]">
             {showPasswordReset
               ? "Reset your password"
               : showVerificationPrompt
@@ -324,7 +325,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                   ? "Welcome back"
                   : "Create your account"}
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-[#536471]">
             {showPasswordReset
               ? "Enter your email address and we'll send you a 6-digit verification code"
               : showVerificationPrompt
@@ -337,19 +338,19 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
           {showVerificationPrompt ? (
             <div className="mt-6 space-y-4">
               <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
-                <p className="text-sm text-foreground">
+                <p className="text-sm text-[#0f1419]">
                   <strong>Check your email</strong> at <strong>{verificationEmail}</strong>
                 </p>
-                <p className="mt-2 text-xs text-muted-foreground">
+                <p className="mt-2 text-xs text-[#536471]">
                   Look for an email from Init Option with the subject "Confirm your email" and click the verification link inside.
                 </p>
               </div>
 
-              <div className="rounded-lg border border-border bg-card/50 p-4">
-                <p className="text-xs text-muted-foreground">
+              <div className="rounded-lg border border-[#e5e7eb] bg-[#f8f9fc] p-4">
+                <p className="text-xs text-[#536471]">
                   <strong>Didn't receive the email?</strong>
                 </p>
-                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                <ul className="mt-2 space-y-1 text-xs text-[#536471]">
                   <li>• Check your spam or junk folder</li>
                   <li>• Wait a few moments and refresh your inbox</li>
                   <li>• Make sure you entered the correct email address</li>
@@ -359,7 +360,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
               <Button
                 type="button"
                 size="lg"
-                className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-primary/25"
+                className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-[#1c81f8]/25"
                 onClick={() => {
                   setShowVerificationPrompt(false);
                   setEmail("");
@@ -376,17 +377,17 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
               {!resetSent ? (
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                    <label className="mb-1.5 block text-xs font-medium text-[#536471]">
                       Email Address
                     </label>
                     <div className="relative">
-                      <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
+                      <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#536471]/50" />
                       <Input
                         type="email"
                         value={resetEmail}
                         onChange={(e) => setResetEmail(e.target.value)}
                         placeholder="you@example.com"
-                        className="h-11 border-border bg-card pl-10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                        className="h-11 border-[#e5e7eb] bg-[#f8f9fc] pl-10 text-sm text-[#0f1419] placeholder:text-[#536471]/50 focus:border-[#1c81f8] focus:ring-1 focus:ring-[#1c81f8]/30"
                       />
                     </div>
                   </div>
@@ -394,7 +395,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                   <Button
                     type="submit"
                     size="lg"
-                    className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-primary/25"
+                    className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-[#1c81f8]/25"
                     disabled={resetLoading}
                   >
                     {resetLoading ? "Sending..." : "Send Verification Code"} <ArrowRight size={16} />
@@ -416,17 +417,17 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
               ) : !resetCodeVerified ? (
                 <>
                   <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
-                    <p className="text-sm text-foreground">
+                    <p className="text-sm text-[#0f1419]">
                       <strong>Verification code sent</strong> to <strong>{resetEmail}</strong>
                     </p>
-                    <p className="mt-2 text-xs text-muted-foreground">
+                    <p className="mt-2 text-xs text-[#536471]">
                       Check your email for a 6-digit verification code and enter it below.
                     </p>
                   </div>
 
                   <form onSubmit={handleVerifyResetCode} className="space-y-4">
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                      <label className="mb-1.5 block text-xs font-medium text-[#536471]">
                         Verification Code
                       </label>
                       <Input
@@ -435,14 +436,14 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                         onChange={(e) => setResetCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                         placeholder="000000"
                         maxLength={6}
-                        className="h-11 border-border bg-card text-center text-lg font-mono tracking-widest text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                        className="h-11 border-[#e5e7eb] bg-[#f8f9fc] text-center text-lg font-mono tracking-widest text-[#0f1419] placeholder:text-[#536471]/50 focus:border-[#1c81f8] focus:ring-1 focus:ring-[#1c81f8]/30"
                       />
                     </div>
 
                     <Button
                       type="submit"
                       size="lg"
-                      className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-primary/25"
+                      className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-[#1c81f8]/25"
                       disabled={resetLoading || resetCode.length !== 6}
                     >
                       {resetLoading ? "Verifying..." : "Verify Code"} <ArrowRight size={16} />
@@ -463,11 +464,11 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                     </Button>
                   </form>
 
-                  <div className="rounded-lg border border-border bg-card/50 p-4">
-                    <p className="text-xs text-muted-foreground">
+                  <div className="rounded-lg border border-[#e5e7eb] bg-[#f8f9fc] p-4">
+                    <p className="text-xs text-[#536471]">
                       <strong>Didn't receive the code?</strong>
                     </p>
-                    <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                    <ul className="mt-2 space-y-1 text-xs text-[#536471]">
                       <li>• Check your spam or junk folder</li>
                       <li>• Wait a few moments and refresh your inbox</li>
                       <li>• The code expires in 10 minutes</li>
@@ -477,37 +478,37 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
               ) : (
                 <>
                   <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
-                    <p className="text-sm text-foreground">
+                    <p className="text-sm text-[#0f1419]">
                       <strong>Code verified</strong>
                     </p>
-                    <p className="mt-2 text-xs text-muted-foreground">
+                    <p className="mt-2 text-xs text-[#536471]">
                       Now enter your new password below.
                     </p>
                   </div>
 
                   <form onSubmit={handleSetNewPassword} className="space-y-4">
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                      <label className="mb-1.5 block text-xs font-medium text-[#536471]">
                         New Password
                       </label>
                       <div className="relative">
-                        <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
+                        <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#536471]/50" />
                         <Input
                           type={showPassword ? "text" : "password"}
                           value={newResetPassword}
                           onChange={(e) => setNewResetPassword(e.target.value)}
                           placeholder="Enter new password"
-                          className="h-11 border-border bg-card pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                          className="h-11 border-[#e5e7eb] bg-[#f8f9fc] pl-10 pr-10 text-sm text-[#0f1419] placeholder:text-[#536471]/50 focus:border-[#1c81f8] focus:ring-1 focus:ring-[#1c81f8]/30"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#536471]/50 transition-colors hover:text-[#536471]"
                         >
                           {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground">
+                      <p className="mt-1 text-xs text-[#536471]">
                         Minimum 6 characters
                       </p>
                     </div>
@@ -515,7 +516,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                     <Button
                       type="submit"
                       size="lg"
-                      className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-primary/25"
+                      className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-[#1c81f8]/25"
                       disabled={resetLoading || newResetPassword.length < 6}
                     >
                       {resetLoading ? "Updating..." : "Update Password"} <ArrowRight size={16} />
@@ -546,7 +547,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               {!isLogin ? (
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                  <label className="mb-1.5 block text-xs font-medium text-[#536471]">
                     Full Name
                   </label>
                   <Input
@@ -554,53 +555,53 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter your full name"
-                    className="h-11 border-border bg-card pl-4 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                    className="h-11 border-[#e5e7eb] bg-[#f8f9fc] pl-4 text-sm text-[#0f1419] placeholder:text-[#536471]/50 focus:border-[#1c81f8] focus:ring-1 focus:ring-[#1c81f8]/30"
                   />
                 </div>
               ) : null}
 
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+              <label className="mb-1.5 block text-xs font-medium text-[#536471]">
                 Email Address
               </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#536471]/50" />
                 <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="h-11 border-border bg-card pl-10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                  className="h-11 border-[#e5e7eb] bg-[#f8f9fc] pl-10 text-sm text-[#0f1419] placeholder:text-[#536471]/50 focus:border-[#1c81f8] focus:ring-1 focus:ring-[#1c81f8]/30"
                 />
               </div>
             </div>
 
             <div>
               <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-xs font-medium text-muted-foreground">Password</label>
+                <label className="text-xs font-medium text-[#536471]">Password</label>
                 {isLogin ? (
                   <button
                     type="button"
                     onClick={() => setShowPasswordReset(true)}
-                    className="text-xs text-primary transition-colors hover:text-primary/80"
+                    className="text-xs text-[#1c81f8] transition-colors hover:text-[#1c81f8]/80"
                   >
                     Forgot password?
                   </button>
                 ) : null}
               </div>
               <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#536471]/50" />
                 <Input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="********"
-                  className="h-11 border-border bg-card pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                  className="h-11 border-[#e5e7eb] bg-[#f8f9fc] pl-10 pr-10 text-sm text-[#0f1419] placeholder:text-[#536471]/50 focus:border-[#1c81f8] focus:ring-1 focus:ring-[#1c81f8]/30"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#536471]/50 transition-colors hover:text-[#536471]"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -609,7 +610,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
 
             {!isLogin ? (
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                <label className="mb-1.5 block text-xs font-medium text-[#536471]">
                   Promo Code (optional)
                 </label>
                 <Input
@@ -617,7 +618,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                   placeholder="Enter promo code for bonus"
-                  className="h-11 border-border bg-card pl-4 text-sm uppercase text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary/30"
+                  className="h-11 border-[#e5e7eb] bg-[#f8f9fc] pl-4 text-sm uppercase text-[#0f1419] placeholder:text-[#536471]/50 focus:border-[#1c81f8] focus:ring-1 focus:ring-[#1c81f8]/30"
                 />
               </div>
             ) : null}
@@ -629,12 +630,12 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                   id="terms"
                   checked={agreed}
                   onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-border bg-card accent-primary"
+                  className="mt-1 h-4 w-4 rounded border-[#e5e7eb] bg-[#f8f9fc] accent-[#1c81f8]"
                 />
-                <label htmlFor="terms" className="text-xs leading-relaxed text-muted-foreground">
-                  I agree to the <Link to="/terms" className="text-primary hover:underline">Terms &amp; Conditions</Link>,{" "}
-                  <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>, and acknowledge the{" "}
-                  <Link to="/risk-disclaimer" className="text-primary hover:underline">Risk Disclaimer</Link>
+                <label htmlFor="terms" className="text-xs leading-relaxed text-[#536471]">
+                  I agree to the <Link to="/terms" className="text-[#1c81f8] hover:underline">Terms &amp; Conditions</Link>,{" "}
+                  <Link to="/privacy" className="text-[#1c81f8] hover:underline">Privacy Policy</Link>, and acknowledge the{" "}
+                  <Link to="/risk-disclaimer" className="text-[#1c81f8] hover:underline">Risk Disclaimer</Link>
                 </label>
               </div>
             ) : null}
@@ -642,7 +643,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
             <Button
               type="submit"
               size="lg"
-              className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-primary/25"
+              className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-[#1c81f8]/25"
               disabled={loading || (!isLogin && !agreed)}
             >
               {loading ? (isLogin ? "Signing In..." : "Creating Account...") : (isLogin ? "Sign In" : "Create Account")}{" "}
@@ -655,7 +656,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
             <>
               <div className="my-6 flex items-center gap-3">
                 <div className="h-px flex-1 bg-border" />
-                <span className="text-xs text-muted-foreground">or continue with</span>
+                <span className="text-xs text-[#536471]">or continue with</span>
                 <div className="h-px flex-1 bg-border" />
               </div>
 
@@ -664,7 +665,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                   type="button"
                   onClick={() => void handleGoogleSignIn()}
                   disabled={loading || googleLoading}
-                  className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex items-center justify-center gap-2 rounded-lg border border-[#e5e7eb] bg-[#f8f9fc] py-2.5 text-sm font-medium text-[#0f1419] transition-colors hover:bg-[#f0f2f5] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -676,21 +677,21 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                 </button>
               </div>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
+          <p className="mt-6 text-center text-xs text-[#536471]">
             {isLogin ? "Don't have an account? " : "Already have an account? "}
             <button
               type="button"
               onClick={() => switchMode(isLogin ? "signup" : "login")}
-              className="font-semibold text-primary transition-colors hover:text-primary/80"
+              className="font-semibold text-[#1c81f8] transition-colors hover:text-[#1c81f8]/80"
             >
               {isLogin ? "Sign Up" : "Sign In"}
             </button>
           </p>
 
-              <div className="mt-6 rounded-lg border border-border/50 bg-card/50 p-3">
-                <p className="text-center text-[10px] leading-relaxed text-muted-foreground">
+              <div className="mt-6 rounded-lg border border-[#e5e7eb] bg-[#f8f9fc] p-3">
+                <p className="text-center text-[10px] leading-relaxed text-[#536471]">
                   Risk Warning: Trading involves risk. You may lose your invested capital.{" "}
-                  <Link to="/risk-disclaimer" className="text-primary underline">
+                  <Link to="/risk-disclaimer" className="text-[#1c81f8] underline">
                     Read risk disclaimer
                   </Link>
                 </p>

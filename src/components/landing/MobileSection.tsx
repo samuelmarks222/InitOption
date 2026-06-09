@@ -17,8 +17,8 @@ const MobileSection = () => {
   const { mobile } = websiteContent;
 
   return (
-    <section className="relative overflow-hidden bg-[#f5f6fa] py-16 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(28,129,248,0.04),transparent_20%),radial-gradient(circle_at_82%_18%,rgba(0,0,0,0.03),transparent_20%)]" />
+    <section className="relative overflow-hidden bg-[#f0f4ff] py-16 sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(28,129,248,0.06),transparent_20%),radial-gradient(circle_at_82%_18%,rgba(0,0,0,0.02),transparent_20%)]" />
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center gap-8 sm:gap-12 lg:flex-row">
           <motion.div

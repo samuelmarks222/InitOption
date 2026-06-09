@@ -33,8 +33,8 @@ const TestimonialsSection = () => {
   ];
 
   return (
-    <section id="reviews" className="relative overflow-hidden bg-[#f5f6fa] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.04),transparent_24%)]" />
+    <section id="reviews" className="relative overflow-hidden bg-[#f0f4ff] py-20 sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.05),transparent_24%)]" />
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

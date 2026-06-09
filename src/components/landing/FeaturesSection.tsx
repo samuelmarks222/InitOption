@@ -55,8 +55,8 @@ const FeaturesSection = () => {
   const cardsToRender = featureCards.length ? featureCards : fallbackCards;
 
   return (
-    <section id="features" className="relative overflow-hidden bg-[#f5f6fa] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.04),transparent_28%)]" />
+    <section id="features" className="relative overflow-hidden bg-white py-20 sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.03),transparent_28%)]" />
 
       <div className="container relative mx-auto px-4">
         <motion.div

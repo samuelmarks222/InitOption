@@ -17,7 +17,7 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-[#e5e7eb] bg-[rgba(255,255,255,0.85)] shadow-[0_1px_8px_rgba(0,0,0,0.06)] backdrop-blur-2xl">
+    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/8 bg-[#1c1f2d] shadow-[0_1px_8px_rgba(0,0,0,0.2)] backdrop-blur-2xl">
       <div className="container mx-auto flex h-16 items-center justify-between gap-2 px-3 sm:h-20 sm:gap-3 sm:px-4">
         <Link to="/" className="shrink-0 flex items-center gap-2">
           <img src={logo} alt="Init Option" className="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11" />
@@ -28,7 +28,7 @@ const Navbar = () => {
             <a
               key={link.label}
               href={link.href}
-              className="relative font-copy text-base font-medium text-[#536471] transition-colors hover:text-[#0f1419] lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[#1c81f8] after:transition-all after:duration-300 hover:after:w-full"
+              className="relative font-copy text-base font-medium text-white/76 transition-colors hover:text-white lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[#1c81f8] after:transition-all after:duration-300 hover:after:w-full"
             >
               {link.label}
             </a>
@@ -40,14 +40,14 @@ const Navbar = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 rounded-full border border-[#e5e7eb] bg-transparent px-2.5 text-xs font-medium text-[#536471] transition-all hover:bg-[#f0f2f5] hover:text-[#0f1419] min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
+              className="h-8 rounded-full border border-white/14 bg-white/[0.04] px-2.5 text-xs font-medium text-white/82 transition-all hover:bg-white/12 hover:text-white min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
               asChild
             >
               <Link to="/login">Login</Link>
             </Button>
             <Button
               size="sm"
-              className="h-8 rounded-full border border-[#1c81f8] bg-[#1c81f8] px-2.5 text-xs font-semibold text-[#ffffff] shadow-[0_4px_20px_rgba(28,129,248,0.25)] transition-all duration-300 hover:shadow-[0_8px_32px_rgba(28,129,248,0.35)] hover:brightness-110 min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
+              className="h-8 rounded-full border border-[#1c81f8] bg-[#1c81f8] px-2.5 text-xs font-semibold text-white shadow-[0_4px_20px_rgba(28,129,248,0.35)] transition-all duration-300 hover:shadow-[0_8px_32px_rgba(28,129,248,0.5)] hover:brightness-110 min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
               asChild
             >
               <Link to="/register">Sign Up</Link>
@@ -55,7 +55,7 @@ const Navbar = () => {
           </div>
 
           <button
-            className="rounded-full border border-[#e5e7eb] bg-white p-2 text-[#536471] transition-colors hover:bg-[#f0f2f5] md:hidden"
+            className="rounded-full border border-white/14 bg-white/[0.04] p-2 text-white/64 transition-colors hover:bg-white/12 hover:text-white md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
           >
@@ -68,13 +68,13 @@ const Navbar = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="border-b border-[#e5e7eb] bg-white px-4 pb-4 pt-2 md:hidden"
+          className="border-t border-white/8 bg-[#1c1f2d] px-4 pb-4 pt-2 md:hidden"
         >
           {navLinks.map((link) => (
             <a
               key={link.label}
               href={link.href}
-              className="block py-2 font-copy text-base font-medium text-[#536471]"
+              className="block py-2 font-copy text-base font-medium text-white/76 hover:text-white"
               onClick={() => setMobileOpen(false)}
             >
               {link.label}

@@ -132,18 +132,18 @@ const Footer = ({ content }: FooterProps) => {
   ] as const;
 
   return (
-    <footer className="relative overflow-hidden border-t border-[#e5e7eb] bg-[#f5f6fa] py-12 sm:py-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.04),transparent_24%)]" />
+    <footer className="relative overflow-hidden border-t border-white/8 bg-[#1c1f2d] py-12 sm:py-16">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.06),transparent_24%)]" />
       <div className="container relative mx-auto px-4">
         <div className="flex flex-col gap-10">
-          <div className="flex flex-col gap-8 border-b border-[#e5e7eb] pb-10 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex flex-col gap-8 border-b border-white/8 pb-10 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-xl">
               <SiteLogo
                 to="/"
                 className="mb-5"
                 imageClassName="h-12 sm:h-14"
               />
-              <p className="max-w-xl font-copy text-sm leading-7 text-[#536471] sm:text-base">
+              <p className="max-w-xl font-copy text-sm leading-7 text-white/72 sm:text-base">
                 {websiteContent.footer.description}
               </p>
             </div>
@@ -158,7 +158,7 @@ const Footer = ({ content }: FooterProps) => {
                       </div>
                     ) : null}
                     {socialLinks.subtitle?.trim() ? (
-                      <p className="mt-2 max-w-md font-copy text-sm leading-6 text-[#536471] lg:ml-auto">
+                      <p className="mt-2 max-w-md font-copy text-sm leading-6 text-white/60 lg:ml-auto">
                         {socialLinks.subtitle}
                       </p>
                     ) : null}
@@ -177,7 +177,7 @@ const Footer = ({ content }: FooterProps) => {
                         rel="noreferrer"
                         aria-label={`Open ${label}`}
                         title={label}
-                        className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[#e5e7eb] bg-[#f8f9fc] text-[#536471] transition-colors hover:border-[#1c81f8]/40 hover:bg-[#1c81f8]/12 hover:text-[#1c81f8]"
+                        className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white/72 transition-colors hover:border-[#1c81f8]/40 hover:bg-[#1c81f8]/12 hover:text-[#1c81f8]"
                       >
                         <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${isWhatsApp ? "text-[#25D366]" : ""}`} strokeWidth={2.25} />
                       </a>
@@ -191,10 +191,10 @@ const Footer = ({ content }: FooterProps) => {
           <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr_1.05fr_0.95fr_1.55fr]">
             {footerLinkGroups.map((group) => (
               <div key={group.title}>
-                <h4 className="font-display text-[28px] font-bold text-[#0f1419] sm:text-[32px] lg:text-[20px]">
+                <h4 className="font-display text-[28px] font-bold text-white sm:text-[32px] lg:text-[20px]">
                   {group.title}
                 </h4>
-                <ul className="mt-5 space-y-4 font-copy text-[15px] leading-7 text-[#536471] sm:text-base">
+                <ul className="mt-5 space-y-4 font-copy text-[15px] leading-7 text-white/72 sm:text-base">
                   {group.items.map((item) => (
                     <li key={item.label}>
                       {"to" in item ? (
@@ -213,22 +213,22 @@ const Footer = ({ content }: FooterProps) => {
             ))}
 
             <div>
-              <h4 className="font-display text-[28px] font-bold text-[#0f1419] sm:text-[32px] lg:text-[20px]">
+              <h4 className="font-display text-[28px] font-bold text-white sm:text-[32px] lg:text-[20px]">
                 Risk Notifications
               </h4>
-              <p className="mt-5 max-w-3xl font-copy text-[15px] leading-8 text-[#536471] sm:text-base">
+              <p className="mt-5 max-w-3xl font-copy text-[15px] leading-8 text-white/72 sm:text-base">
                 {websiteContent.footer.riskWarning}
               </p>
               <Link
                 to="/risk-disclaimer"
-                className="mt-5 inline-flex font-copy text-sm font-semibold text-[#1c81f8] transition-colors hover:text-[#0f1419]"
+                className="mt-5 inline-flex font-copy text-sm font-semibold text-[#1c81f8] transition-colors hover:text-white"
               >
                 Read full risk disclaimer
               </Link>
             </div>
           </div>
 
-          <div className="border-t border-[#e5e7eb] pt-6 text-center font-copy text-xs text-[#536471] sm:text-sm">
+          <div className="border-t border-white/8 pt-6 text-center font-copy text-xs text-white/50 sm:text-sm">
             Copyright {new Date().getFullYear()} {platformName}. All rights reserved.
           </div>
         </div>
