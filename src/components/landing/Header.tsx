@@ -35,12 +35,12 @@ const Header = () => {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4">
+      <header className="fixed inset-x-0 top-0 z-50 bg-[#182838] px-3 pt-3 sm:px-5 sm:pt-4">
         <div
           className={`mx-auto max-w-7xl rounded-[30px] transition-all duration-300 ${
             scrolled
               ? "border-[#182838]/50 bg-[#182838] shadow-[0_24px_70px_rgba(0,0,0,0.22)]"
-              : "bg-[#182838]/95 shadow-[0_18px_48px_rgba(0,0,0,0.16)] backdrop-blur-xl"
+              : "bg-[#182838] shadow-[0_18px_48px_rgba(0,0,0,0.16)] backdrop-blur-xl"
           }`}
         >
           <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
