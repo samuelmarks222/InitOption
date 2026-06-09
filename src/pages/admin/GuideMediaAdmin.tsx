@@ -11,9 +11,19 @@ interface Guide {
   is_published: boolean;
 }
 
+interface GuideSection {
+  id: string;
+  guide_id: string;
+  section_title: string | null;
+  section_order: number;
+  content_type: string;
+  content_text: string | null;
+}
+
 interface GuideMedia {
   id: string;
   guide_id: string;
+  content_id: string | null;
   media_type: "image" | "video" | "thumbnail";
   media_url: string;
   alt_text: string;
@@ -25,10 +35,13 @@ interface GuideMedia {
 const GuideMediaAdmin = () => {
   const { toast } = useToast();
   const [guides, setGuides] = useState<Guide[]>([]);
+  const [guideSections, setGuideSections] = useState<GuideSection[]>([]);
   const [guideMedia, setGuideMedia] = useState<GuideMedia[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [selectedGuideId, setSelectedGuideId] = useState<string>("");
+  const [selectedSectionId, setSelectedSectionId] = useState<string>("");
+  const [newSectionTitle, setNewSectionTitle] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
 
@@ -38,9 +51,41 @@ const GuideMediaAdmin = () => {
       : guideMedia;
   }, [guideMedia, selectedGuideId]);
 
+  const groupedMedia = useMemo(() => {
+    const sectionMap = new Map<string, { section: GuideSection | null; items: GuideMedia[] }>();
+
+    guideSections.forEach((section) => {
+      sectionMap.set(section.id, { section, items: [] });
+    });
+
+    const unassigned = { section: null, items: [] as GuideMedia[] };
+
+    filteredMedia
+      .filter((item) => item.media_type !== "thumbnail")
+      .forEach((item) => {
+        if (item.content_id && sectionMap.has(item.content_id)) {
+          sectionMap.get(item.content_id)?.items.push(item);
+        } else {
+          unassigned.items.push(item);
+        }
+      });
+
+    return [...sectionMap.values(), unassigned].filter((group) => group.items.length > 0);
+  }, [filteredMedia, guideSections]);
+
   useEffect(() => {
     void loadData();
   }, []);
+
+  useEffect(() => {
+    if (!selectedGuideId) {
+      setGuideSections([]);
+      setSelectedSectionId("");
+      return;
+    }
+
+    void loadGuideSections(selectedGuideId);
+  }, [selectedGuideId]);
 
   const loadData = async () => {
     try {
@@ -63,6 +108,65 @@ const GuideMediaAdmin = () => {
       toast({ title: "Error", description: "Failed to load guide media data", variant: "destructive" });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadGuideSections = async (guideId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("guide_content")
+        .select("id,guide_id,section_title,section_order,content_type,content_text")
+        .eq("guide_id", guideId)
+        .order("section_order", { ascending: true });
+
+      if (error) throw error;
+
+      const sections = data || [];
+      setGuideSections(sections);
+      if (sections.length > 0) {
+        setSelectedSectionId((previous) => previous || sections[0].id);
+      } else {
+        setSelectedSectionId("");
+      }
+    } catch (error) {
+      console.error("Failed to load guide sections", error);
+    }
+  };
+
+  const handleCreateSection = async () => {
+    if (!selectedGuideId || !newSectionTitle.trim()) {
+      toast({ title: "Error", description: "Enter section title before creating", variant: "destructive" });
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const nextOrder = guideSections.length > 0 ? Math.max(...guideSections.map((section) => section.section_order)) + 1 : 0;
+      const { data, error } = await supabase
+        .from("guide_content")
+        .insert([
+          {
+            guide_id: selectedGuideId,
+            section_title: newSectionTitle.trim(),
+            section_order: nextOrder,
+            content_type: "text",
+            content_text: "",
+            created_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      setNewSectionTitle("");
+      await loadGuideSections(selectedGuideId);
+      setSelectedSectionId(data.id);
+      toast({ title: "Success", description: "Section created successfully" });
+    } catch (error) {
+      console.error("Failed to create section", error);
+      toast({ title: "Error", description: "Failed to create section", variant: "destructive" });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -95,6 +199,7 @@ const GuideMediaAdmin = () => {
       const { error: dbError } = await supabase.from("guide_media").insert([
         {
           guide_id: selectedGuideId,
+          content_id: selectedSectionId || null,
           media_type: mediaType,
           media_url: data.publicUrl,
           alt_text: file.name,
@@ -137,6 +242,7 @@ const GuideMediaAdmin = () => {
       const { error: dbError } = await supabase.from("guide_media").insert([
         {
           guide_id: selectedGuideId,
+          content_id: selectedSectionId || null,
           media_type: "video",
           media_url: embedUrl,
           alt_text: videoTitle || `YouTube Video - ${videoId}`,
@@ -151,6 +257,7 @@ const GuideMediaAdmin = () => {
       await supabase.from("guide_media").insert([
         {
           guide_id: selectedGuideId,
+          content_id: selectedSectionId || null,
           media_type: "thumbnail",
           media_url: thumbnailUrl,
           alt_text: `Thumbnail - ${videoTitle || videoId}`,
@@ -227,6 +334,46 @@ const GuideMediaAdmin = () => {
             <p className="mt-1 text-sm text-gray-400">Upload images and videos for this guide. Each image and video is kept separate and associated only with this tutorial.</p>
 
             <div className="mt-6 space-y-6">
+              <div className="rounded-xl border border-dashed border-[#2a2f42] bg-[#171c29] p-4">
+                <div className="grid gap-3 lg:grid-cols-[1.7fr_1fr]">
+                  <div>
+                    <label className="block text-sm font-semibold text-white">Guide section</label>
+                    <select
+                      value={selectedSectionId}
+                      onChange={(e) => setSelectedSectionId(e.target.value)}
+                      disabled={!selectedGuideId}
+                      className="mt-2 w-full rounded-lg border border-[#2a2f42] bg-[#0e1117] px-4 py-2 text-white focus:border-[#00C076] focus:outline-none"
+                    >
+                      <option value="">Unassigned / General</option>
+                      {guideSections.map((section) => (
+                        <option key={section.id} value={section.id} className="bg-[#1a1e2b]">
+                          {section.section_title || `Section ${section.section_order + 1}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="block text-sm font-semibold text-white">Create section</label>
+                    <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                      <input
+                        value={newSectionTitle}
+                        onChange={(e) => setNewSectionTitle(e.target.value)}
+                        placeholder="New section title"
+                        disabled={!selectedGuideId}
+                        className="rounded-lg border border-[#2a2f42] bg-[#0e1117] px-4 py-2 text-white focus:border-[#00C076] focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void handleCreateSection()}
+                        disabled={!selectedGuideId || uploading}
+                        className="rounded-lg bg-[#00C076] px-4 py-2 font-semibold text-white hover:bg-[#00a85e] disabled:opacity-50"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
               {/* Multiple Image Upload Slots */}
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#00C076]">Guide Images</h3>
@@ -303,56 +450,60 @@ const GuideMediaAdmin = () => {
               <div className="rounded-xl border border-dashed border-[#2a2f42] bg-[#171c29] p-8 text-center text-gray-400">No media has been added for this guide yet.</div>
             ) : (
               <div className="space-y-6">
-                {/* Images Section */}
-                {filteredMedia.filter((item) => item.media_type === "image").length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#00C076]">Guide images ({filteredMedia.filter((item) => item.media_type === "image").length})</h3>
-                    <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-                      {filteredMedia.filter((item) => item.media_type === "image").map((item) => (
-                        <article key={item.id} className="overflow-hidden rounded-xl border border-[#2a2f42] bg-[#171c29]">
-                          <a href={item.media_url} target="_blank" rel="noreferrer" className="block">
-                            <img src={item.media_url} alt={item.alt_text} className="h-40 w-full object-cover" onError={(e) => { e.currentTarget.src = "/fallback-image.svg"; }} />
-                          </a>
-                          <div className="p-4">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="text-sm font-semibold text-white">{item.alt_text || "Guide image"}</p>
-                                <p className="text-xs text-gray-400">{new Date(item.created_at).toLocaleDateString()}</p>
-                              </div>
-                              <button onClick={() => void handleDeleteMedia(item.id, item.storage_path)} className="rounded-lg border border-red-500/30 p-2 text-red-400 hover:bg-red-500/10">
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        </article>
-                      ))}
+                {groupedMedia.map((group) => (
+                  <div key={group.section?.id ?? "general"} className="space-y-4">
+                    <div className="rounded-xl border border-[#2a2f42] bg-[#171c29] p-4">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#00C076]">
+                            {group.section?.section_title || "General media"}
+                          </h3>
+                          <p className="text-xs text-gray-400">
+                            {group.section ? `Section ${group.section.section_order + 1}` : "Unassigned content"}
+                          </p>
+                        </div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8ff3c7]">
+                          {group.items.length} item{group.items.length === 1 ? "" : "s"}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
 
-                {/* Videos Section */}
-                {filteredMedia.filter((item) => item.media_type === "video").length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#00C076]">Guide videos ({filteredMedia.filter((item) => item.media_type === "video").length})</h3>
                     <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-                      {filteredMedia.filter((item) => item.media_type === "video").map((item) => {
+                      {group.items.map((item) => {
+                        const isVideo = item.media_type === "video";
                         const isYoutube = Boolean(item.youtube_url || item.storage_path?.startsWith("youtube/"));
                         const videoId = isYoutube ? extractVideoIdFromUrl(item.youtube_url || item.media_url) : null;
-                        const thumbnailUrl = videoId ? getYoutubeThumbnail(videoId) : undefined;
+                        const thumbnailUrl = isVideo ? getYoutubeThumbnail(item.youtube_url || item.media_url) || item.media_url : item.media_url;
 
                         return (
                           <article key={item.id} className="overflow-hidden rounded-xl border border-[#2a2f42] bg-[#171c29]">
-                            <a href={isYoutube ? `https://www.youtube.com/watch?v=${videoId}` : item.media_url} target="_blank" rel="noreferrer" className="block relative group">
-                              <img src={thumbnailUrl || item.media_url} alt={item.alt_text} className="h-40 w-full object-cover" onError={(e) => { e.currentTarget.src = "/fallback-image.svg"; }} />
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Video size={40} className="text-[#00C076]" />
-                              </div>
+                            <a
+                              href={item.youtube_url || item.media_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block relative group"
+                            >
+                              <img
+                                src={isVideo ? thumbnailUrl : item.media_url}
+                                alt={item.alt_text}
+                                className="h-40 w-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = "/fallback-image.svg";
+                                }}
+                              />
+                              {isVideo && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Video size={40} className="text-[#00C076]" />
+                                </div>
+                              )}
                             </a>
                             <div className="p-4">
                               <div className="flex items-start justify-between gap-3">
                                 <div>
-                                  <p className="text-sm font-semibold text-white">{item.alt_text || (isYoutube ? "YouTube video" : "Guide video")}</p>
-                                  <p className="text-xs text-gray-400">{isYoutube ? "YouTube" : "Uploaded"} • {new Date(item.created_at).toLocaleDateString()}</p>
+                                  <p className="text-sm font-semibold text-white">{item.alt_text || (isVideo ? "Guide video" : "Guide image")}</p>
+                                  <p className="text-xs text-gray-400">
+                                    {isVideo ? (isYoutube ? "YouTube" : "Uploaded") : "Image"} • {new Date(item.created_at).toLocaleDateString()}
+                                  </p>
                                 </div>
                                 <button onClick={() => void handleDeleteMedia(item.id, item.storage_path)} className="rounded-lg border border-red-500/30 p-2 text-red-400 hover:bg-red-500/10">
                                   <Trash2 size={16} />
@@ -364,7 +515,7 @@ const GuideMediaAdmin = () => {
                       })}
                     </div>
                   </div>
-                )}
+                ))}
               </div>
             )}
           </div>

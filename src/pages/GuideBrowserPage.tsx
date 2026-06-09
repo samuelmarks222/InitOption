@@ -14,10 +14,20 @@ interface Guide {
 
 interface GuideMedia {
   id: string;
+  content_id?: string;
   media_type: "image" | "video" | "thumbnail";
   media_url: string;
   youtube_url?: string;
   alt_text?: string;
+}
+
+interface GuideSection {
+  id: string;
+  guide_id: string;
+  section_title: string | null;
+  section_order: number;
+  content_type: string;
+  content_text?: string | null;
 }
 
 const extractYoutubeVideoId = (value?: string): string | null => {
@@ -43,6 +53,7 @@ const GuideBrowserPage = () => {
   const [filteredGuides, setFilteredGuides] = useState<Guide[]>([]);
   const [selectedGuide, setSelectedGuide] = useState<Guide | null>(null);
   const [guideMedia, setGuideMedia] = useState<GuideMedia[]>([]);
+  const [guideSections, setGuideSections] = useState<GuideSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState(category || "");
@@ -62,7 +73,7 @@ const GuideBrowserPage = () => {
       const guide = guides.find((g) => g.slug === slug);
       if (guide) {
         setSelectedGuide(guide);
-        loadGuideMedia(guide.id);
+        void Promise.all([loadGuideMedia(guide.id), loadGuideSections(guide.id)]);
       }
     }
   }, [slug, guides]);
@@ -101,6 +112,21 @@ const GuideBrowserPage = () => {
     }
   };
 
+  const loadGuideSections = async (guideId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("guide_content")
+        .select("id,guide_id,section_title,section_order,content_type,content_text")
+        .eq("guide_id", guideId)
+        .order("section_order", { ascending: true });
+
+      if (error) throw error;
+      setGuideSections(data || []);
+    } catch (error) {
+      console.error("Failed to load guide sections:", error);
+    }
+  };
+
   const filterGuides = () => {
     let filtered = guides;
 
@@ -120,10 +146,32 @@ const GuideBrowserPage = () => {
     setFilteredGuides(filtered);
   };
 
+  const groupedGuideMedia = useMemo(() => {
+    const sectionMap = new Map<string, { section: GuideSection; items: GuideMedia[] }>();
+    guideSections.forEach((section) => {
+      sectionMap.set(section.id, { section, items: [] });
+    });
+
+    const unassigned: { section: null; items: GuideMedia[] } = { section: null, items: [] };
+
+    guideMedia
+      .filter((media) => media.media_type !== "thumbnail")
+      .forEach((media) => {
+        if (media.content_id && sectionMap.has(media.content_id)) {
+          sectionMap.get(media.content_id)?.items.push(media);
+        } else {
+          unassigned.items.push(media);
+        }
+      });
+
+    return [...sectionMap.values(), unassigned].filter((group) => group.items.length > 0);
+  }, [guideMedia, guideSections]);
+
   const handleSelectGuide = (guide: Guide) => {
     setSelectedGuide(guide);
     setGuideMedia([]);
-    loadGuideMedia(guide.id);
+    setGuideSections([]);
+    void Promise.all([loadGuideMedia(guide.id), loadGuideSections(guide.id)]);
     navigate(`/guides/${guide.category}/${guide.slug}`);
   };
 
@@ -269,44 +317,100 @@ const GuideBrowserPage = () => {
                     <h2 className="mb-6 text-2xl font-bold text-[#0f1419]">
                       Resources & Examples
                     </h2>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      {guideMedia
-                        .filter((media) => media.media_type !== "thumbnail")
-                        .map((media) => {
-                          const isVideo = media.media_type === "video";
-                          const thumbnailUrl = isVideo
-                            ? getYoutubeThumbnail(media.youtube_url || media.media_url) || media.media_url
-                            : media.media_url;
+                    {guideSections.length > 0 ? (
+                      groupedGuideMedia.map((group) => (
+                        <div key={group.section?.id ?? "general"} className="space-y-4 mb-6">
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                              <h3 className="text-xl font-semibold text-[#0f1419]">
+                                {group.section?.section_title || "General media"}
+                              </h3>
+                              <p className="text-sm text-[#536471]">
+                                {group.section ? `Section ${group.section.section_order + 1}` : "Unassigned content"}
+                              </p>
+                            </div>
+                            <span className="rounded-full bg-[#1c81f8]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#1c81f8]">
+                              {group.items.length} item{group.items.length === 1 ? "" : "s"}
+                            </span>
+                          </div>
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            {group.items.map((media) => {
+                              const isVideo = media.media_type === "video";
+                              const thumbnailUrl = isVideo
+                                ? getYoutubeThumbnail(media.youtube_url || media.media_url) || media.media_url
+                                : media.media_url;
 
-                          return (
-                            <a
-                              key={media.id}
-                              href={media.youtube_url || media.media_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="group relative overflow-hidden rounded-lg border border-[#e5e7eb] transition-all hover:border-[#1c81f8]"
-                            >
-                              <img
-                                src={thumbnailUrl}
-                                alt={media.alt_text || (isVideo ? "Guide video" : "Guide resource")}
-                                className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                              />
-                              {isVideo && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity group-hover:bg-black/35">
-                                  <span className="rounded-full bg-red-600/90 px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-lg shadow-red-900/30">
-                                    Watch video
-                                  </span>
+                              return (
+                                <a
+                                  key={media.id}
+                                  href={media.youtube_url || media.media_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="group relative overflow-hidden rounded-lg border border-[#e5e7eb] transition-all hover:border-[#1c81f8]"
+                                >
+                                  <img
+                                    src={thumbnailUrl}
+                                    alt={media.alt_text || (isVideo ? "Guide video" : "Guide resource")}
+                                    className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                  />
+                                  {isVideo && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity group-hover:bg-black/35">
+                                      <span className="rounded-full bg-red-600/90 px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-lg shadow-red-900/30">
+                                        Watch video
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/70 via-transparent to-transparent p-4 opacity-0 transition-opacity group-hover:opacity-100">
+                                    <p className="text-center text-sm font-semibold text-white">
+                                      {isVideo ? "Open on YouTube" : "Open image"}
+                                    </p>
+                                  </div>
+                                </a>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {guideMedia
+                          .filter((media) => media.media_type !== "thumbnail")
+                          .map((media) => {
+                            const isVideo = media.media_type === "video";
+                            const thumbnailUrl = isVideo
+                              ? getYoutubeThumbnail(media.youtube_url || media.media_url) || media.media_url
+                              : media.media_url;
+
+                            return (
+                              <a
+                                key={media.id}
+                                href={media.youtube_url || media.media_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group relative overflow-hidden rounded-lg border border-[#e5e7eb] transition-all hover:border-[#1c81f8]"
+                              >
+                                <img
+                                  src={thumbnailUrl}
+                                  alt={media.alt_text || (isVideo ? "Guide video" : "Guide resource")}
+                                  className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                />
+                                {isVideo && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity group-hover:bg-black/35">
+                                    <span className="rounded-full bg-red-600/90 px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-lg shadow-red-900/30">
+                                      Watch video
+                                    </span>
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/70 via-transparent to-transparent p-4 opacity-0 transition-opacity group-hover:opacity-100">
+                                  <p className="text-center text-sm font-semibold text-white">
+                                    {isVideo ? "Open on YouTube" : "Open image"}
+                                  </p>
                                 </div>
-                              )}
-                              <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/70 via-transparent to-transparent p-4 opacity-0 transition-opacity group-hover:opacity-100">
-                                <p className="text-center text-sm font-semibold text-white">
-                                  {isVideo ? "Open on YouTube" : "Open image"}
-                                </p>
-                              </div>
-                            </a>
-                          );
-                        })}
-                    </div>
+                              </a>
+                            );
+                          })}
+                      </div>
+                    )}
                   </div>
                 )}
 
