@@ -15,6 +15,8 @@ export type PublicPageKey =
   | "terms"
   | "privacy"
   | "risk-disclaimer"
+  | "aml-kyc"
+  | "payment-policy"
   | "affiliate-program"
   | "site-map";
 
@@ -283,6 +285,384 @@ export const PUBLIC_PAGE_DEFINITIONS: Record<PublicPageKey, PublicPageDefinition
           "Telegram: t.me/initoption",
           "Twitter / X: @initoption",
         ],
+      },
+    ],
+  },
+  "aml-kyc": {
+    key: "aml-kyc",
+    path: "/aml-kyc",
+    eyebrow: "Policy",
+    title: "AML and KYC policy",
+    description: "Our AML and KYC policy explains how Init Option prevents financial crime, protects customer funds, and keeps the platform compliant.",
+    seoTitle: "AML and KYC Policy | Init Option",
+    seoDescription: "Read the Init Option Anti-Money Laundering and Know Your Customer policy, including risk assessment, customer due diligence, monitoring, reporting, and compliance.",
+    keywords: "AML policy, KYC policy, init option compliance, anti-money laundering, customer due diligence",
+    sections: [
+      {
+        title: "Introduction and scope",
+        paragraphs: [
+          "Init Option (the Company, we, us, our) is committed to combating money laundering, terrorist financing, and other financial crime on the platform.",
+          "This AML and KYC Policy applies to all users, transactions, employees, contractors, agents, and third-party payment or verification partners working with Init Option.",
+          "Users who do not comply with this Policy may face account restrictions, termination, or reporting to authorities.",
+        ],
+      },
+      {
+        title: "Legal framework",
+        paragraphs: [
+          "This Policy is designed to comply with applicable Kenya laws and internationally recognized standards, including POCAMLA 2009, the AML Amendment Regulations 2023, FRC guidance, FATF recommendations, UNSC counter-terrorism financing resolutions, and other relevant regimes.",
+          "For users in additional jurisdictions, we also consider EU 6AMLD and the US Bank Secrecy Act where applicable.",
+          "We are required to verify identity, monitor transactions, screen sanctions, and report suspicious activity to the Financial Reporting Centre and other competent authorities.",
+        ],
+      },
+      {
+        title: "Definition of money laundering and terrorist financing",
+        paragraphs: [
+          "Money laundering is the process of making illegally obtained funds appear legitimate, typically through placement, layering, and integration.",
+          "Terrorist financing is the provision of funds to support terrorist activities and can involve both legal and illegal financial sources.",
+        ],
+        bullets: [
+          "Placement: introducing illicit funds into the financial system",
+          "Layering: moving funds through multiple transactions to obscure the origin of funds",
+          "Integration: using funds as apparently legitimate proceeds",
+          "Terrorist financing: providing financial support for terrorist objectives",
+        ],
+      },
+      {
+        title: "Risk assessment",
+        paragraphs: [
+          "We conduct regular risk assessments based on geography, customer profile, and transaction patterns.",
+          "Risk controls are updated quarterly to reflect changes in sanctions lists, jurisdiction risk, and platform activity.",
+        ],
+        bullets: [
+          "High risk: sanctioned jurisdictions, PEPs, unusual transaction activity",
+          "Medium risk: new customers, large volumes, emerging markets",
+          "Low risk: verified users in strong-AML jurisdictions with stable activity",
+        ],
+      },
+      {
+        title: "Customer due diligence (CDD)",
+        paragraphs: [
+          "CDD is performed for all users before a relationship is established and on an ongoing basis as needed.",
+          "We collect full legal name, date of birth, country of residence, email, phone number, and source of funds information when required.",
+        ],
+        bullets: [
+          "Basic identity verification at registration",
+          "Full CDD for significant deposits or withdrawals",
+          "Additional documentation when risk indicators appear",
+        ],
+      },
+      {
+        title: "Enhanced due diligence (EDD)",
+        paragraphs: [
+          "EDD is required for higher-risk customers, such as PEPs, users from high-risk jurisdictions, and large or unusual transactions.",
+          "EDD may include additional identity documents, source-of-funds proof, and senior management approval.",
+        ],
+        bullets: [
+          "Second government ID or certified documents",
+          "Bank statements, pay slips, or tax records",
+          "Frequent account reviews and manager sign-off",
+        ],
+      },
+      {
+        title: "Simplified due diligence (SDD)",
+        paragraphs: [
+          "SDD may be applied to lower-risk users, such as demo account holders and verified customers with low transaction volume.",
+          "SDD uses reduced monitoring unless circumstances change or suspicious activity arises.",
+        ],
+        bullets: [
+          "Demo account users with no real deposits",
+          "Low-value accounts from low-risk jurisdictions",
+          "Periodic review at least once a year",
+        ],
+      },
+      {
+        title: "KYC verification procedures",
+        paragraphs: [
+          "Verification is performed in tiers to confirm identity, address, and source of funds.",
+          "Documents must be current, legible, and issued by recognised authorities.",
+        ],
+        bullets: [
+          "Tier 1: government-issued ID such as passport, national ID, or driver's licence",
+          "Tier 2: address proof dated within 3 months, such as utility bills or bank statements",
+          "Tier 3: source of funds documentation for high-value accounts",
+        ],
+      },
+      {
+        title: "Politically exposed persons (PEPs)",
+        paragraphs: [
+          "PEPs and their close associates are subject to mandatory enhanced due diligence and ongoing monitoring.",
+          "This includes individuals in prominent public positions, family members, and known business partners.",
+        ],
+        bullets: [
+          "Domestic and foreign political figures",
+          "Senior officials in international organisations",
+          "Family members and close associates",
+        ],
+      },
+      {
+        title: "Transaction monitoring",
+        paragraphs: [
+          "We monitor transactions in real time and flag patterns that suggest suspicious behavior.",
+          "Flagged transactions may be reviewed manually and paused pending additional information.",
+        ],
+        bullets: [
+          "Large or rapid deposits and withdrawals",
+          "Multiple funding sources within a short period",
+          "Deposits without subsequent trading activity",
+        ],
+      },
+      {
+        title: "Suspicious activity reporting (SAR)",
+        paragraphs: [
+          "SARs are filed with the Financial Reporting Centre and other authorities when suspicious activity is identified.",
+          "It is illegal to tip off users that a SAR has been filed.",
+        ],
+        bullets: [
+          "Internal review within five days",
+          "SAR submitted within seven days of confirmation",
+          "Records retained for seven years",
+        ],
+      },
+      {
+        title: "Record keeping",
+        paragraphs: [
+          "We retain AML and KYC records for a minimum of seven years after the business relationship ends.",
+          "Access to records is restricted to authorised compliance personnel.",
+        ],
+        bullets: [
+          "KYC documents: 7 years after closure",
+          "Transaction history: 7 years",
+          "SAR filings and audit logs: 7 years",
+        ],
+      },
+      {
+        title: "Employee training and compliance officer",
+        paragraphs: [
+          "All staff receive AML/KYC training at hire and on a regular schedule.",
+          "A designated Compliance Officer oversees policy implementation, reporting, and audits.",
+        ],
+        bullets: [
+          "Initial training within 30 days of hire",
+          "Annual refresher training for all employees",
+          "Six-month review cycles for compliance staff",
+        ],
+      },
+      {
+        title: "Prohibited jurisdictions and sanctions screening",
+        paragraphs: [
+          "We block users from sanctioned jurisdictions and screen every user against global sanctions lists.",
+          "Positive matches result in immediate account freeze and regulator notification.",
+        ],
+        bullets: [
+          "UN, EU, UK, OFAC, and other sanctions lists",
+          "Account freeze on positive matches",
+          "SAR filed within 24 hours for confirmed sanctions matches",
+        ],
+      },
+      {
+        title: "Cryptocurrency AML measures",
+        paragraphs: [
+          "Cryptocurrency transactions are subject to address screening, blockchain analysis, and confirmation requirements.",
+          "We may request additional source-of-funds documentation for high-value crypto transactions.",
+        ],
+        bullets: [
+          "Address screening for sanctioned wallets",
+          "Minimum confirmation counts before crediting deposits",
+          "Source of funds review for large crypto deposits",
+        ],
+      },
+      {
+        title: "Third-party reliance and audit",
+        paragraphs: [
+          "We may rely on third-party payment processors and KYC providers, but we retain responsibility for compliance.",
+          "The AML program is audited internally and externally at regular intervals.",
+        ],
+      },
+      {
+        title: "User obligations and consequences",
+        paragraphs: [
+          "Users must provide accurate information, respond promptly to verification requests, and avoid prohibited activity.",
+          "Non-compliance can result in account suspension, termination, or reporting to authorities.",
+        ],
+      },
+      {
+        title: "Policy updates and contact information",
+        paragraphs: [
+          "Material changes to this Policy will be communicated by email and platform notification.",
+          "For questions, contact compliance@initoption.com.",
+        ],
+      },
+    ],
+    relatedLinks: [
+      {
+        label: "Terms and Conditions",
+        to: "/terms",
+        description: "Review the general terms that govern the Init Option platform.",
+      },
+      {
+        label: "Privacy policy",
+        to: "/privacy",
+        description: "See how we protect personal and payment data.",
+      },
+      {
+        label: "Payment policy",
+        to: "/payment-policy",
+        description: "Learn more about deposits, withdrawals, fees, and payment security.",
+      },
+    ],
+  },
+  "payment-policy": {
+    key: "payment-policy",
+    path: "/payment-policy",
+    eyebrow: "Policy",
+    title: "Payment policy",
+    description: "This Payment Policy explains deposits, withdrawals, fees, limits, security, and dispute handling for Init Option.",
+    seoTitle: "Payment Policy | Init Option",
+    seoDescription: "Read the Init Option payment policy for deposit and withdrawal procedures, payment methods, limits, fees, and security.",
+    keywords: "payment policy, deposit policy, withdrawal policy, init option, payment security, payment fees",
+    sections: [
+      {
+        title: "Introduction",
+        paragraphs: [
+          "This Payment Policy governs financial transactions on Init Option, including deposits, withdrawals, fees, and security measures.",
+          "Using the platform for funding or withdrawals means you agree to these terms.",
+        ],
+      },
+      {
+        title: "Accepted payment methods",
+        paragraphs: [
+          "We support M-PESA for Kenyan users and major cryptocurrencies for digital funding.",
+        ],
+        bullets: [
+          "M-PESA deposits: minimum $5 or 650 KES, up to 50,000 KES per transaction", 
+          "Crypto deposits: minimum $10, supported BTC, ETH, USDT, LTC", 
+          "M-PESA withdrawals: minimum $5, processed in about 30 minutes", 
+          "Crypto withdrawals: minimum $10, processed within 24 hours subject to network confirmation",
+        ],
+      },
+      {
+        title: "Deposit procedures",
+        paragraphs: [
+          "Follow the deposit workflow in your Init Option account. M-PESA deposits are authorised using your registered phone number and PIN.",
+          "Crypto deposits require sending the exact amount to the address provided and waiting for the required confirmations.",
+        ],
+      },
+      {
+        title: "Withdrawal procedures",
+        paragraphs: [
+          "Withdrawals are reviewed for security and compliance. First-time withdrawals require KYC verification.",
+          "Always check your withdrawal details carefully before submitting, especially crypto wallet addresses.",
+        ],
+      },
+      {
+        title: "Processing times",
+        paragraphs: [
+          "Processing times vary by payment method and may be affected by network congestion or compliance reviews.",
+        ],
+        bullets: [
+          "M-PESA deposits: instant to 5 minutes", 
+          "BTC deposits: 30 minutes standard, up to 3 hours", 
+          "ETH deposits: 30 minutes standard, up to 2 hours", 
+          "M-PESA withdrawals: 30 minutes standard, up to 2 hours", 
+          "Crypto withdrawals: 2 hours standard, up to 24 hours",
+        ],
+      },
+      {
+        title: "Minimum and maximum limits",
+        paragraphs: [
+          "Limits depend on verification tier. Higher verification levels receive higher deposit and withdrawal allowances.",
+        ],
+        bullets: [
+          "Unverified: deposits starting at $5, daily max $1,000", 
+          "Verified: deposits up to $10,000, daily max $10,000", 
+          "High-tier verified: larger limits available with source-of-funds documentation",
+        ],
+      },
+      {
+        title: "Fees and charges",
+        paragraphs: [
+          "Init Option does not charge M-PESA deposit fees, though payment partners may apply small third-party fees.",
+          "Cryptocurrency funding carries a service fee and network costs depending on the blockchain.",
+        ],
+        bullets: [
+          "M-PESA deposit fee: 0% charged by Init Option", 
+          "Crypto deposit fee: 0.5% service fee", 
+          "Network fees apply for crypto withdrawals", 
+          "Other fees apply only when clearly disclosed, such as deposit reversal or cancellation fees",
+        ],
+      },
+      {
+        title: "Currency and exchange rates",
+        paragraphs: [
+          "Account balances are denominated in USD. Exchange rates for M-PESA and crypto are applied at the time of the transaction.",
+          "Rates may fluctuate between initiation and settlement, and the displayed rate is the one that applies.",
+        ],
+      },
+      {
+        title: "Payment security",
+        paragraphs: [
+          "Payment data is protected with TLS encryption and secure platform controls.",
+          "Users must keep their account credentials private and use only payment methods registered in their own name.",
+        ],
+      },
+      {
+        title: "Failed transactions",
+        paragraphs: [
+          "Failed deposits or withdrawals may occur due to incorrect details, insufficient funds, or network issues.",
+          "Failed transactions are returned where possible and users receive an explanation of the issue.",
+        ],
+      },
+      {
+        title: "Refunds, cancellations, chargebacks, and disputes",
+        paragraphs: [
+          "Deposits are generally non-refundable once credited to your trading balance. Chargebacks are prohibited and may lead to account suspension.",
+          "If a transaction error occurs, contact support promptly for resolution.",
+        ],
+      },
+      {
+        title: "Third-party payment processors",
+        paragraphs: [
+          "We work with trusted third parties such as SasaPay for M-PESA and Plisio for cryptocurrencies.",
+          "Init Option remains responsible for the overall funding and withdrawal experience.",
+        ],
+      },
+      {
+        title: "User obligations",
+        paragraphs: [
+          "Users must provide accurate payment information, maintain sufficient funds, and complete KYC before withdrawals.",
+          "Third-party payments, structured deposits, and fraudulent funding methods are prohibited.",
+        ],
+      },
+      {
+        title: "Payment holds and reversals",
+        paragraphs: [
+          "Large or suspicious transactions may be held for review or reversed if required by law or security policy.",
+          "We reserve the right to reverse transactions that are fraudulent, unauthorized, or processed in error.",
+        ],
+      },
+      {
+        title: "Policy updates and contact information",
+        paragraphs: [
+          "This Payment Policy may change at any time, and material updates will be communicated by email and platform notification.",
+          "For payment questions, contact support via the platform or customer service channels.",
+        ],
+      },
+    ],
+    relatedLinks: [
+      {
+        label: "AML and KYC policy",
+        to: "/aml-kyc",
+        description: "Read the compliance policy that governs verification and suspicious activity reporting.",
+      },
+      {
+        label: "Terms and Conditions",
+        to: "/terms",
+        description: "Review the broad legal terms for using Init Option.",
+      },
+      {
+        label: "Privacy policy",
+        to: "/privacy",
+        description: "Learn how we safeguard your payment and personal information.",
       },
     ],
   },
