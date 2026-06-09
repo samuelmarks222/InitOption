@@ -46,13 +46,13 @@ const Header = () => {
           <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
             <div className="flex min-w-0 flex-1 items-center gap-4">
               <SiteLogo
-                showText={!logoUrl}
-                subtitle={logoUrl ? undefined : "Trading platform"}
+                showText={true}
+                subtitle="Trading platform"
                 className="gap-3"
                 imageClassName="h-9 max-w-[156px] sm:h-10 sm:max-w-[210px]"
                 markClassName="h-10 w-10 rounded-[18px] bg-[linear-gradient(135deg,#ff6a2b_0%,#ff9d5c_55%,#221912_100%)]"
-                nameClassName="font-landing-display text-sm tracking-[0.16em] text-[#141117] sm:text-base"
-                subtitleClassName="font-landing-copy text-[10px] tracking-[0.24em] text-[#7d6c5f]"
+                nameClassName="font-landing-display text-sm tracking-[0.16em] text-[#182838] sm:text-base"
+                subtitleClassName="font-landing-copy text-[10px] tracking-[0.24em] text-[#182838]"
               />
 
               <div className="hidden rounded-full border border-[#1b1820]/10 bg-white/70 px-3 py-1.5 font-landing-copy text-[10px] font-semibold uppercase tracking-[0.22em] text-[#6e6259] xl:inline-flex">
