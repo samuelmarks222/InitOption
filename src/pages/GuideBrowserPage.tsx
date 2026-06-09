@@ -135,15 +135,15 @@ const GuideBrowserPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0f1826] via-[#1a2438] to-[#0f1826]">
+    <div className="min-h-screen bg-gradient-to-br from-white via-[#f5f7fa] to-white">
       {/* Header */}
-      <div className="border-b border-white/10 bg-gradient-to-r from-white/[0.03] to-white/[0.01] backdrop-blur-sm">
+      <div className="border-b border-[#e5e7eb] bg-gradient-to-r from-[#f5f7fa] to-white">
         <div className="px-4 py-12 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-2">
             <BookOpen className="h-8 w-8 text-[#1c81f8]" />
-            <h1 className="text-4xl font-bold text-white">Trading Guides</h1>
+            <h1 className="text-4xl font-bold text-[#0f1419]">Trading Guides</h1>
           </div>
-          <p className="text-gray-400 text-lg">
+          <p className="text-[#536471] text-lg">
             Learn everything you need to succeed in binary options trading
           </p>
         </div>
@@ -156,26 +156,26 @@ const GuideBrowserPage = () => {
             <div className="space-y-4">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-3 top-3 h-5 w-5 text-[#536471]" />
                 <input
                   type="text"
                   placeholder="Search guides..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-white/[0.03] pl-10 pr-4 py-2.5 text-white placeholder-gray-400 focus:border-[#1c81f8] focus:outline-none focus:ring-1 focus:ring-[#1c81f8]"
+                  className="w-full rounded-lg border border-[#e5e7eb] bg-white pl-10 pr-4 py-2.5 text-[#0f1419] placeholder-[#536471] focus:border-[#1c81f8] focus:outline-none focus:ring-1 focus:ring-[#1c81f8]"
                 />
               </div>
 
               {/* Categories */}
-              <div className="rounded-lg border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-4 backdrop-blur-sm">
-                <h3 className="mb-3 font-semibold text-white">Categories</h3>
+              <div className="rounded-lg border border-[#e5e7eb] bg-white p-4">
+                <h3 className="mb-3 font-semibold text-[#0f1419]">Categories</h3>
                 <div className="space-y-2">
                   <button
                     onClick={() => handleCategoryChange("")}
                     className={`w-full rounded-lg px-4 py-2 text-left text-sm font-semibold transition-all ${
                       activeCategory === ""
                         ? "bg-[#1c81f8] text-white shadow-lg shadow-[#1c81f8]/30"
-                        : "text-gray-300 hover:bg-white/[0.05]"
+                        : "text-[#536471] hover:bg-[#f5f7fa]"
                     }`}
                   >
                     All Guides
@@ -187,7 +187,7 @@ const GuideBrowserPage = () => {
                       className={`w-full rounded-lg px-4 py-2 text-left text-sm font-semibold transition-all ${
                         activeCategory === cat
                           ? "border-l-2 border-[#1c81f8] bg-[#1c81f8]/10 text-[#1c81f8]"
-                          : "text-gray-300 hover:bg-white/[0.05]"
+                          : "text-[#536471] hover:bg-[#f5f7fa]"
                       }`}
                     >
                       {cat}
@@ -197,8 +197,8 @@ const GuideBrowserPage = () => {
               </div>
 
               {/* Guide List */}
-              <div className="rounded-lg border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-4 backdrop-blur-sm max-h-[600px] overflow-y-auto">
-                <h3 className="mb-3 font-semibold text-white">
+              <div className="rounded-lg border border-[#e5e7eb] bg-white p-4 max-h-[600px] overflow-y-auto">
+                <h3 className="mb-3 font-semibold text-[#0f1419]">
                   {filteredGuides.length} {activeCategory ? `in ${activeCategory}` : "Guides"}
                 </h3>
                 {loading ? (
@@ -206,7 +206,7 @@ const GuideBrowserPage = () => {
                     <Loader className="h-6 w-6 animate-spin text-[#1c81f8]" />
                   </div>
                 ) : filteredGuides.length === 0 ? (
-                  <p className="text-sm text-gray-400">No guides found</p>
+                  <p className="text-sm text-[#536471]">No guides found</p>
                 ) : (
                   <div className="space-y-2">
                     {filteredGuides.map((guide) => (
@@ -215,14 +215,14 @@ const GuideBrowserPage = () => {
                         onClick={() => handleSelectGuide(guide)}
                         className={`w-full rounded-lg border px-4 py-3 text-left transition-all ${
                           selectedGuide?.id === guide.id
-                            ? "border-[#1c81f8] bg-[#1c81f8]/10 text-white"
-                            : "border-white/10 text-gray-300 hover:border-[#1c81f8]/50 hover:bg-white/[0.03]"
+                            ? "border-[#1c81f8] bg-[#1c81f8]/10 text-[#0f1419]"
+                            : "border-[#e5e7eb] text-[#536471] hover:border-[#1c81f8]/50 hover:bg-[#f5f7fa]"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
                             <p className="font-semibold">{guide.title}</p>
-                            <p className="text-xs text-gray-500">{guide.category}</p>
+                            <p className="text-xs text-[#536471]">{guide.category}</p>
                           </div>
                           <ChevronRight className="h-5 w-5 flex-shrink-0" />
                         </div>
@@ -243,7 +243,7 @@ const GuideBrowserPage = () => {
             ) : selectedGuide ? (
               <div className="space-y-6">
                 {/* Guide Header */}
-                <div className="rounded-lg border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-8 backdrop-blur-sm">
+                <div className="rounded-lg border border-[#e5e7eb] bg-white p-8">
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div>
                       <div className="inline-block rounded-lg bg-[#1c81f8]/10 px-3 py-1 mb-3">
@@ -251,13 +251,13 @@ const GuideBrowserPage = () => {
                           GUIDE
                         </span>
                       </div>
-                      <h1 className="text-4xl font-bold text-white">
+                      <h1 className="text-4xl font-bold text-[#0f1419]">
                         {selectedGuide.title}
                       </h1>
                     </div>
                   </div>
                   {selectedGuide.description && (
-                    <p className="text-lg leading-relaxed text-gray-300">
+                    <p className="text-lg leading-relaxed text-[#536471]">
                       {selectedGuide.description}
                     </p>
                   )}
@@ -265,8 +265,8 @@ const GuideBrowserPage = () => {
 
                 {/* Media Gallery */}
                 {guideMedia.filter((media) => media.media_type !== "thumbnail").length > 0 && (
-                  <div className="rounded-lg border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-8 backdrop-blur-sm">
-                    <h2 className="mb-6 text-2xl font-bold text-white">
+                  <div className="rounded-lg border border-[#e5e7eb] bg-white p-8">
+                    <h2 className="mb-6 text-2xl font-bold text-[#0f1419]">
                       Resources & Examples
                     </h2>
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -284,7 +284,7 @@ const GuideBrowserPage = () => {
                               href={media.youtube_url || media.media_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="group relative overflow-hidden rounded-lg border border-white/10 transition-all hover:border-[#1c81f8]"
+                              className="group relative overflow-hidden rounded-lg border border-[#e5e7eb] transition-all hover:border-[#1c81f8]"
                             >
                               <img
                                 src={thumbnailUrl}
@@ -312,10 +312,10 @@ const GuideBrowserPage = () => {
 
                 {/* Call to Action */}
                 <div className="rounded-lg border border-[#FFB800]/30 bg-[#FFB800]/8 p-8 backdrop-blur-sm">
-                  <h3 className="mb-2 text-lg font-bold text-[#FFD966]">
+                  <h3 className="mb-2 text-lg font-bold text-[#B8860B]">
                     Ready to start trading?
                   </h3>
-                  <p className="text-gray-300 mb-4">
+                  <p className="text-[#536471] mb-4">
                     Apply these strategies and join thousands of successful traders on Init Option.
                   </p>
                   <button
@@ -328,9 +328,9 @@ const GuideBrowserPage = () => {
                 </div>
               </div>
             ) : (
-              <div className="rounded-lg border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-12 text-center backdrop-blur-sm">
-                <BookOpen className="mx-auto mb-4 h-12 w-12 text-gray-500" />
-                <p className="text-gray-400">
+              <div className="rounded-lg border border-[#e5e7eb] bg-white p-12 text-center">
+                <BookOpen className="mx-auto mb-4 h-12 w-12 text-[#536471]" />
+                <p className="text-[#536471]">
                   {searchTerm
                     ? "No guides match your search. Try different keywords."
                     : "Select a guide from the list to get started"}

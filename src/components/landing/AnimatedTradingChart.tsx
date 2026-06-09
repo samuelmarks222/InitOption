@@ -94,7 +94,7 @@ const AnimatedTradingChart = () => {
 
       context.clearRect(0, 0, width, height);
 
-      context.strokeStyle = "rgba(255, 255, 255, 0.08)";
+      context.strokeStyle = "rgba(0, 0, 0, 0.06)";
       context.lineWidth = 0.75;
       for (let row = 0; row < 6; row += 1) {
         const y = (height / 6) * row;
@@ -153,7 +153,7 @@ const AnimatedTradingChart = () => {
       const lastY = toY(lastCandle.close);
 
       context.setLineDash([4, 4]);
-      context.strokeStyle = "rgba(255, 255, 255, 0.12)";
+      context.strokeStyle = "rgba(0, 0, 0, 0.1)";
       context.lineWidth = 1;
       context.beginPath();
       context.moveTo(0, lastY);
@@ -268,8 +268,8 @@ const AnimatedTradingChart = () => {
   const payout = (investment * (parseFloat(activePair.payout) / 100) + investment).toFixed(2);
 
   return (
-    <div className="w-full overflow-hidden rounded-[22px] border border-white/10 bg-white/5 shadow-none sm:rounded-[28px]">
-      <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-white/5 px-2.5 py-2 sm:px-4">
+    <div className="w-full overflow-hidden rounded-[22px] border border-[#e5e7eb] bg-white shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[28px]">
+      <div className="flex items-center justify-between gap-2 border-b border-[#e5e7eb] bg-[#f8f9fc] px-2.5 py-2 sm:px-4">
         <div className="flex min-w-0 items-center gap-1 overflow-x-auto scrollbar-hide sm:gap-2">
           {PAIRS.map((pair, index) => (
             <motion.button
@@ -279,7 +279,7 @@ const AnimatedTradingChart = () => {
               className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border px-2 py-1 text-[9px] font-medium transition-colors sm:text-xs ${
                 index === activePairIndex
                   ? "border-[#1c81f8]/30 bg-[#1c81f8]/10 text-[#1c81f8]"
-                  : "border-transparent text-white/60 hover:text-white"
+                  : "border-transparent text-[#536471] hover:text-[#0f1419]"
               }`}
               type="button"
             >
@@ -291,7 +291,7 @@ const AnimatedTradingChart = () => {
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <div className="hidden items-center gap-1.5 rounded-md border border-[#1c81f8]/18 bg-[#1c81f8]/10 px-2.5 py-1 sm:flex">
-            <span className="text-[10px] text-white/60">Balance:</span>
+            <span className="text-[10px] text-[#536471]">Balance:</span>
             <motion.span
               key={balance.toFixed(2)}
               initial={{ y: -8, opacity: 0 }}
@@ -301,7 +301,7 @@ const AnimatedTradingChart = () => {
               ${balance.toFixed(2)}
             </motion.span>
           </div>
-          <div className="flex items-center gap-1.5 text-[9px] text-white/60 sm:gap-2 sm:text-[10px]">
+          <div className="flex items-center gap-1.5 text-[9px] text-[#536471] sm:gap-2 sm:text-[10px]">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#1c81f8]" />
             LIVE
           </div>
@@ -312,13 +312,13 @@ const AnimatedTradingChart = () => {
         <div className="relative flex-1 min-h-[198px] sm:min-h-[320px]">
           <canvas ref={canvasRef} className="h-[198px] w-full sm:h-[320px]" style={{ display: "block" }} />
 
-          <div className="absolute left-2 top-2 rounded-full border border-[#1c81f8]/20 bg-white/10 px-2 py-1 text-[9px] font-semibold text-[#1c81f8] backdrop-blur min-[430px]:hidden">
+          <div className="absolute left-2 top-2 rounded-full border border-[#1c81f8]/20 bg-white/90 px-2 py-1 text-[9px] font-semibold text-[#1c81f8] backdrop-blur min-[430px]:hidden">
             52% higher
           </div>
 
           <div className="absolute left-3 top-1/4 hidden flex-col items-center gap-0.5 min-[430px]:flex">
             <div className="text-[10px] font-bold text-[#1c81f8]">HIGHER</div>
-            <div className="text-[9px] text-white/60">52%</div>
+            <div className="text-[9px] text-[#536471]">52%</div>
             <div className="my-1 flex flex-col gap-0.5">
               {Array.from({ length: 5 }).map((_, index) => (
                 <motion.div
@@ -335,12 +335,12 @@ const AnimatedTradingChart = () => {
                   key={`down-${index}`}
                   animate={{ opacity: [0.4, 0.7, 0.4] }}
                   transition={{ duration: 1.5, delay: index * 0.15, repeat: Infinity }}
-                  className="h-2 w-3 rotate-45 bg-white/20"
+                  className="h-2 w-3 rotate-45 bg-[#536471]/30"
                 />
               ))}
             </div>
-            <div className="text-[9px] text-white/60">48%</div>
-            <div className="text-[10px] font-bold text-white/60">LOWER</div>
+            <div className="text-[9px] text-[#536471]">48%</div>
+            <div className="text-[10px] font-bold text-[#536471]">LOWER</div>
           </div>
 
           <AnimatePresence>
@@ -369,7 +369,7 @@ const AnimatedTradingChart = () => {
                   className={`flex flex-col items-center gap-1 rounded-xl px-4 py-3 text-sm font-bold shadow-2xl sm:px-8 sm:py-4 sm:text-xl ${
                     showTradeResult.result === "win"
                       ? "bg-[#1c81f8] text-white shadow-[0_20px_40px_rgba(28,129,248,0.24)]"
-                      : "border border-white/15 bg-[#0f487c] text-white shadow-none"
+                      : "border border-[#e5e7eb] bg-white text-[#0f1419] shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
                   }`}
                 >
                   <span>{showTradeResult.result === "win" ? "TRADE WON" : "TRADE LOST"}</span>
@@ -386,8 +386,8 @@ const AnimatedTradingChart = () => {
             )}
           </AnimatePresence>
 
-          <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-md border border-white/10 bg-[#0f487c]/90 px-2 py-1 backdrop-blur sm:bottom-3 sm:right-20 sm:px-2.5">
-            <span className="text-[9px] text-white/60">Profit:</span>
+          <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-md border border-[#e5e7eb] bg-white/90 px-2 py-1 backdrop-blur sm:bottom-3 sm:right-20 sm:px-2.5">
+            <span className="text-[9px] text-[#536471]">Profit:</span>
             <motion.span
               key={totalProfit.toFixed(2)}
               initial={{ scale: 1.3 }}
@@ -399,16 +399,16 @@ const AnimatedTradingChart = () => {
           </div>
         </div>
 
-        <div className="flex w-full flex-col gap-2.5 border-t border-white/10 bg-white/5 p-2.5 sm:gap-3 sm:p-4 lg:w-[220px] lg:border-l lg:border-t-0">
+        <div className="flex w-full flex-col gap-2.5 border-t border-[#e5e7eb] bg-[#f8f9fc] p-2.5 sm:gap-3 sm:p-4 lg:w-[220px] lg:border-l lg:border-t-0">
           <div className="flex items-center justify-between">
             <div className="flex min-w-0 items-center gap-1.5">
-              <span className="truncate text-xs font-bold text-white sm:text-sm">{activePair.name}</span>
+              <span className="truncate text-xs font-bold text-[#0f1419] sm:text-sm">{activePair.name}</span>
               <span className="text-[10px] font-semibold text-[#1c81f8] sm:text-xs">{activePair.payout}</span>
             </div>
           </div>
 
           <div className="flex items-center justify-between rounded-md border border-[#1c81f8]/18 bg-[#1c81f8]/10 px-2.5 py-1.5 sm:hidden">
-            <span className="text-[10px] text-white/60">Balance</span>
+            <span className="text-[10px] text-[#536471]">Balance</span>
             <motion.span
               key={balance.toFixed(2)}
               initial={{ y: -5, opacity: 0 }}
@@ -421,11 +421,11 @@ const AnimatedTradingChart = () => {
 
           <div className="grid gap-2 min-[390px]:grid-cols-2 lg:grid-cols-1">
             <div className="space-y-1.5">
-              <div className="text-[10px] text-white/60">Time</div>
-              <div className="flex items-center justify-between rounded-lg border border-white/12 bg-white/8 px-3 py-1.5">
-                <span className="text-[10px] text-white/60">-</span>
-                <span className="font-mono text-xs font-bold text-white sm:text-sm">00:01:00</span>
-                <span className="text-[10px] text-white/60">+</span>
+              <div className="text-[10px] text-[#536471]">Time</div>
+              <div className="flex items-center justify-between rounded-lg border border-[#e5e7eb] bg-white px-3 py-1.5">
+                <span className="text-[10px] text-[#536471]">-</span>
+                <span className="font-mono text-xs font-bold text-[#0f1419] sm:text-sm">00:01:00</span>
+                <span className="text-[10px] text-[#536471]">+</span>
               </div>
               <div className="text-center">
                 <span className="text-[9px] font-medium text-[#1c81f8]">SWITCH TIME</span>
@@ -434,27 +434,27 @@ const AnimatedTradingChart = () => {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-white/60">Investment</span>
+                <span className="text-[10px] text-[#536471]">Investment</span>
                 <span className="text-[9px] font-medium text-[#1c81f8]">SWITCH</span>
               </div>
-              <div className="flex items-center justify-between rounded-lg border border-white/12 bg-white/8 px-3 py-1.5">
-                <span className="text-[10px] text-white/60">-</span>
+              <div className="flex items-center justify-between rounded-lg border border-[#e5e7eb] bg-white px-3 py-1.5">
+                <span className="text-[10px] text-[#536471]">-</span>
                 <motion.span
                   key={investment}
                   initial={{ scale: 1.2 }}
                   animate={{ scale: 1 }}
-                  className="font-mono text-xs font-bold text-white sm:text-sm"
+                  className="font-mono text-xs font-bold text-[#0f1419] sm:text-sm"
                 >
                   {investment} $
                 </motion.span>
-                <span className="text-[10px] text-white/60">+</span>
+                <span className="text-[10px] text-[#536471]">+</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center justify-between text-[10px]">
-            <span className="text-white/60">Your payout:</span>
-            <span className="font-bold text-white">{payout} $</span>
+            <span className="text-[#536471]">Your payout:</span>
+            <span className="font-bold text-[#0f1419]">{payout} $</span>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -490,7 +490,7 @@ const AnimatedTradingChart = () => {
                   : {}
               }
               transition={{ duration: 0.4 }}
-              className="flex cursor-pointer items-center justify-between rounded-lg border border-white/16 bg-white/8 px-4 py-2 text-sm font-bold text-white sm:py-2.5"
+              className="flex cursor-pointer items-center justify-between rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-bold text-[#0f1419] sm:py-2.5"
             >
               Down <span>&darr;</span>
             </motion.div>
@@ -498,8 +498,8 @@ const AnimatedTradingChart = () => {
 
           <div className="mt-1 flex-1">
             <div className="mb-2 flex items-center gap-3 text-[10px] text-[#536471]">
-              <span className="border-b-2 border-[#1c81f8] pb-0.5 font-medium text-white">Trades {tradeCount}</span>
-              <span className="text-white/60">History</span>
+              <span className="border-b-2 border-[#1c81f8] pb-0.5 font-medium text-[#0f1419]">Trades {tradeCount}</span>
+              <span>History</span>
             </div>
             <div className="max-h-[104px] space-y-1 overflow-hidden sm:max-h-[120px]">
               <AnimatePresence mode="popLayout">
@@ -514,8 +514,8 @@ const AnimatedTradingChart = () => {
                       trade.result === "win"
                         ? "border border-[#1c81f8]/20 bg-[#1c81f8]/10 text-[#1c81f8]"
                         : trade.result === "loss"
-                        ? "border border-white/10 bg-white/5 text-white"
-                        : "border border-white/10 bg-white/5 text-white/60"
+                        ? "border border-[#e5e7eb] bg-white text-[#0f1419]"
+                        : "border border-[#e5e7eb] bg-white text-[#536471]"
                     }`}
                   >
                     <span className="flex items-center gap-1">

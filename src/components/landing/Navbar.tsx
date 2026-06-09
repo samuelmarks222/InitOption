@@ -17,7 +17,7 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#0f487c] shadow-none backdrop-blur-2xl">
+    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-[#e5e7eb]/60 bg-white/90 shadow-[0_1px_6px_rgba(0,0,0,0.04)] backdrop-blur-2xl">
       <div className="flex h-16 items-center justify-between gap-4 px-[70px] sm:h-20 sm:gap-6">
         <Link to="/" className="shrink-0 flex items-center gap-2">
           <img src={logo} alt="Init Option" className="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11" />
@@ -28,7 +28,7 @@ const Navbar = () => {
             <a
               key={link.label}
               href={link.href}
-              className="relative font-copy text-base font-medium text-white/76 transition-colors hover:text-white lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[#1c81f8] after:transition-all after:duration-300 hover:after:w-full"
+              className="relative font-copy text-base font-medium text-[#5b5b5b] transition-colors hover:text-[#0f1419] lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[#1c81f8] after:transition-all after:duration-300 hover:after:w-full"
             >
               {link.label}
             </a>
@@ -40,7 +40,7 @@ const Navbar = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 rounded-full border border-white/14 bg-white/[0.04] px-2.5 text-xs font-medium text-white/82 transition-all hover:bg-white/12 hover:text-white min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
+              className="h-8 rounded-full border border-[#e5e7eb] bg-white px-2.5 text-xs font-medium text-[#5b5b5b] transition-all hover:bg-[#f5f7fa] hover:text-[#0f1419] min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
               asChild
             >
               <Link to="/login">Login</Link>
@@ -55,7 +55,7 @@ const Navbar = () => {
           </div>
 
           <button
-            className="rounded-full border border-white/14 bg-white/[0.04] p-2 text-white/64 transition-colors hover:bg-white/12 hover:text-white md:hidden"
+            className="rounded-full border border-[#e5e7eb] bg-white p-2 text-[#9ca3af] transition-colors hover:bg-[#f5f7fa] hover:text-[#5b5b5b] md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
           >
@@ -68,13 +68,13 @@ const Navbar = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="border-t border-white/8 bg-[#0f487c] px-4 pb-4 pt-2 md:hidden"
+          className="border-t border-[#e5e7eb]/60 bg-white px-4 pb-4 pt-2 md:hidden"
         >
           {navLinks.map((link) => (
             <a
               key={link.label}
               href={link.href}
-              className="block py-2 font-copy text-base font-medium text-white/76 hover:text-white"
+              className="block py-2 font-copy text-base font-medium text-[#5b5b5b] hover:text-[#0f1419]"
               onClick={() => setMobileOpen(false)}
             >
               {link.label}
