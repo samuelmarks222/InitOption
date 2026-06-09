@@ -119,7 +119,9 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
         Number.isNaN(x) ||
         Number.isNaN(y) ||
         x < -18 ||
-        x > host.clientWidth + 18
+        x > host.clientWidth + 18 ||
+        y < -18 ||
+        y > host.clientHeight + 18
       ) {
         marker.style.opacity = "0";
         reqId = requestAnimationFrame(loop);
