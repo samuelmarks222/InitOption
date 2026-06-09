@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,6 +34,12 @@ const RebrandedLogin = () => {
   return (
     <div className="min-h-screen bg-[#f3f7fb] flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
+        <div className="mb-4">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-[#0f72f0] hover:text-[#0a4fff] transition">
+            <ArrowLeft size={16} />
+            Back to Home
+          </Link>
+        </div>
         <div className="bg-white rounded-xl shadow-lg border border-[#e6ecf3]">
           <div className="px-8 py-10">
             <div className="flex justify-center">
