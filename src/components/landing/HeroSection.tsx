@@ -11,11 +11,6 @@ const HeroSection = () => {
 
   return (
     <section className="relative overflow-hidden bg-[#0f487c] pt-16">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute left-[8%] top-[10%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.07)_0%,transparent_70%)] blur-[120px]" />
-        <div className="absolute right-[4%] top-[35%] h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle,rgba(28,129,248,0.1)_0%,transparent_70%)] blur-[100px]" />
-        <div className="absolute bottom-[10%] left-[40%] h-[240px] w-[240px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.04)_0%,transparent_70%)] blur-[80px]" />
-      </div>
 
       <div className="relative px-4 pb-12 pt-10 text-center sm:pb-16 sm:pt-20 lg:pb-24 lg:pt-32">
         <motion.h1
@@ -90,8 +85,6 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.55 }}
           className="relative mt-8 sm:mt-14"
         >
-          <div className="absolute left-[10%] top-[8%] hidden h-32 w-32 rounded-full bg-white/8 blur-[90px] lg:block" />
-          <div className="absolute bottom-[8%] right-[10%] hidden h-36 w-36 rounded-full bg-white/8 blur-[100px] lg:block" />
           <div className="relative mx-auto max-w-7xl">
             <AnimatedTradingChart />
           </div>
