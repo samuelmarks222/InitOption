@@ -1,7 +1,7 @@
-import ClonedAuthPage from "@/components/auth/ClonedAuthPage";
+import RebrandedLogin from "@/components/auth/RebrandedLogin";
 
 const Login = () => {
-  return <ClonedAuthPage initialMode="login" />;
+  return <RebrandedLogin />;
 };
 
 export default Login;
