@@ -27,6 +27,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { TradeDeskShortcut } from "@/components/navigation/TradeDeskShortcut";
+import { NavigationSidebar, type WorkspaceModule } from "@/components/navigation/NavigationSidebar";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeWebsiteContent, type GuideMediaKey, type GuideMediaSettings } from "@/lib/websiteContent";
@@ -1207,6 +1208,8 @@ const TradingGuidePage = () => {
   const [selectedTopicId, setSelectedTopicId] = useState("introduction");
   const [openIds, setOpenIds] = useState<Set<string>>(() => getDefaultOpenSections(platformTopics));
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+  const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceModule>(null);
 
   const currentTopics = topicsByCategory[activeCategory];
   const flatTopics = useMemo(() => flattenTopics(currentTopics), [currentTopics]);
@@ -1274,12 +1277,18 @@ const TradingGuidePage = () => {
     setActivePanel(id);
   };
 
+  useEffect(() => {
+    if (activeWorkspace === null || activeWorkspace === "help" || activeWorkspace === "guides") return;
+    if (activeWorkspace === "trading") { navigate("/trade"); return; }
+    setActivePanel(activeWorkspace as HelpPanel);
+  }, [activeWorkspace, navigate]);
+
   const showSidebar = activePanel === "guides";
 
   return (
-    <div className="trading-terminal min-h-screen font-sans text-white" style={{ background: "var(--trading-workspace-bg)" }}>
+    <div className="trading-terminal h-[100dvh] flex flex-col overflow-hidden font-sans text-white" style={{ background: "var(--trading-workspace-bg)" }}>
       <header
-        className="sticky top-0 z-40 border-b"
+        className="sticky top-0 z-40 shrink-0 border-b"
         style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
       >
         <div className="flex h-[72px] items-stretch justify-between gap-3 px-3 sm:px-5 lg:px-0 lg:pr-4">
@@ -1312,6 +1321,18 @@ const TradingGuidePage = () => {
             )}
           </Link>
 
+          <button
+            type="button"
+            onClick={() => setLeftPanelOpen((current) => !current)}
+            className="hidden h-full w-[92px] shrink-0 items-center justify-center border-r text-slate-500 transition-colors hover:text-white xl:flex"
+            style={{ borderColor: "var(--trading-border-strong-color)" }}
+            title={leftPanelOpen ? "Collapse sidebar" : "Expand sidebar"}
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d={leftPanelOpen ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
+            </svg>
+          </button>
+
           <nav className="hidden items-center gap-1.5 sm:flex xl:gap-2.5">
             {helpTabs.map((tab) => {
               const Icon = tab.icon;
@@ -1338,7 +1359,16 @@ const TradingGuidePage = () => {
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex-1 flex w-full overflow-hidden min-h-0" style={{ background: "var(--trading-workspace-bg)" }}>
+        <div className="hidden shrink-0 transition-[width] duration-300 ease-out xl:block">
+          <NavigationSidebar
+            activeWorkspace={activeWorkspace}
+            onSelectWorkspace={setActiveWorkspace}
+            collapsed={!leftPanelOpen}
+            onToggleCollapsed={() => setLeftPanelOpen((current) => !current)}
+          />
+        </div>
+
         {showSidebar && (
           <>
             <aside
@@ -1453,8 +1483,8 @@ const TradingGuidePage = () => {
           </>
         )}
 
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <div>
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="mb-8 flex flex-wrap gap-3 border-b pb-6 sm:hidden" style={{ borderColor: "var(--trading-border-color)" }}>
               {helpTabs.map((tab) => {
                 const Icon = tab.icon;
@@ -1517,15 +1547,10 @@ const TradingGuidePage = () => {
                       <h1 className="text-4xl sm:text-5xl font-bold leading-[1.1] tracking-tight text-white mt-2">
                         {selectedContent.heading}
                       </h1>
-
                       <p className="mt-6 text-lg leading-relaxed text-gray-400">{selectedContent.intro}</p>
-
                       {selectedContent.paragraphs?.map((paragraph) => (
-                        <p key={paragraph} className="mt-4 text-base leading-relaxed text-gray-400">
-                          {paragraph}
-                        </p>
+                        <p key={paragraph} className="mt-4 text-base leading-relaxed text-gray-400">{paragraph}</p>
                       ))}
-
                       {selectedContent.bullets?.length ? (
                         <ul className="mt-7 space-y-3">
                           {selectedContent.bullets.map((bullet) => (
@@ -1536,72 +1561,51 @@ const TradingGuidePage = () => {
                           ))}
                         </ul>
                       ) : null}
-
                       {selectedContent.note ? (
                         <div className="mt-8 rounded-[12px] border border-[#FFB800]/30 bg-[#FFFAEB] px-6 py-4 text-base font-medium leading-7 text-[#B8860B] flex items-start gap-3">
                           <div className="mt-1 h-1.5 w-1.5 rounded-full bg-[#FFB800] shrink-0 flex-shrink-0"/>
                           <div><span className="font-semibold">Note:</span> {selectedContent.note}</div>
                         </div>
                       ) : null}
-
                       {selectedContent.figure ? (
                         <figure className="mt-8">
-                          <GuideMockup
-                            title={selectedContent.figure.title}
-                            mediaUrl={guideMedia[selectedContent.figure.variant]}
-                          />
+                          <GuideMockup title={selectedContent.figure.title} mediaUrl={guideMedia[selectedContent.figure.variant]} />
                           <figcaption className="mt-3 text-sm italic text-gray-400">{selectedContent.figure.caption}</figcaption>
                         </figure>
                       ) : null}
-
                       {selectedContent.secondaryFigure ? (
                         <figure className="mt-8">
-                          <GuideMockup
-                            title={selectedContent.secondaryFigure.title}
-                            mediaUrl={guideMedia[selectedContent.secondaryFigure.variant]}
-                          />
+                          <GuideMockup title={selectedContent.secondaryFigure.title} mediaUrl={guideMedia[selectedContent.secondaryFigure.variant]} />
                           <figcaption className="mt-3 text-sm italic text-gray-400">{selectedContent.secondaryFigure.caption}</figcaption>
                         </figure>
                       ) : null}
-
                       {selectedContent.video ? (
-                        <VideoPreview
-                          title={selectedContent.video.title}
-                          duration={selectedContent.video.duration}
-                          mediaUrl={selectedContent.video.image === "trading" ? guideMedia.videoTrading : guideMedia.videoMobile}
-                        />
+                        <VideoPreview title={selectedContent.video.title} duration={selectedContent.video.duration} mediaUrl={selectedContent.video.image === "trading" ? guideMedia.videoTrading : guideMedia.videoMobile} />
                       ) : null}
-
-                  <div className="mt-10 flex flex-col sm:flex-row gap-3 pt-8 border-t border-white/10">
-                    {previousTopic ? (
-                      <button
-                        type="button"
-                        onClick={() => selectTopic(previousTopic.id)}
-                        className="group flex-1 rounded-[10px] border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-semibold text-gray-400 hover:bg-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2 hover:text-white"
-                      >
-                        <ArrowRight className="h-4 w-4 rotate-180 transition-transform group-hover:-translate-x-1" />
-                        <div className="text-left">
-                          <div className="text-xs text-gray-400 mb-0.5">Previous</div>
-                          <div>{previousTopic.number}. {previousTopic.title}</div>
-                        </div>
-                      </button>
-                    ) : (
-                      <div />
-                    )}
-                    {nextTopic ? (
-                      <button
-                        type="button"
-                        onClick={() => selectTopic(nextTopic.id)}
-                        className="group flex-1 rounded-[10px] border border-[#1c81f8]/50 bg-[#1c81f8]/10 px-5 py-3.5 text-sm font-semibold text-[#1c81f8] hover:bg-[#1c81f8]/20 hover:border-[#1c81f8] transition-all duration-300 flex items-center gap-2 justify-end hover:justify-end"
-                      >
-                        <div className="text-left sm:text-right">
-                          <div className="text-xs text-[#1c81f8]/70 mb-0.5">Next</div>
-                          <div>{nextTopic.number}. {nextTopic.title}</div>
-                        </div>
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </button>
-                    ) : null}
-                  </div>
+                      <div className="mt-10 flex flex-col sm:flex-row gap-3 pt-8 border-t border-white/10">
+                        {previousTopic ? (
+                          <button type="button" onClick={() => selectTopic(previousTopic.id)}
+                            className="group flex-1 rounded-[10px] border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-semibold text-gray-400 hover:bg-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2 hover:text-white"
+                          >
+                            <ArrowRight className="h-4 w-4 rotate-180 transition-transform group-hover:-translate-x-1" />
+                            <div className="text-left">
+                              <div className="text-xs text-gray-400 mb-0.5">Previous</div>
+                              <div>{previousTopic.number}. {previousTopic.title}</div>
+                            </div>
+                          </button>
+                        ) : <div />}
+                        {nextTopic ? (
+                          <button type="button" onClick={() => selectTopic(nextTopic.id)}
+                            className="group flex-1 rounded-[10px] border border-[#1c81f8]/50 bg-[#1c81f8]/10 px-5 py-3.5 text-sm font-semibold text-[#1c81f8] hover:bg-[#1c81f8]/20 hover:border-[#1c81f8] transition-all duration-300 flex items-center gap-2 justify-end"
+                          >
+                            <div className="text-left sm:text-right">
+                              <div className="text-xs text-[#1c81f8]/70 mb-0.5">Next</div>
+                              <div>{nextTopic.number}. {nextTopic.title}</div>
+                            </div>
+                            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
                   </article>
                 </div>
