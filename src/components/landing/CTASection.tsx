@@ -10,7 +10,7 @@ const CTASection = () => {
 
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(135deg,hsl(var(--landing-primary))_0%,hsl(var(--landing-secondary))_100%)] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.12),transparent_30%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.08),transparent_30%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,hsla(var(--landing-surface),0.12),transparent_30%),radial-gradient(circle_at_80%_70%,hsla(var(--landing-surface),0.08),transparent_30%)]" />
       <div className="px-[70px]">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -24,7 +24,7 @@ const CTASection = () => {
             </h2>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-white/82 sm:text-lg">{footer.description}</p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button size="lg" className="group gap-2 border border-white/20 bg-white px-8 text-base font-semibold text-[hsl(var(--landing-primary))] shadow-[0_8px_32px_rgba(0,0,0,0.15)] transition-all duration-300 hover:bg-white/95 hover:shadow-[0_8px_48px_rgba(0,0,0,0.25)]" asChild>
+              <Button size="lg" className="group gap-2 border border-white/20 bg-white px-8 text-base font-semibold text-[hsl(var(--landing-primary))] shadow-[0_8px_32px_hsla(var(--landing-secondary),0.18)] transition-all duration-300 hover:bg-white/95 hover:shadow-[0_8px_48px_hsla(var(--landing-secondary),0.25)]" asChild>
                 <Link to="/register" className="flex items-center gap-2">
                   {finalCta.primaryButtonLabel}
                   <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />

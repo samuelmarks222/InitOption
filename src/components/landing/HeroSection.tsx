@@ -26,7 +26,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="mx-auto mt-4 max-w-5xl font-copy text-[15px] leading-7 text-[#cbd6e6] sm:mt-5 sm:text-xl sm:leading-8"
+          className="mx-auto mt-4 max-w-5xl font-copy text-[15px] leading-7 text-[white] sm:mt-5 sm:text-xl sm:leading-8"
         >
           {hero.description}
         </motion.p>

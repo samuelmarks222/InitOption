@@ -28,10 +28,10 @@ const FAQSection = () => {
           <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-[hsl(var(--landing-primary))]">
             Support
           </span>
-          <h2 className="font-heading text-3xl font-bold text-[#0f1419] sm:text-4xl">
+          <h2 className="font-heading text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl">
             {faq.title}
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-[#536471] sm:text-lg">{faq.subtitle}</p>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-[hsl(var(--landing-border))] sm:text-lg">{faq.subtitle}</p>
         </motion.div>
 
         <motion.div
@@ -45,12 +45,12 @@ const FAQSection = () => {
               <AccordionItem
                 key={`${item.question}-${index}`}
                 value={`faq-${index}`}
-                className="rounded-[22px] border border-[hsl(var(--landing-border))] bg-white px-6 shadow-[0_1px_6px_rgba(0,0,0,0.04)] data-[state=open]:border-[hsla(var(--landing-primary),0.3)]"
+                className="rounded-[22px] border border-[hsl(var(--landing-border))] bg-white px-6 shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)] data-[state=open]:border-[hsla(var(--landing-primary),0.3)]"
               >
-                <AccordionTrigger className="text-left font-heading text-base font-semibold text-[#0f1419] hover:no-underline sm:text-lg">
+                <AccordionTrigger className="text-left font-heading text-base font-semibold text-[hsl(var(--landing-secondary))] hover:no-underline sm:text-lg">
                   {item.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-base leading-8 text-[#536471]">
+                <AccordionContent className="text-base leading-8 text-[hsl(var(--landing-border))]">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>

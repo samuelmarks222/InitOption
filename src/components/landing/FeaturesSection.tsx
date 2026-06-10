@@ -55,8 +55,8 @@ const FeaturesSection = () => {
   const cardsToRender = featureCards.length ? featureCards : fallbackCards;
 
   return (
-    <section id="features" className="relative overflow-hidden bg-[#faf8f5] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(245,158,11,0.04),transparent_28%)]" />
+    <section id="features" className="relative overflow-hidden bg-[hsl(var(--landing-surface))] py-20 sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsla(var(--landing-primary),0.04),transparent_28%)]" />
 
       <div className="relative px-[70px]">
         <motion.div
@@ -65,13 +65,13 @@ const FeaturesSection = () => {
           viewport={{ once: true }}
           className="mx-auto mb-12 max-w-3xl text-center sm:mb-16"
         >
-          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-[#536471]">
+          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-[hsl(var(--landing-border))]">
             Why Choose Init Option
           </span>
-          <h2 className="font-display text-3xl font-bold text-[#0f1419] sm:text-4xl lg:text-5xl">
+          <h2 className="font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
             Built to feel <span className="text-[hsl(var(--landing-primary))]">clean, global, and easy to trust</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl font-copy text-base leading-8 text-[#536471] sm:text-lg">
+          <p className="mx-auto mt-4 max-w-3xl font-copy text-base leading-8 text-[hsl(var(--landing-border))] sm:text-lg">
             The landing experience should look as polished as the platform itself, so each benefit gets a proper
             designed card instead of a plain block of text.
           </p>
@@ -81,16 +81,16 @@ const FeaturesSection = () => {
           {cardsToRender.map((feature, index) => (
             <article
               key={`${feature.title}-${index}`}
-              className="landing-lift-card relative overflow-hidden rounded-[28px] border border-[hsl(var(--landing-border))] bg-white px-6 pb-8 pt-7 text-center shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
+              className="landing-lift-card relative overflow-hidden rounded-[28px] border border-[hsl(var(--landing-border))] bg-white px-6 pb-8 pt-7 text-center shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)]"
             >
-              <div className="absolute inset-x-10 top-6 h-14 rounded-full bg-[#f0f2f5] blur-2xl" />
-              <div className="relative mx-auto flex h-24 w-24 items-center justify-center rounded-[24px] border border-[hsl(var(--landing-primary))]/14 bg-[#f8f9fc] text-[hsl(var(--landing-primary))] shadow-[inset_0_1px_0_rgba(0,0,0,0.03)]">
+              <div className="absolute inset-x-10 top-6 h-14 rounded-full bg-[hsl(var(--landing-surface))] blur-2xl" />
+              <div className="relative mx-auto flex h-24 w-24 items-center justify-center rounded-[24px] border border-[hsl(var(--landing-primary))]/14 bg-[hsl(var(--landing-surface))] text-[hsl(var(--landing-primary))] shadow-[inset_0_1px_0_hsla(var(--landing-secondary),0.03)]">
                 {renderFeatureIllustration(index)}
               </div>
-              <h3 className="font-display mt-7 text-2xl font-bold text-[#0f1419]">
+              <h3 className="font-display mt-7 text-2xl font-bold text-[hsl(var(--landing-secondary))]">
                 {feature.title}
               </h3>
-              <p className="mt-4 font-copy text-sm leading-7 text-[#536471] sm:text-base">
+              <p className="mt-4 font-copy text-sm leading-7 text-[hsl(var(--landing-border))] sm:text-base">
                 {feature.text}
               </p>
             </article>

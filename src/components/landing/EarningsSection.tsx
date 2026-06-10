@@ -12,8 +12,8 @@ const EarningsSection = () => {
   const estimated = Math.round(accountSize[0] * (profitRate[0] / 100) * 3.5);
 
   return (
-    <section className="relative overflow-hidden bg-[#faf8f5] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(245,158,11,0.04),transparent_26%)]" />
+    <section className="relative overflow-hidden bg-[hsl(var(--landing-surface))] py-20 sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsla(var(--landing-primary),0.04),transparent_26%)]" />
       <div className="px-[70px]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -24,7 +24,7 @@ const EarningsSection = () => {
           <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-[hsl(var(--landing-primary))]">
             Earnings
           </span>
-          <h2 className="font-heading text-3xl font-bold text-[#0f1419] sm:text-4xl">
+          <h2 className="font-heading text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl">
             Discover your <span className="text-gradient-primary">earning potential</span>
           </h2>
         </motion.div>
@@ -33,12 +33,12 @@ const EarningsSection = () => {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative mx-auto max-w-xl rounded-[28px] border border-[hsl(var(--landing-border))] bg-white p-8 shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
+          className="relative mx-auto max-w-xl rounded-[28px] border border-[hsl(var(--landing-border))] bg-white p-8 shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)]"
         >
           <div className="mb-8">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm text-[#536471]">Account size</span>
-              <span className="font-heading text-lg font-bold text-[#0f1419]">${accountSize[0].toFixed(0)}</span>
+              <span className="text-sm text-[hsl(var(--landing-border))]">Account size</span>
+              <span className="font-heading text-lg font-bold text-[hsl(var(--landing-secondary))]">${accountSize[0].toFixed(0)}</span>
             </div>
             <Slider
               value={accountSize}
@@ -52,8 +52,8 @@ const EarningsSection = () => {
 
           <div className="mb-8">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm text-[#536471]">Profit rate</span>
-              <span className="font-heading text-lg font-bold text-[#0f1419]">{profitRate[0]}%</span>
+              <span className="text-sm text-[hsl(var(--landing-border))]">Profit rate</span>
+              <span className="font-heading text-lg font-bold text-[hsl(var(--landing-secondary))]">{profitRate[0]}%</span>
             </div>
             <Slider
               value={profitRate}
@@ -66,11 +66,11 @@ const EarningsSection = () => {
           </div>
 
           <div className="rounded-[22px] border border-[hsl(var(--landing-primary))]/24 bg-[hsla(var(--landing-primary),0.1)] p-6 text-center">
-            <p className="text-xs text-[#536471]">Estimated monthly return</p>
+            <p className="text-xs text-[hsl(var(--landing-border))]">Estimated monthly return</p>
             <p className="mt-1 font-heading text-4xl font-bold text-[hsl(var(--landing-primary))]">
               ${estimated.toLocaleString()}
             </p>
-            <p className="mt-2 text-xs text-[#536471]">
+            <p className="mt-2 text-xs text-[hsl(var(--landing-border))]">
               Based on a sample payout scenario shown for layout preview.
             </p>
           </div>

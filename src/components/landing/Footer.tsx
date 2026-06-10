@@ -183,7 +183,7 @@ const Footer = ({ content }: FooterProps) => {
                         onMouseEnter={e => { (e.target as any).style.borderColor = 'hsla(var(--landing-primary), 0.4)'; (e.target as any).style.background = 'hsla(var(--landing-primary), 0.12)'; (e.target as any).style.color = 'hsl(var(--landing-primary))'; }}
                         onMouseLeave={e => { (e.target as any).style.borderColor = 'var(--border)'; (e.target as any).style.background = 'hsla(var(--card), 0.5)'; (e.target as any).style.color = 'hsl(var(--muted-foreground))'; }}
                       >
-                        <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${isWhatsApp ? 'text-[#25D366]' : ''}`} strokeWidth={2.25} />
+                        <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${isWhatsApp ? 'text-[hsl(var(--landing-primary))]' : ''}`} strokeWidth={2.25} />
                       </a>
                     );
                   })}

@@ -116,7 +116,7 @@ const Sparkline = ({ points, positive }: { points: number[]; positive: boolean }
     <svg viewBox={`0 0 ${width} ${height}`} className="h-24 w-full sm:h-28" aria-hidden="true">
       <polygon
         points={`0,${height} ${linePoints} ${width},${height}`}
-        fill={positive ? "hsla(var(--landing-primary),0.16)" : "rgba(255,255,255,0.06)"}
+        fill={positive ? "hsla(var(--landing-primary),0.16)" : "hsla(var(--landing-surface),0.06)"}
       />
       <polyline
         points={linePoints}
@@ -242,7 +242,7 @@ const WhatWeOfferSection = () => {
               <motion.article
                 key={asset.symbol}
                 variants={{ hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: 0.45 } } }}
-                className="landing-lift-card rounded-[22px] border p-3.5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[26px] sm:p-5"
+                className="landing-lift-card rounded-[22px] border p-3.5 shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)] sm:rounded-[26px] sm:p-5"
                 style={{ borderColor: "var(--border)", background: "hsl(var(--card))" }}
               >
                 <div className="grid gap-3.5 sm:grid-cols-[1.1fr_0.9fr] sm:gap-4 sm:items-start">
@@ -304,7 +304,7 @@ const WhatWeOfferSection = () => {
                       <div className="mt-3 font-copy text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground sm:mt-4">
                         Profit up to
                       </div>
-                      <div className="mt-1 font-display text-[1.7rem] font-bold leading-none text-[#0f1419] sm:text-[2rem]">
+                      <div className="mt-1 font-display text-[1.7rem] font-bold leading-none text-[hsl(var(--landing-secondary))] sm:text-[2rem]">
                         {asset.maxProfit}%
                       </div>
                     </div>
@@ -328,16 +328,16 @@ const WhatWeOfferSection = () => {
           viewport={{ once: true }}
           className="mt-8 grid gap-4 sm:mt-10 lg:grid-cols-[1.1fr_0.9fr]"
         >
-          <div className="rounded-[24px] border border-[hsl(var(--landing-border))] bg-white p-5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[28px] sm:p-6">
-            <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em] text-[#536471]">
+          <div className="rounded-[24px] border border-[hsl(var(--landing-border))] bg-white p-5 shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)] sm:rounded-[28px] sm:p-6">
+            <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em] text-[hsl(var(--landing-border))]">
               {markets.actionCardTitle}
             </div>
-            <p className="mt-3 max-w-2xl font-copy text-[15px] leading-7 text-[#536471] sm:text-lg sm:leading-8">
+            <p className="mt-3 max-w-2xl font-copy text-[15px] leading-7 text-[hsl(var(--landing-border))] sm:text-lg sm:leading-8">
               {markets.actionCardText}
             </p>
           </div>
 
-          <div className="rounded-[24px] border border-[hsl(var(--landing-border))] bg-white p-5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[28px] sm:p-6">
+          <div className="rounded-[24px] border border-[hsl(var(--landing-border))] bg-white p-5 shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)] sm:rounded-[28px] sm:p-6">
             <div className="grid gap-3 sm:grid-cols-2">
               <button
                 type="button"

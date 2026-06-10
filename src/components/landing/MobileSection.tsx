@@ -17,8 +17,8 @@ const MobileSection = () => {
   const { mobile } = websiteContent;
 
   return (
-    <section className="relative overflow-hidden bg-[#f5f7fa] py-16 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,hsla(var(--landing-primary),0.16),transparent_20%),radial-gradient(circle_at_82%_18%,rgba(102,126,234,0.04),transparent_20%)]" />
+    <section className="relative overflow-hidden bg-[hsl(var(--landing-surface))] py-16 sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,hsla(var(--landing-primary),0.16),transparent_20%),radial-gradient(circle_at_82%_18%,hsla(var(--landing-primary),0.04),transparent_20%)]" />
       <div className="px-[70px]">
         <div className="flex flex-col items-center gap-8 sm:gap-12 lg:flex-row">
           <motion.div
@@ -30,16 +30,16 @@ const MobileSection = () => {
             <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-[hsl(var(--landing-primary))]">
               {mobile.installLabel}
             </span>
-            <h2 className="font-heading text-2xl font-bold text-[#0f1419] sm:text-4xl">
+            <h2 className="font-heading text-2xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl">
               {mobile.title}
             </h2>
-            <p className="mt-3 text-base leading-8 text-[#536471] sm:mt-4 sm:text-lg">
+            <p className="mt-3 text-base leading-8 text-[hsl(var(--landing-border))] sm:mt-4 sm:text-lg">
               {mobile.description}
             </p>
 
             <ul className="mt-4 space-y-2 sm:mt-6 sm:space-y-3">
               {features.map((feature) => (
-                <li key={feature} className="flex items-center gap-3 text-sm text-[#536471] sm:text-base">
+                <li key={feature} className="flex items-center gap-3 text-sm text-[hsl(var(--landing-border))] sm:text-base">
                   <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--landing-primary))]/10">
                     <Check size={12} className="text-[hsl(var(--landing-primary))]" />
                   </div>
@@ -62,7 +62,7 @@ const MobileSection = () => {
             viewport={{ once: true }}
             className="order-1 flex flex-1 justify-center lg:order-2"
           >
-            <div className="animate-float rounded-[34px] border border-[hsl(var(--landing-border))] bg-white p-4 shadow-[0_1px_6px_rgba(0,0,0,0.04)]">
+            <div className="animate-float rounded-[34px] border border-[hsl(var(--landing-border))] bg-white p-4 shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)]">
               <img
                 src={mobileTrading}
                 alt="Mobile trading interface showing two phones with Init Option charts"

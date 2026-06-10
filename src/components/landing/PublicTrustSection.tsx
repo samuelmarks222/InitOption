@@ -63,10 +63,10 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
           <span className="text-xs font-medium uppercase tracking-[0.28em] text-[hsl(var(--landing-primary))]">
             Public trust
           </span>
-          <h2 className="mt-4 font-display text-3xl font-bold text-[#0f1419] sm:text-4xl">
+          <h2 className="mt-4 font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl">
             Clear services, public support details, and visible compliance pages
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#536471] sm:text-lg">
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[hsl(var(--landing-border))] sm:text-lg">
             {platformName} is set up for account funding, live trading, and published tournament entries.
             Before using a live balance, visitors can review the platform flow, funding guidance,
             and public legal pages from the main site.
@@ -78,15 +78,15 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
             {serviceCards.map((card) => (
               <div
                 key={card.title}
-                className="rounded-2xl border border-[hsl(var(--landing-border))] bg-white p-6 shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
+                className="rounded-2xl border border-[hsl(var(--landing-border))] bg-white p-6 shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)]"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[hsla(var(--landing-primary),0.1)]">
                   <card.icon className="h-5 w-5 text-[hsl(var(--landing-primary))]" />
                 </div>
-                <h3 className="mt-5 font-display text-xl font-semibold text-[#0f1419]">
+                <h3 className="mt-5 font-display text-xl font-semibold text-[hsl(var(--landing-secondary))]">
                   {card.title}
                 </h3>
-                <p className="mt-3 text-base leading-8 text-[#536471]">
+                <p className="mt-3 text-base leading-8 text-[hsl(var(--landing-border))]">
                   {card.description}
                 </p>
                 <Link
@@ -99,28 +99,28 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
             ))}
           </div>
 
-          <div className="rounded-[28px] border border-[hsl(var(--landing-border))] bg-white p-6 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:p-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--landing-border))] bg-[#f8f9fc] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#536471]">
+          <div className="rounded-[28px] border border-[hsl(var(--landing-border))] bg-white p-6 shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)] sm:p-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--landing-border))] bg-[hsl(var(--landing-surface))] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[hsl(var(--landing-border))]">
               <CircleHelp className="h-3.5 w-3.5 text-[hsl(var(--landing-primary))]" />
               Contact and policy
             </div>
 
-            <div className="mt-6 rounded-2xl border border-[hsl(var(--landing-border))] bg-[#f8f9fc] p-5">
+            <div className="mt-6 rounded-2xl border border-[hsl(var(--landing-border))] bg-[hsl(var(--landing-surface))] p-5">
               <div className="flex items-start gap-3">
                 <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-2xl bg-[hsla(var(--landing-primary),0.1)]">
                   <Mail className="h-4 w-4 text-[hsl(var(--landing-primary))]" />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#536471]">
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[hsl(var(--landing-border))]">
                     Support email
                   </div>
                   <a
                     href={`mailto:${supportEmail}`}
-                    className="mt-2 inline-flex text-lg font-semibold text-[#0f1419] transition-opacity hover:opacity-85"
+                    className="mt-2 inline-flex text-lg font-semibold text-[hsl(var(--landing-secondary))] transition-opacity hover:opacity-85"
                   >
                     {supportEmail}
                   </a>
-                  <p className="mt-3 text-base leading-8 text-[#536471]">
+                  <p className="mt-3 text-base leading-8 text-[hsl(var(--landing-border))]">
                     Moderation teams and customers can use this address for account, funding, and
                     verification questions.
                   </p>
@@ -128,8 +128,8 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
               </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-[hsl(var(--landing-border))] bg-[#f8f9fc] p-5">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[#536471]">
+            <div className="mt-5 rounded-2xl border border-[hsl(var(--landing-border))] bg-[hsl(var(--landing-surface))] p-5">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[hsl(var(--landing-border))]">
                 Supported public pages
               </div>
               <div className="mt-4 grid gap-3">
@@ -137,13 +137,13 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
                   <Link
                     key={link.label}
                     to={link.href}
-                    className="flex items-center justify-between rounded-2xl border border-[hsl(var(--landing-border))] bg-white px-4 py-3.5 text-sm font-medium text-[#0f1419] transition-colors hover:bg-[#f8f9fc]"
+                    className="flex items-center justify-between rounded-2xl border border-[hsl(var(--landing-border))] bg-white px-4 py-3.5 text-sm font-medium text-[hsl(var(--landing-secondary))] transition-colors hover:bg-[hsl(var(--landing-surface))]"
                   >
                     <span className="inline-flex items-center gap-3">
                       <link.icon className="h-4 w-4 text-[hsl(var(--landing-primary))]" />
                       {link.label}
                     </span>
-                    <span className="text-xs uppercase tracking-[0.18em] text-[#536471]">
+                    <span className="text-xs uppercase tracking-[0.18em] text-[hsl(var(--landing-border))]">
                       Open
                     </span>
                   </Link>
@@ -155,7 +155,7 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[hsl(var(--landing-primary))]">
                 Payment visibility
               </div>
-              <p className="mt-3 text-base leading-8 text-[#0f1419]">
+              <p className="mt-3 text-base leading-8 text-[hsl(var(--landing-secondary))]">
                 Payments on this site are used for live account funding and published tournament
                 entries where available. Visitors can review the funding flow, withdrawal guidance,
                 and risk disclosures before registering.
@@ -165,7 +165,7 @@ const PublicTrustSection = ({ content }: PublicTrustSectionProps) => {
                   {paymentMethods.map((method) => (
                     <span
                       key={method}
-                      className="rounded-full border border-[hsl(var(--landing-border))] bg-[#f8f9fc] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#536471]"
+                      className="rounded-full border border-[hsl(var(--landing-border))] bg-[hsl(var(--landing-surface))] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[hsl(var(--landing-border))]"
                     >
                       {method}
                     </span>
