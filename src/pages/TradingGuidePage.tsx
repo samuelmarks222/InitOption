@@ -28,6 +28,16 @@ import {
 } from "lucide-react";
 import { TradeDeskShortcut } from "@/components/navigation/TradeDeskShortcut";
 import { NavigationSidebar, type WorkspaceModule } from "@/components/navigation/NavigationSidebar";
+import TradingHeader from "@/components/trading/TradingHeader";
+import type { AccountType, KycDocumentsLike } from "@/components/trading/AccountModals";
+import { ProfileDrawer, type ProfileTab } from "@/components/profile/ProfileDrawer";
+import { useAuth } from "@/contexts/AuthContext";
+import { getEffectiveLiveBalance } from "@/lib/live-balance";
+import {
+  DEFAULT_DEMO_BALANCE,
+  readDemoBalanceStorage,
+  writeDemoBalanceStorage,
+} from "@/lib/onboarding";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeWebsiteContent, type GuideMediaKey, type GuideMediaSettings } from "@/lib/websiteContent";
@@ -1202,6 +1212,7 @@ const AppsPanel = () => (
 const TradingGuidePage = () => {
   const navigate = useNavigate();
   const { logoUrl, platformName, initials } = useSiteBranding();
+  const { profile, user } = useAuth();
   const guideMedia = useGuideMedia(platformName);
   const [activePanel, setActivePanel] = useState<HelpPanel>("guides");
   const [activeCategory, setActiveCategory] = useState<GuideCategoryId>("platform");
@@ -1210,6 +1221,50 @@ const TradingGuidePage = () => {
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceModule>(null);
+  const [accountType, setAccountType] = useState<AccountType>("live");
+  const [demoBalance, setDemoBalance] = useState(DEFAULT_DEMO_BALANCE);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal");
+
+  const balance = getEffectiveLiveBalance(profile);
+  const currentBalance = balance;
+
+  useEffect(() => {
+    if (!user?.id) {
+      setDemoBalance(DEFAULT_DEMO_BALANCE);
+      return;
+    }
+    setDemoBalance(readDemoBalanceStorage(user.id));
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    writeDemoBalanceStorage(user.id, demoBalance);
+  }, [demoBalance, user?.id]);
+
+  const handleSwitchAccount = (nextType: AccountType) => {
+    setAccountType(nextType);
+  };
+
+  const handleOpenProfile = (tab: ProfileTab = "personal") => {
+    setProfileInitialTab(tab);
+    setIsProfileOpen(true);
+  };
+
+  const handleDemoBalanceUpdate = (value: number) => {
+    const nextValue = Number(value);
+    setDemoBalance(Number.isFinite(nextValue) && nextValue > 0 ? nextValue : DEFAULT_DEMO_BALANCE);
+  };
+
+  const openDepositPage = () => {
+    setAccountType("live");
+    navigate("/deposit");
+  };
+
+  const openWithdrawPage = () => {
+    setAccountType("live");
+    navigate("/withdraw");
+  };
 
   const currentTopics = topicsByCategory[activeCategory];
   const flatTopics = useMemo(() => flattenTopics(currentTopics), [currentTopics]);
@@ -1279,85 +1334,35 @@ const TradingGuidePage = () => {
 
   useEffect(() => {
     if (activeWorkspace === null || activeWorkspace === "help" || activeWorkspace === "guides") return;
-    if (activeWorkspace === "trading") { navigate("/trade"); return; }
-    setActivePanel(activeWorkspace as HelpPanel);
+    navigate("/trade");
+    setActiveWorkspace(null);
   }, [activeWorkspace, navigate]);
 
   const showSidebar = activePanel === "guides";
 
   return (
     <div className="trading-terminal h-[100dvh] flex flex-col overflow-hidden font-sans text-white" style={{ background: "var(--trading-workspace-bg)" }}>
-      <header
-        className="sticky top-0 z-40 shrink-0 border-b"
-        style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
-      >
-        <div className="flex h-[72px] items-stretch justify-between gap-3 px-3 sm:px-5 lg:px-0 lg:pr-4">
-          <Link
-            to="/trade"
-            className="flex h-full min-w-0 items-center border-r px-3 sm:min-w-[260px] sm:px-5 xl:min-w-[310px] xl:px-6"
-            style={{ borderColor: "var(--trading-border-strong-color)" }}
-          >
-            {logoUrl ? (
-              <div className="flex min-w-0 items-center gap-3 overflow-visible xl:gap-4">
-                <div className="flex min-h-[48px] min-w-0 max-w-[230px] items-center overflow-visible py-1 xl:max-w-[300px]">
-                  <img
-                    src={logoUrl}
-                    alt={platformName}
-                    className="block max-h-[42px] w-auto max-w-full shrink-0 object-contain object-left brightness-110 contrast-125 saturate-110"
-                  />
-                </div>
-                <span className="hidden h-1.5 w-1.5 shrink-0 rounded-full bg-white/14 xl:block" />
-                <span className="hidden whitespace-nowrap text-[12px] font-black uppercase tracking-[0.13em] text-slate-500 xl:block">
-                  Web trading platform
-                </span>
-              </div>
-            ) : (
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] bg-[#1c81f8] text-lg font-black text-white shadow-[0_0_14px_rgba(28,129,248,0.38)]">
-                  {initials}
-                </div>
-                <span className="truncate text-[22px] font-black uppercase tracking-[0.08em] text-white">{platformName}</span>
-              </div>
-            )}
-          </Link>
+      <TradingHeader
+        balance={currentBalance}
+        demoBalance={demoBalance}
+        accountType={accountType}
+        onSwitchAccount={handleSwitchAccount}
+        openTabs={[]}
+        onAddAssetClick={() => {}}
+        onOpenDeposit={openDepositPage}
+        onOpenWithdrawal={openWithdrawPage}
+        onOpenProfile={handleOpenProfile}
+        onUpdateDemoBalance={handleDemoBalanceUpdate}
+        onResetDemoBalance={() => handleDemoBalanceUpdate(DEFAULT_DEMO_BALANCE)}
+        onOpenSettings={() => handleOpenProfile("settings")}
+        onOpenHistory={() => {}}
+      />
 
-          <button
-            type="button"
-            onClick={() => setLeftPanelOpen((current) => !current)}
-            className="hidden h-full w-[92px] shrink-0 items-center justify-center border-r text-slate-500 transition-colors hover:text-white xl:flex"
-            style={{ borderColor: "var(--trading-border-strong-color)" }}
-            title={leftPanelOpen ? "Collapse sidebar" : "Expand sidebar"}
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d={leftPanelOpen ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
-            </svg>
-          </button>
-
-          <nav className="hidden items-center gap-1.5 sm:flex xl:gap-2.5">
-            {helpTabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = tab.id === activePanel || (tab.id === "reviews" && false);
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => handleTabClick(tab.id)}
-                  className={`inline-flex h-[38px] items-center gap-2 rounded-full px-4 text-[11px] font-bold uppercase tracking-[0.08em] transition-all duration-200 xl:h-[42px] xl:px-5 xl:text-xs ${
-                    isActive
-                      ? "bg-gradient-to-r from-[#1c81f8] to-[#1565c0] text-white shadow-lg shadow-[#1c81f8]/30"
-                      : "text-slate-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </nav>
-
-          <TradeDeskShortcut />
-        </div>
-      </header>
+      <ProfileDrawer
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        initialTab={profileInitialTab}
+      />
 
       <div className="flex-1 flex w-full overflow-hidden min-h-0" style={{ background: "var(--trading-workspace-bg)" }}>
         <div className="hidden shrink-0 transition-[width] duration-300 ease-out xl:block">
