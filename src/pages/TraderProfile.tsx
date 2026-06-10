@@ -131,8 +131,8 @@ const TraderProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f5f7fa] px-4 py-10 text-[#0f1419] md:px-6">
-        <div className="mx-auto max-w-6xl rounded-3xl border border-[#e5e7eb] bg-white px-6 py-20 text-center text-sm text-[#536471]">
+      <div className="min-h-screen bg-[#0b1018] px-4 py-10 text-white md:px-6">
+        <div className="mx-auto max-w-6xl rounded-3xl border border-white/10 bg-[#111823]/90 px-6 py-20 text-center text-sm text-gray-400">
           Loading trader profile...
         </div>
       </div>
@@ -141,10 +141,10 @@ const TraderProfile = () => {
 
   if (!trader) {
     return (
-      <div className="min-h-screen bg-[#f5f7fa] px-4 py-10 text-[#0f1419] md:px-6">
-        <div className="mx-auto max-w-4xl rounded-3xl border border-[#e5e7eb] bg-white px-6 py-16 text-center">
-          <h1 className="text-2xl font-bold text-[#0f1419]">Trader not found</h1>
-          <p className="mt-3 text-sm text-[#536471]">The public profile you requested could not be loaded.</p>
+      <div className="min-h-screen bg-[#0b1018] px-4 py-10 text-white md:px-6">
+        <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-[#111823]/90 px-6 py-16 text-center">
+          <h1 className="text-2xl font-bold text-white">Trader not found</h1>
+          <p className="mt-3 text-sm text-gray-400">The public profile you requested could not be loaded.</p>
           <Link
             to="/trade"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0fa053] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#2a955e]"
@@ -158,33 +158,33 @@ const TraderProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7fa] px-4 py-8 text-[#0f1419] md:px-6">
+    <div className="min-h-screen bg-[#0b1018] px-4 py-8 text-white md:px-6">
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-3">
-          <Link to="/trade" className="inline-flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-semibold text-[#536471] transition-colors hover:bg-[#f5f7fa] hover:text-[#0f1419]">
+          <Link to="/trade" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/5 hover:text-white">
             <ArrowLeft className="h-4 w-4" />
             Back to trading
           </Link>
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[1.08fr,0.92fr]">
-          <section className="rounded-[28px] border border-[#e5e7eb] bg-white p-6 shadow-[0_24px_80px_rgba(0,0,0,0.06)]">
+          <section className="rounded-[28px] border border-white/10 bg-[#111823]/90 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.06)]">
             <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
               <div className="flex items-start gap-4">
                 {trader.avatar_url ? (
-                  <img src={trader.avatar_url} alt={getTraderDisplayName(trader)} className="h-20 w-20 rounded-3xl object-cover ring-1 ring-[#e5e7eb]" />
+                  <img src={trader.avatar_url} alt={getTraderDisplayName(trader)} className="h-20 w-20 rounded-3xl object-cover ring-1 ring-white/10" />
                 ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-[linear-gradient(135deg,#1d4ed8,#22c55e)] text-2xl font-black text-white ring-1 ring-[#e5e7eb]">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-[linear-gradient(135deg,#1d4ed8,#22c55e)] text-2xl font-black text-white ring-1 ring-white/10">
                     {getTraderDisplayName(trader).charAt(0).toUpperCase()}
                   </div>
                 )}
 
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="truncate text-2xl font-black text-[#0f1419] md:text-3xl">@{getTraderDisplayName(trader)}</h1>
+                    <h1 className="truncate text-2xl font-black text-white md:text-3xl">@{getTraderDisplayName(trader)}</h1>
                     <VipBadge tierId={(trader.vip_tier as any) ?? "none"} size={24} showLabel />
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-4 text-[13px] text-[#536471]">
+                  <div className="mt-3 flex flex-wrap items-center gap-4 text-[13px] text-gray-400">
                     <span className="inline-flex items-center gap-2">
                       <CalendarDays className="h-4 w-4 text-[#0fa053]" />
                       Joined {new Date(trader.created_at).toLocaleDateString()}
@@ -209,7 +209,7 @@ const TraderProfile = () => {
                     onClick={() => void (followingTrader ? unfollowTrader(trader.id) : followTrader(trader.id))}
                     className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
                       followingTrader
-                        ? "border border-[#e5e7eb] bg-white text-[#536471] hover:bg-[#f5f7fa] hover:text-[#0f1419]"
+                        ? "border border-white/10 bg-white/[0.03] text-gray-400 hover:bg-white/5 hover:text-white"
                         : "bg-[#0fa053] text-white hover:bg-[#2a955e]"
                     }`}
                   >
@@ -229,9 +229,9 @@ const TraderProfile = () => {
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <StatCard label="Total Profit" value={formatSocialCurrency(trader.total_profit)} accent="text-emerald-600" />
+              <StatCard label="Total Profit" value={formatSocialCurrency(trader.total_profit)} accent="text-emerald-300" />
               <StatCard label="Win Rate" value={`${winRate}%`} accent="text-[#0fa053]" />
-              <StatCard label="Trades" value={`${Number(trader.total_trades ?? 0)}`} accent="text-[#0f1419]" />
+              <StatCard label="Trades" value={`${Number(trader.total_trades ?? 0)}`} accent="text-white" />
               <StatCard label="Avg Return" value={formatSocialCurrency(avgReturn)} accent="text-[#0fa053]" />
             </div>
 
@@ -241,21 +241,21 @@ const TraderProfile = () => {
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-[#e5e7eb] bg-white p-6 shadow-[0_24px_80px_rgba(0,0,0,0.06)]">
+          <section className="rounded-[28px] border border-white/10 bg-[#111823]/90 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.06)]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-bold text-[#0f1419]">Recent Trades</h2>
-                <p className="mt-1 text-[12px] text-[#536471]">Review recent results and filter by winning or losing positions.</p>
+                <h2 className="text-xl font-bold text-white">Recent Trades</h2>
+                <p className="mt-1 text-[12px] text-gray-400">Review recent results and filter by winning or losing positions.</p>
               </div>
 
-              <div className="flex items-center gap-2 rounded-2xl border border-[#e5e7eb] bg-white p-1">
+              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-1">
                 {(["all", "winning", "losing"] as const).map((value) => (
                   <button
                     key={value}
                     type="button"
                     onClick={() => setTradeFilter(value)}
                     className={`rounded-xl px-3 py-2 text-[12px] font-semibold transition-colors ${
-                      tradeFilter === value ? "bg-[#0fa053] text-white" : "text-[#536471] hover:bg-[#f5f7fa] hover:text-[#0f1419]"
+                      tradeFilter === value ? "bg-[#0fa053] text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"
                     }`}
                   >
                     {value === "all" ? "All" : value === "winning" ? "Winning" : "Losing"}
@@ -266,18 +266,18 @@ const TraderProfile = () => {
 
             <div className="mt-5 space-y-3">
               {filteredTrades.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-[#e5e7eb] bg-[#f5f7fa] px-4 py-8 text-center text-sm text-[#536471]">
+                <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-gray-400">
                   No trades match this filter yet.
                 </div>
               ) : (
                 filteredTrades.map((trade) => (
-                  <div key={trade.id} className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
+                  <div key={trade.id} className="rounded-2xl border border-white/10 bg-[#111823]/90 p-4">
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-[15px] font-bold text-[#0f1419]">{trade.asset_symbol}</p>
+                          <p className="text-[15px] font-bold text-white">{trade.asset_symbol}</p>
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] ${
-                            trade.direction === "higher" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                            trade.direction === "higher" ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"
                           }`}>
                             {formatDirectionLabel(trade.direction)}
                           </span>
@@ -287,15 +287,15 @@ const TraderProfile = () => {
                             </span>
                           ) : null}
                         </div>
-                        <p className="mt-1 text-[12px] text-[#536471]">
+                        <p className="mt-1 text-[12px] text-gray-400">
                           Expiry {trade.expiry_seconds}s • Closed {trade.closed_at ? new Date(trade.closed_at).toLocaleString() : "Pending"}
                         </p>
                       </div>
 
                       <div className="text-right">
-                        <p className="text-[14px] font-bold text-[#0f1419]">{formatSocialCurrency(trade.amount)}</p>
+                        <p className="text-[14px] font-bold text-white">{formatSocialCurrency(trade.amount)}</p>
                         <p className={`mt-1 text-[12px] font-semibold ${
-                          Number(trade.profit ?? 0) >= 0 ? "text-emerald-600" : "text-red-600"
+                          Number(trade.profit ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"
                         }`}>
                           {formatSocialCurrency(trade.profit)}
                         </p>
@@ -313,7 +313,7 @@ const TraderProfile = () => {
                         icon={ArrowLeft}
                         label="Entry"
                         value={trade.entry_price.toFixed(4)}
-                        accent="text-[#0f1419]"
+                        accent="text-white"
                       />
                     </div>
                   </div>
@@ -336,8 +336,8 @@ const TraderProfile = () => {
 };
 
 const StatCard = ({ accent, label, value }: { accent: string; label: string; value: string }) => (
-  <div className="rounded-2xl border border-[#e5e7eb] bg-[#f5f7fa] p-4">
-    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#536471]">{label}</p>
+  <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-gray-500">{label}</p>
     <p className={`mt-2 text-2xl font-black ${accent}`}>{value}</p>
   </div>
 );
@@ -351,17 +351,17 @@ const ListCard = ({
   items: TraderSummary[];
   title: string;
 }) => (
-  <div className="rounded-2xl border border-[#e5e7eb] bg-[#f5f7fa] p-4">
-    <p className="text-[13px] font-bold text-[#0f1419]">{title}</p>
+  <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
+    <p className="text-[13px] font-bold text-white">{title}</p>
     <div className="mt-3 flex flex-wrap gap-2">
       {items.length === 0 ? (
-        <span className="text-[12px] text-[#536471]">{emptyText}</span>
+        <span className="text-[12px] text-gray-400">{emptyText}</span>
       ) : (
         items.map((item) => (
           <Link
             key={item.id}
             to={item.username ? `/traders/${item.username}` : "/trade"}
-            className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#536471] transition-colors hover:bg-[#f5f7fa] hover:text-[#0f1419]"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[12px] font-semibold text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
           >
             {item.avatar_url ? (
               <img src={item.avatar_url} alt={getTraderDisplayName(item)} className="h-5 w-5 rounded-full object-cover" />
@@ -389,8 +389,8 @@ const TradeDetail = ({
   label: string;
   value: string;
 }) => (
-  <div className="rounded-xl border border-[#e5e7eb] bg-[#f5f7fa] px-3 py-2.5">
-    <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[#536471]">
+  <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+    <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-gray-400">
       <Icon className="h-3.5 w-3.5" />
       {label}
     </div>

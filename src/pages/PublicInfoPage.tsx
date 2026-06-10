@@ -20,13 +20,13 @@ const SectionBlock = ({
   section: PublicPageSection;
   platformName: string;
 }) => (
-  <section className="rounded-[28px] border border-[#e5e7eb] bg-white p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:p-8">
-    <h2 className="font-display text-2xl font-bold text-[#0f1419]">{interpolate(section.title, platformName)}</h2>
+  <section className="rounded-[28px] border border-white/8 bg-gradient-to-br from-[#182435] to-[#0f1826] p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:p-8">
+    <h2 className="font-display text-2xl font-bold text-white">{interpolate(section.title, platformName)}</h2>
 
     {section.paragraphs?.length ? (
       <div className="mt-4 space-y-4">
         {section.paragraphs.map((paragraph) => (
-          <p key={paragraph} className="font-copy text-sm leading-8 text-[#536471] sm:text-base">
+          <p key={paragraph} className="font-copy text-sm leading-8 text-[#8fa8ce] sm:text-base">
             {interpolate(paragraph, platformName)}
           </p>
         ))}
@@ -38,7 +38,7 @@ const SectionBlock = ({
         {section.bullets.map((bullet) => (
           <div
             key={bullet}
-            className="rounded-[20px] border border-[#e5e7eb] bg-[#f5f7fa] px-4 py-4 font-copy text-sm leading-7 text-[#536471]"
+            className="rounded-[20px] border border-white/8 bg-black/20 px-4 py-4 font-copy text-sm leading-7 text-[#8fa8ce]"
           >
             {interpolate(bullet, platformName)}
           </div>
@@ -55,14 +55,14 @@ const FaqBlock = ({
   items: PublicFaqItem[];
   platformName: string;
 }) => (
-  <section className="rounded-[28px] border border-[#e5e7eb] bg-white p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:p-8">
-    <h2 className="font-display text-2xl font-bold text-[#0f1419]">Questions and answers</h2>
+  <section className="rounded-[28px] border border-white/8 bg-gradient-to-br from-[#182435] to-[#0f1826] p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:p-8">
+    <h2 className="font-display text-2xl font-bold text-white">Questions and answers</h2>
 
     <div className="mt-6 space-y-4">
       {items.map((item) => (
-        <div key={item.question} className="rounded-[22px] border border-[#e5e7eb] bg-[#f5f7fa] px-5 py-5">
-          <h3 className="font-display text-xl font-bold text-[#0f1419]">{interpolate(item.question, platformName)}</h3>
-          <p className="font-copy mt-3 text-sm leading-7 text-[#536471] sm:text-base sm:leading-8">
+        <div key={item.question} className="rounded-[22px] border border-white/8 bg-black/20 px-5 py-5">
+          <h3 className="font-display text-xl font-bold text-white">{interpolate(item.question, platformName)}</h3>
+          <p className="font-copy mt-3 text-sm leading-7 text-[#8fa8ce] sm:text-base sm:leading-8">
             {interpolate(item.answer, platformName)}
           </p>
         </div>
@@ -76,21 +76,21 @@ const RelatedLinksBlock = ({
 }: {
   links: PublicPageLinkItem[];
 }) => (
-  <section className="rounded-[28px] border border-[#e5e7eb] bg-white p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:p-8">
-    <h2 className="font-display text-2xl font-bold text-[#0f1419]">Keep exploring</h2>
-    <p className="mt-4 max-w-3xl font-copy text-sm leading-7 text-[#536471] sm:text-base">
+  <section className="rounded-[28px] border border-white/8 bg-gradient-to-br from-[#182435] to-[#0f1826] p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:p-8">
+    <h2 className="font-display text-2xl font-bold text-white">Keep exploring</h2>
+    <p className="mt-4 max-w-3xl font-copy text-sm leading-7 text-[#8fa8ce] sm:text-base">
       Use these public links to move deeper into the platform, support, and policy pages without losing context.
     </p>
 
     <div className="mt-6 grid gap-4 lg:grid-cols-2">
       {links.map((item) => {
-        const className =
-          "rounded-[22px] border border-[#e5e7eb] bg-[#f5f7fa] px-5 py-5 transition-colors hover:bg-white";
+        const         className =
+          "rounded-[22px] border border-white/8 bg-black/20 px-5 py-5 transition-colors hover:bg-white/5";
 
         const content = (
           <>
-            <div className="font-display text-xl font-bold text-[#0f1419]">{item.label}</div>
-            <p className="mt-3 font-copy text-sm leading-7 text-[#536471]">{item.description}</p>
+            <div className="font-display text-xl font-bold text-white">{item.label}</div>
+            <p className="mt-3 font-copy text-sm leading-7 text-[#8fa8ce]">{item.description}</p>
           </>
         );
 
@@ -132,18 +132,18 @@ const PublicInfoPage = ({ pageKey }: PublicInfoPageProps) => {
       <Navbar />
 
       <main>
-        <section className="relative overflow-hidden border-b border-[#e5e7eb] bg-[linear-gradient(180deg,#f5f0eb_0%,#f5f7fa_38%,#ffffff_65%,#ffffff_100%)] pb-14 pt-28 sm:pb-20 sm:pt-32">
+        <section className="relative overflow-hidden border-b border-white/8 bg-[#0b1622] pb-14 pt-28 sm:pb-20 sm:pt-32">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(27,65,94,0.08),transparent_36%),radial-gradient(circle_at_20%_20%,rgba(20,158,98,0.06),transparent_24%)]" />
 
           <div className="relative px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl">
-              <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em] text-[#536471]">
+              <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em] text-slate-300">
                 {page.eyebrow}
               </div>
-              <h1 className="font-display mt-4 text-4xl font-bold leading-[1.05] text-[#0f1419] sm:text-5xl lg:text-6xl">
+              <h1 className="font-display mt-4 text-4xl font-bold leading-[1.05] text-white sm:text-5xl lg:text-6xl">
                 {interpolate(page.title, platformName)}
               </h1>
-              <p className="font-copy mt-5 max-w-3xl text-base leading-8 text-[#536471] sm:text-lg">
+              <p className="font-copy mt-5 max-w-3xl text-base leading-8 text-slate-400 sm:text-lg">
                 {interpolate(page.description, platformName)}
               </p>
 
@@ -156,7 +156,7 @@ const PublicInfoPage = ({ pageKey }: PublicInfoPageProps) => {
                 </Link>
                 <Link
                   to="/"
-                  className="inline-flex items-center justify-center rounded-md border border-[#e5e7eb] bg-white px-6 py-4 text-sm font-bold text-[#0f1419] transition-colors hover:bg-[#f5f7fa]"
+                  className="inline-flex items-center justify-center rounded-md border border-white/10 bg-white/5 px-6 py-4 text-sm font-bold text-white transition-colors hover:bg-white/10"
                 >
                   Return to homepage
                 </Link>
@@ -165,7 +165,7 @@ const PublicInfoPage = ({ pageKey }: PublicInfoPageProps) => {
           </div>
         </section>
 
-        <section className="bg-[#f5f7fa] py-16 sm:py-20">
+        <section className="bg-[#101925] py-16 sm:py-20">
           <div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 lg:px-8">
             {page.sections.map((section) => (
               <SectionBlock key={section.title} section={section} platformName={platformName} />

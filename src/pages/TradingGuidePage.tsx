@@ -974,13 +974,13 @@ const useGuideMedia = (platformName: string) => {
 };
 
 const GuideMediaPlaceholder = ({ title }: { title: string }) => (
-  <div className="flex min-h-[280px] flex-col items-center justify-center gap-4 rounded-[14px] border border-dashed border-[#e5e7eb] bg-gradient-to-br from-[#f5f7fa] to-white px-6 py-10 text-center hover:border-[#cbd5e1] transition-colors duration-300">
+  <div className="flex min-h-[280px] flex-col items-center justify-center gap-4 rounded-[14px] border border-dashed border-white/20 bg-gradient-to-br from-white/[0.02] to-[#0f1826] px-6 py-10 text-center hover:border-white/30 transition-colors duration-300">
     <div className="rounded-lg bg-[#1c81f8]/10 p-3">
       <ImageIcon className="h-10 w-10 text-[#1c81f8]" />
     </div>
     <div>
-      <p className="text-sm font-semibold text-[#0f1419]">Guide image not assigned</p>
-      <p className="mt-1.5 text-xs text-[#536471]">Upload the real <span className="text-[#1c81f8]">{title}</span> image from Admin Settings.</p>
+      <p className="text-sm font-semibold text-white">Guide image not assigned</p>
+      <p className="mt-1.5 text-xs text-gray-400">Upload the real <span className="text-[#1c81f8]">{title}</span> image from Admin Settings.</p>
     </div>
   </div>
 );
@@ -991,8 +991,8 @@ const GuideMockup = ({ title, mediaUrl }: { title: string; mediaUrl?: string }) 
   }
 
   return (
-    <figure className="rounded-[14px] border border-[#e5e7eb] bg-white overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
-      <div className="bg-gradient-to-br from-[#f5f7fa] to-white p-1.5">
+    <figure className="rounded-[14px] border border-white/10 bg-[#0f1826] overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+      <div className="bg-gradient-to-br from-white/[0.02] to-[#0f1826] p-1.5">
         <img src={mediaUrl} alt={title} className="h-auto w-full rounded-[10px] object-contain hover:scale-105 transition-transform duration-300" loading="lazy" />
       </div>
     </figure>
@@ -1008,15 +1008,15 @@ const VideoPreview = ({
   duration: string;
   mediaUrl?: string;
 }) => (
-  <div className="mt-8 overflow-hidden rounded-[14px] border border-[#e5e7eb] bg-white shadow-lg hover:shadow-2xl transition-all duration-300 group">
-    <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-[#f5f7fa] to-white">
+  <div className="mt-8 overflow-hidden rounded-[14px] border border-white/10 bg-[#0f1826] shadow-lg hover:shadow-2xl transition-all duration-300 group">
+    <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-white/[0.02] to-[#0f1826]">
       {mediaUrl ? (
         <img src={mediaUrl} alt={title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90" loading="lazy" />
       ) : (
-        <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-[#536471]">
+        <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center text-gray-400">
           <PlaySquare className="h-12 w-12 text-[#1c81f8] opacity-80" />
-          <p className="text-sm font-semibold text-[#0f1419]">Video thumbnail not assigned</p>
-          <p className="max-w-sm text-xs text-[#536471]">Upload this thumbnail from Admin Settings.</p>
+          <p className="text-sm font-semibold text-white">Video thumbnail not assigned</p>
+          <p className="max-w-sm text-xs text-gray-400">Upload this thumbnail from Admin Settings.</p>
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
@@ -1028,8 +1028,8 @@ const VideoPreview = ({
       </div>
     </div>
     <div className="px-5 py-5">
-      <div className="text-base font-bold text-[#0f1419] leading-snug">{title}</div>
-      <div className="mt-2.5 text-sm font-medium text-[#536471]">{duration}</div>
+      <div className="text-base font-bold text-white leading-snug">{title}</div>
+      <div className="mt-2.5 text-sm font-medium text-gray-400">{duration}</div>
     </div>
   </div>
 );
@@ -1065,8 +1065,8 @@ const GuideTreeNode = ({
           "group relative flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left leading-tight transition-all duration-200",
           isActive 
             ? "bg-[#1c81f8]/15 text-[#1c81f8] border border-[#1c81f8]/30" 
-            : "text-[#536471] hover:bg-[#f5f7fa] hover:text-[#0f1419] hover:border border border-transparent",
-          depth === 0 ? "text-[16px] font-bold text-[#0f1419] mt-3 mb-1" : depth === 1 ? "text-[14px] font-semibold" : "text-[13px] font-medium",
+            : "text-gray-400 hover:bg-white/5 hover:text-white hover:border border border-transparent",
+          depth === 0 ? "text-[16px] font-bold text-white mt-3 mb-1" : depth === 1 ? "text-[14px] font-semibold" : "text-[13px] font-medium",
         ].join(" ")}
         style={{ paddingLeft: `${12 + depth * 16}px` }}
       >
@@ -1074,7 +1074,7 @@ const GuideTreeNode = ({
           <span className={`font-semibold ${depth === 0 ? "text-[#1c81f8]" : ""}`}>{topic.number}.</span> {topic.title}
         </span>
         {hasChildren ? (
-          <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#1c81f8]" : "text-[#536471]"}`} />
+          <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#1c81f8]" : "text-gray-400"}`} />
         ) : null}
         {isActive && depth === 0 && <div className="absolute left-0 top-1/2 h-[60%] w-1 -translate-y-1/2 rounded-r-full bg-[#1c81f8]"/>}
       </button>
@@ -1098,14 +1098,14 @@ const GuideTreeNode = ({
 };
 
 const SupportPanel = ({ platformName }: { platformName: string }) => (
-  <div className="rounded-[16px] bg-white border border-[#e5e7eb] p-8">
+  <div className="rounded-[16px] bg-[#0f1826] border border-white/10 p-8">
     <div className="flex items-start gap-4">
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-2">
           <Headset className="h-6 w-6 text-[#1c81f8]"/>
-          <h1 className="text-3xl sm:text-4xl font-bold text-[#0f1419]">Support Service</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white">Support Service</h1>
         </div>
-        <p className="mt-3 max-w-3xl text-base leading-relaxed text-[#536471]">
+        <p className="mt-3 max-w-3xl text-base leading-relaxed text-gray-400">
           Choose the topic that matches your issue. {platformName} support can help with account access, deposits,
           withdrawals, verification, platform settings, and trading workspace questions.
         </p>
@@ -1120,10 +1120,10 @@ const SupportPanel = ({ platformName }: { platformName: string }) => (
       ].map((item) => {
         const Icon = item.icon;
         return (
-          <div key={item.title} className="rounded-[16px] border border-[#e5e7eb] bg-[#f5f7fa] p-5">
+          <div key={item.title} className="rounded-[16px] border border-white/10 bg-white/5 p-5">
             <Icon className="h-8 w-8 text-[#1c81f8]" />
-            <h2 className="mt-5 text-xl font-bold text-[#0f1419]">{item.title}</h2>
-            <p className="mt-3 text-sm leading-6 text-[#536471]">{item.text}</p>
+            <h2 className="mt-5 text-xl font-bold text-white">{item.title}</h2>
+            <p className="mt-3 text-sm leading-6 text-gray-400">{item.text}</p>
           </div>
         );
       })}
@@ -1133,9 +1133,9 @@ const SupportPanel = ({ platformName }: { platformName: string }) => (
 
 const SupportChatPanel = () => (
   <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
-    <div className="rounded-[18px] bg-white border border-[#e5e7eb] p-6">
-      <h1 className="text-3xl font-bold text-[#0f1419]">Support Chat</h1>
-      <p className="mt-4 text-sm leading-7 text-[#536471]">
+    <div className="rounded-[18px] bg-[#0f1826] border border-white/10 p-6">
+      <h1 className="text-3xl font-bold text-white">Support Chat</h1>
+      <p className="mt-4 text-sm leading-7 text-gray-400">
         Start a support conversation from the trading workspace. Keep transaction IDs, phone numbers, and screenshots
         ready when the issue is about payments.
       </p>
@@ -1147,14 +1147,14 @@ const SupportChatPanel = () => (
         <ArrowRight className="h-4 w-4" />
       </button>
     </div>
-    <div className="rounded-[18px] border border-[#e5e7eb] bg-white p-6">
-      <div className="mb-5 flex items-center gap-3 border-b border-[#e5e7eb] pb-4">
+    <div className="rounded-[18px] border border-white/10 bg-[#0f1826] p-6">
+      <div className="mb-5 flex items-center gap-3 border-b border-white/10 pb-4">
         <span className="grid h-11 w-11 place-items-center rounded-full bg-[#1c81f8]">
           <MessageCircle className="h-5 w-5 text-white" />
         </span>
         <div>
-          <div className="text-lg font-bold text-[#0f1419]">Support Chat (Online)</div>
-          <div className="text-sm text-[#536471]">Typical replies appear inside your chat inbox.</div>
+          <div className="text-lg font-bold text-white">Support Chat (Online)</div>
+          <div className="text-sm text-gray-400">Typical replies appear inside your chat inbox.</div>
         </div>
       </div>
       <div className="space-y-4">
@@ -1163,8 +1163,8 @@ const SupportChatPanel = () => (
           "Please include your account ID and the exact issue so we can check it quickly.",
           "For withdrawal questions, share the request ID and selected payout method.",
         ].map((message, index) => (
-          <div key={message} className="rounded-[14px] bg-[#f0f2f5] p-4 text-sm leading-6 text-[#536471]">
-            <span className="font-bold text-[#0f1419]">{index === 0 ? "Support Service" : "Support note"}: </span>
+          <div key={message} className="rounded-[14px] bg-white/5 p-4 text-sm leading-6 text-gray-400">
+            <span className="font-bold text-white">{index === 0 ? "Support Service" : "Support note"}: </span>
             {message}
           </div>
         ))}
@@ -1174,9 +1174,9 @@ const SupportChatPanel = () => (
 );
 
 const AppsPanel = () => (
-  <div className="rounded-[18px] bg-white border border-[#e5e7eb] p-8">
-    <h1 className="text-4xl font-bold text-[#0f1419]">Applications</h1>
-    <p className="mt-4 max-w-3xl text-lg leading-8 text-[#536471]">
+  <div className="rounded-[18px] bg-[#0f1826] border border-white/10 p-8">
+    <h1 className="text-4xl font-bold text-white">Applications</h1>
+    <p className="mt-4 max-w-3xl text-lg leading-8 text-gray-400">
       Use the web platform on desktop or install it as a browser app on supported mobile devices for quicker access.
     </p>
     <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -1187,10 +1187,10 @@ const AppsPanel = () => (
       ].map((item) => {
         const Icon = item.icon;
         return (
-          <div key={item.title} className="rounded-[16px] border border-[#e5e7eb] bg-[#f5f7fa] p-5">
+          <div key={item.title} className="rounded-[16px] border border-white/10 bg-white/5 p-5">
             <Icon className="h-9 w-9 text-[#1c81f8]" />
-            <h2 className="mt-5 text-xl font-bold text-[#0f1419]">{item.title}</h2>
-            <p className="mt-3 text-sm leading-6 text-[#536471]">{item.text}</p>
+            <h2 className="mt-5 text-xl font-bold text-white">{item.title}</h2>
+            <p className="mt-3 text-sm leading-6 text-gray-400">{item.text}</p>
           </div>
         );
       })}
@@ -1316,7 +1316,7 @@ const TradingGuidePage = () => {
       <div className="flex">
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <div>
-            <div className="mb-8 flex flex-wrap gap-3 border-b border-[#e5e7eb] pb-6">
+            <div className="mb-8 flex flex-wrap gap-3 border-b border-white/10 pb-6">
               {helpTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = tab.id === activePanel || (tab.id === "reviews" && false);
@@ -1328,7 +1328,7 @@ const TradingGuidePage = () => {
                     className={`inline-flex min-h-[48px] items-center gap-2.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-[#1c81f8] to-[#1565c0] text-white shadow-lg shadow-[#1c81f8]/30"
-                        : "bg-[#f5f7fa] text-[#536471] hover:bg-white hover:text-[#0f1419] border border-[#e5e7eb]"
+                        : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10"
                     }`}
                   >
                     <Icon className="h-4.5 w-4.5" />
@@ -1355,14 +1355,14 @@ const TradingGuidePage = () => {
                         onClick={() => switchCategory(category.id)}
                         className={`group relative rounded-[14px] overflow-hidden border p-6 text-center transition-all duration-300 hover:shadow-lg ${
                           isActive
-                            ? "border-[#1c81f8] bg-gradient-to-br from-[#1c81f8]/10 to-[#1565c0]/5 text-[#0f1419] shadow-lg shadow-[#1c81f8]/20"
-                            : "border-[#e5e7eb] bg-white text-[#536471] hover:border-[#cbd5e1] hover:bg-[#f5f7fa]"
+                        ? "border-[#1c81f8] bg-gradient-to-br from-[#1c81f8]/10 to-[#1565c0]/5 text-white shadow-lg shadow-[#1c81f8]/20"
+                        : "border-white/10 bg-transparent text-gray-400 hover:border-white/20 hover:bg-white/5"
                         }`}
                       >
                         <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{background: "radial-gradient(circle at 30% 30%, rgba(0, 192, 118, 0.1), transparent 50%)"}}/>
-                        <Icon className={`mx-auto h-12 w-12 transition-all duration-300 ${isActive ? "text-[#1c81f8] scale-110" : "text-[#536471] group-hover:text-[#0f1419] group-hover:scale-105"}`} />
+                        <Icon className={`mx-auto h-12 w-12 transition-all duration-300 ${isActive ? "text-[#1c81f8] scale-110" : "text-gray-400 group-hover:text-white group-hover:scale-105"}`} />
                         <div className="mt-5 text-lg font-bold leading-tight">{category.label}</div>
-                        <div className="mt-2.5 text-xs font-medium leading-relaxed text-[#536471]">{category.description}</div>
+                        <div className="mt-2.5 text-xs font-medium leading-relaxed text-gray-400">{category.description}</div>
                         {isActive && <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-[#1c81f8] animate-pulse"/>}
                       </button>
                     );
@@ -1370,20 +1370,20 @@ const TradingGuidePage = () => {
                 </div>
 
                 <div className="mt-8 grid gap-6">
-                  <article className="rounded-[16px] bg-white border border-[#e5e7eb] px-6 py-8 sm:px-10 lg:px-14">
+                  <article className="rounded-[16px] bg-[#0f1826] border border-white/10 px-6 py-8 sm:px-10 lg:px-14">
                     <div className="mx-auto max-w-3xl">
                       <div className="mb-2 flex items-center gap-2">
                         <div className="h-1 w-1 rounded-full bg-[#1c81f8]"/>
                         <span className="text-xs font-bold uppercase tracking-widest text-[#1c81f8]">Guide</span>
                       </div>
-                      <h1 className="text-4xl sm:text-5xl font-bold leading-[1.1] tracking-tight text-[#0f1419] mt-2">
+                      <h1 className="text-4xl sm:text-5xl font-bold leading-[1.1] tracking-tight text-white mt-2">
                         {selectedContent.heading}
                       </h1>
 
-                      <p className="mt-6 text-lg leading-relaxed text-[#536471]">{selectedContent.intro}</p>
+                      <p className="mt-6 text-lg leading-relaxed text-gray-400">{selectedContent.intro}</p>
 
                       {selectedContent.paragraphs?.map((paragraph) => (
-                        <p key={paragraph} className="mt-4 text-base leading-relaxed text-[#536471]">
+                        <p key={paragraph} className="mt-4 text-base leading-relaxed text-gray-400">
                           {paragraph}
                         </p>
                       ))}
@@ -1391,7 +1391,7 @@ const TradingGuidePage = () => {
                       {selectedContent.bullets?.length ? (
                         <ul className="mt-7 space-y-3">
                           {selectedContent.bullets.map((bullet) => (
-                            <li key={bullet} className="flex gap-3 text-base leading-relaxed text-[#536471]">
+                            <li key={bullet} className="flex gap-3 text-base leading-relaxed text-gray-400">
                               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#1c81f8] flex-shrink-0" />
                               <span>{bullet}</span>
                             </li>
@@ -1412,7 +1412,7 @@ const TradingGuidePage = () => {
                             title={selectedContent.figure.title}
                             mediaUrl={guideMedia[selectedContent.figure.variant]}
                           />
-                          <figcaption className="mt-3 text-sm italic text-[#536471]">{selectedContent.figure.caption}</figcaption>
+                          <figcaption className="mt-3 text-sm italic text-gray-400">{selectedContent.figure.caption}</figcaption>
                         </figure>
                       ) : null}
 
@@ -1422,7 +1422,7 @@ const TradingGuidePage = () => {
                             title={selectedContent.secondaryFigure.title}
                             mediaUrl={guideMedia[selectedContent.secondaryFigure.variant]}
                           />
-                          <figcaption className="mt-3 text-sm italic text-[#536471]">{selectedContent.secondaryFigure.caption}</figcaption>
+                          <figcaption className="mt-3 text-sm italic text-gray-400">{selectedContent.secondaryFigure.caption}</figcaption>
                         </figure>
                       ) : null}
 
@@ -1434,16 +1434,16 @@ const TradingGuidePage = () => {
                         />
                       ) : null}
 
-                  <div className="mt-10 flex flex-col sm:flex-row gap-3 pt-8 border-t border-[#e5e7eb]">
+                  <div className="mt-10 flex flex-col sm:flex-row gap-3 pt-8 border-t border-white/10">
                     {previousTopic ? (
                       <button
                         type="button"
                         onClick={() => selectTopic(previousTopic.id)}
-                        className="group flex-1 rounded-[10px] border border-[#e5e7eb] bg-[#f5f7fa] px-5 py-3.5 text-sm font-semibold text-[#536471] hover:bg-white hover:border-[#cbd5e1] transition-all duration-300 flex items-center gap-2 hover:text-[#0f1419]"
+                        className="group flex-1 rounded-[10px] border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-semibold text-gray-400 hover:bg-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2 hover:text-white"
                       >
                         <ArrowRight className="h-4 w-4 rotate-180 transition-transform group-hover:-translate-x-1" />
                         <div className="text-left">
-                          <div className="text-xs text-[#536471] mb-0.5">Previous</div>
+                          <div className="text-xs text-gray-400 mb-0.5">Previous</div>
                           <div>{previousTopic.number}. {previousTopic.title}</div>
                         </div>
                       </button>
@@ -1467,7 +1467,7 @@ const TradingGuidePage = () => {
                     </div>
                   </article>
 
-                  <aside className="rounded-[16px] bg-white border border-[#e5e7eb] p-6">
+                  <aside className="rounded-[16px] bg-gradient-to-br from-[#1a2438] to-[#0f1826] border border-white/10 p-6">
                     <h2 className="text-sm font-bold uppercase tracking-wider text-[#1c81f8] mb-4">More Topics</h2>
                     <div className="max-h-[400px] overflow-y-auto pr-2 [scrollbar-color:#3a465f_transparent] [scrollbar-width:thin]">
                       <div className="space-y-1">
@@ -1495,7 +1495,7 @@ const TradingGuidePage = () => {
               </>
             ) : null}
 
-            <footer className="mt-16 pt-8 border-t border-[#e5e7eb] flex flex-wrap justify-center gap-6 text-xs text-[#536471]">
+            <footer className="mt-16 pt-8 border-t border-white/10 flex flex-wrap justify-center gap-6 text-xs text-gray-400">
               {[
                 ["About us", "/about"],
                 ["Help", "/trading-guide"],
