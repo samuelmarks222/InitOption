@@ -10,14 +10,15 @@ const HeroSection = () => {
   const hero = websiteContent.hero;
 
   return (
-    <section className="relative overflow-hidden pt-16" style={{ background: "hsl(var(--background))" }}>
+    <section className="relative overflow-hidden pt-16" style={{ background: '#284d5c' }}>
 
       <div className="relative px-[70px] pb-12 pt-10 text-center sm:pb-16 sm:pt-20 lg:pb-24 lg:pt-32">
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.08 }}
-          className="mx-auto max-w-6xl font-display text-[2.2rem] font-bold leading-[1.06] tracking-tight text-white sm:text-5xl sm:leading-[1.02] lg:text-7xl lg:leading-[1.02]"
+          className="mx-auto max-w-6xl font-display text-[2.2rem] font-bold leading-[1.06] tracking-tight sm:text-5xl sm:leading-[1.02] lg:text-7xl lg:leading-[1.02]"
+          style={{ color: '#1cd793' }}
         >
           {hero.title}
         </motion.h1>
@@ -26,7 +27,8 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="mx-auto mt-4 max-w-5xl font-copy text-[15px] leading-7 text-[white] sm:mt-5 sm:text-xl sm:leading-8"
+          className="mx-auto mt-4 max-w-5xl font-copy text-[15px] leading-7 sm:mt-5 sm:text-xl sm:leading-8"
+          style={{ color: '#ffffff' }}
         >
           {hero.description}
         </motion.p>
@@ -39,8 +41,9 @@ const HeroSection = () => {
         >
           <Button
             size="lg"
-            className="group relative h-11 w-full max-w-xs rounded-[12px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_32px_hsla(var(--landing-primary),0.16)] transition-all duration-300 hover:shadow-[0_8px_48px_hsla(var(--landing-primary),0.16)] hover:brightness-110 sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
+            className="group relative h-11 w-full max-w-xs rounded-[12px] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] shadow transition-all duration-300 sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
             asChild
+            style={{ background: '#1cd793', color: '#000000' }}
           >
             <Link to="/register">
               <span className="relative z-10 flex items-center gap-2">
@@ -52,8 +55,9 @@ const HeroSection = () => {
           <Button
             variant="outline"
             size="lg"
-            className="group h-11 w-full max-w-xs rounded-[12px] border border-white/25 bg-white/10 px-6 font-copy text-[11px] font-semibold text-white shadow-none backdrop-blur-sm transition-all duration-300 hover:border-white/40 hover:bg-white/15 hover:text-white sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
+            className="group h-11 w-full max-w-xs rounded-[12px] px-6 font-copy text-[11px] font-semibold shadow-none backdrop-blur-sm transition-all duration-300 sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
             asChild
+            style={{ background: '#1cd793', color: '#000000' }}
           >
             <Link to="/login">
               <Play size={16} className="transition-transform duration-300 group-hover:scale-110" />

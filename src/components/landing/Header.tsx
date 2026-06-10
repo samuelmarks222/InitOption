@@ -35,12 +35,12 @@ const Header = () => {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 bg-[hsl(var(--landing-secondary))] px-3 pt-3 sm:px-5 sm:pt-4">
+      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4" style={{ background: '#284d5c' }}>
         <div
           className={`mx-auto max-w-7xl rounded-[30px] transition-all duration-300 ${
             scrolled
-              ? "border-[hsl(var(--landing-secondary))]/50 bg-[hsl(var(--landing-secondary))] shadow-[0_24px_70px_hsla(var(--landing-secondary),0.22)]"
-              : "bg-[hsl(var(--landing-secondary))] shadow-[0_18px_48px_hsla(var(--landing-secondary),0.16)] backdrop-blur-xl"
+              ? "border-[#284d5c]/50 bg-[#284d5c] shadow-[0_24px_70px_rgba(40,77,92,0.22)]"
+              : "bg-[#284d5c] shadow-[0_18px_48px_rgba(40,77,92,0.16)] backdrop-blur-xl"
           }`}
         >
           <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
@@ -55,33 +55,35 @@ const Header = () => {
                 subtitleClassName="font-landing-copy text-[10px] tracking-[0.24em] text-white"
               />
 
-              <div className="hidden rounded-full border border-[hsl(var(--landing-secondary))]/10 bg-white/70 px-3 py-1.5 font-landing-copy text-[10px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--landing-border))] xl:inline-flex">
+              <div className="hidden rounded-full border px-3 py-1.5 font-landing-copy text-[10px] font-semibold uppercase tracking-[0.22em] text-[#a9e2dd] xl:inline-flex">
                 New generation trading terminal
               </div>
             </div>
 
             <nav className="hidden items-center gap-1 lg:flex">
               {NAV_ITEMS.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="rounded-full px-4 py-2.5 font-landing-copy text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-white/10 hover:text-white"
-                >
-                  {item.label}
-                </a>
-              ))}
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    className="rounded-full px-4 py-2.5 font-landing-copy text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-white/10 hover:text-white"
+                  >
+                    {item.label}
+                  </a>
+                ))}
             </nav>
 
             <div className="ml-auto hidden items-center gap-2 md:flex">
               <Link
                 to="/login"
-                className="rounded-full border border-white/10 bg-white/10 px-4 py-2.5 font-landing-copy text-sm font-semibold text-white transition-colors hover:bg-white/15"
+                className="rounded-full px-4 py-2.5 font-landing-copy text-sm font-semibold transition-colors"
+                style={{ background: '#1cd793', color: '#000000' }}
               >
                 Log in
               </Link>
               <Link
                 to="/register"
-                className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--landing-primary))] px-5 py-2.5 font-landing-copy text-sm font-semibold text-white shadow-[0_16px_36px_hsla(var(--landing-primary),0.35)] transition-transform hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-landing-copy text-sm font-semibold shadow-[0_16px_36px_rgba(28,215,147,0.35)] transition-transform hover:-translate-y-0.5"
+                style={{ background: '#1cd793', color: '#000000' }}
               >
                 Create account
                 <ArrowUpRight className="h-4 w-4" />
@@ -91,23 +93,25 @@ const Header = () => {
             <button
               type="button"
               onClick={() => setMobileOpen((value) => !value)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white transition-colors hover:bg-white/15 lg:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full lg:hidden"
               aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
             >
               {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 border-t border-[hsl(var(--landing-border))]/30 px-4 pb-3 pt-2 md:hidden">
+          <div className="grid grid-cols-2 gap-2 border-t px-4 pb-3 pt-2 md:hidden">
             <Link
               to="/login"
-              className="rounded-full border border-white/15 bg-white/10 px-4 py-3 text-center font-landing-copy text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
+              className="rounded-full px-4 py-3 text-center font-landing-copy text-[11px] font-semibold uppercase tracking-[0.16em]"
+              style={{ background: '#1cd793', color: '#000000' }}
             >
               Login
             </Link>
             <Link
               to="/register"
-              className="rounded-full bg-[hsl(var(--landing-primary))] px-4 py-3 text-center font-landing-copy text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
+              className="rounded-full px-4 py-3 text-center font-landing-copy text-[11px] font-semibold uppercase tracking-[0.16em]"
+              style={{ background: '#1cd793', color: '#000000' }}
             >
               Sign up
             </Link>
@@ -116,10 +120,10 @@ const Header = () => {
       </header>
 
       {mobileOpen ? (
-        <div className="fixed inset-0 z-40 bg-[hsla(var(--landing-secondary),0.36)] backdrop-blur-sm lg:hidden">
-          <div className="ml-auto flex h-full w-full max-w-[24rem] flex-col bg-[hsl(var(--landing-surface))] px-5 pb-8 pt-28 text-[hsl(var(--landing-secondary))] shadow-[-28px_0_70px_hsla(var(--landing-secondary),0.18)]">
+        <div className="fixed inset-0 z-40 backdrop-blur-sm lg:hidden" style={{ background: 'rgba(40,77,92,0.36)' }}>
+          <div className="ml-auto flex h-full w-full max-w-[24rem] flex-col px-5 pb-8 pt-28 shadow-[-28px_0_70px_rgba(40,77,92,0.18)]" style={{ background: '#ffffff' }}>
             <div className="landing-neo-card rounded-[32px] p-5">
-              <div className="rounded-full border border-[hsl(var(--landing-border))]/30 bg-white/70 px-3 py-1.5 font-landing-copy text-[10px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--landing-secondary))]">
+              <div className="rounded-full border px-3 py-1.5 font-landing-copy text-[10px] font-semibold uppercase tracking-[0.22em] text-[#284d5c]">
               </div>
 
               <div className="mt-5 space-y-2">
@@ -128,10 +132,10 @@ const Header = () => {
                     key={item.label}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className="flex items-center justify-between rounded-[22px] border border-[hsl(var(--landing-border))]/30 bg-white/82 px-4 py-4 font-landing-copy text-sm font-semibold text-[hsl(var(--landing-secondary))]"
+                    className="flex items-center justify-between rounded-[22px] border bg-white px-4 py-4 font-landing-copy text-sm font-semibold text-[#284d5c]"
                   >
                     <span>{item.label}</span>
-                    <ArrowUpRight className="h-4 w-4 text-[hsl(var(--landing-primary))]" />
+                    <ArrowUpRight className="h-4 w-4 text-[#1cd793]" />
                   </a>
                 ))}
               </div>
@@ -140,7 +144,7 @@ const Header = () => {
                 {QUICK_PILLS.map((pill) => (
                   <div
                     key={pill}
-                    className="rounded-full border border-[hsl(var(--landing-border))]/30 bg-white/72 px-3 py-1.5 font-landing-copy text-[10px] font-medium uppercase tracking-[0.16em] text-[hsl(var(--landing-secondary))]"
+                    className="rounded-full px-3 py-1.5 font-landing-copy text-[10px] font-medium uppercase tracking-[0.16em] text-[#284d5c]"
                   >
                     {pill}
                   </div>
@@ -151,14 +155,16 @@ const Header = () => {
                 <Link
                   to="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-[22px] border border-[hsl(var(--landing-secondary))]/10 bg-white px-4 py-3.5 text-center font-landing-copy text-sm font-semibold text-[hsl(var(--landing-secondary))]"
+                  className="rounded-[22px] px-4 py-3.5 text-center font-landing-copy text-sm font-semibold"
+                  style={{ background: '#1cd793', color: '#000000' }}
                 >
                   Log in
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-[22px] bg-[hsl(var(--landing-secondary))] px-4 py-3.5 text-center font-landing-copy text-sm font-semibold text-white"
+                  className="rounded-[22px] px-4 py-3.5 text-center font-landing-copy text-sm font-semibold"
+                  style={{ background: '#1cd793', color: '#000000' }}
                 >
                   Create account
                 </Link>
