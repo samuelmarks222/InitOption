@@ -254,13 +254,13 @@ const Analytics = () => {
           <h2 className="text-2xl font-bold text-white">Platform Profit Analytics</h2>
           <p className="mt-1 text-sm text-slate-300">Closed-trade performance, trade mix, and platform-side profitability.</p>
         </div>
-        <div className="flex items-center gap-2 rounded-lg border border-[#2a2f42] bg-[#1a1e2b] p-1">
-          {["7D", "30D", "3M", "1Y", "ALL"].map((range) => (
+        <div className="flex items-center gap-2 rounded-lg p-1" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+          {['7D', '30D', '3M', '1Y', 'ALL'].map((range) => (
             <button
               key={range}
               onClick={() => setTimeRange(range)}
               className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-                timeRange === range ? "bg-[#0fa053] text-white shadow" : "text-slate-300 hover:bg-[#1a1e2b] hover:text-white"
+                timeRange === range ? "bg-[var(--admin-green)] text-white shadow" : "text-slate-300 hover:bg-[var(--admin-surface)] hover:text-white"
               }`}
             >
               {range}
@@ -271,7 +271,7 @@ const Analytics = () => {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {kpiCards.map((kpi) => (
-          <div key={kpi.label} className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-6 shadow-lg">
+          <div key={kpi.label} className="rounded-2xl border p-6 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
             <p className="text-sm font-medium text-slate-300">{kpi.label}</p>
             <h3 className="mt-1 text-3xl font-bold text-white">{loading ? "..." : kpi.value}</h3>
             <div className="mt-4 flex items-center gap-1.5">
@@ -306,7 +306,7 @@ const Analytics = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="flex h-[400px] flex-col rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-6 shadow-lg lg:col-span-2">
+          <div className="flex h-[400px] flex-col rounded-2xl border p-6 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
           <h3 className="mb-6 text-lg font-bold text-white">Daily Platform Profit</h3>
           <div className="flex-1">
             {emptyRange ? (
@@ -324,7 +324,7 @@ const Analytics = () => {
                   <XAxis dataKey="label" stroke="#8A939F" fontSize={12} tickLine={false} axisLine={false} />
                   <YAxis stroke="#8A939F" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
                   <RechartsTooltip
-                    contentStyle={{ backgroundColor: "#1a1e2b", border: "1px solid #ffffff10", borderRadius: "8px", color: "#fff" }}
+                    contentStyle={{ backgroundColor: "var(--admin-surface)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", color: "var(--admin-text)" }}
                     formatter={(value: number) => [formatSignedMoney(value), "Platform P&L"]}
                   />
                   <Area type="monotone" dataKey="profit" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorProfit)" />
@@ -334,7 +334,7 @@ const Analytics = () => {
           </div>
         </div>
 
-        <div className="flex h-[400px] flex-col rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-6 shadow-lg">
+        <div className="flex h-[400px] flex-col rounded-2xl border p-6 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
           <h3 className="mb-2 text-lg font-bold text-white">Trade Volume by Asset Class</h3>
           <p className="mb-4 text-xs text-slate-400">Volume contribution within the selected range.</p>
           <div className="relative flex flex-1 items-center justify-center">
@@ -350,7 +350,7 @@ const Analytics = () => {
                       ))}
                     </Pie>
                     <RechartsTooltip
-                      contentStyle={{ backgroundColor: "#1a1e2b", border: "none", borderRadius: "8px", color: "#fff" }}
+                      contentStyle={{ backgroundColor: "var(--admin-surface)", border: "none", borderRadius: "8px", color: "var(--admin-text)" }}
                       formatter={(value: number) => [formatMoney(value), "Volume"]}
                     />
                     <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: "12px", color: "#8A939F" }} />
@@ -367,9 +367,9 @@ const Analytics = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="flex h-[350px] flex-col rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-6 shadow-lg">
+        <div className="flex h-[350px] flex-col rounded-2xl border p-6 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
           <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-white">
-            <Activity className="h-5 w-5 text-[#8fb0cf]" />
+            <Activity className="h-5 w-5 text-[var(--admin-text-secondary)]" />
             Trading Volume
           </h3>
           <div className="flex-1">
@@ -383,7 +383,7 @@ const Analytics = () => {
                   <YAxis stroke="#8A939F" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${Math.round(value / 1000)}k`} />
                   <RechartsTooltip
                     cursor={{ fill: "#ffffff05" }}
-                    contentStyle={{ backgroundColor: "#1a1e2b", border: "1px solid #ffffff10", borderRadius: "8px", color: "#fff" }}
+                    contentStyle={{ backgroundColor: "var(--admin-surface)", border: "1px solid var(--admin-border)", borderRadius: "8px", color: "#fff" }}
                     formatter={(value: number) => [formatMoney(value), "Volume"]}
                   />
                   <Bar dataKey="volume" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={40} />
@@ -393,9 +393,9 @@ const Analytics = () => {
           </div>
         </div>
 
-        <div className="flex h-[350px] flex-col rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-6 shadow-lg">
+        <div className="flex h-[350px] flex-col rounded-2xl border p-6 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
           <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-white">
-            <PieChartIcon className="h-5 w-5 text-[#0fa053]" />
+            <PieChartIcon className="h-5 w-5 text-[var(--admin-green)]" />
             Trade Direction Bias
           </h3>
           {emptyRange ? (
@@ -411,7 +411,7 @@ const Analytics = () => {
                     </span>
                     <span className="font-bold text-white">{directionCounts.callsPct}%</span>
                   </div>
-                  <div className="h-3 w-full overflow-hidden rounded-full bg-[#1a1e2b]">
+                  <div className="h-3 w-full overflow-hidden rounded-full" style={{ background: "var(--admin-surface)" }}>
                     <div className="h-full rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" style={{ width: `${directionCounts.callsPct}%` }} />
                   </div>
                 </div>
@@ -424,12 +424,12 @@ const Analytics = () => {
                     </span>
                     <span className="font-bold text-white">{directionCounts.putsPct}%</span>
                   </div>
-                  <div className="h-3 w-full overflow-hidden rounded-full bg-[#1a1e2b]">
+                  <div className="h-3 w-full overflow-hidden rounded-full" style={{ background: "var(--admin-surface)" }}>
                     <div className="h-full rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" style={{ width: `${directionCounts.putsPct}%` }} />
                   </div>
                 </div>
 
-                <div className="mt-8 rounded-xl border border-[#0fa053]/20 bg-[#0fa053]/10 p-4">
+                <div className="mt-8 rounded-xl border p-4" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
                   <p className="text-sm text-[#d8f6e5]">
                     <strong>Insight:</strong>{" "}
                     {directionCounts.calls === directionCounts.puts
@@ -459,20 +459,20 @@ const MetricsCard = ({
   icon: ReactNode;
   subtitle?: string;
 }) => (
-  <div className="relative overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-5 shadow-lg">
+  <div className="relative overflow-hidden rounded-2xl border p-5 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
     <div className="flex items-start justify-between">
       <div>
         <p className="text-sm font-medium text-slate-300">{title}</p>
         <h3 className="mt-1 text-2xl font-bold text-white">{value}</h3>
       </div>
-      <div className="rounded-xl border border-[#2a2f42] bg-[#1a1e2b] p-2.5 text-[#0fa053]">{icon}</div>
+      <div className="rounded-xl border p-2.5" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)", color: "var(--admin-green)" }}>{icon}</div>
     </div>
     {subtitle && <p className="mt-3 text-xs text-slate-400">{subtitle}</p>}
   </div>
 );
 
 const EmptyPanel = ({ message, compact = false }: { message: string; compact?: boolean }) => (
-  <div className={`flex h-full items-center justify-center rounded-xl border border-dashed border-[#2a2f42] text-center text-sm text-slate-400 ${compact ? "p-4" : "p-6"}`}>
+  <div className={`flex h-full items-center justify-center rounded-xl border-dashed text-center text-sm text-slate-400 ${compact ? "p-4" : "p-6"}`} style={{ borderColor: "var(--admin-border)" }}>
     {message}
   </div>
 );

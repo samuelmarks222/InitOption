@@ -274,24 +274,24 @@ const AuditLogs = () => {
           type="button"
           onClick={() => void loadAuditEntries()}
           disabled={loading}
-          className="flex items-center gap-2 rounded-lg border border-[#2a2f42] bg-[#1a1e2b] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1a1e2b] disabled:opacity-70"
+          className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-70" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)", }}
         >
           <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
           Refresh
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
-        <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full max-w-sm">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <div className="overflow-hidden rounded-2xl border shadow-lg\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-surface)\" }}>
+        <div className=\"border-b p-4\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-surface)\" }}>
+          <div className=\"flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between\">
+            <div className=\"relative w-full max-w-sm\">
+              <Search className=\"pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400\" />
               <input
-                type="text"
+                type=\"text\"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search request, actor, note or status..."
-                className="w-full rounded-lg border border-[#2a2f42] bg-[#0e1017] py-2 pl-9 pr-4 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
+                placeholder=\"Search request, actor, note or status...\"
+                className=\"w-full rounded-lg border py-2 pl-9 pr-4 text-sm text-white outline-none transition-colors\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-canvas)\" }}
               />
             </div>
           </div>
@@ -299,8 +299,8 @@ const AuditLogs = () => {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#0fa053]/10">
-              <RefreshCw className="h-8 w-8 animate-spin text-[#0fa053]" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "var(--admin-green)/0.10" }}>
+              <RefreshCw className="h-8 w-8 animate-spin" style={{ color: "var(--admin-green)" }} />
             </div>
             <div>
               <h3 className="text-lg font-bold text-white">Loading audit feed</h3>
@@ -311,8 +311,8 @@ const AuditLogs = () => {
           </div>
         ) : filteredEntries.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#0fa053]/10">
-              <DatabaseZap className="h-8 w-8 text-[#0fa053]" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "var(--admin-green)/0.10" }}>
+              <DatabaseZap className="h-8 w-8" style={{ color: "var(--admin-green)" }} />
             </div>
             <div>
               <h3 className="text-lg font-bold text-white">No audit events yet</h3>
@@ -324,7 +324,7 @@ const AuditLogs = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1080px] text-left text-sm text-slate-200">
-              <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
+              <thead className="border-b text-xs uppercase text-slate-300\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-surface)\" }}>
                 <tr>
                   <th className="px-6 py-3 font-semibold">Time</th>
                   <th className="px-6 py-3 font-semibold">Action</th>
@@ -373,9 +373,9 @@ const AuditLogs = () => {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
-        <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
-          <div className="text-lg font-bold text-white">Trade Balance Audit</div>
+      <div className="overflow-hidden rounded-2xl border shadow-lg\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-surface)\" }}>
+        <div className=\"border-b p-4\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-surface)\" }}>
+          <div className=\"text-lg font-bold text-white\">Trade Balance Audit</div>
           <div className="mt-1 text-sm text-slate-300">
             Every trade open and close records the exact balance before, change amount, and balance after.
           </div>
@@ -388,7 +388,7 @@ const AuditLogs = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1120px] text-left text-sm text-slate-200">
-              <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
+              <thead className="border-b text-xs uppercase text-slate-300\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-surface)\" }}>
                 <tr>
                   <th className="px-6 py-3 font-semibold">Time</th>
                   <th className="px-6 py-3 font-semibold">Event</th>

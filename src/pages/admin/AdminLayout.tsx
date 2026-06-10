@@ -79,8 +79,8 @@ const AdminLayout = () => {
 
   if (staffLoading) {
     return (
-      <div className="admin-theme flex h-screen items-center justify-center bg-[#0e1017] text-white">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0fa053] border-t-transparent" />
+      <div className="admin-theme flex h-screen items-center justify-center" style={{ background: "var(--admin-canvas)" }}>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" style={{ borderColor: "var(--admin-green)" }} />
       </div>
     );
   }
@@ -100,18 +100,20 @@ const AdminLayout = () => {
       )}
 
       <aside
-        className={`fixed md:relative top-0 bottom-0 left-0 z-50 md:z-auto w-64 bg-[#1a1e2b] border-r border-[#2a2f42] flex flex-col pt-1 transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+        className={`fixed md:relative top-0 bottom-0 left-0 z-50 md:z-auto w-64 border-r flex flex-col pt-1 transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+        style={{ background: "var(--admin-surface)", borderColor: "var(--admin-border)" }}
       >
         <Link
           to="/"
-          className="flex h-16 shrink-0 cursor-pointer items-center gap-3 border-b border-[#2a2f42] bg-[#1a1e2b] px-6 transition-colors hover:bg-[#1a1e2b]"
+          className="flex h-16 shrink-0 cursor-pointer items-center gap-3 border-b bg-[var(--admin-surface)] px-6 transition-colors hover:bg-[var(--admin-surface)]"
+          style={{ borderColor: "var(--admin-border)" }}
           title={t("admin.returnToSite")}
         >
           {logoUrl ? (
             <img src={logoUrl} alt={platformName} className="h-8 object-contain" />
           ) : (
             <>
-              <ShieldAlert className="h-6 w-6 shrink-0 text-[#ffc27a]" />
+              <ShieldAlert className="h-6 w-6 shrink-0 text-[var(--admin-orange-soft)]" />
               <span className="truncate text-lg font-bold tracking-wide text-white">{t("admin.portal")}</span>
             </>
           )}
@@ -129,9 +131,10 @@ const AdminLayout = () => {
                 to={item.href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                   isActive
-                    ? "border border-[#ff9a3d]/20 bg-[linear-gradient(90deg,rgba(255,154,61,0.16),rgba(55,163,114,0.14))] text-white shadow-[0_18px_40px_rgba(255,154,61,0.08)]"
-                    : "text-[#a7bfd8] hover:bg-[#1a1e2b] hover:text-white"
+                    ? "border bg-[linear-gradient(90deg,var(--admin-orange)/0.16,var(--admin-green)/0.14)] text-white shadow-[0_18px_40px_var(--admin-orange)/0.08]"
+                    : "text-[var(--admin-text-secondary)] hover:bg-[var(--admin-surface)] hover:text-white"
                 }`}
+                style={isActive ? { borderColor: `var(--admin-orange)/0.20` } : { borderColor: "transparent" }}
               >
                 {item.icon}
                 {item.label}
@@ -140,33 +143,33 @@ const AdminLayout = () => {
           })}
         </div>
 
-        <div className="shrink-0 border-t border-[#2a2f42] p-4">
-          <div className="flex items-center gap-3 rounded-xl bg-[#1a1e2b] px-3 py-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-[#0fa053] to-[#1a1e2b] text-xs font-bold text-white">
+        <div className="shrink-0 border-t p-4" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+          <div className="flex items-center gap-3 rounded-xl px-3 py-3" style={{ background: "var(--admin-surface)" }}>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr text-xs font-bold text-white" style={{ background: "linear-gradient(135deg, var(--admin-green), var(--admin-surface))" }}>
               {profile?.display_name?.charAt(0) || "A"}
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-white">{profile?.display_name || t("admin.adminUser")}</p>
-              <p className="truncate text-xs text-[#ffc27a]">{getRoleLabel(primaryRole)}</p>
+              <p className="truncate text-xs text-[var(--admin-orange-soft)]">{getRoleLabel(primaryRole)}</p>
             </div>
-            <button onClick={signOut} className="shrink-0 text-[#a7bfd8] transition-colors hover:text-[#ffc27a]">
+            <button onClick={signOut} className="shrink-0 text-[var(--admin-text-secondary)] transition-colors hover:text-[var(--admin-orange-soft)]">
               <LogOut size={16} />
             </button>
           </div>
         </div>
       </aside>
 
-      <main className="md:ml-0 flex min-w-0 flex-1 flex-col bg-[#0e1017]">
-        <header className="z-10 flex h-16 shrink-0 items-center justify-between border-b border-[#2a2f42] bg-[#1a1e2b]/50 px-4 backdrop-blur sm:px-8">
+      <main className="md:ml-0 flex min-w-0 flex-1 flex-col" style={{ background: "var(--admin-canvas)" }}>
+        <header className="z-10 flex h-16 shrink-0 items-center justify-between border-b bg-[var(--admin-surface)]/50 px-4 backdrop-blur sm:px-8" style={{ borderColor: "var(--admin-border)" }}>
           <div className="flex items-center gap-3">
             <button
-              className="rounded-lg p-2 text-[#a7bfd8] transition-colors hover:bg-[#1a1e2b] hover:text-white md:hidden"
+              className="rounded-lg p-2 text-[var(--admin-text-secondary)] transition-colors hover:bg-[var(--admin-surface)] hover:text-white md:hidden"
               onClick={() => setSidebarOpen((value) => !value)}
             >
               <Menu size={20} />
             </button>
             <div>
-              <div className="hidden text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ffc27a] sm:block">
+              <div className="hidden text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--admin-orange-soft)] sm:block">
                 {t("admin.desk")}
               </div>
               <h1 className="truncate text-lg font-bold text-white sm:text-xl">
@@ -178,7 +181,8 @@ const AdminLayout = () => {
           <div className="flex items-center gap-4">
             <Link
               to="/trade"
-              className="flex items-center gap-2 rounded-lg border border-[#0fa053]/30 bg-[#0fa053]/10 px-3 py-1.5 text-sm font-semibold text-[#0fa053] transition-colors hover:bg-[#0fa053]/20"
+              className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-semibold text-[var(--admin-green)] transition-colors"
+              style={{ borderColor: `var(--admin-green)/0.30`, background: `var(--admin-green)/0.10` }}
               title={t("admin.returnToSite")}
             >
               <TrendingUp size={16} />

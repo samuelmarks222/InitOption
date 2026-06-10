@@ -142,23 +142,23 @@ const AssetManagement = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#2a2f42] pb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-6" style={{ borderColor: "var(--admin-border)" }}>
         <div>
           <h2 className="text-2xl font-bold text-white">Asset Library</h2>
           <p className="text-sm text-slate-300 mt-1">Browse and enable hundreds of pre-configured assets for your traders.</p>
         </div>
       </div>
 
-      <div className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl overflow-hidden shadow-lg">
-        <div className="p-4 border-b border-[#2a2f42] flex flex-col md:flex-row justify-between items-center bg-[#1a1e2b] gap-4">
+      <div className="rounded-2xl overflow-hidden shadow-lg border" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+        <div className="p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-b" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
           
-          <div className="flex space-x-1 bg-[#0e1017] p-1 rounded-lg w-full md:w-auto">
+          <div className="flex space-x-1 p-1 rounded-lg w-full md:w-auto" style={{ background: "var(--admin-canvas)" }}>
             {(["ALL", "CURRENCIES", "CRYPTO", "STOCKS", "COMMODITIES"] as TabType[]).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${
-                  activeTab === tab ? "bg-[#0fa053] text-white shadow-sm" : "text-slate-300 hover:text-white hover:bg-[#1a1e2b]"
+                  activeTab === tab ? "bg-[var(--admin-green)] text-white shadow-sm" : "text-slate-300 hover:text-white hover:bg-[var(--admin-surface)]"
                 }`}
               >
                 {tab}
@@ -173,14 +173,14 @@ const AssetManagement = () => {
                placeholder="Search by symbol or name..." 
                value={searchTerm} 
                onChange={e => setSearchTerm(e.target.value)} 
-               className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none transition-colors" 
+               className="w-full rounded-lg pl-9 pr-4 py-2 text-sm text-white outline-none transition-colors" style={{ borderColor: "var(--admin-border)", background: "var(--admin-canvas)" }} 
              />
           </div>
         </div>
         
         <div className="overflow-x-auto max-h-[700px] overflow-y-auto">
           <table className="w-full min-w-[760px] text-left text-sm text-slate-200">
-            <thead className="sticky top-0 text-xs uppercase bg-[#1a1e2b] text-slate-300 border-b border-[#2a2f42] z-10">
+            <thead className="sticky top-0 text-xs uppercase text-slate-300 z-10" style={{ background: "var(--admin-surface)", borderColor: "var(--admin-border)" }}>
               <tr>
                 <th className="px-6 py-4 font-semibold w-12">Asset</th>
                 <th className="px-6 py-4 font-semibold">Symbol & Name</th>
@@ -213,7 +213,7 @@ const AssetManagement = () => {
                       <div className="text-xs text-slate-400">{ast.name}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-2 py-1.5 rounded bg-[#1a1e2b] text-slate-200 text-[10px] font-bold tracking-wider">{ast.category}</span>
+                      <span className="px-2 py-1.5 rounded text-slate-200 text-[10px] font-bold tracking-wider" style={{ background: "var(--admin-surface)" }}>{ast.category}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
@@ -224,13 +224,13 @@ const AssetManagement = () => {
                           step={1}
                           value={draftPayout}
                           onChange={(event) => handleDraftChange(ast.symbol, event.target.value)}
-                          className="h-10 w-20 rounded-lg border border-[#2a2f42] bg-[#0e1017] px-3 text-sm font-semibold text-white outline-none transition-colors focus:border-[#0fa053]"
+                          className="h-10 w-20 rounded-lg px-3 text-sm font-semibold text-white outline-none transition-colors" style={{ borderColor: "var(--admin-border)", background: "var(--admin-canvas)" }}
                         />
                         <button
                           type="button"
                           onClick={() => handleSavePayout(ast, dbMatch)}
                           disabled={!isAdded || !payoutChanged || savingPayoutSymbol === ast.symbol}
-                          className="rounded-lg border border-[#2a2f42] px-3 py-2 text-[11px] font-bold text-white transition-colors hover:bg-[#1a1e2b] disabled:cursor-not-allowed disabled:opacity-40"
+                          className="rounded-lg px-3 py-2 text-[11px] font-bold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-40" style={{ borderColor: "var(--admin-border)" }}
                         >
                           {savingPayoutSymbol === ast.symbol ? "Saving" : "Save"}
                         </button>
@@ -259,8 +259,8 @@ const AssetManagement = () => {
                          onClick={() => handleToggleAsset(ast, dbMatch)} 
                          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-2 ml-auto ${
                            isActive 
-                             ? "bg-[#1a1e2b] text-slate-300 hover:bg-red-500/20 hover:text-red-400" 
-                             : "bg-[#0fa053] text-white hover:bg-[#0fa053] hover:scale-105"
+                             ? "bg-[var(--admin-surface)] text-slate-300 hover:bg-red-500/20 hover:text-red-400" 
+                             : "bg-[var(--admin-green)] text-white hover:bg-[var(--admin-green)] hover:scale-105"
                          }`}
                        >
                         {isActive ? (

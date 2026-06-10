@@ -77,8 +77,8 @@ const EmptyState = ({
   description: string;
   title: string;
 }) => (
-  <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-8 text-center shadow-lg">
-    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#1a1e2b]">
+  <div className="rounded-2xl border p-8 text-center shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full" style={{ background: "var(--admin-surface)" }}>
       <Clock3 className="h-5 w-5 text-slate-300" />
     </div>
     <h3 className="mt-4 text-lg font-bold text-white">{title}</h3>

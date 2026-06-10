@@ -65,9 +65,9 @@ const PALETTE = {
 };
 
 const panelClass =
-  "rounded-[28px] border border-[#2a2f42] bg-[linear-gradient(180deg,#1a1e2b_0%,#13161e_100%)] shadow-[0_24px_70px_rgba(6,14,24,0.42)] backdrop-blur-xl";
+  "rounded-[28px] border shadow-[0_24px_70px_rgba(6,14,24,0.42)] backdrop-blur-xl" + '" style="border-color: var(--admin-border); background: linear-gradient(180deg, var(--admin-surface) 0%, var(--admin-input) 100%);"';
 
-const innerCardClass = "rounded-[22px] border border-[#2a2f42] bg-[#222738]";
+const innerCardClass = "rounded-[22px] border" + ' style="border-color: var(--admin-border); background: var(--admin-elevated);"';
 const ADMIN_DASHBOARD_CHART_ROW_LIMIT = 5000;
 
 const formatMoney = (value: number) =>
@@ -110,9 +110,9 @@ const MetricCard = ({
 }) => {
   const toneStyles = {
     accent: "border border-[#0fa053]/25 bg-[#0fa053]/12 text-[#9be1bc]",
-    deep: "border border-[#ff9a3d]/20 bg-[#222738] text-[#ffc27a]",
-    soft: "border border-[#2a2f42] bg-[#1a1e2b] text-[#a7bfd8]",
-    strong: "border border-[#ff9a3d]/24 bg-[#ff9a3d]/10 text-[#ffc27a]",
+    deep: "border bg-[var(--admin-elevated)] text-[var(--admin-orange-soft)]" + '" style="border-color: var(--admin-orange)/0.20;"',
+    soft: "border bg-[var(--admin-surface)] text-[var(--admin-text-secondary)]" + '" style="border-color: var(--admin-border);"',
+    strong: "border bg-[var(--admin-orange)]/0.10 text-[var(--admin-orange-soft)]" + '" style="border-color: var(--admin-orange)/0.24;"',
   }[tone];
 
   return (
@@ -331,7 +331,7 @@ const AdminDashboard = () => {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#ff9a3d]/20 bg-[#1a1e2b] px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">
+          <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.28em]" style={{ borderColor: "var(--admin-orange)/0.20", background: "var(--admin-surface)", color: "var(--admin-orange-soft)" }}>
             Admin / Overview
           </div>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">Dashboard</h1>
@@ -360,7 +360,7 @@ const AdminDashboard = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(35,58,89,0.55),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(48,168,106,0.18),transparent_34%)]" />
           <div className="relative flex h-full flex-col justify-between gap-4">
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#ffc27a]">Welcome back</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.24em]" style={{ color: "var(--admin-orange-soft)" }}>Welcome back</div>
               <h2 className="mt-1.5 text-2xl font-semibold tracking-tight break-all text-white sm:text-[1.8rem]">
                 {greetingName}
               </h2>
@@ -370,7 +370,7 @@ const AdminDashboard = () => {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className={`${innerCardClass} p-3`}>
-                <p className="text-[10px] uppercase tracking-[0.26em] text-[#ffc27a]">Trades today</p>
+                <p className="text-[10px] uppercase tracking-[0.26em]" style={{ color: "var(--admin-orange-soft)" }}>Trades today</p>
                 <div className="mt-2 text-2xl font-semibold text-white">{data.tradesToday.toLocaleString()}</div>
                 <div className="mt-1 text-xs text-[#a7bfd8]">Live trading demand today.</div>
               </div>
@@ -399,7 +399,7 @@ const AdminDashboard = () => {
 
         <div className={`${panelClass} col-span-12 p-4 xl:col-span-6`}>
           <div className="mb-3">
-            <div className="text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">Virtual funds</div>
+            <div className="text-[10px] uppercase tracking-[0.28em]" style={{ color: "var(--admin-orange-soft)" }}>Virtual funds</div>
             <h3 className="mt-1 text-lg font-semibold tracking-tight text-white">Add credit to your account</h3>
             <p className="mt-1 text-xs leading-5 text-[#a7bfd8]">Credit your live balance directly without going through the deposit flow.</p>
           </div>
@@ -412,7 +412,7 @@ const AdminDashboard = () => {
                   value={virtualAmount}
                   onChange={(e) => setVirtualAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full rounded-xl border border-[#2a2f42] bg-[#13161e] py-2 pl-7 pr-3 text-base font-bold text-white outline-none transition-colors placeholder:text-slate-500 focus:border-[#0fa053]"
+                  className="w-full rounded-xl border py-2 pl-7 pr-3 text-base font-bold text-white outline-none transition-colors placeholder:text-slate-500" style={{ borderColor: "var(--admin-border)", background: "var(--admin-input)", "--tw-placeholder": "rgb(148 163 184 / 1)" } as any}
                 />
               </div>
               <button
@@ -429,7 +429,7 @@ const AdminDashboard = () => {
                 <button
                   key={preset}
                   onClick={() => setVirtualAmount(String(preset))}
-                  className="rounded-lg border border-[#2a2f42] bg-[#13161e] px-2 py-1 text-[11px] font-semibold text-slate-300 transition-colors hover:border-white/10 hover:text-white"
+                  className="rounded-lg border px-2 py-1 text-[11px] font-semibold text-slate-300 transition-colors" style={{ borderColor: "var(--admin-border)", background: "var(--admin-input)" }}
                 >
                   ${preset.toLocaleString()}
                 </button>
@@ -445,7 +445,7 @@ const AdminDashboard = () => {
 
         <div className={`${panelClass} col-span-12 p-4 xl:col-span-6`}>
           <div className="mb-3">
-            <div className="text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">Activity bar</div>
+            <div className="text-[10px] uppercase tracking-[0.28em]" style={{ color: "var(--admin-orange-soft)" }}>Activity bar</div>
             <h3 className="mt-1 text-lg font-semibold tracking-tight text-white">Weekly platform activity</h3>
             <p className="mt-1 text-xs leading-5 text-[#a7bfd8]">Trades and registrations over the last seven days.</p>
           </div>
@@ -475,7 +475,7 @@ const AdminDashboard = () => {
 
         <div className={`${panelClass} col-span-12 p-4 xl:col-span-3`}>
           <div className="mb-3">
-            <div className="text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">Desk balance</div>
+            <div className="text-[10px] uppercase tracking-[0.28em]" style={{ color: "var(--admin-orange-soft)" }}>Desk balance</div>
             <h3 className="mt-1 text-lg font-semibold tracking-tight text-white">Operations mix</h3>
           </div>
           <div className="mx-auto h-[180px] w-full max-w-[200px]">
@@ -514,13 +514,13 @@ const AdminDashboard = () => {
 
         <div className={`${panelClass} col-span-12 p-4 xl:col-span-3`}>
           <div className="mb-3">
-            <div className="text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">Payout watch</div>
+            <div className="text-[10px] uppercase tracking-[0.28em]" style={{ color: "var(--admin-orange-soft)" }}>Payout watch</div>
             <h3 className="mt-1 text-lg font-semibold tracking-tight text-white">Withdrawal desk</h3>
           </div>
           <div className="space-y-3">
             <div className={`${innerCardClass} px-3 py-3`}>
-              <div className="text-[10px] uppercase tracking-[0.26em] text-[#ffc27a]">Needs review</div>
-              <div className="mt-1 text-2xl font-semibold text-[#ffc27a]">{data.reviewWithdrawals.toLocaleString()}</div>
+              <div className="text-[10px] uppercase tracking-[0.26em]" style={{ color: "var(--admin-orange-soft)" }}>Needs review</div>
+              <div className="mt-1 text-2xl font-semibold" style={{ color: "var(--admin-orange-soft)" }}>{data.reviewWithdrawals.toLocaleString()}</div>
             </div>
             <div className={`${innerCardClass} px-3 py-3`}>
               <div className="text-[10px] uppercase tracking-[0.26em] text-[#9be1bc]">Ready to send</div>
@@ -538,7 +538,7 @@ const AdminDashboard = () => {
         <div className={`${panelClass} col-span-12 p-4`}>
           <div className="mb-3 flex items-start justify-between gap-4">
             <div>
-              <div className="text-[10px] uppercase tracking-[0.28em] text-[#ffc27a]">Live feed</div>
+              <div className="text-[10px] uppercase tracking-[0.28em]" style={{ color: "var(--admin-orange-soft)" }}>Live feed</div>
               <h3 className="mt-1 text-lg font-semibold tracking-tight text-white">Recent admin-visible activity</h3>
             </div>
             <Link
@@ -554,13 +554,13 @@ const AdminDashboard = () => {
                 <Loader2 className="h-6 w-6 animate-spin text-[#0fa053]" />
               </div>
             ) : data.recentActivity.length === 0 ? (
-              <div className="col-span-full flex h-[140px] items-center justify-center rounded-[24px] border border-dashed border-[#2a2f42] text-xs text-slate-500">
+              <div className="col-span-full flex h-[140px] items-center justify-center rounded-[24px] border border-dashed text-xs text-slate-500" style={{ borderColor: "var(--admin-border)" }}>
                 No recent activity yet.
               </div>
             ) : (
               data.recentActivity.map((activity) => (
                 <div key={activity.id} className={`flex items-start gap-3 ${innerCardClass} px-3 py-3`}>
-                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border border-[#2a2f42] bg-[#13161e]">
+                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border" style={{ borderColor: "var(--admin-border)", background: "var(--admin-input)" }}>
                     {activity.type === "deposit" ? (
                       <ArrowDownCircle className="h-4 w-4 text-[#0fa053]" />
                     ) : activity.type === "withdrawal" ? (

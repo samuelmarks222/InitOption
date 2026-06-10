@@ -256,7 +256,7 @@ const CryptoPayments = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Wallet className="text-[#0fa053]" /> Crypto Payments Config
+            <Wallet className="text-[var(--admin-green)]" /> Crypto Payments Config
           </h2>
           <p className="text-sm text-slate-300 mt-1">
             Configure each coin for Plisio hosted checkout and automatic crediting after confirmations.
@@ -268,8 +268,8 @@ const CryptoPayments = () => {
         {(["static", "memo", "dynamic_address"] as const).map((mode) => {
           const copy = getAutomationCopy(mode);
           return (
-            <div key={mode} className="rounded-2xl border border-white/8 bg-[#1a1e2b] p-5">
-              <div className="text-[11px] font-black uppercase tracking-[0.18em] text-[#0fa053]">{copy.label}</div>
+            <div key={mode} className="rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5">
+              <div className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--admin-green)]">{copy.label}</div>
               <p className="mt-2 text-sm font-semibold text-white">{copy.adminSteps}</p>
               <p className="mt-2 text-xs leading-6 text-slate-300">{copy.routingHint}</p>
             </div>
@@ -277,12 +277,12 @@ const CryptoPayments = () => {
         })}
       </div>
 
-      <div className="rounded-2xl border border-[#0fa053]/10 bg-[#0fa053]/5 p-4 text-sm leading-6 text-[#e8fff2]">
+      <div className="rounded-2xl border border-[var(--admin-green)]/10 bg-[var(--admin-green)]/5 p-4 text-sm leading-6 text-[var(--admin-green-soft)]">
         Prefer <strong>Auto with Plisio</strong> for most chains. Use <strong>Auto with memo/tag</strong> only where the network requires it.
       </div>
 
-      <div className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl overflow-hidden shadow-lg">
-        <div className="p-4 border-b border-[#2a2f42] flex justify-between items-center bg-[#1a1e2b]">
+      <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl overflow-hidden shadow-lg">
+        <div className="p-4 border-b border-[var(--admin-border)] flex justify-between items-center bg-[var(--admin-surface)]">
           <div className="flex gap-2 relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
             <input
@@ -290,13 +290,13 @@ const CryptoPayments = () => {
               placeholder="Search by name, symbol or network..."
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
+              className="w-full bg-[var(--admin-canvas)] border border-[var(--admin-border)] rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-[var(--admin-green)] outline-none"
             />
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1180px] text-left text-sm text-slate-200">
-            <thead className="text-xs uppercase bg-[#1a1e2b] text-slate-300 border-b border-[#2a2f42]">
+            <thead className="text-xs uppercase bg-[var(--admin-surface)] text-slate-300 border-b border-[var(--admin-border)]">
               <tr>
                 <th className="px-6 py-3 font-semibold">Coin</th>
                 <th className="px-6 py-3 font-semibold">Setup Type</th>
@@ -340,34 +340,34 @@ const CryptoPayments = () => {
                           />
                           {method.coin_name}
                         </div>
-                        <div className="text-xs text-[#0fa053] font-bold mt-1 tracking-wider">{method.symbol}</div>
-                        <div className="mt-2 inline-flex rounded-full border border-[#2a2f42] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-slate-300">
+                        <div className="text-xs text-[var(--admin-green)] font-bold mt-1 tracking-wider">{method.symbol}</div>
+                        <div className="mt-2 inline-flex rounded-full border border-[var(--admin-border)] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-slate-300">
                           {method.network}
                         </div>
                       </td>
                       <td className="px-6 py-4 w-72">
                         {isEditing ? (
                           <div className="space-y-3">
-                            <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[#0fa053]">
+                            <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--admin-green)]">
                               How should this coin work?
                             </label>
                             <select
                               value={editForm.attribution_mode}
                               onChange={(event) => setEditForm((current) => ({ ...current, attribution_mode: event.target.value }))}
-                              className="w-full rounded-lg border border-[#0fa053]/40 bg-[#0e1017] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
+                              className="w-full rounded-lg border border-[var(--admin-green)]/40 bg-[var(--admin-canvas)] px-3 py-2 text-xs text-white outline-none focus:border-[var(--admin-green)]"
                             >
                               <option value="static">Manual approval</option>
                               <option value="memo">Auto with memo/tag</option>
                               <option value="dynamic_address">Auto with Plisio</option>
                             </select>
-                            <div className="rounded-xl border border-white/8 bg-[#0e1017] px-3 py-3">
+                            <div className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-canvas)] px-3 py-3">
                               <div className="text-sm font-semibold text-white">{automationCopy.label}</div>
                               <div className="mt-1 text-xs leading-6 text-slate-300">{automationCopy.adminSteps}</div>
                               <div className="mt-2 text-[11px] text-[#d8f6e5]">{automationCopy.details}</div>
                             </div>
                             {editForm.attribution_mode === "memo" ? (
                               <div className="space-y-2">
-                                <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[#0fa053]">
+                                <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--admin-green)]">
                                   Memo label shown to users
                                 </label>
                                 <input
@@ -375,7 +375,7 @@ const CryptoPayments = () => {
                                   value={editForm.memo_label}
                                   onChange={(event) => setEditForm((current) => ({ ...current, memo_label: event.target.value }))}
                                   placeholder="Example: Memo, Tag, Destination Tag"
-                                  className="w-full rounded-lg border border-[#0fa053]/40 bg-[#0e1017] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
+                                  className="w-full rounded-lg border border-[var(--admin-green)]/40 bg-[var(--admin-canvas)] px-3 py-2 text-xs text-white outline-none focus:border-[var(--admin-green)]"
                                 />
                                 <div className="text-[11px] leading-5 text-slate-400">
                                   Use this only when the selected chain needs memo/tag routing.
@@ -394,10 +394,10 @@ const CryptoPayments = () => {
                             <div
                               className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${
                                 readiness.tone === "success"
-                                  ? "border-green-500/20 bg-green-500/10 text-green-300"
+                                  ? "border-[var(--admin-green)]/20 bg-[var(--admin-green)]/10 text-[var(--admin-green-soft)]"
                                   : readiness.tone === "warning"
-                                    ? "border-[#0fa053]/20 bg-[#0fa053]/10 text-[#8be0af]"
-                                    : "border-[#0fa053]/20 bg-[#0fa053]/10 text-[#0fa053]"
+                                    ? "border-[var(--admin-green)]/20 bg-[var(--admin-green)]/10 text-[var(--admin-green-soft)]"
+                                    : "border-[var(--admin-green)]/20 bg-[var(--admin-green)]/10 text-[var(--admin-green)]"
                               }`}
                             >
                               {readiness.label}
@@ -413,7 +413,7 @@ const CryptoPayments = () => {
                           <div className="space-y-3">
                             {editForm.attribution_mode !== "dynamic_address" ? (
                               <div className="space-y-2">
-                                <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[#0fa053]">
+                                <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--admin-green)]">
                                   {editForm.attribution_mode === "memo" ? "Fixed wallet address" : "Wallet address"}
                                 </label>
                                 <div className="relative">
@@ -423,12 +423,12 @@ const CryptoPayments = () => {
                                     value={editForm.wallet_address}
                                     onChange={(event) => setEditForm((current) => ({ ...current, wallet_address: event.target.value }))}
                                     placeholder={editForm.attribution_mode === "memo" ? "Legacy fixed wallet used together with memo/tag" : "Wallet address used for manual deposits"}
-                                    className="w-full bg-[#0e1017] border border-[#0fa053]/50 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:border-[#0fa053] outline-none"
+                                    className="w-full bg-[var(--admin-canvas)] border border-[var(--admin-green)]/50 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:border-[var(--admin-green)] outline-none"
                                   />
                                 </div>
                               </div>
                             ) : (
-                              <div className="rounded-xl border border-[#0fa053]/20 bg-[#0fa053]/10 px-3 py-3 text-xs leading-6 text-[#e8fff2]">
+                              <div className="rounded-xl border border-[var(--admin-green)]/20 bg-[var(--admin-green)]/10 px-3 py-3 text-xs leading-6 text-[var(--admin-green-soft)]">
                                 Plisio will host the payment page for this method, then send callbacks back to the platform for confirmation tracking.
                               </div>
                             )}
@@ -439,12 +439,12 @@ const CryptoPayments = () => {
                                 value={editForm.qr_code_url}
                                 onChange={(event) => setEditForm((current) => ({ ...current, qr_code_url: event.target.value }))}
                                 placeholder="QR code image URL (optional)"
-                                className="w-full bg-[#0e1017] border border-[#0fa053]/50 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:border-[#0fa053] outline-none"
+                                className="w-full bg-[var(--admin-canvas)] border border-[var(--admin-green)]/50 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:border-[var(--admin-green)] outline-none"
                               />
                             </div>
                             {editForm.attribution_mode === "dynamic_address" ? (
                               <div className="space-y-2">
-                                <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[#0fa053]">
+                                <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--admin-green)]">
                                   Optional legacy address pool
                                 </label>
                                 <textarea
@@ -452,7 +452,7 @@ const CryptoPayments = () => {
                                   onChange={(event) => setEditForm((current) => ({ ...current, addressPoolEntries: event.target.value }))}
                                   placeholder={"Paste one unique deposit address per line\nExample:\naddr_1\naddr_2\naddr_3"}
                                   rows={5}
-                                  className="w-full rounded-lg border border-[#0fa053]/50 bg-[#0e1017] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
+                                  className="w-full rounded-lg border border-[var(--admin-green)]/50 bg-[var(--admin-canvas)] px-3 py-2 text-xs text-white outline-none focus:border-[var(--admin-green)]"
                                 />
                                 <div className="text-[11px] leading-5 text-slate-400">
                                   {importedAddressCount > 0
@@ -489,7 +489,7 @@ const CryptoPayments = () => {
                         {isEditing ? (
                           <div className="grid grid-cols-1 gap-3">
                             <div className="space-y-2">
-                              <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[#0fa053]">
+                              <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--admin-green)]">
                                 Minimum deposit in USD
                               </label>
                               <input
@@ -503,11 +503,11 @@ const CryptoPayments = () => {
                                   }))
                                 }
                                 placeholder="Minimum USD amount"
-                                className="w-full rounded-lg border border-[#0fa053]/40 bg-[#0e1017] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
+                                className="w-full rounded-lg border border-[var(--admin-green)]/40 bg-[var(--admin-canvas)] px-3 py-2 text-xs text-white outline-none focus:border-[var(--admin-green)e focus:border-[var(--admin-green)]"
                               />
                             </div>
                             <div className="space-y-2">
-                              <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[#0fa053]">
+                              <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--admin-green)]">
                                 Confirmations needed before crediting
                               </label>
                               <input
@@ -521,7 +521,7 @@ const CryptoPayments = () => {
                                   }))
                                 }
                                 placeholder="Required confirmations"
-                                className="w-full rounded-lg border border-[#0fa053]/40 bg-[#0e1017] px-3 py-2 text-xs text-white outline-none focus:border-[#0fa053]"
+                                className="w-full rounded-lg border border-[var(--admin-green)]/40 bg-[var(--admin-canvas)] px-3 py-2 text-xs text-white outline-none focus:border-[var(--admin-green)]"
                               />
                             </div>
                             <div className="text-[11px] leading-5 text-slate-400">
@@ -564,7 +564,7 @@ const CryptoPayments = () => {
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-white rounded transition-colors"
+                              className="p-1.5 bg-[var(--admin-surface)] text-slate-300 hover:text-white rounded transition-colors"
                               title="Cancel"
                             >
                               <X size={16} />
@@ -574,7 +574,7 @@ const CryptoPayments = () => {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => startEdit(method)}
-                              className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-white rounded transition-colors"
+                              className="p-1.5 bg-[var(--admin-surface)dmin-surface)] text-slate-300 hover:text-white rounded transition-colors"
                               title="Edit automation settings"
                             >
                               <Edit2 size={16} />

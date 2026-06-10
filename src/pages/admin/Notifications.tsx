@@ -476,8 +476,8 @@ const Notifications = () => {
           </section>
         </div>
 
-        <section className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl overflow-hidden shadow-lg flex flex-col min-h-[520px]">
-          <div className="p-4 border-b border-[#2a2f42] bg-[#1a1e2b]">
+        <section className="rounded-2xl border overflow-hidden shadow-lg flex flex-col min-h-[520px]" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+          <div className="p-4 border-b" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
             <h3 className="text-white font-bold">Recent Broadcasts</h3>
             <p className="mt-1 text-xs text-slate-400">Latest sent and scheduled announcements.</p>
           </div>

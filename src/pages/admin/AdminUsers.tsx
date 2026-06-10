@@ -33,8 +33,8 @@ const EmptyState = ({
   description: string;
   title: string;
 }) => (
-  <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-8 text-center shadow-lg">
-    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#1a1e2b]">
+  <div className="rounded-2xl border p-8 text-center shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full" style={{ background: "var(--admin-surface)" }}>
       <ShieldCheck className="h-5 w-5 text-slate-300" />
     </div>
     <h3 className="mt-4 text-lg font-bold text-white">{title}</h3>
@@ -218,7 +218,7 @@ const AdminUsers = () => {
             Create focused admin access for support, finance, risk, content, and audit without giving everyone full control.
           </p>
         </div>
-        <div className="rounded-xl border border-[#0fa053]/20 bg-[#0fa053]/10 px-4 py-3 text-sm text-blue-200">
+        <div className="rounded-xl border border-[var(--admin-green)]/20 bg-[var(--admin-green)]/10 px-4 py-3 text-sm text-[var(--admin-green-soft)]">
           {staffUsers.length} active staff account{staffUsers.length === 1 ? "" : "s"}
         </div>
       </div>
@@ -237,7 +237,7 @@ const AdminUsers = () => {
         <>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
             {CO_ADMIN_ROLE_OPTIONS.map((option) => (
-              <div key={option.value} className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4 shadow-lg">
+              <div key={option.value} className="rounded-2xl border p-4 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
                 <div className="text-[11px] uppercase tracking-wider text-slate-400">{option.label}</div>
                 <div className="mt-2 text-2xl font-bold text-white">{roleCounts[option.value] ?? 0}</div>
                 <p className="mt-2 text-xs leading-5 text-slate-300">{option.description}</p>
@@ -246,10 +246,10 @@ const AdminUsers = () => {
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-            <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
-              <div className="border-b border-[#2a2f42] p-4">
+            <div className="rounded-2xl border shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+              <div className="border-b p-4" style={{ borderColor: "var(--admin-border)" }}>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0fa053]/10 text-[#0fa053]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: "var(--admin-green-soft)", color: "var(--admin-green)" }}>
                     <Users className="h-5 w-5" />
                   </div>
                   <div>
@@ -264,7 +264,8 @@ const AdminUsers = () => {
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
                     placeholder="Search by name, username, or ID..."
-                    className="w-full rounded-xl border border-[#2a2f42] bg-[#0e1017] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-slate-400 focus:border-[#0fa053]"
+                    className="w-full rounded-xl border bg-[var(--admin-canvas)] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-slate-400 focus:border-[var(--admin-green)]"
+                    style={{ borderColor: "var(--admin-border)" }}
                   />
                 </div>
               </div>
@@ -279,16 +280,17 @@ const AdminUsers = () => {
                       key={profile.id}
                       type="button"
                       onClick={() => setSelectedUserId(profile.id)}
-                      className={`w-full border-b border-[#2a2f42] px-4 py-4 text-left transition-colors ${
-                        isActive ? "bg-[#0fa053]/10" : "hover:bg-white/[0.03]"
+                      className={`w-full border-b px-4 py-4 text-left transition-colors ${
+                        isActive ? "" : "hover:bg-white/[0.03]"
                       }`}
+                      style={{ borderColor: "var(--admin-border)", background: isActive ? "var(--admin-green-soft)" : undefined }}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="truncate text-sm font-bold text-white">{getUserName(profile)}</div>
                           <div className="mt-1 text-xs text-slate-400">@{getUserHandle(profile)}</div>
                         </div>
-                        <div className="rounded-full border border-[#2a2f42] bg-[#1a1e2b] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-200">
+                        <div className="rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-200" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
                           {currentRole ? getRoleLabel(currentRole) : "No staff role"}
                         </div>
                       </div>
@@ -300,7 +302,7 @@ const AdminUsers = () => {
             </div>
 
             <div className="space-y-6">
-              <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-5 shadow-lg">
+              <div className="rounded-2xl border p-5 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-300">
                     <ShieldPlus className="h-5 w-5" />
@@ -313,11 +315,11 @@ const AdminUsers = () => {
 
                 {selectedUser ? (
                   <div className="mt-5 space-y-5">
-                    <div className="rounded-2xl border border-[#2a2f42] bg-[#0e1017] p-4">
+                    <div className="rounded-2xl border p-4" style={{ borderColor: "var(--admin-border)", background: "var(--admin-canvas)" }}>
                       <div className="text-[11px] uppercase tracking-wider text-slate-400">Selected User</div>
                       <div className="mt-2 text-lg font-bold text-white">{getUserName(selectedUser)}</div>
                       <div className="mt-1 text-sm text-slate-300">@{getUserHandle(selectedUser)}</div>
-                      <div className="mt-3 inline-flex rounded-full border border-[#2a2f42] bg-[#1a1e2b] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-200">
+                      <div className="mt-3 inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-200" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
                         Current role: {selectedUserCurrentRole ? getRoleLabel(selectedUserCurrentRole) : "No staff role"}
                       </div>
                     </div>
@@ -329,14 +331,17 @@ const AdminUsers = () => {
                           type="button"
                           onClick={() => setSelectedRole(option.value)}
                           className={`rounded-2xl border p-4 text-left transition-colors ${
-                            selectedRole === option.value
-                              ? "border-[#0fa053]/50 bg-[#0fa053]/10"
-                              : "border-[#2a2f42] bg-[#0e1017] hover:border-[#2a2f42] hover:bg-white/[0.03]"
+                            selectedRole === option.value ? "" : "hover:bg-white/[0.03]"
                           }`}
+                          style={
+                            selectedRole === option.value
+                              ? { borderColor: "var(--admin-green)", background: "var(--admin-green-soft)" }
+                              : { borderColor: "var(--admin-border)", background: "var(--admin-canvas)" }
+                          }
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className="text-sm font-bold text-white">{option.label}</div>
-                            {selectedRole === option.value ? <ShieldCheck className="h-4 w-4 text-[#0fa053]" /> : null}
+                          {selectedRole === option.value ? <ShieldCheck className="h-4 w-4 text-[var(--admin-green)]" /> : null}
                           </div>
                           <p className="mt-2 text-xs leading-6 text-slate-300">{option.description}</p>
                         </button>
@@ -347,21 +352,21 @@ const AdminUsers = () => {
                       type="button"
                       onClick={() => void handleAssignRole()}
                       disabled={assigning}
-                      className="inline-flex items-center justify-center rounded-xl bg-[#0fa053] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1a1e2b] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex items-center justify-center rounded-xl bg-[var(--admin-green)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--admin-surface)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {assigning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCog className="mr-2 h-4 w-4" />}
                       Save Role
                     </button>
                   </div>
                 ) : (
-                  <div className="mt-5 rounded-2xl border border-dashed border-[#2a2f42] bg-[#0e1017] p-8 text-center text-sm text-slate-300">
+                  <div className="mt-5 rounded-2xl border-dashed p-8 text-center text-sm text-slate-300" style={{ borderColor: "var(--admin-border)", background: "var(--admin-canvas)" }}>
                     Pick a user from the directory to assign a co-admin role.
                   </div>
                 )}
               </div>
 
-              <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
-                <div className="border-b border-[#2a2f42] p-4">
+              <div className="rounded-2xl border shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+                <div className="border-b p-4" style={{ borderColor: "var(--admin-border)" }}>
                   <h3 className="text-lg font-bold text-white">Current Staff</h3>
                   <p className="mt-1 text-sm text-slate-300">Review every elevated account and revoke access when it is no longer needed.</p>
                 </div>
@@ -376,7 +381,7 @@ const AdminUsers = () => {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[760px] text-left text-sm text-slate-200">
-                      <thead className="bg-[#0e1017] text-xs uppercase text-slate-400">
+                      <thead className="text-xs uppercase text-slate-400" style={{ background: "var(--admin-canvas)" }}>
                         <tr>
                           <th className="px-6 py-4 font-semibold">Staff User</th>
                           <th className="px-6 py-4 font-semibold">Role</th>
@@ -389,7 +394,7 @@ const AdminUsers = () => {
                           <tr key={staffUser.id} className="hover:bg-white/[0.02]">
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0fa053]/10 text-[#0fa053]">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full" style={{ background: "var(--admin-green-soft)", color: "var(--admin-green)" }}>
                                   <ShieldCheck className="h-5 w-5" />
                                 </div>
                                 <div>
@@ -399,7 +404,7 @@ const AdminUsers = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              <span className="inline-flex rounded-full border border-[#2a2f42] bg-[#1a1e2b] px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-gray-200">
+                              <span className="inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-gray-200" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
                                 {getRoleLabel(staffUser.role)}
                               </span>
                             </td>
