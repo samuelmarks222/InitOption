@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, Trophy, X } from "lucide-react";
+import { Award, Search, ShieldCheck, Sparkles, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { type Database } from "@/integrations/supabase/types";
@@ -28,23 +28,29 @@ const MONEY = new Intl.NumberFormat("en-US", {
 const TROPHY_VARIANTS = [
   {
     panel:
-      "bg-[linear-gradient(180deg,rgba(58,43,14,0.78)_0%,rgba(37,27,8,0.84)_100%)] border-l border-[#3d2f1f]/70",
-    iconTone: "text-[#f4b742]",
+      "bg-[linear-gradient(180deg,rgba(31,40,66,0.96)_0%,rgba(24,31,51,0.98)_100%)] border border-[#2f3b68]/80",
+    iconTone: "text-[#63d2ff]",
+    icon: Award,
   },
   {
     panel:
-      "bg-[linear-gradient(180deg,rgba(63,48,88,0.76)_0%,rgba(43,33,68,0.88)_100%)] border-l border-[#3f3656]/70",
-    iconTone: "text-[#d4d9e6]",
+      "bg-[linear-gradient(180deg,rgba(32,44,62,0.94)_0%,rgba(25,34,52,0.98)_100%)] border border-[#35496b]/80",
+    iconTone: "text-[#8ee6b4]",
+    icon: ShieldCheck,
   },
   {
     panel:
-      "bg-[linear-gradient(180deg,rgba(37,74,92,0.76)_0%,rgba(22,54,71,0.88)_100%)] border-l border-[#315567]/70",
-    iconTone: "text-[#7fd5f4]",
+      "bg-[linear-gradient(180deg,rgba(33,41,63,0.95)_0%,rgba(26,36,54,0.99)_100%)] border border-[#2f4563]/80",
+    iconTone: "text-[#f7c05c]",
+    icon: Sparkles,
   },
 ];
 
 const sectionTitleClass =
   "mb-2 rounded-[9px] border border-[#2f3c5e] bg-[#26314d] px-3 py-1.5 text-center text-[12px] font-bold text-[#a8bbda]";
+
+const iconColumnClass =
+  "flex items-center justify-center self-stretch border-l border-[#22324f]/40 bg-[#13273f] p-4 sm:p-5";
 
 const formatMoney = (value: number | null | undefined, freeOnZero = false) => {
   const amount = Number(value ?? 0);
@@ -157,63 +163,63 @@ export const TournamentDirectory = ({ onOpenDetails, onClose, variant = "full" }
     const visual = TROPHY_VARIANTS[index % TROPHY_VARIANTS.length];
     const countdownTarget = mode === "active" ? tournament.end_date : tournament.start_date;
     const countdownLabel = mode === "active" ? "Ends in:" : "Starts in:";
-    const iconColumnClass = isCompact ? "w-[128px]" : "w-[148px]";
-    const joinButtonClass = isCompact ? "w-[152px]" : "w-[168px]";
+    const displayIconSize = isCompact ? "h-14 w-14" : "h-16 w-16";
+    const joinButtonClass = isCompact ? "w-full sm:w-[152px]" : "w-full sm:w-[168px]";
 
     return (
       <article
         key={tournament.id}
-        className="mb-3 overflow-hidden rounded-[16px] border border-[#334261] bg-[linear-gradient(180deg,rgba(43,53,81,0.97)_0%,rgba(34,43,68,0.98)_100%)] shadow-[0_14px_28px_rgba(7,10,18,0.42)]"
+        className="mb-4 overflow-hidden rounded-[18px] border border-[#2d3f5d] bg-[linear-gradient(180deg,rgba(22,32,56,0.96)_0%,rgba(16,24,45,0.98)_100%)] shadow-[0_18px_40px_rgba(0,0,0,0.24)]"
       >
-        <div className="grid min-h-[194px] grid-cols-[minmax(0,1fr)_128px] sm:grid-cols-[minmax(0,1fr)_148px]">
-          <div className="flex min-w-0 flex-col p-5">
-            <h3 className="text-[18px] font-bold leading-tight text-[#e7eefb] sm:text-[19px]">
-              {tournament.title}
-            </h3>
-
-            <div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-3">
-              <div className="min-w-0">
-                <p className="text-[11px] text-[#92a3c2]">Prize fund</p>
-                <p className="mt-1 text-[18px] font-extrabold leading-none text-[#e9effd] sm:text-[20px]">
-                  {formatMoney(tournament.prize_pool)}
-                </p>
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-[#92a3c2]">Participation fee</p>
-                <p className="mt-1 text-[18px] font-extrabold leading-none text-[#e9effd] sm:text-[20px]">
-                  {formatMoney(tournament.entry_fee, true)}
-                </p>
+        <div className="grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_148px] sm:p-5">
+          <div className="flex min-w-0 flex-col gap-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h3 className="text-[18px] font-bold leading-tight text-white sm:text-[20px]">{tournament.title}</h3>
+              <div className="rounded-full border border-[#2e4d74] bg-[#14253f] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#92b4dc]">
+                {mode === "active" ? "Live now" : "Upcoming"}
               </div>
             </div>
 
-            <div className="mt-auto flex flex-wrap items-end justify-between gap-x-4 gap-y-3 pt-5">
-              <div className="min-w-[122px] flex-1">
-                <p className="whitespace-nowrap text-[11px] text-[#92a3c2]">{countdownLabel}</p>
-                <p className="mt-1 whitespace-nowrap text-[16px] font-bold text-[#dce7fa] sm:text-[17px]">
-                  {formatCountdown(countdownTarget, now)}
-                </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[16px] border border-[#2d4f79] bg-[#11233f] px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#8fa8cd]">Prize fund</p>
+                <p className="mt-2 text-[20px] font-bold text-white">{formatMoney(tournament.prize_pool)}</p>
               </div>
+              <div className="rounded-[16px] border border-[#2d4f79] bg-[#11233f] px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#8fa8cd]">Participation fee</p>
+                <p className="mt-2 text-[20px] font-bold text-white">{formatMoney(tournament.entry_fee, true)}</p>
+              </div>
+            </div>
 
-              <button
-                type="button"
-                onClick={() => onOpenDetails?.(tournament.id)}
-                className={cn(
-                  "inline-flex h-11 shrink-0 items-center justify-center rounded-[11px] border border-[#0b6f52] bg-[linear-gradient(180deg,#0c805d_0%,#0b6d52_100%)] text-[15px] font-bold text-white transition-colors hover:brightness-110",
-                  joinButtonClass,
-                )}
-              >
-                Join
-              </button>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[16px] border border-[#304b76] bg-[#132847] px-4 py-3">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#8fa8cd]">{countdownLabel}</p>
+                <p className="mt-2 text-[18px] font-bold text-white">{formatCountdown(countdownTarget, now)}</p>
+              </div>
+              <div className="flex items-end justify-end">
+                <button
+                  type="button"
+                  onClick={() => onOpenDetails?.(tournament.id)}
+                  className={cn(
+                    "inline-flex h-12 w-full items-center justify-center rounded-[15px] border border-[#15a982] bg-[linear-gradient(180deg,#1ab97d_0%,#0d8562_100%)] px-5 text-[15px] font-bold text-white transition hover:brightness-110 sm:w-auto",
+                    joinButtonClass,
+                  )}
+                >
+                  Join
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className={cn("flex items-center justify-center self-stretch", iconColumnClass, visual.panel)}>
-            <Trophy
-              className={cn(
-                "h-[68px] w-[68px] drop-shadow-[0_12px_18px_rgba(0,0,0,0.38)] sm:h-[74px] sm:w-[74px]",
-                visual.iconTone,
-              )}
-            />
+          <div className={cn(iconColumnClass, visual.panel)}>
+            <div className="flex h-full w-full items-center justify-center rounded-[20px] bg-gradient-to-br from-[#0c2d55] via-[#112f5f] to-[#1b3a6e] p-3">
+              <visual.icon
+                className={cn(
+                  `${displayIconSize} drop-shadow-[0_18px_24px_rgba(0,0,0,0.32)]`,
+                  visual.iconTone,
+                )}
+              />
+            </div>
           </div>
         </div>
       </article>
@@ -237,14 +243,14 @@ export const TournamentDirectory = ({ onOpenDetails, onClose, variant = "full" }
           ) : null}
         </div>
 
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-4 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setActiveTab("all")}
             className={cn(
-              "rounded-[10px] border px-4 py-2 text-[13px] font-semibold transition-colors",
+              "min-w-[142px] rounded-[12px] border px-4 py-2 text-[13px] font-semibold transition-colors",
               activeTab === "all"
-                ? "border-[#2294ff] bg-[#1e3d66] text-white"
+                ? "border-[#2ba3ff] bg-[#1f4f86] text-white"
                 : "border-[#2f3d60] bg-[#242d46] text-[#a7b9d8] hover:text-white",
             )}
           >
@@ -254,9 +260,9 @@ export const TournamentDirectory = ({ onOpenDetails, onClose, variant = "full" }
             type="button"
             onClick={() => setActiveTab("statistics")}
             className={cn(
-              "rounded-[10px] border px-4 py-2 text-[13px] font-semibold transition-colors",
+              "min-w-[142px] rounded-[12px] border px-4 py-2 text-[13px] font-semibold transition-colors",
               activeTab === "statistics"
-                ? "border-[#2294ff] bg-[#1e3d66] text-white"
+                ? "border-[#2ba3ff] bg-[#1f4f86] text-white"
                 : "border-[#2f3d60] bg-[#242d46] text-[#a7b9d8] hover:text-white",
             )}
           >
@@ -267,12 +273,18 @@ export const TournamentDirectory = ({ onOpenDetails, onClose, variant = "full" }
         {activeTab === "all" ? (
           <>
             {isLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {Array.from({ length: 4 }).map((_, index) => (
                   <div
                     key={index}
-                    className="h-[162px] animate-pulse rounded-[14px] border border-[#2f3d60] bg-[#27324d]"
-                  />
+                    className="h-[162px] rounded-[20px] border border-[#2f3d60] bg-[#27324d] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.12)]"
+                  >
+                    <div className="h-4 w-24 rounded-full bg-white/10" />
+                    <div className="mt-4 h-4 w-32 rounded-full bg-white/10" />
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <div className="h-10 w-full rounded-[14px] bg-white/10" />
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : isError ? (
@@ -378,8 +390,10 @@ export const TournamentDirectory = ({ onOpenDetails, onClose, variant = "full" }
 
         {!isLoading && !isError && activeTab === "all" && activeTournaments.length === 0 && futureTournaments.length === 0 ? (
           <div className="mt-4 rounded-[14px] border border-dashed border-[#334365] bg-[#202942] px-4 py-6 text-center">
-            <Trophy className="mx-auto h-8 w-8 text-[#89a0c8]" />
-            <p className="mt-2 text-[13px] text-[#98abcc]">No tournaments are listed yet.</p>
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#3c5279] bg-[#253a5b] text-[#89a0c8]">
+              <Search className="h-7 w-7" />
+            </div>
+            <p className="text-[13px] text-[#98abcc]">No tournaments are listed yet.</p>
           </div>
         ) : null}
       </div>
