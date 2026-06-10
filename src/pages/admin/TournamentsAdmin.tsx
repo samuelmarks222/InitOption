@@ -15,8 +15,22 @@ const createDefaultTournamentDraft = () => ({
   prize_pool: 0,
   starting_balance: 100,
   status: "upcoming" as const,
-  start_date: new Date().toISOString().slice(0, 16),
-  end_date: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
+  // default to next Friday 09:00 local -> next Friday + 12 hours end
+  start_date: (() => {
+    const now = new Date();
+    const day = now.getDay();
+    const daysUntilFriday = (5 - day + 7) % 7 || 7; // next Friday (if today is Friday, pick next week)
+    const friday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilFriday, 9, 0, 0);
+    return friday.toISOString().slice(0, 16);
+  })(),
+  end_date: (() => {
+    const now = new Date();
+    const day = now.getDay();
+    const daysUntilFriday = (5 - day + 7) % 7 || 7;
+    const friday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilFriday, 9, 0, 0);
+    const end = new Date(friday.getTime() + 12 * 3600 * 1000); // 12 hours by default
+    return end.toISOString().slice(0, 16);
+  })(),
 });
 
 const TournamentsAdmin = () => {

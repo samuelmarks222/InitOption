@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Minus, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +34,7 @@ const formatMoney = (value: number | null | undefined, freeOnZero = false) => {
 };
 
 const formatTournamentDateTime = (value: string) =>
-  new Intl.DateTimeFormat("en-US", {
+  new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
@@ -81,6 +81,7 @@ export const TournamentDetailOverlay = ({
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [rulesExpanded, setRulesExpanded] = useState(true);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -199,7 +200,7 @@ export const TournamentDetailOverlay = ({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[min(920px,calc(100vw-2rem))] max-h-[calc(100vh-3rem)] overflow-y-auto rounded-[16px] border border-[#47577b] bg-[linear-gradient(180deg,#2d3650_0%,#273149_100%)] p-5 shadow-[0_26px_60px_rgba(3,6,12,0.65)] sm:p-7"
+        className="w-full max-w-[min(920px,calc(100vw-2rem))] max-h-[calc(100vh-3rem)] overflow-y-auto rounded-[24px] border border-[#47577b] bg-[linear-gradient(180deg,#232f48_0%,#1c2437_100%)] p-5 shadow-[0_40px_90px_rgba(0,0,0,0.5)] sm:p-7"
         onClick={(event) => event.stopPropagation()}
       >
         {loading || !tournament ? (
@@ -295,21 +296,37 @@ export const TournamentDetailOverlay = ({
                   </div>
                 </div>
 
-                <div className="mt-5 rounded-[12px] border border-[#344665] bg-[#222b43] p-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-[20px] sm:text-[28px] font-bold text-white">Rules of the Tournament</h3>
+                <div className="mt-5 rounded-[18px] border border-[#2f4364] bg-[#1c2d47] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.28)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-[18px] font-bold text-white sm:text-[22px]">Rules of the Tournament</h3>
                     <button
                       type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-[9px] border border-[#324560] bg-[#2a3650] text-[#a2b4d4]"
-                      aria-label="Expand tournament rules"
+                      onClick={() => setRulesExpanded((current) => !current)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-[12px] border border-[#314967] bg-[#22324b] text-[#aec7f1] transition hover:border-[#4b82cc] hover:text-white"
+                      aria-label={rulesExpanded ? "Collapse tournament rules" : "Expand tournament rules"}
                     >
-                      <Plus className="h-5 w-5" />
+                      {rulesExpanded ? <Minus className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
                     </button>
                   </div>
-                  <p className="mt-3 text-[15px] leading-relaxed sm:text-[17px] text-[#d5e1f8]">
-                    {tournament.description?.trim() ||
-                      `Participation in this tournament is ${tournament.entry_fee === 0 ? "free of charge" : "available after entry payment"}. Click on the "Confirm participation" button to register in the tournament.`}
-                  </p>
+                  {rulesExpanded ? (
+                    <div className="mt-4 space-y-3 rounded-[14px] border border-[#324d6b] bg-[#202f4a] p-4 text-[15px] leading-7 text-[#d5e1f8] sm:text-[16px]">
+                      <p>
+                        {tournament.description?.trim() ||
+                          `Participation in this tournament is ${tournament.entry_fee === 0 ? "free of charge" : "available after entry payment"}.`}
+                      </p>
+                      <p>
+                        Only verified clients can join this event. All traders start with the same published balance, and leaderboard ranking is based on tournament performance only.
+                      </p>
+                      <p>
+                        Use the confirm button below to enter the competition. Trades will count after the event opens, and the prize pool is split according to the published payout rules.
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-[15px] leading-relaxed text-[#c8d3ec]">
+                      {tournament.description?.trim() ||
+                        `Participation in this tournament is ${tournament.entry_fee === 0 ? "free of charge" : "available after entry payment"}. Click on the "Confirm participation" button to register.`}
+                    </p>
+                  )}
                 </div>
               </>
             ) : (
