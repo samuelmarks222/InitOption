@@ -1,40 +1,73 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AssetSymbolMark from "@/components/trading/AssetSymbolMark";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
+import { ASSETS_LIBRARY, type MasterAsset } from "@/data/assetsLibrary";
 import { getAssetBasePrice, type AssetCategory } from "@/lib/assets";
 import { getDeterministicChange24h, getDeterministicPriceAt } from "@/lib/deterministicMarket";
-import { ASSETS_LIBRARY, type MasterAsset } from "@/data/assetsLibrary";
-import { clampAssetPayout, getAssetFlags, getDynamicAssetPayoutProfile } from "@/lib/assets";
+import { clampAssetPayout, getDynamicAssetPayoutProfile } from "@/lib/assets";
 
-const SHOWCASE_COUNT = 6;
+const MARKET_CATEGORIES = [
+  {
+    id: "forex",
+    label: "Forex",
+    symbols: ["EUR/USD", "GBP/USD", "AUD/USD", "CAD/USD", "USD/JPY"],
+  },
+  {
+    id: "crypto",
+    label: "Crypto CFDs",
+    symbols: ["BTC", "ETH", "BNB", "SOL", "XRP"],
+  },
+  {
+    id: "share",
+    label: "Share CFDs",
+    symbols: ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"],
+  },
+  {
+    id: "commodities",
+    label: "Commodities",
+    symbols: ["XAU/USD", "XAG/USD", "WTICO/USD", "BRENT/USD", "NATGAS/USD"],
+  },
+  {
+    id: "metals",
+    label: "Spot Metals",
+    symbols: ["XAU/USD", "XAG/USD", "COPPER", "PALLADIUM", "PLATINUM"],
+  },
+  {
+    id: "energies",
+    label: "Energies",
+    symbols: ["WTICO/USD", "BRENT/USD", "NATGAS/USD", "COPPER", "XAU/USD"],
+  },
+  {
+    id: "indices",
+    label: "Indices",
+    symbols: ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"],
+  },
+];
 
-const hashString = (value: string) => {
-  let hash = 2166136261;
+const PRICE_SPREADS = [15, 13, 12, 9, 17];
 
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
+const formatAssetPrice = (price: number) =>
+  price.toLocaleString("en-US", {
+    minimumFractionDigits: price >= 1000 ? 2 : price >= 1 ? 4 : 6,
+    maximumFractionDigits: price >= 1000 ? 2 : price >= 1 ? 4 : 6,
+  });
 
-  return hash >>> 0;
-};
+const formatPairLabel = (symbol: string) => symbol.replace("/", "-");
 
-const assetCategoryToLabel = (category: AssetCategory) => {
-  if (category === "CRYPTO") return "Crypto";
-  if (category === "STOCKS") return "Stock";
-  if (category === "COMMODITIES") return "Commodity";
-  return "Forex";
-};
+const calculateQuoteValues = (price: number, spread: number) => {
+  const factor = price >= 1 ? 0.0002 : 0.00015;
+  const ask = price + spread * factor;
+  const bid = price - spread * factor;
+  const precision = Math.max(5, 4);
 
-const getSparklineStepSeconds = (category: AssetCategory) => {
-  if (category === "CRYPTO") return 22 * 60;
-  if (category === "STOCKS") return 35 * 60;
-  if (category === "COMMODITIES") return 28 * 60;
-  return 18 * 60;
+  return {
+    ask: ask.toFixed(precision),
+    bid: bid.toFixed(precision),
+    spread,
+  };
 };
 
 type ShowcaseAsset = {
@@ -45,105 +78,30 @@ type ShowcaseAsset = {
   price: number;
   change24h: number;
   maxProfit: number;
-  flags: string[];
   stockLogo?: string | null;
   commodityIcon?: MasterAsset["commodity_icon"];
 };
 
-const buildSparklinePoints = (asset: ShowcaseAsset, nowSec: number) => {
-  const category = asset.category;
-  const basePrice = getAssetBasePrice(asset.symbol, category);
-  const stepSeconds = getSparklineStepSeconds(category);
+const buildCategoryAssets = (symbols: string[]) => {
+  const assetMap = new Map(ASSETS_LIBRARY.map((asset) => [asset.symbol, asset]));
 
-  return Array.from({ length: 17 }, (_, index) =>
-    getDeterministicPriceAt({
-      symbol: asset.symbol,
-      basePrice,
-      timestamp: nowSec - (16 - index) * stepSeconds,
-      category,
-    }),
-  );
-};
-
-const pickShowcaseSymbols = (assets: MasterAsset[], seed: string) => {
-  const uniqueAssets = Array.from(new Map(assets.map((asset) => [asset.symbol, asset])).values());
-  const sortedAssets = [...uniqueAssets].sort(
-    (left, right) => hashString(`${seed}:${left.symbol}`) - hashString(`${seed}:${right.symbol}`),
-  );
-  const selectedSymbols: string[] = [];
-
-  (["CRYPTO", "STOCKS", "COMMODITIES", "CURRENCIES"] as AssetCategory[]).forEach((category) => {
-    const firstOfType = sortedAssets.find((asset) => asset.category === category);
-    if (firstOfType) {
-      selectedSymbols.push(firstOfType.symbol);
-    }
-  });
-
-  sortedAssets.forEach((asset) => {
-    if (selectedSymbols.length >= SHOWCASE_COUNT) {
-      return;
-    }
-
-    if (!selectedSymbols.includes(asset.symbol)) {
-      selectedSymbols.push(asset.symbol);
-    }
-  });
-
-  return selectedSymbols.slice(0, SHOWCASE_COUNT);
-};
-
-const formatTrend = (value: number) => `${value >= 0 ? "" : "-"}${Math.abs(value).toFixed(2)}%`;
-
-const formatAssetPrice = (price: number) =>
-  price.toLocaleString("en-US", {
-    minimumFractionDigits: price >= 1000 ? 2 : price >= 1 ? 2 : 4,
-    maximumFractionDigits: price >= 1000 ? 2 : price >= 1 ? 4 : 6,
-  });
-
-const Sparkline = ({ points, positive }: { points: number[]; positive: boolean }) => {
-  const width = 236;
-  const height = 120;
-  const max = Math.max(...points);
-  const min = Math.min(...points);
-  const spread = Math.max(max - min, 1);
-  const linePoints = points.map((point, index) => {
-    const x = (index / (points.length - 1)) * width;
-    const y = height - ((point - min) / spread) * (height - 12) - 6;
-    return `${x},${y}`;
-  }).join(" ");
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-24 w-full sm:h-28" aria-hidden="true">
-      <polygon
-        points={`0,${height} ${linePoints} ${width},${height}`}
-        fill={positive ? "hsla(var(--landing-primary),0.16)" : "hsla(var(--landing-surface),0.06)"}
-      />
-      <polyline
-        points={linePoints}
-        fill="none"
-        stroke="hsl(var(--landing-primary))"
-        strokeWidth="3.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return symbols
+    .map((symbol) => assetMap.get(symbol))
+    .filter((asset): asset is MasterAsset => Boolean(asset));
 };
 
 const WhatWeOfferSection = () => {
   const { data: websiteContent } = useWebsiteContent();
   const { markets } = websiteContent;
-  const showcaseSeed = new Date().toISOString().slice(0, 10);
-  const catalogSignature = useMemo(() => ASSETS_LIBRARY.map((asset) => asset.symbol).join("|"), []);
-  const selectedSymbols = useMemo(() => pickShowcaseSymbols(ASSETS_LIBRARY, showcaseSeed), [catalogSignature, showcaseSeed]);
+  const [activeCategory, setActiveCategory] = useState(MARKET_CATEGORIES[0].id);
+
   const selectedAssets = useMemo(() => {
     const nowSec = Math.floor(Date.now() / 1000);
-    const assetMap = new Map(ASSETS_LIBRARY.map((asset) => [asset.symbol, asset]));
+    const selectedCategory = MARKET_CATEGORIES.find((category) => category.id === activeCategory) ?? MARKET_CATEGORIES[0];
+    const assets = buildCategoryAssets(selectedCategory.symbols);
 
-    return selectedSymbols
-      .map((symbol) => assetMap.get(symbol))
-      .filter((asset): asset is MasterAsset => Boolean(asset))
-      .map((asset) => {
+    return assets
+      .map((asset, index) => {
         const basePrice = getAssetBasePrice(asset.symbol, asset.category);
         const price = getDeterministicPriceAt({
           symbol: asset.symbol,
@@ -169,191 +127,123 @@ const WhatWeOfferSection = () => {
           symbol: asset.symbol,
           name: asset.name,
           category: asset.category,
-          label: assetCategoryToLabel(asset.category),
+          label: activeCategory === "crypto" ? "Crypto" : asset.category === "COMMODITIES" ? "Commodity" : asset.category === "STOCKS" ? "Stock" : "Forex",
           price,
           change24h,
           maxProfit: profit1m,
-          flags: getAssetFlags(asset.symbol, [asset.base_country, asset.quote_country]),
+          spread: PRICE_SPREADS[index % PRICE_SPREADS.length],
           stockLogo: asset.stock_logo,
           commodityIcon: asset.commodity_icon,
-        } satisfies ShowcaseAsset;
-      });
-  }, [selectedSymbols]);
-  const sparklineBucket = Math.floor(Date.now() / 30000);
-  const sparklineMap = useMemo(() => {
-    const nowSec = Math.floor(Date.now() / 1000);
-    return new Map(selectedAssets.map((asset) => [asset.symbol, buildSparklinePoints(asset, nowSec)]));
-  }, [selectedAssets, sparklineBucket]);
+        } as const;
+      })
+      .slice(0, 5);
+  }, [activeCategory]);
 
   return (
-    <section className="relative overflow-hidden py-16 sm:py-24" style={{ background: "hsl(var(--background))" }}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,hsl(var(--landing-primary))_0_0.05,transparent_24%)]" />
-
+    <section className="relative overflow-hidden py-16 sm:py-24" style={{ background: "#0f172a" }}>
+      <div className="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,hsl(var(--landing-primary))_0_0.08,transparent_24%)]" />
       <div className="relative px-[70px]">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mx-auto mb-7 max-w-3xl text-center sm:mb-10"
-        >
-          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-muted-foreground">
-            Market Showcase
+        <div className="mx-auto mb-8 max-w-5xl text-center">
+          <span className="inline-flex rounded-full bg-[hsl(var(--landing-primary))]/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.26em] text-[hsl(var(--landing-primary))]">
+            TRADE NOW
           </span>
-          <h2 className="font-display text-2xl font-bold text-white sm:text-4xl lg:text-5xl">
-            {markets.title}
+          <h2 className="mt-6 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
+            Market Spreads and Swaps
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl font-copy text-[15px] leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+          <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-slate-300 sm:text-lg">
             {markets.description}
           </p>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-8 text-center sm:mb-10"
-        >
-          <Button
-            size="lg"
-            className="group h-11 rounded-[10px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_32px_hsla(var(--landing-primary),0.16)] transition-all duration-300 hover:shadow-[0_8px_48px_hsla(var(--landing-primary),0.16)] hover:brightness-110 sm:h-12 sm:px-8 sm:text-sm"
-            asChild
-          >
-            <Link to="/register">Start Trading</Link>
-          </Button>
-        </motion.div>
-
-        <motion.div
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-          className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
-        >
-          {!selectedAssets.length ? (
-            <div className="rounded-[24px] border-dashed px-6 py-10 text-center text-sm text-muted-foreground md:col-span-2 xl:col-span-3" style={{ borderColor: "var(--border)", background: "hsl(var(--card))" }}>
-              Active platform assets will appear here as soon as the asset feed is available.
-            </div>
-          ) : selectedAssets.map((asset) => {
-            const positive = asset.change24h >= 0;
-            const TrendIcon = positive ? ArrowUpRight : ArrowDownRight;
-            const sparklinePoints = sparklineMap.get(asset.symbol) ?? [];
-
-            return (
-              <motion.article
-                key={asset.symbol}
-                variants={{ hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: 0.45 } } }}
-                className="landing-lift-card rounded-[22px] border p-3.5 shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)] sm:rounded-[26px] sm:p-5"
-                style={{ borderColor: "var(--border)", background: "hsl(var(--card))" }}
+        <div className="mb-10 overflow-hidden rounded-full border border-white/10 bg-white/5 p-1 shadow-[0_18px_50px_rgba(0,0,0,0.16)]">
+          <div className="flex flex-wrap items-center justify-center gap-2 px-2 py-2">
+            {MARKET_CATEGORIES.map((category) => (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => setActiveCategory(category.id)}
+                className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                  activeCategory === category.id
+                    ? "bg-[hsl(var(--landing-primary))] text-black shadow-[0_8px_20px_rgba(28,215,147,0.18)]"
+                    : "text-white/70 hover:text-white"
+                }`}
               >
-                <div className="grid gap-3.5 sm:grid-cols-[1.1fr_0.9fr] sm:gap-4 sm:items-start">
+                {category.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-5 lg:grid-cols-2 md:grid-cols-2">
+          {selectedAssets.map((asset, index) => {
+            const { ask, bid, spread } = calculateQuoteValues(asset.price, asset.spread);
+            return (
+              <article key={asset.symbol} className="rounded-[26px] border border-white/10 bg-white px-5 py-6 shadow-[0_30px_70px_rgba(0,0,0,0.14)]">
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="flex items-start gap-3">
-                      <AssetSymbolMark
-                        symbol={asset.symbol}
-                        name={asset.name}
-                        category={asset.category}
-                        flags={asset.flags}
-                        stockLogo={asset.stockLogo}
-                        commodityIcon={asset.commodityIcon}
-                        size={42}
-                        className="sm:mt-0.5"
-                      />
-                      <div className="min-w-0">
-                        <h3 className="font-display text-[1.3rem] font-bold leading-tight text-white sm:text-[1.65rem]">
-                          {asset.symbol}
-                        </h3>
-                        <p className="font-copy line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-                          {asset.name}
-                        </p>
-                      </div>
+                    <div className="text-[13px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      {asset.label}
                     </div>
-
-                    <div className="mt-4 sm:mt-5">
-                      <Sparkline points={sparklinePoints} positive={positive} />
-                    </div>
-
-                    <div className="mt-4 flex items-center justify-between gap-3">
-                      <div>
-                        <div className="font-copy text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                          Current price
-                        </div>
-                        <div className="mt-1 font-display text-lg font-bold text-white">
-                          {formatAssetPrice(asset.price)}
-                        </div>
-                      </div>
-                      <span className="rounded-full border px-3 py-1.5 font-copy text-[10px] font-extrabold uppercase tracking-[0.16em]" style={{ borderColor: "hsl(var(--landing-primary))", color: "hsl(var(--landing-primary))", background: "transparent" }}>
-                        {asset.label}
-                      </span>
-                    </div>
+                    <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-slate-950">
+                      {formatPairLabel(asset.symbol)}
+                    </h3>
                   </div>
+                  <AssetSymbolMark
+                    symbol={asset.symbol}
+                    name={asset.name}
+                    category={asset.category}
+                    stockLogo={asset.stockLogo}
+                    commodityIcon={asset.commodityIcon}
+                    size={44}
+                  />
+                </div>
 
-                  <div className="flex h-full flex-col justify-between">
-                    <div>
-                      <div className="font-copy text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                        Current trend
-                      </div>
-                      <div className="mt-2.5 flex items-center gap-2 sm:mt-3">
-                        <span className={`flex h-6 w-6 items-center justify-center rounded-md border sm:h-7 sm:w-7 ${positive ? "" : ""}`} style={positive ? { borderColor: "hsl(var(--landing-primary))", background: "hsl(var(--landing-primary))" } : { borderColor: "var(--border)", background: "hsl(var(--card))" }}>
-                          <TrendIcon className={`h-4 w-4 ${positive ? "text-white" : "text-muted-foreground"}`} />
-                        </span>
-                        <span className="font-display text-[1.55rem] font-bold leading-none text-white sm:text-[2rem]">
-                          {formatTrend(asset.change24h)}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 font-copy text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground sm:mt-4">
-                        Profit up to
-                      </div>
-                      <div className="mt-1 font-display text-[1.7rem] font-bold leading-none text-[hsl(var(--landing-secondary))] sm:text-[2rem]">
-                        {asset.maxProfit}%
-                      </div>
-                    </div>
-
-                    <Button
-                      className="group mt-4 h-10 rounded-[10px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] font-copy text-[11px] font-extrabold uppercase tracking-[0.06em] text-[#ffffff] shadow-[0_4px_20px_hsla(var(--landing-primary),0.16)] transition-all duration-300 hover:shadow-[0_8px_32px_hsla(var(--landing-primary),0.16)] hover:brightness-110 sm:mt-6 sm:h-11 sm:text-sm"
-                      asChild
-                    >
-                      <Link to="/register">Trade</Link>
-                    </Button>
+                <div className="mt-6 space-y-3 text-sm text-slate-600">
+                  <div className="flex items-center justify-between">
+                    <span>Ask</span>
+                    <span className="font-semibold text-slate-950">{ask}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Bid</span>
+                    <span className="font-semibold text-slate-950">{bid}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Spread</span>
+                    <span className="font-semibold text-slate-950">{spread}</span>
                   </div>
                 </div>
-              </motion.article>
+
+                <Button
+                  size="lg"
+                  className="mt-6 w-full rounded-[14px] border border-[hsl(var(--landing-primary))] bg-transparent px-4 py-3 text-sm font-semibold uppercase tracking-[0.08em] text-[hsl(var(--landing-primary))] transition hover:bg-[hsl(var(--landing-primary))] hover:text-black"
+                  asChild
+                >
+                  <Link to="/register">Trade</Link>
+                </Button>
+              </article>
             );
           })}
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mt-8 grid gap-4 sm:mt-10 lg:grid-cols-[1.1fr_0.9fr]"
-        >
-          <div className="rounded-[24px] border border-[hsl(var(--landing-border))] bg-white p-5 shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)] sm:rounded-[28px] sm:p-6">
-            <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em] text-[hsl(var(--landing-border))]">
-              {markets.actionCardTitle}
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-[24px] border border-white/10 bg-white/5 p-6 text-white shadow-[0_12px_40px_rgba(0,0,0,0.14)]">
+            <div className="font-copy text-[11px] font-semibold uppercase tracking-[0.24em] text-[hsl(var(--landing-primary))]">
+              Live spreads
             </div>
-            <p className="mt-3 max-w-2xl font-copy text-[15px] leading-7 text-[hsl(var(--landing-border))] sm:text-lg sm:leading-8">
-              {markets.actionCardText}
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-200">
+              See our most competitive spreads across forex, crypto, commodities and indices — presented with the same platform precision you already trust.
             </p>
           </div>
 
-          <div className="rounded-[24px] border border-[hsl(var(--landing-border))] bg-white p-5 shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)] sm:rounded-[28px] sm:p-6">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                className="rounded-[14px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-4 py-3.5 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-white shadow-[0_16px_28px_hsla(var(--landing-primary),0.16)] sm:px-5 sm:py-4 sm:text-sm"
-              >
-                {markets.upButtonLabel}
-              </button>
-              <button
-                type="button"
-                className="rounded-[14px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-4 py-3.5 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_24px_hsla(var(--landing-primary),0.16)] sm:px-5 sm:py-4 sm:text-sm"
-              >
-                {markets.downButtonLabel}
-              </button>
+          <div className="rounded-[24px] border border-white/10 bg-white/5 p-6 text-white shadow-[0_12px_40px_rgba(0,0,0,0.14)]">
+            <div className="font-copy text-[11px] font-semibold uppercase tracking-[0.24em] text-[hsl(var(--landing-primary))]">
+              Actionable trades
             </div>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-200">
+              Every card uses real platform asset data and pricing logic so the section feels native to Init Option and aligns with the underlying feed.
+            </p>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
