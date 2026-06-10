@@ -1206,6 +1206,7 @@ const TradingGuidePage = () => {
   const [activeCategory, setActiveCategory] = useState<GuideCategoryId>("platform");
   const [selectedTopicId, setSelectedTopicId] = useState("introduction");
   const [openIds, setOpenIds] = useState<Set<string>>(() => getDefaultOpenSections(platformTopics));
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   const currentTopics = topicsByCategory[activeCategory];
   const flatTopics = useMemo(() => flattenTopics(currentTopics), [currentTopics]);
@@ -1273,6 +1274,8 @@ const TradingGuidePage = () => {
     setActivePanel(id);
   };
 
+  const showSidebar = activePanel === "guides";
+
   return (
     <div className="trading-terminal min-h-screen font-sans text-white" style={{ background: "var(--trading-workspace-bg)" }}>
       <header
@@ -1282,7 +1285,7 @@ const TradingGuidePage = () => {
         <div className="flex h-[72px] items-stretch justify-between gap-3 px-3 sm:px-5 lg:px-0 lg:pr-4">
           <Link
             to="/trade"
-            className="flex h-full min-w-0 items-center border-r px-3 sm:min-w-[260px] sm:px-5 xl:min-w-[430px] xl:px-6"
+            className="flex h-full min-w-0 items-center border-r px-3 sm:min-w-[260px] sm:px-5 xl:min-w-[310px] xl:px-6"
             style={{ borderColor: "var(--trading-border-strong-color)" }}
           >
             {logoUrl ? (
@@ -1309,14 +1312,150 @@ const TradingGuidePage = () => {
             )}
           </Link>
 
+          <nav className="hidden items-center gap-1.5 sm:flex xl:gap-2.5">
+            {helpTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = tab.id === activePanel || (tab.id === "reviews" && false);
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleTabClick(tab.id)}
+                  className={`inline-flex h-[38px] items-center gap-2 rounded-full px-4 text-[11px] font-bold uppercase tracking-[0.08em] transition-all duration-200 xl:h-[42px] xl:px-5 xl:text-xs ${
+                    isActive
+                      ? "bg-gradient-to-r from-[#1c81f8] to-[#1565c0] text-white shadow-lg shadow-[#1c81f8]/30"
+                      : "text-slate-400 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
 
+          <TradeDeskShortcut />
         </div>
       </header>
 
       <div className="flex">
+        {showSidebar && (
+          <>
+            <aside
+              className="hidden w-[260px] shrink-0 border-r xl:flex xl:flex-col"
+              style={{ borderColor: "var(--trading-border-color)", background: "var(--trading-workspace-bg)" }}
+            >
+              <div className="flex items-center gap-2 border-b px-5 py-4" style={{ borderColor: "var(--trading-border-color)" }}>
+                {guideCategories.map((cat) => {
+                  const CatIcon = cat.icon;
+                  const isCatActive = activeCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => switchCategory(cat.id)}
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs transition-all duration-200 ${
+                        isCatActive
+                          ? "bg-[#1c81f8]/15 text-[#1c81f8] shadow-sm"
+                          : "text-slate-500 hover:bg-white/5 hover:text-white"
+                      }`}
+                      title={cat.label}
+                    >
+                      <CatIcon className="h-4 w-4" />
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex-1 overflow-y-auto px-4 py-5 [scrollbar-color:#3a465f_transparent] [scrollbar-width:thin]">
+                <div className="space-y-1">
+                  {currentTopics.map((topic) => (
+                    <GuideTreeNode
+                      key={topic.id}
+                      topic={topic}
+                      activeId={selectedTopic.id}
+                      openIds={openIds}
+                      onToggle={(id) =>
+                        setOpenIds((current) => {
+                          const next = new Set(current);
+                          if (next.has(id)) next.delete(id);
+                          else next.add(id);
+                          return next;
+                        })
+                      }
+                      onSelect={selectTopic}
+                    />
+                  ))}
+                </div>
+              </div>
+            </aside>
+
+            <button
+              type="button"
+              onClick={() => setShowMobileSidebar(!showMobileSidebar)}
+              className="fixed bottom-6 left-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#1c81f8] text-white shadow-lg xl:hidden"
+            >
+              <Grid className="h-5 w-5" />
+            </button>
+
+            {showMobileSidebar && (
+              <div className="fixed inset-0 z-50 xl:hidden">
+                <div className="absolute inset-0 bg-black/60" onClick={() => setShowMobileSidebar(false)} />
+                <aside className="relative ml-auto h-full w-[300px] max-w-[85vw] overflow-y-auto border-l p-5" style={{ background: "var(--trading-workspace-bg)", borderColor: "var(--trading-border-color)" }}>
+                  <div className="mb-4 flex items-center justify-between">
+                    <span className="text-sm font-bold uppercase tracking-wider text-[#1c81f8]">Topics</span>
+                    <button type="button" onClick={() => setShowMobileSidebar(false)} className="text-slate-400 hover:text-white">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto pb-4">
+                    {guideCategories.map((cat) => {
+                      const CatIcon = cat.icon;
+                      const isCatActive = activeCategory === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => { switchCategory(cat.id); setShowMobileSidebar(false); }}
+                          className={`flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                            isCatActive
+                              ? "bg-[#1c81f8] text-white"
+                              : "border border-white/10 text-slate-400"
+                          }`}
+                        >
+                          <CatIcon className="h-3.5 w-3.5" />
+                          {cat.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="space-y-1">
+                    {currentTopics.map((topic) => (
+                      <GuideTreeNode
+                        key={topic.id}
+                        topic={topic}
+                        activeId={selectedTopic.id}
+                        openIds={openIds}
+                        onToggle={(id) =>
+                          setOpenIds((current) => {
+                            const next = new Set(current);
+                            if (next.has(id)) next.delete(id);
+                            else next.add(id);
+                            return next;
+                          })
+                        }
+                        onSelect={(id) => { selectTopic(id); setShowMobileSidebar(false); }}
+                      />
+                    ))}
+                  </div>
+                </aside>
+              </div>
+            )}
+          </>
+        )}
+
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <div>
-            <div className="mb-8 flex flex-wrap gap-3 border-b border-white/10 pb-6">
+            <div className="mb-8 flex flex-wrap gap-3 border-b pb-6 sm:hidden" style={{ borderColor: "var(--trading-border-color)" }}>
               {helpTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = tab.id === activePanel || (tab.id === "reviews" && false);
@@ -1325,13 +1464,13 @@ const TradingGuidePage = () => {
                     key={tab.id}
                     type="button"
                     onClick={() => handleTabClick(tab.id)}
-                    className={`inline-flex min-h-[48px] items-center gap-2.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                    className={`inline-flex min-h-[44px] items-center gap-2.5 rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-[#1c81f8] to-[#1565c0] text-white shadow-lg shadow-[#1c81f8]/30"
                         : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10"
                     }`}
                   >
-                    <Icon className="h-4.5 w-4.5" />
+                    <Icon className="h-4 w-4" />
                     <span className="hidden sm:inline">{tab.label}</span>
                   </button>
                 );
@@ -1344,32 +1483,31 @@ const TradingGuidePage = () => {
 
             {activePanel === "guides" ? (
               <>
-                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                  {guideCategories.map((category) => {
-                    const Icon = category.icon;
-                    const isActive = activeCategory === category.id;
-                    return (
-                      <button
-                        key={category.id}
-                        type="button"
-                        onClick={() => switchCategory(category.id)}
-                        className={`group relative rounded-[14px] overflow-hidden border p-6 text-center transition-all duration-300 hover:shadow-lg ${
-                          isActive
-                        ? "border-[#1c81f8] bg-gradient-to-br from-[#1c81f8]/10 to-[#1565c0]/5 text-white shadow-lg shadow-[#1c81f8]/20"
-                        : "border-white/10 bg-transparent text-gray-400 hover:border-white/20 hover:bg-white/5"
-                        }`}
-                      >
-                        <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{background: "radial-gradient(circle at 30% 30%, rgba(0, 192, 118, 0.1), transparent 50%)"}}/>
-                        <Icon className={`mx-auto h-12 w-12 transition-all duration-300 ${isActive ? "text-[#1c81f8] scale-110" : "text-gray-400 group-hover:text-white group-hover:scale-105"}`} />
-                        <div className="mt-5 text-lg font-bold leading-tight">{category.label}</div>
-                        <div className="mt-2.5 text-xs font-medium leading-relaxed text-gray-400">{category.description}</div>
-                        {isActive && <div className="absolute top-3 right-3 h-2 w-2 rounded-full bg-[#1c81f8] animate-pulse"/>}
-                      </button>
-                    );
-                  })}
+                <div className="mb-6 flex items-center justify-between">
+                  <div className="flex items-center gap-3 overflow-x-auto xl:hidden">
+                    {guideCategories.map((cat) => {
+                      const CatIcon = cat.icon;
+                      const isCatActive = activeCategory === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => switchCategory(cat.id)}
+                          className={`flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                            isCatActive
+                              ? "bg-[#1c81f8] text-white"
+                              : "border border-white/10 text-slate-400"
+                          }`}
+                        >
+                          <CatIcon className="h-3.5 w-3.5" />
+                          {cat.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="mt-8 grid gap-6">
+                <div className="mt-8">
                   <article className="rounded-[16px] bg-[#0f1826] border border-white/10 px-6 py-8 sm:px-10 lg:px-14">
                     <div className="mx-auto max-w-3xl">
                       <div className="mb-2 flex items-center gap-2">
@@ -1466,31 +1604,6 @@ const TradingGuidePage = () => {
                   </div>
                     </div>
                   </article>
-
-                  <aside className="rounded-[16px] bg-gradient-to-br from-[#1a2438] to-[#0f1826] border border-white/10 p-6">
-                    <h2 className="text-sm font-bold uppercase tracking-wider text-[#1c81f8] mb-4">More Topics</h2>
-                    <div className="max-h-[400px] overflow-y-auto pr-2 [scrollbar-color:#3a465f_transparent] [scrollbar-width:thin]">
-                      <div className="space-y-1">
-                        {currentTopics.map((topic) => (
-                          <GuideTreeNode
-                            key={topic.id}
-                            topic={topic}
-                            activeId={selectedTopic.id}
-                            openIds={openIds}
-                            onToggle={(id) =>
-                              setOpenIds((current) => {
-                                const next = new Set(current);
-                                if (next.has(id)) next.delete(id);
-                                else next.add(id);
-                                return next;
-                              })
-                            }
-                            onSelect={selectTopic}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </aside>
                 </div>
               </>
             ) : null}
