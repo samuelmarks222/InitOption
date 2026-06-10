@@ -242,7 +242,8 @@ const WhatWeOfferSection = () => {
               <motion.article
                 key={asset.symbol}
                 variants={{ hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: 0.45 } } }}
-                className="landing-lift-card rounded-[22px] border p-3.5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[26px] sm:p-5" style={{ borderColor: "var(--border)", background: "hsl(var(--card))" }}><
+                className="landing-lift-card rounded-[22px] border p-3.5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[26px] sm:p-5"
+                style={{ borderColor: "var(--border)", background: "hsl(var(--card))" }}
               >
                 <div className="grid gap-3.5 sm:grid-cols-[1.1fr_0.9fr] sm:gap-4 sm:items-start">
                   <div>

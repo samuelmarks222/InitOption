@@ -324,7 +324,7 @@ const AuditLogs = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1080px] text-left text-sm text-slate-200">
-              <thead className="border-b text-xs uppercase text-slate-300\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-surface)\" }}>
+              <thead className="border-b text-xs uppercase text-slate-300" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
                 <tr>
                   <th className="px-6 py-3 font-semibold">Time</th>
                   <th className="px-6 py-3 font-semibold">Action</th>
@@ -373,9 +373,9 @@ const AuditLogs = () => {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border shadow-lg\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-surface)\" }}>
-        <div className=\"border-b p-4\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-surface)\" }}>
-          <div className=\"text-lg font-bold text-white\">Trade Balance Audit</div>
+      <div className="overflow-hidden rounded-2xl border shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+        <div className="border-b p-4" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+          <div className="text-lg font-bold text-white">Trade Balance Audit</div>
           <div className="mt-1 text-sm text-slate-300">
             Every trade open and close records the exact balance before, change amount, and balance after.
           </div>
@@ -388,7 +388,7 @@ const AuditLogs = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1120px] text-left text-sm text-slate-200">
-              <thead className="border-b text-xs uppercase text-slate-300\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-surface)\" }}>
+              <thead className="border-b text-xs uppercase text-slate-300" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
                 <tr>
                   <th className="px-6 py-3 font-semibold">Time</th>
                   <th className="px-6 py-3 font-semibold">Event</th>
