@@ -7,7 +7,6 @@ import AuthLoadingScreen from "@/components/auth/AuthLoadingScreen";
 import Navbar from "@/components/landing/Navbar";
 import BonusPopup from "@/components/landing/BonusPopup";
 import HeroSection from "@/components/landing/HeroSection";
-import MarketTicker from "@/components/landing/MarketTicker";
 
 const WhatWeOfferSection = lazy(() => import("@/components/landing/WhatWeOfferSection"));
 const FeaturesSection = lazy(() => import("@/components/landing/FeaturesSection"));
@@ -41,7 +40,6 @@ const Index = () => {
       <BonusPopup />
       <Navbar />
       <HeroSection />
-      <MarketTicker />
       <Suspense fallback={<LandingSectionFallback />}>
         <WhatWeOfferSection />
         <FeaturesSection />

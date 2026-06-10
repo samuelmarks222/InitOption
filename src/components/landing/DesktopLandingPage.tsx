@@ -1,7 +1,6 @@
 import Navbar from "@/components/landing/Navbar";
 import BonusPopup from "@/components/landing/BonusPopup";
 import HeroSection from "@/components/landing/HeroSection";
-import MarketTicker from "@/components/landing/MarketTicker";
 import WhatWeOfferSection from "@/components/landing/WhatWeOfferSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import StepsSection from "@/components/landing/StepsSection";
@@ -18,7 +17,6 @@ const DesktopLandingPage = () => {
       <BonusPopup />
       <Navbar />
       <HeroSection />
-      <MarketTicker />
       <WhatWeOfferSection />
       <FeaturesSection />
       <StepsSection />
