@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useCallback, useState } from "react";
+import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
+import { Button } from "@/components/ui/button";
 import AssetSymbolMark from "@/components/trading/AssetSymbolMark";
 import { ASSETS_LIBRARY, type MasterAsset } from "@/data/assetsLibrary";
 
@@ -35,7 +37,13 @@ const availabilityLabel = (symbol: string) => (isLive(symbol) ? "Open" : "Closed
 
 const AssetTicker: React.FC = () => {
   const assets = useMemo(() => selectCarouselAssets(), []);
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: "center", containScroll: "trimSnaps", draggable: true });
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    align: "start",
+    containScroll: "trimSnaps",
+    draggable: true,
+    slidesToScroll: 1,
+  });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
 
@@ -70,7 +78,7 @@ const AssetTicker: React.FC = () => {
         <div className="overflow-hidden" ref={emblaRef}>
           <div className="flex items-stretch">
             {assets.map((asset) => (
-              <div key={asset.symbol} className="min-w-[18.5rem] flex-shrink-0 px-2 sm:min-w-[20rem]">
+              <div key={asset.symbol} className="min-w-full flex-shrink-0 px-2 sm:px-3">
                 <TickerCard asset={asset} />
               </div>
             ))}
@@ -102,34 +110,36 @@ const TickerCard: React.FC<{ asset: MasterAsset }> = ({ asset }) => {
   const up = directionUp(asset.symbol);
 
   return (
-    <div className="rounded-[24px] border border-white/10 bg-white/95 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.18)]">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <AssetSymbolMark symbol={asset.symbol} name={asset.name} category={asset.category} size={34} />
-          <div>
-            <div className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-900">{asset.symbol}</div>
-            <div className="text-xs text-slate-500">{asset.name}</div>
+    <div className="flex min-h-[240px] flex-col justify-between rounded-[24px] border border-white/10 bg-white/95 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.18)]">
+      <div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <AssetSymbolMark symbol={asset.symbol} name={asset.name} category={asset.category} size={34} />
+            <div>
+              <div className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-900">{asset.symbol}</div>
+              <div className="text-xs text-slate-500">{asset.name}</div>
+            </div>
           </div>
+          <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase ${
+            live ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
+          }`}>
+            {availabilityLabel(asset.symbol)}
+          </span>
         </div>
-        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase ${
-          live ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
-        }`}>
-          {availabilityLabel(asset.symbol)}
-        </span>
-      </div>
 
-      <div className="mt-4 grid gap-3 text-sm text-slate-700">
-        <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-          <span className="text-xs uppercase text-slate-500">Payout</span>
-          <span className="font-semibold text-slate-900">{payout}%</span>
-        </div>
-        <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-          <span className="text-xs uppercase text-slate-500">Duration</span>
-          <span className="font-semibold text-slate-900">{formatDuration(duration)}</span>
-        </div>
-        <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-          <span className="text-xs uppercase text-slate-500">ROI</span>
-          <span className="font-semibold text-slate-900">{payout}%</span>
+        <div className="mt-4 grid gap-3 text-sm text-slate-700">
+          <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
+            <span className="text-xs uppercase text-slate-500">Payout</span>
+            <span className="font-semibold text-slate-900">{payout}%</span>
+          </div>
+          <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
+            <span className="text-xs uppercase text-slate-500">Duration</span>
+            <span className="font-semibold text-slate-900">{formatDuration(duration)}</span>
+          </div>
+          <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
+            <span className="text-xs uppercase text-slate-500">ROI</span>
+            <span className="font-semibold text-slate-900">{payout}%</span>
+          </div>
         </div>
       </div>
 
@@ -144,6 +154,13 @@ const TickerCard: React.FC<{ asset: MasterAsset }> = ({ asset }) => {
         </div>
         <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Binary</div>
       </div>
+
+      <Button
+        className="mt-4 w-full rounded-[14px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-3 py-3 text-sm font-semibold uppercase tracking-[0.08em] text-black shadow-[0_10px_30px_rgba(28,215,147,0.16)] transition hover:brightness-105"
+        asChild
+      >
+        <Link to="/register">Trade</Link>
+      </Button>
     </div>
   );
 };
