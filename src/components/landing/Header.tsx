@@ -101,7 +101,7 @@ const Header = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 border-t px-4 pb-3 pt-2 md:hidden">
+          <div className="grid grid-cols-2 gap-2 px-4 pb-3 pt-2 md:hidden">
             <Link
               to="/login"
               className="rounded-full px-4 py-3 text-center font-landing-copy text-[11px] font-semibold uppercase tracking-[0.16em]"

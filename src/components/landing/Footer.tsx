@@ -133,11 +133,11 @@ const Footer = ({ content }: FooterProps) => {
   ] as const;
 
   return (
-    <footer className="relative overflow-hidden border-t py-12 sm:py-16" style={{ borderColor: "var(--border)", background: "hsl(var(--background))" }}>
+    <footer className="relative overflow-hidden py-12 sm:py-16" style={{ background: "hsl(var(--background))" }}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--landing-primary))_0_0.06,transparent_24%)]" />
       <div className="relative px-[70px]">
         <div className="flex flex-col gap-10">
-          <div className="flex flex-col gap-8 border-b pb-10 lg:flex-row lg:items-start lg:justify-between" style={{ borderColor: "var(--border)" }}>
+          <div className="flex flex-col gap-8 pb-10 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-xl">
               <SiteLogo
                 to="/"
@@ -232,7 +232,7 @@ const Footer = ({ content }: FooterProps) => {
             </div>
           </div>
 
-          <div className="border-t border-white/8 pt-6 text-center font-copy text-xs text-white/70 sm:text-sm">
+          <div className="pt-6 text-center font-copy text-xs text-white/70 sm:text-sm">
             Copyright {new Date().getFullYear()} {platformName}. All rights reserved.
           </div>
         </div>

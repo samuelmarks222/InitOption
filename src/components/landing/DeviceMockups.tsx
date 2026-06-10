@@ -21,7 +21,7 @@ const DeviceMockups = () => {
         <div className="flex flex-col items-center justify-center gap-8 lg:flex-row lg:gap-0">
           <div className="relative w-full max-w-2xl">
             <div className="overflow-hidden rounded-t-xl border border-border/60 bg-card">
-              <div className="flex items-center gap-2 border-b border-border/50 bg-secondary/50 px-4 py-2.5">
+              <div className="flex items-center gap-2 bg-secondary/50 px-4 py-2.5">
                 <div className="flex gap-1.5">
                   <div className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
                   <div className="h-2.5 w-2.5 rounded-full bg-[hsl(var(--landing-primary))]/40" />
@@ -95,7 +95,7 @@ const DeviceMockups = () => {
                 </div>
               </div>
             </div>
-            <div className="mx-8 h-4 rounded-b-lg border-x border-b border-border/60 bg-secondary" />
+            <div className="mx-8 h-4 rounded-b-lg border-x border-border/60 bg-secondary" />
             <div className="mx-20 h-1.5 rounded-b-lg bg-muted" />
           </div>
 

@@ -58,7 +58,7 @@ const TradingPlatform = ({ content }: TradingPlatformProps) => {
             <article className="landing-neo-card relative overflow-hidden rounded-[38px] p-5 sm:p-7">
               <div className="absolute inset-0 bg-[linear-gradient(180deg,hsla(var(--landing-surface),0.64)_0%,transparent_30%)]" />
               <div className="relative">
-                <div className="flex flex-col gap-4 border-b border-[hsl(var(--landing-secondary))]/8 pb-6 sm:flex-row sm:items-end sm:justify-between">
+                <div className="flex flex-col gap-4 pb-6 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <div className="font-landing-copy text-[10px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--landing-border))]">
                       Platform canvas

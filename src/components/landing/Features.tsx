@@ -93,7 +93,7 @@ const Features = ({ content }: FeaturesProps) => {
 
         <div className="mt-14 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
           <article className="landing-neo-card overflow-hidden rounded-[36px] p-6 sm:p-8">
-            <div className="flex flex-col gap-4 border-b border-[hsl(var(--landing-secondary))]/8 pb-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-4 pb-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className="font-landing-copy text-[10px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--landing-border))]">
                   New-user path

@@ -133,7 +133,7 @@ const Hero = ({ content }: HeroProps) => {
 
                 <div className="mt-4 grid gap-4 xl:grid-cols-[1.12fr_0.88fr]">
                   <div className="overflow-hidden rounded-[30px] border border-[hsl(var(--landing-secondary))]/8 bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_100%)]">
-                    <div className="flex items-center justify-between border-b border-[hsl(var(--landing-secondary))]/8 px-4 py-3">
+                    <div className="flex items-center justify-between px-4 py-3">
                       <div>
                         <div className="font-landing-copy text-[10px] font-semibold uppercase tracking-[0.18em] text-[hsl(var(--landing-border))]">
                           Command room

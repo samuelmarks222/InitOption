@@ -269,7 +269,7 @@ const AnimatedTradingChart = () => {
 
   return (
     <div className="w-full overflow-hidden rounded-[22px] border border-white/10 bg-[hsl(var(--landing-secondary))]/90 shadow-[0_8px_32px_hsla(var(--landing-secondary),0.28)] backdrop-blur sm:rounded-[28px]">
-      <div className="flex items-center justify-between gap-2 border-b border-white/10 bg-white/[0.04] px-2.5 py-2 sm:px-4">
+      <div className="flex items-center justify-between gap-2 bg-white/[0.04] px-2.5 py-2 sm:px-4">
         <div className="flex min-w-0 items-center gap-1 overflow-x-auto scrollbar-hide sm:gap-2">
           {PAIRS.map((pair, index) => (
             <motion.button
@@ -399,7 +399,7 @@ const AnimatedTradingChart = () => {
           </div>
         </div>
 
-        <div className="flex w-full flex-col gap-2.5 border-t border-[hsl(var(--landing-border))] bg-[hsl(var(--landing-surface))] p-2.5 sm:gap-3 sm:p-4 lg:w-[220px] lg:border-l lg:border-t-0">
+        <div className="flex w-full flex-col gap-2.5 bg-[hsl(var(--landing-surface))] p-2.5 sm:gap-3 sm:p-4 lg:w-[220px] lg:border-l">
           <div className="flex items-center justify-between">
             <div className="flex min-w-0 items-center gap-1.5">
               <span className="truncate text-xs font-bold text-[hsl(var(--landing-secondary))] sm:text-sm">{activePair.name}</span>
@@ -498,7 +498,7 @@ const AnimatedTradingChart = () => {
 
           <div className="mt-1 flex-1">
             <div className="mb-2 flex items-center gap-3 text-[10px] text-[hsl(var(--landing-border))]">
-              <span className="border-b-2 border-[hsl(var(--landing-primary))] pb-0.5 font-medium text-[hsl(var(--landing-secondary))]">Trades {tradeCount}</span>
+              <span className="pb-0.5 font-medium text-[hsl(var(--landing-secondary))]">Trades {tradeCount}</span>
               <span>History</span>
             </div>
             <div className="max-h-[104px] space-y-1 overflow-hidden sm:max-h-[120px]">
