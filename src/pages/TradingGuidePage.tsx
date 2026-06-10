@@ -987,13 +987,13 @@ const useGuideMedia = (platformName: string) => {
 };
 
 const GuideMediaPlaceholder = ({ title }: { title: string }) => (
-  <div className="flex min-h-[280px] flex-col items-center justify-center gap-4 rounded-[14px] border border-dashed border-white/20 bg-gradient-to-br from-white/[0.02] to-[#0f1826] px-6 py-10 text-center hover:border-white/30 transition-colors duration-300">
-    <div className="rounded-lg bg-[#1c81f8]/10 p-3">
-      <ImageIcon className="h-10 w-10 text-[#1c81f8]" />
+  <div className="flex min-h-[280px] flex-col items-center justify-center gap-4 rounded-[14px] border border-dashed bg-white/5 px-6 py-10 text-center hover:bg-white/10 transition-colors duration-300" style={{ borderColor: "var(--border)" }}>
+    <div className="rounded-lg bg-blue-500/10 p-3">
+      <ImageIcon className="h-10 w-10" style={{ color: "hsl(var(--primary))" }} />
     </div>
     <div>
       <p className="text-sm font-semibold text-white">Guide image not assigned</p>
-      <p className="mt-1.5 text-xs text-gray-400">Upload the real <span className="text-[#1c81f8]">{title}</span> image from Admin Settings.</p>
+      <p className="mt-1.5 text-xs text-muted-foreground">Upload the real <span style={{ color: "hsl(var(--primary))" }}>{title}</span> image from Admin Settings.</p>
     </div>
   </div>
 );
@@ -1004,8 +1004,8 @@ const GuideMockup = ({ title, mediaUrl }: { title: string; mediaUrl?: string }) 
   }
 
   return (
-    <figure className="rounded-[14px] border border-white/10 bg-[#0f1826] overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
-      <div className="bg-gradient-to-br from-white/[0.02] to-[#0f1826] p-1.5">
+    <figure className="rounded-[14px] border overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300" style={{ borderColor: "var(--border)", background: "hsl(var(--card))" }}>
+      <div className="p-1.5" style={{ background: "hsl(var(--background))" }}>
         <img src={mediaUrl} alt={title} className="h-auto w-full rounded-[10px] object-contain hover:scale-105 transition-transform duration-300" loading="lazy" />
       </div>
     </figure>
@@ -1111,14 +1111,14 @@ const GuideTreeNode = ({
 };
 
 const SupportPanel = ({ platformName }: { platformName: string }) => (
-  <div className="rounded-[16px] bg-[#0f1826] border border-white/10 p-8">
+  <div className="rounded-[16px] border p-8" style={{ background: "hsl(var(--card))", borderColor: "var(--border)" }}>
     <div className="flex items-start gap-4">
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-2">
-          <Headset className="h-6 w-6 text-[#1c81f8]"/>
+          <Headset className="h-6 w-6" style={{ color: "hsl(var(--primary))" }}/>
           <h1 className="text-3xl sm:text-4xl font-bold text-white">Support Service</h1>
         </div>
-        <p className="mt-3 max-w-3xl text-base leading-relaxed text-gray-400">
+        <p className="mt-3 max-w-3xl text-base leading-relaxed text-muted-foreground">
           Choose the topic that matches your issue. {platformName} support can help with account access, deposits,
           withdrawals, verification, platform settings, and trading workspace questions.
         </p>
@@ -1133,10 +1133,10 @@ const SupportPanel = ({ platformName }: { platformName: string }) => (
       ].map((item) => {
         const Icon = item.icon;
         return (
-          <div key={item.title} className="rounded-[16px] border border-white/10 bg-white/5 p-5">
-            <Icon className="h-8 w-8 text-[#1c81f8]" />
+          <div key={item.title} className="rounded-[16px] border bg-white/5 p-5" style={{ borderColor: "var(--border)" }}>
+            <Icon className="h-8 w-8" style={{ color: "hsl(var(--primary))" }} />
             <h2 className="mt-5 text-xl font-bold text-white">{item.title}</h2>
-            <p className="mt-3 text-sm leading-6 text-gray-400">{item.text}</p>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.text}</p>
           </div>
         );
       })}
@@ -1146,28 +1146,28 @@ const SupportPanel = ({ platformName }: { platformName: string }) => (
 
 const SupportChatPanel = () => (
   <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
-    <div className="rounded-[18px] bg-[#0f1826] border border-white/10 p-6">
+    <div className="rounded-[18px] border p-6" style={{ background: "hsl(var(--card))", borderColor: "var(--border)" }}>
       <h1 className="text-3xl font-bold text-white">Support Chat</h1>
-      <p className="mt-4 text-sm leading-7 text-gray-400">
+      <p className="mt-4 text-sm leading-7 text-muted-foreground">
         Start a support conversation from the trading workspace. Keep transaction IDs, phone numbers, and screenshots
         ready when the issue is about payments.
       </p>
       <button
         type="button"
-        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-[8px] bg-[#1c81f8] px-5 py-3 text-sm font-bold text-white"
+        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-[8px] px-5 py-3 text-sm font-bold text-white" style={{ background: "hsl(var(--primary))" }}
       >
         Open support chat
         <ArrowRight className="h-4 w-4" />
       </button>
     </div>
-    <div className="rounded-[18px] border border-white/10 bg-[#0f1826] p-6">
-      <div className="mb-5 flex items-center gap-3 border-b border-white/10 pb-4">
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-[#1c81f8]">
+    <div className="rounded-[18px] border p-6" style={{ background: "hsl(var(--card))", borderColor: "var(--border)" }}>
+      <div className="mb-5 flex items-center gap-3 border-b pb-4" style={{ borderColor: "var(--border)" }}>
+        <span className="grid h-11 w-11 place-items-center rounded-full" style={{ background: "hsl(var(--primary))" }}>
           <MessageCircle className="h-5 w-5 text-white" />
         </span>
         <div>
           <div className="text-lg font-bold text-white">Support Chat (Online)</div>
-          <div className="text-sm text-gray-400">Typical replies appear inside your chat inbox.</div>
+          <div className="text-sm text-muted-foreground">Typical replies appear inside your chat inbox.</div>
         </div>
       </div>
       <div className="space-y-4">
@@ -1176,7 +1176,7 @@ const SupportChatPanel = () => (
           "Please include your account ID and the exact issue so we can check it quickly.",
           "For withdrawal questions, share the request ID and selected payout method.",
         ].map((message, index) => (
-          <div key={message} className="rounded-[14px] bg-white/5 p-4 text-sm leading-6 text-gray-400">
+          <div key={message} className="rounded-[14px] bg-white/5 p-4 text-sm leading-6 text-muted-foreground" style={{ borderColor: "var(--border)" }}>
             <span className="font-bold text-white">{index === 0 ? "Support Service" : "Support note"}: </span>
             {message}
           </div>
@@ -1187,9 +1187,9 @@ const SupportChatPanel = () => (
 );
 
 const AppsPanel = () => (
-  <div className="rounded-[18px] bg-[#0f1826] border border-white/10 p-8">
+  <div className="rounded-[18px] border p-8" style={{ background: "hsl(var(--card))", borderColor: "var(--border)" }}>
     <h1 className="text-4xl font-bold text-white">Applications</h1>
-    <p className="mt-4 max-w-3xl text-lg leading-8 text-gray-400">
+    <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">
       Use the web platform on desktop or install it as a browser app on supported mobile devices for quicker access.
     </p>
     <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -1395,9 +1395,10 @@ const TradingGuidePage = () => {
                       onClick={() => switchCategory(cat.id)}
                       className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs transition-all duration-200 ${
                         isCatActive
-                          ? "bg-[#1c81f8]/15 text-[#1c81f8] shadow-sm"
+                          ? "shadow-sm"
                           : "text-slate-500 hover:bg-white/5 hover:text-white"
                       }`}
+                    style={isCatActive ? { background: "hsl(var(--primary) / 0.15)", color: "hsl(var(--primary))" } : {}}
                       title={cat.label}
                     >
                       <CatIcon className="h-4 w-4" />
@@ -1505,9 +1506,10 @@ const TradingGuidePage = () => {
                     onClick={() => handleTabClick(tab.id)}
                     className={`inline-flex min-h-[44px] items-center gap-2.5 rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 ${
                       isActive
-                        ? "bg-gradient-to-r from-[#1c81f8] to-[#1565c0] text-white shadow-lg shadow-[#1c81f8]/30"
-                        : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10"
+                        ? "text-white border"
+                        : "bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white border"
                     }`}
+                    style={isActive ? { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))", borderColor: "hsl(var(--primary) / 0.5)", boxShadow: "0 0 30px hsl(var(--primary) / 0.3)" } : { borderColor: "var(--border)" }}
                   >
                     <Icon className="h-4 w-4" />
                     <span className="hidden sm:inline">{tab.label}</span>
@@ -1547,54 +1549,55 @@ const TradingGuidePage = () => {
                 </div>
 
                 <div className="mt-8">
-                  <article className="rounded-[16px] bg-[#0f1826] border border-white/10 px-6 py-8 sm:px-10 lg:px-14">
+                  <article className="rounded-[16px] border px-6 py-8 sm:px-10 lg:px-14" style={{ background: "hsl(var(--card))", borderColor: "var(--border)" }}>
                     <div className="mx-auto max-w-3xl">
                       <div className="mb-2 flex items-center gap-2">
-                        <div className="h-1 w-1 rounded-full bg-[#1c81f8]"/>
-                        <span className="text-xs font-bold uppercase tracking-widest text-[#1c81f8]">Guide</span>
+                        <div className="h-1 w-1 rounded-full" style={{ background: "hsl(var(--primary))" }}/>
+                        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "hsl(var(--primary))" }}>Guide</span>
                       </div>
                       <h1 className="text-4xl sm:text-5xl font-bold leading-[1.1] tracking-tight text-white mt-2">
                         {selectedContent.heading}
                       </h1>
-                      <p className="mt-6 text-lg leading-relaxed text-gray-400">{selectedContent.intro}</p>
+                      <p className="mt-6 text-lg leading-relaxed text-muted-foreground">{selectedContent.intro}</p>
                       {selectedContent.paragraphs?.map((paragraph) => (
-                        <p key={paragraph} className="mt-4 text-base leading-relaxed text-gray-400">{paragraph}</p>
+                        <p key={paragraph} className="mt-4 text-base leading-relaxed text-muted-foreground">{paragraph}</p>
                       ))}
                       {selectedContent.bullets?.length ? (
                         <ul className="mt-7 space-y-3">
                           {selectedContent.bullets.map((bullet) => (
-                            <li key={bullet} className="flex gap-3 text-base leading-relaxed text-gray-400">
-                              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#1c81f8] flex-shrink-0" />
+                            <li key={bullet} className="flex gap-3 text-base leading-relaxed text-muted-foreground">
+                              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
                               <span>{bullet}</span>
                             </li>
                           ))}
                         </ul>
                       ) : null}
                       {selectedContent.note ? (
-                        <div className="mt-8 rounded-[12px] border border-[#FFB800]/30 bg-[#FFFAEB] px-6 py-4 text-base font-medium leading-7 text-[#B8860B] flex items-start gap-3">
-                          <div className="mt-1 h-1.5 w-1.5 rounded-full bg-[#FFB800] shrink-0 flex-shrink-0"/>
+                        <div className="mt-8 rounded-[12px] border px-6 py-4 text-base font-medium leading-7 flex items-start gap-3" style={{ background: "hsl(var(--primary) / 0.1)", borderColor: "hsl(var(--primary) / 0.3)", color: "hsl(var(--primary) / 0.9)" }}>
+                          <div className="mt-1 h-1.5 w-1.5 rounded-full shrink-0 flex-shrink-0" style={{ background: "hsl(var(--primary))" }}/>
                           <div><span className="font-semibold">Note:</span> {selectedContent.note}</div>
                         </div>
                       ) : null}
                       {selectedContent.figure ? (
                         <figure className="mt-8">
                           <GuideMockup title={selectedContent.figure.title} mediaUrl={guideMedia[selectedContent.figure.variant]} />
-                          <figcaption className="mt-3 text-sm italic text-gray-400">{selectedContent.figure.caption}</figcaption>
+                          <figcaption className="mt-3 text-sm italic text-muted-foreground">{selectedContent.figure.caption}</figcaption>
                         </figure>
                       ) : null}
                       {selectedContent.secondaryFigure ? (
                         <figure className="mt-8">
                           <GuideMockup title={selectedContent.secondaryFigure.title} mediaUrl={guideMedia[selectedContent.secondaryFigure.variant]} />
-                          <figcaption className="mt-3 text-sm italic text-gray-400">{selectedContent.secondaryFigure.caption}</figcaption>
+                          <figcaption className="mt-3 text-sm italic text-muted-foreground">{selectedContent.secondaryFigure.caption}</figcaption>
                         </figure>
                       ) : null}
                       {selectedContent.video ? (
                         <VideoPreview title={selectedContent.video.title} duration={selectedContent.video.duration} mediaUrl={selectedContent.video.image === "trading" ? guideMedia.videoTrading : guideMedia.videoMobile} />
                       ) : null}
-                      <div className="mt-10 flex flex-col sm:flex-row gap-3 pt-8 border-t border-white/10">
+                      <div className="mt-10 flex flex-col sm:flex-row gap-3 pt-8 border-t" style={{ borderColor: "var(--border)" }}>
                         {previousTopic ? (
                           <button type="button" onClick={() => selectTopic(previousTopic.id)}
-                            className="group flex-1 rounded-[10px] border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-semibold text-gray-400 hover:bg-white/10 hover:border-white/20 transition-all duration-300 flex items-center gap-2 hover:text-white"
+                            className="group flex-1 rounded-[10px] border bg-white/5 px-5 py-3.5 text-sm font-semibold text-muted-foreground hover:bg-white/10 transition-all duration-300 flex items-center gap-2 hover:text-white"
+                            style={{ borderColor: "var(--border)" }}
                           >
                             <ArrowRight className="h-4 w-4 rotate-180 transition-transform group-hover:-translate-x-1" />
                             <div className="text-left">
@@ -1605,10 +1608,11 @@ const TradingGuidePage = () => {
                         ) : <div />}
                         {nextTopic ? (
                           <button type="button" onClick={() => selectTopic(nextTopic.id)}
-                            className="group flex-1 rounded-[10px] border border-[#1c81f8]/50 bg-[#1c81f8]/10 px-5 py-3.5 text-sm font-semibold text-[#1c81f8] hover:bg-[#1c81f8]/20 hover:border-[#1c81f8] transition-all duration-300 flex items-center gap-2 justify-end"
+                            className="group flex-1 rounded-[10px] border px-5 py-3.5 text-sm font-semibold hover:brightness-110 transition-all duration-300 flex items-center gap-2 justify-end"
+                            style={{ background: "hsl(var(--primary) / 0.1)", borderColor: "hsl(var(--primary) / 0.5)", color: "hsl(var(--primary))" }}
                           >
                             <div className="text-left sm:text-right">
-                              <div className="text-xs text-[#1c81f8]/70 mb-0.5">Next</div>
+                              <div className="text-xs mb-0.5" style={{ color: "hsl(var(--primary) / 0.7)" }}>Next</div>
                               <div>{nextTopic.number}. {nextTopic.title}</div>
                             </div>
                             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -1621,7 +1625,7 @@ const TradingGuidePage = () => {
               </>
             ) : null}
 
-            <footer className="mt-16 pt-8 border-t border-white/10 flex flex-wrap justify-center gap-6 text-xs text-gray-400">
+            <footer className="mt-16 pt-8 border-t flex flex-wrap justify-center gap-6 text-xs text-muted-foreground" style={{ borderColor: "var(--border)" }}>
               {[
                 ["About us", "/about"],
                 ["Help", "/trading-guide"],
@@ -1631,7 +1635,7 @@ const TradingGuidePage = () => {
                 ["Payment policy", "/terms"],
                 ["Information disclosure", "/risk-disclaimer"],
               ].map(([label, to]) => (
-                <Link key={label} to={to} className="hover:text-[#1c81f8] transition-colors duration-200">
+                <Link key={label} to={to} className="hover:text-white transition-colors duration-200">
                   {label}
                 </Link>
               ))}
