@@ -281,9 +281,9 @@ const AuditLogs = () => {
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border shadow-lg\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-surface)\" }}>
-        <div className=\"border-b p-4\" style={{ borderColor: \"var(--admin-border)\", background: \"var(--admin-surface)\" }}>
-          <div className=\"flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between\">
+      <div className="overflow-hidden rounded-2xl border shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+        <div className="border-b p-4" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className=\"relative w-full max-w-sm\">
               <Search className=\"pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400\" />
               <input
