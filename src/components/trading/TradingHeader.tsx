@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
-import { CheckCircle2, ChevronDown, Plus, TrendingDown, Shield } from "lucide-react";
-import { useStaffAccess } from "@/hooks/useStaffAccess";
+import { CheckCircle2, ChevronDown, Plus, TrendingDown } from "lucide-react";
 import { AccountType, AccountDropdown } from "./AccountModals";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -81,7 +80,6 @@ const TradingHeader = ({
   const [chartLayoutMode, setChartLayoutMode] = useState<ChartLayoutMode>(() => loadChartLayoutMode());
   const chartLayoutMenuRef = useRef<HTMLDivElement | null>(null);
   const { profile } = useAuth();
-  const { isStaff } = useStaffAccess();
   const { vip } = useVip();
   const { formatMoney } = useCurrency();
   const { logoUrl, platformName, initials } = useSiteBranding();
@@ -263,16 +261,6 @@ const TradingHeader = ({
           )}
         </button>
 
-        {isStaff && (
-          <button
-            onClick={() => navigate("/admin")}
-            className="flex h-[34px] shrink-0 items-center gap-1 rounded-lg px-2.5 text-[12px] font-bold text-white"
-            style={{ background: "var(--trading-control-bg)", border: "1px solid var(--trading-control-border)" }}
-            title={t("tradingHeader.adminPanel")}
-          >
-            <Shield className="h-3.5 w-3.5" /> {t("tradingHeader.admin")}
-          </button>
-        )}
       </div>
 
       <div className="hidden lg:flex flex-1 min-w-0 items-stretch justify-between gap-3">
@@ -492,17 +480,6 @@ const TradingHeader = ({
           >
             {t("tradingHeader.withdrawal")}
           </button>
-
-          {isStaff && (
-            <button
-              onClick={() => navigate("/admin")}
-              className="flex h-[38px] items-center gap-1.5 rounded px-3 text-[13px] font-bold text-white xl:px-4"
-              style={{ background: "var(--trading-control-bg)", border: "1px solid var(--trading-control-border)" }}
-              title={t("tradingHeader.adminPanel")}
-            >
-              <Shield className="h-3.5 w-3.5" /> {t("tradingHeader.admin")}
-            </button>
-          )}
         </div>
       </div>
     </header>
