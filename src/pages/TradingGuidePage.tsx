@@ -32,7 +32,7 @@ import TradingHeader from "@/components/trading/TradingHeader";
 import type { AccountType, KycDocumentsLike } from "@/components/trading/AccountModals";
 import { ProfileDrawer, type ProfileTab } from "@/components/profile/ProfileDrawer";
 import { ProfileTourProvider } from "@/contexts/ProfileTourContext";
-import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import TradingRouteProviders from "@/components/TradingRouteProviders";
 import { useAuth } from "@/contexts/AuthContext";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import {
@@ -1343,7 +1343,7 @@ const TradingGuidePage = () => {
   const showSidebar = activePanel === "guides";
 
   return (
-    <CurrencyProvider>
+    <TradingRouteProviders>
     <ProfileTourProvider>
     <div className="trading-terminal h-[100dvh] flex flex-col overflow-hidden font-sans text-white" style={{ background: "var(--trading-workspace-bg)" }}>
       <TradingHeader
@@ -1641,7 +1641,7 @@ const TradingGuidePage = () => {
       </div>
     </div>
     </ProfileTourProvider>
-    </CurrencyProvider>
+    </TradingRouteProviders>
   );
 };
 
