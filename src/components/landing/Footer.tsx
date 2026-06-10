@@ -133,11 +133,11 @@ const Footer = ({ content }: FooterProps) => {
   ] as const;
 
   return (
-    <footer className="relative overflow-hidden border-t border-white/8 bg-[#1c1f2d] py-12 sm:py-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.06),transparent_24%)]" />
+    <footer className="relative overflow-hidden border-t py-12 sm:py-16" style={{ borderColor: "var(--border)", background: "hsl(var(--background))" }}>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--primary))_0_0.06,transparent_24%)]" />
       <div className="relative px-[70px]">
         <div className="flex flex-col gap-10">
-          <div className="flex flex-col gap-8 border-b border-white/8 pb-10 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex flex-col gap-8 border-b pb-10 lg:flex-row lg:items-start lg:justify-between" style={{ borderColor: "var(--border)" }}>
             <div className="max-w-xl">
               <SiteLogo
                 to="/"
@@ -154,7 +154,7 @@ const Footer = ({ content }: FooterProps) => {
                 {(socialLinks.title?.trim() || socialLinks.subtitle?.trim()) ? (
                   <div className="mb-4 lg:text-right">
                     {socialLinks.title?.trim() ? (
-                      <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em] text-[#1c81f8]">
+                      <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em]" style={{ color: "hsl(var(--primary))" }}>
                         {socialLinks.title}
                       </div>
                     ) : null}
@@ -178,9 +178,12 @@ const Footer = ({ content }: FooterProps) => {
                         rel="noreferrer"
                         aria-label={`Open ${label}`}
                         title={label}
-                        className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-white/72 transition-colors hover:border-[#1c81f8]/40 hover:bg-[#1c81f8]/12 hover:text-[#1c81f8]"
+                        className="inline-flex h-12 w-12 items-center justify-center rounded-full border transition-colors"
+                        style={{ borderColor: "var(--border)", background: "hsla(var(--card), 0.5)", color: "hsl(var(--muted-foreground))", '--hover-bg': 'hsla(var(--primary), 0.12)', '--hover-border': 'hsla(var(--primary), 0.4)', '--hover-color': 'hsl(var(--primary))' } as any}
+                        onMouseEnter={e => { (e.target as any).style.borderColor = 'hsla(var(--primary), 0.4)'; (e.target as any).style.background = 'hsla(var(--primary), 0.12)'; (e.target as any).style.color = 'hsl(var(--primary))'; }}
+                        onMouseLeave={e => { (e.target as any).style.borderColor = 'var(--border)'; (e.target as any).style.background = 'hsla(var(--card), 0.5)'; (e.target as any).style.color = 'hsl(var(--muted-foreground))'; }}
                       >
-                        <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${isWhatsApp ? "text-[#25D366]" : ""}`} strokeWidth={2.25} />
+                        <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${isWhatsApp ? 'text-[#25D366]' : ''}`} strokeWidth={2.25} />
                       </a>
                     );
                   })}

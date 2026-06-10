@@ -10,7 +10,7 @@ const HeroSection = () => {
   const hero = websiteContent.hero;
 
   return (
-    <section className="relative overflow-hidden bg-[#182838] pt-16">
+    <section className="relative overflow-hidden pt-16" style={{ background: "hsl(var(--background))" }}>
 
       <div className="relative px-[70px] pb-12 pt-10 text-center sm:pb-16 sm:pt-20 lg:pb-24 lg:pt-32">
         <motion.h1
