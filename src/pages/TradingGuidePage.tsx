@@ -31,6 +31,7 @@ import { NavigationSidebar, type WorkspaceModule } from "@/components/navigation
 import TradingHeader from "@/components/trading/TradingHeader";
 import type { AccountType, KycDocumentsLike } from "@/components/trading/AccountModals";
 import { ProfileDrawer, type ProfileTab } from "@/components/profile/ProfileDrawer";
+import { ProfileTourProvider } from "@/contexts/ProfileTourContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import {
@@ -1341,6 +1342,7 @@ const TradingGuidePage = () => {
   const showSidebar = activePanel === "guides";
 
   return (
+    <ProfileTourProvider>
     <div className="trading-terminal h-[100dvh] flex flex-col overflow-hidden font-sans text-white" style={{ background: "var(--trading-workspace-bg)" }}>
       <TradingHeader
         balance={currentBalance}
@@ -1636,6 +1638,7 @@ const TradingGuidePage = () => {
         </main>
       </div>
     </div>
+    </ProfileTourProvider>
   );
 };
 
