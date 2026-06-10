@@ -7,7 +7,7 @@ const DeviceMockups = () => {
       <div className="pointer-events-none absolute inset-0 bg-gradient-hero opacity-50" />
       <div className="container relative z-10 mx-auto px-4">
         <div className="mb-16 text-center">
-          <span className="text-xs font-medium uppercase tracking-wider text-primary">
+          <span className="text-xs font-medium uppercase tracking-wider text-[hsl(var(--landing-primary))]">
             Multi-Device
           </span>
           <h2 className="mt-3 mb-4 font-display text-3xl font-bold sm:text-4xl">
@@ -24,7 +24,7 @@ const DeviceMockups = () => {
               <div className="flex items-center gap-2 border-b border-border/50 bg-secondary/50 px-4 py-2.5">
                 <div className="flex gap-1.5">
                   <div className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-primary/40" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-[hsl(var(--landing-primary))]/40" />
                   <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
                 </div>
                 <div className="mx-4 flex-1">
@@ -54,7 +54,7 @@ const DeviceMockups = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <span className="rounded bg-primary/10 px-2 py-0.5 text-[9px] font-medium text-primary">
+                    <span className="rounded bg-[hsl(var(--landing-primary))]/10 px-2 py-0.5 text-[9px] font-medium text-[hsl(var(--landing-primary))]">
                       92%
                     </span>
                     <span className="text-[9px] text-muted-foreground">Demo</span>
@@ -65,7 +65,7 @@ const DeviceMockups = () => {
                   <div className="flex-1 rounded-lg border border-border/30 bg-secondary/30 p-2">
                     <div className="mb-1 flex items-center justify-between">
                       <span className="text-[9px] font-medium text-foreground">EUR/USD</span>
-                      <span className="text-[9px] font-bold text-primary">1.08452</span>
+                      <span className="text-[9px] font-bold text-[hsl(var(--landing-primary))]">1.08452</span>
                     </div>
                     <CandlestickChart width={440} height={160} candleCount={30} />
                   </div>
@@ -73,7 +73,7 @@ const DeviceMockups = () => {
                   <div className="w-28 space-y-2">
                     <div className="rounded-lg border border-border/30 bg-secondary/30 p-2">
                       <span className="mb-1 block text-[8px] text-muted-foreground">Payout</span>
-                      <span className="text-sm font-bold text-primary">+95%</span>
+                      <span className="text-sm font-bold text-[hsl(var(--landing-primary))]">+95%</span>
                     </div>
                     <div className="rounded-lg border border-border/30 bg-secondary/30 p-2">
                       <span className="mb-1 block text-[8px] text-muted-foreground">Investment</span>
@@ -84,7 +84,7 @@ const DeviceMockups = () => {
                       <span className="text-xs font-bold text-foreground">01:00</span>
                     </div>
                     <div className="grid grid-cols-2 gap-1">
-                      <button className="rounded bg-primary py-1.5 text-[9px] font-bold text-primary-foreground">
+                      <button className="rounded bg-[hsl(var(--landing-primary))] py-1.5 text-[9px] font-bold text-[hsl(var(--landing-primary-foreground))]">
                         Higher
                       </button>
                       <button className="rounded bg-destructive py-1.5 text-[9px] font-bold text-foreground">
@@ -121,7 +121,7 @@ const DeviceMockups = () => {
                     </div>
                     <span className="text-[8px] font-semibold text-foreground">EUR/USD</span>
                   </div>
-                  <span className="text-[8px] font-bold text-primary">92%</span>
+                  <span className="text-[8px] font-bold text-[hsl(var(--landing-primary))]">92%</span>
                 </div>
 
                 <div className="mb-2 rounded-lg border border-border/30 bg-secondary/30 p-1.5">
@@ -140,7 +140,7 @@ const DeviceMockups = () => {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-1">
-                    <button className="rounded-lg bg-primary py-2 text-[8px] font-bold text-primary-foreground">
+                    <button className="rounded-lg bg-[hsl(var(--landing-primary))] py-2 text-[8px] font-bold text-[hsl(var(--landing-primary-foreground))]">
                       Higher
                     </button>
                     <button className="rounded-lg bg-destructive py-2 text-[8px] font-bold text-foreground">

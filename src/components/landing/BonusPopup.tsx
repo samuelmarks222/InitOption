@@ -20,7 +20,7 @@ type PublicBonusSettings = {
 const FloatingCoin = ({ className }: { className?: string }) => (
   <div
     className={cn(
-      "absolute flex h-11 w-11 items-center justify-center rounded-full border border-[#e5e7eb] bg-[radial-gradient(circle_at_30%_30%,#ffffff_0%,#1c81f8_42%,#dbeafe_100%)] shadow-[0_10px_24px_rgba(28,129,248,0.22)]",
+      "absolute flex h-11 w-11 items-center justify-center rounded-full border border-[hsl(var(--landing-border))] bg-[radial-gradient(circle_at_30%_30%,#ffffff_0%,hsl(var(--landing-primary))_42%,hsl(var(--landing-surface))_100%)] shadow-[0_10px_24px_hsla(var(--landing-primary),0.16)]",
       className,
     )}
   >
@@ -31,7 +31,7 @@ const FloatingCoin = ({ className }: { className?: string }) => (
 const FloatingBill = ({ className }: { className?: string }) => (
   <div
     className={cn(
-      "absolute h-16 w-24 rounded-xl border border-[#1c81f8]/60 bg-[linear-gradient(180deg,#1c81f8_0%,#dbeafe_100%)] p-2 shadow-[0_18px_30px_rgba(28,129,248,0.18)]",
+      "absolute h-16 w-24 rounded-xl border border-[hsla(var(--landing-primary),0.6)] bg-[linear-gradient(180deg,hsl(var(--landing-primary))_0%,hsl(var(--landing-surface))_100%)] p-2 shadow-[0_18px_30px_hsla(var(--landing-primary),0.16)]",
       className,
     )}
   >
@@ -47,8 +47,8 @@ const FloatingBill = ({ className }: { className?: string }) => (
 
 const PromoIllustration = () => (
   <div className="relative mx-auto h-[222px] w-full max-w-[330px] sm:h-[248px]">
-    <div className="absolute left-1/2 top-7 h-24 w-24 -translate-x-1/2 rounded-full bg-[#1c81f8]/10 blur-[46px]" />
-    <div className="absolute left-1/2 top-12 h-32 w-40 -translate-x-1/2 rounded-full bg-[#1c81f8]/10 blur-[56px]" />
+    <div className="absolute left-1/2 top-7 h-24 w-24 -translate-x-1/2 rounded-full bg-[hsla(var(--landing-primary),0.1)] blur-[46px]" />
+    <div className="absolute left-1/2 top-12 h-32 w-40 -translate-x-1/2 rounded-full bg-[hsla(var(--landing-primary),0.1)] blur-[56px]" />
 
     <FloatingCoin className="left-[20%] top-1 h-9 w-9" />
     <FloatingCoin className="right-[16%] top-[76px] h-10 w-10" />
@@ -65,26 +65,26 @@ const PromoIllustration = () => (
       <div className="absolute -bottom-3 left-6 h-16 w-20 rounded-[30px] bg-[linear-gradient(180deg,#e8ecf4_0%,#f5f6fa_100%)] shadow-[0_10px_14px_rgba(0,0,0,0.04)]" />
     </div>
 
-    <div className="absolute left-1/2 top-[40px] flex h-[144px] w-[98px] -translate-x-1/2 flex-col rounded-[22px] border-[4px] border-[#e5e7eb] bg-white px-3 pb-3 pt-3 shadow-[0_18px_32px_rgba(0,0,0,0.06)]">
-      <div className="mx-auto mb-2 h-1.5 w-12 rounded-full bg-[#e5e7eb]" />
+    <div className="absolute left-1/2 top-[40px] flex h-[144px] w-[98px] -translate-x-1/2 flex-col rounded-[22px] border-[4px] border-[hsl(var(--landing-border))] bg-white px-3 pb-3 pt-3 shadow-[0_18px_32px_rgba(0,0,0,0.06)]">
+      <div className="mx-auto mb-2 h-1.5 w-12 rounded-full bg-[#a9e2dd]" />
       <div className="mb-3 flex items-center gap-2">
-        <div className="h-4 w-4 rounded-full bg-[#1c81f8]" />
+        <div className="h-4 w-4 rounded-full bg-[hsl(var(--landing-primary))]" />
         <div className="h-1.5 w-6 rounded-full bg-[#0f1419]/50" />
       </div>
       <div className="flex flex-1 items-end gap-1">
-        <div className="h-9 w-1.5 rounded-full bg-[#1c81f8]" />
+        <div className="h-9 w-1.5 rounded-full bg-[hsl(var(--landing-primary))]" />
         <div className="h-[3.25rem] w-1.5 rounded-full bg-[#0f1419]/40" />
-        <div className="h-8 w-1.5 rounded-full bg-[#1c81f8]" />
+        <div className="h-8 w-1.5 rounded-full bg-[hsl(var(--landing-primary))]" />
         <div className="h-5 w-1.5 rounded-full bg-[#0f1419]/40" />
-        <div className="h-11 w-1.5 rounded-full bg-[#1c81f8]" />
+        <div className="h-11 w-1.5 rounded-full bg-[hsl(var(--landing-primary))]" />
         <div className="h-7 w-1.5 rounded-full bg-[#0f1419]/40" />
       </div>
       <div className="relative mt-2 h-8">
-        <div className="absolute left-2 top-5 h-1 w-12 rounded-full bg-[#1c81f8]/75" />
-        <TrendingUp className="absolute left-1 top-0 h-8 w-12 text-[#1c81f8]" strokeWidth={2.8} />
+        <div className="absolute left-2 top-5 h-1 w-12 rounded-full bg-[hsl(var(--landing-primary))]/75" />
+        <TrendingUp className="absolute left-1 top-0 h-8 w-12 text-[hsl(var(--landing-primary))]" strokeWidth={2.8} />
       </div>
       <div className="mt-auto space-y-1">
-        <div className="ml-auto flex w-fit items-center rounded-full bg-[#1c81f8] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.12em] text-white">
+        <div className="ml-auto flex w-fit items-center rounded-full bg-[hsl(var(--landing-primary))] px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.12em] text-white">
           Buy
         </div>
         <div className="ml-auto flex w-fit items-center rounded-full bg-[#0f1419]/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.12em] text-[#0f1419]">
@@ -106,7 +106,7 @@ const BenefitRow = ({
 
   return (
     <div className="flex items-start gap-4 text-left">
-      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-[#e5e7eb] bg-[#f8f9fc] text-[#536471]">
+      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-[hsl(var(--landing-border))] bg-[#f8f9fc] text-[#536471]">
         <Icon className="h-4.5 w-4.5" />
       </div>
       <p className="font-landing-copy text-[16px] leading-[1.25] text-[#0f1419] sm:text-[18px]">{children}</p>
@@ -175,11 +175,11 @@ const BonusPopup = ({ enabled = true }: BonusPopupProps) => {
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/38 backdrop-blur-[10px] data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
 
         <DialogPrimitive.Content
-          className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,620px)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] border border-[#e5e7eb] bg-white font-landing-copy text-[#0f1419] shadow-[0_30px_100px_rgba(0,0,0,0.08)] outline-none data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+          className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,620px)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] border border-[hsl(var(--landing-border))] bg-white font-landing-copy text-[#0f1419] shadow-[0_30px_100px_rgba(0,0,0,0.08)] outline-none data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
         >
-          <div className="absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(28,129,248,0.04)_0%,rgba(255,255,255,0)_100%)]" />
-          <div className="absolute left-1/2 top-16 h-32 w-[56%] -translate-x-1/2 rounded-full bg-[#1c81f8]/10 blur-[76px]" />
-          <div className="absolute bottom-5 left-1/2 h-16 w-[50%] -translate-x-1/2 rounded-full bg-[#1c81f8]/10 blur-[48px]" />
+          <div className="absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,hsla(var(--landing-primary),0.16)_0%,rgba(255,255,255,0)_100%)]" />
+          <div className="absolute left-1/2 top-16 h-32 w-[56%] -translate-x-1/2 rounded-full bg-[hsla(var(--landing-primary),0.1)] blur-[76px]" />
+          <div className="absolute bottom-5 left-1/2 h-16 w-[50%] -translate-x-1/2 rounded-full bg-[hsla(var(--landing-primary),0.1)] blur-[48px]" />
 
           <DialogPrimitive.Close asChild>
             <button
@@ -211,7 +211,7 @@ const BonusPopup = ({ enabled = true }: BonusPopupProps) => {
               <Link
                 to="/register"
                 onClick={() => handleOpenChange(false)}
-                className="mt-6 inline-flex w-full items-center justify-center rounded-[16px] border border-[#1c81f8] bg-[#1c81f8] px-6 py-4 text-center font-landing-copy text-[18px] font-black text-[#ffffff] shadow-[0_20px_32px_rgba(28,129,248,0.22)] transition hover:bg-[#1c81f8] hover:brightness-[1.03] sm:mt-7"
+                className="mt-6 inline-flex w-full items-center justify-center rounded-[16px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-6 py-4 text-center font-landing-copy text-[18px] font-black text-[#ffffff] shadow-[0_20px_32px_hsla(var(--landing-primary),0.16)] transition hover:bg-[hsl(var(--landing-primary))] hover:brightness-[1.03] sm:mt-7"
               >
                 Get Bonus
               </Link>

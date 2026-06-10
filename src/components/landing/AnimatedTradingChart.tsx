@@ -131,7 +131,7 @@ const AnimatedTradingChart = () => {
       data.forEach((candle, index) => {
         const x = toX(index);
         const isUp = candle.close >= candle.open;
-        const color = isUp ? "#1c81f8" : "#e85b4e";
+        const color = isUp ? "#1cd793" : "#e85b4e";
 
         context.strokeStyle = color;
         context.lineWidth = 1;
@@ -165,7 +165,7 @@ const AnimatedTradingChart = () => {
       const badgeX = Math.min(lastX + 6, width - badgeWidth - 4);
       context.beginPath();
       context.roundRect(badgeX, lastY - 11, badgeWidth, 22, 6);
-      context.fillStyle = "#1c81f8";
+      context.fillStyle = "#1cd793";
       context.fill();
       context.fillStyle = "#ffffff";
       context.font = width < 380 ? "700 9px Sora, sans-serif" : "700 11px Sora, sans-serif";
@@ -278,31 +278,31 @@ const AnimatedTradingChart = () => {
               transition={{ duration: 0.3 }}
               className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border px-2 py-1 text-[9px] font-medium transition-colors sm:text-xs ${
                 index === activePairIndex
-                  ? "border-[#1c81f8]/30 bg-[#1c81f8]/10 text-[#1c81f8]"
+                  ? "border-[hsla(var(--landing-primary),0.3)] bg-[hsla(var(--landing-primary),0.1)] text-[hsl(var(--landing-primary))]"
                   : "border-transparent text-[#9aaec9] hover:text-white"
               }`}
               type="button"
             >
               <span>{pair.name}</span>
-              <span className="text-[#1c81f8]">{pair.payout}</span>
+              <span className="text-[hsl(var(--landing-primary))]">{pair.payout}</span>
             </motion.button>
           ))}
         </div>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <div className="hidden items-center gap-1.5 rounded-md border border-[#1c81f8]/18 bg-[#1c81f8]/10 px-2.5 py-1 sm:flex">
+          <div className="hidden items-center gap-1.5 rounded-md border border-[hsla(var(--landing-primary),0.18)] bg-[hsla(var(--landing-primary),0.1)] px-2.5 py-1 sm:flex">
             <span className="text-[10px] text-[#9aaec9]">Balance:</span>
             <motion.span
               key={balance.toFixed(2)}
               initial={{ y: -8, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="font-mono text-xs font-bold text-[#1c81f8]"
+              className="font-mono text-xs font-bold text-[hsl(var(--landing-primary))]"
             >
               ${balance.toFixed(2)}
             </motion.span>
           </div>
           <div className="flex items-center gap-1.5 text-[9px] text-[#9aaec9] sm:gap-2 sm:text-[10px]">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#1c81f8]" />
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[hsl(var(--landing-primary))]" />
             LIVE
           </div>
         </div>
@@ -312,12 +312,12 @@ const AnimatedTradingChart = () => {
         <div className="relative flex-1 min-h-[198px] sm:min-h-[320px]">
           <canvas ref={canvasRef} className="h-[198px] w-full sm:h-[320px]" style={{ display: "block" }} />
 
-          <div className="absolute left-2 top-2 rounded-full border border-[#1c81f8]/20 bg-[#1a2538]/90 px-2 py-1 text-[9px] font-semibold text-[#1c81f8] backdrop-blur min-[430px]:hidden">
+          <div className="absolute left-2 top-2 rounded-full border border-[hsla(var(--landing-primary),0.2)] bg-[#1a2538]/90 px-2 py-1 text-[9px] font-semibold text-[hsl(var(--landing-primary))] backdrop-blur min-[430px]:hidden">
             52% higher
           </div>
 
           <div className="absolute left-3 top-1/4 hidden flex-col items-center gap-0.5 min-[430px]:flex">
-            <div className="text-[10px] font-bold text-[#1c81f8]">HIGHER</div>
+            <div className="text-[10px] font-bold text-[hsl(var(--landing-primary))]">HIGHER</div>
             <div className="text-[9px] text-[#9aaec9]">52%</div>
             <div className="my-1 flex flex-col gap-0.5">
               {Array.from({ length: 5 }).map((_, index) => (
@@ -325,7 +325,7 @@ const AnimatedTradingChart = () => {
                   key={`up-${index}`}
                   animate={{ opacity: [0.4, 0.8, 0.4] }}
                   transition={{ duration: 1.5, delay: index * 0.15, repeat: Infinity }}
-                  className="h-2 w-3 rotate-45 bg-[#1c81f8]/80"
+                  className="h-2 w-3 rotate-45 bg-[hsl(var(--landing-primary))]/80"
                 />
               ))}
             </div>
@@ -349,7 +349,7 @@ const AnimatedTradingChart = () => {
                 initial={{ opacity: 0, scale: 0.5, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.5, y: -20 }}
-                className="absolute left-1/2 top-3 flex max-w-[78vw] -translate-x-1/2 items-center gap-1.5 rounded-full bg-[#1c81f8] px-3 py-1.5 text-[10px] font-bold text-white shadow-[0_18px_36px_rgba(28,129,248,0.24)] sm:top-4 sm:max-w-none sm:gap-2 sm:px-4 sm:text-sm"
+                className="absolute left-1/2 top-3 flex max-w-[78vw] -translate-x-1/2 items-center gap-1.5 rounded-full bg-[hsl(var(--landing-primary))] px-3 py-1.5 text-[10px] font-bold text-white shadow-[0_18px_36px_hsla(var(--landing-primary),0.16)] sm:top-4 sm:max-w-none sm:gap-2 sm:px-4 sm:text-sm"
               >
                 WIN STREAK {winStreak}
               </motion.div>
@@ -368,8 +368,8 @@ const AnimatedTradingChart = () => {
                 <div
                   className={`flex flex-col items-center gap-1 rounded-xl px-4 py-3 text-sm font-bold shadow-2xl sm:px-8 sm:py-4 sm:text-xl ${
                     showTradeResult.result === "win"
-                      ? "bg-[#1c81f8] text-white shadow-[0_20px_40px_rgba(28,129,248,0.24)]"
-                      : "border border-[#e5e7eb] bg-white text-[#0f1419] shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
+                      ? "bg-[hsl(var(--landing-primary))] text-white shadow-[0_20px_40px_hsla(var(--landing-primary),0.16)]"
+                      : "border border-[hsl(var(--landing-border))] bg-white text-[#0f1419] shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
                   }`}
                 >
                   <span>{showTradeResult.result === "win" ? "TRADE WON" : "TRADE LOST"}</span>
@@ -386,34 +386,34 @@ const AnimatedTradingChart = () => {
             )}
           </AnimatePresence>
 
-          <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-md border border-[#e5e7eb] bg-white/90 px-2 py-1 backdrop-blur sm:bottom-3 sm:right-20 sm:px-2.5">
+          <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-md border border-[hsl(var(--landing-border))] bg-white/90 px-2 py-1 backdrop-blur sm:bottom-3 sm:right-20 sm:px-2.5">
             <span className="text-[9px] text-[#536471]">Profit:</span>
             <motion.span
               key={totalProfit.toFixed(2)}
               initial={{ scale: 1.3 }}
               animate={{ scale: 1 }}
-              className="font-mono text-[11px] font-bold text-[#1c81f8]"
+              className="font-mono text-[11px] font-bold text-[hsl(var(--landing-primary))]"
             >
               +${totalProfit.toFixed(2)}
             </motion.span>
           </div>
         </div>
 
-        <div className="flex w-full flex-col gap-2.5 border-t border-[#e5e7eb] bg-[#f8f9fc] p-2.5 sm:gap-3 sm:p-4 lg:w-[220px] lg:border-l lg:border-t-0">
+        <div className="flex w-full flex-col gap-2.5 border-t border-[hsl(var(--landing-border))] bg-[#f8f9fc] p-2.5 sm:gap-3 sm:p-4 lg:w-[220px] lg:border-l lg:border-t-0">
           <div className="flex items-center justify-between">
             <div className="flex min-w-0 items-center gap-1.5">
               <span className="truncate text-xs font-bold text-[#0f1419] sm:text-sm">{activePair.name}</span>
-              <span className="text-[10px] font-semibold text-[#1c81f8] sm:text-xs">{activePair.payout}</span>
+              <span className="text-[10px] font-semibold text-[hsl(var(--landing-primary))] sm:text-xs">{activePair.payout}</span>
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-md border border-[#1c81f8]/18 bg-[#1c81f8]/10 px-2.5 py-1.5 sm:hidden">
+          <div className="flex items-center justify-between rounded-md border border-[hsla(var(--landing-primary),0.18)] bg-[hsla(var(--landing-primary),0.1)] px-2.5 py-1.5 sm:hidden">
             <span className="text-[10px] text-[#536471]">Balance</span>
             <motion.span
               key={balance.toFixed(2)}
               initial={{ y: -5, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="font-mono text-xs font-bold text-[#1c81f8]"
+              className="font-mono text-xs font-bold text-[hsl(var(--landing-primary))]"
             >
               ${balance.toFixed(2)}
             </motion.span>
@@ -422,22 +422,22 @@ const AnimatedTradingChart = () => {
           <div className="grid gap-2 min-[390px]:grid-cols-2 lg:grid-cols-1">
             <div className="space-y-1.5">
               <div className="text-[10px] text-[#536471]">Time</div>
-              <div className="flex items-center justify-between rounded-lg border border-[#e5e7eb] bg-white px-3 py-1.5">
+              <div className="flex items-center justify-between rounded-lg border border-[hsl(var(--landing-border))] bg-white px-3 py-1.5">
                 <span className="text-[10px] text-[#536471]">-</span>
                 <span className="font-mono text-xs font-bold text-[#0f1419] sm:text-sm">00:01:00</span>
                 <span className="text-[10px] text-[#536471]">+</span>
               </div>
               <div className="text-center">
-                <span className="text-[9px] font-medium text-[#1c81f8]">SWITCH TIME</span>
+                <span className="text-[9px] font-medium text-[hsl(var(--landing-primary))]">SWITCH TIME</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-[#536471]">Investment</span>
-                <span className="text-[9px] font-medium text-[#1c81f8]">SWITCH</span>
+                <span className="text-[9px] font-medium text-[hsl(var(--landing-primary))]">SWITCH</span>
               </div>
-              <div className="flex items-center justify-between rounded-lg border border-[#e5e7eb] bg-white px-3 py-1.5">
+              <div className="flex items-center justify-between rounded-lg border border-[hsl(var(--landing-border))] bg-white px-3 py-1.5">
                 <span className="text-[10px] text-[#536471]">-</span>
                 <motion.span
                   key={investment}
@@ -464,15 +464,15 @@ const AnimatedTradingChart = () => {
                   ? {
                       scale: [1, 0.92, 1],
                       boxShadow: [
-                        "0 0 0px rgba(28,129,248,0)",
-                        "0 0 20px rgba(28,129,248,0.4)",
-                        "0 0 0px rgba(28,129,248,0)",
+                        "0 0 0px hsla(var(--landing-primary),0.16)",
+                        "0 0 20px hsla(var(--landing-primary),0.16)",
+                        "0 0 0px hsla(var(--landing-primary),0.16)",
                       ],
                     }
                   : {}
               }
               transition={{ duration: 0.4 }}
-              className="flex cursor-pointer items-center justify-between rounded-lg bg-[#1c81f8] px-4 py-2 text-sm font-bold text-white sm:py-2.5"
+              className="flex cursor-pointer items-center justify-between rounded-lg bg-[hsl(var(--landing-primary))] px-4 py-2 text-sm font-bold text-white sm:py-2.5"
             >
               Up <span>&uarr;</span>
             </motion.div>
@@ -490,7 +490,7 @@ const AnimatedTradingChart = () => {
                   : {}
               }
               transition={{ duration: 0.4 }}
-              className="flex cursor-pointer items-center justify-between rounded-lg border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-bold text-[#0f1419] sm:py-2.5"
+              className="flex cursor-pointer items-center justify-between rounded-lg border border-[hsl(var(--landing-border))] bg-white px-4 py-2 text-sm font-bold text-[#0f1419] sm:py-2.5"
             >
               Down <span>&darr;</span>
             </motion.div>
@@ -498,7 +498,7 @@ const AnimatedTradingChart = () => {
 
           <div className="mt-1 flex-1">
             <div className="mb-2 flex items-center gap-3 text-[10px] text-[#536471]">
-              <span className="border-b-2 border-[#1c81f8] pb-0.5 font-medium text-[#0f1419]">Trades {tradeCount}</span>
+              <span className="border-b-2 border-[hsl(var(--landing-primary))] pb-0.5 font-medium text-[#0f1419]">Trades {tradeCount}</span>
               <span>History</span>
             </div>
             <div className="max-h-[104px] space-y-1 overflow-hidden sm:max-h-[120px]">
@@ -512,14 +512,14 @@ const AnimatedTradingChart = () => {
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
                     className={`${index > 2 ? "hidden sm:flex" : "flex"} items-center justify-between rounded-md px-2 py-1.5 text-[9px] sm:text-[10px] ${
                       trade.result === "win"
-                        ? "border border-[#1c81f8]/20 bg-[#1c81f8]/10 text-[#1c81f8]"
+                        ? "border border-[hsla(var(--landing-primary),0.2)] bg-[hsla(var(--landing-primary),0.1)] text-[hsl(var(--landing-primary))]"
                         : trade.result === "loss"
-                        ? "border border-[#e5e7eb] bg-white text-[#0f1419]"
-                        : "border border-[#e5e7eb] bg-white text-[#536471]"
+                        ? "border border-[hsl(var(--landing-border))] bg-white text-[#0f1419]"
+                        : "border border-[hsl(var(--landing-border))] bg-white text-[#536471]"
                     }`}
                   >
                     <span className="flex items-center gap-1">
-                      <span className={trade.direction === "up" ? "text-[#1c81f8]" : "text-[#536471]"}>
+                      <span className={trade.direction === "up" ? "text-[hsl(var(--landing-primary))]" : "text-[#536471]"}>
                         {trade.direction === "up" ? "\u25B2" : "\u25BC"}
                       </span>
                       <span className="font-medium">{trade.pair}</span>

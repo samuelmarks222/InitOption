@@ -34,7 +34,7 @@ const TestimonialsSection = () => {
 
   return (
     <section id="reviews" className="relative overflow-hidden bg-[#f5f7fa] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(28,129,248,0.04),transparent_24%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsla(var(--landing-primary),0.16),transparent_24%)]" />
       <div className="px-[70px]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -42,7 +42,7 @@ const TestimonialsSection = () => {
           viewport={{ once: true }}
           className="mb-16 text-center"
         >
-          <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-primary">
+          <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-[hsl(var(--landing-primary))]">
             Trader Rating - {review.rating}/5
           </span>
           <h2 className="font-heading text-3xl font-bold text-[#0f1419] sm:text-4xl">
@@ -59,16 +59,16 @@ const TestimonialsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="rounded-[26px] border border-[#e5e7eb] bg-white p-6 shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
+              className="rounded-[26px] border border-[hsl(var(--landing-border))] bg-white p-6 shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
             >
               <div className="mb-4 flex gap-1">
                 {Array.from({ length: 5 }).map((_, starIndex) => (
-                  <Star key={starIndex} size={14} className="fill-[#1c81f8] text-[#1c81f8]" />
+                  <Star key={starIndex} size={14} className="fill-[hsl(var(--landing-primary))] text-[hsl(var(--landing-primary))]" />
                 ))}
               </div>
               <p className="mb-6 text-base leading-8 text-[#536471]">"{testimonial.text}"</p>
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1c81f8]/10 font-heading text-sm font-bold text-[#1c81f8]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsla(var(--landing-primary),0.1)] font-heading text-sm font-bold text-[hsl(var(--landing-primary))]">
                   {testimonial.initials}
                 </div>
                 <div>

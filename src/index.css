@@ -35,6 +35,12 @@
     --input: 227 25.5% 18.4%;
     --ring: 212 94% 54%;
 
+    --landing-primary: 158 77% 48%;   /* #1cd793 */
+    --landing-primary-foreground: 0 0% 100%;
+    --landing-secondary: 197 39% 26%; /* #284d5c */
+    --landing-border: 175 50% 77%;    /* #a9e2dd */
+    --landing-surface: 173 52% 94%;   /* #e6f7f5 */
+
     --radius: 0.375rem;
 
     /* Trading specific colors */
@@ -299,12 +305,12 @@
   .admin-theme-light [class*="linear-gradient(180deg,#1a1e2b"] { background-image: linear-gradient(180deg, var(--admin-surface) 0%, var(--admin-input) 100%) !important; }
 
   .text-gradient-primary {
-    color: #1c81f8;
-    background: linear-gradient(135deg, #ffffff 0%, #1c81f8 100%);
+    color: hsl(var(--landing-primary));
+    background: linear-gradient(135deg, #ffffff 0%, hsl(var(--landing-primary)) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: 0 0 18px rgba(28, 129, 248, 0.18);
+    text-shadow: 0 0 18px hsla(var(--landing-primary), 0.18);
   }
 
   .quotex-glow-home {
@@ -1094,7 +1100,7 @@
   }
 
   .landing-theme-accent {
-    background: linear-gradient(180deg, #1c81f8 0%, #1565c0 100%);
+    background: linear-gradient(180deg, hsl(var(--landing-primary)) 0%, hsl(var(--landing-secondary)) 100%);
   }
 
   .landing-neo-card {
@@ -1137,9 +1143,9 @@
     inset: 0;
     pointer-events: none;
     background:
-      radial-gradient(circle at 18% 12%, rgba(28, 129, 248, 0.12), transparent 24%),
-      radial-gradient(circle at 82% 16%, rgba(30, 35, 48, 0.16), transparent 22%),
-      radial-gradient(circle at 50% 120%, rgba(28, 31, 45, 0.18), transparent 34%);
+      radial-gradient(circle at 18% 12%, hsla(var(--landing-primary), 0.12), transparent 24%),
+      radial-gradient(circle at 82% 16%, hsla(var(--landing-secondary), 0.16), transparent 22%),
+      radial-gradient(circle at 50% 120%, hsla(var(--landing-surface), 0.18), transparent 34%);
   }
 
   .landing-clone-theme {
@@ -1165,14 +1171,14 @@
   }
 
   .text-gradient-gold {
-    background: linear-gradient(135deg, #1c81f8, #1565c0);
+    background: linear-gradient(135deg, hsl(var(--landing-primary)), hsl(var(--landing-secondary)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .bg-gradient-gold {
-    background: linear-gradient(135deg, #1c81f8, #1565c0);
+    background: linear-gradient(135deg, hsl(var(--landing-primary)), hsl(var(--landing-secondary)));
   }
 
   .bg-gradient-card {
@@ -1180,11 +1186,11 @@
   }
 
   .bg-gradient-hero {
-    background: radial-gradient(ellipse at 50% 0%, rgb(28 129 248 / 0.12) 0%, transparent 60%);
+    background: radial-gradient(ellipse at 50% 0%, hsla(var(--landing-primary), 0.12) 0%, transparent 60%);
   }
 
   .shadow-gold {
-    box-shadow: 0 0 40px -10px rgb(28 129 248 / 0.3);
+    box-shadow: 0 0 40px -10px hsla(var(--landing-primary), 0.3);
   }
 
   .shadow-card {

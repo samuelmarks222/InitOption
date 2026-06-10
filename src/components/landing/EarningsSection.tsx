@@ -21,7 +21,7 @@ const EarningsSection = () => {
           viewport={{ once: true }}
           className="mb-16 text-center"
         >
-          <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-primary">
+          <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-[hsl(var(--landing-primary))]">
             Earnings
           </span>
           <h2 className="font-heading text-3xl font-bold text-[#0f1419] sm:text-4xl">
@@ -33,7 +33,7 @@ const EarningsSection = () => {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative mx-auto max-w-xl rounded-[28px] border border-[#e5e7eb] bg-white p-8 shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
+          className="relative mx-auto max-w-xl rounded-[28px] border border-[hsl(var(--landing-border))] bg-white p-8 shadow-[0_1px_6px_rgba(0,0,0,0.04)]"
         >
           <div className="mb-8">
             <div className="mb-2 flex items-center justify-between">
@@ -46,7 +46,7 @@ const EarningsSection = () => {
               min={10}
               max={5000}
               step={10}
-              className="[&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary [&_.relative>div]:bg-primary"
+              className="[&_[role=slider]]:bg-[hsl(var(--landing-primary))] [&_[role=slider]]:border-[hsl(var(--landing-primary))] [&_.relative>div]:bg-[hsl(var(--landing-primary))]"
             />
           </div>
 
@@ -61,13 +61,13 @@ const EarningsSection = () => {
               min={50}
               max={95}
               step={1}
-              className="[&_[role=slider]]:bg-primary [&_[role=slider]]:border-primary [&_.relative>div]:bg-primary"
+              className="[&_[role=slider]]:bg-[hsl(var(--landing-primary))] [&_[role=slider]]:border-[hsl(var(--landing-primary))] [&_.relative>div]:bg-[hsl(var(--landing-primary))]"
             />
           </div>
 
-          <div className="rounded-[22px] border border-[#1c81f8]/24 bg-[#1c81f8]/10 p-6 text-center">
+          <div className="rounded-[22px] border border-[hsl(var(--landing-primary))]/24 bg-[hsla(var(--landing-primary),0.1)] p-6 text-center">
             <p className="text-xs text-[#536471]">Estimated monthly return</p>
-            <p className="mt-1 font-heading text-4xl font-bold text-[#1c81f8]">
+            <p className="mt-1 font-heading text-4xl font-bold text-[hsl(var(--landing-primary))]">
               ${estimated.toLocaleString()}
             </p>
             <p className="mt-2 text-xs text-[#536471]">
@@ -75,7 +75,7 @@ const EarningsSection = () => {
             </p>
           </div>
 
-          <Button className="group mt-6 w-full gap-2 border border-[#1c81f8] bg-[#1c81f8] font-semibold text-[#ffffff] shadow-[0_8px_24px_rgba(28,129,248,0.25)] transition-all duration-300 hover:shadow-[0_8px_40px_rgba(28,129,248,0.4)] hover:brightness-110" size="lg" asChild>
+          <Button className="group mt-6 w-full gap-2 border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] font-semibold text-[#ffffff] shadow-[0_8px_24px_hsla(var(--landing-primary),0.16)] transition-all duration-300 hover:shadow-[0_8px_40px_hsla(var(--landing-primary),0.16)] hover:brightness-110" size="lg" asChild>
             <Link to="/register" className="flex items-center gap-2">
               Start Trading Today
               <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />

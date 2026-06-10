@@ -116,12 +116,12 @@ const Sparkline = ({ points, positive }: { points: number[]; positive: boolean }
     <svg viewBox={`0 0 ${width} ${height}`} className="h-24 w-full sm:h-28" aria-hidden="true">
       <polygon
         points={`0,${height} ${linePoints} ${width},${height}`}
-        fill={positive ? "rgba(28,129,248,0.12)" : "rgba(255,255,255,0.06)"}
+        fill={positive ? "hsla(var(--landing-primary),0.16)" : "rgba(255,255,255,0.06)"}
       />
       <polyline
         points={linePoints}
         fill="none"
-        stroke="#1c81f8"
+        stroke="hsl(var(--landing-primary))"
         strokeWidth="3.2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -187,7 +187,7 @@ const WhatWeOfferSection = () => {
 
   return (
     <section className="relative overflow-hidden py-16 sm:py-24" style={{ background: "hsl(var(--background))" }}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,hsl(var(--primary))_0_0.05,transparent_24%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,hsl(var(--landing-primary))_0_0.05,transparent_24%)]" />
 
       <div className="relative px-[70px]">
         <motion.div
@@ -215,7 +215,7 @@ const WhatWeOfferSection = () => {
         >
           <Button
             size="lg"
-            className="group h-11 rounded-[10px] border border-[#1c81f8] bg-[#1c81f8] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_32px_rgba(28,129,248,0.3)] transition-all duration-300 hover:shadow-[0_8px_48px_rgba(28,129,248,0.45)] hover:brightness-110 sm:h-12 sm:px-8 sm:text-sm"
+            className="group h-11 rounded-[10px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_32px_hsla(var(--landing-primary),0.16)] transition-all duration-300 hover:shadow-[0_8px_48px_hsla(var(--landing-primary),0.16)] hover:brightness-110 sm:h-12 sm:px-8 sm:text-sm"
             asChild
           >
             <Link to="/register">Start Trading</Link>
@@ -281,7 +281,7 @@ const WhatWeOfferSection = () => {
                           {formatAssetPrice(asset.price)}
                         </div>
                       </div>
-                      <span className="rounded-full border px-3 py-1.5 font-copy text-[10px] font-extrabold uppercase tracking-[0.16em]" style={{ borderColor: "hsl(var(--primary))", color: "hsl(var(--primary))", background: "transparent" }}>
+                      <span className="rounded-full border px-3 py-1.5 font-copy text-[10px] font-extrabold uppercase tracking-[0.16em]" style={{ borderColor: "hsl(var(--landing-primary))", color: "hsl(var(--landing-primary))", background: "transparent" }}>
                         {asset.label}
                       </span>
                     </div>
@@ -293,7 +293,7 @@ const WhatWeOfferSection = () => {
                         Current trend
                       </div>
                       <div className="mt-2.5 flex items-center gap-2 sm:mt-3">
-                        <span className={`flex h-6 w-6 items-center justify-center rounded-md border sm:h-7 sm:w-7 ${positive ? "" : ""}`} style={positive ? { borderColor: "hsl(var(--primary))", background: "hsl(var(--primary))" } : { borderColor: "var(--border)", background: "hsl(var(--card))" }}>
+                        <span className={`flex h-6 w-6 items-center justify-center rounded-md border sm:h-7 sm:w-7 ${positive ? "" : ""}`} style={positive ? { borderColor: "hsl(var(--landing-primary))", background: "hsl(var(--landing-primary))" } : { borderColor: "var(--border)", background: "hsl(var(--card))" }}>
                           <TrendIcon className={`h-4 w-4 ${positive ? "text-white" : "text-muted-foreground"}`} />
                         </span>
                         <span className="font-display text-[1.55rem] font-bold leading-none text-white sm:text-[2rem]">
@@ -310,7 +310,7 @@ const WhatWeOfferSection = () => {
                     </div>
 
                     <Button
-                      className="group mt-4 h-10 rounded-[10px] border border-[#1c81f8] bg-[#1c81f8] font-copy text-[11px] font-extrabold uppercase tracking-[0.06em] text-[#ffffff] shadow-[0_4px_20px_rgba(28,129,248,0.25)] transition-all duration-300 hover:shadow-[0_8px_32px_rgba(28,129,248,0.4)] hover:brightness-110 sm:mt-6 sm:h-11 sm:text-sm"
+                      className="group mt-4 h-10 rounded-[10px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] font-copy text-[11px] font-extrabold uppercase tracking-[0.06em] text-[#ffffff] shadow-[0_4px_20px_hsla(var(--landing-primary),0.16)] transition-all duration-300 hover:shadow-[0_8px_32px_hsla(var(--landing-primary),0.16)] hover:brightness-110 sm:mt-6 sm:h-11 sm:text-sm"
                       asChild
                     >
                       <Link to="/register">Trade</Link>
@@ -328,7 +328,7 @@ const WhatWeOfferSection = () => {
           viewport={{ once: true }}
           className="mt-8 grid gap-4 sm:mt-10 lg:grid-cols-[1.1fr_0.9fr]"
         >
-          <div className="rounded-[24px] border border-[#e5e7eb] bg-white p-5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[28px] sm:p-6">
+          <div className="rounded-[24px] border border-[hsl(var(--landing-border))] bg-white p-5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[28px] sm:p-6">
             <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em] text-[#536471]">
               {markets.actionCardTitle}
             </div>
@@ -337,17 +337,17 @@ const WhatWeOfferSection = () => {
             </p>
           </div>
 
-          <div className="rounded-[24px] border border-[#e5e7eb] bg-white p-5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[28px] sm:p-6">
+          <div className="rounded-[24px] border border-[hsl(var(--landing-border))] bg-white p-5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] sm:rounded-[28px] sm:p-6">
             <div className="grid gap-3 sm:grid-cols-2">
               <button
                 type="button"
-                className="rounded-[14px] border border-[#1c81f8] bg-[#1c81f8] px-4 py-3.5 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-white shadow-[0_16px_28px_rgba(28,129,248,0.24)] sm:px-5 sm:py-4 sm:text-sm"
+                className="rounded-[14px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-4 py-3.5 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-white shadow-[0_16px_28px_hsla(var(--landing-primary),0.16)] sm:px-5 sm:py-4 sm:text-sm"
               >
                 {markets.upButtonLabel}
               </button>
               <button
                 type="button"
-                className="rounded-[14px] border border-[#1c81f8] bg-[#1c81f8] px-4 py-3.5 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_24px_rgba(28,129,248,0.25)] sm:px-5 sm:py-4 sm:text-sm"
+                className="rounded-[14px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-4 py-3.5 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_24px_hsla(var(--landing-primary),0.16)] sm:px-5 sm:py-4 sm:text-sm"
               >
                 {markets.downButtonLabel}
               </button>

@@ -39,7 +39,7 @@ const HeroSection = () => {
         >
           <Button
             size="lg"
-            className="group relative h-11 w-full max-w-xs rounded-[12px] border border-[#1c81f8] bg-[#1c81f8] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_32px_rgba(28,129,248,0.3)] transition-all duration-300 hover:shadow-[0_8px_48px_rgba(28,129,248,0.45)] hover:brightness-110 sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
+            className="group relative h-11 w-full max-w-xs rounded-[12px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-6 font-copy text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_32px_hsla(var(--landing-primary),0.16)] transition-all duration-300 hover:shadow-[0_8px_48px_hsla(var(--landing-primary),0.16)] hover:brightness-110 sm:h-12 sm:w-auto sm:max-w-none sm:px-7 sm:text-sm"
             asChild
           >
             <Link to="/register">

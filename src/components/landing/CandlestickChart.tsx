@@ -114,7 +114,7 @@ const CandlestickChart = ({
               y1={toY(candle.high)}
               x2={wickX}
               y2={toY(candle.low)}
-              stroke={bullish ? "hsl(var(--primary))" : "hsl(var(--destructive))"}
+              stroke={bullish ? "hsl(var(--landing-primary))" : "hsl(var(--destructive))"}
               strokeWidth="1"
               opacity={0.7}
             />
@@ -124,7 +124,7 @@ const CandlestickChart = ({
               width={candleWidth - gap}
               height={bodyHeight}
               rx={1}
-              fill={bullish ? "hsl(var(--primary))" : "hsl(var(--destructive))"}
+              fill={bullish ? "hsl(var(--landing-primary))" : "hsl(var(--destructive))"}
               opacity={bullish ? 0.9 : 0.75}
             />
           </g>
@@ -135,7 +135,7 @@ const CandlestickChart = ({
         key={`line-${tick}`}
         points={priceLinePoints}
         fill="none"
-        stroke="hsl(var(--primary))"
+        stroke="hsl(var(--landing-primary))"
         strokeWidth="1.5"
         opacity={0.3}
         strokeLinejoin="round"
@@ -148,7 +148,7 @@ const CandlestickChart = ({
             y1={toY(candles[candles.length - 1].close)}
             x2={width - padding}
             y2={toY(candles[candles.length - 1].close)}
-            stroke="hsl(var(--primary))"
+            stroke="hsl(var(--landing-primary))"
             strokeWidth="1"
             strokeDasharray="3 2"
           />
@@ -158,14 +158,14 @@ const CandlestickChart = ({
             width={36}
             height={16}
             rx={3}
-            fill="hsl(var(--primary))"
+            fill="hsl(var(--landing-primary))"
           />
           <text
             x={width - padding + 16}
             y={toY(candles[candles.length - 1].close) + 3}
             textAnchor="middle"
             fontSize="7"
-            fill="hsl(var(--primary-foreground))"
+            fill="hsl(var(--landing-primary-foreground))"
             fontFamily="Inter, sans-serif"
             fontWeight="600"
           >

@@ -18,7 +18,7 @@ interface HeroProps {
 }
 
 const MARKET_CHIPS = [
-  { label: "EUR/USD", tone: "text-[#1c81f8] bg-[#e9f0ff] border-[#bed4f0]" },
+  { label: "EUR/USD", tone: "text-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-surface))] border-[hsl(var(--landing-border))]" },
   { label: "BTC/USD", tone: "text-[#6f4d00] bg-[#fff4d7] border-[#f3d792]" },
   { label: "Gold", tone: "text-[#4850c8] bg-[#eef0ff] border-[#cfd4ff]" },
 ];

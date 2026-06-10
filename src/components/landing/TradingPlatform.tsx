@@ -163,7 +163,7 @@ const TradingPlatform = ({ content }: TradingPlatformProps) => {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <article className="landing-neo-card rounded-[30px] p-5">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[#eaf8f1] text-[#1c81f8]">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[#eaf8f1] text-[hsl(var(--landing-primary))]">
                     <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div className="font-landing-display mt-5 text-2xl font-semibold tracking-[-0.05em] text-[#17131a]">

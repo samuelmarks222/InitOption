@@ -28,7 +28,7 @@ const Navbar = () => {
             <a
               key={link.label}
               href={link.href}
-              className="relative font-copy text-base font-medium text-white transition-colors hover:text-[#cbd6e6] lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[#1c81f8] after:transition-all after:duration-300 hover:after:w-full"
+              className="relative font-copy text-base font-medium text-white transition-colors hover:text-[#cbd6e6] lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[hsl(var(--landing-primary))] after:transition-all after:duration-300 hover:after:w-full"
             >
               {link.label}
             </a>
@@ -47,7 +47,7 @@ const Navbar = () => {
             </Button>
             <Button
               size="sm"
-              className="h-8 rounded-full border border-[#1c81f8] bg-[#1c81f8] px-2.5 text-xs font-semibold text-white shadow-[0_4px_20px_rgba(28,129,248,0.35)] transition-all duration-300 hover:shadow-[0_8px_32px_rgba(28,129,248,0.5)] hover:brightness-110 min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
+              className="h-8 rounded-full border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-2.5 text-xs font-semibold text-white shadow-[0_4px_20px_hsla(var(--landing-primary),0.16)] transition-all duration-300 hover:shadow-[0_8px_32px_hsla(var(--landing-primary),0.16)] hover:brightness-110 min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
               asChild
             >
               <Link to="/register">Sign Up</Link>

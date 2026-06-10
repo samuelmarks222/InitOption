@@ -18,7 +18,7 @@ const MobileSection = () => {
 
   return (
     <section className="relative overflow-hidden bg-[#f5f7fa] py-16 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(28,129,248,0.05),transparent_20%),radial-gradient(circle_at_82%_18%,rgba(102,126,234,0.04),transparent_20%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,hsla(var(--landing-primary),0.16),transparent_20%),radial-gradient(circle_at_82%_18%,rgba(102,126,234,0.04),transparent_20%)]" />
       <div className="px-[70px]">
         <div className="flex flex-col items-center gap-8 sm:gap-12 lg:flex-row">
           <motion.div
@@ -27,7 +27,7 @@ const MobileSection = () => {
             viewport={{ once: true }}
             className="order-2 flex-1 lg:order-1"
           >
-            <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-primary">
+            <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-[hsl(var(--landing-primary))]">
               {mobile.installLabel}
             </span>
             <h2 className="font-heading text-2xl font-bold text-[#0f1419] sm:text-4xl">
@@ -40,15 +40,15 @@ const MobileSection = () => {
             <ul className="mt-4 space-y-2 sm:mt-6 sm:space-y-3">
               {features.map((feature) => (
                 <li key={feature} className="flex items-center gap-3 text-sm text-[#536471] sm:text-base">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <Check size={12} className="text-primary" />
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--landing-primary))]/10">
+                    <Check size={12} className="text-[hsl(var(--landing-primary))]" />
                   </div>
                   {feature}
                 </li>
               ))}
             </ul>
 
-            <Button className="group mt-6 w-full gap-2 border border-[#1c81f8] bg-[#1c81f8] font-semibold text-[#ffffff] shadow-[0_8px_24px_rgba(28,129,248,0.25)] transition-all duration-300 hover:shadow-[0_8px_40px_rgba(28,129,248,0.4)] hover:brightness-110 sm:mt-8 sm:w-auto" size="lg" asChild>
+            <Button className="group mt-6 w-full gap-2 border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] font-semibold text-[#ffffff] shadow-[0_8px_24px_hsla(var(--landing-primary),0.16)] transition-all duration-300 hover:shadow-[0_8px_40px_hsla(var(--landing-primary),0.16)] hover:brightness-110 sm:mt-8 sm:w-auto" size="lg" asChild>
               <Link to="/register" className="flex items-center gap-2">
                 Open live account
                 <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
@@ -62,7 +62,7 @@ const MobileSection = () => {
             viewport={{ once: true }}
             className="order-1 flex flex-1 justify-center lg:order-2"
           >
-            <div className="animate-float rounded-[34px] border border-[#e5e7eb] bg-white p-4 shadow-[0_1px_6px_rgba(0,0,0,0.04)]">
+            <div className="animate-float rounded-[34px] border border-[hsl(var(--landing-border))] bg-white p-4 shadow-[0_1px_6px_rgba(0,0,0,0.04)]">
               <img
                 src={mobileTrading}
                 alt="Mobile trading interface showing two phones with Init Option charts"
