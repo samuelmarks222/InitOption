@@ -17,7 +17,7 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 border-b shadow-[0_12px_32px_hsla(var(--landing-secondary),0.2)] backdrop-blur-2xl" style={{ borderColor: "var(--border)", background: "hsla(var(--background), 0.95)" }}>
+    <nav className="fixed left-0 right-0 top-0 z-50 shadow-[0_12px_32px_hsla(var(--landing-secondary),0.2)] backdrop-blur-2xl" style={{ background: "hsla(var(--background), 0.95)" }}>
       <div className="flex h-16 items-center justify-between gap-4 px-[70px] sm:h-20 sm:gap-6">
         <Link to="/" className="shrink-0 flex items-center gap-2">
           <img src={logo} alt="Init Option" className="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11" />
@@ -68,7 +68,7 @@ const Navbar = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="border-t border-[hsl(var(--landing-secondary))]/40 bg-[hsl(var(--landing-secondary))] px-4 pb-4 pt-2 md:hidden"
+          className="bg-[hsl(var(--landing-secondary))] px-4 pb-4 pt-2 md:hidden"
         >
           {navLinks.map((link) => (
             <a
