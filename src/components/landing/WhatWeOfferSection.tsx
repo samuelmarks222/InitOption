@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AssetSymbolMark from "@/components/trading/AssetSymbolMark";
+import AssetTicker from "./AssetTicker";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 import { ASSETS_LIBRARY, type MasterAsset } from "@/data/assetsLibrary";
 import { getAssetBasePrice, type AssetCategory } from "@/lib/assets";
@@ -141,6 +142,8 @@ const WhatWeOfferSection = () => {
             ))}
           </div>
         </div>
+
+        <AssetTicker />
 
         <div className="grid gap-6 xl:grid-cols-5 lg:grid-cols-2 md:grid-cols-2">
           {selectedAssets.map((asset, index) => {
