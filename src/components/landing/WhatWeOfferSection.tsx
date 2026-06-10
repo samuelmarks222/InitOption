@@ -9,43 +9,12 @@ import { getAssetBasePrice, type AssetCategory } from "@/lib/assets";
 import { getDeterministicChange24h, getDeterministicPriceAt } from "@/lib/deterministicMarket";
 import { clampAssetPayout, getDynamicAssetPayoutProfile } from "@/lib/assets";
 
-const MARKET_CATEGORIES = [
-  {
-    id: "forex",
-    label: "Forex",
-    symbols: ["EUR/USD", "GBP/USD", "AUD/USD", "CAD/USD", "USD/JPY"],
-  },
-  {
-    id: "crypto",
-    label: "Crypto CFDs",
-    symbols: ["BTC", "ETH", "BNB", "SOL", "XRP"],
-  },
-  {
-    id: "share",
-    label: "Share CFDs",
-    symbols: ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"],
-  },
-  {
-    id: "commodities",
-    label: "Commodities",
-    symbols: ["XAU/USD", "XAG/USD", "WTICO/USD", "BRENT/USD", "NATGAS/USD"],
-  },
-  {
-    id: "metals",
-    label: "Spot Metals",
-    symbols: ["XAU/USD", "XAG/USD", "COPPER", "PALLADIUM", "PLATINUM"],
-  },
-  {
-    id: "energies",
-    label: "Energies",
-    symbols: ["WTICO/USD", "BRENT/USD", "NATGAS/USD", "COPPER", "XAU/USD"],
-  },
-  {
-    id: "indices",
-    label: "Indices",
-    symbols: ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA"],
-  },
-];
+const CATEGORY_LABELS: Record<string, string> = {
+  OTC: "Currencies",
+  CRYPTO: "Crypto",
+  COMMODITIES: "Commodities",
+  STOCKS: "Stocks",
+};
 
 const PRICE_SPREADS = [15, 13, 12, 9, 17];
 
@@ -82,61 +51,60 @@ type ShowcaseAsset = {
   commodityIcon?: MasterAsset["commodity_icon"];
 };
 
-const buildCategoryAssets = (symbols: string[]) => {
-  const assetMap = new Map(ASSETS_LIBRARY.map((asset) => [asset.symbol, asset]));
-
-  return symbols
-    .map((symbol) => assetMap.get(symbol))
-    .filter((asset): asset is MasterAsset => Boolean(asset));
+const buildCategoryAssets = (categoryKey: string) => {
+  return ASSETS_LIBRARY.filter((a) => a.category === (categoryKey as MasterAsset["category"]));
 };
 
 const WhatWeOfferSection = () => {
   const { data: websiteContent } = useWebsiteContent();
   const { markets } = websiteContent;
-  const [activeCategory, setActiveCategory] = useState(MARKET_CATEGORIES[0].id);
+
+  const availableCategories = useMemo(() => {
+    const set = Array.from(new Set(ASSETS_LIBRARY.map((a) => a.category)));
+    return set;
+  }, []);
+
+  const [activeCategory, setActiveCategory] = useState<string>(availableCategories[0] ?? "OTC");
 
   const selectedAssets = useMemo(() => {
     const nowSec = Math.floor(Date.now() / 1000);
-    const selectedCategory = MARKET_CATEGORIES.find((category) => category.id === activeCategory) ?? MARKET_CATEGORIES[0];
-    const assets = buildCategoryAssets(selectedCategory.symbols);
+    const assets = buildCategoryAssets(activeCategory).slice(0, 12);
 
-    return assets
-      .map((asset, index) => {
-        const basePrice = getAssetBasePrice(asset.symbol, asset.category);
-        const price = getDeterministicPriceAt({
-          symbol: asset.symbol,
-          basePrice,
-          timestamp: nowSec,
-          category: asset.category,
-        });
-        const change24h = getDeterministicChange24h({
-          symbol: asset.symbol,
-          basePrice,
-          timestamp: nowSec,
-          category: asset.category,
-        });
-        const { profit1m } = getDynamicAssetPayoutProfile({
-          symbol: asset.symbol,
-          category: asset.category,
-          basePayout: clampAssetPayout(undefined),
-          timestampSec: nowSec,
-          marketBiasPercent: change24h,
-        });
+    return assets.map((asset, index) => {
+      const basePrice = getAssetBasePrice(asset.symbol, asset.category as AssetCategory);
+      const price = getDeterministicPriceAt({
+        symbol: asset.symbol,
+        basePrice,
+        timestamp: nowSec,
+        category: asset.category as AssetCategory,
+      });
+      const change24h = getDeterministicChange24h({
+        symbol: asset.symbol,
+        basePrice,
+        timestamp: nowSec,
+        category: asset.category as AssetCategory,
+      });
+      const { profit1m } = getDynamicAssetPayoutProfile({
+        symbol: asset.symbol,
+        category: asset.category as AssetCategory,
+        basePayout: clampAssetPayout(undefined),
+        timestampSec: nowSec,
+        marketBiasPercent: change24h,
+      });
 
-        return {
-          symbol: asset.symbol,
-          name: asset.name,
-          category: asset.category,
-          label: activeCategory === "crypto" ? "Crypto" : asset.category === "COMMODITIES" ? "Commodity" : asset.category === "STOCKS" ? "Stock" : "Forex",
-          price,
-          change24h,
-          maxProfit: profit1m,
-          spread: PRICE_SPREADS[index % PRICE_SPREADS.length],
-          stockLogo: asset.stock_logo,
-          commodityIcon: asset.commodity_icon,
-        } as const;
-      })
-      .slice(0, 5);
+      return {
+        symbol: asset.symbol,
+        name: asset.name,
+        category: asset.category as AssetCategory,
+        label: CATEGORY_LABELS[asset.category] ?? asset.category,
+        price,
+        change24h,
+        maxProfit: profit1m,
+        spread: PRICE_SPREADS[index % PRICE_SPREADS.length],
+        stockLogo: asset.stock_logo,
+        commodityIcon: asset.commodity_icon,
+      } as const;
+    });
   }, [activeCategory]);
 
   return (
@@ -157,18 +125,18 @@ const WhatWeOfferSection = () => {
 
         <div className="mb-10 overflow-hidden rounded-full border border-white/10 bg-white/5 p-1 shadow-[0_18px_50px_rgba(0,0,0,0.16)]">
           <div className="flex flex-wrap items-center justify-center gap-2 px-2 py-2">
-            {MARKET_CATEGORIES.map((category) => (
+            {availableCategories.map((categoryKey) => (
               <button
-                key={category.id}
+                key={categoryKey}
                 type="button"
-                onClick={() => setActiveCategory(category.id)}
+                onClick={() => setActiveCategory(categoryKey)}
                 className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
-                  activeCategory === category.id
+                  activeCategory === categoryKey
                     ? "bg-[hsl(var(--landing-primary))] text-black shadow-[0_8px_20px_rgba(28,215,147,0.18)]"
                     : "text-white/70 hover:text-white"
                 }`}
               >
-                {category.label}
+                {CATEGORY_LABELS[categoryKey] ?? categoryKey}
               </button>
             ))}
           </div>
