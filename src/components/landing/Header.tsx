@@ -39,9 +39,10 @@ const Header = () => {
         <div
           className={`mx-auto max-w-7xl rounded-[30px] transition-all duration-300 ${
             scrolled
-              ? "border-[#284d5c]/50 bg-[#284d5c] shadow-[0_24px_70px_rgba(40,77,92,0.22)]"
+              ? "bg-[#284d5c] shadow-[0_24px_70px_rgba(40,77,92,0.22)]"
               : "bg-[#284d5c] shadow-[0_18px_48px_rgba(40,77,92,0.16)] backdrop-blur-xl"
           }`}
+          style={{ border: "none" }}
         >
           <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
             <div className="flex min-w-0 flex-1 items-center gap-4">
