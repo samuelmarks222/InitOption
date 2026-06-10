@@ -199,7 +199,7 @@ export const TournamentDetailOverlay = ({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[760px] rounded-[16px] border border-[#47577b] bg-[linear-gradient(180deg,#2d3650_0%,#273149_100%)] p-5 shadow-[0_26px_60px_rgba(3,6,12,0.65)] sm:p-7"
+        className="w-full max-w-[min(920px,calc(100vw-2rem))] max-h-[calc(100vh-3rem)] overflow-y-auto rounded-[16px] border border-[#47577b] bg-[linear-gradient(180deg,#2d3650_0%,#273149_100%)] p-5 shadow-[0_26px_60px_rgba(3,6,12,0.65)] sm:p-7"
         onClick={(event) => event.stopPropagation()}
       >
         {loading || !tournament ? (
