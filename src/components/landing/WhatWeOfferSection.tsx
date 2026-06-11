@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import AssetTicker from "./AssetTicker";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 import { ASSETS_LIBRARY, type MasterAsset } from "@/data/assetsLibrary";
+import { getAssetBasePrice, type AssetCategory } from "@/lib/assets";
+import { getDeterministicChange24h, getDeterministicPriceAt } from "@/lib/deterministicMarket";
 
 const CATEGORY_LABELS: Record<string, string> = {
   OTC: "Currencies",
@@ -41,6 +43,8 @@ type ShowcaseAsset = {
   price: number;
   change24h: number;
   maxProfit: number;
+  ask: string;
+  bid: string;
   stockLogo?: string | null;
   commodityIcon?: MasterAsset["commodity_icon"];
 };
@@ -59,6 +63,42 @@ const WhatWeOfferSection = () => {
   }, []);
 
   const [activeCategory, setActiveCategory] = useState<string>(availableCategories[0] ?? "OTC");
+
+  const selectedAssets = useMemo(() => {
+    const nowSec = Math.floor(Date.now() / 1000);
+    const assets = buildCategoryAssets(activeCategory).slice(0, 8);
+
+    return assets.map((asset, index) => {
+      const basePrice = getAssetBasePrice(asset.symbol, asset.category as AssetCategory);
+      const price = getDeterministicPriceAt({
+        symbol: asset.symbol,
+        basePrice,
+        timestamp: nowSec,
+        category: asset.category as AssetCategory,
+      });
+      const change24h = getDeterministicChange24h({
+        symbol: asset.symbol,
+        basePrice,
+        timestamp: nowSec,
+        category: asset.category as AssetCategory,
+      });
+      const quote = calculateQuoteValues(price, PRICE_SPREADS[index % PRICE_SPREADS.length]);
+
+      return {
+        symbol: asset.symbol,
+        name: asset.name,
+        category: asset.category as AssetCategory,
+        label: CATEGORY_LABELS[asset.category] ?? asset.category,
+        price,
+        change24h,
+        maxProfit: Math.max(65, Math.min(95, Math.round(70 + change24h * 2))),
+        ask: quote.ask,
+        bid: quote.bid,
+        stockLogo: asset.stock_logo,
+        commodityIcon: asset.commodity_icon,
+      } as const;
+    });
+  }, [activeCategory]);
 
   return (
     <section className="relative overflow-hidden py-16 sm:py-24" style={{ background: "#0f172a" }}>
@@ -95,7 +135,7 @@ const WhatWeOfferSection = () => {
           </div>
         </div>
 
-        <AssetTicker />
+        <AssetTicker assets={selectedAssets} />
       </div>
     </section>
   );

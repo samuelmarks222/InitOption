@@ -1,42 +1,34 @@
-import React, { useEffect, useMemo, useCallback, useState } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
 import { Button } from "@/components/ui/button";
 import AssetSymbolMark from "@/components/trading/AssetSymbolMark";
-import { ASSETS_LIBRARY, type MasterAsset } from "@/data/assetsLibrary";
-
-const BINARY_CATEGORIES = ["CRYPTO", "COMMODITIES", "STOCKS"];
-
-const hashString = (value: string) => {
-  let hash = 2166136261;
-  for (let i = 0; i < value.length; i += 1) {
-    hash ^= value.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-};
-
-const selectCarouselAssets = () => {
-  const filtered = ASSETS_LIBRARY.filter((asset) => BINARY_CATEGORIES.includes(asset.category));
-  const seed = new Date().toISOString().slice(0, 10);
-  return filtered
-    .slice()
-    .sort((a, b) => hashString(`${seed}:${a.symbol}`) - hashString(`${seed}:${b.symbol}`))
-    .slice(0, 12);
-};
+import { type MasterAsset } from "@/data/assetsLibrary";
 
 const formatDuration = (seconds: number) => `${seconds}s`;
-const randomPayout = (symbol: string) => 65 + (hashString(symbol) % 31);
-const randomDuration = (symbol: string) => {
-  const choices = [30, 60, 120, 300];
-  return choices[hashString(`${symbol}-duration`) % choices.length];
-};
-const isLive = (symbol: string) => hashString(`${symbol}-status`) % 2 === 0;
-const directionUp = (symbol: string) => hashString(`${symbol}-dir`) % 2 === 0;
+const randomPayout = (symbol: string) => 65 + (symbol.length % 31);
+const isLive = (symbol: string) => symbol.length % 2 === 0;
+const directionUp = (symbol: string) => symbol.charCodeAt(0) % 2 === 0;
 const availabilityLabel = (symbol: string) => (isLive(symbol) ? "Open" : "Closed");
 
-const AssetTicker: React.FC = () => {
-  const assets = useMemo(() => selectCarouselAssets(), []);
+type LandingAsset = {
+  symbol: string;
+  name: string;
+  category: string;
+  ask: string;
+  bid: string;
+  spread: number;
+  price: number;
+  change24h: number;
+  maxProfit: number;
+  stockLogo?: string | null;
+  commodityIcon?: MasterAsset["commodity_icon"];
+};
+
+// no-op placeholder until the landing section passes asset props
+const selectCarouselAssets = () => [] as LandingAsset[];
+
+const AssetTicker: React.FC<{ assets: LandingAsset[] }> = ({ assets }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
     align: "start",
@@ -78,8 +70,10 @@ const AssetTicker: React.FC = () => {
         <div className="overflow-hidden" ref={emblaRef}>
           <div className="flex items-stretch">
             {assets.map((asset) => (
-              <div key={asset.symbol} className="min-w-full flex-shrink-0 px-2 sm:px-3">
-                <TickerCard asset={asset} />
+              <div key={asset.symbol} className="min-w-full flex-shrink-0 px-2 sm:px-4 lg:px-6">
+                <div className="mx-auto max-w-[42rem]">
+                  <TickerCard asset={asset} />
+                </div>
               </div>
             ))}
           </div>
@@ -103,9 +97,8 @@ const AssetTicker: React.FC = () => {
   );
 };
 
-const TickerCard: React.FC<{ asset: MasterAsset }> = ({ asset }) => {
+const TickerCard: React.FC<{ asset: LandingAsset }> = ({ asset }) => {
   const payout = randomPayout(asset.symbol);
-  const duration = randomDuration(asset.symbol);
   const live = isLive(asset.symbol);
   const up = directionUp(asset.symbol);
 
@@ -127,40 +120,34 @@ const TickerCard: React.FC<{ asset: MasterAsset }> = ({ asset }) => {
           </span>
         </div>
 
-        <div className="mt-4 grid gap-3 text-sm text-slate-700">
-          <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-            <span className="text-xs uppercase text-slate-500">Payout</span>
-            <span className="font-semibold text-slate-900">{payout}%</span>
+        <div className="mt-5 grid gap-3 text-sm text-slate-700">
+          <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+            <span className="text-xs uppercase text-slate-500">Ask</span>
+            <span className="font-semibold text-slate-900">{asset.ask}</span>
           </div>
-          <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-            <span className="text-xs uppercase text-slate-500">Duration</span>
-            <span className="font-semibold text-slate-900">{formatDuration(duration)}</span>
+          <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+            <span className="text-xs uppercase text-slate-500">Bid</span>
+            <span className="font-semibold text-slate-900">{asset.bid}</span>
           </div>
-          <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-            <span className="text-xs uppercase text-slate-500">ROI</span>
-            <span className="font-semibold text-slate-900">{payout}%</span>
+          <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+            <span className="text-xs uppercase text-slate-500">Spread</span>
+            <span className="font-semibold text-slate-900">{asset.spread}</span>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between rounded-2xl bg-slate-900/5 px-3 py-2 text-sm text-slate-700">
-        <div className="flex items-center gap-2">
-          <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full ${
-            up ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-600"
-          }`}>
-            {up ? "↑" : "↓"}
-          </span>
-          <div>{up ? "Up" : "Down"}</div>
+      <div className="mt-6 grid gap-3">
+        <div className="flex items-center justify-between rounded-2xl bg-slate-900/5 px-4 py-3 text-sm text-slate-700">
+          <span className="font-semibold text-slate-900">{payout}%</span>
+          <span className="text-xs uppercase tracking-[0.18em] text-slate-500">Binary</span>
         </div>
-        <div className="text-xs uppercase tracking-[0.18em] text-slate-500">Binary</div>
+        <Button
+          className="w-full rounded-[14px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-3 py-4 text-sm font-semibold uppercase tracking-[0.08em] text-black shadow-[0_10px_30px_rgba(28,215,147,0.16)] transition hover:brightness-105"
+          asChild
+        >
+          <Link to="/trade">Trade</Link>
+        </Button>
       </div>
-
-      <Button
-        className="mt-4 w-full rounded-[14px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-3 py-3 text-sm font-semibold uppercase tracking-[0.08em] text-black shadow-[0_10px_30px_rgba(28,215,147,0.16)] transition hover:brightness-105"
-        asChild
-      >
-        <Link to="/register">Trade</Link>
-      </Button>
     </div>
   );
 };
