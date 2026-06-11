@@ -361,8 +361,7 @@ export const createDefaultWebsiteContent = (platformName = DEFAULT_PLATFORM_NAME
   },
   markets: {
     title: "Analyze real-time charts and place trades from one modern trading terminal.",
-    description:
-      `${platformName} brings asset selection, payout visibility, and expiry controls together in a clean, intuitive interface.`,
+    description: "",
     actionCardTitle: "Fast trade setup",
     actionCardText: "Choose your asset, set the amount and time, then place a higher or lower trade without leaving the chart.",
     upButtonLabel: "Higher",

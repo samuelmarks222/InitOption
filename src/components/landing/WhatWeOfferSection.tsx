@@ -212,6 +212,7 @@ const WhatWeOfferSection = () => {
                 className={`rounded-full px-5 py-2 text-base font-semibold uppercase tracking-[0.06em] transition ${
                   activeCategory === categoryKey
                     ? "bg-[hsl(var(--landing-primary))] text-black shadow-[0_10px_24px_rgba(28,215,147,0.16)]"
+                    : "border border-white/10 bg-transparent text-white/70 hover:border-white/20 hover:text-white"
                 }`}
               >
                 {CATEGORY_LABELS[categoryKey] ?? categoryKey}
@@ -222,6 +223,7 @@ const WhatWeOfferSection = () => {
 
         <AssetTicker assets={selectedAssets} />
       </div>
+    </div>
     </section>
   );
 };
