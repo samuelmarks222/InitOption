@@ -191,16 +191,16 @@ const WhatWeOfferSection = () => {
           <span className="inline-flex rounded-full bg-[hsl(var(--landing-primary))]/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.26em] text-[hsl(var(--landing-primary))]">
             TRADE NOW
           </span>
-          <h2 className="mt-6 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
+          <h2 className="mt-10 text-5xl font-extrabold tracking-[-0.05em] text-white sm:text-6xl">
             Market Spreads and Swaps
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-slate-300 sm:text-lg">
+          <p className="mx-auto mt-8 max-w-3xl text-lg font-semibold leading-9 text-slate-200 sm:text-xl">
             {markets.description}
           </p>
         </div>
 
-        <div className="mb-10 overflow-hidden rounded-full border border-white/10 bg-white/5 p-1 shadow-[0_18px_50px_rgba(0,0,0,0.16)]">
-          <div className="flex flex-wrap items-center justify-center gap-2 px-2 py-2">
+        <div className="mb-14 overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.16)]">
+          <div className="flex flex-wrap items-center justify-center gap-3 px-4 py-3">
             {availableCategories.map((categoryKey) => (
               <button
                 key={categoryKey}
