@@ -203,7 +203,7 @@ const WhatWeOfferSection = () => {
         </div>
 
         <div className="mb-14 overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.16)]">
-          <div className="flex flex-wrap items-center justify-center gap-3 px-4 py-3">
+          <div className="flex flex-nowrap items-center justify-center gap-2 px-4 py-3">
             {availableCategories.map((categoryKey) => (
               <button
                 key={categoryKey}
