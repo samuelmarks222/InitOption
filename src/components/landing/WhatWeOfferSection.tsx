@@ -206,10 +206,10 @@ const WhatWeOfferSection = () => {
                 key={categoryKey}
                 type="button"
                 onClick={() => setActiveCategory(categoryKey)}
-                className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                className={`rounded-full px-6 py-3 text-base font-semibold transition ${
                   activeCategory === categoryKey
                     ? "bg-[hsl(var(--landing-primary))] text-black shadow-[0_8px_20px_rgba(28,215,147,0.18)]"
-                    : "text-white/70 hover:text-white"
+                    : "text-white/80 hover:text-white"
                 }`}
               >
                 {CATEGORY_LABELS[categoryKey] ?? categoryKey}
