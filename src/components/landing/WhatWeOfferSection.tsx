@@ -53,6 +53,46 @@ const buildCategoryAssets = (categoryKey: string) => {
   return ASSETS_LIBRARY.filter((a) => a.category === (categoryKey as MasterAsset["category"]));
 };
 
+const TARGET_ASSETS = 8;
+
+const calculateCategoryQuotas = (categories: string[]) => {
+  const totalAssets = ASSETS_LIBRARY.length;
+  const quotas = categories.map((categoryKey) => {
+    const assetsInCategory = buildCategoryAssets(categoryKey);
+    const exact = (assetsInCategory.length * TARGET_ASSETS) / totalAssets;
+    const count = Math.max(1, Math.floor(exact));
+
+    return {
+      categoryKey,
+      count,
+      remainder: exact - count,
+      available: assetsInCategory.length,
+    };
+  });
+
+  let allocated = quotas.reduce((sum, quota) => sum + quota.count, 0);
+
+  while (allocated < TARGET_ASSETS) {
+    quotas.sort((a, b) => b.remainder - a.remainder);
+    quotas[0].count += 1;
+    quotas[0].remainder = 0;
+    allocated += 1;
+  }
+
+  while (allocated > TARGET_ASSETS) {
+    quotas.sort((a, b) => a.remainder - b.remainder);
+    const target = quotas.find((quota) => quota.count > 1);
+    if (!target) break;
+    target.count -= 1;
+    allocated -= 1;
+  }
+
+  return quotas.reduce<Record<string, number>>((counts, quota) => {
+    counts[quota.categoryKey] = Math.min(quota.available, quota.count);
+    return counts;
+  }, {});
+};
+
 const WhatWeOfferSection = () => {
   const { data: websiteContent } = useWebsiteContent();
   const { markets } = websiteContent;
@@ -67,7 +107,13 @@ const WhatWeOfferSection = () => {
 
   const selectedAssets = useMemo(() => {
     const nowSec = Math.floor(Date.now() / 1000);
-    const assets = buildCategoryAssets(activeCategory).slice(0, 8);
+    const quotas = calculateCategoryQuotas(availableCategories);
+    const orderedCategories = [activeCategory, ...availableCategories.filter((c) => c !== activeCategory)];
+
+    const assets = orderedCategories.flatMap((categoryKey) => {
+      const count = quotas[categoryKey] ?? 0;
+      return buildCategoryAssets(categoryKey).slice(0, count);
+    }).slice(0, TARGET_ASSETS);
 
     return assets.map((asset, index) => {
       const basePrice = getAssetBasePrice(asset.symbol, asset.category as AssetCategory);
