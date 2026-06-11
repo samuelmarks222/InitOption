@@ -186,17 +186,20 @@ const WhatWeOfferSection = () => {
   return (
     <section className="relative overflow-hidden py-16 sm:py-24" style={{ background: "#0f172a" }}>
       <div className="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,hsl(var(--landing-primary))_0_0.08,transparent_24%)]" />
-      <div className="relative px-[70px]">
-        <div className="mx-auto mb-8 max-w-5xl text-center">
+      <div className="relative px-6 sm:px-10 lg:px-[300px]">
+        <div className="mx-auto w-full max-w-full">
+          <div className="mx-auto mb-8 max-w-5xl text-center">
           <span className="inline-flex rounded-full bg-[hsl(var(--landing-primary))]/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.26em] text-[hsl(var(--landing-primary))]">
             TRADE NOW
           </span>
           <h2 className="mt-10 text-5xl font-extrabold tracking-[-0.05em] text-white sm:text-6xl">
             Market Spreads and Swaps
           </h2>
-          <p className="mx-auto mt-8 max-w-3xl text-lg font-semibold leading-9 text-slate-200 sm:text-xl">
-            {markets.description}
-          </p>
+          {markets.description ? (
+            <p className="mx-auto mt-8 max-w-3xl text-lg font-semibold leading-9 text-slate-200 sm:text-xl">
+              {markets.description}
+            </p>
+          ) : null}
         </div>
 
         <div className="mb-14 overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-2 shadow-[0_18px_50px_rgba(0,0,0,0.16)]">
@@ -206,10 +209,9 @@ const WhatWeOfferSection = () => {
                 key={categoryKey}
                 type="button"
                 onClick={() => setActiveCategory(categoryKey)}
-                className={`rounded-full px-6 py-3 text-base font-semibold transition ${
+                className={`rounded-full px-5 py-2 text-base font-semibold uppercase tracking-[0.06em] transition ${
                   activeCategory === categoryKey
-                    ? "bg-[hsl(var(--landing-primary))] text-black shadow-[0_8px_20px_rgba(28,215,147,0.18)]"
-                    : "text-white/80 hover:text-white"
+                    ? "bg-[hsl(var(--landing-primary))] text-black shadow-[0_10px_24px_rgba(28,215,147,0.16)]"
                 }`}
               >
                 {CATEGORY_LABELS[categoryKey] ?? categoryKey}
