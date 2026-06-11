@@ -5,11 +5,8 @@ import { Button } from "@/components/ui/button";
 import AssetSymbolMark from "@/components/trading/AssetSymbolMark";
 import { type MasterAsset } from "@/data/assetsLibrary";
 
-const formatDuration = (seconds: number) => `${seconds}s`;
-const randomPayout = (symbol: string) => 65 + (symbol.length % 31);
-const isLive = (symbol: string) => symbol.length % 2 === 0;
-const directionUp = (symbol: string) => symbol.charCodeAt(0) % 2 === 0;
-const availabilityLabel = (symbol: string) => (isLive(symbol) ? "Open" : "Closed");
+const formatDuration = (minutes: number) => `${minutes}m`;
+const availabilityLabel = (marketStatus: "Open" | "Closed") => marketStatus;
 
 type LandingAsset = {
   symbol: string;
@@ -20,7 +17,11 @@ type LandingAsset = {
   spread: number;
   price: number;
   change24h: number;
-  maxProfit: number;
+  payout: number;
+  roi: number;
+  duration: number;
+  marketStatus: "Open" | "Closed";
+  directionUp: boolean;
   stockLogo?: string | null;
   commodityIcon?: MasterAsset["commodity_icon"];
 };
@@ -96,9 +97,9 @@ const AssetTicker: React.FC<{ assets: LandingAsset[] }> = ({ assets }) => {
 };
 
 const TickerCard: React.FC<{ asset: LandingAsset }> = ({ asset }) => {
-  const payout = randomPayout(asset.symbol);
-  const live = isLive(asset.symbol);
-  const up = directionUp(asset.symbol);
+  const payout = asset.payout;
+  const live = asset.marketStatus === "Open";
+  const up = asset.directionUp;
 
   return (
     <div className="flex min-h-[240px] flex-col justify-between rounded-[24px] border border-white/10 bg-white/95 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.18)]">
@@ -114,7 +115,7 @@ const TickerCard: React.FC<{ asset: LandingAsset }> = ({ asset }) => {
           <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase ${
             live ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
           }`}>
-            {availabilityLabel(asset.symbol)}
+            {availabilityLabel(asset.marketStatus)}
           </span>
         </div>
 
@@ -125,15 +126,15 @@ const TickerCard: React.FC<{ asset: LandingAsset }> = ({ asset }) => {
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
             <span className="text-xs uppercase text-slate-500">Payout</span>
-            <span className="font-semibold text-slate-900">{payout}%</span>
+            <span className="font-semibold text-slate-900">{asset.payout}%</span>
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
             <span className="text-xs uppercase text-slate-500">Duration</span>
-            <span className="font-semibold text-slate-900">{formatDuration((asset.symbol.length % 120) + 30)}</span>
+            <span className="font-semibold text-slate-900">{formatDuration(asset.duration)}</span>
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
             <span className="text-xs uppercase text-slate-500">ROI</span>
-            <span className="font-semibold text-slate-900">{payout}%</span>
+            <span className="font-semibold text-slate-900">{asset.roi}%</span>
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
             <span className="text-xs uppercase text-slate-500">Direction</span>

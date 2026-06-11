@@ -35,6 +35,30 @@ const calculateQuoteValues = (price: number, spread: number) => {
   };
 };
 
+const getSymbolHash = (symbol: string) =>
+  symbol.split("").reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
+
+const getDeterministicPayout = (symbol: string, change24h: number) => {
+  const hash = getSymbolHash(symbol);
+  const categoryBias = Math.abs(symbol.length % 5 - 2);
+  const base = 70 + (hash % 18) + categoryBias;
+  const volatility = Math.round(Math.sin(hash / 7) * 3 + Math.cos(hash / 13) * 2);
+  const momentum = Math.round(Math.max(-5, Math.min(8, change24h * 4)));
+  return Math.max(68, Math.min(94, base + volatility + momentum));
+};
+
+const getDeterministicDuration = (symbol: string) => {
+  const durations = [15, 30, 45, 60, 90, 120];
+  const index = getSymbolHash(symbol) % durations.length;
+  return durations[index];
+};
+
+const getDeterministicRoi = (payout: number) => Math.min(100, Math.max(70, payout + (payout % 5) + 2));
+
+const getDeterministicStatus = (symbol: string) => (getSymbolHash(symbol) % 4 === 0 ? "Closed" : "Open");
+
+const getDeterministicDirection = (symbol: string) => getSymbolHash(symbol) % 2 === 0;
+
 type ShowcaseAsset = {
   symbol: string;
   name: string;
@@ -42,7 +66,11 @@ type ShowcaseAsset = {
   label: string;
   price: number;
   change24h: number;
-  maxProfit: number;
+  payout: number;
+  roi: number;
+  duration: number;
+  marketStatus: "Open" | "Closed";
+  directionUp: boolean;
   ask: string;
   bid: string;
   stockLogo?: string | null;
@@ -131,6 +159,10 @@ const WhatWeOfferSection = () => {
       });
       const quote = calculateQuoteValues(price, PRICE_SPREADS[index % PRICE_SPREADS.length]);
 
+      const payout = getDeterministicPayout(asset.symbol, change24h);
+      const duration = getDeterministicDuration(asset.symbol);
+      const roi = getDeterministicRoi(payout);
+
       return {
         symbol: asset.symbol,
         name: asset.name,
@@ -138,7 +170,11 @@ const WhatWeOfferSection = () => {
         label: CATEGORY_LABELS[asset.category] ?? asset.category,
         price,
         change24h,
-        maxProfit: Math.max(65, Math.min(95, Math.round(70 + change24h * 2))),
+        payout,
+        roi,
+        duration,
+        marketStatus: getDeterministicStatus(asset.symbol),
+        directionUp: getDeterministicDirection(asset.symbol),
         ask: quote.ask,
         bid: quote.bid,
         stockLogo: asset.stock_logo,
