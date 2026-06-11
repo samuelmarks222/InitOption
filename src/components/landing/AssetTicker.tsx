@@ -121,20 +121,12 @@ const TickerCard: React.FC<{ asset: LandingAsset }> = ({ asset }) => {
 
         <div className="mt-5 grid gap-3 text-sm text-slate-700">
           <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-            <span className="text-xs uppercase text-slate-500">Asset</span>
-            <span className="font-semibold text-slate-900">{asset.name}</span>
-          </div>
-          <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
             <span className="text-xs uppercase text-slate-500">Payout</span>
             <span className="font-semibold text-slate-900">{asset.payout}%</span>
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
             <span className="text-xs uppercase text-slate-500">Duration</span>
             <span className="font-semibold text-slate-900">{formatDuration(asset.duration)}</span>
-          </div>
-          <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-            <span className="text-xs uppercase text-slate-500">ROI</span>
-            <span className="font-semibold text-slate-900">{asset.roi}%</span>
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
             <span className="text-xs uppercase text-slate-500">Direction</span>
