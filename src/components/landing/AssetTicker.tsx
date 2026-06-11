@@ -70,10 +70,8 @@ const AssetTicker: React.FC<{ assets: LandingAsset[] }> = ({ assets }) => {
         <div className="overflow-hidden" ref={emblaRef}>
           <div className="flex items-stretch">
             {assets.map((asset) => (
-              <div key={asset.symbol} className="min-w-full flex-shrink-0 px-2 sm:px-4 lg:px-6">
-                <div className="mx-auto max-w-[42rem]">
-                  <TickerCard asset={asset} />
-                </div>
+              <div key={asset.symbol} className="min-w-[100%] sm:min-w-[50%] md:min-w-[33.333%] lg:min-w-[20%] flex-shrink-0 px-2 sm:px-3 lg:px-4">
+                <TickerCard asset={asset} />
               </div>
             ))}
           </div>

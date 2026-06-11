@@ -57,9 +57,10 @@ const WhatWeOfferSection = () => {
   const { data: websiteContent } = useWebsiteContent();
   const { markets } = websiteContent;
 
+  const CATEGORIES_ORDER = ["OTC", "CRYPTO", "STOCKS", "COMMODITIES"];
+
   const availableCategories = useMemo(() => {
-    const set = Array.from(new Set(ASSETS_LIBRARY.map((a) => a.category)));
-    return set;
+    return CATEGORIES_ORDER.filter((c) => ASSETS_LIBRARY.some((a) => a.category === c));
   }, []);
 
   const [activeCategory, setActiveCategory] = useState<string>(availableCategories[0] ?? "OTC");
