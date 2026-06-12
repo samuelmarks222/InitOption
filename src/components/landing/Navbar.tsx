@@ -29,7 +29,7 @@ const Navbar = () => {
             <Link
               key={link.label}
               to={link.href}
-              className="relative font-copy text-base font-medium text-white transition-colors hover:text-[#242d60] lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[#242d60] after:transition-all after:duration-300 hover:after:w-full"
+              className="relative font-copy text-base font-medium text-[#242d60] transition-colors hover:text-[#242d60] lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[#242d60] after:transition-all after:duration-300 hover:after:w-full"
             >
               {link.label}
             </Link>
