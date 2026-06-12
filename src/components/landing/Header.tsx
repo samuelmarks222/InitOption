@@ -35,7 +35,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-4" style={{ background: '#284d5c' }}>
+      <header className="fixed inset-x-0 top-0 z-50 pt-3 sm:pt-4" style={{ background: '#284d5c' }}>
         <div
           className={`mx-auto max-w-7xl rounded-[30px] transition-all duration-300 ${
             scrolled
@@ -44,7 +44,7 @@ const Header = () => {
           }`}
           style={{ border: "none" }}
         >
-          <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
+          <div className="flex items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <div className="flex min-w-0 flex-1 items-center gap-4">
               <SiteLogo
                 variant="dark"
