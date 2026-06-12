@@ -35,11 +35,11 @@ const platformFeatures = [
 
 const HeroSection = () => {
   return (
-    <section className="relative isolate overflow-hidden bg-[#f5f7fb] pb-14 pt-24 sm:pb-16 sm:pt-28 lg:min-h-[760px] lg:pb-10 lg:pt-24">
+    <section className="relative isolate overflow-hidden bg-[#f5f7fb] pb-14 pt-24 px-4 sm:px-8 lg:px-[100px] lg:min-h-[760px] lg:pb-10 lg:pt-24">
       <div className="absolute inset-y-0 right-0 z-0 w-[62%] rounded-bl-[46%] bg-[#e9edf5]" aria-hidden="true" />
       <div className="absolute inset-y-0 right-[18%] z-0 hidden w-[42%] rounded-bl-[48%] rounded-br-[34%] bg-white/50 lg:block" aria-hidden="true" />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1180px] px-5 sm:px-8 xl:px-0">
+      <div className="relative z-10 mx-auto w-full max-w-[1180px]">
         <div className="grid items-start gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <motion.div
             initial={{ opacity: 0, x: -24 }}
