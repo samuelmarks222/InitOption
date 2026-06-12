@@ -47,7 +47,7 @@ const Hero = ({ content }: HeroProps) => {
       <div className="absolute right-[-4%] top-[24%] h-72 w-72 rounded-full bg-[hsl(var(--landing-primary))]/24 blur-[120px]" />
       <div className="absolute inset-x-[24%] bottom-[-10%] h-72 rounded-full bg-[hsl(var(--landing-primary))]/18 blur-[130px]" />
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-[100px]">
         <div className="grid items-start gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:gap-12">
           <div className="pt-3">
             <div className="landing-neo-chip inline-flex items-center gap-2 rounded-full px-4 py-2 font-landing-copy text-[11px] font-semibold uppercase tracking-[0.22em] text-[hsl(var(--landing-border))]">

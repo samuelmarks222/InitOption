@@ -18,7 +18,7 @@ const Navbar = () => {
 
   return (
     <nav className="fixed left-0 right-0 top-0 z-50 shadow-[0_12px_32px_hsla(var(--landing-secondary),0.2)] backdrop-blur-2xl" style={{ background: "hsla(var(--background), 0.95)" }}>
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:gap-6 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-20 sm:gap-6 sm:px-6 lg:px-[100px]">
         <Link to="/" className="shrink-0 flex items-center gap-2">
           <SiteLogo
             variant="light"
