@@ -35,7 +35,7 @@ const platformFeatures = [
 
 const HeroSection = () => {
   return (
-    <section className="relative isolate overflow-hidden bg-[#f5f7fb] pb-14 pt-24 px-4 sm:px-8 lg:px-[70px] lg:min-h-[760px] lg:pb-10 lg:pt-24">
+    <section className="relative isolate overflow-hidden bg-[#f5f7fb] pb-14 pt-24 px-[70px] lg:min-h-[760px] lg:pb-10 lg:pt-24">
       <div className="absolute inset-y-0 right-0 z-0 w-[62%] rounded-bl-[46%] bg-[#e9edf5]" aria-hidden="true" />
       <div className="absolute inset-y-0 right-[18%] z-0 hidden w-[42%] rounded-bl-[48%] rounded-br-[34%] bg-white/50 lg:block" aria-hidden="true" />
 
