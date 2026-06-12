@@ -35,32 +35,32 @@ const platformFeatures = [
 
 const HeroSection = () => {
   return (
-    <section className="relative isolate overflow-hidden bg-[#f5f7fb] pb-14 pt-24 px-[70px] lg:min-h-[760px] lg:pb-10 lg:pt-24">
+    <section className="relative isolate overflow-hidden bg-[#f5f7fb] pb-20 pt-32 px-[70px] lg:min-h-[820px] lg:pb-16 lg:pt-32">
       <div className="absolute inset-y-0 right-0 z-0 w-[62%] rounded-bl-[46%] bg-[#e9edf5]" aria-hidden="true" />
       <div className="absolute inset-y-0 right-[18%] z-0 hidden w-[42%] rounded-bl-[48%] rounded-br-[34%] bg-white/50 lg:block" aria-hidden="true" />
 
       <div className="relative z-10 w-full">
-        <div className="grid min-h-[630px] items-start gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="grid min-h-[680px] items-start gap-12 lg:grid-cols-[0.9fr_1.1fr]">
           <motion.div
             initial={{ opacity: 0, x: -24 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.55, delay: 0.08 }}
             className="pt-8 sm:pt-12 lg:pt-28"
           >
-            <h1 className="max-w-[560px] font-heading text-[34px] font-extrabold leading-[1.12] text-[#1e2f62] sm:text-[46px] lg:text-[40px]">
+            <h1 className="max-w-[560px] font-heading text-[40px] font-extrabold leading-[1.12] text-[#1e2f62] sm:text-[52px] lg:text-[48px]">
               The <span className="text-[#ff8a1d]">Premier Platform</span>
               <br />
               for Smart Online Trading
             </h1>
 
-            <p className="mt-4 max-w-[420px] text-[18px] leading-8 text-[#647085]">
+            <p className="mt-6 max-w-[420px] text-[20px] leading-8 text-[#647085]">
               Trade 24/7, practice with demo funds, follow real-time charts, and manage your account from one clean
               Init Option terminal.
             </p>
 
             <Link
               to="/register"
-              className="mt-6 inline-flex h-[40px] items-center justify-center gap-2 rounded-full bg-[#ff8a1d] px-6 text-[13px] font-bold text-white shadow-[0_14px_28px_rgba(255,138,29,0.28)] transition hover:bg-[#ef7b12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8a1d] focus-visible:ring-offset-2"
+              className="mt-8 inline-flex h-[40px] items-center justify-center gap-2 rounded-full bg-[#ff8a1d] px-6 text-[13px] font-bold text-white shadow-[0_14px_28px_rgba(255,138,29,0.28)] transition hover:bg-[#ef7b12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8a1d] focus-visible:ring-offset-2"
             >
               Create Account
               <ArrowRight size={16} strokeWidth={2.2} />
@@ -82,7 +82,7 @@ const HeroSection = () => {
           </motion.div>
         </div>
 
-        <div className="mt-4 grid items-end gap-12 lg:-mt-4 lg:grid-cols-[0.95fr_1fr] lg:gap-10">
+        <div className="mt-10 grid items-end gap-12 lg:mt-6 lg:grid-cols-[0.95fr_1fr] lg:gap-10">
           <motion.div
             initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0 }}
@@ -107,19 +107,19 @@ const HeroSection = () => {
             transition={{ duration: 0.55, delay: 0.42 }}
             className="mx-auto w-full max-w-[520px] pb-4 lg:mx-0 lg:pb-8"
           >
-            <h2 className="text-center font-heading text-[25px] font-extrabold leading-[1.22] text-[#1e2f62] sm:text-[28px] lg:text-right">
+            <h2 className="text-center font-heading text-[28px] font-extrabold leading-[1.22] text-[#1e2f62] sm:text-[32px] lg:text-right">
               Trade on wide range of <span className="text-[#ff8a1d]">Web</span>
               <br />
               and <span className="text-[#ff8a1d]">Mobile</span> Apps
             </h2>
 
-            <div className="mt-8 space-y-5">
+            <div className="mt-10 space-y-6">
               {platformFeatures.map((feature) => {
                 const Icon = feature.icon;
 
                 return (
                   <div key={feature.label} className="flex items-center justify-between gap-4">
-                    <p className="flex-1 text-right text-[13px] leading-6 text-[#6a7488]">
+                    <p className="flex-1 text-right text-[14px] leading-6 text-[#6a7488]">
                       <span className="font-extrabold text-[#1e2f62]">{feature.label}:</span> {feature.text}
                     </p>
                     <div className={`flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[16px] shadow-[0_12px_24px_rgba(42,51,76,0.14)] ${feature.iconClassName}`}>
