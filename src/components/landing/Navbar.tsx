@@ -18,13 +18,14 @@ const Navbar = () => {
 
   return (
     <nav className="fixed left-0 right-0 top-0 z-50 shadow-[0_12px_32px_hsla(var(--landing-secondary),0.2)] backdrop-blur-2xl" style={{ background: "hsla(var(--background), 0.95)" }}>
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-[70px] sm:h-20 sm:gap-6">
-        <Link to="/" className="shrink-0 flex items-center gap-2">
-          <SiteLogo
-            variant="light"
-            imageClassName="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11"
-          />
-        </Link>
+      <div className="w-full px-[70px]">
+        <div className="mx-auto flex h-16 max-w-[calc(100%-140px)] items-center justify-between gap-4 sm:h-20 sm:gap-6">
+          <Link to="/" className="shrink-0 flex items-center gap-2">
+            <SiteLogo
+              variant="light"
+              imageClassName="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11"
+            />
+          </Link>
 
         <div className="hidden items-center gap-16 lg:gap-20 md:flex">
           {navLinks.map((link) => (

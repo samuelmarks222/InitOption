@@ -39,7 +39,7 @@ const HeroSection = () => {
       <div className="absolute inset-y-0 right-0 z-0 w-[62%] rounded-bl-[46%] bg-[#e9edf5]" aria-hidden="true" />
       <div className="absolute inset-y-0 right-[18%] z-0 hidden w-[42%] rounded-bl-[48%] rounded-br-[34%] bg-white/50 lg:block" aria-hidden="true" />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1180px]">
+      <div className="relative z-10 mx-auto w-full max-w-[1180px] lg:max-w-[calc(100%-140px)]">
         <div className="grid items-start gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <motion.div
             initial={{ opacity: 0, x: -24 }}
