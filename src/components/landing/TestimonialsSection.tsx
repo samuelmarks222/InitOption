@@ -6,27 +6,28 @@ const testimonials = [
   {
     name: "Alva Edision",
     role: "Trader",
+    quote: "\"The demo account helped me practice entries before going live, and the chart stayed clear when I placed trades.\"",
     avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=facearea&facepad=2&w=120&h=120&q=80",
   },
   {
     name: "Kristin Watson",
     role: "Trader",
+    quote: "\"I can read price movement, check payouts, and open trades quickly without leaving the trading screen.\"",
     avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=facearea&facepad=2&w=120&h=120&q=80",
   },
   {
     name: "Jacob Jones",
     role: "Trader",
+    quote: "\"The platform makes it easier to manage trade timing, review results, and stay focused during active sessions.\"",
     avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=facearea&facepad=2&w=120&h=120&q=80",
   },
   {
     name: "Merry Jiucy",
     role: "Trader",
+    quote: "\"Fast deposits, clear trade controls, and mobile access make Init Option useful for my daily market routine.\"",
     avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=facearea&facepad=2&w=120&h=120&q=80",
   },
 ] as const;
-
-const reviewCopy =
-  "\"Iiscover a moving experience like no other autgridWe gone beyond mely cking and get an accurate\"";
 
 const TestimonialsSection = () => {
   return (
@@ -50,8 +51,8 @@ const TestimonialsSection = () => {
           </h2>
 
           <p className="mt-6 max-w-[360px] text-[16px] font-medium leading-[1.75] text-[#52666b]">
-            Iscover A Moving Experience Like No Other At Transp Orting Items.Get Rid Of Manual Tracking Um Dolor Seay
-            Wrongave Orem Ipsum.
+            See how traders use Init Option to practice with demo funds, follow live charts, place trades, and manage
+            account activity from one focused platform.
           </p>
 
           <Link
@@ -80,7 +81,7 @@ const TestimonialsSection = () => {
               </div>
 
               <p className="max-w-[330px] text-[16px] font-semibold leading-[1.72] text-[#52666b]">
-                {reviewCopy}
+                {testimonial.quote}
               </p>
 
               <div className="mt-6 flex items-center gap-4">
