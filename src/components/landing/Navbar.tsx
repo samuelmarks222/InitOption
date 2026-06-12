@@ -2,12 +2,13 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 
 const navLinks = [
   { label: "Markets", href: "/#markets" },
-  { label: "Features", href: "/whitetures" },
+  { label: "Features", href: "/#features" },
   { label: "Reviews", href: "/reviews" },
   { label: "FAQ", href: "/#faq" },
   { label: "Blog", href: "/blog" },
@@ -25,13 +26,13 @@ const Navbar = () => {
 
         <div className="hidden items-center gap-16 lg:gap-20 md:flex">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.label}
-              href={link.href}
+              to={link.href}
               className="relative font-copy text-base font-medium text-white transition-colors hover:text-[white] lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[hsl(var(--landing-primary))] after:transition-all after:duration-300 hover:after:w-full"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -71,14 +72,14 @@ const Navbar = () => {
           className="bg-[hsl(var(--landing-secondary))] px-4 pb-4 pt-2 md:hidden"
         >
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.label}
-              href={link.href}
+              to={link.href}
               className="block py-2 font-copy text-base font-medium text-[hsl(var(--landing-secondary))] hover:text-[hsl(var(--landing-secondary))]"
               onClick={() => setMobileOpen(false)}
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </motion.div>
       )}
