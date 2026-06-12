@@ -13,6 +13,7 @@ interface SiteLogoProps {
   stacked?: boolean;
   centered?: boolean;
   showText?: boolean;
+  variant?: "auto" | "light" | "dark";
 }
 
 export const SiteLogo = ({
@@ -26,8 +27,14 @@ export const SiteLogo = ({
   stacked = false,
   centered = false,
   showText = false,
+  variant = "auto",
 }: SiteLogoProps) => {
-  const { initials, logoUrl, platformName } = useSiteBranding();
+  const { initials, logoUrl, logoUrlLight, logoUrlDark, platformName, getLogoUrlByVariant } = useSiteBranding();
+
+  const selectedLogoUrl =
+    variant === "auto"
+      ? logoUrl
+      : getLogoUrlByVariant(variant);
 
   const content = (
     <div
@@ -38,9 +45,9 @@ export const SiteLogo = ({
         className,
       )}
     >
-      {logoUrl ? (
+      {selectedLogoUrl ? (
         <img
-          src={logoUrl}
+          src={selectedLogoUrl}
           alt={platformName}
           className={cn(
             "block h-12 w-auto max-w-[260px] shrink-0 object-contain sm:h-14 sm:max-w-[320px]",

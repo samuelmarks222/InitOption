@@ -36,13 +36,33 @@ export const useSiteBranding = () => {
     return primaryLogo || lightLogo || darkLogo || defaultLogoUrl;
   };
 
+  const getLogoUrlByVariant = (variant: "auto" | "light" | "dark") => {
+    const lightLogo = readStoredLogoUrlLight();
+    const darkLogo = readStoredLogoUrlDark();
+    const primaryLogo = readStoredLogoUrl();
+
+    if (variant === "light") {
+      return lightLogo || primaryLogo || darkLogo || defaultLogoUrl;
+    }
+
+    if (variant === "dark") {
+      return darkLogo || primaryLogo || lightLogo || defaultLogoUrl;
+    }
+
+    return getCurrentLogoUrl();
+  };
+
   const [logoUrl, setLogoUrl] = useState<string | null>(() => getCurrentLogoUrl());
+  const [logoUrlLight, setLogoUrlLight] = useState<string | null>(() => readStoredLogoUrlLight());
+  const [logoUrlDark, setLogoUrlDark] = useState<string | null>(() => readStoredLogoUrlDark());
   const [platformName, setPlatformName] = useState(() => readStoredPlatformName());
   const [supportEmail, setSupportEmail] = useState(() => readStoredSupportEmail());
 
   useEffect(() => {
     const updateBranding = () => {
       setLogoUrl(getCurrentLogoUrl());
+      setLogoUrlLight(readStoredLogoUrlLight());
+      setLogoUrlDark(readStoredLogoUrlDark());
       setPlatformName(readStoredPlatformName());
       setSupportEmail(readStoredSupportEmail());
     };
@@ -62,6 +82,9 @@ export const useSiteBranding = () => {
 
   return {
     logoUrl,
+    logoUrlLight,
+    logoUrlDark,
+    getLogoUrlByVariant,
     platformName: platformName || DEFAULT_PLATFORM_NAME,
     supportEmail: supportEmail || DEFAULT_PLATFORM_SETTINGS.support_email,
     initials,
