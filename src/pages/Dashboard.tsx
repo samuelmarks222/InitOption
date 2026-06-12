@@ -7,13 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, History, Trophy, BarChart3, LogOut, User } from "lucide-react";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
+import { SiteLogo } from "@/components/branding/SiteLogo";
 
 const Dashboard = () => {
   const { user, profile, signOut } = useAuth();
   const [recentTrades, setRecentTrades] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const { getLogoUrlByVariant, platformName, initials } = useSiteBranding();
-  const logoUrl = getLogoUrlByVariant("dark");
+  const { platformName, initials } = useSiteBranding();
   const { formatMoney } = useCurrency();
 
   useEffect(() => {
@@ -46,16 +46,13 @@ const Dashboard = () => {
       {/* Header */}
       <header className="border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-          <Link to="/" className="flex min-w-0 items-center gap-2">
-            {logoUrl ? (
-              <img src={logoUrl} alt={platformName} className="block h-10 w-auto max-w-[240px] object-contain object-left" />
-            ) : (
-              <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">{initials}</span>
-              </div>
-            )}
-            {!logoUrl && <span className="text-xl font-bold text-foreground">{platformName}</span>}
-          </Link>
+          <SiteLogo
+            to="/"
+            variant="dark"
+            className="max-w-full"
+            imageClassName="h-10 w-auto max-w-[240px] object-contain object-left"
+            centered={false}
+          />
           <div className="ml-auto flex shrink-0 items-center gap-3">
             <Link to="/trade">
               <Button variant="trading" size="sm">Trade Now</Button>
