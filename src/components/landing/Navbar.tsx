@@ -67,6 +67,7 @@ const Navbar = () => {
           </button>
         </div>
       </div>
+    </div>
 
       {mobileOpen && (
         <motion.div
