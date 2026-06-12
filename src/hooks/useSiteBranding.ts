@@ -3,6 +3,8 @@ import {
   DEFAULT_PLATFORM_SETTINGS,
   DEFAULT_PLATFORM_NAME,
   readStoredLogoUrl,
+  readStoredLogoUrlLight,
+  readStoredLogoUrlDark,
   readStoredPlatformName,
   readStoredSupportEmail,
 } from "@/lib/platformMetadata";
@@ -21,21 +23,39 @@ const buildInitials = (platformName: string) => {
 };
 
 export const useSiteBranding = () => {
-  const [logoUrl, setLogoUrl] = useState<string | null>(() => readStoredLogoUrl() || defaultLogoUrl);
+  const getCurrentLogoUrl = () => {
+    const lightLogo = readStoredLogoUrlLight();
+    const darkLogo = readStoredLogoUrlDark();
+    const primaryLogo = readStoredLogoUrl();
+    const prefersDark = typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+    const hasDarkThemeClass = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+    const useDarkLogo = prefersDark || hasDarkThemeClass;
+
+    if (useDarkLogo && darkLogo) return darkLogo;
+    if (!useDarkLogo && lightLogo) return lightLogo;
+    return primaryLogo || lightLogo || darkLogo || defaultLogoUrl;
+  };
+
+  const [logoUrl, setLogoUrl] = useState<string | null>(() => getCurrentLogoUrl());
   const [platformName, setPlatformName] = useState(() => readStoredPlatformName());
   const [supportEmail, setSupportEmail] = useState(() => readStoredSupportEmail());
 
   useEffect(() => {
     const updateBranding = () => {
-      setLogoUrl(readStoredLogoUrl() || defaultLogoUrl);
+      setLogoUrl(getCurrentLogoUrl());
       setPlatformName(readStoredPlatformName());
       setSupportEmail(readStoredSupportEmail());
     };
 
     updateBranding();
     window.addEventListener("brand_updated", updateBranding);
+    const mediaQuery = typeof window !== "undefined" ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+    mediaQuery?.addEventListener("change", updateBranding);
 
-    return () => window.removeEventListener("brand_updated", updateBranding);
+    return () => {
+      window.removeEventListener("brand_updated", updateBranding);
+      mediaQuery?.removeEventListener("change", updateBranding);
+    };
   }, []);
 
   const initials = useMemo(() => buildInitials(platformName), [platformName]);

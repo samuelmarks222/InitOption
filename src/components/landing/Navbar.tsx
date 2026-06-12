@@ -29,7 +29,7 @@ const Navbar = () => {
             <Link
               key={link.label}
               to={link.href}
-              className="relative font-copy text-base font-medium text-white transition-colors hover:text-[white] lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[hsl(var(--landing-primary))] after:transition-all after:duration-300 hover:after:w-full"
+              className="relative font-copy text-base font-medium text-white transition-colors hover:text-[#ff8a1d] lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[#ff8a1d] after:transition-all after:duration-300 hover:after:w-full"
             >
               {link.label}
             </Link>
@@ -75,7 +75,7 @@ const Navbar = () => {
             <Link
               key={link.label}
               to={link.href}
-              className="block py-2 font-copy text-base font-medium text-[hsl(var(--landing-secondary))] hover:text-[hsl(var(--landing-secondary))]"
+              className="block py-2 font-copy text-white transition-colors hover:text-[#ff8a1d]"
               onClick={() => setMobileOpen(false)}
             >
               {link.label}

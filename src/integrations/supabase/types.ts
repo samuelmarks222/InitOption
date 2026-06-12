@@ -739,6 +739,8 @@ export type Database = {
           welcome_bonus_pct: number
           referral_commission_pct: number
           logo_url: string | null
+          logo_url_light: string | null
+          logo_url_dark: string | null
           favicon_url: string | null
           chart_up_color: string
           chart_down_color: string

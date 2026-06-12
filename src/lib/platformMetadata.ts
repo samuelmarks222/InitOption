@@ -5,6 +5,8 @@ export {
   DEFAULT_PLATFORM_SETTINGS,
   DEFAULT_SHARE_IMAGE_PATH,
   SITE_LOGO_STORAGE_KEY,
+  SITE_LOGO_LIGHT_STORAGE_KEY,
+  SITE_LOGO_DARK_STORAGE_KEY,
   SITE_PLATFORM_NAME_STORAGE_KEY,
   SITE_SUPPORT_EMAIL_STORAGE_KEY,
   normalizePlatformSettings,
@@ -18,6 +20,8 @@ import {
   DEFAULT_PLATFORM_NAME,
   DEFAULT_PLATFORM_SETTINGS,
   SITE_LOGO_STORAGE_KEY,
+  SITE_LOGO_LIGHT_STORAGE_KEY,
+  SITE_LOGO_DARK_STORAGE_KEY,
   SITE_PLATFORM_NAME_STORAGE_KEY,
   SITE_SUPPORT_EMAIL_STORAGE_KEY,
   normalizePlatformSettings,
@@ -234,6 +238,20 @@ export const readStoredLogoUrl = () => {
   return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
 };
 
+export const readStoredLogoUrlLight = () => {
+  if (typeof window === "undefined") return null;
+
+  const storedLogoUrl = readStorageValue(SITE_LOGO_LIGHT_STORAGE_KEY);
+  return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
+};
+
+export const readStoredLogoUrlDark = () => {
+  if (typeof window === "undefined") return null;
+
+  const storedLogoUrl = readStorageValue(SITE_LOGO_DARK_STORAGE_KEY);
+  return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
+};
+
 export const readStoredSupportEmail = () => {
   if (typeof window === "undefined") return DEFAULT_PLATFORM_SETTINGS.support_email;
 
@@ -278,6 +296,32 @@ export const applyPlatformSettingsToDocument = (
     document.documentElement.style.removeProperty("--site-logo");
     if (typeof window !== "undefined") {
       removeStorageValue(SITE_LOGO_STORAGE_KEY);
+    }
+  }
+
+  const resolvedLogoUrlLight = resolveBrandAssetUrl(settings.logo_url_light.trim(), resolvedCurrentHref);
+  if (resolvedLogoUrlLight) {
+    document.documentElement.style.setProperty("--site-logo-light", `url(${resolvedLogoUrlLight})`);
+    if (typeof window !== "undefined") {
+      writeStorageValue(SITE_LOGO_LIGHT_STORAGE_KEY, resolvedLogoUrlLight);
+    }
+  } else {
+    document.documentElement.style.removeProperty("--site-logo-light");
+    if (typeof window !== "undefined") {
+      removeStorageValue(SITE_LOGO_LIGHT_STORAGE_KEY);
+    }
+  }
+
+  const resolvedLogoUrlDark = resolveBrandAssetUrl(settings.logo_url_dark.trim(), resolvedCurrentHref);
+  if (resolvedLogoUrlDark) {
+    document.documentElement.style.setProperty("--site-logo-dark", `url(${resolvedLogoUrlDark})`);
+    if (typeof window !== "undefined") {
+      writeStorageValue(SITE_LOGO_DARK_STORAGE_KEY, resolvedLogoUrlDark);
+    }
+  } else {
+    document.documentElement.style.removeProperty("--site-logo-dark");
+    if (typeof window !== "undefined") {
+      removeStorageValue(SITE_LOGO_DARK_STORAGE_KEY);
     }
   }
 

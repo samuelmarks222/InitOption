@@ -21,7 +21,15 @@ import {
   type WebsiteContent,
 } from "@/lib/websiteContent";
 
-type UploadTarget = "logo" | "favicon" | "social" | "twitter" | "chartBackground" | `guide:${GuideMediaKey}`;
+type UploadTarget =
+  | "logo"
+  | "logo_light"
+  | "logo_dark"
+  | "favicon"
+  | "social"
+  | "twitter"
+  | "chartBackground"
+  | `guide:${GuideMediaKey}`;
 
 const CARD_CLASS = "rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-6 shadow-lg";
 const INPUT_CLASS =
@@ -184,6 +192,8 @@ const PlatformSettings = () => {
   );
 
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const logoLightInputRef = useRef<HTMLInputElement>(null);
+  const logoDarkInputRef = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
   const socialImageInputRef = useRef<HTMLInputElement>(null);
   const twitterImageInputRef = useRef<HTMLInputElement>(null);
@@ -291,6 +301,8 @@ const PlatformSettings = () => {
       updateTradingDefaults({ chartBackgroundImage: publicData.publicUrl });
     } else {
       if (target === "logo") updateSetting("logo_url", publicData.publicUrl);
+      if (target === "logo_light") updateSetting("logo_url_light", publicData.publicUrl);
+      if (target === "logo_dark") updateSetting("logo_url_dark", publicData.publicUrl);
       if (target === "favicon") updateSetting("favicon_url", publicData.publicUrl);
       if (target === "social") updateSetting("og_image_url", publicData.publicUrl);
       if (target === "twitter") updateSetting("twitter_image_url", publicData.publicUrl);
@@ -644,13 +656,31 @@ const PlatformSettings = () => {
         <div className="grid gap-6 lg:grid-cols-2">
           {[
             {
-              label: "Main Site Logo",
+              label: "Primary Logo",
               value: settings.logo_url,
               onChange: (value: string) => updateSetting("logo_url", value),
               ref: logoInputRef,
               uploadTarget: "logo" as const,
               accept: "image/*",
               helper: "Updates the logo shown on landing, auth, trading, and admin surfaces.",
+            },
+            {
+              label: "Logo for light backgrounds",
+              value: settings.logo_url_light,
+              onChange: (value: string) => updateSetting("logo_url_light", value),
+              ref: logoLightInputRef,
+              uploadTarget: "logo_light" as const,
+              accept: "image/*",
+              helper: "Use a lighter logo version on light surfaces like the hero section.",
+            },
+            {
+              label: "Logo for dark backgrounds",
+              value: settings.logo_url_dark,
+              onChange: (value: string) => updateSetting("logo_url_dark", value),
+              ref: logoDarkInputRef,
+              uploadTarget: "logo_dark" as const,
+              accept: "image/*",
+              helper: "Use a darker logo version on dark surfaces and nav headers.",
             },
             {
               label: "Tab Favicon",
