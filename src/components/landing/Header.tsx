@@ -66,7 +66,7 @@ const Header = () => {
                   <a
                     key={item.label}
                     href={item.href}
-                    className="rounded-full px-4 py-2.5 font-landing-copy text-[11px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-white/10 hover:text-white"
+                    className="rounded-full px-4 py-2.5 font-landing-copy text-[11px] font-semibold uppercase tracking-[0.18em] text-[#242d60] transition-colors hover:bg-white/10 hover:text-[#242d60]"
                   >
                     {item.label}
                   </a>
