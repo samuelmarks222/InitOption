@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, BarChart3, CircleDollarSign, Clock3, Smartphone } from "lucide-react";
 import { Link } from "react-router-dom";
-import mobileTrading from "@/assets/mobile-trading.jpg";
 
 const heroPersonUrl =
   "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=720&h=760&q=85";
@@ -82,22 +81,17 @@ const HeroSection = () => {
           </motion.div>
         </div>
 
-        <div className="mt-10 grid items-end gap-12 lg:mt-6 lg:grid-cols-[0.95fr_1fr] lg:gap-10">
+        <div className="mt-14 grid items-end gap-16 lg:mt-8 lg:grid-cols-[1.1fr_0.85fr] lg:gap-14">
           <motion.div
             initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, delay: 0.35 }}
-            className="relative mx-auto w-full max-w-[520px] lg:mx-0"
+            className="relative mx-auto w-full max-w-[680px] lg:mx-0"
           >
             <img
               src="/landing/hero-laptop-angle.jpg"
               alt="Init Option trading terminal on laptop"
               className="w-full object-contain drop-shadow-[0_20px_34px_rgba(42,51,76,0.16)]"
-            />
-            <img
-              src={mobileTrading}
-              alt="Init Option mobile trading screens"
-              className="absolute -bottom-3 left-0 w-[42%] rounded-[18px] object-cover shadow-[0_18px_34px_rgba(42,51,76,0.16)] sm:left-4"
             />
           </motion.div>
 
