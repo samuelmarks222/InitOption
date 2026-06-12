@@ -2,9 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import logo from "@/assets/logo.png";
+import { SiteLogo } from "@/components/branding/SiteLogo";
 
 const navLinks = [
   { label: "Markets", href: "/#markets" },
@@ -21,7 +20,10 @@ const Navbar = () => {
     <nav className="fixed left-0 right-0 top-0 z-50 shadow-[0_12px_32px_hsla(var(--landing-secondary),0.2)] backdrop-blur-2xl" style={{ background: "hsla(var(--background), 0.95)" }}>
       <div className="flex h-16 items-center justify-between gap-4 px-[70px] sm:h-20 sm:gap-6">
         <Link to="/" className="shrink-0 flex items-center gap-2">
-          <img src={logo} alt="Init Option" className="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11" />
+          <SiteLogo
+            variant="light"
+            imageClassName="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11"
+          />
         </Link>
 
         <div className="hidden items-center gap-16 lg:gap-20 md:flex">
