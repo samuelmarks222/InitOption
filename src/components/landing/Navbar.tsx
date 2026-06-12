@@ -27,7 +27,7 @@ const Navbar = () => {
             />
           </Link>
 
-        <div className="hidden items-center gap-16 lg:gap-20 md:flex">
+          <div className="hidden items-center gap-16 lg:gap-20 md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.label}
