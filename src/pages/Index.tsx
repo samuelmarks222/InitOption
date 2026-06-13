@@ -15,7 +15,6 @@ const MobileSection = lazy(() => import("@/components/landing/MobileSection"));
 const EarningsSection = lazy(() => import("@/components/landing/EarningsSection"));
 const TestimonialsSection = lazy(() => import("@/components/landing/TestimonialsSection"));
 const FAQSection = lazy(() => import("@/components/landing/FAQSection"));
-const CTASection = lazy(() => import("@/components/landing/CTASection"));
 const Footer = lazy(() => import("@/components/landing/Footer"));
 
 const LandingSectionFallback = () => <div className="min-h-[28vh]" aria-hidden="true" />;
@@ -48,7 +47,6 @@ const Index = () => {
         <EarningsSection />
         <TestimonialsSection />
         <FAQSection />
-        <CTASection />
         <Footer />
       </Suspense>
     </div>
