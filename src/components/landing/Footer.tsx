@@ -141,6 +141,7 @@ const Footer = ({ content }: FooterProps) => {
             <div className="max-w-xl">
               <SiteLogo
                 to="/"
+                context="footer"
                 className="mb-5"
                 imageClassName="h-12 sm:h-14"
               />

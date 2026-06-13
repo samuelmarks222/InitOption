@@ -26,6 +26,7 @@ export const AuthShell = ({
       <div className="relative mx-auto flex min-h-screen max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
           <SiteLogo
+            variant="dark"
             className="gap-2.5"
             markClassName="h-9 w-9 rounded-xl bg-[linear-gradient(135deg,#1a88ff,#17bf63)]"
           />

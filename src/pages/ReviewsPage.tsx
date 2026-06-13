@@ -511,6 +511,7 @@ const ReviewsPage = () => {
             <div className="flex min-h-[62px] w-full items-center justify-between gap-4 px-6 xl:px-8">
               <SiteLogo
                 to="/"
+                variant="dark"
                 className="gap-2"
                 imageClassName="h-9 sm:h-10"
                 nameClassName="text-white"

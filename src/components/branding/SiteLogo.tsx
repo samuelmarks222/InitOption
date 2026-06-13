@@ -14,7 +14,7 @@ interface SiteLogoProps {
   centered?: boolean;
   showText?: boolean;
   variant?: "auto" | "light" | "dark";
-  context?: "dashboard" | "hero" | "admin" | "navbar";
+  context?: "dashboard" | "hero" | "admin" | "navbar" | "footer" | "landing_header";
 }
 
 export const SiteLogo = ({
@@ -29,13 +29,16 @@ export const SiteLogo = ({
   centered = false,
   showText = false,
   variant = "auto",
+  context,
 }: SiteLogoProps) => {
-  const { initials, logoUrl, logoUrlLight, logoUrlDark, platformName, getLogoUrlByVariant } = useSiteBranding();
+  const { initials, logoUrl, platformName, getLogoUrlByVariant, getLogoForContext } = useSiteBranding();
 
   const selectedLogoUrl =
-    variant === "auto"
-      ? logoUrl
-      : getLogoUrlByVariant(variant);
+    context
+      ? getLogoForContext(context)
+      : variant === "auto"
+        ? logoUrl
+        : getLogoUrlByVariant(variant);
 
   const content = (
     <div

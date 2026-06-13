@@ -22,7 +22,7 @@ const Navbar = () => {
         <div className="mx-auto flex h-16 max-w-[calc(100%-140px)] items-center justify-between gap-4 sm:h-20 sm:gap-6">
           <Link to="/" className="shrink-0 flex items-center gap-2">
             <SiteLogo
-              variant="light"
+              context="landing_header"
               imageClassName="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11"
             />
           </Link>

@@ -124,7 +124,7 @@ const Settings = () => {
         className="flex min-h-[72px] flex-wrap items-center justify-between gap-4 border-b px-4 py-3 sm:px-6"
         style={{ background: "var(--trading-header-bg)", borderColor: "var(--trading-border-color)" }}
       >
-        <SiteLogo to="/" subtitle={t("settings.platformSettings")} />
+        <SiteLogo to="/" variant="dark" subtitle={t("settings.platformSettings")} />
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/trade")}

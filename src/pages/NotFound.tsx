@@ -13,7 +13,7 @@ const NotFound = () => {
   return (
     <div className="min-h-screen bg-[#07111d] px-4 py-8 text-white sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl flex-col">
-        <SiteLogo to="/" subtitle="Page not found" />
+        <SiteLogo to="/" variant="dark" subtitle="Page not found" />
 
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full rounded-[32px] border border-white/10 bg-[#0d1826]/92 p-8 text-center shadow-[0_30px_90px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:p-12">

@@ -307,7 +307,7 @@ const Withdraw = () => {
     <div className="min-h-screen overflow-x-hidden bg-[#171f2b] text-white">
       <div className="border-b border-white/10 bg-[#192230]/92">
         <div className="mx-auto flex min-h-[68px] w-full max-w-[1360px] items-center justify-between gap-4 px-5 sm:px-8">
-          <SiteLogo to="/" imageClassName="h-9 sm:h-10" />
+          <SiteLogo to="/" variant="dark" imageClassName="h-9 sm:h-10" />
           <Link to="/trade" className="flex shrink-0 items-center gap-2 text-sm text-white/90 transition hover:text-white">
             <ArrowLeft className="h-4 w-4" />
             Back to Trading

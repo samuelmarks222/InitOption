@@ -48,7 +48,7 @@ const Dashboard = () => {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4">
           <SiteLogo
             to="/"
-            variant="dark"
+            variant="light"
             className="max-w-full"
             imageClassName="h-10 w-auto max-w-[240px] object-contain object-left"
             centered={false}

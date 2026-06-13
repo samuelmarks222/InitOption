@@ -20,7 +20,7 @@ const NotificationsPage = () => {
     <div className="relative min-h-screen overflow-hidden bg-[#0b1017]">
       <div className="relative px-4 py-6 sm:px-6 lg:px-10">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <SiteLogo to="/" subtitle="Notification center" />
+          <SiteLogo to="/" variant="dark" subtitle="Notification center" />
         </div>
 
         <section className="mt-6 overflow-hidden rounded-[34px] border border-white/8 bg-[#1a2230]/94 backdrop-blur-xl shadow-[0_38px_120px_rgba(0,0,0,0.08)]">

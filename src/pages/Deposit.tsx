@@ -603,7 +603,7 @@ const Deposit = () => {
       <div className="border-b border-white/10 bg-[#121927]/95">
         <div className="mx-auto flex min-h-[64px] w-full max-w-[1360px] flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-5">
-            <SiteLogo to="/" imageClassName="h-9 sm:h-10" />
+            <SiteLogo to="/" variant="dark" imageClassName="h-9 sm:h-10" />
             <div className="hidden h-8 w-px bg-white/12 sm:block" />
             <Link to="/trade" className="flex w-fit items-center gap-2 text-sm text-white/86 transition-colors hover:text-white">
               <ArrowLeft className="h-4 w-4" />

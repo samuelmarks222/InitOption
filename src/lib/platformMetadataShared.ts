@@ -3,6 +3,11 @@ import { getRouteSeoOverride, type RouteSeoContext } from "./routeSeo.js";
 export const SITE_LOGO_STORAGE_KEY = "site_logo";
 export const SITE_LOGO_LIGHT_STORAGE_KEY = "site_logo_light";
 export const SITE_LOGO_DARK_STORAGE_KEY = "site_logo_dark";
+export const SITE_LOGO_FOOTER_STORAGE_KEY = "site_logo_footer";
+export const SITE_LOGO_DASHBOARD_STORAGE_KEY = "site_logo_dashboard";
+export const SITE_LOGO_DASHBOARD_LIGHT_STORAGE_KEY = "site_logo_dashboard_light";
+export const SITE_LOGO_DASHBOARD_DARK_STORAGE_KEY = "site_logo_dashboard_dark";
+export const SITE_LOGO_LANDING_HEADER_STORAGE_KEY = "site_logo_landing_header";
 export const SITE_PLATFORM_NAME_STORAGE_KEY = "site_platform_name";
 export const SITE_SUPPORT_EMAIL_STORAGE_KEY = "site_support_email";
 
@@ -33,6 +38,11 @@ export interface PlatformSettingsRecord {
   logo_url: string;
   logo_url_light: string;
   logo_url_dark: string;
+  logo_url_footer: string;
+  logo_url_dashboard: string;
+  logo_url_dashboard_light: string;
+  logo_url_dashboard_dark: string;
+  logo_url_landing_header: string;
   favicon_url: string;
   chart_up_color: string;
   chart_down_color: string;
@@ -85,6 +95,11 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettingsRecord = {
   logo_url: "",
   logo_url_light: "",
   logo_url_dark: "",
+  logo_url_footer: "",
+  logo_url_dashboard: "",
+  logo_url_dashboard_light: "",
+  logo_url_dashboard_dark: "",
+  logo_url_landing_header: "",
   favicon_url: "",
   chart_up_color: "#00C076",
   chart_down_color: "#F6465D",
@@ -156,6 +171,11 @@ export const normalizePlatformSettings = (
   logo_url: toStringValue(value?.logo_url),
   logo_url_light: toStringValue(value?.logo_url_light),
   logo_url_dark: toStringValue(value?.logo_url_dark),
+  logo_url_footer: toStringValue(value?.logo_url_footer),
+  logo_url_dashboard: toStringValue(value?.logo_url_dashboard),
+  logo_url_dashboard_light: toStringValue(value?.logo_url_dashboard_light),
+  logo_url_dashboard_dark: toStringValue(value?.logo_url_dashboard_dark),
+  logo_url_landing_header: toStringValue(value?.logo_url_landing_header),
   favicon_url: toStringValue(value?.favicon_url),
   chart_up_color: toStringValue(value?.chart_up_color, DEFAULT_PLATFORM_SETTINGS.chart_up_color),
   chart_down_color: toStringValue(value?.chart_down_color, DEFAULT_PLATFORM_SETTINGS.chart_down_color),

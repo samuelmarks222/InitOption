@@ -82,7 +82,8 @@ const TradingHeader = ({
   const { profile } = useAuth();
   const { vip } = useVip();
   const { formatMoney } = useCurrency();
-  const { logoUrl, platformName, initials } = useSiteBranding();
+  const { platformName, initials, getLogoForContext } = useSiteBranding();
+  const headerLogoUrl = getLogoForContext("dashboard");
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -270,11 +271,11 @@ const TradingHeader = ({
             className="flex h-full min-w-[260px] shrink items-center border-r px-4 xl:min-w-[430px] xl:px-6"
             style={{ borderColor: "var(--trading-border-strong-color)" }}
           >
-            {logoUrl ? (
+            {headerLogoUrl ? (
               <div className="flex min-w-0 items-center gap-3 overflow-visible xl:gap-4">
                 <div className="flex min-h-[50px] min-w-0 max-w-[240px] shrink items-center overflow-visible py-1 xl:min-h-[54px] xl:max-w-[300px] 2xl:max-w-[340px]">
                   <img
-                    src={logoUrl}
+                    src={headerLogoUrl}
                     alt={platformName}
                     className="block max-h-[42px] w-auto max-w-full shrink-0 object-contain object-left brightness-110 contrast-125 saturate-110 xl:max-h-[46px]"
                     style={{ filter: "var(--trading-logo-filter)" }}
