@@ -21,24 +21,28 @@ const Footer = ({ content }: FooterProps) => {
   const websiteContent = normalizeWebsiteContent(content, platformName);
 
   const quickLinks = [
-    { label: "About Us", to: "/about" },
-    { label: "Teams", to: "/teams" },
-    { label: "Services", to: "/services" },
-    { label: "Features", to: "/features" },
+    { label: "About Init Option", to: "/about" },
+    { label: "Facts and figures", to: "/facts-and-figures" },
+    { label: "How it works", to: "/how-it-works" },
+    { label: "Contact us", to: "/contact" },
   ];
 
-  const supportLinks = [
-    { label: "Terms & Conditions", to: "/terms" },
+  const exploreLinks = [
+    { label: "Trading guide", to: "/trading-guide" },
+    { label: "FAQ", to: "/faq" },
+    { label: "Blog", to: "/blog" },
+    { label: "Tournaments", to: "/tournaments" },
+  ];
+
+  const regulationLinks = [
+    { label: "Terms and Conditions", to: "/terms" },
+    { label: "Information Disclosure Policy", to: "/information-disclosure" },
     { label: "Privacy Policy", to: "/privacy" },
-    { label: "FAQs", to: "/faq" },
-    { label: "Support Center", to: "/support" },
+    { label: "Risk disclaimer", to: "/risk-disclaimer" },
   ];
 
-  const companyLinks = [
-    { label: "Careers", to: "/careers" },
-    { label: "Updates", to: "/updates" },
-    { label: "Job", to: "/jobs" },
-    { label: "Announce", to: "/announce" },
+  const partnerLinks = [
+    { label: "Affiliate program", to: "/affiliate-program" },
   ];
 
   const socialLinks = [
@@ -60,7 +64,7 @@ const Footer = ({ content }: FooterProps) => {
       <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
         {/* Main Content */}
         <div className="py-16 sm:py-24">
-          <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-[1fr_2fr]">
+          <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-[0.8fr_1.5fr]">
             {/* Left Section */}
             <div className="flex flex-col gap-8">
               {/* Logo and Description */}
@@ -74,7 +78,7 @@ const Footer = ({ content }: FooterProps) => {
                   />
                 </div>
                 <p className="font-copy text-sm leading-relaxed text-white/70">
-                  {websiteContent.footer.description || "Welcome to our trading site! We offer the best, most affordable products and services around. Shop now and start finding great deals!"}
+                  {websiteContent.footer.description}
                 </p>
               </div>
 
@@ -91,12 +95,12 @@ const Footer = ({ content }: FooterProps) => {
               </div>
             </div>
 
-            {/* Right Section - Three Columns */}
-            <div className="grid grid-cols-3 gap-8 sm:gap-10">
-              {/* Quick Links */}
+            {/* Right Section - Four Columns */}
+            <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 sm:gap-6">
+              {/* About us */}
               <div>
                 <h4 className="font-copy text-xs font-bold text-white/90 uppercase tracking-widest mb-5">
-                  Quick links
+                  About us
                 </h4>
                 <ul className="space-y-4">
                   {quickLinks.map((link) => (
@@ -112,13 +116,13 @@ const Footer = ({ content }: FooterProps) => {
                 </ul>
               </div>
 
-              {/* Support */}
+              {/* Explore */}
               <div>
                 <h4 className="font-copy text-xs font-bold text-white/90 uppercase tracking-widest mb-5">
-                  Support
+                  Explore
                 </h4>
                 <ul className="space-y-4">
-                  {supportLinks.map((link) => (
+                  {exploreLinks.map((link) => (
                     <li key={link.label}>
                       <Link
                         to={link.to}
@@ -131,13 +135,32 @@ const Footer = ({ content }: FooterProps) => {
                 </ul>
               </div>
 
-              {/* Company */}
+              {/* Regulation */}
               <div>
                 <h4 className="font-copy text-xs font-bold text-white/90 uppercase tracking-widest mb-5">
-                  Company
+                  Regulation
                 </h4>
                 <ul className="space-y-4">
-                  {companyLinks.map((link) => (
+                  {regulationLinks.map((link) => (
+                    <li key={link.label}>
+                      <Link
+                        to={link.to}
+                        className="font-copy text-sm text-white/60 transition-colors duration-200 hover:text-white/90"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* For partners */}
+              <div>
+                <h4 className="font-copy text-xs font-bold text-white/90 uppercase tracking-widest mb-5">
+                  For partners
+                </h4>
+                <ul className="space-y-4">
+                  {partnerLinks.map((link) => (
                     <li key={link.label}>
                       <Link
                         to={link.to}
