@@ -111,43 +111,34 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.5 }}
-          className="mt-20 grid items-center gap-10 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-8 lg:grid-cols-[1fr_1.2fr] lg:gap-14 lg:p-12"
+          className="mt-20 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-8 py-10 text-center lg:px-16 lg:py-14"
         >
-          <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-[hsla(var(--landing-primary),0.15)] to-transparent" />
-            <img
-              src="/landing/hero-laptop-angle.jpg"
-              alt="Trading platform"
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <div>
-            <h2 className="font-display text-2xl font-bold text-white lg:text-3xl">
-              Everything you need to trade smarter
-            </h2>
-            <p className="mt-4 text-base leading-7 text-white/50 lg:text-lg lg:leading-8">
-              Init Option offers advanced trading tools, market analysis, risk
-              management features, and educational resources for traders of all
-              levels.
-            </p>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-              <li className="flex items-center gap-2.5 text-sm text-white/60">
-                <CheckCircle size={16} className="shrink-0 text-emerald-400" />
-                Advanced trading tools
-              </li>
-              <li className="flex items-center gap-2.5 text-sm text-white/60">
-                <CheckCircle size={16} className="shrink-0 text-emerald-400" />
-                Market analysis
-              </li>
-              <li className="flex items-center gap-2.5 text-sm text-white/60">
-                <CheckCircle size={16} className="shrink-0 text-emerald-400" />
-                Risk management features
-              </li>
-              <li className="flex items-center gap-2.5 text-sm text-white/60">
-                <CheckCircle size={16} className="shrink-0 text-emerald-400" />
-                Educational resources
-              </li>
-            </ul>
+          <div className="mx-auto inline-flex h-1 w-16 rounded-full bg-gradient-to-r from-blue-400 to-blue-500" />
+          <h2 className="mt-6 font-display text-2xl font-bold text-white lg:text-3xl">
+            Everything you need to trade smarter
+          </h2>
+          <p className="mx-auto mt-4 max-w-3xl text-base leading-7 text-white/50 lg:text-lg lg:leading-8">
+            Init Option offers advanced trading tools, market analysis, risk
+            management features, and educational resources for traders of all
+            levels.
+          </p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:mx-auto lg:max-w-2xl">
+            <div className="flex items-center gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-5 py-4 text-left">
+              <CheckCircle size={18} className="shrink-0 text-blue-400" />
+              <span className="font-copy text-sm font-medium text-white/70">Advanced trading tools</span>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-5 py-4 text-left">
+              <CheckCircle size={18} className="shrink-0 text-blue-400" />
+              <span className="font-copy text-sm font-medium text-white/70">Market analysis</span>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-5 py-4 text-left">
+              <CheckCircle size={18} className="shrink-0 text-blue-400" />
+              <span className="font-copy text-sm font-medium text-white/70">Risk management features</span>
+            </div>
+            <div className="flex items-center gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-5 py-4 text-left">
+              <CheckCircle size={18} className="shrink-0 text-blue-400" />
+              <span className="font-copy text-sm font-medium text-white/70">Educational resources</span>
+            </div>
           </div>
         </motion.div>
       </div>
