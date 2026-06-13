@@ -16,7 +16,7 @@ const FAQSection = () => {
   }
 
   return (
-    <section id="faq" className="relative overflow-hidden bg-white py-20 sm:py-24">
+    <section id="faq" className="relative overflow-hidden bg-[hsl(var(--landing-surface))] py-20 sm:py-24">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,hsla(var(--landing-primary),0.16),transparent_24%)]" />
       <div className="relative z-10 px-[70px]">
         <motion.div
@@ -25,10 +25,10 @@ const FAQSection = () => {
           viewport={{ once: true }}
           className="mb-16 text-center"
         >
-          <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-[hsl(var(--landing-primary))]">
+          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-[hsl(var(--landing-border))]">
             Support
           </span>
-          <h2 className="font-heading text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl">
+          <h2 className="font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
             {faq.title}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-[hsl(var(--landing-border))] sm:text-lg">{faq.subtitle}</p>

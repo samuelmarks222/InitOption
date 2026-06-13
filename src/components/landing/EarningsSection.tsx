@@ -21,10 +21,10 @@ const EarningsSection = () => {
           viewport={{ once: true }}
           className="mb-16 text-center"
         >
-          <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-[hsl(var(--landing-primary))]">
+          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-[hsl(var(--landing-border))]">
             Earnings
           </span>
-          <h2 className="font-heading text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl">
+          <h2 className="font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
             Discover your <span className="text-gradient-primary">earning potential</span>
           </h2>
         </motion.div>

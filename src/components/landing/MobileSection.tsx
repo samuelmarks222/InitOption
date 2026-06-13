@@ -27,10 +27,10 @@ const MobileSection = () => {
             viewport={{ once: true }}
             className="order-2 flex-1 lg:order-1"
           >
-            <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-widest text-[hsl(var(--landing-primary))]">
+            <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-[hsl(var(--landing-border))]">
               {mobile.installLabel}
             </span>
-            <h2 className="font-heading text-2xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl">
+            <h2 className="font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
               {mobile.title}
             </h2>
             <p className="mt-3 text-base leading-8 text-[hsl(var(--landing-border))] sm:mt-4 sm:text-lg">

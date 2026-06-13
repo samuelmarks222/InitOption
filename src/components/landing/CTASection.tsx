@@ -19,7 +19,10 @@ const CTASection = () => {
           className="relative mx-auto max-w-4xl text-center"
         >
           <div className="relative">
-            <h2 className="mx-auto max-w-3xl font-heading text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+            <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-white/60">
+              Get Started
+            </span>
+            <h2 className="mx-auto max-w-3xl font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
               {finalCta.title}
             </h2>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-white/82 sm:text-lg">{footer.description}</p>
