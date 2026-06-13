@@ -35,14 +35,14 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
 
       <div className="relative mx-auto flex min-h-[calc(100vh-7rem)] max-w-7xl flex-col justify-center">
-        <div className="grid items-center gap-10 lg:grid-cols-[1fr_1fr] lg:gap-16">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="pt-8 lg:pt-16"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.04] px-4 py-1.5 font-copy text-xs font-medium text-emerald-400">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 font-copy text-xs font-medium text-emerald-400">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               Trusted by traders worldwide
             </span>
@@ -79,34 +79,29 @@ const HeroSection = () => {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="relative flex items-center justify-center lg:justify-end"
+            transition={{ duration: 0.7, delay: 0.25 }}
+            className="relative flex items-center justify-center py-8 lg:justify-end lg:py-0"
           >
-            {/* Large ambient golden glow */}
-            <div className="absolute -top-10 right-0 h-80 w-80 rounded-full opacity-20 blur-3xl lg:h-[500px] lg:w-[500px]"
-              style={{ background: "radial-gradient(circle at center, #f59e0b, transparent 70%)" }}
+            {/* Golden ambient glow behind everything */}
+            <div className="absolute -top-12 right-4 h-80 w-80 rounded-full opacity-15 blur-3xl lg:h-[500px] lg:w-[500px]"
+              style={{ background: "radial-gradient(circle, #f59e0b, transparent 70%)" }}
             />
 
-            {/* Main circle stack */}
-            <div className="relative z-10 flex items-center justify-center lg:translate-x-10">
-              {/* Golden crescent arc behind the circle */}
-              <div className="absolute -right-6 -top-6 h-[calc(100%+3rem)] w-[calc(100%+3rem)] rounded-full opacity-30 blur-[1px]"
-                style={{ background: "conic-gradient(from 220deg at 50% 50%, transparent 0deg, #f59e0b 30deg, #d97706 60deg, transparent 100deg, transparent 360deg)" }}
-              />
-              <div className="absolute -bottom-4 -left-4 h-[calc(100%+2rem)] w-[calc(100%+2rem)] rounded-full opacity-20 blur-[1px]"
-                style={{ background: "conic-gradient(from 50deg at 50% 50%, transparent 0deg, #fbbf24 40deg, #f59e0b 80deg, transparent 120deg, transparent 360deg)" }}
-              />
+            {/* Golden curved blob behind the circle */}
+            <div className="absolute -right-4 -top-6 h-80 w-80 rounded-[55%_45%_65%_35%] opacity-50 lg:-right-10 lg:-top-10 lg:h-[450px] lg:w-[450px]"
+              style={{ background: "linear-gradient(145deg, rgba(245,158,11,0.6), rgba(217,119,6,0.2))" }}
+            />
+            <div className="absolute -bottom-8 left-4 h-56 w-56 rounded-[40%_60%_30%_70%] opacity-30 lg:left-0 lg:h-72 lg:w-72"
+              style={{ background: "linear-gradient(110deg, rgba(251,191,36,0.45), rgba(245,158,11,0.1))" }}
+            />
 
+            {/* Main circle wrapper - extends outside container */}
+            <div className="relative z-10 lg:translate-x-14">
               <div className="relative h-72 w-72 lg:h-[440px] lg:w-[440px]">
-                {/* Golden offset blob for depth */}
-                <div className="absolute -right-5 -top-5 h-full w-full rounded-full"
-                  style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.25), rgba(217,119,6,0.08))" }}
-                />
-
-                {/* Image circle with white border */}
-                <div className="relative h-full w-full overflow-hidden rounded-full border-[6px] border-white/90 shadow-[0_30px_80px_rgba(0,0,0,0.4),0_0_80px_rgba(245,158,11,0.12)]">
+                {/* Image circle with thick white border */}
+                <div className="relative h-full w-full overflow-hidden rounded-full border-[7px] border-white shadow-[0_35px_90px_rgba(0,0,0,0.45),0_5px_30px_rgba(245,158,11,0.15)]">
                   <img
                     src={heroImage}
                     alt="Professional trader"
