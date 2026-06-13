@@ -110,6 +110,19 @@ const App = () => {
     loadPlatformPresentation();
   }, []);
 
+  // Keep platformSettings in sync after admin saves so RouteSeoManager
+  // doesn't re-apply stale settings (which would wipe new logo keys).
+  useEffect(() => {
+    const onBrandUpdated = () => {
+      const cachedSettings = readPlatformPresentationCache();
+      if (cachedSettings) {
+        setPlatformSettings(cachedSettings);
+      }
+    };
+    window.addEventListener("brand_updated", onBrandUpdated);
+    return () => window.removeEventListener("brand_updated", onBrandUpdated);
+  }, []);
+
   return (
   <AppErrorBoundary>
     <QueryClientProvider client={queryClient}>

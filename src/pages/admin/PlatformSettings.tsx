@@ -377,8 +377,8 @@ const PlatformSettings = () => {
       }
     }
 
-    applyPlatformSettingsToDocument(settings);
     writePlatformPresentationCache(settings);
+    applyPlatformSettingsToDocument(settings);
     toast({ title: "Platform settings published" });
     await fetchSettings();
     setSaving(false);
