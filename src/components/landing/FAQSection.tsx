@@ -6,7 +6,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
-import { HelpCircle } from "lucide-react";
 
 const FAQSection = () => {
   const { data: websiteContent } = useWebsiteContent();
@@ -26,10 +25,14 @@ const FAQSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
-              <HelpCircle size={24} strokeWidth={1.5} />
+            <div className="overflow-hidden rounded-2xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
+              <img
+                src="/landing/faqs.avif"
+                alt="FAQ illustration"
+                className="w-full object-cover"
+              />
             </div>
-            <span className="mt-6 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
+            <span className="mt-8 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
               Support
             </span>
             <h2 className="mt-2 font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
