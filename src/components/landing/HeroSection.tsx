@@ -100,14 +100,30 @@ const HeroSection = () => {
             {/* Main circle wrapper - extends outside container */}
             <div className="relative z-10 lg:translate-x-14">
               <div className="relative h-72 w-72 lg:h-[380px] lg:w-[380px]">
-                {/* Image circle with thick white border */}
-                <div className="relative h-full w-full overflow-hidden rounded-full border-[7px] border-white shadow-[0_35px_90px_rgba(0,0,0,0.45),0_5px_30px_rgba(245,158,11,0.15)]">
-                  <img
-                    src={heroImage}
-                    alt="Professional trader"
-                    className="h-full w-full object-cover"
-                  />
+                {/* Decorative outer ring */}
+                <div className="absolute -inset-3 rounded-full border border-emerald-500/20" />
+                <div className="absolute -inset-6 rounded-full border border-emerald-500/10" />
+
+                {/* Window controls decoration at top of circle */}
+                <div className="absolute left-1/2 top-4 z-20 flex -translate-x-1/2 gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-yellow-500/80" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
                 </div>
+
+                {/* Image circle with terminal-style glass border */}
+                <div className="relative h-full w-full overflow-hidden rounded-full border-[6px] border-white/80 p-1 shadow-[0_35px_90px_rgba(0,0,0,0.45),0_0_50px_hsla(var(--landing-primary),0.12)]">
+                  <div className="h-full w-full overflow-hidden rounded-full">
+                    <img
+                      src={heroImage}
+                      alt="Trading platform preview"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                </div>
+
+                {/* Glass overlay ring for terminal feel */}
+                <div className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-white/10" />
               </div>
             </div>
           </motion.div>
