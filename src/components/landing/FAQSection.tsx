@@ -19,26 +19,24 @@ const FAQSection = () => {
     <section id="faq" className="relative overflow-hidden bg-[hsl(var(--landing-surface))] py-20 sm:py-24">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_100%,hsla(var(--landing-primary),0.04),transparent_50%)]" />
       <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-        <div className="grid gap-14 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
+        <div className="grid items-start gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-14">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <div className="overflow-hidden rounded-2xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
-              <img
-                src="/landing/faqs.avif"
-                alt="FAQ illustration"
-                className="w-full object-cover"
-              />
-            </div>
-            <span className="mt-8 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
+            <img
+              src="/landing/faqs.avif"
+              alt="FAQ illustration"
+              className="w-full"
+            />
+            <span className="mt-6 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
               Support
             </span>
-            <h2 className="mt-2 font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
+            <h2 className="mt-1 font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
               {faq.title}
             </h2>
-            <p className="mt-4 text-base leading-7 text-[hsl(var(--landing-muted))] sm:text-lg">
+            <p className="mt-3 text-base leading-7 text-[hsl(var(--landing-muted))] sm:text-lg">
               {faq.subtitle}
             </p>
           </motion.div>
