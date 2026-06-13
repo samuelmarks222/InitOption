@@ -12,6 +12,7 @@ import {
   type PlatformSettingsRecord,
   type TwitterCardType,
 } from "@/lib/platformMetadata";
+import { writePlatformPresentationCache } from "@/lib/platformSettingsCache";
 import {
   GUIDE_MEDIA_KEYS,
   createDefaultWebsiteContent,
@@ -362,6 +363,7 @@ const PlatformSettings = () => {
     }
 
     applyPlatformSettingsToDocument(settings);
+    writePlatformPresentationCache(settings);
     toast({ title: "Platform settings published" });
     await fetchSettings();
     setSaving(false);
