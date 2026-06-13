@@ -11,7 +11,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
 
       <div className="relative mx-auto flex min-h-[calc(100vh-7rem)] max-w-7xl flex-col justify-center">
-        <div className="grid items-center gap-12 lg:grid-cols-[1.4fr_0.6fr] lg:gap-12">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.3fr_0.7fr] lg:gap-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -77,25 +77,25 @@ const HeroSection = () => {
             />
 
             {/* Main circle wrapper - extends outside container */}
-            <div className="relative z-10 lg:translate-x-14">
-              <div className="relative h-72 w-72 lg:h-[380px] lg:w-[380px]">
+            <div className="relative z-10 lg:translate-x-16">
+              <div className="relative h-80 w-80 lg:h-[480px] lg:w-[480px]">
                 {/* Layered circular frames */}
-                <div className="absolute -inset-4 rounded-full border border-white/8 backdrop-blur-sm"
+                <div className="absolute -inset-5 rounded-full border border-white/8 backdrop-blur-sm"
                   style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(96,165,250,0.02))" }}
                 />
-                <div className="absolute -inset-2 rounded-full border border-white/10"
+                <div className="absolute -inset-3 rounded-full border border-white/10"
                   style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.08), transparent)" }}
                 />
 
                 {/* Image circle with premium frame */}
-                <div className="relative h-full w-full overflow-hidden rounded-full shadow-[0_40px_100px_rgba(0,0,0,0.5),0_0_60px_rgba(37,99,235,0.1)] backdrop-blur-sm"
-                  style={{ border: "3px solid rgba(255,255,255,0.15)", padding: "6px", background: "rgba(11,31,58,0.3)" }}
+                <div className="relative h-full w-full overflow-hidden rounded-full shadow-[0_40px_100px_rgba(0,0,0,0.5),0_0_80px_rgba(37,99,235,0.15)] backdrop-blur-sm"
+                  style={{ border: "3px solid rgba(255,255,255,0.15)", padding: "8px", background: "linear-gradient(135deg, rgba(11,31,58,0.6), rgba(30,41,59,0.3))" }}
                 >
-                  <div className="h-full w-full overflow-hidden rounded-full">
+                  <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#0B1F3A]/60 p-4">
                     <img
                       src={heroImage}
                       alt="Trading platform preview"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-scale-down"
                     />
                   </div>
                 </div>
