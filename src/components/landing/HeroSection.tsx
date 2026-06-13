@@ -26,7 +26,7 @@ const features = [
 ];
 
 const heroImage =
-  "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&h=600&q=85";
+  "/landing/hero-laptop-angle.jpg";
 
 const HeroSection = () => {
   return (
