@@ -32,8 +32,8 @@ const Navbar = () => {
       }`}
       style={{
         background: scrolled
-          ? "hsla(217, 33%, 12%, 0.92)"
-          : "hsla(217, 33%, 12%, 0.5)",
+          ? "rgba(30, 50, 101, 0.92)"
+          : "rgba(30, 50, 101, 0.5)",
       }}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6 sm:h-20 sm:px-8 lg:px-10">
@@ -87,7 +87,8 @@ const Navbar = () => {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="border-t border-white/5 bg-[hsla(217,33%,12%,0.98)] px-6 pb-6 pt-2 backdrop-blur-xl md:hidden"
+          className="border-t border-white/5 px-6 pb-6 pt-2 backdrop-blur-xl md:hidden"
+          style={{ background: "rgba(30, 50, 101, 0.98)" }}
         >
           {navLinks.map((link) => (
             <Link

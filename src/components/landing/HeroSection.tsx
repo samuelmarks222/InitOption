@@ -6,7 +6,7 @@ const heroImage = "/landing/hero-laptop-front77.jpg";
 
 const HeroSection = () => {
   return (
-    <section className="relative isolate min-h-screen overflow-x-clip px-6 pt-28 pb-20 sm:px-8 lg:px-10" style={{ background: "#121e2d" }}>
+    <section className="relative isolate min-h-screen overflow-x-clip px-6 pt-28 pb-20 sm:px-8 lg:px-10" style={{ background: "#1e3265" }}>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsla(var(--landing-primary),0.1),transparent_50%),radial-gradient(ellipse_at_bottom_left,hsla(var(--landing-primary),0.05),transparent_50%)]" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
 
