@@ -84,17 +84,17 @@ const HeroSection = () => {
             transition={{ duration: 0.7, delay: 0.25 }}
             className="relative flex items-center justify-center py-8 lg:justify-end lg:py-0"
           >
-            {/* Golden ambient glow behind everything */}
-            <div className="absolute -top-12 right-4 h-80 w-80 rounded-full opacity-15 blur-3xl lg:h-[500px] lg:w-[500px]"
-              style={{ background: "radial-gradient(circle, #f59e0b, transparent 70%)" }}
+            {/* Emerald ambient glow behind everything */}
+            <div className="absolute -top-12 right-4 h-80 w-80 rounded-full opacity-20 blur-3xl lg:h-[500px] lg:w-[500px]"
+              style={{ background: "radial-gradient(circle, hsl(var(--landing-primary)), transparent 70%)" }}
             />
 
-            {/* Golden curved blob behind the circle */}
-            <div className="absolute -right-4 -top-6 h-80 w-80 rounded-[55%_45%_65%_35%] opacity-50 lg:-right-10 lg:-top-10 lg:h-[450px] lg:w-[450px]"
-              style={{ background: "linear-gradient(145deg, rgba(245,158,11,0.6), rgba(217,119,6,0.2))" }}
+            {/* Emerald curved blob behind the circle */}
+            <div className="absolute -right-4 -top-6 h-80 w-80 rounded-[55%_45%_65%_35%] opacity-40 lg:-right-10 lg:-top-10 lg:h-[450px] lg:w-[450px]"
+              style={{ background: "linear-gradient(145deg, hsla(var(--landing-primary),0.5), hsla(var(--landing-primary),0.1))" }}
             />
-            <div className="absolute -bottom-8 left-4 h-56 w-56 rounded-[40%_60%_30%_70%] opacity-30 lg:left-0 lg:h-72 lg:w-72"
-              style={{ background: "linear-gradient(110deg, rgba(251,191,36,0.45), rgba(245,158,11,0.1))" }}
+            <div className="absolute -bottom-8 left-4 h-56 w-56 rounded-[40%_60%_30%_70%] opacity-25 lg:left-0 lg:h-72 lg:w-72"
+              style={{ background: "linear-gradient(110deg, hsla(var(--landing-primary),0.4), transparent)" }}
             />
 
             {/* Main circle wrapper - extends outside container */}
