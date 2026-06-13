@@ -13,7 +13,7 @@ const EarningsSection = () => {
 
   return (
     <section className="relative overflow-hidden bg-white py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,hsla(var(--landing-primary),0.04),transparent_40%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_100%,hsla(var(--landing-primary),0.04),transparent_40%)]" />
       <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -32,61 +32,78 @@ const EarningsSection = () => {
           </h2>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="relative mx-auto max-w-lg"
-        >
-          <div className="rounded-2xl border border-gray-200/60 bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.04)] sm:p-10">
-            <div className="mb-7">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="font-copy text-sm text-[hsl(var(--landing-muted))]">Account size</span>
-                <span className="font-display text-lg font-bold text-[hsl(var(--landing-secondary))]">${accountSize[0].toFixed(0)}</span>
+        <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mx-auto w-full max-w-lg"
+          >
+            <div className="rounded-2xl border border-gray-200/60 bg-white p-8 shadow-[0_1px_3px_rgba(0,0,0,0.04)] sm:p-10">
+              <div className="mb-7">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="font-copy text-sm text-[hsl(var(--landing-muted))]">Account size</span>
+                  <span className="font-display text-lg font-bold text-[hsl(var(--landing-secondary))]">${accountSize[0].toFixed(0)}</span>
+                </div>
+                <Slider
+                  value={accountSize}
+                  onValueChange={setAccountSize}
+                  min={10}
+                  max={5000}
+                  step={10}
+                  className="[&_[role=slider]]:bg-[hsl(var(--landing-primary))] [&_[role=slider]]:border-[hsl(var(--landing-primary))] [&_.relative>div]:bg-[hsl(var(--landing-primary))]"
+                />
               </div>
-              <Slider
-                value={accountSize}
-                onValueChange={setAccountSize}
-                min={10}
-                max={5000}
-                step={10}
-                className="[&_[role=slider]]:bg-[hsl(var(--landing-primary))] [&_[role=slider]]:border-[hsl(var(--landing-primary))] [&_.relative>div]:bg-[hsl(var(--landing-primary))]"
+
+              <div className="mb-7">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="font-copy text-sm text-[hsl(var(--landing-muted))]">Profit rate</span>
+                  <span className="font-display text-lg font-bold text-[hsl(var(--landing-secondary))]">{profitRate[0]}%</span>
+                </div>
+                <Slider
+                  value={profitRate}
+                  onValueChange={setProfitRate}
+                  min={50}
+                  max={95}
+                  step={1}
+                  className="[&_[role=slider]]:bg-[hsl(var(--landing-primary))] [&_[role=slider]]:border-[hsl(var(--landing-primary))] [&_.relative>div]:bg-[hsl(var(--landing-primary))]"
+                />
+              </div>
+
+              <div className="rounded-xl border border-[hsla(var(--landing-primary),0.15)] bg-[hsla(var(--landing-primary),0.06)] p-6 text-center">
+                <p className="font-copy text-xs font-medium text-[hsl(var(--landing-muted))]">Estimated monthly return</p>
+                <p className="mt-1 font-display text-4xl font-bold text-[hsl(var(--landing-primary))]">
+                  ${estimated.toLocaleString()}
+                </p>
+                <p className="mt-2 font-copy text-xs text-[hsl(var(--landing-muted))]">
+                  Based on a sample payout scenario for illustration purposes.
+                </p>
+              </div>
+
+              <Button className="group mt-6 h-12 w-full rounded-xl bg-[hsl(var(--landing-primary))] px-7 font-copy text-sm font-bold text-white shadow-[0_8px_28px_hsla(var(--landing-primary),0.2)] transition-all duration-300 hover:shadow-[0_12px_40px_hsla(var(--landing-primary),0.3)] hover:brightness-110" size="lg" asChild>
+                <Link to="/register" className="flex items-center gap-2">
+                  Start Trading Today
+                  <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+                </Link>
+              </Button>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="relative hidden lg:block"
+          >
+            <div className="overflow-hidden rounded-2xl border border-gray-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
+              <img
+                src="/landing/earnings-visual.jpg"
+                alt="Earnings chart"
+                className="w-full object-cover"
               />
             </div>
-
-            <div className="mb-7">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="font-copy text-sm text-[hsl(var(--landing-muted))]">Profit rate</span>
-                <span className="font-display text-lg font-bold text-[hsl(var(--landing-secondary))]">{profitRate[0]}%</span>
-              </div>
-              <Slider
-                value={profitRate}
-                onValueChange={setProfitRate}
-                min={50}
-                max={95}
-                step={1}
-                className="[&_[role=slider]]:bg-[hsl(var(--landing-primary))] [&_[role=slider]]:border-[hsl(var(--landing-primary))] [&_.relative>div]:bg-[hsl(var(--landing-primary))]"
-              />
-            </div>
-
-            <div className="rounded-xl border border-[hsla(var(--landing-primary),0.15)] bg-[hsla(var(--landing-primary),0.06)] p-6 text-center">
-              <p className="font-copy text-xs font-medium text-[hsl(var(--landing-muted))]">Estimated monthly return</p>
-              <p className="mt-1 font-display text-4xl font-bold text-[hsl(var(--landing-primary))]">
-                ${estimated.toLocaleString()}
-              </p>
-              <p className="mt-2 font-copy text-xs text-[hsl(var(--landing-muted))]">
-                Based on a sample payout scenario for illustration purposes.
-              </p>
-            </div>
-
-            <Button className="group mt-6 h-12 w-full rounded-xl bg-[hsl(var(--landing-primary))] px-7 font-copy text-sm font-bold text-white shadow-[0_8px_28px_hsla(var(--landing-primary),0.2)] transition-all duration-300 hover:shadow-[0_12px_40px_hsla(var(--landing-primary),0.3)] hover:brightness-110" size="lg" asChild>
-              <Link to="/register" className="flex items-center gap-2">
-                Start Trading Today
-                <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
-            </Button>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
