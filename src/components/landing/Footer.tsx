@@ -4,6 +4,8 @@ import {
   Linkedin,
   Twitter,
   Youtube,
+  Apple,
+  Play,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
@@ -48,56 +50,60 @@ const Footer = ({ content }: FooterProps) => {
   ];
 
   return (
-    <footer className="relative overflow-hidden" style={{ background: "#0a1423" }}>
-      <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
+    <footer className="relative overflow-hidden border-t border-white/10" style={{ background: "linear-gradient(135deg, #0a1423 0%, #0f1b2e 100%)" }}>
+      {/* Decorative Background Elements */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-500/10 to-transparent rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
         {/* Main Content */}
-        <div className="py-16 sm:py-20">
-          <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
+        <div className="py-16 sm:py-24">
+          <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-[1fr_2fr]">
             {/* Left Section */}
             <div className="flex flex-col gap-8">
               {/* Logo and Description */}
               <div className="max-w-sm">
-                <SiteLogo
-                  to="/"
-                  context="footer"
-                  className="mb-6"
-                  imageClassName="h-10"
-                />
-                <p className="font-copy text-sm leading-7 text-white/60">
+                <div className="mb-6">
+                  <SiteLogo
+                    to="/"
+                    context="footer"
+                    className="mb-6"
+                    imageClassName="h-10"
+                  />
+                </div>
+                <p className="font-copy text-sm leading-relaxed text-white/70">
                   {websiteContent.footer.description || "Welcome to our trading site! We offer the best, most affordable products and services around. Shop now and start finding great deals!"}
                 </p>
               </div>
 
               {/* App Buttons */}
-              <div className="flex flex-wrap gap-4">
-                <button className="flex items-center gap-2 rounded-lg bg-[#1abc9c] px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#16a085]">
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M3 3h18v18H3z" />
-                  </svg>
+              <div className="flex flex-wrap gap-3">
+                <button className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white px-5 py-3 text-sm font-semibold text-gray-900 transition-all duration-200 hover:bg-white/90 hover:shadow-lg hover:shadow-white/20">
+                  <Apple className="h-5 w-5" />
                   App Store
                 </button>
-                <button className="flex items-center gap-2 rounded-lg bg-[#3b5998] px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#314a86]">
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M3 3h18v18H3z" />
-                  </svg>
+                <button className="flex items-center gap-2.5 rounded-full border border-white/10 bg-gray-900/50 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-200 hover:bg-gray-800 hover:shadow-lg hover:shadow-white/10">
+                  <Play className="h-5 w-5" />
                   Google Play
                 </button>
               </div>
             </div>
 
             {/* Right Section - Three Columns */}
-            <div className="grid grid-cols-3 gap-8 sm:gap-6">
+            <div className="grid grid-cols-3 gap-8 sm:gap-10">
               {/* Quick Links */}
               <div>
-                <h4 className="font-copy text-sm font-semibold text-white/90 mb-4">
+                <h4 className="font-copy text-xs font-bold text-white/90 uppercase tracking-widest mb-5">
                   Quick links
                 </h4>
-                <ul className="space-y-3">
+                <ul className="space-y-4">
                   {quickLinks.map((link) => (
                     <li key={link.label}>
                       <Link
                         to={link.to}
-                        className="font-copy text-xs text-white/50 transition-colors hover:text-white/80"
+                        className="font-copy text-sm text-white/60 transition-colors duration-200 hover:text-white/90"
                       >
                         {link.label}
                       </Link>
@@ -108,15 +114,15 @@ const Footer = ({ content }: FooterProps) => {
 
               {/* Support */}
               <div>
-                <h4 className="font-copy text-sm font-semibold text-white/90 mb-4">
+                <h4 className="font-copy text-xs font-bold text-white/90 uppercase tracking-widest mb-5">
                   Support
                 </h4>
-                <ul className="space-y-3">
+                <ul className="space-y-4">
                   {supportLinks.map((link) => (
                     <li key={link.label}>
                       <Link
                         to={link.to}
-                        className="font-copy text-xs text-white/50 transition-colors hover:text-white/80"
+                        className="font-copy text-sm text-white/60 transition-colors duration-200 hover:text-white/90"
                       >
                         {link.label}
                       </Link>
@@ -127,15 +133,15 @@ const Footer = ({ content }: FooterProps) => {
 
               {/* Company */}
               <div>
-                <h4 className="font-copy text-sm font-semibold text-white/90 mb-4">
+                <h4 className="font-copy text-xs font-bold text-white/90 uppercase tracking-widest mb-5">
                   Company
                 </h4>
-                <ul className="space-y-3">
+                <ul className="space-y-4">
                   {companyLinks.map((link) => (
                     <li key={link.label}>
                       <Link
                         to={link.to}
-                        className="font-copy text-xs text-white/50 transition-colors hover:text-white/80"
+                        className="font-copy text-sm text-white/60 transition-colors duration-200 hover:text-white/90"
                       >
                         {link.label}
                       </Link>
@@ -147,16 +153,19 @@ const Footer = ({ content }: FooterProps) => {
           </div>
         </div>
 
+        {/* Divider */}
+        <div className="h-px bg-gradient-to-r from-white/0 via-white/10 to-white/0" />
+
         {/* Bottom Section */}
-        <div className="border-t border-white/[0.08] py-8">
+        <div className="py-8 sm:py-10">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             {/* Copyright */}
-            <div className="font-copy text-xs text-white/40">
+            <p className="font-copy text-xs text-white/40 text-center sm:text-left">
               Copyright © {new Date().getFullYear()} designed by {platformName}
-            </div>
+            </p>
 
             {/* Social Icons */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {socialLinks.map((link) => {
                 const Icon = link.icon;
                 return (
@@ -164,7 +173,7 @@ const Footer = ({ content }: FooterProps) => {
                     key={link.label}
                     href={link.to}
                     aria-label={link.label}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#1abc9c]/20 bg-[#1abc9c]/5 text-white/50 transition-all duration-200 hover:border-[#1abc9c]/50 hover:bg-[#1abc9c]/10 hover:text-[#1abc9c]"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/50 transition-all duration-300 hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-400"
                   >
                     <Icon className="h-4 w-4" strokeWidth={1.5} />
                   </a>
