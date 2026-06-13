@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const heroImage = "/landing/hero-laptop-front.jpg";
+const heroImage = "/landing/hero-laptop-front77.jpg";
 
 const HeroSection = () => {
   return (
@@ -114,7 +114,7 @@ const HeroSection = () => {
           <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
             <div className="absolute inset-0 bg-gradient-to-br from-[hsla(var(--landing-primary),0.15)] to-transparent" />
             <img
-              src="/landing/hero-laptop-front.jpg"
+              src="/landing/hero-laptop-angle.jpg"
               alt="Trading platform"
               className="h-full w-full object-cover"
             />
