@@ -111,32 +111,32 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.5 }}
-          className="mt-20 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-8 py-10 text-center lg:px-16 lg:py-14"
+          className="mt-12 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-8 text-center lg:px-12 lg:py-10"
         >
-          <div className="mx-auto inline-flex h-1 w-16 rounded-full bg-gradient-to-r from-blue-400 to-blue-500" />
-          <h2 className="mt-6 font-display text-2xl font-bold text-white lg:text-3xl">
+          <div className="mx-auto inline-flex h-0.5 w-12 rounded-full bg-gradient-to-r from-blue-400 to-blue-500" />
+          <h2 className="mt-4 font-display text-xl font-bold text-white lg:text-2xl">
             Everything you need to trade smarter
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-base leading-7 text-white/50 lg:text-lg lg:leading-8">
+          <p className="mx-auto mt-3 max-w-3xl text-sm leading-6 text-white/50 lg:text-base lg:leading-7">
             Init Option offers advanced trading tools, market analysis, risk
             management features, and educational resources for traders of all
             levels.
           </p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:mx-auto lg:max-w-2xl">
-            <div className="flex items-center gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-5 py-4 text-left">
-              <CheckCircle size={18} className="shrink-0 text-blue-400" />
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:mx-auto lg:max-w-2xl">
+            <div className="flex items-center gap-2.5 rounded-lg border border-white/[0.04] bg-white/[0.02] px-4 py-3 text-left">
+              <CheckCircle size={16} className="shrink-0 text-blue-400" />
               <span className="font-copy text-sm font-medium text-white/70">Advanced trading tools</span>
             </div>
-            <div className="flex items-center gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-5 py-4 text-left">
-              <CheckCircle size={18} className="shrink-0 text-blue-400" />
+            <div className="flex items-center gap-2.5 rounded-lg border border-white/[0.04] bg-white/[0.02] px-4 py-3 text-left">
+              <CheckCircle size={16} className="shrink-0 text-blue-400" />
               <span className="font-copy text-sm font-medium text-white/70">Market analysis</span>
             </div>
-            <div className="flex items-center gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-5 py-4 text-left">
-              <CheckCircle size={18} className="shrink-0 text-blue-400" />
+            <div className="flex items-center gap-2.5 rounded-lg border border-white/[0.04] bg-white/[0.02] px-4 py-3 text-left">
+              <CheckCircle size={16} className="shrink-0 text-blue-400" />
               <span className="font-copy text-sm font-medium text-white/70">Risk management features</span>
             </div>
-            <div className="flex items-center gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-5 py-4 text-left">
-              <CheckCircle size={18} className="shrink-0 text-blue-400" />
+            <div className="flex items-center gap-2.5 rounded-lg border border-white/[0.04] bg-white/[0.02] px-4 py-3 text-left">
+              <CheckCircle size={16} className="shrink-0 text-blue-400" />
               <span className="font-copy text-sm font-medium text-white/70">Educational resources</span>
             </div>
           </div>
