@@ -91,11 +91,11 @@ const HeroSection = () => {
                 <div className="relative h-full w-full overflow-hidden rounded-full shadow-[0_40px_100px_rgba(0,0,0,0.5),0_0_80px_rgba(37,99,235,0.15)] backdrop-blur-sm"
                   style={{ border: "3px solid rgba(255,255,255,0.15)", padding: "8px", background: "linear-gradient(135deg, rgba(11,31,58,0.6), rgba(30,41,59,0.3))" }}
                 >
-                  <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#0B1F3A]/60 p-4">
+                  <div className="h-full w-full overflow-hidden rounded-full">
                     <img
                       src={heroImage}
                       alt="Trading platform preview"
-                      className="h-full w-full object-scale-down"
+                      className="h-full w-full object-cover"
                     />
                   </div>
                 </div>
