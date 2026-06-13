@@ -90,13 +90,11 @@ const EarningsSection = () => {
             viewport={{ once: true }}
             className="relative hidden lg:block"
           >
-            <div className="overflow-hidden rounded-2xl border border-gray-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
-              <img
-                src="/landing/earnings-visual.jpg"
-                alt="Earnings chart"
-                className="w-full object-cover"
-              />
-            </div>
+            <img
+              src="/landing/earnings-visual.jpg"
+              alt="Earnings chart"
+              className="w-full"
+            />
           </motion.div>
         </div>
       </div>
