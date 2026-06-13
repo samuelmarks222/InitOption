@@ -17,21 +17,21 @@ const FAQSection = () => {
 
   return (
     <section id="faq" className="relative overflow-hidden bg-[hsl(var(--landing-surface))] py-20 sm:py-24">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,hsla(var(--landing-primary),0.16),transparent_24%)]" />
-      <div className="relative z-10 px-[70px]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,hsla(var(--landing-primary),0.04),transparent_40%)]" />
+      <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-16 text-center"
+          className="mb-14 text-center"
         >
-          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-[hsl(var(--landing-border))]">
+          <span className="mb-4 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
             Support
           </span>
           <h2 className="font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
             {faq.title}
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-8 text-[hsl(var(--landing-border))] sm:text-lg">{faq.subtitle}</p>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[hsl(var(--landing-muted))] sm:text-lg">{faq.subtitle}</p>
         </motion.div>
 
         <motion.div
@@ -45,12 +45,12 @@ const FAQSection = () => {
               <AccordionItem
                 key={`${item.question}-${index}`}
                 value={`faq-${index}`}
-                className="rounded-[22px] border border-[hsl(var(--landing-border))] bg-white px-6 shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)] data-[state=open]:border-[hsla(var(--landing-primary),0.3)]"
+                className="rounded-xl border border-gray-200/60 bg-white px-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-300 data-[state=open]:border-[hsla(var(--landing-primary),0.2)]"
               >
-                <AccordionTrigger className="text-left font-heading text-base font-semibold text-[hsl(var(--landing-secondary))] hover:no-underline sm:text-lg">
+                <AccordionTrigger className="text-left font-display text-base font-semibold text-[hsl(var(--landing-secondary))] hover:no-underline sm:text-lg">
                   {item.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-base leading-8 text-[hsl(var(--landing-border))]">
+                <AccordionContent className="font-copy text-base leading-7 text-[hsl(var(--landing-muted))]">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>

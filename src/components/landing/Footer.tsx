@@ -133,19 +133,19 @@ const Footer = ({ content }: FooterProps) => {
   ] as const;
 
   return (
-    <footer className="relative overflow-hidden py-12 sm:py-16" style={{ background: "hsl(var(--background))" }}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsl(var(--landing-primary))_0_0.06,transparent_24%)]" />
-      <div className="relative px-[70px]">
+    <footer className="relative overflow-hidden border-t border-white/[0.04] py-12 sm:py-16" style={{ background: "hsl(217, 33%, 12%)" }}>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,hsla(var(--landing-primary),0.04),transparent_40%)]" />
+      <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
         <div className="flex flex-col gap-10">
           <div className="flex flex-col gap-8 pb-10 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-xl">
+            <div className="max-w-md">
               <SiteLogo
                 to="/"
                 context="footer"
                 className="mb-5"
-                imageClassName="h-12 sm:h-14"
+                imageClassName="h-10 sm:h-12"
               />
-              <p className="max-w-xl font-copy text-sm leading-7 text-white/85 sm:text-base">
+              <p className="font-copy text-sm leading-7 text-white/60 sm:text-base">
                 {websiteContent.footer.description}
               </p>
             </div>
@@ -155,21 +155,20 @@ const Footer = ({ content }: FooterProps) => {
                 {(socialLinks.title?.trim() || socialLinks.subtitle?.trim()) ? (
                   <div className="mb-4 lg:text-right">
                     {socialLinks.title?.trim() ? (
-                      <div className="font-copy text-[11px] font-bold uppercase tracking-[0.24em]" style={{ color: "hsl(var(--landing-primary))" }}>
+                      <div className="font-copy text-xs font-semibold uppercase tracking-[0.18em] text-[hsl(var(--landing-primary))]">
                         {socialLinks.title}
                       </div>
                     ) : null}
                     {socialLinks.subtitle?.trim() ? (
-                      <p className="mt-2 max-w-md font-copy text-sm leading-6 text-white/85 lg:ml-auto">
+                      <p className="mt-2 max-w-md font-copy text-sm leading-6 text-white/50 lg:ml-auto">
                         {socialLinks.subtitle}
                       </p>
                     ) : null}
                   </div>
                 ) : null}
-                <div className="flex flex-wrap items-center gap-4 lg:justify-end">
+                <div className="flex flex-wrap items-center gap-3 lg:justify-end">
                   {visibleSocialLinks.map((item) => {
                     const { Icon, isWhatsApp } = resolveSocialIcon(item.platform);
-                    const label = item.handle.trim() || item.platform.trim() || "social account";
 
                     return (
                       <a
@@ -177,14 +176,10 @@ const Footer = ({ content }: FooterProps) => {
                         href={item.href}
                         target="_blank"
                         rel="noreferrer"
-                        aria-label={`Open ${label}`}
-                        title={label}
-                        className="inline-flex h-12 w-12 items-center justify-center rounded-full border transition-colors"
-                        style={{ borderColor: "var(--border)", background: "hsla(var(--card), 0.5)", color: "hsl(var(--muted-foreground))", '--hover-bg': 'hsla(var(--landing-primary), 0.12)', '--hover-border': 'hsla(var(--landing-primary), 0.4)', '--hover-color': 'hsl(var(--landing-primary))' } as any}
-                        onMouseEnter={e => { (e.target as any).style.borderColor = 'hsla(var(--landing-primary), 0.4)'; (e.target as any).style.background = 'hsla(var(--landing-primary), 0.12)'; (e.target as any).style.color = 'hsl(var(--landing-primary))'; }}
-                        onMouseLeave={e => { (e.target as any).style.borderColor = 'var(--border)'; (e.target as any).style.background = 'hsla(var(--card), 0.5)'; (e.target as any).style.color = 'hsl(var(--muted-foreground))'; }}
+                        aria-label={item.handle.trim() || item.platform.trim()}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.03] text-white/40 transition-all duration-200 hover:border-[hsla(var(--landing-primary),0.3)] hover:bg-[hsla(var(--landing-primary),0.1)] hover:text-[hsl(var(--landing-primary))]"
                       >
-                        <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${isWhatsApp ? 'text-[hsl(var(--landing-primary))]' : ''}`} strokeWidth={2.25} />
+                        <Icon className={`h-4 w-4 ${isWhatsApp ? 'text-[hsl(var(--landing-primary))]' : ''}`} strokeWidth={2} />
                       </a>
                     );
                   })}
@@ -193,21 +188,21 @@ const Footer = ({ content }: FooterProps) => {
             ) : null}
           </div>
 
-          <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr_1.05fr_0.95fr_1.55fr]">
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
             {footerLinkGroups.map((group) => (
               <div key={group.title}>
-                <h4 className="font-display text-[28px] font-bold text-white sm:text-[32px] lg:text-[20px]">
+                <h4 className="font-copy text-sm font-semibold text-white">
                   {group.title}
                 </h4>
-                <ul className="mt-5 space-y-4 font-copy text-[15px] leading-7 text-white/85 sm:text-base">
+                <ul className="mt-4 space-y-3">
                   {group.items.map((item) => (
                     <li key={item.label}>
                       {"to" in item ? (
-                        <Link to={item.to} className="relative inline-block transition-colors duration-200 hover:text-[hsl(var(--landing-primary))] after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-[hsl(var(--landing-primary))] after:transition-all after:duration-300 hover:after:w-full">
+                        <Link to={item.to} className="font-copy text-sm text-white/50 transition-colors duration-200 hover:text-[hsl(var(--landing-primary))]">
                           {item.label}
                         </Link>
                       ) : (
-                        <a href={item.href} className="relative inline-block transition-colors duration-200 hover:text-[hsl(var(--landing-primary))] after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-[hsl(var(--landing-primary))] after:transition-all after:duration-300 hover:after:w-full">
+                        <a href={item.href} className="font-copy text-sm text-white/50 transition-colors duration-200 hover:text-[hsl(var(--landing-primary))]">
                           {item.label}
                         </a>
                       )}
@@ -217,23 +212,23 @@ const Footer = ({ content }: FooterProps) => {
               </div>
             ))}
 
-            <div>
-              <h4 className="font-display text-[28px] font-bold text-white sm:text-[32px] lg:text-[20px]">
+            <div className="sm:col-span-2 lg:col-span-1">
+              <h4 className="font-copy text-sm font-semibold text-white">
                 Risk Notifications
               </h4>
-              <p className="mt-5 max-w-3xl font-copy text-[15px] leading-8 text-white/85 sm:text-base">
+              <p className="mt-4 font-copy text-sm leading-7 text-white/50">
                 {websiteContent.footer.riskWarning}
               </p>
               <Link
                 to="/risk-disclaimer"
-                className="mt-5 inline-flex font-copy text-sm font-semibold text-[hsl(var(--landing-primary))] transition-colors hover:text-white"
+                className="mt-4 inline-flex font-copy text-sm font-medium text-[hsl(var(--landing-primary))] transition-colors hover:text-white"
               >
                 Read full risk disclaimer
               </Link>
             </div>
           </div>
 
-          <div className="pt-6 text-center font-copy text-xs text-white/70 sm:text-sm">
+          <div className="border-t border-white/[0.04] pt-6 text-center font-copy text-xs text-white/40 sm:text-sm">
             Copyright {new Date().getFullYear()} {platformName}. All rights reserved.
           </div>
         </div>

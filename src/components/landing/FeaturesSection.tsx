@@ -7,110 +7,107 @@ import { readStoredPlatformName } from "@/lib/platformMetadata";
 import { createDefaultWebsiteContent } from "@/lib/websiteContent";
 
 const renderFeatureIllustration = (variant: number) => {
-  switch (variant % 4) {
-    case 0:
-      return (
-        <svg viewBox="0 0 180 120" className="h-full w-full" aria-hidden="true">
-          <rect x="48" y="22" width="48" height="48" rx="10" fill="none" stroke="hsl(var(--landing-primary))" strokeWidth="4" />
-          <circle cx="72" cy="42" r="9" fill="none" stroke="hsl(var(--landing-primary))" strokeWidth="4" />
-          <path d="M58 64c3-9 10-14 14-14s11 5 14 14" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeWidth="4" />
-          <path d="M100 62h16M108 54v16" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeWidth="4" />
-        </svg>
-      );
-    case 1:
-      return (
-        <svg viewBox="0 0 180 120" className="h-full w-full" aria-hidden="true">
-          <rect x="44" y="26" width="62" height="54" rx="10" fill="none" stroke="hsl(var(--landing-primary))" strokeWidth="4" />
-          <rect x="54" y="36" width="42" height="10" rx="5" fill="none" stroke="hsl(var(--landing-primary))" strokeWidth="4" />
-          <rect x="54" y="54" width="18" height="14" rx="4" fill="none" stroke="hsl(var(--landing-primary))" strokeWidth="4" />
-          <path d="M80 58h18M80 66h22" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeWidth="4" />
-          <path d="M36 46h12M112 46h12" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeWidth="4" />
-        </svg>
-      );
-    case 2:
-      return (
-        <svg viewBox="0 0 180 120" className="h-full w-full" aria-hidden="true">
-          <circle cx="90" cy="54" r="26" fill="none" stroke="hsl(var(--landing-primary))" strokeWidth="4" />
-          <path d="M66 54h48M90 28c10 9 15 18 15 26s-5 17-15 26M90 28C80 37 75 46 75 54s5 17 15 26" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeWidth="4" />
-        </svg>
-      );
-    default:
-      return (
-        <svg viewBox="0 0 180 120" className="h-full w-full" aria-hidden="true">
-          <rect x="54" y="28" width="46" height="34" rx="8" fill="none" stroke="hsl(var(--landing-primary))" strokeWidth="4" />
-          <path d="M62 44h30M62 54h22" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeWidth="4" />
-          <path d="M78 64v14c0 4 3 7 7 7h30c4 0 7-3 7-7V50" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeWidth="4" />
-          <path d="M114 66l8-8 8 8" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
-        </svg>
-      );
-  }
+  const icons = [
+    <svg key={0} viewBox="0 0 48 48" className="h-12 w-12" fill="none" aria-hidden="true">
+      <rect x="8" y="6" width="32" height="36" rx="6" stroke="currentColor" strokeWidth="2.5" />
+      <path d="M16 20l5 5 8-10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 32h20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>,
+    <svg key={1} viewBox="0 0 48 48" className="h-12 w-12" fill="none" aria-hidden="true">
+      <circle cx="24" cy="24" r="16" stroke="currentColor" strokeWidth="2.5" />
+      <path d="M24 8v6M24 34v6M8 24h6M34 24h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M16 24c0-4 4-8 8-8s8 4 8 8-4 8-8 8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>,
+    <svg key={2} viewBox="0 0 48 48" className="h-12 w-12" fill="none" aria-hidden="true">
+      <rect x="10" y="8" width="28" height="20" rx="4" stroke="currentColor" strokeWidth="2.5" />
+      <path d="M10 20h28" stroke="currentColor" strokeWidth="2" />
+      <rect x="14" y="14" width="8" height="3" rx="1.5" fill="currentColor" opacity="0.3" />
+      <rect x="14" y="22" width="12" height="3" rx="1.5" fill="currentColor" opacity="0.3" />
+      <path d="M18 32l4-6 4 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M30 32h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M20 36l2-3 2 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M30 36h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>,
+    <svg key={3} viewBox="0 0 48 48" className="h-12 w-12" fill="none" aria-hidden="true">
+      <rect x="6" y="10" width="36" height="28" rx="6" stroke="currentColor" strokeWidth="2.5" />
+      <rect x="14" y="20" width="20" height="12" rx="3" stroke="currentColor" strokeWidth="2" />
+      <path d="M24 14v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M18 24h12M18 28h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
+      <path d="M24 32v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>,
+  ];
+  return icons[variant % 4];
 };
 
 const FeaturesSection = () => {
   const { data: websiteContent } = useWebsiteContent();
   const fallbackCards = createDefaultWebsiteContent(readStoredPlatformName()).features.cards;
   const featureCards = websiteContent.features.cards.filter(
-    (feature) => feature.title.trim().length > 0 || feature.text.trim().length > 0,
+    (c) => c.title.trim().length > 0 || c.text.trim().length > 0,
   );
-  const cardsToRender = featureCards.length ? featureCards : fallbackCards;
+  const cards = featureCards.length ? featureCards : fallbackCards;
 
   return (
-    <section id="features" className="relative overflow-hidden bg-[hsl(var(--landing-surface))] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,hsla(var(--landing-primary),0.04),transparent_28%)]" />
+    <section id="features" className="relative overflow-hidden bg-[hsl(var(--landing-surface))] py-20 sm:py-28">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsla(var(--landing-primary),0.04),transparent_40%)]" />
 
-      <div className="relative px-[70px]">
+      <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mx-auto mb-12 max-w-3xl text-center sm:mb-16"
+          className="mx-auto mb-14 max-w-3xl text-center sm:mb-18"
         >
-          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-[hsl(var(--landing-border))]">
-            Why Choose Init Option
+          <span className="mb-4 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
+            Why Choose Us
           </span>
           <h2 className="font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
-            Built to feel <span className="text-[hsl(var(--landing-primary))]">clean, global, and easy to trust</span>
+            Built for{" "}
+            <span className="text-[hsl(var(--landing-primary))]">every trader</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl font-copy text-base leading-8 text-[hsl(var(--landing-border))] sm:text-lg">
-            The landing experience should look as polished as the platform itself, so each benefit gets a proper
-            designed card instead of a plain block of text.
+          <p className="mx-auto mt-4 max-w-2xl font-copy text-base leading-7 text-[hsl(var(--landing-muted))] sm:text-lg">
+            From beginners to experts, our platform gives you the tools,
+            speed, and transparency to trade with confidence.
           </p>
         </motion.div>
 
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {cardsToRender.map((feature, index) => (
-            <article
-              key={`${feature.title}-${index}`}
-              className="landing-lift-card relative overflow-hidden rounded-[28px] border border-[hsl(var(--landing-border))] bg-white px-6 pb-8 pt-7 text-center shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)]"
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {cards.map((card, i) => (
+            <motion.article
+              key={`${card.title}-${i}`}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className="group rounded-2xl border border-gray-200/60 bg-white px-6 pb-8 pt-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-[hsla(var(--landing-primary),0.2)] hover:shadow-[0_12px_40px_hsla(var(--landing-primary),0.08)]"
             >
-              <div className="absolute inset-x-10 top-6 h-14 rounded-full bg-[hsl(var(--landing-surface))] blur-2xl" />
-              <div className="relative mx-auto flex h-24 w-24 items-center justify-center rounded-[24px] border border-[hsl(var(--landing-primary))]/14 bg-[hsl(var(--landing-surface))] text-[hsl(var(--landing-primary))] shadow-[inset_0_1px_0_hsla(var(--landing-secondary),0.03)]">
-                {renderFeatureIllustration(index)}
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[hsla(var(--landing-primary),0.08)] text-[hsl(var(--landing-primary))] transition-colors duration-300 group-hover:bg-[hsla(var(--landing-primary),0.14)]">
+                {renderFeatureIllustration(i)}
               </div>
-              <h3 className="font-display mt-7 text-2xl font-bold text-[hsl(var(--landing-secondary))]">
-                {feature.title}
+              <h3 className="mt-6 font-display text-lg font-bold text-[hsl(var(--landing-secondary))]">
+                {card.title}
               </h3>
-              <p className="mt-4 font-copy text-sm leading-7 text-[hsl(var(--landing-border))] sm:text-base">
-                {feature.text}
+              <p className="mt-3 font-copy text-sm leading-7 text-[hsl(var(--landing-muted))]">
+                {card.text}
               </p>
-            </article>
+            </motion.article>
           ))}
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-10 text-center sm:mt-12"
+          className="mt-12 text-center"
         >
           <Button
             size="lg"
-            className="h-12 rounded-[10px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-8 font-copy text-sm font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_18px_36px_hsla(var(--landing-primary),0.16)] hover:bg-[hsl(var(--landing-primary))] hover:brightness-[1.03]"
+            className="group h-12 rounded-xl bg-[hsl(var(--landing-primary))] px-8 font-copy text-sm font-bold text-white shadow-[0_8px_28px_hsla(var(--landing-primary),0.2)] transition-all duration-300 hover:shadow-[0_12px_40px_hsla(var(--landing-primary),0.3)] hover:brightness-110"
             asChild
           >
-            <Link to="/register">
+            <Link to="/register" className="flex items-center gap-2">
               Start Trading
-              <ArrowRight size={18} />
+              <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </Button>
         </motion.div>

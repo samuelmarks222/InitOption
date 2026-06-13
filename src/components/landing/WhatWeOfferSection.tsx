@@ -184,40 +184,38 @@ const WhatWeOfferSection = () => {
   }, [activeCategory]);
 
   return (
-    <section className="relative overflow-hidden bg-[hsl(var(--landing-surface))] py-16 sm:py-24">
-      <div className="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,hsl(var(--landing-primary))_0_0.08,transparent_24%)]" />
-      <div className="relative px-[70px]">
-        <div className="mx-auto mb-8 max-w-5xl text-center">
-          <span className="inline-flex rounded-full bg-[hsl(var(--landing-primary))]/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.28em] text-[hsl(var(--landing-primary))]">
+    <section className="relative overflow-hidden bg-white py-16 sm:py-24">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_0%,hsla(var(--landing-primary),0.04),transparent_40%)]" />
+      <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
+        <div className="mx-auto mb-10 max-w-3xl text-center">
+          <span className="mb-4 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
             Markets
           </span>
-          <h2 className="mt-6 font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
+          <h2 className="font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
             Market Spreads and Swaps
           </h2>
           {markets.description ? (
-            <p className="mx-auto mt-6 max-w-3xl text-base leading-7 text-[hsl(var(--landing-muted))] sm:text-lg">
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[hsl(var(--landing-muted))] sm:text-lg">
               {markets.description}
             </p>
           ) : null}
         </div>
 
-        <div className="mb-14 overflow-hidden rounded-[28px] border border-[hsl(var(--landing-border))] bg-[hsl(var(--landing-card))] p-2 shadow-[0_18px_50px_rgba(0,0,0,0.16)]">
-          <div className="flex flex-nowrap items-center justify-center gap-2 px-4 py-3">
-            {availableCategories.map((categoryKey) => (
-              <button
-                key={categoryKey}
-                type="button"
-                onClick={() => setActiveCategory(categoryKey)}
-                className={`rounded-full px-5 py-2 text-base font-semibold uppercase tracking-[0.06em] transition ${
-                  activeCategory === categoryKey
-                    ? "bg-[hsl(var(--landing-primary))] text-black shadow-[0_10px_24px_rgba(28,215,147,0.16)]"
-                    : "border border-[hsl(var(--landing-border))] bg-transparent text-[hsl(var(--landing-muted))] hover:border-[hsl(var(--landing-primary))] hover:text-[hsl(var(--landing-secondary))]"
-                }`}
-              >
-                {CATEGORY_LABELS[categoryKey] ?? categoryKey}
-              </button>
-            ))}
-          </div>
+        <div className="mb-10 flex flex-wrap items-center justify-center gap-2">
+          {availableCategories.map((categoryKey) => (
+            <button
+              key={categoryKey}
+              type="button"
+              onClick={() => setActiveCategory(categoryKey)}
+              className={`rounded-full px-5 py-2 font-copy text-sm font-semibold tracking-[0.04em] transition-all duration-300 ${
+                activeCategory === categoryKey
+                  ? "bg-[hsl(var(--landing-primary))] text-white shadow-[0_4px_16px_hsla(var(--landing-primary),0.3)]"
+                  : "border border-gray-200 bg-white text-[hsl(var(--landing-muted))] hover:border-[hsla(var(--landing-primary),0.3)] hover:text-[hsl(var(--landing-secondary))]"
+              }`}
+            >
+              {CATEGORY_LABELS[categoryKey] ?? categoryKey}
+            </button>
+          ))}
         </div>
 
         <AssetTicker assets={selectedAssets} />

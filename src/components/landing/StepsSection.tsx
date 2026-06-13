@@ -5,105 +5,24 @@ import { Button } from "@/components/ui/button";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 import { createDefaultWebsiteContent } from "@/lib/websiteContent";
 
-const renderStepIllustration = (variant: number) => {
-  switch (variant % 6) {
-    case 0:
-      return (
-        <svg viewBox="0 0 220 160" className="h-full w-full" aria-hidden="true">
-          <text x="18" y="54" fill="hsla(var(--landing-surface),0.16)" fontSize="68" fontWeight="800">1</text>
-          <rect x="48" y="32" width="110" height="96" rx="20" fill="hsl(var(--landing-surface))" />
-          <rect x="74" y="52" width="56" height="8" rx="4" fill="#ffffff" fillOpacity="0.18" />
-          <rect x="68" y="72" width="70" height="10" rx="5" fill="#ffffff" fillOpacity="0.12" />
-          <rect x="68" y="90" width="70" height="10" rx="5" fill="#ffffff" fillOpacity="0.12" />
-          <rect x="72" y="110" width="64" height="11" rx="5.5" fill="#1cd793" />
-          <circle cx="160" cy="110" r="12" fill="#1cd793" />
-          <path d="M160 104v12M154 110h12" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
-        </svg>
-      );
-    case 1:
-      return (
-        <svg viewBox="0 0 220 160" className="h-full w-full" aria-hidden="true">
-          <text x="22" y="54" fill="hsla(var(--landing-surface),0.16)" fontSize="68" fontWeight="800">2</text>
-          <rect x="56" y="34" width="118" height="98" rx="20" fill="hsl(var(--landing-surface))" />
-          <rect x="62" y="40" width="36" height="10" rx="5" fill="#ffffff" fillOpacity="0.14" />
-          <rect x="102" y="40" width="28" height="10" rx="5" fill="#ffffff" fillOpacity="0.14" />
-          <rect x="136" y="40" width="28" height="10" rx="5" fill="#ffffff" fillOpacity="0.14" />
-          <path d="M68 100l18-36 18 18 17-10 16 20 7-42" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeLinejoin="round" strokeWidth="7" />
-          <rect x="142" y="56" width="28" height="11" rx="5.5" fill="#1cd793" />
-          <rect x="142" y="74" width="30" height="11" rx="5.5" fill="#ffffff" />
-          <rect x="164" y="96" width="28" height="35" rx="14" fill="#1cd793" />
-          <rect x="154" y="104" width="18" height="20" rx="8" fill="hsl(var(--landing-surface))" />
-          <path d="M164 114h10" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
-          <path d="M159 124v-6M156 121h6" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
-        </svg>
-      );
-    case 2:
-      return (
-        <svg viewBox="0 0 220 160" className="h-full w-full" aria-hidden="true">
-          <text x="24" y="54" fill="hsla(var(--landing-surface),0.16)" fontSize="68" fontWeight="800">3</text>
-          <rect x="62" y="34" width="110" height="98" rx="20" fill="hsl(var(--landing-surface))" />
-          <rect x="70" y="46" width="42" height="10" rx="5" fill="#ffffff" fillOpacity="0.14" />
-          <rect x="116" y="46" width="42" height="10" rx="5" fill="#ffffff" fillOpacity="0.14" />
-          <rect x="101" y="72" width="44" height="12" rx="6" fill="#1cd793" />
-          <path d="M72 100h28c6 0 10 4 10 10s4 10 10 10h32" fill="none" stroke="#ffffff" strokeDasharray="9 8" strokeLinecap="round" strokeWidth="4" />
-          <path d="M72 100h16M94 118h18M121 100h18" fill="none" stroke="#ffffff" strokeLinecap="round" strokeWidth="4" />
-          <rect x="112" y="110" width="28" height="20" rx="6" fill="hsl(var(--landing-surface))" />
-          <circle cx="172" cy="108" r="18" fill="#1cd793" />
-          <path d="M172 98c-4 0-7 2-7 5 0 8 14 2 14 10 0 3-3 5-7 5s-7-2-7-5" fill="none" stroke="#ffffff" strokeLinecap="round" strokeWidth="4" />
-          <path d="M172 93v30" stroke="#ffffff" strokeLinecap="round" strokeWidth="4" />
-        </svg>
-      );
-    case 3:
-      return (
-        <svg viewBox="0 0 220 160" className="h-full w-full" aria-hidden="true">
-          <text x="18" y="54" fill="hsla(var(--landing-surface),0.16)" fontSize="68" fontWeight="800">4</text>
-          <rect x="54" y="34" width="118" height="98" rx="20" fill="hsl(var(--landing-surface))" />
-          <circle cx="82" cy="74" r="14" fill="hsl(var(--landing-surface))" />
-          <path d="M79 74h6M82 71v6" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" />
-          <rect x="102" y="60" width="52" height="11" rx="5.5" fill="#ffffff" fillOpacity="0.14" />
-          <rect x="102" y="80" width="38" height="11" rx="5.5" fill="#1cd793" />
-          <rect x="102" y="98" width="46" height="11" rx="5.5" fill="#ffffff" fillOpacity="0.14" />
-          <path d="M64 118c18-14 32-19 48-16 11 2 18 6 30 0" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeWidth="5" />
-          <circle cx="154" cy="116" r="12" fill="#1cd793" />
-          <path d="M154 109l0 14M147 116h14" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" />
-        </svg>
-      );
-    case 4:
-      return (
-        <svg viewBox="0 0 220 160" className="h-full w-full" aria-hidden="true">
-          <text x="18" y="54" fill="hsla(var(--landing-surface),0.16)" fontSize="68" fontWeight="800">5</text>
-          <rect x="58" y="28" width="104" height="112" rx="24" fill="hsl(var(--landing-surface))" stroke="#ffffff" strokeOpacity="0.3" strokeWidth="5" />
-          <circle cx="80" cy="52" r="8" fill="#1cd793" />
-          <rect x="92" y="48" width="28" height="7" rx="3.5" fill="#ffffff" fillOpacity="0.82" />
-          <path d="M76 104l15-25 13 16 13-9 13 19" fill="none" stroke="#ffffff" strokeLinecap="round" strokeLinejoin="round" strokeWidth="5" />
-          <path d="M112 115l28-24" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeWidth="8" />
-          <path d="M140 91v13h-13" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeLinejoin="round" strokeWidth="8" />
-          <rect x="106" y="120" width="34" height="11" rx="5.5" fill="#1cd793" />
-          <rect x="110" y="133" width="30" height="10" rx="5" fill="#ffffff" />
-        </svg>
-      );
-    default:
-      return (
-        <svg viewBox="0 0 220 160" className="h-full w-full" aria-hidden="true">
-          <text x="18" y="54" fill="hsla(var(--landing-surface),0.16)" fontSize="68" fontWeight="800">6</text>
-          <rect x="60" y="34" width="106" height="96" rx="20" fill="hsl(var(--landing-surface))" />
-          <rect x="74" y="52" width="34" height="34" rx="10" fill="hsl(var(--landing-surface))" />
-          <path d="M87 60v18M78 69h18" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
-          <path d="M122 102l10-16 12 8 14-25" fill="none" stroke="hsl(var(--landing-primary))" strokeLinecap="round" strokeLinejoin="round" strokeWidth="6" />
-          <path d="M130 72h22" stroke="#ffffff" strokeOpacity="0.2" strokeWidth="8" strokeLinecap="round" />
-          <path d="M122 84h30" stroke="#ffffff" strokeOpacity="0.2" strokeWidth="8" strokeLinecap="round" />
-          <circle cx="160" cy="110" r="16" fill="#1cd793" />
-          <path d="M160 101c-3 0-6 2-6 4 0 6 12 2 12 8 0 3-3 4-6 4s-6-1-6-4" fill="none" stroke="#ffffff" strokeLinecap="round" strokeWidth="3.5" />
-          <path d="M160 97v25" stroke="#ffffff" strokeLinecap="round" strokeWidth="3.5" />
-        </svg>
-      );
-  }
-};
-
-const cardVariant = {
-  hidden: { opacity: 1, y: 0 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.2 } },
-};
+const stepIcons = [
+  <svg key={0} viewBox="0 0 48 48" className="h-10 w-10" fill="none" aria-hidden="true">
+    <rect x="6" y="10" width="36" height="28" rx="4" stroke="currentColor" strokeWidth="2" />
+    <rect x="12" y="16" width="24" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M24 22v4M22 24h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>,
+  <svg key={1} viewBox="0 0 48 48" className="h-10 w-10" fill="none" aria-hidden="true">
+    <circle cx="24" cy="24" r="16" stroke="currentColor" strokeWidth="2" />
+    <path d="M16 24l6 6 10-10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M24 8v4M24 36v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+  </svg>,
+  <svg key={2} viewBox="0 0 48 48" className="h-10 w-10" fill="none" aria-hidden="true">
+    <path d="M8 30l10-14 8 12 10-8 8 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M8 34h34" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+    <circle cx="14" cy="36" r="4" stroke="currentColor" strokeWidth="2" />
+    <circle cx="34" cy="36" r="4" stroke="currentColor" strokeWidth="2" />
+  </svg>,
+];
 
 const StepsSection = () => {
   const { data: websiteContent } = useWebsiteContent();
@@ -113,73 +32,72 @@ const StepsSection = () => {
     Array.isArray(steps.items) && steps.items.length > 0 ? steps.items.slice(0, 3) : fallbackSteps;
 
   return (
-    <section className="relative overflow-hidden bg-[hsl(var(--landing-surface))] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,hsla(var(--landing-primary),0.04),transparent_28%),linear-gradient(to_right,hsla(var(--landing-secondary),0.02)_1px,transparent_1px),linear-gradient(to_bottom,hsla(var(--landing-secondary),0.02)_1px,transparent_1px)] bg-[size:auto,78px_78px,78px_78px] opacity-40" />
+    <section className="relative overflow-hidden bg-white py-20 sm:py-28">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,hsla(var(--landing-primary),0.03),transparent_40%)]" />
 
-      <div className="relative px-[70px]">
+      <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mx-auto mb-12 max-w-3xl text-center sm:mb-16"
+          className="mx-auto mb-14 max-w-3xl text-center"
         >
-          <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-[hsl(var(--landing-border))]">
+          <span className="mb-4 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
             Quick Start
           </span>
           <h2 className="font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
             {steps.title}
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl font-copy text-base leading-8 text-[hsl(var(--landing-border))] sm:text-lg">
+          <p className="mx-auto mt-4 max-w-2xl font-copy text-base leading-7 text-[hsl(var(--landing-muted))] sm:text-lg">
             {steps.subtitle}
           </p>
         </motion.div>
 
-        <motion.div
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-          className="grid gap-5 md:grid-cols-2 xl:grid-cols-3"
-        >
-          {visibleSteps.map((step, index) => (
-            <motion.article
-              key={`${step.title}-${index}`}
-              variants={cardVariant}
-              className="landing-lift-card group relative overflow-hidden rounded-[30px] border border-[hsl(var(--landing-border))] bg-white px-5 pb-6 pt-5 text-center shadow-[0_1px_6px_hsla(var(--landing-secondary),0.06)] transition-all duration-500 hover:-translate-y-1 hover:border-[hsla(var(--landing-primary),0.2)] hover:shadow-[0_20px_50px_hsla(var(--landing-primary),0.16)] sm:px-6"
-            >
-              <div className="absolute inset-x-8 top-6 h-16 rounded-full bg-[hsl(var(--landing-primary))]/4 blur-3xl" />
-              <div className="relative mx-auto h-40 w-full max-w-[220px]">
-                {renderStepIllustration(index)}
-              </div>
+        <div className="relative grid gap-8 md:grid-cols-3">
+          {/* Connecting line */}
+          <div className="absolute left-1/2 top-12 hidden h-px w-[66%] -translate-x-1/2 bg-gradient-to-r from-transparent via-[hsla(var(--landing-primary),0.2)] to-transparent md:block" />
 
-              <h3 className="font-display mt-2 text-2xl font-bold text-[hsl(var(--landing-secondary))]">
+          {visibleSteps.map((step, i) => (
+            <motion.div
+              key={`${step.title}-${i}`}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.12 }}
+              className="relative text-center"
+            >
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-[hsla(var(--landing-primary),0.08)] text-[hsl(var(--landing-primary))]">
+                {stepIcons[i % 3]}
+              </div>
+              <div className="absolute left-1/2 top-10 -z-10 h-32 w-32 -translate-x-1/2 rounded-full bg-[hsla(var(--landing-primary),0.04)] blur-2xl" />
+              <h3 className="mt-6 font-display text-lg font-bold text-[hsl(var(--landing-secondary))]">
                 {step.title}
               </h3>
-              <p className="mt-3 font-copy text-sm leading-7 text-[hsl(var(--landing-border))] sm:text-base">
+              <p className="mt-3 font-copy text-sm leading-7 text-[hsl(var(--landing-muted))]">
                 {step.text}
               </p>
-
-              <div className="mt-5 inline-flex rounded-full border border-[hsl(var(--landing-primary))]/50 bg-[hsla(var(--landing-primary),0.16)] px-4 py-2 font-copy text-[11px] font-extrabold uppercase tracking-[0.18em] text-[hsl(var(--landing-primary))] transition-all duration-300 group-hover:border-[hsl(var(--landing-primary))] group-hover:bg-[hsla(var(--landing-primary),0.1)]">
+              <span className="mt-5 inline-flex items-center gap-1.5 font-copy text-xs font-semibold uppercase tracking-[0.15em] text-[hsl(var(--landing-primary))]">
                 {step.cta}
-              </div>
-            </motion.article>
+                <ArrowRight size={12} />
+              </span>
+            </motion.div>
           ))}
-        </motion.div>
+        </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-10 text-center sm:mt-12"
+          className="mt-12 text-center"
         >
-            <Button
+          <Button
             size="lg"
-            className="group h-12 rounded-[10px] border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-8 font-copy text-sm font-extrabold uppercase tracking-[0.08em] text-[#ffffff] shadow-[0_8px_32px_hsla(var(--landing-primary),0.16)] transition-all duration-300 hover:shadow-[0_8px_48px_hsla(var(--landing-primary),0.16)] hover:brightness-110"
+            className="group h-12 rounded-xl bg-[hsl(var(--landing-primary))] px-8 font-copy text-sm font-bold text-white shadow-[0_8px_28px_hsla(var(--landing-primary),0.2)] transition-all duration-300 hover:shadow-[0_12px_40px_hsla(var(--landing-primary),0.3)] hover:brightness-110"
             asChild
           >
             <Link to="/register" className="flex items-center gap-2">
-              Start Trading
-              <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
+              Get Started
+              <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </Button>
         </motion.div>

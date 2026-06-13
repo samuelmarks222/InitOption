@@ -9,34 +9,48 @@ const CTASection = () => {
   const { finalCta, footer } = websiteContent;
 
   return (
-    <section className="relative overflow-hidden bg-[linear-gradient(135deg,hsl(var(--landing-primary))_0%,hsl(var(--landing-secondary))_100%)] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,hsla(var(--landing-surface),0.12),transparent_30%),radial-gradient(circle_at_80%_70%,hsla(var(--landing-surface),0.08),transparent_30%)]" />
-      <div className="px-[70px]">
+    <section className="relative overflow-hidden bg-[hsl(var(--landing-secondary))] py-20 sm:py-28">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsla(var(--landing-primary),0.08),transparent_60%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:48px_48px]" />
+
+      <div className="relative mx-auto max-w-4xl px-6 sm:px-8 lg:px-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative mx-auto max-w-4xl text-center"
+          className="text-center"
         >
-          <div className="relative">
-            <span className="mb-3 inline-block font-copy text-[11px] font-bold uppercase tracking-[0.28em] text-white/60">
-              Get Started
-            </span>
-            <h2 className="mx-auto max-w-3xl font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
-              {finalCta.title}
-            </h2>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-8 text-white/82 sm:text-lg">{footer.description}</p>
-            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button size="lg" className="group gap-2 border border-white/20 bg-white px-8 text-base font-semibold text-[hsl(var(--landing-primary))] shadow-[0_8px_32px_hsla(var(--landing-secondary),0.18)] transition-all duration-300 hover:bg-white/95 hover:shadow-[0_8px_48px_hsla(var(--landing-secondary),0.25)]" asChild>
-                <Link to="/register" className="flex items-center gap-2">
-                  {finalCta.primaryButtonLabel}
-                  <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" className="border-white/25 bg-white/10 px-8 text-base font-semibold text-white backdrop-blur-sm hover:bg-white/20" asChild>
-                <Link to="/login">{finalCta.secondaryButtonLabel}</Link>
-              </Button>
-            </div>
+          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.03] px-4 py-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="font-copy text-xs font-medium text-emerald-400/80">Get Started</span>
+          </div>
+
+          <h2 className="mx-auto mt-6 max-w-2xl font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+            {finalCta.title}
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-white/50 sm:text-lg">
+            {footer.description}
+          </p>
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Button
+              size="lg"
+              className="group h-12 gap-2 rounded-full bg-white px-8 font-copy text-sm font-bold text-[hsl(var(--landing-secondary))] shadow-[0_8px_32px_rgba(0,0,0,0.2)] transition-all duration-300 hover:bg-white/95 hover:shadow-[0_12px_48px_rgba(0,0,0,0.3)]"
+              asChild
+            >
+              <Link to="/register" className="flex items-center gap-2">
+                {finalCta.primaryButtonLabel}
+                <ArrowRight size={16} className="transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-12 rounded-full border border-white/10 bg-white/[0.04] px-8 font-copy text-sm font-medium text-white/70 backdrop-blur-sm transition-all hover:bg-white/[0.08] hover:text-white"
+              asChild
+            >
+              <Link to="/login">{finalCta.secondaryButtonLabel}</Link>
+            </Button>
           </div>
         </motion.div>
       </div>

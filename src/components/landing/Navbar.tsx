@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -7,7 +7,7 @@ import { SiteLogo } from "@/components/branding/SiteLogo";
 
 const navLinks = [
   { label: "Markets", href: "/#markets" },
-  { label: "About Us", href: "/about" },
+  { label: "Platform", href: "/about" },
   { label: "Reviews", href: "/reviews" },
   { label: "FAQ", href: "/#faq" },
   { label: "Blog", href: "/blog" },
@@ -15,76 +15,98 @@ const navLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 shadow-[0_12px_32px_hsla(var(--landing-secondary),0.2)] backdrop-blur-2xl" style={{ background: "hsla(var(--background), 0.95)" }}>
-      <div className="w-full px-[70px]">
-        <div className="mx-auto flex h-16 max-w-[calc(100%-140px)] items-center justify-between gap-4 sm:h-20 sm:gap-6">
-          <Link to="/" className="shrink-0 flex items-center gap-2">
-            <SiteLogo
-              context="landing_header"
-              imageClassName="h-6 w-auto min-[380px]:h-7 sm:h-10 lg:h-11"
-            />
-          </Link>
+    <nav
+      className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? "shadow-[0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl"
+          : "shadow-none"
+      }`}
+      style={{
+        background: scrolled
+          ? "hsla(217, 33%, 12%, 0.92)"
+          : "hsla(217, 33%, 12%, 0.5)",
+      }}
+    >
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6 sm:h-20 sm:px-8 lg:px-10">
+        <Link to="/" className="shrink-0 flex items-center gap-2">
+          <SiteLogo
+            context="landing_header"
+            imageClassName="h-7 w-auto sm:h-9 lg:h-10"
+          />
+        </Link>
 
-          <div className="hidden items-center gap-16 lg:gap-20 md:flex">
+        <div className="hidden items-center gap-10 md:flex">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               to={link.href}
-              className="relative font-copy text-base font-medium text-[#242d60] transition-colors hover:text-[#242d60] lg:text-lg after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-0 after:rounded-full after:bg-[#242d60] after:transition-all after:duration-300 hover:after:w-full"
+              className="relative font-copy text-sm font-medium text-white/70 transition-colors duration-300 hover:text-white"
             >
               {link.label}
             </Link>
           ))}
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-          <div className="flex shrink-0 items-center gap-1.5 min-[380px]:gap-2 sm:gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 rounded-full border border-white/20 bg-white/10 px-2.5 text-xs font-medium text-white transition-all hover:bg-white/15 hover:text-[hsl(var(--landing-surface))] min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
-              asChild
-            >
-              <Link to="/login">Login</Link>
-            </Button>
-            <Button
-              size="sm"
-              className="h-8 rounded-full border border-[hsl(var(--landing-primary))] bg-[hsl(var(--landing-primary))] px-2.5 text-xs font-semibold text-white shadow-[0_4px_20px_hsla(var(--landing-primary),0.16)] transition-all duration-300 hover:shadow-[0_8px_32px_hsla(var(--landing-primary),0.16)] hover:brightness-110 min-[380px]:h-9 min-[380px]:px-3 min-[380px]:text-sm sm:h-10 sm:px-4 sm:text-base lg:text-lg"
-              asChild
-            >
-              <Link to="/register">Sign Up</Link>
-            </Button>
-          </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hidden h-9 rounded-full border border-white/10 bg-white/5 px-5 text-sm font-medium text-white/80 transition-all hover:bg-white/10 hover:text-white sm:inline-flex"
+            asChild
+          >
+            <Link to="/login">Log In</Link>
+          </Button>
+          <Button
+            size="sm"
+            className="h-9 rounded-full bg-[hsl(var(--landing-primary))] px-5 text-sm font-semibold text-white shadow-[0_4px_20px_hsla(var(--landing-primary),0.3)] transition-all duration-300 hover:shadow-[0_8px_30px_hsla(var(--landing-primary),0.4)] hover:brightness-110"
+            asChild
+          >
+            <Link to="/register">Get Started</Link>
+          </Button>
 
           <button
-            className="rounded-full border border-white/15 bg-white/10 p-2 text-white transition-colors hover:bg-white/15 hover:text-[white] md:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition-colors hover:bg-white/10 md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
       </div>
-    </div>
 
       {mobileOpen && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[hsl(var(--landing-secondary))] px-4 pb-4 pt-2 md:hidden"
+          className="border-t border-white/5 bg-[hsla(217,33%,12%,0.98)] px-6 pb-6 pt-2 backdrop-blur-xl md:hidden"
         >
           {navLinks.map((link) => (
             <Link
               key={link.label}
               to={link.href}
-              className="block py-2 font-copy text-white transition-colors hover:text-[#242d60]"
+              className="block py-3 font-copy text-sm text-white/70 transition-colors hover:text-white"
               onClick={() => setMobileOpen(false)}
             >
               {link.label}
             </Link>
           ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-2 h-9 w-full rounded-full border border-white/10 bg-white/5 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white"
+            asChild
+          >
+            <Link to="/login">Log In</Link>
+          </Button>
         </motion.div>
       )}
     </nav>
