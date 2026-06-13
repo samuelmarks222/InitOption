@@ -35,7 +35,7 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
 
       <div className="relative mx-auto flex min-h-[calc(100vh-7rem)] max-w-7xl flex-col justify-center">
-        <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.4fr_0.6fr] lg:gap-12">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -47,7 +47,7 @@ const HeroSection = () => {
               Trusted by traders worldwide
             </span>
 
-            <h1 className="mt-8 max-w-[640px] font-display text-[clamp(2.5rem,5.5vw,4rem)] font-bold leading-[1.1] text-white">
+            <h1 className="mt-8 font-display text-[clamp(2.5rem,5.5vw,4rem)] font-bold leading-[1.1] text-white">
               Trade Smarter.
               <br />
               <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
@@ -55,7 +55,7 @@ const HeroSection = () => {
               </span>
             </h1>
 
-            <p className="mt-6 max-w-[500px] text-lg leading-8 text-white/60 lg:text-xl">
+            <p className="mt-6 max-w-[520px] text-lg leading-8 text-white/60 lg:text-xl">
               Practice with $10,000 in demo funds, trade real markets with
               instant execution, and withdraw your profits—all from one
               clean terminal.
@@ -99,7 +99,7 @@ const HeroSection = () => {
 
             {/* Main circle wrapper - extends outside container */}
             <div className="relative z-10 lg:translate-x-14">
-              <div className="relative h-72 w-72 lg:h-[440px] lg:w-[440px]">
+              <div className="relative h-72 w-72 lg:h-[380px] lg:w-[380px]">
                 {/* Image circle with thick white border */}
                 <div className="relative h-full w-full overflow-hidden rounded-full border-[7px] border-white shadow-[0_35px_90px_rgba(0,0,0,0.45),0_5px_30px_rgba(245,158,11,0.15)]">
                   <img
