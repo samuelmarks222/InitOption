@@ -52,6 +52,29 @@ export const useSiteBranding = () => {
     return getCurrentLogoUrl();
   };
 
+  const getLogoForContext = (context: "dashboard" | "hero" | "admin" | "navbar") => {
+    const lightLogo = readStoredLogoUrlLight();
+    const darkLogo = readStoredLogoUrlDark();
+    const primaryLogo = readStoredLogoUrl();
+
+    switch (context) {
+      case "hero":
+        // Hero section uses light logo for light backgrounds
+        return lightLogo || primaryLogo || darkLogo || defaultLogoUrl;
+      case "dashboard":
+        // Dashboard typically uses dark logo or primary
+        return darkLogo || primaryLogo || lightLogo || defaultLogoUrl;
+      case "admin":
+        // Admin panel uses primary or dark logo
+        return primaryLogo || darkLogo || lightLogo || defaultLogoUrl;
+      case "navbar":
+        // Navbar can adapt based on background
+        return darkLogo || primaryLogo || lightLogo || defaultLogoUrl;
+      default:
+        return getCurrentLogoUrl();
+    }
+  };
+
   const [logoUrl, setLogoUrl] = useState<string | null>(() => getCurrentLogoUrl());
   const [logoUrlLight, setLogoUrlLight] = useState<string | null>(() => readStoredLogoUrlLight());
   const [logoUrlDark, setLogoUrlDark] = useState<string | null>(() => readStoredLogoUrlDark());
@@ -85,6 +108,7 @@ export const useSiteBranding = () => {
     logoUrlLight,
     logoUrlDark,
     getLogoUrlByVariant,
+    getLogoForContext,
     platformName: platformName || DEFAULT_PLATFORM_NAME,
     supportEmail: supportEmail || DEFAULT_PLATFORM_SETTINGS.support_email,
     initials,

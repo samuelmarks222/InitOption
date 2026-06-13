@@ -14,6 +14,7 @@ interface SiteLogoProps {
   centered?: boolean;
   showText?: boolean;
   variant?: "auto" | "light" | "dark";
+  context?: "dashboard" | "hero" | "admin" | "navbar";
 }
 
 export const SiteLogo = ({
