@@ -1,27 +1,27 @@
 import { motion } from "framer-motion";
-import { ArrowRight, BarChart3, Smartphone, Clock3, Shield } from "lucide-react";
+import { ArrowRight, TrendingUp, Zap, Globe, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const features = [
   {
     label: "All Markets",
     desc: "Forex, crypto, commodities & stocks",
-    icon: BarChart3,
+    icon: Globe,
   },
   {
     label: "Trading Tools",
     desc: "Demo balance, live charts, fast trades",
-    icon: Smartphone,
+    icon: TrendingUp,
   },
   {
     label: "All Durations",
     desc: "Short expiry to longer windows",
-    icon: Clock3,
+    icon: Zap,
   },
   {
     label: "Secure & Regulated",
     desc: "Protected deposits & withdrawals",
-    icon: Shield,
+    icon: Lock,
   },
 ];
 
@@ -133,25 +133,27 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-4"
         >
-          {features.map((f) => {
+          {features.map((f, i) => {
             const Icon = f.icon;
             return (
-              <div
+              <motion.div
                 key={f.label}
-                className="group rounded-xl border border-white/[0.06] bg-white/[0.03] px-5 py-4 transition-all duration-300 hover:border-white/[0.1] hover:bg-white/[0.05]"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
+                className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6 transition-all duration-500 hover:-translate-y-1 hover:border-emerald-500/20 hover:bg-white/[0.06] hover:shadow-[0_20px_60px_rgba(0,0,0,0.3)]"
               >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[hsla(var(--landing-primary),0.12)] text-[hsl(var(--landing-primary))]">
-                    <Icon size={18} strokeWidth={2} />
+                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[hsla(var(--landing-primary),0.06)] transition-all duration-500 group-hover:scale-150 group-hover:bg-[hsla(var(--landing-primary),0.1)]" />
+                <div className="relative">
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[hsla(var(--landing-primary),0.2)] to-[hsla(var(--landing-primary),0.05)] text-[hsl(var(--landing-primary))] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-300 group-hover:from-[hsla(var(--landing-primary),0.3)] group-hover:to-[hsla(var(--landing-primary),0.1)] group-hover:shadow-[0_0_30px_hsla(var(--landing-primary),0.15)]">
+                    <Icon size={22} strokeWidth={1.5} />
                   </div>
-                  <div>
-                    <p className="font-copy text-sm font-semibold text-white">{f.label}</p>
-                    <p className="font-copy text-xs text-white/40">{f.desc}</p>
-                  </div>
+                  <p className="font-display text-lg font-bold text-white">{f.label}</p>
+                  <p className="mt-1.5 font-copy text-sm leading-relaxed text-white/40">{f.desc}</p>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </motion.div>
