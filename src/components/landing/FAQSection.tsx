@@ -25,12 +25,7 @@ const FAQSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
-            <img
-              src="/landing/faqs.avif"
-              alt="FAQ illustration"
-              className="w-full"
-            />
-            <span className="mt-6 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
+            <span className="inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
               Support
             </span>
             <h2 className="mt-1 font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
@@ -39,6 +34,12 @@ const FAQSection = () => {
             <p className="mt-3 text-base leading-7 text-[hsl(var(--landing-muted))] sm:text-lg">
               {faq.subtitle}
             </p>
+            <img
+              src="/landing/faqs.avif"
+              alt="FAQ illustration"
+              className="mt-8 w-full"
+              style={{ background: "hsl(var(--landing-surface))" }}
+            />
           </motion.div>
 
           <motion.div
