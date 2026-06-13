@@ -133,40 +133,40 @@ const Footer = ({ content }: FooterProps) => {
   ] as const;
 
   return (
-    <footer className="relative overflow-hidden border-t border-white/[0.04] py-12 sm:py-16" style={{ background: "hsl(217, 33%, 12%)" }}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,hsla(var(--landing-primary),0.04),transparent_40%)]" />
+    <footer className="relative overflow-hidden border-t border-white/[0.04]" style={{ background: "#0a1423" }}>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,hsla(var(--landing-primary),0.03),transparent_50%)]" />
       <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-        <div className="flex flex-col gap-10">
-          <div className="flex flex-col gap-8 pb-10 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-md">
+        <div className="py-14 sm:py-18">
+          <div className="flex flex-col gap-10 pb-12 sm:flex-row sm:items-start sm:justify-between sm:gap-16">
+            <div className="max-w-sm">
               <SiteLogo
                 to="/"
                 context="footer"
                 className="mb-5"
-                imageClassName="h-10 sm:h-12"
+                imageClassName="h-10"
               />
-              <p className="font-copy text-sm leading-7 text-white/60 sm:text-base">
+              <p className="font-copy text-sm leading-7 text-white/50">
                 {websiteContent.footer.description}
               </p>
             </div>
 
             {visibleSocialLinks.length ? (
-              <div className="w-full lg:w-auto">
+              <div>
                 {(socialLinks.title?.trim() || socialLinks.subtitle?.trim()) ? (
-                  <div className="mb-4 lg:text-right">
+                  <div className="mb-4">
                     {socialLinks.title?.trim() ? (
                       <div className="font-copy text-xs font-semibold uppercase tracking-[0.18em] text-[hsl(var(--landing-primary))]">
                         {socialLinks.title}
                       </div>
                     ) : null}
                     {socialLinks.subtitle?.trim() ? (
-                      <p className="mt-2 max-w-md font-copy text-sm leading-6 text-white/50 lg:ml-auto">
+                      <p className="mt-1 font-copy text-sm text-white/40">
                         {socialLinks.subtitle}
                       </p>
                     ) : null}
                   </div>
                 ) : null}
-                <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+                <div className="flex flex-wrap items-center gap-2.5">
                   {visibleSocialLinks.map((item) => {
                     const { Icon, isWhatsApp } = resolveSocialIcon(item.platform);
 
@@ -177,9 +177,9 @@ const Footer = ({ content }: FooterProps) => {
                         target="_blank"
                         rel="noreferrer"
                         aria-label={item.handle.trim() || item.platform.trim()}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.03] text-white/40 transition-all duration-200 hover:border-[hsla(var(--landing-primary),0.3)] hover:bg-[hsla(var(--landing-primary),0.1)] hover:text-[hsl(var(--landing-primary))]"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.03] text-white/40 transition-all duration-200 hover:border-[hsla(var(--landing-primary),0.3)] hover:bg-[hsla(var(--landing-primary),0.1)] hover:text-[hsl(var(--landing-primary))]"
                       >
-                        <Icon className={`h-4 w-4 ${isWhatsApp ? 'text-[hsl(var(--landing-primary))]' : ''}`} strokeWidth={2} />
+                        <Icon className={`h-3.5 w-3.5 ${isWhatsApp ? 'text-[hsl(var(--landing-primary))]' : ''}`} strokeWidth={2} />
                       </a>
                     );
                   })}
@@ -188,21 +188,21 @@ const Footer = ({ content }: FooterProps) => {
             ) : null}
           </div>
 
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-10 border-t border-white/[0.04] pt-12 sm:grid-cols-2 lg:grid-cols-5">
             {footerLinkGroups.map((group) => (
-              <div key={group.title}>
-                <h4 className="font-copy text-sm font-semibold text-white">
+              <div key={group.title} className={group.items.length <= 2 ? "lg:col-span-1" : ""}>
+                <h4 className="font-copy text-sm font-semibold text-white/80">
                   {group.title}
                 </h4>
-                <ul className="mt-4 space-y-3">
+                <ul className="mt-4 space-y-2.5">
                   {group.items.map((item) => (
                     <li key={item.label}>
                       {"to" in item ? (
-                        <Link to={item.to} className="font-copy text-sm text-white/50 transition-colors duration-200 hover:text-[hsl(var(--landing-primary))]">
+                        <Link to={item.to} className="font-copy text-sm text-white/40 transition-colors duration-200 hover:text-white">
                           {item.label}
                         </Link>
                       ) : (
-                        <a href={item.href} className="font-copy text-sm text-white/50 transition-colors duration-200 hover:text-[hsl(var(--landing-primary))]">
+                        <a href={item.href} className="font-copy text-sm text-white/40 transition-colors duration-200 hover:text-white">
                           {item.label}
                         </a>
                       )}
@@ -213,24 +213,24 @@ const Footer = ({ content }: FooterProps) => {
             ))}
 
             <div className="sm:col-span-2 lg:col-span-1">
-              <h4 className="font-copy text-sm font-semibold text-white">
+              <h4 className="font-copy text-sm font-semibold text-white/80">
                 Risk Notifications
               </h4>
-              <p className="mt-4 font-copy text-sm leading-7 text-white/50">
+              <p className="mt-4 font-copy text-sm leading-7 text-white/40">
                 {websiteContent.footer.riskWarning}
               </p>
               <Link
                 to="/risk-disclaimer"
-                className="mt-4 inline-flex font-copy text-sm font-medium text-[hsl(var(--landing-primary))] transition-colors hover:text-white"
+                className="mt-3 inline-flex font-copy text-sm font-medium text-[hsl(var(--landing-primary))] transition-colors hover:text-white"
               >
                 Read full risk disclaimer
               </Link>
             </div>
           </div>
+        </div>
 
-          <div className="border-t border-white/[0.04] pt-6 text-center font-copy text-xs text-white/40 sm:text-sm">
-            Copyright {new Date().getFullYear()} {platformName}. All rights reserved.
-          </div>
+        <div className="border-t border-white/[0.04] py-6 text-center font-copy text-xs text-white/30 sm:text-sm">
+          Copyright {new Date().getFullYear()} {platformName}. All rights reserved.
         </div>
       </div>
     </footer>
