@@ -1,32 +1,8 @@
 import { motion } from "framer-motion";
-import { ArrowRight, TrendingUp, Zap, Globe, Lock } from "lucide-react";
+import { ArrowRight, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const features = [
-  {
-    label: "All Markets",
-    desc: "Forex, crypto, commodities & stocks",
-    icon: Globe,
-  },
-  {
-    label: "Trading Tools",
-    desc: "Demo balance, live charts, fast trades",
-    icon: TrendingUp,
-  },
-  {
-    label: "All Durations",
-    desc: "Short expiry to longer windows",
-    icon: Zap,
-  },
-  {
-    label: "Secure & Regulated",
-    desc: "Protected deposits & withdrawals",
-    icon: Lock,
-  },
-];
-
-const heroImage =
-  "/landing/hero-laptop-angle.jpg";
+const heroImage = "/landing/hero-laptop-angle.jpg";
 
 const HeroSection = () => {
   return (
@@ -130,32 +106,47 @@ const HeroSection = () => {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-4"
+          transition={{ duration: 0.7, delay: 0.5 }}
+          className="mt-20 grid items-center gap-10 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-8 lg:grid-cols-[1fr_1.2fr] lg:gap-14 lg:p-12"
         >
-          {features.map((f, i) => {
-            const Icon = f.icon;
-            return (
-              <motion.div
-                key={f.label}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
-                className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] p-6 transition-all duration-500 hover:-translate-y-1 hover:border-emerald-500/20 hover:bg-white/[0.06] hover:shadow-[0_20px_60px_rgba(0,0,0,0.3)]"
-              >
-                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[hsla(var(--landing-primary),0.06)] transition-all duration-500 group-hover:scale-150 group-hover:bg-[hsla(var(--landing-primary),0.1)]" />
-                <div className="relative">
-                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[hsla(var(--landing-primary),0.2)] to-[hsla(var(--landing-primary),0.05)] text-[hsl(var(--landing-primary))] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-300 group-hover:from-[hsla(var(--landing-primary),0.3)] group-hover:to-[hsla(var(--landing-primary),0.1)] group-hover:shadow-[0_0_30px_hsla(var(--landing-primary),0.15)]">
-                    <Icon size={22} strokeWidth={1.5} />
-                  </div>
-                  <p className="font-display text-lg font-bold text-white">{f.label}</p>
-                  <p className="mt-1.5 font-copy text-sm leading-relaxed text-white/40">{f.desc}</p>
-                </div>
-              </motion.div>
-            );
-          })}
+          <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-[hsla(var(--landing-primary),0.15)] to-transparent" />
+            <img
+              src="/landing/hero-laptop-angle.jpg"
+              alt="Trading platform"
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div>
+            <h2 className="font-display text-2xl font-bold text-white lg:text-3xl">
+              Everything you need to trade smarter
+            </h2>
+            <p className="mt-4 text-base leading-7 text-white/50 lg:text-lg lg:leading-8">
+              Init Option offers advanced trading tools, market analysis, risk
+              management features, and educational resources for traders of all
+              levels.
+            </p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              <li className="flex items-center gap-2.5 text-sm text-white/60">
+                <CheckCircle size={16} className="shrink-0 text-emerald-400" />
+                Advanced trading tools
+              </li>
+              <li className="flex items-center gap-2.5 text-sm text-white/60">
+                <CheckCircle size={16} className="shrink-0 text-emerald-400" />
+                Market analysis
+              </li>
+              <li className="flex items-center gap-2.5 text-sm text-white/60">
+                <CheckCircle size={16} className="shrink-0 text-emerald-400" />
+                Risk management features
+              </li>
+              <li className="flex items-center gap-2.5 text-sm text-white/60">
+                <CheckCircle size={16} className="shrink-0 text-emerald-400" />
+                Educational resources
+              </li>
+            </ul>
+          </div>
         </motion.div>
       </div>
     </section>
