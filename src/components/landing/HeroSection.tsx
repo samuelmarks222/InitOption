@@ -42,12 +42,12 @@ const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="pt-8 lg:pt-16"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 font-copy text-xs font-medium text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-2 font-copy text-sm font-semibold text-emerald-400">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
               Trusted by traders worldwide
             </span>
 
-            <h1 className="mt-6 max-w-[580px] font-display text-[clamp(2rem,5vw,3.5rem)] font-bold leading-[1.1] text-white">
+            <h1 className="mt-8 max-w-[640px] font-display text-[clamp(2.5rem,5.5vw,4rem)] font-bold leading-[1.1] text-white">
               Trade Smarter.
               <br />
               <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
@@ -55,23 +55,23 @@ const HeroSection = () => {
               </span>
             </h1>
 
-            <p className="mt-5 max-w-[440px] text-base leading-7 text-white/60">
+            <p className="mt-6 max-w-[500px] text-lg leading-8 text-white/60 lg:text-xl">
               Practice with $10,000 in demo funds, trade real markets with
               instant execution, and withdraw your profits—all from one
               clean terminal.
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
               <Link
                 to="/register"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[hsl(var(--landing-primary))] px-7 font-copy text-sm font-bold text-white shadow-[0_8px_32px_hsla(var(--landing-primary),0.3)] transition-all duration-300 hover:shadow-[0_12px_48px_hsla(var(--landing-primary),0.4)] hover:brightness-110"
+                className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[hsl(var(--landing-primary))] px-8 font-copy text-base font-bold text-white shadow-[0_8px_32px_hsla(var(--landing-primary),0.3)] transition-all duration-300 hover:shadow-[0_12px_48px_hsla(var(--landing-primary),0.4)] hover:brightness-110"
               >
                 Start Trading Free
-                <ArrowRight size={16} strokeWidth={2.5} />
+                <ArrowRight size={18} strokeWidth={2.5} />
               </Link>
               <Link
                 to="/about"
-                className="inline-flex h-12 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-7 font-copy text-sm font-medium text-white/70 transition-all hover:bg-white/[0.08] hover:text-white"
+                className="inline-flex h-14 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-8 font-copy text-base font-medium text-white/70 transition-all hover:bg-white/[0.08] hover:text-white"
               >
                 Learn More
               </Link>
