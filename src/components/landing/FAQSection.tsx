@@ -6,6 +6,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
+import { HelpCircle } from "lucide-react";
 
 const FAQSection = () => {
   const { data: websiteContent } = useWebsiteContent();
@@ -17,27 +18,31 @@ const FAQSection = () => {
 
   return (
     <section id="faq" className="relative overflow-hidden bg-[hsl(var(--landing-surface))] py-20 sm:py-24">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,hsla(var(--landing-primary),0.04),transparent_40%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_100%,hsla(var(--landing-primary),0.04),transparent_50%)]" />
       <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-14 text-center"
-        >
-          <span className="mb-4 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
-            Support
-          </span>
-          <h2 className="font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
-            {faq.title}
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[hsl(var(--landing-muted))] sm:text-lg">{faq.subtitle}</p>
-        </motion.div>
-
-        <div className="mx-auto grid max-w-5xl items-start gap-10 lg:grid-cols-[1fr_1fr]">
+        <div className="grid gap-14 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
+              <HelpCircle size={24} strokeWidth={1.5} />
+            </div>
+            <span className="mt-6 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
+              Support
+            </span>
+            <h2 className="mt-2 font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
+              {faq.title}
+            </h2>
+            <p className="mt-4 text-base leading-7 text-[hsl(var(--landing-muted))] sm:text-lg">
+              {faq.subtitle}
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
             <Accordion type="single" collapsible className="space-y-3">
@@ -56,21 +61,6 @@ const FAQSection = () => {
                 </AccordionItem>
               ))}
             </Accordion>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="relative hidden lg:block"
-          >
-            <div className="overflow-hidden rounded-2xl border border-gray-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
-              <img
-                src="/landing/faq-visual.jpg"
-                alt="FAQ illustration"
-                className="w-full object-cover"
-              />
-            </div>
           </motion.div>
         </div>
       </div>
