@@ -80,13 +80,13 @@ const HeroSection = () => {
             <div className="relative z-10 lg:translate-x-16">
               <div className="relative h-80 w-80 lg:h-[480px] lg:w-[480px]">
                 {/* White and colored decorative rings */}
-                <div className="absolute -inset-6 rounded-full border-2 border-white/30" />
-                <div className="absolute -inset-3 rounded-full border-2 border-white/60" />
-                <div className="absolute -inset-1 rounded-full border border-emerald-400/50" />
+                <div className="absolute -inset-6 rounded-full border border-white/15" />
+                <div className="absolute -inset-3 rounded-full border border-white/25" />
+                <div className="absolute -inset-1 rounded-full border border-emerald-400/30" />
 
-                {/* Image circle with thick white border */}
+                {/* Image circle with white border */}
                 <div className="relative h-full w-full overflow-hidden rounded-full shadow-[0_40px_100px_rgba(0,0,0,0.5),0_0_60px_rgba(16,185,129,0.12),0_0_60px_rgba(37,99,235,0.08)]"
-                  style={{ border: "5px solid rgba(255,255,255,0.85)", background: "transparent" }}
+                  style={{ border: "3px solid rgba(255,255,255,0.45)", background: "transparent" }}
                 >
                   <div className="h-full w-full overflow-hidden rounded-full">
                     <img
