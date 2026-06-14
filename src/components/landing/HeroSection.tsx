@@ -60,20 +60,20 @@ const HeroSection = () => {
             transition={{ duration: 0.7, delay: 0.25 }}
             className="relative flex items-center justify-center py-8 lg:justify-end lg:py-0"
           >
-            {/* Blue ambient glow */}
-            <div className="absolute -top-16 right-0 h-96 w-96 rounded-full opacity-15 blur-3xl lg:h-[550px] lg:w-[550px]"
-              style={{ background: "radial-gradient(circle, #2563EB, transparent 70%)" }}
+            {/* Mixed color ambient glow */}
+            <div className="absolute -top-16 right-0 h-96 w-96 rounded-full opacity-20 blur-3xl lg:h-[550px] lg:w-[550px]"
+              style={{ background: "radial-gradient(circle, #2563EB, #6D5EF5, transparent 70%)" }}
             />
 
-            {/* Overlapping curved abstract shapes behind the circle */}
-            <div className="absolute -right-6 -top-8 h-72 w-72 rounded-[60%_40%_55%_45%] opacity-30 lg:-right-12 lg:-top-12 lg:h-[420px] lg:w-[420px]"
-              style={{ background: "linear-gradient(135deg, #2563EB, #60A5FA)" }}
+            {/* Overlapping curved abstract shapes with mixed colors */}
+            <div className="absolute -right-6 -top-8 h-72 w-72 rounded-[60%_40%_55%_45%] opacity-35 lg:-right-12 lg:-top-12 lg:h-[420px] lg:w-[420px]"
+              style={{ background: "linear-gradient(135deg, #2563EB, #60A5FA, #6D5EF5)" }}
             />
-            <div className="absolute -bottom-10 left-2 h-56 w-56 rounded-[45%_55%_35%_65%] opacity-20 lg:-bottom-14 lg:h-80 lg:w-80"
-              style={{ background: "linear-gradient(120deg, #6D5EF5, #2563EB)" }}
+            <div className="absolute -bottom-10 left-2 h-56 w-56 rounded-[45%_55%_35%_65%] opacity-25 lg:-bottom-14 lg:h-80 lg:w-80"
+              style={{ background: "linear-gradient(120deg, #6D5EF5, #2563EB, #1e3265)" }}
             />
-            <div className="absolute bottom-4 -right-2 h-40 w-40 rounded-[50%_50%_40%_60%] opacity-15 lg:h-56 lg:w-56"
-              style={{ background: "radial-gradient(ellipse at center, #2563EB, transparent)" }}
+            <div className="absolute bottom-4 -right-2 h-40 w-40 rounded-[50%_50%_40%_60%] opacity-20 lg:h-56 lg:w-56"
+              style={{ background: "radial-gradient(ellipse at center, #60A5FA, #2563EB, transparent)" }}
             />
 
             {/* Main circle wrapper - extends outside container */}
@@ -81,15 +81,15 @@ const HeroSection = () => {
               <div className="relative h-80 w-80 lg:h-[480px] lg:w-[480px]">
                 {/* Layered circular frames */}
                 <div className="absolute -inset-5 rounded-full border border-white/8 backdrop-blur-sm"
-                  style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.06), rgba(96,165,250,0.02))" }}
+                  style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.08), rgba(109,94,245,0.04), rgba(96,165,250,0.02))" }}
                 />
                 <div className="absolute -inset-3 rounded-full border border-white/10"
-                  style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.08), transparent)" }}
+                  style={{ background: "linear-gradient(135deg, rgba(109,94,245,0.08), rgba(37,99,235,0.06), transparent)" }}
                 />
 
                 {/* Image circle with premium frame */}
-                <div className="relative h-full w-full overflow-hidden rounded-full shadow-[0_40px_100px_rgba(0,0,0,0.5),0_0_80px_rgba(37,99,235,0.15)] backdrop-blur-sm"
-                  style={{ border: "3px solid rgba(255,255,255,0.15)", padding: "8px", background: "linear-gradient(135deg, rgba(11,31,58,0.6), rgba(30,41,59,0.3))" }}
+                <div className="relative h-full w-full overflow-hidden rounded-full shadow-[0_40px_100px_rgba(0,0,0,0.5),0_0_80px_rgba(37,99,235,0.15),0_0_80px_rgba(109,94,245,0.08)] backdrop-blur-sm"
+                  style={{ border: "3px solid rgba(255,255,255,0.15)", padding: "8px", background: "linear-gradient(145deg, rgba(11,31,58,0.5), rgba(30,41,59,0.2), rgba(37,99,235,0.08))" }}
                 >
                   <div className="h-full w-full overflow-hidden rounded-full">
                     <img
