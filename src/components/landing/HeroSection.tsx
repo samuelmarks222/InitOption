@@ -60,38 +60,41 @@ const HeroSection = () => {
             transition={{ duration: 0.7, delay: 0.25 }}
             className="relative flex items-center justify-center py-8 lg:justify-end lg:py-0"
           >
-            {/* Mixed color ambient glow */}
+            {/* Multi-color ambient glow */}
             <div className="absolute -top-16 right-0 h-96 w-96 rounded-full opacity-20 blur-3xl lg:h-[550px] lg:w-[550px]"
-              style={{ background: "radial-gradient(circle, #2563EB, #6D5EF5, transparent 70%)" }}
+              style={{ background: "radial-gradient(circle, #10b981, #2563EB, transparent 70%)" }}
             />
 
-            {/* Overlapping curved abstract shapes with mixed colors */}
-            <div className="absolute -right-6 -top-8 h-72 w-72 rounded-[60%_40%_55%_45%] opacity-35 lg:-right-12 lg:-top-12 lg:h-[420px] lg:w-[420px]"
-              style={{ background: "linear-gradient(135deg, #2563EB, #60A5FA, #6D5EF5)" }}
+            {/* Overlapping curved abstract shapes with distinct colors */}
+            <div className="absolute -right-6 -top-8 h-72 w-72 rounded-[60%_40%_55%_45%] opacity-40 lg:-right-12 lg:-top-12 lg:h-[420px] lg:w-[420px]"
+              style={{ background: "linear-gradient(135deg, #10b981, #2563EB)" }}
             />
-            <div className="absolute -bottom-10 left-2 h-56 w-56 rounded-[45%_55%_35%_65%] opacity-25 lg:-bottom-14 lg:h-80 lg:w-80"
-              style={{ background: "linear-gradient(120deg, #6D5EF5, #2563EB, #1e3265)" }}
+            <div className="absolute -bottom-10 left-2 h-56 w-56 rounded-[45%_55%_35%_65%] opacity-30 lg:-bottom-14 lg:h-80 lg:w-80"
+              style={{ background: "linear-gradient(120deg, #6D5EF5, #f59e0b)" }}
             />
-            <div className="absolute bottom-4 -right-2 h-40 w-40 rounded-[50%_50%_40%_60%] opacity-20 lg:h-56 lg:w-56"
-              style={{ background: "radial-gradient(ellipse at center, #60A5FA, #2563EB, transparent)" }}
+            <div className="absolute bottom-4 -right-2 h-40 w-40 rounded-[50%_50%_40%_60%] opacity-25 lg:h-56 lg:w-56"
+              style={{ background: "radial-gradient(ellipse at center, #60A5FA, #10b981, transparent)" }}
             />
 
             {/* Main circle wrapper - extends outside container */}
             <div className="relative z-10 lg:translate-x-16">
               <div className="relative h-80 w-80 lg:h-[480px] lg:w-[480px]">
-                {/* Layered circular frames */}
+                {/* Layered circular frames with multi-color */}
                 <div className="absolute -inset-5 rounded-full border border-white/8 backdrop-blur-sm"
-                  style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.08), rgba(109,94,245,0.04), rgba(96,165,250,0.02))" }}
+                  style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(37,99,235,0.05), rgba(109,94,245,0.03))" }}
                 />
                 <div className="absolute -inset-3 rounded-full border border-white/10"
-                  style={{ background: "linear-gradient(135deg, rgba(109,94,245,0.08), rgba(37,99,235,0.06), transparent)" }}
+                  style={{ background: "linear-gradient(135deg, rgba(109,94,245,0.08), rgba(245,158,11,0.04), transparent)" }}
+                />
+                <div className="absolute -inset-1 rounded-full"
+                  style={{ background: "conic-gradient(from 90deg, rgba(16,185,129,0.12), rgba(37,99,235,0.08), rgba(109,94,245,0.12), rgba(245,158,11,0.06), rgba(16,185,129,0.12))" }}
                 />
 
                 {/* Image circle with premium frame */}
-                <div className="relative h-full w-full overflow-hidden rounded-full shadow-[0_40px_100px_rgba(0,0,0,0.5),0_0_80px_rgba(37,99,235,0.15),0_0_80px_rgba(109,94,245,0.08)] backdrop-blur-sm"
-                  style={{ border: "3px solid rgba(255,255,255,0.15)", padding: "8px", background: "linear-gradient(145deg, rgba(11,31,58,0.5), rgba(30,41,59,0.2), rgba(37,99,235,0.08))" }}
+                <div className="relative h-full w-full overflow-hidden rounded-full shadow-[0_40px_100px_rgba(0,0,0,0.5),0_0_80px_rgba(16,185,129,0.1),0_0_80px_rgba(37,99,235,0.1)] backdrop-blur-sm"
+                  style={{ border: "3px solid rgba(255,255,255,0.15)", padding: "6px", background: "linear-gradient(145deg, rgba(11,31,58,0.5), rgba(30,41,59,0.2))" }}
                 >
-                  <div className="h-full w-full overflow-hidden rounded-full">
+                  <div className="h-full w-full overflow-hidden rounded-full ring-1 ring-white/10">
                     <img
                       src={heroImage}
                       alt="Trading platform preview"
