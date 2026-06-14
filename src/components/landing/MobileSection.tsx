@@ -62,14 +62,12 @@ const MobileSection = () => {
             viewport={{ once: true }}
             className="order-1 flex flex-1 justify-center lg:order-2"
           >
-            <div className="animate-float rounded-2xl border border-gray-200/60 bg-white p-3 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
-              <img
-                src={mobileImage}
-                alt="Mobile trading interface"
-                className="max-h-[350px] rounded-xl object-contain sm:max-h-[450px]"
-                loading="lazy"
-              />
-            </div>
+            <img
+              src={mobileImage}
+              alt="Mobile trading interface"
+              className="max-h-[350px] w-full object-contain sm:max-h-[450px]"
+              loading="lazy"
+            />
           </motion.div>
         </div>
       </div>
