@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import mobileTrading from "@/assets/mobile-trading.jpg";
+const mobileImage = "/landing/phone-view.jpg";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 
 const features = [
@@ -64,7 +64,7 @@ const MobileSection = () => {
           >
             <div className="animate-float rounded-2xl border border-gray-200/60 bg-white p-3 shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
               <img
-                src={mobileTrading}
+                src={mobileImage}
                 alt="Mobile trading interface"
                 className="max-h-[350px] rounded-xl object-contain sm:max-h-[450px]"
                 loading="lazy"
