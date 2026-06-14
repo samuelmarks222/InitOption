@@ -127,26 +127,26 @@ const HeroSection = () => {
             </div>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/15">
-                  <CheckCircle size={14} className="text-blue-400" />
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
+                  <CheckCircle size={14} className="text-emerald-400" />
                 </span>
                 <span className="font-copy text-sm text-white/60">Advanced trading tools</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/15">
-                  <CheckCircle size={14} className="text-blue-400" />
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
+                  <CheckCircle size={14} className="text-emerald-400" />
                 </span>
                 <span className="font-copy text-sm text-white/60">Market analysis</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/15">
-                  <CheckCircle size={14} className="text-blue-400" />
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
+                  <CheckCircle size={14} className="text-emerald-400" />
                 </span>
                 <span className="font-copy text-sm text-white/60">Risk management features</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/15">
-                  <CheckCircle size={14} className="text-blue-400" />
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
+                  <CheckCircle size={14} className="text-emerald-400" />
                 </span>
                 <span className="font-copy text-sm text-white/60">Educational resources</span>
               </div>
