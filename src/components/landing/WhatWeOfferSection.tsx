@@ -184,30 +184,30 @@ const WhatWeOfferSection = () => {
   }, [activeCategory]);
 
   return (
-    <section className="relative overflow-hidden bg-white py-16 sm:py-24">
+    <section className="relative overflow-hidden bg-white py-10 sm:py-14">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_60%_0%,hsla(var(--landing-primary),0.04),transparent_40%)]" />
       <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-        <div className="mx-auto mb-10 max-w-3xl text-center">
-          <span className="mb-4 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
+        <div className="mx-auto mb-6 max-w-3xl text-center">
+          <span className="mb-3 inline-block font-copy text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--landing-muted))]">
             Markets
           </span>
-          <h2 className="font-display text-3xl font-bold text-[hsl(var(--landing-secondary))] sm:text-4xl lg:text-5xl">
+          <h2 className="font-display text-2xl font-bold text-[hsl(var(--landing-secondary))] sm:text-3xl lg:text-4xl">
             Market Spreads and Swaps
           </h2>
           {markets.description ? (
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[hsl(var(--landing-muted))] sm:text-lg">
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[hsl(var(--landing-muted))] sm:text-base">
               {markets.description}
             </p>
           ) : null}
         </div>
 
-        <div className="mb-10 flex flex-wrap items-center justify-center gap-2">
+        <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
           {availableCategories.map((categoryKey) => (
             <button
               key={categoryKey}
               type="button"
               onClick={() => setActiveCategory(categoryKey)}
-              className={`rounded-full px-5 py-2 font-copy text-sm font-semibold tracking-[0.04em] transition-all duration-300 ${
+              className={`rounded-full px-4 py-1.5 font-copy text-xs font-semibold tracking-[0.04em] transition-all duration-300 ${
                 activeCategory === categoryKey
                   ? "bg-[hsl(var(--landing-primary))] text-white shadow-[0_4px_16px_hsla(var(--landing-primary),0.3)]"
                   : "border border-gray-200 bg-white text-[hsl(var(--landing-muted))] hover:border-[hsla(var(--landing-primary),0.3)] hover:text-[hsl(var(--landing-secondary))]"
