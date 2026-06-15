@@ -159,8 +159,8 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
 
       {/* Panel */}
       <div
-        className={`absolute right-0 top-0 h-full w-[340px] flex flex-col bg-[#1A1A2A] shadow-2xl transition-transform duration-300 ease-out border-l border-[#2A2A3A] ${
-          mounted ? "translate-x-0" : "translate-x-full"
+        className={`absolute left-0 top-0 h-full w-[340px] flex flex-col bg-[#1A1A2A] shadow-2xl transition-transform duration-300 ease-out border-r border-[#2A2A3A] ${
+          mounted ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Header */}
