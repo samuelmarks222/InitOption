@@ -377,7 +377,7 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
         <div className="shrink-0 border-t border-white/[0.08] px-3 py-2.5">
           <a
             href="/social/traders"
-            className="flex items-center justify-center gap-2 rounded-[5px] bg-[#D5006C]/15 px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-[#D5006C] transition-colors hover:bg-[#D5006C]/25"
+            className="flex items-center justify-center gap-2 rounded-[5px] bg-[#0fa053]/15 px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-[#0fa053] transition-colors hover:bg-[#0fa053]/25"
           >
             <Trophy className="h-3.5 w-3.5" />
             View Full Leaderboard

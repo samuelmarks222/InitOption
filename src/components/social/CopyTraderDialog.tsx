@@ -89,7 +89,7 @@ export const CopyTraderDialog = ({
       <DialogContent className="max-w-[520px] border-white/10 bg-[#1A1A2A] text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-white">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#D5006C]/15 text-[#ff6b9d]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0fa053]/15 text-[#9be1bc]">
               <SlidersHorizontal className="h-5 w-5" />
             </div>
             <div className="min-w-0">
@@ -113,7 +113,7 @@ export const CopyTraderDialog = ({
               step="0.01"
               min="1"
               onChange={(e) => setFixedAmount(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#D5006C]"
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
             />
           </Field>
 
@@ -127,7 +127,7 @@ export const CopyTraderDialog = ({
                   onClick={() => { setAmountType("ratio"); setRatio(opt.value); }}
                   className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
                     ratio === opt.value && amountType === "ratio"
-                      ? "border-[#D5006C]/40 bg-[#D5006C]/15 text-white"
+                      ? "border-[#0fa053]/40 bg-[#0fa053]/15 text-white"
                       : "border-white/10 bg-black/20 text-gray-400 hover:text-white"
                   }`}
                 >
@@ -144,7 +144,7 @@ export const CopyTraderDialog = ({
               value={maxDaily}
               min="1"
               onChange={(e) => setMaxDaily(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#D5006C]"
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
             />
           </Field>
 
@@ -158,7 +158,7 @@ export const CopyTraderDialog = ({
               <button
                 type="button"
                 onClick={() => setStopLossEnabled(!stopLossEnabled)}
-                className={`relative h-7 w-12 rounded-full transition-colors ${stopLossEnabled ? "bg-[#D5006C]" : "bg-gray-600"}`}
+                className={`relative h-7 w-12 rounded-full transition-colors ${stopLossEnabled ? "bg-[#0fa053]" : "bg-gray-600"}`}
               >
                 <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${stopLossEnabled ? "left-6" : "left-1"}`} />
               </button>
@@ -171,7 +171,7 @@ export const CopyTraderDialog = ({
                   min="1"
                   max="100"
                   onChange={(e) => setStopLossPct(e.target.value)}
-                  className="w-24 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#D5006C]"
+                  className="w-24 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
                 />
                 <span className="text-sm text-gray-400">% loss threshold</span>
               </div>
@@ -184,7 +184,7 @@ export const CopyTraderDialog = ({
               type="date"
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#D5006C]"
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
             />
           </Field>
 
@@ -209,7 +209,7 @@ export const CopyTraderDialog = ({
             <button
               type="button"
               onClick={() => setEnabled(!enabled)}
-              className={`relative h-7 w-12 rounded-full transition-colors ${enabled ? "bg-[#D5006C]" : "bg-gray-600"}`}
+              className={`relative h-7 w-12 rounded-full transition-colors ${enabled ? "bg-[#0fa053]" : "bg-gray-600"}`}
             >
               <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${enabled ? "left-6" : "left-1"}`} />
             </button>
@@ -228,7 +228,7 @@ export const CopyTraderDialog = ({
             type="button"
             onClick={() => void handleSave()}
             disabled={saving}
-            className="rounded-xl bg-[#D5006C] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#b8005c] disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-xl bg-[#0fa053] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0d8f47] disabled:cursor-not-allowed disabled:opacity-70"
           >
             {saving ? "Saving..." : "Start Copying"}
           </button>

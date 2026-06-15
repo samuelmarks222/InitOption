@@ -87,7 +87,7 @@ const SocialTopTraders = () => {
   const paginated = filtered.slice(0, page * perPage);
 
   return (
-    <div className="min-h-screen bg-[#0D0D0D] px-4 py-8 text-white md:px-6">
+    <div className="min-h-screen bg-[#0b1018] px-4 py-8 text-white md:px-6">
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -110,7 +110,7 @@ const SocialTopTraders = () => {
               onClick={() => { setPeriod(p.key); setPage(1); }}
               className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
                 period === p.key
-                  ? "bg-[#D5006C] text-white"
+                  ? "bg-[#0fa053] text-white"
                   : "border border-white/10 bg-white/[0.03] text-gray-400 hover:text-white"
               }`}
             >
@@ -127,12 +127,12 @@ const SocialTopTraders = () => {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder="Search traders by username..."
-            className="w-full rounded-xl border border-white/10 bg-[#1A1A2A] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-gray-500 focus:border-[#D5006C]"
+            className="w-full rounded-xl border border-white/10 bg-[#111823] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-gray-500 focus:border-[#0fa053]"
           />
         </div>
 
         {/* Table */}
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#1A1A2A]">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#111823]">
           {loading ? (
             <div className="px-6 py-16 text-center text-sm text-gray-400">Loading traders...</div>
           ) : paginated.length === 0 ? (
@@ -164,7 +164,7 @@ const SocialTopTraders = () => {
                       <tr key={trader.id} className={`transition-colors hover:bg-white/[0.03] ${idx % 2 === 1 ? "bg-white/[0.02]" : ""}`}>
                         <td className="px-5 py-4">
                           <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${
-                            trader.rank <= 3 ? "bg-[#D5006C]/20 text-[#D5006C]" : "text-gray-400"
+                            trader.rank <= 3 ? "bg-[#0fa053]/20 text-[#0fa053]" : "text-gray-400"
                           }`}>
                             {trader.rank <= 3 ? ["🥇", "🥈", "🥉"][trader.rank - 1] : trader.rank}
                           </span>
@@ -174,7 +174,7 @@ const SocialTopTraders = () => {
                             {trader.avatar_url ? (
                               <img src={trader.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-white/10" />
                             ) : (
-                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#D5006C] to-purple-600 text-sm font-bold text-white">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#0fa053] to-purple-600 text-sm font-bold text-white">
                                 {getTraderDisplayName(trader).charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -216,7 +216,7 @@ const SocialTopTraders = () => {
                             <div className="flex items-center justify-end gap-1.5">
                               <button
                                 onClick={() => setCopyDialogTrader(trader)}
-                                className="rounded-lg border border-[#D5006C]/40 px-3 py-1.5 text-xs font-semibold text-[#D5006C] transition-colors hover:bg-[#D5006C] hover:text-white"
+                                className="rounded-lg border border-[#0fa053]/40 px-3 py-1.5 text-xs font-semibold text-[#0fa053] transition-colors hover:bg-[#0fa053] hover:text-white"
                                 title="Copy Trader"
                               >
                                 <Copy className="h-3.5 w-3.5" />
@@ -250,7 +250,7 @@ const SocialTopTraders = () => {
             <div className="border-t border-white/10 px-6 py-4 text-center">
               <button
                 onClick={() => setPage((p) => p + 1)}
-                className="rounded-xl bg-[#D5006C] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#b8005c]"
+                className="rounded-xl bg-[#0fa053] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0d8f47]"
               >
                 Load More ({filtered.length - paginated.length} remaining)
               </button>

@@ -44,15 +44,15 @@ const MyCopiedTraders = () => {
 
         {/* Summary Card */}
         <div className="mb-6 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-[#1A1A2A] p-5">
+          <div className="rounded-2xl border border-white/10 bg-[#111823] p-5">
             <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Active Copies</p>
             <p className="mt-2 text-3xl font-black text-white">{summary.activeCopies}</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-[#1A1A2A] p-5">
+          <div className="rounded-2xl border border-white/10 bg-[#111823] p-5">
             <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Total Copied Amount</p>
             <p className="mt-2 text-3xl font-black text-white">{formatSocialCurrency(summary.totalCopied)}</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-[#1A1A2A] p-5">
+          <div className="rounded-2xl border border-white/10 bg-[#111823] p-5">
             <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Total Profit from Copy</p>
             <p className={`mt-2 text-3xl font-black ${summary.totalProfit >= 0 ? "text-[#00C076]" : "text-[#F6465D]"}`}>
               {summary.totalProfit >= 0 ? "+" : ""}{formatSocialCurrency(summary.totalProfit)}
@@ -61,7 +61,7 @@ const MyCopiedTraders = () => {
         </div>
 
         {/* List */}
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#1A1A2A]">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#111823]">
           {!hasData ? (
             <div className="px-6 py-16 text-center text-sm text-gray-400">
               <Copy className="mx-auto mb-3 h-10 w-10 text-gray-600" />
@@ -69,7 +69,7 @@ const MyCopiedTraders = () => {
               <p className="mt-1">Visit the Top Traders page to find and copy successful traders.</p>
               <Link
                 to="/social/traders"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#D5006C] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#b8005c]"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#0fa053] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0d8f47]"
               >
                 <TrendingUp className="h-4 w-4" />
                 Browse Top Traders
@@ -100,7 +100,7 @@ const MyCopiedTraders = () => {
                             {trader?.avatar_url ? (
                               <img src={trader.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-white/10" />
                             ) : (
-                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#D5006C] to-purple-600 text-sm font-bold text-white">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#0fa053] to-purple-600 text-sm font-bold text-white">
                                 {getTraderDisplayName(trader).charAt(0).toUpperCase()}
                               </div>
                             )}

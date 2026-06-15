@@ -95,7 +95,7 @@ const TraderProfile = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0D0D0D] px-4 py-10 text-white md:px-6">
-        <div className="mx-auto max-w-5xl rounded-2xl border border-white/10 bg-[#1A1A2A] px-6 py-20 text-center text-sm text-gray-400">
+        <div className="mx-auto max-w-5xl rounded-2xl border border-white/10 bg-[#111823] px-6 py-20 text-center text-sm text-gray-400">
           Loading trader profile...
         </div>
       </div>
@@ -105,10 +105,10 @@ const TraderProfile = () => {
   if (!trader) {
     return (
       <div className="min-h-screen bg-[#0D0D0D] px-4 py-10 text-white md:px-6">
-        <div className="mx-auto max-w-4xl rounded-2xl border border-white/10 bg-[#1A1A2A] px-6 py-16 text-center">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-white/10 bg-[#111823] px-6 py-16 text-center">
           <h1 className="text-2xl font-bold text-white">Trader not found</h1>
           <p className="mt-3 text-sm text-gray-400">The profile you requested could not be loaded.</p>
-          <Link to="/trade" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#D5006C] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#b8005c]">
+          <Link to="/trade" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0fa053] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0d8f47]">
             <ArrowLeft className="h-4 w-4" /> Back to platform
           </Link>
         </div>
@@ -128,12 +128,12 @@ const TraderProfile = () => {
         <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
 
           {/* Left Column - Profile Info */}
-          <section className="rounded-2xl border border-white/10 bg-[#1A1A2A] p-6">
+          <section className="rounded-2xl border border-white/10 bg-[#111823] p-6">
             <div className="flex flex-col items-center text-center md:items-start md:text-left">
               {trader.avatar_url ? (
                 <img src={trader.avatar_url} alt="" className="h-24 w-24 rounded-2xl object-cover ring-2 ring-white/10" />
               ) : (
-                <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-[#D5006C] to-purple-600 text-3xl font-black text-white ring-2 ring-white/10">
+                <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0fa053] to-purple-600 text-3xl font-black text-white ring-2 ring-white/10">
                   {getTraderDisplayName(trader).charAt(0).toUpperCase()}
                 </div>
               )}
@@ -147,12 +147,12 @@ const TraderProfile = () => {
               {/* Followers / Watchers */}
               <div className="mt-4 flex items-center gap-6">
                 <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <Users className="h-4 w-4 text-[#D5006C]" />
+                  <Users className="h-4 w-4 text-[#0fa053]" />
                   <span className="font-semibold text-white">{trader.followers_count ?? 0}</span>
                   <span>Followers</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-400">
-                  <Eye className="h-4 w-4 text-[#D5006C]" />
+                  <Eye className="h-4 w-4 text-[#0fa053]" />
                   <span className="font-semibold text-white">{trader.followers_count ?? 0}</span>
                   <span>Watchers</span>
                 </div>
@@ -160,7 +160,7 @@ const TraderProfile = () => {
 
               {/* Profile Level */}
               <div className="mt-3 flex items-center gap-2">
-                <span className="rounded-lg bg-gradient-to-r from-[#D5006C] to-amber-500 px-3 py-1 text-xs font-bold text-white">
+                <span className="rounded-lg bg-gradient-to-r from-[#0fa053] to-amber-500 px-3 py-1 text-xs font-bold text-white">
                   Guru
                 </span>
                 <VipBadge tierId={(trader.vip_tier as any) ?? "none"} size={20} showLabel />
@@ -172,7 +172,7 @@ const TraderProfile = () => {
                   <button
                     onClick={() => setCopyDialogOpen(true)}
                     disabled={trader.social_trading_disabled}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#D5006C] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#b8005c] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#0fa053] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0d8f47] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <Copy className="h-4 w-4" />
                     {copySetting ? "Manage Copy" : "Copy"}
@@ -205,7 +205,7 @@ const TraderProfile = () => {
           </section>
 
           {/* Right Column - Trading Statistics */}
-          <section className="rounded-2xl border border-white/10 bg-[#1A1A2A] p-6">
+          <section className="rounded-2xl border border-white/10 bg-[#111823] p-6">
             <h2 className="text-lg font-bold text-white">Trading Statistics</h2>
 
             {stats ? (
