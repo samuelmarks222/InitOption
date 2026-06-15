@@ -1,6 +1,23 @@
-alter table public.copy_settings
-  add column if not exists stop_loss_pct numeric,
-  add column if not exists expiry_date timestamptz;
+create table if not exists public.copy_settings (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  target_user_id uuid not null references auth.users(id) on delete cascade,
+  enabled boolean not null default true,
+  amount_type text not null default 'fixed',
+  execution_mode text not null default 'automatic',
+  fixed_amount numeric(12, 2),
+  ratio numeric(12, 4),
+  max_per_trade numeric(12, 2),
+  max_daily numeric(12, 2),
+  stop_loss_pct numeric,
+  expiry_date timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint copy_settings_unique_pair unique (user_id, target_user_id),
+  constraint copy_settings_not_self check (user_id <> target_user_id),
+  constraint copy_settings_amount_type_check check (amount_type in ('fixed', 'ratio')),
+  constraint copy_settings_execution_mode_check check (execution_mode in ('automatic', 'manual'))
+);
 
 do $$
 begin
