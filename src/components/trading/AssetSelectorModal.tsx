@@ -305,6 +305,8 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                       <div className="min-w-0 flex-1">
                         {asset.category === "CURRENCIES" ? (
                           <div className="truncate text-[12px] font-bold text-white leading-tight">{asset.symbol}</div>
+                        ) : asset.category === "INDICES" ? (
+                          <div className="truncate text-[12px] font-bold text-white leading-tight">{asset.name} <span className="font-normal text-gray-400">({asset.symbol})</span></div>
                         ) : (
                           <div className="truncate text-[12px] font-bold text-white leading-tight">{asset.name}</div>
                         )}
