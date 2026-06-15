@@ -143,7 +143,6 @@ const buildTradeGroups = <T extends { closed_at?: string; opened_at?: string }>(
 
 // Preset durations in seconds
 const TIME_PRESETS = [
-  { label: "30s",  val: 30     },
   { label: "1m",   val: 60     },
   { label: "2m",   val: 120    },
   { label: "3m",   val: 180    },
@@ -157,7 +156,7 @@ const TIME_PRESETS = [
 ];
 
 const MAX_MANUAL_INVESTMENT = 3000;
-const MIN_MANUAL_EXPIRY_SECONDS = 30;
+const MIN_MANUAL_EXPIRY_SECONDS = 60;
 const MAX_MANUAL_EXPIRY_SECONDS = 24 * 60 * 60;
 const PENDING_TRADE_DELAY_MS = 3000;
 const PENDING_TRADE_MODE_KEY = "trade_pending_mode_enabled";

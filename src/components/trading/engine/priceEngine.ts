@@ -24,7 +24,6 @@ export interface TimeframeConfig {
 }
 
 export const SUPPORTED_CHART_TIMEFRAMES = [
-  "30s",
   "1m",
   "2m",
   "3m",
@@ -42,7 +41,6 @@ export const SUPPORTED_CHART_TIMEFRAMES = [
 export type SupportedChartTimeframe = (typeof SUPPORTED_CHART_TIMEFRAMES)[number];
 
 export const TIMEFRAMES: Record<string, TimeframeConfig> = {
-  "30s": { label: "30s", seconds: 30, updateIntervalMs: 80, historical: 260, bodyPips: 8, wickPips: 6 },
   "1m": { label: "1m", seconds: 60, updateIntervalMs: 100, historical: 240, bodyPips: 8, wickPips: 6 },
   "2m": { label: "2m", seconds: 120, updateIntervalMs: 150, historical: 232, bodyPips: 11, wickPips: 8 },
   "3m": { label: "3m", seconds: 180, updateIntervalMs: 190, historical: 228, bodyPips: 13, wickPips: 9 },
