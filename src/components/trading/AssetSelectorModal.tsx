@@ -213,7 +213,7 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
 
         {/* Column Headers */}
         <div className="shrink-0 border-b border-[#2A2A3A] px-4 pb-2">
-          <div className="grid grid-cols-[minmax(0,1fr),72px,62px,62px] items-center gap-2">
+          <div className="grid grid-cols-[minmax(0,1fr),60px,42px,42px] items-center gap-1">
             <span className="text-[11px] font-semibold text-[#B0B0B0]">Name</span>
             <button
               onClick={() => handleSort("change24h")}
@@ -260,7 +260,7 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                   <div
                     key={asset.symbol}
                     onClick={() => onSelect(asset)}
-                    className="grid grid-cols-[minmax(0,1fr),72px,62px,62px] items-center gap-2 px-4 py-2.5 cursor-pointer transition-colors hover:bg-[#2A2A3A]"
+                    className="grid grid-cols-[minmax(0,1fr),60px,42px,42px] items-center gap-1 px-4 py-2.5 cursor-pointer transition-colors hover:bg-[#2A2A3A]"
                   >
                     {/* Name column */}
                     <div className="flex items-center gap-2.5 min-w-0">
