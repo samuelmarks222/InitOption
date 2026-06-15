@@ -617,54 +617,54 @@ const Trade = () => {
 
     const timerId = window.setInterval(() => {
       const now = Date.now();
+      const canResolveDemoTrades = latestChartPriceRef.current > 0;
       const settledTrades: TradeHistoryEntry[] = [];
       let creditedAmount = 0;
-      const canResolveDemoTrades = latestChartPriceRef.current > 0;
 
-      setDemoActiveTrades((currentTrades) =>
-        currentTrades.reduce<ActiveTrade[]>((nextTrades, trade) => {
-          const elapsedSeconds = (now - new Date(trade.opened_at).getTime()) / 1000;
-          const timeLeft = Math.max(0, trade.expiry_seconds - elapsedSeconds);
+      const nextActiveTrades = demoActiveTrades.reduce<ActiveTrade[]>((nextTrades, trade) => {
+        const elapsedSeconds = (now - new Date(trade.opened_at).getTime()) / 1000;
+        const timeLeft = Math.max(0, trade.expiry_seconds - elapsedSeconds);
 
-          if (timeLeft > 0) {
-            nextTrades.push({ ...trade, timeLeft });
-            return nextTrades;
-          }
-
-          if (!canResolveDemoTrades) {
-            nextTrades.push({ ...trade, timeLeft: 0 });
-            return nextTrades;
-          }
-
-          const exitPrice = latestChartPriceRef.current > 0 ? latestChartPriceRef.current : trade.entry_price;
-          const won =
-            (trade.direction === "higher" && exitPrice > trade.entry_price) ||
-            (trade.direction === "lower" && exitPrice < trade.entry_price);
-          const profit = won ? trade.amount + trade.amount * trade.payout_rate : 0;
-
-          if (won) {
-            creditedAmount += profit;
-          }
-
-          settledTrades.push({
-            id: trade.id,
-            user_id: user?.id ?? "demo",
-            asset_symbol: trade.asset_symbol,
-            direction: trade.direction,
-            amount: trade.amount,
-            entry_price: trade.entry_price,
-            exit_price: exitPrice,
-            expiry_seconds: trade.expiry_seconds,
-            payout_rate: trade.payout_rate,
-            profit,
-            status: won ? "won" : "lost",
-            opened_at: trade.opened_at,
-            closed_at: new Date().toISOString(),
-          });
-
+        if (timeLeft > 0) {
+          nextTrades.push({ ...trade, timeLeft });
           return nextTrades;
-        }, []),
-      );
+        }
+
+        if (!canResolveDemoTrades) {
+          nextTrades.push({ ...trade, timeLeft: 0 });
+          return nextTrades;
+        }
+
+        const exitPrice = latestChartPriceRef.current > 0 ? latestChartPriceRef.current : trade.entry_price;
+        const won =
+          (trade.direction === "higher" && exitPrice > trade.entry_price) ||
+          (trade.direction === "lower" && exitPrice < trade.entry_price);
+        const profit = won ? trade.amount + trade.amount * trade.payout_rate : 0;
+
+        if (won) {
+          creditedAmount += profit;
+        }
+
+        settledTrades.push({
+          id: trade.id,
+          user_id: user?.id ?? "demo",
+          asset_symbol: trade.asset_symbol,
+          direction: trade.direction,
+          amount: trade.amount,
+          entry_price: trade.entry_price,
+          exit_price: exitPrice,
+          expiry_seconds: trade.expiry_seconds,
+          payout_rate: trade.payout_rate,
+          profit,
+          status: won ? "won" : "lost",
+          opened_at: trade.opened_at,
+          closed_at: new Date().toISOString(),
+        });
+
+        return nextTrades;
+      }, []);
+
+      setDemoActiveTrades(nextActiveTrades);
 
       if (settledTrades.length > 0) {
         void playTradeCloseSound();
