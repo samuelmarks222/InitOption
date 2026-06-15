@@ -1402,7 +1402,7 @@ const Trade = () => {
                       onOpenAssetSelector={() => setShowAssetSelector(true)}
                       onOpenMobileHistory={() => setShowMobileHistory(true)} />
                   </div>
-                ) : (
+                  ) : (
                   <button
                     type="button"
                     onClick={() => setRightPanelOpen(true)}
@@ -1413,6 +1413,7 @@ const Trade = () => {
                     <ChevronsLeft className="h-4 w-4" strokeWidth={2.7} />
                   </button>
                 )}
+                {showAssetSelector && <AssetSelectorModal onSelect={handleSelectAsset} onClose={() => setShowAssetSelector(false)} />}
               </div>
               ) : (
               <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
@@ -1599,7 +1600,6 @@ const Trade = () => {
         <ProfileDrawer isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} balance={balance} initialTab={profileInitialTab} />
         <TournamentDetailOverlay tournamentId={selectedTournament} onClose={() => setSelectedTournament(null)}
           onOpenDeposit={openDepositPage} onEnterTournament={handleEnterTournament} />
-        {showAssetSelector && <AssetSelectorModal onSelect={handleSelectAsset} onClose={() => setShowAssetSelector(false)} />}
       </div>
     </ProfileTourProvider>
   );

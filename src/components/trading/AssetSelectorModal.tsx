@@ -145,7 +145,7 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
   };
 
   return (
-    <div className="fixed inset-0 z-[100]">
+    <div className="absolute inset-0 z-[100]">
       {/* Overlay */}
       <div
         className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`}
