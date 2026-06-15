@@ -353,22 +353,22 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 15.4,
-  "5s": 16.5,
-  "15s": 16.1,
-  "30s": 16.5,
-  "1m": 9.0,
-  "2m": 8.5,
-  "3m": 8.0,
-  "4m": 7.5,
-  "5m": 7.0,
-  "10m": 8.0,
-  "15m": 7.0,
-  "30m": 6.0,
-  "1h": 5.5,
-  "2h": 5.0,
-  "4h": 4.5,
-  "1D": 16.5,
+  "1s": 7.0,
+  "5s": 7.0,
+  "15s": 7.0,
+  "30s": 7.0,
+  "1m": 6.5,
+  "2m": 6.0,
+  "3m": 5.5,
+  "4m": 5.0,
+  "5m": 4.5,
+  "10m": 5.0,
+  "15m": 4.5,
+  "30m": 4.0,
+  "1h": 3.5,
+  "2h": 3.0,
+  "4h": 2.5,
+  "1D": 7.0,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
@@ -429,22 +429,22 @@ const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, n
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 2.0,
-  "5s": 2.0,
-  "15s": 2.0,
-  "30s": 2.0,
-  "1m": 2.0,
-  "2m": 2.0,
-  "3m": 2.0,
-  "4m": 2.0,
-  "5m": 2.0,
-  "10m": 2.0,
-  "15m": 2.0,
-  "30m": 2.0,
-  "1h": 2.0,
-  "2h": 2.0,
-  "4h": 2.0,
-  "1D": 2.0,
+  "1s": 1.0,
+  "5s": 1.0,
+  "15s": 1.0,
+  "30s": 1.0,
+  "1m": 1.0,
+  "2m": 1.0,
+  "3m": 1.0,
+  "4m": 1.0,
+  "5m": 1.0,
+  "10m": 1.0,
+  "15m": 1.0,
+  "30m": 1.0,
+  "1h": 1.0,
+  "2h": 1.0,
+  "4h": 1.0,
+  "1D": 1.0,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
@@ -563,7 +563,7 @@ const getHistoryBackfillIncrement = (containerWidth: number, timeframe: Supporte
   return Math.max(trendContextBars, Math.round(historicalBaseline * 0.55));
 };
 
-const getChartRightOffset = (visibleBars: number) => Math.max(18, Math.min(58, Math.round(visibleBars * 0.18)));
+const getChartRightOffset = (visibleBars: number) => Math.max(6, Math.min(24, Math.round(visibleBars * 0.06)));
 
 const getDefaultVisibleBars = (
   containerWidth: number,
@@ -1107,7 +1107,7 @@ const getCandlestickDisplaySettings = (
     borderDownColor: baseDownColor,
     wickUpColor,
     wickDownColor,
-    borderVisible: true,
+    borderVisible: false,
     wickVisible: true,
     priceLineVisible: styles.priceLineVisible,
     autoScale: true,
