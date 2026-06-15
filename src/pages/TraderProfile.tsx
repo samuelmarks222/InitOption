@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, CalendarDays, Copy, TrendingDown, TrendingUp, Users } from "lucide-react";
+import {
+  ArrowLeft, Copy, Eye, MessageCircle, TrendingUp, Users,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +11,6 @@ import { toast } from "@/hooks/use-toast";
 import { VipBadge } from "@/components/vip/VipBadge";
 import { CopyTraderDialog } from "@/components/social/CopyTraderDialog";
 import {
-  computeTraderAverageReturn,
   computeTraderWinRate,
   formatDirectionLabel,
   formatSocialCurrency,
@@ -18,10 +19,9 @@ import {
 } from "@/lib/social";
 
 type TradeRow = Tables<"trades">;
-type TradeFilter = "all" | "winning" | "losing";
 
 const supabaseAny = supabase as any;
-const PROFILE_SUMMARY_SELECT =
+const PROFILE_SELECT =
   "id, username, display_name, avatar_url, vip_tier, created_at, total_profit, total_trades, total_wins, followers_count, following_count, social_trading_disabled";
 
 const TraderProfile = () => {
@@ -35,104 +35,67 @@ const TraderProfile = () => {
     unfollowTrader,
   } = useSocialTrading();
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
-  const [followers, setFollowers] = useState<TraderSummary[]>([]);
-  const [following, setFollowing] = useState<TraderSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tradeFilter, setTradeFilter] = useState<TradeFilter>("all");
   const [trader, setTrader] = useState<Tables<"profiles"> | null>(null);
   const [trades, setTrades] = useState<TradeRow[]>([]);
 
   useEffect(() => {
-    const loadTraderProfile = async () => {
-      if (!username) {
-        setLoading(false);
-        return;
-      }
-
+    const load = async () => {
+      if (!username) { setLoading(false); return; }
       setLoading(true);
-
-      const { data: traderData, error: traderError } = await supabase
+      const { data: traderData } = await supabase
         .from("profiles")
-        .select(PROFILE_SUMMARY_SELECT)
+        .select(PROFILE_SELECT)
         .eq("username", username)
         .maybeSingle();
-
-      if (traderError || !traderData) {
-        toast({
-          title: "Trader profile not found",
-          description: traderError?.message ?? "The trader you requested does not exist.",
-          variant: "destructive",
-        });
+      if (!traderData) {
+        toast({ title: "Trader not found", description: "The requested profile does not exist.", variant: "destructive" });
         setTrader(null);
         setTrades([]);
-        setFollowers([]);
-        setFollowing([]);
         setLoading(false);
         return;
       }
-
       setTrader(traderData);
-
-      const [tradesResponse, followerRowsResponse, followingRowsResponse] = await Promise.all([
-        supabase
-          .from("trades")
-          .select("*")
-          .eq("user_id", traderData.id)
-          .neq("status", "open")
-          .order("closed_at", { ascending: false })
-          .limit(24),
-        supabaseAny
-          .from("follows")
-          .select("follower_id")
-          .eq("followed_id", traderData.id)
-          .order("created_at", { ascending: false })
-          .limit(10),
-        supabaseAny
-          .from("follows")
-          .select("followed_id")
-          .eq("follower_id", traderData.id)
-          .order("created_at", { ascending: false })
-          .limit(10),
-      ]);
-
-      setTrades((tradesResponse.data ?? []) as TradeRow[]);
-
-      const followerIds = ((followerRowsResponse.data ?? []) as Array<{ follower_id: string }>).map((row) => row.follower_id);
-      const followingIds = ((followingRowsResponse.data ?? []) as Array<{ followed_id: string }>).map((row) => row.followed_id);
-
-      const [followersProfiles, followingProfiles] = await Promise.all([
-        followerIds.length
-          ? supabase.from("profiles").select(PROFILE_SUMMARY_SELECT).in("id", followerIds)
-          : Promise.resolve({ data: [] as Tables<"profiles">[] }),
-        followingIds.length
-          ? supabase.from("profiles").select(PROFILE_SUMMARY_SELECT).in("id", followingIds)
-          : Promise.resolve({ data: [] as Tables<"profiles">[] }),
-      ]);
-
-      setFollowers((followersProfiles.data ?? []) as TraderSummary[]);
-      setFollowing((followingProfiles.data ?? []) as TraderSummary[]);
+      const { data: tradesData } = await supabase
+        .from("trades")
+        .select("*")
+        .eq("user_id", traderData.id)
+        .neq("status", "open")
+        .order("closed_at", { ascending: false })
+        .limit(20);
+      setTrades((tradesData ?? []) as TradeRow[]);
       setLoading(false);
     };
-
-    void loadTraderProfile();
+    void load();
   }, [username]);
-
-  const filteredTrades = useMemo(() => {
-    if (tradeFilter === "winning") return trades.filter((trade) => trade.status === "won");
-    if (tradeFilter === "losing") return trades.filter((trade) => trade.status === "lost");
-    return trades;
-  }, [tradeFilter, trades]);
 
   const isSelf = trader?.id === currentProfile?.id;
   const copySetting = trader ? getCopySetting(trader.id) : undefined;
   const followingTrader = trader ? isFollowing(trader.id) : false;
   const winRate = computeTraderWinRate(trader?.total_wins, trader?.total_trades);
-  const avgReturn = computeTraderAverageReturn(trader?.total_profit, trader?.total_trades);
+
+  const stats = useMemo(() => {
+    if (!trades.length) return null;
+    const profitable = trades.filter((t) => (t.profit ?? 0) > 0).length;
+    const totalTurnover = trades.reduce((s, t) => s + Number(t.amount), 0);
+    const totalProfit = trades.reduce((s, t) => s + Number(t.profit ?? 0), 0);
+    const amounts = trades.map((t) => Number(t.amount));
+    const profits = trades.filter((t => (t.profit ?? 0) > 0)).map((t) => Number(t.profit));
+    return {
+      trades: trades.length,
+      profitablePct: trades.length > 0 ? ((profitable / trades.length) * 100).toFixed(1) : "0",
+      turnover: totalTurnover,
+      profit: totalProfit,
+      maxTrade: Math.max(...amounts, 0),
+      minTrade: Math.min(...amounts, 0),
+      maxProfit: profits.length > 0 ? Math.max(...profits) : 0,
+    };
+  }, [trades]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0b1018] px-4 py-10 text-white md:px-6">
-        <div className="mx-auto max-w-6xl rounded-3xl border border-white/10 bg-[#111823]/90 px-6 py-20 text-center text-sm text-gray-400">
+      <div className="min-h-screen bg-[#0D0D0D] px-4 py-10 text-white md:px-6">
+        <div className="mx-auto max-w-5xl rounded-2xl border border-white/10 bg-[#1A1A2A] px-6 py-20 text-center text-sm text-gray-400">
           Loading trader profile...
         </div>
       </div>
@@ -141,16 +104,12 @@ const TraderProfile = () => {
 
   if (!trader) {
     return (
-      <div className="min-h-screen bg-[#0b1018] px-4 py-10 text-white md:px-6">
-        <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-[#111823]/90 px-6 py-16 text-center">
+      <div className="min-h-screen bg-[#0D0D0D] px-4 py-10 text-white md:px-6">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-white/10 bg-[#1A1A2A] px-6 py-16 text-center">
           <h1 className="text-2xl font-bold text-white">Trader not found</h1>
-          <p className="mt-3 text-sm text-gray-400">The public profile you requested could not be loaded.</p>
-          <Link
-            to="/trade"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0fa053] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#2a955e]"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to platform
+          <p className="mt-3 text-sm text-gray-400">The profile you requested could not be loaded.</p>
+          <Link to="/trade" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#D5006C] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#b8005c]">
+            <ArrowLeft className="h-4 w-4" /> Back to platform
           </Link>
         </div>
       </div>
@@ -158,168 +117,154 @@ const TraderProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b1018] px-4 py-8 text-white md:px-6">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between gap-3">
-          <Link to="/trade" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-semibold text-gray-200 transition-colors hover:bg-white/5 hover:text-white">
-            <ArrowLeft className="h-4 w-4" />
-            Back to trading
-          </Link>
-        </div>
+    <div className="min-h-screen bg-[#0D0D0D] px-4 py-8 text-white md:px-6">
+      <div className="mx-auto max-w-6xl space-y-6">
+        {/* Back */}
+        <Link to="/social/traders" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/5 hover:text-white">
+          <ArrowLeft className="h-4 w-4" /> Back to traders
+        </Link>
 
-        <div className="grid gap-6 xl:grid-cols-[1.08fr,0.92fr]">
-          <section className="rounded-[28px] border border-white/10 bg-[#111823]/90 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.06)]">
-            <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-              <div className="flex items-start gap-4">
-                {trader.avatar_url ? (
-                  <img src={trader.avatar_url} alt={getTraderDisplayName(trader)} className="h-20 w-20 rounded-3xl object-cover ring-1 ring-white/10" />
-                ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-[linear-gradient(135deg,#1d4ed8,#22c55e)] text-2xl font-black text-white ring-1 ring-white/10">
-                    {getTraderDisplayName(trader).charAt(0).toUpperCase()}
-                  </div>
-                )}
+        {/* Two Columns */}
+        <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
 
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="truncate text-2xl font-black text-white md:text-3xl">@{getTraderDisplayName(trader)}</h1>
-                    <VipBadge tierId={(trader.vip_tier as any) ?? "none"} size={24} showLabel />
-                  </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-4 text-[13px] text-gray-400">
-                    <span className="inline-flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4 text-[#0fa053]" />
-                      Joined {new Date(trader.created_at).toLocaleDateString()}
-                    </span>
-                    <span className="inline-flex items-center gap-2">
-                      <Users className="h-4 w-4 text-[#0fa053]" />
-                      {Number(trader.followers_count ?? 0)} followers
-                    </span>
-                  </div>
-                  {trader.social_trading_disabled ? (
-                    <p className="mt-3 rounded-xl border border-[#0fa053]/20 bg-[#0fa053]/5 px-3 py-2 text-[12px] text-[#0fa053]">
-                      This trader has disabled copy trading for now.
-                    </p>
-                  ) : null}
+          {/* Left Column - Profile Info */}
+          <section className="rounded-2xl border border-white/10 bg-[#1A1A2A] p-6">
+            <div className="flex flex-col items-center text-center md:items-start md:text-left">
+              {trader.avatar_url ? (
+                <img src={trader.avatar_url} alt="" className="h-24 w-24 rounded-2xl object-cover ring-2 ring-white/10" />
+              ) : (
+                <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-[#D5006C] to-purple-600 text-3xl font-black text-white ring-2 ring-white/10">
+                  {getTraderDisplayName(trader).charAt(0).toUpperCase()}
+                </div>
+              )}
+
+              <div className="mt-4">
+                <p className="text-xs text-gray-500">ID: {trader.username ?? trader.id.slice(0, 8)}</p>
+                <h1 className="mt-1 text-2xl font-bold text-white">{getTraderDisplayName(trader)}</h1>
+                <p className="text-xs text-gray-500">last seen recently</p>
+              </div>
+
+              {/* Followers / Watchers */}
+              <div className="mt-4 flex items-center gap-6">
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <Users className="h-4 w-4 text-[#D5006C]" />
+                  <span className="font-semibold text-white">{trader.followers_count ?? 0}</span>
+                  <span>Followers</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <Eye className="h-4 w-4 text-[#D5006C]" />
+                  <span className="font-semibold text-white">{trader.followers_count ?? 0}</span>
+                  <span>Watchers</span>
                 </div>
               </div>
 
-              {!isSelf ? (
-                <div className="flex flex-wrap gap-2">
+              {/* Profile Level */}
+              <div className="mt-3 flex items-center gap-2">
+                <span className="rounded-lg bg-gradient-to-r from-[#D5006C] to-amber-500 px-3 py-1 text-xs font-bold text-white">
+                  Guru
+                </span>
+                <VipBadge tierId={(trader.vip_tier as any) ?? "none"} size={20} showLabel />
+              </div>
+
+              {/* Actions */}
+              {!isSelf && (
+                <div className="mt-6 flex flex-wrap gap-3">
                   <button
-                    type="button"
-                    onClick={() => void (followingTrader ? unfollowTrader(trader.id) : followTrader(trader.id))}
-                    className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
-                      followingTrader
-                        ? "border border-white/10 bg-white/[0.03] text-gray-400 hover:bg-white/5 hover:text-white"
-                        : "bg-[#0fa053] text-white hover:bg-[#2a955e]"
-                    }`}
-                  >
-                    {followingTrader ? "Following" : "Follow"}
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => setCopyDialogOpen(true)}
                     disabled={trader.social_trading_disabled}
-                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#D5006C] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#b8005c] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <Copy className="h-4 w-4" />
-                    {copySetting ? "Manage Copy" : "Copy Trader"}
+                    {copySetting ? "Manage Copy" : "Copy"}
+                  </button>
+                  <button
+                    onClick={() => void (followingTrader ? unfollowTrader(trader.id) : followTrader(trader.id))}
+                    className={`inline-flex items-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-semibold transition-colors ${
+                      followingTrader
+                        ? "border-[#00C076]/40 text-[#00C076] hover:bg-[#00C076] hover:text-white"
+                        : "border-white/10 text-gray-300 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    <Eye className="h-4 w-4" />
+                    {followingTrader ? "Watching" : "Watch"}
+                  </button>
+                  <button className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-5 py-2.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 hover:text-white">
+                    <MessageCircle className="h-4 w-4" />
+                    Message
                   </button>
                 </div>
-              ) : null}
-            </div>
+              )}
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <StatCard label="Total Profit" value={formatSocialCurrency(trader.total_profit)} accent="text-emerald-300" />
-              <StatCard label="Win Rate" value={`${winRate}%`} accent="text-[#0fa053]" />
-              <StatCard label="Trades" value={`${Number(trader.total_trades ?? 0)}`} accent="text-white" />
-              <StatCard label="Avg Return" value={formatSocialCurrency(avgReturn)} accent="text-[#0fa053]" />
-            </div>
-
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <ListCard title={`Followers (${followers.length})`} items={followers} emptyText="No followers yet" />
-              <ListCard title={`Following (${following.length})`} items={following} emptyText="Not following anyone yet" />
+              {/* Callout */}
+              {!isSelf && (
+                <div className="mt-6 w-full rounded-xl border border-orange-500/20 bg-orange-500/10 px-4 py-3 text-sm text-orange-300">
+                  Add money to your account in order to copy trades.
+                </div>
+              )}
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-white/10 bg-[#111823]/90 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.06)]">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-bold text-white">Recent Trades</h2>
-                <p className="mt-1 text-[12px] text-gray-400">Review recent results and filter by winning or losing positions.</p>
-              </div>
+          {/* Right Column - Trading Statistics */}
+          <section className="rounded-2xl border border-white/10 bg-[#1A1A2A] p-6">
+            <h2 className="text-lg font-bold text-white">Trading Statistics</h2>
 
-              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-1">
-                {(["all", "winning", "losing"] as const).map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setTradeFilter(value)}
-                    className={`rounded-xl px-3 py-2 text-[12px] font-semibold transition-colors ${
-                      tradeFilter === value ? "bg-[#0fa053] text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"
-                    }`}
-                  >
-                    {value === "all" ? "All" : value === "winning" ? "Winning" : "Losing"}
-                  </button>
-                ))}
+            {stats ? (
+              <div className="mt-5 grid grid-cols-2 gap-4">
+                <StatBox label="Trades" value={String(stats.trades)} />
+                <StatBox label="Profitable Trades" value={`${stats.profitablePct}%`} accent={Number(stats.profitablePct) >= 50 ? "text-[#00C076]" : "text-[#F6465D]"} />
+                <StatBox label="Trading Turnover" value={formatSocialCurrency(stats.turnover)} />
+                <StatBox label="Trading Profit" value={`${stats.profit >= 0 ? "+" : ""}${formatSocialCurrency(stats.profit)}`} accent={stats.profit >= 0 ? "text-[#00C076]" : "text-[#F6465D]"} />
+                <StatBox label="Max Trade" value={formatSocialCurrency(stats.maxTrade)} />
+                <StatBox label="Min Trade" value={formatSocialCurrency(stats.minTrade)} />
+                <StatBox label="Max Profit" value={formatSocialCurrency(stats.maxProfit)} accent="text-[#00C076]" />
+                <StatBox label="Win Rate" value={`${winRate}%`} accent={winRate >= 50 ? "text-[#00C076]" : "text-[#F6465D]"} />
               </div>
-            </div>
+            ) : (
+              <div className="mt-5 rounded-xl border border-dashed border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-gray-400">
+                No trade data available yet.
+              </div>
+            )}
 
-            <div className="mt-5 space-y-3">
-              {filteredTrades.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-gray-400">
-                  No trades match this filter yet.
-                </div>
-              ) : (
-                filteredTrades.map((trade) => (
-                  <div key={trade.id} className="rounded-2xl border border-white/10 bg-[#111823]/90 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-[15px] font-bold text-white">{trade.asset_symbol}</p>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] ${
-                            trade.direction === "higher" ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"
+            {/* Recent Trades */}
+            <h3 className="mt-8 text-base font-bold text-white">Recent Trades</h3>
+            {trades.length === 0 ? (
+              <div className="mt-3 rounded-xl border border-dashed border-white/10 bg-white/5 px-4 py-6 text-center text-sm text-gray-400">
+                No trades yet.
+              </div>
+            ) : (
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-white/10 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                      <th className="px-3 py-2.5">Asset</th>
+                      <th className="px-3 py-2.5">Direction</th>
+                      <th className="px-3 py-2.5">Amount</th>
+                      <th className="px-3 py-2.5">Result</th>
+                      <th className="px-3 py-2.5">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {trades.slice(0, 8).map((trade) => (
+                      <tr key={trade.id} className="hover:bg-white/[0.02]">
+                        <td className="px-3 py-2.5 font-semibold text-white">{trade.asset_symbol}</td>
+                        <td className="px-3 py-2.5">
+                          <span className={`rounded px-1.5 py-0.5 font-bold ${
+                            trade.direction === "higher" ? "bg-[#00C076]/15 text-[#00C076]" : "bg-[#F6465D]/15 text-[#F6465D]"
                           }`}>
                             {formatDirectionLabel(trade.direction)}
                           </span>
-                          {trade.source_trade_id ? (
-                            <span className="rounded-full bg-[#0fa053]/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-[#0fa053]">
-                              Copy
-                            </span>
-                          ) : null}
-                        </div>
-                        <p className="mt-1 text-[12px] text-gray-400">
-                          Expiry {trade.expiry_seconds}s • Closed {trade.closed_at ? new Date(trade.closed_at).toLocaleString() : "Pending"}
-                        </p>
-                      </div>
-
-                      <div className="text-right">
-                        <p className="text-[14px] font-bold text-white">{formatSocialCurrency(trade.amount)}</p>
-                        <p className={`mt-1 text-[12px] font-semibold ${
-                          Number(trade.profit ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"
-                        }`}>
-                          {formatSocialCurrency(trade.profit)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 grid grid-cols-2 gap-3">
-                      <TradeDetail
-                        icon={trade.status === "won" ? TrendingUp : TrendingDown}
-                        label="Status"
-                        value={trade.status?.toUpperCase() ?? "CLOSED"}
-                        accent={trade.status === "won" ? "text-emerald-600" : "text-red-600"}
-                      />
-                      <TradeDetail
-                        icon={ArrowLeft}
-                        label="Entry"
-                        value={trade.entry_price.toFixed(4)}
-                        accent="text-white"
-                      />
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+                        </td>
+                        <td className="px-3 py-2.5 font-mono">{formatSocialCurrency(trade.amount)}</td>
+                        <td className={`px-3 py-2.5 font-mono font-semibold ${(trade.profit ?? 0) >= 0 ? "text-[#00C076]" : "text-[#F6465D]"}`}>
+                          {(trade.profit ?? 0) >= 0 ? "+" : ""}{formatSocialCurrency(trade.profit)}
+                        </td>
+                        <td className="px-3 py-2.5 text-gray-400">{trade.closed_at ? new Date(trade.closed_at).toLocaleDateString() : "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
         </div>
       </div>
@@ -335,68 +280,11 @@ const TraderProfile = () => {
   );
 };
 
-const StatCard = ({ accent, label, value }: { accent: string; label: string; value: string }) => (
-  <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
-    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-gray-500">{label}</p>
-    <p className={`mt-2 text-2xl font-black ${accent}`}>{value}</p>
-  </div>
-);
-
-const ListCard = ({
-  emptyText,
-  items,
-  title,
-}: {
-  emptyText: string;
-  items: TraderSummary[];
-  title: string;
-}) => (
-  <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
-    <p className="text-[13px] font-bold text-white">{title}</p>
-    <div className="mt-3 flex flex-wrap gap-2">
-      {items.length === 0 ? (
-        <span className="text-[12px] text-gray-400">{emptyText}</span>
-      ) : (
-        items.map((item) => (
-          <Link
-            key={item.id}
-            to={item.username ? `/traders/${item.username}` : "/trade"}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[12px] font-semibold text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
-          >
-            {item.avatar_url ? (
-              <img src={item.avatar_url} alt={getTraderDisplayName(item)} className="h-5 w-5 rounded-full object-cover" />
-            ) : (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0fa053]/10 text-[10px] font-black text-[#0fa053]">
-                {getTraderDisplayName(item).charAt(0).toUpperCase()}
-              </span>
-            )}
-            @{getTraderDisplayName(item)}
-          </Link>
-        ))
-      )}
-    </div>
-  </div>
-);
-
-const TradeDetail = ({
-  accent,
-  icon: Icon,
-  label,
-  value,
-}: {
-  accent: string;
-  icon: typeof ArrowLeft;
-  label: string;
-  value: string;
-}) => (
-  <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
-    <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-gray-400">
-      <Icon className="h-3.5 w-3.5" />
-      {label}
-    </div>
-    <p className={`mt-2 text-[13px] font-semibold ${accent}`}>{value}</p>
+const StatBox = ({ label, value, accent = "text-white" }: { label: string; value: string; accent?: string }) => (
+  <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">{label}</p>
+    <p className={`mt-1.5 text-xl font-black ${accent}`}>{value}</p>
   </div>
 );
 
 export default TraderProfile;
-

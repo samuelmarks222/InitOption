@@ -37,6 +37,9 @@ const Deposit = lazy(() => import("./pages/Deposit"));
 const Withdraw = lazy(() => import("./pages/Withdraw"));
 const Settings = lazy(() => import("./pages/Settings"));
 const NotificationsPage = lazy(() => import("./pages/Notifications"));
+const TraderProfile = lazy(() => import("./pages/TraderProfile"));
+const SocialTopTraders = lazy(() => import("./pages/SocialTopTraders"));
+const MyCopiedTraders = lazy(() => import("./pages/MyCopiedTraders"));
 
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -156,6 +159,7 @@ const App = () => {
                         <Route path="/risk-disclaimer" element={withRouteSuspense(<PublicInfoPage pageKey="risk-disclaimer" />)} />
                         <Route path="/affiliate-program" element={withRouteSuspense(<PublicInfoPage pageKey="affiliate-program" />)} />
                         <Route path="/site-map" element={withRouteSuspense(<PublicInfoPage pageKey="site-map" />)} />
+                        <Route path="/traders/:username" element={withRouteSuspense(<TraderProfile />)} />
                         <Route path="/tournaments" element={withRouteSuspense(<PublicTournamentsPage platformSettings={platformSettings} />)} />
                         <Route
                           path="/tournaments/:slug"
@@ -172,6 +176,8 @@ const App = () => {
                         <Route path="/withdraw" element={withTradingRoute(<Withdraw />)} />
                         <Route path="/settings" element={withTradingRoute(<Settings />)} />
                         <Route path="/notifications" element={withTradingRoute(<NotificationsPage />)} />
+                        <Route path="/social/traders" element={withTradingRoute(<SocialTopTraders />)} />
+                        <Route path="/social/my-copies" element={withTradingRoute(<MyCopiedTraders />)} />
                         
                         {/* Admin Routes */}
                         <Route path="/admin" element={withProtectedRoute(<AdminLayout />)}>

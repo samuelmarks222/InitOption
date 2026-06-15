@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { ArrowLeft, BellRing, BookOpen, LineChart, PlayCircle, Trophy } from "lucide-react";
+import { ArrowLeft, BellRing, BookOpen, Copy, LineChart, PlayCircle, Trophy } from "lucide-react";
 
 import { ProfileTradingHistory } from "../profile/ProfileTradingHistory";
 import { WorkspaceLeaderboard } from "./WorkspaceLeaderboard";
 import { AnalyticsSignals } from "./analytics/AnalyticsSignals";
 
-type MoreTab = "grid" | "analytics" | "leaderboard" | "signals" | "webinars" | "tutorials";
+type MoreTab = "grid" | "analytics" | "leaderboard" | "signals" | "social" | "webinars" | "tutorials";
 
 export const WorkspaceMore = () => {
   const [activeTab, setActiveTab] = useState<MoreTab>("grid");
@@ -14,6 +14,7 @@ export const WorkspaceMore = () => {
     { id: "analytics", title: "Analytics", desc: "Deep dive into your stats", icon: LineChart, color: "text-[#0fa053]", bg: "bg-[#0fa053]/10" },
     { id: "leaderboard", title: "Leaderboard", desc: "Global & Local rankings", icon: Trophy, color: "text-[#0fa053]", bg: "bg-[#0fa053]/10" },
     { id: "signals", title: "Trading Signals", desc: "Live signal feed status", icon: BellRing, color: "text-green-500", bg: "bg-green-500/10" },
+    { id: "social", title: "Social Trading", desc: "Copy top traders", icon: Copy, color: "text-[#D5006C]", bg: "bg-[#D5006C]/10" },
     { id: "webinars", title: "Live Webinars", desc: "Learn from pros", icon: PlayCircle, color: "text-[#1e2330]", bg: "bg-[#1e2330]/25" },
     { id: "tutorials", title: "Tutorials", desc: "Master the platform", icon: BookOpen, color: "text-yellow-500", bg: "bg-yellow-500/10" },
   ] as const;
@@ -72,6 +73,30 @@ export const WorkspaceMore = () => {
         {activeTab === "signals" && (
           <div className="p-4 sm:p-6">
             <AnalyticsSignals />
+          </div>
+        )}
+
+        {activeTab === "social" && (
+          <div className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+            <Copy className="h-12 w-12 text-[#D5006C]/50" />
+            <div>
+              <p className="text-base font-bold text-white">Social Trading</p>
+              <p className="mt-1 text-sm text-gray-400">Copy top-performing traders automatically.</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href="/social/traders"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#D5006C] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#b8005c]"
+              >
+                Top Traders
+              </a>
+              <a
+                href="/social/my-copies"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-5 py-2.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                My Copies
+              </a>
+            </div>
           </div>
         )}
 

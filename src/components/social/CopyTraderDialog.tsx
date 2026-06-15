@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Shield, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, Shield, SlidersHorizontal } from "lucide-react";
 import { VipBadge } from "@/components/vip/VipBadge";
 import {
   Dialog,
@@ -28,6 +28,12 @@ interface CopyTraderDialogProps {
   trader: TraderSummary;
 }
 
+const RATIO_OPTIONS = [
+  { value: "0.5", label: "0.5x (Half)" },
+  { value: "1", label: "1x (Same)" },
+  { value: "2", label: "2x (Double)" },
+];
+
 export const CopyTraderDialog = ({
   existingSetting,
   onOpenChange,
@@ -42,6 +48,9 @@ export const CopyTraderDialog = ({
   const [ratio, setRatio] = useState(existingSetting?.ratio?.toString() ?? "1");
   const [maxPerTrade, setMaxPerTrade] = useState(existingSetting?.max_per_trade?.toString() ?? "50");
   const [maxDaily, setMaxDaily] = useState(existingSetting?.max_daily?.toString() ?? "250");
+  const [stopLossEnabled, setStopLossEnabled] = useState(false);
+  const [stopLossPct, setStopLossPct] = useState("20");
+  const [expiryDate, setExpiryDate] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -72,97 +81,116 @@ export const CopyTraderDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[560px] border-white/10 bg-[#10161f] text-white">
+      <DialogContent className="max-w-[520px] border-white/10 bg-[#1A1A2A] text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-white">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0fa053]/15 text-[#8be0af]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#D5006C]/15 text-[#ff6b9d]">
               <SlidersHorizontal className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span>Copy {getTraderDisplayName(trader)}</span>
+                <span>Copy trades from {getTraderDisplayName(trader)}</span>
                 <VipBadge tierId={(trader.vip_tier as any) ?? "none"} size={20} />
               </div>
             </div>
           </DialogTitle>
           <DialogDescription className="text-gray-400">
-            Choose how this trader should be copied, how much to allocate, and which risk limits should protect your account.
+            Configure how trades from this trader will be copied to your account.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-gray-500">Copy Mode</p>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {(["automatic", "manual"] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => setExecutionMode(mode)}
-                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                      executionMode === mode
-                        ? "border-[#0fa053]/40 bg-[#0fa053]/15 text-white"
-                        : "border-white/10 bg-black/20 text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    {mode === "automatic" ? "Auto Copy" : "Manual Confirm"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-gray-500">Sizing</p>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {(["fixed", "ratio"] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => setAmountType(mode)}
-                    className={`rounded-xl border px-3 py-2 text-sm font-semibold transition-colors ${
-                      amountType === mode
-                        ? "border-emerald-400/40 bg-emerald-500/15 text-white"
-                        : "border-white/10 bg-black/20 text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    {mode === "fixed" ? "Fixed Amount" : "Ratio"}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field
-              hint={amountType === "fixed" ? "Amount to allocate for each copied trade." : "Original amount multiplier, e.g. 0.50x or 1.25x."}
-              label={amountType === "fixed" ? "Fixed Amount ($)" : "Ratio Multiplier"}
-              step={amountType === "fixed" ? "0.01" : "0.05"}
-              value={amountType === "fixed" ? fixedAmount : ratio}
-              onChange={amountType === "fixed" ? setFixedAmount : setRatio}
+          {/* Copy Amount */}
+          <Field label="Copy Amount ($)" hint="Fixed amount per copied trade.">
+            <input
+              type="number"
+              value={fixedAmount}
+              step="0.01"
+              min="1"
+              onChange={(e) => setFixedAmount(e.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#D5006C]"
             />
-            <Field
-              hint="Cap the amount for any single copied trade."
-              label="Max Per Trade ($)"
-              value={maxPerTrade}
-              onChange={setMaxPerTrade}
+          </Field>
+
+          {/* Copy Ratio */}
+          <Field label="Copy Ratio" hint="Relative to the trader's stake.">
+            <div className="grid grid-cols-3 gap-2">
+              {RATIO_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => { setAmountType("ratio"); setRatio(opt.value); }}
+                  className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
+                    ratio === opt.value && amountType === "ratio"
+                      ? "border-[#D5006C]/40 bg-[#D5006C]/15 text-white"
+                      : "border-white/10 bg-black/20 text-gray-400 hover:text-white"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          {/* Max Daily Copies */}
+          <Field label="Max Daily Copies" hint="Limit copies per day.">
+            <input
+              type="number"
+              value={maxDaily}
+              min="1"
+              onChange={(e) => setMaxDaily(e.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#D5006C]"
             />
-          </div>
+          </Field>
 
-          <Field
-            hint="Hard stop for total copied volume in a single day."
-            label="Max Daily Copy Volume ($)"
-            value={maxDaily}
-            onChange={setMaxDaily}
-          />
-
-          <div className="rounded-2xl border border-[#0fa053]/20 bg-[#0fa053]/10 px-4 py-3 text-sm text-[#d8f6e5]">
-            <div className="flex items-start gap-3">
-              <Shield className="mt-0.5 h-4 w-4 shrink-0 text-[#8be0af]" />
+          {/* Stop Loss */}
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-white">Risk control reminder</p>
-                <p className="mt-1 text-[12px] leading-6 text-[#d8f6e5]/90">
-                  Copy trades only use your own balance. If your account cannot fund a trade or your daily/per-trade cap is reached, the copy is skipped.
+                <p className="text-sm font-semibold text-white">Stop Loss</p>
+                <p className="text-xs text-gray-400">Stop copying if trader loses X%</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStopLossEnabled(!stopLossEnabled)}
+                className={`relative h-7 w-12 rounded-full transition-colors ${stopLossEnabled ? "bg-[#D5006C]" : "bg-gray-600"}`}
+              >
+                <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${stopLossEnabled ? "left-6" : "left-1"}`} />
+              </button>
+            </div>
+            {stopLossEnabled && (
+              <div className="mt-3 flex items-center gap-3">
+                <input
+                  type="number"
+                  value={stopLossPct}
+                  min="1"
+                  max="100"
+                  onChange={(e) => setStopLossPct(e.target.value)}
+                  className="w-24 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#D5006C]"
+                />
+                <span className="text-sm text-gray-400">% loss threshold</span>
+              </div>
+            )}
+          </div>
+
+          {/* Expiry */}
+          <Field label="Expiry (Optional)" hint="Automatically stop copying after this date.">
+            <input
+              type="date"
+              value={expiryDate}
+              onChange={(e) => setExpiryDate(e.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#D5006C]"
+            />
+          </Field>
+
+          {/* Warning */}
+          <div className="rounded-2xl border border-[#F6465D]/20 bg-[#F6465D]/10 px-4 py-3">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#F6465D]" />
+              <div>
+                <p className="text-sm font-semibold text-[#F6465D]">Risk Warning</p>
+                <p className="mt-1 text-xs leading-5 text-[#F6465D]/80">
+                  Copy trading involves risk. You may lose money. Copying does not guarantee profits.
                 </p>
               </div>
             </div>
@@ -171,16 +199,14 @@ export const CopyTraderDialog = ({
           <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-white">Enable Copying</p>
-              <p className="text-[12px] text-gray-400">Pause or resume this trader without losing your saved setup.</p>
+              <p className="text-xs text-gray-400">Pause or resume without losing your saved setup.</p>
             </div>
             <button
               type="button"
-              onClick={() => setEnabled((value) => !value)}
-              className={`relative h-7 w-12 rounded-full transition-colors ${enabled ? "bg-emerald-500" : "bg-gray-600"}`}
+              onClick={() => setEnabled(!enabled)}
+              className={`relative h-7 w-12 rounded-full transition-colors ${enabled ? "bg-[#D5006C]" : "bg-gray-600"}`}
             >
-              <span
-                className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${enabled ? "left-6" : "left-1"}`}
-              />
+              <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${enabled ? "left-6" : "left-1"}`} />
             </button>
           </label>
         </div>
@@ -197,9 +223,9 @@ export const CopyTraderDialog = ({
             type="button"
             onClick={() => void handleSave()}
             disabled={saving}
-            className="rounded-xl bg-[#0fa053] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#2a955e] disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-xl bg-[#D5006C] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#b8005c] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {saving ? "Saving..." : "Save Copy Settings"}
+            {saving ? "Saving..." : "Start Copying"}
           </button>
         </DialogFooter>
       </DialogContent>
@@ -208,29 +234,18 @@ export const CopyTraderDialog = ({
 };
 
 const Field = ({
+  children,
   hint,
   label,
-  onChange,
-  step = "0.01",
-  value,
 }: {
+  children: React.ReactNode;
   hint: string;
   label: string;
-  onChange: (value: string) => void;
-  step?: string;
-  value: string;
 }) => (
   <label className="block">
-    <span className="mb-2 block text-[11px] font-black uppercase tracking-[0.14em] text-gray-500">{label}</span>
-    <input
-      type="number"
-      value={value}
-      step={step}
-      min="0"
-      onChange={(event) => onChange(event.target.value)}
-      className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
-    />
-    <span className="mt-2 block text-[12px] text-gray-500">{hint}</span>
+    <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">{label}</span>
+    {children}
+    <span className="mt-1.5 block text-xs text-gray-500">{hint}</span>
   </label>
 );
 
