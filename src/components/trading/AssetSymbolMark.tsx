@@ -225,6 +225,38 @@ export const AssetSymbolMark = ({
     );
   }
 
+  if (resolvedCategory === "INDICES") {
+    const primaryFlag = resolvedFlags[0] || resolvedFlags[1] || "";
+    const flagSize = Math.max(10, Math.round(size * 0.9));
+    return (
+      <div
+        className={cn("relative shrink-0 overflow-hidden rounded-full border", className)}
+        style={{
+          width: size,
+          height: size,
+          borderColor: "rgba(255,255,255,0.12)",
+          boxShadow: "0 6px 14px rgba(0,0,0,0.22)",
+        }}
+      >
+        {primaryFlag ? (
+          <div className="flex h-full w-full items-center justify-center bg-white">
+            <CountryFlag code={primaryFlag} size={flagSize} />
+          </div>
+        ) : (
+          <div
+            className="flex h-full w-full items-center justify-center font-bold uppercase text-white"
+            style={{
+              background: "#1a3a5c",
+              fontSize: Math.max(8, Math.round(size * 0.42)),
+            }}
+          >
+            {label}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <SingleAssetImage
       sources={[]}

@@ -35,10 +35,28 @@ interface AssetSelectorModalProps {
   onSelect: (asset: AssetSelectorAsset) => void;
 }
 
-type TabType = "CURRENCIES" | "CRYPTO" | "MARKET" | "COMMODITIES" | "STOCKS" | "INDICES" | "FAVORITES";
+type TabType = "CURRENCIES" | "CRYPTO" | "COMMODITIES" | "STOCKS" | "INDICES" | "FAVORITES";
 type SortKey = "change24h" | "profit1m" | "profit5m";
 
-const TABS: TabType[] = ["CURRENCIES", "CRYPTO", "MARKET", "COMMODITIES", "STOCKS", "INDICES", "FAVORITES"];
+const TABS: TabType[] = ["CURRENCIES", "CRYPTO", "COMMODITIES", "STOCKS", "INDICES", "FAVORITES"];
+
+const INDICES_ASSETS: AssetSelectorAsset[] = [
+  { name: "S&P 500", symbol: "SPX", category: "INDICES", change24h: 0.32, profit1m: 85, profit5m: 83, price: 5342, baseCountry: "US", quoteCountry: "US" },
+  { name: "Dow Jones", symbol: "DJI", category: "INDICES", change24h: 0.15, profit1m: 84, profit5m: 82, price: 38768, baseCountry: "US", quoteCountry: "US" },
+  { name: "Nasdaq 100", symbol: "NDX", category: "INDICES", change24h: 0.47, profit1m: 86, profit5m: 84, price: 19682, baseCountry: "US", quoteCountry: "US" },
+  { name: "FTSE 100", symbol: "UKX", category: "INDICES", change24h: -0.12, profit1m: 82, profit5m: 80, price: 8214, baseCountry: "GB", quoteCountry: "GB" },
+  { name: "DAX 40", symbol: "DAX", category: "INDICES", change24h: 0.28, profit1m: 84, profit5m: 82, price: 18456, baseCountry: "DE", quoteCountry: "DE" },
+  { name: "CAC 40", symbol: "CAC", category: "INDICES", change24h: -0.08, profit1m: 83, profit5m: 81, price: 8021, baseCountry: "FR", quoteCountry: "FR" },
+  { name: "Nikkei 225", symbol: "N225", category: "INDICES", change24h: 0.53, profit1m: 85, profit5m: 83, price: 39842, baseCountry: "JP", quoteCountry: "JP" },
+  { name: "Hang Seng", symbol: "HSI", category: "INDICES", change24h: -0.21, profit1m: 80, profit5m: 78, price: 17986, baseCountry: "HK", quoteCountry: "HK" },
+  { name: "ASX 200", symbol: "ASX", category: "INDICES", change24h: 0.09, profit1m: 82, profit5m: 80, price: 7743, baseCountry: "AU", quoteCountry: "AU" },
+  { name: "Shanghai Composite", symbol: "SSEC", category: "INDICES", change24h: -0.05, profit1m: 79, profit5m: 77, price: 3156, baseCountry: "CN", quoteCountry: "CN" },
+  { name: "Euro Stoxx 50", symbol: "SX5E", category: "INDICES", change24h: 0.18, profit1m: 83, profit5m: 81, price: 4962, baseCountry: "EU", quoteCountry: "EU" },
+  { name: "IBEX 35", symbol: "IBEX", category: "INDICES", change24h: -0.03, profit1m: 82, profit5m: 80, price: 11234, baseCountry: "ES", quoteCountry: "ES" },
+  { name: "SMI", symbol: "SMI", category: "INDICES", change24h: 0.11, profit1m: 83, profit5m: 81, price: 12263, baseCountry: "CH", quoteCountry: "CH" },
+  { name: "Nifty 50", symbol: "NIFTY", category: "INDICES", change24h: 0.22, profit1m: 81, profit5m: 79, price: 24786, baseCountry: "IN", quoteCountry: "IN" },
+  { name: "Bovespa", symbol: "BVSP", category: "INDICES", change24h: 0.35, profit1m: 80, profit5m: 78, price: 128593, baseCountry: "BR", quoteCountry: "BR" },
+];
 
 export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProps) => {
   const { t } = useTranslation();
@@ -78,7 +96,7 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
         price: da.price,
       };
     });
-    setLiveAssets(mapped);
+    setLiveAssets([...mapped, ...INDICES_ASSETS]);
   }, [assets]);
 
   useEffect(() => {
@@ -116,10 +134,9 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
       const tabMap: Record<string, SelectorAssetCategory> = {
         CURRENCIES: "CURRENCIES",
         CRYPTO: "CRYPTO",
-        MARKET: "CURRENCIES",
         COMMODITIES: "COMMODITIES",
         STOCKS: "STOCKS",
-        INDICES: "STOCKS",
+        INDICES: "INDICES",
       };
       data = liveAssets.filter(a => a.category === (tabMap[activeTab] ?? "CURRENCIES"));
     }
@@ -179,7 +196,6 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
               const label =
                 tab === "CURRENCIES" ? "Currencies" :
                 tab === "CRYPTO" ? "Crypto" :
-                tab === "MARKET" ? "Market" :
                 tab === "COMMODITIES" ? "Commodities" :
                 tab === "STOCKS" ? "Stocks" :
                 tab === "INDICES" ? "Indices" : "Favorites";
@@ -258,6 +274,8 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                     <Star className="mb-2 h-8 w-8 text-gray-600" />
                     <p>No assets added yet</p>
                   </>
+                ) : activeTab === "INDICES" ? (
+                  <p>No indices found</p>
                 ) : (
                   <p>No assets match your search.</p>
                 )}

@@ -2,7 +2,7 @@ import { ASSETS_LIBRARY, type MasterAsset } from "@/data/assetsLibrary";
 
 export type AssetCategory = MasterAsset["category"];
 export type RuntimeAssetType = "Forex" | "Crypto" | "Stock" | "Commodities";
-export type SelectorAssetCategory = "CURRENCIES" | "CRYPTO" | "COMMODITIES" | "STOCKS";
+export type SelectorAssetCategory = "CURRENCIES" | "CRYPTO" | "COMMODITIES" | "STOCKS" | "INDICES";
 export type CommodityIcon = NonNullable<MasterAsset["commodity_icon"]>;
 
 const CATEGORY_ALIASES: Record<string, AssetCategory> = {
@@ -17,6 +17,8 @@ const CATEGORY_ALIASES: Record<string, AssetCategory> = {
   STOCKS: "STOCKS",
   COMMODITY: "COMMODITIES",
   COMMODITIES: "COMMODITIES",
+  INDICES: "INDICES",
+  INDEX: "INDICES",
 };
 
 const ASSET_BASE_PRICES: Record<string, number> = {
