@@ -21,6 +21,8 @@ type SaveCopySettingInput = {
   ratio?: number | null;
   maxPerTrade?: number | null;
   maxDaily?: number | null;
+  stopLossPct?: number | null;
+  expiryDate?: string | null;
 };
 
 interface SocialTradingContextValue {
@@ -195,6 +197,8 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
         p_ratio: input.ratio ?? null,
         p_max_per_trade: input.maxPerTrade ?? null,
         p_max_daily: input.maxDaily ?? null,
+        p_stop_loss_pct: input.stopLossPct ?? null,
+        p_expiry_date: input.expiryDate ?? null,
       });
 
       if (error) {

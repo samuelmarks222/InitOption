@@ -44,6 +44,8 @@ export interface CopySettingRecord {
   ratio: number | null;
   max_per_trade: number | null;
   max_daily: number | null;
+  stop_loss_pct: number | null;
+  expiry_date: string | null;
   created_at: string;
   updated_at: string;
 }

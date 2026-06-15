@@ -48,9 +48,9 @@ export const CopyTraderDialog = ({
   const [ratio, setRatio] = useState(existingSetting?.ratio?.toString() ?? "1");
   const [maxPerTrade, setMaxPerTrade] = useState(existingSetting?.max_per_trade?.toString() ?? "50");
   const [maxDaily, setMaxDaily] = useState(existingSetting?.max_daily?.toString() ?? "250");
-  const [stopLossEnabled, setStopLossEnabled] = useState(false);
-  const [stopLossPct, setStopLossPct] = useState("20");
-  const [expiryDate, setExpiryDate] = useState("");
+  const [stopLossEnabled, setStopLossEnabled] = useState(!!existingSetting?.stop_loss_pct);
+  const [stopLossPct, setStopLossPct] = useState(existingSetting?.stop_loss_pct?.toString() ?? "20");
+  const [expiryDate, setExpiryDate] = useState(existingSetting?.expiry_date?.slice(0, 10) ?? "");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -62,6 +62,9 @@ export const CopyTraderDialog = ({
     setRatio(existingSetting?.ratio?.toString() ?? "1");
     setMaxPerTrade(existingSetting?.max_per_trade?.toString() ?? "50");
     setMaxDaily(existingSetting?.max_daily?.toString() ?? "250");
+    setStopLossEnabled(!!existingSetting?.stop_loss_pct);
+    setStopLossPct(existingSetting?.stop_loss_pct?.toString() ?? "20");
+    setExpiryDate(existingSetting?.expiry_date?.slice(0, 10) ?? "");
   }, [existingSetting, open]);
 
   const handleSave = async () => {
@@ -74,6 +77,8 @@ export const CopyTraderDialog = ({
       ratio: amountType === "ratio" ? Number(ratio || 0) : null,
       maxPerTrade: Number(maxPerTrade || 0) || null,
       maxDaily: Number(maxDaily || 0) || null,
+      stopLossPct: stopLossEnabled ? Number(stopLossPct || 0) || null : null,
+      expiryDate: expiryDate ? new Date(expiryDate).toISOString() : null,
     });
     setSaving(false);
     onOpenChange(false);
