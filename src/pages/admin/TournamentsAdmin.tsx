@@ -248,11 +248,11 @@ const TournamentsAdmin = () => {
 
             <div className="col-span-1 lg:col-span-1 border-t border-[#2a2f42] pt-4">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Starts (Local)</label>
-              <input type="datetime-local" value={newTour.start_date} onChange={e => setNewTour({...newTour, start_date: e.target.value})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-2 text-xs text-white focus:border-[#0fa053] outline-none" />
+              <input type="text" value={newTour.start_date} onChange={e => setNewTour({...newTour, start_date: e.target.value})} placeholder="2026-06-19T09:00" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-2 text-xs text-white focus:border-[#0fa053] outline-none" />
             </div>
             <div className="col-span-1 lg:col-span-1 border-t border-[#2a2f42] pt-4">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Ends (Local)</label>
-              <input type="datetime-local" value={newTour.end_date} onChange={e => setNewTour({...newTour, end_date: e.target.value})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-2 text-xs text-white focus:border-[#0fa053] outline-none" />
+              <input type="text" value={newTour.end_date} onChange={e => setNewTour({...newTour, end_date: e.target.value})} placeholder="2026-06-19T21:00" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-2 text-xs text-white focus:border-[#0fa053] outline-none" />
             </div>
 
             <div className="col-span-1 lg:col-span-1 flex justify-end">
@@ -352,8 +352,8 @@ const TournamentsAdmin = () => {
                   <td className="px-6 py-4 text-xs font-mono">
                     {editingRowId === t.id ? (
                       <div className="space-y-1.5">
-                        <input type="datetime-local" value={editDrafts[t.id]?.start_date?.slice(0, 16) ?? t.start_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], start_date: e.target.value } }))} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-1 text-xs text-white focus:border-[#0fa053] outline-none" />
-                        <input type="datetime-local" value={editDrafts[t.id]?.end_date?.slice(0, 16) ?? t.end_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], end_date: e.target.value } }))} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-1 text-xs text-white focus:border-[#0fa053] outline-none" />
+                        <input type="text" value={editDrafts[t.id]?.start_date?.slice(0, 16) ?? t.start_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], start_date: e.target.value } }))} placeholder="2026-06-19T09:00" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-1 text-xs text-white focus:border-[#0fa053] outline-none" />
+                        <input type="text" value={editDrafts[t.id]?.end_date?.slice(0, 16) ?? t.end_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], end_date: e.target.value } }))} placeholder="2026-06-19T21:00" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-1 text-xs text-white focus:border-[#0fa053] outline-none" />
                       </div>
                     ) : (
                       <>
