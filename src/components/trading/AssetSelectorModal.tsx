@@ -289,10 +289,10 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                   <div
                     key={asset.symbol}
                     onClick={() => onSelect(asset)}
-                    className="grid grid-cols-[minmax(0,1fr),65px,55px,55px] items-center gap-0.5 px-3 py-1.5 cursor-pointer transition-colors hover:bg-[#2A2A3A]"
+                    className="grid grid-cols-[minmax(0,1fr),65px,55px,55px] items-center gap-0.5 px-3 py-2 cursor-pointer transition-colors hover:bg-[#2A2A3A]"
                   >
                     {/* Name column */}
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <AssetSymbolMark
                         symbol={asset.symbol}
                         name={asset.name}
@@ -300,27 +300,30 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                         flags={[asset.baseCountry, asset.quoteCountry]}
                         stockLogo={asset.stockLogo}
                         commodityIcon={asset.commodityIcon}
-                        size={18}
+                        size={22}
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-[11px] font-semibold text-white leading-tight">{asset.symbol}</div>
-                        <div className="truncate text-[9px] text-gray-400 leading-tight">{asset.name}</div>
+                        {asset.category === "CURRENCIES" ? (
+                          <div className="truncate text-[12px] font-bold text-white leading-tight">{asset.symbol}</div>
+                        ) : (
+                          <div className="truncate text-[12px] font-bold text-white leading-tight">{asset.name}</div>
+                        )}
                       </div>
                       {activeTab === "FAVORITES" ? (
                         <button
                           onClick={(e) => toggleWatchlist(e, asset.symbol)}
-                          className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-gray-400 hover:text-[#F6465D] hover:bg-[#F6465D]/10 transition-colors"
+                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-gray-400 hover:text-[#F6465D] hover:bg-[#F6465D]/10 transition-colors"
                         >
-                          <Minus className="h-2.5 w-2.5" />
+                          <Minus className="h-3 w-3" />
                         </button>
                       ) : (
                         <button
                           onClick={(e) => toggleWatchlist(e, asset.symbol)}
-                          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded transition-colors ${
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors ${
                             isSaved ? "text-yellow-400 hover:text-gray-400" : "text-gray-400 hover:text-yellow-400"
                           }`}
                         >
-                          {isSaved ? <Star className="h-3 w-3 fill-yellow-400" /> : <Star className="h-3 w-3" />}
+                          {isSaved ? <Star className="h-3.5 w-3.5 fill-yellow-400" /> : <Star className="h-3.5 w-3.5" />}
                         </button>
                       )}
                     </div>
@@ -328,25 +331,25 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                     {/* 24h change */}
                     <div className="flex items-center justify-end gap-1">
                       {isPositive ? (
-                        <ArrowUp className="h-2.5 w-2.5 text-[#00C076]" strokeWidth={3} />
+                        <ArrowUp className="h-3 w-3 text-[#00C076]" strokeWidth={3} />
                       ) : (
-                        <ArrowDown className="h-2.5 w-2.5 text-[#F6465D]" strokeWidth={3} />
+                        <ArrowDown className="h-3 w-3 text-[#F6465D]" strokeWidth={3} />
                       )}
-                      <span className={`text-[12px] font-bold ${isPositive ? "text-[#00C076]" : "text-[#F6465D]"}`}>
+                      <span className={`text-[13px] font-bold ${isPositive ? "text-[#00C076]" : "text-[#F6465D]"}`}>
                         {isPositive ? "+" : ""}{asset.change24h.toFixed(2)}%
                       </span>
                     </div>
 
                     {/* Profit 1+ min */}
                     <div className="flex items-center justify-end gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-[#3B82F6]" />
-                      <span className="text-[12px] font-bold text-white">{asset.profit1m}%</span>
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#3B82F6]" />
+                      <span className="text-[13px] font-bold text-white">{asset.profit1m}%</span>
                     </div>
 
                     {/* Profit 5+ min */}
                     <div className="flex items-center justify-end gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-[#00C076]" />
-                      <span className="text-[12px] font-bold text-white">{asset.profit5m}%</span>
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#00C076]" />
+                      <span className="text-[13px] font-bold text-white">{asset.profit5m}%</span>
                     </div>
                   </div>
                 );
