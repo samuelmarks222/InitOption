@@ -18,11 +18,8 @@ export const assetTypes = ["OTC", "Forex", "Crypto", "Stocks", "Commodities"] as
 
 // ... keeping existing timeframes/indicators below ...
 
-// Chart timeframes from 5 seconds to 3 days
+// Chart timeframes from 30 seconds to 3 days
 export const chartTimeframes = [
-  { label: "1s", value: 1, unit: "seconds" },
-  { label: "5s", value: 5, unit: "seconds" },
-  { label: "15s", value: 15, unit: "seconds" },
   { label: "30s", value: 30, unit: "seconds" },
   { label: "1m", value: 60, unit: "seconds" },
   { label: "5m", value: 300, unit: "seconds" },
@@ -37,11 +34,8 @@ export const chartTimeframes = [
   { label: "1D", value: 86400, unit: "seconds" },
 ];
 
-// Expiry times from 5 seconds to 1 day
+// Expiry times from 30 seconds to 1 day
 export const expiryTimes = [
-  { label: "5s", value: 5 },
-  { label: "10s", value: 10 },
-  { label: "15s", value: 15 },
   { label: "30s", value: 30 },
   { label: "1m", value: 60 },
   { label: "2m", value: 120 },
