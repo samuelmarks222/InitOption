@@ -357,11 +357,11 @@ const BAR_SPACING_MAP: Record<string, number> = {
   "5s": 16.5,
   "15s": 16.1,
   "30s": 16.5,
-  "1m": 16.5,
-  "2m": 14.8,
-  "3m": 13.8,
-  "4m": 12.9,
-  "5m": 12.2,
+  "1m": 9.0,
+  "2m": 8.5,
+  "3m": 8.0,
+  "4m": 7.5,
+  "5m": 7.0,
   "10m": 8.0,
   "15m": 7.0,
   "30m": 6.0,
@@ -453,10 +453,10 @@ const getMainPriceScaleMargins = (timeframe: SupportedChartTimeframe) => {
   const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
 
   if (seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS) {
-    return { top: 0.08, bottom: 0.09 };
+    return { top: 0.05, bottom: 0.05 };
   }
 
-  return { top: 0.07, bottom: 0.08 };
+  return { top: 0.05, bottom: 0.05 };
 };
 
 const getZoomResponsivePriceScaleMargins = (
@@ -473,8 +473,8 @@ const getZoomResponsivePriceScaleMargins = (
   }
 
   const zoomRatio = visibleSpan / targetVisibleBars;
-  const zoomPadding = Math.max(-0.04, Math.min(0.08, (zoomRatio - 1) * 0.05));
-  const maxMargin = seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS ? 0.18 : 0.20;
+  const zoomPadding = Math.max(-0.03, Math.min(0.05, (zoomRatio - 1) * 0.03));
+  const maxMargin = 0.10;
   const topMargin = Math.max(baseMargins.top, Math.min(maxMargin, baseMargins.top + zoomPadding));
   const bottomMargin = Math.max(baseMargins.bottom, Math.min(maxMargin, baseMargins.bottom + zoomPadding));
 
@@ -1672,7 +1672,7 @@ const OscillatorPane = ({
       },
       rightPriceScale: {
         borderColor: THEME.border,
-        scaleMargins: { top: 0.1, bottom: 0.1 },
+        scaleMargins: { top: 0.05, bottom: 0.05 },
         textColor: THEME.mutedText,
         minimumWidth: SYNCED_PRICE_SCALE_MIN_WIDTH,
       },
@@ -1752,7 +1752,7 @@ const OscillatorPane = ({
     chart.applyOptions({
       rightPriceScale: {
         borderColor: THEME.border,
-        scaleMargins: { top: 0.1, bottom: 0.1 },
+        scaleMargins: { top: 0.05, bottom: 0.05 },
         textColor: THEME.mutedText,
         minimumWidth: SYNCED_PRICE_SCALE_MIN_WIDTH,
       },
