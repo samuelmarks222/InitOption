@@ -176,21 +176,23 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
           <div className="flex min-w-max items-center px-2">
             {TABS.map(tab => {
               const isActive = activeTab === tab;
+              const label =
+                tab === "CURRENCIES" ? "Currencies" :
+                tab === "CRYPTO" ? "Crypto" :
+                tab === "MARKET" ? "Market" :
+                tab === "COMMODITIES" ? "Commodities" :
+                tab === "STOCKS" ? "Stocks" :
+                tab === "INDICES" ? "Indices" : "Favorites";
               return (
                 <button
                   key={tab}
                   onClick={() => { setActiveTab(tab); setSearchQuery(""); }}
-                  className={`relative shrink-0 px-2.5 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                  className={`relative shrink-0 px-1.5 py-2 text-[9px] font-semibold uppercase tracking-wider transition-colors ${
                     isActive ? "text-white" : "text-[#B0B0B0] hover:text-white"
                   }`}
                 >
-                  {tab === "CURRENCIES" ? "Currencies" :
-                   tab === "CRYPTO" ? "Crypto" :
-                   tab === "MARKET" ? "Market" :
-                   tab === "COMMODITIES" ? "Commodities" :
-                   tab === "STOCKS" ? "Stocks" :
-                   tab === "INDICES" ? "Indices" : "Favorites"}
-                  {isActive && <span className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full bg-[#D5006C]" />}
+                  {label}
+                  {isActive && <span className="absolute bottom-0 left-1.5 right-1.5 h-[2px] rounded-full bg-[#D5006C]" />}
                 </button>
               );
             })}
@@ -218,25 +220,25 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
 
         {/* Column Headers */}
         <div className="shrink-0 border-b border-[#2A2A3A] px-3 pb-2">
-          <div className="grid grid-cols-[1fr,90px,75px,75px] items-center gap-1">
+          <div className="grid grid-cols-[minmax(0,1fr),65px,55px,55px] items-center gap-0.5">
             <span className="text-[11px] font-semibold text-[#B0B0B0]">Name</span>
             <button
               onClick={() => handleSort("change24h")}
-              className="group flex items-center justify-end gap-1 text-[11px] font-semibold text-[#B0B0B0] hover:text-white transition-colors"
+              className="group flex items-center justify-end gap-0.5 text-[10px] font-semibold text-[#B0B0B0] hover:text-white transition-colors"
             >
-              24h changing {renderSortIcon("change24h")}
+              24h {renderSortIcon("change24h")}
             </button>
             <button
               onClick={() => handleSort("profit1m")}
-              className="group flex items-center justify-end gap-1 text-[11px] font-semibold text-[#B0B0B0] hover:text-white transition-colors"
+              className="group flex items-center justify-end gap-0.5 text-[10px] font-semibold text-[#B0B0B0] hover:text-white transition-colors"
             >
-              Profit 1+ min {renderSortIcon("profit1m")}
+              1+ min {renderSortIcon("profit1m")}
             </button>
             <button
               onClick={() => handleSort("profit5m")}
-              className="group flex items-center justify-end gap-1 text-[11px] font-semibold text-[#B0B0B0] hover:text-white transition-colors"
+              className="group flex items-center justify-end gap-0.5 text-[10px] font-semibold text-[#B0B0B0] hover:text-white transition-colors"
             >
-              Profit 5+ min {renderSortIcon("profit5m")}
+              5+ min {renderSortIcon("profit5m")}
             </button>
           </div>
         </div>
@@ -269,7 +271,7 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                   <div
                     key={asset.symbol}
                     onClick={() => onSelect(asset)}
-                    className="grid grid-cols-[1fr,90px,75px,75px] items-center gap-1 px-3 py-2 cursor-pointer transition-colors hover:bg-[#2A2A3A]"
+                    className="grid grid-cols-[minmax(0,1fr),65px,55px,55px] items-center gap-0.5 px-3 py-1.5 cursor-pointer transition-colors hover:bg-[#2A2A3A]"
                   >
                     {/* Name column */}
                     <div className="flex items-center gap-2 min-w-0">
@@ -282,22 +284,25 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                         commodityIcon={asset.commodityIcon}
                         size={18}
                       />
-                      <span className="truncate text-[13px] font-semibold text-white">{asset.symbol}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[11px] font-semibold text-white leading-tight">{asset.symbol}</div>
+                        <div className="truncate text-[9px] text-gray-400 leading-tight">{asset.name}</div>
+                      </div>
                       {activeTab === "FAVORITES" ? (
                         <button
                           onClick={(e) => toggleWatchlist(e, asset.symbol)}
-                          className="ml-auto flex h-5 w-5 items-center justify-center rounded text-gray-400 hover:text-[#F6465D] hover:bg-[#F6465D]/10 transition-colors"
+                          className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-gray-400 hover:text-[#F6465D] hover:bg-[#F6465D]/10 transition-colors"
                         >
-                          <Minus className="h-3 w-3" />
+                          <Minus className="h-2.5 w-2.5" />
                         </button>
                       ) : (
                         <button
                           onClick={(e) => toggleWatchlist(e, asset.symbol)}
-                          className={`ml-auto flex h-5 w-5 items-center justify-center rounded transition-colors ${
+                          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded transition-colors ${
                             isSaved ? "text-yellow-400 hover:text-gray-400" : "text-gray-400 hover:text-yellow-400"
                           }`}
                         >
-                          {isSaved ? <Star className="h-3.5 w-3.5 fill-yellow-400" /> : <Star className="h-3.5 w-3.5" />}
+                          {isSaved ? <Star className="h-3 w-3 fill-yellow-400" /> : <Star className="h-3 w-3" />}
                         </button>
                       )}
                     </div>
