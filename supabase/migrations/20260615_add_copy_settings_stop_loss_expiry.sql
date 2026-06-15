@@ -89,5 +89,9 @@ begin
 end;
 $$;
 
-revoke execute on function public.upsert_copy_setting(uuid, boolean, text, numeric, numeric, numeric, numeric, text) from authenticated;
+do $$
+begin
+  execute 'revoke execute on function public.upsert_copy_setting(uuid, boolean, text, numeric, numeric, numeric, numeric, text) from authenticated';
+exception when undefined_function then null;
+end $$;
 grant execute on function public.upsert_copy_setting(uuid, boolean, text, numeric, numeric, numeric, numeric, text, numeric, timestamptz) to authenticated;
