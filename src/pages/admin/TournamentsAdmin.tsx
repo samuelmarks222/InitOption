@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Trash2, Edit, Save, Trophy } from "lucide-react";
+import { Search, Plus, Trash2, Edit, Save, Trophy, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Database } from "@/integrations/supabase/types";
@@ -40,6 +40,8 @@ const TournamentsAdmin = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [editingRebuyId, setEditingRebuyId] = useState<string | null>(null);
   const [rebuyDrafts, setRebuyDrafts] = useState<Record<string, number>>({});
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [editDrafts, setEditDrafts] = useState<Record<string, Partial<Tournament>>>({});
   
   const [newTour, setNewTour] = useState(createDefaultTournamentDraft);
 
@@ -105,6 +107,45 @@ const TournamentsAdmin = () => {
     toast({ title: "Rebuy cost updated" });
     setTournaments((current) => current.map((t) => (t.id === id ? { ...t, rebuy_cost: draftValue } : t)));
     setEditingRebuyId(null);
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    const draft = editDrafts[id];
+    if (!draft) return;
+    if (!draft.title?.trim()) {
+      toast({ title: "Validation Error", description: "Tournament title is required.", variant: "destructive" });
+      return;
+    }
+    if (Number(draft.rebuy_cost) < 0) {
+      toast({ title: "Validation Error", description: "Rebuy cost cannot be negative.", variant: "destructive" });
+      return;
+    }
+
+    const sDate = draft.start_date ? new Date(draft.start_date).toISOString() : undefined;
+    const eDate = draft.end_date ? new Date(draft.end_date).toISOString() : undefined;
+
+    const { error } = await supabase.from('tournaments').update({
+      ...(draft.title !== undefined && { title: draft.title }),
+      ...(draft.description !== undefined && { description: draft.description }),
+      ...(draft.entry_fee !== undefined && { entry_fee: Number(draft.entry_fee) }),
+      ...(draft.rebuy_cost !== undefined && { rebuy_cost: Number(draft.rebuy_cost) }),
+      ...(draft.prize_pool !== undefined && { prize_pool: Number(draft.prize_pool) }),
+      ...(draft.starting_balance !== undefined && { starting_balance: Number(draft.starting_balance) }),
+      ...(sDate !== undefined && { start_date: sDate }),
+      ...(eDate !== undefined && { end_date: eDate }),
+    }).eq('id', id);
+
+    if (error) {
+      toast({ title: "Failed to update tournament", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Tournament updated successfully!" });
+    setTournaments((current) =>
+      current.map((t) => (t.id === id ? { ...t, ...draft, start_date: sDate ?? t.start_date, end_date: eDate ?? t.end_date } : t))
+    );
+    setEditingRowId(null);
+    setEditDrafts((current) => { const next = { ...current }; delete next[id]; return next; });
   };
 
   const handleCreateTour = async () => {
@@ -240,10 +281,25 @@ const TournamentsAdmin = () => {
               ) : filtered.map((t) => (
                 <tr key={t.id} className="hover:bg-white/[0.02]">
                   <td className="px-6 py-4">
-                    <div className="font-bold text-white text-base">{t.title}</div>
-                    <div className="text-xs text-slate-400 max-w-[200px] truncate">{t.description}</div>
+                    {editingRowId === t.id ? (
+                      <div className="space-y-2">
+                        <input type="text" value={editDrafts[t.id]?.title ?? t.title} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], title: e.target.value } }))} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#0fa053] outline-none" />
+                        <input type="text" value={editDrafts[t.id]?.description ?? t.description ?? ""} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], description: e.target.value } }))} placeholder="Description" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:border-[#0fa053] outline-none" />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="font-bold text-white text-base">{t.title}</div>
+                        <div className="text-xs text-slate-400 max-w-[200px] truncate">{t.description}</div>
+                      </>
+                    )}
                   </td>
-                  <td className="px-6 py-4 font-mono font-bold">{t.entry_fee === 0 ? <span className="text-green-400">FREE</span> : `$${t.entry_fee}`}</td>
+                  <td className="px-6 py-4">
+                    {editingRowId === t.id ? (
+                      <input type="number" value={editDrafts[t.id]?.entry_fee ?? t.entry_fee} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], entry_fee: Number(e.target.value) } }))} className="w-24 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#0fa053] outline-none" />
+                    ) : (
+                      <span className="font-mono font-bold">{t.entry_fee === 0 ? <span className="text-green-400">FREE</span> : `$${t.entry_fee}`}</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 font-mono font-bold">
                     {editingRebuyId === t.id ? (
                       <input
@@ -253,15 +309,38 @@ const TournamentsAdmin = () => {
                         onChange={(e) => setRebuyDrafts((current) => ({ ...current, [t.id]: Number(e.target.value) }))}
                         className="w-28 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
                       />
+                    ) : editingRowId === t.id ? (
+                      <input type="number" min="0" value={editDrafts[t.id]?.rebuy_cost ?? t.rebuy_cost} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], rebuy_cost: Number(e.target.value) } }))} className="w-24 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#0fa053] outline-none" />
                     ) : (
                       t.rebuy_cost === 0 ? <span className="text-green-400">FREE</span> : `$${t.rebuy_cost}`
                     )}
                   </td>
-                  <td className="px-6 py-4 font-mono font-bold text-yellow-500">${t.prize_pool}</td>
-                  <td className="px-6 py-4 font-mono font-medium text-green-400">${t.starting_balance}</td>
+                  <td className="px-6 py-4">
+                    {editingRowId === t.id ? (
+                      <input type="number" value={editDrafts[t.id]?.prize_pool ?? t.prize_pool} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], prize_pool: Number(e.target.value) } }))} className="w-24 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-yellow-500 font-bold focus:border-[#0fa053] outline-none" />
+                    ) : (
+                      <span className="font-mono font-bold text-yellow-500">${t.prize_pool}</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    {editingRowId === t.id ? (
+                      <input type="number" value={editDrafts[t.id]?.starting_balance ?? t.starting_balance} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], starting_balance: Number(e.target.value) } }))} className="w-24 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-green-400 font-bold focus:border-[#0fa053] outline-none" />
+                    ) : (
+                      <span className="font-mono font-medium text-green-400">${t.starting_balance}</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-xs font-mono">
-                    <div className="text-slate-300">S: {new Date(t.start_date).toLocaleString()}</div>
-                    <div className="text-slate-400">E: {new Date(t.end_date).toLocaleString()}</div>
+                    {editingRowId === t.id ? (
+                      <div className="space-y-1.5">
+                        <input type="datetime-local" value={editDrafts[t.id]?.start_date?.slice(0, 16) ?? t.start_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], start_date: e.target.value } }))} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-1 text-xs text-white focus:border-[#0fa053] outline-none" />
+                        <input type="datetime-local" value={editDrafts[t.id]?.end_date?.slice(0, 16) ?? t.end_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], end_date: e.target.value } }))} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-1 text-xs text-white focus:border-[#0fa053] outline-none" />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="text-slate-300">S: {new Date(t.start_date).toLocaleString()}</div>
+                        <div className="text-slate-400">E: {new Date(t.end_date).toLocaleString()}</div>
+                      </>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <select 
@@ -282,29 +361,34 @@ const TournamentsAdmin = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {editingRebuyId === t.id ? (
-                        <button
-                          onClick={() => handleSaveRebuyCost(t.id)}
-                          className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-green-400 rounded transition-colors"
-                          title="Save Rebuy Cost"
-                        >
-                          <Save size={16} />
-                        </button>
+                      {editingRowId === t.id ? (
+                        <>
+                          <button onClick={() => handleSaveEdit(t.id)} className="p-1.5 bg-[#1a1e2b] text-green-400 hover:text-white rounded transition-colors" title="Save All Changes">
+                            <Save size={16} />
+                          </button>
+                          <button onClick={() => { setEditingRowId(null); setEditDrafts((d) => { const next = { ...d }; delete next[t.id]; return next; }); }} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-red-400 rounded transition-colors" title="Cancel Editing">
+                            <X size={16} />
+                          </button>
+                        </>
                       ) : (
-                        <button
-                          onClick={() => {
-                            setEditingRebuyId(t.id);
-                            setRebuyDrafts((current) => ({ ...current, [t.id]: Number(t.rebuy_cost ?? 0) }));
-                          }}
-                          className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-[#0fa053] rounded transition-colors"
-                          title="Edit Rebuy Cost"
-                        >
-                          <Edit size={16} />
-                        </button>
+                        <>
+                          <button onClick={() => { setEditingRowId(t.id); setEditDrafts((d) => ({ ...d, [t.id]: {} })); setEditingRebuyId(null); }} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-[#0fa053] rounded transition-colors" title="Edit All Fields">
+                            <Edit size={16} />
+                          </button>
+                          {editingRebuyId === t.id ? (
+                            <button onClick={() => handleSaveRebuyCost(t.id)} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-green-400 rounded transition-colors" title="Save Rebuy Cost">
+                              <Save size={16} />
+                            </button>
+                          ) : editingRowId !== t.id ? (
+                            <button onClick={() => { setEditingRebuyId(t.id); setRebuyDrafts((current) => ({ ...current, [t.id]: Number(t.rebuy_cost ?? 0) })); }} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-[#0fa053] rounded transition-colors" title="Edit Rebuy Cost">
+                              <Edit size={16} />
+                            </button>
+                          ) : null}
+                          <button onClick={() => handleDelete(t.id)} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-red-400 rounded transition-colors" title="Delete Tournament">
+                            <Trash2 size={16} />
+                          </button>
+                        </>
                       )}
-                      <button onClick={() => handleDelete(t.id)} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-red-400 rounded transition-colors" title="Delete Tournament">
-                        <Trash2 size={16} />
-                      </button>
                     </div>
                   </td>
                 </tr>
