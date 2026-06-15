@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useState, useMemo, useEffect } from "react";
-import { X, Search, Star, ArrowDown, ArrowUp, ArrowUpDown, Trash2, Plus, Minus } from "lucide-react";
+import { X, Search, ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
 import { useTrading } from "@/hooks/useTrading";
 import {
@@ -35,10 +35,10 @@ interface AssetSelectorModalProps {
   onSelect: (asset: AssetSelectorAsset) => void;
 }
 
-type TabType = "CURRENCIES" | "CRYPTO" | "COMMODITIES" | "STOCKS" | "INDICES" | "FAVORITES";
+type TabType = "CURRENCIES" | "CRYPTO" | "COMMODITIES" | "STOCKS" | "INDICES";
 type SortKey = "change24h" | "profit1m" | "profit5m";
 
-const TABS: TabType[] = ["CURRENCIES", "CRYPTO", "COMMODITIES", "STOCKS", "INDICES", "FAVORITES"];
+const TABS: TabType[] = ["CURRENCIES", "CRYPTO", "COMMODITIES", "STOCKS", "INDICES"];
 
 const INDICES_ASSETS: AssetSelectorAsset[] = [
   { name: "S&P 500", symbol: "SPX", category: "INDICES", change24h: 0.32, profit1m: 85, profit5m: 83, price: 5342, baseCountry: "US", quoteCountry: "US" },
@@ -64,7 +64,6 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
   const [searchQuery, setSearchQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("profit1m");
   const [sortAsc, setSortAsc] = useState(false);
-  const [watchlist, setWatchlist] = useState<string[]>([]);
   const [liveAssets, setLiveAssets] = useState<AssetSelectorAsset[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -99,23 +98,6 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
     setLiveAssets([...mapped, ...INDICES_ASSETS]);
   }, [assets]);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("trading_watchlist");
-    if (saved) {
-      try { setWatchlist(JSON.parse(saved)); }
-      catch (e) {}
-    }
-  }, []);
-
-  const toggleWatchlist = (e: React.MouseEvent, symbol: string) => {
-    e.stopPropagation();
-    setWatchlist(prev => {
-      const next = prev.includes(symbol) ? prev.filter(s => s !== symbol) : [...prev, symbol];
-      localStorage.setItem("trading_watchlist", JSON.stringify(next));
-      return next;
-    });
-  };
-
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
       setSortAsc(!sortAsc);
@@ -128,18 +110,14 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
   const filteredData = useMemo(() => {
     let data: AssetSelectorAsset[];
 
-    if (activeTab === "FAVORITES") {
-      data = liveAssets.filter(a => watchlist.includes(a.symbol));
-    } else {
-      const tabMap: Record<string, SelectorAssetCategory> = {
-        CURRENCIES: "CURRENCIES",
-        CRYPTO: "CRYPTO",
-        COMMODITIES: "COMMODITIES",
-        STOCKS: "STOCKS",
-        INDICES: "INDICES",
-      };
-      data = liveAssets.filter(a => a.category === (tabMap[activeTab] ?? "CURRENCIES"));
-    }
+    const tabMap: Record<string, SelectorAssetCategory> = {
+      CURRENCIES: "CURRENCIES",
+      CRYPTO: "CRYPTO",
+      COMMODITIES: "COMMODITIES",
+      STOCKS: "STOCKS",
+      INDICES: "INDICES",
+    };
+    data = liveAssets.filter(a => a.category === (tabMap[activeTab] ?? "CURRENCIES"));
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -157,7 +135,7 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
     }
 
     return data;
-  }, [activeTab, searchQuery, sortKey, sortAsc, watchlist, liveAssets]);
+  }, [activeTab, searchQuery, sortKey, sortAsc, liveAssets]);
 
   const renderSortIcon = (key: SortKey) => {
     if (sortKey === key) {
@@ -197,8 +175,7 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                 tab === "CURRENCIES" ? "Currencies" :
                 tab === "CRYPTO" ? "Crypto" :
                 tab === "COMMODITIES" ? "Commodities" :
-                tab === "STOCKS" ? "Stocks" :
-                tab === "INDICES" ? "Indices" : "Favorites";
+                tab === "STOCKS" ? "Stocks" : "Indices";
               return (
                 <button
                   key={tab}
@@ -269,12 +246,7 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
           <div className="asset-scroll">
             {filteredData.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center text-[13px] text-gray-500">
-                {activeTab === "FAVORITES" ? (
-                  <>
-                    <Star className="mb-2 h-8 w-8 text-gray-600" />
-                    <p>No assets added yet</p>
-                  </>
-                ) : activeTab === "INDICES" ? (
+                {activeTab === "INDICES" ? (
                   <p>No indices found</p>
                 ) : (
                   <p>No assets match your search.</p>
@@ -282,7 +254,6 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
               </div>
             ) : (
               filteredData.map((asset, i) => {
-                const isSaved = watchlist.includes(asset.symbol);
                 const isPositive = asset.change24h >= 0;
 
                 return (
@@ -311,23 +282,6 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                           <div className="truncate text-[12px] font-bold text-white leading-tight">{asset.name}</div>
                         )}
                       </div>
-                      {activeTab === "FAVORITES" ? (
-                        <button
-                          onClick={(e) => toggleWatchlist(e, asset.symbol)}
-                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-gray-400 hover:text-[#F6465D] hover:bg-[#F6465D]/10 transition-colors"
-                        >
-                          <Minus className="h-3 w-3" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={(e) => toggleWatchlist(e, asset.symbol)}
-                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors ${
-                            isSaved ? "text-yellow-400 hover:text-gray-400" : "text-gray-400 hover:text-yellow-400"
-                          }`}
-                        >
-                          {isSaved ? <Star className="h-3.5 w-3.5 fill-yellow-400" /> : <Star className="h-3.5 w-3.5" />}
-                        </button>
-                      )}
                     </div>
 
                     {/* 24h change */}
