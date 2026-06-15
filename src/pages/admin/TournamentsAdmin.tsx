@@ -14,6 +14,7 @@ const createDefaultTournamentDraft = () => ({
   rebuy_cost: 0,
   prize_pool: 0,
   starting_balance: 100,
+  number_of_winners: 1,
   status: "upcoming" as const,
   // default to next Friday 09:00 local -> next Friday + 12 hours end
   start_date: (() => {
@@ -112,11 +113,16 @@ const TournamentsAdmin = () => {
   const handleSaveEdit = async (id: string) => {
     const draft = editDrafts[id];
     if (!draft) return;
-    if (!draft.title?.trim()) {
+    const original = tournaments.find((t) => t.id === id);
+    if (!original) return;
+
+    const resolvedTitle = draft.title ?? original.title;
+    if (!resolvedTitle?.trim()) {
       toast({ title: "Validation Error", description: "Tournament title is required.", variant: "destructive" });
       return;
     }
-    if (Number(draft.rebuy_cost) < 0) {
+    const resolvedRebuy = draft.rebuy_cost ?? original.rebuy_cost;
+    if (Number(resolvedRebuy) < 0) {
       toast({ title: "Validation Error", description: "Rebuy cost cannot be negative.", variant: "destructive" });
       return;
     }
@@ -131,6 +137,7 @@ const TournamentsAdmin = () => {
       ...(draft.rebuy_cost !== undefined && { rebuy_cost: Number(draft.rebuy_cost) }),
       ...(draft.prize_pool !== undefined && { prize_pool: Number(draft.prize_pool) }),
       ...(draft.starting_balance !== undefined && { starting_balance: Number(draft.starting_balance) }),
+      ...(draft.number_of_winners !== undefined && { number_of_winners: Number(draft.number_of_winners) }),
       ...(sDate !== undefined && { start_date: sDate }),
       ...(eDate !== undefined && { end_date: eDate }),
     }).eq('id', id);
@@ -170,6 +177,7 @@ const TournamentsAdmin = () => {
       rebuy_cost: Number(newTour.rebuy_cost),
       prize_pool: Number(newTour.prize_pool),
       starting_balance: Number(newTour.starting_balance),
+      number_of_winners: Number(newTour.number_of_winners),
       start_date: sDate,
       end_date: eDate,
       status: newTour.status
@@ -214,7 +222,7 @@ const TournamentsAdmin = () => {
             </div>
             <div className="col-span-2 lg:col-span-5">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Description / Rules</label>
-              <input type="text" value={newTour.description} onChange={e => setNewTour({...newTour, description: e.target.value})} placeholder="Top 10 traders win cash prizes." className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+              <input type="text" value={newTour.description} onChange={e => setNewTour({...newTour, description: e.target.value})} placeholder="Top 10 traders win cash prizes. (mention winners here)" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
             </div>
             
             <div className="col-span-1 border-t border-[#2a2f42] pt-4">
@@ -228,6 +236,10 @@ const TournamentsAdmin = () => {
             <div className="col-span-1 border-t border-[#2a2f42] pt-4">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Prize Pool ($)</label>
               <input type="number" value={newTour.prize_pool} onChange={e => setNewTour({...newTour, prize_pool: Number(e.target.value)})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-yellow-500 font-bold focus:border-[#0fa053] outline-none" />
+            </div>
+            <div className="col-span-1 border-t border-[#2a2f42] pt-4">
+              <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Winners</label>
+              <input type="number" min="1" value={newTour.number_of_winners} onChange={e => setNewTour({...newTour, number_of_winners: Math.max(1, Number(e.target.value))})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white font-bold focus:border-[#0fa053] outline-none" />
             </div>
              <div className="col-span-1 border-t border-[#2a2f42] pt-4">
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Start Balance ($)</label>
@@ -267,6 +279,7 @@ const TournamentsAdmin = () => {
                 <th className="px-6 py-3 font-semibold">Entry Fee</th>
                 <th className="px-6 py-3 font-semibold">Rebuy Cost</th>
                 <th className="px-6 py-3 font-semibold text-yellow-500">Prize Pool</th>
+                <th className="px-6 py-3 font-semibold">Winners</th>
                 <th className="px-6 py-3 font-semibold text-green-400">Sandbox Bal</th>
                 <th className="px-6 py-3 font-semibold">Timeline</th>
                 <th className="px-6 py-3 font-semibold">Status</th>
@@ -275,9 +288,9 @@ const TournamentsAdmin = () => {
             </thead>
             <tbody className="divide-y divide-white/5">
               {loading ? (
-                 <tr><td colSpan={8} className="text-center py-8 text-slate-400">Loading tournaments...</td></tr>
-              ) : filtered.length === 0 ? (
-                 <tr><td colSpan={8} className="text-center py-8 text-slate-400">No tournaments configured. Deploy one to begin.</td></tr>
+                  <tr><td colSpan={9} className="text-center py-8 text-slate-400">Loading tournaments...</td></tr>
+               ) : filtered.length === 0 ? (
+                  <tr><td colSpan={9} className="text-center py-8 text-slate-400">No tournaments configured. Deploy one to begin.</td></tr>
               ) : filtered.map((t) => (
                 <tr key={t.id} className="hover:bg-white/[0.02]">
                   <td className="px-6 py-4">
@@ -320,6 +333,13 @@ const TournamentsAdmin = () => {
                       <input type="number" value={editDrafts[t.id]?.prize_pool ?? t.prize_pool} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], prize_pool: Number(e.target.value) } }))} className="w-24 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-yellow-500 font-bold focus:border-[#0fa053] outline-none" />
                     ) : (
                       <span className="font-mono font-bold text-yellow-500">${t.prize_pool}</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    {editingRowId === t.id ? (
+                      <input type="number" min="1" value={editDrafts[t.id]?.number_of_winners ?? t.number_of_winners} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], number_of_winners: Math.max(1, Number(e.target.value)) } }))} className="w-16 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white font-bold focus:border-[#0fa053] outline-none" />
+                    ) : (
+                      <span className="font-mono font-bold">{t.number_of_winners}</span>
                     )}
                   </td>
                   <td className="px-6 py-4">

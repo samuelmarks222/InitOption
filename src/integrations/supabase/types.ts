@@ -1108,6 +1108,7 @@ export type Database = {
           rebuy_cost: number
           prize_pool: number
           starting_balance: number
+          number_of_winners: number
           start_date: string
           end_date: string
           status: Database["public"]["Enums"]["tournament_status"]
@@ -1122,6 +1123,7 @@ export type Database = {
           rebuy_cost?: number
           prize_pool?: number
           starting_balance?: number
+          number_of_winners?: number
           start_date: string
           end_date: string
           status?: Database["public"]["Enums"]["tournament_status"]
@@ -1136,6 +1138,7 @@ export type Database = {
           rebuy_cost?: number
           prize_pool?: number
           starting_balance?: number
+          number_of_winners?: number
           start_date?: string
           end_date?: string
           status?: Database["public"]["Enums"]["tournament_status"]
