@@ -88,21 +88,21 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-[calc(100%+8px)] left-0 w-[800px] h-[550px] bg-[#1a1b20] border border-white/10 rounded overflow-hidden shadow-2xl flex z-50">
+          <div className="absolute top-[calc(100%+8px)] left-0 w-[550px] h-[500px] bg-[#1a1b20] border border-white/10 rounded overflow-hidden shadow-2xl flex z-50">
             
             {/* Left Sidebar Menu */}
-            <div className="w-[220px] bg-[#1d2029] border-r border-white/5 flex flex-col shrink-0 overflow-y-auto scrollbar-hide py-4">
+            <div className="w-[160px] bg-[#1d2029] border-r border-white/5 flex flex-col shrink-0 overflow-y-auto scrollbar-hide py-4">
                {CATEGORIES.map(cat => (
                  <div key={cat.id} className="mb-2">
                    <button
                      onClick={() => setActiveCategory(cat.id)}
-                     className={`w-full flex items-center justify-between px-6 py-3 transition-colors ${
+                     className={`w-full flex items-center justify-between px-3 py-3 transition-colors ${
                        activeCategory === cat.id ? "text-white" : "text-gray-400 hover:text-gray-200"
                      }`}
                    >
-                     <div className="flex items-center gap-4">
+                     <div className="flex items-center gap-2">
                        <cat.icon className="w-[18px] h-[18px]" />
-                       <span className={`font-semibold text-[13px] ${activeCategory === cat.id ? "text-white" : ""}`}>{cat.label}</span>
+                       <span className={`font-semibold text-[12px] ${activeCategory === cat.id ? "text-white" : ""}`}>{cat.label}</span>
                      </div>
                      {cat.count !== undefined && !cat.subItems && (
                        <span className="text-[10px] bg-[#2a2d3e] px-2 py-0.5 rounded-full text-gray-400 font-medium">{cat.count}</span>
@@ -116,11 +116,11 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
                          <button
                            key={sub.id}
                            onClick={() => setActiveSubCategory(sub.id)}
-                           className={`w-full flex items-center justify-between pl-14 pr-6 py-2.5 transition-colors ${
+                           className={`w-full flex items-center justify-between pl-8 pr-3 py-2.5 transition-colors ${
                              activeSubCategory === sub.id ? "bg-white/5 text-white" : "text-gray-400 hover:text-gray-200"
                            }`}
                          >
-                           <span className="font-medium text-[13px]">{sub.label}</span>
+                           <span className="font-medium text-[12px]">{sub.label}</span>
                            <span className="text-[10px] bg-[#2a2d3e] px-2 py-0.5 rounded-full text-gray-400 font-medium">{sub.count}</span>
                          </button>
                        ))}
