@@ -340,21 +340,23 @@ export const getDynamicAssetPayoutProfile = ({
   const normalizedCategory = normalizeAssetCategory(category, normalizedSymbol);
   const seed = hashStringToUnitInterval(`payout:${normalizedCategory}:${normalizedSymbol}`);
 
-  const cycleDuration = 60;
-  const cyclePhase = ((timestampSec + seed * cycleDuration) % cycleDuration) / cycleDuration;
-  const highPayout = clampAssetPayout(basePayout + 5 + (seed - 0.5) * 10, basePayout);
+  // 90% of assets hover around 80 (±2), 10% vary more
+  const isNarrowBand = seed < 0.9;
+  const centerPayout = isNarrowBand ? 80 : clampAssetPayout(basePayout, 80);
+
+  const cyclePhase = ((timestampSec + seed * 60) % 60) / 60;
+  const narrowAmplitude = 2;
+  const wideAmplitude = 8;
+  const amplitude = isNarrowBand ? narrowAmplitude : wideAmplitude;
 
   const driftRad = (timestampSec % 3600) / 3600 * Math.PI * 2;
-  const driftAmount = 3 * Math.sin(driftRad + seed * 100);
+  const driftAmount = (isNarrowBand ? 0.5 : 2) * Math.sin(driftRad + seed * 100);
 
-  const amplitude = (highPayout - 30) / 2;
-  const midpoint = (highPayout + 30) / 2;
-  const rawValue = midpoint + amplitude * Math.cos(cyclePhase * 2 * Math.PI) + driftAmount;
-  const microJitter = Math.sin(timestampSec * 0.8 + seed * 100) * 0.4;
-  const profit1m = clampAssetPayout(rawValue + microJitter, basePayout);
+  const rawValue = centerPayout + amplitude * Math.cos(cyclePhase * 2 * Math.PI) + driftAmount;
+  const microJitter = Math.sin(timestampSec * 0.8 + seed * 100) * (isNarrowBand ? 0.2 : 0.5);
 
-  const raw5m = rawValue - 2 + Math.cos(timestampSec * 0.6 + seed * 50) * 0.4;
-  const profit5m = clampAssetPayout(raw5m, basePayout);
+  const profit1m = clampAssetPayout(rawValue + microJitter, centerPayout);
+  const profit5m = clampAssetPayout(rawValue - 1 + driftAmount * 0.3, centerPayout);
 
   return { profit1m, profit5m, available: true };
 };
