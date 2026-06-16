@@ -463,10 +463,8 @@ const CompactTradeRowShell = ({
       )}
 
       {expanded && details ? (
-        <div className="px-2 pb-2.5 pl-8">
-          <div className="rounded-[12px] border border-white/6 bg-[#2d3342] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-            {details}
-          </div>
+        <div className="px-0 pb-2">
+          {details}
         </div>
       ) : null}
     </div>
