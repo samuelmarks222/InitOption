@@ -884,18 +884,18 @@ const TradingPanel = ({
 
   return (
     <>
-      <aside className={`font-copy w-full lg:w-[220px] xl:w-[250px] 2xl:w-[280px] h-full min-h-[190px] shrink-0 flex flex-col text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none ${showTimeSwitcher ? "overflow-visible lg:overflow-hidden" : "overflow-hidden"} ${mobileDocked ? "rounded-t-[16px]" : ""}`}
+      <aside className={`font-copy w-full lg:w-[160px] xl:w-[170px] 2xl:w-[180px] h-full min-h-[190px] shrink-0 flex flex-col text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none ${showTimeSwitcher ? "overflow-visible lg:overflow-hidden" : "overflow-hidden"} ${mobileDocked ? "rounded-t-[16px]" : ""}`}
         style={{ background: "var(--trading-panel-bg)" }}>
 
         {/* ── Asset Header & Pending Toggle (Single Row) ──────────────── */}
-        <div className="flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-5 lg:pt-3.5 lg:pb-1">
+        <div className="flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-4 lg:pt-3.5 lg:pb-1">
           <button 
             onClick={() => onOpenAssetSelector?.()}
             className="flex min-w-0 items-center gap-1.5 rounded-lg p-1 -ml-1 transition-colors hover:bg-white/5"
           >
             <SymbolFlags symbol={asset.symbol} />
-            <div className="flex min-w-0 items-center gap-1 text-[11px] font-extrabold tracking-[0.01em] text-white sm:text-[12px] lg:text-[14px]">
-              <span className="max-w-[112px] truncate sm:max-w-[180px] lg:max-w-[200px]">{asset.symbol}</span>
+            <div className="flex min-w-0 items-center gap-1 text-[11px] font-extrabold tracking-[0.01em] text-white sm:text-[12px] lg:text-[12px]">
+              <span className="max-w-[90px] truncate sm:max-w-[120px] lg:max-w-[110px]">{asset.symbol}</span>
               <span className={`shrink-0 ${asset.available === false ? "text-red-400" : "text-[#0fa053]"}`}>{asset.available === false ? "N/A" : `${asset.maxProfit ?? 79}%`}</span>
               <ChevronDown className="w-3.5 h-3.5 text-gray-400 lg:hidden" strokeWidth={3} />
             </div>
@@ -922,7 +922,7 @@ const TradingPanel = ({
           type="button"
           onClick={handlePendingTradeToggle}
           aria-pressed={pendingTradeEnabled}
-          className="hidden items-center justify-between px-5 pb-3 text-left transition-colors hover:bg-white/[0.02] lg:flex"
+          className="hidden items-center justify-between px-4 pb-3 text-left transition-colors hover:bg-white/[0.02] lg:flex"
         >
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-[#0fa053]" strokeWidth={2.4} />
@@ -941,15 +941,15 @@ const TradingPanel = ({
         </button>
 
         {accountType === "tournament" && (
-          <div className="mx-2.5 mb-2 rounded-[10px] border border-[#0fa053]/35 bg-[#1e2330]/72 px-3 py-2 text-[10px] font-semibold leading-relaxed text-[#d8f6e5] lg:mx-5 lg:mb-3">
+          <div className="mx-2.5 mb-2 rounded-[10px] border border-[#0fa053]/35 bg-[#1e2330]/72 px-3 py-2 text-[10px] font-semibold leading-relaxed text-[#d8f6e5] lg:mx-4 lg:mb-3">
             Tournament mode is active. Open positions and history below are scoped to this tournament account.
           </div>
         )}
 
         {/* ── Compact mobile layout with desktop controls restored ── */}
-        <div className="px-2.5 pb-2 lg:px-5 lg:pb-2.5">
+        <div className="px-2.5 pb-2 lg:px-4 lg:pb-2.5">
           <div className="relative z-10 lg:pb-0">
-            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-1 lg:gap-5">
+            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-1 lg:gap-3">
               <div className="relative">
                   <button
                     type="button"
@@ -967,7 +967,7 @@ const TradingPanel = ({
 
                 <div
                   onClick={() => setShowTimeSwitcher((value) => !value)}
-                  className="relative hidden h-[42px] w-full cursor-pointer flex-col justify-center rounded-[5px] border border-[#596278] bg-[#2e3444] px-2 pb-1 pt-1 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex"
+                  className="relative hidden h-[42px] w-full cursor-pointer flex-col justify-center rounded-[5px] border border-[#3d4559] bg-[#282d3d] px-2 pb-1 pt-1 text-left lg:flex"
                 >
                   <span className="absolute -top-[6px] left-2.5 bg-[#1e2330] px-1.5 text-[11px] font-medium leading-none text-[#8fb0cf]" style={{ fontFamily: "Arial, sans-serif" }}>
                     Time
@@ -983,7 +983,7 @@ const TradingPanel = ({
                     >
                       <Minus className="h-2.5 w-2.5" strokeWidth={2.8} />
                     </button>
-                    <div className="flex-1 text-center text-[12px] font-bold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>
+                    <div className="flex-1 text-center text-[11px] font-bold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>
                       {formatTradeClock(expirySeconds)}
                     </div>
                     <button
@@ -997,10 +997,6 @@ const TradingPanel = ({
                       <Plus className="h-2.5 w-2.5" strokeWidth={2.8} />
                     </button>
                   </div>
-
-                  <span className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 bg-[#1e2330] px-1.5 text-[10px] font-bold uppercase leading-none tracking-[0.07em] text-[#0fa053]" style={{ fontFamily: "Arial, sans-serif" }}>
-                    SWITCH TIME
-                  </span>
                 </div>
               </div>
 
@@ -1032,7 +1028,7 @@ const TradingPanel = ({
                   </div>
                 </div>
 
-                <div className="relative hidden h-[42px] w-full flex-col justify-center rounded-[5px] border border-[#596278] bg-[#2e3444] px-2 pb-1 pt-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:flex">
+                <div className="relative hidden h-[42px] w-full flex-col justify-center rounded-[5px] border border-[#3d4559] bg-[#282d3d] px-2 pb-1 pt-1 lg:flex">
                   <span className="absolute -top-[6px] left-2.5 bg-[#1e2330] px-1.5 text-[11px] font-medium leading-none text-[#8fb0cf]" style={{ fontFamily: "Arial, sans-serif" }}>
                     Investment
                   </span>
@@ -1053,10 +1049,10 @@ const TradingPanel = ({
                         step={0.01}
                         inputMode="decimal"
                         onChange={(event) => handleInvestmentInput(event.target.value)}
-                        className="hide-number-spin w-8 bg-transparent text-right text-[12px] font-bold text-white outline-none"
+                        className="hide-number-spin w-8 bg-transparent text-right text-[11px] font-bold text-white outline-none"
                         style={{ fontFamily: "Arial, sans-serif" }}
                       />
-                      <span className="text-[12px] font-bold text-white" style={{ fontFamily: "Arial, sans-serif" }}>{investmentUnit}</span>
+                      <span className="text-[11px] font-bold text-white" style={{ fontFamily: "Arial, sans-serif" }}>{investmentUnit}</span>
                     </div>
                     <button
                       type="button"
@@ -1066,10 +1062,6 @@ const TradingPanel = ({
                       <Plus className="h-2.5 w-2.5" strokeWidth={2.8} />
                     </button>
                   </div>
-
-                  <span className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 bg-[#1e2330] px-1 text-[7px] font-bold uppercase leading-none tracking-[0.07em] text-[#8fb0cf]">
-                    USD
-                  </span>
                 </div>
               </div>
             </div>
@@ -1081,20 +1073,20 @@ const TradingPanel = ({
         </div>
 
         {/* ── Payout ───────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-2.5 pb-2 text-white lg:px-5 lg:pb-3">
+        <div className="flex items-center justify-between px-2.5 pb-2 text-white lg:px-4 lg:pb-3">
           <span className="text-[10px] font-medium text-[#9aa3b5] lg:text-[12px]">Your payout:</span>
           <div className="mx-2 flex-1 translate-y-[-1px] border-b border-dashed border-[#5f677c]" />
           <span className="text-[12px] font-bold tracking-[0.01em] lg:text-[14px]" style={{ fontFamily: "Arial, sans-serif" }}>{asset.available === false ? "N/A" : `${payout.toFixed(2)} $`}</span>
         </div>
 
         {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
-        <div className="grid grid-cols-2 gap-2.5 px-2.5 pb-3 lg:grid-cols-1 lg:gap-3 lg:px-5 lg:pb-4">
+        <div className="grid grid-cols-2 gap-2.5 px-2.5 pb-3 lg:grid-cols-1 lg:gap-3 lg:px-4 lg:pb-4">
           <button
             ref={higherButtonRef}
             type="button"
             onClick={() => placeTrade("higher")}
             disabled={asset.available === false}
-            className={`flex h-[36px] items-center justify-between rounded-[4px] px-3 text-[14px] font-bold text-white transition-all active:scale-[0.98] focus:outline-none lg:h-[48px] lg:rounded-[6px] lg:px-4 lg:text-[15px] ${
+            className={`flex h-[36px] items-center justify-between rounded-[4px] px-3 text-[14px] font-bold text-white transition-all active:scale-[0.98] focus:outline-none lg:h-[44px] lg:rounded-[6px] lg:px-3 lg:text-[14px] ${
               higherButtonFocused ? "scale-[1.01]" : ""
             } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
             style={{
@@ -1103,8 +1095,8 @@ const TradingPanel = ({
               boxShadow: higherButtonFocused ? "var(--trading-success-focus-shadow)" : "var(--trading-success-shadow)",
             }}>
             <span>{asset.available === false ? t("tradingPanel.unavailable") : t("tradingPanel.up")}</span>
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
-              <ArrowUp className="w-3.5 h-3.5 lg:h-4 lg:w-4" strokeWidth={2.8} />
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-6 lg:w-6">
+              <ArrowUp className="w-3.5 h-3.5 lg:h-3.5 lg:w-3.5" strokeWidth={2.8} />
             </span>
           </button>
 
@@ -1113,7 +1105,7 @@ const TradingPanel = ({
             type="button"
             onClick={() => placeTrade("lower")}
             disabled={asset.available === false}
-            className={`flex h-[36px] items-center justify-between rounded-[4px] px-3 text-[14px] font-bold text-white transition-all active:scale-[0.98] focus:outline-none lg:h-[48px] lg:rounded-[6px] lg:px-4 lg:text-[15px] ${
+            className={`flex h-[36px] items-center justify-between rounded-[4px] px-3 text-[14px] font-bold text-white transition-all active:scale-[0.98] focus:outline-none lg:h-[44px] lg:rounded-[6px] lg:px-3 lg:text-[14px] ${
               lowerButtonFocused ? "scale-[1.01]" : ""
             } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
             style={{
@@ -1122,8 +1114,8 @@ const TradingPanel = ({
               boxShadow: lowerButtonFocused ? "var(--trading-danger-focus-shadow)" : "var(--trading-danger-shadow)",
             }}>
             <span>{asset.available === false ? t("tradingPanel.unavailable") : t("tradingPanel.down")}</span>
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-7 lg:w-7">
-              <ArrowDown className="w-3.5 h-3.5 lg:h-4 lg:w-4" strokeWidth={2.8} />
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/22 lg:h-6 lg:w-6">
+              <ArrowDown className="w-3.5 h-3.5 lg:h-3.5 lg:w-3.5" strokeWidth={2.8} />
             </span>
           </button>
         </div>
@@ -1136,7 +1128,7 @@ const TradingPanel = ({
           
           {/* ── Tabs: History / Pending ───────────────────────────────── */}
           <div
-            className="flex items-end gap-1.5 border-b px-2.5 pt-2 lg:px-5"
+            className="flex items-end gap-1.5 border-b px-2.5 pt-2"
             style={{ background: "color-mix(in srgb, var(--trading-panel-soft-bg) 84%, #111827)", borderBottomColor: "var(--trading-border-color)" }}
           >
             <button
@@ -1170,7 +1162,7 @@ const TradingPanel = ({
           </div>
 
           {/* ── Trade List ───────────────────────────────────────────── */}
-          <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-2.5 py-3 lg:px-5">
+          <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-2.5 py-3">
             {activeTab === "pending" ? (
               queuedPendingTrades.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#33394a] p-6 text-center">
