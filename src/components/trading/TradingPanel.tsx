@@ -196,14 +196,27 @@ const TimeSwitcher = ({
   value,
   onChange,
   onClose,
+  triggerRef,
 }: {
   value: number;
   onChange: (v: number) => void;
   onClose: () => void;
+  triggerRef: React.RefObject<HTMLDivElement | null>;
 }) => {
   const derived = deriveCustomDurationInput(value);
   const [customAmount, setCustomAmount] = useState(derived.amount);
   const [customUnit, setCustomUnit] = useState<CustomDurationUnit>(derived.unit);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, right: 0 });
+
+  useEffect(() => {
+    if (!triggerRef.current || !cardRef.current) return;
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    setPos({
+      top: triggerRect.top,
+      right: window.innerWidth - triggerRect.left + 8,
+    });
+  }, [triggerRef]);
 
   useEffect(() => {
     const nextDerived = deriveCustomDurationInput(value);
@@ -229,53 +242,56 @@ const TimeSwitcher = ({
     <>
       <div className="fixed inset-0 z-30" onClick={onClose} />
       <div
-        className="fixed right-[195px] top-[30%] z-[100] w-[130px] rounded-lg border border-white/10 p-1.5 shadow-lg"
-        style={{ background: "var(--trading-panel-bg, #1e2330)" }}
+        ref={cardRef}
+        style={{ position: "fixed", top: pos.top, right: pos.right, zIndex: 100 }}
+        className="w-[170px] rounded-lg border border-white/10 p-2 shadow-lg"
       >
-        <div className="grid grid-cols-2 gap-1">
-          {TIME_PRESETS.map((preset) => {
-            const isSelected = value === preset.val;
-            return (
-              <button
-                key={preset.val}
-                type="button"
-                onClick={() => { onChange(preset.val); onClose(); }}
-                className={`rounded-md px-1 py-1.5 text-center text-[11px] transition-colors ${
-                  isSelected
-                    ? "bg-white/15 text-white"
-                    : "text-white/70 hover:bg-white/8 hover:text-white"
-                }`}
-              >
-                {preset.label}
-              </button>
-            );
-          })}
-        </div>
-        <div className="mt-1.5 flex items-center gap-1">
-          <input
-            type="number"
-            min={1}
-            step={1}
-            value={customAmount}
-            onChange={(e) => setCustomAmount(e.target.value)}
-            className="hide-number-spin h-7 w-10 rounded border border-white/10 bg-transparent px-1.5 text-[11px] text-white outline-none"
-          />
-          <select
-            value={customUnit}
-            onChange={(e) => setCustomUnit(e.target.value as CustomDurationUnit)}
-            className="h-7 flex-1 rounded border border-white/10 bg-transparent px-1 text-[11px] text-white outline-none"
-          >
-            <option value="seconds">Sec</option>
-            <option value="minutes">Min</option>
-            <option value="hours">Hr</option>
-          </select>
-          <button
-            type="button"
-            onClick={applyCustomDuration}
-            className="h-7 rounded bg-white/15 px-2 text-[10px] text-white hover:bg-white/20"
-          >
-            Go
-          </button>
+        <div style={{ background: "var(--trading-panel-bg, #1e2330)" }} className="rounded-[6px]">
+          <div className="grid grid-cols-2 gap-1">
+            {TIME_PRESETS.map((preset) => {
+              const isSelected = value === preset.val;
+              return (
+                <button
+                  key={preset.val}
+                  type="button"
+                  onClick={() => { onChange(preset.val); onClose(); }}
+                  className={`rounded-md px-1 py-1.5 text-center text-[11px] transition-colors ${
+                    isSelected
+                      ? "bg-white/15 text-white"
+                      : "text-white/70 hover:bg-white/8 hover:text-white"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-1.5 flex items-center gap-1">
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={customAmount}
+              onChange={(e) => setCustomAmount(e.target.value)}
+              className="hide-number-spin h-7 w-12 rounded border border-white/10 bg-transparent px-1.5 text-[11px] text-white outline-none"
+            />
+            <select
+              value={customUnit}
+              onChange={(e) => setCustomUnit(e.target.value as CustomDurationUnit)}
+              className="h-7 flex-1 rounded border border-white/10 bg-transparent px-1 text-[11px] text-white outline-none"
+            >
+              <option value="seconds">Sec</option>
+              <option value="minutes">Min</option>
+              <option value="hours">Hr</option>
+            </select>
+            <button
+              type="button"
+              onClick={applyCustomDuration}
+              className="h-7 rounded bg-white/15 px-2 text-[10px] text-white hover:bg-white/20"
+            >
+              Go
+            </button>
+          </div>
         </div>
       </div>
     </>
@@ -289,13 +305,26 @@ const InvestmentSwitcher = ({
   onChange,
   onClose,
   max,
+  triggerRef,
 }: {
   value: number;
   onChange: (v: number) => void;
   onClose: () => void;
   max: number;
+  triggerRef: React.RefObject<HTMLDivElement | null>;
 }) => {
   const [customAmount, setCustomAmount] = useState(String(value));
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, right: 0 });
+
+  useEffect(() => {
+    if (!triggerRef.current || !cardRef.current) return;
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    setPos({
+      top: triggerRect.top,
+      right: window.innerWidth - triggerRect.left + 8,
+    });
+  }, [triggerRef]);
 
   const applyCustom = () => {
     const v = Math.max(1, Math.min(max, Math.round(Number(customAmount) || 0)));
@@ -307,44 +336,47 @@ const InvestmentSwitcher = ({
     <>
       <div className="fixed inset-0 z-30" onClick={onClose} />
       <div
-        className="fixed right-[195px] top-[38%] z-[100] w-[130px] rounded-lg border border-white/10 p-1.5 shadow-lg"
-        style={{ background: "var(--trading-panel-bg, #1e2330)" }}
+        ref={cardRef}
+        style={{ position: "fixed", top: pos.top, right: pos.right, zIndex: 100 }}
+        className="w-[170px] rounded-lg border border-white/10 p-2 shadow-lg"
       >
-        <div className="grid grid-cols-2 gap-1">
-          {INVESTMENT_PRESETS.map((amount) => {
-            const isSelected = value === amount;
-            return (
-              <button
-                key={amount}
-                type="button"
-                onClick={() => { onChange(amount); onClose(); }}
-                className={`rounded-md px-1 py-1.5 text-center text-[11px] transition-colors ${
-                  isSelected
-                    ? "bg-white/15 text-white"
-                    : "text-white/70 hover:bg-white/8 hover:text-white"
-                }`}
-              >
-                ${amount}
-              </button>
-            );
-          })}
-        </div>
-        <div className="mt-1.5 flex items-center gap-1">
-          <input
-            type="number"
-            min={1}
-            max={max}
-            value={customAmount}
-            onChange={(e) => setCustomAmount(e.target.value)}
-            className="hide-number-spin h-7 flex-1 rounded border border-white/10 bg-transparent px-1.5 text-[11px] text-white outline-none"
-          />
-          <button
-            type="button"
-            onClick={applyCustom}
-            className="h-7 rounded bg-white/15 px-2 text-[10px] text-white hover:bg-white/20"
-          >
-            Go
-          </button>
+        <div style={{ background: "var(--trading-panel-bg, #1e2330)" }} className="rounded-[6px]">
+          <div className="grid grid-cols-2 gap-1">
+            {INVESTMENT_PRESETS.map((amount) => {
+              const isSelected = value === amount;
+              return (
+                <button
+                  key={amount}
+                  type="button"
+                  onClick={() => { onChange(amount); onClose(); }}
+                  className={`rounded-md px-1 py-1.5 text-center text-[11px] transition-colors ${
+                    isSelected
+                      ? "bg-white/15 text-white"
+                      : "text-white/70 hover:bg-white/8 hover:text-white"
+                  }`}
+                >
+                  ${amount}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-1.5 flex items-center gap-1">
+            <input
+              type="number"
+              min={1}
+              max={max}
+              value={customAmount}
+              onChange={(e) => setCustomAmount(e.target.value)}
+              className="hide-number-spin h-7 flex-1 rounded border border-white/10 bg-transparent px-1.5 text-[11px] text-white outline-none"
+            />
+            <button
+              type="button"
+              onClick={applyCustom}
+              className="h-7 rounded bg-white/15 px-2 text-[10px] text-white hover:bg-white/20"
+            >
+              Go
+            </button>
+          </div>
         </div>
       </div>
     </>
@@ -664,6 +696,8 @@ const TradingPanel = ({
   const pendingTradeGroups = buildTradeGroups(queuedPendingTrades);
   const tradeListRef = useRef<HTMLDivElement | null>(null);
   const selectedAssetTradeRef = useRef<HTMLDivElement | null>(null);
+  const timeTriggerRef = useRef<HTMLDivElement | null>(null);
+  const investTriggerRef = useRef<HTMLDivElement | null>(null);
   const queuedPendingTimeoutRef = useRef<number | null>(null);
   const queuedPendingTradeIdRef = useRef<string | null>(null);
   const directionFocusTimeoutRef = useRef<number | null>(null);
@@ -1012,6 +1046,7 @@ const TradingPanel = ({
                   </button>
 
                 <div
+                  ref={timeTriggerRef}
                   onClick={() => setShowTimeSwitcher((value) => !value)}
                   className="relative hidden h-[42px] w-full cursor-pointer flex-col justify-center rounded-[5px] border border-[#3d4559] bg-[#282d3d] px-2 pb-1 pt-1 text-left lg:flex"
                 >
@@ -1075,6 +1110,7 @@ const TradingPanel = ({
                 </div>
 
                 <div
+                  ref={investTriggerRef}
                   onClick={() => setShowInvestmentSwitcher((v) => !v)}
                   className="relative hidden h-[42px] w-full cursor-pointer flex-col justify-center rounded-[5px] border border-[#3d4559] bg-[#282d3d] px-2 pb-1 pt-1 lg:flex"
                 >
@@ -1118,13 +1154,14 @@ const TradingPanel = ({
                     onChange={(v) => handleInvestmentInput(String(v))}
                     onClose={() => setShowInvestmentSwitcher(false)}
                     max={MAX_MANUAL_INVESTMENT}
+                    triggerRef={investTriggerRef}
                   />
                 )}
               </div>
             </div>
 
             {showTimeSwitcher && (
-              <TimeSwitcher value={expirySeconds} onChange={setExpirySeconds} onClose={() => setShowTimeSwitcher(false)} />
+              <TimeSwitcher value={expirySeconds} onChange={setExpirySeconds} onClose={() => setShowTimeSwitcher(false)} triggerRef={timeTriggerRef} />
             )}
           </div>
         </div>
