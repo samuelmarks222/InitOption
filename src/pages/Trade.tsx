@@ -1416,9 +1416,10 @@ const Trade = () => {
                 {showAssetSelector && <AssetSelectorModal onSelect={handleSelectAsset} onClose={() => setShowAssetSelector(false)} />}
               </div>
               ) : (
-              <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
+              <div className="relative flex flex-1 flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
                 {/* ── MOBILE: Chart + Trading Panel combined in a fixed flex layout ── */}
                 {/* Chart block — dynamically fills remaining vertical space */}
+                {showAssetSelector && <AssetSelectorModal onSelect={handleSelectAsset} onClose={() => setShowAssetSelector(false)} />}
                 <div id="tour-chart" className="flex-1 min-h-0 relative flex flex-col pb-[250px] sm:pb-[262px]">
                   <div className="hidden">
                     <span style={{ fontSize: "11px", color: "#7f8b99" }} />
