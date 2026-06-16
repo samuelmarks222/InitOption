@@ -412,7 +412,7 @@ const CompactTradeRowShell = ({
   details?: ReactNode;
 }) => {
   const rowBody = (
-    <div className="px-3 py-3 transition-colors hover:bg-white/[0.02]">
+    <div className="px-2 py-2.5 transition-colors hover:bg-white/[0.02]">
       <div className="flex items-start gap-2">
         <span className="mt-[2px] flex h-4 w-4 shrink-0 items-center justify-center text-[#b8c2d8]">
           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} />
@@ -422,7 +422,7 @@ const CompactTradeRowShell = ({
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <SymbolFlags symbol={symbol} size={20} />
-              <span className="truncate text-[11px] font-black uppercase tracking-[0.01em] text-white sm:text-[12px]">
+              <span className="text-[11px] font-black uppercase tracking-[0.01em] text-white sm:text-[12px]">
                 {symbol}
               </span>
             </div>
@@ -432,7 +432,7 @@ const CompactTradeRowShell = ({
             </span>
           </div>
 
-          <div className="mt-1.5 flex items-center justify-between gap-2 pl-[30px]">
+          <div className="mt-1.5 flex items-center justify-between gap-2">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-black" style={{ color: amountColor }}>
               <span
                 className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full"
@@ -463,7 +463,7 @@ const CompactTradeRowShell = ({
       )}
 
       {expanded && details ? (
-        <div className="px-3 pb-3 pl-9">
+        <div className="px-2 pb-2.5 pl-8">
           <div className="rounded-[12px] border border-white/6 bg-[#2d3342] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
             {details}
           </div>
@@ -1162,19 +1162,19 @@ const TradingPanel = ({
           </div>
 
           {/* ── Trade List ───────────────────────────────────────────── */}
-          <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-2.5 py-3">
+          <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-1.5 py-1.5">
             {activeTab === "pending" ? (
               queuedPendingTrades.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#33394a] p-6 text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
-                    <Clock className="h-7 w-7 text-gray-600" />
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#33394a] p-4 text-center">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
+                    <Clock className="h-5 w-5 text-gray-600" />
                   </div>
                   <p className="text-[11px] leading-relaxed text-gray-500">
                     No pending trades yet. Armed delayed trades will appear here before execution.
                   </p>
                 </div>
               ) : (
-                <div className="overflow-hidden bg-[#34394a] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                <div className="bg-[#34394a]">
                   {pendingTradeGroups.map((group, groupIndex) => (
                     <section key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/2" : ""}>
                       <TradeGroupHeader label={group.label} count={group.items.length} />
@@ -1195,14 +1195,14 @@ const TradingPanel = ({
               )
             ) : (
               tradesTabCount === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#33394a] p-6 text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
-                    <Briefcase className="h-7 w-7 text-gray-600" />
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#33394a] p-4 text-center">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
+                    <Briefcase className="h-5 w-5 text-gray-600" />
                   </div>
                   <p className="text-[11px] leading-relaxed text-gray-500">No trades yet. Ongoing and completed trades will appear here.</p>
                 </div>
               ) : (
-                <div className="overflow-hidden bg-[#34394a] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+                <div className="bg-[#34394a]">
                   {sortedActiveTrades.length > 0 ? (
                     <section>
                       <TradeGroupHeader label={t("tradingPanel.openTrades")} count={sortedActiveTrades.length} />
