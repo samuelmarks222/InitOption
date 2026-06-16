@@ -229,7 +229,7 @@ const TimeSwitcher = ({
     <>
       <div className="fixed inset-0 z-30" onClick={onClose} />
       <div
-        className="absolute bottom-full left-0 z-[80] mb-2 w-[130px] rounded-lg border border-white/10 p-1.5 shadow-lg lg:bottom-auto lg:top-full lg:mb-0 lg:mt-1 lg:left-0"
+        className="fixed right-[195px] top-[30%] z-[100] w-[130px] rounded-lg border border-white/10 p-1.5 shadow-lg"
         style={{ background: "var(--trading-panel-bg, #1e2330)" }}
       >
         <div className="grid grid-cols-2 gap-1">
@@ -307,7 +307,7 @@ const InvestmentSwitcher = ({
     <>
       <div className="fixed inset-0 z-30" onClick={onClose} />
       <div
-        className="absolute bottom-full left-0 z-[80] mb-2 w-[130px] rounded-lg border border-white/10 p-1.5 shadow-lg lg:bottom-auto lg:top-full lg:mb-0 lg:mt-1 lg:left-0"
+        className="fixed right-[195px] top-[38%] z-[100] w-[130px] rounded-lg border border-white/10 p-1.5 shadow-lg"
         style={{ background: "var(--trading-panel-bg, #1e2330)" }}
       >
         <div className="grid grid-cols-2 gap-1">
