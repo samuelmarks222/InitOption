@@ -152,7 +152,6 @@ const TIME_PRESETS = [
   { label: "15m",  val: 900    },
   { label: "30m",  val: 1800   },
   { label: "1h",   val: 3600   },
-  { label: "4h",   val: 14400  },
 ];
 
 const MAX_MANUAL_INVESTMENT = 3000;
