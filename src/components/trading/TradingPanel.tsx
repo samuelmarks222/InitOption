@@ -244,10 +244,16 @@ const TimeSwitcher = ({
       <div
         ref={cardRef}
         style={{ position: "fixed", top: pos.top, right: pos.right, zIndex: 100 }}
-        className="w-[170px] rounded-lg border border-white/10 p-2 shadow-lg"
+        className="w-[200px] overflow-hidden rounded-lg border border-white/10 shadow-lg"
       >
-        <div style={{ background: "var(--trading-panel-bg, #1e2330)" }} className="rounded-[6px]">
-          <div className="grid grid-cols-2 gap-1">
+        <div className="flex items-center justify-between bg-[#0fa053] px-3 py-1.5">
+          <span className="text-[11px] font-semibold text-white">Expiry Time</span>
+          <button type="button" onClick={onClose} className="flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30">
+            <X className="h-3 w-3" strokeWidth={2.5} />
+          </button>
+        </div>
+        <div style={{ background: "var(--trading-panel-bg, #1e2330)" }} className="p-2.5">
+          <div className="grid grid-cols-2 gap-1.5">
             {TIME_PRESETS.map((preset) => {
               const isSelected = value === preset.val;
               return (
@@ -255,10 +261,10 @@ const TimeSwitcher = ({
                   key={preset.val}
                   type="button"
                   onClick={() => { onChange(preset.val); onClose(); }}
-                  className={`rounded-md px-1 py-1.5 text-center text-[11px] transition-colors ${
+                  className={`rounded-md px-2 py-1.5 text-center text-[11px] transition-colors ${
                     isSelected
-                      ? "bg-white/15 text-white"
-                      : "text-white/70 hover:bg-white/8 hover:text-white"
+                      ? "bg-[#0fa053]/20 text-white"
+                      : "text-white/60 hover:bg-white/8 hover:text-white"
                   }`}
                 >
                   {preset.label}
@@ -266,31 +272,33 @@ const TimeSwitcher = ({
               );
             })}
           </div>
-          <div className="mt-1.5 flex items-center gap-1">
-            <input
-              type="number"
-              min={1}
-              step={1}
-              value={customAmount}
-              onChange={(e) => setCustomAmount(e.target.value)}
-              className="hide-number-spin h-7 w-12 rounded border border-white/10 bg-transparent px-1.5 text-[11px] text-white outline-none"
-            />
-            <select
-              value={customUnit}
-              onChange={(e) => setCustomUnit(e.target.value as CustomDurationUnit)}
-              className="h-7 flex-1 rounded border border-white/10 bg-transparent px-1 text-[11px] text-white outline-none"
-            >
-              <option value="seconds">Sec</option>
-              <option value="minutes">Min</option>
-              <option value="hours">Hr</option>
-            </select>
-            <button
-              type="button"
-              onClick={applyCustomDuration}
-              className="h-7 rounded bg-white/15 px-2 text-[10px] text-white hover:bg-white/20"
-            >
-              Go
-            </button>
+          <div className="mt-3 border-t border-white/8 pt-2.5">
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={customAmount}
+                onChange={(e) => setCustomAmount(e.target.value)}
+                className="hide-number-spin h-7 w-14 rounded border border-white/10 bg-transparent px-2 text-[11px] text-white outline-none"
+              />
+              <select
+                value={customUnit}
+                onChange={(e) => setCustomUnit(e.target.value as CustomDurationUnit)}
+                className="h-7 flex-1 rounded border border-white/10 bg-transparent px-1 text-[11px] text-white outline-none"
+              >
+                <option value="seconds">Sec</option>
+                <option value="minutes">Min</option>
+                <option value="hours">Hr</option>
+              </select>
+              <button
+                type="button"
+                onClick={applyCustomDuration}
+                className="h-7 rounded bg-[#0fa053] px-2.5 text-[10px] font-medium text-white hover:opacity-90"
+              >
+                Go
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -338,10 +346,16 @@ const InvestmentSwitcher = ({
       <div
         ref={cardRef}
         style={{ position: "fixed", top: pos.top, right: pos.right, zIndex: 100 }}
-        className="w-[170px] rounded-lg border border-white/10 p-2 shadow-lg"
+        className="w-[200px] overflow-hidden rounded-lg border border-white/10 shadow-lg"
       >
-        <div style={{ background: "var(--trading-panel-bg, #1e2330)" }} className="rounded-[6px]">
-          <div className="grid grid-cols-2 gap-1">
+        <div className="flex items-center justify-between bg-[#0fa053] px-3 py-1.5">
+          <span className="text-[11px] font-semibold text-white">Investment</span>
+          <button type="button" onClick={onClose} className="flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30">
+            <X className="h-3 w-3" strokeWidth={2.5} />
+          </button>
+        </div>
+        <div style={{ background: "var(--trading-panel-bg, #1e2330)" }} className="p-2.5">
+          <div className="grid grid-cols-2 gap-1.5">
             {INVESTMENT_PRESETS.map((amount) => {
               const isSelected = value === amount;
               return (
@@ -349,10 +363,10 @@ const InvestmentSwitcher = ({
                   key={amount}
                   type="button"
                   onClick={() => { onChange(amount); onClose(); }}
-                  className={`rounded-md px-1 py-1.5 text-center text-[11px] transition-colors ${
+                  className={`rounded-md px-2 py-1.5 text-center text-[11px] transition-colors ${
                     isSelected
-                      ? "bg-white/15 text-white"
-                      : "text-white/70 hover:bg-white/8 hover:text-white"
+                      ? "bg-[#0fa053]/20 text-white"
+                      : "text-white/60 hover:bg-white/8 hover:text-white"
                   }`}
                 >
                   ${amount}
@@ -360,22 +374,24 @@ const InvestmentSwitcher = ({
               );
             })}
           </div>
-          <div className="mt-1.5 flex items-center gap-1">
-            <input
-              type="number"
-              min={1}
-              max={max}
-              value={customAmount}
-              onChange={(e) => setCustomAmount(e.target.value)}
-              className="hide-number-spin h-7 flex-1 rounded border border-white/10 bg-transparent px-1.5 text-[11px] text-white outline-none"
-            />
-            <button
-              type="button"
-              onClick={applyCustom}
-              className="h-7 rounded bg-white/15 px-2 text-[10px] text-white hover:bg-white/20"
-            >
-              Go
-            </button>
+          <div className="mt-3 border-t border-white/8 pt-2.5">
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min={1}
+                max={max}
+                value={customAmount}
+                onChange={(e) => setCustomAmount(e.target.value)}
+                className="hide-number-spin h-7 flex-1 rounded border border-white/10 bg-transparent px-2 text-[11px] text-white outline-none"
+              />
+              <button
+                type="button"
+                onClick={applyCustom}
+                className="h-7 rounded bg-[#0fa053] px-2.5 text-[10px] font-medium text-white hover:opacity-90"
+              >
+                Go
+              </button>
+            </div>
           </div>
         </div>
       </div>
