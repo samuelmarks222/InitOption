@@ -17,8 +17,6 @@ describe("supported chart timeframes", () => {
       "30m",
       "1h",
       "2h",
-      "4h",
-      "1D",
     ]);
   });
 
@@ -30,7 +28,5 @@ describe("supported chart timeframes", () => {
     expect(TIMEFRAMES["30m"].seconds).toBe(1800);
     expect(TIMEFRAMES["1h"].seconds).toBe(3600);
     expect(TIMEFRAMES["2h"].seconds).toBe(7200);
-    expect(TIMEFRAMES["4h"].seconds).toBe(14400);
-    expect(TIMEFRAMES["1D"].seconds).toBe(86400);
   });
 });

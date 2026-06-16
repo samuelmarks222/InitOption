@@ -28,9 +28,7 @@ export const chartTimeframes = [
   { label: "1h", value: 3600, unit: "seconds" },
   { label: "2h", value: 7200, unit: "seconds" },
   { label: "3h", value: 10800, unit: "seconds" },
-  { label: "4h", value: 14400, unit: "seconds" },
   { label: "12h", value: 43200, unit: "seconds" },
-  { label: "1D", value: 86400, unit: "seconds" },
 ];
 
 // Expiry times from 1 minute to 1 day

@@ -34,8 +34,6 @@ export const SUPPORTED_CHART_TIMEFRAMES = [
   "30m",
   "1h",
   "2h",
-  "4h",
-  "1D",
 ] as const;
 
 export type SupportedChartTimeframe = (typeof SUPPORTED_CHART_TIMEFRAMES)[number];
@@ -51,8 +49,6 @@ export const TIMEFRAMES: Record<string, TimeframeConfig> = {
   "30m": { label: "30m", seconds: 1800, updateIntervalMs: 1000, historical: 240, bodyPips: 34, wickPips: 18 },
   "1h": { label: "1h", seconds: 3600, updateIntervalMs: 1500, historical: 220, bodyPips: 46, wickPips: 24 },
   "2h": { label: "2h", seconds: 7200, updateIntervalMs: 2000, historical: 210, bodyPips: 58, wickPips: 30 },
-  "4h": { label: "4h", seconds: 14400, updateIntervalMs: 3000, historical: 200, bodyPips: 74, wickPips: 38 },
-  "1D": { label: "1D", seconds: 86400, updateIntervalMs: 5000, historical: 180, bodyPips: 116, wickPips: 58 },
 };
 
 const HIGH_TIMEFRAME_DIRECT_SECONDS = 30 * 60;
