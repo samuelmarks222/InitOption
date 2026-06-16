@@ -413,9 +413,9 @@ const CompactTradeRowShell = ({
 }) => {
   const rowBody = (
     <div className="px-2 py-2.5 transition-colors hover:bg-white/[0.02]">
-      <div className="flex items-start gap-2">
-        <span className="mt-[2px] flex h-4 w-4 shrink-0 items-center justify-center text-[#b8c2d8]">
-          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`} />
+      <div className="flex items-start">
+        <span className="mt-[2px] flex h-3 w-3 shrink-0 items-center justify-center text-[#b8c2d8]">
+          <ChevronDown className={`h-2.5 w-2.5 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </span>
 
         <div className="min-w-0 flex-1">
