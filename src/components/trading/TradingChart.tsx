@@ -357,17 +357,17 @@ const BAR_SPACING_MAP: Record<string, number> = {
   "5s": 7.0,
   "15s": 7.0,
   "30s": 7.0,
-  "1m": 6.5,
-  "2m": 6.0,
-  "3m": 5.5,
-  "4m": 5.0,
-  "5m": 4.5,
-  "10m": 5.0,
-  "15m": 4.5,
-  "30m": 4.0,
-  "1h": 3.5,
-  "2h": 3.0,
-  "4h": 2.5,
+  "1m": 6.0,
+  "2m": 6.5,
+  "3m": 7.0,
+  "4m": 7.0,
+  "5m": 7.5,
+  "10m": 9.0,
+  "15m": 10.5,
+  "30m": 13.0,
+  "1h": 16.0,
+  "2h": 20.0,
+  "4h": 24.0,
   "1D": 7.0,
 };
 
@@ -381,12 +381,12 @@ const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
   "3m": 94,
   "4m": 96,
   "5m": 98,
-  "10m": 84,
-  "15m": 84,
-  "30m": 84,
-  "1h": 84,
-  "2h": 84,
-  "4h": 84,
+  "10m": 60,
+  "15m": 50,
+  "30m": 40,
+  "1h": 30,
+  "2h": 24,
+  "4h": 18,
   "1D": 84,
 };
 
@@ -429,22 +429,22 @@ const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, n
 };
 
 const MIN_BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 1.0,
-  "5s": 1.0,
-  "15s": 1.0,
-  "30s": 1.0,
-  "1m": 1.0,
-  "2m": 1.0,
-  "3m": 1.0,
-  "4m": 1.0,
-  "5m": 1.0,
-  "10m": 1.0,
-  "15m": 1.0,
-  "30m": 1.0,
-  "1h": 1.0,
-  "2h": 1.0,
-  "4h": 1.0,
-  "1D": 1.0,
+  "1s": 1.5,
+  "5s": 1.5,
+  "15s": 1.5,
+  "30s": 1.5,
+  "1m": 1.5,
+  "2m": 1.5,
+  "3m": 1.5,
+  "4m": 1.5,
+  "5m": 1.5,
+  "10m": 2.0,
+  "15m": 2.5,
+  "30m": 3.0,
+  "1h": 4.0,
+  "2h": 5.0,
+  "4h": 6.0,
+  "1D": 2.0,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
@@ -452,8 +452,12 @@ const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
 const getMainPriceScaleMargins = (timeframe: SupportedChartTimeframe) => {
   const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
 
-  if (seconds >= PROFESSIONAL_HIGH_TIMEFRAME_SECONDS) {
-    return { top: 0.05, bottom: 0.05 };
+  if (seconds >= 3600) {
+    return { top: 0.02, bottom: 0.02 };
+  }
+
+  if (seconds >= 600) {
+    return { top: 0.03, bottom: 0.03 };
   }
 
   return { top: 0.05, bottom: 0.05 };
@@ -474,7 +478,8 @@ const getZoomResponsivePriceScaleMargins = (
 
   const zoomRatio = visibleSpan / targetVisibleBars;
   const zoomPadding = Math.max(-0.03, Math.min(0.05, (zoomRatio - 1) * 0.03));
-  const maxMargin = 0.10;
+  const effectiveMaxMargin = seconds >= 3600 ? 0.06 : seconds >= 600 ? 0.08 : 0.10;
+  const maxMargin = effectiveMaxMargin;
   const topMargin = Math.max(baseMargins.top, Math.min(maxMargin, baseMargins.top + zoomPadding));
   const bottomMargin = Math.max(baseMargins.bottom, Math.min(maxMargin, baseMargins.bottom + zoomPadding));
 
