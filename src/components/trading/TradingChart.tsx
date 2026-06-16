@@ -352,23 +352,50 @@ const IndicatorControlStrip = ({
   );
 };
 
+const TARGET_VISIBLE_CANDLES: Record<string, number> = {
+  "1s": 200,
+  "5s": 200,
+  "15s": 200,
+  "30s": 200,
+  "1m": 200,
+  "2m": 190,
+  "3m": 180,
+  "4m": 175,
+  "5m": 170,
+  "10m": 140,
+  "15m": 120,
+  "30m": 100,
+  "1h": 80,
+  "2h": 60,
+  "4h": 50,
+  "1D": 200,
+};
+
+const getTargetVisibleCandleCount = (timeframe: SupportedChartTimeframe) =>
+  TARGET_VISIBLE_CANDLES[timeframe] ?? TARGET_VISIBLE_CANDLES["1m"];
+
+const getCandleSpacing = (containerWidth: number, timeframe: SupportedChartTimeframe) => {
+  const targetCount = getTargetVisibleCandleCount(timeframe);
+  return Math.max(2, Math.min(40, containerWidth / targetCount));
+};
+
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 7.0,
-  "5s": 7.0,
-  "15s": 7.0,
-  "30s": 7.0,
+  "1s": 6.0,
+  "5s": 6.0,
+  "15s": 6.0,
+  "30s": 6.0,
   "1m": 6.0,
-  "2m": 6.5,
-  "3m": 7.0,
-  "4m": 7.0,
-  "5m": 7.5,
-  "10m": 9.0,
-  "15m": 10.5,
-  "30m": 13.0,
-  "1h": 16.0,
+  "2m": 6.3,
+  "3m": 6.7,
+  "4m": 6.9,
+  "5m": 7.0,
+  "10m": 8.5,
+  "15m": 10.0,
+  "30m": 12.0,
+  "1h": 15.0,
   "2h": 20.0,
   "4h": 24.0,
-  "1D": 7.0,
+  "1D": 6.0,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
@@ -500,16 +527,10 @@ const getMainPriceScaleOptions = (
 });
 
 const getTargetVisibleBars = (containerWidth: number, timeframe: SupportedChartTimeframe) => {
-  const safeWidth = Math.max(320, containerWidth);
-  const targetSpacing = BAR_SPACING_MAP[timeframe] ?? BAR_SPACING_MAP["1m"];
-  const minimumBars = MIN_VISIBLE_BAR_COUNT_MAP[timeframe] ?? DEFAULT_VISIBLE_BARS;
+  const targetCount = getTargetVisibleCandleCount(timeframe);
   const maximumBars = MAX_VISIBLE_BAR_COUNT_MAP[timeframe];
-  const widthBasedBars = Math.floor(safeWidth / Math.max(1, targetSpacing));
-  const cappedBars =
-    typeof maximumBars === "number" ? Math.min(widthBasedBars, maximumBars) : widthBasedBars;
-  const responsiveMinimum = Math.max(12, Math.round(minimumBars * Math.min(1, safeWidth / 1440)));
-
-  return Math.max(responsiveMinimum, cappedBars);
+  const cappedCount = typeof maximumBars === "number" ? Math.min(targetCount, maximumBars) : targetCount;
+  return Math.max(12, cappedCount);
 };
 
 const getMaxReadableZoomBars = (
@@ -568,7 +589,11 @@ const getHistoryBackfillIncrement = (containerWidth: number, timeframe: Supporte
   return Math.max(trendContextBars, Math.round(historicalBaseline * 0.55));
 };
 
-const getChartRightOffset = (visibleBars: number) => Math.max(6, Math.min(24, Math.round(visibleBars * 0.06)));
+const getChartRightOffset = (visibleBars: number, timeframe?: SupportedChartTimeframe) => {
+  const seconds = timeframe ? TIMEFRAMES[timeframe]?.seconds ?? 60 : 60;
+  const offsetRatio = seconds >= 3600 ? 0.03 : seconds >= 600 ? 0.04 : 0.06;
+  return Math.max(3, Math.min(16, Math.round(visibleBars * offsetRatio)));
+};
 
 const getDefaultVisibleBars = (
   containerWidth: number,
@@ -584,21 +609,8 @@ const getInitialVisibleBars = (
   timeframe: SupportedChartTimeframe,
   availableBars = Number.POSITIVE_INFINITY,
 ) => {
-  const defaultVisibleBars = getDefaultVisibleBars(containerWidth, timeframe, availableBars);
-  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
-  const pocketStyleContextMultiplier =
-    seconds < 60
-      ? 1.02
-      : seconds < 5 * 60
-        ? 1.04
-        : seconds < 30 * 60
-          ? 1.14
-          : seconds < 4 * 60 * 60
-            ? 1.18
-            : 1.22;
-  const pocketStyleContextBars = Math.round(defaultVisibleBars * pocketStyleContextMultiplier);
-
-  return Math.max(defaultVisibleBars, Math.min(availableBars, pocketStyleContextBars));
+  const targetCount = getTargetVisibleCandleCount(timeframe);
+  return Math.max(1, Math.min(availableBars, targetCount));
 };
 
 const getUnixTime = (value: unknown) => {
@@ -2571,7 +2583,7 @@ const TradingChart = ({
       const containerWidth = mainRef.current?.clientWidth ?? 960;
       const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, dataPointCount);
       const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, dataPointCount);
-      const rightOffset = getChartRightOffset(trendContextBars);
+      const rightOffset = getChartRightOffset(trendContextBars, selectedTf);
       const visibleSpan = initialVisibleBars + rightOffset;
       const targetTo = dataPointCount + rightOffset;
 
@@ -3133,9 +3145,9 @@ const TradingChart = ({
     const containerWidth = mainRef.current?.clientWidth ?? 960;
     const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, history.length);
     const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, history.length);
-    const rightOffset = getChartRightOffset(trendContextBars);
+    const rightOffset = getChartRightOffset(trendContextBars, selectedTf);
     chartRef.current.timeScale().applyOptions({
-      barSpacing: getBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale),
+      barSpacing: getCandleSpacing(containerWidth, selectedTf),
       minBarSpacing: getMinBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale),
       rightOffset,
       timeVisible: true,
@@ -3281,7 +3293,7 @@ const TradingChart = ({
         selectedTf,
         Math.max(1, MAX_CANDLES_IN_MEMORY),
       );
-      const maxReadableRightOffset = getChartRightOffset(maxReadableBars);
+      const maxReadableRightOffset = getChartRightOffset(maxReadableBars, selectedTf);
       const maxReadableSpan = maxReadableBars + maxReadableRightOffset;
       const visibleSpan = range.to - range.from;
 
@@ -3375,7 +3387,7 @@ const TradingChart = ({
       selectedTf,
       Math.max(1, historyRef.current.length),
     );
-    const rightOffset = getChartRightOffset(trendContextBars);
+    const rightOffset = getChartRightOffset(trendContextBars, selectedTf);
     const timeScale = chart.timeScale();
     const dataPointCount = mainSeriesRef.current?.data()?.length ?? historyRef.current.length;
     const currentRange = timeScale.getVisibleLogicalRange();
