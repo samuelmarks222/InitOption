@@ -249,7 +249,7 @@ const TradingHeader = ({
             highlightDepositButton ? "ring-2 ring-[#8ff6bb] ring-offset-2 ring-offset-[#1c1f2d] animate-pulse" : ""
           }`}
           style={{
-            background: "var(--trading-success-color)",
+            background: "var(--trading-up-color, var(--trading-success-color))",
             color: "var(--trading-success-contrast-color)",
             boxShadow: highlightDepositButton ? "var(--trading-success-focus-shadow)" : "var(--trading-success-shadow)",
           }}
@@ -461,7 +461,7 @@ const TradingHeader = ({
               highlightDepositButton ? "ring-2 ring-[#8ff6bb] ring-offset-2 ring-offset-[#1c1f2d] animate-pulse" : ""
             }`}
             style={{
-              background: "var(--trading-success-color)",
+              background: "var(--trading-up-color, var(--trading-success-color))",
               color: "var(--trading-success-contrast-color)",
               boxShadow: highlightDepositButton ? "var(--trading-success-focus-shadow)" : "var(--trading-success-shadow)",
             }}
