@@ -353,20 +353,20 @@ const IndicatorControlStrip = ({
 };
 
 const BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 7.0,
-  "5s": 7.0,
-  "15s": 7.0,
-  "30s": 7.0,
-  "1m": 6.0,
-  "2m": 6.5,
-  "3m": 7.0,
-  "4m": 7.0,
-  "5m": 7.5,
-  "10m": 9.0,
-  "15m": 10.5,
-  "30m": 13.0,
-  "1h": 16.0,
-  "2h": 20.0,
+  "1s": 9.0,
+  "5s": 9.0,
+  "15s": 9.0,
+  "30s": 9.0,
+  "1m": 8.0,
+  "2m": 8.5,
+  "3m": 9.0,
+  "4m": 9.0,
+  "5m": 9.5,
+  "10m": 11.5,
+  "15m": 13.0,
+  "30m": 16.0,
+  "1h": 20.0,
+  "2h": 25.0,
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
@@ -439,19 +439,10 @@ const MIN_BAR_SPACING_MAP: Record<string, number> = {
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
 
-const getMainPriceScaleMargins = (timeframe: SupportedChartTimeframe) => {
-  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
-
-  if (seconds >= 3600) {
-    return { top: 0.02, bottom: 0.02 };
-  }
-
-  if (seconds >= 600) {
-    return { top: 0.03, bottom: 0.03 };
-  }
-
-  return { top: 0.05, bottom: 0.05 };
-};
+const getMainPriceScaleMargins = (_timeframe: SupportedChartTimeframe) => ({
+  top: 0.12,
+  bottom: 0.12,
+});
 
 const getZoomResponsivePriceScaleMargins = (
   timeframe: SupportedChartTimeframe,
@@ -460,20 +451,22 @@ const getZoomResponsivePriceScaleMargins = (
 ) => {
   const baseMargins = getMainPriceScaleMargins(timeframe);
   const targetVisibleBars = getTargetVisibleBars(containerWidth, timeframe);
-  const seconds = TIMEFRAMES[timeframe]?.seconds ?? TIMEFRAMES["1m"].seconds;
 
   if (!Number.isFinite(visibleSpan) || !visibleSpan || visibleSpan <= 0 || targetVisibleBars <= 0) {
     return baseMargins;
   }
 
   const zoomRatio = visibleSpan / targetVisibleBars;
-  const zoomPadding = Math.max(-0.03, Math.min(0.05, (zoomRatio - 1) * 0.03));
-  const effectiveMaxMargin = seconds >= 3600 ? 0.06 : seconds >= 600 ? 0.08 : 0.10;
-  const maxMargin = effectiveMaxMargin;
-  const topMargin = Math.max(baseMargins.top, Math.min(maxMargin, baseMargins.top + zoomPadding));
-  const bottomMargin = Math.max(baseMargins.bottom, Math.min(maxMargin, baseMargins.bottom + zoomPadding));
 
-  return { top: topMargin, bottom: bottomMargin };
+  if (zoomRatio > 1.5) {
+    const extraPadding = Math.min(0.05, (zoomRatio - 1.5) * 0.02);
+    return {
+      top: baseMargins.top + extraPadding,
+      bottom: baseMargins.bottom + extraPadding,
+    };
+  }
+
+  return baseMargins;
 };
 
 const getMainPriceScaleOptions = (
