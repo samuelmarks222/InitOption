@@ -1063,7 +1063,7 @@ const getAreaDisplaySettings = (styles: ChartStylePreferences) => {
     lineWidth,
     crosshairMarkerBorderColor: styles.areaLineColor,
     crosshairMarkerBackgroundColor: "#182131",
-    crosshairMarkerRadius: 2,
+    crosshairMarkerRadius: 1,
     priceLineVisible: styles.priceLineVisible,
     lastValueVisible: true,
     autoScale: true,

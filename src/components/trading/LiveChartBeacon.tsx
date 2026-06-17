@@ -51,17 +51,17 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
 
     const pulse = document.createElement("div");
     pulse.className = "absolute rounded-full";
-    pulse.style.width = "24px";
-    pulse.style.height = "24px";
+    pulse.style.width = "12px";
+    pulse.style.height = "12px";
     pulse.style.transform = "translate(-50%, -50%) scale(1)";
     marker.appendChild(pulse);
 
     const dot = document.createElement("div");
     dot.className = "absolute rounded-full";
-    dot.style.width = "10px";
-    dot.style.height = "10px";
+    dot.style.width = "5px";
+    dot.style.height = "5px";
     dot.style.transform = "translate(-50%, -50%)";
-    dot.style.border = "2px solid rgba(198,232,255,0.92)";
+    dot.style.border = "1px solid rgba(198,232,255,0.92)";
     marker.appendChild(dot);
 
     el.appendChild(marker);
@@ -118,10 +118,10 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
         y === null ||
         Number.isNaN(x) ||
         Number.isNaN(y) ||
-        x < -18 ||
-        x > host.clientWidth + 18 ||
-        y < -18 ||
-        y > host.clientHeight + 18
+        x < -12 ||
+        x > host.clientWidth + 12 ||
+        y < -12 ||
+        y > host.clientHeight + 12
       ) {
         marker.style.opacity = "0";
         reqId = requestAnimationFrame(loop);
@@ -129,8 +129,8 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
       }
 
       const pulseMix = (Math.sin(performance.now() / 210) + 1) / 2;
-      const pulseScale = 0.8 + pulseMix * 1.45;
-      const clampedY = Math.min(Math.max(12, y), Math.max(12, host.clientHeight - 12));
+      const pulseScale = 0.8 + pulseMix * 1.0;
+      const clampedY = Math.min(Math.max(8, y), Math.max(8, host.clientHeight - 8));
 
       marker.style.opacity = "1";
       marker.style.left = `${x}px`;
@@ -140,11 +140,11 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
       pulse.style.transform = `translate(-50%, -50%) scale(${pulseScale})`;
       pulse.style.background = `rgba(${BEACON_RGB},0.34)`;
       pulse.style.border = `1px solid rgba(${BEACON_RGB},0.68)`;
-      pulse.style.boxShadow = `0 0 ${14 + pulseMix * 20}px rgba(${BEACON_RGB},0.72)`;
+      pulse.style.boxShadow = `0 0 ${8 + pulseMix * 12}px rgba(${BEACON_RGB},0.72)`;
 
       dot.style.background = BEACON_COLOR;
       dot.style.opacity = `${0.82 + pulseMix * 0.18}`;
-      dot.style.boxShadow = `0 0 0 ${3 + pulseMix * 3}px rgba(${BEACON_RGB},0.2), 0 0 ${12 + pulseMix * 14}px rgba(${BEACON_RGB},0.9)`;
+      dot.style.boxShadow = `0 0 0 ${1.5 + pulseMix * 2}px rgba(${BEACON_RGB},0.2), 0 0 ${6 + pulseMix * 8}px rgba(${BEACON_RGB},0.9)`;
 
       reqId = requestAnimationFrame(loop);
     };
