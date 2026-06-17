@@ -140,11 +140,11 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
       pulse.style.transform = `translate(-50%, -50%) scale(${pulseScale})`;
       pulse.style.background = `rgba(${BEACON_RGB},0.34)`;
       pulse.style.border = `1px solid rgba(${BEACON_RGB},0.68)`;
-      pulse.style.boxShadow = `0 0 ${8 + pulseMix * 12}px rgba(${BEACON_RGB},0.72)`;
+      pulse.style.boxShadow = `0 0 ${14 + pulseMix * 20}px rgba(${BEACON_RGB},0.72)`;
 
       dot.style.background = BEACON_COLOR;
       dot.style.opacity = `${0.82 + pulseMix * 0.18}`;
-      dot.style.boxShadow = `0 0 0 ${1.5 + pulseMix * 2}px rgba(${BEACON_RGB},0.2), 0 0 ${6 + pulseMix * 8}px rgba(${BEACON_RGB},0.9)`;
+      dot.style.boxShadow = `0 0 0 ${3 + pulseMix * 3}px rgba(${BEACON_RGB},0.2), 0 0 ${12 + pulseMix * 14}px rgba(${BEACON_RGB},0.9)`;
 
       reqId = requestAnimationFrame(loop);
     };
