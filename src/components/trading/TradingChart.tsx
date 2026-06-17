@@ -1063,7 +1063,7 @@ const getAreaDisplaySettings = (styles: ChartStylePreferences) => {
     lineWidth,
     crosshairMarkerBorderColor: styles.areaLineColor,
     crosshairMarkerBackgroundColor: "#182131",
-    crosshairMarkerRadius: 3,
+    crosshairMarkerRadius: 2,
     priceLineVisible: styles.priceLineVisible,
     lastValueVisible: true,
     autoScale: true,
@@ -3992,8 +3992,8 @@ const TradingChart = ({
 
         {chartType === "line" && (
           <div className="pointer-events-none absolute bottom-[18px] right-0 z-[55]">
-            <div className="h-1.5 w-1.5 animate-ping rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.4)]" />
-            <div className="absolute inset-0 h-1.5 w-1.5 rounded-full bg-white" />
+            <div className="h-1 w-1 animate-ping rounded-full bg-white shadow-[0_0_2px_rgba(255,255,255,0.3)]" />
+            <div className="absolute inset-0 h-1 w-1 rounded-full bg-white" />
           </div>
         )}
       </div>
