@@ -44,7 +44,6 @@ const Navbar = () => {
       <nav className="io-navbar" aria-label="Primary navigation">
         <div className="io-header-inner io-navbar-inner">
           <SiteLogo
-            showText
             logoOverride={landingLogoUrl}
             className="gap-2"
             imageClassName="h-10 max-w-[170px] sm:h-12 sm:max-w-[220px]"
