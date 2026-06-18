@@ -46,7 +46,7 @@ const LINE_HIT_STROKE_WIDTH = 28;
 const ANCHOR_RADIUS = 6;
 const ANCHOR_HIT_RADIUS = 14;
 
-const BOX_TOOL_IDS = new Set(["rect", "disjoint", "flat", "priceRange", "dateRange", "datePriceRange", "gannBox", "cyclic"]);
+const BOX_TOOL_IDS = new Set(["rect", "disjoint", "flat", "priceRange", "dateRange", "datePriceRange", "gannBox", "cyclic", "ellipse"]);
 
 const isBoxTool = (tool: string) => BOX_TOOL_IDS.has(tool);
 
@@ -1276,8 +1276,14 @@ export const DrawingOverlay = ({
       const bh = Math.max(0, cornerEntries[3].point.y - cornerEntries[0].point.y);
       return (
         <g key={d.id}>
-          <rect x={bx} y={by} width={bw} height={bh} fill={fill} fillOpacity={shapeFillOpacity} stroke={color} strokeWidth={lw} strokeDasharray={dash}
-            style={{ pointerEvents: "visiblePainted", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
+          {d.tool === "ellipse" ? (
+            <ellipse cx={bx + bw / 2} cy={by + bh / 2} rx={bw / 2} ry={bh / 2}
+              fill={fill} fillOpacity={shapeFillOpacity} stroke={color} strokeWidth={lw} strokeDasharray={dash}
+              style={{ pointerEvents: "visiblePainted", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
+          ) : (
+            <rect x={bx} y={by} width={bw} height={bh} fill={fill} fillOpacity={shapeFillOpacity} stroke={color} strokeWidth={lw} strokeDasharray={dash}
+              style={{ pointerEvents: "visiblePainted", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
+          )}
           {d.tool === "gannBox" && <>
             <line x1={bx} y1={by} x2={bx + bw} y2={by + bh} stroke={color} strokeWidth={1} strokeOpacity={0.4} style={{ pointerEvents: "none" }} />
             <line x1={bx + bw} y1={by} x2={bx} y2={by + bh} stroke={color} strokeWidth={1} strokeOpacity={0.4} style={{ pointerEvents: "none" }} />
@@ -1321,7 +1327,7 @@ export const DrawingOverlay = ({
     }
 
     // ── Fibonacci ──────────────────────────────────────────────────────────
-    if (["fibo", "fibfan", "fibtz", "fiboFan"].includes(d.tool)) {
+    if (["fibo", "fibfan", "fibtz", "fiboFan", "fiboArc"].includes(d.tool)) {
       const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1, 1.618];
       const diffY = p2.y - p1.y;
       const diffX = p2.x - p1.x;
@@ -1367,6 +1373,35 @@ export const DrawingOverlay = ({
               const endX = p1.x + 99999 * Math.sign(diffX);
               const endY = p1.y + slope * 99999 * Math.sign(diffX);
               return <line key={lvl} x1={p1.x} y1={p1.y} x2={endX} y2={endY} stroke={color} strokeWidth={1} strokeOpacity={0.6} style={{ pointerEvents: "none" }} />;
+            })}
+            {anchors}
+          </g>
+        );
+      }
+
+      if (d.tool === "fiboArc") {
+        const arcLevels = [0.382, 0.5, 0.618];
+        const cx = (p1.x + p2.x) / 2;
+        const cy = p2.y;
+        const baseRx = Math.abs(dx) / 2;
+        const baseRy = Math.abs(dy);
+        return (
+          <g key={d.id}>
+            <rect
+              x={Math.min(p1.x, p2.x)}
+              y={Math.min(p1.y, p2.y)}
+              width={Math.abs(diffX)}
+              height={Math.abs(diffY)}
+              fill="transparent"
+              style={{ pointerEvents: "visibleFill", cursor: "grab" }}
+              onPointerDown={e => shapeDown(e)}
+            />
+            <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={color} strokeWidth={1} strokeDasharray="4 4" strokeOpacity={0.3} style={{ pointerEvents: "none" }} />
+            {arcLevels.map((lvl, i) => {
+              const rx = baseRx * lvl * 1.6;
+              const ry = baseRy * lvl;
+              const arcD = `M ${cx - rx} ${cy} A ${rx} ${ry} 0 0 1 ${cx + rx} ${cy}`;
+              return <path key={i} d={arcD} fill="none" stroke={color} strokeWidth={lvl === 0.5 ? lw : 1.4} strokeOpacity={lvl === 0.5 ? 0.9 : 0.5} />;
             })}
             {anchors}
           </g>
@@ -1513,6 +1548,89 @@ export const DrawingOverlay = ({
           <ellipse cx={cx2} cy={cy2} rx={rx} ry={ry} fill={fill} fillOpacity={shapeFillOpacity}
             stroke={color} strokeWidth={lw} strokeDasharray={dash}
             style={{ pointerEvents: "visiblePainted", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
+          {anchors}
+        </g>
+      );
+    }
+
+    // ── Bollinger Bands ────────────────────────────────────────────────────
+    if (d.tool === "bollinger") {
+      const midY = (p1.y + p2.y) / 2;
+      const bandOffset = Math.abs(dy) * 0.3;
+      const steps = 12;
+      const upperPts: string[] = [];
+      const lowerPts: string[] = [];
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const x = p1.x + dx * t;
+        const baseY = p1.y + dy * t;
+        const wave = Math.sin(t * Math.PI * 2) * bandOffset * 0.4;
+        upperPts.push(`${x},${baseY - bandOffset - wave}`);
+        lowerPts.push(`${x},${baseY + bandOffset + wave}`);
+      }
+      const upperD = `M ${upperPts.join(" L ")}`;
+      const lowerD = `M ${lowerPts.join(" L ")}`;
+      const fillPoly = `${upperPts.join(" ")} ${[...lowerPts].reverse().join(" ")}`;
+      return (
+        <g key={d.id}>
+          <polygon points={fillPoly} fill={fill} fillOpacity={shapeFillOpacity} style={{ pointerEvents: "none" }} />
+          <path d={upperD} fill="none" stroke={color} strokeWidth={1.4} strokeOpacity={0.6} style={{ pointerEvents: "none" }} />
+          <path d={lowerD} fill="none" stroke={color} strokeWidth={1.4} strokeOpacity={0.6} style={{ pointerEvents: "none" }} />
+          <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={color} strokeWidth={lw} style={{ pointerEvents: "none" }} />
+          <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="transparent" strokeWidth={LINE_HIT_STROKE_WIDTH}
+            style={{ pointerEvents: "stroke", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
+          {anchors}
+        </g>
+      );
+    }
+
+    // ── Volatility Stop ────────────────────────────────────────────────────
+    if (d.tool === "volStop") {
+      const steps = 4;
+      const stepX = dx / steps;
+      const stepY = dy / steps;
+      const pts: SvgPoint[] = [{ x: p1.x, y: p1.y }];
+      for (let i = 1; i <= steps; i++) {
+        pts.push({ x: p1.x + stepX * i, y: p1.y + stepY * i });
+      }
+      const lineD = pts.map((pt, i) => `${i === 0 ? "M" : "L"} ${pt.x} ${pt.y}`).join(" ");
+      return (
+        <g key={d.id}>
+          <path d={lineD} fill="none" stroke={color} strokeWidth={lw} strokeLinejoin="round" style={{ pointerEvents: "none" }} />
+          <path d={lineD} fill="none" stroke="transparent" strokeWidth={LINE_HIT_STROKE_WIDTH}
+            strokeLinejoin="round" style={{ pointerEvents: "stroke", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
+          {pts.map((pt, i) => (
+            <circle key={i} cx={pt.x} cy={pt.y} r={3} fill={color} stroke="#ffffff" strokeWidth={1} style={{ pointerEvents: "none" }} />
+          ))}
+          {anchors}
+        </g>
+      );
+    }
+
+    // ── Volume Profile ─────────────────────────────────────────────────────
+    if (d.tool === "volumeProfile") {
+      const numBars = 6;
+      const barH = Math.abs(dy) / (numBars + 1);
+      const minX = Math.min(p1.x, p2.x);
+      const maxX = Math.max(p1.x, p2.x);
+      const topY = Math.min(p1.y, p2.y);
+      const bottomY = Math.max(p1.y, p2.y);
+      const rectHit = { x: minX, y: topY, width: maxX - minX, height: bottomY - topY };
+      return (
+        <g key={d.id}>
+          <rect x={rectHit.x} y={rectHit.y} width={rectHit.width} height={rectHit.height}
+            fill="transparent" style={{ pointerEvents: "visibleFill", cursor: "grab" }} onPointerDown={e => shapeDown(e)} />
+          <rect x={rectHit.x} y={rectHit.y} width={rectHit.width} height={rectHit.height}
+            fill={fill} fillOpacity={shapeFillOpacity * 0.3} rx={2} style={{ pointerEvents: "none" }} />
+          {Array.from({ length: numBars }, (_, i) => {
+            const y = topY + barH * (i + 0.5);
+            const volumeWidth = (maxX - minX) * (0.4 + Math.random() * 0.4);
+            const bx = maxX - volumeWidth;
+            return (
+              <rect key={i} x={bx} y={y - barH * 0.3} width={volumeWidth} height={barH * 0.6}
+                fill={color} fillOpacity={0.5 + i * 0.08} rx={1.5} style={{ pointerEvents: "none" }} />
+            );
+          })}
           {anchors}
         </g>
       );
