@@ -1,7 +1,7 @@
 export interface MasterAsset {
   symbol: string;
   name: string;
-  category: "OTC" | "CRYPTO" | "STOCKS" | "COMMODITIES";
+  category: "OTC" | "CRYPTO" | "STOCKS" | "COMMODITIES" | "INDICES";
   base_country?: string;  // ISO Alpha-2 for flags (e.g. "US", "EU", "GB")
   quote_country?: string; // ISO Alpha-2 for flags
   stock_logo?: string;    // Clearbit or other URL
@@ -151,4 +151,23 @@ export const ASSETS_LIBRARY: MasterAsset[] = [
   { symbol: "COPPER",     name: "Copper",           category: "COMMODITIES", commodity_icon: "copper" },
   { symbol: "PALLADIUM",  name: "Palladium",        category: "COMMODITIES", commodity_icon: "silver" },
   { symbol: "PLATINUM",   name: "Platinum",         category: "COMMODITIES", commodity_icon: "silver" },
+
+  // ─────────────────────────────────────────────────────────────────
+  // INDICES
+  // ─────────────────────────────────────────────────────────────────
+  { symbol: "SPX",    name: "S&P 500",              category: "INDICES", base_country: "US", quote_country: "US" },
+  { symbol: "DJI",    name: "Dow Jones",             category: "INDICES", base_country: "US", quote_country: "US" },
+  { symbol: "NDX",    name: "Nasdaq 100",            category: "INDICES", base_country: "US", quote_country: "US" },
+  { symbol: "UKX",    name: "FTSE 100",              category: "INDICES", base_country: "GB", quote_country: "GB" },
+  { symbol: "DAX",    name: "DAX 40",                category: "INDICES", base_country: "DE", quote_country: "DE" },
+  { symbol: "CAC",    name: "CAC 40",                category: "INDICES", base_country: "FR", quote_country: "FR" },
+  { symbol: "N225",   name: "Nikkei 225",            category: "INDICES", base_country: "JP", quote_country: "JP" },
+  { symbol: "HSI",    name: "Hang Seng",             category: "INDICES", base_country: "HK", quote_country: "HK" },
+  { symbol: "ASX",    name: "ASX 200",               category: "INDICES", base_country: "AU", quote_country: "AU" },
+  { symbol: "SSEC",   name: "Shanghai Composite",    category: "INDICES", base_country: "CN", quote_country: "CN" },
+  { symbol: "SX5E",   name: "Euro Stoxx 50",         category: "INDICES", base_country: "EU", quote_country: "EU" },
+  { symbol: "IBEX",   name: "IBEX 35",               category: "INDICES", base_country: "ES", quote_country: "ES" },
+  { symbol: "SMI",    name: "SMI",                   category: "INDICES", base_country: "CH", quote_country: "CH" },
+  { symbol: "NIFTY",  name: "Nifty 50",              category: "INDICES", base_country: "IN", quote_country: "IN" },
+  { symbol: "BVSP",   name: "Bovespa",               category: "INDICES", base_country: "BR", quote_country: "BR" },
 ];

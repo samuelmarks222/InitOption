@@ -88,7 +88,7 @@ type TradeTabAsset = {
   commodityIcon?: CommodityIcon;
   maxProfit: number;
   change5min: string;
-  category: "Options" | "Stocks";
+  category: "Options" | "Stocks" | "Index";
   isTradersChoice: boolean;
   price: number;
   change: number;
@@ -137,7 +137,7 @@ const buildTradeTabAsset = (assetRow: TradeAssetConfigRow): TradeTabAsset => {
     maxProfit: profit1m,
     available,
     change5min: "0.00%",
-    category: category === "STOCKS" ? "Stocks" : "Options",
+    category: category === "STOCKS" ? "Stocks" : category === "INDICES" ? "Index" : "Options",
     isTradersChoice: false,
     price: basePrice,
     change: 0,

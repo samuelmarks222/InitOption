@@ -16,7 +16,7 @@ interface AssetConfig {
   payout_pct: number;
 }
 
-type TabType = "ALL" | "CURRENCIES" | "CRYPTO" | "STOCKS" | "COMMODITIES";
+type TabType = "ALL" | "CURRENCIES" | "CRYPTO" | "STOCKS" | "COMMODITIES" | "INDICES";
 
 const AssetManagement = () => {
   const [dbAssets, setDbAssets] = useState<AssetConfig[]>([]);
@@ -153,7 +153,7 @@ const AssetManagement = () => {
         <div className="p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-b" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
           
           <div className="flex space-x-1 p-1 rounded-lg w-full md:w-auto" style={{ background: "var(--admin-canvas)" }}>
-            {(["ALL", "CURRENCIES", "CRYPTO", "STOCKS", "COMMODITIES"] as TabType[]).map(tab => (
+            {(["ALL", "CURRENCIES", "CRYPTO", "STOCKS", "COMMODITIES", "INDICES"] as TabType[]).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}

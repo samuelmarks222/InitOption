@@ -1,7 +1,7 @@
 import { ASSETS_LIBRARY, type MasterAsset } from "@/data/assetsLibrary";
 
 export type AssetCategory = MasterAsset["category"];
-export type RuntimeAssetType = "Forex" | "Crypto" | "Stock" | "Commodities";
+export type RuntimeAssetType = "Forex" | "Crypto" | "Stock" | "Commodities" | "Index";
 export type SelectorAssetCategory = "CURRENCIES" | "CRYPTO" | "COMMODITIES" | "STOCKS" | "INDICES";
 export type CommodityIcon = NonNullable<MasterAsset["commodity_icon"]>;
 
@@ -50,6 +50,21 @@ const ASSET_BASE_PRICES: Record<string, number> = {
   COPPER: 4.2,
   PALLADIUM: 980,
   PLATINUM: 950,
+  SPX: 5342,
+  DJI: 38768,
+  NDX: 19682,
+  UKX: 8214,
+  DAX: 18456,
+  CAC: 8021,
+  N225: 39842,
+  HSI: 17986,
+  ASX: 7743,
+  SSEC: 3156,
+  SX5E: 4962,
+  IBEX: 11234,
+  SMI: 12263,
+  NIFTY: 24786,
+  BVSP: 128593,
 };
 
 const CRYPTO_LOGO_OVERRIDES: Record<string, string> = {
@@ -208,6 +223,10 @@ export const getDeterministicFallbackBasePrice = (symbol?: string | null, catego
     return 10 + seed * 2400;
   }
 
+  if (normalizedCategory === "INDICES") {
+    return 5000 + seed * 130000;
+  }
+
   return 1.05 + seed * 0.3;
 };
 
@@ -215,6 +234,7 @@ export const assetCategoryToRuntimeType = (category: AssetCategory): RuntimeAsse
   if (category === "CRYPTO") return "Crypto";
   if (category === "STOCKS") return "Stock";
   if (category === "COMMODITIES") return "Commodities";
+  if (category === "INDICES") return "Index";
   return "Forex";
 };
 
@@ -222,6 +242,7 @@ export const assetCategoryToSelectorTab = (category: AssetCategory): SelectorAss
   if (category === "CRYPTO") return "CRYPTO";
   if (category === "STOCKS") return "STOCKS";
   if (category === "COMMODITIES") return "COMMODITIES";
+  if (category === "INDICES") return "INDICES";
   return "CURRENCIES";
 };
 
@@ -313,6 +334,7 @@ export const getAssetDefaultPayout = (category: AssetCategory) => {
   if (category === "CRYPTO") return 82;
   if (category === "STOCKS") return 78;
   if (category === "COMMODITIES") return 80;
+  if (category === "INDICES") return 78;
   return 85;
 };
 

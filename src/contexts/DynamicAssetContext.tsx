@@ -18,7 +18,7 @@ import { getDeterministicChange24h, getDeterministicPriceAt } from "@/lib/determ
 
 export interface DynamicAsset {
   symbol: string;
-  type: "Forex" | "Crypto" | "Stock" | "Commodities";
+  type: "Forex" | "Crypto" | "Stock" | "Commodities" | "Index";
   name: string;
   price: number;
   change24h: number;          // As a percentage number (e.g. 4.2 for 4.2%)
@@ -50,6 +50,7 @@ const getVolatilityForType = (type: DynamicAsset["type"]) => {
   if (type === "Crypto") return 0.0005;
   if (type === "Commodities") return 0.00035;
   if (type === "Stock") return 0.0002;
+  if (type === "Index") return 0.00015;
   return 0.00005;
 };
 

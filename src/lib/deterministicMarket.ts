@@ -98,6 +98,23 @@ const CATEGORY_PROFILES: Record<AssetCategory, MarketProfile> = {
     tickScaleSeconds: 1.4,
     volumeBase: 390,
   },
+  INDICES: {
+    driftAmplitude: 0.011,
+    driftScaleSeconds: 22 * 60 * 60,
+    swingAmplitude: 0.0045,
+    swingScaleSeconds: 4 * 60 * 60,
+    pulseAmplitude: 0.0018,
+    pulseScaleSeconds: 12 * 60,
+    microAmplitude: 0.0008,
+    microScaleSeconds: 30,
+    cycleAmplitude: 0.0032,
+    cycleSeconds: 6 * 60 * 60,
+    secondaryCycleAmplitude: 0.0015,
+    secondaryCycleSeconds: 90 * 60,
+    tickAmplitude: 0.0004,
+    tickScaleSeconds: 1.4,
+    volumeBase: 420,
+  },
 };
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
