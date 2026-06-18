@@ -218,6 +218,79 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
   },
 
   {
+    id: "ema",
+    name: "EMA",
+    category: "Trend Indicators",
+    pane: "overlay",
+    params: [
+      { id: "period", name: "Period", type: "number", default: 14, min: 1, max: 200 },
+      { id: "source", name: "Source", type: "source", default: "close", options: ["close", "open", "high", "low"] },
+      { id: "color", name: "main", type: "color", default: "#3291ff" },
+      { id: "width", name: "width", type: "number", default: 1, min: 1, max: 5 },
+    ],
+    outputs: [{ id: "line", type: "line" }],
+  },
+  {
+    id: "wma",
+    name: "WMA",
+    category: "Trend Indicators",
+    pane: "overlay",
+    params: [
+      { id: "period", name: "Period", type: "number", default: 14, min: 1, max: 200 },
+      { id: "source", name: "Source", type: "source", default: "close", options: ["close", "open", "high", "low"] },
+      { id: "color", name: "main", type: "color", default: "#a566f4" },
+      { id: "width", name: "width", type: "number", default: 1, min: 1, max: 5 },
+    ],
+    outputs: [{ id: "line", type: "line" }],
+  },
+  {
+    id: "hma",
+    name: "HMA",
+    category: "Trend Indicators",
+    pane: "overlay",
+    params: [
+      { id: "period", name: "Period", type: "number", default: 14, min: 1, max: 200 },
+      { id: "source", name: "Source", type: "source", default: "close", options: ["close", "open", "high", "low"] },
+      { id: "color", name: "main", type: "color", default: "#1fd2cf" },
+      { id: "width", name: "width", type: "number", default: 1, min: 1, max: 5 },
+    ],
+    outputs: [{ id: "line", type: "line" }],
+  },
+  {
+    id: "obv",
+    name: "On Balance Volume",
+    category: "Volume",
+    pane: "separate",
+    params: [
+      { id: "lineColor", name: "main", type: "color", default: "#22c55e" },
+    ],
+    outputs: [{ id: "line", type: "line" }],
+  },
+  {
+    id: "volume",
+    name: "Volume",
+    category: "Volume",
+    pane: "separate",
+    params: [
+      { id: "histColorUp", name: "up", type: "color", default: "#22c55e" },
+      { id: "histColorDown", name: "down", type: "color", default: "#ef4444" },
+    ],
+    outputs: [{ id: "histogram", type: "histogram" }],
+  },
+  {
+    id: "schaff",
+    name: "Schaff Trend Cycle",
+    category: "Oscillators",
+    pane: "separate",
+    params: [
+      { id: "period", name: "Period", type: "number", default: 10, min: 1, max: 200 },
+      { id: "fast", name: "Fast period", type: "number", default: 23, min: 1 },
+      { id: "slow", name: "Slow period", type: "number", default: 50, min: 1 },
+      { id: "lineColor", name: "main", type: "color", default: "#22c55e" },
+    ],
+    outputs: [{ id: "line", type: "line" }],
+  },
+  {
     id: "macd",
     name: "MACD",
     category: "Oscillators",
@@ -468,6 +541,9 @@ export const INDICATOR_REGISTRY: IndicatorConfig[] = [
 
 export const STANDARD_INDICATOR_IDS = new Set([
   "sma",
+  "ema",
+  "wma",
+  "hma",
   "bollinger",
   "alligator",
   "envelopes",
@@ -492,6 +568,9 @@ export const STANDARD_INDICATOR_IDS = new Set([
   "bullsPower",
   "bearsPower",
   "vortex",
+  "schaff",
   "atr",
+  "volume",
+  "obv",
   "volumeOsc",
 ]);

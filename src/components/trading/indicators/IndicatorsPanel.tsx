@@ -1,17 +1,8 @@
+import { ChevronDown, ChevronRight, Eye, EyeOff, Plus, Search, Settings2, Trash2, X } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  ChevronDown,
-  ChevronUp,
-  Eye,
-  EyeOff,
-  Plus,
-  Search,
-  Settings2,
-  Trash2,
-  X,
-} from "lucide-react";
 import { ActiveIndicator, IndicatorCategory } from "./types";
 import { INDICATOR_REGISTRY, STANDARD_INDICATOR_IDS } from "./config";
+import { INDICATOR_ICONS } from "./indicatorIcons";
 import IndicatorSettingsEditor from "./IndicatorSettingsEditor";
 
 interface IndicatorsPanelProps {
@@ -24,14 +15,44 @@ interface IndicatorsPanelProps {
   onClose: () => void;
 }
 
-const CATEGORIES: IndicatorCategory[] = ["Trend Indicators", "Oscillators", "Volatility", "Volume"];
+interface PanelCategory {
+  name: string;
+  items: string[];
+}
 
-const CATEGORY_ACCENTS: Record<IndicatorCategory, string> = {
-  "Trend Indicators": "#22c55e",
-  "Oscillators": "#3291ff",
-  Volatility: "#f59e0b",
-  Volume: "#1fd2cf",
-};
+const PANEL_BG = "#1A1A2A";
+const CATEGORY_BG = "#1d2332";
+
+const PANEL_CATEGORIES: PanelCategory[] = [
+  {
+    name: "Popular",
+    items: ["sma", "bollinger", "rsi", "macd", "stochastic", "volume", "ichimoku", "supertrend"],
+  },
+  {
+    name: "Momentum",
+    items: ["rsi", "stochastic", "cci", "momentum", "roc", "williamsR", "awesome"],
+  },
+  {
+    name: "Trend",
+    items: ["sma", "ema", "wma", "hma", "bollinger", "envelopes", "ichimoku", "supertrend", "alligator", "parabolic", "zigzag"],
+  },
+  {
+    name: "Volatility",
+    items: ["atr", "keltner", "donchian", "bollinger"],
+  },
+  {
+    name: "Moving Averages",
+    items: ["sma", "ema", "wma", "hma"],
+  },
+  {
+    name: "Volume",
+    items: ["volume", "obv", "volumeOsc"],
+  },
+  {
+    name: "Other",
+    items: ["adx", "aroon", "demarker", "bullsPower", "bearsPower", "schaff", "vortex", "fractal"],
+  },
+];
 
 export const IndicatorsPanel = ({
   activeIndicators,
@@ -44,11 +65,10 @@ export const IndicatorsPanel = ({
 }: IndicatorsPanelProps) => {
   const [activeTab, setActiveTab] = useState<"catalog" | "active">("catalog");
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
-    "Trend Indicators": true,
-    Oscillators: true,
-    Volatility: true,
-    Volume: true,
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    PANEL_CATEGORIES.forEach((c) => { initial[c.name] = true; });
+    return initial;
   });
   const [localEditingIndicatorId, setLocalEditingIndicatorId] = useState<string | null>(null);
 
@@ -71,22 +91,24 @@ export const IndicatorsPanel = ({
     setEditingIndicatorId(null);
   }, [editingIndicator, resolvedEditingIndicatorId]);
 
-  const toggleCategory = (category: string) =>
-    setExpandedCategories((current) => ({ ...current, [category]: !current[category] }));
+  const toggleCategory = (name: string) =>
+    setExpandedCategories((prev) => ({ ...prev, [name]: !prev[name] }));
 
-  const filteredRegistry = useMemo(() => {
+  const filteredCategories = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
+    if (!query) return PANEL_CATEGORIES;
 
-    return INDICATOR_REGISTRY.filter((indicator) => {
-      if (!STANDARD_INDICATOR_IDS.has(indicator.id)) return false;
-      if (!query) return true;
-
-      return (
-        indicator.name.toLowerCase().includes(query)
-        || indicator.id.toLowerCase().includes(query)
-        || indicator.category.toLowerCase().includes(query)
-      );
-    });
+    return PANEL_CATEGORIES.map((cat) => ({
+      ...cat,
+      items: cat.items.filter((id) => {
+        const reg = INDICATOR_REGISTRY.find((r) => r.id === id);
+        if (!reg) return false;
+        return (
+          reg.name.toLowerCase().includes(query) ||
+          reg.id.toLowerCase().includes(query)
+        );
+      }),
+    })).filter((cat) => cat.items.length > 0);
   }, [searchQuery]);
 
   return (
@@ -108,7 +130,10 @@ export const IndicatorsPanel = ({
       ) : (
         <>
           <div className="flex items-center justify-between border-b border-white/6 px-3 py-2.5">
-            <span className="text-[12px] font-semibold text-white">Indicators</span>
+            <div className="flex items-center gap-2">
+              <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+              <span className="text-[12px] font-semibold text-white">Indicators</span>
+            </div>
             <button
               type="button"
               onClick={onClose}
@@ -145,9 +170,9 @@ export const IndicatorsPanel = ({
             </button>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3 pt-2">
+          <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-2 pb-3 pt-2">
             {activeTab === "catalog" ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <label className="relative block">
                   <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
                   <input
@@ -159,60 +184,72 @@ export const IndicatorsPanel = ({
                   />
                 </label>
 
-                {CATEGORIES.map((category) => {
-                  const items = filteredRegistry.filter((indicator) => indicator.category === category);
-                  if (items.length === 0) return null;
-
-                  const isExpanded = expandedCategories[category];
-
-                  return (
-                    <section key={category} className="overflow-hidden rounded-[4px] border border-white/6 bg-[#202738]">
-                      <button
-                        type="button"
-                        onClick={() => toggleCategory(category)}
-                        className="flex w-full items-center justify-between gap-3 px-2.5 py-2 text-left"
+                <div className="space-y-2">
+                  {filteredCategories.map((cat) => {
+                    const isExpanded = expandedCategories[cat.name] ?? true;
+                    return (
+                      <section
+                        key={cat.name}
+                        className="overflow-hidden rounded-[6px]"
+                        style={{ border: "1px solid rgba(255,255,255,0.06)", backgroundColor: CATEGORY_BG }}
                       >
-                        <div className="flex min-w-0 items-center gap-2">
-                          <span
-                            className="h-2 w-2 flex-shrink-0 rounded-full"
-                            style={{ backgroundColor: CATEGORY_ACCENTS[category] }}
-                          />
-                          <span className="truncate text-[11px] font-semibold uppercase tracking-[0.12em] text-white">
-                            {category}
+                        <button
+                          type="button"
+                          onClick={() => toggleCategory(cat.name)}
+                          className="flex w-full items-center justify-between px-2.5 py-2 text-left transition-colors hover:bg-white/5"
+                        >
+                          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white">
+                            {cat.name}
                           </span>
-                        </div>
-                        {isExpanded ? (
-                          <ChevronUp className="h-4 w-4 text-slate-400" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-slate-400" />
+                          <ChevronDown
+                            className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-200 ${
+                              isExpanded ? "rotate-0" : "-rotate-90"
+                            }`}
+                          />
+                        </button>
+                        {isExpanded && (
+                          <div className="pb-1">
+                            {cat.items.map((id) => {
+                              const reg = INDICATOR_REGISTRY.find((r) => r.id === id);
+                              if (!reg) return null;
+                              return (
+                                <button
+                                  key={id}
+                                  type="button"
+                                  onClick={() => onAddIndicator(id)}
+                                  className="group flex w-full items-center gap-2.5 px-2.5 py-1.5 text-left transition-colors"
+                                  style={{ color: "#c8d0dc" }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = "#2A2A3A";
+                                    e.currentTarget.style.color = "#ffffff";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = "transparent";
+                                    e.currentTarget.style.color = "#c8d0dc";
+                                  }}
+                                >
+                                  <span
+                                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[4px] transition-colors"
+                                    style={{ color: "#c8d0dc" }}
+                                  >
+                                    {INDICATOR_ICONS[id] || null}
+                                  </span>
+                                  <span className="truncate text-[12px] font-medium">{reg.name}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
                         )}
-                      </button>
-
-                      {isExpanded && (
-                        <div className="border-t border-white/6 py-1">
-                          {items.map((indicator) => (
-                            <button
-                              key={indicator.id}
-                              type="button"
-                              onClick={() => onAddIndicator(indicator.id)}
-                              className="flex w-full items-center justify-between gap-3 px-2.5 py-2 text-left transition-colors hover:bg-white/5"
-                            >
-                              <span className="truncate text-[12px] font-medium text-white">
-                                {indicator.name}
-                              </span>
-                              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#2a3142] text-white">
-                                <Plus className="h-3 w-3" />
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </section>
-                  );
-                })}
+                      </section>
+                    );
+                  })}
+                </div>
               </div>
             ) : activeIndicators.length === 0 ? (
-              <div className="rounded-[4px] border border-dashed border-white/10 bg-[#202738] px-3 py-6 text-center text-[12px] text-slate-400">
+              <div
+                className="rounded-[4px] border border-dashed border-white/10 px-3 py-6 text-center text-[12px] text-slate-400"
+                style={{ backgroundColor: CATEGORY_BG }}
+              >
                 No indicators added.
               </div>
             ) : (
@@ -220,7 +257,8 @@ export const IndicatorsPanel = ({
                 {activeIndicators.map((indicator) => (
                   <div
                     key={indicator.instanceId}
-                    className="rounded-[4px] border border-white/6 bg-[#202738] px-2.5 py-2"
+                    className="rounded-[4px] border border-white/6 px-2.5 py-2"
+                    style={{ backgroundColor: CATEGORY_BG }}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="truncate text-[12px] font-semibold text-white">

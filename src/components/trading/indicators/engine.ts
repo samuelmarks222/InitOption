@@ -379,6 +379,71 @@ export const calculateIndicator = (indicator: ActiveIndicator, history: OHLCCand
         return [{ id: "histogram", data: mapWithPad(result.res, (value) => value) }];
       }
 
+      case "ema": {
+        const result = buildMovingAverage(source, p.period || 14, "EMA");
+        return [{ id: "line", data: mapWithPad(result, (value) => value) }];
+      }
+
+      case "wma": {
+        const result = buildMovingAverage(source, p.period || 14, "WMA");
+        return [{ id: "line", data: mapWithPad(result, (value) => value) }];
+      }
+
+      case "hma": {
+        const period = p.period || 14;
+        const halfPeriod = Math.max(1, Math.floor(period / 2));
+        const sqrtPeriod = Math.max(1, Math.floor(Math.sqrt(period)));
+        const wmaHalf = buildMovingAverage(source, halfPeriod, "WMA");
+        const wmaFull = buildMovingAverage(source, period, "WMA");
+        const raw = wmaHalf.map((v, i) => 2 * v - (wmaFull[i - (period - halfPeriod)] ?? v));
+        const result = buildMovingAverage(raw, sqrtPeriod, "WMA");
+        return [{ id: "line", data: mapWithPad(result, (value) => value) }];
+      }
+
+      case "obv": {
+        const volumes = h.map((candle) => candle.volume ?? 0);
+        const obvValues: number[] = [0];
+        for (let i = 1; i < closes.length; i++) {
+          if (closes[i] > closes[i - 1]) obvValues.push(obvValues[i - 1] + volumes[i]);
+          else if (closes[i] < closes[i - 1]) obvValues.push(obvValues[i - 1] - volumes[i]);
+          else obvValues.push(obvValues[i - 1]);
+        }
+        return [{ id: "line", data: mapWithPad(obvValues, (value) => value) }];
+      }
+
+      case "volume": {
+        const volumes = h.map((candle) => candle.volume ?? 0);
+        return [{
+          id: "histogram",
+          data: mapWithPad(volumes, (value) => value, (_v, i) => ({
+            color: closes[i] >= (i > 0 ? closes[i - 1] : closes[i]) ? (p.histColorUp || "#22c55e") : (p.histColorDown || "#ef4444"),
+          })),
+        }];
+      }
+
+      case "schaff": {
+        const fast = p.fast || 23;
+        const slow = p.slow || 50;
+        const period = p.period || 10;
+        const macdLine: number[] = [];
+        const emaFast = buildMovingAverage(closes, fast, "EMA");
+        const emaSlow = buildMovingAverage(closes, slow, "EMA");
+        for (let i = 0; i < closes.length; i++) {
+          macdLine.push((emaFast[i] ?? 0) - (emaSlow[i] ?? 0));
+        }
+        const minMacd = Math.min(...macdLine.slice(slow));
+        const maxMacd = Math.max(...macdLine.slice(slow));
+        const range = maxMacd - minMacd || 1;
+        const stochRaw = macdLine.map((v) => ((v - minMacd) / range) * 100);
+        const stochEma1 = buildMovingAverage(stochRaw, period, "EMA");
+        const minStoch = Math.min(...stochEma1.slice(slow));
+        const maxStoch = Math.max(...stochEma1.slice(slow));
+        const range2 = maxStoch - minStoch || 1;
+        const stochEma2 = stochEma1.map((v) => ((v - minStoch) / range2) * 100);
+        const result = buildMovingAverage(stochEma2, period, "EMA");
+        return [{ id: "line", data: mapWithPad(result, (value) => value) }];
+      }
+
       default:
         return [];
     }
