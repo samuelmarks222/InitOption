@@ -186,8 +186,7 @@ const HeroSection = () => {
         .io-hero-stage {
           position: relative;
           overflow: hidden;
-          min-height: 690px;
-          padding: 174px 24px 128px;
+          padding: 116px 24px 72px;
           background:
             linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(239, 244, 253, 0.94)),
             #eef3fb;
@@ -495,8 +494,8 @@ const HeroSection = () => {
           position: relative;
           z-index: 2;
           width: min(100% - 48px, 1180px);
-          margin: -86px auto 0;
-          padding-bottom: 70px;
+          margin: -40px auto 0;
+          padding-bottom: 56px;
         }
 
         .io-benefit-inner {
@@ -687,7 +686,7 @@ const HeroSection = () => {
         @media (max-width: 760px) {
           .io-hero-stage {
             min-height: 0;
-            padding: 142px 16px 94px;
+            padding: 108px 16px 64px;
           }
 
           .io-hero-copy h1 {
@@ -742,8 +741,8 @@ const HeroSection = () => {
 
           .io-benefit-band {
             width: min(100% - 32px, 1180px);
-            margin-top: -58px;
-            padding-bottom: 52px;
+            margin-top: -30px;
+            padding-bottom: 40px;
           }
 
           .io-benefit-inner {
