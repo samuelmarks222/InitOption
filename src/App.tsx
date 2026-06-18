@@ -61,6 +61,7 @@ const TournamentsAdmin = lazy(() => import("./pages/admin/TournamentsAdmin"));
 const SupportInbox = lazy(() => import("./pages/admin/SupportInbox"));
 const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
 const GuideAdmin = lazy(() => import("./pages/admin/GuideAdmin"));
+const GuideMediaAdmin = lazy(() => import("./pages/admin/GuideMediaAdmin"));
 
 const RouteLoadingScreen = () => (
   <div className="flex min-h-screen items-center justify-center bg-background px-6 py-16 text-center">
@@ -201,6 +202,7 @@ const App = () => {
                           <Route path="analytics" element={withRouteSuspense(<Analytics />)} />
                           <Route path="tournaments" element={withRouteSuspense(<TournamentsAdmin />)} />
                           <Route path="guides" element={withRouteSuspense(<GuideAdmin />)} />
+                          <Route path="guides/media" element={withRouteSuspense(<GuideMediaAdmin />)} />
                         </Route>
 
                         <Route path="*" element={withRouteSuspense(<NotFound />)} />

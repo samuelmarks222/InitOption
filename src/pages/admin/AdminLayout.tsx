@@ -27,6 +27,7 @@ import {
   ChevronRight,
   UserCheck,
   UserPlus,
+  Image,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
@@ -87,6 +88,7 @@ const NAV_CATEGORIES: NavCategory[] = [
       { label: "Blog", href: "/admin/blog", icon: <FileText size={20} /> },
       { label: "Announcements", href: "/admin/notifications", icon: <Bell size={20} /> },
       { label: "Help Center", href: "/admin/guides", icon: <BookOpen size={20} /> },
+      { label: "Guide Media", href: "/admin/guides/media", icon: <Image size={20} /> },
     ],
   },
   {
