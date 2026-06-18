@@ -16,44 +16,28 @@ create policy "Admin can view promo materials"
   on public.promo_materials
   for select
   using (
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid()
-        and profiles.role = 'admin'
-    )
+    public.has_role(auth.uid(), 'admin'::public.app_role)
   );
 
 create policy "Admin can insert promo materials"
   on public.promo_materials
   for insert
   with check (
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid()
-        and profiles.role = 'admin'
-    )
+    public.has_role(auth.uid(), 'admin'::public.app_role)
   );
 
 create policy "Admin can update promo materials"
   on public.promo_materials
   for update
   using (
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid()
-        and profiles.role = 'admin'
-    )
+    public.has_role(auth.uid(), 'admin'::public.app_role)
   );
 
 create policy "Admin can delete promo materials"
   on public.promo_materials
   for delete
   using (
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid()
-        and profiles.role = 'admin'
-    )
+    public.has_role(auth.uid(), 'admin'::public.app_role)
   );
 
 -- Allow non-authenticated users to read promo materials for marketing purposes
