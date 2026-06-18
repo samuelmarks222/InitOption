@@ -24,6 +24,7 @@ import {
 
 type UploadTarget =
   | "logo"
+  | "landing_logo"
   | "favicon"
   | "social"
   | "twitter"
@@ -191,6 +192,7 @@ const PlatformSettings = () => {
   );
 
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const landingLogoInputRef = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
   const socialImageInputRef = useRef<HTMLInputElement>(null);
   const twitterImageInputRef = useRef<HTMLInputElement>(null);
@@ -298,6 +300,7 @@ const PlatformSettings = () => {
       updateTradingDefaults({ chartBackgroundImage: publicData.publicUrl });
     } else {
       if (target === "logo") updateSetting("logo_url", publicData.publicUrl);
+      if (target === "landing_logo") updateSetting("landing_logo_url", publicData.publicUrl);
       if (target === "favicon") updateSetting("favicon_url", publicData.publicUrl);
       if (target === "social") updateSetting("og_image_url", publicData.publicUrl);
       if (target === "twitter") updateSetting("twitter_image_url", publicData.publicUrl);
@@ -659,6 +662,15 @@ const PlatformSettings = () => {
               uploadTarget: "logo" as const,
               accept: "image/*",
               helper: "The single logo used across all platform surfaces (landing, auth, trading, admin, etc.).",
+            },
+            {
+              label: "Landing Page Logo",
+              value: settings.landing_logo_url,
+              onChange: (value: string) => updateSetting("landing_logo_url", value),
+              ref: landingLogoInputRef,
+              uploadTarget: "landing_logo" as const,
+              accept: "image/*",
+              helper: "A separate logo shown only on the landing page header. Leave empty to use the Primary Logo.",
             },
             {
               label: "Tab Favicon",

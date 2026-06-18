@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { BarChart3, ChevronDown, Headphones, Menu, ShieldCheck, X } from "lucide-react";
 import { SiteLogo } from "@/components/branding/SiteLogo";
+import { useSiteBranding } from "@/hooks/useSiteBranding";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -19,6 +20,7 @@ const quickLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { landingLogoUrl } = useSiteBranding();
 
   return (
     <header className="io-header">
@@ -43,6 +45,7 @@ const Navbar = () => {
         <div className="io-header-inner io-navbar-inner">
           <SiteLogo
             showText
+            logoOverride={landingLogoUrl}
             className="gap-2"
             imageClassName="h-10 max-w-[170px] sm:h-12 sm:max-w-[220px]"
             markClassName="h-10 w-10 rounded-[14px] bg-[linear-gradient(135deg,#35225f_0%,#6d36d8_58%,#ff970f_100%)] shadow-[0_12px_24px_rgba(53,34,95,0.22)]"

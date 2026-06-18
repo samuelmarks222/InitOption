@@ -1,6 +1,7 @@
 import { getRouteSeoOverride, type RouteSeoContext } from "./routeSeo.js";
 
 export const SITE_LOGO_STORAGE_KEY = "site_logo";
+export const SITE_LANDING_LOGO_STORAGE_KEY = "site_logo_landing";
 export const SITE_PLATFORM_NAME_STORAGE_KEY = "site_platform_name";
 export const SITE_SUPPORT_EMAIL_STORAGE_KEY = "site_support_email";
 
@@ -29,6 +30,7 @@ export interface PlatformSettingsRecord {
   welcome_bonus_pct: number;
   referral_commission_pct: number;
   logo_url: string;
+  landing_logo_url: string;
   favicon_url: string;
   chart_up_color: string;
   chart_down_color: string;
@@ -79,6 +81,7 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettingsRecord = {
   welcome_bonus_pct: 50,
   referral_commission_pct: 10,
   logo_url: "",
+  landing_logo_url: "",
   favicon_url: "",
   chart_up_color: "#00C076",
   chart_down_color: "#F6465D",
@@ -147,6 +150,7 @@ export const normalizePlatformSettings = (
     value?.referral_commission_pct,
     DEFAULT_PLATFORM_SETTINGS.referral_commission_pct,
   ),
+  landing_logo_url: toStringValue(value?.landing_logo_url),
   logo_url: toStringValue(value?.logo_url),
   favicon_url: toStringValue(value?.favicon_url),
   chart_up_color: toStringValue(value?.chart_up_color, DEFAULT_PLATFORM_SETTINGS.chart_up_color),

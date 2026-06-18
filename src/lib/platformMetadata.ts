@@ -5,6 +5,7 @@ export {
   DEFAULT_PLATFORM_SETTINGS,
   DEFAULT_SHARE_IMAGE_PATH,
   SITE_LOGO_STORAGE_KEY,
+  SITE_LANDING_LOGO_STORAGE_KEY,
   SITE_PLATFORM_NAME_STORAGE_KEY,
   SITE_SUPPORT_EMAIL_STORAGE_KEY,
   normalizePlatformSettings,
@@ -17,6 +18,7 @@ export {
 import {
   DEFAULT_PLATFORM_NAME,
   DEFAULT_PLATFORM_SETTINGS,
+  SITE_LANDING_LOGO_STORAGE_KEY,
   SITE_LOGO_STORAGE_KEY,
   SITE_PLATFORM_NAME_STORAGE_KEY,
   SITE_SUPPORT_EMAIL_STORAGE_KEY,
@@ -234,6 +236,13 @@ export const readStoredLogoUrl = () => {
   return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
 };
 
+export const readStoredLandingLogoUrl = () => {
+  if (typeof window === "undefined") return null;
+
+  const storedLogoUrl = readStorageValue(SITE_LANDING_LOGO_STORAGE_KEY);
+  return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
+};
+
 export const readStoredSupportEmail = () => {
   if (typeof window === "undefined") return DEFAULT_PLATFORM_SETTINGS.support_email;
 
@@ -278,6 +287,23 @@ export const applyPlatformSettingsToDocument = (
     document.documentElement.style.removeProperty("--site-logo");
     if (typeof window !== "undefined") {
       removeStorageValue(SITE_LOGO_STORAGE_KEY);
+    }
+  }
+
+  const resolvedLandingLogoUrl = resolveBrandAssetUrl(
+    settings.landing_logo_url.trim(),
+    resolvedCurrentHref,
+  );
+
+  if (resolvedLandingLogoUrl) {
+    document.documentElement.style.setProperty("--site-logo-landing", `url(${resolvedLandingLogoUrl})`);
+    if (typeof window !== "undefined") {
+      writeStorageValue(SITE_LANDING_LOGO_STORAGE_KEY, resolvedLandingLogoUrl);
+    }
+  } else {
+    document.documentElement.style.removeProperty("--site-logo-landing");
+    if (typeof window !== "undefined") {
+      removeStorageValue(SITE_LANDING_LOGO_STORAGE_KEY);
     }
   }
 

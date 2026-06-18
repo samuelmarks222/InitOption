@@ -13,6 +13,7 @@ interface SiteLogoProps {
   stacked?: boolean;
   centered?: boolean;
   showText?: boolean;
+  logoOverride?: string | null;
 }
 
 export const SiteLogo = ({
@@ -26,8 +27,11 @@ export const SiteLogo = ({
   stacked = false,
   centered = false,
   showText = false,
+  logoOverride,
 }: SiteLogoProps) => {
   const { initials, logoUrl, platformName } = useSiteBranding();
+
+  const resolvedLogoUrl = logoOverride !== undefined ? logoOverride : logoUrl;
 
   const content = (
     <div
@@ -38,9 +42,9 @@ export const SiteLogo = ({
         className,
       )}
     >
-      {logoUrl ? (
+      {resolvedLogoUrl ? (
         <img
-          src={logoUrl}
+          src={resolvedLogoUrl}
           alt={platformName}
           className={cn(
             "block h-12 w-auto max-w-[260px] shrink-0 object-contain sm:h-14 sm:max-w-[320px]",

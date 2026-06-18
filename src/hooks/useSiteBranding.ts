@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_PLATFORM_SETTINGS,
   DEFAULT_PLATFORM_NAME,
+  readStoredLandingLogoUrl,
   readStoredLogoUrl,
   readStoredPlatformName,
   readStoredSupportEmail,
@@ -22,12 +23,14 @@ const buildInitials = (platformName: string) => {
 
 export const useSiteBranding = () => {
   const [logoUrl, setLogoUrl] = useState<string | null>(() => readStoredLogoUrl() || defaultLogoUrl);
+  const [landingLogoUrl, setLandingLogoUrl] = useState<string | null>(() => readStoredLandingLogoUrl());
   const [platformName, setPlatformName] = useState(() => readStoredPlatformName());
   const [supportEmail, setSupportEmail] = useState(() => readStoredSupportEmail());
 
   useEffect(() => {
     const updateBranding = () => {
       setLogoUrl(readStoredLogoUrl() || defaultLogoUrl);
+      setLandingLogoUrl(readStoredLandingLogoUrl());
       setPlatformName(readStoredPlatformName());
       setSupportEmail(readStoredSupportEmail());
     };
@@ -44,6 +47,7 @@ export const useSiteBranding = () => {
 
   return {
     logoUrl,
+    landingLogoUrl,
     platformName: platformName || DEFAULT_PLATFORM_NAME,
     supportEmail: supportEmail || DEFAULT_PLATFORM_SETTINGS.support_email,
     initials,
