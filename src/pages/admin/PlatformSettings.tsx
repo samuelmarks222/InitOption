@@ -24,13 +24,6 @@ import {
 
 type UploadTarget =
   | "logo"
-  | "logo_light"
-  | "logo_dark"
-  | "logo_footer"
-  | "logo_dashboard"
-  | "logo_dashboard_light"
-  | "logo_dashboard_dark"
-  | "logo_landing_header"
   | "favicon"
   | "social"
   | "twitter"
@@ -198,13 +191,6 @@ const PlatformSettings = () => {
   );
 
   const logoInputRef = useRef<HTMLInputElement>(null);
-  const logoLightInputRef = useRef<HTMLInputElement>(null);
-  const logoDarkInputRef = useRef<HTMLInputElement>(null);
-  const logoFooterInputRef = useRef<HTMLInputElement>(null);
-  const logoDashboardInputRef = useRef<HTMLInputElement>(null);
-  const logoDashboardLightInputRef = useRef<HTMLInputElement>(null);
-  const logoDashboardDarkInputRef = useRef<HTMLInputElement>(null);
-  const logoLandingHeaderInputRef = useRef<HTMLInputElement>(null);
   const faviconInputRef = useRef<HTMLInputElement>(null);
   const socialImageInputRef = useRef<HTMLInputElement>(null);
   const twitterImageInputRef = useRef<HTMLInputElement>(null);
@@ -312,13 +298,6 @@ const PlatformSettings = () => {
       updateTradingDefaults({ chartBackgroundImage: publicData.publicUrl });
     } else {
       if (target === "logo") updateSetting("logo_url", publicData.publicUrl);
-      if (target === "logo_light") updateSetting("logo_url_light", publicData.publicUrl);
-      if (target === "logo_dark") updateSetting("logo_url_dark", publicData.publicUrl);
-      if (target === "logo_footer") updateSetting("logo_url_footer", publicData.publicUrl);
-      if (target === "logo_dashboard") updateSetting("logo_url_dashboard", publicData.publicUrl);
-      if (target === "logo_dashboard_light") updateSetting("logo_url_dashboard_light", publicData.publicUrl);
-      if (target === "logo_dashboard_dark") updateSetting("logo_url_dashboard_dark", publicData.publicUrl);
-      if (target === "logo_landing_header") updateSetting("logo_url_landing_header", publicData.publicUrl);
       if (target === "favicon") updateSetting("favicon_url", publicData.publicUrl);
       if (target === "social") updateSetting("og_image_url", publicData.publicUrl);
       if (target === "twitter") updateSetting("twitter_image_url", publicData.publicUrl);
@@ -679,70 +658,7 @@ const PlatformSettings = () => {
               ref: logoInputRef,
               uploadTarget: "logo" as const,
               accept: "image/*",
-              helper: "Updates the logo shown on landing, auth, trading, and admin surfaces.",
-            },
-            {
-              label: "Logo for light backgrounds",
-              value: settings.logo_url_light,
-              onChange: (value: string) => updateSetting("logo_url_light", value),
-              ref: logoLightInputRef,
-              uploadTarget: "logo_light" as const,
-              accept: "image/*",
-              helper: "Use a lighter logo version on light surfaces like the hero section.",
-            },
-            {
-              label: "Logo for dark backgrounds",
-              value: settings.logo_url_dark,
-              onChange: (value: string) => updateSetting("logo_url_dark", value),
-              ref: logoDarkInputRef,
-              uploadTarget: "logo_dark" as const,
-              accept: "image/*",
-              helper: "Use a darker logo version on dark surfaces and nav headers.",
-            },
-            {
-              label: "Footer Logo",
-              value: settings.logo_url_footer,
-              onChange: (value: string) => updateSetting("logo_url_footer", value),
-              ref: logoFooterInputRef,
-              uploadTarget: "logo_footer" as const,
-              accept: "image/*",
-              helper: "Logo shown in the footer area. Falls back to dark variant if not set.",
-            },
-            {
-              label: "Dashboard Logo",
-              value: settings.logo_url_dashboard,
-              onChange: (value: string) => updateSetting("logo_url_dashboard", value),
-              ref: logoDashboardInputRef,
-              uploadTarget: "logo_dashboard" as const,
-              accept: "image/*",
-              helper: "Primary dashboard logo. Used when no theme-specific logo is set.",
-            },
-            {
-              label: "Dashboard Logo (light theme)",
-              value: settings.logo_url_dashboard_light,
-              onChange: (value: string) => updateSetting("logo_url_dashboard_light", value),
-              ref: logoDashboardLightInputRef,
-              uploadTarget: "logo_dashboard_light" as const,
-              accept: "image/*",
-              helper: "Dashboard logo when the dashboard is in light theme mode.",
-            },
-            {
-              label: "Dashboard Logo (dark theme)",
-              value: settings.logo_url_dashboard_dark,
-              onChange: (value: string) => updateSetting("logo_url_dashboard_dark", value),
-              ref: logoDashboardDarkInputRef,
-              uploadTarget: "logo_dashboard_dark" as const,
-              accept: "image/*",
-              helper: "Dashboard logo when the dashboard is in dark theme mode.",
-            },
-            {
-              label: "Landing Header Logo",
-              value: settings.logo_url_landing_header,
-              onChange: (value: string) => updateSetting("logo_url_landing_header", value),
-              ref: logoLandingHeaderInputRef,
-              uploadTarget: "logo_landing_header" as const,
-              accept: "image/*",
-              helper: "Logo shown in the landing page header. Falls back to dark variant if not set.",
+              helper: "The single logo used across all platform surfaces (landing, auth, trading, admin, etc.).",
             },
             {
               label: "Tab Favicon",

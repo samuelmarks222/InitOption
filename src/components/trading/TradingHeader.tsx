@@ -82,8 +82,8 @@ const TradingHeader = ({
   const { profile } = useAuth();
   const { vip } = useVip();
   const { formatMoney } = useCurrency();
-  const { platformName, initials, getLogoForContext } = useSiteBranding();
-  const headerLogoUrl = getLogoForContext("dashboard");
+  const { platformName, initials, logoUrl } = useSiteBranding();
+  const headerLogoUrl = logoUrl;
   const { t } = useTranslation();
 
   useEffect(() => {

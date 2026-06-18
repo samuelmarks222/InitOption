@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Image,
   Loader2,
+  Save,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -24,16 +25,21 @@ const MAX_BYTES = 2 * 1024 * 1024;
 const VALID_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 const STORAGE_BUCKET = "guide-media";
 
+type PendingAction =
+  | { kind: "upload"; file: File; previewUrl: string }
+  | { kind: "remove" };
+
 interface MediaState {
-  exists: boolean;
-  url: string;
+  remoteUrl: string;
+  remoteExists: boolean;
   altText: string;
+  pending: PendingAction | null;
 }
 
 const GuideMediaAdmin = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     GUIDE_SECTIONS.forEach((s) => { init[s.slug] = true; });
@@ -48,11 +54,6 @@ const GuideMediaAdmin = () => {
     const loadAll = async () => {
       setLoading(true);
       const result: Record<string, MediaState> = {};
-      const supabaseUrl = supabase.storage.from(STORAGE_BUCKET).getPublicUrl("").data.publicUrl
-        .replace(`/${STORAGE_BUCKET}/`, "")
-        .replace(`/storage/v1/object/public/${STORAGE_BUCKET}`, "")
-        .replace(`/storage/v1/object/public/`, "");
-      const base = `https://${supabaseUrl}/storage/v1/object/public/${STORAGE_BUCKET}`;
 
       for (const section of GUIDE_SECTIONS) {
         const { data: files } = await supabase.storage
@@ -66,9 +67,10 @@ const GuideMediaAdmin = () => {
           const path = getGuideMediaPath(section.slug, topic.slug);
           const exists = existingFiles.has(fileName);
           result[path] = {
-            exists,
-            url: exists ? `${base}/${path}` : "",
+            remoteUrl: exists ? `${baseUrl()}/${path}` : "",
+            remoteExists: exists,
             altText: "",
+            pending: null,
           };
         }
       }
@@ -78,11 +80,25 @@ const GuideMediaAdmin = () => {
     void loadAll();
   }, []);
 
-  const handleUpload = async (section: GuideSectionDef, topic: GuideTopicDef) => {
+  const baseUrl = () => {
+    const u = supabase.storage.from(STORAGE_BUCKET).getPublicUrl("").data.publicUrl;
+    const parts = u.replace(`/storage/v1/object/public/${STORAGE_BUCKET}`, "").replace(`/${STORAGE_BUCKET}/`, "");
+    return `https://${parts}/storage/v1/object/public/${STORAGE_BUCKET}`;
+  };
+
+  const pendingCount = useMemo(() => {
+    let count = 0;
+    for (const m of Object.values(media)) {
+      if (m.pending) count++;
+    }
+    return count;
+  }, [media]);
+
+  const stageUpload = (section: GuideSectionDef, topic: GuideTopicDef) => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/png,image/jpeg,image/webp";
-    input.onchange = async () => {
+    input.onchange = () => {
       const file = input.files?.[0];
       if (!file) return;
       if (!VALID_TYPES.has(file.type)) {
@@ -95,64 +111,31 @@ const GuideMediaAdmin = () => {
       }
 
       const path = getGuideMediaPath(section.slug, topic.slug);
-      setUploading(path);
-
-      try {
-        const { error: uploadError } = await supabase.storage
-          .from(STORAGE_BUCKET)
-          .upload(path, file, { upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabase.storage
-          .from(STORAGE_BUCKET)
-          .getPublicUrl(path);
-
-        setMedia((prev) => ({
-          ...prev,
-          [path]: { exists: true, url: urlData.publicUrl, altText: prev[path]?.altText || "" },
-        }));
-
-        toast({ title: `${topic.name} image uploaded` });
-      } catch (error) {
-        console.error("Upload failed:", error);
-        toast({
-          title: "Upload failed",
-          description: error instanceof Error ? error.message : "Could not upload image.",
-          variant: "destructive",
-        });
-      } finally {
-        setUploading(null);
-      }
+      const previewUrl = URL.createObjectURL(file);
+      setMedia((prev) => ({
+        ...prev,
+        [path]: { ...prev[path], pending: { kind: "upload" as const, file, previewUrl } },
+      }));
     };
     input.click();
   };
 
-  const handleRemove = async (section: GuideSectionDef, topic: GuideTopicDef) => {
-    const path = getGuideMediaPath(section.slug, topic.slug);
-    if (!confirm(`Remove the image for "${topic.name}"?`)) return;
+  const stageRemove = (path: string) => {
+    setMedia((prev) => ({
+      ...prev,
+      [path]: { ...prev[path], pending: { kind: "remove" } },
+    }));
+  };
 
-    try {
-      const { error: removeError } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .remove([path]);
-
-      if (removeError) throw removeError;
-
-      setMedia((prev) => ({
-        ...prev,
-        [path]: { exists: false, url: "", altText: prev[path]?.altText || "" },
-      }));
-
-      toast({ title: `${topic.name} image removed` });
-    } catch (error) {
-      console.error("Remove failed:", error);
-      toast({
-        title: "Remove failed",
-        description: error instanceof Error ? error.message : "Could not remove image.",
-        variant: "destructive",
-      });
+  const clearPending = (path: string) => {
+    const m = media[path];
+    if (m?.pending?.kind === "upload") {
+      URL.revokeObjectURL(m.pending.previewUrl);
     }
+    setMedia((prev) => ({
+      ...prev,
+      [path]: { ...prev[path], pending: null },
+    }));
   };
 
   const handleAltTextChange = (path: string, value: string) => {
@@ -160,6 +143,62 @@ const GuideMediaAdmin = () => {
       ...prev,
       [path]: { ...prev[path], altText: value },
     }));
+  };
+
+  const handleSave = async () => {
+    const toUpload: { path: string; file: File }[] = [];
+    const toRemove: string[] = [];
+
+    for (const [path, m] of Object.entries(media)) {
+      if (!m.pending) continue;
+      if (m.pending.kind === "upload") toUpload.push({ path, file: m.pending.file });
+      else if (m.pending.kind === "remove") toRemove.push(path);
+    }
+
+    if (toUpload.length === 0 && toRemove.length === 0) {
+      toast({ title: "No changes to save" });
+      return;
+    }
+
+    setSaving(true);
+
+    let errors = 0;
+
+    for (const { path, file } of toUpload) {
+      const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, { upsert: true });
+      if (error) {
+        console.error("Upload failed:", path, error);
+        errors++;
+      }
+    }
+
+    if (toRemove.length > 0) {
+      const { error } = await supabase.storage.from(STORAGE_BUCKET).remove(toRemove);
+      if (error) {
+        console.error("Remove failed:", error);
+        errors++;
+      }
+    }
+
+    setMedia((prev) => {
+      const next = { ...prev };
+      for (const { path } of toUpload) {
+        const u = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+        next[path] = { ...next[path], remoteUrl: u, remoteExists: true, pending: null };
+      }
+      for (const path of toRemove) {
+        next[path] = { ...next[path], remoteUrl: "", remoteExists: false, pending: null };
+      }
+      return next;
+    });
+
+    setSaving(false);
+
+    if (errors > 0) {
+      toast({ title: `Saved with ${errors} error(s)`, variant: "destructive" });
+    } else {
+      toast({ title: "All changes saved" });
+    }
   };
 
   if (loading) {
@@ -172,16 +211,30 @@ const GuideMediaAdmin = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-white">Trading Guide Media</h1>
-        <p className="mt-1 text-sm" style={{ color: TEXT_SEC }}>
-          Upload the real InitOption screenshots and graphics used on the help and guide page.
-          Empty slots show a neutral placeholder, so sample graphics never appear by accident.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-white">Trading Guide Media</h1>
+          <p className="mt-1 text-sm" style={{ color: TEXT_SEC }}>
+            Upload the real InitOption screenshots and graphics used on the help and guide page.
+            Changes are staged until you click <strong>Save Changes</strong>.
+          </p>
+        </div>
+
+        <button
+          onClick={handleSave}
+          disabled={saving || pendingCount === 0}
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-bold text-white transition-opacity disabled:opacity-40"
+          style={{ background: ACCENT }}
+        >
+          {saving ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4" />
+          )}
+          {saving ? "Saving..." : `Save Changes${pendingCount > 0 ? ` (${pendingCount})` : ""}`}
+        </button>
       </div>
 
-      {/* Sections */}
       <div className="space-y-4">
         {GUIDE_SECTIONS.map((section) => {
           const isExpanded = expanded[section.slug] ?? true;
@@ -191,7 +244,6 @@ const GuideMediaAdmin = () => {
               className="overflow-hidden rounded-xl border"
               style={{ background: BG_CARD, borderColor: BORDER }}
             >
-              {/* Section header */}
               <button
                 onClick={() => toggleSection(section.slug)}
                 className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-white/5"
@@ -206,7 +258,6 @@ const GuideMediaAdmin = () => {
                 )}
               </button>
 
-              {/* Topics grid */}
               {isExpanded && (
                 <div className="grid gap-4 border-t px-5 py-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                   style={{ borderColor: BORDER }}
@@ -214,30 +265,31 @@ const GuideMediaAdmin = () => {
                   {section.topics.map((topic) => {
                     const path = getGuideMediaPath(section.slug, topic.slug);
                     const m = media[path];
-                    const isUploading = uploading === path;
+                    const isPendingUpload = m?.pending?.kind === "upload";
+                    const isPendingRemove = m?.pending?.kind === "remove";
+                    const displayUrl = isPendingUpload
+                      ? m.pending.previewUrl
+                      : m?.remoteUrl;
+                    const hasImage = isPendingUpload || m?.remoteExists;
 
                     return (
                       <div
                         key={topic.slug}
                         className="flex flex-col overflow-hidden rounded-lg border"
-                        style={{ background: "#13161e", borderColor: BORDER }}
+                        style={{
+                          background: "#13161e",
+                          borderColor: isPendingRemove ? "#F6465D" : isPendingUpload ? "#00C076" : BORDER,
+                        }}
                       >
-                        {/* Image preview */}
                         <div
                           className="relative flex h-44 items-center justify-center overflow-hidden"
                           style={{ background: "#0e1117" }}
                         >
-                          {m?.exists && m.url ? (
+                          {hasImage && displayUrl ? (
                             <img
-                              src={m.url}
-                              alt={m.altText || topic.name}
+                              src={displayUrl}
+                              alt={m?.altText || topic.name}
                               className="h-full w-full object-contain"
-                              onError={() => {
-                                setMedia((prev) => ({
-                                  ...prev,
-                                  [path]: { ...prev[path], exists: false, url: "" },
-                                }));
-                              }}
                             />
                           ) : (
                             <div className="flex flex-col items-center gap-2 text-center px-4">
@@ -248,18 +300,24 @@ const GuideMediaAdmin = () => {
                             </div>
                           )}
 
-                          {isUploading && (
+                          {isPendingUpload && (
+                            <div className="absolute left-2 top-2 rounded bg-[#00C076]/80 px-2 py-0.5 text-[10px] font-bold text-white">
+                              NEW
+                            </div>
+                          )}
+
+                          {isPendingRemove && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                              <Loader2 className="h-6 w-6 animate-spin" style={{ color: ACCENT }} />
+                              <span className="rounded bg-[#F6465D]/80 px-3 py-1 text-xs font-bold text-white">
+                                Will be removed
+                              </span>
                             </div>
                           )}
                         </div>
 
-                        {/* Topic info */}
                         <div className="flex flex-1 flex-col px-4 py-3">
                           <h4 className="text-sm font-semibold text-white">{topic.name}</h4>
 
-                          {/* Alt text */}
                           <input
                             type="text"
                             value={m?.altText || ""}
@@ -270,28 +328,37 @@ const GuideMediaAdmin = () => {
                           />
                         </div>
 
-                        {/* Actions */}
                         <div className="flex gap-2 border-t px-4 py-3"
                           style={{ borderColor: BORDER }}
                         >
-                          <button
-                            onClick={() => handleUpload(section, topic)}
-                            disabled={isUploading}
-                            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-colors disabled:opacity-50"
-                            style={{ background: ACCENT }}
-                          >
-                            <Upload size={14} />
-                            Upload
-                          </button>
-                          {m?.exists && (
+                          {m?.pending ? (
                             <button
-                              onClick={() => handleRemove(section, topic)}
-                              disabled={isUploading}
-                              className="flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-50"
-                              style={{ borderColor: "rgba(246,70,93,0.4)", color: "#F6465D" }}
+                              onClick={() => clearPending(path)}
+                              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors"
+                              style={{ borderColor: BORDER, color: TEXT_SEC }}
                             >
-                              <Trash2 size={14} />
+                              Undo
                             </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => stageUpload(section, topic)}
+                                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white transition-colors"
+                                style={{ background: ACCENT }}
+                              >
+                                <Upload size={14} />
+                                Upload
+                              </button>
+                              {m?.remoteExists && (
+                                <button
+                                  onClick={() => stageRemove(path)}
+                                  className="flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors"
+                                  style={{ borderColor: "rgba(246,70,93,0.4)", color: "#F6465D" }}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>

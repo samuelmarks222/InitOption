@@ -5,13 +5,6 @@ export {
   DEFAULT_PLATFORM_SETTINGS,
   DEFAULT_SHARE_IMAGE_PATH,
   SITE_LOGO_STORAGE_KEY,
-  SITE_LOGO_LIGHT_STORAGE_KEY,
-  SITE_LOGO_DARK_STORAGE_KEY,
-  SITE_LOGO_FOOTER_STORAGE_KEY,
-  SITE_LOGO_DASHBOARD_STORAGE_KEY,
-  SITE_LOGO_DASHBOARD_LIGHT_STORAGE_KEY,
-  SITE_LOGO_DASHBOARD_DARK_STORAGE_KEY,
-  SITE_LOGO_LANDING_HEADER_STORAGE_KEY,
   SITE_PLATFORM_NAME_STORAGE_KEY,
   SITE_SUPPORT_EMAIL_STORAGE_KEY,
   normalizePlatformSettings,
@@ -25,13 +18,6 @@ import {
   DEFAULT_PLATFORM_NAME,
   DEFAULT_PLATFORM_SETTINGS,
   SITE_LOGO_STORAGE_KEY,
-  SITE_LOGO_LIGHT_STORAGE_KEY,
-  SITE_LOGO_DARK_STORAGE_KEY,
-  SITE_LOGO_FOOTER_STORAGE_KEY,
-  SITE_LOGO_DASHBOARD_STORAGE_KEY,
-  SITE_LOGO_DASHBOARD_LIGHT_STORAGE_KEY,
-  SITE_LOGO_DASHBOARD_DARK_STORAGE_KEY,
-  SITE_LOGO_LANDING_HEADER_STORAGE_KEY,
   SITE_PLATFORM_NAME_STORAGE_KEY,
   SITE_SUPPORT_EMAIL_STORAGE_KEY,
   normalizePlatformSettings,
@@ -248,50 +234,6 @@ export const readStoredLogoUrl = () => {
   return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
 };
 
-export const readStoredLogoUrlLight = () => {
-  if (typeof window === "undefined") return null;
-
-  const storedLogoUrl = readStorageValue(SITE_LOGO_LIGHT_STORAGE_KEY);
-  return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
-};
-
-export const readStoredLogoUrlDark = () => {
-  if (typeof window === "undefined") return null;
-
-  const storedLogoUrl = readStorageValue(SITE_LOGO_DARK_STORAGE_KEY);
-  return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
-};
-
-export const readStoredLogoUrlFooter = () => {
-  if (typeof window === "undefined") return null;
-  const storedLogoUrl = readStorageValue(SITE_LOGO_FOOTER_STORAGE_KEY);
-  return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
-};
-
-export const readStoredLogoUrlDashboard = () => {
-  if (typeof window === "undefined") return null;
-  const storedLogoUrl = readStorageValue(SITE_LOGO_DASHBOARD_STORAGE_KEY);
-  return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
-};
-
-export const readStoredLogoUrlDashboardLight = () => {
-  if (typeof window === "undefined") return null;
-  const storedLogoUrl = readStorageValue(SITE_LOGO_DASHBOARD_LIGHT_STORAGE_KEY);
-  return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
-};
-
-export const readStoredLogoUrlDashboardDark = () => {
-  if (typeof window === "undefined") return null;
-  const storedLogoUrl = readStorageValue(SITE_LOGO_DASHBOARD_DARK_STORAGE_KEY);
-  return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
-};
-
-export const readStoredLogoUrlLandingHeader = () => {
-  if (typeof window === "undefined") return null;
-  const storedLogoUrl = readStorageValue(SITE_LOGO_LANDING_HEADER_STORAGE_KEY);
-  return resolveBrandAssetUrl(storedLogoUrl, window.location.href) || null;
-};
-
 export const readStoredSupportEmail = () => {
   if (typeof window === "undefined") return DEFAULT_PLATFORM_SETTINGS.support_email;
 
@@ -336,97 +278,6 @@ export const applyPlatformSettingsToDocument = (
     document.documentElement.style.removeProperty("--site-logo");
     if (typeof window !== "undefined") {
       removeStorageValue(SITE_LOGO_STORAGE_KEY);
-    }
-  }
-
-  const resolvedLogoUrlLight = resolveBrandAssetUrl(settings.logo_url_light.trim(), resolvedCurrentHref);
-  if (resolvedLogoUrlLight) {
-    document.documentElement.style.setProperty("--site-logo-light", `url(${resolvedLogoUrlLight})`);
-    if (typeof window !== "undefined") {
-      writeStorageValue(SITE_LOGO_LIGHT_STORAGE_KEY, resolvedLogoUrlLight);
-    }
-  } else {
-    document.documentElement.style.removeProperty("--site-logo-light");
-    if (typeof window !== "undefined") {
-      removeStorageValue(SITE_LOGO_LIGHT_STORAGE_KEY);
-    }
-  }
-
-  const resolvedLogoUrlDark = resolveBrandAssetUrl(settings.logo_url_dark.trim(), resolvedCurrentHref);
-  if (resolvedLogoUrlDark) {
-    document.documentElement.style.setProperty("--site-logo-dark", `url(${resolvedLogoUrlDark})`);
-    if (typeof window !== "undefined") {
-      writeStorageValue(SITE_LOGO_DARK_STORAGE_KEY, resolvedLogoUrlDark);
-    }
-  } else {
-    document.documentElement.style.removeProperty("--site-logo-dark");
-    if (typeof window !== "undefined") {
-      removeStorageValue(SITE_LOGO_DARK_STORAGE_KEY);
-    }
-  }
-
-  const resolvedLogoUrlFooter = resolveBrandAssetUrl(settings.logo_url_footer.trim(), resolvedCurrentHref);
-  if (resolvedLogoUrlFooter) {
-    document.documentElement.style.setProperty("--site-logo-footer", `url(${resolvedLogoUrlFooter})`);
-    if (typeof window !== "undefined") {
-      writeStorageValue(SITE_LOGO_FOOTER_STORAGE_KEY, resolvedLogoUrlFooter);
-    }
-  } else {
-    document.documentElement.style.removeProperty("--site-logo-footer");
-    if (typeof window !== "undefined") {
-      removeStorageValue(SITE_LOGO_FOOTER_STORAGE_KEY);
-    }
-  }
-
-  const resolvedLogoUrlDashboard = resolveBrandAssetUrl(settings.logo_url_dashboard.trim(), resolvedCurrentHref);
-  if (resolvedLogoUrlDashboard) {
-    document.documentElement.style.setProperty("--site-logo-dashboard", `url(${resolvedLogoUrlDashboard})`);
-    if (typeof window !== "undefined") {
-      writeStorageValue(SITE_LOGO_DASHBOARD_STORAGE_KEY, resolvedLogoUrlDashboard);
-    }
-  } else {
-    document.documentElement.style.removeProperty("--site-logo-dashboard");
-    if (typeof window !== "undefined") {
-      removeStorageValue(SITE_LOGO_DASHBOARD_STORAGE_KEY);
-    }
-  }
-
-  const resolvedLogoUrlDashboardLight = resolveBrandAssetUrl(settings.logo_url_dashboard_light.trim(), resolvedCurrentHref);
-  if (resolvedLogoUrlDashboardLight) {
-    document.documentElement.style.setProperty("--site-logo-dashboard-light", `url(${resolvedLogoUrlDashboardLight})`);
-    if (typeof window !== "undefined") {
-      writeStorageValue(SITE_LOGO_DASHBOARD_LIGHT_STORAGE_KEY, resolvedLogoUrlDashboardLight);
-    }
-  } else {
-    document.documentElement.style.removeProperty("--site-logo-dashboard-light");
-    if (typeof window !== "undefined") {
-      removeStorageValue(SITE_LOGO_DASHBOARD_LIGHT_STORAGE_KEY);
-    }
-  }
-
-  const resolvedLogoUrlDashboardDark = resolveBrandAssetUrl(settings.logo_url_dashboard_dark.trim(), resolvedCurrentHref);
-  if (resolvedLogoUrlDashboardDark) {
-    document.documentElement.style.setProperty("--site-logo-dashboard-dark", `url(${resolvedLogoUrlDashboardDark})`);
-    if (typeof window !== "undefined") {
-      writeStorageValue(SITE_LOGO_DASHBOARD_DARK_STORAGE_KEY, resolvedLogoUrlDashboardDark);
-    }
-  } else {
-    document.documentElement.style.removeProperty("--site-logo-dashboard-dark");
-    if (typeof window !== "undefined") {
-      removeStorageValue(SITE_LOGO_DASHBOARD_DARK_STORAGE_KEY);
-    }
-  }
-
-  const resolvedLogoUrlLandingHeader = resolveBrandAssetUrl(settings.logo_url_landing_header.trim(), resolvedCurrentHref);
-  if (resolvedLogoUrlLandingHeader) {
-    document.documentElement.style.setProperty("--site-logo-landing-header", `url(${resolvedLogoUrlLandingHeader})`);
-    if (typeof window !== "undefined") {
-      writeStorageValue(SITE_LOGO_LANDING_HEADER_STORAGE_KEY, resolvedLogoUrlLandingHeader);
-    }
-  } else {
-    document.documentElement.style.removeProperty("--site-logo-landing-header");
-    if (typeof window !== "undefined") {
-      removeStorageValue(SITE_LOGO_LANDING_HEADER_STORAGE_KEY);
     }
   }
 
