@@ -346,7 +346,7 @@ const HeroSection = () => {
         @media (max-width: 767px) {
           .mobile-menu-btn { display: flex !important; }
           nav > div > div:nth-child(2) { display: none !important; }
-          nav > div > a:last-child { display: none !important; }
+          nav > div > div:last-child { display: none !important; }
           .hero-grid h1 { font-size: 32px !important; }
           .hero-grid p { font-size: 16px !important; }
           .hero-grid .hero-visual > div { width: 240px !important; height: 240px !important; }
