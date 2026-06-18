@@ -1095,7 +1095,7 @@ const getCandlestickDisplaySettings = (
     borderDownColor: baseDownColor,
     wickUpColor,
     wickDownColor,
-    borderVisible: false,
+    borderVisible: true,
     wickVisible: true,
     priceLineVisible: styles.priceLineVisible,
     autoScale: true,
