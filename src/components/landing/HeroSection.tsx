@@ -1,160 +1,363 @@
-import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const heroImage = "/landing/hero-laptop-front77.jpg";
+const TAG_PILLS = ["Forex", "Crypto", "Stocks", "Commodities"];
+
+const BENEFITS = [
+  {
+    icon: "fa-solid fa-chart-line",
+    title: "Real-Time Charts",
+    desc: "Professional candlestick charts with 30+ indicators and real-time price updates.",
+  },
+  {
+    icon: "fa-solid fa-bolt",
+    title: "Fast Withdrawals",
+    desc: "Get your profits in minutes with our automated withdrawal system. No delays.",
+  },
+  {
+    icon: "fa-solid fa-gift",
+    title: "Free Demo Account",
+    desc: "Practice with $10,000 in virtual funds. No credit card required. Start today.",
+  },
+  {
+    icon: "fa-solid fa-percent",
+    title: "High Profits",
+    desc: "Earn up to 95% returns on successful trades with our optimized payout structure.",
+  },
+];
 
 const HeroSection = () => {
   return (
-    <section className="relative isolate min-h-screen overflow-x-clip px-6 pt-28 pb-20 sm:px-8 lg:px-10" style={{ background: "#1e3265" }}>
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsla(var(--landing-primary),0.1),transparent_50%),radial-gradient(ellipse_at_bottom_left,hsla(var(--landing-primary),0.05),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
-
-      <div className="relative mx-auto flex min-h-[calc(100vh-7rem)] max-w-7xl flex-col justify-center">
-        <div className="grid items-center gap-12 lg:grid-cols-[1.3fr_0.7fr] lg:gap-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="pt-8 lg:pt-16"
-          >
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-2 font-copy text-sm font-semibold text-emerald-400">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              Trusted by traders worldwide
-            </span>
-
-            <h1 className="mt-8 font-display text-[clamp(2.5rem,5.5vw,4rem)] font-bold leading-[1.1] text-white">
-              Trade Smarter.
+    <div style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
+      {/* ─── HERO ─────────────────────────────────────────── */}
+      <section style={{
+        background: "#F8F9FA",
+        paddingTop: 120,
+        paddingBottom: 80,
+        paddingLeft: 24,
+        paddingRight: 24,
+      }}>
+        <div style={{
+          maxWidth: 1280,
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 60,
+          alignItems: "center",
+        }} className="hero-grid">
+          {/* Left */}
+          <div>
+            <h1 style={{
+              fontSize: 56,
+              fontWeight: 700,
+              color: "#1A1A2A",
+              lineHeight: 1.15,
+              margin: 0,
+              letterSpacing: "-1.5px",
+            }}>
+              Trade Markets.
               <br />
-              <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
-                Earn Faster.
-              </span>
+              Withdraw Fast.
             </h1>
 
-            <p className="mt-6 max-w-[520px] text-lg leading-8 text-white/60 lg:text-xl">
-              Practice with $10,000 in demo funds, trade real markets with
-              instant execution, and withdraw your profits—all from one
-              clean terminal.
+            <p style={{
+              fontSize: 18,
+              color: "#6B7280",
+              lineHeight: 1.7,
+              marginTop: 24,
+              marginBottom: 0,
+              maxWidth: 550,
+            }}>
+              Trade over 100 global assets with real-time charts and fast withdrawals.
+              Start with a free demo account. No credit card required.
             </p>
 
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div style={{ marginTop: 32 }}>
               <Link
                 to="/register"
-                className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[hsl(var(--landing-primary))] px-8 font-copy text-base font-bold text-white shadow-[0_8px_32px_hsla(var(--landing-primary),0.3)] transition-all duration-300 hover:shadow-[0_12px_48px_hsla(var(--landing-primary),0.4)] hover:brightness-110"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  background: "#D5006C",
+                  color: "#FFFFFF",
+                  borderRadius: 999,
+                  padding: "14px 32px",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  transition: "opacity 0.2s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
               >
-                Start Trading Free
-                <ArrowRight size={18} strokeWidth={2.5} />
-              </Link>
-              <Link
-                to="/about"
-                className="inline-flex h-14 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-8 font-copy text-base font-medium text-white/70 transition-all hover:bg-white/[0.08] hover:text-white"
-              >
-                Learn More
+                Start Trading Now
+                <i className="fa-solid fa-arrow-right" style={{ fontSize: 13 }} />
               </Link>
             </div>
-          </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.25 }}
-            className="relative flex items-center justify-center py-8 lg:justify-end lg:py-0"
-          >
-            {/* Mixed color ambient glow */}
-            <div className="absolute -top-16 right-0 h-96 w-96 rounded-full opacity-20 blur-3xl lg:h-[550px] lg:w-[550px]"
-              style={{ background: "radial-gradient(circle, #2563EB, #6D5EF5, transparent 70%)" }}
-            />
-
-            {/* Overlapping curved abstract shapes with mixed colors */}
-            <div className="absolute -right-6 -top-8 h-72 w-72 rounded-[60%_40%_55%_45%] opacity-35 lg:-right-12 lg:-top-12 lg:h-[420px] lg:w-[420px]"
-              style={{ background: "linear-gradient(135deg, #2563EB, #60A5FA, #6D5EF5)" }}
-            />
-            <div className="absolute -bottom-10 left-2 h-56 w-56 rounded-[45%_55%_35%_65%] opacity-25 lg:-bottom-14 lg:h-80 lg:w-80"
-              style={{ background: "linear-gradient(120deg, #6D5EF5, #2563EB, #1e3265)" }}
-            />
-            <div className="absolute bottom-4 -right-2 h-40 w-40 rounded-[50%_50%_40%_60%] opacity-20 lg:h-56 lg:w-56"
-              style={{ background: "radial-gradient(ellipse at center, #60A5FA, #2563EB, transparent)" }}
-            />
-
-            {/* Main circle wrapper - extends outside container */}
-            <div className="relative z-10 lg:translate-x-16">
-              <div className="relative h-80 w-80 lg:h-[480px] lg:w-[480px]">
-                {/* Layered circular frames */}
-                <div className="absolute -inset-5 rounded-full border border-white/8 backdrop-blur-sm"
-                  style={{ background: "linear-gradient(135deg, rgba(37,99,235,0.08), rgba(109,94,245,0.04), rgba(96,165,250,0.02))" }}
-                />
-                <div className="absolute -inset-3 rounded-full border border-white/10"
-                  style={{ background: "linear-gradient(135deg, rgba(109,94,245,0.08), rgba(37,99,235,0.06), transparent)" }}
-                />
-
-                {/* Image circle with premium frame */}
-                <div className="relative h-full w-full overflow-hidden rounded-full shadow-[0_40px_100px_rgba(0,0,0,0.5),0_0_80px_rgba(37,99,235,0.15),0_0_80px_rgba(109,94,245,0.08)] backdrop-blur-sm"
-                  style={{ border: "3px solid rgba(255,255,255,0.15)", padding: "8px", background: "linear-gradient(145deg, rgba(11,31,58,0.5), rgba(30,41,59,0.2), rgba(37,99,235,0.08))" }}
+            {/* Floating tag pills */}
+            <div style={{
+              display: "flex",
+              gap: 10,
+              marginTop: 40,
+              flexWrap: "wrap",
+            }}>
+              {TAG_PILLS.map((tag) => (
+                <span
+                  key={tag}
+                  style={{
+                    background: "#F3F4F6",
+                    border: "1px solid #E5E7EB",
+                    borderRadius: 999,
+                    padding: "4px 14px",
+                    fontSize: 12,
+                    color: "#6B7280",
+                    fontWeight: 400,
+                  }}
                 >
-                  <div className="h-full w-full overflow-hidden rounded-full">
-                    <img
-                      src={heroImage}
-                      alt="Trading platform preview"
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                </div>
-
-                {/* Glass overlay */}
-                <div className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-white/5" />
-              </div>
+                  {tag}
+                </span>
+              ))}
             </div>
-          </motion.div>
-        </div>
+          </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.5 }}
-          className="mt-12 border-t border-white/[0.06] pt-10 lg:pt-14"
-        >
-          <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
-            <div>
-              <h2 className="font-display text-2xl font-bold leading-tight text-white lg:text-3xl">
-                Everything you need <br className="hidden lg:block" />
-                to trade smarter
-              </h2>
-              <p className="mt-4 text-sm leading-6 text-white/50 lg:text-base lg:leading-7">
-                Init Option offers advanced trading tools, market analysis, risk
-                management features, and educational resources for traders of all
-                levels.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                  <CheckCircle size={14} className="text-emerald-400" />
+          {/* Right visual */}
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            position: "relative",
+          }} className="hero-visual">
+            <div style={{
+              width: 440,
+              height: 440,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, rgba(213,0,108,0.08), rgba(213,0,108,0.02))",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+            }}>
+              {/* Inner rings */}
+              <div style={{
+                position: "absolute",
+                width: 360,
+                height: 360,
+                borderRadius: "50%",
+                border: "2px solid rgba(213,0,108,0.1)",
+              }} />
+              <div style={{
+                position: "absolute",
+                width: 280,
+                height: 280,
+                borderRadius: "50%",
+                border: "2px solid rgba(213,0,108,0.08)",
+              }} />
+
+              {/* Central chart icon */}
+              <div style={{
+                width: 180,
+                height: 180,
+                borderRadius: 24,
+                background: "#FFFFFF",
+                boxShadow: "0 20px 60px rgba(213,0,108,0.12), 0 4px 16px rgba(0,0,0,0.06)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 20,
+                zIndex: 1,
+              }}>
+                <i className="fa-solid fa-chart-simple" style={{ fontSize: 52, color: "#D5006C" }} />
+                <span style={{
+                  marginTop: 12,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#1A1A2A",
+                }}>
+                  Live Trading
                 </span>
-                <span className="font-copy text-sm text-white/60">Advanced trading tools</span>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                  <CheckCircle size={14} className="text-emerald-400" />
-                </span>
-                <span className="font-copy text-sm text-white/60">Market analysis</span>
+
+              {/* Floating decorative elements */}
+              <div style={{
+                position: "absolute",
+                top: 30,
+                right: 30,
+                width: 48,
+                height: 48,
+                borderRadius: "50%",
+                background: "rgba(213,0,108,0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                <i className="fa-solid fa-arrow-trend-up" style={{ fontSize: 18, color: "#D5006C" }} />
               </div>
-              <div className="flex items-center gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                  <CheckCircle size={14} className="text-emerald-400" />
-                </span>
-                <span className="font-copy text-sm text-white/60">Risk management features</span>
+              <div style={{
+                position: "absolute",
+                bottom: 50,
+                left: 20,
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                background: "rgba(213,0,108,0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                <i className="fa-solid fa-coins" style={{ fontSize: 16, color: "#D5006C" }} />
               </div>
-              <div className="flex items-center gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-                  <CheckCircle size={14} className="text-emerald-400" />
-                </span>
-                <span className="font-copy text-sm text-white/60">Educational resources</span>
+              <div style={{
+                position: "absolute",
+                bottom: 80,
+                right: 40,
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                background: "rgba(213,0,108,0.06)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                <i className="fa-solid fa-bolt" style={{ fontSize: 14, color: "#D5006C" }} />
               </div>
             </div>
           </div>
-        </motion.div>
-      </div>
-    </section>
+        </div>
+      </section>
+
+      {/* ─── BENEFIT CARDS ─────────────────────────────────── */}
+      <section style={{
+        background: "#FFFFFF",
+        padding: "80px 24px",
+      }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+          <h2 style={{
+            fontSize: 32,
+            fontWeight: 700,
+            color: "#1A1A2A",
+            textAlign: "center",
+            margin: "0 0 48px",
+            letterSpacing: "-0.5px",
+          }}>
+            Why Trade With Init Option
+          </h2>
+
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 24,
+          }} className="benefits-grid">
+            {BENEFITS.map((benefit) => (
+              <div
+                key={benefit.title}
+                style={{
+                  background: "#FFFFFF",
+                  borderRadius: 12,
+                  padding: 24,
+                  boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 16,
+                  transition: "transform 0.2s, boxShadow 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                  e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.05)";
+                }}
+              >
+                <div style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  background: "rgba(213,0,108,0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 20,
+                  color: "#D5006C",
+                }}>
+                  <i className={benefit.icon} />
+                </div>
+
+                <h3 style={{
+                  fontSize: 18,
+                  fontWeight: 600,
+                  color: "#1A1A2A",
+                  margin: 0,
+                }}>
+                  {benefit.title}
+                </h3>
+
+                <p style={{
+                  fontSize: 14,
+                  color: "#6B7280",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}>
+                  {benefit.desc}
+                </p>
+
+                <Link
+                  to="/about"
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "#D5006C",
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    marginTop: "auto",
+                  }}
+                >
+                  Learn More
+                  <i className="fa-solid fa-arrow-right" style={{ fontSize: 11 }} />
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Responsive styles */}
+      <style>{`
+        @media (max-width: 1199px) {
+          .hero-grid {
+            grid-template-columns: 1fr !important;
+            text-align: center;
+            gap: 40px !important;
+          }
+          .hero-grid h1 { font-size: 42px !important; }
+          .hero-grid p { max-width: 100% !important; margin-left: auto; margin-right: auto; }
+          .hero-grid .hero-visual { order: -1; }
+          .hero-grid .hero-visual > div { width: 320px !important; height: 320px !important; }
+          .hero-grid .hero-visual > div > div:nth-child(2) { width: 260px !important; height: 260px !important; }
+          .hero-grid .hero-visual > div > div:nth-child(3) { width: 200px !important; height: 200px !important; }
+          .hero-grid .hero-visual > div > div:nth-child(4) { width: 140px !important; height: 140px !important; }
+          .hero-tags { justify-content: center; }
+          .benefits-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 767px) {
+          .mobile-menu-btn { display: flex !important; }
+          nav > div > div:nth-child(2) { display: none !important; }
+          nav > div > a:last-child { display: none !important; }
+          .hero-grid h1 { font-size: 32px !important; }
+          .hero-grid p { font-size: 16px !important; }
+          .hero-grid .hero-visual > div { width: 240px !important; height: 240px !important; }
+          .hero-grid .hero-visual > div > div:nth-child(2) { width: 200px !important; height: 200px !important; }
+          .hero-grid .hero-visual > div > div:nth-child(3) { width: 150px !important; height: 150px !important; }
+          .hero-grid .hero-visual > div > div:nth-child(4) { width: 100px !important; height: 100px !important; }
+          .benefits-grid { grid-template-columns: 1fr !important; }
+          section { padding-left: 16px !important; padding-right: 16px !important; }
+        }
+      `}</style>
+    </div>
   );
 };
 
