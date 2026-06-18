@@ -144,7 +144,7 @@ const AdminLayout = () => {
 
   if (staffLoading) {
     return (
-      <div className="flex h-screen items-center justify-center" style={{ background: BG }}>
+      <div className="admin-theme-dark flex h-screen items-center justify-center" style={{ background: BG }}>
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" style={{ borderColor: ACCENT }} />
       </div>
     );
@@ -154,7 +154,27 @@ const AdminLayout = () => {
   if (!roleAllowsAdminPath(primaryRole, location.pathname)) return <Navigate to="/admin" replace />;
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden" style={{ background: BG, color: "#FFFFFF" }}>
+    <div
+      className="admin-theme-dark flex h-[100dvh] overflow-hidden"
+      style={{
+        background: BG,
+        color: "#FFFFFF",
+        "--admin-canvas": "#0D0D0D",
+        "--admin-surface": "#1A1A2A",
+        "--admin-elevated": "#222738",
+        "--admin-input": "#13161e",
+        "--admin-border": "#2A2A3A",
+        "--admin-text": "#FFFFFF",
+        "--admin-text-secondary": "#B0B0B0",
+        "--admin-text-muted": "#7890ab",
+        "--admin-hover": "#2A2A3A",
+        "--admin-hover-overlay": "rgba(255,255,255,0.04)",
+        "--admin-green": "#00C076",
+        "--admin-green-soft": "rgba(0,192,118,0.7)",
+        "--admin-orange": "#D5006C",
+        "--admin-orange-soft": "#D5006C",
+      } as React.CSSProperties}
+    >
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => setSidebarOpen(false)} />
