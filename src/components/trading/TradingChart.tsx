@@ -1085,14 +1085,14 @@ const getCandlestickDisplaySettings = (
   const minimalPreset = styles.displayPreset === "secondary";
   const upColor = minimalPreset ? toRgba(baseUpColor, 0.85) : mixHexColors(baseUpColor, "#ffffff", 0.02);
   const downColor = minimalPreset ? toRgba(baseDownColor, 0.85) : mixHexColors(baseDownColor, "#ffffff", 0.02);
-  const wickUpColor = toRgba(mixHexColors(baseUpColor, "#ffffff", minimalPreset ? 0.02 : 0.04), 0.88);
-  const wickDownColor = toRgba(mixHexColors(baseDownColor, "#ffffff", minimalPreset ? 0.02 : 0.04), 0.88);
+  const wickUpColor = mixHexColors(baseUpColor, "#000000", minimalPreset ? 0.35 : 0.25);
+  const wickDownColor = mixHexColors(baseDownColor, "#000000", minimalPreset ? 0.35 : 0.25);
 
   return {
     upColor,
     downColor,
-    borderUpColor: baseUpColor,
-    borderDownColor: baseDownColor,
+    borderUpColor: wickUpColor,
+    borderDownColor: wickDownColor,
     wickUpColor,
     wickDownColor,
     borderVisible: true,
