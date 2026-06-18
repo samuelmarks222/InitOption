@@ -124,7 +124,7 @@ const Navbar = () => {
         }
 
         .io-topbar-inner {
-          min-height: 40px;
+          min-height: 34px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -176,7 +176,7 @@ const Navbar = () => {
         }
 
         .io-navbar-inner {
-          min-height: 92px;
+          min-height: 64px;
           display: flex;
           align-items: center;
           justify-content: space-between;
