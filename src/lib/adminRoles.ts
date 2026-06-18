@@ -82,15 +82,21 @@ export const roleAllowsAdminPath = (role: AppRole | null, pathname: string) => {
     case "support_agent":
       return ["/admin/support", "/admin/users", "/admin/notifications"].some((path) => pathname.startsWith(path));
     case "finance_manager":
-      return ["/admin/finance", "/admin/reports", "/admin/analytics", "/admin/users"].some((path) => pathname.startsWith(path));
-    case "trade_risk_manager":
-      return ["/admin/trades", "/admin/risk", "/admin/analytics", "/admin/assets"].some((path) => pathname.startsWith(path));
-    case "content_marketing_manager":
-      return ["/admin/blog", "/admin/promos", "/admin/notifications", "/admin/settings", "/admin/reports"].some((path) =>
+      return ["/admin/finance", "/admin/reports", "/admin/analytics", "/admin/users", "/admin/crypto-payments"].some((path) =>
         pathname.startsWith(path),
       );
+    case "trade_risk_manager":
+      return ["/admin/trades", "/admin/risk", "/admin/analytics", "/admin/assets", "/admin/tournaments"].some((path) =>
+        pathname.startsWith(path),
+      );
+    case "content_marketing_manager":
+      return ["/admin/blog", "/admin/promos", "/admin/notifications", "/admin/settings", "/admin/reports", "/admin/guides"].some(
+        (path) => pathname.startsWith(path),
+      );
     case "auditor":
-      return ["/admin/audit", "/admin/reports", "/admin/finance", "/admin/trades"].some((path) => pathname.startsWith(path));
+      return ["/admin/audit", "/admin/reports", "/admin/finance", "/admin/trades", "/admin/analytics"].some((path) =>
+        pathname.startsWith(path),
+      );
     default:
       return false;
   }
