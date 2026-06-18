@@ -98,33 +98,6 @@ const Navbar = () => {
             Sign Up
           </Link>
 
-          <Link
-            to="/contact"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              border: "1px solid #D5006C",
-              color: "#D5006C",
-              borderRadius: 999,
-              padding: "8px 20px",
-              fontSize: 14,
-              fontWeight: 600,
-              textDecoration: "none",
-              transition: "opacity 0.2s",
-              whiteSpace: "nowrap",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#D5006C";
-              e.currentTarget.style.color = "#FFFFFF";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "#D5006C";
-            }}
-          >
-            Require Consultation? Contact Us Now
-          </Link>
         </div>
 
         <button
@@ -202,24 +175,6 @@ const Navbar = () => {
               Sign Up
             </Link>
           </div>
-          <Link
-            to="/contact"
-            onClick={() => setMobileOpen(false)}
-            style={{
-              display: "block",
-              textAlign: "center",
-              marginTop: 10,
-              border: "1px solid #D5006C",
-              color: "#D5006C",
-              borderRadius: 999,
-              padding: "10px 24px",
-              fontSize: 14,
-              fontWeight: 600,
-              textDecoration: "none",
-            }}
-          >
-            Require Consultation? Contact Us Now
-          </Link>
         </div>
       )}
     </nav>
