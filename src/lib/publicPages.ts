@@ -18,7 +18,9 @@ export type PublicPageKey =
   | "aml-kyc"
   | "payment-policy"
   | "affiliate-program"
-  | "site-map";
+  | "site-map"
+  | "regulation"
+  | "for-partners";
 
 export interface PublicPageSection {
   title: string;
@@ -1487,6 +1489,94 @@ export const PUBLIC_PAGE_DEFINITIONS: Record<PublicPageKey, PublicPageDefinition
       { label: "Delete account request", to: "/delete-account", description: "Follow the public account closure request process." },
       { label: "Sign in", to: "/login", description: "Go to the account sign-in page." },
       { label: "Create account", to: "/register", description: "Open the registration page for new users." },
+    ],
+  },
+  regulation: {
+    key: "regulation",
+    path: "/regulation",
+    eyebrow: "Compliance",
+    title: "Regulation and licensing",
+    description:
+      "{platformName} operates in full compliance with applicable laws and regulatory standards governing online trading platforms.",
+    seoTitle: "{platformName} Regulation & Licensing | Compliance Overview",
+    seoDescription:
+      "Review the regulatory framework, licensing, and compliance standards that {platformName} follows as an online trading platform.",
+    keywords:
+      "init option regulation, trading platform license, financial compliance, aml policy, kyc policy, regulatory framework",
+    sections: [
+      {
+        title: "Regulatory framework",
+        paragraphs: [
+          "{platformName} is committed to maintaining a transparent and compliant trading environment. We adhere to international standards for anti-money laundering (AML) and know-your-customer (KYC) practices.",
+          "Our platform operates under the legal framework of Kenya and complies with all applicable laws and regulations governing online trading and financial services.",
+        ],
+      },
+      {
+        title: "Compliance with AML and KYC standards",
+        paragraphs: [
+          "We have implemented robust AML and KYC procedures to prevent fraud, money laundering, and other financial crimes. All users are required to verify their identity before making withdrawals.",
+          "Our compliance team continuously monitors transactions and account activity to detect and report suspicious behavior to the relevant authorities.",
+        ],
+      },
+      {
+        title: "Data protection and privacy",
+        paragraphs: [
+          "{platformName} complies with the Data Protection Act and other applicable privacy laws. User data is encrypted, stored securely, and never shared with third parties without consent except as required by law.",
+          "We regularly review and update our security measures to protect user information from unauthorized access or disclosure.",
+        ],
+      },
+    ],
+    relatedLinks: [
+      { label: "AML and KYC policy", to: "/aml-kyc", description: "Read our full AML and KYC compliance policy." },
+      { label: "Privacy policy", to: "/privacy", description: "Review how we collect, use, and protect your data." },
+      { label: "Risk disclaimer", to: "/risk-disclaimer", description: "Understand the risks involved in trading." },
+    ],
+  },
+  "for-partners": {
+    key: "for-partners",
+    path: "/for-partners",
+    eyebrow: "Partnerships",
+    title: "For partners",
+    description:
+      "Explore partnership opportunities with {platformName} and grow your audience while earning competitive commissions.",
+    seoTitle: "{platformName} For Partners | Affiliate & Referral Programs",
+    seoDescription:
+      "Learn about {platformName} partnership and affiliate programs, including commission structures, promotional materials, and referral tracking.",
+    keywords:
+      "init option partners, affiliate program, referral program, partnership opportunities, commission, promote trading platform",
+    sections: [
+      {
+        title: "Why partner with us",
+        paragraphs: [
+          "{platformName} offers competitive partnership programs for affiliates, content creators, and financial communities who want to earn recurring revenue by referring traders to our platform.",
+          "Our partnership platform provides real-time tracking, promotional materials, and dedicated support to help you maximize your earnings.",
+        ],
+      },
+      {
+        title: "Affiliate program",
+        bullets: [
+          "Competitive commission rates on referred traders",
+          "Real-time tracking dashboard with detailed analytics",
+          "Promotional banners, landing pages, and marketing materials",
+          "Timely commission payouts with transparent reporting",
+          "Dedicated affiliate support team",
+        ],
+        paragraphs: [
+          "The affiliate program is designed for individuals and organizations who can direct traffic to {platformName}. You earn a commission for every qualified referral who signs up and trades on the platform.",
+        ],
+      },
+      {
+        title: "How to get started",
+        paragraphs: [
+          "Getting started as a partner is simple. Sign up for the affiliate program, access your unique referral links and promotional materials, and start earning commissions on referred traders.",
+          "Our team will work with you to optimize your campaigns and ensure you have everything you need to succeed.",
+        ],
+      },
+    ],
+    relatedLinks: [
+      { label: "Affiliate program", to: "/affiliate-program", description: "Detailed information about our affiliate program." },
+      { label: "Promo materials", to: "/admin/promo-materials", description: "Download banners and promotional assets." },
+      { label: "Contact support", to: "/contact", description: "Reach out to our partnership team." },
     ],
   },
 };

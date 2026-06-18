@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, CalendarDays, Rss, Search, Tag } from "lucide-re
 import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import PageHero from "@/components/layout/PageHero";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { useDynamicRouteSeo } from "@/hooks/useDynamicRouteSeo";
@@ -136,22 +137,13 @@ const BlogPage = () => {
       <Navbar />
 
       <main>
-        <section className="relative overflow-hidden border-b border-border/50 bg-background pb-16 pt-24 sm:pb-20 sm:pt-28">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,196,118,0.14),transparent_34%),radial-gradient(circle_at_78%_18%,rgba(255,255,255,0.06),transparent_24%)]" />
-          <div className="relative px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl">
-              <div className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Blog</div>
-              <h1 className="mt-5 text-4xl font-bold leading-[1.05] text-foreground sm:text-5xl lg:text-6xl">
-                Trading guides, platform updates, tournament results, and market education.
-              </h1>
-              <p className="mt-6 max-w-3xl text-base leading-8 text-muted-foreground sm:text-lg">
-                Explore professional articles written to help users understand how Init Option works, improve decision-making, and stay informed about platform updates, withdrawals, tournaments, and trading strategy.
-              </p>
-            </div>
-          </div>
-        </section>
+        <PageHero
+          eyebrow="Blog"
+          title="Trading guides, platform updates, tournament results, and market education."
+          description="Explore professional articles written to help users understand how Init Option works, improve decision-making, and stay informed about platform updates, withdrawals, tournaments, and trading strategy."
+        />
 
-        <section className="bg-background py-16 sm:py-20">
+        <section className="bg-[#f8f9fa] py-16 sm:py-20">
           <div className="px-4 sm:px-6 lg:px-8">
             {loading ? (
               <div className="text-sm text-muted-foreground">Loading blog posts...</div>

@@ -1,14 +1,17 @@
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import PageHero from "@/components/layout/PageHero";
 
 const InformationDisclosure = () => {
   return (
     <div className="min-h-screen bg-white font-copy text-gray-700">
       <Navbar />
+      <PageHero
+        eyebrow="Policy"
+        title="Information Disclosure Policy"
+        description="Last Updated: 9 June 2026 — Version 2.0 — Applicable to: All users, employees, contractors, and third parties interacting with Init Option"
+      />
       <main className="max-w-4xl mx-auto p-6">
-        <h1 className="font-display text-5xl md:text-6xl font-bold text-gray-900 mb-8">
-          Information Disclosure Policy
-        </h1>
 
         <section className="bg-gray-50 rounded-lg p-8 space-y-6 border border-gray-200">
           <p className="text-sm text-gray-600">

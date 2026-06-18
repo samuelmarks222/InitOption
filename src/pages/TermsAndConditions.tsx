@@ -1,15 +1,18 @@
 import { Link } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import PageHero from "@/components/layout/PageHero";
 
 const TermsAndConditions = () => {
   return (
     <div className="min-h-screen bg-white font-copy text-gray-700">
       <Navbar />
+      <PageHero
+        eyebrow="Legal"
+        title="Terms and Conditions for InitOption Trading Platform"
+        description="Last Updated: May 17, 2026"
+      />
       <main className="max-w-4xl mx-auto p-6">
-        <h1 className="font-display text-5xl md:text-6xl font-bold text-gray-900 mb-8">
-          Terms and Conditions for InitOption Trading Platform
-        </h1>
 
         <section className="bg-gray-50 rounded-lg p-8 space-y-6 border border-gray-200">
           <p>Last Updated: May 17, 2026</p>
