@@ -1,14 +1,15 @@
 import {
+  ChevronRight,
   Facebook,
   Globe,
   Instagram,
+  Mail,
   Music2,
   Send,
+  ShieldCheck,
   Twitter,
   type LucideIcon,
   Youtube,
-  Apple,
-  Play,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { WhatsAppLogo } from "@/components/icons/BrandSocialIcons";
@@ -133,120 +134,220 @@ const Footer = ({ content }: FooterProps) => {
       ],
     },
   ] as const;
+  const footerLinkItems = footerLinkGroups.flatMap((group) => group.items);
+  const instagramLink = visibleSocialLinks.find((item) => item.platform.trim().toLowerCase().includes("instagram"));
+  const paymentLabels = websiteContent.features.paymentLogos
+    .map((label) => label.trim())
+    .filter(Boolean)
+    .slice(0, 6);
+  const footerGalleryImages = [
+    {
+      src: "/landing/hero-laptop-front77.jpg",
+      alt: `${platformName} desktop trading terminal`,
+    },
+    {
+      src: "/landing/phone-view.jpg",
+      alt: `${platformName} mobile trading terminal`,
+    },
+    {
+      src: "/landing/hero-laptop-angle.jpg",
+      alt: `${platformName} platform dashboard`,
+    },
+    {
+      src: "/landing/earnings-visual.jpg",
+      alt: `${platformName} earnings preview`,
+    },
+    {
+      src: "/landing/faq-visual.jpg",
+      alt: `${platformName} support resources`,
+    },
+    {
+      src: "/landing/faqs.avif",
+      alt: `${platformName} trading help center`,
+    },
+  ];
 
   return (
-    <footer className="relative overflow-hidden border-t border-white/10" style={{ background: "linear-gradient(135deg, #0a1423 0%, #0f1b2e 100%)" }}>
-      {/* Decorative Background Elements */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-500/10 to-transparent rounded-full blur-3xl" />
-      </div>
+    <footer
+      className="relative overflow-hidden border-t border-emerald-400/20 bg-[#042d32] text-white"
+      style={{
+        backgroundImage:
+          "linear-gradient(115deg, rgba(4, 46, 49, 0.96), rgba(3, 28, 37, 0.98)), repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 48px), repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 48px)",
+      }}
+    >
+      <div
+        aria-hidden="true"
+        className="h-3 w-full border-y border-emerald-300/20 bg-[repeating-linear-gradient(135deg,#19b65a_0_5px,#0f7f46_5px_10px)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(90deg, rgba(8,92,80,0.2), transparent 30%, rgba(8,92,80,0.18)), radial-gradient(circle at right, rgba(255,255,255,0.06) 1px, transparent 1px)",
+          backgroundSize: "auto, 18px 18px",
+        }}
+      />
 
-      <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-        {/* Main Content */}
-        <div className="py-14 sm:py-18">
-          <div className="flex flex-col gap-10 pb-12 sm:flex-row sm:items-start sm:justify-between sm:gap-16">
-            {/* Left Section */}
-            <div className="max-w-sm">
-              <SiteLogo
-                to="/"
-                context="footer"
-                className="mb-5"
-                imageClassName="h-10"
-              />
-              <p className="font-copy text-sm leading-7 text-white/50">
-                {websiteContent.footer.description}
-              </p>
+      <div className="relative mx-auto max-w-7xl px-6 py-14 sm:px-8 sm:py-16 lg:px-10">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-14">
+          <div className="lg:col-span-4">
+            <SiteLogo
+              to="/"
+              className="mb-7"
+              imageClassName="h-11 max-w-[240px] sm:h-12"
+            />
+            <p className="max-w-sm font-copy text-sm font-semibold leading-7 text-white/60">
+              {websiteContent.footer.description}
+            </p>
 
-              {/* App Buttons */}
-              <div className="mt-6 flex flex-wrap gap-3">
-                <button className="flex items-center gap-2.5 rounded-full border border-white/10 bg-white px-5 py-3 text-sm font-semibold text-gray-900 transition-all duration-200 hover:bg-white/90 hover:shadow-lg hover:shadow-white/20">
-                  <Apple className="h-5 w-5" />
-                  App Store
-                </button>
-                <button className="flex items-center gap-2.5 rounded-full border border-white/10 bg-gray-900/50 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-200 hover:bg-gray-800 hover:shadow-lg hover:shadow-white/10">
-                  <Play className="h-5 w-5" />
-                  Google Play
-                </button>
-              </div>
-            </div>
+            <a
+              href={`mailto:${supportEmail}`}
+              className="mt-7 inline-flex max-w-full items-center gap-4 rounded-sm border border-emerald-300/15 bg-white/[0.03] px-4 py-3 transition-colors hover:border-emerald-300/40 hover:bg-white/[0.06]"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-300/30 text-emerald-400">
+                <Mail className="h-5 w-5" />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate font-copy text-base font-black text-white">
+                  {supportEmail}
+                </span>
+                <span className="mt-0.5 block font-copy text-xs font-bold uppercase tracking-[0.12em] text-emerald-400">
+                  Support 24/7
+                </span>
+              </span>
+            </a>
 
-            {/* Social Links Section */}
             {visibleSocialLinks.length ? (
-              <div>
-                {(socialLinksConfig.title?.trim() || socialLinksConfig.subtitle?.trim()) ? (
-                  <div className="mb-4">
-                    {socialLinksConfig.title?.trim() ? (
-                      <div className="font-copy text-xs font-semibold uppercase tracking-[0.18em] text-emerald-400">
-                        {socialLinksConfig.title}
-                      </div>
-                    ) : null}
-                    {socialLinksConfig.subtitle?.trim() ? (
-                      <p className="mt-1 font-copy text-sm text-white/40">
-                        {socialLinksConfig.subtitle}
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
-                <div className="flex flex-wrap items-center gap-2.5">
-                  {visibleSocialLinks.map((item) => {
-                    const { Icon, isWhatsApp } = resolveSocialIcon(item.platform);
+              <div className="mt-7 flex flex-wrap items-center gap-3">
+                <span className="font-copy text-sm font-black text-emerald-400">Follow On :</span>
+                <span className="h-6 w-px bg-white/20" />
+                {visibleSocialLinks.map((item) => {
+                  const { Icon, isWhatsApp } = resolveSocialIcon(item.platform);
 
-                    return (
-                      <a
-                        key={`${item.platform}-${item.href}`}
-                        href={item.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={item.handle.trim() || item.platform.trim()}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-white/50 transition-all duration-200 hover:border-emerald-500/50 hover:bg-emerald-500/20 hover:text-emerald-400"
-                      >
-                        <Icon className={`h-3.5 w-3.5 ${isWhatsApp ? 'text-emerald-400' : ''}`} strokeWidth={2} />
-                      </a>
-                    );
-                  })}
-                </div>
+                  return (
+                    <a
+                      key={`${item.platform}-${item.href}`}
+                      href={item.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={item.handle.trim() || item.platform.trim()}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/70 transition-all duration-200 hover:border-emerald-400/50 hover:bg-emerald-500/15 hover:text-emerald-300"
+                    >
+                      <Icon className={`h-4 w-4 ${isWhatsApp ? "text-emerald-400" : ""}`} strokeWidth={2.2} />
+                    </a>
+                  );
+                })}
               </div>
             ) : null}
           </div>
 
-          <div className="grid gap-10 border-t border-white/[0.04] pt-12 sm:grid-cols-2 lg:grid-cols-5">
-            {footerLinkGroups.map((group) => (
-              <div key={group.title} className={group.items.length <= 2 ? "lg:col-span-1" : ""}>
-                <h4 className="font-copy text-sm font-semibold text-white/80">
-                  {group.title}
-                </h4>
-                <ul className="mt-4 space-y-2.5">
-                  {group.items.map((item) => (
-                    <li key={item.label}>
-                      <Link to={item.to} className="font-copy text-sm text-white/40 transition-colors duration-200 hover:text-white">
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+          <div className="lg:col-span-5">
+            <h3 className="font-copy text-2xl font-black text-white">Useful Links</h3>
+            <div className="mt-4 h-px w-full bg-emerald-100/15">
+              <div className="h-px w-24 bg-emerald-500" />
+            </div>
 
-            <div className="sm:col-span-2 lg:col-span-1">
-              <h4 className="font-copy text-sm font-semibold text-white/80">
+            <ul className="mt-8 grid gap-x-10 gap-y-4 sm:grid-cols-2">
+              {footerLinkItems.map((item) => (
+                <li key={`${item.label}-${item.to}`}>
+                  <Link
+                    to={item.to}
+                    className="group inline-flex items-center gap-3 font-copy text-sm font-bold text-white/70 transition-colors hover:text-white"
+                  >
+                    <ChevronRight className="h-4 w-4 text-emerald-500 transition-transform group-hover:translate-x-1" />
+                    <span>{item.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8 border-l-2 border-emerald-500/70 pl-5">
+              <div className="flex items-center gap-2 font-copy text-sm font-black text-white">
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
                 Risk Notifications
-              </h4>
-              <p className="mt-4 font-copy text-sm leading-7 text-white/40">
+              </div>
+              <p className="mt-3 max-w-2xl font-copy text-sm leading-7 text-white/50">
                 {websiteContent.footer.riskWarning}
               </p>
               <Link
                 to="/risk-disclaimer"
-                className="mt-3 inline-flex font-copy text-sm font-medium text-emerald-400 transition-colors hover:text-white"
+                className="mt-3 inline-flex font-copy text-sm font-bold text-emerald-400 transition-colors hover:text-white"
               >
                 Read full risk disclaimer
               </Link>
             </div>
           </div>
-        </div>
 
-        <div className="border-t border-white/[0.04] py-6 text-center font-copy text-xs text-white/30 sm:text-sm">
-          Copyright © {new Date().getFullYear()} {platformName}. All rights reserved.
+          <div className="lg:col-span-3">
+            <h3 className="font-copy text-2xl font-black text-white">
+              {instagramLink ? "Instagram" : "Social Updates"}
+            </h3>
+            <div className="mt-4 h-px w-full bg-emerald-100/15">
+              <div className="h-px w-20 bg-emerald-500" />
+            </div>
+
+            <div className="mt-8 grid max-w-[320px] grid-cols-3 gap-3">
+              {footerGalleryImages.map((image) =>
+                instagramLink ? (
+                  <a
+                    key={image.src}
+                    href={instagramLink.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Open ${platformName} Instagram`}
+                    className="aspect-square overflow-hidden rounded-md border-2 border-emerald-500/80 bg-emerald-950/60 shadow-[0_0_0_3px_rgba(20,184,116,0.12)] transition-transform hover:-translate-y-1"
+                  >
+                    <img
+                      src={image.src}
+                      alt={image.alt}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  </a>
+                ) : (
+                  <div
+                    key={image.src}
+                    className="aspect-square overflow-hidden rounded-md border-2 border-emerald-500/80 bg-emerald-950/60 shadow-[0_0_0_3px_rgba(20,184,116,0.12)]"
+                  >
+                    <img
+                      src={image.src}
+                      alt={image.alt}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ),
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative border-t border-emerald-300/15 bg-[#05242b]/90">
+        <div
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 hidden w-[52%] bg-[#10993f] lg:block"
+          style={{ clipPath: "polygon(0 0, 88% 0, 100% 100%, 0 100%)" }}
+        />
+        <div className="relative mx-auto flex max-w-7xl flex-col gap-5 px-6 py-6 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-10">
+          <p className="font-copy text-sm font-bold text-white">
+            &copy; Copyright {new Date().getFullYear()} - {platformName} All rights reserved.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {paymentLabels.map((label) => (
+              <span
+                key={label}
+                className="inline-flex h-9 min-w-14 items-center justify-center rounded-md border border-white/20 bg-white px-3 font-copy text-[11px] font-black uppercase tracking-[0.04em] text-slate-800 shadow-sm"
+              >
+                {label}
+              </span>
+            ))}
+            <div className="ml-1 flex h-14 w-14 items-center justify-center rounded-full border-2 border-emerald-300/70 bg-white/5 font-copy text-sm font-black text-white shadow-[0_0_0_8px_rgba(255,255,255,0.04)]">
+              100%
+            </div>
+          </div>
         </div>
       </div>
     </footer>
