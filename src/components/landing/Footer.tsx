@@ -135,37 +135,10 @@ const Footer = ({ content }: FooterProps) => {
     },
   ] as const;
   const footerLinkItems = footerLinkGroups.flatMap((group) => group.items);
-  const instagramLink = visibleSocialLinks.find((item) => item.platform.trim().toLowerCase().includes("instagram"));
   const paymentLabels = websiteContent.features.paymentLogos
     .map((label) => label.trim())
     .filter(Boolean)
     .slice(0, 6);
-  const footerGalleryImages = [
-    {
-      src: "/landing/hero-laptop-front77.jpg",
-      alt: `${platformName} desktop trading terminal`,
-    },
-    {
-      src: "/landing/phone-view.jpg",
-      alt: `${platformName} mobile trading terminal`,
-    },
-    {
-      src: "/landing/hero-laptop-angle.jpg",
-      alt: `${platformName} platform dashboard`,
-    },
-    {
-      src: "/landing/earnings-visual.jpg",
-      alt: `${platformName} earnings preview`,
-    },
-    {
-      src: "/landing/faq-visual.jpg",
-      alt: `${platformName} support resources`,
-    },
-    {
-      src: "/landing/faqs.avif",
-      alt: `${platformName} trading help center`,
-    },
-  ];
 
   return (
     <footer
@@ -261,64 +234,28 @@ const Footer = ({ content }: FooterProps) => {
                 </li>
               ))}
             </ul>
-
-            <div className="mt-8 border-l-2 border-emerald-500/70 pl-5">
-              <div className="flex items-center gap-2 font-copy text-sm font-black text-white">
-                <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                Risk Notifications
-              </div>
-              <p className="mt-3 max-w-2xl font-copy text-sm leading-7 text-white/50">
-                {websiteContent.footer.riskWarning}
-              </p>
-              <Link
-                to="/risk-disclaimer"
-                className="mt-3 inline-flex font-copy text-sm font-bold text-emerald-400 transition-colors hover:text-white"
-              >
-                Read full risk disclaimer
-              </Link>
-            </div>
           </div>
 
           <div className="lg:col-span-3">
-            <h3 className="font-copy text-2xl font-black text-white">
-              {instagramLink ? "Instagram" : "Social Updates"}
-            </h3>
+            <h3 className="font-copy text-2xl font-black text-white">Risk Notifications</h3>
             <div className="mt-4 h-px w-full bg-emerald-100/15">
               <div className="h-px w-20 bg-emerald-500" />
             </div>
 
-            <div className="mt-8 grid max-w-[320px] grid-cols-3 gap-3">
-              {footerGalleryImages.map((image) =>
-                instagramLink ? (
-                  <a
-                    key={image.src}
-                    href={instagramLink.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`Open ${platformName} Instagram`}
-                    className="aspect-square overflow-hidden rounded-md border-2 border-emerald-500/80 bg-emerald-950/60 shadow-[0_0_0_3px_rgba(20,184,116,0.12)] transition-transform hover:-translate-y-1"
-                  >
-                    <img
-                      src={image.src}
-                      alt={image.alt}
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                  </a>
-                ) : (
-                  <div
-                    key={image.src}
-                    className="aspect-square overflow-hidden rounded-md border-2 border-emerald-500/80 bg-emerald-950/60 shadow-[0_0_0_3px_rgba(20,184,116,0.12)]"
-                  >
-                    <img
-                      src={image.src}
-                      alt={image.alt}
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ),
-              )}
+            <div className="mt-8 border-l-2 border-emerald-500/70 bg-white/[0.03] px-5 py-5">
+              <div className="flex items-center gap-2 font-copy text-sm font-black text-white">
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                Trading Risk
+              </div>
+              <p className="mt-3 font-copy text-sm leading-7 text-white/50">
+                {websiteContent.footer.riskWarning}
+              </p>
+              <Link
+                to="/risk-disclaimer"
+                className="mt-4 inline-flex font-copy text-sm font-bold text-emerald-400 transition-colors hover:text-white"
+              >
+                Read full risk disclaimer
+              </Link>
             </div>
           </div>
         </div>
