@@ -1173,7 +1173,7 @@ const getCandlestickDisplaySettings = (
     wickUpColor,
     wickDownColor,
     borderVisible: true,
-    wickVisible: false,
+    wickVisible: true,
     priceLineVisible: styles.priceLineVisible,
     autoScale: true,
   };
