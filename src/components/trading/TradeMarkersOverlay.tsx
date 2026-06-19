@@ -14,6 +14,8 @@ interface Props {
   trades: ActiveTrade[];
   timeframeSeconds: number;
   liveLogical?: number | null;
+  livePrice?: number;
+  showIdleReference?: boolean;
 }
 
 const MARKER_WIDTH = 82;
@@ -25,6 +27,26 @@ const MARKER_EDGE_GAP = 8;
 const ENTRY_DOT_SIZE = 9;
 const CONNECTOR_DOT_SIZE = 8;
 const ENTRY_PRICE_TAG_WIDTH = 114;
+
+type MarkerPosition = {
+  id: string;
+  left: number;
+  top: number;
+  purchaseLabelLeft: number;
+  connectorDotLeft: number;
+  dotLeft: number;
+  dotTop: number;
+  amountLabel: string;
+  clockLabel: string;
+  color: string;
+  direction: ActiveTrade["direction"];
+  entryPrice: number;
+  entryPriceLead: string;
+  entryPriceAccent: string;
+  openedAtMs: number;
+  progress: number;
+  isReference?: boolean;
+};
 
 export const normalizeTradeMarkerSymbol = (symbol: string) =>
   symbol
@@ -40,6 +62,12 @@ const isFiniteCoordinate = (value: unknown): value is number =>
 
 const isUsableMarkerX = (value: unknown, width: number): value is number =>
   isFiniteCoordinate(value) && value >= -MARKER_WIDTH && value <= width + MARKER_EDGE_GAP;
+
+const clampMarkerX = (value: number, width: number) =>
+  Math.min(Math.max(value, MARKER_MIN_VISIBLE_X), Math.max(MARKER_MIN_VISIBLE_X, width - MARKER_EDGE_GAP));
+
+const clampMarkerY = (value: number, height: number) =>
+  Math.min(Math.max(value, MARKER_EDGE_GAP), Math.max(MARKER_EDGE_GAP, height - MARKER_EDGE_GAP));
 
 const formatMarkerClock = (seconds: number) => {
   const total = Math.max(0, Math.ceil(seconds));
@@ -165,7 +193,16 @@ export const getTradeMarkerCoordinate = (
     : null;
 };
 
-export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timeframeSeconds, liveLogical }: Props) => {
+export const TradeMarkersOverlay = ({
+  chart,
+  series,
+  assetSymbol,
+  trades,
+  timeframeSeconds,
+  liveLogical,
+  livePrice,
+  showIdleReference = false,
+}: Props) => {
   const sRef = useRef(series);
   const chartRef = useRef(chart);
   const plRef = useRef<Record<string, IPriceLine>>({});
@@ -224,7 +261,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
     const width = rect.width || container.clientWidth || 1;
     const height = rect.height || container.clientHeight || 1;
 
-    return myTrades.map((trade) => {
+    return myTrades.map((trade): MarkerPosition | null => {
       const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds || 1));
       const markerTimeNumber = trade.marker_time ?? Math.floor(new Date(trade.opened_at).getTime() / 1000);
       const openedAtMs = new Date(trade.opened_at).getTime();
@@ -241,10 +278,6 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
       const exactTimeX = timeScale.timeToCoordinate(markerTime);
       const bucketTimeX = timeScale.timeToCoordinate(markerBucketTime as Time);
       const y = series.priceToCoordinate(trade.entry_price);
-
-      if (!isFiniteCoordinate(y)) {
-        return null;
-      }
 
       const nowSec = Math.floor(Date.now() / 1000);
       const { entryTime, expiryTime } = getTradeDisplayTimes(trade, nowSec);
@@ -265,14 +298,12 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         isUsableMarkerX(candidate, width),
       );
 
-      if (!isFiniteCoordinate(x)) {
-        return null;
-      }
-
       const isHigher = trade.direction === "higher";
       const color = isHigher ? UP : DN;
-      const clampedX = Math.min(Math.max(x, MARKER_MIN_VISIBLE_X), width - MARKER_EDGE_GAP);
-      const clampedY = Math.min(Math.max(y, MARKER_EDGE_GAP), height - MARKER_EDGE_GAP);
+      const fallbackX = width * (0.16 + Math.max(0, Math.min(1, 1 - progress)) * 0.54);
+      const clampedX = clampMarkerX(isFiniteCoordinate(x) ? x : fallbackX, width);
+      const fallbackY = height * 0.76;
+      const clampedY = clampMarkerY(isFiniteCoordinate(y) ? y : fallbackY, height);
       const pillLeft = clampedX - MARKER_WIDTH - MARKER_DOT_GAP;
       const purchaseLabelLeft = Math.min(Math.max(8, clampedX - 112), Math.max(8, width - 152));
       const priceParts = splitPriceLabel(trade.entry_price);
@@ -295,12 +326,57 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         openedAtMs: Number.isFinite(openedAtMs) ? openedAtMs : markerTimeNumber * 1000,
         progress,
       };
-    }).filter(Boolean).sort((left, right) => {
-      if (!left || !right) return 0;
+    }).filter((position): position is MarkerPosition => Boolean(position)).sort((left, right) => {
       return left.openedAtMs - right.openedAtMs;
     });
   }, [chart, liveLogical, myTrades, series, tick, timeframeSeconds]);
-  const featuredPosition = markerPositions[markerPositions.length - 1] ?? null;
+
+  const idleReferencePosition = useMemo<MarkerPosition | null>(() => {
+    if (!showIdleReference || myTrades.length > 0) return null;
+
+    const container = chartRef.current?.container?.();
+    if (!container) return null;
+
+    const rect = container.getBoundingClientRect();
+    const width = rect.width || container.clientWidth || 1;
+    const height = rect.height || container.clientHeight || 1;
+    const safePrice = typeof livePrice === "number" && Number.isFinite(livePrice) ? livePrice : 0;
+    const y = safePrice > 0 ? series.priceToCoordinate(safePrice) : null;
+    const logicalX =
+      typeof liveLogical === "number" &&
+      Number.isFinite(liveLogical) &&
+      typeof chartRef.current.timeScale().logicalToCoordinate === "function"
+        ? chartRef.current.timeScale().logicalToCoordinate((liveLogical - 8) as never)
+        : null;
+    const clampedX = clampMarkerX(isUsableMarkerX(logicalX, width) ? logicalX : width * 0.18, width);
+    const clampedY = clampMarkerY(isFiniteCoordinate(y) ? y : height * 0.76, height);
+    const pillLeft = clampedX - MARKER_WIDTH - MARKER_DOT_GAP;
+    const purchaseLabelLeft = Math.min(Math.max(8, clampedX - 112), Math.max(8, width - 152));
+    const priceParts = splitPriceLabel(safePrice || 0);
+    const clockSeconds = Math.max(1, Math.min(15, Math.floor(Math.max(1, timeframeSeconds) / 4)));
+
+    return {
+      id: "idle-reference",
+      left: pillLeft,
+      top: clampedY,
+      purchaseLabelLeft,
+      connectorDotLeft: pillLeft + MARKER_WIDTH + CONNECTOR_DOT_OFFSET,
+      dotLeft: clampedX,
+      dotTop: clampedY,
+      amountLabel: "",
+      clockLabel: formatMarkerClock(clockSeconds),
+      color: DN,
+      direction: "lower",
+      entryPrice: safePrice,
+      entryPriceLead: priceParts.lead,
+      entryPriceAccent: priceParts.accent,
+      openedAtMs: Date.now(),
+      progress: 1,
+      isReference: true,
+    };
+  }, [liveLogical, livePrice, myTrades.length, series, showIdleReference, tick, timeframeSeconds]);
+
+  const featuredPosition = markerPositions[markerPositions.length - 1] ?? idleReferencePosition;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[90]" data-trade-markers-overlay="true">
