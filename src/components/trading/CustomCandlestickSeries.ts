@@ -28,9 +28,7 @@ export interface CustomCandlestickOptions extends CustomSeriesOptions {
 const SHADOW_BLUR = 4;
 const SHADOW_OFFSET_X = 3;
 const SHADOW_OPACITY = 0.15;
-const BORDER_WIDTH = 0.5;
 const WICK_LINE_WIDTH = 1;
-const BODY_RADIUS = 2;
 
 class CustomCandlestickPaneRenderer implements ICustomSeriesPaneRenderer {
   private _data: PaneRendererCustomData<Time, CustomCandlestickData> | null = null;
@@ -71,8 +69,6 @@ class CustomCandlestickPaneRenderer implements ICustomSeriesPaneRenderer {
         const bodyHeight = Math.max(1, bodyBottom - bodyTop);
 
         const left = x - halfBody;
-        const right = x + halfBody;
-        const radius = Math.min(BODY_RADIUS, halfBody, bodyHeight / 2);
 
         if (options.wickVisible) {
           ctx.save();
@@ -95,25 +91,8 @@ class CustomCandlestickPaneRenderer implements ICustomSeriesPaneRenderer {
         ctx.shadowOffsetX = SHADOW_OFFSET_X;
         ctx.shadowOffsetY = 0;
 
-        ctx.beginPath();
-        ctx.moveTo(left + radius, bodyTop);
-        ctx.lineTo(right - radius, bodyTop);
-        ctx.arcTo(right, bodyTop, right, bodyTop + radius, radius);
-        ctx.lineTo(right, bodyBottom - radius);
-        ctx.arcTo(right, bodyBottom, right - radius, bodyBottom, radius);
-        ctx.lineTo(left + radius, bodyBottom);
-        ctx.arcTo(left, bodyBottom, left, bodyBottom - radius, radius);
-        ctx.lineTo(left, bodyTop + radius);
-        ctx.arcTo(left, bodyTop, left + radius, bodyTop, radius);
-        ctx.closePath();
-
         ctx.fillStyle = bodyColor;
-        ctx.fill();
-
-        ctx.shadowColor = "transparent";
-        ctx.strokeStyle = bodyColor;
-        ctx.lineWidth = BORDER_WIDTH;
-        ctx.stroke();
+        ctx.fillRect(left, bodyTop, bodyWidth, bodyHeight);
         ctx.restore();
       }
     });
