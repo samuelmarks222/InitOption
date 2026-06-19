@@ -48,7 +48,7 @@ class CustomCandlestickPaneRenderer implements ICustomSeriesPaneRenderer {
       const bars = data.bars;
       if (bars.length === 0) return;
 
-      const bodyWidth = Math.max(1, data.barSpacing * 0.55);
+      const bodyWidth = Math.max(1, data.barSpacing * 0.72);
       const halfBody = bodyWidth / 2;
 
       for (const bar of bars) {
