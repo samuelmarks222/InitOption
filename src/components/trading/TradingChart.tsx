@@ -191,6 +191,83 @@ type LivePriceBeaconState = {
   logical: number | null;
 };
 
+const DOTTED_WORLD_MAP_BACKGROUND = `url("data:image/svg+xml,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="520" viewBox="0 0 980 520">
+  <defs>
+    <pattern id="dotMapPattern" width="7" height="7" patternUnits="userSpaceOnUse">
+      <circle cx="1.6" cy="1.6" r="1.35" fill="#07111f"/>
+    </pattern>
+  </defs>
+  <g fill="url(#dotMapPattern)" opacity="0.46">
+    <path d="M111 124c43-33 105-42 155-20 31 14 54 39 74 66 22 30 41 63 39 99-2 43-34 80-73 96-45 18-101 8-136-25-26-25-40-61-66-86-23-23-58-35-69-66-9-26 10-49 76-64Z"/>
+    <path d="M298 81c54-37 140-39 202-12 38 17 72 44 111 58 44 17 96 15 133 43 30 22 44 59 31 91-16 40-70 53-112 42-34-9-62-31-96-37-41-8-84 11-126 7-52-5-94-43-123-86-20-29-42-78-20-106Z"/>
+    <path d="M501 263c43-20 95-10 121 25 22 30 22 74 12 111-9 36-25 77-60 91-36 15-74-8-96-38-24-33-35-78-27-118 6-32 21-58 50-71Z"/>
+    <path d="M676 286c36-21 91-5 114 32 20 33 13 82-14 109-27 28-71 33-104 12-31-20-48-60-41-96 4-24 19-45 45-57Z"/>
+    <path d="M741 119c44-18 98-6 136 21 29 20 58 55 47 90-10 34-53 48-89 45-35-3-66-19-99-30-31-11-68-16-87-43-25-37 15-70 92-83Z"/>
+    <path d="M789 410c23-8 55 2 69 22 13 19 8 45-10 58-20 14-50 10-67-8-19-21-18-57 8-72Z"/>
+  </g>
+</svg>
+`)}")`;
+
+const splitPriceLabel = (price: number, precision: number) => {
+  const safePrecision = Math.max(0, Math.min(8, precision));
+  const label = Number.isFinite(price) ? price.toFixed(safePrecision) : "0";
+  const decimalIndex = label.indexOf(".");
+
+  if (decimalIndex === -1) {
+    return { lead: "", accent: label };
+  }
+
+  return {
+    lead: label.slice(0, decimalIndex + 1),
+    accent: label.slice(decimalIndex + 1),
+  };
+};
+
+const LivePriceAxisOverlay = ({
+  chart,
+  series,
+  price,
+  precision,
+  rising,
+}: {
+  chart: IChartApi;
+  series: ChartSeriesApi;
+  price: number;
+  precision: number;
+  rising: boolean;
+}) => {
+  const y = series.priceToCoordinate(price);
+  const host = chart.container?.();
+
+  if (typeof y !== "number" || !Number.isFinite(y) || !host) {
+    return null;
+  }
+
+  const clampedY = Math.min(Math.max(16, y), Math.max(16, host.clientHeight - 16));
+  const parts = splitPriceLabel(price, precision);
+  const accentColor = rising ? "#10d66a" : "#ff6b5d";
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[84]" aria-hidden="true">
+      <div
+        className="absolute left-0 right-[74px] h-px bg-[#e8edf7]/85 shadow-[0_0_8px_rgba(232,237,247,0.18)]"
+        style={{ top: clampedY }}
+      />
+      <div
+        className="absolute right-0 flex h-[30px] min-w-[112px] items-center justify-end bg-[#e8ecf2] pl-5 pr-2.5 text-right text-[14px] font-black leading-none shadow-[0_8px_18px_rgba(0,0,0,0.22)]"
+        style={{
+          top: clampedY - 15,
+          clipPath: "polygon(12px 0, 100% 0, 100% 100%, 12px 100%, 0 50%)",
+        }}
+      >
+        <span className="text-[#566173]">{parts.lead}</span>
+        <span style={{ color: accentColor }}>{parts.accent}</span>
+      </div>
+    </div>
+  );
+};
+
 const toLineChartData = (candles: OHLCCandle[]): LineData<Time>[] =>
   candles.map((candle) => ({ time: toChartTime(candle.time), value: candle.close }));
 
@@ -2127,7 +2204,15 @@ const TradingChart = ({
     if (!activeChartBackgroundImage) {
       return {
         ...mobileTouchSurface,
-        background: effectiveChartTheme.bg,
+        backgroundColor: effectiveChartTheme.bg,
+        backgroundImage: [
+          DOTTED_WORLD_MAP_BACKGROUND,
+          "radial-gradient(ellipse at 52% 46%, rgba(143,164,210,0.08) 0%, rgba(143,164,210,0.02) 46%, transparent 74%)",
+          "linear-gradient(180deg, rgba(255,255,255,0.018), rgba(0,0,0,0.025))",
+        ].join(", "),
+        backgroundPosition: "center 48%, center, center",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "980px 520px, 100% 100%, 100% 100%",
       };
     }
 
@@ -2665,7 +2750,7 @@ const TradingChart = ({
     // Apply background colors reactively
     chartRef.current.applyOptions({
       layout: {
-        background: { type: ColorType.Solid, color: effectiveChartTheme.bg },
+        background: { type: ColorType.Solid, color: TRANSPARENT_COLOR },
         textColor: chartTextColor,
       },
       grid: {
@@ -2701,7 +2786,7 @@ const TradingChart = ({
         width: mainRef.current.clientWidth,
         height: mainRef.current.clientHeight,
         layout: { 
-          background: { type: ColorType.Solid, color: globalThemeRef.current.bg }, 
+          background: { type: ColorType.Solid, color: TRANSPARENT_COLOR },
           textColor: chartTextColor,
           fontFamily: "Arial, Helvetica, sans-serif",
           fontSize: 12 
@@ -3871,6 +3956,15 @@ const TradingChart = ({
 
         {syncChart && syncSeries && (
            <>
+             {!mobileHistoryOpen && !overlayUiSuppressed && (
+               <LivePriceAxisOverlay
+                 chart={syncChart}
+                 series={syncSeries}
+                 price={livePriceBeacon?.price ?? currentPrice}
+                 precision={dec}
+                 rising={isUp}
+               />
+             )}
              {!mobileHistoryOpen && (
                <DrawingOverlay 
                  chart={syncChart} 
@@ -3956,6 +4050,21 @@ const TradingChart = ({
               })}
             </div>
           </>
+        )}
+
+        {activeAssetTrades.length > 0 && !compactPane && !miniOverlay && !mobileHistoryOpen && !overlayUiSuppressed && (
+          <div className="pointer-events-none absolute bottom-6 right-5 z-[88] hidden sm:block">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                scrollChartToLiveEdge();
+              }}
+              className="pointer-events-auto rounded-full bg-[#7d8598]/88 px-7 py-2 text-[12px] font-semibold text-white shadow-[0_10px_26px_rgba(0,0,0,0.24)] transition-colors hover:bg-[#9098aa]"
+            >
+              Show All
+            </button>
+          </div>
         )}
 
         {!compactPane && !miniOverlay && !mobileHistoryOpen && !overlayUiSuppressed && (

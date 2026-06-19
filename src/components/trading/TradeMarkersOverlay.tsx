@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { IChartApi, ISeriesApi, type SeriesType, Time, IPriceLine, LineStyle } from "lightweight-charts";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { AlarmClock, ArrowDown, ArrowUp, Flag } from "lucide-react";
 import type { ActiveTrade } from "@/hooks/useTrading";
 
 const UP = "#47c58a";
 const DN = "#f26a61";
+const PURCHASE_LINE = "#f1604d";
 
 interface Props {
   chart: IChartApi;
@@ -23,6 +24,7 @@ const MARKER_MIN_VISIBLE_X = MARKER_WIDTH + MARKER_DOT_GAP + 8;
 const MARKER_EDGE_GAP = 8;
 const ENTRY_DOT_SIZE = 9;
 const CONNECTOR_DOT_SIZE = 8;
+const ENTRY_PRICE_TAG_WIDTH = 114;
 
 export const normalizeTradeMarkerSymbol = (symbol: string) =>
   symbol
@@ -51,6 +53,28 @@ const formatMarkerAmount = (amount: number) => {
   return Number.isInteger(normalized)
     ? `${normalized.toFixed(0)} $`
     : `${normalized.toFixed(2).replace(/\.?0+$/, "")} $`;
+};
+
+const getEntryPricePrecision = (price: number) => {
+  const abs = Math.abs(price);
+  if (abs >= 100) return 4;
+  if (abs >= 10) return 4;
+  if (abs >= 1) return 5;
+  return 6;
+};
+
+const splitPriceLabel = (price: number) => {
+  const label = price.toFixed(getEntryPricePrecision(price));
+  const decimalIndex = label.indexOf(".");
+
+  if (decimalIndex === -1) {
+    return { lead: "", accent: label };
+  }
+
+  return {
+    lead: label.slice(0, decimalIndex + 1),
+    accent: label.slice(decimalIndex + 1),
+  };
 };
 
 export const getTradeProgress = (start: number, end: number, now: number) => {
@@ -203,6 +227,7 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
     return myTrades.map((trade) => {
       const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds || 1));
       const markerTimeNumber = trade.marker_time ?? Math.floor(new Date(trade.opened_at).getTime() / 1000);
+      const openedAtMs = new Date(trade.opened_at).getTime();
       const markerTime = markerTimeNumber as Time;
       const markerBucketTime = Math.floor(markerTimeNumber / safeTimeframe) * safeTimeframe;
       const logicalAnchor = typeof trade.marker_logical === "number" && Number.isFinite(trade.marker_logical)
@@ -249,11 +274,14 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
       const clampedX = Math.min(Math.max(x, MARKER_MIN_VISIBLE_X), width - MARKER_EDGE_GAP);
       const clampedY = Math.min(Math.max(y, MARKER_EDGE_GAP), height - MARKER_EDGE_GAP);
       const pillLeft = clampedX - MARKER_WIDTH - MARKER_DOT_GAP;
+      const purchaseLabelLeft = Math.min(Math.max(8, clampedX - 112), Math.max(8, width - 152));
+      const priceParts = splitPriceLabel(trade.entry_price);
 
       return {
         id: trade.id,
         left: pillLeft,
         top: clampedY,
+        purchaseLabelLeft,
         connectorDotLeft: pillLeft + MARKER_WIDTH + CONNECTOR_DOT_OFFSET,
         dotLeft: clampedX,
         dotTop: clampedY,
@@ -261,13 +289,87 @@ export const TradeMarkersOverlay = ({ chart, series, assetSymbol, trades, timefr
         clockLabel: formatMarkerClock(timeLeft),
         color,
         direction: trade.direction,
+        entryPrice: trade.entry_price,
+        entryPriceLead: priceParts.lead,
+        entryPriceAccent: priceParts.accent,
+        openedAtMs: Number.isFinite(openedAtMs) ? openedAtMs : markerTimeNumber * 1000,
         progress,
       };
-    }).filter(Boolean);
+    }).filter(Boolean).sort((left, right) => {
+      if (!left || !right) return 0;
+      return left.openedAtMs - right.openedAtMs;
+    });
   }, [chart, liveLogical, myTrades, series, tick, timeframeSeconds]);
+  const featuredPosition = markerPositions[markerPositions.length - 1] ?? null;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[90]" data-trade-markers-overlay="true">
+      {featuredPosition ? (
+        <div key={`${featuredPosition.id}-purchase-shell`} aria-hidden="true">
+          <div
+            data-trade-purchase-time-label="true"
+            className="absolute top-2 z-[7] flex items-start gap-1.5 text-white"
+            style={{ left: featuredPosition.purchaseLabelLeft }}
+          >
+            <span className="mt-[3px] max-w-[55px] text-right text-[10px] font-medium uppercase leading-[1.05] tracking-[0.03em] text-white/88">
+              Purchase<br />Time
+            </span>
+            <span className="font-mono text-[23px] font-semibold leading-none tabular-nums tracking-[-0.03em] text-white">
+              {featuredPosition.clockLabel}
+            </span>
+          </div>
+          <div
+            data-trade-purchase-ruler="true"
+            className="absolute top-0 bottom-0 z-[1] w-[2px] shadow-[0_0_12px_rgba(241,96,77,0.42)]"
+            style={{ left: featuredPosition.dotLeft - 1, background: PURCHASE_LINE }}
+          />
+          <div
+            data-trade-purchase-ruler-ticks="true"
+            className="absolute z-[1]"
+            style={{
+              left: featuredPosition.dotLeft - 24,
+              top: 58,
+              bottom: 16,
+              width: 18,
+              backgroundImage: "repeating-linear-gradient(to bottom, rgba(232,238,247,0.78) 0 1px, transparent 1px 6px)",
+              opacity: 0.72,
+            }}
+          />
+          <div
+            data-trade-entry-price-guide="true"
+            className="absolute left-0 z-[1] h-px bg-[#edf2fb]/82 shadow-[0_0_8px_rgba(237,242,251,0.18)]"
+            style={{
+              right: ENTRY_PRICE_TAG_WIDTH - 16,
+              top: featuredPosition.dotTop,
+            }}
+          />
+          <div
+            data-trade-entry-price-tag="true"
+            className="absolute right-0 z-[6] flex h-[30px] min-w-[112px] items-center justify-end bg-[#e7ebf0] pl-5 pr-2.5 text-right text-[14px] font-black leading-none shadow-[0_8px_18px_rgba(0,0,0,0.2)]"
+            style={{
+              top: featuredPosition.dotTop - 15,
+              clipPath: "polygon(12px 0, 100% 0, 100% 100%, 12px 100%, 0 50%)",
+            }}
+          >
+            <span className="text-[#596476]">{featuredPosition.entryPriceLead}</span>
+            <span style={{ color: featuredPosition.direction === "higher" ? "#13b95e" : "#f04f43" }}>
+              {featuredPosition.entryPriceAccent}
+            </span>
+          </div>
+          <div
+            data-trade-purchase-anchor-icons="true"
+            className="absolute bottom-[7px] z-[8] flex items-center gap-[3px]"
+            style={{ left: Math.min(Math.max(6, featuredPosition.dotLeft - 30), Math.max(6, (chartRef.current?.container?.().clientWidth ?? 60) - 62)) }}
+          >
+            <span className="flex h-[23px] w-[23px] items-center justify-center rounded-full border-[2px] border-white bg-white text-[#111827] shadow-[0_7px_16px_rgba(0,0,0,0.24)]">
+              <AlarmClock className="h-[13px] w-[13px]" strokeWidth={2.8} />
+            </span>
+            <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f1604d] text-white shadow-[0_7px_16px_rgba(241,96,77,0.32)]">
+              <Flag className="h-[11px] w-[11px]" fill="currentColor" strokeWidth={2.6} />
+            </span>
+          </div>
+        </div>
+      ) : null}
       {markerPositions.map((position) => (
         position ? (
           <div key={position.id}>
