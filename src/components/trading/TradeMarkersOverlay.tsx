@@ -6,6 +6,8 @@ import type { ActiveTrade } from "@/hooks/useTrading";
 const UP = "#47c58a";
 const DN = "#f26a61";
 const PURCHASE_LINE = "#f1604d";
+const BEACON_RESERVE_HEIGHT = 28;
+const EXPIRY_LINE_RESERVE_WIDTH = 32;
 
 interface Props {
   chart: IChartApi;
@@ -19,14 +21,17 @@ interface Props {
 }
 
 const MARKER_WIDTH = 82;
-const MARKER_HEIGHT = 18;
-const MARKER_DOT_GAP = 24;
+const MARKER_HEIGHT = 20;
+const MARKER_DOT_GAP = 20;
 const CONNECTOR_DOT_OFFSET = 7;
-const MARKER_MIN_VISIBLE_X = MARKER_WIDTH + MARKER_DOT_GAP + 8;
 const MARKER_EDGE_GAP = 8;
 const ENTRY_DOT_SIZE = 9;
 const CONNECTOR_DOT_SIZE = 8;
 const ENTRY_PRICE_TAG_WIDTH = 114;
+const PILL_GAP = 6;
+const PILL_STACK_OFFSET = 26;
+
+type DisplayMode = "full" | "compact" | "minimal";
 
 type MarkerPosition = {
   id: string;
@@ -46,6 +51,10 @@ type MarkerPosition = {
   openedAtMs: number;
   progress: number;
   isReference?: boolean;
+  payoutLabel: string;
+  payoutUp: boolean;
+  isInactive: boolean;
+  displayMode: DisplayMode;
 };
 
 export const normalizeTradeMarkerSymbol = (symbol: string) =>
@@ -64,7 +73,7 @@ const isUsableMarkerX = (value: unknown, width: number): value is number =>
   isFiniteCoordinate(value) && value >= -MARKER_WIDTH && value <= width + MARKER_EDGE_GAP;
 
 const clampMarkerX = (value: number, width: number) =>
-  Math.min(Math.max(value, MARKER_MIN_VISIBLE_X), Math.max(MARKER_MIN_VISIBLE_X, width - MARKER_EDGE_GAP));
+  Math.min(Math.max(value, MARKER_WIDTH + MARKER_DOT_GAP + 8), Math.max(MARKER_WIDTH + MARKER_DOT_GAP + 8, width - MARKER_EDGE_GAP));
 
 const clampMarkerY = (value: number, height: number) =>
   Math.min(Math.max(value, MARKER_EDGE_GAP), Math.max(MARKER_EDGE_GAP, height - MARKER_EDGE_GAP));
@@ -94,23 +103,19 @@ const getEntryPricePrecision = (price: number) => {
 const splitPriceLabel = (price: number) => {
   const label = price.toFixed(getEntryPricePrecision(price));
   const decimalIndex = label.indexOf(".");
-
-  if (decimalIndex === -1) {
-    return { lead: "", accent: label };
-  }
-
+  if (decimalIndex === -1) return { lead: "", accent: label };
   return {
     lead: label.slice(0, decimalIndex + 1),
     accent: label.slice(decimalIndex + 1),
   };
 };
 
-export const getTradeProgress = (start: number, end: number, now: number) => {
+const getTradeProgress = (start: number, end: number, now: number) => {
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 1;
   return Math.min(1, Math.max(0, (now - start) / (end - start)));
 };
 
-export const getTradeDisplayTimes = (
+const getTradeDisplayTimes = (
   trade: Pick<ActiveTrade, "marker_time" | "opened_at" | "expiry_seconds">,
   nowSec: number,
 ) => {
@@ -119,48 +124,34 @@ export const getTradeDisplayTimes = (
       ? Math.floor(trade.marker_time)
       : Math.floor(new Date(trade.opened_at).getTime() / 1000);
   const expiryTime = entryTime + Math.max(1, Math.floor(trade.expiry_seconds || 0));
-
-  return {
-    entryTime,
-    expiryTime,
-    activeLineEndTime: Math.min(nowSec, expiryTime),
-  };
+  return { entryTime, expiryTime, activeLineEndTime: Math.min(nowSec, expiryTime) };
 };
 
-export const getTradeMarkerLogicalTime = (
+const getTradeMarkerLogicalTime = (
   history: Array<{ time: number; logical: number }>,
   markerTime: number,
   timeframeSeconds: number,
 ) => {
   const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds || 1));
   const sortedHistory = [...history].sort((left, right) => left.time - right.time);
-
   if (sortedHistory.length === 0) return null;
-
   const first = sortedHistory[0];
   const last = sortedHistory[sortedHistory.length - 1];
-
   if (markerTime <= first.time) return first.logical;
-
-  if (markerTime >= last.time) {
-    return last.logical + Math.max(0, markerTime - last.time) / safeTimeframe * 0.5;
-  }
-
+  if (markerTime >= last.time) return last.logical + Math.max(0, markerTime - last.time) / safeTimeframe * 0.5;
   for (let index = 0; index < sortedHistory.length - 1; index += 1) {
     const current = sortedHistory[index];
     const next = sortedHistory[index + 1];
-
     if (markerTime >= current.time && markerTime < next.time) {
       const span = Math.max(1, next.time - current.time);
       const fraction = (markerTime - current.time) / span;
       return current.logical + fraction * (next.logical - current.logical) * 0.5;
     }
   }
-
   return last.logical;
 };
 
-export const resolveTradeMarkerEntryLogicalAnchor = ({
+const resolveTradeMarkerEntryLogicalAnchor = ({
   fixedEntryLogical,
   timeBasedLogicalAnchor,
 }: {
@@ -175,11 +166,10 @@ export const resolveTradeMarkerEntryLogicalAnchor = ({
     const gap = Math.abs(fixedEntryLogical - timeBasedLogicalAnchor);
     if (gap < 1.5) return fixedEntryLogical;
   }
-
   return timeBasedLogicalAnchor;
 };
 
-export const getTradeMarkerCoordinate = (
+const getTradeMarkerCoordinate = (
   chart: Pick<IChartApi, "timeScale">,
   history: Array<{ time: number; logical: number }>,
   markerTime: number,
@@ -187,10 +177,90 @@ export const getTradeMarkerCoordinate = (
 ) => {
   const logical = getTradeMarkerLogicalTime(history, markerTime, timeframeSeconds);
   if (typeof logical !== "number" || !Number.isFinite(logical)) return null;
-
   return typeof chart.timeScale().logicalToCoordinate === "function"
     ? chart.timeScale().logicalToCoordinate(logical)
     : null;
+};
+
+const detectDisplayMode = (chart: IChartApi): DisplayMode => {
+  try {
+    const range = chart.timeScale().getVisibleLogicalRange();
+    if (!range) return "full";
+    const span = Math.abs(range.to - range.from);
+    if (span < 30) return "full";
+    if (span < 100) return "compact";
+    return "minimal";
+  } catch {
+    return "full";
+  }
+};
+
+const computePayoutGrade = (payout: number) => {
+  const pct = (payout * 100).toFixed(0);
+  return `+${pct}%`;
+};
+
+const detectBeaconZone = (chart: IChartApi, series: ISeriesApi<SeriesType>, liveLogical: number | null, livePrice: number | null): number | null => {
+  if (typeof livePrice === "number" && Number.isFinite(livePrice)) {
+    const y = series.priceToCoordinate(livePrice);
+    if (isFiniteCoordinate(y)) return y;
+  }
+  return null;
+};
+
+const computeStackedPositions = (
+  positions: MarkerPosition[],
+  width: number,
+  height: number,
+  beaconY: number | null,
+): MarkerPosition[] => {
+  if (positions.length === 0) return [];
+
+  const sorted = [...positions].sort((a, b) => a.dotTop - b.dotTop);
+  const beaconReserve = beaconY !== null ? [beaconY - BEACON_RESERVE_HEIGHT, beaconY + BEACON_RESERVE_HEIGHT] : null;
+
+  const assigned: MarkerPosition[] = [];
+  const usedSlots: Array<{ top: number; bottom: number }> = [];
+
+  const isSlotFree = (slotTop: number, slotBottom: number): boolean => {
+    for (const used of usedSlots) {
+      if (slotTop < used.bottom && slotBottom > used.top) return false;
+    }
+    return true;
+  };
+
+  for (const pos of sorted) {
+    let adjustedTop = pos.top;
+    const slotHeight = MARKER_HEIGHT + PILL_GAP;
+    const halfSlot = slotHeight / 2;
+    let attempts = 0;
+
+    while (attempts < 30) {
+      const slotTop = adjustedTop - halfSlot;
+      const slotBottom = adjustedTop + halfSlot;
+
+      const inBeaconZone = beaconReserve !== null && slotTop < beaconReserve[1] && slotBottom > beaconReserve[0];
+
+      if (!inBeaconZone && isSlotFree(slotTop, slotBottom)) {
+        break;
+      }
+
+      adjustedTop += (attempts % 2 === 0 ? 1 : -1) * (PILL_STACK_OFFSET * (1 + Math.floor(attempts / 2)));
+      adjustedTop = clampMarkerY(adjustedTop, height - slotHeight);
+      attempts++;
+    }
+
+    const finalTop = clampMarkerY(adjustedTop, height - MARKER_HEIGHT);
+    usedSlots.push({ top: finalTop - halfSlot, bottom: finalTop + halfSlot });
+
+    assigned.push({
+      ...pos,
+      top: finalTop,
+      dotTop: finalTop,
+    });
+  }
+
+  return assigned;
 };
 
 export const TradeMarkersOverlay = ({
@@ -206,14 +276,21 @@ export const TradeMarkersOverlay = ({
   const sRef = useRef(series);
   const chartRef = useRef(chart);
   const plRef = useRef<Record<string, IPriceLine>>({});
+  const rafRef = useRef(0);
   const [tick, setTick] = useState(0);
 
   useEffect(() => { sRef.current = series; }, [series]);
   useEffect(() => { chartRef.current = chart; }, [chart]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setTick((value) => value + 1), 1000);
-    return () => window.clearInterval(timer);
+    let running = true;
+    const loop = () => {
+      if (!running) return;
+      setTick((v) => v + 1);
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+    return () => { running = false; cancelAnimationFrame(rafRef.current); };
   }, []);
 
   const myTrades = useMemo(
@@ -221,17 +298,14 @@ export const TradeMarkersOverlay = ({
     [assetSymbol, trades],
   );
 
-  // Price line at entry price — locked, never moves
   useEffect(() => {
     const s = sRef.current;
     if (!s) return;
     const lines = plRef.current;
     const ids = new Set(myTrades.map((t) => t.id));
-
     Object.keys(lines).forEach((id) => {
       if (!ids.has(id)) { try { s.removePriceLine(lines[id]); } catch {} delete lines[id]; }
     });
-
     myTrades.forEach((t) => {
       const c = t.direction === "higher" ? UP : DN;
       const o = {
@@ -244,14 +318,13 @@ export const TradeMarkersOverlay = ({
       if (lines[t.id]) try { lines[t.id].applyOptions(o); } catch {}
       else try { lines[t.id] = s.createPriceLine(o); } catch {}
     });
-
     return () => {
       Object.values(plRef.current).forEach((l) => { try { s.removePriceLine(l); } catch {} });
       plRef.current = {};
     };
   }, [myTrades, series]);
 
-  // No marker shapes on the entry candle
+  const displayMode = useMemo(() => detectDisplayMode(chart), [chart, tick]);
 
   const markerPositions = useMemo(() => {
     const container = chartRef.current?.container?.();
@@ -261,20 +334,17 @@ export const TradeMarkersOverlay = ({
     const width = rect.width || container.clientWidth || 1;
     const height = rect.height || container.clientHeight || 1;
 
-    return myTrades.map((trade): MarkerPosition | null => {
+    const raw = myTrades.map((trade): MarkerPosition | null => {
       const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds || 1));
       const markerTimeNumber = trade.marker_time ?? Math.floor(new Date(trade.opened_at).getTime() / 1000);
       const openedAtMs = new Date(trade.opened_at).getTime();
       const markerTime = markerTimeNumber as Time;
       const markerBucketTime = Math.floor(markerTimeNumber / safeTimeframe) * safeTimeframe;
       const logicalAnchor = typeof trade.marker_logical === "number" && Number.isFinite(trade.marker_logical)
-        ? trade.marker_logical
-        : null;
+        ? trade.marker_logical : null;
       const timeScale = chartRef.current.timeScale();
-      const logicalX =
-        logicalAnchor !== null && typeof chartRef.current.timeScale().logicalToCoordinate === "function"
-          ? timeScale.logicalToCoordinate(logicalAnchor as never)
-          : null;
+      const logicalX = logicalAnchor !== null && typeof timeScale.logicalToCoordinate === "function"
+        ? timeScale.logicalToCoordinate(logicalAnchor as never) : null;
       const exactTimeX = timeScale.timeToCoordinate(markerTime);
       const bucketTimeX = timeScale.timeToCoordinate(markerBucketTime as Time);
       const y = series.priceToCoordinate(trade.entry_price);
@@ -282,21 +352,15 @@ export const TradeMarkersOverlay = ({
       const nowSec = Math.floor(Date.now() / 1000);
       const { entryTime, expiryTime } = getTradeDisplayTimes(trade, nowSec);
       const timeLeft = typeof trade.timeLeft === "number" && Number.isFinite(trade.timeLeft)
-        ? trade.timeLeft
-        : Math.max(0, expiryTime - nowSec);
+        ? trade.timeLeft : Math.max(0, expiryTime - nowSec);
       const progress = getTradeProgress(entryTime, expiryTime, nowSec);
       const elapsedSeconds = Math.max(0, Math.min(trade.expiry_seconds || safeTimeframe, (trade.expiry_seconds || safeTimeframe) - timeLeft));
-      const fallbackLogical =
-        typeof liveLogical === "number" && Number.isFinite(liveLogical)
-          ? liveLogical - elapsedSeconds / safeTimeframe
-          : null;
-      const liveFallbackX =
-        fallbackLogical !== null && typeof timeScale.logicalToCoordinate === "function"
-          ? timeScale.logicalToCoordinate(fallbackLogical as never)
-          : null;
+      const fallbackLogical = typeof liveLogical === "number" && Number.isFinite(liveLogical)
+        ? liveLogical - elapsedSeconds / safeTimeframe : null;
+      const liveFallbackX = fallbackLogical !== null && typeof timeScale.logicalToCoordinate === "function"
+        ? timeScale.logicalToCoordinate(fallbackLogical as never) : null;
       const x = [logicalX, exactTimeX, bucketTimeX, liveFallbackX].find((candidate) =>
-        isUsableMarkerX(candidate, width),
-      );
+        isUsableMarkerX(candidate, width));
 
       const isHigher = trade.direction === "higher";
       const color = isHigher ? UP : DN;
@@ -307,6 +371,9 @@ export const TradeMarkersOverlay = ({
       const pillLeft = clampedX - MARKER_WIDTH - MARKER_DOT_GAP;
       const purchaseLabelLeft = Math.min(Math.max(8, clampedX - 112), Math.max(8, width - 152));
       const priceParts = splitPriceLabel(trade.entry_price);
+
+      const payoutLabel = computePayoutGrade(trade.payout_rate);
+      const isInactive = progress >= 1 || timeLeft <= 0;
 
       return {
         id: trade.id,
@@ -325,36 +392,34 @@ export const TradeMarkersOverlay = ({
         entryPriceAccent: priceParts.accent,
         openedAtMs: Number.isFinite(openedAtMs) ? openedAtMs : markerTimeNumber * 1000,
         progress,
+        payoutLabel,
+        payoutUp: isHigher,
+        isInactive,
+        displayMode,
       };
-    }).filter((position): position is MarkerPosition => Boolean(position)).sort((left, right) => {
-      return left.openedAtMs - right.openedAtMs;
-    });
-  }, [chart, liveLogical, myTrades, series, tick, timeframeSeconds]);
+    }).filter((position): position is MarkerPosition => Boolean(position));
+
+    const beaconY = detectBeaconZone(chart, series, liveLogical ?? null, livePrice ?? null);
+    return computeStackedPositions(raw, width, height, beaconY);
+  }, [chart, series, liveLogical, livePrice, myTrades, tick, timeframeSeconds, displayMode]);
 
   const idleReferencePosition = useMemo<MarkerPosition | null>(() => {
     if (!showIdleReference || myTrades.length > 0) return null;
-
     const container = chartRef.current?.container?.();
     if (!container) return null;
-
     const rect = container.getBoundingClientRect();
     const width = rect.width || container.clientWidth || 1;
     const height = rect.height || container.clientHeight || 1;
     const safePrice = typeof livePrice === "number" && Number.isFinite(livePrice) ? livePrice : 0;
     const y = safePrice > 0 ? series.priceToCoordinate(safePrice) : null;
-    const logicalX =
-      typeof liveLogical === "number" &&
-      Number.isFinite(liveLogical) &&
-      typeof chartRef.current.timeScale().logicalToCoordinate === "function"
-        ? chartRef.current.timeScale().logicalToCoordinate((liveLogical - 8) as never)
-        : null;
+    const logicalX = typeof liveLogical === "number" && Number.isFinite(liveLogical) && typeof chartRef.current.timeScale().logicalToCoordinate === "function"
+      ? chartRef.current.timeScale().logicalToCoordinate((liveLogical - 8) as never) : null;
     const clampedX = clampMarkerX(isUsableMarkerX(logicalX, width) ? logicalX : width * 0.18, width);
     const clampedY = clampMarkerY(isFiniteCoordinate(y) ? y : height * 0.76, height);
     const pillLeft = clampedX - MARKER_WIDTH - MARKER_DOT_GAP;
     const purchaseLabelLeft = Math.min(Math.max(8, clampedX - 112), Math.max(8, width - 152));
     const priceParts = splitPriceLabel(safePrice || 0);
     const clockSeconds = Math.max(1, Math.min(15, Math.floor(Math.max(1, timeframeSeconds) / 4)));
-
     return {
       id: "idle-reference",
       left: pillLeft,
@@ -366,17 +431,24 @@ export const TradeMarkersOverlay = ({
       amountLabel: "",
       clockLabel: formatMarkerClock(clockSeconds),
       color: DN,
-      direction: "lower",
+      direction: "lower" as const,
       entryPrice: safePrice,
       entryPriceLead: priceParts.lead,
       entryPriceAccent: priceParts.accent,
       openedAtMs: Date.now(),
       progress: 1,
       isReference: true,
+      payoutLabel: "",
+      payoutUp: false,
+      isInactive: false,
+      displayMode: "full",
     };
   }, [liveLogical, livePrice, myTrades.length, series, showIdleReference, tick, timeframeSeconds]);
 
   const featuredPosition = markerPositions[markerPositions.length - 1] ?? idleReferencePosition;
+
+  const isFullMode = displayMode === "full";
+  const isCompactMode = displayMode === "compact";
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[90]" data-trade-markers-overlay="true">
@@ -403,10 +475,7 @@ export const TradeMarkersOverlay = ({
             data-trade-purchase-ruler-ticks="true"
             className="absolute z-[1]"
             style={{
-              left: featuredPosition.dotLeft - 24,
-              top: 58,
-              bottom: 16,
-              width: 18,
+              left: featuredPosition.dotLeft - 24, top: 58, bottom: 16, width: 18,
               backgroundImage: "repeating-linear-gradient(to bottom, rgba(232,238,247,0.78) 0 1px, transparent 1px 6px)",
               opacity: 0.72,
             }}
@@ -414,18 +483,12 @@ export const TradeMarkersOverlay = ({
           <div
             data-trade-entry-price-guide="true"
             className="absolute left-0 z-[1] h-px bg-[#edf2fb]/82 shadow-[0_0_8px_rgba(237,242,251,0.18)]"
-            style={{
-              right: ENTRY_PRICE_TAG_WIDTH - 16,
-              top: featuredPosition.dotTop,
-            }}
+            style={{ right: ENTRY_PRICE_TAG_WIDTH - 16, top: featuredPosition.dotTop }}
           />
           <div
             data-trade-entry-price-tag="true"
             className="absolute right-0 z-[6] flex h-[30px] min-w-[112px] items-center justify-end bg-[#e7ebf0] pl-5 pr-2.5 text-right text-[14px] font-black leading-none shadow-[0_8px_18px_rgba(0,0,0,0.2)]"
-            style={{
-              top: featuredPosition.dotTop - 15,
-              clipPath: "polygon(12px 0, 100% 0, 100% 100%, 12px 100%, 0 50%)",
-            }}
+            style={{ top: featuredPosition.dotTop - 15, clipPath: "polygon(12px 0, 100% 0, 100% 100%, 12px 100%, 0 50%)" }}
           >
             <span className="text-[#596476]">{featuredPosition.entryPriceLead}</span>
             <span style={{ color: featuredPosition.direction === "higher" ? "#13b95e" : "#f04f43" }}>
@@ -446,36 +509,101 @@ export const TradeMarkersOverlay = ({
           </div>
         </div>
       ) : null}
-      {markerPositions.map((position) => (
-        position ? (
+
+      {markerPositions.map((position) => {
+        if (!position) return null;
+        const opacity = position.isInactive ? 0.4 : (0.96 + 0.04 * Math.max(0, Math.min(1, position.progress ?? 0)));
+        const PILL_MINIMAL_W = 24;
+
+        return (
           <div key={position.id}>
-            <div
-              data-trade-entry-marker="true"
-              className="absolute z-[2] inline-flex items-center gap-[3px] rounded-full pl-[4px] pr-[5px] text-white shadow-[0_2px_5px_rgba(0,0,0,0.18)]"
-              style={{
-                left: position.left,
-                top: position.top,
-                width: MARKER_WIDTH,
-                height: MARKER_HEIGHT,
-                background: position.color,
-                transform: "translateY(-50%)",
-                opacity: 0.96 + 0.04 * Math.max(0, Math.min(1, position.progress ?? 0)),
-              }}
-            >
-              <span className="flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-full bg-white/24">
+            {isFullMode ? (
+              <div
+                data-trade-entry-marker="true"
+                className="absolute z-[2] inline-flex items-center gap-[3px] rounded-full pl-[4px] pr-[5px] text-white shadow-[0_2px_5px_rgba(0,0,0,0.18)]"
+                style={{
+                  left: position.left,
+                  top: position.top,
+                  width: MARKER_WIDTH,
+                  height: MARKER_HEIGHT,
+                  background: position.color,
+                  transform: "translateY(-50%)",
+                  opacity,
+                }}
+              >
+                <span className="flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-full bg-white/24">
+                  {position.direction === "higher" ? (
+                    <ArrowUp className="h-[9px] w-[9px] stroke-[3]" />
+                  ) : (
+                    <ArrowDown className="h-[9px] w-[9px] stroke-[3]" />
+                  )}
+                </span>
+                <span className="whitespace-nowrap text-[12px] font-black leading-none tracking-normal">
+                  {position.amountLabel}
+                </span>
+                <span className="whitespace-nowrap pt-[1px] text-[9px] font-bold leading-none text-white/82">
+                  {position.clockLabel}
+                </span>
+              </div>
+            ) : isCompactMode ? (
+              <div
+                data-trade-entry-marker="true"
+                className="absolute z-[2] inline-flex items-center justify-center rounded-full text-white shadow-[0_2px_5px_rgba(0,0,0,0.18)]"
+                style={{
+                  left: position.left + (MARKER_WIDTH - PILL_MINIMAL_W) / 2,
+                  top: position.top,
+                  width: PILL_MINIMAL_W,
+                  height: MARKER_HEIGHT,
+                  background: position.color,
+                  transform: "translateY(-50%)",
+                  opacity,
+                }}
+              >
+                {position.direction === "higher" ? (
+                  <ArrowUp className="h-[11px] w-[11px] stroke-[3]" />
+                ) : (
+                  <ArrowDown className="h-[11px] w-[11px] stroke-[3]" />
+                )}
+              </div>
+            ) : (
+              <div
+                data-trade-entry-marker="true"
+                className="absolute z-[2] inline-flex items-center justify-center rounded-full text-white shadow-[0_2px_5px_rgba(0,0,0,0.18)]"
+                style={{
+                  left: position.left + (MARKER_WIDTH - PILL_MINIMAL_W) / 2,
+                  top: position.top,
+                  width: PILL_MINIMAL_W,
+                  height: MARKER_HEIGHT,
+                  background: position.color,
+                  transform: "translateY(-50%)",
+                  opacity: opacity * 0.6,
+                }}
+              >
                 {position.direction === "higher" ? (
                   <ArrowUp className="h-[9px] w-[9px] stroke-[3]" />
                 ) : (
                   <ArrowDown className="h-[9px] w-[9px] stroke-[3]" />
                 )}
-              </span>
-              <span className="whitespace-nowrap text-[12px] font-black leading-none tracking-normal">
-                {position.amountLabel}
-              </span>
-              <span className="whitespace-nowrap pt-[1px] text-[9px] font-bold leading-none text-white/82">
-                {position.clockLabel}
-              </span>
-            </div>
+              </div>
+            )}
+
+            {(isFullMode || isCompactMode) && position.payoutLabel ? (
+              <div
+                data-trade-payout-label="true"
+                className="absolute z-[5] inline-flex items-center rounded-[4px] px-[6px] py-[2px] text-[10px] font-black leading-none shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
+                style={{
+                  left: position.dotLeft + ENTRY_DOT_SIZE + 6,
+                  top: position.top,
+                  transform: "translateY(-50%)",
+                  color: "#ffffff",
+                  background: position.payoutUp ? "rgba(71,197,138,0.88)" : "rgba(242,106,97,0.88)",
+                  opacity,
+                }}
+              >
+                {position.payoutLabel}
+              </div>
+            ) : null}
+
             <div
               data-trade-entry-connector-dot="true"
               className="absolute z-[3] rounded-full border-2 border-white"
@@ -486,6 +614,7 @@ export const TradeMarkersOverlay = ({
                 height: CONNECTOR_DOT_SIZE,
                 background: position.color,
                 boxShadow: `0 0 0 1px ${position.color}`,
+                opacity,
               }}
             />
             <div
@@ -499,11 +628,12 @@ export const TradeMarkersOverlay = ({
                 borderColor: position.color,
                 background: "#ffffff",
                 boxShadow: `0 0 0 1px ${position.color}`,
+                opacity,
               }}
             />
           </div>
-        ) : null
-      ))}
+        );
+      })}
     </div>
   );
 };

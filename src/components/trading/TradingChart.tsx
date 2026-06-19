@@ -3974,16 +3974,17 @@ const TradingChart = ({
                  timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60}
                />
              )}
-             {!mobileHistoryOpen && (
-               <TradeMarkersOverlay
-                 chart={syncChart}
-                 series={syncSeries}
-                 assetSymbol={asset.symbol}
-                 trades={activeTrades}
-                 timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60}
-                 liveLogical={livePriceBeacon?.logical ?? null}
-               />
-             )}
+              {!mobileHistoryOpen && (
+                <TradeMarkersOverlay
+                  chart={syncChart}
+                  series={syncSeries}
+                  assetSymbol={asset.symbol}
+                  trades={activeTrades}
+                  timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60}
+                  liveLogical={livePriceBeacon?.logical ?? null}
+                  livePrice={livePriceBeacon?.price ?? currentPrice}
+                />
+              )}
              {!mobileHistoryOpen && !overlayUiSuppressed && (
                <LiveChartBeacon
                  chart={syncChart}
