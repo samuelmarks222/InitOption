@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { IChartApi, ISeriesApi, type SeriesType, Time, IPriceLine, LineStyle } from "lightweight-charts";
-import { AlarmClock, ArrowDown, ArrowUp, Flag } from "lucide-react";
+import { AlarmClock, Flag } from "lucide-react";
 import type { ActiveTrade } from "@/hooks/useTrading";
 
 const UP = "#47c58a";
@@ -55,6 +55,7 @@ type MarkerPosition = {
   payoutUp: boolean;
   isInactive: boolean;
   displayMode: DisplayMode;
+  pnlPercent: number;
 };
 
 export const normalizeTradeMarkerSymbol = (symbol: string) =>
@@ -90,6 +91,12 @@ const formatMarkerAmount = (amount: number) => {
   return Number.isInteger(normalized)
     ? `${normalized.toFixed(0)} $`
     : `${normalized.toFixed(2).replace(/\.?0+$/, "")} $`;
+};
+
+const computePnlPercent = (entryPrice: number, currentPrice: number, direction: ActiveTrade["direction"]): number => {
+  if (!Number.isFinite(entryPrice) || !Number.isFinite(currentPrice) || entryPrice === 0) return 0;
+  const rawDiff = ((currentPrice - entryPrice) / entryPrice) * 100;
+  return direction === "higher" ? rawDiff : -rawDiff;
 };
 
 const getEntryPricePrecision = (price: number) => {
@@ -396,6 +403,7 @@ export const TradeMarkersOverlay = ({
         payoutUp: isHigher,
         isInactive,
         displayMode,
+        pnlPercent: computePnlPercent(trade.entry_price, livePrice ?? trade.entry_price, trade.direction),
       };
     }).filter((position): position is MarkerPosition => Boolean(position));
 
@@ -440,8 +448,8 @@ export const TradeMarkersOverlay = ({
       isReference: true,
       payoutLabel: "",
       payoutUp: false,
-      isInactive: false,
       displayMode: "full",
+      pnlPercent: 0,
     };
   }, [liveLogical, livePrice, myTrades.length, series, showIdleReference, tick, timeframeSeconds]);
 
@@ -512,97 +520,42 @@ export const TradeMarkersOverlay = ({
 
       {markerPositions.map((position) => {
         if (!position) return null;
-        const opacity = position.isInactive ? 0.4 : (0.96 + 0.04 * Math.max(0, Math.min(1, position.progress ?? 0)));
-        const PILL_MINIMAL_W = 24;
+        const opacity = position.isInactive ? 0.4 : 0.92;
+        const borderColor = position.direction === "higher" ? "#00C076" : "#F6465D";
+        const pnlColor = position.pnlPercent >= 0 ? "#00C076" : "#F6465D";
+        const pnlSign = position.pnlPercent >= 0 ? "+" : "";
+        const offsetY = position.direction === "higher" ? -22 : 6;
+        const priceStr = `${position.entryPriceLead}${position.entryPriceAccent}`;
+        const displayPrice = priceStr.length > 12 ? priceStr.slice(0, 12) : priceStr;
 
         return (
           <div key={position.id}>
-            {isFullMode ? (
-              <div
-                data-trade-entry-marker="true"
-                className="absolute z-[2] inline-flex items-center gap-[3px] rounded-full pl-[4px] pr-[5px] text-white shadow-[0_2px_5px_rgba(0,0,0,0.18)]"
-                style={{
-                  left: position.left,
-                  top: position.top,
-                  width: MARKER_WIDTH,
-                  height: MARKER_HEIGHT,
-                  background: position.color,
-                  transform: "translateY(-50%)",
-                  opacity,
-                }}
+            <div
+              data-trade-indicator-box="true"
+              className="absolute z-[5] inline-flex items-center gap-[6px] whitespace-nowrap rounded-[6px] px-[8px] py-[4px] text-white shadow-[0_4px_12px_rgba(0,0,0,0.25)]"
+              style={{
+                left: position.dotLeft + ENTRY_DOT_SIZE + 4,
+                top: position.dotTop + offsetY,
+                background: "rgba(26,26,42,0.92)",
+                border: `1px solid ${borderColor}`,
+                opacity,
+              }}
+            >
+              <span className="font-mono text-[11px] font-bold leading-none tabular-nums">
+                {displayPrice}
+              </span>
+              <span className="text-[10px] font-bold leading-none text-white/70">|</span>
+              <span className="font-mono text-[11px] font-bold leading-none tabular-nums text-white/92">
+                {position.clockLabel}
+              </span>
+              <span className="text-[10px] font-bold leading-none text-white/70">|</span>
+              <span
+                className="font-mono text-[11px] font-bold leading-none tabular-nums"
+                style={{ color: pnlColor }}
               >
-                <span className="flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-full bg-white/24">
-                  {position.direction === "higher" ? (
-                    <ArrowUp className="h-[9px] w-[9px] stroke-[3]" />
-                  ) : (
-                    <ArrowDown className="h-[9px] w-[9px] stroke-[3]" />
-                  )}
-                </span>
-                <span className="whitespace-nowrap text-[12px] font-black leading-none tracking-normal">
-                  {position.amountLabel}
-                </span>
-                <span className="whitespace-nowrap pt-[1px] text-[9px] font-bold leading-none text-white/82">
-                  {position.clockLabel}
-                </span>
-              </div>
-            ) : isCompactMode ? (
-              <div
-                data-trade-entry-marker="true"
-                className="absolute z-[2] inline-flex items-center justify-center rounded-full text-white shadow-[0_2px_5px_rgba(0,0,0,0.18)]"
-                style={{
-                  left: position.left + (MARKER_WIDTH - PILL_MINIMAL_W) / 2,
-                  top: position.top,
-                  width: PILL_MINIMAL_W,
-                  height: MARKER_HEIGHT,
-                  background: position.color,
-                  transform: "translateY(-50%)",
-                  opacity,
-                }}
-              >
-                {position.direction === "higher" ? (
-                  <ArrowUp className="h-[11px] w-[11px] stroke-[3]" />
-                ) : (
-                  <ArrowDown className="h-[11px] w-[11px] stroke-[3]" />
-                )}
-              </div>
-            ) : (
-              <div
-                data-trade-entry-marker="true"
-                className="absolute z-[2] inline-flex items-center justify-center rounded-full text-white shadow-[0_2px_5px_rgba(0,0,0,0.18)]"
-                style={{
-                  left: position.left + (MARKER_WIDTH - PILL_MINIMAL_W) / 2,
-                  top: position.top,
-                  width: PILL_MINIMAL_W,
-                  height: MARKER_HEIGHT,
-                  background: position.color,
-                  transform: "translateY(-50%)",
-                  opacity: opacity * 0.6,
-                }}
-              >
-                {position.direction === "higher" ? (
-                  <ArrowUp className="h-[9px] w-[9px] stroke-[3]" />
-                ) : (
-                  <ArrowDown className="h-[9px] w-[9px] stroke-[3]" />
-                )}
-              </div>
-            )}
-
-            {(isFullMode || isCompactMode) && position.payoutLabel ? (
-              <div
-                data-trade-payout-label="true"
-                className="absolute z-[5] inline-flex items-center rounded-[4px] px-[6px] py-[2px] text-[10px] font-black leading-none shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
-                style={{
-                  left: position.dotLeft + ENTRY_DOT_SIZE + 6,
-                  top: position.top,
-                  transform: "translateY(-50%)",
-                  color: "#ffffff",
-                  background: position.payoutUp ? "rgba(71,197,138,0.88)" : "rgba(242,106,97,0.88)",
-                  opacity,
-                }}
-              >
-                {position.payoutLabel}
-              </div>
-            ) : null}
+                {pnlSign}{position.pnlPercent.toFixed(2)}%
+              </span>
+            </div>
 
             <div
               data-trade-entry-connector-dot="true"
