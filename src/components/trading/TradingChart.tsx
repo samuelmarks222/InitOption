@@ -5,7 +5,6 @@ import {
   ColorType,
   CrosshairMode,
   LineStyle,
-  CandlestickSeries,
   AreaSeries,
   BaselineSeries,
   LineSeries,
@@ -47,6 +46,7 @@ import { dispatchTradeDeskDirectionSubmit, type TradeDeskDirection } from "./tra
 import { useDrawings } from "@/contexts/DrawingContext";
 import { supabase } from "@/integrations/supabase/client";
 import { type Tables } from "@/integrations/supabase/types";
+import { CustomCandlestickPaneView, type CustomCandlestickData } from "./CustomCandlestickSeries";
 import {
   Briefcase,
   X,
@@ -165,7 +165,7 @@ const DEFAULT_CHART_TYPE: ChartType = "candles";
 const SYNCED_PRICE_SCALE_MIN_WIDTH = 58;
 type ChartSeriesApi = ISeriesApi<SeriesType>;
 type OverlayIndicatorPoint = LineData<Time> | HistogramData<Time>;
-type MainChartPoint = LineData<Time> | BarData<Time> | CandlestickData<Time>;
+type MainChartPoint = LineData<Time> | BarData<Time> | CandlestickData<Time> | CustomCandlestickData;
 type PlatformThemeRow = Pick<Tables<"platform_settings">, "chart_bg_color" | "chart_up_color" | "chart_down_color">;
 const toChartTime = (time: number) => time as Time;
 const INTRABAR_LOGICAL_SPAN = 0.72;
@@ -271,7 +271,7 @@ const LivePriceAxisOverlay = ({
 const toLineChartData = (candles: OHLCCandle[]): LineData<Time>[] =>
   candles.map((candle) => ({ time: toChartTime(candle.time), value: candle.close }));
 
-const toOhlcChartData = (candles: OHLCCandle[]): Array<BarData<Time> | CandlestickData<Time>> =>
+const toOhlcChartData = (candles: OHLCCandle[]): Array<BarData<Time> | CandlestickData<Time> | CustomCandlestickData> =>
   candles.map((candle) => ({
     time: toChartTime(candle.time),
     open: candle.open,
@@ -1188,6 +1188,8 @@ const getCandlestickPreviewPalette = (color: string, variant: ChartDisplayPreset
 const getMainSeriesKind = (chartType: ChartType): MainSeriesKind =>
   chartType === "line" ? "area" : chartType === "bars" ? "bar" : "candlestick";
 
+const customCandlePaneView = new CustomCandlestickPaneView();
+
 const createMainSeries = (
   chart: IChartApi,
   chartType: ChartType,
@@ -1215,11 +1217,16 @@ const createMainSeries = (
     };
   }
 
+  const candleSettings = getCandlestickDisplaySettings(chartType, styles, globalTheme);
   return {
     kind: "candlestick" as const,
-    series: chart.addSeries(CandlestickSeries, {
+    series: chart.addCustomSeries(customCandlePaneView, {
       priceFormat,
-      ...getCandlestickDisplaySettings(chartType, styles, globalTheme),
+      upColor: candleSettings.upColor,
+      downColor: candleSettings.downColor,
+      wickVisible: candleSettings.wickVisible,
+      wickUpColor: candleSettings.wickUpColor,
+      wickDownColor: candleSettings.wickDownColor,
     }),
   };
 };
@@ -1247,9 +1254,14 @@ const applyMainSeriesOptions = (
     return;
   }
 
+  const candleSettings = getCandlestickDisplaySettings(chartType, styles, globalTheme);
   series.applyOptions({
     priceFormat,
-    ...getCandlestickDisplaySettings(chartType, styles, globalTheme),
+    upColor: candleSettings.upColor,
+    downColor: candleSettings.downColor,
+    wickVisible: candleSettings.wickVisible,
+    wickUpColor: candleSettings.wickUpColor,
+    wickDownColor: candleSettings.wickDownColor,
   });
 };
 
