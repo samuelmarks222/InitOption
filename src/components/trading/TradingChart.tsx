@@ -191,23 +191,6 @@ type LivePriceBeaconState = {
   logical: number | null;
 };
 
-const DOTTED_WORLD_MAP_BACKGROUND = `url("data:image/svg+xml,${encodeURIComponent(`
-<svg xmlns="http://www.w3.org/2000/svg" width="980" height="520" viewBox="0 0 980 520">
-  <defs>
-    <pattern id="dotMapPattern" width="7" height="7" patternUnits="userSpaceOnUse">
-      <circle cx="1.6" cy="1.6" r="1.35" fill="#07111f"/>
-    </pattern>
-  </defs>
-  <g fill="url(#dotMapPattern)" opacity="0.46">
-    <path d="M111 124c43-33 105-42 155-20 31 14 54 39 74 66 22 30 41 63 39 99-2 43-34 80-73 96-45 18-101 8-136-25-26-25-40-61-66-86-23-23-58-35-69-66-9-26 10-49 76-64Z"/>
-    <path d="M298 81c54-37 140-39 202-12 38 17 72 44 111 58 44 17 96 15 133 43 30 22 44 59 31 91-16 40-70 53-112 42-34-9-62-31-96-37-41-8-84 11-126 7-52-5-94-43-123-86-20-29-42-78-20-106Z"/>
-    <path d="M501 263c43-20 95-10 121 25 22 30 22 74 12 111-9 36-25 77-60 91-36 15-74-8-96-38-24-33-35-78-27-118 6-32 21-58 50-71Z"/>
-    <path d="M676 286c36-21 91-5 114 32 20 33 13 82-14 109-27 28-71 33-104 12-31-20-48-60-41-96 4-24 19-45 45-57Z"/>
-    <path d="M741 119c44-18 98-6 136 21 29 20 58 55 47 90-10 34-53 48-89 45-35-3-66-19-99-30-31-11-68-16-87-43-25-37 15-70 92-83Z"/>
-    <path d="M789 410c23-8 55 2 69 22 13 19 8 45-10 58-20 14-50 10-67-8-19-21-18-57 8-72Z"/>
-  </g>
-</svg>
-`)}")`;
 
 const splitPriceLabel = (price: number, precision: number) => {
   const safePrecision = Math.max(0, Math.min(8, precision));
@@ -2218,7 +2201,6 @@ const TradingChart = ({
         ...mobileTouchSurface,
         backgroundColor: effectiveChartTheme.bg,
         backgroundImage: [
-          DOTTED_WORLD_MAP_BACKGROUND,
           "radial-gradient(ellipse at 52% 46%, rgba(143,164,210,0.08) 0%, rgba(143,164,210,0.02) 46%, transparent 74%)",
           "linear-gradient(180deg, rgba(255,255,255,0.018), rgba(0,0,0,0.025))",
         ].join(", "),
