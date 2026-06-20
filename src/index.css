@@ -1336,6 +1336,7 @@
   --radius: 0.75rem;
   font-family: Arial, system-ui, sans-serif;
   color: #06383c;
+  background-color: #ffffff;
 }
 
 .poolito-page .text-muted-foreground {
