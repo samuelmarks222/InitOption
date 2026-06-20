@@ -20,10 +20,12 @@ import {
   LogIn,
   Mail,
   Play,
+  ShieldCheck,
   Smartphone,
   Star,
   Users,
   UserPlus,
+  WalletCards,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/landing/Footer";
@@ -321,7 +323,14 @@ const marketGroups = [
   },
 ];
 
-const trustLogos = ["Markets", "Signals", "Wallet", "Security", "Support", "Demo"];
+const trustLogos = [
+  { label: "Markets", icon: BarChart3 },
+  { label: "Signals", icon: LineChart },
+  { label: "Wallet", icon: WalletCards },
+  { label: "Security", icon: ShieldCheck },
+  { label: "Support", icon: Headphones },
+  { label: "Demo", icon: Play },
+];
 
 const testimonials = [
   {
@@ -752,9 +761,18 @@ const PoolitoHomePage = () => {
             </div>
 
             <div className="poolito-logo-strip" aria-label={`${platformName} platform features`}>
-              {trustLogos.map((item) => (
-                <span key={item}>{item}</span>
-              ))}
+              {trustLogos.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <span key={item.label}>
+                    <span className="poolito-logo-strip-icon">
+                      <Icon size={24} />
+                    </span>
+                    <strong>{item.label}</strong>
+                  </span>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -2095,13 +2113,40 @@ const PoolitoHomePage = () => {
         }
 
         .poolito-logo-strip span {
-          min-height: 94px;
+          min-height: 118px;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
+          gap: 11px;
           color: rgba(255, 255, 255, 0.78);
           background: rgba(255, 255, 255, 0.05);
           font-size: 18px;
+          font-weight: 950;
+        }
+
+        .poolito-logo-strip-icon {
+          width: 46px;
+          height: 46px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          color: var(--poolito-green-bright);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.07);
+          box-shadow:
+            inset 0 0 0 7px rgba(255, 255, 255, 0.04),
+            0 12px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        .poolito-logo-strip-icon svg {
+          stroke-width: 2.4;
+        }
+
+        .poolito-logo-strip strong {
+          color: rgba(255, 255, 255, 0.82);
+          font-size: 17px;
           font-weight: 950;
         }
 
@@ -2435,6 +2480,15 @@ const PoolitoHomePage = () => {
           .poolito-service-grid,
           .poolito-logo-strip {
             grid-template-columns: 1fr;
+          }
+
+          .poolito-logo-strip span {
+            min-height: 96px;
+          }
+
+          .poolito-logo-strip-icon {
+            width: 40px;
+            height: 40px;
           }
 
           .poolito-markets {
