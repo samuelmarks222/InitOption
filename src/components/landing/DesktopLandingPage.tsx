@@ -1,31 +1,7 @@
-import Navbar from "@/components/landing/Navbar";
-import BonusPopup from "@/components/landing/BonusPopup";
-import HeroSection from "@/components/landing/HeroSection";
-import WhatWeOfferSection from "@/components/landing/WhatWeOfferSection";
-import FeaturesSection from "@/components/landing/FeaturesSection";
-import StepsSection from "@/components/landing/StepsSection";
-import MobileSection from "@/components/landing/MobileSection";
-import EarningsSection from "@/components/landing/EarningsSection";
-import TestimonialsSection from "@/components/landing/TestimonialsSection";
-import FAQSection from "@/components/landing/FAQSection";
-import Footer from "@/components/landing/Footer";
+import PoolitoHomePage from "@/components/landing/PoolitoHomePage";
 
 const DesktopLandingPage = () => {
-  return (
-    <div className="quotex-glow-home min-h-screen overflow-x-hidden bg-background">
-      <BonusPopup />
-      <Navbar />
-      <HeroSection />
-      <WhatWeOfferSection />
-      <FeaturesSection />
-      <StepsSection />
-      <MobileSection />
-      <EarningsSection />
-      <TestimonialsSection />
-      <FAQSection />
-      <Footer />
-    </div>
-  );
+  return <PoolitoHomePage />;
 };
 
 export default DesktopLandingPage;
