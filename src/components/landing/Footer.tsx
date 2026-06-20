@@ -289,9 +289,9 @@ const Footer = ({ content }: FooterProps) => {
               return (
                 <span
                   key={label}
-                  className="inline-flex h-9 min-w-14 items-center justify-center rounded-md border border-white/20 bg-white px-2 shadow-sm"
+                  className="inline-flex h-8 items-center justify-center overflow-hidden rounded-md border border-white/20 bg-white px-2 shadow-sm"
                 >
-                  <img src={logoSrc} alt={label} className="h-6 max-w-[80px] object-contain" />
+                  <img src={logoSrc} alt={label} className="h-full max-h-6 w-auto max-w-[72px] object-contain" />
                 </span>
               );
             })}
