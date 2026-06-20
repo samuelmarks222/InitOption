@@ -94,7 +94,7 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
                   <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50">
                     <Trophy className="h-7 w-7 text-emerald-500" />
                   </div>
-                  <h3 className="font-display mt-5 text-2xl font-bold text-[#2b215c]">No tournaments are listed yet</h3>
+                  <h3 className="font-display mt-5 text-2xl font-bold text-[#06383c]">No tournaments are listed yet</h3>
                   <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-gray-600 sm:text-base">
                     Once a new competition is published, it will appear here with its schedule, prize pool, and event
                     details.
@@ -112,11 +112,11 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
                       </div>
                       <div className="text-right">
                         <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">Prize pool</div>
-                        <div className="mt-1 text-2xl font-black text-[#2b215c]">{formatTournamentMoney(tournament.prize_pool)}</div>
+                        <div className="mt-1 text-2xl font-black text-[#06383c]">{formatTournamentMoney(tournament.prize_pool)}</div>
                       </div>
                     </div>
 
-                    <h3 className="font-display mt-6 text-3xl font-bold text-[#2b215c]">{tournament.title}</h3>
+                    <h3 className="font-display mt-6 text-3xl font-bold text-[#06383c]">{tournament.title}</h3>
                     <p className="mt-4 text-sm leading-8 text-gray-600 sm:text-base">
                       {getTournamentSummary(tournament, platformName)}
                     </p>
@@ -152,7 +152,7 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
                             <item.icon className="h-4 w-4 text-emerald-500" />
                             {item.label}
                           </div>
-                          <div className="mt-3 text-sm font-bold leading-7 text-[#2b215c] sm:text-base">{item.value}</div>
+                          <div className="mt-3 text-sm font-bold leading-7 text-[#06383c] sm:text-base">{item.value}</div>
                         </div>
                       ))}
                     </div>
@@ -181,7 +181,7 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
                 <div className="font-copy text-[11px] font-bold uppercase tracking-[0.22em] text-gray-400">
                   Weekly schedule
                 </div>
-                <h2 className="font-display mt-3 text-3xl font-bold text-[#2b215c] sm:text-4xl">
+                <h2 className="font-display mt-3 text-3xl font-bold text-[#06383c] sm:text-4xl">
                   Public tournament format and prize structure
                 </h2>
               </div>
@@ -240,12 +240,12 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
                   >
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div>
-                        <h3 className="font-display text-2xl font-bold text-[#2b215c]">{event.title}</h3>
+                        <h3 className="font-display text-2xl font-bold text-[#06383c]">{event.title}</h3>
                         <p className="mt-3 text-sm leading-8 text-gray-600 sm:text-base">{event.details}</p>
                       </div>
                       <div className="min-w-[140px] rounded-[20px] border border-gray-100 bg-gray-50 px-4 py-4 text-right">
                         <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">Prize pool</div>
-                        <div className="mt-2 text-2xl font-black text-[#2b215c]">{event.pool}</div>
+                        <div className="mt-2 text-2xl font-black text-[#06383c]">{event.pool}</div>
                     </div>
                   </div>
 
@@ -257,7 +257,7 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
                     ].map((item) => (
                       <div key={item.label} className="rounded-[18px] border border-gray-100 bg-gray-50 px-4 py-4">
                         <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">{item.label}</div>
-                        <div className="mt-2 text-sm font-bold text-[#2b215c] sm:text-base">{item.value}</div>
+                        <div className="mt-2 text-sm font-bold text-[#06383c] sm:text-base">{item.value}</div>
                       </div>
                     ))}
                   </div>
@@ -267,7 +267,7 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
 
             <div className="grid gap-6 lg:grid-cols-2">
               <div className="rounded-[26px] border border-gray-200 bg-white p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)]">
-                <h3 className="font-display text-2xl font-bold text-[#2b215c]">How to join a tournament</h3>
+                <h3 className="font-display text-2xl font-bold text-[#06383c]">How to join a tournament</h3>
                 <div className="mt-4 space-y-4 text-sm leading-8 text-gray-600 sm:text-base">
                   <p>1. Log into your account and open the tournaments page from the left navigation.</p>
                   <p>2. Review the active or upcoming event card and open its detail page.</p>
@@ -278,7 +278,7 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
               </div>
 
               <div className="rounded-[26px] border border-gray-200 bg-white p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)]">
-                <h3 className="font-display text-2xl font-bold text-[#2b215c]">Core tournament rules</h3>
+                <h3 className="font-display text-2xl font-bold text-[#06383c]">Core tournament rules</h3>
                 <div className="mt-4 grid gap-3">
                   {[
                     "All participants begin with the tournament starting balance published on the event page.",

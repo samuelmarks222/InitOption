@@ -1358,11 +1358,8 @@
   border-color: rgba(6, 56, 60, 0.11) !important;
 }
 
-.poolito-page section h2 {
-  color: #06383c;
-}
-
-.poolito-page section h2 a {
+.poolito-page section h2,
+.poolito-page section h3 {
   color: #06383c;
 }
 
@@ -1378,6 +1375,108 @@
 .poolito-page textarea,
 .poolito-page select {
   font-family: Arial, system-ui, sans-serif;
+}
+
+/* ─── Navbar overrides inside poolito-page ─── */
+.poolito-page .io-topbar {
+  background: #06383c !important;
+}
+
+.poolito-page .io-social-dot {
+  background: #109b42 !important;
+  box-shadow: 0 8px 16px rgba(16, 155, 66, 0.2) !important;
+}
+
+.poolito-page .io-social-dot:hover {
+  background: #18b958 !important;
+}
+
+.poolito-page .io-navbar {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-bottom-color: rgba(6, 56, 60, 0.11) !important;
+}
+
+.poolito-page .io-nav-link {
+  color: #06383c !important;
+}
+
+.poolito-page .io-nav-link:hover,
+.poolito-page .io-login-link:hover {
+  color: #109b42 !important;
+}
+
+.poolito-page .io-login-link {
+  color: #06383c !important;
+  border-color: rgba(6, 56, 60, 0.11) !important;
+}
+
+.poolito-page .io-register-link {
+  background: #109b42 !important;
+  box-shadow: 0 13px 28px rgba(16, 155, 66, 0.28) !important;
+}
+
+.poolito-page .io-register-link:hover {
+  box-shadow: 0 18px 34px rgba(16, 155, 66, 0.32) !important;
+}
+
+.poolito-page .io-mobile-menu-btn {
+  color: #06383c !important;
+}
+
+/* ─── PageHero overrides inside poolito-page ─── */
+.poolito-page .ph-stage {
+  background: linear-gradient(135deg, rgba(255,255,255,0.84), rgba(239,244,253,0.94)), #eef3fb !important;
+}
+
+.poolito-page .ph-stage::before {
+  background:
+    linear-gradient(135deg, transparent 0 17%, rgba(255,255,255,0.62) 17% 31%, transparent 31% 100%),
+    linear-gradient(45deg, transparent 0 68%, rgba(6,56,60,0.05) 68% 84%, transparent 84% 100%),
+    linear-gradient(120deg, transparent 0 50%, rgba(16,155,66,0.05) 50% 69%, transparent 69% 100%) !important;
+}
+
+.poolito-page .ph-stage::after {
+  background-image:
+    linear-gradient(rgba(6,56,60,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6,56,60,0.035) 1px, transparent 1px) !important;
+}
+
+.poolito-page .ph-bg-arc {
+  background: radial-gradient(circle, rgba(16,155,66,0.09), transparent 66%) !important;
+}
+
+.poolito-page .ph-eyebrow {
+  background: linear-gradient(135deg, #109b42, #06383c) !important;
+}
+
+.poolito-page .ph-title {
+  color: #06383c !important;
+}
+
+.poolito-page .ph-btn-primary {
+  background: #109b42 !important;
+  box-shadow: 0 13px 28px rgba(16, 155, 66, 0.28) !important;
+}
+
+.poolito-page .ph-btn-primary:hover {
+  box-shadow: 0 18px 34px rgba(16, 155, 66, 0.32) !important;
+}
+
+.poolito-page .ph-btn-secondary {
+  color: #06383c !important;
+  border-color: rgba(6, 56, 60, 0.11) !important;
+}
+
+.poolito-page .ph-btn-secondary:hover {
+  color: #109b42 !important;
+}
+
+.poolito-page .text-gray-900 {
+  color: #06383c !important;
+}
+
+.poolito-page .text-gray-700 {
+  color: #2d3748 !important;
 }
 
 @layer utilities {

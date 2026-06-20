@@ -22,7 +22,7 @@ const SectionBlock = ({
   platformName: string;
 }) => (
   <section className="rounded-[28px] border border-gray-200 bg-white p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:p-8">
-    <h2 className="font-display text-2xl font-bold text-[#2b215c]">{interpolate(section.title, platformName)}</h2>
+    <h2 className="font-display text-2xl font-bold text-[#06383c]">{interpolate(section.title, platformName)}</h2>
 
     {section.paragraphs?.length ? (
       <div className="mt-4 space-y-4">
@@ -57,12 +57,12 @@ const FaqBlock = ({
   platformName: string;
 }) => (
   <section className="rounded-[28px] border border-gray-200 bg-white p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:p-8">
-    <h2 className="font-display text-2xl font-bold text-[#2b215c]">Questions and answers</h2>
+    <h2 className="font-display text-2xl font-bold text-[#06383c]">Questions and answers</h2>
 
     <div className="mt-6 space-y-4">
       {items.map((item) => (
         <div key={item.question} className="rounded-[22px] border border-gray-100 bg-gray-50 px-5 py-5">
-          <h3 className="font-display text-xl font-bold text-[#2b215c]">{interpolate(item.question, platformName)}</h3>
+          <h3 className="font-display text-xl font-bold text-[#06383c]">{interpolate(item.question, platformName)}</h3>
           <p className="font-copy mt-3 text-sm leading-7 text-gray-600 sm:text-base sm:leading-8">
             {interpolate(item.answer, platformName)}
           </p>
@@ -78,7 +78,7 @@ const RelatedLinksBlock = ({
   links: PublicPageLinkItem[];
 }) => (
   <section className="rounded-[28px] border border-gray-200 bg-white p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:p-8">
-    <h2 className="font-display text-2xl font-bold text-[#2b215c]">Keep exploring</h2>
+    <h2 className="font-display text-2xl font-bold text-[#06383c]">Keep exploring</h2>
     <p className="mt-4 max-w-3xl font-copy text-sm leading-7 text-gray-600 sm:text-base">
       Use these public links to move deeper into the platform, support, and policy pages without losing context.
     </p>
@@ -90,7 +90,7 @@ const RelatedLinksBlock = ({
 
         const content = (
           <>
-            <div className="font-display text-xl font-bold text-[#2b215c]">{item.label}</div>
+            <div className="font-display text-xl font-bold text-[#06383c]">{item.label}</div>
             <p className="mt-3 font-copy text-sm leading-7 text-gray-600">{item.description}</p>
           </>
         );
