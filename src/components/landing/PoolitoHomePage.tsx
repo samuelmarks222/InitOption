@@ -976,10 +976,10 @@ const PoolitoHomePage = () => {
 
         .poolito-hero {
           position: relative;
-          min-height: 610px;
+          min-height: 690px;
           overflow: hidden;
           display: grid;
-          grid-template-columns: minmax(0, 48%) minmax(0, 52%);
+          grid-template-columns: minmax(0, 55%) minmax(0, 45%);
           background: var(--poolito-deep);
         }
 
@@ -999,16 +999,15 @@ const PoolitoHomePage = () => {
           z-index: 2;
           display: flex;
           align-items: center;
-          padding-left: max(56px, calc((100vw - 1300px) / 2));
+          padding-left: max(82px, calc((100vw - 1440px) / 2));
           padding-right: 40px;
         }
 
         .poolito-frame {
           position: relative;
-          width: min(100%, 600px);
-          padding: 58px 44px 58px;
-          border: 8px solid var(--poolito-green);
-          border-right: 0;
+          width: min(100%, 640px);
+          padding: 46px 44px 44px;
+          border-left: 8px solid var(--poolito-green);
         }
 
         .poolito-frame::before,
@@ -1019,17 +1018,18 @@ const PoolitoHomePage = () => {
         }
 
         .poolito-frame::before {
-          right: 0;
+          left: 0;
           top: 0;
-          width: 48%;
+          width: 61%;
           height: 8px;
         }
 
         .poolito-frame::after {
-          right: 0;
+          left: 0;
           bottom: 0;
-          width: 48%;
+          width: 86%;
           height: 8px;
+          box-shadow: 26px 0 0 -8px var(--poolito-green);
         }
 
         .poolito-kicker {
@@ -1046,7 +1046,7 @@ const PoolitoHomePage = () => {
         .poolito-frame h1 {
           margin: 0;
           color: #fff;
-          font-size: clamp(38px, 3.8vw, 58px);
+          font-size: clamp(40px, 3.2vw, 50px);
           line-height: 1.06;
           font-weight: 950;
           letter-spacing: 0;
@@ -1058,11 +1058,11 @@ const PoolitoHomePage = () => {
         }
 
         .poolito-hero-subheadline {
-          max-width: 520px;
-          margin: 22px 0 0;
+          max-width: 560px;
+          margin: 18px 0 0;
           color: rgba(255, 255, 255, 0.82);
-          font-size: 16px;
-          line-height: 1.58;
+          font-size: 15px;
+          line-height: 1.52;
           font-weight: 800;
         }
 
@@ -1071,7 +1071,7 @@ const PoolitoHomePage = () => {
           flex-wrap: wrap;
           align-items: center;
           gap: 14px;
-          margin-top: 30px;
+          margin-top: 24px;
         }
 
         .poolito-cta,
@@ -1114,8 +1114,8 @@ const PoolitoHomePage = () => {
         .poolito-hero-image {
           position: relative;
           z-index: 1;
-          min-height: 610px;
-          clip-path: polygon(12% 0, 100% 0, 100% 100%, 0 100%);
+          min-height: 690px;
+          clip-path: polygon(16% 0, 100% 0, 100% 100%, 0 100%);
         }
 
         .poolito-hero-image::after {
@@ -1129,7 +1129,7 @@ const PoolitoHomePage = () => {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          object-position: center;
+          object-position: center right;
           display: block;
         }
 
@@ -1139,17 +1139,17 @@ const PoolitoHomePage = () => {
           z-index: 3;
           top: 80px;
           bottom: 0;
-          width: 28px;
+          width: 34px;
           background: var(--poolito-green-bright);
           transform: skewX(-20deg);
         }
 
         .poolito-slash-one {
-          left: 48%;
+          left: 51%;
         }
 
         .poolito-slash-two {
-          left: calc(48% + 48px);
+          left: calc(51% + 52px);
           opacity: 0.82;
         }
 
@@ -2327,6 +2327,11 @@ const PoolitoHomePage = () => {
           .poolito-frame {
             padding: 40px 28px;
             border-width: 6px;
+          }
+
+          .poolito-frame::before,
+          .poolito-frame::after {
+            height: 6px;
           }
 
           .poolito-frame h1 {
