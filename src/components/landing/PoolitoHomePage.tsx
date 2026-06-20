@@ -536,7 +536,7 @@ const PoolitoHomePage = () => {
                 <img src={HOME_ASSETS.aboutPhone} alt={`${platformName} mobile trading screens`} />
               </div>
               <div className="poolito-round-badge" aria-hidden="true">
-                <BarChart3 size={44} />
+                <BarChart3 size={36} />
               </div>
             </div>
 
@@ -1390,17 +1390,46 @@ const PoolitoHomePage = () => {
           position: absolute;
           left: 47%;
           top: 48%;
-          width: 164px;
-          height: 164px;
+          width: 136px;
+          height: 136px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           border-radius: 50%;
           color: #fff;
           background: var(--poolito-green);
-          border: 12px solid rgba(255, 255, 255, 0.22);
+          border: 10px solid rgba(255, 255, 255, 0.22);
+          overflow: hidden;
           transform: translate(-50%, -50%);
           box-shadow: 0 18px 36px rgba(16, 155, 66, 0.26);
+        }
+
+        .poolito-round-badge::before {
+          content: "";
+          position: absolute;
+          inset: 9px;
+          border-radius: 50%;
+          background: repeating-conic-gradient(
+            from 0deg,
+            rgba(255, 255, 255, 0.78) 0deg 4deg,
+            transparent 4deg 9deg
+          );
+          -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
+          opacity: 0.82;
+          transform-origin: center;
+          animation: poolito-badge-ring-spin 7s linear infinite;
+        }
+
+        .poolito-round-badge svg {
+          position: relative;
+          z-index: 1;
+        }
+
+        @keyframes poolito-badge-ring-spin {
+          to {
+            transform: rotate(360deg);
+          }
         }
 
         .poolito-section-label,
@@ -2483,8 +2512,9 @@ const PoolitoHomePage = () => {
           }
 
           .poolito-round-badge {
-            width: 118px;
-            height: 118px;
+            width: 98px;
+            height: 98px;
+            border-width: 8px;
           }
 
           .poolito-feature-pair,
