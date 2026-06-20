@@ -16,6 +16,7 @@ import {
   Play,
   ShieldCheck,
   Smartphone,
+  Star,
   Trophy,
   Users,
   UserPlus,
@@ -50,6 +51,8 @@ const stats = [
   { value: "35+", label: "Fast Payouts", icon: Building2 },
   { value: "8+", label: "Help Channels", icon: Users },
 ];
+
+const assetTags = ["Currencies", "Indices", "Crypto", "Stocks", "Commodities"];
 
 const howItWorksSteps = [
   {
@@ -104,6 +107,30 @@ const services = [
 ];
 
 const trustLogos = ["Markets", "Signals", "Wallet", "Security", "Support", "Demo"];
+
+const testimonials = [
+  {
+    quote: "The demo account helped me test strategies before placing live trades.",
+    name: "Maya K.",
+    role: "Currency trader",
+    initials: "MK",
+    rating: "5.0",
+  },
+  {
+    quote: "Charts load quickly, the platform is clean, and withdrawals have been smooth.",
+    name: "Daniel R.",
+    role: "Crypto trader",
+    initials: "DR",
+    rating: "5.0",
+  },
+  {
+    quote: "I can move from phone to desktop without losing track of my open positions.",
+    name: "Sofia N.",
+    role: "Multi-asset trader",
+    initials: "SN",
+    rating: "4.9",
+  },
+];
 
 const PoolitoHomePage = () => {
   const { platformName, supportEmail } = useSiteBranding();
@@ -181,24 +208,25 @@ const PoolitoHomePage = () => {
                 100% platform access
               </span>
               <h1 id="poolito-hero-title">
-                Ready to Start
+                The Right Place for
                 <br />
-                Your <span>Trading</span>
+                Online <span>Trading</span>
                 <br />
-                Journey?
+                Simple, Fast, and Secure.
               </h1>
               <p className="poolito-hero-subheadline">
-                Join thousands of traders already using Init Option. Start with a free demo or go live instantly.
+                Trade over 100 global assets including currencies, indices, crypto, stocks, and commodities.
+                Access real-time charts, a free demo account, and fast withdrawals - all from one clean, powerful platform.
               </p>
               <div className="poolito-cta-row">
                 <Link to="/register" className="poolito-cta">
-                  Create Free Account
+                  Start Trading Now
                   <span>
                     <ArrowRight size={17} />
                   </span>
                 </Link>
                 <Link to="/trade" className="poolito-cta poolito-cta-secondary">
-                  Open Demo
+                  Free Demo
                   <span>
                     <Play size={16} fill="currentColor" />
                   </span>
@@ -208,6 +236,11 @@ const PoolitoHomePage = () => {
           </div>
           <div className="poolito-hero-image" aria-label={`${platformName} trading platform preview`}>
             <img src={HOME_ASSETS.hero} alt={`${platformName} laptop trading platform`} />
+            <div className="poolito-floating-tags" aria-label={`${platformName} tradable asset classes`}>
+              {assetTags.map((tag) => (
+                <span key={tag}>{tag}</span>
+              ))}
+            </div>
           </div>
           <div className="poolito-slash-one" aria-hidden="true" />
           <div className="poolito-slash-two" aria-hidden="true" />
@@ -367,6 +400,62 @@ const PoolitoHomePage = () => {
               {trustLogos.map((item) => (
                 <span key={item}>{item}</span>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="poolito-testimonials" aria-labelledby="poolito-testimonials-title">
+          <div className="poolito-container">
+            <div className="poolito-section-heading">
+              <span>Trader Feedback</span>
+              <h2 id="poolito-testimonials-title">What Traders Say</h2>
+            </div>
+
+            <div className="poolito-testimonial-grid">
+              {testimonials.map((item) => (
+                <article className="poolito-testimonial-card" key={item.name}>
+                  <div className="poolito-rating" aria-label={`${item.rating} out of 5 rating`}>
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <Star key={index} size={16} fill="currentColor" />
+                    ))}
+                    <strong>{item.rating}</strong>
+                  </div>
+                  <p>{item.quote}</p>
+                  <div className="poolito-testimonial-author">
+                    <span>{item.initials}</span>
+                    <div>
+                      <strong>{item.name}</strong>
+                      <small>{item.role}</small>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="poolito-final-cta" aria-labelledby="poolito-final-cta-title">
+          <div className="poolito-container poolito-final-cta-inner">
+            <div>
+              <span className="poolito-section-label">Start Today</span>
+              <h2 id="poolito-final-cta-title">Ready to Start Your Trading Journey?</h2>
+              <p>
+                Join thousands of traders already using Init Option. Start with a free demo or go live instantly.
+              </p>
+            </div>
+            <div className="poolito-final-cta-actions">
+              <Link to="/register" className="poolito-cta">
+                Create Free Account
+                <span>
+                  <ArrowRight size={17} />
+                </span>
+              </Link>
+              <Link to="/trade" className="poolito-cta poolito-cta-secondary">
+                Open Demo
+                <span>
+                  <Play size={16} fill="currentColor" />
+                </span>
+              </Link>
             </div>
           </div>
         </section>
@@ -577,7 +666,7 @@ const PoolitoHomePage = () => {
 
         .poolito-frame {
           position: relative;
-          width: min(100%, 560px);
+          width: min(100%, 600px);
           padding: 58px 44px 58px;
           border: 8px solid var(--poolito-green);
           border-right: 0;
@@ -618,8 +707,8 @@ const PoolitoHomePage = () => {
         .poolito-frame h1 {
           margin: 0;
           color: #fff;
-          font-size: clamp(46px, 5vw, 76px);
-          line-height: 0.98;
+          font-size: clamp(38px, 3.8vw, 58px);
+          line-height: 1.06;
           font-weight: 950;
           letter-spacing: 0;
           text-transform: uppercase;
@@ -630,10 +719,10 @@ const PoolitoHomePage = () => {
         }
 
         .poolito-hero-subheadline {
-          max-width: 440px;
+          max-width: 520px;
           margin: 22px 0 0;
           color: rgba(255, 255, 255, 0.82);
-          font-size: 17px;
+          font-size: 16px;
           line-height: 1.58;
           font-weight: 800;
         }
@@ -703,6 +792,33 @@ const PoolitoHomePage = () => {
           object-fit: cover;
           object-position: center;
           display: block;
+        }
+
+        .poolito-floating-tags {
+          position: absolute;
+          z-index: 2;
+          right: max(34px, calc((100vw - 1300px) / 2));
+          bottom: 34px;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 12px;
+          max-width: 520px;
+          pointer-events: none;
+        }
+
+        .poolito-floating-tags span {
+          display: inline-flex;
+          align-items: center;
+          min-height: 42px;
+          padding: 0 18px;
+          border-radius: 999px;
+          color: #fff;
+          border: 1px solid rgba(255, 255, 255, 0.26);
+          background: rgba(5, 46, 49, 0.72);
+          box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
+          font-size: 13px;
+          font-weight: 950;
         }
 
         .poolito-slash-one,
@@ -1332,6 +1448,158 @@ const PoolitoHomePage = () => {
           font-weight: 950;
         }
 
+        .poolito-testimonials {
+          position: relative;
+          overflow: hidden;
+          padding: 104px 0 112px;
+          background: #fff;
+        }
+
+        .poolito-testimonials::before {
+          content: "";
+          position: absolute;
+          inset: 0 0 auto auto;
+          width: 34%;
+          height: 60%;
+          pointer-events: none;
+          background-image: radial-gradient(rgba(6,56,60,0.1) 2px, transparent 2px);
+          background-size: 18px 18px;
+          opacity: 0.45;
+        }
+
+        .poolito-testimonial-grid {
+          position: relative;
+          z-index: 1;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 28px;
+        }
+
+        .poolito-testimonial-card {
+          min-height: 310px;
+          display: flex;
+          flex-direction: column;
+          padding: 32px 30px;
+          border-radius: 8px;
+          border: 1px solid rgba(6, 56, 60, 0.1);
+          background: #fff;
+          box-shadow: 0 16px 36px rgba(6, 56, 60, 0.1);
+        }
+
+        .poolito-rating {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          color: #f2a600;
+        }
+
+        .poolito-rating strong {
+          margin-left: 8px;
+          color: var(--poolito-dark);
+          font-size: 14px;
+          font-weight: 950;
+        }
+
+        .poolito-testimonial-card p {
+          margin: 28px 0 0;
+          color: #5f6472;
+          font-size: 18px;
+          line-height: 1.62;
+          font-weight: 800;
+        }
+
+        .poolito-testimonial-author {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          margin-top: auto;
+          padding-top: 28px;
+        }
+
+        .poolito-testimonial-author > span {
+          width: 58px;
+          height: 58px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          color: #fff;
+          background: var(--poolito-green);
+          font-weight: 950;
+        }
+
+        .poolito-testimonial-author strong,
+        .poolito-testimonial-author small {
+          display: block;
+        }
+
+        .poolito-testimonial-author strong {
+          color: var(--poolito-dark);
+          font-size: 18px;
+          font-weight: 950;
+        }
+
+        .poolito-testimonial-author small {
+          color: var(--poolito-green);
+          font-size: 13px;
+          font-weight: 900;
+        }
+
+        .poolito-final-cta {
+          position: relative;
+          overflow: hidden;
+          padding: 96px 0;
+          background:
+            linear-gradient(90deg, rgba(5, 46, 49, 0.94), rgba(16, 155, 66, 0.9)),
+            url("${HOME_ASSETS.abstract}") center/cover;
+        }
+
+        .poolito-final-cta-inner {
+          display: grid;
+          grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.75fr);
+          gap: 48px;
+          align-items: center;
+        }
+
+        .poolito-final-cta .poolito-section-label {
+          color: #fff;
+        }
+
+        .poolito-final-cta .poolito-section-label::before {
+          background: #fff;
+        }
+
+        .poolito-final-cta h2 {
+          max-width: 760px;
+          margin: 18px 0 0;
+          color: #fff;
+          font-size: clamp(40px, 4vw, 60px);
+          line-height: 1.12;
+          font-weight: 950;
+          letter-spacing: 0;
+        }
+
+        .poolito-final-cta p {
+          max-width: 650px;
+          margin: 22px 0 0;
+          color: rgba(255, 255, 255, 0.78);
+          font-size: 18px;
+          line-height: 1.64;
+          font-weight: 800;
+        }
+
+        .poolito-final-cta-actions {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 14px;
+        }
+
+        .poolito-final-cta .poolito-cta-secondary {
+          background: rgba(255, 255, 255, 0.12);
+          box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.28);
+        }
+
         @media (max-width: 1180px) {
           .poolito-nav {
             flex-wrap: wrap;
@@ -1372,6 +1640,12 @@ const PoolitoHomePage = () => {
             clip-path: none;
           }
 
+          .poolito-floating-tags {
+            left: 32px;
+            right: 32px;
+            justify-content: flex-start;
+          }
+
           .poolito-slash-one,
           .poolito-slash-two {
             display: none;
@@ -1401,6 +1675,15 @@ const PoolitoHomePage = () => {
 
           .poolito-service-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .poolito-testimonial-grid,
+          .poolito-final-cta-inner {
+            grid-template-columns: 1fr;
+          }
+
+          .poolito-final-cta-actions {
+            justify-content: flex-start;
           }
         }
 
@@ -1446,7 +1729,7 @@ const PoolitoHomePage = () => {
           }
 
           .poolito-frame h1 {
-            font-size: clamp(38px, 12vw, 54px);
+            font-size: clamp(34px, 11vw, 50px);
           }
 
           .poolito-stat-list {
@@ -1477,6 +1760,7 @@ const PoolitoHomePage = () => {
           }
 
           .poolito-feature-pair,
+          .poolito-testimonial-grid,
           .poolito-service-grid,
           .poolito-logo-strip {
             grid-template-columns: 1fr;
@@ -1511,6 +1795,19 @@ const PoolitoHomePage = () => {
 
           .poolito-frame {
             padding: 34px 20px;
+          }
+
+          .poolito-floating-tags {
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            gap: 8px;
+          }
+
+          .poolito-floating-tags span {
+            min-height: 36px;
+            padding: 0 12px;
+            font-size: 12px;
           }
 
           .poolito-stat-list {
