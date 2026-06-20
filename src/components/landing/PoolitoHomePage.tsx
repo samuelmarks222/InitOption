@@ -13,6 +13,7 @@ import {
   Headphones,
   LineChart,
   Play,
+  ShieldCheck,
   Smartphone,
   Star,
   TrendingUp,
