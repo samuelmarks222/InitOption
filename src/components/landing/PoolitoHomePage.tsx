@@ -27,6 +27,7 @@ import {
 import { Link } from "react-router-dom";
 import Footer from "@/components/landing/Footer";
 import { SiteLogo } from "@/components/branding/SiteLogo";
+import AssetSymbolMark from "@/components/trading/AssetSymbolMark";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 
 const HOME_ASSETS = {
@@ -104,9 +105,9 @@ const services = [
 const marketGroups = [
   {
     label: "Currencies",
+    category: "OTC",
     cards: [
       {
-        badge: "EU",
         symbol: "EUR/USD",
         name: "Euro / US Dollar",
         status: "Closed",
@@ -115,7 +116,6 @@ const marketGroups = [
         direction: "Up",
       },
       {
-        badge: "GB",
         symbol: "GBP/USD",
         name: "British Pound / US Dollar",
         status: "Open",
@@ -124,7 +124,6 @@ const marketGroups = [
         direction: "Up",
       },
       {
-        badge: "US",
         symbol: "USD/JPY",
         name: "US Dollar / Japanese Yen",
         status: "Closed",
@@ -133,7 +132,6 @@ const marketGroups = [
         direction: "Up",
       },
       {
-        badge: "AU",
         symbol: "AUD/CAD",
         name: "Australian Dollar / Canadian Dollar",
         status: "Open",
@@ -145,9 +143,9 @@ const marketGroups = [
   },
   {
     label: "Crypto",
+    category: "CRYPTO",
     cards: [
       {
-        badge: "BT",
         symbol: "BTC",
         name: "Bitcoin",
         status: "Open",
@@ -156,7 +154,6 @@ const marketGroups = [
         direction: "Down",
       },
       {
-        badge: "ET",
         symbol: "ETH",
         name: "Ethereum",
         status: "Open",
@@ -165,7 +162,6 @@ const marketGroups = [
         direction: "Up",
       },
       {
-        badge: "SO",
         symbol: "SOL",
         name: "Solana",
         status: "Closed",
@@ -174,7 +170,6 @@ const marketGroups = [
         direction: "Up",
       },
       {
-        badge: "XR",
         symbol: "XRP",
         name: "Ripple",
         status: "Open",
@@ -186,9 +181,9 @@ const marketGroups = [
   },
   {
     label: "Stocks",
+    category: "STOCKS",
     cards: [
       {
-        badge: "AP",
         symbol: "AAPL",
         name: "Apple Inc.",
         status: "Open",
@@ -197,7 +192,6 @@ const marketGroups = [
         direction: "Up",
       },
       {
-        badge: "TS",
         symbol: "TSLA",
         name: "Tesla Inc.",
         status: "Closed",
@@ -206,7 +200,6 @@ const marketGroups = [
         direction: "Down",
       },
       {
-        badge: "MS",
         symbol: "MSFT",
         name: "Microsoft Corp.",
         status: "Open",
@@ -215,7 +208,6 @@ const marketGroups = [
         direction: "Up",
       },
       {
-        badge: "AM",
         symbol: "AMZN",
         name: "Amazon.com Inc.",
         status: "Open",
@@ -227,37 +219,34 @@ const marketGroups = [
   },
   {
     label: "Commodities",
+    category: "COMMODITIES",
     cards: [
       {
-        badge: "GD",
-        symbol: "GOLD",
-        name: "Gold Spot",
+        symbol: "XAU/USD",
+        name: "Gold",
         status: "Open",
         payout: "90%",
         duration: "45m",
         direction: "Up",
       },
       {
-        badge: "OL",
-        symbol: "OIL",
-        name: "Crude Oil",
+        symbol: "WTICO/USD",
+        name: "WTI Crude Oil",
         status: "Closed",
         payout: "73%",
         duration: "60m",
         direction: "Down",
       },
       {
-        badge: "SV",
-        symbol: "SILVER",
-        name: "Silver Spot",
+        symbol: "XAG/USD",
+        name: "Silver",
         status: "Open",
         payout: "85%",
         duration: "30m",
         direction: "Up",
       },
       {
-        badge: "NG",
-        symbol: "NATGAS",
+        symbol: "NATGAS/USD",
         name: "Natural Gas",
         status: "Open",
         payout: "77%",
@@ -296,16 +285,40 @@ const testimonials = [
 
 const PoolitoHomePage = () => {
   const { platformName, supportEmail } = useSiteBranding();
-  const [activeMarketIndex, setActiveMarketIndex] = useState(0);
-  const activeMarket = marketGroups[activeMarketIndex] || marketGroups[0];
+  const marketSlides = [...marketGroups, marketGroups[0]!];
+  const [marketSlideIndex, setMarketSlideIndex] = useState(0);
+  const [isMarketJumping, setIsMarketJumping] = useState(false);
+  const activeMarketIndex = marketSlideIndex % marketGroups.length;
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
-      setActiveMarketIndex((currentIndex) => (currentIndex + 1) % marketGroups.length);
+      setMarketSlideIndex((currentIndex) => currentIndex + 1);
     }, 4200);
 
     return () => window.clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    if (!isMarketJumping) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setIsMarketJumping(false);
+    }, 40);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isMarketJumping]);
+
+  const handleMarketSelect = (index: number) => {
+    setIsMarketJumping(false);
+    setMarketSlideIndex(index);
+  };
+
+  const handleMarketTransitionEnd = () => {
+    if (marketSlideIndex < marketGroups.length) return;
+
+    setIsMarketJumping(true);
+    setMarketSlideIndex(0);
+  };
 
   return (
     <div className="poolito-home min-h-screen overflow-x-hidden bg-white text-[#06383c]">
@@ -561,7 +574,7 @@ const PoolitoHomePage = () => {
                   aria-selected={activeMarketIndex === index}
                   className={`poolito-market-tab ${activeMarketIndex === index ? "is-active" : ""}`}
                   key={group.label}
-                  onClick={() => setActiveMarketIndex(index)}
+                  onClick={() => handleMarketSelect(index)}
                 >
                   {group.label}
                 </button>
@@ -569,49 +582,72 @@ const PoolitoHomePage = () => {
             </div>
 
             <div className="poolito-market-stage">
-              <div className="poolito-market-grid" key={activeMarket.label} aria-live="polite">
-                {activeMarket.cards.map((market) => {
-                  const isDown = market.direction === "Down";
+              <div
+                className={`poolito-market-track ${isMarketJumping ? "is-jumping" : ""}`}
+                style={{ transform: `translateX(-${marketSlideIndex * 100}%)` }}
+                onTransitionEnd={handleMarketTransitionEnd}
+                aria-live="polite"
+              >
+                {marketSlides.map((group, slideIndex) => (
+                  <div
+                    className="poolito-market-slide"
+                    key={`${group.label}-${slideIndex}`}
+                    aria-hidden={activeMarketIndex !== slideIndex % marketGroups.length}
+                  >
+                    <div className="poolito-market-grid">
+                      {group.cards.map((market) => {
+                        const isDown = market.direction === "Down";
 
-                  return (
-                    <article className="poolito-market-card" key={market.symbol}>
-                      <div className="poolito-market-card-head">
-                        <span className="poolito-market-badge">{market.badge}</span>
-                        <div>
-                          <h3>{market.symbol}</h3>
-                          <p>{market.name}</p>
-                        </div>
-                        <span className={`poolito-market-status ${market.status.toLowerCase()}`}>
-                          {market.status}
-                        </span>
-                      </div>
+                        return (
+                          <article className="poolito-market-card" key={market.symbol}>
+                            <div className="poolito-market-card-head">
+                              <div className="poolito-market-mark-wrap">
+                                <AssetSymbolMark
+                                  symbol={market.symbol}
+                                  name={market.name}
+                                  category={group.category}
+                                  size={48}
+                                  className="poolito-market-mark"
+                                />
+                              </div>
+                              <div>
+                                <h3>{market.symbol}</h3>
+                                <p>{market.name}</p>
+                              </div>
+                              <span className={`poolito-market-status ${market.status.toLowerCase()}`}>
+                                {market.status}
+                              </span>
+                            </div>
 
-                      <dl className="poolito-market-metrics">
-                        <div>
-                          <dt>Payout</dt>
-                          <dd>{market.payout}</dd>
-                        </div>
-                        <div>
-                          <dt>Duration</dt>
-                          <dd>{market.duration}</dd>
-                        </div>
-                        <div>
-                          <dt>Direction</dt>
-                          <dd className={isDown ? "is-down" : "is-up"}>{market.direction}</dd>
-                        </div>
-                      </dl>
+                            <dl className="poolito-market-metrics">
+                              <div>
+                                <dt>Payout</dt>
+                                <dd>{market.payout}</dd>
+                              </div>
+                              <div>
+                                <dt>Duration</dt>
+                                <dd>{market.duration}</dd>
+                              </div>
+                              <div>
+                                <dt>Direction</dt>
+                                <dd className={isDown ? "is-down" : "is-up"}>{market.direction}</dd>
+                              </div>
+                            </dl>
 
-                      <div className="poolito-market-bottom">
-                        <strong>{market.payout}</strong>
-                        <span>Binary</span>
-                      </div>
+                            <div className="poolito-market-bottom">
+                              <strong>{market.payout}</strong>
+                              <span>Binary</span>
+                            </div>
 
-                      <Link to="/trade" className="poolito-market-trade">
-                        Trade
-                      </Link>
-                    </article>
-                  );
-                })}
+                            <Link to="/trade" className="poolito-market-trade">
+                              Trade
+                            </Link>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -622,7 +658,7 @@ const PoolitoHomePage = () => {
                   className={activeMarketIndex === index ? "is-active" : ""}
                   aria-label={`Show ${group.label} markets`}
                   key={group.label}
-                  onClick={() => setActiveMarketIndex(index)}
+                  onClick={() => handleMarketSelect(index)}
                 />
               ))}
             </div>
@@ -1639,23 +1675,25 @@ const PoolitoHomePage = () => {
           overflow: hidden;
         }
 
+        .poolito-market-track {
+          display: flex;
+          transition: transform 640ms cubic-bezier(0.76, 0, 0.24, 1);
+          will-change: transform;
+        }
+
+        .poolito-market-track.is-jumping {
+          transition: none;
+        }
+
+        .poolito-market-slide {
+          min-width: 100%;
+          flex: 0 0 100%;
+        }
+
         .poolito-market-grid {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 28px;
-          animation: poolitoMarketSwap 420ms ease;
-        }
-
-        @keyframes poolitoMarketSwap {
-          from {
-            opacity: 0;
-            transform: translateY(12px);
-          }
-
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
         }
 
         .poolito-market-card {
@@ -1669,23 +1707,21 @@ const PoolitoHomePage = () => {
 
         .poolito-market-card-head {
           display: grid;
-          grid-template-columns: 48px minmax(0, 1fr) auto;
+          grid-template-columns: 70px minmax(0, 1fr) auto;
           gap: 12px;
           align-items: center;
         }
 
-        .poolito-market-badge {
-          width: 48px;
-          height: 48px;
-          display: inline-flex;
+        .poolito-market-mark-wrap {
+          width: 70px;
+          min-width: 70px;
+          display: flex;
           align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #fff;
-          background: linear-gradient(135deg, var(--poolito-dark), var(--poolito-green));
-          box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.28);
-          font-size: 13px;
-          font-weight: 950;
+          justify-content: flex-start;
+        }
+
+        .poolito-market-mark {
+          filter: drop-shadow(0 8px 16px rgba(6, 56, 60, 0.18));
         }
 
         .poolito-market-card h3 {
@@ -2308,12 +2344,12 @@ const PoolitoHomePage = () => {
           }
 
           .poolito-market-card-head {
-            grid-template-columns: 44px minmax(0, 1fr);
+            grid-template-columns: 64px minmax(0, 1fr);
           }
 
-          .poolito-market-badge {
-            width: 44px;
-            height: 44px;
+          .poolito-market-mark-wrap {
+            width: 64px;
+            min-width: 64px;
           }
 
           .poolito-market-status {
