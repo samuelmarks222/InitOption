@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BookOpen, Search, ChevronRight, Loader } from "lucide-react";
+import Navbar from "@/components/landing/Navbar";
 
 interface Guide {
   id: string;
@@ -184,6 +185,9 @@ const GuideBrowserPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0f1826] via-[#1a2438] to-[#0f1826]">
+      <Navbar />
+      <div className="guide-public-header-spacer" aria-hidden="true" />
+
       {/* Header */}
       <div className="border-b border-white/10 bg-gradient-to-r from-[#1a2438] to-[#0f1826]">
         <div className="px-4 py-12 sm:px-6 lg:px-8">
@@ -444,6 +448,24 @@ const GuideBrowserPage = () => {
           </div>
         </div>
       </div>
+
+      <style>{`
+        .guide-public-header-spacer {
+          height: 132px;
+        }
+
+        @media (max-width: 1180px) {
+          .guide-public-header-spacer {
+            height: 192px;
+          }
+        }
+
+        @media (max-width: 820px) {
+          .guide-public-header-spacer {
+            height: 214px;
+          }
+        }
+      `}</style>
     </div>
   );
 };

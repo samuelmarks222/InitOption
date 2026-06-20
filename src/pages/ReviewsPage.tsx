@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   BarChart3,
   Copy,
   Facebook,
@@ -20,10 +19,9 @@ import {
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { SiteLogo } from "@/components/branding/SiteLogo";
+import Navbar from "@/components/landing/Navbar";
 import { WhatsAppLogo } from "@/components/icons/BrandSocialIcons";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { useToast } from "@/hooks/use-toast";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 import { supabase } from "@/integrations/supabase/client";
@@ -395,7 +393,6 @@ const AccountRail = ({
 };
 
 const ReviewsPage = () => {
-  const { platformName, logoUrl } = useSiteBranding();
   const { data: websiteContent } = useWebsiteContent();
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -505,37 +502,11 @@ const ReviewsPage = () => {
 
   return (
     <div className="min-h-screen" style={pageStyle}>
+      <Navbar />
+      <div className="reviews-public-header-spacer" aria-hidden="true" />
+
       <div className="flex min-h-screen">
         <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-r from-white/[0.03] to-white/[0.01] backdrop-blur-sm">
-            <div className="flex min-h-[62px] w-full items-center justify-between gap-4 px-6 xl:px-8">
-              <SiteLogo
-                to="/"
-                variant="dark"
-                className="gap-2"
-                imageClassName="h-9 sm:h-10"
-                nameClassName="text-white"
-                subtitleClassName="text-[#8fa4c2]"
-                showText={!logoUrl}
-              />
-              <nav className="hidden items-center gap-14 text-sm font-bold text-white/90 lg:flex">
-                <Link to="/features" className="hover:text-[#9fd6ff]">Quick start</Link>
-                <Link to="/trade" className="hover:text-[#9fd6ff]">Free demo</Link>
-                <Link to="/about" className="hover:text-[#9fd6ff]">About us</Link>
-                <Link to="/blog" className="hover:text-[#9fd6ff]">{platformName} Blog</Link>
-              </nav>
-              <Link
-                to="/trade"
-                className="inline-flex h-10 items-center gap-2 rounded-[9px] px-4 text-sm font-black text-white transition-all hover:bg-[#1565c0] lg:hidden"
-                style={{ background: accentBlue }}
-              >
-                Trade now
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Globe className="hidden h-5 w-5 text-white/90 lg:block" />
-            </div>
-          </header>
-
           <main className="w-full px-6 pb-14 pt-12 xl:px-8">
             <section className="pb-20">
               <div className="flex items-center gap-2 mb-3">
@@ -659,6 +630,24 @@ const ReviewsPage = () => {
 
         <AccountRail socialButtons={socialButtons} />
       </div>
+
+      <style>{`
+        .reviews-public-header-spacer {
+          height: 132px;
+        }
+
+        @media (max-width: 1180px) {
+          .reviews-public-header-spacer {
+            height: 192px;
+          }
+        }
+
+        @media (max-width: 820px) {
+          .reviews-public-header-spacer {
+            height: 214px;
+          }
+        }
+      `}</style>
     </div>
   );
 };

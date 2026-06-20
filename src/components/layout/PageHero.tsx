@@ -39,7 +39,7 @@ const PageHero = ({ eyebrow, title, description, cta }: PageHeroProps) => (
       .ph-stage {
         position: relative;
         overflow: hidden;
-        padding: 116px 24px 64px;
+        padding: 166px 24px 64px;
         background: linear-gradient(135deg, rgba(255,255,255,0.84), rgba(239,244,253,0.94)), #eef3fb;
       }
 
@@ -166,7 +166,7 @@ const PageHero = ({ eyebrow, title, description, cta }: PageHeroProps) => (
 
       @media (max-width: 768px) {
         .ph-stage {
-          padding: 100px 20px 48px;
+          padding: 152px 20px 48px;
         }
 
         .ph-title {
