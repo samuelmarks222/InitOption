@@ -466,7 +466,7 @@ const PoolitoHomePage = () => {
                 100% platform access
               </span>
               <h1 id="poolito-hero-title">
-                Your Gateway to Global Markets – Simple, Fast, Secure.
+                The Right Place for Online <span style={{ color: "#109b42" }}>Trading</span> – Simple, Fast, Secure.
               </h1>
               <p className="poolito-hero-subheadline">
                 Trade 100+ assets with real-time charts, a free demo, and fast withdrawals. All from one clean platform.
@@ -537,9 +537,7 @@ const PoolitoHomePage = () => {
             <div className="poolito-about-copy">
               <span className="poolito-section-label">About Trading</span>
               <h2 id="poolito-about-title">
-                The Right Place
-                <br />
-                for Online Trading
+                Your Gateway to Global Markets
               </h2>
               <p>
                 When you work with {platformName}, market access becomes easier because your chart,
