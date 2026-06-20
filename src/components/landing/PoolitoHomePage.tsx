@@ -68,31 +68,31 @@ const howItWorksSteps = [
 
 const services = [
   {
-    eyebrow: "TRADING 01",
-    title: "Demo Practice",
-    text: "Explore price movement with virtual funds before moving into live trading.",
-    icon: ShieldCheck,
+    eyebrow: "FEATURE 01",
+    title: "Real-Time Charts",
+    text: "Professional candlestick charts with 30+ indicators.",
+    icon: LineChart,
     image: HOME_ASSETS.imac,
   },
   {
-    eyebrow: "TRADING 02",
-    title: "Live Markets",
-    text: "Trade currencies, crypto, commodities, and stock-linked instruments.",
-    icon: LineChart,
+    eyebrow: "FEATURE 02",
+    title: "Fast Withdrawals",
+    text: "Get your profits when you need them. No delays.",
+    icon: WalletCards,
     image: HOME_ASSETS.hero,
   },
   {
-    eyebrow: "TRADING 03",
-    title: "Mobile Access",
-    text: "Monitor charts and place trades from a responsive phone-ready terminal.",
-    icon: Smartphone,
+    eyebrow: "FEATURE 03",
+    title: "Free Demo Account",
+    text: "Practice with $10,000 virtual funds. No risk.",
+    icon: ShieldCheck,
     image: HOME_ASSETS.phone,
   },
   {
-    eyebrow: "TRADING 04",
-    title: "Fast Funding",
-    text: "Deposit, withdraw, and follow account activity from one secure dashboard.",
-    icon: WalletCards,
+    eyebrow: "FEATURE 04",
+    title: "High Profits",
+    text: "Earn up to 95% on winning trades.",
+    icon: CircleDollarSign,
     image: HOME_ASSETS.laptopPhone,
   },
 ];
@@ -337,8 +337,8 @@ const PoolitoHomePage = () => {
           <div className="poolito-service-pattern" aria-hidden="true" />
           <div className="poolito-container">
             <div className="poolito-section-heading">
-              <span>Trading Service</span>
-              <h2 id="poolito-services-title">Our Excellent Service</h2>
+              <span>Platform Features</span>
+              <h2 id="poolito-services-title">Features Built For Traders</h2>
             </div>
 
             <div className="poolito-service-grid">
