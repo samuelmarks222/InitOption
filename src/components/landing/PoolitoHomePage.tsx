@@ -162,18 +162,29 @@ const PoolitoHomePage = () => {
                 100% platform access
               </span>
               <h1 id="poolito-hero-title">
-                Trading
+                Ready to Start
                 <br />
-                Services <span>For</span>
+                Your <span>Trading</span>
                 <br />
-                Your City
+                Journey?
               </h1>
-              <Link to="/register" className="poolito-cta">
-                Get Started
-                <span>
-                  <ArrowRight size={17} />
-                </span>
-              </Link>
+              <p className="poolito-hero-subheadline">
+                Join thousands of traders already using Init Option. Start with a free demo or go live instantly.
+              </p>
+              <div className="poolito-cta-row">
+                <Link to="/register" className="poolito-cta">
+                  Create Free Account
+                  <span>
+                    <ArrowRight size={17} />
+                  </span>
+                </Link>
+                <Link to="/trade" className="poolito-cta poolito-cta-secondary">
+                  Open Demo
+                  <span>
+                    <Play size={16} fill="currentColor" />
+                  </span>
+                </Link>
+              </div>
             </div>
           </div>
           <div className="poolito-hero-image" aria-label={`${platformName} trading platform preview`}>
@@ -550,7 +561,7 @@ const PoolitoHomePage = () => {
 
         .poolito-frame {
           position: relative;
-          width: min(100%, 520px);
+          width: min(100%, 560px);
           padding: 58px 44px 58px;
           border: 8px solid var(--poolito-green);
           border-right: 0;
@@ -602,6 +613,23 @@ const PoolitoHomePage = () => {
           color: var(--poolito-green-bright);
         }
 
+        .poolito-hero-subheadline {
+          max-width: 440px;
+          margin: 22px 0 0;
+          color: rgba(255, 255, 255, 0.82);
+          font-size: 17px;
+          line-height: 1.58;
+          font-weight: 800;
+        }
+
+        .poolito-cta-row {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 14px;
+          margin-top: 30px;
+        }
+
         .poolito-cta,
         .poolito-read-more,
         .poolito-small-cta {
@@ -617,11 +645,15 @@ const PoolitoHomePage = () => {
         .poolito-cta {
           gap: 13px;
           min-height: 54px;
-          margin-top: 34px;
           padding: 0 9px 0 26px;
           border-radius: 999px;
           font-size: 14px;
           text-transform: uppercase;
+        }
+
+        .poolito-cta-secondary {
+          background: rgba(255, 255, 255, 0.1);
+          box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.22);
         }
 
         .poolito-cta span,
