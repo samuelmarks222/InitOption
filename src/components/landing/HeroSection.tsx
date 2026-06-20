@@ -71,7 +71,7 @@ const HeroSection = () => {
             </div>
 
             <h1 id="landing-hero-title">
-              The Right Place for Online <span style={{ color: "#109b42" }}>Trading</span> – Simple, Fast, Secure.
+              Your Gateway to Global Markets – Simple, Fast, Secure.
             </h1>
 
             <p className="io-hero-description">
