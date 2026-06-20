@@ -1379,48 +1379,59 @@
 }
 
 /* ─── Navbar overrides inside poolito-page ─── */
-.poolito-page .io-topbar {
+.poolito-page .io-topbar,
+.poolito-home .io-topbar {
   background: #06383c !important;
 }
 
-.poolito-page .io-social-dot {
+.poolito-page .io-social-dot,
+.poolito-home .io-social-dot {
   background: #109b42 !important;
   box-shadow: 0 8px 16px rgba(16, 155, 66, 0.2) !important;
 }
 
-.poolito-page .io-social-dot:hover {
+.poolito-page .io-social-dot:hover,
+.poolito-home .io-social-dot:hover {
   background: #18b958 !important;
 }
 
-.poolito-page .io-navbar {
+.poolito-page .io-navbar,
+.poolito-home .io-navbar {
   background: rgba(255, 255, 255, 0.94) !important;
   border-bottom-color: rgba(6, 56, 60, 0.11) !important;
 }
 
-.poolito-page .io-nav-link {
+.poolito-page .io-nav-link,
+.poolito-home .io-nav-link {
   color: #06383c !important;
 }
 
 .poolito-page .io-nav-link:hover,
-.poolito-page .io-login-link:hover {
+.poolito-home .io-nav-link:hover,
+.poolito-page .io-login-link:hover,
+.poolito-home .io-login-link:hover {
   color: #109b42 !important;
 }
 
-.poolito-page .io-login-link {
+.poolito-page .io-login-link,
+.poolito-home .io-login-link {
   color: #06383c !important;
   border-color: rgba(6, 56, 60, 0.11) !important;
 }
 
-.poolito-page .io-register-link {
+.poolito-page .io-register-link,
+.poolito-home .io-register-link {
   background: #109b42 !important;
   box-shadow: 0 13px 28px rgba(16, 155, 66, 0.28) !important;
 }
 
-.poolito-page .io-register-link:hover {
+.poolito-page .io-register-link:hover,
+.poolito-home .io-register-link:hover {
   box-shadow: 0 18px 34px rgba(16, 155, 66, 0.32) !important;
 }
 
-.poolito-page .io-mobile-menu-btn {
+.poolito-page .io-mobile-menu-btn,
+.poolito-home .io-mobile-menu-btn {
   color: #06383c !important;
 }
 
