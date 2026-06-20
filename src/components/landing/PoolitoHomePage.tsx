@@ -1357,7 +1357,9 @@ const PoolitoHomePage = () => {
           position: absolute;
           overflow: hidden;
           background: #fff;
-          box-shadow: 0 22px 48px rgba(6, 56, 60, 0.16);
+          box-shadow:
+            0 22px 48px rgba(6, 56, 60, 0.16),
+            0 0 0 1px rgba(16, 155, 66, 0.08);
           z-index: 1;
         }
 
@@ -1388,16 +1390,40 @@ const PoolitoHomePage = () => {
           top: 72px;
           width: 50%;
           height: 500px;
-          border: 12px solid var(--poolito-green);
-          box-shadow: 0 18px 34px rgba(6, 56, 60, 0.16);
+          border: 10px solid var(--poolito-green);
+          box-shadow:
+            0 18px 34px rgba(6, 56, 60, 0.16),
+            inset 0 0 0 8px rgba(255, 255, 255, 0.92);
           z-index: 2;
         }
 
+        .poolito-about-img-float::before {
+          content: "";
+          position: absolute;
+          inset: 10px;
+          border: 1px solid rgba(16, 155, 66, 0.16);
+          pointer-events: none;
+          z-index: 2;
+        }
+
+        .poolito-about-img-float::after {
+          content: "";
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          width: 76px;
+          height: 7px;
+          background: var(--poolito-green);
+          pointer-events: none;
+          z-index: 3;
+        }
+
         .poolito-about-img-float img {
-          object-fit: cover;
+          object-fit: contain;
           object-position: 50% 50%;
           background: #fff;
-          transform: translateY(-10%) scale(1.38);
+          padding: 18px;
+          transform: translateY(1%) scale(1.12);
         }
 
         .poolito-round-badge {
@@ -2531,6 +2557,7 @@ const PoolitoHomePage = () => {
             top: 62px;
             width: 50%;
             height: 382px;
+            border-width: 8px;
           }
 
           .poolito-round-badge {
