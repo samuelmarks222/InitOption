@@ -51,6 +51,27 @@ const stats = [
   { value: "8+", label: "Help Channels", icon: Users },
 ];
 
+const howItWorksSteps = [
+  {
+    step: "Step 1",
+    title: "Create Account",
+    text: "Sign up in seconds. No credit card required.",
+    icon: Users,
+  },
+  {
+    step: "Step 2",
+    title: "Choose Asset",
+    text: "Pick from currencies, indices, crypto, stocks, or commodities.",
+    icon: BarChart3,
+  },
+  {
+    step: "Step 3",
+    title: "Trade & Withdraw",
+    text: "One-click trading. Fast withdrawals when you win.",
+    icon: CircleDollarSign,
+  },
+];
+
 const services = [
   {
     eyebrow: "TRADING 01",
@@ -274,6 +295,28 @@ const PoolitoHomePage = () => {
                 <CheckCircle2 size={22} />
                 Give your trading account a cleaner place to grow.
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="poolito-how" aria-labelledby="poolito-how-title">
+          <div className="poolito-container">
+            <div className="poolito-section-heading poolito-how-heading">
+              <span>Simple Start</span>
+              <h2 id="poolito-how-title">How It Works (3 Steps)</h2>
+            </div>
+
+            <div className="poolito-how-grid">
+              {howItWorksSteps.map((item) => (
+                <article className="poolito-how-card" key={item.step}>
+                  <div className="poolito-how-icon">
+                    <item.icon size={38} />
+                  </div>
+                  <span>{item.step}</span>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                </article>
+              ))}
             </div>
           </div>
         </section>
@@ -1031,6 +1074,100 @@ const PoolitoHomePage = () => {
           font-weight: 950;
         }
 
+        .poolito-how {
+          position: relative;
+          overflow: hidden;
+          padding: 96px 0 102px;
+          color: #fff;
+          background:
+            linear-gradient(90deg, rgba(5, 46, 49, 0.95), rgba(5, 46, 49, 0.9)),
+            url("${HOME_ASSETS.abstract}") center/cover;
+        }
+
+        .poolito-how::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background-image: radial-gradient(rgba(255,255,255,0.12) 1.5px, transparent 1.5px);
+          background-size: 18px 18px;
+          opacity: 0.28;
+        }
+
+        .poolito-how .poolito-container {
+          position: relative;
+          z-index: 1;
+        }
+
+        .poolito-how-heading h2 {
+          color: #fff;
+        }
+
+        .poolito-how-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 28px;
+        }
+
+        .poolito-how-card {
+          position: relative;
+          min-height: 260px;
+          padding: 34px 30px 32px;
+          overflow: hidden;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-left: 7px solid var(--poolito-green);
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.07);
+          box-shadow: 0 18px 42px rgba(0, 0, 0, 0.18);
+        }
+
+        .poolito-how-card::after {
+          content: "";
+          position: absolute;
+          right: -48px;
+          top: -48px;
+          width: 132px;
+          height: 132px;
+          border-radius: 50%;
+          background: rgba(16, 155, 66, 0.22);
+        }
+
+        .poolito-how-icon {
+          width: 74px;
+          height: 74px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          color: #fff;
+          background: var(--poolito-green);
+        }
+
+        .poolito-how-card > span {
+          display: block;
+          margin-top: 28px;
+          color: var(--poolito-green-bright);
+          font-size: 15px;
+          font-weight: 950;
+          text-transform: uppercase;
+        }
+
+        .poolito-how-card h3 {
+          margin: 10px 0 0;
+          color: #fff;
+          font-size: 28px;
+          line-height: 1.18;
+          font-weight: 950;
+        }
+
+        .poolito-how-card p {
+          margin: 16px 0 0;
+          color: rgba(255, 255, 255, 0.76);
+          font-size: 17px;
+          line-height: 1.62;
+          font-weight: 800;
+        }
+
         .poolito-services {
           position: relative;
           overflow: hidden;
@@ -1283,6 +1420,10 @@ const PoolitoHomePage = () => {
 
           .poolito-about-grid {
             gap: 52px;
+          }
+
+          .poolito-how-grid {
+            grid-template-columns: 1fr;
           }
 
           .poolito-service-grid {
