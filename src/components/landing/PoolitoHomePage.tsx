@@ -1339,7 +1339,18 @@ const PoolitoHomePage = () => {
 
         .poolito-about-media {
           position: relative;
-          min-height: 560px;
+          min-height: 600px;
+        }
+
+        .poolito-about-media::after {
+          content: "";
+          position: absolute;
+          top: 72px;
+          right: 0;
+          width: 118px;
+          height: 10px;
+          background: var(--poolito-green);
+          z-index: 0;
         }
 
         .poolito-about-img {
@@ -1347,6 +1358,7 @@ const PoolitoHomePage = () => {
           overflow: hidden;
           background: #fff;
           box-shadow: 0 22px 48px rgba(6, 56, 60, 0.16);
+          z-index: 1;
         }
 
         .poolito-about-img img {
@@ -1358,38 +1370,40 @@ const PoolitoHomePage = () => {
 
         .poolito-about-img-main {
           left: 0;
-          top: 8px;
+          top: 0;
           width: 76%;
-          height: 500px;
+          height: 520px;
           border-left: 14px solid var(--poolito-green);
           border-bottom: 14px solid var(--poolito-green);
         }
 
         .poolito-about-img-main img {
           object-fit: cover;
-          object-position: center;
+          object-position: 50% 52%;
+          transform: scale(1.24);
         }
 
         .poolito-about-img-float {
           right: 0;
-          bottom: 8px;
-          width: 58%;
-          height: 390px;
+          top: 82px;
+          width: 52%;
+          height: 510px;
           border: 12px solid var(--poolito-green);
+          box-shadow: 0 18px 34px rgba(6, 56, 60, 0.16);
+          z-index: 2;
         }
 
         .poolito-about-img-float img {
-          object-fit: contain;
-          object-position: center;
+          object-fit: cover;
+          object-position: 50% 48%;
           background: #fff;
-          padding: 8px;
-          transform: scale(1.08);
+          transform: scale(1.06);
         }
 
         .poolito-round-badge {
           position: absolute;
           left: 47%;
-          top: 48%;
+          top: 45%;
           width: 136px;
           height: 136px;
           display: inline-flex;
@@ -1402,6 +1416,7 @@ const PoolitoHomePage = () => {
           overflow: hidden;
           transform: translate(-50%, -50%);
           box-shadow: 0 18px 36px rgba(16, 155, 66, 0.26);
+          z-index: 3;
         }
 
         .poolito-round-badge::before {
@@ -2498,17 +2513,24 @@ const PoolitoHomePage = () => {
           }
 
           .poolito-about-media {
-            min-height: 430px;
+            min-height: 500px;
+          }
+
+          .poolito-about-media::after {
+            top: 48px;
+            width: 92px;
+            height: 8px;
           }
 
           .poolito-about-img-main {
             width: 78%;
-            height: 350px;
+            height: 410px;
           }
 
           .poolito-about-img-float {
+            top: 68px;
             width: 52%;
-            height: 260px;
+            height: 390px;
           }
 
           .poolito-round-badge {
@@ -2616,8 +2638,9 @@ const PoolitoHomePage = () => {
           }
 
           .poolito-about-img-float {
+            top: 96px;
             width: 58%;
-            height: 230px;
+            height: 270px;
           }
 
           .poolito-about-copy h2,
