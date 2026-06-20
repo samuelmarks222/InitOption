@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import Navbar from "@/components/landing/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSocialTrading } from "@/contexts/SocialTradingContext";
 import { toast } from "@/hooks/use-toast";
@@ -95,6 +96,7 @@ const TraderProfile = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0D0D0D] px-4 py-10 text-white md:px-6">
+        <TraderProfilePublicHeader />
         <div className="mx-auto max-w-5xl rounded-2xl border border-white/10 bg-[#111823] px-6 py-20 text-center text-sm text-gray-400">
           Loading trader profile...
         </div>
@@ -105,6 +107,7 @@ const TraderProfile = () => {
   if (!trader) {
     return (
       <div className="min-h-screen bg-[#0D0D0D] px-4 py-10 text-white md:px-6">
+        <TraderProfilePublicHeader />
         <div className="mx-auto max-w-4xl rounded-2xl border border-white/10 bg-[#111823] px-6 py-16 text-center">
           <h1 className="text-2xl font-bold text-white">Trader not found</h1>
           <p className="mt-3 text-sm text-gray-400">The profile you requested could not be loaded.</p>
@@ -118,6 +121,7 @@ const TraderProfile = () => {
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] px-4 py-8 text-white md:px-6">
+      <TraderProfilePublicHeader />
       <div className="mx-auto max-w-6xl space-y-6">
         {/* Back */}
         <Link to="/social/traders" className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/5 hover:text-white">
@@ -279,6 +283,30 @@ const TraderProfile = () => {
     </div>
   );
 };
+
+const TraderProfilePublicHeader = () => (
+  <>
+    <Navbar />
+    <div className="trader-profile-header-spacer" aria-hidden="true" />
+    <style>{`
+      .trader-profile-header-spacer {
+        height: 132px;
+      }
+
+      @media (max-width: 1180px) {
+        .trader-profile-header-spacer {
+          height: 192px;
+        }
+      }
+
+      @media (max-width: 820px) {
+        .trader-profile-header-spacer {
+          height: 214px;
+        }
+      }
+    `}</style>
+  </>
+);
 
 const StatBox = ({ label, value, accent = "text-white" }: { label: string; value: string; accent?: string }) => (
   <div className="rounded-xl border border-white/10 bg-black/20 p-4">
