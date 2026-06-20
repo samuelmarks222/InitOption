@@ -448,15 +448,10 @@ const PoolitoHomePage = () => {
                 100% platform access
               </span>
               <h1 id="poolito-hero-title">
-                The Right Place for
-                <br />
-                Online <span>Trading</span>
-                <br />
-                Simple, Fast, and Secure.
+                The Right Place for Online Trading – Simple, Fast, Secure.
               </h1>
               <p className="poolito-hero-subheadline">
-                Trade over 100 global assets including currencies, indices, crypto, stocks, and commodities.
-                Access real-time charts, a free demo account, and fast withdrawals - all from one clean, powerful platform.
+                Trade 100+ assets with real-time charts, a free demo, and fast withdrawals. All from one clean platform.
               </p>
               <div className="poolito-cta-row">
                 <Link to="/register" className="poolito-cta">

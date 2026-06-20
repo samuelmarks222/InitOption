@@ -71,15 +71,11 @@ const HeroSection = () => {
             </div>
 
             <h1 id="landing-hero-title">
-              The Right Place for Online Trading
-              <br />
-              <span>– Simple, Fast, and Secure.</span>
+              The Right Place for Online Trading – Simple, Fast, Secure.
             </h1>
 
             <p className="io-hero-description">
-              Trade over 100 global assets including currencies, indices, crypto, stocks, and commodities.
-              Access real‑time charts, a free demo account, and fast withdrawals – all from one clean,
-              powerful platform.
+              Trade 100+ assets with real-time charts, a free demo, and fast withdrawals. All from one clean platform.
             </p>
 
             <div className="io-hero-actions">
