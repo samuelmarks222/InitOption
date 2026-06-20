@@ -1154,7 +1154,10 @@ const PoolitoHomePage = () => {
           content: "";
           position: absolute;
           inset: 0;
-          background: linear-gradient(90deg, rgba(5, 46, 49, 0.34), rgba(5, 46, 49, 0.04));
+          pointer-events: none;
+          background:
+            linear-gradient(90deg, rgba(4, 44, 43, 0.62) 0%, rgba(7, 96, 57, 0.34) 48%, rgba(16, 155, 66, 0.2) 100%),
+            rgba(6, 103, 55, 0.16);
         }
 
         .poolito-hero-image img {
@@ -1163,6 +1166,7 @@ const PoolitoHomePage = () => {
           object-fit: cover;
           object-position: center right;
           display: block;
+          filter: saturate(0.9) contrast(0.92) brightness(0.88);
         }
 
         .poolito-slash-one,
