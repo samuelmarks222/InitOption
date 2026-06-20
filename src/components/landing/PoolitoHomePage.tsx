@@ -17,12 +17,10 @@ import {
   LogIn,
   Mail,
   Play,
-  ShieldCheck,
   Smartphone,
   Star,
   Users,
   UserPlus,
-  WalletCards,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/landing/Footer";
@@ -71,34 +69,91 @@ const howItWorksSteps = [
   },
 ];
 
-const services = [
+type FeatureIconType = "candles" | "bolt" | "shield" | "profit";
+
+const FeatureDrawnIcon = ({ type }: { type: FeatureIconType }) => {
+  if (type === "candles") {
+    return (
+      <svg viewBox="0 0 72 72" aria-hidden="true">
+        <path d="M10 56H62" />
+        <path d="M17 50V23" className="poolito-icon-muted-line" />
+        <path d="M17 38H25V50H17Z" className="poolito-icon-green" />
+        <path d="M31 52V18" className="poolito-icon-muted-line" />
+        <path d="M31 25H39V42H31Z" className="poolito-icon-red" />
+        <path d="M45 50V20" className="poolito-icon-muted-line" />
+        <path d="M45 30H53V48H45Z" className="poolito-icon-green" />
+        <path d="M15 47C26 39 34 38 42 29C48 23 54 22 60 17" className="poolito-icon-trend" />
+      </svg>
+    );
+  }
+
+  if (type === "bolt") {
+    return (
+      <svg viewBox="0 0 72 72" aria-hidden="true">
+        <path d="M40 8L18 40H34L29 64L54 28H37L40 8Z" />
+        <path d="M14 17H25" className="poolito-icon-muted-line" />
+        <path d="M9 30H21" className="poolito-icon-muted-line" />
+        <path d="M50 52H62" className="poolito-icon-muted-line" />
+      </svg>
+    );
+  }
+
+  if (type === "shield") {
+    return (
+      <svg viewBox="0 0 72 72" aria-hidden="true">
+        <path d="M36 8L58 17V33C58 47 49 58 36 64C23 58 14 47 14 33V17L36 8Z" />
+        <path d="M27 34L34 41L47 27" className="poolito-icon-green" />
+        <circle cx="36" cy="28" r="6" className="poolito-icon-muted-line" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 72 72" aria-hidden="true">
+      <circle cx="28" cy="42" r="18" />
+      <path d="M22 47L34 35" className="poolito-icon-muted-line" />
+      <path d="M23 34H23.5" className="poolito-icon-muted-line" />
+      <path d="M33 48H33.5" className="poolito-icon-muted-line" />
+      <path d="M42 25H58V41" className="poolito-icon-green" />
+      <path d="M42 41L58 25" className="poolito-icon-green" />
+    </svg>
+  );
+};
+
+const services: Array<{
+  eyebrow: string;
+  title: string;
+  text: string;
+  benefit: string;
+  icon: FeatureIconType;
+}> = [
   {
     eyebrow: "FEATURE 01",
     title: "Real-Time Charts",
     text: "Professional candlestick charts with 30+ indicators.",
-    icon: LineChart,
-    image: HOME_ASSETS.imac,
+    benefit: "Analyse markets like a pro with RSI, MACD, Bollinger Bands, and more.",
+    icon: "candles",
   },
   {
     eyebrow: "FEATURE 02",
     title: "Fast Withdrawals",
     text: "Get your profits when you need them. No delays.",
-    icon: WalletCards,
-    image: HOME_ASSETS.hero,
+    benefit: "Withdraw via M-PESA or crypto - often within minutes.",
+    icon: "bolt",
   },
   {
     eyebrow: "FEATURE 03",
     title: "Free Demo Account",
     text: "Practice with $10,000 virtual funds. No risk.",
-    icon: ShieldCheck,
-    image: HOME_ASSETS.phone,
+    benefit: "Unlimited time, reset anytime - learn without pressure.",
+    icon: "shield",
   },
   {
     eyebrow: "FEATURE 04",
     title: "High Profits",
     text: "Earn up to 95% on winning trades.",
-    icon: CircleDollarSign,
-    image: HOME_ASSETS.laptopPhone,
+    benefit: "Maximise your returns with competitive payouts.",
+    icon: "profit",
   },
 ];
 
@@ -533,21 +588,20 @@ const PoolitoHomePage = () => {
             <div className="poolito-section-heading">
               <span>Platform Features</span>
               <h2 id="poolito-services-title">Features Built For Traders</h2>
+              <p>Everything you need to trade with confidence - all in one place.</p>
             </div>
 
             <div className="poolito-service-grid">
               {services.map((service) => (
                 <article className="poolito-service-card" key={service.title}>
-                  <div className="poolito-service-image">
-                    <img src={service.image} alt={`${platformName} ${service.title.toLowerCase()}`} />
+                  <div className="poolito-feature-icon">
+                    <FeatureDrawnIcon type={service.icon} />
                   </div>
                   <div className="poolito-service-body">
-                    <div>
-                      <span>{service.eyebrow}</span>
-                      <h3>{service.title}</h3>
-                    </div>
-                    <service.icon size={54} />
+                    <span>{service.eyebrow}</span>
+                    <h3>{service.title}</h3>
                     <p>{service.text}</p>
+                    <p className="poolito-feature-benefit">{service.benefit}</p>
                   </div>
                 </article>
               ))}
@@ -1536,6 +1590,15 @@ const PoolitoHomePage = () => {
           justify-content: center;
         }
 
+        .poolito-section-heading > p {
+          max-width: 700px;
+          margin: 18px auto 0;
+          color: #657284;
+          font-size: 17px;
+          line-height: 1.62;
+          font-weight: 700;
+        }
+
         .poolito-service-grid {
           position: relative;
           z-index: 1;
@@ -1545,35 +1608,65 @@ const PoolitoHomePage = () => {
         }
 
         .poolito-service-card {
+          min-height: 390px;
+          display: flex;
+          flex-direction: column;
+          gap: 26px;
           overflow: hidden;
+          padding: 32px 30px;
+          border: 1px solid rgba(6, 56, 60, 0.1);
           border-radius: 8px;
           background: #fff;
           box-shadow: 0 14px 34px rgba(6, 56, 60, 0.11);
         }
 
-        .poolito-service-image {
-          height: 210px;
-          overflow: hidden;
+        .poolito-feature-icon {
+          width: 92px;
+          height: 92px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 8px;
+          color: var(--poolito-dark);
+          border: 1px solid rgba(16, 155, 66, 0.18);
+          background: linear-gradient(135deg, rgba(16, 155, 66, 0.1), rgba(6, 56, 60, 0.04));
         }
 
-        .poolito-service-image img {
-          width: 100%;
-          height: 100%;
-          display: block;
-          object-fit: cover;
+        .poolito-feature-icon svg {
+          width: 62px;
+          height: 62px;
         }
 
-        .poolito-service-card:nth-child(3) .poolito-service-image img,
-        .poolito-service-card:nth-child(4) .poolito-service-image img {
-          object-fit: contain;
-          background: #070707;
+        .poolito-feature-icon path,
+        .poolito-feature-icon circle {
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 4;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+
+        .poolito-feature-icon .poolito-icon-green {
+          stroke: var(--poolito-green);
+        }
+
+        .poolito-feature-icon .poolito-icon-red {
+          stroke: #e21b52;
+        }
+
+        .poolito-feature-icon .poolito-icon-muted-line {
+          stroke: rgba(6, 56, 60, 0.42);
+        }
+
+        .poolito-feature-icon .poolito-icon-trend {
+          stroke: var(--poolito-green-bright);
+          stroke-width: 3.5;
         }
 
         .poolito-service-body {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 64px;
-          gap: 20px;
-          padding: 28px 30px 32px;
+          display: flex;
+          flex: 1;
+          flex-direction: column;
         }
 
         .poolito-service-body span {
@@ -1591,20 +1684,24 @@ const PoolitoHomePage = () => {
           text-transform: uppercase;
         }
 
-        .poolito-service-body svg {
-          color: #8b929d;
-          align-self: center;
-        }
-
         .poolito-service-body p {
-          grid-column: 1 / -1;
-          margin: 0;
+          margin: 22px 0 0;
           padding-top: 24px;
-          border-top: 2px dashed rgba(6, 56, 60, 0.2);
+          border-top: 2px dashed rgba(6, 56, 60, 0.18);
           color: #717481;
           font-size: 17px;
           line-height: 1.62;
           font-weight: 700;
+        }
+
+        .poolito-service-body .poolito-feature-benefit {
+          margin-top: 16px;
+          padding-top: 0;
+          border-top: 0;
+          color: var(--poolito-green);
+          font-size: 15px;
+          line-height: 1.58;
+          font-weight: 900;
         }
 
         .poolito-markets {
