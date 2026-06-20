@@ -1303,7 +1303,7 @@ const PoolitoHomePage = () => {
         .poolito-about {
           position: relative;
           overflow: hidden;
-          padding: 112px 0 98px;
+          padding: 88px 0 98px;
           background:
             linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.96)),
             radial-gradient(circle at 88% 12%, rgba(6,56,60,0.08), transparent 28%),
@@ -1379,15 +1379,15 @@ const PoolitoHomePage = () => {
 
         .poolito-about-img-main img {
           object-fit: cover;
-          object-position: 50% 52%;
-          transform: scale(1.24);
+          object-position: 50% 50%;
+          transform: translate(-2%, -8%) scale(1.46);
         }
 
         .poolito-about-img-float {
           right: 0;
-          top: 82px;
-          width: 52%;
-          height: 510px;
+          top: 72px;
+          width: 50%;
+          height: 500px;
           border: 12px solid var(--poolito-green);
           box-shadow: 0 18px 34px rgba(6, 56, 60, 0.16);
           z-index: 2;
@@ -1395,15 +1395,15 @@ const PoolitoHomePage = () => {
 
         .poolito-about-img-float img {
           object-fit: cover;
-          object-position: 50% 48%;
+          object-position: 50% 50%;
           background: #fff;
-          transform: scale(1.06);
+          transform: translateY(-10%) scale(1.38);
         }
 
         .poolito-round-badge {
           position: absolute;
-          left: 47%;
-          top: 45%;
+          left: 46%;
+          top: 43%;
           width: 136px;
           height: 136px;
           display: inline-flex;
@@ -2528,9 +2528,9 @@ const PoolitoHomePage = () => {
           }
 
           .poolito-about-img-float {
-            top: 68px;
-            width: 52%;
-            height: 390px;
+            top: 62px;
+            width: 50%;
+            height: 382px;
           }
 
           .poolito-round-badge {
@@ -2638,9 +2638,9 @@ const PoolitoHomePage = () => {
           }
 
           .poolito-about-img-float {
-            top: 96px;
+            top: 88px;
             width: 58%;
-            height: 270px;
+            height: 278px;
           }
 
           .poolito-about-copy h2,

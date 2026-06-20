@@ -6,9 +6,10 @@ import { useSiteBranding } from "@/hooks/useSiteBranding";
 
 const navLinks = [
   { label: "Home", href: "/" },
-  { label: "Markets", href: "/#markets" },
-  { label: "Guide", href: "/trading-guide", hasMenu: true },
-  { label: "Reviews", href: "/reviews" },
+  { label: "About Us", href: "/about" },
+  { label: "Trading", href: "/trade" },
+  { label: "Tournaments", href: "/tournaments" },
+  { label: "Blog", href: "/blog" },
   { label: "Contact Us", href: "/contact" },
 ];
 
