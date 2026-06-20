@@ -11,14 +11,14 @@ import {
   Instagram,
   LineChart,
   Linkedin,
+  LogIn,
   Mail,
-  PhoneCall,
   Play,
-  Search,
   ShieldCheck,
   Smartphone,
   Trophy,
   Users,
+  UserPlus,
   WalletCards,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -36,12 +36,12 @@ const HOME_ASSETS = {
 };
 
 const navLinks = [
-  { label: "HOME", to: "/" },
-  { label: "ABOUT US", to: "/about" },
-  { label: "SERVICE", to: "/trading-guide" },
-  { label: "BLOG", to: "/blog" },
-  { label: "PAGES", to: "/faq" },
-  { label: "CONTACT", to: "/contact" },
+  { label: "Home", to: "/" },
+  { label: "About Us", to: "/about" },
+  { label: "Trading", to: "/trade" },
+  { label: "Tournaments", to: "/tournaments" },
+  { label: "Blog", to: "/blog" },
+  { label: "Contact Us", to: "/contact" },
 ];
 
 const stats = [
@@ -158,15 +158,13 @@ const PoolitoHomePage = () => {
               ))}
             </div>
             <div className="poolito-nav-actions">
-              <button type="button" aria-label="Search">
-                <Search size={19} />
-              </button>
-              <Link to="/contact" className="poolito-phone">
-                <span>
-                  <PhoneCall size={22} />
-                </span>
-                <small>Contact Support</small>
-                <strong>{supportEmail}</strong>
+              <Link to="/login" className="poolito-auth-link">
+                <LogIn size={18} />
+                Sign In
+              </Link>
+              <Link to="/register" className="poolito-auth-link poolito-auth-link-primary">
+                <UserPlus size={18} />
+                Sign Up
               </Link>
             </div>
           </div>
@@ -510,67 +508,42 @@ const PoolitoHomePage = () => {
         }
 
         .poolito-nav-actions {
-          gap: 18px;
+          flex-shrink: 0;
+          gap: 12px;
         }
 
-        .poolito-nav-actions button {
+        .poolito-auth-link {
+          min-height: 46px;
           display: inline-flex;
-          width: 42px;
-          height: 42px;
           align-items: center;
           justify-content: center;
-          border: 0;
-          border-right: 1px solid rgba(6, 56, 60, 0.22);
-          background: transparent;
+          gap: 9px;
+          padding: 0 20px;
+          border-radius: 999px;
           color: var(--poolito-dark);
-        }
-
-        .poolito-phone {
-          min-height: 82px;
-          min-width: 260px;
-          display: grid;
-          grid-template-columns: 58px minmax(0, 1fr);
-          grid-template-rows: 1fr 1fr;
-          column-gap: 14px;
-          align-items: center;
-          padding: 0 24px;
-          color: #fff;
-          background: var(--poolito-green);
+          border: 2px solid rgba(6, 56, 60, 0.14);
+          background: #fff;
+          font-size: 13px;
+          font-weight: 950;
           text-decoration: none;
-        }
-
-        .poolito-phone span {
-          grid-row: 1 / 3;
-          width: 58px;
-          height: 58px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #fff;
-          background: var(--poolito-dark);
-          box-shadow: 0 0 0 12px #fff;
-        }
-
-        .poolito-phone small,
-        .poolito-phone strong {
-          display: block;
-          min-width: 0;
-          overflow: hidden;
-          text-overflow: ellipsis;
           white-space: nowrap;
         }
 
-        .poolito-phone small {
-          align-self: end;
-          font-size: 12px;
-          font-weight: 800;
+        .poolito-auth-link:hover {
+          color: var(--poolito-green);
+          border-color: rgba(16, 155, 66, 0.36);
         }
 
-        .poolito-phone strong {
-          align-self: start;
-          font-size: 15px;
-          font-weight: 900;
+        .poolito-auth-link-primary {
+          color: #fff;
+          border-color: var(--poolito-green);
+          background: var(--poolito-green);
+        }
+
+        .poolito-auth-link-primary:hover {
+          color: #fff;
+          border-color: var(--poolito-dark);
+          background: var(--poolito-dark);
         }
 
         .poolito-hero {
@@ -1381,8 +1354,8 @@ const PoolitoHomePage = () => {
             gap: 20px;
           }
 
-          .poolito-phone {
-            min-width: 220px;
+          .poolito-nav-actions {
+            flex-shrink: 1;
           }
 
           .poolito-hero {
@@ -1460,11 +1433,6 @@ const PoolitoHomePage = () => {
           .poolito-nav-actions {
             width: 100%;
             justify-content: center;
-          }
-
-          .poolito-phone {
-            width: min(100%, 360px);
-            min-height: 76px;
           }
 
           .poolito-hero-copy {
