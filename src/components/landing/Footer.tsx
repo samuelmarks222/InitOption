@@ -89,6 +89,7 @@ const PAYMENT_LOGOS: Record<string, string> = {
   "M-PESA": "/payment-logos/mpesa.png",
   "USDT (TRC20)": "/payment-logos/usdt.png",
   Bitcoin: "/payment-logos/bitcoin.png",
+  Binance: "/payment-logos/binance.png",
 };
 
 const Footer = ({ content }: FooterProps) => {
@@ -147,7 +148,7 @@ const Footer = ({ content }: FooterProps) => {
     .map((label) => label.trim())
     .filter(Boolean)
     .filter((label) => label !== "Plisio")
-    .slice(0, 6);
+    .slice(0, 8);
 
   return (
     <footer

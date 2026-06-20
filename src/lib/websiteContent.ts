@@ -339,7 +339,7 @@ export const createDefaultWebsiteContent = (platformName = DEFAULT_PLATFORM_NAME
     ],
   },
   features: {
-    paymentLogos: ["VISA", "Mastercard", "M-PESA", "Plisio", "USDT (TRC20)", "Bitcoin"],
+    paymentLogos: ["VISA", "Mastercard", "M-PESA", "Plisio", "USDT (TRC20)", "Bitcoin", "Binance"],
     cards: [
       {
         title: "High-profit trading",
