@@ -512,9 +512,9 @@ const PoolitoHomePage = () => {
             <div className="poolito-about-copy">
               <span className="poolito-section-label">About Trading</span>
               <h2 id="poolito-about-title">
-                The Right Place for
+                The Right Place
                 <br />
-                Online Trading
+                for Online Trading
               </h2>
               <p>
                 When you work with {platformName}, market access becomes easier because your chart,
