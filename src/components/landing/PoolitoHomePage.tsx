@@ -35,10 +35,10 @@ import { useSiteBranding } from "@/hooks/useSiteBranding";
 
 const HOME_ASSETS = {
   hero: "/landing/poolito-initoption/hero-laptop-desk.jpg",
-  laptopPhone: "/landing/poolito-initoption/laptop-phone-angle.png",
+  aboutImac: "/landing/poolito-initoption/about-imac-mockup.jpg",
+  aboutPhone: "/landing/poolito-initoption/about-phone-view.jpg",
   imac: "/landing/poolito-initoption/imac-platform.png",
   imacAlt: "/landing/poolito-initoption/imac-platform-alt.png",
-  phone: "/landing/poolito-initoption/iphone-platform.png",
   abstract: "/landing/poolito-initoption/abstract-trading-bg.jpg",
 };
 
@@ -530,10 +530,10 @@ const PoolitoHomePage = () => {
           <div className="poolito-container poolito-about-grid">
             <div className="poolito-about-media">
               <div className="poolito-about-img poolito-about-img-main">
-                <img src={HOME_ASSETS.laptopPhone} alt={`${platformName} laptop and phone trading screens`} />
+                <img src={HOME_ASSETS.aboutImac} alt={`${platformName} iMac trading terminal`} />
               </div>
               <div className="poolito-about-img poolito-about-img-float">
-                <img src={HOME_ASSETS.phone} alt={`${platformName} mobile trading screens`} />
+                <img src={HOME_ASSETS.aboutPhone} alt={`${platformName} mobile trading screens`} />
               </div>
               <div className="poolito-round-badge" aria-hidden="true">
                 <BarChart3 size={44} />
@@ -1339,7 +1339,7 @@ const PoolitoHomePage = () => {
 
         .poolito-about-media {
           position: relative;
-          min-height: 520px;
+          min-height: 560px;
         }
 
         .poolito-about-img {
@@ -1352,34 +1352,38 @@ const PoolitoHomePage = () => {
         .poolito-about-img img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain;
           display: block;
         }
 
         .poolito-about-img-main {
-          left: 18px;
-          top: 0;
-          width: 70%;
-          height: 470px;
+          left: 0;
+          top: 8px;
+          width: 76%;
+          height: 500px;
           border-left: 14px solid var(--poolito-green);
           border-bottom: 14px solid var(--poolito-green);
         }
 
         .poolito-about-img-main img {
-          object-position: 42% 45%;
+          object-fit: cover;
+          object-position: center;
         }
 
         .poolito-about-img-float {
           right: 0;
-          bottom: 0;
-          width: 52%;
-          height: 360px;
+          bottom: 8px;
+          width: 58%;
+          height: 390px;
           border: 12px solid var(--poolito-green);
         }
 
         .poolito-about-img-float img {
           object-fit: contain;
-          background: #050505;
+          object-position: center;
+          background: #fff;
+          padding: 8px;
+          transform: scale(1.08);
         }
 
         .poolito-round-badge {

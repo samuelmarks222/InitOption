@@ -4,7 +4,7 @@ import PageHero from "@/components/layout/PageHero";
 
 const InformationDisclosure = () => {
   return (
-    <div className="min-h-screen bg-white font-copy text-gray-700">
+    <div className="poolito-page min-h-screen font-copy">
       <Navbar />
       <PageHero
         eyebrow="Policy"

@@ -133,7 +133,7 @@ const BlogPage = () => {
   };
 
   return (
-    <div className="quotex-glow-home min-h-screen overflow-x-hidden bg-background">
+    <div className="poolito-page min-h-screen overflow-x-hidden">
       <Navbar />
 
       <main>

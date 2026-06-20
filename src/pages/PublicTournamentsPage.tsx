@@ -38,7 +38,7 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
   const totalPrizePool = visibleTournaments.reduce((sum, tournament) => sum + Number(tournament.prize_pool ?? 0), 0);
 
   return (
-    <div className="quotex-glow-home min-h-screen overflow-x-hidden bg-background">
+    <div className="poolito-page min-h-screen overflow-x-hidden">
       <Navbar />
 
       <main>

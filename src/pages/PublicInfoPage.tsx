@@ -129,7 +129,7 @@ const PublicInfoPage = ({ pageKey }: PublicInfoPageProps) => {
   const page = resolvePublicPageDefinition(pageKey, websiteContent, platformName);
 
   return (
-    <div className="quotex-glow-home min-h-screen overflow-x-hidden bg-background font-copy">
+    <div className="poolito-page min-h-screen overflow-x-hidden">
       <Navbar />
 
       <main>
