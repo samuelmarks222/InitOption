@@ -84,12 +84,11 @@ const resolveSocialIcon = (platform: string): { Icon: SocialIcon; isWhatsApp?: b
 };
 
 const PAYMENT_LOGOS: Record<string, string> = {
-  VISA: `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none"><rect width="120" height="40" rx="4" fill="#1A1F71"/><text x="14" y="26" font-family="Arial,sans-serif" font-size="22" font-weight="bold" fill="white" letter-spacing="1">VISA</text></svg>`)}`,
-  Mastercard: `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none"><rect width="120" height="40" rx="4" fill="#fff"/><circle cx="44" cy="20" r="14" fill="#EB001B"/><circle cx="62" cy="20" r="14" fill="#F79E1B" opacity="0.85"/><text x="82" y="26" font-family="Arial,sans-serif" font-size="16" font-weight="900" fill="#333" letter-spacing="0.5">Mastercard</text></svg>`)}`,
-  "M-PESA": `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none"><rect width="120" height="40" rx="4" fill="#4B1D7F"/><text x="14" y="24" font-family="Arial,sans-serif" font-size="14" font-weight="bold" fill="white">M-PESA</text></svg>`)}`,
-  Plisio: `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none"><rect width="120" height="40" rx="4" fill="#135E46"/><text x="14" y="24" font-family="Arial,sans-serif" font-size="16" font-weight="bold" fill="white">Plisio</text></svg>`)}`,
-  "USDT (TRC20)": `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none"><rect width="120" height="40" rx="4" fill="#26A17B"/><text x="10" y="24" font-family="Arial,sans-serif" font-size="13" font-weight="bold" fill="white">USDT TRC20</text></svg>`)}`,
-  Bitcoin: `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none"><rect width="120" height="40" rx="4" fill="#F7931A"/><text x="14" y="26" font-family="Arial,sans-serif" font-size="18" font-weight="bold" fill="white">Bitcoin</text></svg>`)}`,
+  VISA: "/payment-logos/visa-mastercard.png",
+  Mastercard: null,
+  "M-PESA": "/payment-logos/mpesa.png",
+  "USDT (TRC20)": "/payment-logos/usdt.png",
+  Bitcoin: "/payment-logos/bitcoin.png",
 };
 
 const Footer = ({ content }: FooterProps) => {
@@ -284,20 +283,14 @@ const Footer = ({ content }: FooterProps) => {
 
           <div className="flex flex-wrap items-center gap-3">
             {paymentLabels.map((label) => {
-              const logoSvg = PAYMENT_LOGOS[label];
-              return logoSvg ? (
+              const logoSrc = PAYMENT_LOGOS[label];
+              if (!logoSrc) return null;
+              return (
                 <span
                   key={label}
                   className="inline-flex h-9 min-w-14 items-center justify-center rounded-md border border-white/20 bg-white px-2 shadow-sm"
                 >
-                  <img src={logoSvg} alt={label} className="h-5 max-w-[72px] object-contain" />
-                </span>
-              ) : (
-                <span
-                  key={label}
-                  className="inline-flex h-9 min-w-14 items-center justify-center rounded-md border border-white/20 bg-white px-3 font-copy text-[11px] font-black uppercase tracking-[0.04em] text-slate-800 shadow-sm"
-                >
-                  {label}
+                  <img src={logoSrc} alt={label} className="h-6 max-w-[80px] object-contain" />
                 </span>
               );
             })}
