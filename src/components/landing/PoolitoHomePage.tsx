@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   CircleDollarSign,
   Gem,
+  Globe2,
   Headphones,
   LineChart,
   Play,
