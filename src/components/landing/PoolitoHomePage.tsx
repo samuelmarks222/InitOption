@@ -1,4 +1,8 @@
 import {
+  useEffect,
+  useState,
+} from "react";
+import {
   ArrowRight,
   BadgeCheck,
   BarChart3,
@@ -97,6 +101,173 @@ const services = [
   },
 ];
 
+const marketGroups = [
+  {
+    label: "Currencies",
+    cards: [
+      {
+        badge: "EU",
+        symbol: "EUR/USD",
+        name: "Euro / US Dollar",
+        status: "Closed",
+        payout: "74%",
+        duration: "45m",
+        direction: "Up",
+      },
+      {
+        badge: "GB",
+        symbol: "GBP/USD",
+        name: "British Pound / US Dollar",
+        status: "Open",
+        payout: "89%",
+        duration: "45m",
+        direction: "Up",
+      },
+      {
+        badge: "US",
+        symbol: "USD/JPY",
+        name: "US Dollar / Japanese Yen",
+        status: "Closed",
+        payout: "84%",
+        duration: "90m",
+        direction: "Up",
+      },
+      {
+        badge: "AU",
+        symbol: "AUD/CAD",
+        name: "Australian Dollar / Canadian Dollar",
+        status: "Open",
+        payout: "79%",
+        duration: "60m",
+        direction: "Down",
+      },
+    ],
+  },
+  {
+    label: "Crypto",
+    cards: [
+      {
+        badge: "BT",
+        symbol: "BTC",
+        name: "Bitcoin",
+        status: "Open",
+        payout: "79%",
+        duration: "60m",
+        direction: "Down",
+      },
+      {
+        badge: "ET",
+        symbol: "ETH",
+        name: "Ethereum",
+        status: "Open",
+        payout: "86%",
+        duration: "30m",
+        direction: "Up",
+      },
+      {
+        badge: "SO",
+        symbol: "SOL",
+        name: "Solana",
+        status: "Closed",
+        payout: "82%",
+        duration: "45m",
+        direction: "Up",
+      },
+      {
+        badge: "XR",
+        symbol: "XRP",
+        name: "Ripple",
+        status: "Open",
+        payout: "76%",
+        duration: "15m",
+        direction: "Down",
+      },
+    ],
+  },
+  {
+    label: "Stocks",
+    cards: [
+      {
+        badge: "AP",
+        symbol: "AAPL",
+        name: "Apple Inc.",
+        status: "Open",
+        payout: "81%",
+        duration: "60m",
+        direction: "Up",
+      },
+      {
+        badge: "TS",
+        symbol: "TSLA",
+        name: "Tesla Inc.",
+        status: "Closed",
+        payout: "78%",
+        duration: "45m",
+        direction: "Down",
+      },
+      {
+        badge: "MS",
+        symbol: "MSFT",
+        name: "Microsoft Corp.",
+        status: "Open",
+        payout: "88%",
+        duration: "90m",
+        direction: "Up",
+      },
+      {
+        badge: "AM",
+        symbol: "AMZN",
+        name: "Amazon.com Inc.",
+        status: "Open",
+        payout: "83%",
+        duration: "30m",
+        direction: "Up",
+      },
+    ],
+  },
+  {
+    label: "Commodities",
+    cards: [
+      {
+        badge: "GD",
+        symbol: "GOLD",
+        name: "Gold Spot",
+        status: "Open",
+        payout: "90%",
+        duration: "45m",
+        direction: "Up",
+      },
+      {
+        badge: "OL",
+        symbol: "OIL",
+        name: "Crude Oil",
+        status: "Closed",
+        payout: "73%",
+        duration: "60m",
+        direction: "Down",
+      },
+      {
+        badge: "SV",
+        symbol: "SILVER",
+        name: "Silver Spot",
+        status: "Open",
+        payout: "85%",
+        duration: "30m",
+        direction: "Up",
+      },
+      {
+        badge: "NG",
+        symbol: "NATGAS",
+        name: "Natural Gas",
+        status: "Open",
+        payout: "77%",
+        duration: "90m",
+        direction: "Down",
+      },
+    ],
+  },
+];
+
 const trustLogos = ["Markets", "Signals", "Wallet", "Security", "Support", "Demo"];
 
 const testimonials = [
@@ -125,6 +296,16 @@ const testimonials = [
 
 const PoolitoHomePage = () => {
   const { platformName, supportEmail } = useSiteBranding();
+  const [activeMarketIndex, setActiveMarketIndex] = useState(0);
+  const activeMarket = marketGroups[activeMarketIndex] || marketGroups[0];
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setActiveMarketIndex((currentIndex) => (currentIndex + 1) % marketGroups.length);
+    }, 4200);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   return (
     <div className="poolito-home min-h-screen overflow-x-hidden bg-white text-[#06383c]">
@@ -356,6 +537,93 @@ const PoolitoHomePage = () => {
                     <p>{service.text}</p>
                   </div>
                 </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="poolito-markets" aria-labelledby="poolito-markets-title">
+          <div className="poolito-container">
+            <div className="poolito-section-heading poolito-markets-heading">
+              <span>Markets</span>
+              <h2 id="poolito-markets-title">Market Spreads and Swaps</h2>
+              <p>
+                {platformName} combines chart action, entry logic, timer control, and higher or lower
+                execution in one focused trading surface.
+              </p>
+            </div>
+
+            <div className="poolito-market-tabs" role="tablist" aria-label="Market categories">
+              {marketGroups.map((group, index) => (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeMarketIndex === index}
+                  className={`poolito-market-tab ${activeMarketIndex === index ? "is-active" : ""}`}
+                  key={group.label}
+                  onClick={() => setActiveMarketIndex(index)}
+                >
+                  {group.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="poolito-market-stage">
+              <div className="poolito-market-grid" key={activeMarket.label} aria-live="polite">
+                {activeMarket.cards.map((market) => {
+                  const isDown = market.direction === "Down";
+
+                  return (
+                    <article className="poolito-market-card" key={market.symbol}>
+                      <div className="poolito-market-card-head">
+                        <span className="poolito-market-badge">{market.badge}</span>
+                        <div>
+                          <h3>{market.symbol}</h3>
+                          <p>{market.name}</p>
+                        </div>
+                        <span className={`poolito-market-status ${market.status.toLowerCase()}`}>
+                          {market.status}
+                        </span>
+                      </div>
+
+                      <dl className="poolito-market-metrics">
+                        <div>
+                          <dt>Payout</dt>
+                          <dd>{market.payout}</dd>
+                        </div>
+                        <div>
+                          <dt>Duration</dt>
+                          <dd>{market.duration}</dd>
+                        </div>
+                        <div>
+                          <dt>Direction</dt>
+                          <dd className={isDown ? "is-down" : "is-up"}>{market.direction}</dd>
+                        </div>
+                      </dl>
+
+                      <div className="poolito-market-bottom">
+                        <strong>{market.payout}</strong>
+                        <span>Binary</span>
+                      </div>
+
+                      <Link to="/trade" className="poolito-market-trade">
+                        Trade
+                      </Link>
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="poolito-market-dots" aria-label="Market carousel pages">
+              {marketGroups.map((group, index) => (
+                <button
+                  type="button"
+                  className={activeMarketIndex === index ? "is-active" : ""}
+                  aria-label={`Show ${group.label} markets`}
+                  key={group.label}
+                  onClick={() => setActiveMarketIndex(index)}
+                />
               ))}
             </div>
           </div>
@@ -1303,6 +1571,272 @@ const PoolitoHomePage = () => {
           font-weight: 700;
         }
 
+        .poolito-markets {
+          position: relative;
+          overflow: hidden;
+          padding: 104px 0 116px;
+          background: #f6faf8;
+        }
+
+        .poolito-markets::before {
+          content: "";
+          position: absolute;
+          inset: 48px 0 auto auto;
+          width: 34%;
+          height: 58%;
+          pointer-events: none;
+          background-image: radial-gradient(rgba(6, 56, 60, 0.1) 2px, transparent 2px);
+          background-size: 18px 18px;
+          opacity: 0.34;
+        }
+
+        .poolito-markets-heading {
+          margin-bottom: 26px;
+        }
+
+        .poolito-markets-heading p {
+          max-width: 760px;
+          margin: 18px auto 0;
+          color: #657284;
+          font-size: 17px;
+          line-height: 1.62;
+          font-weight: 700;
+        }
+
+        .poolito-market-tabs {
+          position: relative;
+          z-index: 1;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 10px;
+          margin-bottom: 34px;
+        }
+
+        .poolito-market-tab {
+          min-height: 38px;
+          padding: 0 22px;
+          border: 1px solid rgba(6, 56, 60, 0.12);
+          border-radius: 999px;
+          color: #607084;
+          background: #fff;
+          box-shadow: 0 10px 24px rgba(6, 56, 60, 0.05);
+          font-size: 13px;
+          font-weight: 950;
+          cursor: pointer;
+        }
+
+        .poolito-market-tab.is-active {
+          color: #fff;
+          border-color: var(--poolito-green);
+          background: var(--poolito-green);
+          box-shadow: 0 16px 28px rgba(16, 155, 66, 0.24);
+        }
+
+        .poolito-market-stage {
+          position: relative;
+          z-index: 1;
+          overflow: hidden;
+        }
+
+        .poolito-market-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 28px;
+          animation: poolitoMarketSwap 420ms ease;
+        }
+
+        @keyframes poolitoMarketSwap {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .poolito-market-card {
+          min-height: 360px;
+          padding: 24px 22px 22px;
+          border: 1px solid rgba(6, 56, 60, 0.08);
+          border-radius: 8px;
+          background: #fff;
+          box-shadow: 0 18px 40px rgba(6, 56, 60, 0.1);
+        }
+
+        .poolito-market-card-head {
+          display: grid;
+          grid-template-columns: 48px minmax(0, 1fr) auto;
+          gap: 12px;
+          align-items: center;
+        }
+
+        .poolito-market-badge {
+          width: 48px;
+          height: 48px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          color: #fff;
+          background: linear-gradient(135deg, var(--poolito-dark), var(--poolito-green));
+          box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.28);
+          font-size: 13px;
+          font-weight: 950;
+        }
+
+        .poolito-market-card h3 {
+          margin: 0;
+          color: var(--poolito-dark);
+          font-size: 17px;
+          font-weight: 950;
+          letter-spacing: 1.5px;
+        }
+
+        .poolito-market-card p {
+          margin: 4px 0 0;
+          color: #728092;
+          font-size: 12px;
+          font-weight: 800;
+          line-height: 1.35;
+        }
+
+        .poolito-market-status {
+          min-height: 27px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 12px;
+          border-radius: 999px;
+          color: #647181;
+          background: #edf2f4;
+          font-size: 11px;
+          font-weight: 950;
+          text-transform: uppercase;
+        }
+
+        .poolito-market-status.open {
+          color: var(--poolito-green);
+          background: rgba(24, 185, 88, 0.15);
+        }
+
+        .poolito-market-metrics {
+          display: grid;
+          gap: 12px;
+          margin: 24px 0 0;
+        }
+
+        .poolito-market-metrics div {
+          min-height: 54px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          padding: 0 16px;
+          border-radius: 8px;
+          background: #f4f7f8;
+        }
+
+        .poolito-market-metrics dt,
+        .poolito-market-metrics dd {
+          margin: 0;
+        }
+
+        .poolito-market-metrics dt {
+          color: #6c7b8d;
+          font-size: 12px;
+          font-weight: 850;
+          text-transform: uppercase;
+        }
+
+        .poolito-market-metrics dd {
+          color: #162536;
+          font-size: 14px;
+          font-weight: 950;
+        }
+
+        .poolito-market-metrics dd.is-up {
+          color: var(--poolito-green);
+        }
+
+        .poolito-market-metrics dd.is-down {
+          color: #e21b52;
+        }
+
+        .poolito-market-bottom {
+          min-height: 54px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          margin-top: 18px;
+          padding: 0 16px;
+          border-radius: 8px;
+          background: linear-gradient(90deg, #f0f2f4, #fff);
+        }
+
+        .poolito-market-bottom strong {
+          color: #162536;
+          font-size: 15px;
+          font-weight: 950;
+        }
+
+        .poolito-market-bottom span {
+          color: #718095;
+          font-size: 12px;
+          font-weight: 950;
+          letter-spacing: 3px;
+          text-transform: uppercase;
+        }
+
+        .poolito-market-trade {
+          min-height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 12px;
+          border-radius: 8px;
+          color: #fff;
+          background: var(--poolito-green);
+          text-decoration: none;
+          font-size: 13px;
+          font-weight: 950;
+          letter-spacing: 0.6px;
+          text-transform: uppercase;
+        }
+
+        .poolito-market-trade:hover {
+          background: var(--poolito-dark);
+        }
+
+        .poolito-market-dots {
+          position: relative;
+          z-index: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 9px;
+          margin-top: 28px;
+        }
+
+        .poolito-market-dots button {
+          width: 10px;
+          height: 10px;
+          padding: 0;
+          border: 0;
+          border-radius: 999px;
+          background: #cbd5d8;
+          cursor: pointer;
+        }
+
+        .poolito-market-dots button.is-active {
+          width: 28px;
+          background: var(--poolito-green);
+        }
+
         .poolito-trust {
           padding: 0 0 104px;
           background: var(--poolito-deep);
@@ -1607,6 +2141,10 @@ const PoolitoHomePage = () => {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
 
+          .poolito-market-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
           .poolito-testimonial-grid,
           .poolito-final-cta-inner {
             grid-template-columns: 1fr;
@@ -1706,9 +2244,22 @@ const PoolitoHomePage = () => {
 
           .poolito-feature-pair,
           .poolito-testimonial-grid,
+          .poolito-market-grid,
           .poolito-service-grid,
           .poolito-logo-strip {
             grid-template-columns: 1fr;
+          }
+
+          .poolito-markets {
+            padding: 78px 0 86px;
+          }
+
+          .poolito-markets-heading p {
+            font-size: 15px;
+          }
+
+          .poolito-market-card {
+            min-height: 0;
           }
 
           .poolito-section-label::before {
@@ -1744,6 +2295,34 @@ const PoolitoHomePage = () => {
 
           .poolito-band-tags {
             gap: 8px;
+          }
+
+          .poolito-market-tab {
+            min-height: 36px;
+            padding: 0 14px;
+            font-size: 12px;
+          }
+
+          .poolito-market-card {
+            padding: 20px 18px 18px;
+          }
+
+          .poolito-market-card-head {
+            grid-template-columns: 44px minmax(0, 1fr);
+          }
+
+          .poolito-market-badge {
+            width: 44px;
+            height: 44px;
+          }
+
+          .poolito-market-status {
+            grid-column: 1 / -1;
+            justify-self: flex-start;
+          }
+
+          .poolito-market-bottom span {
+            letter-spacing: 2px;
           }
 
           .poolito-about-img-main {
