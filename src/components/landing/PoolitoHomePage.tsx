@@ -2,7 +2,6 @@ import {
   ArrowRight,
   BadgeCheck,
   BarChart3,
-  Building2,
   CheckCircle2,
   CircleDollarSign,
   Clock3,
@@ -17,7 +16,6 @@ import {
   ShieldCheck,
   Smartphone,
   Star,
-  Trophy,
   Users,
   UserPlus,
   WalletCards,
@@ -43,13 +41,6 @@ const navLinks = [
   { label: "Tournaments", to: "/tournaments" },
   { label: "Blog", to: "/blog" },
   { label: "Contact Us", to: "/contact" },
-];
-
-const stats = [
-  { value: "83+", label: "Market Choice", icon: BarChart3 },
-  { value: "3+", label: "Account Modes", icon: Trophy },
-  { value: "35+", label: "Fast Payouts", icon: Building2 },
-  { value: "8+", label: "Help Channels", icon: Users },
 ];
 
 const assetTags = ["Currencies", "Indices", "Crypto", "Stocks", "Commodities"];
@@ -236,32 +227,22 @@ const PoolitoHomePage = () => {
           </div>
           <div className="poolito-hero-image" aria-label={`${platformName} trading platform preview`}>
             <img src={HOME_ASSETS.hero} alt={`${platformName} laptop trading platform`} />
-            <div className="poolito-floating-tags" aria-label={`${platformName} tradable asset classes`}>
-              {assetTags.map((tag) => (
-                <span key={tag}>{tag}</span>
-              ))}
-            </div>
           </div>
           <div className="poolito-slash-one" aria-hidden="true" />
           <div className="poolito-slash-two" aria-hidden="true" />
         </section>
 
-        <section className="poolito-stat-band" aria-label={`${platformName} highlights`}>
-          <Link to="/trading-guide" className="poolito-video-chip">
-            <span className="poolito-play">
-              <Play size={22} fill="currentColor" />
-            </span>
-            <small>About Trading</small>
-            <strong>Deep Trading In Your City</strong>
-          </Link>
-          <div className="poolito-stat-list">
-            {stats.map((item) => (
-              <div className="poolito-stat" key={item.label}>
-                <item.icon size={32} />
-                <strong>{item.value}</strong>
-                <span>{item.label}</span>
-              </div>
-            ))}
+        <section className="poolito-asset-band" aria-label={`${platformName} tradable asset classes`}>
+          <div className="poolito-container poolito-asset-band-inner">
+            <div className="poolito-asset-band-title">
+              <span>Trade</span>
+              <strong>Global Assets</strong>
+            </div>
+            <div className="poolito-band-tags">
+              {assetTags.map((tag) => (
+                <span key={tag}>{tag}</span>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -794,33 +775,6 @@ const PoolitoHomePage = () => {
           display: block;
         }
 
-        .poolito-floating-tags {
-          position: absolute;
-          z-index: 2;
-          right: max(34px, calc((100vw - 1300px) / 2));
-          bottom: 34px;
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: flex-end;
-          gap: 12px;
-          max-width: 520px;
-          pointer-events: none;
-        }
-
-        .poolito-floating-tags span {
-          display: inline-flex;
-          align-items: center;
-          min-height: 42px;
-          padding: 0 18px;
-          border-radius: 999px;
-          color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.26);
-          background: rgba(5, 46, 49, 0.72);
-          box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
-          font-size: 13px;
-          font-weight: 950;
-        }
-
         .poolito-slash-one,
         .poolito-slash-two {
           position: absolute;
@@ -841,89 +795,76 @@ const PoolitoHomePage = () => {
           opacity: 0.82;
         }
 
-        .poolito-stat-band {
+        .poolito-asset-band {
+          position: relative;
           min-height: 150px;
-          display: grid;
-          grid-template-columns: minmax(280px, 1.1fr) minmax(0, 2.9fr);
-          background: var(--poolito-deep);
-          color: #fff;
-        }
-
-        .poolito-video-chip {
           display: flex;
           align-items: center;
-          gap: 22px;
-          padding-left: max(56px, calc((100vw - 1300px) / 2));
-          padding-right: 34px;
           color: #fff;
+          background: linear-gradient(90deg, var(--poolito-green) 0 30%, var(--poolito-deep) 30% 100%);
+        }
+
+        .poolito-asset-band::before {
+          content: "";
+          position: absolute;
+          left: 30%;
+          top: 0;
+          bottom: 0;
+          width: 96px;
           background: var(--poolito-green);
-          text-decoration: none;
+          clip-path: polygon(0 0, 45% 0, 100% 100%, 0 100%);
         }
 
-        .poolito-play {
-          width: 78px;
-          height: 78px;
-          flex: 0 0 auto;
-          display: inline-flex;
+        .poolito-asset-band-inner {
+          position: relative;
+          z-index: 1;
+          display: grid;
+          grid-template-columns: minmax(220px, 0.8fr) minmax(0, 2.2fr);
+          gap: 36px;
           align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #fff;
-          background: var(--poolito-dark);
         }
 
-        .poolito-video-chip small,
-        .poolito-video-chip strong {
+        .poolito-asset-band-title span,
+        .poolito-asset-band-title strong {
           display: block;
           text-transform: uppercase;
         }
 
-        .poolito-video-chip small {
-          color: rgba(255, 255, 255, 0.72);
-          font-size: 12px;
-          font-weight: 900;
-        }
-
-        .poolito-video-chip strong {
-          margin-top: 5px;
-          max-width: 250px;
-          font-size: 24px;
-          line-height: 1.15;
-          font-weight: 950;
-        }
-
-        .poolito-stat-list {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          align-items: center;
-          gap: 20px;
-          padding: 28px max(56px, calc((100vw - 1300px) / 2)) 28px 54px;
-        }
-
-        .poolito-stat {
-          display: grid;
-          grid-template-columns: 44px 1fr;
-          column-gap: 14px;
-          align-items: center;
-        }
-
-        .poolito-stat svg {
-          grid-row: 1 / 3;
-          color: #fff;
-          opacity: 0.86;
-        }
-
-        .poolito-stat strong {
-          font-size: 34px;
-          line-height: 1;
-          font-weight: 950;
-        }
-
-        .poolito-stat span {
-          margin-top: 5px;
+        .poolito-asset-band-title span {
           color: rgba(255, 255, 255, 0.72);
           font-size: 13px;
-          font-weight: 800;
+          font-weight: 950;
+        }
+
+        .poolito-asset-band-title strong {
+          margin-top: 4px;
+          max-width: 250px;
+          color: #fff;
+          font-size: 32px;
+          line-height: 1.06;
+          font-weight: 950;
+        }
+
+        .poolito-band-tags {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 14px;
+        }
+
+        .poolito-band-tags span {
+          min-height: 52px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 24px;
+          border-radius: 999px;
+          color: #fff;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.08);
+          box-shadow: 0 16px 30px rgba(0, 0, 0, 0.16);
+          font-size: 15px;
+          font-weight: 950;
         }
 
         .poolito-about {
@@ -1640,29 +1581,18 @@ const PoolitoHomePage = () => {
             clip-path: none;
           }
 
-          .poolito-floating-tags {
-            left: 32px;
-            right: 32px;
-            justify-content: flex-start;
-          }
-
           .poolito-slash-one,
           .poolito-slash-two {
             display: none;
           }
 
-          .poolito-stat-band,
+          .poolito-asset-band-inner,
           .poolito-about-grid {
             grid-template-columns: 1fr;
           }
 
-          .poolito-video-chip {
-            min-height: 150px;
-            padding: 28px 32px;
-          }
-
-          .poolito-stat-list {
-            padding: 34px 32px;
+          .poolito-band-tags {
+            justify-content: flex-start;
           }
 
           .poolito-about-grid {
@@ -1732,8 +1662,23 @@ const PoolitoHomePage = () => {
             font-size: clamp(34px, 11vw, 50px);
           }
 
-          .poolito-stat-list {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+          .poolito-asset-band {
+            padding: 28px 0;
+            background: var(--poolito-deep);
+          }
+
+          .poolito-asset-band::before {
+            display: none;
+          }
+
+          .poolito-asset-band-title strong {
+            font-size: 24px;
+          }
+
+          .poolito-band-tags span {
+            min-height: 42px;
+            padding: 0 16px;
+            font-size: 13px;
           }
 
           .poolito-about {
@@ -1797,21 +1742,8 @@ const PoolitoHomePage = () => {
             padding: 34px 20px;
           }
 
-          .poolito-floating-tags {
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
+          .poolito-band-tags {
             gap: 8px;
-          }
-
-          .poolito-floating-tags span {
-            min-height: 36px;
-            padding: 0 12px;
-            font-size: 12px;
-          }
-
-          .poolito-stat-list {
-            grid-template-columns: 1fr;
           }
 
           .poolito-about-img-main {
