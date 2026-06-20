@@ -71,16 +71,15 @@ const HeroSection = () => {
             </div>
 
             <h1 id="landing-hero-title">
-              Trade Smarter,
+              The Right Place for Online Trading
               <br />
-              Move Faster With
-              <br />
-              <span>{platformName}</span>
+              <span>– Simple, Fast, and Secure.</span>
             </h1>
 
             <p className="io-hero-description">
-              Trade forex, crypto, stocks, and commodities with real-time charts, fast funding,
-              tournament flow, and a clean terminal made for focused decisions.
+              Trade over 100 global assets including currencies, indices, crypto, stocks, and commodities.
+              Access real‑time charts, a free demo account, and fast withdrawals – all from one clean,
+              powerful platform.
             </p>
 
             <div className="io-hero-actions">
