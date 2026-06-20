@@ -6,10 +6,12 @@ import {
   ArrowRight,
   BadgeCheck,
   BarChart3,
+  Bitcoin,
   CheckCircle2,
   CircleDollarSign,
   Clock3,
   Facebook,
+  Gem,
   Headphones,
   Instagram,
   LineChart,
@@ -46,7 +48,13 @@ const navLinks = [
   { label: "Contact Us", to: "/contact" },
 ];
 
-const assetTags = ["Currencies", "Indices", "Crypto", "Stocks", "Commodities"];
+const assetTags = [
+  { label: "Currencies", icon: CircleDollarSign },
+  { label: "Indices", icon: BarChart3 },
+  { label: "Crypto", icon: Bitcoin },
+  { label: "Stocks", icon: LineChart },
+  { label: "Commodities", icon: Gem },
+];
 
 const howItWorksSteps = [
   {
@@ -483,9 +491,16 @@ const PoolitoHomePage = () => {
               <strong>Global Assets</strong>
             </div>
             <div className="poolito-band-tags">
-              {assetTags.map((tag) => (
-                <span key={tag}>{tag}</span>
-              ))}
+              {assetTags.map((tag) => {
+                const Icon = tag.icon;
+
+                return (
+                  <span key={tag.label}>
+                    <Icon size={18} />
+                    {tag.label}
+                  </span>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -1210,7 +1225,8 @@ const PoolitoHomePage = () => {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          padding: 0 24px;
+          gap: 10px;
+          padding: 0 22px;
           border-radius: 999px;
           color: #fff;
           border: 1px solid rgba(255, 255, 255, 0.2);
@@ -1218,6 +1234,12 @@ const PoolitoHomePage = () => {
           box-shadow: 0 16px 30px rgba(0, 0, 0, 0.16);
           font-size: 15px;
           font-weight: 950;
+        }
+
+        .poolito-band-tags span svg {
+          flex: 0 0 auto;
+          color: var(--poolito-green-bright);
+          stroke-width: 2.6;
         }
 
         .poolito-about {
