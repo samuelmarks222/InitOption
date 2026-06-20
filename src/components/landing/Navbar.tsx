@@ -220,13 +220,13 @@ const Navbar = () => {
         }
 
         .io-logo-panel {
-          width: min(31vw, 460px);
-          min-width: 330px;
+          width: clamp(380px, 22vw, 430px);
+          min-width: 380px;
           display: flex;
           align-items: center;
-          padding: 0 78px 0 max(34px, calc((100vw - 1430px) / 2 + 34px));
+          padding: 0 88px 0 clamp(42px, 5vw, 96px);
           background: var(--io-green);
-          clip-path: polygon(0 0, calc(100% - 84px) 0, 100% 100%, 0 100%);
+          clip-path: polygon(0 0, calc(100% - 68px) 0, 100% 100%, 0 100%);
         }
 
         .io-logo {
