@@ -9,21 +9,15 @@ import {
   Bitcoin,
   CheckCircle2,
   CircleDollarSign,
-  Clock3,
-  Facebook,
   Gem,
   Headphones,
-  Instagram,
   LineChart,
-  Linkedin,
-  LogIn,
-  Mail,
   Play,
   Smartphone,
   Star,
   TrendingUp,
   Users,
-  UserPlus,
+  WalletCards,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/landing/Footer";
