@@ -71,7 +71,7 @@ const HeroSection = () => {
             </div>
 
             <h1 id="landing-hero-title">
-              The Right Place for Online Trading – Simple, Fast, Secure.
+              The Right Place for <span style={{ color: "#109b42" }}>Online Trading</span> – Simple, Fast, Secure.
             </h1>
 
             <p className="io-hero-description">
@@ -282,12 +282,6 @@ const HeroSection = () => {
           line-height: 1.08;
           font-weight: 900;
           letter-spacing: 0;
-        }
-
-        .io-hero-copy h1 span {
-          display: inline-block;
-          color: #7a3df0;
-          font-style: italic;
         }
 
         .io-hero-description {
