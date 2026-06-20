@@ -12,6 +12,7 @@ import {
   Clock3,
   Facebook,
   Gem,
+  Globe2,
   Headphones,
   Instagram,
   LineChart,
@@ -487,8 +488,13 @@ const PoolitoHomePage = () => {
         <section className="poolito-asset-band" aria-label={`${platformName} tradable asset classes`}>
           <div className="poolito-container poolito-asset-band-inner">
             <div className="poolito-asset-band-title">
-              <span>Trade</span>
-              <strong>Global Assets</strong>
+              <div className="poolito-asset-title-icon" aria-hidden="true">
+                <Globe2 size={34} />
+              </div>
+              <div>
+                <span>Trade</span>
+                <strong>Global Assets</strong>
+              </div>
             </div>
             <div className="poolito-band-tags">
               {assetTags.map((tag) => {
@@ -1190,6 +1196,32 @@ const PoolitoHomePage = () => {
           grid-template-columns: minmax(220px, 0.8fr) minmax(0, 2.2fr);
           gap: 36px;
           align-items: center;
+        }
+
+        .poolito-asset-band-title {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .poolito-asset-title-icon {
+          width: 58px;
+          height: 58px;
+          flex: 0 0 auto;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          color: #fff;
+          border: 1px solid rgba(255, 255, 255, 0.24);
+          background: rgba(5, 46, 49, 0.2);
+          box-shadow:
+            inset 0 0 0 8px rgba(255, 255, 255, 0.06),
+            0 14px 26px rgba(0, 0, 0, 0.16);
+        }
+
+        .poolito-asset-title-icon svg {
+          stroke-width: 2.5;
         }
 
         .poolito-asset-band-title span,
