@@ -48,7 +48,7 @@ const PublicTournamentDetailPage = ({ platformSettings }: PublicTournamentDetail
       <Navbar />
 
       <main>
-        <section className="relative overflow-hidden border-b border-white/8 bg-[#0b1622] pb-14 pt-28 sm:pb-20 sm:pt-32">
+        <section className="relative overflow-hidden border-b border-white/8 bg-[#0b1622] pb-14 pt-[224px] sm:pb-20 md:pt-[206px] xl:pt-[154px]">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(27,65,94,0.08),transparent_36%),radial-gradient(circle_at_24%_18%,rgba(20,158,98,0.06),transparent_24%)]" />
 
           <div className="relative px-4 sm:px-6 lg:px-8">

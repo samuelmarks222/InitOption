@@ -2004,7 +2004,7 @@ const TradingGuidePage = () => {
           @media (max-width: 760px) {
             .poolito-guide-hero {
               min-height: 320px;
-              padding: 146px 0 58px;
+              padding: 228px 0 58px;
             }
 
             .poolito-guide-hero-inner,

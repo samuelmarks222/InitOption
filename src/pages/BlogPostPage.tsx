@@ -89,7 +89,7 @@ const BlogPostPage = () => {
       <Navbar />
 
       <main>
-        <section className="relative overflow-hidden border-b border-border/50 bg-background pb-16 pt-24 sm:pb-20 sm:pt-28">
+        <section className="relative overflow-hidden border-b border-border/50 bg-background pb-16 pt-[224px] sm:pb-20 md:pt-[206px] xl:pt-[154px]">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,196,118,0.14),transparent_34%),radial-gradient(circle_at_80%_22%,rgba(255,255,255,0.06),transparent_22%)]" />
           <div className="relative px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
