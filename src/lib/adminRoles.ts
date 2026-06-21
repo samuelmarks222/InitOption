@@ -80,7 +80,7 @@ export const roleAllowsAdminPath = (role: AppRole | null, pathname: string) => {
 
   switch (role) {
     case "support_agent":
-      return ["/admin/support", "/admin/users", "/admin/notifications"].some((path) => pathname.startsWith(path));
+      return ["/admin/support", "/admin/users", "/admin/user-activity", "/admin/notifications"].some((path) => pathname.startsWith(path));
     case "finance_manager":
       return ["/admin/finance", "/admin/funds", "/admin/reports", "/admin/analytics", "/admin/users", "/admin/crypto-payments"].some((path) =>
         pathname.startsWith(path),

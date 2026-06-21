@@ -63,6 +63,7 @@ const BlogAdmin = lazy(() => import("./pages/admin/BlogAdmin"));
 const GuideAdmin = lazy(() => import("./pages/admin/GuideAdmin"));
 const GuideMediaAdmin = lazy(() => import("./pages/admin/GuideMediaAdmin"));
 const FundsManager = lazy(() => import("./pages/admin/FundsManager"));
+const UserActivity = lazy(() => import("./pages/admin/UserActivity"));
 
 const RouteLoadingScreen = () => (
   <div className="flex min-h-screen items-center justify-center bg-background px-6 py-16 text-center">
@@ -193,6 +194,7 @@ const App = () => {
                           <Route path="trades" element={withRouteSuspense(<TradeManagement />)} />
                           <Route path="finance" element={withRouteSuspense(<Finance />)} />
                           <Route path="funds" element={withRouteSuspense(<FundsManager />)} />
+                          <Route path="user-activity" element={withRouteSuspense(<UserActivity />)} />
                           <Route path="assets" element={withRouteSuspense(<AssetManagement />)} />
                           <Route path="settings" element={withRouteSuspense(<PlatformSettings />)} />
                           <Route path="promo-materials" element={withRouteSuspense(<PromoMaterials />)} />

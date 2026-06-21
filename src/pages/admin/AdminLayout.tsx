@@ -64,7 +64,7 @@ const NAV_CATEGORIES: NavCategory[] = [
     items: [
       { label: "All Users", href: "/admin/users", icon: <Users size={20} /> },
       { label: "KYC Verification", href: "/admin/users?tab=kyc", icon: <ShieldCheck size={20} /> },
-      { label: "User Activity", href: "/admin/users?tab=activity", icon: <Activity size={20} /> },
+      { label: "User Activity", href: "/admin/user-activity", icon: <Activity size={20} /> },
     ],
   },
   {
@@ -315,6 +315,16 @@ const AdminLayout = () => {
                 style={{ borderColor: BORDER, color: TEXT_SEC }}
               />
             </div>
+
+            {/* Go to Trading */}
+            <Link
+              to="/trade"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-80"
+              style={{ background: ACCENT }}
+            >
+              <TrendingUp size={16} />
+              <span className="hidden sm:inline">Go to Trading</span>
+            </Link>
 
             {/* Notifications */}
             <button className="relative rounded-lg p-2 transition-colors hover:bg-white/10" style={{ color: TEXT_SEC }}>
