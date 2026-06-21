@@ -1243,8 +1243,7 @@ const Trade = () => {
           highlightDepositButton={Boolean(depositGuideReason)} />
 
         <div className="flex-1 flex w-full overflow-hidden min-h-0" style={{ background: "var(--trading-workspace-bg)" }}>
-          {/* Left sidebar — desktop only */}
-          {isDesktopViewport && (
+          {/* Left sidebar */}
           <div className="shrink-0 transition-[width] duration-300 ease-out">
             <NavigationSidebar
               activeWorkspace={activeWorkspace}
@@ -1253,7 +1252,6 @@ const Trade = () => {
               onToggleCollapsed={() => setLeftPanelOpen((current) => !current)}
             />
           </div>
-          )}
 
           {activeWorkspace && !isFullScreen && (
             <DynamicWorkspace
@@ -1420,6 +1418,12 @@ const Trade = () => {
                 {/* ── MOBILE: Chart + Trading Panel combined in a fixed flex layout ── */}
                 {/* Chart block — dynamically fills remaining vertical space */}
                 {showAssetSelector && <AssetSelectorModal onSelect={handleSelectAsset} onClose={() => setShowAssetSelector(false)} />}
+                <div className="w-full min-w-0">
+                  <AssetInfo asset={selectedAsset} onSelectAsset={() => {}} onOpenSelector={() => setShowAssetSelector(true)}
+                    openTabs={openTabs} activeTabId={activeTabId} onSelectTab={handleSelectTab}
+                    onRemoveTab={handleRemoveTab} onAddAssetClick={() => setShowAssetSelector(true)}
+                    activeTrades={visibleActiveTrades} livePrices={liveChartPrices} />
+                </div>
                 <div id="tour-chart" className="flex-1 min-h-0 relative flex flex-col pb-[250px] sm:pb-[262px]">
                   <div className="hidden">
                     <span style={{ fontSize: "11px", color: "#7f8b99" }} />
