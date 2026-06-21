@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useMemo } from "react";
 import { Outlet, Link, Navigate, useLocation } from "react-router-dom";
 import {
+  DollarSign,
   LayoutDashboard,
   CandlestickChart,
   Clock,
@@ -72,6 +73,7 @@ const NAV_CATEGORIES: NavCategory[] = [
       { label: "Deposits", href: "/admin/finance?tab=deposits", icon: <ArrowDownCircle size={20} /> },
       { label: "Withdrawals", href: "/admin/finance?tab=withdrawals", icon: <ArrowUpCircle size={20} /> },
       { label: "Transactions", href: "/admin/finance?tab=transactions", icon: <Receipt size={20} /> },
+      { label: "Funds Manager", href: "/admin/funds", icon: <DollarSign size={20} /> },
     ],
   },
   {
