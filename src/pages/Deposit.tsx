@@ -621,10 +621,7 @@ const Deposit = () => {
                 <div className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#aab5c6]">Payment method</div>
                 <span className="rounded-full border border-[#22b978]/30 bg-[#22b978]/8 px-2.5 py-0.5 text-[10px] font-bold text-[#35d891]">Fast & Secure</span>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#aab5c6]">Choose a payment method</div>
-                <span className="rounded-full border border-[#22b978]/30 bg-[#22b978]/8 px-2.5 py-0.5 text-[10px] font-bold text-[#35d891]">Fast & Secure</span>
-              </div>
+              <div className="text-sm font-extrabold uppercase tracking-[0.08em] text-white">Choose a payment method</div>
               <div className="mt-4 space-y-3">
                 <button
                   type="button"
