@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { IChartApi, ISeriesApi, type SeriesType, Time, IPriceLine, LineStyle } from "lightweight-charts";
+import { IChartApi, ISeriesApi, type SeriesType, Time } from "lightweight-charts";
 import { AlarmClock, Flag } from "lucide-react";
 import type { ActiveTrade } from "@/hooks/useTrading";
 
 const UP = "#47c58a";
 const DN = "#f26a61";
 const PURCHASE_LINE = "#f1604d";
+const PURCHASE_DASHED_LINE = "rgba(245,248,255,0.88)";
 const BEACON_RESERVE_HEIGHT = 28;
 const EXPIRY_LINE_RESERVE_WIDTH = 32;
 
@@ -282,7 +283,6 @@ export const TradeMarkersOverlay = ({
 }: Props) => {
   const sRef = useRef(series);
   const chartRef = useRef(chart);
-  const plRef = useRef<Record<string, IPriceLine>>({});
   const rafRef = useRef(0);
   const [tick, setTick] = useState(0);
 
@@ -304,32 +304,6 @@ export const TradeMarkersOverlay = ({
     () => trades.filter((trade) => isSameTradeMarkerSymbol(trade.asset_symbol, assetSymbol)),
     [assetSymbol, trades],
   );
-
-  useEffect(() => {
-    const s = sRef.current;
-    if (!s) return;
-    const lines = plRef.current;
-    const ids = new Set(myTrades.map((t) => t.id));
-    Object.keys(lines).forEach((id) => {
-      if (!ids.has(id)) { try { s.removePriceLine(lines[id]); } catch {} delete lines[id]; }
-    });
-    myTrades.forEach((t) => {
-      const c = t.direction === "higher" ? UP : DN;
-      const o = {
-        price: t.entry_price,
-        color: c,
-        lineStyle: LineStyle.Solid as const,
-        lineWidth: 1 as const,
-        axisLabelVisible: false,
-      };
-      if (lines[t.id]) try { lines[t.id].applyOptions(o); } catch {}
-      else try { lines[t.id] = s.createPriceLine(o); } catch {}
-    });
-    return () => {
-      Object.values(plRef.current).forEach((l) => { try { s.removePriceLine(l); } catch {} });
-      plRef.current = {};
-    };
-  }, [myTrades, series]);
 
   const displayMode = useMemo(() => detectDisplayMode(chart), [chart, tick]);
 
@@ -455,8 +429,8 @@ export const TradeMarkersOverlay = ({
 
   const featuredPosition = markerPositions[markerPositions.length - 1] ?? idleReferencePosition;
 
-  const isFullMode = displayMode === "full";
-  const isCompactMode = displayMode === "compact";
+  const redLineLeft = featuredPosition?.dotLeft ?? 0;
+  const dashedLineLeft = redLineLeft - 14;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[90]" data-trade-markers-overlay="true">
@@ -464,7 +438,7 @@ export const TradeMarkersOverlay = ({
         <div key={`${featuredPosition.id}-purchase-shell`} aria-hidden="true">
           <div
             data-trade-purchase-time-label="true"
-            className="absolute top-2 z-[7] flex items-start gap-1.5 text-white"
+            className="absolute top-[18px] z-[7] flex items-start gap-1.5 text-white"
             style={{ left: featuredPosition.purchaseLabelLeft }}
           >
             <span className="mt-[3px] max-w-[55px] text-right text-[10px] font-medium uppercase leading-[1.05] tracking-[0.03em] text-white/88">
@@ -477,15 +451,14 @@ export const TradeMarkersOverlay = ({
           <div
             data-trade-purchase-ruler="true"
             className="absolute top-0 bottom-0 z-[1] w-[2px] shadow-[0_0_12px_rgba(241,96,77,0.42)]"
-            style={{ left: featuredPosition.dotLeft - 1, background: PURCHASE_LINE }}
+            style={{ left: redLineLeft - 1, background: PURCHASE_LINE }}
           />
           <div
             data-trade-purchase-ruler-ticks="true"
-            className="absolute z-[1]"
+            className="absolute top-0 bottom-0 z-[1] w-px"
             style={{
-              left: featuredPosition.dotLeft - 24, top: 58, bottom: 16, width: 18,
-              backgroundImage: "repeating-linear-gradient(to bottom, rgba(232,238,247,0.78) 0 1px, transparent 1px 6px)",
-              opacity: 0.72,
+              left: dashedLineLeft,
+              backgroundImage: `repeating-linear-gradient(to bottom, ${PURCHASE_DASHED_LINE} 0 2px, transparent 2px 5px)`,
             }}
           />
           <div
@@ -505,88 +478,23 @@ export const TradeMarkersOverlay = ({
           </div>
           <div
             data-trade-purchase-anchor-icons="true"
-            className="absolute bottom-[7px] z-[8] flex items-center gap-[3px]"
-            style={{ left: Math.min(Math.max(6, featuredPosition.dotLeft - 30), Math.max(6, (chartRef.current?.container?.().clientWidth ?? 60) - 62)) }}
+            className="absolute inset-x-0 bottom-[7px] z-[8]"
           >
-            <span className="flex h-[23px] w-[23px] items-center justify-center rounded-full border-[2px] border-white bg-white text-[#111827] shadow-[0_7px_16px_rgba(0,0,0,0.24)]">
+            <span
+              className="absolute flex h-[23px] w-[23px] items-center justify-center rounded-full border-[2px] border-white bg-white text-[#111827] shadow-[0_7px_16px_rgba(0,0,0,0.24)]"
+              style={{ left: dashedLineLeft - 11.5, bottom: 0 }}
+            >
               <AlarmClock className="h-[13px] w-[13px]" strokeWidth={2.8} />
             </span>
-            <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f1604d] text-white shadow-[0_7px_16px_rgba(241,96,77,0.32)]">
+            <span
+              className="absolute flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#f1604d] text-white shadow-[0_7px_16px_rgba(241,96,77,0.32)]"
+              style={{ left: redLineLeft - 9, bottom: 2.5 }}
+            >
               <Flag className="h-[11px] w-[11px]" fill="currentColor" strokeWidth={2.6} />
             </span>
           </div>
         </div>
       ) : null}
-
-      {markerPositions.map((position) => {
-        if (!position) return null;
-        const opacity = position.isInactive ? 0.4 : 0.92;
-        const borderColor = position.direction === "higher" ? "#00C076" : "#F6465D";
-        const pnlColor = position.pnlPercent >= 0 ? "#00C076" : "#F6465D";
-        const pnlSign = position.pnlPercent >= 0 ? "+" : "";
-        const offsetY = position.direction === "higher" ? -22 : 6;
-        const priceStr = `${position.entryPriceLead}${position.entryPriceAccent}`;
-        const displayPrice = priceStr.length > 12 ? priceStr.slice(0, 12) : priceStr;
-
-        return (
-          <div key={position.id}>
-            <div
-              data-trade-indicator-box="true"
-              className="absolute z-[5] inline-flex items-center gap-[6px] whitespace-nowrap rounded-[6px] px-[8px] py-[4px] text-white shadow-[0_4px_12px_rgba(0,0,0,0.25)]"
-              style={{
-                left: position.dotLeft + ENTRY_DOT_SIZE + 4,
-                top: position.dotTop + offsetY,
-                background: "rgba(26,26,42,0.92)",
-                border: `1px solid ${borderColor}`,
-                opacity,
-              }}
-            >
-              <span className="font-mono text-[11px] font-bold leading-none tabular-nums">
-                {displayPrice}
-              </span>
-              <span className="text-[10px] font-bold leading-none text-white/70">|</span>
-              <span className="font-mono text-[11px] font-bold leading-none tabular-nums text-white/92">
-                {position.clockLabel}
-              </span>
-              <span className="text-[10px] font-bold leading-none text-white/70">|</span>
-              <span
-                className="font-mono text-[11px] font-bold leading-none tabular-nums"
-                style={{ color: pnlColor }}
-              >
-                {pnlSign}{position.pnlPercent.toFixed(2)}%
-              </span>
-            </div>
-
-            <div
-              data-trade-entry-connector-dot="true"
-              className="absolute z-[3] rounded-full border-2 border-white"
-              style={{
-                left: position.connectorDotLeft - CONNECTOR_DOT_SIZE / 2,
-                top: position.dotTop - CONNECTOR_DOT_SIZE / 2,
-                width: CONNECTOR_DOT_SIZE,
-                height: CONNECTOR_DOT_SIZE,
-                background: position.color,
-                boxShadow: `0 0 0 1px ${position.color}`,
-                opacity,
-              }}
-            />
-            <div
-              data-trade-entry-end-dot="true"
-              className="absolute z-[4] rounded-full border-2"
-              style={{
-                left: position.dotLeft - ENTRY_DOT_SIZE / 2,
-                top: position.dotTop - ENTRY_DOT_SIZE / 2,
-                width: ENTRY_DOT_SIZE,
-                height: ENTRY_DOT_SIZE,
-                borderColor: position.color,
-                background: "#ffffff",
-                boxShadow: `0 0 0 1px ${position.color}`,
-                opacity,
-              }}
-            />
-          </div>
-        );
-      })}
     </div>
   );
 };
