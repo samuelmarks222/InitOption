@@ -651,11 +651,11 @@ const Deposit = () => {
                         : "border-white/10 bg-white/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:border-[#2f8cff]/40 hover:bg-white/[0.09] hover:shadow-[0_4px_16px_rgba(47,140,255,0.06)]"
                     }`}
                   >
-                    <span className="flex h-14 w-20 items-center justify-center rounded-xl bg-white/[0.08] p-1.5 shadow-inner">
+                    <span className="flex h-14 w-24 items-center justify-center rounded-xl bg-white/[0.08] p-1 shadow-inner">
                       <div className="relative flex w-full items-center justify-center">
-                        <img src="/payment-logos/bitcoin.png" alt="BTC" className="relative z-10 h-8 w-8 rounded-full border-[3px] border-[#1a2232] object-contain" />
-                        <img src="/payment-logos/usdt.png" alt="USDT" className="relative -ml-3.5 z-20 h-8 w-8 rounded-full border-[3px] border-[#1a2232] object-contain" />
-                        <img src="/payment-logos/binance.png" alt="BNB" className="relative -ml-3.5 z-30 h-8 w-8 rounded-full border-[3px] border-[#1a2232] object-contain" />
+                        <img src="/payment-logos/bitcoin.png" alt="BTC" className="relative z-10 h-9 w-9 rounded-full border-2 border-[#1a2232] object-contain" />
+                        <img src="/payment-logos/usdt.png" alt="USDT" className="relative -ml-3 z-20 h-9 w-9 rounded-full border-2 border-[#1a2232] object-contain" />
+                        <img src="/payment-logos/binance.png" alt="BNB" className="relative -ml-3 z-30 h-9 w-9 rounded-full border-2 border-[#1a2232] object-contain" />
                       </div>
                     </span>
                     <div>
@@ -672,15 +672,20 @@ const Deposit = () => {
 
             <section>
               <div className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#aab5c6]">Account snapshot</div>
-              <div className="mt-5 rounded-lg border border-white/8 bg-[#202838] p-5">
-                <div className="text-sm text-white">Live Balance</div>
-                <div className="mt-3 break-all text-[40px] font-bold leading-none text-white">${storedLiveBalance.toFixed(2)}</div>
-                <div className="mt-4 inline-flex rounded-full bg-[#19b872]/14 px-3 py-1 text-xs font-bold uppercase tracking-[0.06em] text-[#35d891]">
-                  Live account
+              <div className="mt-4 rounded-xl border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.01)_100%)] p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[13px] text-white/80">Live Balance</div>
+                    <div className="mt-1 text-2xl font-bold text-white">${storedLiveBalance.toFixed(2)}</div>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#19b872]/30 bg-[#19b872]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.06em] text-[#35d891]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#35d891]" />
+                    Live
+                  </span>
                 </div>
                 {reservedWithdrawalBalance > 0 ? (
-                  <p className="mt-4 text-xs leading-5 text-[#96a8c0]">
-                    ${availableLiveBalance.toFixed(2)} available. ${reservedWithdrawalBalance.toFixed(2)} reserved for pending withdrawals.
+                  <p className="mt-3 border-t border-white/8 pt-3 text-xs leading-5 text-[#96a8c0]">
+                    ${availableLiveBalance.toFixed(2)} available &middot; ${reservedWithdrawalBalance.toFixed(2)} reserved
                   </p>
                 ) : null}
               </div>
