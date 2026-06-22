@@ -647,8 +647,12 @@ const Deposit = () => {
                       : "border-white/12 bg-[#202838] hover:border-white/24"
                   }`}
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/10 p-1.5">
-                    <img src="/payment-logos/bitcoin.png" alt="Bitcoin" className="h-full w-full object-contain" />
+                  <span className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg bg-white/5 p-1">
+                    <div className="relative flex w-full items-center justify-center">
+                      <img src="/payment-logos/bitcoin.png" alt="BTC" className="relative z-10 h-7 w-7 rounded-full border-2 border-[#202838] object-contain" />
+                      <img src="/payment-logos/usdt.png" alt="USDT" className="relative -ml-3 z-20 h-7 w-7 rounded-full border-2 border-[#202838] object-contain" />
+                      <img src="/payment-logos/binance.png" alt="BNB" className="relative -ml-3 z-30 h-7 w-7 rounded-full border-2 border-[#202838] object-contain" />
+                    </div>
                   </span>
                   <span className="min-w-0">
                     <span className="block text-base font-bold leading-tight text-white">Cryptocurrency</span>
