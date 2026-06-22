@@ -1186,10 +1186,6 @@ const Trade = () => {
     tournamentTradeHistory.length,
   ]);
 
-  if (!selectedAsset) {
-    return <CandlestickLoadingScreen />;
-  }
-
   const openDepositPage = () => {
     setDepositGuideReason(null);
     setAccountType("live");
@@ -1210,15 +1206,8 @@ const Trade = () => {
     !showIndicatorsPanel &&
     !showDrawingsPanel &&
     !isProfileOpen &&
-    !showMobileHistory &&
     !showRealAccountWelcome &&
     !["account", "tournaments", "more", "join", "help"].includes(activeWorkspace || "");
-
-  const isChartNavActive =
-    !mobileOverlay &&
-    !selectedTournament &&
-    !isProfileOpen &&
-    !showAssetSelector;
   const isHelpNavActive = mobileOverlay === "help";
   const isAccountNavActive = mobileOverlay === "account" || mobileOverlay === "balance_history" || mobileOverlay === "trading_history";
   const isTournamentsNavActive = mobileOverlay === "tournaments" || Boolean(selectedTournament);
@@ -1279,6 +1268,10 @@ const Trade = () => {
           ) : activeWorkspace === "join" ? (
             <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-bg)" }}>
               <WorkspaceReferral onSelectWorkspace={setActiveWorkspace} />
+            </div>
+          ) : !selectedAsset ? (
+            <div className="relative flex flex-1 items-center justify-center">
+              <CandlestickLoadingScreen />
             </div>
           ) : (
             <>
