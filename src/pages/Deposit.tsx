@@ -621,49 +621,53 @@ const Deposit = () => {
                 <div className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#aab5c6]">Payment method</div>
                 <span className="rounded-full border border-[#22b978]/30 bg-[#22b978]/8 px-2.5 py-0.5 text-[10px] font-bold text-[#35d891]">Fast & Secure</span>
               </div>
-              <div className="mt-4 rounded-2xl border border-white/12 bg-[linear-gradient(135deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.01)_100%)] shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-                <div className="flex gap-3 overflow-x-auto p-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                  <button
-                    type="button"
-                    onClick={() => handleSelectMethod("mpesa")}
-                    className={`group flex shrink-0 items-center gap-3 rounded-xl border-2 px-4 py-3 transition-all duration-200 ${
-                      selectedMethod === "mpesa"
-                        ? "border-[#22b978] bg-[linear-gradient(135deg,rgba(34,185,120,0.15)_0%,rgba(34,185,120,0.05)_100%)] shadow-[0_0_0_1px_rgba(34,185,120,0.3),0_8px_24px_rgba(34,185,120,0.12)]"
-                        : "border-white/10 bg-white/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:border-[#22b978]/40 hover:bg-white/[0.09]"
-                    }`}
-                  >
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] shadow-inner">
-                      <img src="/payment-logos/mpesa.png" alt="M-PESA" className="h-8 w-8 object-contain" />
-                    </span>
-                    <div className="whitespace-nowrap text-left">
-                      <div className="text-sm font-bold text-white">M-PESA</div>
-                      <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#35d891]">Mobile Money</div>
-                    </div>
-                  </button>
+              <div className="flex items-center justify-between">
+                <div className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#aab5c6]">Choose a payment method</div>
+                <span className="rounded-full border border-[#22b978]/30 bg-[#22b978]/8 px-2.5 py-0.5 text-[10px] font-bold text-[#35d891]">Fast & Secure</span>
+              </div>
+              <div className="mt-4 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => handleSelectMethod("mpesa")}
+                  className={`group flex w-full items-center gap-4 rounded-xl border-2 px-4 py-3.5 transition-all duration-200 ${
+                    selectedMethod === "mpesa"
+                      ? "border-[#22b978] bg-[linear-gradient(135deg,rgba(34,185,120,0.15)_0%,rgba(34,185,120,0.05)_100%)] shadow-[0_0_0_1px_rgba(34,185,120,0.3),0_8px_24px_rgba(34,185,120,0.12)]"
+                      : "border-white/10 bg-white/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:border-[#22b978]/40 hover:bg-white/[0.09]"
+                  }`}
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] shadow-inner">
+                    <img src="/payment-logos/mpesa.png" alt="M-PESA" className="h-8 w-8 object-contain" />
+                  </span>
+                  <div className="flex-1 text-left">
+                    <div className="text-sm font-bold text-white">M-PESA</div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#35d891]">Mobile Money</div>
+                  </div>
+                  <svg className="h-4 w-4 text-white/30" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3L11 8L6 13" /></svg>
+                </button>
 
-                  <button
-                    type="button"
-                    disabled={cryptoMethods.length === 0}
-                    onClick={() => handleSelectMethod("crypto")}
-                    className={`group flex shrink-0 items-center gap-3 rounded-xl border-2 px-4 py-3 transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55 ${
-                      selectedMethod === "crypto"
-                        ? "border-[#2f8cff] bg-[linear-gradient(135deg,rgba(47,140,255,0.15)_0%,rgba(47,140,255,0.05)_100%)] shadow-[0_0_0_1px_rgba(47,140,255,0.3),0_8px_24px_rgba(47,140,255,0.12)]"
-                        : "border-white/10 bg-white/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:border-[#2f8cff]/40 hover:bg-white/[0.09]"
-                    }`}
-                  >
-                    <span className="flex h-11 w-20 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] shadow-inner">
-                      <div className="relative flex w-full items-center justify-center">
-                        <img src="/payment-logos/bitcoin.png" alt="BTC" className="relative z-10 h-8 w-8 rounded-full border-2 border-[#1a2232] object-contain" />
-                        <img src="/payment-logos/usdt.png" alt="USDT" className="relative -ml-3 z-20 h-8 w-8 rounded-full border-2 border-[#1a2232] object-contain" />
-                        <img src="/payment-logos/binance.png" alt="BNB" className="relative -ml-3 z-30 h-8 w-8 rounded-full border-2 border-[#1a2232] object-contain" />
-                      </div>
-                    </span>
-                    <div className="whitespace-nowrap text-left">
-                      <div className="text-sm font-bold text-white">Cryptocurrency</div>
-                      <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#5ea8ff]">Choose coin</div>
+                <button
+                  type="button"
+                  disabled={cryptoMethods.length === 0}
+                  onClick={() => handleSelectMethod("crypto")}
+                  className={`group flex w-full items-center gap-4 rounded-xl border-2 px-4 py-3.5 transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55 ${
+                    selectedMethod === "crypto"
+                      ? "border-[#2f8cff] bg-[linear-gradient(135deg,rgba(47,140,255,0.15)_0%,rgba(47,140,255,0.05)_100%)] shadow-[0_0_0_1px_rgba(47,140,255,0.3),0_8px_24px_rgba(47,140,255,0.12)]"
+                      : "border-white/10 bg-white/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:border-[#2f8cff]/40 hover:bg-white/[0.09]"
+                  }`}
+                >
+                  <span className="flex h-11 w-20 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] shadow-inner">
+                    <div className="relative flex w-full items-center justify-center">
+                      <img src="/payment-logos/bitcoin.png" alt="BTC" className="relative z-10 h-8 w-8 rounded-full border-2 border-[#1a2232] object-contain" />
+                      <img src="/payment-logos/usdt.png" alt="USDT" className="relative -ml-3 z-20 h-8 w-8 rounded-full border-2 border-[#1a2232] object-contain" />
+                      <img src="/payment-logos/binance.png" alt="BNB" className="relative -ml-3 z-30 h-8 w-8 rounded-full border-2 border-[#1a2232] object-contain" />
                     </div>
-                  </button>
-                </div>
+                  </span>
+                  <div className="flex-1 text-left">
+                    <div className="text-sm font-bold text-white">Cryptocurrency</div>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#5ea8ff]">Choose coin</div>
+                  </div>
+                  <svg className="h-4 w-4 text-white/30" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3L11 8L6 13" /></svg>
+                </button>
               </div>
               {cryptoMethods.length === 0 ? (
                 <p className="mt-3 text-xs leading-5 text-[#8ea0b7]">Cryptocurrency deposits are temporarily unavailable right now.</p>
