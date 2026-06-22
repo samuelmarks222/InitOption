@@ -485,6 +485,7 @@ const Trade = () => {
 
   const balance = getEffectiveLiveBalance(profile);
   const isNewUser = useMemo(() => isNewUserProfile(profile), [profile]);
+  const canClaimBonus = useMemo(() => isNewUser && !profile?.welcome_bonus_granted_at, [isNewUser, profile?.welcome_bonus_granted_at]);
 
   // Handle guides navigation
   useEffect(() => {
@@ -1596,6 +1597,7 @@ const Trade = () => {
               closeNewUserWelcome();
               setActiveWorkspace("join");
             }}
+            canClaimBonus={canClaimBonus}
           />
         )}
         <DepositGuideReminder
