@@ -500,8 +500,8 @@ const MIN_BAR_SPACING_MAP: Record<string, number> = {
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
 
 const getMainPriceScaleMargins = (_timeframe: SupportedChartTimeframe) => ({
-  top: 0.04,
-  bottom: 0.04,
+  top: 0.12,
+  bottom: 0.12,
 });
 
 const getZoomResponsivePriceScaleMargins = (
