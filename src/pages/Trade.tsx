@@ -31,6 +31,7 @@ import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/us
 import { useDynamicAssets, type DynamicAsset } from "@/contexts/DynamicAssetContext";
 import { AccountType, RealAccountWelcomeModal } from "@/components/trading/AccountModals";
 import { ProfileDrawer, type ProfileTab } from "@/components/profile/ProfileDrawer";
+import WelcomeGuideModal from "@/components/trading/WelcomeGuideModal";
 import { TournamentsGridOverlay } from "@/components/workspace/TournamentsGridOverlay";
 import { AccountGridOverlay } from "@/components/workspace/AccountGridOverlay";
 import { AnalyticsGridOverlay } from "@/components/workspace/AnalyticsGridOverlay";
@@ -1580,19 +1581,15 @@ const Trade = () => {
         />
 
         {showRealAccountWelcome && (
-          <RealAccountWelcomeModal
+          <WelcomeGuideModal
             onClose={closeNewUserWelcome}
             onDeposit={() => {
               closeNewUserWelcome();
               openDepositPage();
             }}
-            onWithdraw={() => {
+            onReferral={() => {
               closeNewUserWelcome();
-              openWithdrawPage();
-            }}
-            onUseDemo={() => {
-              closeNewUserWelcome();
-              setAccountType("demo");
+              setActiveWorkspace("join");
             }}
           />
         )}
