@@ -1206,8 +1206,15 @@ const Trade = () => {
     !showIndicatorsPanel &&
     !showDrawingsPanel &&
     !isProfileOpen &&
+    !showMobileHistory &&
     !showRealAccountWelcome &&
     !["account", "tournaments", "more", "join", "help"].includes(activeWorkspace || "");
+
+  const isChartNavActive =
+    !mobileOverlay &&
+    !selectedTournament &&
+    !isProfileOpen &&
+    !showAssetSelector;
   const isHelpNavActive = mobileOverlay === "help";
   const isAccountNavActive = mobileOverlay === "account" || mobileOverlay === "balance_history" || mobileOverlay === "trading_history";
   const isTournamentsNavActive = mobileOverlay === "tournaments" || Boolean(selectedTournament);
