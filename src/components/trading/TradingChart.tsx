@@ -1016,7 +1016,7 @@ const DEFAULT_CHART_STYLE: ChartStylePreferences = {
   barDownColor: PROFESSIONAL_DOWN_COLOR,
   heikinUpColor: PROFESSIONAL_UP_COLOR,
   heikinDownColor: PROFESSIONAL_DOWN_COLOR,
-  bodyScale: 1.08,
+  bodyScale: 1.5,
   displayPreset: "primary",
   priceLineVisible: true,
 };
@@ -1082,7 +1082,7 @@ const resolveChartCandleColor = (
   return legacyColors.some((color) => matchesHexColor(value, color)) ? professionalColor : value;
 };
 
-const clampBodyScale = (value: number) => Math.max(0.9, Math.min(1.5, value));
+const clampBodyScale = (value: number) => Math.max(0.9, Math.min(2.5, value));
 const clampAreaWidth = (value: number) => Math.max(1, Math.min(4, value));
 
 const isChartDisplayPreset = (value: unknown): value is ChartDisplayPreset =>
