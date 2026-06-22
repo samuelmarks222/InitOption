@@ -632,8 +632,8 @@ const Deposit = () => {
                         : "border-white/10 bg-white/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:border-[#22b978]/40 hover:bg-white/[0.09]"
                     }`}
                   >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] p-2 shadow-inner">
-                      <img src="/payment-logos/mpesa.png" alt="M-PESA" className="h-full w-full object-contain" />
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] shadow-inner">
+                      <img src="/payment-logos/mpesa.png" alt="M-PESA" className="h-8 w-8 object-contain" />
                     </span>
                     <div className="whitespace-nowrap text-left">
                       <div className="text-sm font-bold text-white">M-PESA</div>
@@ -651,11 +651,11 @@ const Deposit = () => {
                         : "border-white/10 bg-white/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:border-[#2f8cff]/40 hover:bg-white/[0.09]"
                     }`}
                   >
-                    <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] p-1 shadow-inner">
+                    <span className="flex h-11 w-20 shrink-0 items-center justify-center rounded-lg bg-white/[0.08] shadow-inner">
                       <div className="relative flex w-full items-center justify-center">
-                        <img src="/payment-logos/bitcoin.png" alt="BTC" className="relative z-10 h-7 w-7 rounded-full border-2 border-[#1a2232] object-contain" />
-                        <img src="/payment-logos/usdt.png" alt="USDT" className="relative -ml-2.5 z-20 h-7 w-7 rounded-full border-2 border-[#1a2232] object-contain" />
-                        <img src="/payment-logos/binance.png" alt="BNB" className="relative -ml-2.5 z-30 h-7 w-7 rounded-full border-2 border-[#1a2232] object-contain" />
+                        <img src="/payment-logos/bitcoin.png" alt="BTC" className="relative z-10 h-8 w-8 rounded-full border-2 border-[#1a2232] object-contain" />
+                        <img src="/payment-logos/usdt.png" alt="USDT" className="relative -ml-3 z-20 h-8 w-8 rounded-full border-2 border-[#1a2232] object-contain" />
+                        <img src="/payment-logos/binance.png" alt="BNB" className="relative -ml-3 z-30 h-8 w-8 rounded-full border-2 border-[#1a2232] object-contain" />
                       </div>
                     </span>
                     <div className="whitespace-nowrap text-left">
