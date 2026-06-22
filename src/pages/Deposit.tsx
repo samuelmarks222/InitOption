@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, BadgeCheck, Bitcoin, CircleHelp, Clock3, ShieldCheck, Smartphone, XCircle } from "lucide-react";
+import { ArrowLeft, BadgeCheck, CircleHelp, Clock3, ShieldCheck, Smartphone, XCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
-import { MpesaIcon } from "@/components/ui/MpesaIcon";
+
 import { toast } from "@/hooks/use-toast";
 import { SiteLogo } from "@/components/branding/SiteLogo";
 import { createCryptoDepositInstruction, isAutomatedCryptoMode } from "@/lib/cryptoDeposits";
@@ -628,8 +628,8 @@ const Deposit = () => {
                       : "border-white/12 bg-[#202838] hover:border-white/24"
                   }`}
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#20b87a]">
-                    <MpesaIcon className="h-8 w-8" />
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/10 p-1.5">
+                    <img src="/payment-logos/mpesa.png" alt="M-PESA" className="h-full w-full object-contain" />
                   </span>
                   <span className="min-w-0">
                     <span className="block text-base font-bold leading-tight text-white">M-PESA Mobile Money</span>
@@ -647,8 +647,8 @@ const Deposit = () => {
                       : "border-white/12 bg-[#202838] hover:border-white/24"
                   }`}
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#287bff] text-white">
-                    <Bitcoin className="h-7 w-7" />
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/10 p-1.5">
+                    <img src="/payment-logos/bitcoin.png" alt="Bitcoin" className="h-full w-full object-contain" />
                   </span>
                   <span className="min-w-0">
                     <span className="block text-base font-bold leading-tight text-white">Cryptocurrency</span>
@@ -745,51 +745,95 @@ const Deposit = () => {
 
             <div className="mt-6">
               {loadingBonuses ? <div className="mb-3 text-xs text-[#8fa0b7]">Refreshing offers...</div> : null}
-              {resolvedBonusCatalog.length === 0 ? (
+
+              {/* Bonus header */}
+              {resolvedBonusCatalog.length > 0 && (
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Available Bonus Tiers</h3>
+                    <p className="mt-0.5 text-xs text-[#8fa0b7]">
+                      {bonusEnabled && bonusPercent > 0
+                        ? `${bonusPercent}% bonus applied`
+                        : "Tap a tier to jump to its starting amount"}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {loadingBonuses ? null : resolvedBonusCatalog.filter((o) => o.eligible).length === 0 ? (
                 <div className="rounded-lg border border-white/10 bg-[#202838] px-4 py-3 text-sm text-[#aab6c8]">
-                  No deposit bonus offers are available right now.
+                  {bonusAvailabilityCopy}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {resolvedBonusCatalog.map((offer) => {
+                  {resolvedBonusCatalog.filter((o) => o.eligible).map((offer) => {
                     const isSelected = appliedBonusOffer?.id === offer.id;
                     const offerMatchesCurrentAmount = doesDepositAmountMatchBonusOffer({ amount: amountValue, offer });
                     const previewAmount = offerMatchesCurrentAmount ? amountValue : resolveDepositBonusOfferMinimumAmount(offer);
                     const currentBonusAmount = calculateDepositBonusAmountFromOffer({ amount: previewAmount, offer });
                     const projectedCredit = previewAmount + currentBonusAmount;
-                    const badgeLabel = offer.eligible ? `+${Number(offer.bonus_percent ?? 0)}% bonus` : "USED";
                     const rangeLabel = formatDepositBonusOfferRange({ offer }).replace(/\$/g, "");
+                    const bonusPct = Number(offer.bonus_percent ?? 0);
 
                     return (
                       <button
                         key={offer.id}
                         type="button"
-                        disabled={!offer.eligible}
                         onClick={() => handleSelectBonusOffer(offer)}
-                        className={`min-h-[74px] rounded-lg border px-4 py-3 text-left transition ${
+                        className={`group relative overflow-hidden rounded-xl border p-4 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                           isSelected
-                            ? "border-[#2f9aff] bg-[#20324a] shadow-[0_0_0_1px_rgba(47,154,255,0.42),0_14px_28px_rgba(14,95,190,0.18)]"
-                            : offer.eligible
-                              ? "border-white/22 bg-[#3a4151] hover:border-[#5ea8ff]"
-                              : "border-white/12 bg-[#3a4151]/80 opacity-70"
-                        } ${!offer.eligible ? "cursor-not-allowed" : ""}`}
+                            ? "border-[#f59e0b] bg-[linear-gradient(135deg,rgba(245,158,11,0.18)_0%,rgba(217,119,6,0.08)_100%)] shadow-[0_0_0_1px_rgba(245,158,11,0.35),0_16px_40px_rgba(217,119,6,0.15)]"
+                            : "border-white/15 bg-[linear-gradient(135deg,rgba(58,65,81,0.9)_0%,rgba(48,55,72,0.95)_100%)] hover:border-[#f59e0b]/50 hover:shadow-[0_8px_30px_rgba(245,158,11,0.08)]"
+                        }`}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <span className="min-w-0 break-words text-lg font-bold leading-tight text-white">{rangeLabel} USD</span>
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                              isSelected ? "bg-[#2f9aff]/18 text-[#75bdff]" : "bg-white/14 text-[#c5ccd8]"
-                            }`}
-                          >
-                            {badgeLabel}
-                          </span>
-                        </div>
-                        <div className="mt-2 text-xs leading-4 text-[#c7cfdb]">
-                          {offer.eligible
-                            ? offerMatchesCurrentAmount
-                              ? `${projectedCredit.toFixed(2)} $ credited at this amount`
-                              : `From ${projectedCredit.toFixed(2)} $`
-                            : offer.reason ?? "Unavailable"}
+                        {/* Glow effect */}
+                        <div
+                          className={`pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-0 transition-opacity duration-300 ${
+                            isSelected ? "opacity-60" : "group-hover:opacity-30"
+                          }`}
+                          style={{
+                            background:
+                              "radial-gradient(circle, rgba(245,158,11,0.25) 0%, transparent 70%)",
+                          }}
+                        />
+
+                        <div className="relative z-[1]">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <span className="block text-[11px] font-bold uppercase tracking-[0.1em] text-[#fbbf24]">
+                                {rangeLabel}
+                              </span>
+                              <span className="mt-1 block text-xl font-extrabold text-white">USD</span>
+                            </div>
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-extrabold tracking-wide ${
+                                isSelected
+                                  ? "bg-[#f59e0b]/20 text-[#fbbf24]"
+                                  : "bg-white/10 text-[#c5ccd8]"
+                              }`}
+                            >
+                              <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none">
+                                <path d="M6 0L7.35 4.65L12 6L7.35 7.35L6 12L4.65 7.35L0 6L4.65 4.65L6 0Z" fill="currentColor" />
+                              </svg>
+                              {bonusPct}% bonus
+                            </span>
+                          </div>
+
+                          <div className="mt-3 flex items-end justify-between">
+                            <div>
+                              <p className="text-[11px] font-medium text-[#8fa0b7]">Projected credit</p>
+                              <p className="text-sm font-bold text-white">
+                                {offerMatchesCurrentAmount
+                                  ? `${projectedCredit.toFixed(2)} $`
+                                  : `From ${projectedCredit.toFixed(2)} $`}
+                              </p>
+                            </div>
+                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 text-[#fbbf24] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M5 1L11 7L5 13" />
+                              </svg>
+                            </div>
+                          </div>
                         </div>
                       </button>
                     );
@@ -809,7 +853,7 @@ const Deposit = () => {
                     placeholder="e.g., 0712345678 or 254712345678"
                     className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#8c96a9]"
                   />
-                  <MpesaIcon className="ml-3 h-7 w-[58px] shrink-0" />
+                  <img src="/payment-logos/mpesa.png" alt="M-PESA" className="ml-3 h-7 w-[58px] shrink-0 object-contain" />
                 </div>
               </div>
             ) : null}
