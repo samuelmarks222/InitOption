@@ -694,7 +694,7 @@ const Trade = () => {
   }, [demoActiveTrades.length, showChartSettlementAnnouncement, user?.id]);
 
   useEffect(() => {
-    if (!user?.id || !isNewUser || hasSeenNewUserPrompt(user.id) || showRealAccountWelcome) {
+    if (!user?.id || showRealAccountWelcome) {
       return;
     }
 
@@ -702,9 +702,14 @@ const Trade = () => {
       return;
     }
 
+    const sessionKey = `welcome_guide_shown_${user.id}`;
+    if (sessionStorage.getItem(sessionKey)) {
+      return;
+    }
+
     setShowRealAccountWelcome(true);
+    sessionStorage.setItem(sessionKey, "1");
   }, [
-    isNewUser,
     isProfileOpen,
     mobileOverlay,
     selectedTournament,
