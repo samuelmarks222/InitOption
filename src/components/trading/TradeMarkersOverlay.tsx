@@ -77,7 +77,7 @@ export const TradeMarkersOverlay = ({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !chart || !series) return;
-    const container = chart.container();
+    const container = chart.chartElement?.();
     if (!container) return;
 
     let running = true;
