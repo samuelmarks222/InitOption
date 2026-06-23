@@ -5,12 +5,12 @@ import type { ActiveTrade } from "@/hooks/useTrading";
 const UP = "#13b95e";
 const DN = "#f04f43";
 
-const TEXT_ROW1_H = 13;
-const TEXT_ROW2_H = 11;
-const TEXT_LINE_GAP = 3;
+const TEXT_ROW1_H = 11;
+const TEXT_ROW2_H = 9;
+const TEXT_LINE_GAP = 1;
 const TEXT_HEIGHT = TEXT_ROW1_H + TEXT_LINE_GAP + TEXT_ROW2_H;
-const DOT_SIZE = 8;
-const CONNECTOR_GAP = 4;
+const DOT_SIZE = 3;
+const CONNECTOR_GAP = 3;
 const COLLISION_PAD = 10;
 
 interface Props {
@@ -279,7 +279,7 @@ export const TradeMarkersOverlay = ({
         ctx.fillStyle = m.color;
         ctx.fill();
         ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1;
         ctx.stroke();
       }
 
@@ -294,7 +294,7 @@ export const TradeMarkersOverlay = ({
         ctx.textBaseline = "bottom";
         ctx.textAlign = "right";
         ctx.shadowColor = "rgba(0,0,0,0.85)";
-        ctx.shadowBlur = 2;
+        ctx.shadowBlur = 1;
 
         // Line 1: arrow + amount, strictly white
         ctx.font = fontBold;
