@@ -132,23 +132,50 @@ export const TradeMarkersOverlay = ({
   );
 
   const markerPositions = useMemo(() => {
-    const container = chart?.container?.();
-    if (!container) return [];
-    const rect = container.getBoundingClientRect();
-    const width = rect.width || container.clientWidth || 1;
-    const height = rect.height || container.clientHeight || 1;
+    let width = 800;
+    let height = 400;
+    try {
+      const container = chart?.container?.();
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        if (rect.width > 0) width = rect.width;
+        else if (container.clientWidth > 0) width = container.clientWidth;
+        const range = chart.timeScale().getVisibleLogicalRange();
+        if (range && isFin(range.to) && isFin(range.from)) {
+          try {
+            const left = chart.timeScale().logicalToCoordinate(range.from);
+            const right = chart.timeScale().logicalToCoordinate(range.to);
+            if (isFin(left) && isFin(right)) width = right - left;
+          } catch {}
+        }
+        if (rect.height > 0) height = rect.height;
+        else if (container.clientHeight > 0) height = container.clientHeight;
+      }
+    } catch {} 
+    if (width < 100) width = 800;
+    if (height < 50) height = 400;
 
-    const raw = myTrades.map((trade): MarkerPosition | null => {
+    const raw = myTrades.map((trade): MarkerPosition => {
       const nowSec = Math.floor(Date.now() / 1000);
       const { entry, timeLeft, progress } = getTradeTimes(trade, nowSec);
       const ts = chart.timeScale();
       const markerTime = (isFin(trade.marker_time) ? trade.marker_time : Math.floor(new Date(trade.opened_at).getTime() / 1000)) as Time;
-      const cx = ts.timeToCoordinate(markerTime);
-      const cy = series.priceToCoordinate(trade.entry_price);
-      if (!isFin(cx) || !isFin(cy)) return null;
 
-      const dotX = cx;
-      const dotY = cy;
+      let dotX: number;
+      let dotY: number;
+      try {
+        const cx = ts.timeToCoordinate(markerTime);
+        dotX = isFin(cx) ? cx : width * (0.16 + Math.max(0, Math.min(1, 1 - progress)) * 0.54);
+      } catch {
+        dotX = width * 0.7;
+      }
+      try {
+        const cy = series.priceToCoordinate(trade.entry_price);
+        dotY = isFin(cy) ? cy : height * 0.5;
+      } catch {
+        dotY = height * 0.5;
+      }
+
       const tooltipRight = dotX - DOT_SIZE / 2 - CONNECTOR_GAP;
       const tooltipLeft = tooltipRight - TOOLTIP_WIDTH;
 
@@ -166,7 +193,7 @@ export const TradeMarkersOverlay = ({
         color,
         isInactive,
       };
-    }).filter((p): p is MarkerPosition => p !== null);
+    });
 
     const beaconY = detectBeaconZone(chart, series, livePrice ?? null);
     return computeStacked(raw, height, beaconY);
