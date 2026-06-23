@@ -166,11 +166,15 @@ export const TradeMarkersOverlay = ({
       const ts = chart.timeScale();
       const markerTime = (isFin(trade.marker_time) ? trade.marker_time : Math.floor(new Date(trade.opened_at).getTime() / 1000)) as Time;
 
+      const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds));
+      const markerTimeNum = Number(markerTime);
+      const bucketTime = (isFin(markerTimeNum) ? Math.floor(markerTimeNum / safeTimeframe) * safeTimeframe : markerTimeNum) as Time;
+
       let dotX: number;
       let dotY: number;
       try {
-        const cx = ts.timeToCoordinate(markerTime);
-        dotX = isFin(cx) ? cx : width * (0.16 + Math.max(0, Math.min(1, 1 - progress)) * 0.54);
+        const cx = ts.timeToCoordinate(bucketTime);
+        dotX = isFin(cx) ? cx : width * 0.7;
       } catch {
         dotX = width * 0.7;
       }
