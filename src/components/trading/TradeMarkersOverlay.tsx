@@ -245,7 +245,6 @@ export const TradeMarkersOverlay = ({
         const ls = m.dotX + DOT_SIZE / 2;
         const lw = Math.max(0, m.expiryX - ls);
         if (lw <= 0) continue;
-        ctx.globalAlpha = m.opacity * 0.4;
         ctx.strokeStyle = m.color;
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -261,7 +260,6 @@ export const TradeMarkersOverlay = ({
         const dotLeft = refX + CONNECTOR_GAP;
         const cw = dotLeft - textRight;
         if (cw <= 0) continue;
-        ctx.globalAlpha = m.opacity * 0.5;
         ctx.strokeStyle = m.color;
         ctx.lineWidth = 1;
         ctx.setLineDash([]);
@@ -273,7 +271,6 @@ export const TradeMarkersOverlay = ({
 
       // 3c: dots
       for (const m of markers) {
-        ctx.globalAlpha = m.opacity;
         ctx.beginPath();
         ctx.arc(m.dotX, m.dotY, DOT_SIZE / 2, 0, Math.PI * 2);
         ctx.fillStyle = m.color;
@@ -290,7 +287,6 @@ export const TradeMarkersOverlay = ({
         const label1Y = m.dotY - TEXT_HEIGHT / 2 + TEXT_ROW1_H;
         const label2Y = label1Y + TEXT_LINE_GAP;
 
-        ctx.globalAlpha = m.opacity;
         ctx.textBaseline = "bottom";
         ctx.textAlign = "right";
         ctx.shadowColor = "rgba(0,0,0,0.85)";
@@ -303,7 +299,7 @@ export const TradeMarkersOverlay = ({
 
         // Line 2: clock
         ctx.font = fontNorm;
-        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.fillStyle = "#ffffff";
         ctx.fillText(m.clockStr, textRight, label2Y + TEXT_ROW2_H);
 
         // Reset shadow
