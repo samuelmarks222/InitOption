@@ -13,6 +13,7 @@ const DOT_SIZE = 8;
 const CONNECTOR_GAP = 4;
 const LINE_DASH_LEN = 6;
 const LINE_GAP_LEN = 4;
+const COLLISION_PAD = 10;
 
 interface Props {
   chart: IChartApi;
@@ -23,6 +24,27 @@ interface Props {
   liveLogical?: number | null;
   livePrice?: number;
   showIdleReference?: boolean;
+}
+
+interface Marker {
+  trade: ActiveTrade;
+  dotX: number;
+  dotY: number;
+  textBaseY: number;
+  isActive: boolean;
+  opacity: number;
+  color: string;
+  arrow: string;
+  fullLine1: string;
+  amountStr: string;
+  clockStr: string;
+  line1Width: number;
+  line2Width: number;
+  labelWidth: number;
+  expiryX: number;
+  horizontalShift: number;
+  bucketTime: number;
+  expiryBucket: number;
 }
 
 const normalizeSymbol = (s: string) =>
@@ -114,6 +136,11 @@ export const TradeMarkersOverlay = ({
         isSameSymbol(t.asset_symbol, currentSymbol),
       );
 
+      // ── Phase 1: build Marker data ──
+      const markers: Marker[] = [];
+      const fontBold = `bold ${TEXT_ROW1_H}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      const fontNorm = `${TEXT_ROW2_H}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+
       for (const trade of relevant) {
         const { entry, expiry: expiryTime, timeLeft, progress } = getTradeTimes(trade, nowSec);
         const isActive = progress < 1 && timeLeft > 0;
@@ -139,90 +166,156 @@ export const TradeMarkersOverlay = ({
 
         const isHigher = trade.direction === "higher";
         const color = isHigher ? UP : DN;
-
         const arrow = isHigher ? "\u25B2" : "\u25BC";
         const amountStr = fmtAmount(trade.amount);
         const clockStr = fmtClock(timeLeft);
         const fullLine1 = `${arrow} ${amountStr}`;
 
-        // --- Forward expiration line ---
+        ctx.font = fontBold;
+        const l1w = ctx.measureText(fullLine1).width;
+        ctx.font = fontNorm;
+        const l2w = ctx.measureText(clockStr).width;
+
+        // Expiration X
         const expiryBucket = Math.ceil(expiryTime / safeTf) * safeTf;
-        let expiryX: number | null = null;
+        let expiryX: number = w;
         try {
           const ex = ts.timeToCoordinate(expiryBucket as Time);
           if (isFin(ex)) expiryX = ex;
-        } catch {}
-        if (expiryX === null) {
-          try {
+          else {
             const nowBucket = Math.floor(nowSec / safeTf) * safeTf;
             const nowX = ts.timeToCoordinate(nowBucket as Time);
             const elapsed = nowBucket - Math.floor(entry / safeTf) * safeTf;
             const total = expiryBucket - Math.floor(entry / safeTf) * safeTf;
-            if (isFin(nowX) && total > 0 && elapsed > 0) {
+            if (isFin(nowX) && total > 0 && elapsed > 0)
               expiryX = dotX + (nowX - dotX) * (total / elapsed);
-            }
-          } catch {}
+          }
+        } catch {}
+
+        markers.push({
+          trade,
+          dotX,
+          dotY,
+          textBaseY: dotY - TEXT_HEIGHT / 2,
+          isActive,
+          opacity,
+          color,
+          arrow,
+          fullLine1,
+          amountStr,
+          clockStr,
+          line1Width: l1w,
+          line2Width: l2w,
+          labelWidth: Math.max(l1w, l2w),
+          expiryX,
+          horizontalShift: 0,
+          bucketTime,
+          expiryBucket,
+        });
+      }
+
+      // ── Phase 2: collide & stagger ──
+      markers.sort((a, b) => a.textBaseY - b.textBaseY);
+      const groups: Marker[][] = [];
+      {
+        let cur: Marker[] = [];
+        for (const m of markers) {
+          if (cur.length === 0 || m.textBaseY < cur[cur.length - 1].textBaseY + TEXT_HEIGHT + 4)
+            cur.push(m);
+          else {
+            groups.push(cur);
+            cur = [m];
+          }
         }
+        if (cur.length > 0) groups.push(cur);
+      }
 
-        const lineStartX = dotX + DOT_SIZE / 2;
-        const lineEndX = expiryX !== null && expiryX > lineStartX ? expiryX : w;
-        const lineWidth = Math.max(0, lineEndX - lineStartX);
-
-        if (lineWidth > 0) {
-          ctx.save();
-          ctx.globalAlpha = opacity * 0.4;
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 1;
-          ctx.setLineDash([LINE_DASH_LEN, LINE_GAP_LEN]);
-          ctx.beginPath();
-          ctx.moveTo(lineStartX, dotY);
-          ctx.lineTo(lineEndX, dotY);
-          ctx.stroke();
-          ctx.restore();
+      for (const group of groups) {
+        if (group.length <= 1) continue;
+        group.sort((a, b) => a.dotX - b.dotX || a.trade.amount - b.trade.amount);
+        let accShift = 0;
+        for (let i = 1; i < group.length; i++) {
+          accShift += group[i - 1].labelWidth + COLLISION_PAD;
+          group[i].horizontalShift = accShift;
         }
+      }
 
-        // --- Dot ---
-        ctx.save();
-        ctx.globalAlpha = opacity;
+      // ── Phase 3: draw ──
+
+      // 3a: expiration lines
+      for (const m of markers) {
+        const ls = m.dotX + DOT_SIZE / 2;
+        const lw = Math.max(0, m.expiryX - ls);
+        if (lw <= 0) continue;
+        ctx.globalAlpha = m.opacity * 0.4;
+        ctx.strokeStyle = m.color;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([LINE_DASH_LEN, LINE_GAP_LEN]);
         ctx.beginPath();
-        ctx.arc(dotX, dotY, DOT_SIZE / 2, 0, Math.PI * 2);
-        ctx.fillStyle = color;
+        ctx.moveTo(ls, m.dotY);
+        ctx.lineTo(ls + lw, m.dotY);
+        ctx.stroke();
+      }
+
+      // 3b: connectors (text → dot)
+      for (const m of markers) {
+        const refX = m.dotX - DOT_SIZE / 2 - CONNECTOR_GAP;
+        const textRight = refX - m.horizontalShift;
+        const dotLeft = refX + CONNECTOR_GAP;
+        const cw = dotLeft - textRight;
+        if (cw <= 0) continue;
+        ctx.globalAlpha = m.opacity * 0.5;
+        ctx.strokeStyle = m.color;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(textRight, m.dotY);
+        ctx.lineTo(textRight + cw, m.dotY);
+        ctx.stroke();
+      }
+
+      // 3c: dots
+      for (const m of markers) {
+        ctx.globalAlpha = m.opacity;
+        ctx.beginPath();
+        ctx.arc(m.dotX, m.dotY, DOT_SIZE / 2, 0, Math.PI * 2);
+        ctx.fillStyle = m.color;
         ctx.fill();
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 2;
         ctx.stroke();
-        ctx.restore();
+      }
 
-        // --- Text label (right-aligned, left of dot) ---
-        const textRightEdge = dotX - DOT_SIZE / 2 - CONNECTOR_GAP;
-        const label1Y = dotY - TEXT_HEIGHT / 2 + TEXT_ROW1_H;
+      // 3d: text labels
+      for (const m of markers) {
+        const refX = m.dotX - DOT_SIZE / 2 - CONNECTOR_GAP;
+        const textRight = refX - m.horizontalShift;
+        const label1Y = m.dotY - TEXT_HEIGHT / 2 + TEXT_ROW1_H;
         const label2Y = label1Y + TEXT_LINE_GAP;
 
-        ctx.save();
-        ctx.globalAlpha = opacity;
+        ctx.globalAlpha = m.opacity;
         ctx.textBaseline = "bottom";
+        ctx.textAlign = "right";
         ctx.shadowColor = "rgba(0,0,0,0.85)";
         ctx.shadowBlur = 2;
 
         // Line 1: full label in arrow color, overwrite amount in white
-        ctx.textAlign = "right";
-        ctx.font = `bold ${TEXT_ROW1_H}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-        ctx.fillStyle = color;
-        ctx.fillText(fullLine1, textRightEdge, label1Y);
-
-        const arrowText = `${arrow} `;
+        ctx.font = fontBold;
+        ctx.fillStyle = m.color;
+        ctx.fillText(m.fullLine1, textRight, label1Y);
+        const arrowText = `${m.arrow} `;
         const arrowW = ctx.measureText(arrowText).width;
         ctx.fillStyle = "#ffffff";
-        ctx.fillText(amountStr, textRightEdge - arrowW, label1Y);
+        ctx.fillText(m.amountStr, textRight - arrowW, label1Y);
 
         // Line 2: clock
-        ctx.font = `${TEXT_ROW2_H}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+        ctx.font = fontNorm;
         ctx.fillStyle = "rgba(255,255,255,0.55)";
-        ctx.fillText(clockStr, textRightEdge, label2Y + TEXT_ROW2_H);
+        ctx.fillText(m.clockStr, textRight, label2Y + TEXT_ROW2_H);
 
-        ctx.restore();
-
-
+        // Reset shadow
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
       }
 
       rafRef.current = requestAnimationFrame(draw);
