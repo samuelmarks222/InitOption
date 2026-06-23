@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, ChevronRight, ChevronDown, Delete } from "lucide-react";
+import { X, Delete } from "lucide-react";
 
 interface Props {
   value: number;
@@ -9,15 +9,11 @@ interface Props {
   triggerRef: React.RefObject<HTMLDivElement | null>;
 }
 
-const PRESETS = [1, 5, 10, 25, 50, 100, 200, 500];
-
 const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const [display, setDisplay] = useState(String(value));
-  const [histOpen, setHistOpen] = useState(false);
   const [limitOn, setLimitOn] = useState(false);
-  const [presetOpen, setPresetOpen] = useState(true);
 
   useEffect(() => {
     if (!triggerRef.current || !cardRef.current) return;
@@ -51,11 +47,6 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
     } else {
       setDisplay((d) => (d === "0" ? k : d + k));
     }
-  };
-
-  const applyPreset = (v: number) => {
-    onChange(v);
-    onClose();
   };
 
   const keys = [
@@ -103,45 +94,8 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
             </div>
           </div>
 
-          {/* Presets collapsible */}
-          <div className="rounded-lg border border-white/8 mb-3">
-            <button
-              type="button"
-              onClick={() => setPresetOpen((v) => !v)}
-              className="flex w-full items-center justify-between px-2.5 py-2 text-[11px] font-medium text-white/50 hover:text-white/80"
-            >
-              <span>Quick amounts</span>
-              {presetOpen ? (
-                <ChevronDown className="h-3 w-3" strokeWidth={2} />
-              ) : (
-                <ChevronRight className="h-3 w-3" strokeWidth={2} />
-              )}
-            </button>
-            {presetOpen && (
-              <div className="grid grid-cols-4 gap-1 px-2.5 pb-2.5 border-t border-white/8 pt-2">
-                {PRESETS.map((a) => {
-                  const sel = value === a;
-                  return (
-                    <button
-                      key={a}
-                      type="button"
-                      onClick={() => applyPreset(a)}
-                      className={`rounded-md py-1.5 text-center text-[11px] font-semibold transition-colors ${
-                        sel
-                          ? "bg-[#3391ff]/20 text-[#3391ff]"
-                          : "text-white/50 hover:bg-white/8 hover:text-white"
-                      }`}
-                    >
-                      ${a}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
           {/* Calculator numpad */}
-          <div className="rounded-lg border border-white/8 mb-3">
+          <div className="rounded-lg border border-white/8">
             <div className="flex items-center justify-between border-b border-white/8 px-2.5 py-1.5">
               <span className="text-[10px] font-semibold tracking-wide text-white/40 uppercase">Calculator</span>
             </div>
@@ -168,27 +122,6 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
                 Apply
               </button>
             </div>
-          </div>
-
-          {/* History accordion */}
-          <div className="rounded-lg border border-white/8">
-            <button
-              type="button"
-              onClick={() => setHistOpen((v) => !v)}
-              className="flex w-full items-center justify-between px-2.5 py-2 text-[11px] font-medium text-white/50 hover:text-white/80"
-            >
-              <span>History of trades</span>
-              {histOpen ? (
-                <ChevronDown className="h-3 w-3" strokeWidth={2} />
-              ) : (
-                <ChevronRight className="h-3 w-3" strokeWidth={2} />
-              )}
-            </button>
-            {histOpen && (
-              <div className="border-t border-white/8 px-2.5 py-2 text-[10px] text-white/30">
-                No recent trades yet.
-              </div>
-            )}
           </div>
 
           {/* Limit toggle */}

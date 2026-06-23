@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, ChevronRight, ChevronDown, Delete, Clock } from "lucide-react";
+import { X, Delete, Clock } from "lucide-react";
 
 interface Props {
   value: number;
@@ -21,8 +21,7 @@ const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const [display, setDisplay] = useState(String(value));
   const [unit, setUnit] = useState<"sec" | "min" | "hr">("sec");
-  const [histOpen, setHistOpen] = useState(false);
-  const [presetOpen, setPresetOpen] = useState(false);
+
 
   useEffect(() => {
     if (!triggerRef.current || !cardRef.current) return;
@@ -59,27 +58,11 @@ const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
     }
   };
 
-  const applyPreset = (seconds: number) => {
-    onChange(seconds);
-    onClose();
-  };
-
   const keys = [
     ["1", "2", "3"],
     ["4", "5", "6"],
     ["7", "8", "9"],
     ["clear", "0", "backspace"],
-  ];
-
-  const presets = [
-    { label: "1m",  val: 60 },
-    { label: "3m",  val: 180 },
-    { label: "5m",  val: 300 },
-    { label: "15m", val: 900 },
-    { label: "30m", val: 1800 },
-    { label: "1h",  val: 3600 },
-    { label: "4h",  val: 14400 },
-    { label: "24h", val: 86400 },
   ];
 
   const displayLabel = formatDisplay(value);
@@ -132,7 +115,7 @@ const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
           </div>
 
           {/* Num pad */}
-          <div className="rounded-lg border border-white/8 mb-3">
+          <div className="rounded-lg border border-white/8">
             <div className="grid grid-cols-3 gap-px bg-white/8">
               {keys.flat().map((k) => (
                 <button
@@ -164,63 +147,6 @@ const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
             </div>
           </div>
 
-          {/* Presets collapsible */}
-          <div className="rounded-lg border border-white/8 mb-2">
-            <button
-              type="button"
-              onClick={() => setPresetOpen((v) => !v)}
-              className="flex w-full items-center justify-between px-2.5 py-2 text-[11px] font-medium text-white/50 hover:text-white/80"
-            >
-              <span>Quick presets</span>
-              {presetOpen ? (
-                <ChevronDown className="h-3 w-3" strokeWidth={2} />
-              ) : (
-                <ChevronRight className="h-3 w-3" strokeWidth={2} />
-              )}
-            </button>
-            {presetOpen && (
-              <div className="grid grid-cols-4 gap-1 px-2.5 pb-2.5 border-t border-white/8 pt-2">
-                {presets.map((p) => {
-                  const sel = value === p.val;
-                  return (
-                    <button
-                      key={p.val}
-                      type="button"
-                      onClick={() => applyPreset(p.val)}
-                      className={`rounded-md py-1.5 text-center text-[11px] font-semibold transition-colors ${
-                        sel
-                          ? "bg-[#3391ff]/20 text-[#3391ff]"
-                          : "text-white/50 hover:bg-white/8 hover:text-white"
-                      }`}
-                    >
-                      {p.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* History accordion */}
-          <div className="rounded-lg border border-white/8">
-            <button
-              type="button"
-              onClick={() => setHistOpen((v) => !v)}
-              className="flex w-full items-center justify-between px-2.5 py-2 text-[11px] font-medium text-white/50 hover:text-white/80"
-            >
-              <span>History of trades</span>
-              {histOpen ? (
-                <ChevronDown className="h-3 w-3" strokeWidth={2} />
-              ) : (
-                <ChevronRight className="h-3 w-3" strokeWidth={2} />
-              )}
-            </button>
-            {histOpen && (
-              <div className="border-t border-white/8 px-2.5 py-2 text-[10px] text-white/30">
-                No recent trades yet.
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </>
