@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Delete } from "lucide-react";
+import { X } from "lucide-react";
 
 interface Props {
   value: number;
@@ -40,13 +40,7 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
   };
 
   const keyPress = (k: string) => {
-    if (k === "backspace") {
-      setDisplay((d) => (d.length > 1 ? d.slice(0, -1) : "0"));
-    } else if (k === ".") {
-      setDisplay((d) => (d.includes(".") ? d : d + "."));
-    } else {
-      setDisplay((d) => (d === "0" ? k : d + k));
-    }
+    setDisplay((d) => (d === "0" ? k : d + k));
   };
 
   return (
@@ -70,41 +64,23 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
 
         <div style={{ background: "#1c2030" }} className="p-3.5 flex flex-col gap-2.5">
           {/* Display row */}
-          <div className="flex items-center gap-1.5 h-12">
-            <div className="flex h-full flex-1 items-center rounded-lg border border-[#22283d] bg-[#151926] px-3.5 text-lg font-semibold tracking-wide text-white">
-              $<span>{display}</span>
-            </div>
-            <div className="flex h-full w-7 flex-col justify-between">
-              <button type="button" className="flex h-[22px] w-full items-center justify-center rounded border border-[#2d3550] bg-[#23293f] text-[10px] font-bold text-gray-400 transition hover:bg-[#2c344e]">*</button>
-              <button type="button" className="flex h-[22px] w-full items-center justify-center rounded border border-[#2d3550] bg-[#23293f] text-[10px] font-bold text-gray-400 transition hover:bg-[#2c344e]">÷</button>
-            </div>
-            <div className="flex h-full w-11 items-center justify-center rounded border border-[#2d3550] bg-[#23293f] text-sm font-semibold text-white">
-              2
-            </div>
+          <div className="flex items-center justify-between bg-[#151926] p-2 rounded-lg border border-[#22283d] mb-2.5">
+            <span className="text-base font-bold text-white">${display}</span>
+            <span className="text-xs bg-[#23293f] px-1.5 py-0.5 rounded text-gray-400">2</span>
           </div>
 
-          {/* Calculator */}
-          <div className="rounded-lg border border-[#22283d] bg-[#151926] p-2.5">
-            <div className="mb-2 flex items-center justify-between border-b border-[#1e2336] px-0.5 pb-2 text-xs font-medium text-gray-400">
-              <span>Calculator</span>
-              <svg className="h-3 w-3 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {["7","8","9","4","5","6","1","2","3",".","0","backspace"].map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => keyPress(k)}
-                  className="flex h-[34px] items-center justify-center rounded border border-[#2a304a]/30 bg-[#21263c] text-[13px] font-medium text-gray-300 transition hover:bg-[#2a304b] active:scale-95"
-                >
-                  {k === "backspace" ? (
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75L14.25 12m0 0l2.25 2.25M14.25 12l2.25-2.25M14.25 12L12 14.25m-2.58 4.92l-6.375-6.375a1.125 1.125 0 010-1.59L9.42 4.83c.211-.211.498-.33.796-.33H19.5a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-9.284c-.298 0-.585-.119-.796-.33z" /></svg>
-                  ) : (
-                    k
-                  )}
-                </button>
-              ))}
-            </div>
+          {/* Numpad */}
+          <div className="grid grid-cols-3 gap-1 text-center text-xs font-medium bg-[#151926] p-1.5 rounded-lg border border-[#22283d]">
+            {["7","8","9","4","5","6","1","2","3"].map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => keyPress(k)}
+                className="bg-[#21263c] py-2 rounded text-gray-300 hover:bg-[#2c344e] transition active:scale-95"
+              >
+                {k}
+              </button>
+            ))}
           </div>
 
           {/* History row */}
