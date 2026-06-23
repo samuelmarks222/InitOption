@@ -38,6 +38,7 @@ import { formatCurrencyAmount } from "@/lib/currency";
 import { clearCryptoDepositCheckoutCache } from "@/lib/cryptoDepositCheckoutCache";
 import { requestDepositReview } from "@/lib/deposits";
 import { requestMobileMoneyWithdrawal } from "@/lib/mobileMoney";
+import AccountLevelsModal from "./AccountLevelsModal";
 import { convertUsdToKesWithdrawalAmount, MPESA_METHOD_LABEL } from "@/lib/mobileMoneyShared";
 import { requestWithdrawal } from "@/lib/withdrawals";
 import {
@@ -2069,6 +2070,7 @@ export const AccountDropdown = ({
   const { currency, formatMoney } = useCurrency();
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showDemoBalanceModal, setShowDemoBalanceModal] = useState(false);
+  const [showLevelsModal, setShowLevelsModal] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const navigate = useNavigate();
 
@@ -2110,6 +2112,7 @@ export const AccountDropdown = ({
         onClose={() => setShowDemoBalanceModal(false)}
         onSave={onUpdateDemoBalance}
       />
+      <AccountLevelsModal isOpen={showLevelsModal} onClose={() => setShowLevelsModal(false)} />
       <div className="fixed inset-0 z-[110]" onClick={onClose} />
       <div
         className="fixed left-2 right-2 top-[58px] z-[120] mx-auto w-auto max-w-[368px] overflow-y-auto rounded-[20px] font-copy text-left shadow-2xl max-h-[calc(100dvh-180px)] lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-3 lg:w-[520px] lg:max-w-[min(520px,calc(100vw-32px))] lg:max-h-[520px]"
@@ -2131,6 +2134,13 @@ export const AccountDropdown = ({
                     </div>
                     <div className="mt-1.5 truncate text-[13px] font-extrabold text-white">{profileEmail}</div>
                     <div className="mt-1 text-[11px] text-gray-400">{vip.currentTier.shortDescription}</div>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setShowLevelsModal(true); }}
+                      className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-[#3b82f6] hover:text-blue-400 transition cursor-pointer"
+                    >
+                      View levels
+                    </button>
                   </div>
                 </div>
 
