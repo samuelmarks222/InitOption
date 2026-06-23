@@ -132,7 +132,7 @@ const AssetInfo = ({
 
   return (
     <div
-      className="relative h-[60px] shrink-0 overflow-hidden"
+      className="relative h-[60px] shrink-0 overflow-hidden hidden lg:block"
       style={{
         background: "linear-gradient(180deg, var(--trading-panel-bg) 0%, var(--trading-tabs-bg) 100%)",
         borderBottom: "1px solid var(--trading-border-color)",
