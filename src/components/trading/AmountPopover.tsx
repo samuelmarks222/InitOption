@@ -14,6 +14,7 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const [display, setDisplay] = useState(String(value));
   const [limitOn, setLimitOn] = useState(false);
+  const [calcOpen, setCalcOpen] = useState(true);
 
   useEffect(() => {
     if (!triggerRef.current || !cardRef.current) return;
@@ -48,7 +49,28 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
   };
 
   const keyPress = (k: string) => {
+    if (k === ".") {
+      if (display.includes(".")) return;
+      setDisplay((d) => d + ".");
+      return;
+    }
     setDisplay((d) => (d === "0" ? k : d + k));
+  };
+
+  const backspace = () => {
+    setDisplay((d) => (d.length > 1 ? d.slice(0, -1) : "0"));
+  };
+
+  const applyOperation = (op: string) => {
+    const cur = parseFloat(display) || value;
+    const input = prompt(`Enter operand for ${op}:`);
+    if (input === null) return;
+    const num = parseFloat(input);
+    if (isNaN(num)) return;
+    let result = cur;
+    if (op === "*") result = cur * num;
+    if (op === "÷") result = num !== 0 ? cur / num : cur;
+    setDisplay(String(Math.round(result * 100) / 100));
   };
 
   return (
@@ -71,24 +93,78 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
         </div>
 
         <div style={{ background: "#1c2030" }} className="p-3.5 flex flex-col gap-2.5">
-          {/* Display row */}
-          <div className="flex items-center justify-between bg-[#151926] p-2 rounded-lg border border-[#22283d] mb-2.5">
-            <span className="text-base font-bold text-white">${display}</span>
-            <span className="text-xs bg-[#23293f] px-1.5 py-0.5 rounded text-gray-400">2</span>
+          {/* Display + multiplier ops + multiplier badge */}
+          <div className="flex items-center gap-1.5 h-12">
+            <div className="flex-1 h-full bg-[#151926] border border-[#22283d] rounded-lg px-3.5 flex items-center text-lg font-semibold text-white tracking-wide">
+              $<span>{display}</span>
+            </div>
+            <div className="w-7 h-full flex flex-col justify-between">
+              <button
+                type="button"
+                onClick={() => applyOperation("*")}
+                className="w-full h-[22px] bg-[#23293f] hover:bg-[#2c344e] rounded border border-[#2d3550] flex items-center justify-center text-gray-400 text-[10px] transition font-bold"
+              >
+                *
+              </button>
+              <button
+                type="button"
+                onClick={() => applyOperation("÷")}
+                className="w-full h-[22px] bg-[#23293f] hover:bg-[#2c344e] rounded border border-[#2d3550] flex items-center justify-center text-gray-400 text-[10px] transition font-bold"
+              >
+                ÷
+              </button>
+            </div>
+            <div className="w-11 h-full bg-[#23293f] border border-[#2d3550] rounded flex items-center justify-center text-sm font-semibold text-white">
+              2
+            </div>
           </div>
 
-          {/* Numpad */}
-          <div className="grid grid-cols-3 gap-1 text-center text-xs font-medium bg-[#151926] p-1.5 rounded-lg border border-[#22283d]">
-            {["7","8","9","4","5","6","1","2","3"].map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => keyPress(k)}
-                className="bg-[#21263c] py-2 rounded text-white hover:bg-[#2c344e] transition active:scale-95"
-              >
-                {k}
-              </button>
-            ))}
+          {/* Calculator section */}
+          <div className="bg-[#151926] rounded-lg p-2.5 border border-[#22283d]">
+            <button
+              type="button"
+              onClick={() => setCalcOpen((v) => !v)}
+              className="flex w-full items-center justify-between text-gray-400 text-xs font-medium px-0.5 pb-2 border-b border-[#1e2336] mb-2"
+            >
+              <span>Calculator</span>
+              <svg className={`w-3 h-3 text-gray-500 transition-transform ${calcOpen ? "" : "rotate-180"}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
+            </button>
+
+            {calcOpen && (
+              <div className="grid grid-cols-3 gap-1.5">
+                {["7","8","9","4","5","6","1","2","3"].map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => keyPress(k)}
+                    className="h-[34px] bg-[#21263c] hover:bg-[#2a304b] text-[13px] text-gray-300 font-medium rounded border border-[#2a304a]/30 transition active:scale-95"
+                  >
+                    {k}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => keyPress(".")}
+                  className="h-[34px] bg-[#21263c] hover:bg-[#2a304b] text-[13px] text-gray-300 font-medium rounded border border-[#2a304a]/30 transition active:scale-95"
+                >
+                  .
+                </button>
+                <button
+                  type="button"
+                  onClick={() => keyPress("0")}
+                  className="h-[34px] bg-[#21263c] hover:bg-[#2a304b] text-[13px] text-gray-300 font-medium rounded border border-[#2a304a]/30 transition active:scale-95"
+                >
+                  0
+                </button>
+                <button
+                  type="button"
+                  onClick={backspace}
+                  className="h-[34px] bg-[#21263c] hover:bg-[#2a304b] rounded border border-[#2a304a]/30 flex items-center justify-center text-gray-400 transition active:scale-95"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75L14.25 12m0 0l2.25 2.25M14.25 12l2.25-2.25M14.25 12L12 14.25m-2.58 4.92l-6.375-6.375a1.125 1.125 0 010-1.59L9.42 4.83c.211-.211.498-.33.796-.33H19.5a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-9.284c-.298 0-.585-.119-.796-.33z" /></svg>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* History row */}

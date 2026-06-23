@@ -11,15 +11,15 @@ interface Props {
 const pad = (n: number) => String(Math.max(0, Math.floor(n))).padStart(2, "0");
 
 const TIME_PRESETS = [
-  { label: "1m",  val: 60 },
-  { label: "2m",  val: 120 },
-  { label: "3m",  val: 180 },
-  { label: "4m",  val: 240 },
-  { label: "5m",  val: 300 },
-  { label: "10m", val: 600 },
-  { label: "15m", val: 900 },
-  { label: "30m", val: 1800 },
-  { label: "1h",  val: 3600 },
+  { label: "S3",  val: 3 },
+  { label: "S15", val: 15 },
+  { label: "S30", val: 30 },
+  { label: "M1",  val: 60 },
+  { label: "M3",  val: 180 },
+  { label: "M5",  val: 300 },
+  { label: "M30", val: 1800 },
+  { label: "H1",  val: 3600 },
+  { label: "H4",  val: 14400 },
 ];
 
 const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
@@ -137,13 +137,13 @@ const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
           </div>
 
           {/* Preset grid */}
-          <div className="grid grid-cols-3 gap-2 rounded-lg border border-[#22283d] bg-[#151926] p-2.5">
+          <div className="bg-[#151926] rounded-lg p-2.5 border border-[#22283d] grid grid-cols-3 gap-2">
             {TIME_PRESETS.map((p) => (
               <button
                 key={p.val}
                 type="button"
                 onClick={() => { onChange(p.val); onClose(); }}
-                className="border border-[#262c43] py-1.5 rounded bg-[#151926] hover:bg-[#23293f] text-[13px] font-semibold text-white transition"
+                className="h-9 rounded-md border border-[#262c43] bg-transparent hover:bg-[#1f253a] text-[13px] font-medium text-[#4c84ff] tracking-wide transition"
               >
                 {p.label}
               </button>
