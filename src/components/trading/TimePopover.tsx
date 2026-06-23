@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Delete, Clock } from "lucide-react";
+import { X, Clock } from "lucide-react";
 
 interface Props {
   value: number;
@@ -8,21 +8,9 @@ interface Props {
   triggerRef: React.RefObject<HTMLDivElement | null>;
 }
 
-const formatDisplay = (s: number) => {
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (h > 0) return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-};
-
 const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
-  const [display, setDisplay] = useState(String(value));
-  const [unit, setUnit] = useState<"sec" | "min" | "hr">("sec");
-
-
   useEffect(() => {
     if (!triggerRef.current || !cardRef.current) return;
     const tr = triggerRef.current.getBoundingClientRect();
@@ -33,40 +21,16 @@ const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
     });
   }, [triggerRef]);
 
-  useEffect(() => {
-    setDisplay(String(value));
-  }, [value]);
-
-  const commitValue = () => {
-    const parsed = parseInt(display, 10);
-    if (!isNaN(parsed) && parsed > 0) {
-      let seconds = parsed;
-      if (unit === "min") seconds = parsed * 60;
-      if (unit === "hr") seconds = parsed * 3600;
-      onChange(Math.max(60, Math.min(86400, Math.round(seconds))));
-    } else {
-      setDisplay(String(value));
-    }
-    onClose();
-  };
-
-  const keyPress = (k: string) => {
-    if (k === "backspace") {
-      setDisplay((d) => (d.length > 1 ? d.slice(0, -1) : "0"));
-    } else {
-      setDisplay((d) => (d === "0" ? k : d + k));
-    }
-  };
-
-  const keys = [
-    ["1", "2", "3"],
-    ["4", "5", "6"],
-    ["7", "8", "9"],
-    ["clear", "0", "backspace"],
+  const presets = [
+    { label: "1m",  val: 60 },
+    { label: "3m",  val: 180 },
+    { label: "5m",  val: 300 },
+    { label: "15m", val: 900 },
+    { label: "30m", val: 1800 },
+    { label: "1h",  val: 3600 },
+    { label: "4h",  val: 14400 },
+    { label: "24h", val: 86400 },
   ];
-
-  const displayLabel = formatDisplay(value);
-  const unitLabels = { sec: "Sec", min: "Min", hr: "Hr" };
 
   return (
     <>
@@ -91,60 +55,25 @@ const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
         </div>
 
         <div style={{ background: "#1c2030" }} className="p-3">
-          {/* Display */}
-          <div className="flex items-center justify-between rounded-lg bg-[#121420] px-3 py-2.5 mb-3">
-            <span className="text-lg font-bold tracking-tight text-white" style={{ fontFamily: "Arial, sans-serif" }}>
-              {displayLabel}
-            </span>
-            <div className="flex items-center gap-1">
-              {(["sec", "min", "hr"] as const).map((u) => (
+          {/* Expiry time presets */}
+          <div className="grid grid-cols-4 gap-1.5">
+            {presets.map((p) => {
+              const sel = value === p.val;
+              return (
                 <button
-                  key={u}
+                  key={p.val}
                   type="button"
-                  onClick={() => setUnit(u)}
-                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide transition-colors ${
-                    unit === u
-                      ? "bg-[#3391ff] text-white"
-                      : "text-white/40 hover:text-white/70"
+                  onClick={() => { onChange(p.val); onClose(); }}
+                  className={`rounded-md py-1.5 text-center text-[11px] font-semibold transition-colors ${
+                    sel
+                      ? "bg-[#3391ff]/20 text-[#3391ff]"
+                      : "text-white/50 hover:bg-white/8 hover:text-white"
                   }`}
                 >
-                  {unitLabels[u]}
+                  {p.label}
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Num pad */}
-          <div className="rounded-lg border border-white/8">
-            <div className="grid grid-cols-3 gap-px bg-white/8">
-              {keys.flat().map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => k === "clear" ? setDisplay("0") : keyPress(k)}
-                  className={`flex h-8 items-center justify-center text-[12px] font-bold transition-colors ${
-                    k === "clear"
-                      ? "bg-[#1c2030] text-white/40 hover:bg-white/10"
-                      : "bg-[#1c2030] text-white hover:bg-white/10 active:bg-white/15"
-                  }`}
-                >
-                  {k === "backspace" ? (
-                    <Delete className="h-3.5 w-3.5" strokeWidth={2} />
-                  ) : k === "clear" ? (
-                    "C"
-                  ) : (
-                    k
-                  )}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={commitValue}
-                className="col-span-3 flex h-8 items-center justify-center bg-[#3391ff] text-[11px] font-bold text-white hover:bg-[#2a7ae0]"
-              >
-                Apply
-              </button>
-            </div>
+              );
+            })}
           </div>
 
         </div>
