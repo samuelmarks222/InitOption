@@ -19,8 +19,10 @@ const PILL_STACK_OFFSET = 26;
 
 interface MarkerPosition {
   id: string;
-  x: number;
-  y: number;
+  textX: number;
+  textY: number;
+  dotX: number;
+  dotY: number;
   direction: ActiveTrade["direction"];
   amountLabel: string;
   clockLabel: string;
@@ -76,7 +78,7 @@ const detectBeaconZone = (chart: IChartApi, series: ISeriesApi<SeriesType>, live
 
 const computeStacked = (positions: MarkerPosition[], height: number, beaconY: number | null): MarkerPosition[] => {
   if (positions.length === 0) return [];
-  const sorted = [...positions].sort((a, b) => a.y - b.y);
+  const sorted = [...positions].sort((a, b) => a.textY - b.textY);
   const beaconR = beaconY !== null ? [beaconY - BEACON_RESERVE_HEIGHT, beaconY + BEACON_RESERVE_HEIGHT] : null;
   const assigned: MarkerPosition[] = [];
   const slots: Array<{ top: number; bottom: number }> = [];
@@ -87,7 +89,7 @@ const computeStacked = (positions: MarkerPosition[], height: number, beaconY: nu
     !slots.some((s) => top < s.bottom && bottom > s.top);
 
   for (const pos of sorted) {
-    let y = pos.y;
+    let y = pos.textY;
     let attempts = 0;
     while (attempts < 30) {
       const st = y - half;
@@ -100,7 +102,7 @@ const computeStacked = (positions: MarkerPosition[], height: number, beaconY: nu
     }
     y = Math.max(EDGE_PAD, Math.min(height - TEXT_HEIGHT - EDGE_PAD, y));
     slots.push({ top: y - half, bottom: y + half });
-    assigned.push({ ...pos, y });
+    assigned.push({ ...pos, textY: y });
   }
   return assigned;
 };
@@ -154,7 +156,7 @@ export const TradeMarkersOverlay = ({
         if (rect.height > 0) height = rect.height;
         else if (container.clientHeight > 0) height = container.clientHeight;
       }
-    } catch {} 
+    } catch {}
     if (width < 100) width = 800;
     if (height < 50) height = 400;
 
@@ -189,8 +191,10 @@ export const TradeMarkersOverlay = ({
 
       return {
         id: trade.id,
-        x: Math.max(EDGE_PAD, textLeft),
-        y: dotY - TEXT_HEIGHT / 2,
+        textX: Math.max(EDGE_PAD, textLeft),
+        textY: dotY - TEXT_HEIGHT / 2,
+        dotX,
+        dotY,
         direction: trade.direction,
         amountLabel: fmtAmount(trade.amount),
         clockLabel: fmtClock(timeLeft),
@@ -206,36 +210,37 @@ export const TradeMarkersOverlay = ({
   return (
     <div className="pointer-events-none absolute inset-0 z-[90]" data-trade-markers-overlay="true">
       {markerPositions.map((pos) => {
-        const textRight = pos.x + TEXT_WIDTH;
-        const textCenterY = pos.y + TEXT_HEIGHT / 2;
-        const dotCenterX = textRight + CONNECTOR_GAP + DOT_SIZE / 2;
-        const dotCenterY = textCenterY;
-        const dotLeft = dotCenterX - DOT_SIZE / 2;
-        const dotTop = dotCenterY - DOT_SIZE / 2;
-        const connectorLeft = textRight;
-        const connectorWidth = Math.max(1, dotLeft - textRight);
+        const textRight = pos.textX + TEXT_WIDTH;
+        const textCenterY = pos.textY + TEXT_HEIGHT / 2;
+        const dotCx = pos.dotX;
+        const dotCy = pos.dotY;
+        const dotLeft = dotCx - DOT_SIZE / 2;
+        const dotTop = dotCy - DOT_SIZE / 2;
+
+        const dx = dotCx - textRight;
+        const dy = dotCy - textCenterY;
+        const connLen = Math.sqrt(dx * dx + dy * dy);
+        const connAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+
         const arrow = pos.direction === "higher" ? "▲" : "▼";
         const arrowColor = pos.direction === "higher" ? "#13b95e" : "#f04f43";
-        const opacity = pos.isInactive ? 0.35 : 0.92;
 
         return (
-          <div key={pos.id} style={{ opacity }}>
+          <div key={pos.id} style={{ opacity: pos.isInactive ? 0.35 : 0.92 }}>
             <div
               data-trade-marker-text="true"
               className="absolute"
-              style={{
-                left: pos.x,
-                top: pos.y,
-                width: TEXT_WIDTH,
-              }}
+              style={{ left: pos.textX, top: pos.textY, width: TEXT_WIDTH }}
             >
-              <div className="flex items-center gap-[4px] text-[13px] font-bold leading-none tracking-tight whitespace-nowrap"
+              <div
+                className="flex items-center gap-[4px] text-[13px] font-bold leading-none tracking-tight whitespace-nowrap"
                 style={{ color: "#ffffff", textShadow: "1px 1px 2px rgba(0,0,0,0.85)" }}
               >
                 <span style={{ color: arrowColor, fontSize: 11 }}>{arrow}</span>
                 <span>{pos.amountLabel}</span>
               </div>
-              <div className="mt-[3px] text-[11px] font-medium leading-none tracking-wide"
+              <div
+                className="mt-[3px] text-[11px] font-medium leading-none tracking-wide"
                 style={{ color: "rgba(255,255,255,0.55)", textShadow: "1px 1px 2px rgba(0,0,0,0.85)" }}
               >
                 {pos.clockLabel}
@@ -244,12 +249,15 @@ export const TradeMarkersOverlay = ({
 
             <div
               data-trade-marker-connector="true"
-              className="absolute h-px"
+              className="absolute"
               style={{
-                left: connectorLeft,
+                left: textRight,
                 top: textCenterY,
-                width: connectorWidth,
+                width: connLen || 1,
+                height: 1,
                 background: pos.color,
+                transformOrigin: "0 0",
+                transform: `rotate(${connAngle}deg)`,
                 boxShadow: "0 0 2px rgba(0,0,0,0.5)",
               }}
             />
