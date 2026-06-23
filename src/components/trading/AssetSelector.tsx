@@ -90,8 +90,8 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           <div className="absolute top-[calc(100%+8px)] left-0 w-[340px] h-[350px] bg-[#1a1b20] border border-white/10 rounded overflow-hidden shadow-2xl flex z-50">
             
-            {/* Left Sidebar Menu */}
-            <div className="w-[120px] bg-[#1d2029] border-r border-white/5 flex flex-col shrink-0 overflow-y-auto scrollbar-hide py-3">
+            {/* Left Sidebar Menu — hidden on mobile */}
+            <div className="hidden w-[120px] bg-[#1d2029] border-r border-white/5 sm:flex flex-col shrink-0 overflow-y-auto scrollbar-hide py-3">
                {CATEGORIES.map(cat => (
                  <div key={cat.id} className="mb-2">
                    <button

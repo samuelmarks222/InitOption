@@ -1246,8 +1246,8 @@ const Trade = () => {
           highlightDepositButton={Boolean(depositGuideReason)} />
 
         <div className="flex-1 flex w-full overflow-hidden min-h-0" style={{ background: "var(--trading-workspace-bg)" }}>
-          {/* Left sidebar */}
-          <div className="shrink-0 transition-[width] duration-300 ease-out">
+          {/* Left sidebar — hidden on mobile (< 1024px) */}
+          <div className="hidden shrink-0 transition-[width] duration-300 ease-out lg:block">
             <NavigationSidebar
               activeWorkspace={activeWorkspace}
               onSelectWorkspace={setActiveWorkspace}

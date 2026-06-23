@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trading Sidebar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: #0d1117;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+    }
+
+    /* ── Popover ── */
+    .popover {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      width: 240px;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.07);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      background: #1c2030;
+    }
+    .popover.open { display: block; }
+
+    .popover-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: #151a28;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .popover-header span {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+    }
+    .popover-close {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: none; cursor: pointer;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.5);
+      font-size: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .popover-close:hover { background: rgba(255,255,255,0.18); color: #fff; }
+
+    .popover-body { padding: 12px; }
+
+    /* ── Time matrix ── */
+    .time-matrix { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .tm-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .tm-btn {
+      width: 40px; height: 24px; border-radius: 4px; border: none; cursor: pointer;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.4); font-size: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tm-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+    .tm-display {
+      width: 40px; height: 36px; border-radius: 6px; border: none;
+      background: #0d1117; color: #fff;
+      font-size: 15px; font-weight: 700; letter-spacing: 0.05em;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tm-sep {
+      margin-top: 24px;
+      font-size: 16px; font-weight: 700;
+      color: rgba(255,255,255,0.2);
+    }
+
+    /* ── Presets grid ── */
+    .presets { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 16px; }
+    .preset-btn {
+      padding: 6px 0; border-radius: 6px; border: none; cursor: pointer;
+      background: transparent;
+      color: rgba(255,255,255,0.45);
+      font-size: 10px; font-weight: 600; text-align: center;
+    }
+    .preset-btn:hover { background: rgba(255,255,255,0.07); color: #fff; }
+    .preset-btn.active { background: rgba(16,160,85,0.15); color: #10a055; }
+
+    /* ── Calculator ── */
+    .calc-display {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border-radius: 8px;
+      background: #0d1117; margin-bottom: 12px;
+    }
+    .calc-display .amount { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+    .calc-ops { display: flex; gap: 4px; }
+    .calc-ops button {
+      width: 24px; height: 24px; border-radius: 4px; border: none; cursor: pointer;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .calc-ops button:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+    .calc-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+    .cp-btn {
+      padding: 6px 0; border-radius: 6px; border: none; cursor: pointer;
+      background: transparent;
+      color: rgba(255,255,255,0.45);
+      font-size: 10px; font-weight: 600; text-align: center;
+    }
+    .cp-btn:hover { background: rgba(255,255,255,0.07); color: #fff; }
+    .cp-btn.active { background: rgba(16,160,85,0.15); color: #10a055; }
+
+    .keypad-wrap {
+      border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);
+      overflow: hidden; margin-bottom: 8px;
+    }
+    .keypad-title {
+      padding: 6px 10px; font-size: 9px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: rgba(255,255,255,0.3);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(255,255,255,0.06); }
+    .keypad-grid button {
+      height: 32px; border: none; cursor: pointer;
+      background: #1c2030;
+      color: #fff; font-size: 11px; font-weight: 600;
+    }
+    .keypad-grid button:hover { background: rgba(255,255,255,0.09); }
+    .keypad-grid button:active { background: rgba(255,255,255,0.14); }
+    .keypad-apply {
+      height: 32px; border: none; cursor: pointer; grid-column: span 3;
+      background: #10a055; color: #fff; font-size: 10px; font-weight: 700;
+    }
+    .keypad-apply:hover { background: #0d8c47; }
+
+    /* ── Accordion / Toggle ── */
+    .accordion-btn {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0; border: none; cursor: pointer; border-radius: 8px;
+      background: transparent; color: rgba(255,255,255,0.45);
+      font-size: 10px; font-weight: 500;
+    }
+    .accordion-btn:hover { color: rgba(255,255,255,0.75); }
+    .accordion-body {
+      display: none; padding: 8px 0 4px; font-size: 9px; color: rgba(255,255,255,0.25);
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .accordion-body.open { display: block; }
+
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0;
+    }
+    .toggle-row label { font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.45); cursor: pointer; }
+    .toggle-track {
+      position: relative; width: 28px; height: 16px; border-radius: 8px;
+      background: rgba(255,255,255,0.15); cursor: pointer; transition: background 0.2s;
+    }
+    .toggle-track.on { background: #10a055; }
+    .toggle-knob {
+      position: absolute; top: 2px; left: 2px;
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #fff; transition: transform 0.2s;
+    }
+    .toggle-track.on .toggle-knob { transform: translateX(12px); }
+
+    /* ── Backdrop ── */
+    .backdrop {
+      display: none;
+      position: fixed; inset: 0; z-index: 50;
+      background: transparent;
+    }
+    .backdrop.open { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ─── SIDEBAR ─── -->
+<div id="sidebar" style="width:180px; background:#171a28; border-radius:10px; border:1px solid #2b3149; padding:12px; display:flex; flex-direction:column; gap:10px;">
+
+  <!-- Time Module -->
+  <div>
+    <label style="font-size:9px; font-weight:500; color:rgba(255,255,255,0.5); letter-spacing:0.03em; display:block; margin-bottom:3px;">
+      <i class="fa-regular fa-clock" style="margin-right:4px;font-size:8px;"></i>TIME
+    </label>
+    <div id="timeTrigger" class="trigger-field" style="display:flex; align-items:center; justify-content:space-between; height:36px; border-radius:6px; border:1px solid #2b3149; background:#0d1117; padding:0 8px; cursor:pointer;">
+      <span id="timeDisplay" style="font-size:12px; font-weight:700; color:#fff; letter-spacing:0.02em; font-family:Arial,sans-serif;">00:01:03</span>
+      <i class="fa-regular fa-clock" style="font-size:10px; color:rgba(255,255,255,0.25);"></i>
+    </div>
+  </div>
+
+  <!-- Amount Module -->
+  <div>
+    <label style="font-size:9px; font-weight:500; color:rgba(255,255,255,0.5); letter-spacing:0.03em; display:block; margin-bottom:3px;">
+      <i class="fa-solid fa-dollar-sign" style="margin-right:4px;font-size:8px;"></i>AMOUNT
+    </label>
+    <div id="amountTrigger" class="trigger-field" style="display:flex; align-items:center; justify-content:space-between; height:36px; border-radius:6px; border:1px solid #2b3149; background:#0d1117; padding:0 8px; cursor:pointer;">
+      <span id="amountDisplay" style="font-size:12px; font-weight:700; color:#fff; letter-spacing:0.02em;">$19.69</span>
+      <i class="fa-regular fa-keyboard" style="font-size:10px; color:rgba(255,255,255,0.25);"></i>
+    </div>
+  </div>
+
+  <!-- BUY / SELL -->
+  <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
+    <button id="buyBtn" style="height:44px; border-radius:8px; border:none; cursor:pointer; background:#10a055; color:#fff; font-size:13px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; display:flex; align-items:center; justify-content:center; gap:6px; transition:opacity 0.15s;">
+      <i class="fa-solid fa-arrow-up" style="font-size:11px;"></i> BUY
+    </button>
+    <button id="sellBtn" style="height:44px; border-radius:8px; border:none; cursor:pointer; background:#dc3c3c; color:#fff; font-size:13px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; display:flex; align-items:center; justify-content:center; gap:6px; transition:opacity 0.15s;">
+      <i class="fa-solid fa-arrow-down" style="font-size:11px;"></i> SELL
+    </button>
+  </div>
+</div>
+
+<!-- ─── BACKDROP ─── -->
+<div id="backdrop" class="backdrop"></div>
+
+<!-- ─── TIME POPOVER ─── -->
+<div id="timePopover" class="popover">
+  <div class="popover-header">
+    <span><i class="fa-regular fa-clock" style="margin-right:4px;"></i>Expiry Time</span>
+    <button class="popover-close" onclick="closePopover('time')"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="popover-body">
+    <!-- H:M:S Matrix -->
+    <div class="time-matrix">
+      <div class="tm-col">
+        <button class="tm-btn" onclick="adjTime('h',1)"><i class="fa-solid fa-plus"></i></button>
+        <div class="tm-display" id="tmH">00</div>
+        <button class="tm-btn" onclick="adjTime('h',-1)"><i class="fa-solid fa-minus"></i></button>
+      </div>
+      <span class="tm-sep">:</span>
+      <div class="tm-col">
+        <button class="tm-btn" onclick="adjTime('m',1)"><i class="fa-solid fa-plus"></i></button>
+        <div class="tm-display" id="tmM">01</div>
+        <button class="tm-btn" onclick="adjTime('m',-1)"><i class="fa-solid fa-minus"></i></button>
+      </div>
+      <span class="tm-sep">:</span>
+      <div class="tm-col">
+        <button class="tm-btn" onclick="adjTime('s',1)"><i class="fa-solid fa-plus"></i></button>
+        <div class="tm-display" id="tmS">03</div>
+        <button class="tm-btn" onclick="adjTime('s',-1)"><i class="fa-solid fa-minus"></i></button>
+      </div>
+    </div>
+    <!-- Presets -->
+    <div class="presets" id="presetsGrid"></div>
+  </div>
+</div>
+
+<!-- ─── AMOUNT POPOVER ─── -->
+<div id="amountPopover" class="popover">
+  <div class="popover-header">
+    <span><i class="fa-solid fa-calculator" style="margin-right:4px;"></i>Amount</span>
+    <button class="popover-close" onclick="closePopover('amount')"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="popover-body">
+    <!-- Display -->
+    <div class="calc-display">
+      <span class="amount" id="calcAmount">$19.69</span>
+      <div class="calc-ops">
+        <button>+</button><button>-</button><button>&times;</button><button>&divide;</button>
+      </div>
+    </div>
+    <!-- Presets -->
+    <div class="calc-presets" id="calcPresets"></div>
+    <!-- Keypad -->
+    <div class="keypad-wrap">
+      <div class="keypad-title">Calculator</div>
+      <div class="keypad-grid" id="keypadGrid"></div>
+    </div>
+    <!-- History accordion -->
+    <button class="accordion-btn" onclick="toggleAccordion()">
+      <span><i class="fa-regular fa-clock" style="margin-right:5px;"></i>History of trades</span>
+      <i class="fa-solid fa-chevron-right" id="histChevron" style="font-size:8px;"></i>
+    </button>
+    <div class="accordion-body" id="histBody">No recent trades yet.</div>
+    <!-- Toggle -->
+    <div class="toggle-row">
+      <label><i class="fa-solid fa-shield" style="margin-right:5px;font-size:9px;"></i>Trade amount limit</label>
+      <div class="toggle-track" id="limitToggle" onclick="toggleLimit()">
+        <div class="toggle-knob"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────
+const state = {
+  totalSec: 63,           // 00:01:03
+  amountStr: "19.69",
+  histOpen: false,
+  limitOn: false,
+};
+
+// ─── Time presets ─────────────────────────────────────
+const TIME_PRESETS = [
+  { label: "S3",  val: 3 },
+  { label: "S15", val: 15 },
+  { label: "S30", val: 30 },
+  { label: "M1",  val: 60 },
+  { label: "M3",  val: 180 },
+  { label: "M5",  val: 300 },
+  { label: "M30", val: 1800 },
+  { label: "H1",  val: 3600 },
+  { label: "H4",  val: 14400 },
+];
+const AMOUNT_PRESETS = [1, 5, 10, 25, 50, 100, 200, 500];
+const KEYS = [["1","2","3"],["4","5","6"],["7","8","9"],[".","0","backspace"]];
+
+const pad = n => String(Math.max(0,Math.floor(n))).padStart(2,"0");
+
+// ─── Popover positioning ──────────────────────────────
+function openPopover(name) {
+  const triggerId = name === 'time' ? 'timeTrigger' : 'amountTrigger';
+  const popoverId = name === 'time' ? 'timePopover' : 'amountPopover';
+  const trigger = document.getElementById(triggerId);
+  const popover = document.getElementById(popoverId);
+  if (!trigger || !popover) return;
+
+  const tr = trigger.getBoundingClientRect();
+  const cardW = 240;
+  popover.style.top = tr.top + 'px';
+  popover.style.left = (tr.left - cardW - 8) + 'px';
+  popover.classList.add('open');
+  document.getElementById('backdrop').classList.add('open');
+}
+
+function closePopover(name) {
+  const popoverId = name === 'time' ? 'timePopover' : 'amountPopover';
+  const popover = document.getElementById(popoverId);
+  if (popover) popover.classList.remove('open');
+  document.getElementById('backdrop').classList.remove('open');
+}
+
+function closeAll() {
+  document.querySelectorAll('.popover').forEach(p => p.classList.remove('open'));
+  document.getElementById('backdrop').classList.remove('open');
+}
+
+// ─── Time logic ───────────────────────────────────────
+function getComponents() {
+  const h = Math.floor(state.totalSec / 3600);
+  const m = Math.floor((state.totalSec % 3600) / 60);
+  const s = state.totalSec % 60;
+  return { h, m, s };
+}
+
+function setFromComponents(h, m, s) {
+  state.totalSec = h * 3600 + m * 60 + s;
+  syncTimeUI();
+}
+
+function adjTime(comp, delta) {
+  const c = getComponents();
+  if (comp === 'h') c.h = Math.max(0, Math.min(99, c.h + delta));
+  if (comp === 'm') c.m = Math.max(0, Math.min(59, c.m + delta));
+  if (comp === 's') c.s = Math.max(0, Math.min(59, c.s + delta));
+  setFromComponents(c.h, c.m, c.s);
+}
+
+function applyTimePreset(val) {
+  state.totalSec = val;
+  syncTimeUI();
+  closePopover('time');
+}
+
+function syncTimeUI() {
+  const c = getComponents();
+  document.getElementById('tmH').textContent = pad(c.h);
+  document.getElementById('tmM').textContent = pad(c.m);
+  document.getElementById('tmS').textContent = pad(c.s);
+  document.getElementById('timeDisplay').textContent = `${pad(c.h)}:${pad(c.m)}:${pad(c.s)}`;
+  document.querySelectorAll('#presetsGrid .preset-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.val) === state.totalSec);
+  });
+}
+
+function renderTimePresets() {
+  const grid = document.getElementById('presetsGrid');
+  grid.innerHTML = '';
+  TIME_PRESETS.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn' + (p.val === state.totalSec ? ' active' : '');
+    btn.dataset.val = p.val;
+    btn.textContent = p.label;
+    btn.onclick = () => applyTimePreset(p.val);
+    grid.appendChild(btn);
+  });
+}
+
+// ─── Amount logic ─────────────────────────────────────
+function keypadPress(k) {
+  if (k === 'backspace') {
+    state.amountStr = state.amountStr.length > 1 ? state.amountStr.slice(0,-1) : '0';
+  } else if (k === '.') {
+    if (!state.amountStr.includes('.')) state.amountStr += '.';
+  } else {
+    state.amountStr = state.amountStr === '0' ? k : state.amountStr + k;
+  }
+  syncAmountUI();
+}
+
+function applyAmount() {
+  closePopover('amount');
+}
+
+function applyAmountPreset(v) {
+  state.amountStr = String(v);
+  syncAmountUI();
+  closePopover('amount');
+}
+
+function syncAmountUI() {
+  const display = '$' + state.amountStr;
+  document.getElementById('calcAmount').textContent = display;
+  document.getElementById('amountDisplay').textContent = display;
+  document.querySelectorAll('#calcPresets .cp-btn').forEach(btn => {
+    btn.classList.toggle('active', parseFloat(btn.dataset.val) === parseFloat(state.amountStr));
+  });
+}
+
+function renderCalcPresets() {
+  const grid = document.getElementById('calcPresets');
+  grid.innerHTML = '';
+  AMOUNT_PRESETS.forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'cp-btn' + (v === parseFloat(state.amountStr) ? ' active' : '');
+    btn.dataset.val = v;
+    btn.textContent = '$' + v;
+    btn.onclick = () => applyAmountPreset(v);
+    grid.appendChild(btn);
+  });
+}
+
+function renderKeypad() {
+  const grid = document.getElementById('keypadGrid');
+  grid.innerHTML = '';
+  KEYS.flat().forEach(k => {
+    const btn = document.createElement('button');
+    btn.innerHTML = k === 'backspace' ? '<i class="fa-solid fa-delete-left"></i>' : k;
+    btn.onclick = () => keypadPress(k);
+    grid.appendChild(btn);
+  });
+  const apply = document.createElement('button');
+  apply.className = 'keypad-apply';
+  apply.textContent = 'Apply';
+  apply.onclick = applyAmount;
+  grid.appendChild(apply);
+}
+
+// ─── Accordion / Toggle ───────────────────────────────
+function toggleAccordion() {
+  state.histOpen = !state.histOpen;
+  const body = document.getElementById('histBody');
+  const chevron = document.getElementById('histChevron');
+  body.classList.toggle('open', state.histOpen);
+  chevron.className = state.histOpen ? 'fa-solid fa-chevron-down' : 'fa-solid fa-chevron-right';
+}
+
+function toggleLimit() {
+  state.limitOn = !state.limitOn;
+  document.getElementById('limitToggle').classList.toggle('on', state.limitOn);
+}
+
+// ─── Hover effects ────────────────────────────────────
+document.getElementById('buyBtn').addEventListener('mouseenter', function() { this.style.opacity = '0.85'; });
+document.getElementById('buyBtn').addEventListener('mouseleave', function() { this.style.opacity = '1'; });
+document.getElementById('sellBtn').addEventListener('mouseenter', function() { this.style.opacity = '0.85'; });
+document.getElementById('sellBtn').addEventListener('mouseleave', function() { this.style.opacity = '1'; });
+
+// ─── Trigger clicks ───────────────────────────────────
+document.getElementById('timeTrigger').addEventListener('click', function(e) {
+  e.stopPropagation();
+  if (document.getElementById('timePopover').classList.contains('open')) {
+    closePopover('time');
+  } else {
+    closeAll();
+    openPopover('time');
+  }
+});
+
+document.getElementById('amountTrigger').addEventListener('click', function(e) {
+  e.stopPropagation();
+  if (document.getElementById('amountPopover').classList.contains('open')) {
+    closePopover('amount');
+  } else {
+    closeAll();
+    openPopover('amount');
+  }
+});
+
+document.getElementById('backdrop').addEventListener('click', closeAll);
+
+// ─── Init ─────────────────────────────────────────────
+renderTimePresets();
+renderCalcPresets();
+renderKeypad();
+syncTimeUI();
+syncAmountUI();
+</script>
+</body>
+</html>
