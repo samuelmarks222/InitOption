@@ -11,15 +11,15 @@ interface Props {
 const pad = (n: number) => String(Math.max(0, Math.floor(n))).padStart(2, "0");
 
 const TIME_PRESETS = [
-  { label: "S3",  val: 3 },
-  { label: "S15", val: 15 },
-  { label: "S30", val: 30 },
-  { label: "M1",  val: 60 },
-  { label: "M3",  val: 180 },
-  { label: "M5",  val: 300 },
-  { label: "M30", val: 1800 },
-  { label: "H1",  val: 3600 },
-  { label: "H4",  val: 14400 },
+  { label: "1m",  val: 60 },
+  { label: "2m",  val: 120 },
+  { label: "3m",  val: 180 },
+  { label: "4m",  val: 240 },
+  { label: "5m",  val: 300 },
+  { label: "10m", val: 600 },
+  { label: "15m", val: 900 },
+  { label: "30m", val: 1800 },
+  { label: "1h",  val: 3600 },
 ];
 
 const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
