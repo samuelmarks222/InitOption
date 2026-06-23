@@ -1,34 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { IChartApi, ISeriesApi, type SeriesType, Time } from "lightweight-charts";
 import type { ActiveTrade } from "@/hooks/useTrading";
 
 const UP = "#13b95e";
 const DN = "#f04f43";
 
-const TEXT_LINE_GAP = 3;
 const TEXT_ROW1_H = 13;
 const TEXT_ROW2_H = 11;
+const TEXT_LINE_GAP = 3;
 const TEXT_HEIGHT = TEXT_ROW1_H + TEXT_LINE_GAP + TEXT_ROW2_H;
 const DOT_SIZE = 8;
 const CONNECTOR_GAP = 4;
-const EDGE_PAD = 8;
-const PILL_GAP = 4;
-const ESTIMATED_LABEL_WIDTH = 65;
-const COLLISION_PAD = 10;
-const STACK_STEP = ESTIMATED_LABEL_WIDTH + COLLISION_PAD;
-
-interface MarkerPosition {
-  id: string;
-  textY: number;
-  dotX: number;
-  dotY: number;
-  direction: ActiveTrade["direction"];
-  amountLabel: string;
-  clockLabel: string;
-  color: string;
-  isInactive: boolean;
-  horizontalOffset: number;
-}
+const LINE_DASH_LEN = 6;
+const LINE_GAP_LEN = 4;
 
 interface Props {
   chart: IChartApi;
@@ -70,33 +54,6 @@ const getTradeTimes = (trade: ActiveTrade, nowSec: number) => {
   return { entry, expiry, timeLeft, progress };
 };
 
-const computeHorizontalStack = (positions: MarkerPosition[]): MarkerPosition[] => {
-  if (positions.length <= 1) return positions;
-  const sorted = [...positions].sort((a, b) => a.textY - b.textY);
-
-  const groups: MarkerPosition[][] = [];
-  let current: MarkerPosition[] = [sorted[0]];
-
-  for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i].textY < current[current.length - 1].textY + TEXT_HEIGHT + PILL_GAP) {
-      current.push(sorted[i]);
-    } else {
-      groups.push(current);
-      current = [sorted[i]];
-    }
-  }
-  if (current.length > 0) groups.push(current);
-
-  for (const group of groups) {
-    if (group.length <= 1) continue;
-    group.sort((a, b) => a.dotX - b.dotX);
-    group.forEach((pos, idx) => {
-      pos.horizontalOffset = idx * STACK_STEP;
-    });
-  }
-  return sorted;
-};
-
 export const TradeMarkersOverlay = ({
   chart,
   series,
@@ -107,159 +64,181 @@ export const TradeMarkersOverlay = ({
   livePrice: _livePrice,
   showIdleReference: _showIdleReference,
 }: Props) => {
-  const [tick, setTick] = useState(0);
-  const mountedRef = useRef(true);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rafRef = useRef(0);
+  const tradesRef = useRef(trades);
+  const assetRef = useRef(assetSymbol);
+  const tfRef = useRef(timeframeSeconds);
+
+  tradesRef.current = trades;
+  assetRef.current = assetSymbol;
+  tfRef.current = timeframeSeconds;
 
   useEffect(() => {
-    mountedRef.current = true;
-    const id = setInterval(() => {
-      if (mountedRef.current) setTick((v) => v + 1);
-    }, 1000);
-    return () => { mountedRef.current = false; clearInterval(id); };
-  }, []);
+    const canvas = canvasRef.current;
+    if (!canvas || !chart || !series) return;
+    const container = chart.container();
+    if (!container) return;
 
-  useEffect(() => {
-    if (!chart) return;
-    const handler = () => {
-      if (mountedRef.current) setTick((v) => v + 1);
-    };
-    chart.timeScale().subscribeVisibleLogicalRangeChange(handler);
-    return () => chart.timeScale().unsubscribeVisibleLogicalRangeChange(handler);
-  }, [chart]);
+    let running = true;
 
-  const myTrades = useMemo(
-    () => trades.filter((t) => isSameSymbol(t.asset_symbol, assetSymbol)),
-    [assetSymbol, trades],
-  );
+    const draw = () => {
+      if (!running) return;
+      const rect = container.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      const dpr = window.devicePixelRatio || 1;
 
-  const markerPositions = useMemo(() => {
-    let height = 400;
-    try {
-      const container = chart?.container?.();
-      if (container) {
-        const rect = container.getBoundingClientRect();
-        if (rect.height > 0) height = rect.height;
-        else if (container.clientHeight > 0) height = container.clientHeight;
+      if (
+        Math.round(canvas.width) !== Math.round(w * dpr) ||
+        Math.round(canvas.height) !== Math.round(h * dpr)
+      ) {
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        canvas.style.width = `${w}px`;
+        canvas.style.height = `${h}px`;
       }
-    } catch {}
-    if (height < 50) height = 400;
 
-    const ts = chart.timeScale();
-    const raw = myTrades.flatMap((trade): MarkerPosition => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      const currentTrades = tradesRef.current;
+      const currentSymbol = assetRef.current;
+      const safeTf = Math.max(1, Math.floor(tfRef.current));
       const nowSec = Math.floor(Date.now() / 1000);
-      const { timeLeft, progress } = getTradeTimes(trade, nowSec);
-      const markerTime = (isFin(trade.marker_time) ? trade.marker_time : Math.floor(new Date(trade.opened_at).getTime() / 1000)) as Time;
+      const ts = chart.timeScale();
 
-      const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds));
-      const markerTimeNum = Number(markerTime);
-      const bucketTime = (isFin(markerTimeNum) ? Math.floor(markerTimeNum / safeTimeframe) * safeTimeframe : markerTimeNum) as Time;
+      const relevant = currentTrades.filter((t) =>
+        isSameSymbol(t.asset_symbol, currentSymbol),
+      );
 
-      let dotX: number;
-      let dotY: number;
-      try {
-        const cx = ts.timeToCoordinate(bucketTime);
-        dotX = isFin(cx) ? cx : 0;
-      } catch {
-        dotX = 0;
+      for (const trade of relevant) {
+        const { entry, expiry: expiryTime, timeLeft, progress } = getTradeTimes(trade, nowSec);
+        const isActive = progress < 1 && timeLeft > 0;
+        const opacity = isActive ? 0.92 : 0.35;
+
+        const markerTime = isFin(trade.marker_time)
+          ? trade.marker_time
+          : Math.floor(new Date(trade.opened_at).getTime() / 1000);
+        const bucketTime = Math.floor(markerTime / safeTf) * safeTf;
+
+        let dotX: number | null = null;
+        let dotY: number | null = null;
+        try {
+          const cx = ts.timeToCoordinate(bucketTime as Time);
+          if (isFin(cx)) dotX = cx;
+        } catch {}
+        try {
+          const cy = series.priceToCoordinate(trade.entry_price);
+          if (isFin(cy)) dotY = cy;
+        } catch {}
+
+        if (dotX === null || dotY === null) continue;
+
+        const isHigher = trade.direction === "higher";
+        const color = isHigher ? UP : DN;
+
+        const arrow = isHigher ? "\u25B2" : "\u25BC";
+        const amountStr = fmtAmount(trade.amount);
+        const clockStr = fmtClock(timeLeft);
+        const fullLine1 = `${arrow} ${amountStr}`;
+
+        // --- Forward expiration line ---
+        const expiryBucket = Math.ceil(expiryTime / safeTf) * safeTf;
+        let expiryX: number | null = null;
+        try {
+          const ex = ts.timeToCoordinate(expiryBucket as Time);
+          if (isFin(ex)) expiryX = ex;
+        } catch {}
+        if (expiryX === null) {
+          try {
+            const nowBucket = Math.floor(nowSec / safeTf) * safeTf;
+            const nowX = ts.timeToCoordinate(nowBucket as Time);
+            const elapsed = nowBucket - Math.floor(entry / safeTf) * safeTf;
+            const total = expiryBucket - Math.floor(entry / safeTf) * safeTf;
+            if (isFin(nowX) && total > 0 && elapsed > 0) {
+              expiryX = dotX + (nowX - dotX) * (total / elapsed);
+            }
+          } catch {}
+        }
+
+        const lineStartX = dotX + DOT_SIZE / 2;
+        const lineEndX = expiryX !== null && expiryX > lineStartX ? expiryX : w;
+        const lineWidth = Math.max(0, lineEndX - lineStartX);
+
+        if (lineWidth > 0) {
+          ctx.save();
+          ctx.globalAlpha = opacity * 0.4;
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([LINE_DASH_LEN, LINE_GAP_LEN]);
+          ctx.beginPath();
+          ctx.moveTo(lineStartX, dotY);
+          ctx.lineTo(lineEndX, dotY);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // --- Dot ---
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, DOT_SIZE / 2, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+
+        // --- Text label (right-aligned, left of dot) ---
+        const textRightEdge = dotX - DOT_SIZE / 2 - CONNECTOR_GAP;
+        const label1Y = dotY - TEXT_HEIGHT / 2 + TEXT_ROW1_H;
+        const label2Y = label1Y + TEXT_LINE_GAP;
+
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.textBaseline = "bottom";
+        ctx.shadowColor = "rgba(0,0,0,0.85)";
+        ctx.shadowBlur = 2;
+
+        // Line 1: full label in arrow color, overwrite amount in white
+        ctx.textAlign = "right";
+        ctx.font = `bold ${TEXT_ROW1_H}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+        ctx.fillStyle = color;
+        ctx.fillText(fullLine1, textRightEdge, label1Y);
+
+        const arrowText = `${arrow} `;
+        const arrowW = ctx.measureText(arrowText).width;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(amountStr, textRightEdge - arrowW, label1Y);
+
+        // Line 2: clock
+        ctx.font = `${TEXT_ROW2_H}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.fillText(clockStr, textRightEdge, label2Y + TEXT_ROW2_H);
+
+        ctx.restore();
+
+
       }
-      try {
-        const cy = series.priceToCoordinate(trade.entry_price);
-        dotY = isFin(cy) ? cy : height * 0.5;
-      } catch {
-        dotY = height * 0.5;
-      }
 
-      const isHigher = trade.direction === "higher";
-      const color = isHigher ? UP : DN;
-      const isInactive = progress >= 1 || timeLeft <= 0;
+      rafRef.current = requestAnimationFrame(draw);
+    };
 
-      return {
-        id: trade.id,
-        textY: dotY - TEXT_HEIGHT / 2,
-        dotX,
-        dotY,
-        direction: trade.direction,
-        amountLabel: fmtAmount(trade.amount),
-        clockLabel: fmtClock(timeLeft),
-        color,
-        isInactive,
-        horizontalOffset: 0,
-      };
-    });
-
-    return computeHorizontalStack(raw);
-  }, [chart, series, myTrades, tick, timeframeSeconds]);
+    rafRef.current = requestAnimationFrame(draw);
+    return () => {
+      running = false;
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [chart, series]);
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[90]" data-trade-markers-overlay="true">
-      {markerPositions.map((pos) => {
-        const textCenterY = pos.dotY;
-        const dotLeft = pos.dotX - DOT_SIZE / 2;
-        const dotTop = pos.dotY - DOT_SIZE / 2;
-        const refX = pos.dotX - DOT_SIZE / 2 - CONNECTOR_GAP;
-        const textRightEdge = refX - pos.horizontalOffset;
-        const connWidth = CONNECTOR_GAP + pos.horizontalOffset;
-
-        const arrow = pos.direction === "higher" ? "\u25B2" : "\u25BC";
-        const arrowColor = pos.direction === "higher" ? "#13b95e" : "#f04f43";
-
-        return (
-          <div key={pos.id} style={{ opacity: pos.isInactive ? 0.35 : 0.92 }}>
-            <div
-              data-trade-marker-text="true"
-              className="absolute whitespace-nowrap z-10"
-              style={{
-                left: textRightEdge,
-                top: 0,
-                transform: `translate(-100%, ${pos.textY}px)`,
-              }}
-            >
-              <div
-                className="flex items-center gap-[4px] text-[13px] font-bold leading-none tracking-tight"
-                style={{ color: "#ffffff", textShadow: "1px 1px 2px rgba(0,0,0,0.85)" }}
-              >
-                <span style={{ color: arrowColor, fontSize: 11 }}>{arrow}</span>
-                <span>{pos.amountLabel}</span>
-              </div>
-              <div
-                className="mt-[3px] text-[11px] font-medium leading-none tracking-wide"
-                style={{ color: "rgba(255,255,255,0.55)", textShadow: "1px 1px 2px rgba(0,0,0,0.85)" }}
-              >
-                {pos.clockLabel}
-              </div>
-            </div>
-
-            <div
-              data-trade-marker-connector="true"
-              className="absolute"
-              style={{
-                transform: `translate(${textRightEdge}px, ${textCenterY}px)`,
-                left: 0,
-                top: 0,
-                width: connWidth,
-                height: 1,
-                background: pos.color,
-                boxShadow: "0 0 2px rgba(0,0,0,0.5)",
-              }}
-            />
-
-            <div
-              data-trade-marker-dot="true"
-              className="absolute rounded-full border-2"
-              style={{
-                transform: `translate(${dotLeft}px, ${dotTop}px)`,
-                left: 0,
-                top: 0,
-                width: DOT_SIZE,
-                height: DOT_SIZE,
-                background: pos.color,
-                borderColor: "#ffffff",
-                boxShadow: `0 0 6px ${pos.color}88`,
-              }}
-            />
-          </div>
-        );
-      })}
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="pointer-events-none absolute inset-0 z-[90]"
+    />
   );
 };
