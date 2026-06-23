@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Search, User, Wallet, RefreshCw, Loader2, CheckCircle, XCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
 type UserProfile = {
@@ -25,6 +26,14 @@ const FundsManager = () => {
   const searchUser = useCallback(async () => {
     const term = searchTerm.trim();
     if (!term) return;
+    if (!isSupabaseConfigured) {
+      toast({
+        title: "Search failed",
+        description: "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setSearching(true);
     setUser(null);
@@ -119,6 +128,59 @@ const FundsManager = () => {
     }
   };
 
+  // Credit logged-in admin's own account
+  const { profile: myProfile } = useAuth();
+  const [myAmount, setMyAmount] = useState("");
+  const [myReason, setMyReason] = useState("");
+  const [mySubmitting, setMySubmitting] = useState(false);
+
+  const handleSelfCredit = async () => {
+    if (!myProfile || !myAmount) return;
+
+    const creditAmount = parseFloat(myAmount);
+    if (!Number.isFinite(creditAmount) || creditAmount <= 0) {
+      toast({ title: "Enter a valid positive amount", variant: "destructive" });
+      return;
+    }
+
+    if (!isSupabaseConfigured) {
+      toast({ title: "Search failed", description: "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.", variant: "destructive" });
+      return;
+    }
+
+    setMySubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          balance: myProfile.balance + creditAmount,
+          total_deposit: (myProfile.total_deposit ?? 0) + creditAmount,
+        })
+        .eq("id", myProfile.id);
+
+      if (error) throw error;
+
+      try {
+        await supabase.from("admin_balance_log").insert({
+          user_id: myProfile.id,
+          amount: creditAmount,
+          type: "credit",
+          reason: myReason.trim() || "Admin self credit",
+        });
+      } catch {
+        // ignore
+      }
+
+      toast({ title: "Funds credited", description: `${creditAmount.toFixed(2)} added to your account.` });
+      setMyAmount("");
+      setMyReason("");
+    } catch (error) {
+      toast({ title: "Credit failed", description: error instanceof Error ? error.message : "Could not credit funds.", variant: "destructive" });
+    } finally {
+      setMySubmitting(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
@@ -126,6 +188,52 @@ const FundsManager = () => {
         <p className="mt-1 text-sm" style={{ color: "var(--admin-text-secondary)" }}>
           Credit virtual money to any user account.
         </p>
+      </div>
+
+      {/* Admin self credit */}
+      <div className="rounded-2xl border p-5" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+        <h3 className="mb-3 text-sm font-semibold text-white">Credit my account</h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-sm font-medium text-white">Amount</label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: "var(--admin-text-muted)" }}>$</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={myAmount}
+                onChange={(e) => setMyAmount(e.target.value)}
+                className="h-10 w-full rounded-lg border bg-transparent pl-7 pr-3 text-sm text-white outline-none"
+                style={{ borderColor: "var(--admin-border)", color: "var(--admin-text-secondary)" }}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-end">
+            <button
+              onClick={handleSelfCredit}
+              disabled={mySubmitting || !myAmount || !isSupabaseConfigured}
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-50"
+              style={{ background: "var(--admin-green)" }}
+            >
+              {mySubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />} Credit Me
+            </button>
+          </div>
+
+          <div className="sm:col-span-3">
+            <label className="mb-1.5 block text-sm font-medium text-white">Reason (optional)</label>
+            <input
+              type="text"
+              placeholder="e.g. Adjustment, test credit"
+              value={myReason}
+              onChange={(e) => setMyReason(e.target.value)}
+              className="h-10 w-full rounded-lg border bg-transparent px-3 text-sm text-white outline-none"
+              style={{ borderColor: "var(--admin-border)", color: "var(--admin-text-secondary)" }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Search */}
@@ -146,7 +254,7 @@ const FundsManager = () => {
           </div>
           <button
             onClick={searchUser}
-            disabled={searching || !searchTerm.trim()}
+            disabled={searching || !searchTerm.trim() || !isSupabaseConfigured}
             className="flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-medium text-white transition-opacity disabled:opacity-50"
             style={{ background: "var(--admin-orange)" }}
           >

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Search, User, Loader2, TrendingUp, TrendingDown, ArrowDownCircle, ArrowUpCircle, Clock, RefreshCw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
@@ -53,6 +53,14 @@ const UserActivity = () => {
   const searchUser = useCallback(async () => {
     const term = searchTerm.trim();
     if (!term) return;
+    if (!isSupabaseConfigured) {
+      toast({
+        title: "Search failed",
+        description: "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setSearching(true);
     setFoundUser(null);
@@ -201,7 +209,7 @@ const UserActivity = () => {
           </div>
           <button
             onClick={searchUser}
-            disabled={searching || !searchTerm.trim()}
+            disabled={searching || !searchTerm.trim() || !isSupabaseConfigured}
             className="flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-medium text-white transition-opacity disabled:opacity-50"
             style={{ background: "var(--admin-orange)" }}
           >
