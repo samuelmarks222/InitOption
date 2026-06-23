@@ -17,6 +17,7 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
   const [display, setDisplay] = useState(String(value));
   const [histOpen, setHistOpen] = useState(false);
   const [limitOn, setLimitOn] = useState(false);
+  const [presetOpen, setPresetOpen] = useState(true);
 
   useEffect(() => {
     if (!triggerRef.current || !cardRef.current) return;
@@ -39,6 +40,7 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
     } else {
       setDisplay(String(value));
     }
+    onClose();
   };
 
   const keyPress = (k: string) => {
@@ -82,9 +84,10 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
           </button>
         </div>
 
-        <div style={{ background: "#1a1e2b" }} className="p-3">
-          <div className="flex items-center justify-between rounded-lg bg-[#0d0f14] px-3 py-2.5">
-            <span className="text-lg font-bold tracking-tight text-white">
+        <div style={{ background: "#1c2030" }} className="p-3">
+          {/* Display */}
+          <div className="flex items-center justify-between rounded-lg bg-[#121420] px-3 py-2.5 mb-3">
+            <span className="text-lg font-bold tracking-tight text-white" style={{ fontFamily: "Arial, sans-serif" }}>
               ${display}
             </span>
             <div className="flex items-center gap-1">
@@ -100,27 +103,45 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
             </div>
           </div>
 
-          <div className="mt-3 grid grid-cols-4 gap-1.5">
-            {PRESETS.map((a) => {
-              const sel = value === a;
-              return (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => applyPreset(a)}
-                  className={`rounded-md py-1.5 text-center text-[11px] font-semibold transition-colors ${
-                    sel
-                      ? "bg-[#10a055]/20 text-[#10a055]"
-                      : "text-white/50 hover:bg-white/8 hover:text-white"
-                  }`}
-                >
-                  ${a}
-                </button>
-              );
-            })}
+          {/* Presets collapsible */}
+          <div className="rounded-lg border border-white/8 mb-3">
+            <button
+              type="button"
+              onClick={() => setPresetOpen((v) => !v)}
+              className="flex w-full items-center justify-between px-2.5 py-2 text-[11px] font-medium text-white/50 hover:text-white/80"
+            >
+              <span>Quick amounts</span>
+              {presetOpen ? (
+                <ChevronDown className="h-3 w-3" strokeWidth={2} />
+              ) : (
+                <ChevronRight className="h-3 w-3" strokeWidth={2} />
+              )}
+            </button>
+            {presetOpen && (
+              <div className="grid grid-cols-4 gap-1 px-2.5 pb-2.5 border-t border-white/8 pt-2">
+                {PRESETS.map((a) => {
+                  const sel = value === a;
+                  return (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => applyPreset(a)}
+                      className={`rounded-md py-1.5 text-center text-[11px] font-semibold transition-colors ${
+                        sel
+                          ? "bg-[#3391ff]/20 text-[#3391ff]"
+                          : "text-white/50 hover:bg-white/8 hover:text-white"
+                      }`}
+                    >
+                      ${a}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          <div className="mt-3 rounded-lg border border-white/8">
+          {/* Calculator numpad */}
+          <div className="rounded-lg border border-white/8 mb-3">
             <div className="flex items-center justify-between border-b border-white/8 px-2.5 py-1.5">
               <span className="text-[10px] font-semibold tracking-wide text-white/40 uppercase">Calculator</span>
             </div>
@@ -130,7 +151,7 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
                   key={k}
                   type="button"
                   onClick={() => keyPress(k)}
-                  className="flex h-8 items-center justify-center bg-[#1a1e2b] text-[12px] font-bold text-white hover:bg-white/10 active:bg-white/15"
+                  className="flex h-8 items-center justify-center bg-[#1c2030] text-[12px] font-bold text-white hover:bg-white/10 active:bg-white/15"
                 >
                   {k === "backspace" ? (
                     <Delete className="h-3.5 w-3.5" strokeWidth={2} />
@@ -142,14 +163,15 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
               <button
                 type="button"
                 onClick={commitDisplay}
-                className="col-span-3 flex h-8 items-center justify-center bg-[#10a055] text-[11px] font-bold text-white hover:bg-[#0d8c47]"
+                className="col-span-3 flex h-8 items-center justify-center bg-[#3391ff] text-[11px] font-bold text-white hover:bg-[#2a7ae0]"
               >
                 Apply
               </button>
             </div>
           </div>
 
-          <div className="mt-2 rounded-lg border border-white/8">
+          {/* History accordion */}
+          <div className="rounded-lg border border-white/8">
             <button
               type="button"
               onClick={() => setHistOpen((v) => !v)}
@@ -169,13 +191,14 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
             )}
           </div>
 
+          {/* Limit toggle */}
           <div className="mt-1 flex items-center justify-between rounded-lg px-2.5 py-2">
             <span className="text-[11px] font-medium text-white/50">Trade amount limit</span>
             <button
               type="button"
               onClick={() => setLimitOn((v) => !v)}
               className={`relative h-4 w-7 rounded-full transition-colors ${
-                limitOn ? "bg-[#10a055]" : "bg-white/20"
+                limitOn ? "bg-[#3391ff]" : "bg-white/20"
               }`}
             >
               <span
