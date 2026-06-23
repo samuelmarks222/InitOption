@@ -5,7 +5,6 @@ import type { ActiveTrade } from "@/hooks/useTrading";
 const UP = "#13b95e";
 const DN = "#f04f43";
 
-const TEXT_WIDTH = 80;
 const TEXT_LINE_GAP = 3;
 const TEXT_ROW1_H = 13;
 const TEXT_ROW2_H = 11;
@@ -17,7 +16,6 @@ const PILL_GAP = 4;
 
 interface MarkerPosition {
   id: string;
-  textX: number;
   textY: number;
   dotX: number;
   dotY: number;
@@ -69,7 +67,7 @@ const getTradeTimes = (trade: ActiveTrade, nowSec: number) => {
   return { entry, expiry, timeLeft, progress };
 };
 
-const computeHorizontalStack = (positions: MarkerPosition[], width: number): MarkerPosition[] => {
+const computeHorizontalStack = (positions: MarkerPosition[]): MarkerPosition[] => {
   if (positions.length <= 1) return positions;
   const sorted = [...positions].sort((a, b) => a.textY - b.textY);
 
@@ -91,20 +89,8 @@ const computeHorizontalStack = (positions: MarkerPosition[], width: number): Mar
   for (const group of groups) {
     if (group.length === 1) continue;
     group.sort((a, b) => a.dotX - b.dotX);
-
     group.forEach((pos, idx) => {
-      const flipRight = idx % 2 === 1;
-      let newLeft: number;
-      if (flipRight) {
-        const dotRight = pos.dotX + DOT_SIZE / 2;
-        newLeft = dotRight + CONNECTOR_GAP;
-      } else {
-        const dotLeft = pos.dotX - DOT_SIZE / 2;
-        newLeft = dotLeft - CONNECTOR_GAP - TEXT_WIDTH;
-      }
-      const maxLeft = Math.max(EDGE_PAD, width - TEXT_WIDTH - EDGE_PAD);
-      pos.textX = Math.max(EDGE_PAD, Math.min(maxLeft, newLeft));
-      pos.isRightSide = flipRight;
+      pos.isRightSide = idx % 2 === 1;
     });
   }
   return sorted;
@@ -146,24 +132,21 @@ export const TradeMarkersOverlay = ({
   );
 
   const markerPositions = useMemo(() => {
-    let width = 800;
     let height = 400;
     try {
       const container = chart?.container?.();
       if (container) {
         const rect = container.getBoundingClientRect();
-        if (rect.width > 0) width = rect.width;
         if (rect.height > 0) height = rect.height;
         else if (container.clientHeight > 0) height = container.clientHeight;
       }
     } catch {}
-    if (width < 100) width = 800;
     if (height < 50) height = 400;
 
-    const raw = myTrades.map((trade): MarkerPosition => {
+    const ts = chart.timeScale();
+    const raw = myTrades.flatMap((trade): MarkerPosition => {
       const nowSec = Math.floor(Date.now() / 1000);
       const { timeLeft, progress } = getTradeTimes(trade, nowSec);
-      const ts = chart.timeScale();
       const markerTime = (isFin(trade.marker_time) ? trade.marker_time : Math.floor(new Date(trade.opened_at).getTime() / 1000)) as Time;
 
       const safeTimeframe = Math.max(1, Math.floor(timeframeSeconds));
@@ -174,9 +157,9 @@ export const TradeMarkersOverlay = ({
       let dotY: number;
       try {
         const cx = ts.timeToCoordinate(bucketTime);
-        dotX = isFin(cx) ? cx : width * 0.7;
+        dotX = isFin(cx) ? cx : 0;
       } catch {
-        dotX = width * 0.7;
+        dotX = 0;
       }
       try {
         const cy = series.priceToCoordinate(trade.entry_price);
@@ -191,7 +174,6 @@ export const TradeMarkersOverlay = ({
 
       return {
         id: trade.id,
-        textX: 0,
         textY: dotY - TEXT_HEIGHT / 2,
         dotX,
         dotY,
@@ -204,23 +186,20 @@ export const TradeMarkersOverlay = ({
       };
     });
 
-    return computeHorizontalStack(raw, width);
+    return computeHorizontalStack(raw);
   }, [chart, series, myTrades, tick, timeframeSeconds]);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[90]" data-trade-markers-overlay="true">
       {markerPositions.map((pos) => {
-        const textCenterY = pos.textY + TEXT_HEIGHT / 2;
-        const textRight = pos.textX + TEXT_WIDTH;
+        const textY = pos.dotY - TEXT_HEIGHT / 2;
+        const textCenterY = pos.dotY;
+
         const dotLeft = pos.dotX - DOT_SIZE / 2;
         const dotTop = pos.dotY - DOT_SIZE / 2;
         const dotRight = pos.dotX + DOT_SIZE / 2;
 
-        const connStartX = pos.isRightSide ? pos.textX : textRight;
-        const connEndX = pos.isRightSide ? dotRight : dotLeft;
-        const dx = connEndX - connStartX;
-        const connLen = Math.abs(dx);
-        const connAngle = dx >= 0 ? 0 : 180;
+        const refX = pos.dotX - DOT_SIZE / 2 - CONNECTOR_GAP;
 
         const arrow = pos.direction === "higher" ? "\u25B2" : "\u25BC";
         const arrowColor = pos.direction === "higher" ? "#13b95e" : "#f04f43";
@@ -229,11 +208,15 @@ export const TradeMarkersOverlay = ({
           <div key={pos.id} style={{ opacity: pos.isInactive ? 0.35 : 0.92 }}>
             <div
               data-trade-marker-text="true"
-              className="absolute"
-              style={{ transform: `translate(${pos.textX}px, ${pos.textY}px)`, left: 0, top: 0, width: TEXT_WIDTH }}
+              className="absolute whitespace-nowrap"
+              style={{
+                left: pos.isRightSide ? `${pos.dotX + DOT_SIZE / 2 + CONNECTOR_GAP}px` : `${refX}px`,
+                top: 0,
+                transform: `translate(${pos.isRightSide ? "0" : "-100%"}, ${textY}px)`,
+              }}
             >
               <div
-                className="flex items-center gap-[4px] text-[13px] font-bold leading-none tracking-tight whitespace-nowrap"
+                className="flex items-center gap-[4px] text-[13px] font-bold leading-none tracking-tight"
                 style={{ color: "#ffffff", textShadow: "1px 1px 2px rgba(0,0,0,0.85)" }}
               >
                 <span style={{ color: arrowColor, fontSize: 11 }}>{arrow}</span>
@@ -247,22 +230,19 @@ export const TradeMarkersOverlay = ({
               </div>
             </div>
 
-            {connLen > 0 && (
-              <div
-                data-trade-marker-connector="true"
-                className="absolute"
-                style={{
-                  transform: `translate(${connStartX}px, ${textCenterY}px) rotate(${connAngle}deg)`,
-                  transformOrigin: "0 0",
-                  left: 0,
-                  top: 0,
-                  width: connLen,
-                  height: 1,
-                  background: pos.color,
-                  boxShadow: "0 0 2px rgba(0,0,0,0.5)",
-                }}
-              />
-            )}
+            <div
+              data-trade-marker-connector="true"
+              className="absolute"
+              style={{
+                transform: `translate(${pos.isRightSide ? dotRight : refX}px, ${textCenterY}px)`,
+                left: 0,
+                top: 0,
+                width: CONNECTOR_GAP,
+                height: 1,
+                background: pos.color,
+                boxShadow: "0 0 2px rgba(0,0,0,0.5)",
+              }}
+            />
 
             <div
               data-trade-marker-dot="true"
