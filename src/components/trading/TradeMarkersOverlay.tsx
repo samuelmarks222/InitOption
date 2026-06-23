@@ -13,6 +13,9 @@ const DOT_SIZE = 8;
 const CONNECTOR_GAP = 4;
 const EDGE_PAD = 8;
 const PILL_GAP = 4;
+const ESTIMATED_LABEL_WIDTH = 65;
+const COLLISION_PAD = 10;
+const STACK_STEP = ESTIMATED_LABEL_WIDTH + COLLISION_PAD;
 
 interface MarkerPosition {
   id: string;
@@ -24,7 +27,7 @@ interface MarkerPosition {
   clockLabel: string;
   color: string;
   isInactive: boolean;
-  isRightSide: boolean;
+  horizontalOffset: number;
 }
 
 interface Props {
@@ -75,9 +78,7 @@ const computeHorizontalStack = (positions: MarkerPosition[]): MarkerPosition[] =
   let current: MarkerPosition[] = [sorted[0]];
 
   for (let i = 1; i < sorted.length; i++) {
-    const prevTop = current[current.length - 1].textY;
-    const currTop = sorted[i].textY;
-    if (currTop < prevTop + TEXT_HEIGHT + PILL_GAP) {
+    if (sorted[i].textY < current[current.length - 1].textY + TEXT_HEIGHT + PILL_GAP) {
       current.push(sorted[i]);
     } else {
       groups.push(current);
@@ -87,10 +88,10 @@ const computeHorizontalStack = (positions: MarkerPosition[]): MarkerPosition[] =
   if (current.length > 0) groups.push(current);
 
   for (const group of groups) {
-    if (group.length === 1) continue;
+    if (group.length <= 1) continue;
     group.sort((a, b) => a.dotX - b.dotX);
     group.forEach((pos, idx) => {
-      pos.isRightSide = idx % 2 === 1;
+      pos.horizontalOffset = idx * STACK_STEP;
     });
   }
   return sorted;
@@ -182,7 +183,7 @@ export const TradeMarkersOverlay = ({
         clockLabel: fmtClock(timeLeft),
         color,
         isInactive,
-        isRightSide: false,
+        horizontalOffset: 0,
       };
     });
 
@@ -192,14 +193,12 @@ export const TradeMarkersOverlay = ({
   return (
     <div className="pointer-events-none absolute inset-0 z-[90]" data-trade-markers-overlay="true">
       {markerPositions.map((pos) => {
-        const textY = pos.dotY - TEXT_HEIGHT / 2;
         const textCenterY = pos.dotY;
-
         const dotLeft = pos.dotX - DOT_SIZE / 2;
         const dotTop = pos.dotY - DOT_SIZE / 2;
-        const dotRight = pos.dotX + DOT_SIZE / 2;
-
         const refX = pos.dotX - DOT_SIZE / 2 - CONNECTOR_GAP;
+        const textRightEdge = refX - pos.horizontalOffset;
+        const connWidth = CONNECTOR_GAP + pos.horizontalOffset;
 
         const arrow = pos.direction === "higher" ? "\u25B2" : "\u25BC";
         const arrowColor = pos.direction === "higher" ? "#13b95e" : "#f04f43";
@@ -208,11 +207,11 @@ export const TradeMarkersOverlay = ({
           <div key={pos.id} style={{ opacity: pos.isInactive ? 0.35 : 0.92 }}>
             <div
               data-trade-marker-text="true"
-              className="absolute whitespace-nowrap"
+              className="absolute whitespace-nowrap z-10"
               style={{
-                left: pos.isRightSide ? `${pos.dotX + DOT_SIZE / 2 + CONNECTOR_GAP}px` : `${refX}px`,
+                left: textRightEdge,
                 top: 0,
-                transform: `translate(${pos.isRightSide ? "0" : "-100%"}, ${textY}px)`,
+                transform: `translate(-100%, ${pos.textY}px)`,
               }}
             >
               <div
@@ -234,10 +233,10 @@ export const TradeMarkersOverlay = ({
               data-trade-marker-connector="true"
               className="absolute"
               style={{
-                transform: `translate(${pos.isRightSide ? dotRight : refX}px, ${textCenterY}px)`,
+                transform: `translate(${textRightEdge}px, ${textCenterY}px)`,
                 left: 0,
                 top: 0,
-                width: CONNECTOR_GAP,
+                width: connWidth,
                 height: 1,
                 background: pos.color,
                 boxShadow: "0 0 2px rgba(0,0,0,0.5)",
