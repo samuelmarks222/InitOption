@@ -982,7 +982,7 @@ const TradingPanel = ({
   return (
     <>
       <aside className={`font-copy w-full lg:w-[160px] xl:w-[170px] 2xl:w-[180px] h-full min-h-[190px] shrink-0 flex flex-col text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none ${showTimeSwitcher ? "overflow-visible lg:overflow-hidden" : "overflow-hidden"} ${mobileDocked ? "rounded-t-[16px]" : ""}`}
-        style={{ background: "#1c2030", borderColor: "#23293f" }}>
+        style={{ background: "#2a3040", borderColor: "#23293f" }}>
 
         {/* ── Asset Header & Pending Toggle (Single Row) ──────────────── */}
         <div className="flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-4 lg:pt-3.5 lg:pb-1">
@@ -1038,7 +1038,7 @@ const TradingPanel = ({
         </button>
 
         {accountType === "tournament" && (
-          <div className="mx-2.5 mb-2 rounded-[10px] border border-[#0fa053]/35 bg-[#1c2030]/80 px-3 py-2 text-[10px] font-semibold leading-relaxed text-[#d8f6e5] lg:mx-4 lg:mb-3">
+          <div className="mx-2.5 mb-2 rounded-[10px] border border-[#0fa053]/35 bg-[#2a3040]/80 px-3 py-2 text-[10px] font-semibold leading-relaxed text-[#d8f6e5] lg:mx-4 lg:mb-3">
             Tournament mode is active. Open positions and history below are scoped to this tournament account.
           </div>
         )}
@@ -1069,16 +1069,16 @@ const TradingPanel = ({
                   onClick={() => setShowTimeSwitcher((value) => !value)}
                   className="relative hidden lg:flex flex-col group cursor-pointer"
                 >
-                  <div className="absolute -top-2 left-3 bg-[#1c2030] px-1 text-[10px] text-gray-400 font-medium z-10">Time</div>
+                  <div className="absolute -top-2 left-3 bg-[#2a3040] px-1 text-[10px] text-gray-400 font-medium z-10">Time</div>
                   <div className="flex items-center justify-between border border-[#2b3149] rounded-xl px-2 bg-[#151926] hover:border-blue-500/50 transition cursor-pointer h-11">
-                    <span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#1c2030] text-gray-400 hover:text-white transition active:scale-95">
-                      <Minus className="w-3 h-3" strokeWidth={2.5} />
+<span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95">
+                      <Minus className="w-3 h-3" />
                     </span>
                     <span className="text-sm font-semibold text-white tracking-widest font-mono">
                       {formatTradeClock(expirySeconds)}
                     </span>
-                    <span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#1c2030] text-gray-400 hover:text-white transition active:scale-95">
-                      <Plus className="w-3 h-3" strokeWidth={2.5} />
+<span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95">
+                      <Plus className="w-3 h-3" />
                     </span>
                   </div>
                   <div className="w-full text-center mt-0.5"><span className="text-[9px] font-bold text-[#3b82f6] uppercase tracking-wider">Switch Time</span></div>
@@ -1111,16 +1111,16 @@ const TradingPanel = ({
                   onClick={() => setShowInvestmentSwitcher((v) => !v)}
                   className="relative hidden lg:flex flex-col group cursor-pointer"
                 >
-                  <div className="absolute -top-2 left-3 bg-[#1c2030] px-1 text-[10px] text-gray-400 font-medium z-10">Investment</div>
+                  <div className="absolute -top-2 left-3 bg-[#2a3040] px-1 text-[10px] text-gray-400 font-medium z-10">Investment</div>
                   <div className="flex items-center justify-between border border-[#2b3149] rounded-xl px-2 bg-[#151926] hover:border-blue-500/50 transition cursor-pointer h-11">
-                    <span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#1c2030] text-gray-400 hover:text-white transition active:scale-95">
-                      <Minus className="w-3 h-3" strokeWidth={2.5} />
+<span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95">
+                      <Minus className="w-3 h-3" />
                     </span>
                     <span className="text-sm font-semibold text-white tracking-widest font-mono">
                       {investment} $
                     </span>
-                    <span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#1c2030] text-gray-400 hover:text-white transition active:scale-95">
-                      <Plus className="w-3 h-3" strokeWidth={2.5} />
+<span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95">
+                      <Plus className="w-3 h-3" />
                     </span>
                   </div>
                   <div className="w-full text-center mt-0.5"><span className="text-[9px] font-bold text-[#3b82f6] uppercase tracking-wider">Switch</span></div>
@@ -1194,7 +1194,7 @@ const TradingPanel = ({
         {/* ── Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) ── */}
         <div
           className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:flex flex-1'} flex-col overflow-hidden rounded-xl border border-[#262b40]`}
-          style={{ background: "#1c2030" }}
+          style={{ background: "#2a3040" }}
         >
           
           {/* ── Tabs: History / Pending ───────────────────────────────── */}
