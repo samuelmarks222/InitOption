@@ -11,8 +11,6 @@ const TEXT_LINE_GAP = 3;
 const TEXT_HEIGHT = TEXT_ROW1_H + TEXT_LINE_GAP + TEXT_ROW2_H;
 const DOT_SIZE = 8;
 const CONNECTOR_GAP = 4;
-const LINE_DASH_LEN = 6;
-const LINE_GAP_LEN = 4;
 const COLLISION_PAD = 10;
 
 interface Props {
@@ -250,7 +248,6 @@ export const TradeMarkersOverlay = ({
         ctx.globalAlpha = m.opacity * 0.4;
         ctx.strokeStyle = m.color;
         ctx.lineWidth = 1;
-        ctx.setLineDash([LINE_DASH_LEN, LINE_GAP_LEN]);
         ctx.beginPath();
         ctx.moveTo(ls, m.dotY);
         ctx.lineTo(ls + lw, m.dotY);
@@ -299,14 +296,10 @@ export const TradeMarkersOverlay = ({
         ctx.shadowColor = "rgba(0,0,0,0.85)";
         ctx.shadowBlur = 2;
 
-        // Line 1: full label in arrow color, overwrite amount in white
+        // Line 1: arrow + amount, strictly white
         ctx.font = fontBold;
-        ctx.fillStyle = m.color;
-        ctx.fillText(m.fullLine1, textRight, label1Y);
-        const arrowText = `${m.arrow} `;
-        const arrowW = ctx.measureText(arrowText).width;
         ctx.fillStyle = "#ffffff";
-        ctx.fillText(m.amountStr, textRight - arrowW, label1Y);
+        ctx.fillText(m.fullLine1, textRight, label1Y);
 
         // Line 2: clock
         ctx.font = fontNorm;
