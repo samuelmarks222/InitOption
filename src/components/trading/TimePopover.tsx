@@ -135,7 +135,7 @@ const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
                 key={p.val}
                 type="button"
                 onClick={() => { onChange(p.val); onClose(); }}
-                className="h-9 rounded-md border border-[#262c43] bg-transparent text-[13px] font-medium tracking-wide text-[#4c84ff] transition hover:bg-[#1f253a]"
+                className="h-9 rounded-md border border-[#262c43] bg-transparent text-[13px] font-medium tracking-wide text-white transition hover:bg-[#1f253a]"
               >
                 {p.label}
               </button>

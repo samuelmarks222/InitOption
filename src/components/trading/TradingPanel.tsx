@@ -983,7 +983,7 @@ const TradingPanel = ({
   return (
     <>
       <aside className={`font-copy w-full lg:w-[160px] xl:w-[170px] 2xl:w-[180px] h-full min-h-[190px] shrink-0 flex flex-col text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none ${showTimeSwitcher ? "overflow-visible lg:overflow-hidden" : "overflow-hidden"} ${mobileDocked ? "rounded-t-[16px]" : ""}`}
-        style={{ background: "#171a28" }}>
+        style={{ background: "#262c42" }}>
 
         {/* ── Asset Header & Pending Toggle (Single Row) ──────────────── */}
         <div className="flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-4 lg:pt-3.5 lg:pb-1">
@@ -1039,7 +1039,7 @@ const TradingPanel = ({
         </button>
 
         {accountType === "tournament" && (
-          <div className="mx-2.5 mb-2 rounded-[10px] border border-[#0fa053]/35 bg-[#171a28]/80 px-3 py-2 text-[10px] font-semibold leading-relaxed text-[#d8f6e5] lg:mx-4 lg:mb-3">
+          <div className="mx-2.5 mb-2 rounded-[10px] border border-[#0fa053]/35 bg-[#262c42]/80 px-3 py-2 text-[10px] font-semibold leading-relaxed text-[#d8f6e5] lg:mx-4 lg:mb-3">
             Tournament mode is active. Open positions and history below are scoped to this tournament account.
           </div>
         )}
@@ -1070,7 +1070,7 @@ const TradingPanel = ({
                   onClick={() => setShowTimeSwitcher((value) => !value)}
                   className="relative hidden h-[42px] w-full cursor-pointer flex-col justify-center rounded-[5px] border border-[#3d4559] bg-[#121420] px-2.5 pb-1 pt-1 text-left transition-shadow focus-within:border-[#3391ff] focus-within:shadow-[0_0_0_2px_rgba(51,145,255,0.35)] lg:flex"
                 >
-                  <span className="absolute -top-[6px] left-2.5 bg-[#171a28] px-1.5 text-[11px] font-medium leading-none text-[#8fb0cf] uppercase tracking-[0.04em]">
+                  <span className="absolute -top-[6px] left-2.5 bg-[#262c42] px-1.5 text-[11px] font-medium leading-none text-[#8fb0cf] uppercase tracking-[0.04em]">
                     Time
                   </span>
                   <div className="mt-0.5 flex items-center justify-between gap-1.5">
@@ -1109,7 +1109,7 @@ const TradingPanel = ({
                   onClick={() => setShowInvestmentSwitcher((v) => !v)}
                   className="relative hidden h-[42px] w-full cursor-pointer flex-col justify-center rounded-[5px] border border-[#3d4559] bg-[#121420] px-2.5 pb-1 pt-1 transition-shadow focus-within:border-[#3391ff] focus-within:shadow-[0_0_0_2px_rgba(51,145,255,0.35)] lg:flex"
                 >
-                  <span className="absolute -top-[6px] left-2.5 bg-[#171a28] px-1.5 text-[11px] font-medium leading-none text-[#8fb0cf] uppercase tracking-[0.04em]">
+                  <span className="absolute -top-[6px] left-2.5 bg-[#262c42] px-1.5 text-[11px] font-medium leading-none text-[#8fb0cf] uppercase tracking-[0.04em]">
                     Amount
                   </span>
                   <div className="mt-0.5 flex items-center justify-between gap-1.5">
@@ -1185,17 +1185,17 @@ const TradingPanel = ({
         {/* ── Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) ── */}
         <div
           className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:flex flex-1'} flex-col overflow-hidden border-t`}
-          style={{ background: "#171a28", borderTopColor: "var(--trading-border-color)" }}
+          style={{ background: "#262c42", borderTopColor: "var(--trading-border-color)" }}
         >
           
           {/* ── Tabs: History / Pending ───────────────────────────────── */}
           <div
             className="flex items-end gap-1.5 border-b px-2.5 pt-2"
-            style={{ background: "#171a28", borderBottomColor: "var(--trading-border-color)" }}
+            style={{ background: "#262c42", borderBottomColor: "var(--trading-border-color)" }}
           >
             <button
               onClick={() => setActiveTab("trades")}
-              className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "trades" ? "bg-[#171a28] text-white" : "bg-[#171a28] text-[#a0a8bc] hover:text-white"}`}
+              className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "trades" ? "bg-[#262c42] text-white" : "bg-[#262c42] text-[#a0a8bc] hover:text-white"}`}
             >
               {activeTab === "trades" && <div className="absolute left-0 right-0 top-0 h-[2px] rounded-full bg-[#3391ff]" />}
               <span>{t("tradingPanel.trades")}</span>
@@ -1207,7 +1207,7 @@ const TradingPanel = ({
             <button
               onClick={() => setActiveTab("pending")}
               aria-label={t("tradingPanel.pendingTrades")}
-              className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "pending" ? "bg-[#171a28] text-white" : "bg-[#171a28] text-[#a0a8bc] hover:text-white"}`}
+              className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "pending" ? "bg-[#262c42] text-white" : "bg-[#262c42] text-[#a0a8bc] hover:text-white"}`}
             >
               {activeTab === "pending" && <div className="absolute left-0 right-0 top-0 h-[2px] rounded-full bg-[#3391ff]" />}
               <Clock className="h-4 w-4" />
@@ -1227,7 +1227,7 @@ const TradingPanel = ({
           <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-1.5 py-1.5">
             {activeTab === "pending" ? (
               queuedPendingTrades.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#171a28] p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#262c42] p-4 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
                     <Clock className="h-5 w-5 text-gray-600" />
                   </div>
@@ -1236,7 +1236,7 @@ const TradingPanel = ({
                   </p>
                 </div>
               ) : (
-                <div className="bg-[#171a28]">
+                <div className="bg-[#262c42]">
                   {pendingTradeGroups.map((group, groupIndex) => (
                     <section key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/2" : ""}>
                       <TradeGroupHeader label={group.label} count={group.items.length} />
@@ -1257,14 +1257,14 @@ const TradingPanel = ({
               )
             ) : (
               tradesTabCount === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#171a28] p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#262c42] p-4 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
                     <Briefcase className="h-5 w-5 text-gray-600" />
                   </div>
                   <p className="text-[11px] leading-relaxed text-gray-500">No trades yet. Ongoing and completed trades will appear here.</p>
                 </div>
               ) : (
-                <div className="bg-[#171a28]">
+                <div className="bg-[#262c42]">
                   {sortedActiveTrades.length > 0 ? (
                     <section>
                       <TradeGroupHeader label={t("tradingPanel.openTrades")} count={sortedActiveTrades.length} />
