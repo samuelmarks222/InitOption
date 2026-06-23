@@ -1051,7 +1051,7 @@ const TradingPanel = ({
                   <button
                     type="button"
                     onClick={() => setShowTimeSwitcher((value) => !value)}
-                    className="relative flex h-[44px] w-full items-center justify-between rounded-[4px] border border-[#2b3149] bg-[#2a3040] px-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-blue-500/50 lg:hidden"
+                    className="relative flex h-[44px] w-full items-center justify-between rounded-[4px] border border-[#2b3149] bg-[#151926] px-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-blue-500/50 lg:hidden"
                   >
                     <div className="flex items-center gap-2">
                       <Clock className="h-3.5 w-3.5 text-[#596278]" strokeWidth={1.8} />
@@ -1070,7 +1070,7 @@ const TradingPanel = ({
                   className="relative hidden lg:flex flex-col group cursor-pointer"
                 >
                   <div className="absolute -top-2 left-3 bg-[#2a3040] px-1 text-[10px] text-gray-400 font-medium z-10">Time</div>
-                  <div className="flex items-center justify-between border border-[#2b3149] rounded-xl px-2 bg-[#2a3040] hover:border-blue-500/50 transition cursor-pointer h-11">
+                  <div className="flex items-center justify-between border border-[#2b3149] rounded-xl px-2 bg-[#151926] hover:border-blue-500/50 transition cursor-pointer h-11">
 <span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95">
                       <Minus className="w-3 h-3" />
                     </span>
@@ -1086,7 +1086,7 @@ const TradingPanel = ({
               </div>
 
               <div className="relative">
-                <div className="relative flex h-[44px] w-full items-center justify-between rounded-[4px] border border-[#2b3149] bg-[#2a3040] px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden">
+                <div className="relative flex h-[44px] w-full items-center justify-between rounded-[4px] border border-[#2b3149] bg-[#151926] px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden">
                   <div className="flex items-center gap-2">
                     <span className="text-[15px] font-bold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>$</span>
                     <input
@@ -1112,7 +1112,7 @@ const TradingPanel = ({
                   className="relative hidden lg:flex flex-col group cursor-pointer"
                 >
                   <div className="absolute -top-2 left-3 bg-[#2a3040] px-1 text-[10px] text-gray-400 font-medium z-10">Investment</div>
-                  <div className="flex items-center justify-between border border-[#2b3149] rounded-xl px-2 bg-[#2a3040] hover:border-blue-500/50 transition cursor-pointer h-11">
+                  <div className="flex items-center justify-between border border-[#2b3149] rounded-xl px-2 bg-[#151926] hover:border-blue-500/50 transition cursor-pointer h-11">
 <span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95">
                       <Minus className="w-3 h-3" />
                     </span>
@@ -1203,7 +1203,7 @@ const TradingPanel = ({
           >
             <button
               onClick={() => setActiveTab("trades")}
-              className={`flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors ${activeTab === "trades" ? "border-b-2 border-blue-500 text-white bg-[#2a3040]/30" : "text-gray-400 hover:text-gray-200"}`}
+              className={`flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors ${activeTab === "trades" ? "border-b-2 border-blue-500 text-white bg-[#151926]/30" : "text-gray-400 hover:text-gray-200"}`}
             >
               <span>{t("tradingPanel.trades")}</span>
               <span className="bg-[#262b40] text-[9px] px-1 rounded-sm text-gray-300 font-mono">{tradesTabCount}</span>
@@ -1212,7 +1212,7 @@ const TradingPanel = ({
             <button
               onClick={() => setActiveTab("pending")}
               aria-label={t("tradingPanel.pendingTrades")}
-              className={`flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors ${activeTab === "pending" ? "border-b-2 border-blue-500 text-white bg-[#2a3040]/30" : "text-gray-400 hover:text-gray-200"}`}
+              className={`flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors ${activeTab === "pending" ? "border-b-2 border-blue-500 text-white bg-[#151926]/30" : "text-gray-400 hover:text-gray-200"}`}
             >
               <i className="fa-regular fa-clock text-xs"></i>
               <span className="bg-[#262b40] text-[9px] px-1 rounded-sm text-gray-500 font-mono">{queuedPendingTrades.length}</span>
@@ -1229,7 +1229,7 @@ const TradingPanel = ({
           <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-1.5 py-1.5">
             {activeTab === "pending" ? (
               queuedPendingTrades.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#181c2b] p-4 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
                     <Clock className="h-5 w-5 text-gray-600" />
                   </div>
@@ -1238,7 +1238,7 @@ const TradingPanel = ({
                   </p>
                 </div>
               ) : (
-                <div className="bg-[#2a3040]">
+                <div className="bg-[#181c2b]">
                   {pendingTradeGroups.map((group, groupIndex) => (
                     <section key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/2" : ""}>
                       <TradeGroupHeader label={group.label} count={group.items.length} />
@@ -1259,14 +1259,14 @@ const TradingPanel = ({
               )
             ) : (
               tradesTabCount === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#181c2b] p-4 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
                     <Briefcase className="h-5 w-5 text-gray-600" />
                   </div>
                   <p className="text-[11px] leading-relaxed text-gray-500">No trades yet. Ongoing and completed trades will appear here.</p>
                 </div>
               ) : (
-                <div className="bg-[#2a3040]">
+                <div className="bg-[#181c2b]">
                   {sortedActiveTrades.length > 0 ? (
                     <section>
                       <TradeGroupHeader label={t("tradingPanel.openTrades")} count={sortedActiveTrades.length} />

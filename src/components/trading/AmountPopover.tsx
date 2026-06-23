@@ -19,9 +19,10 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
     if (!triggerRef.current || !cardRef.current) return;
     const tr = triggerRef.current.getBoundingClientRect();
     const cardW = 274;
+    const isMobile = window.innerWidth < 1024;
     setPos({
       top: tr.top,
-      left: tr.left - cardW - 8,
+      left: isMobile ? Math.max(8, (window.innerWidth - cardW) / 2) : tr.left - cardW - 8,
     });
   }, [triggerRef]);
 
@@ -52,7 +53,7 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
         className="w-[274px] overflow-hidden rounded-xl border border-[#262b40] shadow-2xl"
       >
         <div className="flex items-center justify-between bg-[#151923] px-3 py-2">
-          <span className="text-[11px] font-semibold tracking-wide text-white/70 uppercase">Amount</span>
+          <span className="text-[11px] font-semibold tracking-wide text-white uppercase">Amount</span>
           <button
             type="button"
             onClick={() => commitDisplay(true)}
@@ -76,7 +77,7 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
                 key={k}
                 type="button"
                 onClick={() => keyPress(k)}
-                className="bg-[#21263c] py-2 rounded text-gray-300 hover:bg-[#2c344e] transition active:scale-95"
+                className="bg-[#21263c] py-2 rounded text-white hover:bg-[#2c344e] transition active:scale-95"
               >
                 {k}
               </button>
