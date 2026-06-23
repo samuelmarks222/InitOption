@@ -13,9 +13,7 @@ const TEXT_HEIGHT = TEXT_ROW1_H + TEXT_LINE_GAP + TEXT_ROW2_H;
 const DOT_SIZE = 8;
 const CONNECTOR_GAP = 4;
 const EDGE_PAD = 8;
-const BEACON_RESERVE_HEIGHT = 28;
 const PILL_GAP = 4;
-const PILL_STACK_OFFSET = 26;
 
 interface MarkerPosition {
   id: string;
@@ -28,6 +26,7 @@ interface MarkerPosition {
   clockLabel: string;
   color: string;
   isInactive: boolean;
+  isRightSide: boolean;
 }
 
 interface Props {
@@ -70,41 +69,45 @@ const getTradeTimes = (trade: ActiveTrade, nowSec: number) => {
   return { entry, expiry, timeLeft, progress };
 };
 
-const detectBeaconZone = (chart: IChartApi, series: ISeriesApi<SeriesType>, livePrice: number | null): number | null => {
-  if (!isFin(livePrice)) return null;
-  const y = series.priceToCoordinate(livePrice);
-  return isFin(y) ? y : null;
-};
-
-const computeStacked = (positions: MarkerPosition[], height: number, beaconY: number | null): MarkerPosition[] => {
-  if (positions.length === 0) return [];
+const computeHorizontalStack = (positions: MarkerPosition[], width: number): MarkerPosition[] => {
+  if (positions.length <= 1) return positions;
   const sorted = [...positions].sort((a, b) => a.textY - b.textY);
-  const beaconR = beaconY !== null ? [beaconY - BEACON_RESERVE_HEIGHT, beaconY + BEACON_RESERVE_HEIGHT] : null;
-  const assigned: MarkerPosition[] = [];
-  const slots: Array<{ top: number; bottom: number }> = [];
-  const slotH = TEXT_HEIGHT + PILL_GAP;
-  const half = slotH / 2;
 
-  const isFree = (top: number, bottom: number) =>
-    !slots.some((s) => top < s.bottom && bottom > s.top);
+  const groups: MarkerPosition[][] = [];
+  let current: MarkerPosition[] = [sorted[0]];
 
-  for (const pos of sorted) {
-    let y = pos.textY;
-    let attempts = 0;
-    while (attempts < 30) {
-      const st = y - half;
-      const sb = y + half;
-      const inBeacon = beaconR !== null && st < beaconR[1] && sb > beaconR[0];
-      if (!inBeacon && isFree(st, sb)) break;
-      y += (attempts % 2 === 0 ? 1 : -1) * (PILL_STACK_OFFSET * (1 + Math.floor(attempts / 2)));
-      y = Math.max(EDGE_PAD, Math.min(height - TEXT_HEIGHT - EDGE_PAD, y));
-      attempts++;
+  for (let i = 1; i < sorted.length; i++) {
+    const prevTop = current[current.length - 1].textY;
+    const currTop = sorted[i].textY;
+    if (currTop < prevTop + TEXT_HEIGHT + PILL_GAP) {
+      current.push(sorted[i]);
+    } else {
+      groups.push(current);
+      current = [sorted[i]];
     }
-    y = Math.max(EDGE_PAD, Math.min(height - TEXT_HEIGHT - EDGE_PAD, y));
-    slots.push({ top: y - half, bottom: y + half });
-    assigned.push({ ...pos, textY: y });
   }
-  return assigned;
+  if (current.length > 0) groups.push(current);
+
+  for (const group of groups) {
+    if (group.length === 1) continue;
+    group.sort((a, b) => a.dotX - b.dotX);
+
+    group.forEach((pos, idx) => {
+      const flipRight = idx % 2 === 1;
+      let newLeft: number;
+      if (flipRight) {
+        const dotRight = pos.dotX + DOT_SIZE / 2;
+        newLeft = dotRight + CONNECTOR_GAP;
+      } else {
+        const dotLeft = pos.dotX - DOT_SIZE / 2;
+        newLeft = dotLeft - CONNECTOR_GAP - TEXT_WIDTH;
+      }
+      const maxLeft = Math.max(EDGE_PAD, width - TEXT_WIDTH - EDGE_PAD);
+      pos.textX = Math.max(EDGE_PAD, Math.min(maxLeft, newLeft));
+      pos.isRightSide = flipRight;
+    });
+  }
+  return sorted;
 };
 
 export const TradeMarkersOverlay = ({
@@ -114,22 +117,28 @@ export const TradeMarkersOverlay = ({
   trades,
   timeframeSeconds,
   liveLogical: _liveLogical,
-  livePrice,
+  livePrice: _livePrice,
   showIdleReference: _showIdleReference,
 }: Props) => {
-  const rafRef = useRef(0);
   const [tick, setTick] = useState(0);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    let running = true;
-    const loop = () => {
-      if (!running) return;
-      setTick((v) => v + 1);
-      rafRef.current = requestAnimationFrame(loop);
-    };
-    rafRef.current = requestAnimationFrame(loop);
-    return () => { running = false; cancelAnimationFrame(rafRef.current); };
+    mountedRef.current = true;
+    const id = setInterval(() => {
+      if (mountedRef.current) setTick((v) => v + 1);
+    }, 1000);
+    return () => { mountedRef.current = false; clearInterval(id); };
   }, []);
+
+  useEffect(() => {
+    if (!chart) return;
+    const handler = () => {
+      if (mountedRef.current) setTick((v) => v + 1);
+    };
+    chart.timeScale().subscribeVisibleLogicalRangeChange(handler);
+    return () => chart.timeScale().unsubscribeVisibleLogicalRangeChange(handler);
+  }, [chart]);
 
   const myTrades = useMemo(
     () => trades.filter((t) => isSameSymbol(t.asset_symbol, assetSymbol)),
@@ -144,15 +153,6 @@ export const TradeMarkersOverlay = ({
       if (container) {
         const rect = container.getBoundingClientRect();
         if (rect.width > 0) width = rect.width;
-        else if (container.clientWidth > 0) width = container.clientWidth;
-        const range = chart.timeScale().getVisibleLogicalRange();
-        if (range && isFin(range.to) && isFin(range.from)) {
-          try {
-            const left = chart.timeScale().logicalToCoordinate(range.from);
-            const right = chart.timeScale().logicalToCoordinate(range.to);
-            if (isFin(left) && isFin(right)) width = right - left;
-          } catch {}
-        }
         if (rect.height > 0) height = rect.height;
         else if (container.clientHeight > 0) height = container.clientHeight;
       }
@@ -162,7 +162,7 @@ export const TradeMarkersOverlay = ({
 
     const raw = myTrades.map((trade): MarkerPosition => {
       const nowSec = Math.floor(Date.now() / 1000);
-      const { entry, timeLeft, progress } = getTradeTimes(trade, nowSec);
+      const { timeLeft, progress } = getTradeTimes(trade, nowSec);
       const ts = chart.timeScale();
       const markerTime = (isFin(trade.marker_time) ? trade.marker_time : Math.floor(new Date(trade.opened_at).getTime() / 1000)) as Time;
 
@@ -185,17 +185,13 @@ export const TradeMarkersOverlay = ({
         dotY = height * 0.5;
       }
 
-      const dotLeft = dotX - DOT_SIZE / 2;
-      const textRight = dotLeft - CONNECTOR_GAP;
-      const textLeft = textRight - TEXT_WIDTH;
-
       const isHigher = trade.direction === "higher";
       const color = isHigher ? UP : DN;
       const isInactive = progress >= 1 || timeLeft <= 0;
 
       return {
         id: trade.id,
-        textX: Math.max(EDGE_PAD, textLeft),
+        textX: 0,
         textY: dotY - TEXT_HEIGHT / 2,
         dotX,
         dotY,
@@ -204,29 +200,29 @@ export const TradeMarkersOverlay = ({
         clockLabel: fmtClock(timeLeft),
         color,
         isInactive,
+        isRightSide: false,
       };
     });
 
-    const beaconY = detectBeaconZone(chart, series, livePrice ?? null);
-    return computeStacked(raw, height, beaconY);
-  }, [chart, series, myTrades, tick, timeframeSeconds, livePrice]);
+    return computeHorizontalStack(raw, width);
+  }, [chart, series, myTrades, tick, timeframeSeconds]);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[90]" data-trade-markers-overlay="true">
       {markerPositions.map((pos) => {
-        const textRight = pos.textX + TEXT_WIDTH;
         const textCenterY = pos.textY + TEXT_HEIGHT / 2;
-        const dotCx = pos.dotX;
-        const dotCy = pos.dotY;
-        const dotLeft = dotCx - DOT_SIZE / 2;
-        const dotTop = dotCy - DOT_SIZE / 2;
+        const textRight = pos.textX + TEXT_WIDTH;
+        const dotLeft = pos.dotX - DOT_SIZE / 2;
+        const dotTop = pos.dotY - DOT_SIZE / 2;
+        const dotRight = pos.dotX + DOT_SIZE / 2;
 
-        const dx = dotCx - textRight;
-        const dy = dotCy - textCenterY;
-        const connLen = Math.sqrt(dx * dx + dy * dy);
-        const connAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+        const connStartX = pos.isRightSide ? pos.textX : textRight;
+        const connEndX = pos.isRightSide ? dotRight : dotLeft;
+        const dx = connEndX - connStartX;
+        const connLen = Math.abs(dx);
+        const connAngle = dx >= 0 ? 0 : 180;
 
-        const arrow = pos.direction === "higher" ? "▲" : "▼";
+        const arrow = pos.direction === "higher" ? "\u25B2" : "\u25BC";
         const arrowColor = pos.direction === "higher" ? "#13b95e" : "#f04f43";
 
         return (
@@ -234,7 +230,7 @@ export const TradeMarkersOverlay = ({
             <div
               data-trade-marker-text="true"
               className="absolute"
-              style={{ left: pos.textX, top: pos.textY, width: TEXT_WIDTH }}
+              style={{ transform: `translate(${pos.textX}px, ${pos.textY}px)`, left: 0, top: 0, width: TEXT_WIDTH }}
             >
               <div
                 className="flex items-center gap-[4px] text-[13px] font-bold leading-none tracking-tight whitespace-nowrap"
@@ -251,27 +247,30 @@ export const TradeMarkersOverlay = ({
               </div>
             </div>
 
-            <div
-              data-trade-marker-connector="true"
-              className="absolute"
-              style={{
-                left: textRight,
-                top: textCenterY,
-                width: connLen || 1,
-                height: 1,
-                background: pos.color,
-                transformOrigin: "0 0",
-                transform: `rotate(${connAngle}deg)`,
-                boxShadow: "0 0 2px rgba(0,0,0,0.5)",
-              }}
-            />
+            {connLen > 0 && (
+              <div
+                data-trade-marker-connector="true"
+                className="absolute"
+                style={{
+                  transform: `translate(${connStartX}px, ${textCenterY}px) rotate(${connAngle}deg)`,
+                  transformOrigin: "0 0",
+                  left: 0,
+                  top: 0,
+                  width: connLen,
+                  height: 1,
+                  background: pos.color,
+                  boxShadow: "0 0 2px rgba(0,0,0,0.5)",
+                }}
+              />
+            )}
 
             <div
               data-trade-marker-dot="true"
               className="absolute rounded-full border-2"
               style={{
-                left: dotLeft,
-                top: dotTop,
+                transform: `translate(${dotLeft}px, ${dotTop}px)`,
+                left: 0,
+                top: 0,
                 width: DOT_SIZE,
                 height: DOT_SIZE,
                 background: pos.color,
