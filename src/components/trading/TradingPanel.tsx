@@ -23,6 +23,8 @@ import {
   TRADE_DESK_DIRECTION_SUBMIT_EVENT,
   type TradeDeskDirectionFocusDetail,
 } from "./tradeDeskEvents";
+import TimePopover from "./TimePopover";
+import AmountPopover from "./AmountPopover";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TradingPanelProps {
@@ -1164,7 +1166,7 @@ const TradingPanel = ({
                   </div>
                 </div>
                 {showInvestmentSwitcher && (
-                  <InvestmentSwitcher
+                  <AmountPopover
                     value={investment}
                     onChange={(v) => handleInvestmentInput(String(v))}
                     onClose={() => setShowInvestmentSwitcher(false)}
@@ -1176,7 +1178,7 @@ const TradingPanel = ({
             </div>
 
             {showTimeSwitcher && (
-              <TimeSwitcher value={expirySeconds} onChange={setExpirySeconds} onClose={() => setShowTimeSwitcher(false)} triggerRef={timeTriggerRef} />
+              <TimePopover value={expirySeconds} onChange={setExpirySeconds} onClose={() => setShowTimeSwitcher(false)} triggerRef={timeTriggerRef} />
             )}
           </div>
         </div>
