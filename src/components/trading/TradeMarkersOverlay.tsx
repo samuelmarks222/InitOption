@@ -5,10 +5,13 @@ import type { ActiveTrade } from "@/hooks/useTrading";
 const UP = "#13b95e";
 const DN = "#f04f43";
 
-const TOOLTIP_WIDTH = 110;
-const TOOLTIP_HEIGHT = 44;
+const TEXT_WIDTH = 80;
+const TEXT_LINE_GAP = 3;
+const TEXT_ROW1_H = 13;
+const TEXT_ROW2_H = 11;
+const TEXT_HEIGHT = TEXT_ROW1_H + TEXT_LINE_GAP + TEXT_ROW2_H;
 const DOT_SIZE = 8;
-const CONNECTOR_GAP = 6;
+const CONNECTOR_GAP = 4;
 const EDGE_PAD = 8;
 const BEACON_RESERVE_HEIGHT = 28;
 const PILL_GAP = 4;
@@ -77,7 +80,7 @@ const computeStacked = (positions: MarkerPosition[], height: number, beaconY: nu
   const beaconR = beaconY !== null ? [beaconY - BEACON_RESERVE_HEIGHT, beaconY + BEACON_RESERVE_HEIGHT] : null;
   const assigned: MarkerPosition[] = [];
   const slots: Array<{ top: number; bottom: number }> = [];
-  const slotH = TOOLTIP_HEIGHT + PILL_GAP;
+  const slotH = TEXT_HEIGHT + PILL_GAP;
   const half = slotH / 2;
 
   const isFree = (top: number, bottom: number) =>
@@ -92,10 +95,10 @@ const computeStacked = (positions: MarkerPosition[], height: number, beaconY: nu
       const inBeacon = beaconR !== null && st < beaconR[1] && sb > beaconR[0];
       if (!inBeacon && isFree(st, sb)) break;
       y += (attempts % 2 === 0 ? 1 : -1) * (PILL_STACK_OFFSET * (1 + Math.floor(attempts / 2)));
-      y = Math.max(EDGE_PAD, Math.min(height - TOOLTIP_HEIGHT - EDGE_PAD, y));
+      y = Math.max(EDGE_PAD, Math.min(height - TEXT_HEIGHT - EDGE_PAD, y));
       attempts++;
     }
-    y = Math.max(EDGE_PAD, Math.min(height - TOOLTIP_HEIGHT - EDGE_PAD, y));
+    y = Math.max(EDGE_PAD, Math.min(height - TEXT_HEIGHT - EDGE_PAD, y));
     slots.push({ top: y - half, bottom: y + half });
     assigned.push({ ...pos, y });
   }
@@ -176,8 +179,9 @@ export const TradeMarkersOverlay = ({
         dotY = height * 0.5;
       }
 
-      const tooltipRight = dotX - DOT_SIZE / 2 - CONNECTOR_GAP;
-      const tooltipLeft = tooltipRight - TOOLTIP_WIDTH;
+      const dotLeft = dotX - DOT_SIZE / 2;
+      const textRight = dotLeft - CONNECTOR_GAP;
+      const textLeft = textRight - TEXT_WIDTH;
 
       const isHigher = trade.direction === "higher";
       const color = isHigher ? UP : DN;
@@ -185,8 +189,8 @@ export const TradeMarkersOverlay = ({
 
       return {
         id: trade.id,
-        x: Math.max(EDGE_PAD, tooltipLeft),
-        y: dotY - TOOLTIP_HEIGHT / 2,
+        x: Math.max(EDGE_PAD, textLeft),
+        y: dotY - TEXT_HEIGHT / 2,
         direction: trade.direction,
         amountLabel: fmtAmount(trade.amount),
         clockLabel: fmtClock(timeLeft),
@@ -199,14 +203,17 @@ export const TradeMarkersOverlay = ({
     return computeStacked(raw, height, beaconY);
   }, [chart, series, myTrades, tick, timeframeSeconds, livePrice]);
 
-  if (markerPositions.length === 0) return null;
-
   return (
     <div className="pointer-events-none absolute inset-0 z-[90]" data-trade-markers-overlay="true">
       {markerPositions.map((pos) => {
-        const dotCx = pos.x + TOOLTIP_WIDTH + CONNECTOR_GAP + DOT_SIZE / 2;
-        const connectorLeft = pos.x + TOOLTIP_WIDTH;
-        const connectorRight = dotCx - DOT_SIZE / 2;
+        const textRight = pos.x + TEXT_WIDTH;
+        const textCenterY = pos.y + TEXT_HEIGHT / 2;
+        const dotCenterX = textRight + CONNECTOR_GAP + DOT_SIZE / 2;
+        const dotCenterY = textCenterY;
+        const dotLeft = dotCenterX - DOT_SIZE / 2;
+        const dotTop = dotCenterY - DOT_SIZE / 2;
+        const connectorLeft = textRight;
+        const connectorWidth = Math.max(1, dotLeft - textRight);
         const arrow = pos.direction === "higher" ? "▲" : "▼";
         const arrowColor = pos.direction === "higher" ? "#13b95e" : "#f04f43";
         const opacity = pos.isInactive ? 0.35 : 0.92;
@@ -214,21 +221,23 @@ export const TradeMarkersOverlay = ({
         return (
           <div key={pos.id} style={{ opacity }}>
             <div
-              data-trade-marker-tooltip="true"
-              className="absolute rounded-[6px] px-3 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.35)]"
+              data-trade-marker-text="true"
+              className="absolute"
               style={{
                 left: pos.x,
                 top: pos.y,
-                width: TOOLTIP_WIDTH,
-                background: "rgba(18,24,38,0.92)",
-                border: `1px solid ${pos.color}44`,
+                width: TEXT_WIDTH,
               }}
             >
-              <div className="flex items-center gap-1.5 text-[13px] font-bold leading-none tracking-tight text-white whitespace-nowrap">
+              <div className="flex items-center gap-[4px] text-[13px] font-bold leading-none tracking-tight whitespace-nowrap"
+                style={{ color: "#ffffff", textShadow: "1px 1px 2px rgba(0,0,0,0.85)" }}
+              >
                 <span style={{ color: arrowColor, fontSize: 11 }}>{arrow}</span>
                 <span>{pos.amountLabel}</span>
               </div>
-              <div className="mt-[3px] text-[11px] font-medium leading-none tracking-wide text-white/50">
+              <div className="mt-[3px] text-[11px] font-medium leading-none tracking-wide"
+                style={{ color: "rgba(255,255,255,0.55)", textShadow: "1px 1px 2px rgba(0,0,0,0.85)" }}
+              >
                 {pos.clockLabel}
               </div>
             </div>
@@ -238,9 +247,10 @@ export const TradeMarkersOverlay = ({
               className="absolute h-px"
               style={{
                 left: connectorLeft,
-                top: pos.y + TOOLTIP_HEIGHT / 2,
-                width: Math.max(1, connectorRight - connectorLeft),
+                top: textCenterY,
+                width: connectorWidth,
                 background: pos.color,
+                boxShadow: "0 0 2px rgba(0,0,0,0.5)",
               }}
             />
 
@@ -248,8 +258,8 @@ export const TradeMarkersOverlay = ({
               data-trade-marker-dot="true"
               className="absolute rounded-full border-2"
               style={{
-                left: dotCx - DOT_SIZE / 2,
-                top: pos.y + TOOLTIP_HEIGHT / 2 - DOT_SIZE / 2,
+                left: dotLeft,
+                top: dotTop,
                 width: DOT_SIZE,
                 height: DOT_SIZE,
                 background: pos.color,
