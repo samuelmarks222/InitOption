@@ -20,10 +20,17 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
     const tr = triggerRef.current.getBoundingClientRect();
     const cardW = 274;
     const isMobile = window.innerWidth < 1024;
-    setPos({
-      top: tr.top,
-      left: isMobile ? Math.max(8, (window.innerWidth - cardW) / 2) : tr.left - cardW - 8,
-    });
+    if (isMobile) {
+      setPos({
+        top: Math.max(8, window.innerHeight - 420),
+        left: Math.max(8, (window.innerWidth - cardW) / 2),
+      });
+    } else {
+      setPos({
+        top: tr.top,
+        left: tr.left - cardW - 8,
+      });
+    }
   }, [triggerRef]);
 
   useEffect(() => {

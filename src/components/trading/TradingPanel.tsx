@@ -213,10 +213,18 @@ const TimeSwitcher = ({
   useEffect(() => {
     if (!triggerRef.current || !cardRef.current) return;
     const triggerRect = triggerRef.current.getBoundingClientRect();
-    setPos({
-      top: triggerRect.top,
-      right: window.innerWidth - triggerRect.left + 8,
-    });
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) {
+      setPos({
+        top: Math.max(8, window.innerHeight - 380),
+        right: Math.max(8, (window.innerWidth - 340) / 2),
+      });
+    } else {
+      setPos({
+        top: triggerRect.top,
+        right: window.innerWidth - triggerRect.left + 8,
+      });
+    }
   }, [triggerRef]);
 
   useEffect(() => {
