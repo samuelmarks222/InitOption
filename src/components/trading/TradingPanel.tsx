@@ -1185,21 +1185,21 @@ const TradingPanel = ({
         {/* ── Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) ── */}
         <div
           className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:flex flex-1'} flex-col overflow-hidden border-t`}
-          style={{ background: "var(--trading-panel-soft-bg)", borderTopColor: "var(--trading-border-color)" }}
+          style={{ background: "#171a28", borderTopColor: "var(--trading-border-color)" }}
         >
           
           {/* ── Tabs: History / Pending ───────────────────────────────── */}
           <div
             className="flex items-end gap-1.5 border-b px-2.5 pt-2"
-            style={{ background: "color-mix(in srgb, var(--trading-panel-soft-bg) 84%, #111827)", borderBottomColor: "var(--trading-border-color)" }}
+            style={{ background: "#171a28", borderBottomColor: "var(--trading-border-color)" }}
           >
             <button
               onClick={() => setActiveTab("trades")}
-              className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "trades" ? "bg-[#33394a] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
+              className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "trades" ? "bg-[#171a28] text-white" : "bg-[#171a28] text-[#a0a8bc] hover:text-white"}`}
             >
               {activeTab === "trades" && <div className="absolute left-0 right-0 top-0 h-[2px] rounded-full bg-[#3391ff]" />}
               <span>{t("tradingPanel.trades")}</span>
-              <span className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-black ${activeTab === "trades" ? "bg-[#515a70] text-white" : "bg-black/20 text-[#c1c8d7]"}`}>
+              <span className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-black ${activeTab === "trades" ? "bg-[#23293f] text-white" : "bg-black/20 text-[#c1c8d7]"}`}>
                 {tradesTabCount}
               </span>
             </button>
@@ -1207,11 +1207,11 @@ const TradingPanel = ({
             <button
               onClick={() => setActiveTab("pending")}
               aria-label={t("tradingPanel.pendingTrades")}
-              className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "pending" ? "bg-[#33394a] text-white" : "bg-[#3a4051]/75 text-[#a0a8bc] hover:text-white"}`}
+              className={`relative flex h-[44px] flex-1 items-center justify-center gap-2 rounded-t-[10px] px-4 text-[12px] font-black transition-colors ${activeTab === "pending" ? "bg-[#171a28] text-white" : "bg-[#171a28] text-[#a0a8bc] hover:text-white"}`}
             >
               {activeTab === "pending" && <div className="absolute left-0 right-0 top-0 h-[2px] rounded-full bg-[#3391ff]" />}
               <Clock className="h-4 w-4" />
-              <span className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-black ${activeTab === "pending" ? "bg-[#515a70] text-white" : "bg-black/20 text-[#c1c8d7]"}`}>
+              <span className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-black ${activeTab === "pending" ? "bg-[#23293f] text-white" : "bg-black/20 text-[#c1c8d7]"}`}>
                 {queuedPendingTrades.length}
               </span>
             </button>
@@ -1227,7 +1227,7 @@ const TradingPanel = ({
           <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-1.5 py-1.5">
             {activeTab === "pending" ? (
               queuedPendingTrades.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#33394a] p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#171a28] p-4 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
                     <Clock className="h-5 w-5 text-gray-600" />
                   </div>
@@ -1236,7 +1236,7 @@ const TradingPanel = ({
                   </p>
                 </div>
               ) : (
-                <div className="bg-[#34394a]">
+                <div className="bg-[#171a28]">
                   {pendingTradeGroups.map((group, groupIndex) => (
                     <section key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/2" : ""}>
                       <TradeGroupHeader label={group.label} count={group.items.length} />
@@ -1257,14 +1257,14 @@ const TradingPanel = ({
               )
             ) : (
               tradesTabCount === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#33394a] p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#171a28] p-4 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
                     <Briefcase className="h-5 w-5 text-gray-600" />
                   </div>
                   <p className="text-[11px] leading-relaxed text-gray-500">No trades yet. Ongoing and completed trades will appear here.</p>
                 </div>
               ) : (
-                <div className="bg-[#34394a]">
+                <div className="bg-[#171a28]">
                   {sortedActiveTrades.length > 0 ? (
                     <section>
                       <TradeGroupHeader label={t("tradingPanel.openTrades")} count={sortedActiveTrades.length} />
