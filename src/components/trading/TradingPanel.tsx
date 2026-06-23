@@ -982,7 +982,7 @@ const TradingPanel = ({
   return (
     <>
       <aside className={`font-copy w-full lg:w-[160px] xl:w-[170px] 2xl:w-[180px] h-full min-h-[190px] shrink-0 flex flex-col text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none ${showTimeSwitcher ? "overflow-visible lg:overflow-hidden" : "overflow-hidden"} ${mobileDocked ? "rounded-t-[16px]" : ""}`}
-        style={{ background: "#191e2f", borderColor: "#23293f" }}>
+        style={{ background: "#2a3040", borderColor: "#23293f" }}>
 
         {/* ── Asset Header & Pending Toggle (Single Row) ──────────────── */}
         <div className="flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-4 lg:pt-3.5 lg:pb-1">
@@ -1038,7 +1038,7 @@ const TradingPanel = ({
         </button>
 
         {accountType === "tournament" && (
-          <div className="mx-2.5 mb-2 rounded-[10px] border border-[#0fa053]/35 bg-[#191e2f]/80 px-3 py-2 text-[10px] font-semibold leading-relaxed text-[#d8f6e5] lg:mx-4 lg:mb-3">
+          <div className="mx-2.5 mb-2 rounded-[10px] border border-[#0fa053]/35 bg-[#2a3040]/80 px-3 py-2 text-[10px] font-semibold leading-relaxed text-[#d8f6e5] lg:mx-4 lg:mb-3">
             Tournament mode is active. Open positions and history below are scoped to this tournament account.
           </div>
         )}
@@ -1069,7 +1069,7 @@ const TradingPanel = ({
                   onClick={() => setShowTimeSwitcher((value) => !value)}
                   className="relative hidden lg:flex flex-col group cursor-pointer"
                 >
-                  <div className="absolute -top-2 left-3 bg-[#191e2f] px-1 text-[10px] text-gray-400 font-medium z-10">Time</div>
+                  <div className="absolute -top-2 left-3 bg-[#2a3040] px-1 text-[10px] text-gray-400 font-medium z-10">Time</div>
                   <div className="flex items-center justify-between border border-[#2d3550] rounded-xl px-2.5 py-1.5 bg-[#141824] hover:border-blue-500 transition cursor-pointer">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#2d3550] bg-[#1c2132] text-xs text-gray-400 hover:text-white transition">
                       <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15"/></svg>
@@ -1111,7 +1111,7 @@ const TradingPanel = ({
                   onClick={() => setShowInvestmentSwitcher((v) => !v)}
                   className="relative hidden lg:flex flex-col group cursor-pointer"
                 >
-                  <div className="absolute -top-2 left-3 bg-[#191e2f] px-1 text-[10px] text-gray-400 font-medium z-10">Investment</div>
+                  <div className="absolute -top-2 left-3 bg-[#2a3040] px-1 text-[10px] text-gray-400 font-medium z-10">Investment</div>
                   <div className="flex items-center justify-between border border-[#2d3550] rounded-xl px-2.5 py-1.5 bg-[#141824] hover:border-blue-500 transition cursor-pointer">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#2d3550] bg-[#1c2132] text-xs text-gray-400 hover:text-white transition">
                       <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15"/></svg>
@@ -1194,7 +1194,7 @@ const TradingPanel = ({
         {/* ── Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) ── */}
         <div
           className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:flex flex-1'} flex-col overflow-hidden rounded-xl border border-[#23293f]`}
-          style={{ background: "#191e2f" }}
+          style={{ background: "#2a3040" }}
         >
           
           {/* ── Tabs: History / Pending ───────────────────────────────── */}
@@ -1229,7 +1229,7 @@ const TradingPanel = ({
           <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-1.5 py-1.5">
             {activeTab === "pending" ? (
               queuedPendingTrades.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#191e2f] p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
                     <Clock className="h-5 w-5 text-gray-600" />
                   </div>
@@ -1238,7 +1238,7 @@ const TradingPanel = ({
                   </p>
                 </div>
               ) : (
-                <div className="bg-[#191e2f]">
+                <div className="bg-[#2a3040]">
                   {pendingTradeGroups.map((group, groupIndex) => (
                     <section key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/2" : ""}>
                       <TradeGroupHeader label={group.label} count={group.items.length} />
@@ -1259,14 +1259,14 @@ const TradingPanel = ({
               )
             ) : (
               tradesTabCount === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#191e2f] p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
                     <Briefcase className="h-5 w-5 text-gray-600" />
                   </div>
                   <p className="text-[11px] leading-relaxed text-gray-500">No trades yet. Ongoing and completed trades will appear here.</p>
                 </div>
               ) : (
-                <div className="bg-[#191e2f]">
+                <div className="bg-[#2a3040]">
                   {sortedActiveTrades.length > 0 ? (
                     <section>
                       <TradeGroupHeader label={t("tradingPanel.openTrades")} count={sortedActiveTrades.length} />
