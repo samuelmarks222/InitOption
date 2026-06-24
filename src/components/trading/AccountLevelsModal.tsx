@@ -28,7 +28,7 @@ const LEVELS: LevelData[] = [
     badgeLabel: "Active",
     badgeBg: "bg-[#3b82f6]",
     isActive: true,
-    features: [{ icon: "%", text: "Basic percentage of profitability for all instruments", iconColor: "#34d399" }],
+    features: [{ icon: "%", text: "Basic percentage of profitability for all instruments", iconColor: "#34d399" }, { icon: "+2%", text: "Standard bonus percentage", iconColor: "#34d399" }],
   },
   {
     id: "pro",
@@ -40,8 +40,8 @@ const LEVELS: LevelData[] = [
     badgeBg: "bg-[#2a3047]",
     balanceReq: "Balance from 5,000.00 $",
     features: [
-      { icon: "+2%", text: "Increased percentage of profitability for all instruments", iconColor: "#f59e0b", floatBadgeColor: "#f59e0b" },
-      { icon: "tag", text: "Promo codes from the market in mailings and promotions", iconColor: "#f59e0b" },
+      { icon: "+4%", text: "Increased percentage of profitability for all instruments", iconColor: "#f59e0b", floatBadgeColor: "#f59e0b" },
+      { icon: "fa-tag", text: "Promo codes from the market in mailings and promotions", iconColor: "#f59e0b" },
     ],
   },
   {
@@ -55,7 +55,7 @@ const LEVELS: LevelData[] = [
     balanceReq: "Balance from 10,000.00 $",
     features: [
       { icon: "+4%", text: "Increased percentage of profitability for all instruments", iconColor: "#a78bfa", floatBadgeColor: "#a78bfa" },
-      { icon: "tag", text: "Promo codes from the market in mailings and promotions", iconColor: "#a78bfa" },
+      { icon: "fa-tag", text: "Promo codes from the market in mailings and promotions", iconColor: "#a78bfa" },
     ],
   },
 ];
@@ -126,13 +126,13 @@ const AccountLevelsModal = ({ isOpen, onClose }: Props) => {
                         key={idx}
                         className={`flex items-center gap-2.5 ${level.isActive ? "bg-[#171a28]/60" : "bg-[#171a28]/40"} p-2 rounded-lg border ${level.isActive ? "border-[#2b3149]/30" : "border-[#2b3149]/20"}`}
                       >
-                        <div className="w-6 h-6 rounded bg-[#2b3149] flex items-center justify-center font-mono flex-shrink-0" style={{ color: f.iconColor }}>
-                          {f.icon.length <= 2 ? (
-                            <span className="text-[10px] font-black">{f.icon}</span>
-                          ) : (
-                            <i className={`fa-regular fa-${f.icon}`} style={{ fontSize: "10px" }}></i>
-                          )}
-                        </div>
+                  <div className="w-6 h-6 rounded bg-[#2b3149] flex items-center justify-center font-mono flex-shrink-0" style={{ color: f.iconColor }}>
+                    {f.icon.startsWith("fa-") ? (
+                      <i className={`fa-regular ${f.icon}`} style={{ fontSize: "10px" }}></i>
+                    ) : (
+                      <span className="text-[10px] font-black">{f.icon}</span>
+                    )}
+                    </div>
                         <p className="text-[11px] text-gray-400">{f.text}</p>
                       </div>
                     ))}
