@@ -1249,7 +1249,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
           <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-1.5 py-1.5">
             {activeTab === "pending" ? (
               queuedPendingTrades.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 p-4 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full">
                     <Clock className="h-5 w-5 text-gray-600" />
                   </div>
@@ -1258,7 +1258,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
                   </p>
                 </div>
               ) : (
-                <div className="bg-[#2a3040]">
+                <div>
                   {pendingTradeGroups.map((group, groupIndex) => (
                     <section key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/2" : ""}>
                       <TradeGroupHeader label={group.label} count={group.items.length} />
@@ -1279,14 +1279,14 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
               )
             ) : (
               tradesTabCount === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 p-4 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full">
                     <Briefcase className="h-5 w-5 text-gray-600" />
                   </div>
                   <p className="text-[11px] leading-relaxed text-gray-500">No trades yet. Ongoing and completed trades will appear here.</p>
                 </div>
               ) : (
-                <div className="bg-[#2a3040]">
+                <div>
                   {sortedActiveTrades.length > 0 ? (
                     <section>
                       <TradeGroupHeader label={t("tradingPanel.openTrades")} count={sortedActiveTrades.length} />
