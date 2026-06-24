@@ -2672,7 +2672,11 @@ const PoolitoHomePage = () => {
 
           .poolito-about-copy h2,
           .poolito-section-heading h2 {
-            font-size: 36px;
+            font-size: 30px;
+          }
+
+          .poolito-frame h1 {
+            font-size: clamp(24px, 9vw, 34px);
           }
 
           .poolito-founder-row {

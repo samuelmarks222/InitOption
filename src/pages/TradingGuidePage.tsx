@@ -2025,6 +2025,10 @@ const TradingGuidePage = () => {
               grid-template-columns: 1fr;
             }
 
+            .poolito-guide-grid {
+              grid-template-columns: 1fr;
+            }
+
             .poolito-guide-featured button,
             .poolito-guide-featured button:last-child {
               border-right: 0;
