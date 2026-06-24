@@ -1080,14 +1080,14 @@ const TradingPanel = ({
                   <div className="absolute -top-2 left-3 bg-[#2a3040] px-1 text-[10px] text-gray-400 font-medium z-10">Time</div>
                   <div className="flex items-center justify-between border border-[#2b3149] rounded-lg px-2 bg-[#2a3040] hover:border-blue-500/50 transition cursor-pointer h-11">
 <span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95"
-onClick={(e) => { e.stopPropagation(); setShowTimeSwitcher((value) => !value); }}>
+onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}>
                       <Minus className="w-3 h-3" />
                     </span>
                     <span className="text-sm font-semibold text-white tracking-widest" style={{ fontFamily: "Arial, sans-serif" }}>
                       {formatTradeClock(expirySeconds)}
                     </span>
 <span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95"
-onClick={(e) => { e.stopPropagation(); setShowTimeSwitcher((value) => !value); }}>
+onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}>
                       <Plus className="w-3 h-3" />
                     </span>
                   </div>
@@ -1124,7 +1124,7 @@ onClick={(e) => { e.stopPropagation(); setShowTimeSwitcher((value) => !value); }
                   <div className="absolute -top-2 left-3 bg-[#2a3040] px-1 text-[10px] text-gray-400 font-medium z-10">Investment</div>
                   <div className="flex items-center justify-between border border-[#2b3149] rounded-lg px-2 bg-[#2a3040] hover:border-blue-500/50 transition cursor-pointer h-11">
 <span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95"
-onClick={(e) => { e.stopPropagation(); setShowInvestmentSwitcher((v) => !v); }}>
+onClick={(e) => { e.stopPropagation(); adjustInvestment(-1); }}>
                       <Minus className="w-3 h-3" />
                     </span>
                     <input
@@ -1137,9 +1137,10 @@ onClick={(e) => { e.stopPropagation(); setShowInvestmentSwitcher((v) => !v); }}>
                       onClick={(e) => e.stopPropagation()}
                       onChange={(event) => handleInvestmentInput(event.target.value)}
                       className="hide-number-spin min-w-0 w-[60px] bg-transparent text-sm font-semibold text-white tracking-widest font-mono outline-none text-center"
+                      style={{ fontFamily: "Arial, sans-serif" }}
                     />
 <span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95"
-onClick={(e) => { e.stopPropagation(); setShowInvestmentSwitcher((v) => !v); }}>
+onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
                       <Plus className="w-3 h-3" />
                     </span>
                   </div>

@@ -2181,11 +2181,11 @@ export const AccountDropdown = ({
                   onSwitch("live");
                   onClose();
                 }}
-                className={`w-full rounded-[15px] border px-3 py-2.5 text-left transition-colors ${
-                  accountType === "live"
-                    ? "border-[#2f87ff]/35 bg-white/[0.06]"
-                    : "border-white/6 bg-white/[0.03] hover:bg-white/[0.05]"
-                }`}
+className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                   accountType === "live"
+                     ? "border-[#2f87ff]/35 bg-white/[0.06]"
+                     : "border-white/6 bg-white/[0.03] hover:bg-white/[0.05]"
+                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div className="pt-0.5">
@@ -2218,11 +2218,11 @@ export const AccountDropdown = ({
                   onSwitch("demo");
                   onClose();
                 }}
-                className={`w-full rounded-[15px] border px-3 py-2.5 text-left transition-colors ${
-                  accountType === "demo"
-                    ? "border-[#2f87ff]/35 bg-white/[0.06]"
-                    : "border-white/6 bg-white/[0.03] hover:bg-white/[0.05]"
-                }`}
+className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                   accountType === "demo"
+                     ? "border-[#2f87ff]/35 bg-white/[0.06]"
+                     : "border-white/6 bg-white/[0.03] hover:bg-white/[0.05]"
+                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div className="pt-0.5">
