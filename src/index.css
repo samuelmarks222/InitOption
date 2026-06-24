@@ -836,7 +836,8 @@
   .trading-terminal [class*="bg-[#3a4153]"],
   .trading-terminal [class*="bg-[#3a4255]"],
   .trading-terminal [class*="bg-[#454f65]"],
-  .trading-terminal [class*="bg-[#4c5567]"] {
+  .trading-terminal [class*="bg-[#4c5567]"],
+  .trading-terminal [class*="bg-[#666f86]"] {
     background: var(--trading-panel-soft-bg) !important;
   }
 
