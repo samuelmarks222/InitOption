@@ -3,6 +3,8 @@ import { BadgeDollarSign, History, LogOut, MessageCircle, Settings, User, X } fr
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileTour } from "@/contexts/ProfileTourContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useVip } from "@/contexts/VipContext";
+import { VipBadge } from "@/components/vip/VipBadge";
 import { KycAvatarBadge } from "./KycAvatarBadge";
 import { ProfilePersonalData } from "./ProfilePersonalData";
 import { ProfileDeposit } from "./ProfileDeposit";
@@ -39,6 +41,7 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
   const { emailVerified, profile, signOut, user } = useAuth();
   const { markStepCompleted } = useProfileTour();
   const { formatMoney } = useCurrency();
+  const { vip } = useVip();
   const [activeTab, setActiveTab] = useState<ProfileTab>("personal");
   const [personalGuideTarget, setPersonalGuideTarget] = useState<PersonalGuideTarget | null>(null);
 
@@ -143,9 +146,12 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
                     )}
                     <KycAvatarBadge status={kycStatus} documents={profileDocuments} size="sm" />
                   </div>
-                  <div className="min-w-0">
-                    <div className="truncate text-[18px] font-bold text-white">{p?.username || user?.email || "My account"}</div>
-                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[#96a3bb]">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-[18px] font-bold text-white">{p?.username || user?.email || "My account"}</span>
+                        <VipBadge tierId={vip.currentTier.id} size={18} />
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[#96a3bb]">
                       <span className="whitespace-nowrap">ID: {accountId}</span>
                       <span className="whitespace-nowrap">Registered: {registeredAt}</span>
                       <span className="whitespace-nowrap">Balance: {formatMoney(balance)}</span>
