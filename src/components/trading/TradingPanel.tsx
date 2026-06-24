@@ -1214,7 +1214,6 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
         {/* ── Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) ── */}
         <div
           className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:flex flex-1'} flex-col overflow-hidden rounded-xl border border-[#262b40]`}
-          style={{ background: "#2a3040" }}
         >
           
           {/* ── Tabs: History / Pending ───────────────────────────────── */}
@@ -1249,7 +1248,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
           <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-1.5 py-1.5">
             {activeTab === "pending" ? (
               queuedPendingTrades.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full">
                     <Clock className="h-5 w-5 text-gray-600" />
                   </div>
@@ -1258,7 +1257,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
                   </p>
                 </div>
               ) : (
-                <div>
+                <div className="bg-[#2a3040]">
                   {pendingTradeGroups.map((group, groupIndex) => (
                     <section key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/2" : ""}>
                       <TradeGroupHeader label={group.label} count={group.items.length} />
@@ -1279,14 +1278,14 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
               )
             ) : (
               tradesTabCount === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full">
                     <Briefcase className="h-5 w-5 text-gray-600" />
                   </div>
                   <p className="text-[11px] leading-relaxed text-gray-500">No trades yet. Ongoing and completed trades will appear here.</p>
                 </div>
               ) : (
-                <div>
+                <div className="bg-[#2a3040]">
                   {sortedActiveTrades.length > 0 ? (
                     <section>
                       <TradeGroupHeader label={t("tradingPanel.openTrades")} count={sortedActiveTrades.length} />
