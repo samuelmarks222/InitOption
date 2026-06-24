@@ -1059,7 +1059,7 @@ const TradingPanel = ({
                   <button
                     type="button"
                     onClick={() => setShowTimeSwitcher((value) => !value)}
-                    className="relative flex h-[44px] w-full items-center justify-between rounded-[4px] border border-[#2b3149] bg-[#2a3040] px-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-blue-500/50 lg:hidden"
+                    className="relative flex h-[44px] w-full items-center justify-between rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-blue-500/50 lg:hidden"
                   >
                     <div className="flex items-center gap-2">
                       <Clock className="h-3.5 w-3.5 text-[#596278]" strokeWidth={1.8} />
@@ -1078,14 +1078,16 @@ const TradingPanel = ({
                   className="relative hidden lg:flex flex-col group cursor-pointer"
                 >
                   <div className="absolute -top-2 left-3 bg-[#2a3040] px-1 text-[10px] text-gray-400 font-medium z-10">Time</div>
-                  <div className="flex items-center justify-between border border-[#2b3149] rounded-xl px-2 bg-[#2a3040] hover:border-blue-500/50 transition cursor-pointer h-11">
-<span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95">
+                  <div className="flex items-center justify-between border border-[#2b3149] rounded-lg px-2 bg-[#2a3040] hover:border-blue-500/50 transition cursor-pointer h-11">
+<span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95"
+onClick={(e) => { e.stopPropagation(); setShowTimeSwitcher((value) => !value); }}>
                       <Minus className="w-3 h-3" />
                     </span>
                     <span className="text-sm font-semibold text-white tracking-widest font-mono">
                       {formatTradeClock(expirySeconds)}
                     </span>
-<span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95">
+<span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95"
+onClick={(e) => { e.stopPropagation(); setShowTimeSwitcher((value) => !value); }}>
                       <Plus className="w-3 h-3" />
                     </span>
                   </div>
@@ -1094,7 +1096,7 @@ const TradingPanel = ({
               </div>
 
               <div className="relative">
-                <div className="relative flex h-[44px] w-full items-center justify-between rounded-[4px] border border-[#2b3149] bg-[#2a3040] px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden">
+                <div className="relative flex h-[44px] w-full items-center justify-between rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden">
                   <div className="flex items-center gap-2">
                     <span className="text-[15px] font-bold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>$</span>
                     <input
@@ -1120,14 +1122,24 @@ const TradingPanel = ({
                   className="relative hidden lg:flex flex-col group cursor-pointer"
                 >
                   <div className="absolute -top-2 left-3 bg-[#2a3040] px-1 text-[10px] text-gray-400 font-medium z-10">Investment</div>
-                  <div className="flex items-center justify-between border border-[#2b3149] rounded-xl px-2 bg-[#2a3040] hover:border-blue-500/50 transition cursor-pointer h-11">
-<span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95">
+                  <div className="flex items-center justify-between border border-[#2b3149] rounded-lg px-2 bg-[#2a3040] hover:border-blue-500/50 transition cursor-pointer h-11">
+<span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95"
+onClick={(e) => { e.stopPropagation(); setShowInvestmentSwitcher((v) => !v); }}>
                       <Minus className="w-3 h-3" />
                     </span>
-                    <span className="text-sm font-semibold text-white tracking-widest font-mono">
-                      {investment} $
-                    </span>
-<span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95">
+                    <input
+                      type="number"
+                      value={investment}
+                      min={1}
+                      max={MAX_MANUAL_INVESTMENT}
+                      step={0.01}
+                      inputMode="decimal"
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(event) => handleInvestmentInput(event.target.value)}
+                      className="hide-number-spin min-w-0 w-[60px] bg-transparent text-sm font-semibold text-white tracking-widest font-mono outline-none text-center"
+                    />
+<span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95"
+onClick={(e) => { e.stopPropagation(); setShowInvestmentSwitcher((v) => !v); }}>
                       <Plus className="w-3 h-3" />
                     </span>
                   </div>
