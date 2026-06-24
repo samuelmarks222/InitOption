@@ -2127,13 +2127,7 @@ export const AccountDropdown = ({
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
                   <div className="min-w-0">
-                    <div className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-400">{t("accountModals.currentVipTier")}</div>
-                    <div className="mt-1 flex min-w-0 items-center gap-2">
-                      <span className="truncate font-display text-[15px] font-bold leading-tight text-white">{vip.currentTier.name} VIP</span>
-                      <VipBadge tierId={vip.currentTier.id} size={18} />
-                    </div>
                     <div className="mt-1.5 truncate text-[13px] font-extrabold text-white">{profileEmail}</div>
-                    <div className="mt-1 text-[11px] text-gray-400">{vip.currentTier.shortDescription}</div>
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); setShowLevelsModal(true); }}
