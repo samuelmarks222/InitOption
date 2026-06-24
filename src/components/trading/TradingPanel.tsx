@@ -1213,7 +1213,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
 
         {/* ── Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) ── */}
         <div
-          className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:flex flex-1'} flex-col overflow-hidden rounded-xl border border-[#262b40]`}
+          className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:flex flex-1'} flex-col overflow-hidden rounded-xl border border-[#262b40] bg-[#2a3040]`}
         >
           
           {/* ── Tabs: History / Pending ───────────────────────────────── */}

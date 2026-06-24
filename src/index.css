@@ -859,6 +859,8 @@
   .trading-terminal [class*="border-[#2b3241]"],
   .trading-terminal [class*="border-[#2b3649]"],
   .trading-terminal [class*="border-[#1a2035]"],
+  .trading-terminal [class*="border-[#262b40]"],
+  .trading-terminal [class*="border-[#2b3149]"],
   .trading-terminal [class*="border-[#ffffff10]"] {
     border-color: var(--trading-border-color) !important;
   }
@@ -881,8 +883,21 @@
   .trading-terminal [class*="text-[#b8c0d3]"],
   .trading-terminal [class*="text-[#b8c2d8]"],
   .trading-terminal [class*="text-[#b8cadc]"],
-  .trading-terminal [class*="text-[#b9c8dc]"] {
+  .trading-terminal [class*="text-[#b9c8dc]"],
+  .trading-terminal [class*="text-[#596278]"] {
     color: var(--trading-muted-color) !important;
+  }
+
+  .trading-terminal [class*="text-[#eff3ff]"] {
+    color: var(--trading-text-color) !important;
+  }
+
+  .trading-terminal [class*="text-[#d8f6e5]"] {
+    color: var(--trading-success-color) !important;
+  }
+
+  .trading-terminal [class*="text-[#3b82f6]"] {
+    color: var(--trading-accent-color) !important;
   }
 
   html[data-trading-template="graphite"] .trading-terminal {
