@@ -148,7 +148,7 @@ const Footer = ({ content }: FooterProps) => {
     .map((label) => label.trim())
     .filter(Boolean)
     .filter((label) => label !== "Plisio")
-    .slice(0, 8);
+    .slice(0, 5);
 
   return (
     <footer

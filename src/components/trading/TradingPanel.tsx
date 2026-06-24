@@ -1106,7 +1106,7 @@ onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}>
                       step={0.01}
                       inputMode="decimal"
                       onChange={(event) => handleInvestmentInput(event.target.value)}
-                      className="hide-number-spin min-w-0 max-w-[72px] bg-transparent text-[15px] font-bold tracking-[0.01em] text-white outline-none min-[360px]:text-[16px]"
+                      className="hide-number-spin min-w-0 w-full bg-transparent text-[15px] font-bold tracking-[0.01em] text-white outline-none min-[360px]:text-[16px]"
                       style={{ fontFamily: "Arial, sans-serif" }}
                     />
                   </div>
@@ -1170,13 +1170,13 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
         </div>
 
         {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
-        <div className="grid grid-cols-2 gap-2.5 px-2.5 pb-3 lg:grid-cols-1 lg:gap-2.5 lg:px-0 lg:pb-4 lg:mx-4">
+        <div className="grid grid-cols-2 gap-2 px-2.5 pb-3 lg:grid-cols-1 lg:gap-2.5 lg:px-0 lg:pb-4 lg:mx-4">
           <button
             ref={higherButtonRef}
             type="button"
             onClick={() => placeTrade("higher")}
             disabled={asset.available === false}
-            className={`flex h-12 items-center justify-between rounded-lg px-4 text-[13px] font-bold text-white transition-all active:scale-[0.99] focus:outline-none ${
+            className={`flex h-[44px] items-center justify-between rounded-lg px-3 text-[12px] font-bold text-white transition-all active:scale-[0.99] focus:outline-none lg:h-12 lg:px-4 lg:text-[13px] ${
               higherButtonFocused ? "scale-[1.02]" : ""
             } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
             style={{
@@ -1185,7 +1185,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
               boxShadow: higherButtonFocused ? "var(--trading-success-focus-shadow)" : "0 4px 16px rgba(16,160,85,0.30)",
             }}>
             <span>Up</span>
-            <span className="flex w-[22px] h-[22px] items-center justify-center rounded-full bg-white/20 text-[10px]">
+            <span className="flex w-[20px] h-[20px] items-center justify-center rounded-full bg-white/20 text-[10px] lg:w-[22px] lg:h-[22px]">
               <ArrowUp className="w-3 h-3" strokeWidth={3} />
             </span>
           </button>
@@ -1195,7 +1195,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
             type="button"
             onClick={() => placeTrade("lower")}
             disabled={asset.available === false}
-            className={`flex h-12 items-center justify-between rounded-lg px-4 text-[13px] font-bold text-white transition-all active:scale-[0.99] focus:outline-none ${
+            className={`flex h-[44px] items-center justify-between rounded-lg px-3 text-[12px] font-bold text-white transition-all active:scale-[0.99] focus:outline-none lg:h-12 lg:px-4 lg:text-[13px] ${
               lowerButtonFocused ? "scale-[1.02]" : ""
             } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
             style={{
@@ -1204,7 +1204,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
               boxShadow: lowerButtonFocused ? "var(--trading-danger-focus-shadow)" : "0 4px 16px rgba(220,60,60,0.30)",
             }}>
             <span>Down</span>
-            <span className="flex w-[22px] h-[22px] items-center justify-center rounded-full bg-white/20 text-[10px]">
+            <span className="flex w-[20px] h-[20px] items-center justify-center rounded-full bg-white/20 text-[10px] lg:w-[22px] lg:h-[22px]">
               <ArrowDown className="w-3 h-3" strokeWidth={3} />
             </span>
           </button>
