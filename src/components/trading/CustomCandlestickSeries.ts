@@ -29,6 +29,7 @@ const SHADOW_BLUR = 4;
 const SHADOW_OFFSET_X = 3;
 const SHADOW_OPACITY = 0.15;
 const WICK_LINE_WIDTH = 1;
+const BODY_WIDTH_RATIO = 0.88;
 
 class CustomCandlestickPaneRenderer implements ICustomSeriesPaneRenderer {
   private _data: PaneRendererCustomData<Time, CustomCandlestickData> | null = null;
@@ -48,39 +49,48 @@ class CustomCandlestickPaneRenderer implements ICustomSeriesPaneRenderer {
       const bars = data.bars;
       if (bars.length === 0) return;
 
-      const bodyWidth = Math.max(1, data.barSpacing * 0.88);
+      const bodyWidth = Math.floor(data.barSpacing * BODY_WIDTH_RATIO);
+      if (bodyWidth < 1) return;
       const halfBody = bodyWidth / 2;
 
-      for (const bar of bars) {
+      let prevCloseY: number | null = null;
+
+      for (let i = 0; i < bars.length; i++) {
+        const bar = bars[i];
         const x = bar.x;
         const d = bar.originalData;
-        const openY = priceConverter(d.open);
         const highY = priceConverter(d.high);
         const lowY = priceConverter(d.low);
         const closeY = priceConverter(d.close);
-        if (openY === null || highY === null || lowY === null || closeY === null) continue;
+        if (highY === null || lowY === null || closeY === null) continue;
+
+        const openY = priceConverter(d.open);
+        if (openY === null) continue;
+
+        const adjustedOpenY = prevCloseY !== null ? prevCloseY : openY;
 
         const isUp = d.close >= d.open;
         const bodyColor = isUp ? options.upColor : options.downColor;
         const wickColor = isUp ? options.wickUpColor : options.wickDownColor;
 
-        const bodyTop = Math.min(openY, closeY);
-        const bodyBottom = Math.max(openY, closeY);
+        const bodyTop = Math.min(adjustedOpenY, closeY);
+        const bodyBottom = Math.max(adjustedOpenY, closeY);
         const bodyHeight = Math.max(1, bodyBottom - bodyTop);
 
         const left = x - halfBody;
+        const wickX = left + bodyWidth / 2;
 
         if (options.wickVisible) {
           ctx.save();
           ctx.strokeStyle = wickColor;
           ctx.lineWidth = WICK_LINE_WIDTH;
           ctx.beginPath();
-          ctx.moveTo(x, highY);
-          ctx.lineTo(x, bodyTop);
+          ctx.moveTo(wickX, highY);
+          ctx.lineTo(wickX, bodyTop);
           ctx.stroke();
           ctx.beginPath();
-          ctx.moveTo(x, bodyBottom);
-          ctx.lineTo(x, lowY);
+          ctx.moveTo(wickX, bodyBottom);
+          ctx.lineTo(wickX, lowY);
           ctx.stroke();
           ctx.restore();
         }
@@ -94,6 +104,8 @@ class CustomCandlestickPaneRenderer implements ICustomSeriesPaneRenderer {
         ctx.fillStyle = bodyColor;
         ctx.fillRect(left, bodyTop, bodyWidth, bodyHeight);
         ctx.restore();
+
+        prevCloseY = closeY;
       }
     });
   }
@@ -124,11 +136,11 @@ export class CustomCandlestickPaneView implements ICustomSeriesPaneView<Time, Cu
 
   defaultOptions(): CustomCandlestickOptions {
     return {
-      upColor: "#26a69a",
-      downColor: "#ef5350",
+      upColor: "#10b981",
+      downColor: "#ef4444",
       wickVisible: true,
-      wickUpColor: "#26a69a",
-      wickDownColor: "#ef5350",
+      wickUpColor: "#10b981",
+      wickDownColor: "#ef4444",
     };
   }
 }
