@@ -1083,7 +1083,7 @@ const TradingPanel = ({
 onClick={(e) => { e.stopPropagation(); setShowTimeSwitcher((value) => !value); }}>
                       <Minus className="w-3 h-3" />
                     </span>
-                    <span className="text-sm font-semibold text-white tracking-widest font-mono">
+                    <span className="text-sm font-semibold text-white tracking-widest" style={{ fontFamily: "Arial, sans-serif" }}>
                       {formatTradeClock(expirySeconds)}
                     </span>
 <span className="flex w-7 h-7 items-center justify-center rounded-lg border border-[#2b3149] bg-[#2a3040] text-gray-400 hover:text-white transition active:scale-95"
@@ -1176,7 +1176,7 @@ onClick={(e) => { e.stopPropagation(); setShowInvestmentSwitcher((v) => !v); }}>
             type="button"
             onClick={() => placeTrade("higher")}
             disabled={asset.available === false}
-            className={`flex h-12 items-center justify-between rounded-xl px-4 text-[13px] font-bold text-white transition-all active:scale-[0.99] focus:outline-none ${
+            className={`flex h-12 items-center justify-between rounded-lg px-4 text-[13px] font-bold text-white transition-all active:scale-[0.99] focus:outline-none ${
               higherButtonFocused ? "scale-[1.02]" : ""
             } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
             style={{
@@ -1195,7 +1195,7 @@ onClick={(e) => { e.stopPropagation(); setShowInvestmentSwitcher((v) => !v); }}>
             type="button"
             onClick={() => placeTrade("lower")}
             disabled={asset.available === false}
-            className={`flex h-12 items-center justify-between rounded-xl px-4 text-[13px] font-bold text-white transition-all active:scale-[0.99] focus:outline-none ${
+            className={`flex h-12 items-center justify-between rounded-lg px-4 text-[13px] font-bold text-white transition-all active:scale-[0.99] focus:outline-none ${
               lowerButtonFocused ? "scale-[1.02]" : ""
             } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
             style={{
