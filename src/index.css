@@ -469,6 +469,11 @@
     color: var(--trading-text-color) !important;
   }
 
+  .trading-terminal aside {
+    background: var(--trading-panel-bg) !important;
+    border-color: var(--trading-border-color) !important;
+  }
+
   .trading-terminal .text-muted-foreground {
     color: var(--trading-muted-color) !important;
   }
