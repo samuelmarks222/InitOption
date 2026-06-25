@@ -1276,16 +1276,19 @@ const Trade = () => {
             <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-bg)" }}>
               <WorkspaceReferral onSelectWorkspace={setActiveWorkspace} />
             </div>
-          ) : !selectedAsset ? (
-            <div className="relative flex flex-1 items-center justify-center">
-              <CandlestickLoadingScreen />
-            </div>
           ) : (
             <>
               {/* ── DESKTOP & TABLET: side-by-side chart + panel ── */}
               {isDesktopViewport ? (
               <div className="relative flex w-full min-w-[300px] flex-1 overflow-hidden min-h-0">
                 <div id="tour-chart" className="relative flex w-full min-w-[300px] flex-1 min-h-0 flex-col" style={{ background: "var(--trading-workspace-bg)" }}>
+                  {!selectedAsset && (
+                    <div className="relative flex flex-1 items-center justify-center">
+                      <CandlestickLoadingScreen />
+                    </div>
+                  )}
+                  {selectedAsset && (
+                  <>
                   <div className="w-full min-w-0">
                     <AssetInfo asset={selectedAsset} onSelectAsset={() => {}} onOpenSelector={() => setShowAssetSelector(true)}
                       openTabs={openTabs} activeTabId={activeTabId} onSelectTab={handleSelectTab}
@@ -1377,6 +1380,8 @@ const Trade = () => {
                       </button>
                     ))}
                   </div>
+                  </>
+                  )}
                   {showIndicatorsPanel && (
                     <IndicatorsPanel activeIndicators={standardActiveIndicators} onAddIndicator={handleAddIndicator}
                       onUpdateIndicator={handleUpdateIndicator} onRemoveIndicator={handleRemoveIndicator}
