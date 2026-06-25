@@ -3176,6 +3176,8 @@ const TradingChart = ({
     if (persisted && persisted.timeframe === selectedTf && persisted.aggregator && persisted.feed) {
       if (persisted.disconnectTimer) { clearTimeout(persisted.disconnectTimer); }
       persisted.disconnectTimer = null;
+      persisted.feed?.disconnect();
+      persisted.feed = null;
 
       aggregatorRef.current = persisted.aggregator;
       engineRef.current = persisted.engine;
@@ -3272,8 +3274,6 @@ const TradingChart = ({
         },
       });
       marketFeedRef.current.connect();
-
-      persistedFeeds.delete(cacheKey);
 
       return () => {
         mainUpdateSchedulerRef.current?.cleanup();
