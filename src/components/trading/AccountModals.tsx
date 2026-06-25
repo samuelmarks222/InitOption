@@ -2072,11 +2072,6 @@ export const AccountDropdown = ({
   const [isSigningOut, setIsSigningOut] = useState(false);
   const navigate = useNavigate();
 
-  const openQuickAction = (action: () => void) => {
-    onClose();
-    action();
-  };
-
   const handleLogout = async () => {
     if (isSigningOut) return;
 
@@ -2090,11 +2085,6 @@ export const AccountDropdown = ({
       setIsSigningOut(false);
     }
   };
-
-  const quickActions = [
-    { label: t("accountModals.quickActionTrades"), action: () => openQuickAction(() => onOpenProfile("trading_history")) },
-    { label: t("accountModals.quickActionMyAccount"), action: () => openQuickAction(() => onOpenProfile("personal")) },
-  ];
 
   const profileEmail = profile?.email || "trader@platform.com";
   const accountId = profile?.id?.slice(0, 8).toUpperCase() || "--------";
@@ -2303,35 +2293,28 @@ export const AccountDropdown = ({
 
               <div className="border-t border-white/10" />
 
-              <div className="space-y-1">
-                {["Deposit", "Withdrawal", "Payments", "Trades", "My account"].map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => {}}
-                    className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-[13px] font-semibold text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
-                  >
-                    {item}
-                    <ChevronRight className="h-3.5 w-3.5 text-gray-500" />
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-3 bg-[#121824] p-3 lg:bg-transparent">
             <div>
               <div className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#7f8ea8]">{t("accountModals.quickActions")}</div>
-              <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
-                {quickActions.map((item) => (
+              <div className="space-y-1">
+                {[
+                  { label: "Deposit", action: onOpenDeposit },
+                  { label: "Withdrawal", action: onOpenWithdrawal },
+                  { label: "Payments", action: () => onOpenProfile("balance_history") },
+                  { label: "Trades", action: () => onOpenProfile("trading_history") },
+                  { label: "My account", action: () => onOpenProfile("personal") },
+                ].map((item) => (
                   <button
                     key={item.label}
                     type="button"
                     onClick={item.action}
-                    className="flex w-full items-center justify-between rounded-[12px] bg-white/5 px-3 py-2.5 text-[12px] font-bold text-white transition-colors hover:bg-white/10 lg:text-[13px]"
+                    className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-[13px] font-semibold text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
                   >
                     {item.label}
-                    <ChevronRight className="h-4 w-4 text-[#8fa3c8]" />
+                    <ChevronRight className="h-3.5 w-3.5 text-gray-500" />
                   </button>
                 ))}
               </div>
