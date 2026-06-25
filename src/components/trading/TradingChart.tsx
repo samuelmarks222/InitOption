@@ -66,7 +66,7 @@ import {
   Minus,
   CheckCheck,
 } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ActiveTrade, TradeDirection } from "@/hooks/useTrading";
 import { cn } from "@/lib/utils";
 import AssetSymbolMark from "./AssetSymbolMark";
@@ -2767,13 +2767,15 @@ const TradingChart = ({
   }, [chartGridColor, chartTextColor, effectiveChartTheme]);
 
   // ─── INIT MASTER CHART ───────────────────────────────────────────
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!mainRef.current) return;
+    const containerWidth = mainRef.current.clientWidth || 960;
+    const containerHeight = mainRef.current.clientHeight || 480;
     let chart: IChartApi;
     try {
       chart = createChart(mainRef.current, {
-        width: mainRef.current.clientWidth,
-        height: mainRef.current.clientHeight,
+        width: containerWidth,
+        height: containerHeight,
         layout: { 
           background: { type: ColorType.Solid, color: TRANSPARENT_COLOR },
           textColor: chartTextColor,
@@ -3890,7 +3892,7 @@ const TradingChart = ({
       )}
 
       <div
-        className="relative w-full min-w-0 flex-1 min-h-0 overflow-hidden"
+        className="relative w-full min-w-[300px] flex-1 min-h-[200px] overflow-hidden"
         ref={mainRef}
         style={chartViewportStyle}
         onMouseMove={handleChartMouseMove}

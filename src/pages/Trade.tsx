@@ -1284,8 +1284,8 @@ const Trade = () => {
             <>
               {/* ── DESKTOP & TABLET: side-by-side chart + panel ── */}
               {isDesktopViewport ? (
-              <div className="relative flex w-full min-w-0 flex-1 overflow-hidden min-h-0">
-                <div id="tour-chart" className="relative flex w-full min-w-0 flex-1 min-h-0 flex-col" style={{ background: "var(--trading-workspace-bg)" }}>
+              <div className="relative flex w-full min-w-[300px] flex-1 overflow-hidden min-h-0">
+                <div id="tour-chart" className="relative flex w-full min-w-[300px] flex-1 min-h-0 flex-col" style={{ background: "var(--trading-workspace-bg)" }}>
                   <div className="w-full min-w-0">
                     <AssetInfo asset={selectedAsset} onSelectAsset={() => {}} onOpenSelector={() => setShowAssetSelector(true)}
                       openTabs={openTabs} activeTabId={activeTabId} onSelectTab={handleSelectTab}
@@ -1293,7 +1293,7 @@ const Trade = () => {
                       activeTrades={visibleActiveTrades} livePrices={liveChartPrices} />
                   </div>
                   <div
-                    className={`grid w-full min-w-0 flex-1 min-h-0 gap-[1px] ${getDesktopChartGridClass(chartLayoutMode)}`}
+                    className={`grid w-full min-w-[300px] flex-1 min-h-0 gap-[1px] ${getDesktopChartGridClass(chartLayoutMode)}`}
                     style={{ background: "var(--trading-chart-divider-bg)" }}
                   >
                     {desktopChartAssets.map((chartAsset, index) => {
@@ -1303,7 +1303,7 @@ const Trade = () => {
                       return (
                         <div
                           key={chartAsset.symbol}
-                          className={`relative flex w-full min-w-0 min-h-0 flex-col overflow-hidden ${
+                          className={`relative flex w-full min-w-[300px] min-h-[200px] flex-col overflow-hidden ${
                             chartLayoutMode > 1 ? "border border-transparent" : ""
                           } ${isActivePane && chartLayoutMode > 1 ? "border-[#4f86c8]/55 shadow-[inset_0_0_0_1px_rgba(104,166,255,0.18)]" : ""}`}
                           style={{ background: "var(--trading-chart-pane-bg)" }}
