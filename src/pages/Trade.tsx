@@ -114,7 +114,6 @@ const DEFAULT_TRADE_ASSET_ROW = {
   quote_country: "US",
 } as TradeAssetConfigRow;
 
-const TRADE_ASSET_BOOT_TIMEOUT_MS = 4500;
 
 const buildTradeTabAsset = (assetRow: TradeAssetConfigRow): TradeTabAsset => {
   const category = normalizeAssetCategory(assetRow.category, assetRow.symbol);
@@ -379,26 +378,7 @@ const Trade = () => {
 
   useEffect(() => {
     let cancelled = false;
-    let timeoutId: number | undefined;
     const fallbackAsset = buildTradeTabAsset(DEFAULT_TRADE_ASSET_ROW);
-
-    const resolveActiveAssetRows = async () => {
-      const query = supabase
-        .from("assets_config")
-        .select("*")
-        .eq("status", "active")
-        .order("symbol")
-        .then(({ data, error }) => {
-          if (error) throw error;
-          return ((data ?? []) as TradeAssetConfigRow[]).filter((assetRow) => String(assetRow.symbol ?? "").trim());
-        });
-
-      const timeout = new Promise<TradeAssetConfigRow[]>((resolve) => {
-        timeoutId = window.setTimeout(() => resolve([DEFAULT_TRADE_ASSET_ROW]), TRADE_ASSET_BOOT_TIMEOUT_MS);
-      });
-
-      return Promise.race([query, timeout]);
-    };
 
     const applyInitialAssets = (assetRows: TradeAssetConfigRow[]) => {
       const availableRows = assetRows.length ? assetRows : [DEFAULT_TRADE_ASSET_ROW];
@@ -431,17 +411,38 @@ const Trade = () => {
 
     async function initAssets() {
       try {
-        const assetRows = await resolveActiveAssetRows();
-        if (!cancelled) {
-          applyInitialAssets(assetRows);
-        }
+        const { data, error } = await supabase
+          .from("assets_config")
+          .select("*")
+          .eq("status", "active")
+          .order("symbol");
+
+        if (cancelled) return;
+
+        if (error) throw error;
+
+        const assetRows = ((data ?? []) as TradeAssetConfigRow[]).filter((assetRow) => String(assetRow.symbol ?? "").trim());
+        applyInitialAssets(assetRows);
       } catch (error) {
-        console.warn("Failed to load active assets. Using fallback trade desk asset.", error);
+        console.warn("Failed to load active assets. Using saved tabs or fallback.", error);
         if (!cancelled) {
+          const savedTabsRaw = localStorage.getItem("trading_open_tabs");
+          if (savedTabsRaw) {
+            try {
+              const parsed = JSON.parse(savedTabsRaw) as Array<{ symbol?: string }>;
+              const savedTabs = parsed
+                .map((tab) => buildTradeTabAsset({ symbol: tab.symbol, name: tab.symbol, category: "OTC", status: "active", payout_pct: 85, base_country: null, quote_country: null, stock_logo: null, commodity_icon: null, id: 0, created_at: null } as unknown as TradeAssetConfigRow))
+                .filter(Boolean);
+              if (savedTabs.length > 0) {
+                setOpenTabs(savedTabs);
+                setSelectedAssetSaved(savedTabs[0]);
+                setActiveTabId(savedTabs[0].symbol);
+                return;
+              }
+            } catch {}
+          }
           applyInitialAssets([DEFAULT_TRADE_ASSET_ROW]);
         }
-      } finally {
-        if (timeoutId) window.clearTimeout(timeoutId);
       }
     }
 
@@ -449,7 +450,6 @@ const Trade = () => {
 
     return () => {
       cancelled = true;
-      if (timeoutId) window.clearTimeout(timeoutId);
     };
   }, []);
 

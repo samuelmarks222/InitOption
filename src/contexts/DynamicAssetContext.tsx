@@ -108,13 +108,24 @@ export const DynamicAssetProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [assets, setAssets] = useState<DynamicAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const assetsRef = useRef<DynamicAsset[]>([]);
+  const lastGoodAssetsRef = useRef<DynamicAsset[]>([]);
+  const hasEverLoadedRef = useRef(false);
   const userId = user?.id ?? null;
+  const prevUserIdRef = useRef(userId);
 
   useEffect(() => {
+    const prev = prevUserIdRef.current;
+    prevUserIdRef.current = userId;
+
     let intervalId: NodeJS.Timeout;
 
     if (!userId) {
+      if (hasEverLoadedRef.current) {
+        setLoading(false);
+        return;
+      }
       assetsRef.current = [];
+      lastGoodAssetsRef.current = [];
       setAssets([]);
       setLoading(false);
       return;
@@ -131,8 +142,6 @@ export const DynamicAssetProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (error) {
         console.error("Error loading active assets:", error);
-        assetsRef.current = [];
-        setAssets([]);
         setLoading(false);
         return;
       }
@@ -144,6 +153,8 @@ export const DynamicAssetProvider: React.FC<{ children: React.ReactNode }> = ({ 
           .map((assetRow) => buildDynamicAsset(assetRow, nowSec))
           .sort((a, b) => b.maxProfit - a.maxProfit);
         assetsRef.current = nextAssets;
+        lastGoodAssetsRef.current = nextAssets;
+        hasEverLoadedRef.current = true;
         setAssets(nextAssets);
       };
 
@@ -161,7 +172,7 @@ export const DynamicAssetProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, [userId]);
 
   const getAsset = (symbol: string) => {
-    return assets.find(a => a.symbol === symbol);
+    return assets.find(a => a.symbol === symbol) ?? lastGoodAssetsRef.current.find(a => a.symbol === symbol);
   };
 
   return (
