@@ -1974,9 +1974,7 @@ const DemoBalanceModal = ({
         <div className="flex items-center justify-between gap-4">
           <div>
             <h3 className="text-[22px] font-bold text-white">Edit demo balance</h3>
-            <p className="mt-2 text-[14px] leading-6 text-[#9aa7bf]">
-              Set any demo amount you want for practice. This never touches your live funds.
-            </p>
+
           </div>
           <button
             type="button"
@@ -2175,10 +2173,10 @@ export const AccountDropdown = ({
                   onSwitch("live");
                   onClose();
                 }}
-className={`w-full rounded border px-3 py-2.5 text-left transition-colors ${
+                className={`w-full text-left ${
                    accountType === "live"
-                     ? "border-[#2f87ff]/35 bg-white/[0.06]"
-                     : "border-white/6 bg-white/[0.03] hover:bg-white/[0.05]"
+                     ? "text-white"
+                     : "text-gray-300 hover:text-white"
                  }`}
               >
                 <div className="flex items-start gap-3">
@@ -2212,10 +2210,10 @@ className={`w-full rounded border px-3 py-2.5 text-left transition-colors ${
                   onSwitch("demo");
                   onClose();
                 }}
-className={`w-full rounded border px-3 py-2.5 text-left transition-colors ${
+                className={`w-full text-left ${
                    accountType === "demo"
-                     ? "border-[#2f87ff]/35 bg-white/[0.06]"
-                     : "border-white/6 bg-white/[0.03] hover:bg-white/[0.05]"
+                     ? "text-white"
+                     : "text-gray-300 hover:text-white"
                  }`}
               >
                 <div className="flex items-start gap-3">
@@ -2263,7 +2261,7 @@ className={`w-full rounded border px-3 py-2.5 text-left transition-colors ${
                         </button>
                       </div>
                     </div>
-                    <div className="mt-1 text-[10.5px] leading-relaxed text-gray-500">Editable practice balance for demo trading.</div>
+
                   </div>
                 </div>
               </button>
@@ -2274,11 +2272,11 @@ className={`w-full rounded border px-3 py-2.5 text-left transition-colors ${
                   onSwitch("tournament");
                   onClose();
                 }}
-                className={`w-full rounded-[15px] border px-3 py-2.5 text-left transition-colors ${
-                  accountType === "tournament"
-                    ? "border-[#00C076]/35 bg-[#00C076]/[0.07]"
-                    : "border-white/6 bg-white/[0.03] hover:bg-white/[0.05]"
-                }`}
+                className={`w-full text-left ${
+                   accountType === "tournament"
+                     ? "text-[#00C076]"
+                     : "text-gray-300 hover:text-white"
+                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div className="pt-0.5">
@@ -2296,7 +2294,7 @@ className={`w-full rounded border px-3 py-2.5 text-left transition-colors ${
                     <div className="mt-0.5 font-display text-[14px] font-semibold text-white">
                       {accountType === "tournament" ? t("accountModals.tournamentActive") : t("accountModals.tournamentJoin")}
                     </div>
-                    <div className="mt-1 text-[10.5px] leading-relaxed text-gray-500">Use event balances for tournament trading.</div>
+                    <div className="mt-1 text-[10.5px] leading-relaxed text-gray-500">Use even balance for tournament trading.</div>
                   </div>
                 </div>
               </button>
