@@ -28,8 +28,13 @@ const getAnimationFrameScheduler = () => {
 
 export class CandleAggregator {
   private readonly timeframeSeconds: number;
-  private readonly onClose: CandleCloseCallback;
-  private readonly onUpdate: CandleUpdateCallback;
+  private onClose: CandleCloseCallback;
+  private onUpdate: CandleUpdateCallback;
+
+  setCallbacks(onClose: CandleCloseCallback, onUpdate: CandleUpdateCallback): void {
+    this.onClose = onClose;
+    this.onUpdate = onUpdate;
+  }
   private currentCandle: OHLCCandle | null = null;
   private lastTradePrice: number | null = null;
   private lastProcessedTimestamp = 0;

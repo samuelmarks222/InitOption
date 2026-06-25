@@ -2095,6 +2095,21 @@ class SmoothUpdateScheduler {
   }
 }
 
+// ── Persistent feed cache: keeps market feed alive across page navigation ──
+const PERSIST_FEED_TTL = 60_000;
+interface PersistedFeedEntry {
+  symbol: string;
+  timeframe: SupportedChartTimeframe;
+  feed: MarketDataFeed;
+  aggregator: CandleAggregator;
+  engine: OTCPriceEngine;
+  history: OHLCCandle[];
+  liveCandle: OHLCCandle | null;
+  disconnectTimer: ReturnType<typeof setTimeout> | null;
+}
+const persistedFeeds = new Map<string, PersistedFeedEntry>();
+const feedCallbackRefs = new Map<string, { onClose: CandleCloseCallback; onUpdate: CandleUpdateCallback } | null>();
+
 const TradingChart = ({
   asset,
   onPriceUpdate,
@@ -3148,16 +3163,154 @@ const TradingChart = ({
     const tf = TIMEFRAMES[selectedTf];
     if (!tf || !mainSeriesRef.current || !chartRef.current) return;
     const websocketUrl = import.meta.env.VITE_MARKET_DATA_WS_URL;
+    const step = tf.seconds;
+    const nowSec = Date.now() / 1000;
+    const cacheKey = asset.symbol;
+    const engineBasePrice =
+      typeof asset.basePrice === "number" && Number.isFinite(asset.basePrice) && asset.basePrice > 0
+        ? asset.basePrice
+        : assetSnapshotRef.current.price;
+
+    // ── Check for persisted feed (survives page navigation) ────────────────
+    const persisted = persistedFeeds.get(cacheKey);
+    if (persisted && persisted.timeframe === selectedTf && persisted.aggregator && persisted.feed) {
+      if (persisted.disconnectTimer) { clearTimeout(persisted.disconnectTimer); }
+      persisted.disconnectTimer = null;
+
+      aggregatorRef.current = persisted.aggregator;
+      engineRef.current = persisted.engine;
+      historyRef.current = persisted.history;
+      liveRef.current = persisted.liveCandle;
+      loadedHistoryCountRef.current = persisted.history.length;
+
+      const startPrice = liveRef.current?.close ?? engineBasePrice;
+
+      mainSeriesRef.current?.setData(getMainSeriesData(chartTypeRef.current, historyRef.current));
+
+      setCurrentPrice(liveRef.current?.close ?? startPrice);
+      setPriceChange(0);
+      if (liveRef.current) {
+        setLivePriceBeacon({
+          price: getLiveBeaconPrice(chartTypeRef.current, liveRef.current, historyRef.current),
+          time: liveRef.current.time,
+          logical: historyRef.current.length,
+        });
+      }
+
+      const containerWidth = mainRef.current?.clientWidth ?? 960;
+      const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, historyRef.current.length);
+      const rightOffset = getChartRightOffset(trendContextBars);
+      chartRef.current.timeScale().applyOptions({
+        barSpacing: 6,
+        minBarSpacing: 1.5,
+        rightOffset,
+        timeVisible: true,
+        secondsVisible: tf.seconds < 60,
+        tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
+        fixLeftEdge: true,
+        fixRightEdge: false,
+        rightBarStaysOnScroll: false,
+        shiftVisibleRangeOnNewBar: false,
+        allowShiftVisibleRangeOnWhitespaceReplacement: false,
+      });
+      scrollChartToLiveEdge(historyRef.current.length);
+
+      renderOverlayIndicators(getIndicatorHistory());
+      setForceOscillatorRender((current) => current + 1);
+
+      // onClose
+      const handleCandleClose = (closed: OHLCCandle) => {
+        historyRef.current = [...historyRef.current, closed].slice(-MAX_CANDLES_IN_MEMORY);
+        renderOverlayIndicators(getIndicatorHistory());
+        setForceOscillatorRender((current) => current + 1);
+      };
+      // onUpdate
+      const handleCandleUpdate = (candle: OHLCCandle, sourceTimestamp?: number) => {
+        if (!mainSeriesRef.current) return;
+        liveRef.current = candle;
+        setCurrentPrice(candle.close);
+        setPriceChange(((candle.close - startPrice) / Math.max(startPrice, 0.000001)) * 100);
+        const effectiveMarkerTime =
+          typeof sourceTimestamp === "number" && Number.isFinite(sourceTimestamp) ? sourceTimestamp : candle.time;
+        const intrabarFraction = tf.seconds > 0 ? (effectiveMarkerTime - candle.time) / tf.seconds : 0;
+        const markerLogical = historyRef.current.length + getIntrabarLogicalOffset(intrabarFraction);
+        setLivePriceBeacon({
+          price: getLiveBeaconPrice(chartTypeRef.current, candle, historyRef.current),
+          time: candle.time,
+          logical: markerLogical,
+        });
+        onPriceUpdateRef.current?.(candle.close, effectiveMarkerTime, tf.seconds, markerLogical);
+        const updatePayload = buildMainSeriesUpdatePayload(chartTypeRef.current, candle, historyRef.current);
+        if (mainUpdateSchedulerRef.current) {
+          mainUpdateSchedulerRef.current.update(updatePayload, candle, previousCandleRef.current, startPrice, tf.seconds);
+          previousCandleRef.current = { ...candle };
+        }
+        renderOverlayIndicators(getIndicatorHistory());
+      };
+
+      aggregatorRef.current.setCallbacks(handleCandleClose, handleCandleUpdate);
+
+      // Create a fresh feed that ticks into the persisted aggregator
+      marketFeedRef.current = createMarketDataFeed({
+        websocketUrl,
+        subscription: {
+          symbol: asset.symbol,
+          basePrice: engineBasePrice,
+          timeframe: tf,
+          assetCategory: asset.type,
+        },
+        callbacks: {
+          onTick: (tick) => {
+            const entry = persistedFeeds.get(cacheKey);
+            if (entry?.aggregator) {
+              entry.aggregator.onTick({ timestamp: tick.timestamp, price: tick.price });
+            }
+          },
+          onError: (error) => {
+            console.warn(`Market feed error for ${asset.symbol}:`, error);
+          },
+        },
+      });
+      marketFeedRef.current.connect();
+
+      persistedFeeds.delete(cacheKey);
+
+      return () => {
+        mainUpdateSchedulerRef.current?.cleanup();
+        if (aggregatorRef.current) aggregatorRef.current.setCallbacks(() => {}, () => {});
+        const key = asset.symbol;
+        const prevEntry = persistedFeeds.get(key);
+        if (prevEntry?.disconnectTimer) clearTimeout(prevEntry.disconnectTimer);
+        const disconnectTimer = setTimeout(() => {
+          const entry = persistedFeeds.get(key);
+          if (entry) {
+            entry.feed?.disconnect();
+            entry.aggregator?.destroy();
+            persistedFeeds.delete(key);
+          }
+          feedCallbackRefs.delete(key);
+        }, PERSIST_FEED_TTL);
+        persistedFeeds.set(key, {
+          symbol: asset.symbol,
+          timeframe: selectedTf,
+          feed: marketFeedRef.current,
+          aggregator: aggregatorRef.current,
+          engine: engineRef.current,
+          history: historyRef.current,
+          liveCandle: liveRef.current,
+          disconnectTimer,
+        });
+        feedCallbackRefs.set(key, null);
+        marketFeedRef.current = null;
+        engineRef.current = null;
+        aggregatorRef.current = null;
+      };
+    }
 
     marketFeedRef.current?.disconnect();
     marketFeedRef.current = null;
     if (aggregatorRef.current) aggregatorRef.current.destroy();
 
-    const nowSec = Date.now() / 1000;
-    const engineBasePrice =
-      typeof asset.basePrice === "number" && Number.isFinite(asset.basePrice) && asset.basePrice > 0
-        ? asset.basePrice
-        : assetSnapshotRef.current.price;
     const engine = new OTCPriceEngine(asset.symbol, engineBasePrice, asset.type);
     engineRef.current = engine;
 
@@ -3167,7 +3320,6 @@ const TradingChart = ({
 
     mainSeriesRef.current?.setData(getMainSeriesData(chartTypeRef.current, historyRef.current));
 
-    const step = tf.seconds;
     const seedReplay = replayDeterministicTickState({
       symbol: asset.symbol,
       basePrice: engineBasePrice,
@@ -3179,7 +3331,6 @@ const TradingChart = ({
     liveRef.current = seedCandle;
     const startPrice = seedCandle.open;
 
-    // Freeze trades to the visible live candle anchor shown on the chart.
     setCurrentPrice(seedCandle.close);
     setPriceChange(((seedCandle.close - seedCandle.open) / Math.max(seedCandle.open, 0.000001)) * 100);
     setLivePriceBeacon({
@@ -3188,7 +3339,6 @@ const TradingChart = ({
       logical: history.length,
     });
 
-    // Apply timeframe-appropriate bar spacing so candles look correct at each interval
     const containerWidth = mainRef.current?.clientWidth ?? 960;
     const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, history.length);
     const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, history.length);
@@ -3211,17 +3361,12 @@ const TradingChart = ({
     renderOverlayIndicators(getIndicatorHistory());
     setForceOscillatorRender((current) => current + 1);
 
-    // ── CandleAggregator setup ─────────────────────────────────────────────
-    // Destroy previous aggregator and create a new one
-
-    // onClose: called synchronously when a period ends — push the closed candle to history
     const handleCandleClose = (closed: OHLCCandle) => {
       historyRef.current = [...historyRef.current, closed].slice(-MAX_CANDLES_IN_MEMORY);
       renderOverlayIndicators(getIndicatorHistory());
       setForceOscillatorRender((current) => current + 1);
     };
 
-    // onUpdate: called via RAF — update the live candle in the chart
     const handleCandleUpdate = (candle: OHLCCandle, sourceTimestamp?: number) => {
       if (!mainSeriesRef.current) return;
       liveRef.current = candle;
@@ -3248,7 +3393,6 @@ const TradingChart = ({
       const updatePayload = buildMainSeriesUpdatePayload(chartTypeRef.current, candle, historyRef.current);
 
       if (mainUpdateSchedulerRef.current) {
-        // Pass candle data for market-responsive animation duration
         mainUpdateSchedulerRef.current.update(
           updatePayload,
           candle,
@@ -3265,7 +3409,18 @@ const TradingChart = ({
     aggregatorRef.current.setSeedCandle(seedCandle, nowSec);
     handleCandleUpdate(aggregatorRef.current.getCurrentCandle() ?? seedCandle, nowSec);
 
-    // ── Tick loop (drives price engine + feeds aggregator) ─────────────────
+    // Register in persisted feeds before creating the feed so onTick finds the aggregator
+    persistedFeeds.set(cacheKey, {
+      symbol: asset.symbol,
+      timeframe: selectedTf,
+      feed: null,
+      aggregator: aggregatorRef.current,
+      engine: engineRef.current,
+      history: historyRef.current,
+      liveCandle: liveRef.current,
+      disconnectTimer: null,
+    });
+
     marketFeedRef.current = createMarketDataFeed({
       websocketUrl,
       subscription: {
@@ -3276,10 +3431,10 @@ const TradingChart = ({
       },
       callbacks: {
         onTick: (tick) => {
-          aggregatorRef.current?.onTick({
-            timestamp: tick.timestamp,
-            price: tick.price,
-          });
+          const entry = persistedFeeds.get(cacheKey);
+          if (entry?.aggregator) {
+            entry.aggregator.onTick({ timestamp: tick.timestamp, price: tick.price });
+          }
         },
         onError: (error) => {
           console.warn(`Market feed error for ${asset.symbol}:`, error);
@@ -3287,14 +3442,37 @@ const TradingChart = ({
       },
     });
     marketFeedRef.current.connect();
+    { const e = persistedFeeds.get(cacheKey); if (e) e.feed = marketFeedRef.current; }
 
-    // ── Dedicated overlay indicator refresh every 3s ────────────────────────
     return () => {
       mainUpdateSchedulerRef.current?.cleanup();
-      marketFeedRef.current?.disconnect();
+      if (aggregatorRef.current) aggregatorRef.current.setCallbacks(() => {}, () => {});
+      const key = asset.symbol;
+      const prevEntry = persistedFeeds.get(key);
+      if (prevEntry?.disconnectTimer) clearTimeout(prevEntry.disconnectTimer);
+      const disconnectTimer = setTimeout(() => {
+        const entry = persistedFeeds.get(key);
+        if (entry) {
+          entry.feed?.disconnect();
+          entry.aggregator?.destroy();
+          persistedFeeds.delete(key);
+        }
+        feedCallbackRefs.delete(key);
+      }, PERSIST_FEED_TTL);
+      persistedFeeds.set(key, {
+        symbol: asset.symbol,
+        timeframe: selectedTf,
+        feed: marketFeedRef.current,
+        aggregator: aggregatorRef.current,
+        engine: engineRef.current,
+        history: historyRef.current,
+        liveCandle: liveRef.current,
+        disconnectTimer,
+      });
+      feedCallbackRefs.set(key, null);
       marketFeedRef.current = null;
       engineRef.current = null;
-      if (aggregatorRef.current) { aggregatorRef.current.destroy(); aggregatorRef.current = null; }
+      aggregatorRef.current = null;
     };
   }, [
     applyResponsivePriceScale,
