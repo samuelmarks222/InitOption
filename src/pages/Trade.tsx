@@ -207,7 +207,7 @@ const loadStoredActiveIndicators = (): ActiveIndicator[] => {
 };
 
 const CandlestickLoadingScreen = () => (
-  <div className="flex h-[100dvh] items-center justify-center bg-[radial-gradient(circle_at_center,#20283a_0%,#171d2d_48%,#111827_100%)] px-6 text-white">
+  <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,#20283a_0%,#171d2d_48%,#111827_100%)] px-6 text-white">
     <div className="flex flex-col items-center gap-5">
       <div className="relative flex h-40 w-40 items-center justify-center rounded-full border border-white/[0.08] bg-[#151c2a] shadow-[0_18px_50px_rgba(0,0,0,0.35)] sm:h-44 sm:w-44">
         <div className="absolute inset-0 rounded-full border-[3px] border-[#243046] border-t-[#58a6ff] animate-spin" />
