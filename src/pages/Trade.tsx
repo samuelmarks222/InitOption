@@ -1395,7 +1395,7 @@ const Trade = () => {
                     </div>
                   )}
                 </div>
-                {rightPanelOpen ? (
+                {selectedAsset && (rightPanelOpen ? (
                   <div id="tour-trade-panel" className="relative z-20 flex shrink-0 flex-col shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-[width,opacity] duration-300 ease-out">
                     <button
                       type="button"
@@ -1422,10 +1422,10 @@ const Trade = () => {
                   >
                     <ChevronsLeft className="h-4 w-4" strokeWidth={2.7} />
                   </button>
-                )}
+                ))}
                 {showAssetSelector && <AssetSelectorModal onSelect={handleSelectAsset} onClose={() => setShowAssetSelector(false)} />}
               </div>
-              ) : (
+              ) : selectedAsset && (
               <div className="relative flex flex-1 flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
                 {/* ── MOBILE: Chart + Trading Panel combined in a fixed flex layout ── */}
                 {/* Chart block — dynamically fills remaining vertical space */}
