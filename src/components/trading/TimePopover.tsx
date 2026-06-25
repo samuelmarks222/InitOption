@@ -57,7 +57,7 @@ const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
 
   return (
     <>
-      <div className="fixed inset-0 z-30" onClick={onClose} />
+      <div className="fixed inset-0 z-[99]" onClick={onClose} />
       <div
         ref={cardRef}
         style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 100 }}

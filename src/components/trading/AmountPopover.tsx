@@ -75,7 +75,7 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
 
   return (
     <>
-      <div className="fixed inset-0 z-30" onClick={() => commitDisplay(true)} />
+      <div className="fixed inset-0 z-[99]" onClick={() => commitDisplay(true)} />
       <div
         ref={cardRef}
         style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 100 }}
