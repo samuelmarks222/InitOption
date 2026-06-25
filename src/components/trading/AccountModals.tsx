@@ -2300,6 +2300,22 @@ export const AccountDropdown = ({
                   </div>
                 </div>
               </button>
+
+              <div className="border-t border-white/10" />
+
+              <div className="space-y-1">
+                {["Deposit", "Withdrawal", "Payments", "Trades", "My account"].map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => {}}
+                    className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-[13px] font-semibold text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
+                  >
+                    {item}
+                    <ChevronRight className="h-3.5 w-3.5 text-gray-500" />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
