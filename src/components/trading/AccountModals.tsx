@@ -2199,10 +2199,11 @@ export const AccountDropdown = ({
                         </div>
                       </div>
                     </div>
-                    <div className="mt-1 text-[10.5px] leading-relaxed text-gray-500">Funds appear here after approved or auto-credited deposits.</div>
                   </div>
                 </div>
               </button>
+
+              <div className="border-t border-white/10" />
 
               <button
                 type="button"
@@ -2266,6 +2267,8 @@ export const AccountDropdown = ({
                 </div>
               </button>
 
+              <div className="border-t border-white/10" />
+
               <button
                 type="button"
                 onClick={() => {
@@ -2294,7 +2297,6 @@ export const AccountDropdown = ({
                     <div className="mt-0.5 font-display text-[14px] font-semibold text-white">
                       {accountType === "tournament" ? t("accountModals.tournamentActive") : t("accountModals.tournamentJoin")}
                     </div>
-                    <div className="mt-1 text-[10.5px] leading-relaxed text-gray-500">Use even balance for tournament trading.</div>
                   </div>
                 </div>
               </button>
