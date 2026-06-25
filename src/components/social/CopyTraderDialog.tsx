@@ -95,7 +95,7 @@ export const CopyTraderDialog = ({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span>Copy trades from {getTraderDisplayName(trader)}</span>
-                <VipBadge tierId={(trader.vip_tier as any) ?? "none"} size={20} />
+                <VipBadge tierId={(trader.vip_tier as any) ?? "standard"} size={20} />
               </div>
             </div>
           </DialogTitle>

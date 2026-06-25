@@ -181,7 +181,7 @@ const SocialTopTraders = () => {
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-semibold text-white">{getTraderDisplayName(trader)}</span>
-                                <VipBadge tierId={(trader.vip_tier as any) ?? "none"} size={16} />
+                                <VipBadge tierId={(trader.vip_tier as any) ?? "standard"} size={16} />
                               </div>
                             </div>
                           </Link>

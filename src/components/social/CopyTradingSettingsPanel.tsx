@@ -54,7 +54,7 @@ export const CopyTradingSettingsPanel = ({ compact = false }: CopyTradingSetting
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="truncate text-[15px] font-bold text-white">{getTraderDisplayName(setting.target)}</p>
-                    <VipBadge tierId={(setting.target?.vip_tier as any) ?? "none"} size={18} />
+                    <VipBadge tierId={(setting.target?.vip_tier as any) ?? "standard"} size={18} />
                   </div>
                   <p className="mt-1 text-[12px] text-gray-400">{formatCopySettingSummary(setting)}</p>
                 </div>

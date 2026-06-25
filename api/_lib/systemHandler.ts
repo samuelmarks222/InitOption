@@ -866,7 +866,7 @@ const handleAdminUsers = async (request: ApiRequest, response: ApiResponse) => {
 
     return {
       balance: Number(profile.balance ?? 0),
-      currentTier: profile.vip_tier_override ?? "none",
+      currentTier: profile.vip_tier_override ?? "standard",
       id: profile.id,
       kycDocuments: storedDocuments,
       kycStatus: ((profile.kyc_status as SupportedKycStatus | null) ?? "Pending") as SupportedKycStatus,

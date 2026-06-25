@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { toast } from "@/hooks/use-toast";
 import { fetchAdminUserManagementFeed, reviewUserKyc, type AdminKycDecision, type AdminKycDocuments, type AdminUserManagementFeedItem } from "@/lib/adminUsers";
-import { VIP_TIER_SEQUENCE, calculateVipTier, formatVipCurrency, getVipTierById, VipTierId } from "@/lib/vip";
+import { formatVipCurrency, getVipTierById, VipTierId } from "@/lib/vip";
 import { VipBadge } from "@/components/vip/VipBadge";
 
 type KycDocument = AdminKycDocuments["front"];
@@ -31,11 +31,9 @@ type AdminUserRow = {
 
 const TIER_OPTIONS: Array<{ label: string; value: VipTierId | "auto" }> = [
   { label: "Auto", value: "auto" },
-  { label: "Bronze", value: "bronze" },
-  { label: "Silver", value: "silver" },
-  { label: "Gold", value: "gold" },
-  { label: "Platinum", value: "platinum" },
-  { label: "Diamond", value: "diamond" },
+  { label: "STANDARD", value: "standard" },
+  { label: "PRO", value: "pro" },
+  { label: "VIP", value: "vip" },
 ];
 
 const STATUS_STYLES: Record<KycStatus, string> = {
@@ -45,7 +43,7 @@ const STATUS_STYLES: Record<KycStatus, string> = {
 };
 
 const isVipTierId = (value: string | null | undefined): value is VipTierId =>
-  value === "none" || value === "bronze" || value === "silver" || value === "gold" || value === "platinum" || value === "diamond";
+  value === "standard" || value === "pro" || value === "vip";
 
 const UserManagement = () => {
   const { roles } = useStaffAccess();
@@ -72,15 +70,12 @@ const UserManagement = () => {
       const serverUsers = await fetchAdminUserManagementFeed();
       const nextUsers: AdminUserRow[] = serverUsers.map((user: AdminUserManagementFeedItem) => {
         const manualOverride = isVipTierId(user.manualOverride) ? user.manualOverride : null;
-        const computedTier = calculateVipTier({
-          totalDeposit: Number(user.totalDeposit ?? 0),
-          tradeVolume30d: Number(user.volume30d ?? 0),
-          tradeCount30d: Number(user.trades30d ?? 0),
-        });
+        const balance = Number(user.balance ?? 0);
+        const computedTierId: VipTierId = balance >= 10000 ? "vip" : balance >= 5000 ? "pro" : "standard";
 
         return {
           ...user,
-          currentTier: manualOverride ?? computedTier.id,
+          currentTier: manualOverride ?? computedTierId,
           kycDocuments: (user.kycDocuments ?? {}) as KycDocuments,
           kycStatus: user.kycStatus ?? "Pending",
           manualOverride,
@@ -129,8 +124,8 @@ const UserManagement = () => {
     const storageKey = `vip_snapshot_${userId}`;
     const raw = localStorage.getItem(storageKey);
     let snapshot: any = {
-      totalDeposit: 0,
-      currentTier: "none",
+      balance: 0,
+      currentTier: "standard",
       notifications: [],
       pendingDowngrade: null,
     };
@@ -142,7 +137,7 @@ const UserManagement = () => {
     }
 
     const manualOverride = nextValue === "auto" ? null : nextValue;
-    const currentTier = manualOverride ?? snapshot.currentTier ?? "none";
+    const currentTier = manualOverride ?? snapshot.currentTier ?? "standard";
     localStorage.setItem(storageKey, JSON.stringify({ ...snapshot, manualOverride, currentTier }));
 
     setUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, manualOverride, currentTier } : user)));
@@ -262,11 +257,10 @@ const UserManagement = () => {
               onChange={(e) => setSelectedTier(e.target.value)}
               className="bg-[#1a1e2b] border border-[#2a2f42] rounded-lg pl-9 pr-8 py-2 text-sm text-white appearance-none focus:outline-none focus:border-[#0fa053] transition-colors"
             >
-              <option value="all">All VIP tiers</option>
-              {VIP_TIER_SEQUENCE.map((tier) => (
-                <option key={tier.id} value={tier.id}>{tier.name}</option>
-              ))}
-              <option value="none">No VIP</option>
+              <option value="all">All tiers</option>
+              <option value="standard">STANDARD</option>
+              <option value="pro">PRO</option>
+              <option value="vip">VIP</option>
             </select>
           </div>
           <select

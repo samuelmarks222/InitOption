@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
-import { VipTierConfig, getVipTierById } from "@/lib/vip";
+import { VipTierConfig, calculateVipTierFromBalance } from "@/lib/vip";
 
 interface UserProfile {
   id?: string;
@@ -15,9 +15,10 @@ interface VipState {
   hasChanges: boolean;
 }
 
-interface VipContextType extends VipState {
+interface VipContextType {
+  vip: VipState;
   updateBalance: (newBalance: number) => Promise<void>;
-  refreshVipStatus: () => Promise<void>;
+  refreshVip: () => Promise<void>;
   triggerTierUpgrade: (newTierId: string) => Promise<void>;
 }
 
@@ -31,35 +32,14 @@ interface VipProviderProps {
 export const VipProvider = ({ children, initialUser }: VipProviderProps) => {
   const [vipState, setVipState] = useState<VipState>(() => {
     const initialBalance = initialUser?.balance || 0;
-    const initialTier = getVipTierById("none"); // Will be calculated based on balance
-    let initialTier = getVipTierById("none");
-    
-    if (initialBalance >= 10000) {
-      initialTier = getVipTierById("vip");
-    } else if (initialBalance >= 5000) {
-      initialTier = getVipTierById("pro");
-    } else if (initialBalance > 0) {
-      initialTier = getVipTierById("standard");
-    }
-    
+    const initialTier = calculateVipTierFromBalance(initialBalance);
+
     return {
       currentTier: initialTier,
       isLoading: false,
       hasChanges: false,
     };
   });
-
-  const calculateTierFromBalance = (balance: number): VipTierConfig => {
-    if (balance >= 10000) {
-      return getVipTierById("vip");
-    } else if (balance >= 5000) {
-      return getVipTierById("pro");
-    } else if (balance > 0) {
-      return getVipTierById("standard");
-    } else {
-      return getVipTierById("none");
-    }
-  };
 
   const fetchUserProfile = async (): Promise<UserProfile | null> => {
     try {
@@ -78,14 +58,14 @@ export const VipProvider = ({ children, initialUser }: VipProviderProps) => {
     }
   };
 
-  const refreshVipStatus = useCallback(async () => {
+  const refreshVip = useCallback(async () => {
     setVipState(prev => ({ ...prev, isLoading: true }));
-    
+
     try {
       const userProfile = await fetchUserProfile();
       const newBalance = userProfile?.balance || 0;
-      const newTier = calculateTierFromBalance(newBalance);
-      
+      const newTier = calculateVipTierFromBalance(newBalance);
+
       setVipState(prev => ({
         ...prev,
         currentTier: newTier,
@@ -107,20 +87,20 @@ export const VipProvider = ({ children, initialUser }: VipProviderProps) => {
         },
         body: JSON.stringify({ tierId: newTierId }),
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to upgrade tier");
       }
-      
-      const updatedTier = getVipTierById(newTierId);
-      
+
+      const newTier = calculateVipTierFromBalance(
+        newTierId === "vip" ? 10000 : newTierId === "pro" ? 5000 : 0
+      );
+
       setVipState(prev => ({
         ...prev,
-        currentTier: updatedTier,
+        currentTier: newTier,
         hasChanges: false,
       }));
-      
-      return updatedTier;
     } catch (error) {
       console.error("Failed to trigger tier upgrade:", error);
       throw error;
@@ -136,13 +116,13 @@ export const VipProvider = ({ children, initialUser }: VipProviderProps) => {
         },
         body: JSON.stringify({ balance: newBalance }),
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to update balance");
       }
-      
-      const newTier = calculateTierFromBalance(newBalance);
-      
+
+      const newTier = calculateVipTierFromBalance(newBalance);
+
       setVipState(prev => ({
         ...prev,
         currentTier: newTier,
@@ -155,13 +135,13 @@ export const VipProvider = ({ children, initialUser }: VipProviderProps) => {
   }, []);
 
   useEffect(() => {
-    refreshVipStatus();
-  }, [refreshVipStatus]);
+    refreshVip();
+  }, [refreshVip]);
 
   const value: VipContextType = {
-    ...vipState,
+    vip: vipState,
     updateBalance,
-    refreshVipStatus,
+    refreshVip,
     triggerTierUpgrade,
   };
 

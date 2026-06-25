@@ -167,7 +167,7 @@ const TraderProfile = () => {
                 <span className="rounded-lg bg-gradient-to-r from-[#0fa053] to-amber-500 px-3 py-1 text-xs font-bold text-white">
                   Guru
                 </span>
-                <VipBadge tierId={(trader.vip_tier as any) ?? "none"} size={20} showLabel />
+                <VipBadge tierId={(trader.vip_tier as any) ?? "standard"} size={20} showLabel />
               </div>
 
               {/* Actions */}
