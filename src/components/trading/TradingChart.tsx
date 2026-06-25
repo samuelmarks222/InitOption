@@ -1142,20 +1142,13 @@ const getCandlestickDisplaySettings = (
 ) => {
   const baseUpColor = getCandleUpColor(chartType, styles, globalTheme.up);
   const baseDownColor = getCandleDownColor(chartType, styles, globalTheme.down);
-  const minimalPreset = styles.displayPreset === "secondary";
-  const upColor = minimalPreset ? toRgba(baseUpColor, 0.85) : mixHexColors(baseUpColor, "#ffffff", 0.02);
-  const downColor = minimalPreset ? toRgba(baseDownColor, 0.85) : mixHexColors(baseDownColor, "#ffffff", 0.02);
-  const wickUpColor = mixHexColors(baseUpColor, "#000000", minimalPreset ? 0.35 : 0.25);
-  const wickDownColor = mixHexColors(baseDownColor, "#000000", minimalPreset ? 0.35 : 0.25);
 
   return {
-    upColor,
-    downColor,
-    borderUpColor: wickUpColor,
-    borderDownColor: wickDownColor,
-    wickUpColor,
-    wickDownColor,
-    borderVisible: true,
+    upColor: baseUpColor,
+    downColor: baseDownColor,
+    wickUpColor: baseUpColor,
+    wickDownColor: baseDownColor,
+    borderVisible: false,
     wickVisible: true,
     priceLineVisible: styles.priceLineVisible,
     autoScale: true,
@@ -1210,6 +1203,7 @@ const createMainSeries = (
       wickVisible: candleSettings.wickVisible,
       wickUpColor: candleSettings.wickUpColor,
       wickDownColor: candleSettings.wickDownColor,
+      borderVisible: candleSettings.borderVisible,
     }),
   };
 };
@@ -1245,6 +1239,7 @@ const applyMainSeriesOptions = (
     wickVisible: candleSettings.wickVisible,
     wickUpColor: candleSettings.wickUpColor,
     wickDownColor: candleSettings.wickDownColor,
+    borderVisible: candleSettings.borderVisible,
   });
 };
 
@@ -1822,9 +1817,9 @@ const OscillatorPane = ({
         timeVisible: true,
         secondsVisible: tf.seconds < 60,
         rightOffset,
-        barSpacing: getBarSpacingForScale(selectedTf, bodyScale),
-        minBarSpacing: getMinBarSpacingForScale(selectedTf, bodyScale),
-        fixLeftEdge: false,
+        barSpacing: 6,
+        minBarSpacing: 1.5,
+        fixLeftEdge: true,
         fixRightEdge: false,
         rightBarStaysOnScroll: false,
         shiftVisibleRangeOnNewBar: false,
@@ -2826,9 +2821,9 @@ const TradingChart = ({
           secondsVisible: true,
           tickMarkFormatter: (time: number) => formatTimeScaleTick(time, TIMEFRAMES["1m"].seconds),
           rightOffset: 6,
-          barSpacing: getBarSpacingForScale("1m", chartStylesRef.current.bodyScale),
-          minBarSpacing: getMinBarSpacingForScale("1m", chartStylesRef.current.bodyScale),
-          fixLeftEdge: false,
+          barSpacing: 6,
+          minBarSpacing: 1.5,
+          fixLeftEdge: true,
           fixRightEdge: false,
           rightBarStaysOnScroll: false,
           shiftVisibleRangeOnNewBar: false,
@@ -3197,13 +3192,13 @@ const TradingChart = ({
     const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, history.length);
     const rightOffset = getChartRightOffset(trendContextBars);
     chartRef.current.timeScale().applyOptions({
-      barSpacing: getBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale),
-      minBarSpacing: getMinBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale),
+      barSpacing: 6,
+      minBarSpacing: 1.5,
       rightOffset,
       timeVisible: true,
       secondsVisible: tf.seconds < 60,
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
-      fixLeftEdge: false,
+      fixLeftEdge: true,
       fixRightEdge: false,
       rightBarStaysOnScroll: false,
       shiftVisibleRangeOnNewBar: false,
@@ -3446,13 +3441,13 @@ const TradingChart = ({
       currentRange.to >= dataPointCount - Math.max(4, rightOffset * 0.7);
 
     timeScale.applyOptions({
-      barSpacing: getBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale),
-      minBarSpacing: getMinBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale),
+      barSpacing: 6,
+      minBarSpacing: 1.5,
       rightOffset,
       timeVisible: true,
       secondsVisible: tf.seconds < 60,
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
-      fixLeftEdge: false,
+      fixLeftEdge: true,
       fixRightEdge: false,
       rightBarStaysOnScroll: false,
       shiftVisibleRangeOnNewBar: false,

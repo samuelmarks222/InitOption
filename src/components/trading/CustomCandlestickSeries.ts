@@ -23,6 +23,7 @@ export interface CustomCandlestickOptions extends CustomSeriesOptions {
   wickVisible: boolean;
   wickUpColor: string;
   wickDownColor: string;
+  borderVisible: boolean;
 }
 
 const SHADOW_BLUR = 4;
@@ -96,14 +97,23 @@ class CustomCandlestickPaneRenderer implements ICustomSeriesPaneRenderer {
         }
 
         ctx.save();
-        ctx.shadowColor = `rgba(0,0,0,${SHADOW_OPACITY})`;
-        ctx.shadowBlur = SHADOW_BLUR;
-        ctx.shadowOffsetX = SHADOW_OFFSET_X;
-        ctx.shadowOffsetY = 0;
-
+        if (options.borderVisible) {
+          ctx.shadowColor = `rgba(0,0,0,${SHADOW_OPACITY})`;
+          ctx.shadowBlur = SHADOW_BLUR;
+          ctx.shadowOffsetX = SHADOW_OFFSET_X;
+          ctx.shadowOffsetY = 0;
+        }
         ctx.fillStyle = bodyColor;
         ctx.fillRect(left, bodyTop, bodyWidth, bodyHeight);
         ctx.restore();
+
+        if (options.borderVisible) {
+          ctx.save();
+          ctx.strokeStyle = wickColor;
+          ctx.lineWidth = 0.5;
+          ctx.strokeRect(left, bodyTop, bodyWidth, bodyHeight);
+          ctx.restore();
+        }
 
         prevCloseY = closeY;
       }
@@ -141,6 +151,7 @@ export class CustomCandlestickPaneView implements ICustomSeriesPaneView<Time, Cu
       wickVisible: true,
       wickUpColor: "#10b981",
       wickDownColor: "#ef4444",
+      borderVisible: false,
     };
   }
 }
