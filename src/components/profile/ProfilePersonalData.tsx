@@ -737,8 +737,8 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
 };
 
 const FieldShell = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="profile-field-shell relative rounded-[12px] border border-[var(--trading-border-color)] bg-[var(--trading-header-bg)]">
-    <div className="profile-field-label absolute left-4 top-0 -translate-y-1/2 bg-[var(--trading-header-bg)] px-2 text-[12px] font-medium text-[#737e94]">
+  <div className="profile-field-shell relative rounded-[12px] border border-[var(--trading-border-color)] bg-[#293042]">
+    <div className="profile-field-label absolute left-4 top-0 -translate-y-1/2 bg-[#293042] px-2 text-[12px] font-medium text-[#737e94]">
       {label}
     </div>
     {children}
@@ -760,7 +760,7 @@ const DocumentRow = ({
   onUpload: () => void;
   onRemove: () => void;
 }) => (
-  <div className="profile-document-row rounded-[14px] border border-[var(--trading-border-color)] bg-[var(--trading-header-bg)] p-4">
+  <div className="profile-document-row rounded-[14px] border border-[var(--trading-border-color)] bg-[#293042] p-4">
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">
         <div className="text-[15px] font-semibold text-white">{label}</div>
