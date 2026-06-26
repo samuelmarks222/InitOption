@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
-import { Lock, Shield, Bell, Monitor, Smartphone, Wallet, Users } from "lucide-react";
+import { Shield, Bell, Monitor, Smartphone, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_NOTIFICATION_PREFERENCES, normalizeNotificationPreferences } from "@/lib/profileSettings";
 import type { NotificationPreferences } from "@/types/profile";
-import { AccountCurrencyModal } from "./AccountCurrencyModal";
 import { CopyTradingSettingsPanel } from "@/components/social/CopyTradingSettingsPanel";
 
 export const ProfileSettings = () => {
-  const [activeSettingsTab, setActiveSettingsTab] = useState<"account" | "notifications" | "interface" | "security" | "social">("account");
-  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState<"notifications" | "interface" | "security" | "social">("security");
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
   const [savingNotificationKey, setSavingNotificationKey] = useState<keyof NotificationPreferences | null>(null);
   const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -20,7 +17,6 @@ export const ProfileSettings = () => {
   const [timezone, setTimezone] = useState("UTC+03:00 (Tbilisi, Georgia)");
   const [darkMode, setDarkMode] = useState(() => typeof window !== "undefined" && document.documentElement.classList.contains("dark"));
   const { profile, updateProfile, user, signOut } = useAuth();
-  const { currency, currencyOption } = useCurrency();
 
   useEffect(() => {
     setNotificationPreferences(normalizeNotificationPreferences(profile?.notificationPreferences));
@@ -125,10 +121,8 @@ export const ProfileSettings = () => {
   return (
     <div className="max-w-4xl text-white h-full flex flex-col">
       <h2 className="text-[24px] font-bold mb-6">Settings</h2>
-      <AccountCurrencyModal isOpen={showCurrencyModal} onClose={() => setShowCurrencyModal(false)} />
 
       <div className="flex bg-black/40 rounded-lg p-1 w-max mb-6 overflow-x-auto">
-        <SettingsTab id="account" icon={Lock} label="Account" active={activeSettingsTab} onSelect={setActiveSettingsTab} />
         <SettingsTab id="security" icon={Shield} label="Security" active={activeSettingsTab} onSelect={setActiveSettingsTab} />
         <SettingsTab id="notifications" icon={Bell} label="Notifications" active={activeSettingsTab} onSelect={setActiveSettingsTab} />
         <SettingsTab id="social" icon={Users} label="Social" active={activeSettingsTab} onSelect={setActiveSettingsTab} />
@@ -136,78 +130,6 @@ export const ProfileSettings = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {activeSettingsTab === "account" && (
-          <div className="space-y-6">
-            <SettingsSection title="Account Currency">
-              <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-black/20 p-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#0b65c2]/15 text-[#7fb9ff]">
-                    <Wallet className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-[15px] font-bold text-white">Display balances in {currency}</h4>
-                    <p className="mt-1 text-[12px] text-gray-400">
-                      Current selection: {currencyOption.label}. Account balances and performance cards update to this currency.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowCurrencyModal(true)}
-                  className="rounded-lg bg-[#0b65c2] px-5 py-2.5 text-[14px] font-bold text-white transition-colors hover:bg-[#094e96]"
-                >
-                  Change Currency
-                </button>
-              </div>
-            </SettingsSection>
-
-            <SettingsSection title="Change Password">
-              <div className="space-y-4">
-                <input
-                  type="password"
-                  value={passwordForm.currentPassword}
-                  onChange={(event) => setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))}
-                  placeholder="Current Password"
-                  className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-[14px] text-white focus:outline-none focus:border-[#0b65c2]"
-                />
-                <input
-                  type="password"
-                  value={passwordForm.newPassword}
-                  onChange={(event) => setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))}
-                  placeholder="New Password"
-                  className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-[14px] text-white focus:outline-none focus:border-[#0b65c2]"
-                />
-                <input
-                  type="password"
-                  value={passwordForm.confirmPassword}
-                  onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))}
-                  placeholder="Confirm New Password"
-                  className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-[14px] text-white focus:outline-none focus:border-[#0b65c2]"
-                />
-                <button
-                  type="button"
-                  onClick={handlePasswordUpdate}
-                  disabled={updatingPassword}
-                  className="bg-[#0b65c2] hover:bg-[#094e96] text-white px-6 py-2.5 rounded text-[14px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {updatingPassword ? "Updating..." : "Update Password"}
-                </button>
-              </div>
-            </SettingsSection>
-
-            <SettingsSection title="Danger Zone">
-              <p className="text-[13px] text-gray-400 mb-4">Use this to end your current sign-in session and clear all active devices from the app.</p>
-              <button
-                type="button"
-                onClick={() => void signOut().then(() => supabase.auth.signOut({ scope: "global" }))}
-                className="bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/30 px-6 py-2.5 rounded text-[14px] font-bold transition-colors"
-              >
-                Sign out from all devices
-              </button>
-            </SettingsSection>
-          </div>
-        )}
-
         {activeSettingsTab === "security" && (
           <div className="space-y-6">
             <SettingsSection title="Two-Factor Authentication (2FA)">
@@ -384,11 +306,11 @@ interface SettingsSectionProps {
 }
 
 interface SettingsTabProps {
-  id: "account" | "notifications" | "interface" | "security" | "social";
-  icon: typeof Lock;
+  id: "notifications" | "interface" | "security" | "social";
+  icon: typeof Shield;
   label: string;
-  active: "account" | "notifications" | "interface" | "security" | "social";
-  onSelect: (id: "account" | "notifications" | "interface" | "security" | "social") => void;
+  active: "notifications" | "interface" | "security" | "social";
+  onSelect: (id: "notifications" | "interface" | "security" | "social") => void;
 }
 
 interface ToggleRowProps {
