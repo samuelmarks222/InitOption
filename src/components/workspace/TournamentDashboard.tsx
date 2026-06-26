@@ -8,20 +8,11 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
-  Bell,
-  ChevronDown,
   Crown,
-  Headset,
   HelpCircle,
-  LineChart,
   Medal,
-  MoreHorizontal,
   Search,
-  Settings,
   Trophy,
-  User,
-  X,
-  Gift,
 } from "lucide-react";
 
 type Tournament = Database["public"]["Tables"]["tournaments"]["Row"];
@@ -103,25 +94,8 @@ const defaultDistribution = [
   { position: 3, share: 0.2, label: "3rd" },
 ];
 
-interface TournamentDashboardProps {
-  onEnterTournament?: (id: string) => void;
-  onClose?: () => void;
-  directoryRefreshKey?: number;
-}
-
 type ViewMode = "list" | "detail";
 type ListTab = "active" | "completed";
-
-const NAV_ITEMS = [
-  { id: "trade", label: "Trade", icon: LineChart },
-  { id: "support", label: "Support", icon: Headset },
-  { id: "account", label: "Account", icon: User },
-  { id: "tournaments", label: "Tournaments", icon: Trophy, badge: "4" },
-  { id: "market", label: "Market", icon: Search },
-  { id: "more", label: "More", icon: MoreHorizontal },
-  { id: "join", label: "Join Us", icon: Gift },
-  { id: "help", label: "Help", icon: HelpCircle },
-] as const;
 
 const FAQ_ITEMS = [
   {
@@ -156,7 +130,12 @@ function getTournamentBadge(tournament: Tournament, now: number) {
   return { label: "UNTIL START", className: "bg-[#007aff] text-white" };
 }
 
-export const TournamentDashboard = ({ onEnterTournament, onClose, directoryRefreshKey }: TournamentDashboardProps) => {
+interface TournamentsPageProps {
+  onEnterTournament?: (id: string) => void;
+  directoryRefreshKey?: number;
+}
+
+export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: TournamentsPageProps) => {
   const { profile, refreshProfile } = useAuth();
   const [now, setNow] = useState(() => Date.now());
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -267,119 +246,36 @@ export const TournamentDashboard = ({ onEnterTournament, onClose, directoryRefre
     }
   };
 
-  const displayTournaments = listTab === "active" ? activeTournaments : completedTournaments;
-
   return (
-    <div className="flex h-full min-h-0 text-white" style={{ background: "#1b202a" }}>
-      {/* Left Sidebar */}
-      <div className="flex w-[88px] shrink-0 flex-col items-center border-r border-[#2a3340] bg-[#1e2530] py-3">
-        <div className="mb-4 text-[11px] font-black tracking-[0.2em] text-[#00b95b]">Q</div>
-        <nav className="flex w-full flex-1 flex-col items-center gap-1 px-1">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = item.id === "tournaments";
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={cn(
-                  "relative flex w-full flex-col items-center gap-1 rounded-lg py-3 text-[11px] font-semibold transition-colors",
-                  isActive
-                    ? "bg-[#2a3345] text-white"
-                    : "text-[#7a8aa8] hover:bg-[#232b3a] hover:text-white",
-                )}
-              >
-                <Icon className="h-[22px] w-[22px]" />
-                <span>{item.label}</span>
-                {item.badge && (
-                  <span className="absolute right-2 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#00b95b] px-1 text-[9px] font-bold text-white">
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col min-w-0">
-        {/* Header Bar */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-[#2a3340] bg-[#1e2530] px-5">
-          <div className="flex items-center gap-4">
-            <span className="text-xl font-black tracking-wider text-white">QUOTEX</span>
-            <div className="hidden items-center gap-3 rounded-lg bg-[#00b95b]/10 px-4 py-2 md:flex">
-              <span className="text-[14px] font-bold text-[#00b95b]">
-                Get a 50% bonus on your deposit!
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <button type="button" className="relative text-[#7a8aa8] hover:text-white">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[#ff3b30]" />
-            </button>
-            <div className="flex items-center gap-2 text-[14px]">
-              <span className="text-[#7a8aa8]">Balance</span>
-              <span className="font-bold text-white">$0.94</span>
-              <ChevronDown className="h-4 w-4 text-[#7a8aa8]" />
-            </div>
-            <button
-              type="button"
-              className="rounded-lg bg-[#00b95b] px-5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-[#00a34f]"
-            >
-              Deposit
-            </button>
-            <button
-              type="button"
-              className="rounded-lg bg-[#2a3340] px-5 py-2 text-[13px] font-bold text-white transition-colors hover:bg-[#354151]"
-            >
-              Withdrawal
-            </button>
-            {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg text-[#7a8aa8] transition-colors hover:bg-[#2a3340] hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            )}
-          </div>
-        </header>
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto">
-          {viewMode === "detail" && selectedTournament ? (
-            <TournamentDetailView
-              tournament={selectedTournament}
-              now={now}
-              onBack={handleBackToList}
-              onJoin={handleJoin}
-              joining={joining}
-              hasJoined={joinedIds.has(selectedTournament.id)}
-              profileId={profile?.id}
-            />
-          ) : (
-            <TournamentListView
-              listTab={listTab}
-              onTabChange={setListTab}
-              participatingTournaments={participatingTournaments}
-              availableTournaments={availableTournaments}
-              completedTournaments={completedTournaments}
-              historyRows={historyRows}
-              joinedIds={joinedIds}
-              now={now}
-              isLoading={isLoading}
-              isError={isError}
-              onOpenDetails={handleOpenDetails}
-              onJoin={handleJoin}
-              onEnterTournament={onEnterTournament}
-              joining={joining}
-            />
-          )}
-        </div>
-      </div>
+    <div className="h-full w-full min-h-0 overflow-y-auto text-white" style={{ background: "#1b202a" }}>
+      {viewMode === "detail" && selectedTournament ? (
+        <TournamentDetailView
+          tournament={selectedTournament}
+          now={now}
+          onBack={handleBackToList}
+          onJoin={handleJoin}
+          joining={joining}
+          hasJoined={joinedIds.has(selectedTournament.id)}
+          profileId={profile?.id}
+        />
+      ) : (
+        <TournamentListView
+          listTab={listTab}
+          onTabChange={setListTab}
+          participatingTournaments={participatingTournaments}
+          availableTournaments={availableTournaments}
+          completedTournaments={completedTournaments}
+          historyRows={historyRows}
+          joinedIds={joinedIds}
+          now={now}
+          isLoading={isLoading}
+          isError={isError}
+          onOpenDetails={handleOpenDetails}
+          onJoin={handleJoin}
+          onEnterTournament={onEnterTournament}
+          joining={joining}
+        />
+      )}
     </div>
   );
 };
