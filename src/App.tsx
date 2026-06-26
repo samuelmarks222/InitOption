@@ -40,6 +40,7 @@ const NotificationsPage = lazy(() => import("./pages/Notifications"));
 const TraderProfile = lazy(() => import("./pages/TraderProfile"));
 const SocialTopTraders = lazy(() => import("./pages/SocialTopTraders"));
 const MyCopiedTraders = lazy(() => import("./pages/MyCopiedTraders"));
+const Referrals = lazy(() => import("./pages/Referrals"));
 
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -183,6 +184,7 @@ const App = () => {
                         <Route path="/notifications" element={withTradingRoute(<NotificationsPage />)} />
                         <Route path="/social/traders" element={withTradingRoute(<SocialTopTraders />)} />
                         <Route path="/social/my-copies" element={withTradingRoute(<MyCopiedTraders />)} />
+                        <Route path="/referrals" element={withTradingRoute(<Referrals />)} />
                         
                         {/* Admin Routes */}
                         <Route path="/admin" element={withProtectedRoute(<AdminLayout />)}>

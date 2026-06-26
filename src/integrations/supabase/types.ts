@@ -872,6 +872,61 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_commissions: {
+        Row: {
+          id: string
+          referrer_id: string
+          referred_user_id: string
+          deposit_request_id: string | null
+          deposit_amount: number
+          commission_rate: number
+          commission_amount: number
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          referrer_id: string
+          referred_user_id: string
+          deposit_request_id?: string | null
+          deposit_amount?: number
+          commission_rate?: number
+          commission_amount?: number
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          referrer_id?: string
+          referred_user_id?: string
+          deposit_request_id?: string | null
+          deposit_amount?: number
+          commission_rate?: number
+          commission_amount?: number
+          status?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_referral_commissions_referrer"
+            columns: ["referrer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_referral_commissions_referred"
+            columns: ["referred_user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_referral_commissions_deposit"
+            columns: ["deposit_request_id"]
+            referencedRelation: "deposit_requests"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       chat_messages: {
         Row: {
           created_at: string

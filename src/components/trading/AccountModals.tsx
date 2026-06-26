@@ -2305,6 +2305,7 @@ export const AccountDropdown = ({
                   { label: "Withdrawal", action: onOpenWithdrawal },
                   { label: "Payments", action: () => onOpenProfile("balance_history") },
                   { label: "Trades", action: () => onOpenProfile("trading_history") },
+                  { label: "Referrals", action: () => navigate("/referrals") },
                   { label: "My account", action: () => onOpenProfile("personal") },
                 ].map((item) => (
                   <button

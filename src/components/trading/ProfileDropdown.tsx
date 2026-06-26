@@ -11,6 +11,7 @@ interface Props {
   onWithdrawal?: () => void;
   onPayments?: () => void;
   onTrades?: () => void;
+  onReferrals?: () => void;
   onMyAccount?: () => void;
   onLogout?: () => void;
 }
@@ -26,6 +27,7 @@ const ProfileDropdown = ({
   onWithdrawal,
   onPayments,
   onTrades,
+  onReferrals,
   onMyAccount,
   onLogout,
 }: Props) => {
@@ -148,6 +150,7 @@ const ProfileDropdown = ({
                 { label: "Withdrawal", onClick: onWithdrawal },
                 { label: "Payments", onClick: onPayments },
                 { label: "Trades", onClick: onTrades },
+                { label: "Referrals", onClick: onReferrals },
                 { label: "My account", onClick: onMyAccount },
               ].map((item) => (
                 <button
