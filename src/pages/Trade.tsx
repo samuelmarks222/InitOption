@@ -280,12 +280,7 @@ const MobileModuleOverlay = ({
             </button>
           </div>
           <div className="flex-1 min-h-0 relative">
-            <TournamentsGridOverlay
-              onOpenDetails={(id) => {
-                setMobileOverlay(null);
-                setSelectedTournament(id);
-              }}
-            />
+            <TournamentsGridOverlay directoryRefreshKey={directoryRefreshKey} />
           </div>
         </div>
       )}
@@ -1277,7 +1272,7 @@ const Trade = () => {
             </div>
           ) : activeWorkspace === "tournaments" ? (
             <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
-              <TournamentsGridOverlay onOpenDetails={setSelectedTournament} onEnterTournament={handleEnterTournament} onClose={() => setActiveWorkspace(null)} />
+              <TournamentsGridOverlay onEnterTournament={handleEnterTournament} onClose={() => setActiveWorkspace(null)} directoryRefreshKey={directoryRefreshKey} />
             </div>
           ) : activeWorkspace === "referrals" ? (
             <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
