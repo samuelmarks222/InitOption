@@ -620,7 +620,7 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
             <div
               className={`profile-verification-notice mt-6 rounded-[14px] border px-5 py-6 ${
                 verificationNotice.tone === "success"
-                  ? "border-[#0fa053]/30 bg-green-500/10 text-green-300"
+                  ? "border-[#293042] bg-[#293042] text-white"
                   : verificationNotice.tone === "warning"
                     ? "border-[#0fa053]/25 bg-[#0fa053]/10 text-[#d8f6e5]"
                     : "border-red-500/25 bg-red-500/10 text-red-200"
