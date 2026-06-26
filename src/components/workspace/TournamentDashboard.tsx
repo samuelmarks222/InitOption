@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
+  ChevronDown,
   Crown,
   HelpCircle,
   Medal,
@@ -254,6 +255,7 @@ export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: Tour
           now={now}
           onBack={handleBackToList}
           onJoin={handleJoin}
+          onEnterTournament={onEnterTournament}
           joining={joining}
           hasJoined={joinedIds.has(selectedTournament.id)}
           profileId={profile?.id}
@@ -535,23 +537,18 @@ const TournamentCard = ({
             </p>
           </div>
 
-          {hasJoined ? (
-            <button
-              type="button"
-              onClick={() => onEnterTournament?.(tournament.id)}
-              className="rounded-xl bg-[#00b95b] px-8 py-3 text-[14px] font-bold text-white transition-colors hover:bg-[#00a34f]"
-            >
-              Trade
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => onOpenDetails(tournament.id)}
-              className="rounded-xl bg-[#2a3340] px-8 py-3 text-[14px] font-bold text-white transition-colors hover:bg-[#354151]"
-            >
-              Details
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => onOpenDetails(tournament.id)}
+            className={cn(
+              "rounded-xl px-8 py-3 text-[14px] font-bold text-white transition-colors",
+              hasJoined
+                ? "bg-[#00b95b] hover:bg-[#00a34f]"
+                : "bg-[#2a3340] hover:bg-[#354151]",
+            )}
+          >
+            {hasJoined ? "Trade" : "Details"}
+          </button>
         </div>
       </div>
     </div>
@@ -563,6 +560,7 @@ interface TournamentDetailViewProps {
   now: number;
   onBack: () => void;
   onJoin: (id: string) => void;
+  onEnterTournament?: (id: string) => void;
   joining: boolean;
   hasJoined: boolean;
   profileId?: string;
@@ -573,6 +571,7 @@ const TournamentDetailView = ({
   now,
   onBack,
   onJoin,
+  onEnterTournament,
   joining,
   hasJoined,
   profileId,
@@ -580,6 +579,7 @@ const TournamentDetailView = ({
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [participants, setParticipants] = useState<number>(0);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
   const pollRef = useRef<ReturnType<typeof setInterval>>();
 
   const isActive = tournament.status === "active";
@@ -629,6 +629,16 @@ const TournamentDetailView = ({
     [leaderboard, profileId],
   );
 
+  const top10 = useMemo(() => leaderboard.slice(0, 10), [leaderboard]);
+  const totalPages = Math.max(1, Math.ceil(leaderboard.length / 10));
+
+  const estimatedPrize = (pos: number) => {
+    const dist = prizeDistribution.find((d) => d.position === pos);
+    return dist ? formatMoney(tournament.prize_pool * dist.share) : null;
+  };
+
+  const profileUsername = leaderboard.find((e) => e.user_id === profileId)?.trader_name || profileId?.slice(0, 8);
+
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-6">
       {/* Return Back */}
@@ -643,33 +653,51 @@ const TournamentDetailView = ({
 
       {/* 3-Column Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Column: Info Card + Description */}
+        {/* Left Column: Info Card + Description + CTA */}
         <div className="space-y-5">
           {/* Feature Info Card */}
           <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
+            {/* Badge row */}
             <div className="mb-4 flex items-center gap-3">
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wider",
-                  tournament.status === "active"
-                    ? "bg-[#00b95b] text-white"
+              {hasJoined ? (
+                <span className="inline-flex items-center rounded-full bg-[#2a3340] px-3 py-1 text-[10px] font-bold tracking-wider text-[#7a8aa8]">
+                  YOU ARE PARTICIPATING
+                </span>
+              ) : (
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wider",
+                    tournament.status === "active"
+                      ? "bg-[#00b95b] text-white"
+                      : tournament.status === "completed"
+                        ? "bg-[#47577b] text-white"
+                        : "bg-[#007aff] text-white",
+                  )}
+                >
+                  {tournament.status === "active"
+                    ? "ACTIVE NOW"
                     : tournament.status === "completed"
-                      ? "bg-[#47577b] text-white"
-                      : "bg-[#007aff] text-white",
-                )}
-              >
-                {tournament.status === "active"
-                  ? "ACTIVE NOW"
-                  : tournament.status === "completed"
-                    ? "FINISHED"
-                    : "UPCOMING"}
-              </span>
+                      ? "FINISHED"
+                      : "UPCOMING"}
+                </span>
+              )}
               <span className="text-[20px] font-black text-[#00b95b]">
                 {formatMoney(tournament.prize_pool)}
               </span>
             </div>
 
             <h2 className="mb-4 text-[22px] font-bold text-white">{tournament.title}</h2>
+
+            {/* "Go to trading" button for participating users */}
+            {hasJoined && (
+              <button
+                type="button"
+                onClick={() => onEnterTournament?.(tournament.id)}
+                className="mb-5 w-full rounded-xl bg-[#007aff] py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-[#3399ff]"
+              >
+                Go to trading
+              </button>
+            )}
 
             <div className="space-y-3 text-[14px]">
               <div className="flex justify-between border-b border-[#334050] pb-2">
@@ -701,6 +729,23 @@ const TournamentDetailView = ({
                 <span className="font-semibold text-[#00b95b]">{formatCountdown(countdownTarget, now)}</span>
               </div>
             </div>
+
+            {/* CTA for non-participating users */}
+            {!hasJoined && (
+              <button
+                type="button"
+                onClick={() => onJoin(tournament.id)}
+                disabled={joining || tournament.status === "completed"}
+                className={cn(
+                  "mt-5 w-full rounded-xl py-4 text-[16px] font-bold transition-all",
+                  tournament.status === "completed"
+                    ? "cursor-not-allowed bg-[#2a3340] text-[#7a8aa8]"
+                    : "bg-[#00b95b] text-white hover:bg-[#00a34f]",
+                )}
+              >
+                {joining ? "Processing..." : tournament.status === "completed" ? "Tournament ended" : "Confirm participation"}
+              </button>
+            )}
           </div>
 
           {/* Description */}
@@ -713,62 +758,64 @@ const TournamentDetailView = ({
                 } entry tournament. All traders start with ${formatMoney(tournament.starting_balance)} and compete for a share of ${formatMoney(tournament.prize_pool)} in prizes.`}
             </p>
           </div>
-
-          {/* CTA */}
-          <button
-            type="button"
-            onClick={() => onJoin(tournament.id)}
-            disabled={joining || tournament.status === "completed"}
-            className={cn(
-              "w-full rounded-xl py-4 text-[16px] font-bold transition-all",
-              tournament.status === "completed"
-                ? "cursor-not-allowed bg-[#2a3340] text-[#7a8aa8]"
-                : "bg-[#00b95b] text-white hover:bg-[#00a34f]",
-            )}
-          >
-            {joining
-              ? "Processing..."
-              : tournament.status === "completed"
-                ? "Tournament ended"
-                : hasJoined
-                  ? "Open tournament desk"
-                  : "Confirm participation"}
-          </button>
         </div>
 
-        {/* Middle Column: Prize Distribution / Leaderboard */}
+        {/* Middle Column: Leaderboard */}
         <div className="space-y-5 lg:col-span-1">
-          {/* Prize Distribution */}
-          <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
-            <h3 className="mb-4 text-[15px] font-bold text-white">Prize Pool Distribution</h3>
-            <div className="space-y-2">
-              {prizeDistribution.map((dist) => {
-                const prizeAmount = tournament.prize_pool * dist.share;
-                const icon =
-                  dist.position === 1 ? (
-                    <Crown className="h-4 w-4 text-yellow-400" />
-                  ) : dist.position === 2 ? (
-                    <Medal className="h-4 w-4 text-slate-300" />
-                  ) : dist.position === 3 ? (
-                    <Medal className="h-4 w-4 text-amber-600" />
-                  ) : null;
-                return (
-                  <div
-                    key={dist.position}
-                    className="flex items-center justify-between rounded-xl border border-[#334050] bg-[#1e2530] px-4 py-3"
+          {/* Pinned user card (only when participating) */}
+          {hasJoined && userPosition && (
+            <div className="rounded-2xl border border-[#007aff]/30 bg-[#1e2530] p-4">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2a3340] text-[15px] font-bold text-white">
+                  {profileId?.charAt(0).toUpperCase() || "U"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-bold text-white">
+                    {profileUsername}
+                  </p>
+                  <p className="text-[11px] text-[#7a8aa8]">{profileId?.slice(0, 12)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[16px] font-extrabold text-white">
+                    {formatMoney(userPosition.current_balance)}
+                  </p>
+                  <p className="text-[11px] text-[#7a8aa8]">Balance</p>
+                </div>
+              </div>
+
+              <div className="mb-3 grid grid-cols-3 gap-3 rounded-xl bg-[#27303d] p-3">
+                <div className="text-center">
+                  <p className="text-[13px] font-bold text-white">#{userPosition.position}</p>
+                  <p className="text-[10px] text-[#7a8aa8]">Position</p>
+                </div>
+                <div className="text-center">
+                  <p
+                    className={cn(
+                      "text-[13px] font-bold tabular-nums",
+                      userPosition.profit_loss >= 0 ? "text-[#00b95b]" : "text-[#ff3b30]",
+                    )}
                   >
-                    <div className="flex items-center gap-3">
-                      {icon}
-                      <span className="text-[14px] font-semibold text-white">{dist.label}</span>
-                    </div>
-                    <span className="text-[14px] font-bold text-[#00b95b]">
-                      {formatMoney(prizeAmount)}
-                    </span>
-                  </div>
-                );
-              })}
+                    {userPosition.profit_loss >= 0 ? "+" : ""}
+                    {formatMoney(Math.abs(userPosition.profit_loss))}
+                  </p>
+                  <p className="text-[10px] text-[#7a8aa8]">P/L</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[13px] font-bold text-[#f4b742]">
+                    {estimatedPrize(userPosition.position) || "—"}
+                  </p>
+                  <p className="text-[10px] text-[#7a8aa8]">Prize</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="w-full rounded-lg bg-[#00b95b] py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[#00a34f]"
+              >
+                Rebuy
+              </button>
             </div>
-          </div>
+          )}
 
           {/* Leaderboard */}
           <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
@@ -776,90 +823,97 @@ const TournamentDetailView = ({
             {leaderboard.length === 0 ? (
               <div className="py-6 text-center text-[14px] text-[#7a8aa8]">No participants yet.</div>
             ) : (
-              <div className="space-y-1">
-                {leaderboard.slice(0, 50).map((entry) => {
-                  const isMe = profileId === entry.user_id;
-                  const isPositive = entry.profit_loss >= 0;
-                  return (
-                    <div
-                      key={entry.user_id}
-                      className={cn(
-                        "flex items-center justify-between rounded-xl px-4 py-2.5 text-[13px]",
-                        isMe ? "bg-[#007aff]/10" : "hover:bg-[#1e2530]",
-                      )}
+              <>
+                <div className="space-y-1">
+                  {top10.map((entry) => {
+                    const isMe = profileId === entry.user_id;
+                    const isPositive = entry.profit_loss >= 0;
+                    return (
+                      <div
+                        key={entry.user_id}
+                        className={cn(
+                          "flex items-center justify-between rounded-xl px-3 py-2.5 text-[13px]",
+                          isMe ? "bg-[#007aff]/10" : "hover:bg-[#1e2530]",
+                        )}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="w-5 shrink-0 text-center text-[12px] font-bold text-[#7a8aa8]">
+                            {entry.position}
+                          </span>
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a3340] text-[11px] font-bold text-white">
+                            {(entry.trader_name || `T${entry.position}`).charAt(0).toUpperCase()}
+                          </div>
+                          <span className="truncate font-semibold text-white">
+                            {isMe ? "You" : entry.trader_name || `Trader ${entry.position}`}
+                          </span>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <span className="font-bold tabular-nums text-white">
+                            {formatMoney(entry.current_balance)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="mt-4 flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2a3340] text-[13px] text-white transition-colors hover:bg-[#354151] disabled:opacity-40"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="w-6 text-center font-bold text-[#7a8aa8]">
-                          {entry.position}
-                        </span>
-                        <span className="font-semibold text-white">
-                          {isMe ? "You" : entry.trader_name || `Trader ${entry.position}`}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span
-                          className={cn(
-                            "font-bold tabular-nums",
-                            isPositive ? "text-[#00b95b]" : "text-[#ff3b30]",
-                          )}
-                        >
-                          {isPositive ? "+" : ""}
-                          {formatMoney(Math.abs(entry.profit_loss))}
-                        </span>
-                        <span
-                          className={cn(
-                            "ml-2 text-[12px] font-semibold tabular-nums",
-                            isPositive ? "text-[#00b95b]" : "text-[#ff3b30]",
-                          )}
-                        >
-                          ({formatPct(entry.return_percentage)})
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                      &lt;
+                    </button>
+                    <span className="text-[13px] text-[#7a8aa8]">
+                      {page} / {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2a3340] text-[13px] text-white transition-colors hover:bg-[#354151] disabled:opacity-40"
+                    >
+                      &gt;
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
-          {/* User Position Card */}
-          {hasJoined && userPosition && (
-            <div className="rounded-2xl border border-[#007aff]/30 bg-[#007aff]/5 p-5">
-              <h3 className="mb-3 text-[15px] font-bold text-white">Your Position</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-[12px] text-[#7a8aa8]">Position</p>
-                  <p className="text-[18px] font-extrabold text-white">#{userPosition.position}</p>
-                </div>
-                <div>
-                  <p className="text-[12px] text-[#7a8aa8]">Score</p>
-                  <p className="text-[18px] font-extrabold text-white">
-                    {formatMoney(userPosition.current_balance)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[12px] text-[#7a8aa8]">P/L</p>
-                  <p
-                    className={cn(
-                      "text-[18px] font-extrabold tabular-nums",
-                      userPosition.profit_loss >= 0 ? "text-[#00b95b]" : "text-[#ff3b30]",
-                    )}
-                  >
-                    {userPosition.profit_loss >= 0 ? "+" : ""}
-                    {formatMoney(Math.abs(userPosition.profit_loss))}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[12px] text-[#7a8aa8]">Return</p>
-                  <p
-                    className={cn(
-                      "text-[18px] font-extrabold tabular-nums",
-                      userPosition.return_percentage >= 0 ? "text-[#00b95b]" : "text-[#ff3b30]",
-                    )}
-                  >
-                    {formatPct(userPosition.return_percentage)}
-                  </p>
-                </div>
+          {/* Compact Prize Distribution (secondary) */}
+          {!hasJoined && (
+            <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
+              <h3 className="mb-4 text-[15px] font-bold text-white">Prize Pool Distribution</h3>
+              <div className="space-y-2">
+                {prizeDistribution.map((dist) => {
+                  const prizeAmount = tournament.prize_pool * dist.share;
+                  const icon =
+                    dist.position === 1 ? (
+                      <Crown className="h-4 w-4 text-yellow-400" />
+                    ) : dist.position === 2 ? (
+                      <Medal className="h-4 w-4 text-slate-300" />
+                    ) : dist.position === 3 ? (
+                      <Medal className="h-4 w-4 text-amber-600" />
+                    ) : null;
+                  return (
+                    <div
+                      key={dist.position}
+                      className="flex items-center justify-between rounded-xl border border-[#334050] bg-[#1e2530] px-4 py-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        {icon}
+                        <span className="text-[14px] font-semibold text-white">{dist.label}</span>
+                      </div>
+                      <span className="text-[14px] font-bold text-[#00b95b]">
+                        {formatMoney(prizeAmount)}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -871,7 +925,7 @@ const TournamentDetailView = ({
             <h3 className="mb-4 text-[15px] font-bold text-white">FAQ</h3>
             <div className="space-y-2">
               {FAQ_ITEMS.map((item, index) => (
-                <div key={index} className="rounded-xl border border-[#334050] overflow-hidden">
+                <div key={index} className="overflow-hidden rounded-xl border border-[#334050]">
                   <button
                     type="button"
                     onClick={() => setActiveFaq(activeFaq === index ? null : index)}
