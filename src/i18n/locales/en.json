@@ -220,7 +220,6 @@
     "pendingTradeEnabledDesc": "New trades will execute after a short delay.",
     "pendingTradeLabel": "Pending trade",
     "pendingTradeLabelMobile": "PENDING TRADE",
-    "tournamentBanner": "Tournament mode is active. Open positions and history below are scoped to this tournament account.",
     "timer": "Timer",
     "time": "Time",
     "switchTime": "SWITCH TIME",

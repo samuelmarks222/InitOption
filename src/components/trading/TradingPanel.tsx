@@ -1044,12 +1044,6 @@ const TradingPanel = ({
           </div>
         </button>
 
-        {accountType === "tournament" && (
-          <div className="mx-2.5 mb-2 rounded-[10px] border border-[#0fa053]/35 bg-[#2a3040]/80 px-3 py-2 text-[10px] font-semibold leading-relaxed text-[#d8f6e5] lg:mx-4 lg:mb-3">
-            Tournament mode is active. Open positions and history below are scoped to this tournament account.
-          </div>
-        )}
-
         {/* ── Compact mobile layout with desktop controls restored ── */}
         <div className="px-2.5 pb-2 lg:px-4 lg:pb-2.5">
           <div className="relative z-10 lg:pb-0">
