@@ -112,11 +112,11 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
       <div className="fixed inset-y-0 right-0 z-50 flex w-full justify-end">
         <div
           className="flex h-full w-full max-w-[1520px] flex-col shadow-[0_32px_120px_rgba(0,0,0,0.55)] md:w-[88%]"
-          style={{ background: "var(--trading-workspace-bg)" }}
+          style={{ background: "#293042" }}
         >
           <div
             className="border-b border-white/6 px-4 py-4 md:px-6 md:py-5"
-            style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
+            style={{ background: "#293042", borderBottomColor: "var(--trading-border-color)" }}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
@@ -170,8 +170,7 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
           </div>
 
           <div
-            className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6"
-            style={{ background: "var(--trading-workspace-bg)" }}
+            className="flex-1 overflow-y-auto bg-[#293042] px-4 py-4 md:px-6 md:py-6"
           >
             {activeTab === "personal" && <ProfilePersonalData compact guidedTarget={personalGuideTarget} />}
             {activeTab === "deposit" && <ProfileDeposit />}
