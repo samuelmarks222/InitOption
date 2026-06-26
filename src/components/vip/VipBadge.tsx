@@ -89,9 +89,12 @@ export const VipBadge = ({ tierId, size = 24, showLabel = false, className = "" 
           className="absolute inset-x-[14%] bottom-[14%] h-[16%] rounded-full"
           style={{ background: "rgba(8, 12, 20, 0.16)" }}
         />
-        <span className="relative z-10 leading-none" style={{ fontSize: iconSize }}>
-          {tier.icon}
-        </span>
+        <img
+          src={tier.icon}
+          alt={tier.name}
+          className="relative z-10"
+          style={{ width: iconSize, height: iconSize, objectFit: "contain" }}
+        />
       </div>
       {showLabel && (
         <span
