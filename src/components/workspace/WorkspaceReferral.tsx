@@ -2,6 +2,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Copy,
+  DollarSign,
   FileText,
   ImageIcon,
   LockKeyhole,
@@ -117,6 +118,16 @@ const EmptyFriendsState = ({ onShare }: { onShare: () => void }) => (
   </div>
 );
 
+const StatCard = ({ icon: Icon, label, value, color }: { icon: any; label: string; value: string; color: string }) => (
+  <div className="rounded-[9px] border p-3" style={softPanelStyle}>
+    <div className="flex items-center gap-2">
+      <Icon className={`h-4 w-4 ${color}`} />
+      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--trading-muted-color)]">{label}</span>
+    </div>
+    <div className="mt-1 text-[16px] font-bold text-[var(--trading-text-color)]">{value}</div>
+  </div>
+);
+
 export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps) => {
   const navigate = useNavigate();
   const { platformName } = useSiteBranding();
@@ -132,6 +143,9 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
   const [bonusRules, setBonusRules] = useState<BonusSettingsRow | null>(null);
   const [promoMaterials, setPromoMaterials] = useState<any[]>([]);
   const [materialsLoading, setMaterialsLoading] = useState(false);
+  const [commissions, setCommissions] = useState<any[]>([]);
+  const [referredUsers, setReferredUsers] = useState<any[]>([]);
+  const [commissionLoading, setCommissionLoading] = useState(false);
 
   const referralCode = useMemo(() => {
     const saved = String((profile as any)?.referral_code ?? "").trim().toUpperCase();
@@ -201,16 +215,20 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
   useEffect(() => {
     if (!user) return;
 
-    const fetchReferralCount = async () => {
-      const { count } = await supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .eq("referred_by", user.id);
-
-      setReferredCount(count ?? 0);
+    const fetchReferralData = async () => {
+      setCommissionLoading(true);
+      const [countResult, referredResult, commissionsResult] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("referred_by", user.id),
+        supabase.from("profiles").select("id, username, display_name, created_at").eq("referred_by", user.id).order("created_at", { ascending: false }),
+        supabase.from("referral_commissions").select("*").eq("referrer_id", user.id).order("created_at", { ascending: false }),
+      ]);
+      setReferredCount(countResult.count ?? 0);
+      if (referredResult.data) setReferredUsers(referredResult.data);
+      if (commissionsResult.data) setCommissions(commissionsResult.data);
+      setCommissionLoading(false);
     };
 
-    void fetchReferralCount();
+    void fetchReferralData();
   }, [user]);
 
   const copyValue = (value: string, field: string) => {
@@ -269,6 +287,23 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
   const inviteeBonusAmount = maxInviteeBonus > 0 ? Math.min(rawInviteeBonus, maxInviteeBonus) : rawInviteeBonus;
   const referralEarnings = Number((profile as any)?.referral_earnings ?? 0);
   const displayName = profile?.username?.trim() || profile?.display_name?.trim() || user?.email?.split("@")[0] || "Trader";
+
+  const totalCommissions = useMemo(
+    () => commissions.reduce((sum, c) => sum + Number(c.commission_amount), 0),
+    [commissions],
+  );
+  const pendingCommissions = useMemo(
+    () => commissions.filter((c) => c.status === "pending").reduce((sum, c) => sum + Number(c.commission_amount), 0),
+    [commissions],
+  );
+  const paidCommissions = useMemo(
+    () => commissions.filter((c) => c.status === "paid").reduce((sum, c) => sum + Number(c.commission_amount), 0),
+    [commissions],
+  );
+  const totalDeposits = useMemo(
+    () => commissions.reduce((sum, c) => sum + Number(c.deposit_amount), 0),
+    [commissions],
+  );
 
   const shareTargets = [
     { label: "f", href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(refLink)}` },
@@ -458,16 +493,28 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
             <h3 className="text-[15px] font-bold">Your Init Friends</h3>
             <div className="mt-3 space-y-2 text-[12px]">
               <div className="flex items-center justify-between text-[var(--trading-muted-color)]">
-                <span>Total registered</span>
+                <span>Total referrals</span>
                 <span className="font-bold text-[var(--trading-text-color)]">{referredCount || "-"}</span>
+              </div>
+              <div className="flex items-center justify-between text-[var(--trading-muted-color)]">
+                <span>Total deposits</span>
+                <span className="font-bold text-[var(--trading-text-color)]">{formatMoney(totalDeposits, 0)}</span>
               </div>
               <div className="flex items-center justify-between text-[var(--trading-muted-color)]">
                 <span>Commission rate</span>
                 <span className="font-bold text-[var(--trading-text-color)]">{referralPercent}%</span>
               </div>
               <div className="flex items-center justify-between text-[var(--trading-muted-color)]">
-                <span>Rewards</span>
-                <span className="font-bold text-[var(--trading-text-color)]">{formatMoney(referralEarnings, 0)}</span>
+                <span>Total earned</span>
+                <span className="font-bold text-[#5ee0bd]">{formatMoney(totalCommissions)}</span>
+              </div>
+              <div className="flex items-center justify-between text-[var(--trading-muted-color)]">
+                <span>Pending</span>
+                <span className="font-bold text-amber-400">{formatMoney(pendingCommissions)}</span>
+              </div>
+              <div className="flex items-center justify-between text-[var(--trading-muted-color)]">
+                <span>Paid</span>
+                <span className="font-bold text-[#5ee0bd]">{formatMoney(paidCommissions)}</span>
               </div>
             </div>
           </div>
@@ -497,8 +544,8 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
           {activeTab !== "friends" ? (
             renderInfoTab()
           ) : (
-            <div className="grid min-h-0 grid-rows-[178px_176px_56px_minmax(120px,1fr)] gap-3 overflow-hidden">
-              <section className="grid min-h-0 grid-cols-[minmax(0,1fr)_320px] overflow-hidden rounded-[12px] border" style={panelStyle}>
+            <div className="flex min-h-0 flex-col gap-3 overflow-y-auto">
+              <section className="grid min-h-0 shrink-0 grid-cols-[minmax(0,1fr)_320px] overflow-hidden rounded-[12px] border" style={panelStyle}>
                 <div className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0b7557]/15 text-[#5ee0bd]">
@@ -546,7 +593,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                 <PromoIllustration />
               </section>
 
-              <section className="min-h-0 rounded-[12px] border p-4" style={panelStyle}>
+              <section className="min-h-0 shrink-0 rounded-[12px] border p-4" style={panelStyle}>
                 {detailMode === "calculator" ? (
                   <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_1fr_1fr] gap-4">
                     <div>
@@ -606,60 +653,99 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                 )}
               </section>
 
-              <section className="flex min-h-0 items-center justify-between rounded-[12px] border border-[#0b7557]/20 bg-[#0b7557] px-4 text-white">
-                <div className="min-w-0">
-                  <h2 className="truncate text-[18px] font-bold">Download marketing banners</h2>
-                  <p className="mt-1 truncate text-[12px] font-semibold text-white/85">
-                    Download zipped banner packs to promote {platformName} with professional marketing materials.
-                  </p>
+              <section className="shrink-0 rounded-[12px] border p-4" style={panelStyle}>
+                <h2 className="text-[18px] font-bold">Referral summary</h2>
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                  <StatCard icon={UsersRound} label="Total referrals" value={String(referredCount)} color="text-blue-400" />
+                  <StatCard icon={DollarSign} label="Total deposits" value={formatMoney(totalDeposits, 0)} color="text-emerald-400" />
+                  <StatCard icon={WalletCards} label="Total earned" value={formatMoney(totalCommissions)} color="text-[#5ee0bd]" />
+                  <StatCard icon={CalendarDays} label="Pending" value={formatMoney(pendingCommissions)} color="text-amber-400" />
+                  <StatCard icon={CheckCircle2} label="Paid" value={formatMoney(paidCommissions)} color="text-[#5ee0bd]" />
                 </div>
               </section>
 
-              <section className="min-h-0 rounded-[12px] border p-4" style={panelStyle}>
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h2 className="text-[18px] font-bold">Available Banner Packs</h2>
-                    <p className="mt-1 text-[12px] font-medium text-[var(--trading-muted-color)]">
-                      Download professional banner images to promote your referral link.
-                    </p>
+              <section className="shrink-0 rounded-[12px] border" style={panelStyle}>
+                <div className="border-b px-4 py-3" style={{ borderColor: "var(--trading-border-color)" }}>
+                  <h2 className="text-[16px] font-bold">Commission History</h2>
+                </div>
+                {commissionLoading ? (
+                  <div className="flex items-center justify-center py-8 text-[var(--trading-muted-color)]">Loading...</div>
+                ) : commissions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <DollarSign className="h-10 w-10 text-[var(--trading-muted-color)] mb-2 opacity-50" />
+                    <p className="text-[13px] font-bold text-[var(--trading-text-color)]">No commissions yet</p>
+                    <p className="mt-1 text-[11px] text-[var(--trading-muted-color)]">Share your referral link to start earning.</p>
                   </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-[12px]">
+                      <thead>
+                        <tr className="text-[11px] font-bold text-[var(--trading-muted-color)] uppercase tracking-wider border-b" style={{ borderColor: "var(--trading-border-color)" }}>
+                          <th className="px-4 py-3">User</th>
+                          <th className="px-4 py-3">Deposit</th>
+                          <th className="px-4 py-3">Commission</th>
+                          <th className="px-4 py-3">Rate</th>
+                          <th className="px-4 py-3">Status</th>
+                          <th className="px-4 py-3">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y" style={{ borderColor: "var(--trading-border-color)" }}>
+                        {commissions.map((c: any) => (
+                          <tr key={c.id} className="hover:bg-white/[0.02]">
+                            <td className="px-4 py-3 text-[var(--trading-text-color)] font-medium">
+                              {referredUsers.find((u: any) => u.id === c.referred_user_id)?.username || "User"}
+                            </td>
+                            <td className="px-4 py-3 text-[var(--trading-muted-color)]">{formatMoney(Number(c.deposit_amount))}</td>
+                            <td className="px-4 py-3 text-[#5ee0bd] font-bold">{formatMoney(Number(c.commission_amount))}</td>
+                            <td className="px-4 py-3 text-[var(--trading-muted-color)]">{Number(c.commission_rate)}%</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                c.status === "paid" ? "bg-emerald-500/10 text-emerald-400" : c.status === "pending" ? "bg-amber-500/10 text-amber-400" : "bg-red-500/10 text-red-400"
+                              }`}>
+                                {c.status === "paid" && <CheckCircle2 className="h-3 w-3" />}
+                                {c.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-[var(--trading-muted-color)]">
+                              {new Date(c.created_at).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+
+              <section className="shrink-0 rounded-[12px] border" style={panelStyle}>
+                <div className="border-b px-4 py-3" style={{ borderColor: "var(--trading-border-color)" }}>
+                  <h2 className="text-[16px] font-bold">Referred Users</h2>
                 </div>
-                <div className="mt-2 h-[calc(100%-62px)] min-h-0 overflow-y-auto">
-                  {materialsLoading ? (
-                    <div className="flex items-center justify-center h-full text-[var(--trading-muted-color)]">
-                      <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-[#5ee0bd]"></div>
-                    </div>
-                  ) : promoMaterials.length === 0 ? (
-                    <div className="flex h-full min-h-0 flex-col items-center justify-center text-center">
-                      <ImageIcon className="h-12 w-12 text-[var(--trading-muted-color)] mb-2 opacity-50" />
-                      <h3 className="text-[14px] font-bold text-[var(--trading-text-color)]">No banners available yet</h3>
-                      <p className="mt-1 text-[12px] text-[var(--trading-muted-color)]">
-                        Admin will upload banner packs soon. Check back later!
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {promoMaterials.map((material) => (
-                        <div key={material.id} className="flex items-center justify-between rounded-[9px] border p-3 hover:bg-white/5 transition-colors" style={softPanelStyle}>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[13px] font-bold text-[var(--trading-text-color)] truncate">{material.name}</p>
-                            <p className="text-[11px] text-[var(--trading-muted-color)] mt-1">
-                              Size: {(material.file_size / 1024 / 1024).toFixed(2)} MB
-                            </p>
+                {commissionLoading ? (
+                  <div className="flex items-center justify-center py-8 text-[var(--trading-muted-color)]">Loading...</div>
+                ) : referredUsers.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <UsersRound className="h-10 w-10 text-[var(--trading-muted-color)] mb-2 opacity-50" />
+                    <p className="text-[13px] font-bold text-[var(--trading-text-color)]">No referrals yet</p>
+                    <p className="mt-1 text-[11px] text-[var(--trading-muted-color)]">People who sign up with your code will appear here.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y" style={{ borderColor: "var(--trading-border-color)" }}>
+                    {referredUsers.map((ru: any) => (
+                      <div key={ru.id} className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.02]">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600/20 text-emerald-400 text-sm font-bold">
+                            {(ru.username || ru.display_name || "U")[0].toUpperCase()}
                           </div>
-                          <a
-                            href={material.file_url}
-                            download={`${material.name}.zip`}
-                            className="ml-2 flex items-center justify-center h-[32px] w-[32px] rounded-[7px] bg-[#0b7557] hover:brightness-110 text-white transition-all"
-                            title={`Download ${material.name}`}
-                          >
-                            <FileText className="h-4 w-4" />
-                          </a>
+                          <div>
+                            <div className="text-[13px] font-bold text-[var(--trading-text-color)]">{ru.username || ru.display_name || "User"}</div>
+                            <div className="text-[11px] text-[var(--trading-muted-color)]">Joined {new Date(ru.created_at).toLocaleDateString()}</div>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </section>
             </div>
           )}

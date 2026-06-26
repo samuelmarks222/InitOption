@@ -1198,7 +1198,7 @@ const Trade = () => {
     navigate("/withdraw");
   };
 
-  const isFullScreen = ["account", "more", "join"].includes(activeWorkspace || "");
+  const isFullScreen = ["account", "more", "tournaments", "referrals"].includes(activeWorkspace || "");
   const currentBalance = accountType === "tournament" ? tournamentSandboxBalance : balance;
   const tourEnabled =
     !mobileOverlay &&
@@ -1209,7 +1209,7 @@ const Trade = () => {
     !isProfileOpen &&
     !showMobileHistory &&
     !showRealAccountWelcome &&
-    !["account", "tournaments", "more", "join", "help"].includes(activeWorkspace || "");
+    !["account", "tournaments", "more", "referrals", "help"].includes(activeWorkspace || "");
 
   const isChartNavActive =
     !mobileOverlay &&
@@ -1275,8 +1275,12 @@ const Trade = () => {
             <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
               <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setActiveWorkspace(null)} />
             </div>
-          ) : activeWorkspace === "join" ? (
-            <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-bg)" }}>
+          ) : activeWorkspace === "tournaments" ? (
+            <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
+              <TournamentsGridOverlay onOpenDetails={setSelectedTournament} onEnterTournament={handleEnterTournament} onClose={() => setActiveWorkspace(null)} />
+            </div>
+          ) : activeWorkspace === "referrals" ? (
+            <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
               <WorkspaceReferral onSelectWorkspace={setActiveWorkspace} />
             </div>
           ) : (
@@ -1603,7 +1607,7 @@ const Trade = () => {
             }}
             onReferral={() => {
               closeNewUserWelcome();
-              setActiveWorkspace("join");
+              setActiveWorkspace("referrals");
             }}
             canClaimBonus={canClaimBonus}
           />

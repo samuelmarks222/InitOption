@@ -109,11 +109,6 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
             <WorkspaceSettings />
           </div>
         )}
-        {activeWorkspace === "join" && (
-          <div className="flex-1 w-full h-full">
-            <WorkspaceReferral onSelectWorkspace={onSelectWorkspace} />
-          </div>
-        )}
         {activeWorkspace === "referrals" && (
           <div className="flex-1 w-full h-full">
             <WorkspaceReferral onSelectWorkspace={onSelectWorkspace} />

@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   BarChart3,
-  DollarSign,
+  Gift,
   Grid,
-  Handshake,
   Headset,
   HelpCircle,
   LineChart,
@@ -13,7 +12,7 @@ import {
   User,
 } from "lucide-react";
 
-export type WorkspaceModule = "support" | "account" | "tournaments" | "leaderboard" | "referrals" | "more" | "settings" | "join" | "help" | "guides" | null;
+export type WorkspaceModule = "support" | "account" | "tournaments" | "leaderboard" | "referrals" | "more" | "settings" | "help" | "guides" | null;
 
 interface NavigationSidebarProps {
   activeWorkspace: WorkspaceModule;
@@ -22,8 +21,8 @@ interface NavigationSidebarProps {
   onToggleCollapsed?: () => void;
 }
 
-type AccountTabTarget = "personal" | "deposit";
-type PrimaryNavKey = "trading" | "finance" | "profile";
+type AccountTabTarget = "personal";
+type PrimaryNavKey = "trading" | "profile";
 
 const ACCOUNT_TAB_STORAGE_KEY = "initoption:account-tab";
 const ACCOUNT_TAB_CHANGE_EVENT = "initoption:account-tab-change";
@@ -34,9 +33,8 @@ const getNavItemClassName = (collapsed: boolean) =>
 const navIconClassName = "h-[25px] w-[25px] transition-transform duration-200 group-hover:-translate-y-0.5";
 const navLabelClassName = "text-center text-[12px] font-semibold leading-tight";
 
-const getStoredAccountPrimaryKey = (): Exclude<PrimaryNavKey, "trading"> => {
-  if (typeof window === "undefined") return "profile";
-  return window.sessionStorage.getItem(ACCOUNT_TAB_STORAGE_KEY) === "deposit" ? "finance" : "profile";
+const getStoredAccountPrimaryKey = (): PrimaryNavKey => {
+  return "profile";
 };
 
 export const NavigationSidebar = ({
@@ -45,11 +43,10 @@ export const NavigationSidebar = ({
   collapsed = false,
   onToggleCollapsed,
 }: NavigationSidebarProps) => {
-  const [accountPrimaryKey, setAccountPrimaryKey] = useState<Exclude<PrimaryNavKey, "trading">>(getStoredAccountPrimaryKey);
+  const [accountPrimaryKey] = useState<PrimaryNavKey>(getStoredAccountPrimaryKey);
 
   const PRIMARY_ITEMS = [
     { key: "trading", label: "Trading", icon: LineChart, workspace: null },
-    { key: "finance", label: "Finance", icon: DollarSign, workspace: "account", accountTab: "deposit" },
     { key: "profile", label: "Profile", icon: User, workspace: "account", accountTab: "personal" },
   ] as const;
 
@@ -57,13 +54,12 @@ export const NavigationSidebar = ({
     { id: "tournaments", label: "Tournament", icon: Trophy },
     { id: "support", label: "Chat", icon: Headset },
     { id: "leaderboard", label: "Leaders", icon: BarChart3 },
-    { id: "referrals", label: "Referrals", icon: Handshake },
     { id: "more", label: "More", icon: Grid },
   ] as const;
 
   const UTILITY_ITEMS = [
     { id: "settings", label: "Settings", icon: Settings },
-    { id: "join", label: "Join Us", icon: Handshake },
+    { id: "referrals", label: "Referral", icon: Gift },
     { id: "help", label: "Help", icon: HelpCircle },
   ] as const;
 
@@ -80,20 +76,12 @@ export const NavigationSidebar = ({
   }, []);
 
   const selectPrimaryItem = (item: (typeof PRIMARY_ITEMS)[number]) => {
-    if (item.accountTab && typeof window !== "undefined") {
-      const accountTab = item.accountTab as AccountTabTarget;
-      setAccountPrimaryKey(accountTab === "deposit" ? "finance" : "profile");
-      window.sessionStorage.setItem(ACCOUNT_TAB_STORAGE_KEY, accountTab);
-      window.dispatchEvent(new CustomEvent(ACCOUNT_TAB_CHANGE_EVENT, { detail: accountTab }));
-    }
-
     onSelectWorkspace(item.workspace);
   };
 
   const getPrimaryActiveKey = (): PrimaryNavKey | null => {
     if (activeWorkspace === null) return "trading";
     if (activeWorkspace === "account") return accountPrimaryKey;
-
     return null;
   };
 
@@ -148,7 +136,7 @@ export const NavigationSidebar = ({
                 )}
                 <Icon
                   className={`${navIconClassName} ${isActive ? "text-white" : "text-current"}`}
-                  strokeWidth={item.key === "finance" ? 2.55 : 2.35}
+                  strokeWidth={2.35}
                 />
                 <span className={`${collapsed ? "sr-only" : navLabelClassName} ${isActive ? "font-bold text-white" : ""}`}>
                   {item.label}
