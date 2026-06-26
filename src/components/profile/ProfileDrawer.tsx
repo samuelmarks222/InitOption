@@ -136,7 +136,7 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
           >
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
               <div className="min-w-0">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#7f8ea8]">Account</div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7f8ea8]">Live account</div>
                 <div className="mt-3 flex items-center gap-3">
                   <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[#1f3a5d] shadow-[inset_0_0_0_4px_rgba(33,45,68,0.95)]">
                     {profile?.avatar_url ? (
@@ -148,8 +148,8 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
                   </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
+                        <VipBadge tierId={vip.currentTier.id} size={32} />
                         <span className="truncate text-[18px] font-bold text-white">{p?.username || user?.email || "My account"}</span>
-                        <VipBadge tierId={vip.currentTier.id} size={18} />
                       </div>
                       <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[#96a3bb]">
                       <span className="whitespace-nowrap">ID: {accountId}</span>
