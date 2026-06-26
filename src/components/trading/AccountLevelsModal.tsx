@@ -9,8 +9,7 @@ interface LevelData {
   id: string;
   name: string;
   description: string;
-  svgPath: string;
-  svgColor: string;
+  logoPath: string;
   badgeLabel: string;
   badgeBg: string;
   features: { icon: string; text: string; iconColor: string; floatBadgeColor?: string }[];
@@ -23,8 +22,7 @@ const LEVELS: LevelData[] = [
     id: "standard",
     name: "STANDARD",
     description: "Level for beginners",
-    svgPath: "M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5",
-    svgColor: "#34d399",
+    logoPath: "/standard-logo.png",
     badgeLabel: "Active",
     badgeBg: "bg-[#3b82f6]",
     isActive: true,
@@ -34,8 +32,7 @@ const LEVELS: LevelData[] = [
     id: "pro",
     name: "PRO",
     description: "Level for casual traders",
-    svgPath: "M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-5.25A1.125 1.125 0 006 15.375V18.75m9.75-13.5c0-.621-.503-1.125-1.125-1.125h-5.25A1.125 1.125 0 007.125 5.25v5.625c0 .621.503 1.125 1.125 1.125h5.25a1.125 1.125 0 001.125-1.125V5.25zM16.5 5.25h1.875c.621 0 1.125.503 1.125 1.125v1.5a3.375 3.375 0 01-3.375 3.375M7.125 5.25H5.25a1.125 1.125 0 00-1.125 1.125v1.5a3.375 3.375 0 003.375 3.375",
-    svgColor: "#f59e0b",
+    logoPath: "/pro-logo.png",
     badgeLabel: "Inactive",
     badgeBg: "bg-[#2a3047]",
     balanceReq: "Balance from 5,000.00 $",
@@ -48,8 +45,7 @@ const LEVELS: LevelData[] = [
     id: "vip",
     name: "VIP",
     description: "Level for professional traders",
-    svgPath: "M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z",
-    svgColor: "#a78bfa",
+    logoPath: "/vip-logo.png",
     badgeLabel: "Inactive",
     badgeBg: "bg-[#2a3047]",
     balanceReq: "Balance from 10,000.00 $",
@@ -92,9 +88,7 @@ const AccountLevelsModal = ({ isOpen, onClose }: Props) => {
               >
                 <div className="flex flex-col items-center gap-3 w-24 flex-shrink-0">
                   <div className="relative">
-                    <svg className="w-12 h-12" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" style={{ color: level.svgColor }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d={level.svgPath} />
-                    </svg>
+                    <img src={level.logoPath} alt={level.name} className="w-12 h-12 object-contain" />
                     {!level.isActive && level.features[0].floatBadgeColor && (
                       <span
                         className="absolute -top-1 -right-2 text-white font-black text-[9px] rounded-full w-5 h-5 flex items-center justify-center border-2 border-[#22273b] shadow"
