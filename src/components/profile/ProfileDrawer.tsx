@@ -148,7 +148,7 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
                   </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <VipBadge tierId={vip.currentTier.id} size={32} />
+                        <VipBadge tierId={vip.currentTier.id} size={40} />
                         <span className="truncate text-[18px] font-bold text-white">{p?.username || user?.email || "My account"}</span>
                       </div>
                       <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[#96a3bb]">

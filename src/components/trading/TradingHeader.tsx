@@ -433,7 +433,7 @@ const TradingHeader = ({
               </div>
 
               <div className="flex h-8 items-center gap-2 border-l border-white/6 pl-3">
-                <VipBadge tierId={vip.currentTier.id} size={22} />
+                <VipBadge tierId={vip.currentTier.id} size={32} />
                 <ChevronDown className="h-3.5 w-3.5 text-gray-500 transition-colors group-hover:text-gray-300" />
               </div>
             </button>
