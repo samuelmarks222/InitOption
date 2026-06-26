@@ -65,9 +65,9 @@ export const STANDARD_TIER = VIP_TIER_SEQUENCE[0];
 export const getVipTierById = (tierId: VipTierId | string | null | undefined): VipTierConfig =>
   VIP_TIER_MAP[tierId as VipTierId] ?? STANDARD_TIER;
 
-export const calculateVipTierFromBalance = (balance: number): VipTierConfig => {
-  if (balance >= 10000) return VIP_TIER_MAP.vip;
-  if (balance >= 5000) return VIP_TIER_MAP.pro;
+export const calculateVipTier = (balance: number, totalTrades: number): VipTierConfig => {
+  if (balance >= 10000 && totalTrades >= 50) return VIP_TIER_MAP.vip;
+  if (balance >= 5000 && totalTrades >= 10) return VIP_TIER_MAP.pro;
   return VIP_TIER_MAP.standard;
 };
 

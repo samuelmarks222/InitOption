@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
-import { VipTierConfig, calculateVipTierFromBalance } from "@/lib/vip";
+import { VipTierConfig, calculateVipTier } from "@/lib/vip";
 
 interface UserProfile {
   id?: string;
@@ -7,6 +7,7 @@ interface UserProfile {
   username?: string;
   email?: string;
   avatar_url?: string;
+  total_trades?: number;
 }
 
 interface VipState {
@@ -32,7 +33,8 @@ interface VipProviderProps {
 export const VipProvider = ({ children, initialUser }: VipProviderProps) => {
   const [vipState, setVipState] = useState<VipState>(() => {
     const initialBalance = initialUser?.balance || 0;
-    const initialTier = calculateVipTierFromBalance(initialBalance);
+    const initialTrades = initialUser?.total_trades || 0;
+    const initialTier = calculateVipTier(initialBalance, initialTrades);
 
     return {
       currentTier: initialTier,
@@ -64,7 +66,8 @@ export const VipProvider = ({ children, initialUser }: VipProviderProps) => {
     try {
       const userProfile = await fetchUserProfile();
       const newBalance = userProfile?.balance || 0;
-      const newTier = calculateVipTierFromBalance(newBalance);
+      const newTrades = userProfile?.total_trades || 0;
+      const newTier = calculateVipTier(newBalance, newTrades);
 
       setVipState(prev => ({
         ...prev,
@@ -92,8 +95,9 @@ export const VipProvider = ({ children, initialUser }: VipProviderProps) => {
         throw new Error("Failed to upgrade tier");
       }
 
-      const newTier = calculateVipTierFromBalance(
-        newTierId === "vip" ? 10000 : newTierId === "pro" ? 5000 : 0
+      const newTier = calculateVipTier(
+        newTierId === "vip" ? 10000 : newTierId === "pro" ? 5000 : 0,
+        newTierId === "vip" ? 50 : newTierId === "pro" ? 10 : 0
       );
 
       setVipState(prev => ({
@@ -121,13 +125,15 @@ export const VipProvider = ({ children, initialUser }: VipProviderProps) => {
         throw new Error("Failed to update balance");
       }
 
-      const newTier = calculateVipTierFromBalance(newBalance);
-
-      setVipState(prev => ({
-        ...prev,
-        currentTier: newTier,
-        hasChanges: newTier.id !== prev.currentTier.id,
-      }));
+      setVipState(prev => {
+        const currentTrades = prev.currentTier.id === "standard" ? 0 : 50;
+        const newTier = calculateVipTier(newBalance, currentTrades);
+        return {
+          ...prev,
+          currentTier: newTier,
+          hasChanges: newTier.id !== prev.currentTier.id,
+        };
+      });
     } catch (error) {
       console.error("Failed to update balance:", error);
       throw error;
