@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, Trophy, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,7 +70,7 @@ const EmptyListBlock = ({ label }: { label: string }) => (
   </div>
 );
 
-export const TournamentDirectory = ({ onOpenDetails, onEnterTournament, onClose, variant = "full" }: TournamentDirectoryProps) => {
+export const TournamentDirectory = ({ onOpenDetails, onEnterTournament, onClose, variant = "full", directoryRefreshKey }: TournamentDirectoryProps & { directoryRefreshKey?: number }) => {
   const isCompact = variant === "compact";
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState<TournamentStatsTab>("all");
@@ -85,31 +85,24 @@ export const TournamentDirectory = ({ onOpenDetails, onEnterTournament, onClose,
     return () => window.clearInterval(timer);
   }, []);
 
-  useEffect(() => {
+  const loadHistory = useCallback(async () => {
     if (!profile?.id) {
       setHistoryRows([]);
       return;
     }
-
-    let mounted = true;
-    const loadHistory = async () => {
-      setHistoryLoading(true);
-      const { data } = await supabase
-        .from("tournament_participants")
-        .select("id, tournament_id, current_balance, created_at, updated_at")
-        .eq("user_id", profile.id)
-        .order("created_at", { ascending: false });
-
-      if (!mounted) return;
-      setHistoryRows((data as ParticipantHistoryRow[] | null) ?? []);
-      setHistoryLoading(false);
-    };
-
-    void loadHistory();
-    return () => {
-      mounted = false;
-    };
+    setHistoryLoading(true);
+    const { data } = await supabase
+      .from("tournament_participants")
+      .select("id, tournament_id, current_balance, created_at, updated_at")
+      .eq("user_id", profile.id)
+      .order("created_at", { ascending: false });
+    setHistoryRows((data as ParticipantHistoryRow[] | null) ?? []);
+    setHistoryLoading(false);
   }, [profile?.id]);
+
+  useEffect(() => {
+    void loadHistory();
+  }, [loadHistory, directoryRefreshKey]);
 
   const visibleTournaments = useMemo(
     () => tournaments.filter((tournament) => tournament.status !== "cancelled"),

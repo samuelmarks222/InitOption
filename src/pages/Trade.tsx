@@ -474,6 +474,7 @@ const Trade = () => {
   const [showRealAccountWelcome, setShowRealAccountWelcome] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceModule>(null);
   const [selectedTournament, setSelectedTournament] = useState<string | null>(null);
+  const [directoryRefreshKey, setDirectoryRefreshKey] = useState(0);
   const [tournamentSandboxBalance, setTournamentSandboxBalance] = useState(0);
   const [accountType, setAccountType] = useState<AccountType>("live");
   const [demoBalance, setDemoBalance] = useState(DEFAULT_DEMO_BALANCE);
@@ -1263,6 +1264,7 @@ const Trade = () => {
               onOpenTournament={setSelectedTournament}
               onEnterTournament={handleEnterTournament}
               onSelectWorkspace={setActiveWorkspace}
+              directoryRefreshKey={directoryRefreshKey}
             />
           )}
 
@@ -1614,7 +1616,8 @@ const Trade = () => {
         />
         <ProfileDrawer isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} balance={balance} initialTab={profileInitialTab} />
         <TournamentDetailOverlay tournamentId={selectedTournament} onClose={() => setSelectedTournament(null)}
-          onOpenDeposit={openDepositPage} onEnterTournament={handleEnterTournament} />
+          onOpenDeposit={openDepositPage} onEnterTournament={handleEnterTournament}
+          onJoined={() => setDirectoryRefreshKey((k) => k + 1)} />
       </div>
     </ProfileTourProvider>
   );

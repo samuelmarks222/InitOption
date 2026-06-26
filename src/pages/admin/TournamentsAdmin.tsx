@@ -15,6 +15,11 @@ const createDefaultTournamentDraft = () => ({
   prize_pool: 0,
   starting_balance: 100,
   number_of_winners: 1,
+  prize_distribution: JSON.stringify([
+    { position: 1, share: 0.5, label: "1st" },
+    { position: 2, share: 0.3, label: "2nd" },
+    { position: 3, share: 0.2, label: "3rd" },
+  ]),
   status: "upcoming" as const,
   // default to next Friday 09:00 local -> next Friday + 12 hours end
   start_date: (() => {
@@ -130,6 +135,11 @@ const TournamentsAdmin = () => {
     const sDate = draft.start_date ? new Date(draft.start_date).toISOString() : undefined;
     const eDate = draft.end_date ? new Date(draft.end_date).toISOString() : undefined;
 
+    let resolvedPrizeDist = draft.prize_distribution;
+    if (typeof resolvedPrizeDist === "string") {
+      try { resolvedPrizeDist = JSON.parse(resolvedPrizeDist); }
+      catch { resolvedPrizeDist = undefined; }
+    }
     const { error } = await supabase.from('tournaments').update({
       ...(draft.title !== undefined && { title: draft.title }),
       ...(draft.description !== undefined && { description: draft.description }),
@@ -138,6 +148,7 @@ const TournamentsAdmin = () => {
       ...(draft.prize_pool !== undefined && { prize_pool: Number(draft.prize_pool) }),
       ...(draft.starting_balance !== undefined && { starting_balance: Number(draft.starting_balance) }),
       ...(draft.number_of_winners !== undefined && { number_of_winners: Number(draft.number_of_winners) }),
+      ...(resolvedPrizeDist !== undefined && { prize_distribution: resolvedPrizeDist }),
       ...(sDate !== undefined && { start_date: sDate }),
       ...(eDate !== undefined && { end_date: eDate }),
     }).eq('id', id);
@@ -170,6 +181,9 @@ const TournamentsAdmin = () => {
     const sDate = new Date(newTour.start_date).toISOString();
     const eDate = new Date(newTour.end_date).toISOString();
 
+    let prizeDistribution: any = undefined;
+    try { prizeDistribution = JSON.parse(newTour.prize_distribution); } catch {}
+
     const { data, error } = await supabase.from('tournaments').insert({
       title: newTour.title,
       description: newTour.description,
@@ -178,6 +192,7 @@ const TournamentsAdmin = () => {
       prize_pool: Number(newTour.prize_pool),
       starting_balance: Number(newTour.starting_balance),
       number_of_winners: Number(newTour.number_of_winners),
+      prize_distribution: prizeDistribution,
       start_date: sDate,
       end_date: eDate,
       status: newTour.status
@@ -237,12 +252,16 @@ const TournamentsAdmin = () => {
               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Prize Pool ($)</label>
               <input type="number" value={newTour.prize_pool} onChange={e => setNewTour({...newTour, prize_pool: Number(e.target.value)})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-yellow-500 font-bold focus:border-[#0fa053] outline-none" />
             </div>
-            <div className="col-span-1 border-t border-[#2a2f42] pt-4">
-              <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Winners</label>
-              <input type="number" min="1" value={newTour.number_of_winners} onChange={e => setNewTour({...newTour, number_of_winners: Math.max(1, Number(e.target.value))})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white font-bold focus:border-[#0fa053] outline-none" />
-            </div>
              <div className="col-span-1 border-t border-[#2a2f42] pt-4">
-              <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Start Balance ($)</label>
+               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Winners</label>
+               <input type="number" min="1" value={newTour.number_of_winners} onChange={e => setNewTour({...newTour, number_of_winners: Math.max(1, Number(e.target.value))})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white font-bold focus:border-[#0fa053] outline-none" />
+             </div>
+             <div className="col-span-1 sm:col-span-2 border-t border-[#2a2f42] pt-4">
+               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Prize Distribution (JSON)</label>
+               <textarea rows={2} value={newTour.prize_distribution} onChange={e => setNewTour({...newTour, prize_distribution: e.target.value})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-[11px] text-green-300 font-mono focus:border-[#0fa053] outline-none" />
+             </div>
+              <div className="col-span-1 border-t border-[#2a2f42] pt-4">
+               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Start Balance ($)</label>
               <input type="number" value={newTour.starting_balance} onChange={e => setNewTour({...newTour, starting_balance: Number(e.target.value)})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-green-400 font-bold focus:border-[#0fa053] outline-none" />
             </div>
 
@@ -294,10 +313,19 @@ const TournamentsAdmin = () => {
               ) : filtered.map((t) => (
                 <tr key={t.id} className="hover:bg-white/[0.02]">
                   <td className="px-6 py-4">
-                    {editingRowId === t.id ? (
+                      {editingRowId === t.id ? (
                       <div className="space-y-2">
                         <input type="text" value={editDrafts[t.id]?.title ?? t.title} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], title: e.target.value } }))} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#0fa053] outline-none" />
                         <input type="text" value={editDrafts[t.id]?.description ?? t.description ?? ""} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], description: e.target.value } }))} placeholder="Description" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:border-[#0fa053] outline-none" />
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Prize Distribution (JSON)</label>
+                          <textarea
+                            rows={3}
+                            value={editDrafts[t.id]?.prize_distribution ?? JSON.stringify((t as any).prize_distribution ?? [], null, 2)}
+                            onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], prize_distribution: e.target.value } }))}
+                            className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-[11px] text-green-300 font-mono focus:border-[#0fa053] outline-none"
+                          />
+                        </div>
                       </div>
                     ) : (
                       <>
@@ -392,7 +420,7 @@ const TournamentsAdmin = () => {
                         </>
                       ) : (
                         <>
-                          <button onClick={() => { setEditingRowId(t.id); setEditDrafts((d) => ({ ...d, [t.id]: {} })); setEditingRebuyId(null); }} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-[#0fa053] rounded transition-colors" title="Edit All Fields">
+                          <button onClick={() => { setEditingRowId(t.id); setEditDrafts((d) => ({ ...d, [t.id]: { prize_distribution: JSON.stringify((t as any).prize_distribution ?? []) } })); setEditingRebuyId(null); }} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-[#0fa053] rounded transition-colors" title="Edit All Fields">
                             <Edit size={16} />
                           </button>
                           {editingRebuyId === t.id ? (
