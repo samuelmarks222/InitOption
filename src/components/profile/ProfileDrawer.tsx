@@ -131,7 +131,8 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
           style={{ background: "var(--trading-workspace-bg)" }}
         >
           <div
-            className="overflow-hidden rounded-[24px] border border-[#0b2f3a] bg-[#13232d] shadow-[0_18px_50px_rgba(0,0,0,0.28)] px-4 py-4 md:px-6 md:py-5"
+            className="border-b border-white/6 px-4 py-4 md:px-6 md:py-5"
+            style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
           >
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
               <div className="min-w-0">
