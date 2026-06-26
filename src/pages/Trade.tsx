@@ -20,7 +20,7 @@ import AssetInfo from "@/components/trading/AssetInfo";
 import { ProfileTourProvider } from "@/contexts/ProfileTourContext";
 import { GuidedTour } from "@/components/tour/GuidedTour";
 import { AssetSelectorModal, type AssetSelectorAsset } from "@/components/trading/AssetSelectorModal";
-import { DepositGuideReminder } from "@/components/trading/DepositGuideReminder";
+
 import IndicatorsPanel from "@/components/trading/indicators/IndicatorsPanel";
 import { DrawingsPanel } from "@/components/trading/drawings/DrawingsPanel";
 import { ActiveIndicator } from "@/components/trading/indicators/types";
@@ -1607,12 +1607,6 @@ const Trade = () => {
             canClaimBonus={canClaimBonus}
           />
         )}
-        <DepositGuideReminder
-          open={Boolean(depositGuideReason)}
-          reason={depositGuideReason}
-          onClose={() => setDepositGuideReason(null)}
-          onDeposit={openDepositPage}
-        />
         <ProfileDrawer isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} balance={balance} initialTab={profileInitialTab} />
         <TournamentDetailOverlay tournamentId={selectedTournament} onClose={() => setSelectedTournament(null)}
           onOpenDeposit={openDepositPage} onEnterTournament={handleEnterTournament}
