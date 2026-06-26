@@ -14,10 +14,11 @@ interface DynamicWorkspaceProps {
   activeWorkspace: WorkspaceModule;
   onClose: () => void;
   onOpenTournament?: (id: string) => void;
+  onEnterTournament?: (id: string) => void;
   onSelectWorkspace?: (workspace: WorkspaceModule) => void;
 }
 
-export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, onSelectWorkspace }: DynamicWorkspaceProps) => {
+export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, onEnterTournament, onSelectWorkspace }: DynamicWorkspaceProps) => {
   const [supportImmersive, setSupportImmersive] = useState(false);
 
   useEffect(() => {
@@ -94,7 +95,7 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
         )}
         {activeWorkspace === "tournaments" && (
           <div className="flex-1 w-full h-full">
-            <WorkspaceTournaments onOpenDetails={onOpenTournament} onClose={onClose} />
+            <WorkspaceTournaments onOpenDetails={onOpenTournament} onEnterTournament={onEnterTournament} onClose={onClose} />
           </div>
         )}
         {activeWorkspace === "more" && (

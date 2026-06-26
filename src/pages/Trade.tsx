@@ -1261,6 +1261,7 @@ const Trade = () => {
               activeWorkspace={activeWorkspace}
               onClose={() => setActiveWorkspace(null)}
               onOpenTournament={setSelectedTournament}
+              onEnterTournament={handleEnterTournament}
               onSelectWorkspace={setActiveWorkspace}
             />
           )}

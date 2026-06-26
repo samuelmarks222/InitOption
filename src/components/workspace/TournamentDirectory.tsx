@@ -9,6 +9,7 @@ import { type TournamentRow } from "@/lib/publicTournaments";
 
 interface TournamentDirectoryProps {
   onOpenDetails?: (id: string) => void;
+  onEnterTournament?: (id: string) => void;
   onClose?: () => void;
   variant?: "compact" | "full";
 }
@@ -69,7 +70,7 @@ const EmptyListBlock = ({ label }: { label: string }) => (
   </div>
 );
 
-export const TournamentDirectory = ({ onOpenDetails, onClose, variant = "full" }: TournamentDirectoryProps) => {
+export const TournamentDirectory = ({ onOpenDetails, onEnterTournament, onClose, variant = "full" }: TournamentDirectoryProps) => {
   const isCompact = variant === "compact";
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState<TournamentStatsTab>("all");
@@ -159,6 +160,7 @@ export const TournamentDirectory = ({ onOpenDetails, onClose, variant = "full" }
     const countdownLabel = mode === "active" ? "Ends in:" : "Starts in:";
     const iconColumnClass = isCompact ? "w-[128px]" : "w-[148px]";
     const joinButtonClass = isCompact ? "w-[152px]" : "w-[168px]";
+    const alreadyJoined = historyRows.some((row) => row.tournament_id === tournament.id);
 
     return (
       <article
@@ -194,16 +196,29 @@ export const TournamentDirectory = ({ onOpenDetails, onClose, variant = "full" }
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => onOpenDetails?.(tournament.id)}
-                className={cn(
-                  "inline-flex h-11 shrink-0 items-center justify-center rounded-[11px] border border-[#0b6f52] bg-[linear-gradient(180deg,#0c805d_0%,#0b6d52_100%)] text-[15px] font-bold text-white transition-colors hover:brightness-110",
-                  joinButtonClass,
-                )}
-              >
-                Join
-              </button>
+              {alreadyJoined ? (
+                <button
+                  type="button"
+                  onClick={() => onEnterTournament?.(tournament.id)}
+                  className={cn(
+                    "inline-flex h-11 shrink-0 items-center justify-center rounded-[11px] border border-[#0b6f52] bg-[linear-gradient(180deg,#0c805d_0%,#0b6d52_100%)] text-[15px] font-bold text-white transition-colors hover:brightness-110",
+                    joinButtonClass,
+                  )}
+                >
+                  Trade
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onOpenDetails?.(tournament.id)}
+                  className={cn(
+                    "inline-flex h-11 shrink-0 items-center justify-center rounded-[11px] border border-[#2a4d8f] bg-[linear-gradient(180deg,#2d65b8_0%,#1f4d94_100%)] text-[15px] font-bold text-white transition-colors hover:brightness-110",
+                    joinButtonClass,
+                  )}
+                >
+                  Join
+                </button>
+              )}
             </div>
           </div>
 
