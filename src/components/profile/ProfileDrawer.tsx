@@ -147,7 +147,7 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
                   onClick={() => setActiveTab(item.id)}
                   className={`shrink-0 rounded-[12px] px-3 py-2 text-[13px] font-bold transition-colors sm:px-4 sm:py-3 sm:text-[14px] ${
                     activeTab === item.id
-                      ? "bg-white/[0.08] text-white"
+                      ? "bg-[#293042] text-white"
                       : "bg-white/[0.045] text-[#b7c2d8] hover:bg-white/[0.075] hover:text-white"
                   }`}
                 >
