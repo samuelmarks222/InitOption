@@ -2,10 +2,6 @@ import { useEffect, useState } from "react";
 import { BadgeDollarSign, History, LogOut, MessageCircle, Settings, User, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileTour } from "@/contexts/ProfileTourContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
-import { useVip } from "@/contexts/VipContext";
-import { VipBadge } from "@/components/vip/VipBadge";
-import { KycAvatarBadge } from "./KycAvatarBadge";
 import { ProfilePersonalData } from "./ProfilePersonalData";
 import { ProfileDeposit } from "./ProfileDeposit";
 import { ProfileSupport } from "./ProfileSupport";
@@ -38,24 +34,12 @@ const TAB_ITEMS: Array<{ id: ProfileTab; label: string; icon: typeof User }> = [
 ];
 
 export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal" }: ProfileDrawerProps) => {
-  const { emailVerified, profile, signOut, user } = useAuth();
+  const { emailVerified, profile, signOut } = useAuth();
   const { markStepCompleted } = useProfileTour();
-  const { formatMoney } = useCurrency();
-  const { vip } = useVip();
   const [activeTab, setActiveTab] = useState<ProfileTab>("personal");
   const [personalGuideTarget, setPersonalGuideTarget] = useState<PersonalGuideTarget | null>(null);
 
   const p = profile as any;
-  const profileDocuments = (p?.kyc_documents ?? p?.kycDocuments) ?? {};
-  const kycStatus = normalizeKycStatus(p?.kyc_status ?? p?.kycStatus);
-  const accountId = (profile?.id ?? "--------").replace(/-/g, "").slice(0, 8).toUpperCase();
-  const registeredAt = p?.created_at
-    ? new Date(p.created_at).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : "Not available";
 
   const getNextPersonalGuideTarget = (): PersonalGuideTarget | null => {
     const checks = [
@@ -134,32 +118,7 @@ export const ProfileDrawer = ({ isOpen, onClose, balance, initialTab = "personal
             className="border-b border-white/6 px-4 py-4 md:px-6 md:py-5"
             style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
           >
-            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
-              <div className="min-w-0">
-                <div className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7f8ea8]">Live account</div>
-                <div className="mt-3 flex items-center gap-3">
-                  <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[#1f3a5d] shadow-[inset_0_0_0_4px_rgba(33,45,68,0.95)]">
-                    {profile?.avatar_url ? (
-                      <img src={profile.avatar_url} alt="Profile" className="h-full w-full object-cover" />
-                    ) : (
-                      <User className="h-6 w-6 text-[#2693ff]" />
-                    )}
-                    <KycAvatarBadge status={kycStatus} documents={profileDocuments} size="sm" />
-                  </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <VipBadge tierId={vip.currentTier.id} size={40} />
-                        <span className="truncate text-[18px] font-bold text-white">{p?.username || user?.email || "My account"}</span>
-                      </div>
-                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[#96a3bb]">
-                      <span className="whitespace-nowrap">ID: {accountId}</span>
-                      <span className="whitespace-nowrap">Registered: {registeredAt}</span>
-                      <span className="whitespace-nowrap">Balance: {formatMoney(balance)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
+            <div className="flex items-start justify-between gap-4">
               <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
                 <button
                   type="button"
