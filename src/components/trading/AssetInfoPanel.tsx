@@ -67,7 +67,7 @@ const AssetInfoPanel = ({ asset, onClose }: AssetInfoPanelProps) => {
           </button>
         </div>
         <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-green-500/20 border border-[#0fa053]/30">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+          <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
           <span className="text-green-400 text-xs font-medium">{t("assetInfoPanel.openNow")}</span>
         </div>
 
