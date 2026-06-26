@@ -25,7 +25,7 @@ create policy "Admins can view all referral commissions"
   using (
     exists (
       select 1 from public.user_roles
-      where user_id = auth.uid() and role in ('admin', 'superadmin')
+      where user_id = auth.uid() and role = 'admin'::public.app_role
     )
   );
 
