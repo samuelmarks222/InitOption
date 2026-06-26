@@ -390,7 +390,7 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
 
   return (
     <div className={`w-full text-white ${compact ? "profile-personal-data-compact" : ""}`}>
-      <div className="profile-personal-data-card overflow-hidden rounded-[24px] border border-white/8 bg-[var(--trading-header-bg)] shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
+      <div className="profile-personal-data-card overflow-hidden rounded-[24px] border border-white/8 bg-[#293042] shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
         <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
           <form onSubmit={handleSave} className="profile-personal-data-form border-b border-white/6 p-4 md:p-6 lg:border-b-0 lg:border-r lg:border-white/6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
