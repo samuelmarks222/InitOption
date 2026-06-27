@@ -2,12 +2,13 @@ import { useTrading } from "@/hooks/useTrading";
 import { mapTradeSettlementToPresentation, TradeResultDetailModal } from "./TradeResultPresentation";
 
 export const TradeSettlementOverlay = () => {
-  const { latestSettlement, clearLatestSettlement } = useTrading();
+  const { pendingSettlements, dismissSettlement } = useTrading();
+  const latest = pendingSettlements.length > 0 ? pendingSettlements[pendingSettlements.length - 1] : null;
 
   return (
     <TradeResultDetailModal
-      trade={latestSettlement ? mapTradeSettlementToPresentation(latestSettlement) : null}
-      onClose={clearLatestSettlement}
+      trade={latest ? mapTradeSettlementToPresentation(latest) : null}
+      onClose={latest ? () => dismissSettlement(latest.id) : undefined}
     />
   );
 };

@@ -1180,6 +1180,7 @@ export type Database = {
           prize_pool?: number
           starting_balance?: number
           number_of_winners?: number
+          prize_distribution?: Array<{ position: number; share: number; label?: string }> | null
           start_date: string
           end_date: string
           status?: Database["public"]["Enums"]["tournament_status"]
@@ -1195,6 +1196,7 @@ export type Database = {
           prize_pool?: number
           starting_balance?: number
           number_of_winners?: number
+          prize_distribution?: Array<{ position: number; share: number; label?: string }> | null
           start_date?: string
           end_date?: string
           status?: Database["public"]["Enums"]["tournament_status"]

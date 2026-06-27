@@ -17,7 +17,7 @@ create index if not exists idx_tournament_participants_balance_desc
 -- 4. Leaderboard query function with P/L and return %
 create or replace function public.get_tournament_leaderboard(p_tournament_id uuid)
 returns table (
-  position bigint,
+  "position" bigint,
   user_id uuid,
   trader_name text,
   avatar_url text,
@@ -36,7 +36,7 @@ begin
   select
     row_number() over (
       order by tp.current_balance desc, tp.updated_at asc, tp.created_at asc
-    )::bigint as position,
+    )::bigint as "position",
     tp.user_id,
     p.trader_name,
     p.avatar_url,

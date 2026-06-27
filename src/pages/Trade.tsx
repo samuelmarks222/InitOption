@@ -333,8 +333,8 @@ const Trade = () => {
     tradeHistory,
     openTrade,
     setCurrentPrice,
-    latestSettlement,
-    clearLatestSettlement,
+    pendingSettlements,
+    dismissSettlement,
     tournamentParticipantId,
     setTournamentParticipantId,
   } = useTrading();
@@ -598,21 +598,23 @@ const Trade = () => {
   }, []);
 
   useEffect(() => {
-    if (!latestSettlement) {
-      return;
-    }
+    if (pendingSettlements.length === 0) return;
 
-    showChartSettlementAnnouncement({
-      id: latestSettlement.id,
-      assetSymbol: latestSettlement.asset_symbol,
-      direction: latestSettlement.direction,
-      amount: latestSettlement.amount,
-      expirySeconds: latestSettlement.expiry_seconds,
-      profit: latestSettlement.profit,
-      status: latestSettlement.status,
+    pendingSettlements.forEach((s) => {
+      showChartSettlementAnnouncement({
+        id: s.id,
+        assetSymbol: s.asset_symbol,
+        direction: s.direction,
+        amount: s.amount,
+        expirySeconds: s.expiry_seconds,
+        profit: s.profit,
+        status: s.status,
+      });
     });
-    clearLatestSettlement();
-  }, [clearLatestSettlement, latestSettlement, showChartSettlementAnnouncement]);
+
+    // dismiss all processed settlements
+    pendingSettlements.forEach((s) => dismissSettlement(s.id));
+  }, [dismissSettlement, pendingSettlements, showChartSettlementAnnouncement]);
 
   useEffect(() => {
     if (demoActiveTrades.length === 0) return;

@@ -72,10 +72,10 @@ export interface TradeSettlement {
 interface TradingContextValue {
   activeTrades: ActiveTrade[];
   tradeHistory: TradeHistoryEntry[];
-  latestSettlement: TradeSettlement | null;
+  pendingSettlements: TradeSettlement[];
   tournamentParticipantId: string | null;
   setTournamentParticipantId: (id: string | null) => void;
-  clearLatestSettlement: () => void;
+  dismissSettlement: (id: string) => void;
   openTrade: OpenTradeHandler;
   setCurrentPrice: (price: number, markerTime?: number) => void;
 }
@@ -108,7 +108,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
   const { refreshVip } = useVip();
   const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
   const [tradeHistory, setTradeHistory] = useState<TradeHistoryEntry[]>([]);
-  const [latestSettlement, setLatestSettlement] = useState<TradeSettlement | null>(null);
+  const [pendingSettlements, setPendingSettlements] = useState<TradeSettlement[]>([]);
   const [tournamentParticipantId, setTournamentParticipantId] = useState<string | null>(null);
   const currentPriceRef = useRef<number>(0);
   const currentMarkerTimeRef = useRef<number | null>(null);
@@ -157,8 +157,8 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     }
   }, []);
 
-  const clearLatestSettlement = useCallback(() => {
-    setLatestSettlement(null);
+  const dismissSettlement = useCallback((id: string) => {
+    setPendingSettlements((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
   const userId = user?.id ?? null;
@@ -166,7 +166,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
   useEffect(() => {
     setActiveTrades([]);
     setTradeHistory([]);
-    setLatestSettlement(null);
+    setPendingSettlements([]);
 
     if (!userId) {
       return;
@@ -428,19 +428,22 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     const profit = won ? trade.amount + trade.amount * trade.payout_rate : 0;
     const status: "won" | "lost" = won ? "won" : "lost";
     const settledAt = new Date().toISOString();
-    setLatestSettlement({
-      id: trade.id,
-      asset_symbol: trade.asset_symbol,
-      direction: trade.direction,
-      amount: trade.amount,
-      entry_price: trade.entry_price,
-      exit_price: exitPrice,
-      expiry_seconds: trade.expiry_seconds,
-      payout_rate: trade.payout_rate,
-      profit,
-      status,
-      settled_at: settledAt,
-    });
+    setPendingSettlements((prev) => [
+      ...prev,
+      {
+        id: trade.id,
+        asset_symbol: trade.asset_symbol,
+        direction: trade.direction,
+        amount: trade.amount,
+        entry_price: trade.entry_price,
+        exit_price: exitPrice,
+        expiry_seconds: trade.expiry_seconds,
+        payout_rate: trade.payout_rate,
+        profit,
+        status,
+        settled_at: settledAt,
+      },
+    ]);
     void playTradeCloseSound();
   }, []);
 
@@ -471,8 +474,6 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     }
 
     intervalRef.current = setInterval(() => {
-      let expiredTrades: ActiveTrade[] = [];
-
       setActiveTrades((prev) => {
         const updated: ActiveTrade[] = [];
         const expired: ActiveTrade[] = [];
@@ -498,15 +499,14 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
           }
         });
 
-        expiredTrades = expired;
+        if (expired.length > 0) {
+          expired.forEach((trade) => applySettlementPopup(trade));
+          settlementQueueRef.current.push(...expired);
+          void processSettlementQueue();
+        }
+
         return updated;
       });
-
-      if (expiredTrades.length > 0) {
-        expiredTrades.forEach((trade) => applySettlementPopup(trade));
-        settlementQueueRef.current.push(...expiredTrades);
-        void processSettlementQueue();
-      }
     }, 100);
 
     return () => {
@@ -838,10 +838,10 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
   const value = {
     activeTrades,
     tradeHistory,
-    latestSettlement,
+    pendingSettlements,
     tournamentParticipantId,
     setTournamentParticipantId,
-    clearLatestSettlement,
+    dismissSettlement,
     openTrade,
     setCurrentPrice,
   };
