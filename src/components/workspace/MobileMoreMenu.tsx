@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, TrendingUp, Trophy, ChevronRight, Wallet, ArrowDownLeft, List, History, LogOut, Globe, ChevronDown, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import CountryFlag from "@/components/ui/CountryFlag";
+import { getCountryOptionByName } from "@/lib/countries";
 
 interface MobileMoreMenuProps {
   onClose: () => void;
@@ -127,6 +130,76 @@ export const MobileLeaderboardOverlay = ({ onClose }: LeaderboardOverlayProps) =
   const [instrument, setInstrument] = useState("All instruments");
   const [showInstrDrop, setShowInstrDrop] = useState(false);
   const [tab, setTab] = useState<"weekly" | "monthly" | "all">("weekly");
+  const [loading, setLoading] = useState(true);
+  const [traders, setTraders] = useState<Array<any>>([]);
+
+  const hashSeed = (value: string) => {
+    let hash = 0;
+    for (let index = 0; index < value.length; index += 1) {
+      hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+    }
+    return hash;
+  };
+
+  const getTraderCountryCode = (trader: any, offset = 0) => {
+    const stored = (trader.phone_country ?? "").trim().toUpperCase();
+    if (/^[A-Z]{2}$/.test(stored)) return stored;
+    const nat = getCountryOptionByName(trader.nationality ?? null)?.code;
+    if (nat) return nat;
+    const fallbackCodes = ["KE", "NG", "ZA", "GB", "US", "FR", "BR", "IN", "TR", "AE", "CA", "AU", "DE", "JP", "KR", "MX", "EG", "SA"];
+    const seed = trader.id || trader.username || trader.display_name || "trader";
+    return fallbackCodes[(hashSeed(seed) + offset) % fallbackCodes.length];
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchLeaders = async () => {
+      setLoading(true);
+      const selectClause =
+        "user_id, profit, status, closed_at, profiles(id, username, display_name, avatar_url, nationality, phone_country)";
+
+      const runLeaderboardQuery = (select: string) => {
+        let query = supabase
+          .from("trades")
+          .select(select)
+          .neq("status", "open")
+          .order("closed_at", { ascending: false })
+          .limit(500);
+        return query;
+      };
+
+      try {
+        const { data, error } = await runLeaderboardQuery(selectClause);
+        if (error) {
+          setTraders([]);
+          setLoading(false);
+          return;
+        }
+
+        const aggregate = new Map<string, any>();
+        (data ?? []).forEach((row: any) => {
+          const trader = row.profiles;
+          if (!trader?.id) return;
+          const current = aggregate.get(trader.id) ?? { ...trader, rankedProfit: 0, rankedTrades: 0 };
+          current.rankedProfit += Number(row.profit ?? 0);
+          current.rankedTrades += 1;
+          aggregate.set(trader.id, current);
+        });
+
+        const next = Array.from(aggregate.values()).sort((a, b) => b.rankedProfit - a.rankedProfit).slice(0, 30);
+        if (!cancelled) setTraders(next);
+      } catch (e) {
+        if (!cancelled) setTraders([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void fetchLeaders();
+    return () => {
+      cancelled = true;
+    };
+  }, [tab]);
 
   return (
     <div className="flex flex-col h-full bg-[#0d1117]">
