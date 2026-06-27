@@ -910,6 +910,15 @@ const Trade = () => {
       const markerTimeOverride = liveChartMarkerTime ?? clickTimestampSec;
       const markerLogicalOverride = latestChartMarkerLogicalBySymbolRef.current[assetSymbol] ?? null;
 
+      const announcementId = `order_${assetSymbol}_${Date.now()}_${crypto.randomUUID()}`;
+
+      showChartOrderAnnouncement({
+        id: announcementId,
+        assetSymbol,
+        direction,
+        amount,
+      });
+
       const opened = await openTrade(
         assetSymbol,
         direction,
@@ -922,18 +931,17 @@ const Trade = () => {
         timeframeSeconds,
       );
 
-      if (opened) {
-        showChartOrderAnnouncement({
-          id: `order_${assetSymbol}_${Date.now()}_${crypto.randomUUID()}`,
-          assetSymbol,
-          direction,
-          amount,
-        });
+      if (!opened) {
+        const timerId = orderHideTimersRef.current[announcementId];
+        if (timerId !== undefined) {
+          window.clearTimeout(timerId);
+        }
+        setChartOrderAnnouncements((current) => current.filter((a) => a.id !== announcementId));
       }
 
       return opened;
     },
-    [openTrade, showChartOrderAnnouncement],
+    [openTrade, showChartOrderAnnouncement, setChartOrderAnnouncements],
   );
 
   useEffect(() => {

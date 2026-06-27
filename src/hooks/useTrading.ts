@@ -261,6 +261,22 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     const status: "won" | "lost" = won ? "won" : "lost";
     const settledAt = new Date().toISOString();
 
+    if (trade.showSettlementOverlay) {
+      setLatestSettlement({
+        id: trade.id,
+        asset_symbol: trade.asset_symbol,
+        direction: trade.direction,
+        amount: trade.amount,
+        entry_price: trade.entry_price,
+        exit_price: exitPrice,
+        expiry_seconds: trade.expiry_seconds,
+        payout_rate: trade.payout_rate,
+        profit,
+        status,
+        settled_at: settledAt,
+      });
+    }
+
     await supabase
       .from("trades")
       .update({
@@ -401,22 +417,6 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     }
 
     void playTradeCloseSound();
-
-    if (trade.showSettlementOverlay) {
-      setLatestSettlement({
-        id: trade.id,
-        asset_symbol: trade.asset_symbol,
-        direction: trade.direction,
-        amount: trade.amount,
-        entry_price: trade.entry_price,
-        exit_price: exitPrice,
-        expiry_seconds: trade.expiry_seconds,
-        payout_rate: trade.payout_rate,
-        profit,
-        status,
-        settled_at: settledAt,
-      });
-    }
 
     if (user) {
       const { data } = await supabase
