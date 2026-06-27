@@ -281,26 +281,14 @@ export const DepositModal = ({ isOpen, onClose, onBack }: DepositModalProps) => 
             {/* Dynamic Summary */}
             <div className="border-t border-dashed pt-4" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
               {selectedBonus ? (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-[14px]">
-                    <span style={{ color: "#8899b3" }}>Deposit amount</span>
-                    <span className="text-white">{formatMoney(amount)}</span>
-                  </div>
-                  <div className="flex justify-between text-[14px]">
-                    <span style={{ color: "#8899b3" }}>Bonus {selectedBonus.percent}%</span>
-                    <span className="font-medium" style={{ color: "#22c55e" }}>+{formatMoney(bonusAmount)}</span>
-                  </div>
-                  <hr className="my-2 border-0" style={{ borderTop: "1px dashed rgba(255,255,255,0.06)" }} />
-                  <div className="flex justify-between text-[14px] font-bold">
-                    <span className="text-white">You will receive</span>
-                    <span className="text-white">{formatMoney(totalReceive)}</span>
-                  </div>
+                <div className="space-y-3">
+                  <DotRow label="Deposit amount" value={formatMoney(amount)} />
+                  <DotRow label={`Bonus ${selectedBonus.percent}%`} value={`+${formatMoney(bonusAmount)}`} valueColor="#22c55e" />
+                  <hr className="border-0" style={{ borderTop: "1px dashed rgba(255,255,255,0.06)" }} />
+                  <DotRow label="You will receive" value={formatMoney(totalReceive)} bold />
                 </div>
               ) : (
-                <div className="flex justify-between text-[14px]">
-                  <span style={{ color: "#8899b3" }}>You will receive</span>
-                  <span className="text-white">{formatMoney(totalReceive)}</span>
-                </div>
+                <DotRow label="You will receive" value={formatMoney(totalReceive)} />
               )}
             </div>
 
@@ -318,6 +306,14 @@ export const DepositModal = ({ isOpen, onClose, onBack }: DepositModalProps) => 
     </div>
   );
 };
+
+const DotRow = ({ label, value, valueColor, bold }: { label: string; value: string; valueColor?: string; bold?: boolean }) => (
+  <div className="flex items-baseline gap-1 text-[14px]">
+    <span className="shrink-0" style={{ color: "#8899b3" }}>{label}</span>
+    <span className="mx-1 flex-1 self-center border-b border-dotted" style={{ borderColor: "rgba(255,255,255,0.12)", height: 0 }} />
+    <span className={`shrink-0 ${bold ? "font-bold text-white" : ""}`} style={{ color: valueColor ?? (bold ? undefined : "#ffffff") }}>{value}</span>
+  </div>
+);
 
 const PhoneIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
