@@ -261,22 +261,6 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     const status: "won" | "lost" = won ? "won" : "lost";
     const settledAt = new Date().toISOString();
 
-    if (trade.showSettlementOverlay) {
-      setLatestSettlement({
-        id: trade.id,
-        asset_symbol: trade.asset_symbol,
-        direction: trade.direction,
-        amount: trade.amount,
-        entry_price: trade.entry_price,
-        exit_price: exitPrice,
-        expiry_seconds: trade.expiry_seconds,
-        payout_rate: trade.payout_rate,
-        profit,
-        status,
-        settled_at: settledAt,
-      });
-    }
-
     await supabase
       .from("trades")
       .update({
@@ -416,8 +400,6 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       void refreshVip();
     }
 
-    void playTradeCloseSound();
-
     if (user) {
       const { data } = await supabase
         .from("trades")
@@ -436,6 +418,31 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
 
   const settlementQueueRef = useRef<ActiveTrade[]>([]);
   const isProcessingSettlementsRef = useRef(false);
+
+  const applySettlementPopup = useCallback((trade: ActiveTrade) => {
+    if (!trade.showSettlementOverlay) return;
+    const exitPrice = currentPriceRef.current;
+    const won =
+      (trade.direction === "higher" && exitPrice > trade.entry_price) ||
+      (trade.direction === "lower" && exitPrice < trade.entry_price);
+    const profit = won ? trade.amount + trade.amount * trade.payout_rate : 0;
+    const status: "won" | "lost" = won ? "won" : "lost";
+    const settledAt = new Date().toISOString();
+    setLatestSettlement({
+      id: trade.id,
+      asset_symbol: trade.asset_symbol,
+      direction: trade.direction,
+      amount: trade.amount,
+      entry_price: trade.entry_price,
+      exit_price: exitPrice,
+      expiry_seconds: trade.expiry_seconds,
+      payout_rate: trade.payout_rate,
+      profit,
+      status,
+      settled_at: settledAt,
+    });
+    void playTradeCloseSound();
+  }, []);
 
   const processSettlementQueue = useCallback(async () => {
     if (isProcessingSettlementsRef.current) return;
@@ -464,6 +471,8 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     }
 
     intervalRef.current = setInterval(() => {
+      let expiredTrades: ActiveTrade[] = [];
+
       setActiveTrades((prev) => {
         const updated: ActiveTrade[] = [];
         const expired: ActiveTrade[] = [];
@@ -489,13 +498,15 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
           }
         });
 
-        if (expired.length > 0) {
-          settlementQueueRef.current.push(...expired);
-          void processSettlementQueue();
-        }
-
+        expiredTrades = expired;
         return updated;
       });
+
+      if (expiredTrades.length > 0) {
+        expiredTrades.forEach((trade) => applySettlementPopup(trade));
+        settlementQueueRef.current.push(...expiredTrades);
+        void processSettlementQueue();
+      }
     }, 100);
 
     return () => {
@@ -503,7 +514,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         clearInterval(intervalRef.current);
       }
     };
-  }, [activeTrades.length, processSettlementQueue, resolveTrade]);
+  }, [activeTrades.length, applySettlementPopup, processSettlementQueue, resolveTrade]);
 
   const openTrade = useCallback(
     async (

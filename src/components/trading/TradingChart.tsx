@@ -3226,7 +3226,6 @@ const TradingChart = ({
           mainUpdateSchedulerRef.current.update(updatePayload);
           previousCandleRef.current = { ...candle };
         }
-        renderOverlayIndicators(getIndicatorHistory());
       };
 
       aggregatorRef.current.setCallbacks(handleCandleClose, handleCandleUpdate);
@@ -3373,16 +3372,9 @@ const TradingChart = ({
       const updatePayload = buildMainSeriesUpdatePayload(chartTypeRef.current, candle, historyRef.current);
 
       if (mainUpdateSchedulerRef.current) {
-        mainUpdateSchedulerRef.current.update(
-          updatePayload,
-          candle,
-          previousCandleRef.current,
-          startPrice,
-          tf.seconds,
-        );
+        mainUpdateSchedulerRef.current.update(updatePayload);
         previousCandleRef.current = { ...candle };
       }
-      renderOverlayIndicators(getIndicatorHistory());
     };
 
     aggregatorRef.current = new CandleAggregator(step, handleCandleClose, handleCandleUpdate);
