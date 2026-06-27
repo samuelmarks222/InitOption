@@ -1,6 +1,9 @@
-import { useState, useMemo } from "react";
-import { X, ChevronRight, AlertTriangle, Ticket, CheckCircle, ArrowLeft } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { X, ChevronRight, AlertTriangle, Ticket, CheckCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -8,43 +11,66 @@ interface DepositModalProps {
   onBack?: () => void;
 }
 
-interface BonusCode {
-  code: string;
-  label: string;
-  percent: number;
-  maxBonus: number;
-}
-
-const AVAILABLE_BONUSES: BonusCode[] = [
-  { code: "WELCOME50", label: "50% Welcome Bonus", percent: 50, maxBonus: 500 },
-  { code: "DEPOSIT30", label: "30% Deposit Bonus", percent: 30, maxBonus: 200 },
-  { code: "DEPOSIT40", label: "40% Deposit Bonus", percent: 40, maxBonus: 300 },
-  { code: "DEPOSIT50", label: "50% Deposit Bonus", percent: 50, maxBonus: 500 },
-];
+type BonusOffer = Tables<"deposit_bonus_offers">;
 
 const QUICK_AMOUNTS = [150, 200, 300, 500];
 
 export const DepositModal = ({ isOpen, onClose, onBack }: DepositModalProps) => {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [amount, setAmount] = useState(100);
   const [isBonusOpen, setIsBonusOpen] = useState(false);
-  const [selectedBonus, setSelectedBonus] = useState<BonusCode | null>(null);
+  const [selectedBonus, setSelectedBonus] = useState<BonusOffer | null>(null);
   const [customCode, setCustomCode] = useState("");
+  const [bonusOffers, setBonusOffers] = useState<BonusOffer[]>([]);
+  const [loadingOffers, setLoadingOffers] = useState(true);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    setLoadingOffers(true);
+
+    const fetchOffers = async () => {
+      const { data } = await supabase
+        .from("deposit_bonus_offers")
+        .select("*")
+        .eq("status", "active")
+        .order("position", { ascending: true })
+        .order("deposit_amount", { ascending: true });
+      if (!cancelled) {
+        setBonusOffers((data ?? []) as BonusOffer[]);
+        setLoadingOffers(false);
+      }
+    };
+
+    void fetchOffers();
+    return () => { cancelled = true; };
+  }, [isOpen]);
 
   const bonusAmount = useMemo(() => {
     if (!selectedBonus) return 0;
-    const raw = amount * (selectedBonus.percent / 100);
-    return Math.min(raw, selectedBonus.maxBonus);
+    const raw = amount * (selectedBonus.bonus_percent / 100);
+    return selectedBonus.maximum_bonus_amount != null
+      ? Math.min(raw, selectedBonus.maximum_bonus_amount)
+      : Math.round(raw * 100) / 100;
   }, [amount, selectedBonus]);
 
-  const totalReceive = useMemo(() => {
-    return amount + bonusAmount;
-  }, [amount, bonusAmount]);
+  const totalReceive = useMemo(() => amount + bonusAmount, [amount, bonusAmount]);
 
-  const handleApplyBonus = (bonus: BonusCode) => {
-    setSelectedBonus(bonus);
+  const handleOfferClick = (offer: BonusOffer) => {
+    setSelectedBonus(offer);
     setCustomCode("");
     setIsBonusOpen(false);
+  };
+
+  const handleCustomApply = () => {
+    const trimmed = customCode.trim().toUpperCase();
+    const match = bonusOffers.find((o) => o.title.toUpperCase() === trimmed);
+    if (match) {
+      setSelectedBonus(match);
+      setCustomCode("");
+      setIsBonusOpen(false);
+    }
   };
 
   const handleClearBonus = () => {
@@ -52,14 +78,12 @@ export const DepositModal = ({ isOpen, onClose, onBack }: DepositModalProps) => 
     setCustomCode("");
   };
 
-  const handleCustomApply = () => {
-    const code = customCode.trim().toUpperCase();
-    const match = AVAILABLE_BONUSES.find((b) => b.code === code);
-    if (match) {
-      setSelectedBonus(match);
-      setCustomCode("");
-      setIsBonusOpen(false);
-    }
+  const handleProceed = () => {
+    const params = new URLSearchParams();
+    params.set("amount", String(amount));
+    if (selectedBonus?.id) params.set("bonusOfferId", selectedBonus.id);
+    onClose();
+    navigate(`/deposit?${params.toString()}`);
   };
 
   const formatMoney = (value: number) =>
@@ -157,7 +181,7 @@ export const DepositModal = ({ isOpen, onClose, onBack }: DepositModalProps) => 
                   value={amount}
                   onChange={(e) => setAmount(Math.max(0, Number(e.target.value)))}
                   className="h-[52px] w-full rounded-[10px] border-0 px-5 text-right text-[20px] font-bold text-white outline-none transition-colors focus:ring-2"
-                  style={{ backgroundColor: "#1b202a", focus: { ringColor: "#4d8cff" } }}
+                  style={{ backgroundColor: "#1b202a", caretColor: "#4d8cff" }}
                 />
                 <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-[20px] font-bold text-white">$</span>
               </div>
@@ -184,7 +208,6 @@ export const DepositModal = ({ isOpen, onClose, onBack }: DepositModalProps) => 
 
             {/* Bonus Code Accordion */}
             <div className="overflow-hidden rounded-[10px] border" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-              {/* Accordion Header */}
               <button
                 type="button"
                 onClick={() => setIsBonusOpen(!isBonusOpen)}
@@ -198,7 +221,7 @@ export const DepositModal = ({ isOpen, onClose, onBack }: DepositModalProps) => 
                 <div className="flex items-center gap-2">
                   {selectedBonus ? (
                     <span className="text-[13px] font-bold" style={{ color: "#22c55e" }}>
-                      +{selectedBonus.percent}% BONUS
+                      +{selectedBonus.bonus_percent}% BONUS
                     </span>
                   ) : (
                     <span className="text-[13px] font-medium" style={{ color: "#4d8cff" }}>
@@ -208,23 +231,22 @@ export const DepositModal = ({ isOpen, onClose, onBack }: DepositModalProps) => 
                 </div>
               </button>
 
-              {/* Accordion Body */}
               {isBonusOpen && (
                 <div className="border-t px-4 py-4" style={{ backgroundColor: "#1b202a", borderColor: "rgba(255,255,255,0.08)" }}>
-                  {/* Custom code input */}
                   <div className="flex gap-2">
                     <input
                       type="text"
                       placeholder="Select or enter code"
                       value={customCode}
                       onChange={(e) => setCustomCode(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleCustomApply(); }}
                       className="h-[44px] flex-1 rounded-[8px] border-0 px-4 text-[13px] text-white outline-none transition-colors focus:ring-2"
-                      style={{ backgroundColor: "#27303d", focus: { ringColor: "#4d8cff" } }}
+                      style={{ backgroundColor: "#27303d", caretColor: "#4d8cff" }}
                     />
                     <button
                       type="button"
                       onClick={handleCustomApply}
-                      className="h-[44px] rounded-[8px] px-5 text-[13px] font-bold text-white transition-colors"
+                      className="h-[44px] rounded-[8px] px-5 text-[13px] font-bold text-white transition-colors disabled:opacity-40"
                       style={{ backgroundColor: "#4d8cff" }}
                       disabled={!customCode.trim()}
                     >
@@ -232,35 +254,46 @@ export const DepositModal = ({ isOpen, onClose, onBack }: DepositModalProps) => 
                     </button>
                   </div>
 
-                  {/* Available promos list */}
-                  <div className="mt-3 space-y-1">
-                    {AVAILABLE_BONUSES.map((bonus) => (
-                      <button
-                        key={bonus.code}
-                        type="button"
-                        onClick={() => handleApplyBonus(bonus)}
-                        className="flex w-full items-center justify-between rounded-[8px] px-4 py-2.5 text-left transition-colors hover:bg-white/5"
-                        style={{
-                          backgroundColor: selectedBonus?.code === bonus.code ? "rgba(77,140,255,0.15)" : "transparent",
-                        }}
-                      >
-                        <div>
-                          <span className="text-[13px] font-medium text-white">{bonus.code}</span>
-                          <span className="ml-2 text-[12px] text-[#8899b3]">{bonus.label}</span>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-[#8899b3]" />
-                      </button>
-                    ))}
-                  </div>
+                  {loadingOffers ? (
+                    <div className="mt-3 flex items-center justify-center py-4">
+                      <Loader2 className="h-5 w-5 animate-spin text-[#8899b3]" />
+                    </div>
+                  ) : bonusOffers.length > 0 ? (
+                    <div className="mt-3 space-y-1">
+                      {bonusOffers.map((offer) => (
+                        <button
+                          key={offer.id}
+                          type="button"
+                          onClick={() => handleOfferClick(offer)}
+                          className="flex w-full items-center justify-between rounded-[8px] px-4 py-2.5 text-left transition-colors hover:bg-white/5"
+                          style={{
+                            backgroundColor: selectedBonus?.id === offer.id ? "rgba(77,140,255,0.15)" : "transparent",
+                          }}
+                        >
+                          <div>
+                            <span className="text-[13px] font-medium text-white">{offer.title}</span>
+                            <span className="ml-2 text-[12px] text-[#8899b3]">
+                              {offer.bonus_percent}% bonus ·
+                              {offer.minimum_deposit_amount != null
+                                ? ` min ${formatMoney(offer.minimum_deposit_amount)}`
+                                : ` up to ${offer.maximum_bonus_amount != null ? formatMoney(offer.maximum_bonus_amount) : "unlimited"}`}
+                            </span>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-[#8899b3]" />
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-center text-[13px] text-[#8899b3]">No bonus offers available</p>
+                  )}
                 </div>
               )}
 
-              {/* Applied bonus state */}
               {selectedBonus && !isBonusOpen && (
                 <div className="border-t px-4 py-4" style={{ backgroundColor: "#1b202a", borderColor: "rgba(255,255,255,0.08)" }}>
                   <div className="flex items-center gap-2">
                     <div className="flex flex-1 items-center rounded-[8px] px-4 py-2.5" style={{ backgroundColor: "#27303d" }}>
-                      <span className="text-[13px] text-white">{selectedBonus.code}</span>
+                      <span className="text-[13px] text-white">{selectedBonus.title}</span>
                       <button
                         type="button"
                         onClick={handleClearBonus}
@@ -276,8 +309,10 @@ export const DepositModal = ({ isOpen, onClose, onBack }: DepositModalProps) => 
                   >
                     <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
                     <span>
-                      Promo code applied successfully. You'll get a {selectedBonus.percent}% bonus (up to{" "}
-                      {formatMoney(selectedBonus.maxBonus)} max).
+                      Promo code applied successfully. You'll get a {selectedBonus.bonus_percent}% bonus
+                      {selectedBonus.maximum_bonus_amount != null
+                        ? ` (up to ${formatMoney(selectedBonus.maximum_bonus_amount)} max)`
+                        : ""}.
                     </span>
                   </div>
                 </div>
@@ -317,7 +352,7 @@ export const DepositModal = ({ isOpen, onClose, onBack }: DepositModalProps) => 
                     <span className="text-white">{formatMoney(amount)}</span>
                   </div>
                   <div className="flex justify-between text-[14px]">
-                    <span className="text-[#8899b3]">Bonus {selectedBonus.percent}%</span>
+                    <span className="text-[#8899b3]">Bonus {selectedBonus.bonus_percent}%</span>
                     <span className="font-medium" style={{ color: "#22c55e" }}>+{formatMoney(bonusAmount)}</span>
                   </div>
                   <hr className="my-2 border-0" style={{ borderTop: "1px dashed rgba(255,255,255,0.06)" }} />
@@ -337,6 +372,7 @@ export const DepositModal = ({ isOpen, onClose, onBack }: DepositModalProps) => 
             {/* Submit Button */}
             <button
               type="button"
+              onClick={handleProceed}
               className="h-[52px] w-full rounded-[10px] text-[15px] font-bold text-white transition-colors hover:brightness-110"
               style={{ backgroundColor: "#4d8cff" }}
             >
