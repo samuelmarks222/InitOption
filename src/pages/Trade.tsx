@@ -103,6 +103,7 @@ interface MobileModuleOverlayProps {
   setSelectedTournament: (id: string | null) => void;
   analyticsSignalAsset?: AnalyticsSignalAsset;
   directoryRefreshKey: number;
+  onEnterTournament?: (id: string) => void;
 }
 
 const DEFAULT_TRADE_ASSET_ROW = {
@@ -264,6 +265,7 @@ const MobileModuleOverlay = ({
   setSelectedTournament,
   analyticsSignalAsset,
   directoryRefreshKey,
+  onEnterTournament,
 }: MobileModuleOverlayProps) => {
   if (!mobileOverlay) return null;
   return (
@@ -282,7 +284,7 @@ const MobileModuleOverlay = ({
             </button>
           </div>
           <div className="flex-1 min-h-0 relative">
-            <TournamentsGridOverlay directoryRefreshKey={directoryRefreshKey} />
+            <TournamentsGridOverlay onEnterTournament={onEnterTournament} directoryRefreshKey={directoryRefreshKey} />
           </div>
         </div>
       )}
@@ -1594,6 +1596,7 @@ const Trade = () => {
           setSelectedTournament={setSelectedTournament}
           analyticsSignalAsset={analyticsSignalAsset}
           directoryRefreshKey={directoryRefreshKey}
+          onEnterTournament={handleEnterTournament}
         />
 
         {showRealAccountWelcome && (
