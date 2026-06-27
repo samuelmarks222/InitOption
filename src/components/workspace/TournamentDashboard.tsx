@@ -663,13 +663,19 @@ const TournamentDetailView = ({
   const countdownLabel = isActive ? "Ends in:" : "Starts in:";
 
   const fetchLeaderboard = useCallback(async () => {
-    const { data } = await supabaseAny.rpc("get_tournament_leaderboard", {
-      p_tournament_id: tournament.id,
-    });
-    if (Array.isArray(data) && data.length > 0) {
-      setLeaderboard(data as LeaderboardEntry[]);
-      return;
+    try {
+      const { data, error } = await supabaseAny.rpc("get_tournament_leaderboard", {
+        p_tournament_id: tournament.id,
+      });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        setLeaderboard(data as LeaderboardEntry[]);
+        return;
+      }
+    } catch {
+      // Fall back to the participant rows when the RPC is unavailable or fails.
     }
+
     setLeaderboard(buildFallbackLeaderboard(participantList, tournament));
   }, [participantList, tournament]);
 

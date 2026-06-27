@@ -94,6 +94,17 @@ describe("TournamentDetailOverlay", () => {
     });
   });
 
+  it("shows registered participants even when the leaderboard rpc throws", async () => {
+    vi.mocked(supabase.rpc).mockRejectedValueOnce(new Error("leaderboard rpc failed"));
+
+    render(<TournamentDetailOverlay tournamentId="tour-1" onClose={() => {}} onEnterTournament={() => {}} />);
+
+    expect(await screen.findByText("You")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText("No participants yet.")).not.toBeInTheDocument();
+    });
+  });
+
   it("opens from a null tournament selection without triggering a hooks-order crash", async () => {
     const { rerender } = render(
       <TournamentDetailOverlay tournamentId={null} onClose={() => {}} onEnterTournament={() => {}} />,

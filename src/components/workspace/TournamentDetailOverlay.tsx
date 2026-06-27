@@ -196,12 +196,18 @@ export const TournamentDetailOverlay = ({
 
   const fetchLeaderboard = useCallback(async () => {
     if (!tournamentId) return;
-    const { data } = await supabaseAny.rpc("get_tournament_leaderboard", {
-      p_tournament_id: tournamentId,
-    });
-    if (Array.isArray(data) && data.length > 0) {
-      setLeaderboard(data as LeaderboardEntry[]);
-      return;
+
+    try {
+      const { data, error } = await supabaseAny.rpc("get_tournament_leaderboard", {
+        p_tournament_id: tournamentId,
+      });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        setLeaderboard(data as LeaderboardEntry[]);
+        return;
+      }
+    } catch {
+      // Fall back to the participant rows when the RPC is unavailable or fails.
     }
 
     const fallback = buildFallbackLeaderboard(participants, tournament);
