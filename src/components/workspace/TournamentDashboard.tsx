@@ -633,6 +633,7 @@ const TournamentDetailView = ({
 }: TournamentDetailViewProps) => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [participants, setParticipants] = useState<number>(0);
+  const [participantList, setParticipantList] = useState<ParticipantRow[]>([]);
   const [page, setPage] = useState(1);
   const pollRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -648,9 +649,8 @@ const TournamentDetailView = ({
       setLeaderboard(data as LeaderboardEntry[]);
       return;
     }
-
-    setLeaderboard(buildFallbackLeaderboard(participantRows, tournament));
-  }, [participantRows, tournament]);
+    setLeaderboard(buildFallbackLeaderboard(participantList, tournament));
+  }, [participantList, tournament]);
 
   useEffect(() => {
     void fetchLeaderboard();
@@ -674,7 +674,7 @@ const TournamentDetailView = ({
           .order("current_balance", { ascending: false }),
       ]);
       if (count !== null) setParticipants(count);
-      setParticipantRows((data as ParticipantRow[] | null) ?? []);
+      setParticipantList((data as ParticipantRow[] | null) ?? []);
     };
     void fetchParticipants();
   }, [tournament.id]);
@@ -693,8 +693,8 @@ const TournamentDetailView = ({
 
   const visibleLeaderboard = useMemo(() => {
     if (leaderboard.length > 0) return leaderboard;
-    return buildFallbackLeaderboard(participantRows, tournament);
-  }, [leaderboard, participantRows, tournament]);
+    return buildFallbackLeaderboard(participantList, tournament);
+  }, [leaderboard, participantList, tournament]);
 
   const userPosition = useMemo(
     () => (profileId ? visibleLeaderboard.find((e) => e.user_id === profileId) ?? null : null),
