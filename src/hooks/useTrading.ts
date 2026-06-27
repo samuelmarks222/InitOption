@@ -434,6 +434,27 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     }
   }, [profile, refreshProfile, refreshVip, user]);
 
+  const settlementQueueRef = useRef<ActiveTrade[]>([]);
+  const isProcessingSettlementsRef = useRef(false);
+
+  const processSettlementQueue = useCallback(async () => {
+    if (isProcessingSettlementsRef.current) return;
+    isProcessingSettlementsRef.current = true;
+
+    try {
+      while (settlementQueueRef.current.length > 0) {
+        const trade = settlementQueueRef.current.shift()!;
+        await resolveTrade(trade);
+      }
+    } finally {
+      isProcessingSettlementsRef.current = false;
+
+      if (settlementQueueRef.current.length > 0) {
+        void processSettlementQueue();
+      }
+    }
+  }, [resolveTrade]);
+
   useEffect(() => {
     if (activeTrades.length === 0) {
       if (intervalRef.current) {
@@ -468,9 +489,10 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
           }
         });
 
-        expired.forEach((trade) => {
-          void resolveTrade(trade);
-        });
+        if (expired.length > 0) {
+          settlementQueueRef.current.push(...expired);
+          void processSettlementQueue();
+        }
 
         return updated;
       });
@@ -481,7 +503,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         clearInterval(intervalRef.current);
       }
     };
-  }, [activeTrades.length, resolveTrade]);
+  }, [activeTrades.length, processSettlementQueue, resolveTrade]);
 
   const openTrade = useCallback(
     async (
