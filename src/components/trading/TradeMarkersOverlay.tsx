@@ -315,7 +315,7 @@ export const TradeMarkersOverlay = ({
       running = false;
       cancelAnimationFrame(rafRef.current);
     };
-  }, [chart, series]);
+  }, [chart, series, assetSymbol]);
 
   return (
     <canvas

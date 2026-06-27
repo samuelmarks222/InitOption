@@ -2143,6 +2143,7 @@ const TradingChart = ({
   const marketFeedRef = useRef<MarketDataFeed | null>(null);
   const engineRef = useRef<OTCPriceEngine | null>(null);
   const historyRef = useRef<OHLCCandle[]>([]);
+  const historyAssetRef = useRef<string>("");
   const liveRef = useRef<OHLCCandle | null>(null);
   const previousCandleRef = useRef<OHLCCandle | null>(null);
   const loadedHistoryCountRef = useRef(0);
@@ -2938,7 +2939,7 @@ const TradingChart = ({
       return;
     }
 
-    if (historyRef.current.length > 0 && mainSeriesRef.current) {
+    if (historyRef.current.length > 0 && mainSeriesRef.current && historyAssetRef.current === asset.symbol) {
       mainSeriesRef.current.setData(getMainSeriesData(chartType, historyRef.current));
       if (liveRef.current) {
         const tf = TIMEFRAMES[selectedTf] || { seconds: 60 };
@@ -3120,6 +3121,7 @@ const TradingChart = ({
 
       loadedHistoryCountRef.current = nextHistory.length;
       historyRef.current = nextHistory;
+      historyAssetRef.current = asset.symbol;
       mainSeries.setData(getMainSeriesData(chartTypeRef.current, historyRef.current));
 
       if (liveRef.current) {
@@ -3182,6 +3184,7 @@ const TradingChart = ({
       aggregatorRef.current = persisted.aggregator;
       engineRef.current = persisted.engine;
       historyRef.current = persisted.history;
+      historyAssetRef.current = asset.symbol;
       liveRef.current = persisted.liveCandle;
       loadedHistoryCountRef.current = persisted.history.length;
 
@@ -3316,6 +3319,7 @@ const TradingChart = ({
 
     const history = engine.generateHistory(tf, nowSec);
     historyRef.current = history;
+    historyAssetRef.current = asset.symbol;
     loadedHistoryCountRef.current = history.length;
 
     mainSeriesRef.current?.setData(getMainSeriesData(chartTypeRef.current, historyRef.current));
