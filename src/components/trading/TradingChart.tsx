@@ -2050,23 +2050,11 @@ class SmoothUpdateScheduler {
   constructor(series) {
     this.series = series;
     this.pendingUpdate = null;
-    this.animationDuration = 600;
     this.rafId = null;
-    this.previousCandle = null;
   }
 
-  update(updateData, currentCandle = null, previousCandle = null, basePrice = 1, timeframeSeconds = 60) {
+  update(updateData) {
     this.pendingUpdate = updateData;
-
-    // Calculate adaptive animation duration if candle data provided
-    if (currentCandle && basePrice > 0) {
-      this.animationDuration = calculateAdaptiveAnimationDuration(
-        currentCandle,
-        previousCandle || this.previousCandle,
-        basePrice,
-      );
-      this.previousCandle = { ...currentCandle };
-    }
 
     if (this.rafId === null) {
       this.rafId = requestAnimationFrame(() => this.flush());
@@ -2076,9 +2064,6 @@ class SmoothUpdateScheduler {
   flush() {
     if (this.pendingUpdate && this.series) {
       try {
-        this.series.applyOptions({
-          animation: { enabled: true, duration: Math.max(500, Math.min(1000, this.animationDuration)) },
-        });
         this.series.update(this.pendingUpdate);
       } catch (_) {}
       this.pendingUpdate = null;
@@ -2091,12 +2076,11 @@ class SmoothUpdateScheduler {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
-    this.previousCandle = null;
   }
 }
 
 // ── Persistent feed cache: keeps market feed alive across page navigation ──
-const PERSIST_FEED_TTL = 60_000;
+const PERSIST_FEED_TTL = 5_000;
 interface PersistedFeedEntry {
   symbol: string;
   timeframe: SupportedChartTimeframe;
@@ -2946,10 +2930,6 @@ const TradingChart = ({
         if (mainUpdateSchedulerRef.current) {
           mainUpdateSchedulerRef.current.update(
             buildMainSeriesUpdatePayload(chartType, liveRef.current, historyRef.current),
-            liveRef.current,
-            previousCandleRef.current,
-            referencePrice,
-            tf.seconds,
           );
         } else {
           try {
@@ -3129,10 +3109,6 @@ const TradingChart = ({
           if (mainUpdateSchedulerRef.current) {
             mainUpdateSchedulerRef.current.update(
               buildMainSeriesUpdatePayload(chartTypeRef.current, liveRef.current, historyRef.current),
-              liveRef.current,
-              previousCandleRef.current,
-              assetSnapshotRef.current.price > 0 ? assetSnapshotRef.current.price : liveRef.current.close,
-              tf.seconds,
             );
             if (previousCandleRef.current) {
               // Don't update previousCandleRef here as it's already tracking in handleCandleUpdate
@@ -3247,7 +3223,7 @@ const TradingChart = ({
         onPriceUpdateRef.current?.(candle.close, effectiveMarkerTime, tf.seconds, markerLogical);
         const updatePayload = buildMainSeriesUpdatePayload(chartTypeRef.current, candle, historyRef.current);
         if (mainUpdateSchedulerRef.current) {
-          mainUpdateSchedulerRef.current.update(updatePayload, candle, previousCandleRef.current, startPrice, tf.seconds);
+          mainUpdateSchedulerRef.current.update(updatePayload);
           previousCandleRef.current = { ...candle };
         }
         renderOverlayIndicators(getIndicatorHistory());

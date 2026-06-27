@@ -322,7 +322,11 @@ class DeterministicTickFeed implements MarketDataFeed {
     const nowMs = Date.now();
     let guard = 0;
 
-    while (this.nextTickAtMs <= nowMs && guard < 64) {
+    if (nowMs - this.nextTickAtMs > tickIntervalMs * 128) {
+      this.nextTickAtMs = nowMs;
+    }
+
+    while (this.nextTickAtMs <= nowMs && guard < 8) {
       const timestamp = this.nextTickAtMs / 1000;
       const anchorPrice = getSharedLivePriceAt(this.engine, timestamp);
 
@@ -350,11 +354,7 @@ class DeterministicTickFeed implements MarketDataFeed {
       guard += 1;
     }
 
-    if (nowMs - this.nextTickAtMs > tickIntervalMs * 8) {
-      this.nextTickAtMs = nowMs + tickIntervalMs;
-    }
-
-    this.schedulePump(Math.max(4, this.nextTickAtMs - Date.now()));
+    this.schedulePump(Math.max(16, this.nextTickAtMs - Date.now()));
   }
 }
 
