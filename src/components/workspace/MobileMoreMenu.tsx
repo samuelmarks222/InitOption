@@ -271,18 +271,53 @@ export const MobileLeaderboardOverlay = ({ onClose }: LeaderboardOverlayProps) =
         <span className="text-[13px] text-white font-bold">$0.00</span>
       </div>
 
-      {/* Empty state */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
-        <div className="w-20 h-20 rounded-full bg-yellow-500/10 flex items-center justify-center">
-          <Award className="w-10 h-10 text-yellow-500/50" />
-        </div>
-        <div>
-          <h3 className="text-white font-bold text-[16px] mb-2">No traders yet</h3>
-          <p className="text-[13px] text-gray-500 leading-relaxed">
-            There are no traders on<br />the leaderboard yet.<br />
-            <span className="text-[#0fa053] font-semibold">Become the first one!</span>
-          </p>
-        </div>
+      {/* Leaderboard rows */}
+      <div className="flex-1 overflow-y-auto p-3 bg-[#0d1117]">
+        {loading ? (
+          <div className="flex h-full items-center justify-center text-[14px] text-gray-400">
+            Loading leaderboard...
+          </div>
+        ) : traders.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center p-8 text-center gap-4">
+            <div className="w-20 h-20 rounded-full bg-yellow-500/10 flex items-center justify-center">
+              <Award className="w-10 h-10 text-yellow-500/50" />
+            </div>
+            <div>
+              <h3 className="text-white font-bold text-[16px] mb-2">No traders yet</h3>
+              <p className="text-[13px] text-gray-500 leading-relaxed">
+                There are no traders on<br />the leaderboard yet.<br />
+                <span className="text-[#0fa053] font-semibold">Become the first one!</span>
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {traders.slice(0, 10).map((trader, index) => {
+              const countryCode = getTraderCountryCode(trader, index);
+              const name = trader.username || trader.display_name || `Trader ${index + 1}`;
+              return (
+                <div key={trader.id ?? index} className="flex items-center gap-3 rounded-3xl border border-white/10 bg-[#111518] px-3 py-3">
+                  <span className="w-6 text-[13px] font-bold text-[#7a8aa8] text-center">{index + 1}</span>
+                  {trader.avatar_url ? (
+                    <img src={trader.avatar_url} alt={name} className="h-10 w-10 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1f2836] text-[12px] font-bold text-white">
+                      {name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate text-sm font-semibold text-white">{name}</span>
+                      {countryCode ? <CountryFlag code={countryCode} size={18} className="rounded-full" /> : null}
+                    </div>
+                    <p className="text-[12px] text-[#7a8aa8] truncate">{trader.rankedProfit !== undefined ? `$${Number(trader.rankedProfit).toLocaleString()}` : "—"}</p>
+                  </div>
+                  <span className="text-[13px] font-semibold text-white">{trader.rankedProfit !== undefined ? `$${Number(trader.rankedProfit).toLocaleString()}` : "—"}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
