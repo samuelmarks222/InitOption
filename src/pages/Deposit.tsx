@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, BadgeCheck, CircleHelp, Clock3, ShieldCheck, Smartphone, XCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -43,12 +43,7 @@ const getCryptoAutomationPriority = (method: Pick<CryptoPaymentMethod, "attribut
 const Deposit = () => {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const urlAmount = searchParams.get("amount");
-  const parsedAmount = urlAmount ? Number(urlAmount) : 0;
-  const [amount, setAmount] = useState<number | "">(
-    parsedAmount > 0 ? parsedAmount : "",
-  );
+  const [amount, setAmount] = useState<number | "">("");
   const [loading, setLoading] = useState(false);
   const [loadingBonuses, setLoadingBonuses] = useState(true);
   const [bonusEnabled, setBonusEnabled] = useState(true);
@@ -205,17 +200,6 @@ const Deposit = () => {
       cancelled = true;
     };
   }, [user?.id]);
-
-  useEffect(() => {
-    const bonusId = searchParams.get("bonusOfferId");
-    if (bonusId && resolvedBonusCatalog.length > 0) {
-      const match = resolvedBonusCatalog.find((o) => o.id === bonusId);
-      if (match && match.eligible) {
-        setSelectedBonusOfferId(bonusId);
-        setBonusEnabled(true);
-      }
-    }
-  }, [searchParams, resolvedBonusCatalog]);
 
   const amountValue = Number(amount) || 0;
   const selectedCryptoMethod = cryptoMethods.find((entry) => entry.id === selectedCryptoId) ?? null;
