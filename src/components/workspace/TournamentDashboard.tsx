@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
+import CountryFlag from "@/components/ui/CountryFlag";
+import { getCountryOptionByName } from "@/lib/countries";
 import { usePublicTournaments } from "@/hooks/usePublicTournaments";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { toast } from "sonner";
@@ -19,7 +21,7 @@ import {
 
 type Tournament = Database["public"]["Tables"]["tournaments"]["Row"];
 type ParticipantRow = Database["public"]["Tables"]["tournament_participants"]["Row"] & {
-  profiles?: { username: string | null; avatar_url?: string | null };
+  profiles?: { username: string | null; avatar_url?: string | null; nationality?: string | null; phone_country?: string | null };
 };
 
 type LeaderboardEntry = {
@@ -103,12 +105,31 @@ const buildFallbackLeaderboard = (participants: ParticipantRow[], tournament: To
     user_id: participant.user_id,
     trader_name: participant.profiles?.username ?? null,
     avatar_url: participant.profiles?.avatar_url ?? null,
+    country_code: (participant.profiles?.phone_country ?? getCountryOptionByName(participant.profiles?.nationality ?? null)?.code) ?? null,
     current_balance: Number(participant.current_balance ?? startingBalance),
     starting_balance: startingBalance,
     profit_loss: Number(participant.current_balance ?? startingBalance) - startingBalance,
     return_percentage: startingBalance > 0 ? ((Number(participant.current_balance ?? startingBalance) - startingBalance) / startingBalance) * 100 : 0,
     trades_count: 0,
   }));
+};
+
+const hashSeed = (value: string) => {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+};
+
+const getTraderCountryCode = (trader: { nationality?: string | null; phone_country?: string | null; username?: string | null; id?: string | null }, offset = 0) => {
+  const stored = (trader.phone_country ?? "").trim().toUpperCase();
+  if (/^[A-Z]{2}$/.test(stored)) return stored;
+  const nat = getCountryOptionByName(trader.nationality ?? null)?.code;
+  if (nat) return nat;
+  const fallbackCodes = ["KE", "NG", "ZA", "GB", "US", "FR", "BR", "IN", "TR", "AE", "CA", "AU", "DE", "JP", "KR", "MX", "EG", "SA"];
+  const seed = trader.id || trader.username || "trader";
+  return fallbackCodes[(hashSeed(seed) + offset) % fallbackCodes.length];
 };
 
 type ViewMode = "list" | "detail";
@@ -669,7 +690,7 @@ const TournamentDetailView = ({
           .eq("tournament_id", tournament.id),
         supabase
           .from("tournament_participants")
-          .select("*, profiles(username, avatar_url)")
+          .select("*, profiles(username, avatar_url, nationality, phone_country)")
           .eq("tournament_id", tournament.id)
           .order("current_balance", { ascending: false }),
       ]);
@@ -912,9 +933,16 @@ const TournamentDetailView = ({
                           <span className="w-5 shrink-0 text-center text-[12px] font-bold text-[#7a8aa8]">
                             {entry.position}
                           </span>
-                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a3340] text-[11px] font-bold text-white">
-                            {(entry.trader_name || `T${entry.position}`).charAt(0).toUpperCase()}
-                          </div>
+                          {entry.avatar_url ? (
+                            <img src={entry.avatar_url} alt={entry.trader_name ?? "Trader"} className="h-7 w-7 rounded-full object-cover" />
+                          ) : (
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a3340] text-[11px] font-bold text-white">
+                              {(entry.trader_name || `T${entry.position}`).charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          {entry.country_code ? (
+                            <CountryFlag code={entry.country_code} size={16} className="rounded-full" />
+                          ) : null}
                           <span className="truncate font-semibold text-white">
                             {isMe ? "You" : entry.trader_name || `Trader ${entry.position}`}
                           </span>
