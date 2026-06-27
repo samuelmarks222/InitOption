@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TournamentDetailOverlay } from "@/components/workspace/TournamentDetailOverlay";
+import { supabase } from "@/integrations/supabase/client";
 
 const updateProfileMock = vi.fn();
 
@@ -60,6 +61,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 
       throw new Error(`Unexpected table: ${table}`);
     }),
+    rpc: vi.fn(),
   },
 }));
 
@@ -73,12 +75,23 @@ vi.mock("sonner", () => ({
 describe("TournamentDetailOverlay", () => {
   beforeEach(() => {
     updateProfileMock.mockReset();
+    vi.mocked(supabase.rpc).mockReset();
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: [] } as any);
     tournamentsQuery.select.mockClear();
     tournamentsQuery.eq.mockClear();
     tournamentsQuery.single.mockClear();
     participantsQuery.select.mockClear();
     participantsQuery.eq.mockClear();
     participantsQuery.order.mockClear();
+  });
+
+  it("shows registered participants on the leaderboard when the rpc returns no rows", async () => {
+    render(<TournamentDetailOverlay tournamentId="tour-1" onClose={() => {}} onEnterTournament={() => {}} />);
+
+    expect(await screen.findByText("You")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText("No participants yet.")).not.toBeInTheDocument();
+    });
   });
 
   it("opens from a null tournament selection without triggering a hooks-order crash", async () => {
@@ -92,15 +105,13 @@ describe("TournamentDetailOverlay", () => {
       <TournamentDetailOverlay tournamentId="tour-1" onClose={() => {}} onEnterTournament={() => {}} />,
     );
 
-    expect(await screen.findByRole("heading", { name: /Tournament "Mock Tournament"/i })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Rating" }));
+    expect(await screen.findByRole("heading", { name: /Mock Tournament/i })).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText("Tournament chart")).toBeInTheDocument();
+      expect(screen.getByText("Leaderboard")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("sam")).toBeInTheDocument();
+    expect(screen.getByText("You")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Open tournament desk" })).toBeInTheDocument();
     expect(tournamentsQuery.single).toHaveBeenCalledTimes(1);
     expect(participantsQuery.order).toHaveBeenCalledTimes(1);

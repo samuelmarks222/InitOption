@@ -23,6 +23,26 @@ type LeaderboardEntry = {
   trades_count: number;
 };
 
+const buildFallbackLeaderboard = (
+  participants: Participant[],
+  tournament: Tournament | null,
+): LeaderboardEntry[] => {
+  if (!tournament) return [];
+
+  const startingBalance = Number(tournament.starting_balance ?? 0);
+  return participants.map((participant, index) => ({
+    position: index + 1,
+    user_id: participant.user_id,
+    trader_name: participant.profiles?.username ?? null,
+    avatar_url: participant.profiles?.avatar_url ?? null,
+    current_balance: Number(participant.current_balance ?? startingBalance),
+    starting_balance: startingBalance,
+    profit_loss: Number(participant.current_balance ?? startingBalance) - startingBalance,
+    return_percentage: startingBalance > 0 ? ((Number(participant.current_balance ?? startingBalance) - startingBalance) / startingBalance) * 100 : 0,
+    trades_count: 0,
+  }));
+};
+
 const supabaseAny = supabase as any;
 
 interface TournamentDetailOverlayProps {
@@ -156,8 +176,14 @@ export const TournamentDetailOverlay = ({
     const { data } = await supabaseAny.rpc("get_tournament_leaderboard", {
       p_tournament_id: tournamentId,
     });
-    if (data) setLeaderboard(data as LeaderboardEntry[]);
-  }, [tournamentId]);
+    if (Array.isArray(data) && data.length > 0) {
+      setLeaderboard(data as LeaderboardEntry[]);
+      return;
+    }
+
+    const fallback = buildFallbackLeaderboard(participants, tournament);
+    setLeaderboard(fallback);
+  }, [participants, tournament, tournamentId]);
 
   useEffect(() => {
     if (!tournamentId) return;
@@ -184,10 +210,15 @@ export const TournamentDetailOverlay = ({
   const hasJoined = profile
     ? participants.some((participant) => participant.user_id === profile.id)
     : false;
+
+  const visibleLeaderboard = useMemo(() => {
+    if (leaderboard.length > 0) return leaderboard;
+    return buildFallbackLeaderboard(participants, tournament);
+  }, [leaderboard, participants, tournament]);
   const userPosition = useMemo(() => {
     if (!profile) return null;
-    return leaderboard.find((entry) => entry.user_id === profile.id) ?? null;
-  }, [leaderboard, profile]);
+    return visibleLeaderboard.find((entry) => entry.user_id === profile.id) ?? null;
+  }, [profile, visibleLeaderboard]);
 
   const handleJoin = async () => {
     if (!tournament || !profile) {
@@ -379,12 +410,12 @@ export const TournamentDetailOverlay = ({
                     <span className="text-right">Return</span>
                     <span className="text-right">Score</span>
                   </div>
-                  {leaderboard.length === 0 ? (
+                  {visibleLeaderboard.length === 0 ? (
                     <div className="px-4 py-8 text-center text-[14px] text-[#99adcf]">
                       No participants yet.
                     </div>
                   ) : (
-                    leaderboard.map((entry) => {
+                    visibleLeaderboard.map((entry) => {
                       const isMe = profile?.id === entry.user_id;
                       const isPositive = entry.profit_loss >= 0;
                       return (

@@ -14,13 +14,13 @@ import {
   Medal,
   Search,
   Trophy,
+  Info,
 } from "lucide-react";
 
 type Tournament = Database["public"]["Tables"]["tournaments"]["Row"];
-type ParticipantRow = Pick<
-  Database["public"]["Tables"]["tournament_participants"]["Row"],
-  "id" | "tournament_id" | "current_balance" | "created_at" | "updated_at"
->;
+type ParticipantRow = Database["public"]["Tables"]["tournament_participants"]["Row"] & {
+  profiles?: { username: string | null; avatar_url?: string | null };
+};
 
 type LeaderboardEntry = {
   position: number;
@@ -95,6 +95,22 @@ const defaultDistribution = [
   { position: 3, share: 0.2, label: "3rd" },
 ];
 
+const buildFallbackLeaderboard = (participants: ParticipantRow[], tournament: Tournament): LeaderboardEntry[] => {
+  if (!tournament) return [];
+  const startingBalance = Number(tournament.starting_balance ?? 0);
+  return participants.map((participant, index) => ({
+    position: index + 1,
+    user_id: participant.user_id,
+    trader_name: participant.profiles?.username ?? null,
+    avatar_url: participant.profiles?.avatar_url ?? null,
+    current_balance: Number(participant.current_balance ?? startingBalance),
+    starting_balance: startingBalance,
+    profit_loss: Number(participant.current_balance ?? startingBalance) - startingBalance,
+    return_percentage: startingBalance > 0 ? ((Number(participant.current_balance ?? startingBalance) - startingBalance) / startingBalance) * 100 : 0,
+    trades_count: 0,
+  }));
+};
+
 type ViewMode = "list" | "detail";
 type ListTab = "active" | "completed";
 
@@ -116,6 +132,39 @@ const FAQ_ITEMS = [
     a: "Your results are displayed in the leaderboard during the tournament. After completion, you can view detailed statistics in the tournament history tab.",
   },
 ];
+
+const FAQSection = () => {
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  return (
+    <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
+      <h3 className="mb-4 text-[15px] font-bold text-white">FAQ</h3>
+      <div className="space-y-2">
+        {FAQ_ITEMS.map((item, index) => (
+          <div key={index} className="overflow-hidden rounded-xl border border-[#334050]">
+            <button
+              type="button"
+              onClick={() => setActiveFaq(activeFaq === index ? null : index)}
+              className="flex w-full items-center justify-between bg-[#1e2530] px-4 py-3 text-left text-[13px] font-semibold text-white transition-colors hover:bg-[#232b3a]"
+            >
+              <span>{item.q}</span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 text-[#7a8aa8] transition-transform",
+                  activeFaq === index && "rotate-180",
+                )}
+              />
+            </button>
+            {activeFaq === index && (
+              <div className="px-4 py-3 text-[13px] leading-relaxed text-[#b0bedd]">
+                {item.a}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 function getTournamentBadge(tournament: Tournament, now: number) {
   if (tournament.status === "active") {
@@ -143,6 +192,7 @@ export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: Tour
   const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null);
   const [listTab, setListTab] = useState<ListTab>("active");
   const [historyRows, setHistoryRows] = useState<ParticipantRow[]>([]);
+  const [participantRows, setParticipantRows] = useState<ParticipantRow[]>([]);
   const [joining, setJoining] = useState(false);
   const { data: tournaments = [], isLoading, isError } = usePublicTournaments();
 
@@ -363,39 +413,43 @@ const TournamentListView = ({
         <>
           {participatingTournaments.length > 0 && (
             <>
-              <SectionHeader label="YOU ARE PARTICIPATING" />
-              {participatingTournaments.map((t, i) => (
-                <TournamentCard
-                  key={t.id}
-                  tournament={t}
-                  now={now}
-                  index={i}
-                  hasJoined={true}
-                  onJoin={onJoin}
-                  onOpenDetails={onOpenDetails}
-                  onEnterTournament={onEnterTournament}
-                  joining={joining}
-                />
-              ))}
+              <SectionHeader label={"YOU ARE PARTICIPATING (" + participatingTournaments.length + ")"} />
+              <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                {participatingTournaments.map((t, i) => (
+                  <TournamentCard
+                    key={t.id}
+                    tournament={t}
+                    now={now}
+                    index={i}
+                    hasJoined={true}
+                    onJoin={onJoin}
+                    onOpenDetails={onOpenDetails}
+                    onEnterTournament={onEnterTournament}
+                    joining={joining}
+                  />
+                ))}
+              </div>
             </>
           )}
 
           {availableTournaments.length > 0 && (
             <>
-              <SectionHeader label="AVAILABLE FOR PARTICIPATION" />
-              {availableTournaments.map((t, i) => (
-                <TournamentCard
-                  key={t.id}
-                  tournament={t}
-                  now={now}
-                  index={participatingTournaments.length + i}
-                  hasJoined={joinedIds.has(t.id)}
-                  onJoin={onJoin}
-                  onOpenDetails={onOpenDetails}
-                  onEnterTournament={onEnterTournament}
-                  joining={joining}
-                />
-              ))}
+              <SectionHeader label={"AVAILABLE FOR PARTICIPATION (" + availableTournaments.length + ")"} />
+              <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+                {availableTournaments.map((t, i) => (
+                  <TournamentCard
+                    key={t.id}
+                    tournament={t}
+                    now={now}
+                    index={participatingTournaments.length + i}
+                    hasJoined={joinedIds.has(t.id)}
+                    onJoin={onJoin}
+                    onOpenDetails={onOpenDetails}
+                    onEnterTournament={onEnterTournament}
+                    joining={joining}
+                  />
+                ))}
+              </div>
             </>
           )}
 
@@ -408,27 +462,62 @@ const TournamentListView = ({
         </>
       ) : (
         <>
-          <SectionHeader label="COMPLETED TOURNAMENTS" />
-          {completedTournaments.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[#334365] bg-[#202942] px-6 py-10 text-center">
-              <Search className="mx-auto mb-3 h-8 w-8 text-[#89a0c8]" />
-              <p className="text-[15px] text-[#98abcc]">No completed tournaments yet.</p>
+          <SectionHeader label="PREVIOUS TOURNAMENTS" />
+          <div className="flex gap-6">
+            <div className="min-w-0 flex-1">
+              {(() => {
+                const userCompleted = completedTournaments.filter((t) => joinedIds.has(t.id));
+                return userCompleted.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[#334365] bg-[#202942] px-6 py-10 text-center">
+                    <Search className="mx-auto mb-3 h-8 w-8 text-[#89a0c8]" />
+                    <p className="text-[15px] text-[#98abcc]">No completed tournaments yet.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden rounded-2xl border border-[#334050] bg-[#27303d]">
+                    <table className="w-full text-left text-[13px]">
+                      <thead>
+                        <tr className="border-b border-[#334050] text-[11px] font-bold tracking-wider text-[#7a8aa8]">
+                          <th className="px-4 py-3">Position</th>
+                          <th className="px-4 py-3">Name</th>
+                          <th className="px-4 py-3">Started / Ended</th>
+                          <th className="px-4 py-3">Balance</th>
+                          <th className="px-4 py-3">Prize</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {userCompleted.map((t) => {
+                          const historyEntry = historyRows.find((r) => r.tournament_id === t.id);
+                          return (
+                            <tr
+                              key={t.id}
+                              className="border-b border-[#334050] transition-colors hover:bg-[#1e2530]"
+                            >
+                              <td className="px-4 py-3 font-semibold text-white">—</td>
+                              <td className="px-4 py-3 font-semibold text-white">{t.title}</td>
+                              <td className="px-4 py-3 text-[#b0bedd]">
+                                {formatTournamentDateTime(t.start_date)}
+                                <br />
+                                {formatTournamentDateTime(t.end_date)}
+                              </td>
+                              <td className="px-4 py-3 font-semibold text-white">
+                                {historyEntry ? formatMoney(historyEntry.current_balance) : "—"}
+                              </td>
+                              <td className="px-4 py-3 font-semibold text-[#00b95b]">—</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
             </div>
-          ) : (
-            completedTournaments.map((t, i) => (
-              <TournamentCard
-                key={t.id}
-                tournament={t}
-                now={now}
-                index={i}
-                hasJoined={joinedIds.has(t.id)}
-                onJoin={onJoin}
-                onOpenDetails={onOpenDetails}
-                onEnterTournament={onEnterTournament}
-                joining={joining}
-              />
-            ))
-          )}
+
+            {/* FAQ Sidebar */}
+            <div className="hidden w-[320px] shrink-0 lg:block">
+              <FAQSection />
+            </div>
+          </div>
         </>
       )}
     </div>
@@ -437,7 +526,8 @@ const TournamentListView = ({
 
 const SectionHeader = ({ label }: { label: string }) => (
   <div className="mb-4 mt-6 flex items-center gap-4 first:mt-0">
-    <span className="text-[13px] font-bold tracking-wider text-[#7a8aa8]">{label}</span>
+    <div className="flex-1 border-t border-[#2a3340]" />
+    <span className="shrink-0 text-[13px] font-bold tracking-wider text-[#7a8aa8]">{label}</span>
     <div className="flex-1 border-t border-[#2a3340]" />
   </div>
 );
@@ -465,33 +555,14 @@ const TournamentCard = ({
 }: TournamentCardProps) => {
   const badge = getTournamentBadge(tournament, now);
   const isActive = tournament.status === "active";
-
   const countdownTarget = isActive ? tournament.end_date : tournament.start_date;
   const countdownLabel = isActive ? "Ends in:" : "Starts in:";
 
-  const watermarkColors = [
-    "from-[#00b95b]/5 to-transparent",
-    "from-[#007aff]/5 to-transparent",
-    "from-[#f4b742]/5 to-transparent",
-  ];
-  const watermarkColor = watermarkColors[index % watermarkColors.length];
-
   return (
-    <div className="group relative mb-3 overflow-hidden rounded-2xl border border-[#334050] bg-[#27303d]">
-      {/* Watermark Arrow */}
-      <div
-        className={cn(
-          "pointer-events-none absolute -right-6 -top-6 h-28 w-28 rotate-45 bg-gradient-to-bl opacity-60",
-          watermarkColor,
-        )}
-        style={{
-          clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
-        }}
-      />
-
-      <div className="relative px-5 py-5">
-        {/* Badge + Prize Pool Row */}
-        <div className="mb-3 flex items-center justify-between">
+    <div className="overflow-hidden rounded-2xl border border-[#334050] bg-[#27303d]">
+      <div className="px-5 py-5">
+        {/* Top Bar: badge left, prize pool right */}
+        <div className="mb-4 flex items-center justify-between">
           <span
             className={cn(
               "inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wider",
@@ -501,55 +572,39 @@ const TournamentCard = ({
             {badge.label}
           </span>
           <div className="text-right">
-            <span className="text-[11px] text-[#7a8aa8]">Prize pool</span>
-            <p className="text-[22px] font-black leading-none text-[#00b95b]">
+            <p className="text-[24px] font-black leading-none text-[#00b95b]">
               {formatMoney(tournament.prize_pool)}
             </p>
+            <span className="text-[11px] text-[#7a8aa8]">PRIZE POOL</span>
           </div>
         </div>
 
-        {/* Title */}
-        <h3 className="mb-4 text-[18px] font-bold text-white">{tournament.title}</h3>
-
-        {/* Stats Row */}
-        <div className="mb-4 flex items-center gap-3 text-[13px] text-[#7a8aa8]">
-          <span>
+        {/* Middle Section: title left, entry fee + duration below */}
+        <h3 className="mb-3 text-[18px] font-bold text-white">{tournament.title}</h3>
+        <div className="mb-5 space-y-1.5 text-[13px] text-[#7a8aa8]">
+          <p>
             Entry fee:{" "}
             <span className="font-semibold text-white">
               {formatMoney(tournament.entry_fee, true)}
             </span>
-          </span>
-          <span className="text-[#3a4555]">|</span>
-          <span>
+          </p>
+          <p>
             Duration:{" "}
             <span className="font-semibold text-white">
               {formatDuration(tournament.start_date, tournament.end_date)}
             </span>
-          </span>
+          </p>
         </div>
 
-        {/* Countdown + Action */}
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-[11px] text-[#7a8aa8]">{countdownLabel}</span>
-            <p className="text-[15px] font-bold text-white">
-              {formatCountdown(countdownTarget, now)}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => onOpenDetails(tournament.id)}
-            className={cn(
-              "rounded-xl px-8 py-3 text-[14px] font-bold text-white transition-colors",
-              hasJoined
-                ? "bg-[#00b95b] hover:bg-[#00a34f]"
-                : "bg-[#2a3340] hover:bg-[#354151]",
-            )}
-          >
-            {hasJoined ? "Trade" : "Details"}
-          </button>
-        </div>
+        {/* Bottom Section: full-width Details button */}
+        <button
+          type="button"
+          onClick={() => onOpenDetails(tournament.id)}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#2a3340] px-4 py-3 text-[14px] font-bold text-white transition-colors hover:bg-[#354151]"
+        >
+          <Info className="h-4 w-4" />
+          Details
+        </button>
       </div>
     </div>
   );
@@ -578,7 +633,6 @@ const TournamentDetailView = ({
 }: TournamentDetailViewProps) => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [participants, setParticipants] = useState<number>(0);
-  const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const pollRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -590,8 +644,13 @@ const TournamentDetailView = ({
     const { data } = await supabaseAny.rpc("get_tournament_leaderboard", {
       p_tournament_id: tournament.id,
     });
-    if (data) setLeaderboard(data as LeaderboardEntry[]);
-  }, [tournament.id]);
+    if (Array.isArray(data) && data.length > 0) {
+      setLeaderboard(data as LeaderboardEntry[]);
+      return;
+    }
+
+    setLeaderboard(buildFallbackLeaderboard(participantRows, tournament));
+  }, [participantRows, tournament]);
 
   useEffect(() => {
     void fetchLeaderboard();
@@ -603,11 +662,19 @@ const TournamentDetailView = ({
 
   useEffect(() => {
     const fetchParticipants = async () => {
-      const { count } = await supabase
-        .from("tournament_participants")
-        .select("id", { count: "exact", head: true })
-        .eq("tournament_id", tournament.id);
+      const [{ count }, { data }] = await Promise.all([
+        supabase
+          .from("tournament_participants")
+          .select("id", { count: "exact", head: true })
+          .eq("tournament_id", tournament.id),
+        supabase
+          .from("tournament_participants")
+          .select("*, profiles(username, avatar_url)")
+          .eq("tournament_id", tournament.id)
+          .order("current_balance", { ascending: false }),
+      ]);
       if (count !== null) setParticipants(count);
+      setParticipantRows((data as ParticipantRow[] | null) ?? []);
     };
     void fetchParticipants();
   }, [tournament.id]);
@@ -624,20 +691,25 @@ const TournamentDetailView = ({
     return defaultDistribution;
   }, [tournament]);
 
+  const visibleLeaderboard = useMemo(() => {
+    if (leaderboard.length > 0) return leaderboard;
+    return buildFallbackLeaderboard(participantRows, tournament);
+  }, [leaderboard, participantRows, tournament]);
+
   const userPosition = useMemo(
-    () => (profileId ? leaderboard.find((e) => e.user_id === profileId) ?? null : null),
-    [leaderboard, profileId],
+    () => (profileId ? visibleLeaderboard.find((e) => e.user_id === profileId) ?? null : null),
+    [profileId, visibleLeaderboard],
   );
 
-  const top10 = useMemo(() => leaderboard.slice(0, 10), [leaderboard]);
-  const totalPages = Math.max(1, Math.ceil(leaderboard.length / 10));
+  const top10 = useMemo(() => visibleLeaderboard.slice(0, 10), [visibleLeaderboard]);
+  const totalPages = Math.max(1, Math.ceil(visibleLeaderboard.length / 10));
 
   const estimatedPrize = (pos: number) => {
     const dist = prizeDistribution.find((d) => d.position === pos);
     return dist ? formatMoney(tournament.prize_pool * dist.share) : null;
   };
 
-  const profileUsername = leaderboard.find((e) => e.user_id === profileId)?.trader_name || profileId?.slice(0, 8);
+  const profileUsername = visibleLeaderboard.find((e) => e.user_id === profileId)?.trader_name || profileId?.slice(0, 8);
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-6">
@@ -820,7 +892,7 @@ const TournamentDetailView = ({
           {/* Leaderboard */}
           <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
             <h3 className="mb-4 text-[15px] font-bold text-white">Leaderboard</h3>
-            {leaderboard.length === 0 ? (
+            {visibleLeaderboard.length === 0 ? (
               <div className="py-6 text-center text-[14px] text-[#7a8aa8]">No participants yet.</div>
             ) : (
               <>
@@ -919,33 +991,7 @@ const TournamentDetailView = ({
 
         {/* Right Column: FAQ */}
         <div className="space-y-5">
-          <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
-            <h3 className="mb-4 text-[15px] font-bold text-white">FAQ</h3>
-            <div className="space-y-2">
-              {FAQ_ITEMS.map((item, index) => (
-                <div key={index} className="overflow-hidden rounded-xl border border-[#334050]">
-                  <button
-                    type="button"
-                    onClick={() => setActiveFaq(activeFaq === index ? null : index)}
-                    className="flex w-full items-center justify-between bg-[#1e2530] px-4 py-3 text-left text-[13px] font-semibold text-white transition-colors hover:bg-[#232b3a]"
-                  >
-                    <span>{item.q}</span>
-                    <ChevronDown
-                      className={cn(
-                        "h-4 w-4 shrink-0 text-[#7a8aa8] transition-transform",
-                        activeFaq === index && "rotate-180",
-                      )}
-                    />
-                  </button>
-                  {activeFaq === index && (
-                    <div className="px-4 py-3 text-[13px] leading-relaxed text-[#b0bedd]">
-                      {item.a}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          <FAQSection />
         </div>
       </div>
     </div>
