@@ -617,14 +617,14 @@ const TournamentCard = ({
           </p>
         </div>
 
-        {/* Bottom Section: full-width Details button */}
+        {/* Bottom Section: full-width Join button */}
         <button
           type="button"
           onClick={() => onOpenDetails(tournament.id)}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#2a3340] px-4 py-3 text-[14px] font-bold text-white transition-colors hover:bg-[#354151]"
         >
           <Info className="h-4 w-4" />
-          Details
+          Join
         </button>
       </div>
     </div>
