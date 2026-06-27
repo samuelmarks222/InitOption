@@ -362,18 +362,8 @@ const TournamentsAdmin = () => {
                         <input type="text" value={editDrafts[t.id]?.title ?? t.title} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], title: e.target.value } }))} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#0fa053] outline-none" />
                         <input type="text" value={editDrafts[t.id]?.description ?? t.description ?? ""} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], description: e.target.value } }))} placeholder="Description" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:border-[#0fa053] outline-none" />
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Winners</label>
-                          <input
-                            type="number" min="1"
-                            value={editDrafts[t.id]?.number_of_winners ?? (t as any).number_of_winners ?? 1}
-                            onChange={e => {
-                              const num = Math.max(1, Number(e.target.value));
-                              const existing = editDrafts[t.id]?.prize_distribution ?? JSON.stringify((t as any).prize_distribution ?? []);
-                              setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], number_of_winners: num, prize_distribution: rebuildDistribution(num, existing) } }));
-                            }}
-                            className="w-20 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-1 text-xs text-white font-bold focus:border-[#0fa053] outline-none mb-2" />
-                          <div className="mt-1">
                           <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Prize Distribution</label>
+                          <div className="text-[10px] text-slate-500 mb-1.5">{editDrafts[t.id]?.number_of_winners ?? (t as any).number_of_winners ?? 1} winner{(editDrafts[t.id]?.number_of_winners ?? (t as any).number_of_winners ?? 1) !== 1 ? "s" : ""}</div>
                           <div className="space-y-1">
                             {parseDistribution(editDrafts[t.id]?.prize_distribution ?? JSON.stringify((t as any).prize_distribution ?? [])).map((entry) => (
                               <div key={entry.position} className="flex items-center gap-2">
@@ -394,7 +384,6 @@ const TournamentsAdmin = () => {
                             ))}
                           </div>
                         </div>
-                      </div>
                       </div>
                     ) : (
                       <>
@@ -434,7 +423,13 @@ const TournamentsAdmin = () => {
                   </td>
                   <td className="px-6 py-4">
                     {editingRowId === t.id ? (
-                      <input type="number" min="1" value={editDrafts[t.id]?.number_of_winners ?? t.number_of_winners} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], number_of_winners: Math.max(1, Number(e.target.value)) } }))} className="w-16 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white font-bold focus:border-[#0fa053] outline-none" />
+                      <input type="number" min="1" value={editDrafts[t.id]?.number_of_winners ?? t.number_of_winners}
+                        onChange={e => {
+                          const num = Math.max(1, Number(e.target.value));
+                          const existing = editDrafts[t.id]?.prize_distribution ?? JSON.stringify((t as any).prize_distribution ?? []);
+                          setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], number_of_winners: num, prize_distribution: rebuildDistribution(num, existing) } }));
+                        }}
+                        className="w-16 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white font-bold focus:border-[#0fa053] outline-none" />
                     ) : (
                       <span className="font-mono font-bold">{t.number_of_winners}</span>
                     )}
