@@ -885,38 +885,36 @@ const TournamentDetailView = ({
           </div>
 
           {/* Compact Prize Distribution (secondary) */}
-          {!hasJoined && (
-            <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
-              <h3 className="mb-4 text-[15px] font-bold text-white">Prize Pool Distribution</h3>
-              <div className="space-y-2">
-                {prizeDistribution.map((dist) => {
-                  const prizeAmount = tournament.prize_pool * dist.share;
-                  const icon =
-                    dist.position === 1 ? (
-                      <Crown className="h-4 w-4 text-yellow-400" />
-                    ) : dist.position === 2 ? (
-                      <Medal className="h-4 w-4 text-slate-300" />
-                    ) : dist.position === 3 ? (
-                      <Medal className="h-4 w-4 text-amber-600" />
-                    ) : null;
-                  return (
-                    <div
-                      key={dist.position}
-                      className="flex items-center justify-between rounded-xl border border-[#334050] bg-[#1e2530] px-4 py-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        {icon}
-                        <span className="text-[14px] font-semibold text-white">{dist.label}</span>
-                      </div>
-                      <span className="text-[14px] font-bold text-[#00b95b]">
-                        {formatMoney(prizeAmount)}
-                      </span>
+          <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
+            <h3 className="mb-4 text-[15px] font-bold text-white">Prize Pool Distribution</h3>
+            <div className="space-y-2">
+              {prizeDistribution.map((dist) => {
+                const prizeAmount = tournament.prize_pool * dist.share;
+                const icon =
+                  dist.position === 1 ? (
+                    <Crown className="h-4 w-4 text-yellow-400" />
+                  ) : dist.position === 2 ? (
+                    <Medal className="h-4 w-4 text-slate-300" />
+                  ) : dist.position === 3 ? (
+                    <Medal className="h-4 w-4 text-amber-600" />
+                  ) : null;
+                return (
+                  <div
+                    key={dist.position}
+                    className="flex items-center justify-between rounded-xl border border-[#334050] bg-[#1e2530] px-4 py-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      {icon}
+                      <span className="text-[14px] font-semibold text-white">{dist.label}</span>
                     </div>
-                  );
-                })}
-              </div>
+                    <span className="text-[14px] font-bold text-[#00b95b]">
+                      {formatMoney(prizeAmount)}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Right Column: FAQ */}

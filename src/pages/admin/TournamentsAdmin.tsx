@@ -39,6 +39,26 @@ const createDefaultTournamentDraft = () => ({
   })(),
 });
 
+const parseDistribution = (json: string): Array<{position: number; share: number; label: string}> => {
+  try { const p = JSON.parse(json); if (Array.isArray(p)) return p; } catch {}
+  return [];
+};
+const positionLabel = (pos: number) => pos === 1 ? "1st" : pos === 2 ? "2nd" : pos === 3 ? "3rd" : `${pos}th`;
+const rebuildDistribution = (numWinners: number, existingJson?: string): string => {
+  const existing = existingJson ? parseDistribution(existingJson) : [];
+  const dist: Array<{position: number; share: number; label: string}> = [];
+  for (let i = 1; i <= numWinners; i++) {
+    const match = existing.find(d => d.position === i);
+    dist.push({ position: i, share: match ? match.share : 0, label: positionLabel(i) });
+  }
+  if (dist.length > 0) {
+    const eq = Math.floor((1 / numWinners) * 100) / 100;
+    const rem = Math.round((1 - eq * numWinners) * 100) / 100;
+    dist.forEach(d => { if (d.share === 0) d.share = eq + (d.position === 1 ? rem : 0); });
+  }
+  return JSON.stringify(dist);
+};
+
 const TournamentsAdmin = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
@@ -254,11 +274,35 @@ const TournamentsAdmin = () => {
             </div>
              <div className="col-span-1 border-t border-[#2a2f42] pt-4">
                <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Winners</label>
-               <input type="number" min="1" value={newTour.number_of_winners} onChange={e => setNewTour({...newTour, number_of_winners: Math.max(1, Number(e.target.value))})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white font-bold focus:border-[#0fa053] outline-none" />
+               <input type="number" min="1" value={newTour.number_of_winners}
+                 onChange={e => {
+                   const num = Math.max(1, Number(e.target.value));
+                   setNewTour(prev => ({ ...prev, number_of_winners: num, prize_distribution: rebuildDistribution(num, prev.prize_distribution) }));
+                 }}
+                 className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white font-bold focus:border-[#0fa053] outline-none" />
              </div>
              <div className="col-span-1 sm:col-span-2 border-t border-[#2a2f42] pt-4">
-               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Prize Distribution (JSON)</label>
-               <textarea rows={2} value={newTour.prize_distribution} onChange={e => setNewTour({...newTour, prize_distribution: e.target.value})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-[11px] text-green-300 font-mono focus:border-[#0fa053] outline-none" />
+               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Prize Distribution</label>
+               <div className="space-y-1.5">
+                 {parseDistribution(newTour.prize_distribution).map((entry) => (
+                   <div key={entry.position} className="flex items-center gap-2">
+                     <span className="w-8 text-sm font-semibold text-slate-300">{entry.label}</span>
+                     <div className="flex items-center gap-1.5 flex-1">
+                       <input
+                         type="number" min="0" max="100"
+                         value={Math.round(entry.share * 100)}
+                         onChange={e => {
+                           const pct = Math.max(0, Math.min(100, Number(e.target.value) || 0));
+                           const cur = parseDistribution(newTour.prize_distribution);
+                           setNewTour(prev => ({ ...prev, prize_distribution: JSON.stringify(cur.map(d => d.position === entry.position ? { ...d, share: pct / 100 } : d)) }));
+                         }}
+                         className="w-16 bg-[#0e1017] border border-[#2a2f42] rounded px-2 py-1 text-sm text-white text-center focus:border-[#0fa053] outline-none" />
+                       <span className="text-xs text-slate-500">%</span>
+                       <span className="text-xs text-green-400 font-mono">${Math.round(newTour.prize_pool * entry.share).toLocaleString()}</span>
+                     </div>
+                   </div>
+                 ))}
+               </div>
              </div>
               <div className="col-span-1 border-t border-[#2a2f42] pt-4">
                <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Start Balance ($)</label>
@@ -318,14 +362,39 @@ const TournamentsAdmin = () => {
                         <input type="text" value={editDrafts[t.id]?.title ?? t.title} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], title: e.target.value } }))} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#0fa053] outline-none" />
                         <input type="text" value={editDrafts[t.id]?.description ?? t.description ?? ""} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], description: e.target.value } }))} placeholder="Description" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:border-[#0fa053] outline-none" />
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Prize Distribution (JSON)</label>
-                          <textarea
-                            rows={3}
-                            value={editDrafts[t.id]?.prize_distribution ?? JSON.stringify((t as any).prize_distribution ?? [], null, 2)}
-                            onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], prize_distribution: e.target.value } }))}
-                            className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-[11px] text-green-300 font-mono focus:border-[#0fa053] outline-none"
-                          />
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Winners</label>
+                          <input
+                            type="number" min="1"
+                            value={editDrafts[t.id]?.number_of_winners ?? (t as any).number_of_winners ?? 1}
+                            onChange={e => {
+                              const num = Math.max(1, Number(e.target.value));
+                              const existing = editDrafts[t.id]?.prize_distribution ?? JSON.stringify((t as any).prize_distribution ?? []);
+                              setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], number_of_winners: num, prize_distribution: rebuildDistribution(num, existing) } }));
+                            }}
+                            className="w-20 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-1 text-xs text-white font-bold focus:border-[#0fa053] outline-none mb-2" />
+                          <div className="mt-1">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Prize Distribution</label>
+                          <div className="space-y-1">
+                            {parseDistribution(editDrafts[t.id]?.prize_distribution ?? JSON.stringify((t as any).prize_distribution ?? [])).map((entry) => (
+                              <div key={entry.position} className="flex items-center gap-2">
+                                <span className="w-6 text-[11px] font-semibold text-slate-400">{entry.label}</span>
+                                <input
+                                  type="number" min="0" max="100"
+                                  value={Math.round(entry.share * 100)}
+                                  onChange={e => {
+                                    const pct = Math.max(0, Math.min(100, Number(e.target.value) || 0));
+                                    const cur = parseDistribution(editDrafts[t.id]?.prize_distribution ?? JSON.stringify((t as any).prize_distribution ?? []));
+                                    const updated = JSON.stringify(cur.map(d => d.position === entry.position ? { ...d, share: pct / 100 } : d));
+                                    setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], prize_distribution: updated } }));
+                                  }}
+                                  className="w-14 bg-[#0e1017] border border-[#2a2f42] rounded px-1.5 py-1 text-[11px] text-white text-center focus:border-[#0fa053] outline-none" />
+                                <span className="text-[10px] text-slate-500">%</span>
+                                <span className="text-[10px] text-green-400 font-mono">${Math.round(Number((t as any).prize_pool ?? 0) * entry.share).toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
+                      </div>
                       </div>
                     ) : (
                       <>
@@ -420,7 +489,7 @@ const TournamentsAdmin = () => {
                         </>
                       ) : (
                         <>
-                          <button onClick={() => { setEditingRowId(t.id); setEditDrafts((d) => ({ ...d, [t.id]: { prize_distribution: JSON.stringify((t as any).prize_distribution ?? []) } })); setEditingRebuyId(null); }} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-[#0fa053] rounded transition-colors" title="Edit All Fields">
+                          <button onClick={() => { setEditingRowId(t.id); setEditDrafts((d) => ({ ...d, [t.id]: { prize_distribution: JSON.stringify((t as any).prize_distribution ?? []), number_of_winners: t.number_of_winners } })); setEditingRebuyId(null); }} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-[#0fa053] rounded transition-colors" title="Edit All Fields">
                             <Edit size={16} />
                           </button>
                           {editingRebuyId === t.id ? (
