@@ -30,6 +30,9 @@ const LEADERBOARD_SELECT_WITH_COUNTRY =
 const LEADERBOARD_SELECT_FALLBACK =
   "user_id, profit, status, closed_at, profiles(id, username, display_name, avatar_url, vip_tier, followers_count, following_count, total_profit, total_trades, total_wins)";
 
+const PROFILE_FALLBACK_SELECT =
+  "id, username, display_name, avatar_url, nationality, phone_country, vip_tier, followers_count, following_count, total_profit, total_trades, total_wins";
+
 const isMissingCountryColumnError = (error: unknown) => {
   const message = error && typeof error === "object" && "message" in error ? String(error.message) : "";
   return /(nationality|phone_country)/iu.test(message) && /(column|schema|not found|does not exist)/iu.test(message);
@@ -141,33 +144,32 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
   const { profile } = useAuth();
   const { followTrader, isFollowing, unfollowTrader } = useSocialTrading();
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState<LeaderboardPeriod>("daily");
+  const [period, setPeriod] = useState<LeaderboardPeriod>("all");
   const [traders, setTraders] = useState<LeaderboardTrader[]>([]);
 
   useEffect(() => {
+    const runLeaderboardQuery = (selectClause: string, cutoff: string | null) => {
+      let query = supabase
+        .from("trades")
+        .select(selectClause)
+        .neq("status", "open")
+        .order("closed_at", { ascending: false })
+        .limit(500);
+
+      if (cutoff) {
+        query = query.gte("closed_at", cutoff);
+      }
+
+      return query;
+    };
+
     const fetchLeaders = async () => {
       setLoading(true);
-      const cutoff = getCutoff(period);
-
-      const runLeaderboardQuery = (selectClause: string) => {
-        let query = supabase
-          .from("trades")
-          .select(selectClause)
-          .neq("status", "open")
-          .order("closed_at", { ascending: false })
-          .limit(500);
-
-        if (cutoff) {
-          query = query.gte("closed_at", cutoff);
-        }
-
-        return query;
-      };
-
-      let { data, error } = await runLeaderboardQuery(LEADERBOARD_SELECT_WITH_COUNTRY);
+      let cutoff = getCutoff(period);
+      let { data, error } = await runLeaderboardQuery(LEADERBOARD_SELECT_WITH_COUNTRY, cutoff);
 
       if (error && isMissingCountryColumnError(error)) {
-        const fallbackResult = await runLeaderboardQuery(LEADERBOARD_SELECT_FALLBACK);
+        const fallbackResult = await runLeaderboardQuery(LEADERBOARD_SELECT_FALLBACK, cutoff);
         data = fallbackResult.data;
         error = fallbackResult.error;
       }
@@ -178,13 +180,71 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
         return;
       }
 
+      let resultRows = data ?? [];
+      if (resultRows.length === 0 && period !== "all") {
+        const fallbackCutoff = getCutoff("all");
+        let fallbackResult = await runLeaderboardQuery(LEADERBOARD_SELECT_WITH_COUNTRY, fallbackCutoff);
+        if (fallbackResult.error && isMissingCountryColumnError(fallbackResult.error)) {
+          fallbackResult = await runLeaderboardQuery(LEADERBOARD_SELECT_FALLBACK, fallbackCutoff);
+        }
+        if (!fallbackResult.error) {
+          resultRows = fallbackResult.data ?? [];
+        }
+      }
+
       const aggregate = new Map<string, LeaderboardTrader>();
 
-      (data ?? []).forEach((row: any) => {
-        const trader = row.profiles;
-        if (!trader?.id) return;
+      const addTraderFromProfile = (profileRow: any) => {
+        if (!profileRow?.id) return;
+        const existing = aggregate.get(profileRow.id);
+        const trader = {
+          id: profileRow.id,
+          username: profileRow.username ?? null,
+          display_name: profileRow.display_name ?? null,
+          avatar_url: profileRow.avatar_url ?? null,
+          nationality: profileRow.nationality ?? null,
+          phone_country: profileRow.phone_country ?? null,
+          phoneCountry: profileRow.phoneCountry ?? null,
+          vip_tier: profileRow.vip_tier ?? null,
+          followers_count: profileRow.followers_count ?? 0,
+          following_count: profileRow.following_count ?? 0,
+          total_profit: profileRow.total_profit ?? 0,
+          total_trades: profileRow.total_trades ?? 0,
+          total_wins: profileRow.total_wins ?? 0,
+          rankedProfit: Number(profileRow.total_profit ?? 0),
+          rankedTrades: Number(profileRow.total_trades ?? 0),
+          rankedWins: Number(profileRow.total_wins ?? 0),
+          winRate: computeTraderWinRate(Number(profileRow.total_wins ?? 0), Number(profileRow.total_trades ?? 0)),
+        } as LeaderboardTrader;
 
-        const current = aggregate.get(trader.id) ?? {
+        if (existing) {
+          existing.rankedProfit += trader.rankedProfit;
+          existing.rankedTrades += trader.rankedTrades;
+          existing.rankedWins += trader.rankedWins;
+          existing.winRate = computeTraderWinRate(existing.rankedWins, existing.rankedTrades);
+          aggregate.set(profileRow.id, existing as LeaderboardTrader);
+          return;
+        }
+
+        aggregate.set(profileRow.id, trader);
+      };
+
+      (resultRows ?? []).forEach((row: any) => {
+        const profile = row.profiles;
+        const traderId = profile?.id ?? row.user_id;
+        if (!traderId) return;
+
+        const trader: Partial<LeaderboardTrader> = {
+          id: traderId,
+          username: profile?.username ?? null,
+          display_name: profile?.display_name ?? null,
+          avatar_url: profile?.avatar_url ?? null,
+          nationality: profile?.nationality ?? null,
+          phone_country: profile?.phone_country ?? null,
+          phoneCountry: profile?.phoneCountry ?? null,
+        };
+
+        const current = aggregate.get(traderId) ?? {
           ...trader,
           rankedProfit: 0,
           rankedTrades: 0,
@@ -196,8 +256,20 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
         current.rankedTrades += 1;
         current.rankedWins += row.status === "won" ? 1 : 0;
         current.winRate = computeTraderWinRate(current.rankedWins, current.rankedTrades);
-        aggregate.set(trader.id, current);
+        aggregate.set(traderId, current as LeaderboardTrader);
       });
+
+      if (aggregate.size === 0) {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select(PROFILE_FALLBACK_SELECT)
+          .order("total_profit", { ascending: false })
+          .limit(30);
+
+        if (!profileError) {
+          (profileData ?? []).forEach(addTraderFromProfile);
+        }
+      }
 
       const nextTraders = Array.from(aggregate.values())
         .sort((left, right) => right.rankedProfit - left.rankedProfit)
