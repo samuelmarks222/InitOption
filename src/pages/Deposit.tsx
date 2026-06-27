@@ -44,12 +44,11 @@ const Deposit = () => {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initialAmount = (() => {
-    const a = searchParams.get("amount");
-    if (a) { const n = Number(a); if (Number.isFinite(n) && n > 0) return n; }
-    return "";
-  })();
-  const [amount, setAmount] = useState<number | "">(initialAmount);
+  const urlAmount = searchParams.get("amount");
+  const parsedAmount = urlAmount ? Number(urlAmount) : 0;
+  const [amount, setAmount] = useState<number | "">(
+    parsedAmount > 0 ? parsedAmount : "",
+  );
   const [loading, setLoading] = useState(false);
   const [loadingBonuses, setLoadingBonuses] = useState(true);
   const [bonusEnabled, setBonusEnabled] = useState(true);

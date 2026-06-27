@@ -3,7 +3,6 @@ import { X, ChevronRight, AlertTriangle, Ticket, CheckCircle, ArrowLeft, Loader2
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -11,7 +10,17 @@ interface DepositModalProps {
   onBack?: () => void;
 }
 
-type BonusOffer = Tables<"deposit_bonus_offers">;
+interface BonusOffer {
+  id: string;
+  title: string;
+  bonus_percent: number;
+  minimum_deposit_amount: number | null;
+  maximum_bonus_amount: number | null;
+  deposit_amount: number;
+  description: string | null;
+  position: number;
+  status: string;
+}
 
 const QUICK_AMOUNTS = [150, 200, 300, 500];
 
