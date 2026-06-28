@@ -29,6 +29,7 @@ type LeaderboardEntry = {
   user_id: string;
   trader_name: string | null;
   avatar_url: string | null;
+  country_code: string | null;
   current_balance: number;
   starting_balance: number;
   profit_loss: number;
@@ -97,22 +98,7 @@ const defaultDistribution = [
   { position: 3, share: 0.2, label: "3rd" },
 ];
 
-const buildFallbackLeaderboard = (participants: ParticipantRow[], tournament: Tournament): LeaderboardEntry[] => {
-  if (!tournament) return [];
-  const startingBalance = Number(tournament.starting_balance ?? 0);
-  return participants.map((participant, index) => ({
-    position: index + 1,
-    user_id: participant.user_id,
-    trader_name: participant.profiles?.username ?? null,
-    avatar_url: participant.profiles?.avatar_url ?? null,
-    country_code: (participant.profiles?.phone_country ?? getCountryOptionByName(participant.profiles?.nationality ?? null)?.code) ?? null,
-    current_balance: Number(participant.current_balance ?? startingBalance),
-    starting_balance: startingBalance,
-    profit_loss: Number(participant.current_balance ?? startingBalance) - startingBalance,
-    return_percentage: startingBalance > 0 ? ((Number(participant.current_balance ?? startingBalance) - startingBalance) / startingBalance) * 100 : 0,
-    trades_count: 0,
-  }));
-};
+
 
 const hashSeed = (value: string) => {
   let hash = 0;
@@ -213,7 +199,6 @@ export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: Tour
   const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null);
   const [listTab, setListTab] = useState<ListTab>("active");
   const [historyRows, setHistoryRows] = useState<ParticipantRow[]>([]);
-  const [participantRows, setParticipantRows] = useState<ParticipantRow[]>([]);
   const [joining, setJoining] = useState(false);
   const { data: tournaments = [], isLoading, isError } = usePublicTournaments();
 
@@ -654,7 +639,6 @@ const TournamentDetailView = ({
 }: TournamentDetailViewProps) => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [participants, setParticipants] = useState<number>(0);
-  const [participantList, setParticipantList] = useState<ParticipantRow[]>([]);
   const [page, setPage] = useState(1);
   const pollRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -662,49 +646,46 @@ const TournamentDetailView = ({
   const countdownTarget = isActive ? tournament.end_date : tournament.start_date;
   const countdownLabel = isActive ? "Ends in:" : "Starts in:";
 
-  const fetchLeaderboard = useCallback(async () => {
-    try {
-      const { data, error } = await supabaseAny.rpc("get_tournament_leaderboard", {
-        p_tournament_id: tournament.id,
-      });
-
-      if (!error && Array.isArray(data) && data.length > 0) {
-        setLeaderboard(data as LeaderboardEntry[]);
-        return;
-      }
-    } catch {
-      // Fall back to the participant rows when the RPC is unavailable or fails.
-    }
-
-    setLeaderboard(buildFallbackLeaderboard(participantList, tournament));
-  }, [participantList, tournament]);
+  const fetchParticipants = useCallback(async () => {
+    const [{ count }, { data }] = await Promise.all([
+      supabase
+        .from("tournament_participants")
+        .select("id", { count: "exact", head: true })
+        .eq("tournament_id", tournament.id),
+      supabase
+        .from("tournament_participants")
+        .select("*, profiles(username, avatar_url, nationality, phone_country)")
+        .eq("tournament_id", tournament.id)
+        .order("current_balance", { ascending: false }),
+    ]);
+    if (count !== null) setParticipants(count);
+    const list = ((data ?? []) as any[]);
+    const startingBalance = Number(tournament.starting_balance ?? 0);
+    const board: LeaderboardEntry[] = list.map((p: any, index: number) => {
+      const balance = Number(p.current_balance ?? startingBalance);
+      return {
+        position: index + 1,
+        user_id: p.user_id,
+        trader_name: p.profiles?.username ?? null,
+        avatar_url: p.profiles?.avatar_url ?? null,
+        country_code: (p.profiles?.phone_country ?? getCountryOptionByName(p.profiles?.nationality ?? null)?.code) ?? null,
+        current_balance: balance,
+        starting_balance: startingBalance,
+        profit_loss: balance - startingBalance,
+        return_percentage: startingBalance > 0 ? ((balance - startingBalance) / startingBalance) * 100 : 0,
+        trades_count: 0,
+      };
+    });
+    setLeaderboard(board);
+  }, [tournament]);
 
   useEffect(() => {
-    void fetchLeaderboard();
-    pollRef.current = window.setInterval(fetchLeaderboard, 10_000);
+    void fetchParticipants();
+    pollRef.current = window.setInterval(fetchParticipants, 10_000);
     return () => {
       if (pollRef.current) window.clearInterval(pollRef.current);
     };
-  }, [tournament.id, fetchLeaderboard]);
-
-  useEffect(() => {
-    const fetchParticipants = async () => {
-      const [{ count }, { data }] = await Promise.all([
-        supabase
-          .from("tournament_participants")
-          .select("id", { count: "exact", head: true })
-          .eq("tournament_id", tournament.id),
-        supabase
-          .from("tournament_participants")
-          .select("*, profiles(username, avatar_url, nationality, phone_country)")
-          .eq("tournament_id", tournament.id)
-          .order("current_balance", { ascending: false }),
-      ]);
-      if (count !== null) setParticipants(count);
-      setParticipantList((data as ParticipantRow[] | null) ?? []);
-    };
-    void fetchParticipants();
-  }, [tournament.id]);
+  }, [tournament.id, fetchParticipants]);
 
   const prizeDistribution = useMemo(() => {
     const dist = (tournament as any).prize_distribution;
@@ -718,10 +699,7 @@ const TournamentDetailView = ({
     return defaultDistribution;
   }, [tournament]);
 
-  const visibleLeaderboard = useMemo(() => {
-    if (leaderboard.length > 0) return leaderboard;
-    return buildFallbackLeaderboard(participantList, tournament);
-  }, [leaderboard, participantList, tournament]);
+  const visibleLeaderboard = leaderboard;
 
   const userPosition = useMemo(
     () => (profileId ? visibleLeaderboard.find((e) => e.user_id === profileId) ?? null : null),
