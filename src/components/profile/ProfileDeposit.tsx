@@ -12,8 +12,8 @@ export const ProfileDeposit = () => {
     <div className="max-w-3xl text-white">
       <h2 className="mb-6 text-[24px] font-bold">Deposit Funds</h2>
 
-      <div className="overflow-hidden rounded-[24px] border border-[#0b2f3a] bg-[#13232d] shadow-[0_18px_50px_rgba(0,0,0,0.28)]">
-        <div className="border-b border-[#0b2f3a] bg-[#10202a] p-6">
+      <div className="overflow-hidden rounded-[24px] border border-white/8 bg-[#293042] shadow-[0_18px_50px_rgba(0,0,0,0.28)]">
+        <div className="border-b border-white/8 bg-[#293042] p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="text-[13px] font-semibold uppercase tracking-[0.2em] text-[#86c9d4]">Live Account</div>
