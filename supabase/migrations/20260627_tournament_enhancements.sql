@@ -39,7 +39,7 @@ begin
       order by tp.current_balance desc, tp.updated_at asc, tp.created_at asc
     )::bigint as "position",
     tp.user_id,
-    p.trader_name,
+    coalesce(p.display_name, p.username) as trader_name,
     p.avatar_url,
     upper(nullif(trim(p.phone_country), '')) as country_code,
     tp.current_balance,

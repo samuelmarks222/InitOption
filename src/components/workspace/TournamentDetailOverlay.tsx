@@ -226,12 +226,12 @@ export const TournamentDetailOverlay = ({
 
       // Try to fetch profile data for country flags / names
       const userIds = list.map((p: any) => p.user_id).filter(Boolean);
-      let profileMap = new Map<string, { trader_name?: string | null; avatar_url?: string | null; phone_country?: string | null }>();
+      let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null; phone_country?: string | null }>();
       if (userIds.length > 0) {
         try {
           const { data: profiles } = await supabaseAny
             .from("profiles")
-            .select("id, trader_name, avatar_url, phone_country")
+            .select("id, display_name, username, avatar_url, phone_country")
             .in("id", userIds);
           if (profiles) {
             profileMap = new Map((profiles as any[]).map((p: any) => [p.id, p]));
@@ -248,7 +248,7 @@ export const TournamentDetailOverlay = ({
         return {
           position: index + 1,
           user_id: p.user_id,
-          trader_name: prof.trader_name ?? null,
+          trader_name: prof.display_name || prof.username || null,
           avatar_url: prof.avatar_url ?? null,
           country_code: (prof.phone_country ?? "").trim().toUpperCase() || null,
           current_balance: balance,
