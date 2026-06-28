@@ -5,7 +5,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import CountryFlag from "@/components/ui/CountryFlag";
-import { getCountryOptionByName } from "@/lib/countries";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { cn } from "@/lib/utils";
 
@@ -25,45 +24,6 @@ type LeaderboardEntry = {
   profit_loss: number;
   return_percentage: number;
   trades_count: number;
-};
-
-const buildFallbackLeaderboard = (
-  participants: Participant[],
-  tournament: Tournament | null,
-): LeaderboardEntry[] => {
-  if (!tournament) return [];
-
-  const startingBalance = Number(tournament.starting_balance ?? 0);
-  return participants.map((participant, index) => ({
-    position: index + 1,
-    user_id: participant.user_id,
-    trader_name: participant.profiles?.username ?? null,
-    avatar_url: participant.profiles?.avatar_url ?? null,
-    country_code: (participant.profiles?.phone_country ?? getCountryOptionByName(participant.profiles?.nationality ?? null)?.code) ?? null,
-    current_balance: Number(participant.current_balance ?? startingBalance),
-    starting_balance: startingBalance,
-    profit_loss: Number(participant.current_balance ?? startingBalance) - startingBalance,
-    return_percentage: startingBalance > 0 ? ((Number(participant.current_balance ?? startingBalance) - startingBalance) / startingBalance) * 100 : 0,
-    trades_count: 0,
-  }));
-};
-
-const hashSeed = (value: string) => {
-  let hash = 0;
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
-  }
-  return hash;
-};
-
-const getTraderCountryCode = (trader: { nationality?: string | null; phone_country?: string | null; username?: string | null; id?: string | null }, offset = 0) => {
-  const stored = (trader.phone_country ?? "").trim().toUpperCase();
-  if (/^[A-Z]{2}$/.test(stored)) return stored;
-  const nat = getCountryOptionByName(trader.nationality ?? null)?.code;
-  if (nat) return nat;
-  const fallbackCodes = ["KE", "NG", "ZA", "GB", "US", "FR", "BR", "IN", "TR", "AE", "CA", "AU", "DE", "JP", "KR", "MX", "EG", "SA"];
-  const seed = trader.id || trader.username || "trader";
-  return fallbackCodes[(hashSeed(seed) + offset) % fallbackCodes.length];
 };
 
 const supabaseAny = supabase as any;
@@ -177,45 +137,7 @@ export const TournamentDetailOverlay = ({
       setLoading(true);
       const tournamentPromise = supabase.from("tournaments").select("*").eq("id", tournamentId).single();
 
-      // Try RPC for leaderboard first (SECURITY DEFINER — bypasses RLS, includes profiles & trades_count)
-      let rpcBoard: LeaderboardEntry[] | null = null;
-      try {
-        const { data, error } = await supabaseAny.rpc("get_tournament_leaderboard", {
-          p_tournament_id: tournamentId,
-        });
-        if (!error && Array.isArray(data) && data.length > 0) {
-          rpcBoard = data as LeaderboardEntry[];
-        }
-      } catch {}
-
-      const tournamentResult = await tournamentPromise;
-      if (cancelled) return;
-      const t = tournamentResult.data ?? null;
-      setTournament(t);
-
-      if (rpcBoard) {
-        setLeaderboard(rpcBoard);
-        setParticipants(
-          rpcBoard.map((entry) => ({
-            id: entry.user_id,
-            tournament_id: tournamentId,
-            user_id: entry.user_id,
-            current_balance: entry.current_balance,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            profiles: {
-              username: entry.trader_name,
-              avatar_url: entry.avatar_url,
-              nationality: null,
-              phone_country: entry.country_code ?? null,
-            },
-          })) as Participant[],
-        );
-        setLoading(false);
-        return;
-      }
-
-      // Fallback: fetch tournament_participants directly + try profiles
+      // 1. Fetch tournament_participants to know user_ids
       const participantResult = await supabase
         .from("tournament_participants")
         .select("id, user_id, current_balance, created_at, updated_at")
@@ -224,38 +146,59 @@ export const TournamentDetailOverlay = ({
       if (cancelled) return;
       const list = ((participantResult.data ?? []) as any[]);
 
-      // Try to fetch profile data for country flags / names
+      // 2. Always fetch profile data (names, avatars, country flags)
       const userIds = list.map((p: any) => p.user_id).filter(Boolean);
-      let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null; phone_country?: string | null }>();
+      let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null }>();
       if (userIds.length > 0) {
         try {
-          const { data: profiles } = await supabaseAny
+          const { data: profiles, error: profilesErr } = await supabaseAny
             .from("profiles")
-            .select("id, display_name, username, avatar_url, phone_country")
+            .select("id, display_name, username, avatar_url")
             .in("id", userIds);
+          if (profilesErr) console.error("Leaderboard profiles fetch error:", profilesErr);
           if (profiles) {
             profileMap = new Map((profiles as any[]).map((p: any) => [p.id, p]));
           }
-        } catch {
-          // profiles table may not be readable — proceed without profile data
+        } catch (e) {
+          console.error("Leaderboard profiles fetch exception:", e);
         }
       }
 
+      // 3. Try RPC for enriched data (balance, trades_count, positions)
+      let rpcMap = new Map<string, any>();
+      try {
+        const { data: rpcData, error: rpcErr } = await supabaseAny.rpc("get_tournament_leaderboard", {
+          p_tournament_id: tournamentId,
+        });
+        if (!rpcErr && Array.isArray(rpcData)) {
+          rpcMap = new Map((rpcData as any[]).map((r: any) => [r.user_id, r]));
+        }
+      } catch {
+        // RPC unavailable — continue without enriched data
+      }
+
+      const tournamentResult = await tournamentPromise;
+      if (cancelled) return;
+      const t = tournamentResult.data ?? null;
+      setTournament(t);
+
+      // 4. Merge: use RPC data if available, otherwise build from participants; overlay profile data
       const startingBalance = Number(t?.starting_balance ?? 0);
       const board: LeaderboardEntry[] = list.map((p: any, index: number) => {
+        const rpcEntry = rpcMap.get(p.user_id);
         const prof = profileMap.get(p.user_id) ?? {};
-        const balance = Number(p.current_balance ?? startingBalance);
+        const balance = rpcEntry ? Number(rpcEntry.current_balance) : Number(p.current_balance ?? startingBalance);
         return {
-          position: index + 1,
+          position: rpcEntry ? Number(rpcEntry.position) : index + 1,
           user_id: p.user_id,
-          trader_name: prof.display_name || prof.username || null,
-          avatar_url: prof.avatar_url ?? null,
-          country_code: (prof.phone_country ?? "").trim().toUpperCase() || null,
+          trader_name: (rpcEntry && rpcEntry.trader_name) ? rpcEntry.trader_name : (prof.display_name || prof.username || null),
+          avatar_url: (rpcEntry && rpcEntry.avatar_url) ? rpcEntry.avatar_url : (prof.avatar_url ?? null),
+          country_code: (rpcEntry && rpcEntry.country_code) ? rpcEntry.country_code : null,
           current_balance: balance,
           starting_balance: startingBalance,
           profit_loss: balance - startingBalance,
           return_percentage: startingBalance > 0 ? ((balance - startingBalance) / startingBalance) * 100 : 0,
-          trades_count: 0,
+          trades_count: rpcEntry ? Number(rpcEntry.trades_count) : 0,
         };
       });
       setLeaderboard(board);
@@ -271,22 +214,65 @@ export const TournamentDetailOverlay = ({
   const fetchLeaderboard = useCallback(async () => {
     if (!tournamentId) return;
 
-    // Try RPC first (SECURITY DEFINER — bypasses RLS, includes profiles & trades_count)
-    try {
-      const { data, error } = await supabaseAny.rpc("get_tournament_leaderboard", {
-        p_tournament_id: tournamentId,
-      });
-      if (!error && Array.isArray(data) && data.length > 0) {
-        setLeaderboard(data as LeaderboardEntry[]);
-        return;
+    // 1. Fetch current participants to get user_ids
+    const { data: rows } = await supabase
+      .from("tournament_participants")
+      .select("id, user_id, current_balance, created_at, updated_at")
+      .eq("tournament_id", tournamentId)
+      .order("current_balance", { ascending: false });
+    if (!rows) return;
+    const list = rows as any[];
+
+    // 2. Fetch profile data
+    const userIds = list.map((p: any) => p.user_id).filter(Boolean);
+    let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null }>();
+    if (userIds.length > 0) {
+      try {
+        const { data: profiles, error: profilesErr } = await supabaseAny
+          .from("profiles")
+          .select("id, display_name, username, avatar_url")
+          .in("id", userIds);
+        if (profilesErr) console.error("Leaderboard profiles fetch error:", profilesErr);
+        if (profiles) {
+          profileMap = new Map((profiles as any[]).map((p: any) => [p.id, p]));
+        }
+      } catch (e) {
+        console.error("Leaderboard profiles fetch exception:", e);
       }
-    } catch {
-      // RPC unavailable — fall through to fallback below
     }
 
-    const board = buildFallbackLeaderboard(participants, tournament);
+    // 3. Try RPC for enriched data
+    let rpcMap = new Map<string, any>();
+    try {
+      const { data: rpcData, error: rpcErr } = await supabaseAny.rpc("get_tournament_leaderboard", {
+        p_tournament_id: tournamentId,
+      });
+      if (!rpcErr && Array.isArray(rpcData)) {
+        rpcMap = new Map((rpcData as any[]).map((r: any) => [r.user_id, r]));
+      }
+    } catch {}
+
+    // 4. Merge: RPC data enriched with profile info
+    const startingBalance = Number(tournament?.starting_balance ?? 0);
+    const board: LeaderboardEntry[] = list.map((p: any, index: number) => {
+      const rpcEntry = rpcMap.get(p.user_id);
+      const prof = profileMap.get(p.user_id) ?? {};
+      const balance = rpcEntry ? Number(rpcEntry.current_balance) : Number(p.current_balance ?? startingBalance);
+      return {
+        position: rpcEntry ? Number(rpcEntry.position) : index + 1,
+        user_id: p.user_id,
+        trader_name: (rpcEntry && rpcEntry.trader_name) ? rpcEntry.trader_name : (prof.display_name || prof.username || null),
+        avatar_url: (rpcEntry && rpcEntry.avatar_url) ? rpcEntry.avatar_url : (prof.avatar_url ?? null),
+        country_code: (rpcEntry && rpcEntry.country_code) ? rpcEntry.country_code : null,
+        current_balance: balance,
+        starting_balance: startingBalance,
+        profit_loss: balance - startingBalance,
+        return_percentage: startingBalance > 0 ? ((balance - startingBalance) / startingBalance) * 100 : 0,
+        trades_count: rpcEntry ? Number(rpcEntry.trades_count) : 0,
+      };
+    });
     setLeaderboard(board);
-  }, [participants, tournament, tournamentId]);
+  }, [tournament, tournamentId]);
 
   const prizeDistribution = useMemo(() => {
     if (!tournament) return defaultDistribution;
@@ -306,9 +292,8 @@ export const TournamentDetailOverlay = ({
     : false;
 
   const visibleLeaderboard = useMemo(() => {
-    if (leaderboard.length > 0) return leaderboard;
-    return buildFallbackLeaderboard(participants, tournament);
-  }, [leaderboard, participants, tournament]);
+    return leaderboard;
+  }, [leaderboard]);
   const userPosition = useMemo(() => {
     if (!profile) return null;
     return visibleLeaderboard.find((entry) => entry.user_id === profile.id) ?? null;

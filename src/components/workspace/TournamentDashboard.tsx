@@ -647,23 +647,8 @@ const TournamentDetailView = ({
   const countdownLabel = isActive ? "Ends in:" : "Starts in:";
 
   const fetchParticipants = useCallback(async () => {
-    // Try RPC first (SECURITY DEFINER — bypasses RLS, includes profiles & trades_count)
     try {
-      const { data, error } = await supabaseAny.rpc("get_tournament_leaderboard", {
-        p_tournament_id: tournament.id,
-      });
-      if (!error && Array.isArray(data) && data.length > 0) {
-        setLeaderboard(data as LeaderboardEntry[]);
-        const count = data.length;
-        setParticipants(count);
-        return;
-      }
-    } catch {
-      // RPC unavailable — fall through to client-side fetch below
-    }
-
-    // Fallback: fetch tournament_participants directly + try profiles
-    try {
+      // 1. Always fetch participant list to know user_ids
       const [{ count, error: countErr }, { data: rows, error: rowsErr }] = await Promise.all([
         supabase
           .from("tournament_participants")
@@ -679,38 +664,54 @@ const TournamentDetailView = ({
       if (!countErr && count !== null) setParticipants(count);
       const list = ((!rowsErr ? rows : null) ?? []) as any[];
 
-      // Try to fetch profile data for country flags / names
+      // 2. Always fetch profile data (names, avatars, country flags)
       const userIds = list.map((p: any) => p.user_id).filter(Boolean);
-      let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null; phone_country?: string | null }>();
+      let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null }>();
       if (userIds.length > 0) {
         try {
-          const { data: profiles } = await supabaseAny
+          const { data: profiles, error: profilesErr } = await supabaseAny
             .from("profiles")
-            .select("id, display_name, username, avatar_url, phone_country")
+            .select("id, display_name, username, avatar_url")
             .in("id", userIds);
+          if (profilesErr) console.error("Leaderboard profiles fetch error:", profilesErr);
           if (profiles) {
             profileMap = new Map((profiles as any[]).map((p: any) => [p.id, p]));
           }
-        } catch {
-          // profiles table may not be readable — proceed without profile data
+        } catch (e) {
+          console.error("Leaderboard profiles fetch exception:", e);
         }
       }
 
+      // 3. Try RPC for enriched data (balance, trades_count, positions)
+      let rpcMap = new Map<string, any>();
+      try {
+        const { data: rpcData, error: rpcErr } = await supabaseAny.rpc("get_tournament_leaderboard", {
+          p_tournament_id: tournament.id,
+        });
+        if (!rpcErr && Array.isArray(rpcData)) {
+          rpcMap = new Map((rpcData as any[]).map((r: any) => [r.user_id, r]));
+        }
+      } catch {
+        // RPC unavailable — continue without enriched data
+      }
+
+      // 4. Merge: use RPC data if available, otherwise build from participants; overlay profile data
       const startingBalance = Number(tournament.starting_balance ?? 0);
       const board: LeaderboardEntry[] = list.map((p: any, index: number) => {
+        const rpcEntry = rpcMap.get(p.user_id);
         const prof = profileMap.get(p.user_id) ?? {};
-        const balance = Number(p.current_balance ?? startingBalance);
+        const balance = rpcEntry ? Number(rpcEntry.current_balance) : Number(p.current_balance ?? startingBalance);
         return {
-          position: index + 1,
+          position: rpcEntry ? Number(rpcEntry.position) : index + 1,
           user_id: p.user_id,
-          trader_name: prof.display_name || prof.username || null,
-          avatar_url: prof.avatar_url ?? null,
-          country_code: (prof.phone_country ?? "").trim().toUpperCase() || null,
+          trader_name: (rpcEntry && rpcEntry.trader_name) ? rpcEntry.trader_name : (prof.display_name || prof.username || null),
+          avatar_url: (rpcEntry && rpcEntry.avatar_url) ? rpcEntry.avatar_url : (prof.avatar_url ?? null),
+          country_code: (rpcEntry && rpcEntry.country_code) ? rpcEntry.country_code : null,
           current_balance: balance,
           starting_balance: startingBalance,
           profit_loss: balance - startingBalance,
           return_percentage: startingBalance > 0 ? ((balance - startingBalance) / startingBalance) * 100 : 0,
-          trades_count: 0,
+          trades_count: rpcEntry ? Number(rpcEntry.trades_count) : 0,
         };
       });
       setLeaderboard(board);
