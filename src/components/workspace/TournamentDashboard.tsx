@@ -662,7 +662,7 @@ const TournamentDetailView = ({
       // RPC unavailable — fall through to client-side fetch below
     }
 
-    // Fallback: fetch tournament_participants directly
+    // Fallback: fetch tournament_participants directly + try profiles
     try {
       const [{ count, error: countErr }, { data: rows, error: rowsErr }] = await Promise.all([
         supabase
@@ -678,15 +678,34 @@ const TournamentDetailView = ({
 
       if (!countErr && count !== null) setParticipants(count);
       const list = ((!rowsErr ? rows : null) ?? []) as any[];
+
+      // Try to fetch profile data for country flags / names
+      const userIds = list.map((p: any) => p.user_id).filter(Boolean);
+      let profileMap = new Map<string, { trader_name?: string | null; avatar_url?: string | null; phone_country?: string | null }>();
+      if (userIds.length > 0) {
+        try {
+          const { data: profiles } = await supabaseAny
+            .from("profiles")
+            .select("id, trader_name, avatar_url, phone_country")
+            .in("id", userIds);
+          if (profiles) {
+            profileMap = new Map((profiles as any[]).map((p: any) => [p.id, p]));
+          }
+        } catch {
+          // profiles table may not be readable — proceed without profile data
+        }
+      }
+
       const startingBalance = Number(tournament.starting_balance ?? 0);
       const board: LeaderboardEntry[] = list.map((p: any, index: number) => {
+        const prof = profileMap.get(p.user_id) ?? {};
         const balance = Number(p.current_balance ?? startingBalance);
         return {
           position: index + 1,
           user_id: p.user_id,
-          trader_name: null,
-          avatar_url: null,
-          country_code: null,
+          trader_name: prof.trader_name ?? null,
+          avatar_url: prof.avatar_url ?? null,
+          country_code: (prof.phone_country ?? "").trim().toUpperCase() || null,
           current_balance: balance,
           starting_balance: startingBalance,
           profit_loss: balance - startingBalance,
@@ -864,14 +883,17 @@ const TournamentDetailView = ({
           {hasJoined && userPosition && (
             <div className="rounded-2xl border border-[#007aff]/30 bg-[#1e2530] p-4">
               <div className="mb-3 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2a3340] text-[15px] font-bold text-white">
-                  {profileId?.charAt(0).toUpperCase() || "U"}
-                </div>
+                {userPosition.avatar_url ? (
+                  <img src={userPosition.avatar_url} alt={userPosition.trader_name ?? "You"} className="h-10 w-10 rounded-full object-cover" />
+                ) : userPosition.country_code ? (
+                  <CountryFlag code={userPosition.country_code} size={36} className="h-10 w-10 rounded-full" />
+                ) : (
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2a3340]" />
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[14px] font-bold text-white">
-                    {profileUsername}
+                    {userPosition.trader_name || profileUsername}
                   </p>
-                  <p className="text-[11px] text-[#7a8aa8]">{profileId?.slice(0, 12)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[16px] font-extrabold text-white">
@@ -940,12 +962,12 @@ const TournamentDetailView = ({
                           </span>
                           {entry.avatar_url ? (
                             <img src={entry.avatar_url} alt={entry.trader_name ?? "Trader"} className="h-7 w-7 rounded-full object-cover" />
+                          ) : entry.country_code ? (
+                            <CountryFlag code={entry.country_code} size={24} className="h-7 w-7 rounded-full" />
                           ) : (
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a3340] text-[11px] font-bold text-white">
-                              {(entry.trader_name || `T${entry.position}`).charAt(0).toUpperCase()}
-                            </div>
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a3340]" />
                           )}
-                          {entry.country_code ? (
+                          {entry.avatar_url && entry.country_code ? (
                             <CountryFlag code={entry.country_code} size={16} className="rounded-full" />
                           ) : null}
                           <span className="truncate font-semibold text-white">

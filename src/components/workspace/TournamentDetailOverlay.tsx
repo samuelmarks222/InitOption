@@ -215,7 +215,7 @@ export const TournamentDetailOverlay = ({
         return;
       }
 
-      // Fallback: fetch tournament_participants directly
+      // Fallback: fetch tournament_participants directly + try profiles
       const participantResult = await supabase
         .from("tournament_participants")
         .select("id, user_id, current_balance, created_at, updated_at")
@@ -223,6 +223,42 @@ export const TournamentDetailOverlay = ({
         .order("current_balance", { ascending: false });
       if (cancelled) return;
       const list = ((participantResult.data ?? []) as any[]);
+
+      // Try to fetch profile data for country flags / names
+      const userIds = list.map((p: any) => p.user_id).filter(Boolean);
+      let profileMap = new Map<string, { trader_name?: string | null; avatar_url?: string | null; phone_country?: string | null }>();
+      if (userIds.length > 0) {
+        try {
+          const { data: profiles } = await supabaseAny
+            .from("profiles")
+            .select("id, trader_name, avatar_url, phone_country")
+            .in("id", userIds);
+          if (profiles) {
+            profileMap = new Map((profiles as any[]).map((p: any) => [p.id, p]));
+          }
+        } catch {
+          // profiles table may not be readable — proceed without profile data
+        }
+      }
+
+      const startingBalance = Number(t?.starting_balance ?? 0);
+      const board: LeaderboardEntry[] = list.map((p: any, index: number) => {
+        const prof = profileMap.get(p.user_id) ?? {};
+        const balance = Number(p.current_balance ?? startingBalance);
+        return {
+          position: index + 1,
+          user_id: p.user_id,
+          trader_name: prof.trader_name ?? null,
+          avatar_url: prof.avatar_url ?? null,
+          country_code: (prof.phone_country ?? "").trim().toUpperCase() || null,
+          current_balance: balance,
+          starting_balance: startingBalance,
+          profit_loss: balance - startingBalance,
+          return_percentage: startingBalance > 0 ? ((balance - startingBalance) / startingBalance) * 100 : 0,
+          trades_count: 0,
+        };
+      });
+      setLeaderboard(board);
       setParticipants(list.map((p: any) => ({ ...p, profiles: {} })) as Participant[]);
       setLoading(false);
     };
@@ -488,12 +524,12 @@ export const TournamentDetailOverlay = ({
                           <span className="flex items-center gap-2 truncate font-semibold text-[#e8f0ff]">
                             {entry.avatar_url ? (
                               <img src={entry.avatar_url} alt={entry.trader_name ?? "Trader"} className="h-7 w-7 rounded-full object-cover" />
+                            ) : entry.country_code ? (
+                              <CountryFlag code={entry.country_code} size={24} className="h-7 w-7 rounded-full" />
                             ) : (
-                              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2a3340] text-[11px] font-bold text-white">
-                                {(entry.trader_name || `T${entry.position}`).charAt(0).toUpperCase()}
-                              </div>
+                              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a3340]" />
                             )}
-                            {entry.country_code ? (
+                            {entry.avatar_url && entry.country_code ? (
                               <CountryFlag code={entry.country_code} size={16} className="rounded-full" />
                             ) : null}
                             <span className="min-w-0 truncate">{isMe ? "You" : entry.trader_name || `Trader ${entry.position}`}</span>
