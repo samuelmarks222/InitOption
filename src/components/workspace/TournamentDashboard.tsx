@@ -647,6 +647,22 @@ const TournamentDetailView = ({
   const countdownLabel = isActive ? "Ends in:" : "Starts in:";
 
   const fetchParticipants = useCallback(async () => {
+    // Try RPC first (SECURITY DEFINER — bypasses RLS, includes profiles & trades_count)
+    try {
+      const { data, error } = await supabaseAny.rpc("get_tournament_leaderboard", {
+        p_tournament_id: tournament.id,
+      });
+      if (!error && Array.isArray(data) && data.length > 0) {
+        setLeaderboard(data as LeaderboardEntry[]);
+        const count = data.length;
+        setParticipants(count);
+        return;
+      }
+    } catch {
+      // RPC unavailable — fall through to client-side fetch below
+    }
+
+    // Fallback: fetch tournament_participants directly
     try {
       const [{ count, error: countErr }, { data: rows, error: rowsErr }] = await Promise.all([
         supabase
@@ -662,30 +678,15 @@ const TournamentDetailView = ({
 
       if (!countErr && count !== null) setParticipants(count);
       const list = ((!rowsErr ? rows : null) ?? []) as any[];
-
-      // Fetch profiles for all participants
-      const userIds = list.map((r: any) => r.user_id).filter(Boolean);
-      let profileMap = new Map<string, any>();
-      if (userIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, username, avatar_url, nationality, phone_country")
-          .in("id", userIds);
-        if (profiles) {
-          profileMap = new Map((profiles as any[]).map((p: any) => [p.id, p]));
-        }
-      }
-
       const startingBalance = Number(tournament.starting_balance ?? 0);
       const board: LeaderboardEntry[] = list.map((p: any, index: number) => {
-        const prof = profileMap.get(p.user_id) ?? {};
         const balance = Number(p.current_balance ?? startingBalance);
         return {
           position: index + 1,
           user_id: p.user_id,
-          trader_name: prof.username ?? null,
-          avatar_url: prof.avatar_url ?? null,
-          country_code: (prof.phone_country ?? getCountryOptionByName(prof.nationality ?? null)?.code) ?? null,
+          trader_name: null,
+          avatar_url: null,
+          country_code: null,
           current_balance: balance,
           starting_balance: startingBalance,
           profit_loss: balance - startingBalance,

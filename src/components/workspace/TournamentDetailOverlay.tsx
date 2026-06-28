@@ -175,37 +175,55 @@ export const TournamentDetailOverlay = ({
     let cancelled = false;
     const fetchDetails = async () => {
       setLoading(true);
-      const [tournamentData, participantData] = await Promise.all([
-        supabase.from("tournaments").select("*").eq("id", tournamentId).single(),
-        supabase
-          .from("tournament_participants")
-          .select("id, user_id, current_balance, created_at, updated_at")
-          .eq("tournament_id", tournamentId)
-          .order("current_balance", { ascending: false }),
-      ]);
-      if (cancelled) return;
-      const t = tournamentData.data ?? null;
-      setTournament(t);
-      const list = ((participantData.data ?? []) as any[]);
+      const tournamentPromise = supabase.from("tournaments").select("*").eq("id", tournamentId).single();
 
-      // Fetch profiles separately
-      const userIds = list.map((r: any) => r.user_id).filter(Boolean);
-      let profileMap = new Map<string, any>();
-      if (userIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, username, avatar_url, nationality, phone_country")
-          .in("id", userIds);
-        if (profiles) {
-          profileMap = new Map((profiles as any[]).map((p: any) => [p.id, p]));
+      // Try RPC for leaderboard first (SECURITY DEFINER — bypasses RLS, includes profiles & trades_count)
+      let rpcBoard: LeaderboardEntry[] | null = null;
+      try {
+        const { data, error } = await supabaseAny.rpc("get_tournament_leaderboard", {
+          p_tournament_id: tournamentId,
+        });
+        if (!error && Array.isArray(data) && data.length > 0) {
+          rpcBoard = data as LeaderboardEntry[];
         }
+      } catch {}
+
+      const tournamentResult = await tournamentPromise;
+      if (cancelled) return;
+      const t = tournamentResult.data ?? null;
+      setTournament(t);
+
+      if (rpcBoard) {
+        setLeaderboard(rpcBoard);
+        setParticipants(
+          rpcBoard.map((entry) => ({
+            id: entry.user_id,
+            tournament_id: tournamentId,
+            user_id: entry.user_id,
+            current_balance: entry.current_balance,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            profiles: {
+              username: entry.trader_name,
+              avatar_url: entry.avatar_url,
+              nationality: null,
+              phone_country: entry.country_code ?? null,
+            },
+          })) as Participant[],
+        );
+        setLoading(false);
+        return;
       }
 
-      const participantsWithProfiles = list.map((p: any) => ({
-        ...p,
-        profiles: profileMap.get(p.user_id) ?? {},
-      }));
-      setParticipants(participantsWithProfiles as Participant[]);
+      // Fallback: fetch tournament_participants directly
+      const participantResult = await supabase
+        .from("tournament_participants")
+        .select("id, user_id, current_balance, created_at, updated_at")
+        .eq("tournament_id", tournamentId)
+        .order("current_balance", { ascending: false });
+      if (cancelled) return;
+      const list = ((participantResult.data ?? []) as any[]);
+      setParticipants(list.map((p: any) => ({ ...p, profiles: {} })) as Participant[]);
       setLoading(false);
     };
     void fetchDetails();
@@ -216,6 +234,20 @@ export const TournamentDetailOverlay = ({
 
   const fetchLeaderboard = useCallback(async () => {
     if (!tournamentId) return;
+
+    // Try RPC first (SECURITY DEFINER — bypasses RLS, includes profiles & trades_count)
+    try {
+      const { data, error } = await supabaseAny.rpc("get_tournament_leaderboard", {
+        p_tournament_id: tournamentId,
+      });
+      if (!error && Array.isArray(data) && data.length > 0) {
+        setLeaderboard(data as LeaderboardEntry[]);
+        return;
+      }
+    } catch {
+      // RPC unavailable — fall through to fallback below
+    }
+
     const board = buildFallbackLeaderboard(participants, tournament);
     setLeaderboard(board);
   }, [participants, tournament, tournamentId]);
