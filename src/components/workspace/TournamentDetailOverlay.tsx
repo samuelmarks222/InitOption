@@ -179,13 +179,33 @@ export const TournamentDetailOverlay = ({
         supabase.from("tournaments").select("*").eq("id", tournamentId).single(),
         supabase
           .from("tournament_participants")
-          .select("*, profiles(username, avatar_url, nationality, phone_country)")
+          .select("id, user_id, current_balance, created_at, updated_at")
           .eq("tournament_id", tournamentId)
           .order("current_balance", { ascending: false }),
       ]);
       if (cancelled) return;
-      setTournament(tournamentData.data ?? null);
-      setParticipants((participantData.data as Participant[] | null) ?? []);
+      const t = tournamentData.data ?? null;
+      setTournament(t);
+      const list = ((participantData.data ?? []) as any[]);
+
+      // Fetch profiles separately
+      const userIds = list.map((r: any) => r.user_id).filter(Boolean);
+      let profileMap = new Map<string, any>();
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, username, avatar_url, nationality, phone_country")
+          .in("id", userIds);
+        if (profiles) {
+          profileMap = new Map((profiles as any[]).map((p: any) => [p.id, p]));
+        }
+      }
+
+      const participantsWithProfiles = list.map((p: any) => ({
+        ...p,
+        profiles: profileMap.get(p.user_id) ?? {},
+      }));
+      setParticipants(participantsWithProfiles as Participant[]);
       setLoading(false);
     };
     void fetchDetails();
@@ -196,32 +216,9 @@ export const TournamentDetailOverlay = ({
 
   const fetchLeaderboard = useCallback(async () => {
     if (!tournamentId) return;
-
-    try {
-      const { data, error } = await supabaseAny.rpc("get_tournament_leaderboard", {
-        p_tournament_id: tournamentId,
-      });
-
-      if (!error && Array.isArray(data) && data.length > 0) {
-        setLeaderboard(data as LeaderboardEntry[]);
-        return;
-      }
-    } catch {
-      // Fall back to the participant rows when the RPC is unavailable or fails.
-    }
-
-    const fallback = buildFallbackLeaderboard(participants, tournament);
-    setLeaderboard(fallback);
+    const board = buildFallbackLeaderboard(participants, tournament);
+    setLeaderboard(board);
   }, [participants, tournament, tournamentId]);
-
-  useEffect(() => {
-    if (!tournamentId) return;
-    void fetchLeaderboard();
-    pollRef.current = window.setInterval(fetchLeaderboard, 10_000);
-    return () => {
-      if (pollRef.current) window.clearInterval(pollRef.current);
-    };
-  }, [tournamentId, fetchLeaderboard]);
 
   const prizeDistribution = useMemo(() => {
     if (!tournament) return defaultDistribution;
