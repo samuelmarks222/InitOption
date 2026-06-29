@@ -15,6 +15,7 @@ create index if not exists idx_tournament_participants_balance_desc
   on public.tournament_participants (tournament_id, current_balance desc);
 
 -- 4. Leaderboard query function with P/L and return %
+drop function if exists public.get_tournament_leaderboard(uuid);
 create or replace function public.get_tournament_leaderboard(p_tournament_id uuid)
 returns table (
   "position" bigint,
@@ -39,7 +40,12 @@ begin
       order by tp.current_balance desc, tp.updated_at asc, tp.created_at asc
     )::bigint as "position",
     tp.user_id,
-    coalesce(p.display_name, p.username) as trader_name,
+    coalesce(
+      nullif(p.display_name, ''),
+      nullif(p.username, ''),
+      nullif(split_part(au.email, '@', 1), ''),
+      'User-' || upper(substring(au.id::text from 1 for 6))
+    ) as trader_name,
     p.avatar_url,
     upper(nullif(trim(p.phone_country), '')) as country_code,
     tp.current_balance,
@@ -58,6 +64,7 @@ begin
   from public.tournament_participants tp
   join public.tournaments t on t.id = tp.tournament_id
   join public.profiles p on p.id = tp.user_id
+  join auth.users au on au.id = tp.user_id
   where tp.tournament_id = p_tournament_id
   order by tp.current_balance desc, tp.updated_at asc, tp.created_at asc;
 end;
