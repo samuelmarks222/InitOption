@@ -43,8 +43,7 @@ begin
     coalesce(
       nullif(p.display_name, ''),
       nullif(p.username, ''),
-      nullif(split_part(au.email, '@', 1), ''),
-      'User-' || upper(substring(au.id::text from 1 for 6))
+      'User-' || upper(substring(tp.user_id::text from 1 for 6))
     ) as trader_name,
     p.avatar_url,
     upper(nullif(trim(p.phone_country), '')) as country_code,
@@ -64,7 +63,6 @@ begin
   from public.tournament_participants tp
   join public.tournaments t on t.id = tp.tournament_id
   join public.profiles p on p.id = tp.user_id
-  join auth.users au on au.id = tp.user_id
   where tp.tournament_id = p_tournament_id
   order by tp.current_balance desc, tp.updated_at asc, tp.created_at asc;
 end;
