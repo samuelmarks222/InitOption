@@ -6,6 +6,7 @@ import CountryFlag from "@/components/ui/CountryFlag";
 import { getCountryOptionByName } from "@/lib/countries";
 import { usePublicTournaments } from "@/hooks/usePublicTournaments";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
+import { getDummyTraders } from "@/lib/dummyTraders";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -717,6 +718,30 @@ const TournamentDetailView = ({
           trades_count: rpcEntry ? Number(rpcEntry.trades_count) : 0,
         };
       });
+
+      // Supplement with dummy traders if fewer than 10 real participants
+      if (board.length < 10) {
+        const dummyCount = 10 - board.length;
+        const realUserIds = new Set(board.map((e) => e.user_id));
+        const dummies = getDummyTraders(dummyCount, Array.from(realUserIds));
+        let nextPosition = board.length > 0 ? Math.max(...board.map((e) => e.position)) + 1 : 1;
+        dummies.forEach((dummy) => {
+          const balance = startingBalance + (Math.random() - 0.5) * startingBalance * 0.4;
+          board.push({
+            position: nextPosition++,
+            user_id: `dummy-${dummy.name.toLowerCase().replace(/\s+/g, '-')}`,
+            trader_name: dummy.name,
+            avatar_url: dummy.avatar,
+            country_code: dummy.country ?? null,
+            current_balance: Number(balance.toFixed(2)),
+            starting_balance: startingBalance,
+            profit_loss: Number((balance - startingBalance).toFixed(2)),
+            return_percentage: startingBalance > 0 ? Number(((balance - startingBalance) / startingBalance * 100).toFixed(2)) : 0,
+            trades_count: Math.floor(Math.random() * 20),
+          });
+        });
+      }
+
       setLeaderboard(board);
     } catch {
       setLeaderboard([]);

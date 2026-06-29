@@ -7,6 +7,7 @@ import { Database } from "@/integrations/supabase/types";
 import CountryFlag from "@/components/ui/CountryFlag";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { cn } from "@/lib/utils";
+import { getDummyTraders } from "@/lib/dummyTraders";
 
 type Tournament = Database["public"]["Tables"]["tournaments"]["Row"];
 type Participant = Database["public"]["Tables"]["tournament_participants"]["Row"] & {
@@ -195,8 +196,7 @@ export const TournamentDetailOverlay = ({
           trader_name: (rpcEntry && rpcEntry.trader_name)
             ? rpcEntry.trader_name
             : (prof.display_name || prof.username || uuidFallback),
-          avatar_url: (rpcEntry && rpcEntry.avatar_url) ? rpcEntry.avatar_url : (prof.avatar_url ?? null),
-          country_code: (rpcEntry && rpcEntry.country_code) ? rpcEntry.country_code : null,
+          avatar_url: (rpcEntry && rpcEntry.avatar_url) ? rpcEntry.avatar_url : (prof.avatar_url ?? null,
           current_balance: balance,
           starting_balance: startingBalance,
           profit_loss: balance - startingBalance,
@@ -204,6 +204,30 @@ export const TournamentDetailOverlay = ({
           trades_count: rpcEntry ? Number(rpcEntry.trades_count) : 0,
         };
       });
+
+      // Supplement with dummy traders if fewer than 10 real participants
+      if (board.length < 10) {
+        const dummyCount = 10 - board.length;
+        const realUserIds = new Set(board.map((e) => e.user_id));
+        const dummies = getDummyTraders(dummyCount, Array.from(realUserIds));
+        let nextPosition = board.length > 0 ? Math.max(...board.map((e) => e.position)) + 1 : 1;
+        dummies.forEach((dummy) => {
+          const balance = startingBalance + (Math.random() - 0.5) * startingBalance * 0.4;
+          board.push({
+            position: nextPosition++,
+            user_id: `dummy-${dummy.name.toLowerCase().replace(/\s+/g, '-')}`,
+            trader_name: dummy.name,
+            avatar_url: dummy.avatar,
+            country_code: dummy.country,
+            current_balance: balance,
+            starting_balance: startingBalance,
+            profit_loss: balance - startingBalance,
+            return_percentage: startingBalance > 0 ? ((balance - startingBalance) / startingBalance) * 100 : 0,
+            trades_count: Math.floor(Math.random() * 20),
+          });
+        });
+      }
+
       setLeaderboard(board);
       setParticipants(list.map((p: any) => ({ ...p, profiles: {} })) as Participant[]);
       setLoading(false);
@@ -261,10 +285,13 @@ export const TournamentDetailOverlay = ({
       const rpcEntry = rpcMap.get(p.user_id);
       const prof = profileMap.get(p.user_id) ?? {};
       const balance = rpcEntry ? Number(rpcEntry.current_balance) : Number(p.current_balance ?? startingBalance);
+      const uuidFallback = 'User-' + String(p.user_id).slice(0, 6).toUpperCase();
       return {
         position: rpcEntry ? Number(rpcEntry.position) : index + 1,
         user_id: p.user_id,
-        trader_name: (rpcEntry && rpcEntry.trader_name) ? rpcEntry.trader_name : (prof.display_name || prof.username || null),
+        trader_name: (rpcEntry && rpcEntry.trader_name)
+          ? rpcEntry.trader_name
+          : (prof.display_name || prof.username || uuidFallback),
         avatar_url: (rpcEntry && rpcEntry.avatar_url) ? rpcEntry.avatar_url : (prof.avatar_url ?? null),
         country_code: (rpcEntry && rpcEntry.country_code) ? rpcEntry.country_code : null,
         current_balance: balance,
@@ -274,6 +301,30 @@ export const TournamentDetailOverlay = ({
         trades_count: rpcEntry ? Number(rpcEntry.trades_count) : 0,
       };
     });
+
+    // Supplement with dummy traders if fewer than 10 real participants
+    if (board.length < 10) {
+      const dummyCount = 10 - board.length;
+      const realUserIds = new Set(board.map((e) => e.user_id));
+      const dummies = getDummyTraders(dummyCount, Array.from(realUserIds));
+      let nextPosition = board.length > 0 ? Math.max(...board.map((e) => e.position)) + 1 : 1;
+      dummies.forEach((dummy) => {
+        const balance = startingBalance + (Math.random() - 0.5) * startingBalance * 0.4;
+        board.push({
+          position: nextPosition++,
+          user_id: `dummy-${dummy.name.toLowerCase().replace(/\s+/g, '-')}`,
+          trader_name: dummy.name,
+          avatar_url: dummy.avatar,
+          country_code: dummy.country,
+          current_balance: balance,
+          starting_balance: startingBalance,
+          profit_loss: balance - startingBalance,
+          return_percentage: startingBalance > 0 ? ((balance - startingBalance) / startingBalance) * 100 : 0,
+          trades_count: Math.floor(Math.random() * 20),
+        });
+      });
+    }
+
     setLeaderboard(board);
   }, [tournament, tournamentId]);
 
