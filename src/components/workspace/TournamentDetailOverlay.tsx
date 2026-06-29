@@ -188,10 +188,13 @@ export const TournamentDetailOverlay = ({
         const rpcEntry = rpcMap.get(p.user_id);
         const prof = profileMap.get(p.user_id) ?? {};
         const balance = rpcEntry ? Number(rpcEntry.current_balance) : Number(p.current_balance ?? startingBalance);
+        const uuidFallback = 'User-' + String(p.user_id).slice(0, 6).toUpperCase();
         return {
           position: rpcEntry ? Number(rpcEntry.position) : index + 1,
           user_id: p.user_id,
-          trader_name: (rpcEntry && rpcEntry.trader_name) ? rpcEntry.trader_name : (prof.display_name || prof.username || null),
+          trader_name: (rpcEntry && rpcEntry.trader_name)
+            ? rpcEntry.trader_name
+            : (prof.display_name || prof.username || uuidFallback),
           avatar_url: (rpcEntry && rpcEntry.avatar_url) ? rpcEntry.avatar_url : (prof.avatar_url ?? null),
           country_code: (rpcEntry && rpcEntry.country_code) ? rpcEntry.country_code : null,
           current_balance: balance,
