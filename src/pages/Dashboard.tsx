@@ -9,6 +9,12 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { SiteLogo } from "@/components/branding/SiteLogo";
 
+const safe = (v: unknown): string => {
+  if (v == null) return "";
+  if (typeof v === "object") return JSON.stringify(v);
+  return String(v);
+};
+
 const Dashboard = () => {
   const { user, profile, signOut } = useAuth();
   const [recentTrades, setRecentTrades] = useState<any[]>([]);
@@ -125,8 +131,8 @@ const Dashboard = () => {
                           <TrendingDown className="w-4 h-4 text-trading-red" />
                         )}
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-slate-900">{trade.asset_symbol}</p>
-                          <p className="text-xs text-slate-500">{trade.direction.toUpperCase()} • {formatMoney(trade.amount)}</p>
+                          <p className="truncate text-sm font-medium text-slate-900">{safe(trade.asset_symbol)}</p>
+                          <p className="text-xs text-slate-500">{safe(trade.direction ?? "").toUpperCase()} • {formatMoney(trade.amount)}</p>
                         </div>
                       </div>
                       <div className="text-left sm:text-right">
@@ -167,9 +173,9 @@ const Dashboard = () => {
                           {i + 1}
                         </span>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-slate-900">{trader.display_name || trader.username || "Anonymous"}</p>
+                          <p className="truncate text-sm font-medium text-slate-900">{safe(trader.display_name || trader.username || "Anonymous")}</p>
                           <p className="text-xs text-slate-500">
-                            {trader.total_trades} trades • {trader.total_trades > 0 ? ((trader.total_wins / trader.total_trades) * 100).toFixed(0) : 0}% win
+                            {safe(trader.total_trades)} trades • {trader.total_trades > 0 ? ((trader.total_wins / trader.total_trades) * 100).toFixed(0) : 0}% win
                           </p>
                         </div>
                       </div>
