@@ -51,7 +51,7 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
       : activeWorkspace === "tournaments"
       ? "w-[430px] max-w-[calc(100vw-85px)]"
       : isDedicatedLeaderboard
-        ? "w-[304px] max-w-[calc(100vw-85px)]"
+        ? "w-[340px] max-w-[calc(100vw-85px)]"
       : activeWorkspace === "settings"
           ? "w-[260px] max-w-[calc(100vw-85px)]"
           : activeWorkspace === "help"

@@ -1,8 +1,5 @@
-import { useMemo, useState } from "react";
-import {
-  ArrowLeft, ArrowUpDown, ChevronDown, Copy, Medal, Search, SortAsc, TrendingDown, TrendingUp, Trophy, User, Users,
-} from "lucide-react";
-import CountryFlag from "@/components/ui/CountryFlag";
+import { useState } from "react";
+import { ChevronDown, X } from "lucide-react";
 import { TraderProfile } from "./TraderProfile";
 
 const FIRST_NAMES = [
@@ -34,12 +31,6 @@ const COUNTRIES = [
   "CO","CL","ZA","NG","KE","GH","EG","MA","TN","AE","SA","IN","PK","BD","JP","KR",
   "CN","TH","VN","MY","SG","RU","TR","PL","CZ","HU","RO","UA","GR","PT","IE","CH",
   "AT","BE","IL","PH","ID","NZ","PE","VE",
-];
-
-const ICON_COLORS = [
-  "#f44336","#e91e63","#9c27b0","#673ab7","#3f51b5","#2196f3","#03a9f4","#00bcd4",
-  "#009688","#4caf50","#8bc34a","#cddc39","#ffc107","#ff9800","#ff5722","#795548",
-  "#607d8b","#1abc9c","#3498db","#9b59b6","#e67e22","#2ecc71","#e74c3c","#1b8ffa",
 ];
 
 function seededRandom(seed: number): () => number {
@@ -94,7 +85,6 @@ const ASSETS = ["EUR/USD","GBP/USD","Gold","Bitcoin","Oil","NASDAQ","Silver","Ap
 const EXPIRATIONS = ["30 sec","1 min","5 min","15 min"];
 const DIRECTIONS = ["Higher","Lower"];
 const EXPERIENCES = ["Beginner","Intermediate","Professional"];
-const ACHIEVEMENTS_LIST = ["Top Trader","High Win Rate","Consistent Performer","Weekly Champion","Monthly Champion","100 Winning Trades","1,000 Completed Trades","Elite Trader"];
 
 function generateTraders(): TraderData[] {
   const rng = seededRandom(99);
@@ -161,18 +151,19 @@ function generateTraders(): TraderData[] {
 
 const ALL_TRADERS = generateTraders();
 
-type SortField = "rank" | "profit" | "winRate" | "trades" | "todayProfit";
-
 const formatProfit = (value: number) => {
   const sign = value >= 0 ? "+" : "";
-  return `${sign}$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `${sign}$${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-const getRankStyle = (rank: number) => {
-  if (rank === 1) return { bg: "bg-yellow-400/20 text-yellow-400 border-yellow-400/40", icon: <Trophy className="h-3.5 w-3.5" /> };
-  if (rank === 2) return { bg: "bg-slate-300/20 text-slate-300 border-slate-300/40", icon: <Medal className="h-3.5 w-3.5" /> };
-  if (rank === 3) return { bg: "bg-amber-600/20 text-amber-600 border-amber-600/40", icon: <Medal className="h-3.5 w-3.5" /> };
-  return { bg: "bg-transparent text-[#7a8aa8] border-transparent", icon: null };
+const COUNTRY_TO_EMOJI: Record<string, string> = {
+  US: "🇺🇸", GB: "🇬🇧", CA: "🇨🇦", AU: "🇦🇺", DE: "🇩🇪", FR: "🇫🇷", IT: "🇮🇹", ES: "🇪🇸",
+  NL: "🇳🇱", SE: "🇸🇪", NO: "🇳🇴", DK: "🇩🇰", FI: "🇫🇮", BR: "🇧🇷", AR: "🇦🇷", MX: "🇲🇽",
+  CO: "🇨🇴", CL: "🇨🇱", ZA: "🇿🇦", NG: "🇳🇬", KE: "🇰🇪", GH: "🇬🇭", EG: "🇪🇬", MA: "🇲🇦",
+  TN: "🇹🇳", AE: "🇦🇪", SA: "🇸🇦", IN: "🇮🇳", PK: "🇵🇰", BD: "🇧🇩", JP: "🇯🇵", KR: "🇰🇷",
+  CN: "🇨🇳", TH: "🇹🇭", VN: "🇻🇳", MY: "🇲🇾", SG: "🇸🇬", RU: "🇷🇺", TR: "🇹🇷", PL: "🇵🇱",
+  CZ: "🇨🇿", HU: "🇭🇺", RO: "🇷🇴", UA: "🇺🇦", GR: "🇬🇷", PT: "🇵🇹", IE: "🇮🇪", CH: "🇨🇭",
+  AT: "🇦🇹", BE: "🇧🇪", IL: "🇮🇱", PH: "🇵🇭", ID: "🇮🇩", NZ: "🇳🇿", PE: "🇵🇪", VE: "🇻🇪",
 };
 
 interface WorkspaceLeaderboardProps {
@@ -180,40 +171,8 @@ interface WorkspaceLeaderboardProps {
 }
 
 export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState<SortField>("profit");
-  const [sortAsc, setSortAsc] = useState(false);
   const [selectedTrader, setSelectedTrader] = useState<TraderData | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const pageSize = 25;
-
-  const filtered = useMemo(() => {
-    let list = ALL_TRADERS;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter((t) => t.name.toLowerCase().includes(q));
-    }
-    list = [...list].sort((a, b) => {
-      let cmp = 0;
-      if (sortField === "profit") cmp = a.totalProfit - b.totalProfit;
-      else if (sortField === "winRate") cmp = a.winRate - b.winRate;
-      else if (sortField === "trades") cmp = a.totalTrades - b.totalTrades;
-      else if (sortField === "todayProfit") cmp = a.todayProfit - b.todayProfit;
-      return sortAsc ? cmp : -cmp;
-    });
-    return list;
-  }, [search, sortField, sortAsc]);
-
-  const totalPages = Math.ceil(filtered.length / pageSize);
-  const paginated = useMemo(() => filtered.slice((page - 1) * pageSize, page * pageSize), [filtered, page]);
-
-  const toggleSort = (field: SortField) => {
-    if (sortField === field) setSortAsc(!sortAsc);
-    else { setSortField(field); setSortAsc(field === "rank"); }
-    setPage(1);
-  };
 
   const handleCopy = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -221,186 +180,95 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const SortHeader = ({ field, label, className }: { field: SortField; label: string; className?: string }) => (
-    <button
-      type="button"
-      onClick={() => toggleSort(field)}
-      className={cn("inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#7a8aa8] transition-colors hover:text-white", className)}
-    >
-      {label}
-      <ArrowUpDown className={cn("h-3 w-3", sortField === field && "text-[#00b95b]")} />
-    </button>
-  );
-
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#191d29] text-white">
+    <div className="flex h-full min-h-0 flex-col bg-[#131722] text-white">
       {/* Header */}
-      <div className="flex h-[58px] shrink-0 items-center gap-2 border-b border-white/[0.08] px-3">
+      <div className="flex h-[58px] shrink-0 items-center gap-2 border-b border-white/[0.08] px-4">
         {onClose ? (
           <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-white/65 transition-colors hover:bg-white/[0.06] hover:text-white" aria-label="Close">
-            <ArrowLeft className="h-4 w-4" />
+            <X className="h-4 w-4" />
           </button>
         ) : null}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-[16px] font-black leading-none text-white">Leaderboard</span>
-            <span className="rounded-full bg-[#00b95b]/12 px-2 py-0.5 text-[10px] font-bold text-[#00b95b]">
+            <span className="text-[16px] font-black leading-none text-white">Leaders</span>
+            <span className="rounded-full bg-[#00e676]/12 px-2 py-0.5 text-[10px] font-bold text-[#00e676]">
               {ALL_TRADERS.toLocaleString()} Traders
             </span>
           </div>
-          <div className="mt-1 text-[11px] font-semibold text-white/42">Today's Top Traders</div>
+          <div className="mt-0.5 text-[11px] font-semibold text-white/42">Today's Top Ranked Traders</div>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="shrink-0 border-b border-white/[0.08] px-3 py-2.5">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Search by username..."
-            className="w-full rounded-[8px] border border-white/[0.1] bg-[#242837] py-2.5 pl-10 pr-4 text-[13px] text-white outline-none placeholder:text-white/30 focus:border-[#007aff]/50"
-          />
+      {/* Dropdown */}
+      <div className="shrink-0 px-4 pt-3">
+        <div className="flex items-center gap-2 rounded-lg bg-[#1e2235] border border-[#2a3045] px-3 py-2.5">
+          <span className="text-[13px]">🥇</span>
+          <span className="flex-1 text-[13px] font-medium text-white">Top ranked traders for 24h</span>
+          <ChevronDown className="h-4 w-4 text-[#787b86]" />
         </div>
       </div>
 
-      {/* Column headers */}
-      <div className="flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-white/35">
-        <SortHeader field="rank" label="#" className="w-8 justify-center" />
-        <span className="w-7" />
-        <span className="w-6" />
-        <span className="flex-1">Trader</span>
-        <SortHeader field="profit" label="Total P/L" className="w-[90px] justify-end" />
-        <SortHeader field="todayProfit" label="Today" className="w-[80px] justify-end" />
-        <SortHeader field="winRate" label="Win Rate" className="w-[65px] justify-end" />
-        <SortHeader field="trades" label="Trades" className="w-[55px] justify-end" />
-        <span className="w-[80px] text-right">Action</span>
+      {/* REAL TRADING subheader */}
+      <div className="shrink-0 px-4 pt-3 pb-1">
+        <div className="flex items-center justify-center rounded-md bg-[#1e2235]/60 py-2">
+          <span className="text-[11px] font-bold tracking-[1.5px] text-[#787b86]">REAL TRADING</span>
+        </div>
       </div>
 
-      {/* List */}
-      <div className="min-h-0 flex-1 overflow-y-auto divide-y divide-white/[0.06]">
-        {paginated.map((trader, idx) => {
-          const rank = (page - 1) * pageSize + idx + 1;
+      {/* Scrollable list */}
+      <div className="min-h-0 flex-1 overflow-y-auto divide-y divide-white/[0.04] px-4">
+        {ALL_TRADERS.slice(0, 100).map((trader) => {
           const isPositive = trader.totalProfit >= 0;
-          const todayPositive = trader.todayProfit >= 0;
-          const initial = trader.name.charAt(0).toUpperCase();
-          const iconColor = ICON_COLORS[hashCode(trader.id) % ICON_COLORS.length];
-          const rankStyle = getRankStyle(rank);
+          const flagEmoji = COUNTRY_TO_EMOJI[trader.country] || "🌐";
 
           return (
             <div
               key={trader.id}
               onClick={() => setSelectedTrader(trader)}
-              className="flex cursor-pointer items-center gap-2 px-3 py-3 transition-colors hover:bg-white/[0.03]"
+              className="flex cursor-pointer items-center gap-3 py-3 transition-colors hover:bg-white/[0.02]"
             >
-              {/* Rank */}
-              <div className={`flex w-8 shrink-0 items-center justify-center gap-1 text-[12px] font-black ${rankStyle.bg}`}>
-                {rankStyle.icon}
-                {rank <= 3 ? "" : rank}
+              {/* Avatar with status badge */}
+              <div className="relative shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#2a3045] bg-[#1e2235] text-[20px]">
+                  {flagEmoji}
+                </div>
+                <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#131722] bg-[#26a69a]" />
               </div>
 
-              {/* Profile Icon */}
-              <div
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white ring-1 ring-white/10"
-                style={{ background: iconColor }}
-              >
-                {initial}
-              </div>
-
-              {/* Country Flag */}
-              <div className="w-6 shrink-0">
-                <CountryFlag code={trader.country} size={20} className="rounded-full ring-1 ring-black/20" />
-              </div>
-
-              {/* Username */}
+              {/* User info */}
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="truncate text-[12px] font-bold text-white">{trader.name}</span>
-                  {trader.isVerified && (
-                    <span className="shrink-0 rounded-full bg-[#007aff]/12 px-1.5 py-0.5 text-[8px] font-bold text-[#007aff]">VERIFIED</span>
-                  )}
+                <div className="truncate text-[14px] font-semibold text-[#f1f2f4]">{trader.name}</div>
+                <div className="mt-0.5">
+                  <span className="text-[11px] text-[#787b86]">Number of trades: </span>
+                  <span className="text-[12px] font-bold text-[#d1d4dc]">{trader.totalTrades.toLocaleString()}</span>
                 </div>
               </div>
 
-              {/* Total Profit */}
-              <span className={`w-[90px] shrink-0 text-right text-[12px] font-black tabular-nums ${isPositive ? "text-[#00c977]" : "text-[#ff6f6f]"}`}>
-                {formatProfit(trader.totalProfit)}
-              </span>
-
-              {/* Today Profit */}
-              <span className={`w-[80px] shrink-0 text-right text-[11px] font-bold tabular-nums ${todayPositive ? "text-[#00c977]" : "text-[#ff6f6f]"}`}>
-                {trader.todayProfit >= 0 ? "+" : ""}${Math.abs(trader.todayProfit).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </span>
-
-              {/* Win Rate */}
-              <span className="w-[65px] shrink-0 text-right text-[12px] font-bold tabular-nums text-white">
-                {trader.winRate.toFixed(0)}%
-              </span>
-
-              {/* Trades */}
-              <span className="w-[55px] shrink-0 text-right text-[11px] font-semibold text-white/60">
-                {trader.totalTrades.toLocaleString()}
-              </span>
-
-              {/* Copy Trade */}
-              <div className="flex w-[80px] shrink-0 justify-end">
-                <button
-                  type="button"
-                  onClick={(e) => handleCopy(e, trader.id)}
-                  className={`inline-flex items-center gap-1 rounded-[6px] px-2.5 py-1.5 text-[10px] font-bold transition-all ${
-                    copiedId === trader.id
-                      ? "bg-[#00b95b] text-white"
-                      : "border border-[#00b95b]/30 bg-[#00b95b]/8 text-[#00b95b] hover:bg-[#00b95b]/20"
-                  }`}
-                >
-                  <Copy className="h-3 w-3" />
-                  {copiedId === trader.id ? "Copied!" : "Copy"}
-                </button>
+              {/* Right metrics */}
+              <div className="shrink-0 text-right">
+                <div className="text-[14px] font-bold text-[#26a69a]">{formatProfit(trader.totalProfit)}</div>
+                <div className="mt-0.5">
+                  <span className="text-[11px] text-[#787b86]">Profitable trades: </span>
+                  <span className="text-[12px] font-bold text-[#d1d4dc]">{trader.winRate.toFixed(0)}%</span>
+                </div>
               </div>
+
+              {/* Copy button on hover */}
+              <button
+                type="button"
+                onClick={(e) => handleCopy(e, trader.id)}
+                className={`ml-1 shrink-0 rounded-md px-2.5 py-1.5 text-[10px] font-bold transition-all ${
+                  copiedId === trader.id
+                    ? "bg-[#26a69a] text-white"
+                    : "border border-[#26a69a]/30 text-[#26a69a] hover:bg-[#26a69a]/10"
+                }`}
+              >
+                {copiedId === trader.id ? "Copied!" : "Copy"}
+              </button>
             </div>
           );
         })}
-
-        {filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-white/40">
-            <Users className="mb-2 h-8 w-8" />
-            <p className="text-[13px]">No traders found</p>
-          </div>
-        )}
-      </div>
-
-      {/* Pagination */}
-      <div className="shrink-0 border-t border-white/[0.08] px-3 py-3">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] text-white/42">
-            {filtered.length.toLocaleString()} traders
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="inline-flex items-center gap-1 rounded-[6px] bg-[#242837] px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-[#2e3348] disabled:opacity-40"
-            >
-              <ArrowLeft className="h-3 w-3" />
-              Prev
-            </button>
-            <span className="text-[11px] text-white/42 min-w-[60px] text-center">
-              {page} / {totalPages.toLocaleString()}
-            </span>
-            <button
-              type="button"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="inline-flex items-center gap-1 rounded-[6px] bg-[#242837] px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-[#2e3348] disabled:opacity-40"
-            >
-              Next
-              <ChevronDown className="h-3 w-3 -rotate-90" />
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Trader Profile Modal */}
@@ -414,7 +282,3 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
     </div>
   );
 };
-
-function cn(...classes: (string | boolean | undefined | null)[]): string {
-  return classes.filter(Boolean).join(" ");
-}
