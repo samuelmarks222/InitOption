@@ -163,7 +163,6 @@ interface WorkspaceLeaderboardProps {
 
 export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => {
   const [selectedTrader, setSelectedTrader] = useState<TraderData | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [watchingIds, setWatchingIds] = useState<Set<string>>(new Set());
   const [showWatching, setShowWatching] = useState(false);
 
@@ -174,18 +173,7 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
 
   const displayTraders = showWatching ? watchedTraders : ALL_TRADERS.slice(0, 100);
 
-  const handleCopy = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    setCopiedId(id);
-    toast.success("Trader added to copy portfolio", {
-      description: "Default copy settings applied. Open trader profile to customize.",
-      duration: 3000,
-    });
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
   const handleCopyWithSettings = (id: string, settings?: CopySettings) => {
-    setCopiedId(id);
     if (settings) {
       toast.success(`Now copying ${ALL_TRADERS.find(t => t.id === id)?.name || id}`, {
         description: `$${settings.amount.toLocaleString()} investment, ${settings.riskMultiplier}x risk, max ${settings.maxLoss.toLocaleString()} daily loss`,
@@ -196,7 +184,6 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
         duration: 3000,
       });
     }
-    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const handleWatch = (id: string) => {
@@ -332,18 +319,7 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
                   <div className="mt-0.5 text-[11px] text-[#d1d4dc]">{trader.winRate.toFixed(1)}% win rate</div>
                 </div>
 
-                {/* Copy button */}
-                <button
-                  type="button"
-                  onClick={(e) => handleCopy(e, trader.id)}
-                  className={`ml-1 shrink-0 rounded-md px-2.5 py-1.5 text-[10px] font-bold transition-all ${
-                    copiedId === trader.id
-                      ? "bg-[#26a69a] text-white"
-                      : "border border-[#26a69a]/20 text-[#26a69a]/80 hover:bg-[#26a69a]/10 hover:text-[#26a69a]"
-                  }`}
-                >
-                  {copiedId === trader.id ? "Copied!" : "Copy"}
-                </button>
+
               </div>
             );
           })
