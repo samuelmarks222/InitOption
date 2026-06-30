@@ -15,6 +15,7 @@ import {
   BarChart3,
   Calendar,
   ChevronDown,
+  ChevronRight,
   Crown,
   DollarSign,
   Flag,
