@@ -15,16 +15,6 @@ const ACHIEVEMENTS = [
   { icon: Shield, label: "Elite Trader", color: "text-cyan-400", bg: "bg-cyan-400/12" },
 ];
 
-const COUNTRY_TO_EMOJI: Record<string, string> = {
-  US: "🇺🇸", GB: "🇬🇧", CA: "🇨🇦", AU: "🇦🇺", DE: "🇩🇪", FR: "🇫🇷", IT: "🇮🇹", ES: "🇪🇸",
-  NL: "🇳🇱", SE: "🇸🇪", NO: "🇳🇴", DK: "🇩🇰", FI: "🇫🇮", BR: "🇧🇷", AR: "🇦🇷", MX: "🇲🇽",
-  CO: "🇨🇴", CL: "🇨🇱", ZA: "🇿🇦", NG: "🇳🇬", KE: "🇰🇪", GH: "🇬🇭", EG: "🇪🇬", MA: "🇲🇦",
-  TN: "🇹🇳", AE: "🇦🇪", SA: "🇸🇦", IN: "🇮🇳", PK: "🇵🇰", BD: "🇧🇩", JP: "🇯🇵", KR: "🇰🇷",
-  CN: "🇨🇳", TH: "🇹🇭", VN: "🇻🇳", MY: "🇲🇾", SG: "🇸🇬", RU: "🇷🇺", TR: "🇹🇷", PL: "🇵🇱",
-  CZ: "🇨🇿", HU: "🇭🇺", RO: "🇷🇴", UA: "🇺🇦", GR: "🇬🇷", PT: "🇵🇹", IE: "🇮🇪", CH: "🇨🇭",
-  AT: "🇦🇹", BE: "🇧🇪", IL: "🇮🇱", PH: "🇵🇭", ID: "🇮🇩", NZ: "🇳🇿", PE: "🇵🇪", VE: "🇻🇪",
-};
-
 const formatMoney = (value: number) => {
   const sign = value >= 0 ? "+" : "";
   return `${sign}$${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -47,7 +37,6 @@ export const TraderProfile = ({ trader, onClose, onCopy }: TraderProfileProps) =
   const [riskMultiplier, setRiskMultiplier] = useState(1);
 
   const isPositive = trader.totalProfit >= 0;
-  const flagEmoji = COUNTRY_TO_EMOJI[trader.country] || "🌐";
 
   const tabs: { id: TabId; label: string }[] = [
     { id: "trading", label: "Trading Statistics" },
@@ -87,9 +76,12 @@ export const TraderProfile = ({ trader, onClose, onCopy }: TraderProfileProps) =
           <div className="flex items-center gap-5 px-6 pb-5">
             {/* Large avatar with green ring */}
             <div className="flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-full border-[3px] border-[#26a69a]">
-              <div className="flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-full bg-[#24293d] text-[32px]">
-                {flagEmoji}
-              </div>
+              <img
+                src={trader.flagUrl}
+                alt=""
+                className="h-[76px] w-[76px] rounded-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
             </div>
 
             {/* Stats Grid */}
@@ -141,12 +133,14 @@ export const TraderProfile = ({ trader, onClose, onCopy }: TraderProfileProps) =
             </button>
             <button
               type="button"
+              onClick={() => alert(`Watchlist: Added ${trader.name} to watchlist`)}
               className="flex-1 rounded-md border border-[#2a3045] bg-[#24293d] px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#2a3045]"
             >
               Watch
             </button>
             <button
               type="button"
+              onClick={() => alert(`Messenger: Opening chat with ${trader.name}`)}
               className="flex-1 rounded-md border border-[#2a3045] bg-[#24293d] px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#2a3045]"
             >
               Message

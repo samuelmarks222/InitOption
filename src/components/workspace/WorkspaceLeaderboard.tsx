@@ -51,6 +51,7 @@ export type TraderData = {
   id: string;
   name: string;
   country: string;
+  flagUrl: string;
   totalProfit: number;
   todayProfit: number;
   winRate: number;
@@ -94,6 +95,7 @@ function generateTraders(): TraderData[] {
     const ln = LAST_NAMES[Math.floor(i / FIRST_NAMES.length) % LAST_NAMES.length];
     const name = `${fn} ${ln}`;
     const country = COUNTRIES[Math.floor(rng() * COUNTRIES.length)];
+    const flagUrl = `https://flagcdn.com/w160/${country.toLowerCase()}.png`;
     const totalTrades = Math.floor(rng() * 1500 + 10);
     const wins = Math.floor(totalTrades * (0.45 + rng() * 0.4));
     const losses = totalTrades - wins;
@@ -138,7 +140,7 @@ function generateTraders(): TraderData[] {
     const monthlyProfits = Array.from({ length: 12 }, () => Number(((rng() - 0.3) * 15000).toFixed(2)));
 
     traders.push({
-      id: `tr-${i}`, name, country, totalProfit, todayProfit, winRate, totalTrades, wins, losses,
+      id: `tr-${i}`, name, country, flagUrl, totalProfit, todayProfit, winRate, totalTrades, wins, losses,
       avgReturn, highestWin, longestStreak, currentStreak, avgDuration, avgAmount,
       preferredAssets, favExpirations, experience, memberSince, isOnline, isVerified,
       followers, successRate, last30DaysProfit, riskLevel, minCopyAmount,
@@ -156,15 +158,6 @@ const formatProfit = (value: number) => {
   return `${sign}$${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-const COUNTRY_TO_EMOJI: Record<string, string> = {
-  US: "🇺🇸", GB: "🇬🇧", CA: "🇨🇦", AU: "🇦🇺", DE: "🇩🇪", FR: "🇫🇷", IT: "🇮🇹", ES: "🇪🇸",
-  NL: "🇳🇱", SE: "🇸🇪", NO: "🇳🇴", DK: "🇩🇰", FI: "🇫🇮", BR: "🇧🇷", AR: "🇦🇷", MX: "🇲🇽",
-  CO: "🇨🇴", CL: "🇨🇱", ZA: "🇿🇦", NG: "🇳🇬", KE: "🇰🇪", GH: "🇬🇭", EG: "🇪🇬", MA: "🇲🇦",
-  TN: "🇹🇳", AE: "🇦🇪", SA: "🇸🇦", IN: "🇮🇳", PK: "🇵🇰", BD: "🇧🇩", JP: "🇯🇵", KR: "🇰🇷",
-  CN: "🇨🇳", TH: "🇹🇭", VN: "🇻🇳", MY: "🇲🇾", SG: "🇸🇬", RU: "🇷🇺", TR: "🇹🇷", PL: "🇵🇱",
-  CZ: "🇨🇿", HU: "🇭🇺", RO: "🇷🇴", UA: "🇺🇦", GR: "🇬🇷", PT: "🇵🇹", IE: "🇮🇪", CH: "🇨🇭",
-  AT: "🇦🇹", BE: "🇧🇪", IL: "🇮🇱", PH: "🇵🇭", ID: "🇮🇩", NZ: "🇳🇿", PE: "🇵🇪", VE: "🇻🇪",
-};
 
 interface WorkspaceLeaderboardProps {
   onClose?: () => void;
@@ -220,7 +213,6 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
       <div className="min-h-0 flex-1 overflow-y-auto divide-y divide-white/[0.04] px-4">
         {ALL_TRADERS.slice(0, 100).map((trader) => {
           const isPositive = trader.totalProfit >= 0;
-          const flagEmoji = COUNTRY_TO_EMOJI[trader.country] || "🌐";
 
           return (
             <div
@@ -230,9 +222,12 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
             >
               {/* Avatar with status badge */}
               <div className="relative shrink-0">
-                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#2a3045] bg-[#1e2235] text-[20px]">
-                  {flagEmoji}
-                </div>
+                <img
+                  src={trader.flagUrl}
+                  alt=""
+                  className="h-10 w-10 rounded-full border border-[#2a3045] object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
                 <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#131722] bg-[#26a69a]" />
               </div>
 
