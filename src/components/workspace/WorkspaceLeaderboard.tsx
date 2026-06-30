@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Bell, BellOff, ChevronDown, Eye, EyeOff, MessageCircle, Star, Trophy, Users, X } from "lucide-react";
 import { TraderProfile } from "./TraderProfile";
 
 const FIRST_NAMES = [
@@ -39,12 +39,6 @@ function seededRandom(seed: number): () => number {
     s = (Math.imul(1103515245, s) + 12345) >>> 0;
     return (s & 0x7fffffff) / 0x7fffffff;
   };
-}
-
-function hashCode(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
-  return hash >>> 0;
 }
 
 export type TraderData = {
@@ -158,7 +152,6 @@ const formatProfit = (value: number) => {
   return `${sign}$${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-
 interface WorkspaceLeaderboardProps {
   onClose?: () => void;
 }
@@ -166,6 +159,15 @@ interface WorkspaceLeaderboardProps {
 export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => {
   const [selectedTrader, setSelectedTrader] = useState<TraderData | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [watchingIds, setWatchingIds] = useState<Set<string>>(new Set());
+  const [showWatching, setShowWatching] = useState(false);
+
+  const watchedTraders = useMemo(
+    () => ALL_TRADERS.filter((t) => watchingIds.has(t.id)),
+    [watchingIds]
+  );
+
+  const displayTraders = showWatching ? watchedTraders : ALL_TRADERS.slice(0, 100);
 
   const handleCopy = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -173,97 +175,155 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const handleWatch = (id: string) => {
+    setWatchingIds((prev) => new Set(prev).add(id));
+  };
+
+  const handleUnwatch = (id: string) => {
+    setWatchingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
+
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#131722] text-white">
+    <div
+      className="flex h-full min-h-0 flex-col text-white"
+      style={{ background: "linear-gradient(180deg, #232637 0%, #282D41 100%)" }}
+    >
       {/* Header */}
-      <div className="flex h-[58px] shrink-0 items-center gap-2 border-b border-white/[0.08] px-4">
+      <div className="flex h-[58px] shrink-0 items-center gap-2 border-b border-white/[0.06] px-4">
         {onClose ? (
-          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-white/65 transition-colors hover:bg-white/[0.06] hover:text-white" aria-label="Close">
+          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white" aria-label="Close">
             <X className="h-4 w-4" />
           </button>
         ) : null}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="text-[16px] font-black leading-none text-white">Leaders</span>
-            <span className="rounded-full bg-[#00e676]/12 px-2 py-0.5 text-[10px] font-bold text-[#00e676]">
+            <span className="rounded-full bg-[#26a69a]/12 px-2 py-0.5 text-[10px] font-bold text-[#26a69a]">
               {ALL_TRADERS.length.toLocaleString()} Traders
             </span>
+            {watchingIds.size > 0 && (
+              <span className="rounded-full bg-[#f4b742]/12 px-2 py-0.5 text-[10px] font-bold text-[#f4b742]">
+                {watchingIds.size} Watching
+              </span>
+            )}
           </div>
-          <div className="mt-0.5 text-[11px] font-semibold text-white/42">Today's Top Ranked Traders</div>
+          <div className="mt-0.5 text-[11px] font-semibold text-white/35">Today's Top Ranked Traders</div>
         </div>
       </div>
 
-      {/* Dropdown */}
+      {/* Dropdown + Watching toggle */}
       <div className="shrink-0 px-4 pt-3">
-        <div className="flex items-center gap-2 rounded-lg bg-[#1e2235] border border-[#2a3045] px-3 py-2.5">
+        <div className="flex items-center gap-2 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3 py-2.5 transition-all hover:bg-white/[0.06]">
           <span className="text-[13px]">🥇</span>
           <span className="flex-1 text-[13px] font-medium text-white">Top ranked traders for 24h</span>
           <ChevronDown className="h-4 w-4 text-[#787b86]" />
         </div>
+
+        {/* Watching toggle */}
+        {watchingIds.size > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowWatching(!showWatching)}
+            className="mt-2 flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-[12px] font-semibold transition-all"
+            style={{
+              borderColor: showWatching ? "#26a69a" : "rgba(255,255,255,0.06)",
+              background: showWatching ? "rgba(38,166,154,0.08)" : "rgba(255,255,255,0.03)",
+              color: showWatching ? "#26a69a" : "#787b86",
+            }}
+          >
+            {showWatching ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            {showWatching ? `Show All Traders` : `View Watching List (${watchingIds.size})`}
+          </button>
+        )}
       </div>
 
       {/* REAL TRADING subheader */}
       <div className="shrink-0 px-4 pt-3 pb-1">
-        <div className="flex items-center justify-center rounded-md bg-[#1e2235]/60 py-2">
-          <span className="text-[11px] font-bold tracking-[1.5px] text-[#787b86]">REAL TRADING</span>
+        <div className="flex items-center justify-center rounded-md bg-white/[0.03] py-2">
+          <span className="text-[11px] font-bold tracking-[1.5px] text-[#787b86]/60">
+            {showWatching ? "WATCHING" : "REAL TRADING"}
+          </span>
         </div>
       </div>
 
       {/* Scrollable list */}
-      <div className="min-h-0 flex-1 overflow-y-auto divide-y divide-white/[0.04] px-4">
-        {ALL_TRADERS.slice(0, 100).map((trader) => {
-          const isPositive = trader.totalProfit >= 0;
+      <div className="min-h-0 flex-1 overflow-y-auto space-y-0.5 px-4 pb-2">
+        {displayTraders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-[#787b86]">
+            <Users className="mb-2 h-8 w-8 opacity-30" />
+            <p className="text-[13px]">No watched traders yet</p>
+            <p className="mt-1 text-[11px]">Click Watch on a trader profile to start following</p>
+          </div>
+        ) : (
+          displayTraders.map((trader) => {
+            const isPositive = trader.totalProfit >= 0;
+            const isWatched = watchingIds.has(trader.id);
 
-          return (
-            <div
-              key={trader.id}
-              onClick={() => setSelectedTrader(trader)}
-              className="flex cursor-pointer items-center gap-3 py-3 transition-colors hover:bg-white/[0.02]"
-            >
-              {/* Avatar with status badge */}
-              <div className="relative shrink-0">
-                <img
-                  src={trader.flagUrl}
-                  alt=""
-                  className="h-10 w-10 rounded-full border border-[#2a3045] object-cover"
-                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                />
-                <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#131722] bg-[#26a69a]" />
-              </div>
-
-              {/* User info */}
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[14px] font-semibold text-[#f1f2f4]">{trader.name}</div>
-                <div className="mt-0.5">
-                  <span className="text-[11px] text-[#787b86]">Number of trades: </span>
-                  <span className="text-[12px] font-bold text-[#d1d4dc]">{trader.totalTrades.toLocaleString()}</span>
-                </div>
-              </div>
-
-              {/* Right metrics */}
-              <div className="shrink-0 text-right">
-                <div className="text-[14px] font-bold text-[#26a69a]">{formatProfit(trader.totalProfit)}</div>
-                <div className="mt-0.5">
-                  <span className="text-[11px] text-[#787b86]">Profitable trades: </span>
-                  <span className="text-[12px] font-bold text-[#d1d4dc]">{trader.winRate.toFixed(0)}%</span>
-                </div>
-              </div>
-
-              {/* Copy button on hover */}
-              <button
-                type="button"
-                onClick={(e) => handleCopy(e, trader.id)}
-                className={`ml-1 shrink-0 rounded-md px-2.5 py-1.5 text-[10px] font-bold transition-all ${
-                  copiedId === trader.id
-                    ? "bg-[#26a69a] text-white"
-                    : "border border-[#26a69a]/30 text-[#26a69a] hover:bg-[#26a69a]/10"
-                }`}
+            return (
+              <div
+                key={trader.id}
+                onClick={() => setSelectedTrader(trader)}
+                className="group flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 transition-all hover:bg-white/[0.04] hover:shadow-sm active:scale-[0.99]"
               >
-                {copiedId === trader.id ? "Copied!" : "Copy"}
-              </button>
-            </div>
-          );
-        })}
+                {/* Avatar with status badge */}
+                <div className="relative shrink-0">
+                  <img
+                    src={trader.flagUrl}
+                    alt=""
+                    className="h-10 w-10 rounded-full border border-white/[0.08] object-cover ring-1 ring-white/[0.04] transition-all group-hover:ring-[#26a69a]/30"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                  <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#232637] bg-[#26a69a]" />
+                  {isWatched && (
+                    <span className="absolute -bottom-0.5 -left-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#f4b742] border-2 border-[#232637]">
+                      <Star className="h-2 w-2 text-white" />
+                    </span>
+                  )}
+                </div>
+
+                {/* User info */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-[14px] font-semibold text-[#f1f2f4] group-hover:text-white">{trader.name}</span>
+                    {isWatched && (
+                      <span className="shrink-0 rounded-full bg-[#f4b742]/12 px-1.5 py-0.5 text-[8px] font-bold text-[#f4b742]">WATCHING</span>
+                    )}
+                  </div>
+                  <div className="mt-0.5">
+                    <span className="text-[11px] text-[#787b86]">Number of trades: </span>
+                    <span className="text-[12px] font-bold text-[#d1d4dc]">{trader.totalTrades.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* Right metrics */}
+                <div className="shrink-0 text-right">
+                  <div className="text-[14px] font-bold text-[#26a69a]">{formatProfit(trader.totalProfit)}</div>
+                  <div className="mt-0.5">
+                    <span className="text-[11px] text-[#787b86]">Profitable trades: </span>
+                    <span className="text-[12px] font-bold text-[#d1d4dc]">{trader.winRate.toFixed(0)}%</span>
+                  </div>
+                </div>
+
+                {/* Copy button */}
+                <button
+                  type="button"
+                  onClick={(e) => handleCopy(e, trader.id)}
+                  className={`ml-1 shrink-0 rounded-md px-2.5 py-1.5 text-[10px] font-bold transition-all ${
+                    copiedId === trader.id
+                      ? "bg-[#26a69a] text-white"
+                      : "border border-[#26a69a]/20 text-[#26a69a]/80 hover:bg-[#26a69a]/10 hover:text-[#26a69a]"
+                  }`}
+                >
+                  {copiedId === trader.id ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            );
+          })
+        )}
       </div>
 
       {/* Trader Profile Modal */}
@@ -272,6 +332,9 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
           trader={selectedTrader}
           onClose={() => setSelectedTrader(null)}
           onCopy={(id) => console.log("Copy trader:", id)}
+          onWatch={handleWatch}
+          onUnwatch={handleUnwatch}
+          isWatched={watchingIds.has(selectedTrader.id)}
         />
       )}
     </div>

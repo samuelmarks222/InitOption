@@ -1,8 +1,9 @@
 import { useState } from "react";
 import {
-  Flame, Medal, Shield, Star, Trophy, TrendingUp, X, Zap,
+  Bell, BellOff, Flame, Medal, MessageCircle, Shield, Star, Trophy, TrendingUp, X, Zap,
 } from "lucide-react";
 import type { TraderData } from "./WorkspaceLeaderboard";
+import { ChatDialog } from "./ChatDialog";
 
 const ACHIEVEMENTS = [
   { icon: Trophy, label: "Top Trader", color: "text-yellow-400", bg: "bg-yellow-400/12" },
@@ -26,11 +27,16 @@ interface TraderProfileProps {
   trader: TraderData;
   onClose: () => void;
   onCopy: (id: string) => void;
+  onWatch: (id: string) => void;
+  onUnwatch: (id: string) => void;
+  isWatched: boolean;
 }
 
-export const TraderProfile = ({ trader, onClose, onCopy }: TraderProfileProps) => {
+export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isWatched }: TraderProfileProps) => {
   const [activeTab, setActiveTab] = useState<TabId>("trading");
   const [showCopyModal, setShowCopyModal] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [showWatchConfirm, setShowWatchConfirm] = useState(false);
   const [copyAmount, setCopyAmount] = useState(trader.minCopyAmount);
   const [maxLoss, setMaxLoss] = useState(500);
   const [maxTrades, setMaxTrades] = useState(10);
@@ -133,17 +139,35 @@ export const TraderProfile = ({ trader, onClose, onCopy }: TraderProfileProps) =
             </button>
             <button
               type="button"
-              onClick={() => alert(`Watchlist: Added ${trader.name} to watchlist`)}
-              className="flex-1 rounded-md border border-[#2a3045] bg-[#24293d] px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#2a3045]"
+              onClick={() => {
+                if (isWatched) {
+                  onUnwatch(trader.id);
+                } else {
+                  onWatch(trader.id);
+                  setShowWatchConfirm(true);
+                  setTimeout(() => setShowWatchConfirm(false), 3000);
+                }
+              }}
+              className={`flex-1 rounded-md border px-3 py-2 text-[13px] font-semibold text-white transition-all ${
+                isWatched
+                  ? "border-[#26a69a]/40 bg-[#26a69a]/10 text-[#26a69a]"
+                  : "border-[#2a3045] bg-[#24293d] hover:bg-[#2a3045]"
+              }`}
             >
-              Watch
+              <span className="flex items-center justify-center gap-1.5">
+                {isWatched ? <BellOff className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
+                {isWatched ? "Watching" : "Watch"}
+              </span>
             </button>
             <button
               type="button"
-              onClick={() => alert(`Messenger: Opening chat with ${trader.name}`)}
+              onClick={() => setShowChat(true)}
               className="flex-1 rounded-md border border-[#2a3045] bg-[#24293d] px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#2a3045]"
             >
-              Message
+              <span className="flex items-center justify-center gap-1.5">
+                <MessageCircle className="h-3.5 w-3.5" />
+                Message
+              </span>
             </button>
           </div>
 
@@ -274,6 +298,26 @@ export const TraderProfile = ({ trader, onClose, onCopy }: TraderProfileProps) =
             </div>
           </div>
         </div>
+      )}
+
+      {/* Watch confirmation toast */}
+      {showWatchConfirm && (
+        <div className="fixed bottom-6 left-1/2 z-[500] -translate-x-1/2 animate-fade-in">
+          <div className="flex items-center gap-3 rounded-xl border border-[#26a69a]/40 bg-[#1c2030] px-5 py-3.5 shadow-2xl">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#26a69a]/20">
+              <Bell className="h-4 w-4 text-[#26a69a]" />
+            </div>
+            <div>
+              <p className="text-[13px] font-bold text-white">You have successfully started watching this trader.</p>
+              <p className="mt-0.5 text-[11px] text-[#787b86]">You will receive notifications when {trader.name} places a trade.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Dialog */}
+      {showChat && (
+        <ChatDialog trader={trader} onClose={() => setShowChat(false)} />
       )}
     </>
   );
