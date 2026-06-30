@@ -97,11 +97,14 @@ function generateTraders(): TraderData[] {
     const losses = totalTrades - wins;
     const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
     const avgReturn = Number((rng() * 60 + 3).toFixed(1));
-    // Heavy-tail profit distribution: most traders near zero, few very high
-    const profitRaw = -Math.log(1 - rng() + 0.00001) * 48000;
-    const profitJitter = (rng() - 0.5) * 35000;
-    const isLoss = rng() < 0.08;
-    const totalProfit = Number((isLoss ? -(Math.abs(profitRaw * rng() * 0.6) + 500) : profitRaw + profitJitter).toFixed(2));
+    // Pareto distribution: top 100 of 12,845 span ~$1.5K to ~$43K
+    const paretoAlpha = 1.37;
+    const paretoXm = 44;
+    const u = rng();
+    const profitRaw = paretoXm / Math.pow(u, 1 / paretoAlpha);
+    const profitJitter = (rng() - 0.5) * 800;
+    const isLoss = rng() < 0.04;
+    const totalProfit = Number((isLoss ? -(rng() * 800 + 200) : Math.min(profitRaw + profitJitter, 48000)).toFixed(2));
     const todayProfit = Number(((rng() - 0.45) * 12000).toFixed(2));
     const highestWin = Number((rng() * 15000 + 200).toFixed(2));
     const longestStreak = Math.floor(rng() * 25 + 1);
