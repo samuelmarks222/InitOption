@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Bell, BellOff, ChevronDown, Eye, EyeOff, MessageCircle, Star, Trophy, Users, X } from "lucide-react";
+import { toast } from "sonner";
 import { TraderProfile } from "./TraderProfile";
+import type { CopySettings } from "./TraderProfile";
 
 const FIRST_NAMES = [
   "James","Mary","John","Patricia","Robert","Jennifer","Michael","Linda","David","Elizabeth",
@@ -172,6 +174,25 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
   const handleCopy = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     setCopiedId(id);
+    toast.success("Trader added to copy portfolio", {
+      description: "Default copy settings applied. Open trader profile to customize.",
+      duration: 3000,
+    });
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleCopyWithSettings = (id: string, settings?: CopySettings) => {
+    setCopiedId(id);
+    if (settings) {
+      toast.success(`Now copying ${ALL_TRADERS.find(t => t.id === id)?.name || id}`, {
+        description: `$${settings.amount.toLocaleString()} investment, ${settings.riskMultiplier}x risk, max ${settings.maxLoss.toLocaleString()} daily loss`,
+        duration: 5000,
+      });
+    } else {
+      toast.success("Trader added to copy portfolio", {
+        duration: 3000,
+      });
+    }
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -333,7 +354,7 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
         <TraderProfile
           trader={selectedTrader}
           onClose={() => setSelectedTrader(null)}
-          onCopy={(id) => console.log("Copy trader:", id)}
+          onCopy={handleCopyWithSettings}
           onWatch={handleWatch}
           onUnwatch={handleUnwatch}
           isWatched={watchingIds.has(selectedTrader.id)}

@@ -23,10 +23,18 @@ const formatMoney = (value: number) => {
 
 type TabId = "trading" | "social" | "achievements";
 
+export interface CopySettings {
+  amount: number;
+  maxLoss: number;
+  maxTrades: number;
+  riskMultiplier: number;
+  stopCondition: string;
+}
+
 interface TraderProfileProps {
   trader: TraderData;
   onClose: () => void;
-  onCopy: (id: string) => void;
+  onCopy: (id: string, settings?: CopySettings) => void;
   onWatch: (id: string) => void;
   onUnwatch: (id: string) => void;
   isWatched: boolean;
@@ -41,6 +49,7 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
   const [maxLoss, setMaxLoss] = useState(500);
   const [maxTrades, setMaxTrades] = useState(10);
   const [riskMultiplier, setRiskMultiplier] = useState(1);
+  const [stopCondition, setStopCondition] = useState("never");
 
   const isPositive = trader.totalProfit >= 0;
 
@@ -280,7 +289,7 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
                 </div>
                 <div>
                   <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-[#787b86]">Stop Copying</label>
-                  <select className="w-full rounded-lg border border-[#2a3045] bg-[#24293d] py-3 px-4 text-[14px] font-bold text-white outline-none focus:border-[#2196f3]/50">
+                  <select value={stopCondition} onChange={(e) => setStopCondition(e.target.value)} className="w-full rounded-lg border border-[#2a3045] bg-[#24293d] py-3 px-4 text-[14px] font-bold text-white outline-none focus:border-[#2196f3]/50">
                     <option value="never">Never</option>
                     <option value="loss">On max loss</option>
                     <option value="profit">On target profit</option>
@@ -290,7 +299,7 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
               </div>
               <button
                 type="button"
-                onClick={() => { onCopy(trader.id); setShowCopyModal(false); }}
+                onClick={() => { onCopy(trader.id, { amount: copyAmount, maxLoss, maxTrades, riskMultiplier, stopCondition }); setShowCopyModal(false); }}
                 className="w-full rounded-lg bg-[#26a69a] py-3.5 text-[14px] font-bold text-white transition-all hover:bg-[#1f8f84]"
               >
                 Start Copying
