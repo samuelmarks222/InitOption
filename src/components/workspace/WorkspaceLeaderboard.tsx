@@ -193,7 +193,7 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
           <div className="flex items-center gap-2">
             <span className="text-[16px] font-black leading-none text-white">Leaders</span>
             <span className="rounded-full bg-[#00e676]/12 px-2 py-0.5 text-[10px] font-bold text-[#00e676]">
-              {ALL_TRADERS.toLocaleString()} Traders
+              {ALL_TRADERS.length.toLocaleString()} Traders
             </span>
           </div>
           <div className="mt-0.5 text-[11px] font-semibold text-white/42">Today's Top Ranked Traders</div>
