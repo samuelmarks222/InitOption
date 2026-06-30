@@ -60,7 +60,7 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
 
   return (
     <div
-      className={`h-full flex flex-col border-r z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.5)] transform transition-transform duration-300 ${workspaceWidthClass}`}
+      className={`h-full flex flex-col border-r z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.5)] ${workspaceWidthClass}`}
       style={{ background: "var(--trading-workspace-panel-bg)", borderRightColor: "var(--trading-border-color)" }}
     >
       
