@@ -3,6 +3,12 @@ import { Search, Trophy, X, Award, TrendingUp, DollarSign, BarChart3, Target } f
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { type Database } from "@/integrations/supabase/types";
+
+const safe = (v: unknown): string => {
+  if (v == null) return "";
+  if (typeof v === "object") return JSON.stringify(v);
+  return String(v);
+};
 import { cn } from "@/lib/utils";
 import { usePublicTournaments } from "@/hooks/usePublicTournaments";
 import { type TournamentRow } from "@/lib/publicTournaments";
@@ -467,10 +473,10 @@ export const TournamentDirectory = ({ onOpenDetails, onEnterTournament, onClose,
                       key={entry.id}
                       className="rounded-[10px] border border-[#30405f] bg-[#262f47] px-3 py-2.5"
                     >
-                      <p className="text-[13px] font-semibold text-white">{entry.tournament?.title}</p>
+                      <p className="text-[13px] font-semibold text-white">{safe(entry.tournament?.title ?? "Unknown Tournament")}</p>
                       <p className="mt-1 text-[12px] text-[#95a9cf]">
                         Balance: {formatMoney(entry.current_balance)} - Updated{" "}
-                        {new Date(entry.updated_at).toLocaleDateString()}
+                        {safe(new Date(entry.updated_at).toLocaleDateString())}
                       </p>
                     </div>
                   ))}
