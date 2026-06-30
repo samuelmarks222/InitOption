@@ -513,16 +513,13 @@ export const TournamentDetailOverlay = ({
                               <span className="w-6 shrink-0 text-center text-[12px] font-bold text-[#99adcf]">
                                 {entry.position}
                               </span>
-                              {entry.avatar_url ? (
-                                <img src={entry.avatar_url} alt={entry.trader_name ?? "Trader"} className="h-7 w-7 shrink-0 rounded-full object-cover" />
+                              {entry.country_code ? (
+                                <CountryFlag code={entry.country_code} size={24} className="h-7 w-7 shrink-0 rounded-full" />
                               ) : (
                                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a3340]">
                                   <User className="h-3.5 w-3.5 text-[#7a8aa8]" />
                                 </div>
                               )}
-                              {entry.country_code ? (
-                                <CountryFlag code={entry.country_code} size={16} className="rounded-full shrink-0" />
-                              ) : null}
                               <span className="min-w-0 flex-1 truncate font-semibold text-[#e8f0ff]">
                                 {isMe ? "You" : entry.trader_name || `Trader ${entry.position}`}
                               </span>

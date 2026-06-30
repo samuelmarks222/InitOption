@@ -812,12 +812,12 @@ const TournamentDetailView = ({
           {hasJoined && userPosition && (
             <div className="rounded-2xl border border-[#007aff]/30 bg-[#1e2530] p-4">
               <div className="mb-3 flex items-center gap-3">
-                {userPosition.avatar_url ? (
-                  <img src={userPosition.avatar_url} alt={userPosition.trader_name ?? "You"} className="h-10 w-10 rounded-full object-cover" />
-                ) : userPosition.country_code ? (
-                  <CountryFlag code={userPosition.country_code} size={36} className="h-10 w-10 rounded-full" />
+                {userPosition.country_code ? (
+                  <CountryFlag code={userPosition.country_code} size={36} className="h-10 w-10 shrink-0 rounded-full" />
                 ) : (
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2a3340]" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2a3340]">
+                    <User className="h-5 w-5 text-[#7a8aa8]" />
+                  </div>
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[14px] font-bold text-white">
@@ -894,16 +894,13 @@ const TournamentDetailView = ({
                           <span className="w-5 shrink-0 text-center text-[12px] font-bold text-[#7a8aa8]">
                             {entry.position}
                           </span>
-                          {entry.avatar_url ? (
-                            <img src={entry.avatar_url} alt={entry.trader_name ?? "Trader"} className="h-7 w-7 rounded-full object-cover" />
+                          {entry.country_code ? (
+                            <CountryFlag code={entry.country_code} size={24} className="h-7 w-7 shrink-0 rounded-full" />
                           ) : (
                             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a3340]">
                               <User className="h-3.5 w-3.5 text-[#7a8aa8]" />
                             </div>
                           )}
-                          {entry.country_code ? (
-                            <CountryFlag code={entry.country_code} size={16} className="rounded-full" />
-                          ) : null}
                           <span className="truncate font-semibold text-white">
                             {isMe ? "You" : entry.trader_name || `Trader ${entry.position}`}
                           </span>
