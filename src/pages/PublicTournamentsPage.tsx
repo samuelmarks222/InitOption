@@ -113,14 +113,14 @@ const FEATURES = [
 ];
 
 const RULES = [
-  "Every participant starts with the same tournament balance.",
-  "Rankings are based on the final account balance at tournament end.",
+  "Every participant trades under the same starting conditions.",
+  "Rankings are based on final tournament performance.",
   "All trades must be placed within the tournament period.",
-  "Fraudulent activity or multiple accounts leads to immediate disqualification.",
+  "Fraudulent activity leads to immediate disqualification.",
   "Tournament decisions made by the administration are final.",
-  "Rebuys are allowed only where specified in the tournament rules.",
-  "Prizes are distributed within 24 hours after tournament completion.",
+  "Rewards are distributed after verification within 24 hours.",
   "Participants must be 18 years or older to compete.",
+  "The platform reserves the right to modify rules at any time.",
 ];
 
 const FAQ_ITEMS = [
@@ -290,7 +290,7 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
                 Weekly Trading Tournaments
               </div>
               <h1 className="text-[40px] font-black leading-tight text-white sm:text-[56px]">
-                Compete. Trade. <span className="text-[#00b95b]">Win.</span>
+                Weekly Trading <span className="text-[#00b95b]">Tournaments</span>
               </h1>
               <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-[#9aafcf]">
                 Join thousands of traders in weekly competitions. Prove your skills, climb the leaderboard,
@@ -347,12 +347,11 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard icon={Calendar} label="Weekly Tournaments" value={4} />
               <StatCard icon={Users} label="Active Traders" value={15000} suffix="+" />
-              <StatCard icon={UserPlus} label="Participants This Week" value={13284} />
-              <StatCard icon={Globe} label="Countries" value={120} suffix="+" />
+              <StatCard icon={UserPlus} label="Registered Participants" value={13284} />
+              <StatCard icon={Globe} label="Countries Participating" value={120} suffix="+" />
               <StatCard icon={DollarSign} label="Total Prize Pool" value={250000} />
               <StatCard icon={Trophy} label="Weekly Prize Winners" value={400} />
-              <StatCard icon={Award} label="Completed Tournaments" value={2300} suffix="+" />
-              <StatCard icon={Flag} label="Countries Participating" value={120} suffix="+" />
+              <StatCard icon={Flag} label="Completed Tournaments" value={2300} suffix="+" />
             </div>
           </div>
         </section>
@@ -506,7 +505,7 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
                       </div>
                     </div>
                     <p className="mb-4 text-[14px] leading-relaxed text-[#9aafcf]">{t.desc}</p>
-                    <div className="grid grid-cols-2 gap-3 rounded-xl border border-[#334050] bg-[#1e2530] p-4 sm:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3 rounded-xl border border-[#334050] bg-[#1e2530] p-4 sm:grid-cols-5">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a8aa8]">Start</p>
                         <p className="mt-1 text-[13px] font-bold text-white">Every {t.day}</p>
@@ -522,6 +521,10 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a8aa8]">Prize</p>
                         <p className="mt-1 text-[13px] font-bold text-[#00b95b]">{t.pool}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a8aa8]">Participants</p>
+                        <p className="mt-1 text-[13px] font-bold text-white">{t.participants}</p>
                       </div>
                     </div>
                   </div>
@@ -613,11 +616,10 @@ const PublicTournamentsPage = ({ platformSettings }: PublicTournamentsPageProps)
               <div className="overflow-hidden rounded-2xl border border-[#334050]">
                 <div className="grid grid-cols-3 gap-px bg-[#334050]">
                   {[
-                    { rank: "1st", icon: Crown, prize: "40% of pool", color: "text-yellow-400", bg: "bg-yellow-400/8" },
-                    { rank: "2nd", icon: Medal, prize: "25% of pool", color: "text-slate-300", bg: "bg-slate-300/8" },
-                    { rank: "3rd", icon: Medal, prize: "15% of pool", color: "text-amber-600", bg: "bg-amber-600/8" },
-                    { rank: "Top 10", icon: Trophy, prize: "Share 15%", color: "text-[#007aff]", bg: "bg-[#007aff]/8" },
-                    { rank: "Top 25", icon: Star, prize: "Share 3%", color: "text-[#00b95b]", bg: "bg-[#00b95b]/8" },
+                    { rank: "1st Place", icon: Crown, prize: "50% of pool", color: "text-yellow-400", bg: "bg-yellow-400/8" },
+                    { rank: "2nd Place", icon: Medal, prize: "25% of pool", color: "text-slate-300", bg: "bg-slate-300/8" },
+                    { rank: "3rd Place", icon: Medal, prize: "15% of pool", color: "text-amber-600", bg: "bg-amber-600/8" },
+                    { rank: "Top 10", icon: Trophy, prize: "Share 8%", color: "text-[#007aff]", bg: "bg-[#007aff]/8" },
                     { rank: "Top 100", icon: Award, prize: "Share 2%", color: "text-[#f4b742]", bg: "bg-[#f4b742]/8" },
                   ].map((item) => (
                     <div key={item.rank} className={cn("flex flex-col items-center justify-center p-6 text-center transition-colors hover:brightness-110", item.bg)}>
