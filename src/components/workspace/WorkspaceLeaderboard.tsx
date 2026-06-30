@@ -251,7 +251,7 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
       </div>
 
       {/* Scrollable list */}
-      <div className="min-h-0 flex-1 overflow-y-auto space-y-0.5 px-4 pb-2">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-2">
         {displayTraders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-[#787b86]">
             <Users className="mb-2 h-8 w-8 opacity-30" />
@@ -259,15 +259,17 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
             <p className="mt-1 text-[11px]">Click Watch on a trader profile to start following</p>
           </div>
         ) : (
-          displayTraders.map((trader) => {
+          displayTraders.map((trader, idx) => {
             const isPositive = trader.totalProfit >= 0;
             const isWatched = watchingIds.has(trader.id);
+            const rowBg = idx % 2 === 0 ? "#282D41" : "#232637";
 
             return (
               <div
                 key={trader.id}
                 onClick={() => setSelectedTrader(trader)}
-                className="group flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 transition-all hover:bg-white/[0.04] hover:shadow-sm active:scale-[0.99]"
+                className="group flex cursor-pointer items-center gap-3 px-3 py-3 transition-all hover:brightness-[1.15] active:scale-[0.99]"
+                style={{ background: rowBg }}
               >
                 {/* Avatar with status badge */}
                 <div className="relative shrink-0">
@@ -277,9 +279,9 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
                     className="h-10 w-10 rounded-full border border-white/[0.08] object-cover ring-1 ring-white/[0.04] transition-all group-hover:ring-[#26a69a]/30"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
-                  <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#232637] bg-[#26a69a]" />
+                  <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white/[0.15] bg-[#26a69a]" />
                   {isWatched && (
-                    <span className="absolute -bottom-0.5 -left-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#f4b742] border-2 border-[#232637]">
+                    <span className="absolute -bottom-0.5 -left-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#f4b742] border-2 border-white/[0.15]">
                       <Star className="h-2 w-2 text-white" />
                     </span>
                   )}
