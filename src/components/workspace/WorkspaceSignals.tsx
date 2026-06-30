@@ -7,8 +7,12 @@ import {
   Settings,
   Wifi,
   X,
+  Check,
+  AlertCircle,
 } from "lucide-react";
 import { type AssetOption } from "../trading/AssetSelector";
+import { useTradingDesk } from "../trading/TradingDeskContext";
+import { toast } from "sonner";
 
 interface SignalData {
   id: string;
@@ -47,9 +51,28 @@ function generateTimeAgo(timestamp: number): string {
   return `${Math.floor(diff / 86400)} days ago`;
 }
 
+function parseValueToAmount(value: string): number {
+  const num = parseFloat(value.replace("$", "").replace(",", ""));
+  return Math.max(1, Math.floor(num * 100)); // Convert to cents, minimum 1
+}
+
 export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps) => {
   const [activeTab, setActiveTab] = useState<"updates" | "all">("updates");
   const [signals, setSignals] = useState<SignalData[]>(MOCK_SIGNALS);
+  const [copyingSignalId, setCopyingSignalId] = useState<string | null>(null);
+
+  const {
+    setExpirySeconds,
+    setInvestment,
+    setDirection,
+    setSignalMode,
+    executeTrade,
+    currentAsset,
+    setCurrentAsset,
+    accountType,
+    balance,
+    demoBalance,
+  } = useTradingDesk();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -71,11 +94,56 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
-  const handleCopySignal = (id: string) => {
-    setSignals((prev) =>
-      prev.map((sig) => (sig.id === id ? { ...sig, copied: sig.copied + 1 } : sig))
-    );
-    console.log(`Signal ${id} copied — execute trade logic here`);
+  const handleCopySignal = async (signal: SignalData) => {
+    setCopyingSignalId(signal.id);
+    
+    try {
+      // Set signal mode
+      setSignalMode(true);
+      setDirection(signal.direction === "up" ? "higher" : "lower");
+      setExpirySeconds(signal.duration);
+      
+      // Parse investment amount from signal value
+      const amount = parseValueToAmount(signal.value);
+      setInvestment(amount);
+      
+      // Set current asset if available
+      if (currentAsset?.symbol !== signal.asset) {
+        // We'll need to find the asset from the trading context
+        // For now, just set the basic info
+      }
+      
+      // Execute the trade
+      const success = await executeTrade({
+        assetSymbol: signal.asset,
+        direction: signal.direction === "up" ? "higher" : "lower",
+        amount,
+        entryPrice: currentAsset?.price || 1.0,
+        expirySeconds: signal.duration,
+        payoutRate: (currentAsset?.maxProfit || 85) / 100,
+      });
+
+      if (success) {
+        setSignals((prev) =>
+          prev.map((sig) => (sig.id === signal.id ? { ...sig, copied: sig.copied + 1 } : sig))
+        );
+        toast.success(`Signal copied and trade executed!`, {
+          description: `${signal.direction === "up" ? "HIGHER" : "LOWER"} ${signal.asset} for $${amount/100} (${signal.duration}s)`,
+        });
+      } else {
+        toast.error("Failed to execute signal trade", {
+          description: "Check your balance and try again",
+        });
+      }
+    } catch (error) {
+      toast.error("Error executing signal", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setCopyingSignalId(null);
+      setSignalMode(false);
+      setDirection(null);
+    }
   };
 
   const selectedAssetCode = activeAsset?.code || "USD/PHP OTC";
@@ -146,6 +214,7 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
           filteredSignals.map((signal) => {
             const isUp = signal.direction === "up";
             const progress = Math.min((signal.duration / progressMax) * 100, 100);
+            const isCopying = copyingSignalId === signal.id;
 
             return (
               <div
@@ -193,11 +262,24 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
                   <span className="text-[#9ba1b0] font-semibold text-[13px]">{signal.value}</span>
                   <button
                     type="button"
-                    onClick={() => handleCopySignal(signal.id)}
-                    className="bg-[#1e6b4e] hover:bg-[#26a69a] text-white font-medium text-[12px] py-1.5 px-3.5 rounded-md transition-all active:scale-[0.98]"
+                    onClick={() => handleCopySignal(signal)}
+                    disabled={isCopying}
+                    className={`bg-[#1e6b4e] hover:bg-[#26a69a] text-white font-medium text-[12px] py-1.5 px-3.5 rounded-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+                      isCopying ? "opacity-70" : ""
+                    }`}
                     style={{ border: "1px solid rgba(38,166,154,0.3)" }}
                   >
-                    Copy signal
+                    {isCopying ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Executing...
+                      </>
+                    ) : (
+                      "Copy signal"
+                    )}
                   </button>
                 </div>
 

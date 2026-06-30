@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, useContext } from "react";
 import {
   ChevronDown, Plus, Minus, ArrowUp, ArrowDown,
   Clock, Briefcase,
@@ -25,6 +25,7 @@ import {
 } from "./tradeDeskEvents";
 import TimePopover from "./TimePopover";
 import AmountPopover from "./AmountPopover";
+import { useTradingDesk } from "./TradingDeskContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TradingPanelProps {
@@ -687,12 +688,38 @@ const TradingPanel = ({
   const { preferences: tradingPreferences } = useTradingPreferences();
   const executeTrade = onTrade ?? openTrade;
 
-  // Trading params
-  const [expirySeconds, setExpirySeconds] = useState(60);
-  const [investment, setInvestment] = useState(1);
+  // Trading Desk Context for cross-component signal integration
+  const {
+    expirySeconds: contextExpirySeconds,
+    setExpirySeconds: contextSetExpirySeconds,
+    investment: contextInvestment,
+    setInvestment: contextSetInvestment,
+    executeTrade: contextExecuteTrade,
+    direction: contextDirection,
+    setDirection: contextSetDirection,
+    isSignalMode,
+  } = useTradingDesk();
+
+  // Trading params - use context when in signal mode, otherwise local state
+  const [localExpirySeconds, setLocalExpirySeconds] = useState(60);
+  const [localInvestment, setLocalInvestment] = useState(1);
   const [investmentMode] = useState<InvestmentMode>("amount");
   const [showTimeSwitcher, setShowTimeSwitcher] = useState(false);
   const [showInvestmentSwitcher, setShowInvestmentSwitcher] = useState(false);
+
+  // Sync with context when signal mode is active
+  useEffect(() => {
+    if (isSignalMode) {
+      setLocalExpirySeconds(contextExpirySeconds);
+      setLocalInvestment(contextInvestment);
+    }
+  }, [isSignalMode, contextExpirySeconds, contextInvestment]);
+
+  // Exported values - prefer context in signal mode
+  const expirySeconds = isSignalMode ? contextExpirySeconds : localExpirySeconds;
+  const investment = isSignalMode ? contextInvestment : localInvestment;
+  const setExpirySeconds = isSignalMode ? contextSetExpirySeconds : setLocalExpirySeconds;
+  const setInvestment = isSignalMode ? contextSetInvestment : setLocalInvestment;
 
   // Tabs
   const [activeTab, setActiveTab] = useState<ActiveTab>("trades");
@@ -790,7 +817,20 @@ const TradingPanel = ({
 
   // Trade execution
   const executeTradeNow = async (direction: "higher" | "lower") => {
+    const dir = isSignalMode && contextDirection ? contextDirection : direction;
     if (effectiveInvestment <= 0) return false;
+
+    // Use context executeTrade in signal mode for cross-component integration
+    if (isSignalMode && contextExecuteTrade) {
+      return await contextExecuteTrade(
+        asset.symbol,
+        dir,
+        effectiveInvestment,
+        asset.price,
+        expirySeconds,
+        payoutRate,
+      );
+    }
 
     if (accountType === "demo") {
       if (effectiveInvestment > demoBalance) {
@@ -799,7 +839,7 @@ const TradingPanel = ({
       }
       return await (onDemoTrade ?? executeTrade)(
         asset.symbol,
-        direction,
+        dir,
         effectiveInvestment,
         asset.price,
         expirySeconds,
@@ -809,7 +849,7 @@ const TradingPanel = ({
 
     return await executeTrade(
       asset.symbol,
-      direction,
+      dir,
       effectiveInvestment,
       asset.price,
       expirySeconds,

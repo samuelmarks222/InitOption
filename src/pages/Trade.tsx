@@ -8,6 +8,7 @@ import { TournamentDetailOverlay } from "@/components/workspace/TournamentDetail
 import TradingHeader from "@/components/trading/TradingHeader";
 import TradingChart, { type ChartOrderAnnouncement, type ChartSettlementAnnouncement } from "@/components/trading/TradingChart";
 import TradingPanel from "@/components/trading/TradingPanel";
+import { TradingDeskProvider } from "@/components/trading/TradingDeskContext";
 import {
   type ChartLayoutMode,
   CHART_LAYOUT_STORAGE_KEY,
@@ -1242,8 +1243,17 @@ const Trade = () => {
 
   return (
     <ProfileTourProvider>
-      <div className="trading-terminal h-[100dvh] flex flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
-        <GuidedTour enabled={tourEnabled} />
+      <TradingDeskProvider
+        initialExpirySeconds={60}
+        initialInvestment={1}
+        initialAccountType={accountType}
+        initialBalance={currentBalance}
+        initialDemoBalance={demoBalance}
+        onExecuteTrade={handleLiveTradeFromChart}
+        onExecuteDemoTrade={handleOpenDemoTrade}
+      >
+        <div className="trading-terminal h-[100dvh] flex flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
+          <GuidedTour enabled={tourEnabled} />
           <TradingHeader balance={currentBalance} demoBalance={demoBalance} accountType={accountType}
           onSwitchAccount={handleSwitchAccount} activeTabId={activeTabId} onSelectTab={handleSelectTab}
           openTabs={openTabs} onRemoveTab={handleRemoveTab} onAddAssetClick={() => setShowAssetSelector(true)}
@@ -1255,49 +1265,49 @@ const Trade = () => {
           onOpenSettings={() => handleOpenProfile("settings")} onOpenHistory={() => {}}
           highlightDepositButton={Boolean(depositGuideReason)} />
 
-        <div className="flex-1 flex w-full overflow-hidden min-h-0" style={{ background: "var(--trading-workspace-bg)" }}>
-          {/* Left sidebar — hidden on mobile (< 1024px) */}
-          <div className="hidden shrink-0 transition-[width] duration-300 ease-out lg:block">
-            <NavigationSidebar
-              activeWorkspace={activeWorkspace}
-              onSelectWorkspace={setActiveWorkspace}
-              collapsed={!leftPanelOpen}
-              onToggleCollapsed={() => setLeftPanelOpen((current) => !current)}
-            />
-          </div>
+          <div className="flex-1 flex w-full overflow-hidden min-h-0" style={{ background: "var(--trading-workspace-bg)" }}>
+            {/* Left sidebar — hidden on mobile (< 1024px) */}
+            <div className="hidden shrink-0 transition-[width] duration-300 ease-out lg:block">
+              <NavigationSidebar
+                activeWorkspace={activeWorkspace}
+                onSelectWorkspace={setActiveWorkspace}
+                collapsed={!leftPanelOpen}
+                onToggleCollapsed={() => setLeftPanelOpen((current) => !current)}
+              />
+            </div>
 
-          {activeWorkspace && !isFullScreen && (
-            <DynamicWorkspace
-              activeWorkspace={activeWorkspace}
-              onClose={() => setActiveWorkspace(null)}
-              onOpenTournament={setSelectedTournament}
-              onEnterTournament={handleEnterTournament}
-              onSelectWorkspace={setActiveWorkspace}
-              directoryRefreshKey={directoryRefreshKey}
-            />
-          )}
+            {activeWorkspace && !isFullScreen && (
+              <DynamicWorkspace
+                activeWorkspace={activeWorkspace}
+                onClose={() => setActiveWorkspace(null)}
+                onOpenTournament={setSelectedTournament}
+                onEnterTournament={handleEnterTournament}
+                onSelectWorkspace={setActiveWorkspace}
+                directoryRefreshKey={directoryRefreshKey}
+              />
+            )}
 
-          {/* Desktop full-screen workspace overlays */}
-          {activeWorkspace === "account" ? (
-            <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}><AccountGridOverlay onClose={() => setActiveWorkspace(null)} /></div>
-          ) : activeWorkspace === "more" ? (
-            <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
-              <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setActiveWorkspace(null)} />
-            </div>
-          ) : activeWorkspace === "tournaments" ? (
-            <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
-              <TournamentsGridOverlay onEnterTournament={handleEnterTournament} onClose={() => setActiveWorkspace(null)} directoryRefreshKey={directoryRefreshKey} />
-            </div>
-          ) : activeWorkspace === "referrals" ? (
-            <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
-              <WorkspaceReferral onSelectWorkspace={setActiveWorkspace} />
-            </div>
-          ) : (
-            <>
-              {/* ── DESKTOP & TABLET: side-by-side chart + panel ── */}
-              {isDesktopViewport ? (
-              <div className="relative flex w-full min-w-[300px] flex-1 overflow-hidden min-h-0">
-                <div id="tour-chart" className="relative flex w-full min-w-[300px] flex-1 min-h-0 flex-col" style={{ background: "var(--trading-workspace-bg)" }}>
+            {/* Desktop full-screen workspace overlays */}
+            {activeWorkspace === "account" ? (
+              <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}><AccountGridOverlay onClose={() => setActiveWorkspace(null)} /></div>
+            ) : activeWorkspace === "more" ? (
+              <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
+                <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setActiveWorkspace(null)} />
+              </div>
+            ) : activeWorkspace === "tournaments" ? (
+              <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
+                <TournamentsGridOverlay onEnterTournament={handleEnterTournament} onClose={() => setActiveWorkspace(null)} directoryRefreshKey={directoryRefreshKey} />
+              </div>
+            ) : activeWorkspace === "referrals" ? (
+              <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
+                <WorkspaceReferral onSelectWorkspace={setActiveWorkspace} />
+              </div>
+            ) : (
+              <>
+                {/* ── DESKTOP & TABLET: side-by-side chart + panel ── */}
+                {isDesktopViewport ? (
+                <div className="relative flex w-full min-w-[300px] flex-1 overflow-hidden min-h-0">
+                  <div id="tour-chart" className="relative flex w-full min-w-[300px] flex-1 min-h-0 flex-col" style={{ background: "var(--trading-workspace-bg)" }}>
                   {!selectedAsset && (
                     <div className="relative flex flex-1 items-center justify-center">
                       <CandlestickLoadingScreen />
@@ -1627,7 +1637,8 @@ const Trade = () => {
         <TournamentDetailOverlay tournamentId={selectedTournament} onClose={() => setSelectedTournament(null)}
           onOpenDeposit={openDepositPage} onEnterTournament={handleEnterTournament}
           onJoined={() => setDirectoryRefreshKey((k) => k + 1)} />
-      </div>
+        </div>
+      </TradingDeskProvider>
     </ProfileTourProvider>
   );
 };
