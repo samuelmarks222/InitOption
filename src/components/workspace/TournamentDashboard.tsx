@@ -18,6 +18,7 @@ import {
   Search,
   Trophy,
   Info,
+  User,
 } from "lucide-react";
 
 type Tournament = Database["public"]["Tables"]["tournaments"]["Row"];
@@ -719,17 +720,18 @@ const TournamentDetailView = ({
         };
       });
 
-      // Supplement with dummy traders if fewer than 10 real participants
-      if (board.length < 10) {
-        const dummyCount = 10 - board.length;
+      // Supplement with dummy traders to reach 1000+ participants
+      const MIN_DUMMIES = 1000;
+      if (board.length < MIN_DUMMIES) {
+        const dummyCount = MIN_DUMMIES - board.length;
         const realUserIds = new Set(board.map((e) => e.user_id));
-        const dummies = getDummyTraders(dummyCount, Array.from(realUserIds));
+        const dummies = getDummyTraders(dummyCount, Array.from(realUserIds), tournament.id);
         let nextPosition = board.length > 0 ? Math.max(...board.map((e) => e.position)) + 1 : 1;
         dummies.forEach((dummy) => {
           const balance = startingBalance + (Math.random() - 0.5) * startingBalance * 0.4;
           board.push({
             position: nextPosition++,
-            user_id: `dummy-${dummy.name.toLowerCase().replace(/\s+/g, '-')}`,
+            user_id: dummy.name.toLowerCase().replace(/\s+/g, '-') + '-' + nextPosition,
             trader_name: dummy.name,
             avatar_url: dummy.avatar,
             country_code: dummy.country ?? null,
@@ -737,7 +739,7 @@ const TournamentDetailView = ({
             starting_balance: startingBalance,
             profit_loss: Number((balance - startingBalance).toFixed(2)),
             return_percentage: startingBalance > 0 ? Number(((balance - startingBalance) / startingBalance * 100).toFixed(2)) : 0,
-            trades_count: Math.floor(Math.random() * 20),
+            trades_count: Math.floor(Math.random() * 50 + 1),
           });
         });
       }
@@ -769,14 +771,19 @@ const TournamentDetailView = ({
   }, [tournament]);
 
   const visibleLeaderboard = leaderboard;
+  const totalParticipants = visibleLeaderboard.length;
 
   const userPosition = useMemo(
     () => (profileId ? visibleLeaderboard.find((e) => e.user_id === profileId) ?? null : null),
     [profileId, visibleLeaderboard],
   );
 
-  const top10 = useMemo(() => visibleLeaderboard.slice(0, 10), [visibleLeaderboard]);
-  const totalPages = Math.max(1, Math.ceil(visibleLeaderboard.length / 10));
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(visibleLeaderboard.length / pageSize));
+  const paginatedBoard = useMemo(
+    () => visibleLeaderboard.slice((page - 1) * pageSize, page * pageSize),
+    [visibleLeaderboard, page],
+  );
 
   const estimatedPrize = (pos: number) => {
     const dist = prizeDistribution.find((d) => d.position === pos);
@@ -799,114 +806,7 @@ const TournamentDetailView = ({
 
       {/* 3-Column Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Column: Info Card + Description + CTA */}
-        <div className="space-y-5">
-          {/* Feature Info Card */}
-          <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
-            {/* Badge row */}
-            <div className="mb-4 flex items-center gap-3">
-              {hasJoined ? (
-                <span className="inline-flex items-center rounded-full bg-[#2a3340] px-3 py-1 text-[10px] font-bold tracking-wider text-[#7a8aa8]">
-                  YOU ARE PARTICIPATING
-                </span>
-              ) : (
-                <span
-                  className={cn(
-                    "inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wider",
-                    tournament.status === "active"
-                      ? "bg-[#00b95b] text-white"
-                      : tournament.status === "completed"
-                        ? "bg-[#47577b] text-white"
-                        : "bg-[#007aff] text-white",
-                  )}
-                >
-                  {tournament.status === "active"
-                    ? "ACTIVE NOW"
-                    : tournament.status === "completed"
-                      ? "FINISHED"
-                      : "UPCOMING"}
-                </span>
-              )}
-              <span className="text-[20px] font-black text-[#00b95b]">
-                {formatMoney(tournament.prize_pool)}
-              </span>
-            </div>
-
-            <h2 className="mb-4 text-[22px] font-bold text-white">{tournament.title}</h2>
-
-            {/* "Go to trading" button for participating users */}
-            {hasJoined && (
-              <button
-                type="button"
-                onClick={() => onEnterTournament?.(tournament.id)}
-                className="mb-5 w-full rounded-xl bg-[#007aff] py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-[#3399ff]"
-              >
-                Go to trading
-              </button>
-            )}
-
-            <div className="space-y-3 text-[14px]">
-              <div className="flex justify-between border-b border-[#334050] pb-2">
-                <span className="text-[#7a8aa8]">Entry fee</span>
-                <span className="font-semibold text-white">{formatMoney(tournament.entry_fee, true)}</span>
-              </div>
-              <div className="flex justify-between border-b border-[#334050] pb-2">
-                <span className="text-[#7a8aa8]">Duration</span>
-                <span className="font-semibold text-white">{formatDuration(tournament.start_date, tournament.end_date)}</span>
-              </div>
-              <div className="flex justify-between border-b border-[#334050] pb-2">
-                <span className="text-[#7a8aa8]">Participants</span>
-                <span className="font-semibold text-white">{participants}</span>
-              </div>
-              <div className="flex justify-between border-b border-[#334050] pb-2">
-                <span className="text-[#7a8aa8]">Start</span>
-                <span className="font-semibold text-white">{formatTournamentDateTime(tournament.start_date)}</span>
-              </div>
-              <div className="flex justify-between border-b border-[#334050] pb-2">
-                <span className="text-[#7a8aa8]">End</span>
-                <span className="font-semibold text-white">{formatTournamentDateTime(tournament.end_date)}</span>
-              </div>
-              <div className="flex justify-between border-b border-[#334050] pb-2">
-                <span className="text-[#7a8aa8]">Starting balance</span>
-                <span className="font-semibold text-white">{formatMoney(tournament.starting_balance)}</span>
-              </div>
-              <div className="flex justify-between pb-2">
-                <span className="text-[#7a8aa8]">{countdownLabel}</span>
-                <span className="font-semibold text-[#00b95b]">{formatCountdown(countdownTarget, now)}</span>
-              </div>
-            </div>
-
-            {/* CTA for non-participating users */}
-            {!hasJoined && (
-              <button
-                type="button"
-                onClick={() => onJoin(tournament.id)}
-                disabled={joining || tournament.status === "completed"}
-                className={cn(
-                  "mt-5 w-full rounded-xl py-4 text-[16px] font-bold transition-all",
-                  tournament.status === "completed"
-                    ? "cursor-not-allowed bg-[#2a3340] text-[#7a8aa8]"
-                    : "bg-[#00b95b] text-white hover:bg-[#00a34f]",
-                )}
-              >
-                {joining ? "Processing..." : tournament.status === "completed" ? "Tournament ended" : "Confirm participation"}
-              </button>
-            )}
-          </div>
-
-          {/* Description */}
-          <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
-            <h3 className="mb-3 text-[15px] font-bold text-white">Description</h3>
-            <p className="text-[13px] leading-relaxed text-[#b0bedd]">
-              {tournament.description?.trim() ||
-                `Trade your way to the top in this ${
-                  tournament.entry_fee === 0 ? "free" : formatMoney(tournament.entry_fee)
-                } entry tournament. All traders start with ${formatMoney(tournament.starting_balance)} and compete for a share of ${formatMoney(tournament.prize_pool)} in prizes.`}
-            </p>
-          </div>
-        </div>
-
-        {/* Middle Column: Leaderboard */}
+        {/* Left Column: Leaderboard */}
         <div className="space-y-5 lg:col-span-1">
           {/* Pinned user card (only when participating) */}
           {hasJoined && userPosition && (
@@ -968,13 +868,18 @@ const TournamentDetailView = ({
 
           {/* Leaderboard */}
           <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
-            <h3 className="mb-4 text-[15px] font-bold text-white">Leaderboard</h3>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-[15px] font-bold text-white">Leaderboard</h3>
+              <span className="text-[13px] font-semibold text-[#7a8aa8]">
+                {totalParticipants.toLocaleString()} Traders
+              </span>
+            </div>
             {visibleLeaderboard.length === 0 ? (
               <div className="py-6 text-center text-[14px] text-[#7a8aa8]">No participants yet.</div>
             ) : (
               <>
                 <div className="space-y-1">
-                  {top10.map((entry) => {
+                  {paginatedBoard.map((entry) => {
                     const isMe = profileId === entry.user_id;
                     const isPositive = entry.profit_loss >= 0;
                     return (
@@ -991,12 +896,12 @@ const TournamentDetailView = ({
                           </span>
                           {entry.avatar_url ? (
                             <img src={entry.avatar_url} alt={entry.trader_name ?? "Trader"} className="h-7 w-7 rounded-full object-cover" />
-                          ) : entry.country_code ? (
-                            <CountryFlag code={entry.country_code} size={24} className="h-7 w-7 rounded-full" />
                           ) : (
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a3340]" />
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a3340]">
+                              <User className="h-3.5 w-3.5 text-[#7a8aa8]" />
+                            </div>
                           )}
-                          {entry.avatar_url && entry.country_code ? (
+                          {entry.country_code ? (
                             <CountryFlag code={entry.country_code} size={16} className="rounded-full" />
                           ) : null}
                           <span className="truncate font-semibold text-white">
@@ -1014,25 +919,27 @@ const TournamentDetailView = ({
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="mt-4 flex items-center justify-center gap-2">
+                  <div className="mt-4 flex items-center justify-between gap-2">
                     <button
                       type="button"
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2a3340] text-[13px] text-white transition-colors hover:bg-[#354151] disabled:opacity-40"
+                      className="inline-flex items-center gap-1 rounded-lg bg-[#2a3340] px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#354151] disabled:opacity-40"
                     >
-                      &lt;
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      Previous
                     </button>
                     <span className="text-[13px] text-[#7a8aa8]">
-                      {page} / {totalPages}
+                      Page {page} of {totalPages.toLocaleString()}
                     </span>
                     <button
                       type="button"
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={page === totalPages}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#2a3340] text-[13px] text-white transition-colors hover:bg-[#354151] disabled:opacity-40"
+                      className="inline-flex items-center gap-1 rounded-lg bg-[#2a3340] px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#354151] disabled:opacity-40"
                     >
-                      &gt;
+                      Next
+                      <ChevronDown className="h-3.5 w-3.5 -rotate-90" />
                     </button>
                   </div>
                 )}
@@ -1070,6 +977,113 @@ const TournamentDetailView = ({
                 );
               })}
             </div>
+          </div>
+        </div>
+
+        {/* Middle Column: Info Card + Description */}
+        <div className="space-y-5">
+          {/* Feature Info Card */}
+          <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
+            {/* Badge row */}
+            <div className="mb-4 flex items-center gap-3">
+              {hasJoined ? (
+                <span className="inline-flex items-center rounded-full bg-[#2a3340] px-3 py-1 text-[10px] font-bold tracking-wider text-[#7a8aa8]">
+                  YOU ARE PARTICIPATING
+                </span>
+              ) : (
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wider",
+                    tournament.status === "active"
+                      ? "bg-[#00b95b] text-white"
+                      : tournament.status === "completed"
+                        ? "bg-[#47577b] text-white"
+                        : "bg-[#007aff] text-white",
+                  )}
+                >
+                  {tournament.status === "active"
+                    ? "ACTIVE NOW"
+                    : tournament.status === "completed"
+                      ? "FINISHED"
+                      : "UPCOMING"}
+                </span>
+              )}
+              <span className="text-[20px] font-black text-[#00b95b]">
+                {formatMoney(tournament.prize_pool)}
+              </span>
+            </div>
+
+            <h2 className="mb-4 text-[22px] font-bold text-white">{tournament.title}</h2>
+
+            {/* "Go to trading" button for participating users */}
+            {hasJoined && (
+              <button
+                type="button"
+                onClick={() => onEnterTournament?.(tournament.id)}
+                className="mb-5 w-full rounded-xl bg-[#007aff] py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-[#3399ff]"
+              >
+                Go to trading
+              </button>
+            )}
+
+            <div className="space-y-3 text-[14px]">
+              <div className="flex justify-between border-b border-[#334050] pb-2">
+                <span className="text-[#7a8aa8]">Entry fee</span>
+                <span className="font-semibold text-white">{formatMoney(tournament.entry_fee, true)}</span>
+              </div>
+              <div className="flex justify-between border-b border-[#334050] pb-2">
+                <span className="text-[#7a8aa8]">Duration</span>
+                <span className="font-semibold text-white">{formatDuration(tournament.start_date, tournament.end_date)}</span>
+              </div>
+              <div className="flex justify-between border-b border-[#334050] pb-2">
+                <span className="text-[#7a8aa8]">Participants</span>
+                <span className="font-semibold text-white">{totalParticipants.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between border-b border-[#334050] pb-2">
+                <span className="text-[#7a8aa8]">Start</span>
+                <span className="font-semibold text-white">{formatTournamentDateTime(tournament.start_date)}</span>
+              </div>
+              <div className="flex justify-between border-b border-[#334050] pb-2">
+                <span className="text-[#7a8aa8]">End</span>
+                <span className="font-semibold text-white">{formatTournamentDateTime(tournament.end_date)}</span>
+              </div>
+              <div className="flex justify-between border-b border-[#334050] pb-2">
+                <span className="text-[#7a8aa8]">Starting balance</span>
+                <span className="font-semibold text-white">{formatMoney(tournament.starting_balance)}</span>
+              </div>
+              <div className="flex justify-between pb-2">
+                <span className="text-[#7a8aa8]">{countdownLabel}</span>
+                <span className="font-semibold text-[#00b95b]">{formatCountdown(countdownTarget, now)}</span>
+              </div>
+            </div>
+
+            {/* CTA for non-participating users */}
+            {!hasJoined && (
+              <button
+                type="button"
+                onClick={() => onJoin(tournament.id)}
+                disabled={joining || tournament.status === "completed"}
+                className={cn(
+                  "mt-5 w-full rounded-xl py-4 text-[16px] font-bold transition-all",
+                  tournament.status === "completed"
+                    ? "cursor-not-allowed bg-[#2a3340] text-[#7a8aa8]"
+                    : "bg-[#00b95b] text-white hover:bg-[#00a34f]",
+                )}
+              >
+                {joining ? "Processing..." : tournament.status === "completed" ? "Tournament ended" : "Confirm participation"}
+              </button>
+            )}
+          </div>
+
+          {/* Description */}
+          <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
+            <h3 className="mb-3 text-[15px] font-bold text-white">Description</h3>
+            <p className="text-[13px] leading-relaxed text-[#b0bedd]">
+              {tournament.description?.trim() ||
+                `Trade your way to the top in this ${
+                  tournament.entry_fee === 0 ? "free" : formatMoney(tournament.entry_fee)
+                } entry tournament. All traders start with ${formatMoney(tournament.starting_balance)} and compete for a share of ${formatMoney(tournament.prize_pool)} in prizes.`}
+            </p>
           </div>
         </div>
 
