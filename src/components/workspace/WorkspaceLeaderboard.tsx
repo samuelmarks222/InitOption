@@ -3,6 +3,8 @@ import { Bell, BellOff, ChevronDown, Eye, EyeOff, MessageCircle, Star, Trophy, U
 import { toast } from "sonner";
 import { TraderProfile } from "./TraderProfile";
 import type { CopySettings } from "./TraderProfile";
+import { DataRow } from "./TraderProfile";
+import type { CopySettings } from "./TraderProfile";
 
 const FIRST_NAMES = [
   "James","Mary","John","Patricia","Robert","Jennifer","Michael","Linda","David","Elizabeth",
@@ -335,11 +337,26 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
           trader={selectedTrader}
           onClose={() => setSelectedTrader(null)}
           onCopy={handleCopyWithSettings}
-          onWatch={handleWatch}
-          onUnwatch={handleUnwatch}
+          onWatch={(id) => {
+            setWatchingIds((prev) => new Set(prev).add(id));
+          }}
+          onUnwatch={(id) => {
+            setWatchingIds((prev) => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+            });
+          }}
           isWatched={watchingIds.has(selectedTrader.id)}
         />
       )}
     </div>
   );
 };
+
+const DataRow = ({ label, value }: { label: string; value: string }) => (
+  <div className="flex items-center justify-between rounded border-l-[3px] border-[#1fa2ff] bg-[#24293d] px-3.5 py-2.5">
+    <span className="text-[12px] text-[#9ba1b0]">{label}</span>
+    <span className="text-[13px] font-bold text-white">{value}</span>
+  </div>
+);

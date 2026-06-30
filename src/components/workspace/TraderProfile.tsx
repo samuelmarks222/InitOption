@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Bell, BellOff, Flame, Medal, MessageCircle, Shield, Star, Trophy, TrendingUp, X, Zap,
 } from "lucide-react";
+import { toast } from "sonner";
 import type { TraderData } from "./WorkspaceLeaderboard";
 import { ChatDialog } from "./ChatDialog";
 
@@ -50,6 +51,39 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
   const [maxTrades, setMaxTrades] = useState(10);
   const [riskMultiplier, setRiskMultiplier] = useState(1);
   const [stopCondition, setStopCondition] = useState("never");
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCopyWithSettings = (id: string, settings?: CopySettings) => {
+    if (settings) {
+      toast.success(`Now copying ${trader.name}`, {
+        description: `$${settings.amount.toLocaleString()} investment, ${settings.riskMultiplier}x risk, max ${settings.maxLoss.toLocaleString()} daily loss`,
+        duration: 5000,
+      });
+    } else {
+      toast.success("Trader added to copy portfolio", {
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleMessage = () => setShowChat(true);
+  const handleWatch = () => {
+    if (isWatched) {
+      onUnwatch(trader.id);
+    } else {
+      onWatch(trader.id);
+      setShowWatchConfirm(true);
+      setTimeout(() => setShowWatchConfirm(false), 3000);
+    }
+  };
+
+  useEffect(() => {
+    if (showChat && chatInputRef.current) {
+      chatInputRef.current.focus();
+    }
+  }, [showChat]);
 
   const isPositive = trader.totalProfit >= 0;
 
@@ -202,30 +236,11 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
             {/* Content panel */}
             <div className="min-w-0 flex-1 space-y-2">
               {activeTab === "trading" && (
-                <>
-                  <DataRow label="Trades" value={trader.totalTrades.toLocaleString()} />
-                  <DataRow label="Profitable trades" value={`${trader.winRate.toFixed(0)}%`} />
-                  <DataRow label="Trading turnover" value={formatMoney(trader.totalProfit)} />
-                  <DataRow label="Trading profit" value={formatMoney(trader.totalProfit)} />
-                  <DataRow label="Avg Return" value={`${trader.avgReturn}%`} />
-                  <DataRow label="Highest Win" value={formatMoney(trader.highestWin)} />
-                  <DataRow label="Longest Streak" value={`${trader.longestStreak}`} />
-                  <DataRow label="Wins / Losses" value={`${trader.wins} / ${trader.losses}`} />
-                  <DataRow label="Risk Level" value={trader.riskLevel} />
-                  <DataRow label="Avg Duration" value={`${trader.avgDuration} min`} />
-                </>
+                <> <DataRow label="Trades" value={trader.totalTrades.toLocaleString()} /> <DataRow label="Profitable trades" value={`${trader.winRate.toFixed(0)}%`} /> <DataRow label="Trading turnover" value={formatMoney(trader.totalProfit)} /> <DataRow label="Trading profit" value={formatMoney(trader.totalProfit)} /> <DataRow label="Avg Return" value={`${trader.avgReturn}%`} /> <DataRow label="Highest Win" value={formatMoney(trader.highestWin)} /> <DataRow label="Longest Streak" value={`${trader.longestStreak}`} /> <DataRow label="Wins / Losses" value={`${trader.wins} / ${trader.losses}`} /> <DataRow label="Risk Level" value={trader.riskLevel} /> <DataRow label="Avg Duration" value={`${trader.avgDuration} min`} /></>
               )}
 
               {activeTab === "social" && (
-                <>
-                  <DataRow label="Followers" value={trader.followers.toLocaleString()} />
-                  <DataRow label="Success Rate" value={`${trader.successRate}%`} />
-                  <DataRow label="30 Days P/L" value={formatMoney(trader.last30DaysProfit)} />
-                  <DataRow label="Total Trades" value={trader.totalTrades.toLocaleString()} />
-                  <DataRow label="Win Rate" value={`${trader.winRate.toFixed(1)}%`} />
-                  <DataRow label="Experience" value={trader.experience} />
-                  <DataRow label="Member Since" value={trader.memberSince} />
-                </>
+                <> <DataRow label="Followers" value={trader.followers.toLocaleString()} /> <DataRow label="Success Rate" value={`${trader.successRate}%`} /> <DataRow label="30 Days P/L" value={formatMoney(trader.last30DaysProfit)} /> <DataRow label="Total Trades" value={trader.totalTrades.toLocaleString()} /> <DataRow label="Win Rate" value={`${trader.winRate.toFixed(1)}%`} /> <DataRow label="Experience" value={trader.experience} /> <DataRow label="Member Since" value={trader.memberSince} /></>
               )}
 
               {activeTab === "achievements" && (
