@@ -291,7 +291,6 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
                     className="h-10 w-10 rounded-full border border-white/[0.08] object-cover ring-1 ring-white/[0.04] transition-all group-hover:ring-[#26a69a]/30"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
-                  <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white/[0.15] bg-[#26a69a]" />
                   {isWatched && (
                     <span className="absolute -bottom-0.5 -left-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#f4b742] border-2 border-white/[0.15]">
                       <Star className="h-2 w-2 text-white" />
@@ -307,7 +306,7 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
                       {isWatched && (
                         <span className="shrink-0 rounded-full bg-[#f4b742]/12 px-1.5 py-0.5 text-[8px] font-bold text-[#f4b742]">WATCHING</span>
                       )}
-                      <span className={`text-[13px] font-bold ${isPositive ? "text-[#26a69a]" : "text-[#ef5350]"}`}>{formatProfit(trader.totalProfit)}</span>
+                      <span className="text-[13px] font-bold text-[#26a69a]">{formatProfit(trader.totalProfit)}</span>
                     </div>
                   </div>
                   <div className="mt-1 flex justify-between text-[11px] text-[#787b86]">

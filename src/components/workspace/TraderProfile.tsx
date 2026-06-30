@@ -109,8 +109,7 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
                 <p className="text-[11px] text-[#787b86]">Status</p>
                 <p className="text-[13px] text-[#787b86]">
                   {trader.isOnline ? (
-                    <span className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-[#26a69a]" />
+                    <span className="flex items-center gap-1.5 text-[#26a69a]">
                       Online
                     </span>
                   ) : "last seen recently"}
