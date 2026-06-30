@@ -9,6 +9,7 @@ import { WorkspaceHelp } from "./WorkspaceHelp";
 import { WorkspaceLeaderboard } from "./WorkspaceLeaderboard";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { WorkspaceSocial } from "../social/WorkspaceSocial";
+import { WorkspaceSignals } from "./WorkspaceSignals";
 
 interface DynamicWorkspaceProps {
   activeWorkspace: WorkspaceModule;
@@ -33,7 +34,7 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
   const isImmersiveSupport = activeWorkspace === "support" && supportImmersive;
   const isEmbeddedTournaments = activeWorkspace === "tournaments";
   const isDedicatedLeaderboard = activeWorkspace === "leaderboard";
-  const workspaceTitleMap: Record<Exclude<WorkspaceModule, null>, string> = {
+const workspaceTitleMap: Record<Exclude<WorkspaceModule, null>, string> = {
     support: "social",
     account: "account",
     tournaments: "tournaments",
@@ -42,6 +43,9 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
     settings: "settings",
     join: "join us",
     help: "help",
+    referrals: "referrals",
+    guides: "guides",
+    signals: "signals",
   };
   const workspaceTitle = workspaceTitleMap[activeWorkspace];
   const workspaceWidthClass = isImmersiveSupport
@@ -122,6 +126,11 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
         {activeWorkspace === "leaderboard" && (
           <div className="flex-1 w-full h-full">
             <WorkspaceLeaderboard onClose={onClose} />
+          </div>
+        )}
+        {activeWorkspace === "signals" && (
+          <div className="flex-1 w-full h-full">
+            <WorkspaceSignals onClose={onClose} />
           </div>
         )}
       </div>

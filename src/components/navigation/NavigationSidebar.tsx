@@ -10,9 +10,10 @@ import {
   Settings,
   Trophy,
   User,
+  Wifi,
 } from "lucide-react";
 
-export type WorkspaceModule = "support" | "account" | "tournaments" | "leaderboard" | "referrals" | "more" | "settings" | "help" | "guides" | null;
+export type WorkspaceModule = "support" | "account" | "tournaments" | "leaderboard" | "referrals" | "more" | "settings" | "help" | "guides" | "signals" | null;
 
 interface NavigationSidebarProps {
   activeWorkspace: WorkspaceModule;
@@ -54,6 +55,7 @@ export const NavigationSidebar = ({
     { id: "tournaments", label: "Tournament", icon: Trophy },
     { id: "support", label: "Chat", icon: Headset },
     { id: "leaderboard", label: "Leaders", icon: BarChart3 },
+    { id: "signals", label: "Signals", icon: Wifi },
     { id: "more", label: "More", icon: Grid },
   ] as const;
 
