@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { Minus, Plus, X, Crown, Medal, User, ArrowLeft, ChevronDown } from "lucide-react";
+import { Minus, Plus, X, Crown, Medal, ArrowLeft, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,6 +90,20 @@ const formatCountdown = (targetDate: string, now: number) => {
   return `${dayPrefix}${hours}h ${minutes}m ${seconds}s`;
 };
 
+const ICON_COLORS = [
+  "#f44336","#e91e63","#9c27b0","#673ab7","#3f51b5","#2196f3","#03a9f4","#00bcd4",
+  "#009688","#4caf50","#8bc34a","#cddc39","#ffc107","#ff9800","#ff5722","#795548",
+  "#607d8b","#1abc9c","#3498db","#9b59b6","#e67e22","#2ecc71","#e74c3c","#1b8ffa",
+];
+
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return hash >>> 0;
+}
+
 const PLACE_LABELS: Record<number, string> = {
   1: "1st",
   2: "2nd",
@@ -150,12 +164,12 @@ export const TournamentDetailOverlay = ({
 
       // 2. Always fetch profile data (names, avatars, country flags)
       const userIds = list.map((p: any) => p.user_id).filter(Boolean);
-      let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null }>();
+      let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null; phone_country?: string | null }>();
       if (userIds.length > 0) {
         try {
           const { data: profiles, error: profilesErr } = await supabaseAny
             .from("profiles")
-            .select("id, display_name, username, avatar_url")
+            .select("id, display_name, username, avatar_url, phone_country")
             .in("id", userIds);
           if (profilesErr) console.error("Leaderboard profiles fetch error:", profilesErr);
           if (profiles) {
@@ -198,6 +212,7 @@ export const TournamentDetailOverlay = ({
             ? rpcEntry.trader_name
             : (prof.display_name || prof.username || uuidFallback),
           avatar_url: (rpcEntry && rpcEntry.avatar_url) ? rpcEntry.avatar_url : (prof.avatar_url ?? null),
+          country_code: (rpcEntry && rpcEntry.country_code) ? rpcEntry.country_code : (prof.phone_country ?? null),
           current_balance: balance,
           starting_balance: startingBalance,
           profit_loss: balance - startingBalance,
@@ -254,12 +269,12 @@ export const TournamentDetailOverlay = ({
 
     // 2. Fetch profile data
     const userIds = list.map((p: any) => p.user_id).filter(Boolean);
-    let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null }>();
+    let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null; phone_country?: string | null }>();
     if (userIds.length > 0) {
       try {
         const { data: profiles, error: profilesErr } = await supabaseAny
           .from("profiles")
-          .select("id, display_name, username, avatar_url")
+          .select("id, display_name, username, avatar_url, phone_country")
           .in("id", userIds);
         if (profilesErr) console.error("Leaderboard profiles fetch error:", profilesErr);
         if (profiles) {
@@ -295,7 +310,7 @@ export const TournamentDetailOverlay = ({
           ? rpcEntry.trader_name
           : (prof.display_name || prof.username || uuidFallback),
         avatar_url: (rpcEntry && rpcEntry.avatar_url) ? rpcEntry.avatar_url : (prof.avatar_url ?? null),
-        country_code: (rpcEntry && rpcEntry.country_code) ? rpcEntry.country_code : null,
+        country_code: (rpcEntry && rpcEntry.country_code) ? rpcEntry.country_code : (prof.phone_country ?? null),
         current_balance: balance,
         starting_balance: startingBalance,
         profit_loss: balance - startingBalance,
@@ -502,6 +517,8 @@ export const TournamentDetailOverlay = ({
                         {paginatedBoard.map((entry) => {
                           const isMe = profile?.id === entry.user_id;
                           const isPositive = entry.profit_loss >= 0;
+                          const initial = entry.trader_name?.charAt(0).toUpperCase() || "U";
+                          const iconColor = ICON_COLORS[hashCode(entry.user_id) % ICON_COLORS.length];
                           return (
                             <div
                               key={entry.user_id}
@@ -510,19 +527,24 @@ export const TournamentDetailOverlay = ({
                                 isMe ? "bg-[#1a3a5c]/60" : "hover:bg-[#1a2a44]/40",
                               )}
                             >
-                              <span className="w-6 shrink-0 text-center text-[12px] font-bold text-[#99adcf]">
-                                {entry.position}
-                              </span>
-                              {entry.country_code ? (
-                                <CountryFlag code={entry.country_code} size={24} className="h-7 w-7 shrink-0 rounded-full" />
-                              ) : (
-                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a3340]">
-                                  <User className="h-3.5 w-3.5 text-[#7a8aa8]" />
-                                </div>
-                              )}
-                              <span className="min-w-0 flex-1 truncate font-semibold text-[#e8f0ff]">
-                                {isMe ? "You" : entry.trader_name || `Trader ${entry.position}`}
-                              </span>
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <span className="w-6 shrink-0 text-center text-[12px] font-bold text-[#99adcf]">
+                                  {entry.position}
+                                </span>
+                                {entry.country_code ? (
+                                  <CountryFlag code={entry.country_code} size={24} className="h-7 w-7 shrink-0 rounded-full" />
+                                ) : (
+                                  <div
+                                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white ring-1 ring-white/10"
+                                    style={{ background: iconColor }}
+                                  >
+                                    {initial}
+                                  </div>
+                                )}
+                                <span className="truncate font-semibold text-[#e8f0ff]">
+                                  {isMe ? "You" : entry.trader_name || `Trader ${entry.position}`}
+                                </span>
+                              </div>
                               <span
                                 className={cn(
                                   "shrink-0 font-bold tabular-nums",

@@ -18,7 +18,6 @@ import {
   Search,
   Trophy,
   Info,
-  User,
 } from "lucide-react";
 
 type Tournament = Database["public"]["Tables"]["tournaments"]["Row"];
@@ -99,6 +98,20 @@ const defaultDistribution = [
   { position: 2, share: 0.3, label: "2nd" },
   { position: 3, share: 0.2, label: "3rd" },
 ];
+
+const ICON_COLORS = [
+  "#f44336","#e91e63","#9c27b0","#673ab7","#3f51b5","#2196f3","#03a9f4","#00bcd4",
+  "#009688","#4caf50","#8bc34a","#cddc39","#ffc107","#ff9800","#ff5722","#795548",
+  "#607d8b","#1abc9c","#3498db","#9b59b6","#e67e22","#2ecc71","#e74c3c","#1b8ffa",
+];
+
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return hash >>> 0;
+}
 
 
 
@@ -672,12 +685,12 @@ const TournamentDetailView = ({
 
       // 2. Always fetch profile data (names, avatars, country flags)
       const userIds = list.map((p: any) => p.user_id).filter(Boolean);
-      let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null }>();
+      let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null; phone_country?: string | null }>();
       if (userIds.length > 0) {
         try {
           const { data: profiles, error: profilesErr } = await supabaseAny
             .from("profiles")
-            .select("id, display_name, username, avatar_url")
+            .select("id, display_name, username, avatar_url, phone_country")
             .in("id", userIds);
           if (profilesErr) console.error("Leaderboard profiles fetch error:", profilesErr);
           if (profiles) {
@@ -715,7 +728,7 @@ const TournamentDetailView = ({
             ? rpcEntry.trader_name
             : (prof.display_name || prof.username || uuidFallback),
           avatar_url: (rpcEntry && rpcEntry.avatar_url) ? rpcEntry.avatar_url : (prof.avatar_url ?? null),
-          country_code: (rpcEntry && rpcEntry.country_code) ? rpcEntry.country_code : null,
+          country_code: (rpcEntry && rpcEntry.country_code) ? rpcEntry.country_code : (prof.phone_country ?? null),
           current_balance: balance,
           starting_balance: startingBalance,
           profit_loss: balance - startingBalance,
@@ -819,8 +832,11 @@ const TournamentDetailView = ({
                 {userPosition.country_code ? (
                   <CountryFlag code={userPosition.country_code} size={36} className="h-10 w-10 shrink-0 rounded-full" />
                 ) : (
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2a3340]">
-                    <User className="h-5 w-5 text-[#7a8aa8]" />
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[14px] font-bold text-white ring-1 ring-white/10"
+                    style={{ background: ICON_COLORS[hashCode(userPosition.user_id) % ICON_COLORS.length] }}
+                  >
+                    {(userPosition.trader_name || "U").charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
@@ -886,6 +902,8 @@ const TournamentDetailView = ({
                   {paginatedBoard.map((entry) => {
                     const isMe = profileId === entry.user_id;
                     const isPositive = entry.profit_loss >= 0;
+                    const initial = entry.trader_name?.charAt(0).toUpperCase() || "U";
+                    const iconColor = ICON_COLORS[hashCode(entry.user_id) % ICON_COLORS.length];
                     return (
                       <div
                         key={entry.user_id}
@@ -901,8 +919,11 @@ const TournamentDetailView = ({
                           {entry.country_code ? (
                             <CountryFlag code={entry.country_code} size={24} className="h-7 w-7 shrink-0 rounded-full" />
                           ) : (
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2a3340]">
-                              <User className="h-3.5 w-3.5 text-[#7a8aa8]" />
+                            <div
+                              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white ring-1 ring-white/10"
+                              style={{ background: iconColor }}
+                            >
+                              {initial}
                             </div>
                           )}
                           <span className="truncate font-semibold text-white">
