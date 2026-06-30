@@ -300,23 +300,23 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
 
                 {/* User info */}
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex justify-between items-center">
                     <span className="text-[13px] font-semibold text-[#f1f2f4] group-hover:text-white">{trader.name}</span>
-                    {isWatched && (
-                      <span className="shrink-0 rounded-full bg-[#f4b742]/12 px-1.5 py-0.5 text-[8px] font-bold text-[#f4b742]">WATCHING</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {isWatched && (
+                        <span className="shrink-0 rounded-full bg-[#f4b742]/12 px-1.5 py-0.5 text-[8px] font-bold text-[#f4b742]">WATCHING</span>
+                      )}
+                      <span className={`text-[13px] font-bold ${isPositive ? "text-[#26a69a]" : "text-[#ef5350]"}`}>{formatProfit(trader.totalProfit)}</span>
+                    </div>
                   </div>
-                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[#787b86]">
-                    <span>{trader.id}</span>
-                    <span>·</span>
-                    <span>{trader.totalTrades.toLocaleString()} trades</span>
+                  <div className="mt-1 flex justify-between text-[11px] text-[#787b86]">
+                    <span>Number of trades:</span>
+                    <span>Profitable trades</span>
                   </div>
-                </div>
-
-                {/* Right metrics */}
-                <div className="shrink-0 text-right">
-                  <div className={`text-[13px] font-bold ${isPositive ? "text-[#26a69a]" : "text-[#ef5350]"}`}>{formatProfit(trader.totalProfit)}</div>
-                  <div className="mt-0.5 text-[11px] text-[#d1d4dc]">{trader.winRate.toFixed(1)}% win rate</div>
+                  <div className="flex justify-between">
+                    <span className="text-[12px] font-bold text-[#d1d4dc]">{trader.totalTrades.toLocaleString()}</span>
+                    <span className="text-[12px] font-bold text-[#d1d4dc]">{trader.winRate.toFixed(0)}%</span>
+                  </div>
                 </div>
 
 
