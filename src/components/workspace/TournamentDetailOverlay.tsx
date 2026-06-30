@@ -196,7 +196,7 @@ export const TournamentDetailOverlay = ({
           trader_name: (rpcEntry && rpcEntry.trader_name)
             ? rpcEntry.trader_name
             : (prof.display_name || prof.username || uuidFallback),
-          avatar_url: (rpcEntry && rpcEntry.avatar_url) ? rpcEntry.avatar_url : (prof.avatar_url ?? null,
+          avatar_url: (rpcEntry && rpcEntry.avatar_url) ? rpcEntry.avatar_url : (prof.avatar_url ?? null),
           current_balance: balance,
           starting_balance: startingBalance,
           profit_loss: balance - startingBalance,
