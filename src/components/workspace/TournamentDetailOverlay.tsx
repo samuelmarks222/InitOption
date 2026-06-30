@@ -344,8 +344,8 @@ export const TournamentDetailOverlay = ({
     return defaultDistribution;
   }, [tournament]);
 
-  const hasJoined = profile
-    ? participants.some((participant) => participant.user_id === profile.id)
+  const hasJoined = profile && tournament
+    ? new Date(tournament.end_date).getTime() > now && participants.some((participant) => participant.user_id === profile.id)
     : false;
 
   const visibleLeaderboard = useMemo(() => {

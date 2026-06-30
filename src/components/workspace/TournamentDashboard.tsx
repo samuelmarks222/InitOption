@@ -589,29 +589,32 @@ const TournamentCard = ({
 
         {/* Middle Section: title left, entry fee + duration below */}
         <h3 className="mb-3 text-[18px] font-bold text-white">{tournament.title}</h3>
-        <div className="mb-5 space-y-1.5 text-[13px] text-[#7a8aa8]">
-          <p>
-            Entry fee:{" "}
-            <span className="font-semibold text-white">
-              {formatMoney(tournament.entry_fee, true)}
-            </span>
-          </p>
-          <p>
-            Duration:{" "}
-            <span className="font-semibold text-white">
-              {formatDuration(tournament.start_date, tournament.end_date)}
-            </span>
-          </p>
+        <div className="mb-4 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
+          <div>
+            <p className="text-[#7a8aa8]">Entry fee</p>
+            <p className="font-semibold text-white">{formatMoney(tournament.entry_fee, true)}</p>
+          </div>
+          <div>
+            <p className="text-[#7a8aa8]">Duration</p>
+            <p className="font-semibold text-white">{formatDuration(tournament.start_date, tournament.end_date)}</p>
+          </div>
+          <div>
+            <p className="text-[#7a8aa8]">Start balance</p>
+            <p className="font-semibold text-white">{formatMoney(tournament.starting_balance)}</p>
+          </div>
+          <div>
+            <p className="text-[#7a8aa8]">{isActive ? "Ends" : "Starts"}</p>
+            <p className="font-semibold text-[#3ddf8a]">{formatCountdown(countdownTarget, now)}</p>
+          </div>
         </div>
 
-        {/* Bottom Section: full-width Join button */}
+        {/* Bottom Section: full-width Details button */}
         <button
           type="button"
           onClick={() => onOpenDetails(tournament.id)}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#2a3340] px-4 py-3 text-[14px] font-bold text-white transition-colors hover:bg-[#354151]"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#00b95b] px-4 py-3 text-[14px] font-bold text-white transition-colors hover:bg-[#00a34f]"
         >
-          <Info className="h-4 w-4" />
-          Join
+          View details
         </button>
       </div>
     </div>
@@ -644,6 +647,7 @@ const TournamentDetailView = ({
   const [page, setPage] = useState(1);
   const pollRef = useRef<ReturnType<typeof setInterval>>();
 
+  const hasActiveJoin = hasJoined && new Date(tournament.end_date).getTime() > now;
   const isActive = tournament.status === "active";
   const countdownTarget = isActive ? tournament.end_date : tournament.start_date;
   const countdownLabel = isActive ? "Ends in:" : "Starts in:";
@@ -809,7 +813,7 @@ const TournamentDetailView = ({
         {/* Left Column: Leaderboard */}
         <div className="space-y-5 lg:col-span-1">
           {/* Pinned user card (only when participating) */}
-          {hasJoined && userPosition && (
+          {hasActiveJoin && userPosition && (
             <div className="rounded-2xl border border-[#007aff]/30 bg-[#1e2530] p-4">
               <div className="mb-3 flex items-center gap-3">
                 {userPosition.country_code ? (
@@ -983,7 +987,7 @@ const TournamentDetailView = ({
           <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5">
             {/* Badge row */}
             <div className="mb-4 flex items-center gap-3">
-              {hasJoined ? (
+              {hasActiveJoin ? (
                 <span className="inline-flex items-center rounded-full bg-[#2a3340] px-3 py-1 text-[10px] font-bold tracking-wider text-[#7a8aa8]">
                   YOU ARE PARTICIPATING
                 </span>
@@ -1013,7 +1017,7 @@ const TournamentDetailView = ({
             <h2 className="mb-4 text-[22px] font-bold text-white">{tournament.title}</h2>
 
             {/* "Go to trading" button for participating users */}
-            {hasJoined && (
+            {hasActiveJoin && (
               <button
                 type="button"
                 onClick={() => onEnterTournament?.(tournament.id)}
@@ -1055,7 +1059,7 @@ const TournamentDetailView = ({
             </div>
 
             {/* CTA for non-participating users */}
-            {!hasJoined && (
+            {!hasActiveJoin && (
               <button
                 type="button"
                 onClick={() => onJoin(tournament.id)}
