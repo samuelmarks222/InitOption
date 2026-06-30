@@ -15,8 +15,6 @@ import {
   BarChart3,
   Calendar,
   ChevronDown,
-  ChevronRight,
-  Clock,
   Crown,
   DollarSign,
   Flag,
@@ -218,24 +216,6 @@ const StatCard = ({ icon: Icon, label, value, suffix }: { icon: any; label: stri
       {suffix && <span className="text-[28px] font-black text-[#00b95b]">{suffix}</span>}
       <p className="mt-1 text-[13px] text-[#7a8aa8]">{label}</p>
     </div>
-  );
-};
-
-const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  const diff = Math.max(new Date(targetDate).getTime() - now, 0);
-  const d = Math.floor(diff / 86400000);
-  const h = Math.floor((diff % 86400000) / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  const s = Math.floor((diff % 60000) / 1000);
-  return (
-    <span className="font-mono text-[13px] font-bold tabular-nums text-[#00b95b]">
-      {d > 0 ? `${d}d ` : ""}{h}h {m}m {s}s
-    </span>
   );
 };
 
@@ -525,50 +505,7 @@ const TournamentListView = ({
 }: TournamentListViewProps) => {
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-6">
-      {/* ─── Hero Section ──────────────────────────────────────────────── */}
-      <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#00b95b]/30 bg-[#00b95b]/8 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#00b95b]">
-        <Trophy className="h-3.5 w-3.5" />
-        Weekly Trading Tournaments
-      </div>
-      <h1 className="text-[32px] font-black text-white sm:text-[40px]">
-        Weekly Trading <span className="text-[#00b95b]">Tournaments</span>
-      </h1>
-      <p className="mt-2 mb-6 max-w-2xl text-[14px] leading-relaxed text-[#9aafcf]">
-        Join thousands of traders in weekly competitions. Prove your skills, climb the leaderboard,
-        and earn real rewards. New tournaments every Monday, Wednesday, Friday, and Saturday.
-      </p>
 
-      <div className="mb-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {SCHEDULE.map((t, i) => (
-          <FadeInSection key={t.day}>
-            <div className="group relative overflow-hidden rounded-2xl border border-[#334050] bg-[#27303d] p-5 transition-all duration-300 hover:border-[#00b95b]/40 hover:shadow-lg hover:shadow-[#00b95b]/5">
-              <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-[#00b95b]/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[#00b95b]/12 text-[#00b95b]">
-                <t.icon className="h-5 w-5" />
-              </div>
-              <div className="mb-2 inline-flex items-center rounded-full border border-[#334050] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#7a8aa8]">
-                {t.day}
-              </div>
-              <h3 className="text-[17px] font-bold text-white">{t.title}</h3>
-              <div className="mt-3 space-y-1.5 text-[13px] text-[#7a8aa8]">
-                <p>Prize: <span className="font-bold text-[#00b95b]">{t.pool}</span></p>
-                <p>Entry: <span className="font-semibold text-white">{t.entry}</span></p>
-                <p>Participants: <span className="font-semibold text-white">{t.participants}</span></p>
-              </div>
-              <div className="mt-3 flex items-center gap-1.5 text-[12px] text-[#7a8aa8]">
-                <Clock className="h-3.5 w-3.5" />
-                <CountdownTimer targetDate={i === 0 ? "2026-07-07T00:00:00Z" : i === 1 ? "2026-07-09T00:00:00Z" : i === 2 ? "2026-07-11T00:00:00Z" : "2026-07-12T00:00:00Z"} />
-              </div>
-              <button
-                type="button"
-                className="mt-4 w-full rounded-xl bg-[#00b95b] py-2.5 text-[13px] font-bold text-white transition-all hover:bg-[#00a34f] hover:shadow-lg hover:shadow-[#00b95b]/20"
-              >
-                Join Tournament
-              </button>
-            </div>
-          </FadeInSection>
-        ))}
-      </div>
 
       {/* ─── Statistics Section ────────────────────────────────────────── */}
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
