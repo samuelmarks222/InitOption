@@ -1,139 +1,117 @@
-import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, HelpCircle, Trophy, UserCheck, UserPlus, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useSocialTrading } from "@/contexts/SocialTradingContext";
-import type { TraderSummary } from "@/lib/social";
-import { computeTraderWinRate, getTraderDisplayName } from "@/lib/social";
+import { useMemo, useState } from "react";
+import { ArrowLeft, ChevronDown, Trophy, TrendingUp, TrendingDown } from "lucide-react";
 import CountryFlag from "@/components/ui/CountryFlag";
-import { getCountryOptionByName } from "@/lib/countries";
 
-type LeaderboardTrader = TraderSummary & {
-  rankedProfit: number;
-  rankedTrades: number;
-  rankedWins: number;
-  winRate: number;
-};
-
-type LeaderboardPeriod = "daily" | "weekly" | "monthly" | "all";
-
-const PERIODS: Array<{ id: LeaderboardPeriod; label: string }> = [
-  { id: "daily", label: "Day" },
-  { id: "weekly", label: "Week" },
-  { id: "monthly", label: "Month" },
-  { id: "all", label: "All" },
+const FIRST_NAMES = [
+  "James","Mary","John","Patricia","Robert","Jennifer","Michael","Linda","David","Elizabeth",
+  "William","Barbara","Richard","Susan","Joseph","Jessica","Thomas","Sarah","Christopher","Karen",
+  "Charles","Lisa","Daniel","Nancy","Matthew","Betty","Anthony","Margaret","Mark","Sandra",
+  "Donald","Ashley","Steven","Dorothy","Paul","Kimberly","Andrew","Emily","Joshua","Donna",
+  "Kenneth","Michelle","Kevin","Carol","Brian","Amanda","George","Melissa","Timothy","Deborah",
+  "Ronald","Stephanie","Edward","Rebecca","Jason","Sharon","Jeffrey","Laura","Ryan","Cynthia",
+  "Jacob","Kathleen","Gary","Amy","Nicholas","Angela","Eric","Shirley","Jonathan","Anna",
+  "Stephen","Brenda","Larry","Pamela","Justin","Emma","Scott","Nicole","Brandon","Helen",
+  "Benjamin","Samantha","Samuel","Katherine","Raymond","Christine","Gregory","Debra","Frank",
+  "Rachel","Alexander","Carolyn","Patrick","Janet","Jack","Catherine","Dennis","Maria",
+  "Jeremy","Heather","Ahmed","Fatima","Omar","Aisha","Kwame","Zara","Chen","Maria",
+  "Carlos","Priya","Yusuf","Lindiwe","Chloe","David","Sofia","Hassan","Naledi","Rajesh",
 ];
 
-const LEADERBOARD_SELECT_WITH_COUNTRY =
-  "user_id, profit, status, closed_at, profiles(id, username, display_name, avatar_url, nationality, phone_country, vip_tier, followers_count, following_count, total_profit, total_trades, total_wins)";
+const LAST_NAMES = [
+  "Smith","Johnson","Williams","Brown","Jones","Garcia","Miller","Davis","Rodriguez","Martinez",
+  "Hernandez","Lopez","Gonzalez","Wilson","Anderson","Thomas","Taylor","Moore","Jackson","Martin",
+  "Lee","Perez","Thompson","White","Harris","Sanchez","Clark","Ramirez","Lewis","Robinson",
+  "Walker","Young","Allen","King","Wright","Scott","Torres","Nguyen","Hill","Flores",
+  "Green","Adams","Nelson","Baker","Hall","Rivera","Campbell","Mitchell","Carter","Roberts",
+  "Gomez","Phillips","Evans","Turner","Diaz","Parker","Cruz","Edwards","Collins","Reyes",
+];
 
-const LEADERBOARD_SELECT_FALLBACK =
-  "user_id, profit, status, closed_at, profiles(id, username, display_name, avatar_url, vip_tier, followers_count, following_count, total_profit, total_trades, total_wins)";
+const COUNTRIES = [
+  "US","GB","CA","AU","DE","FR","IT","ES","NL","SE","NO","DK","FI","BR","AR","MX",
+  "CO","CL","ZA","NG","KE","GH","EG","MA","TN","AE","SA","IN","PK","BD","JP","KR",
+  "CN","TH","VN","MY","SG","RU","TR","PL","CZ","HU","RO","UA","GR","PT","IE","CH",
+  "AT","BE","IL","PH","ID","NZ","PE","VE",
+];
 
-const PROFILE_FALLBACK_SELECT =
-  "id, username, display_name, avatar_url, nationality, phone_country, vip_tier, followers_count, following_count, total_profit, total_trades, total_wins";
+const ICON_COLORS = [
+  "#f44336","#e91e63","#9c27b0","#673ab7","#3f51b5","#2196f3","#03a9f4","#00bcd4",
+  "#009688","#4caf50","#8bc34a","#cddc39","#ffc107","#ff9800","#ff5722","#795548",
+  "#607d8b","#1abc9c","#3498db","#9b59b6","#e67e22","#2ecc71","#e74c3c","#1b8ffa",
+];
 
-const isMissingCountryColumnError = (error: unknown) => {
-  const message = error && typeof error === "object" && "message" in error ? String(error.message) : "";
-  return /(nationality|phone_country)/iu.test(message) && /(column|schema|not found|does not exist)/iu.test(message);
-};
+function seededRandom(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = (Math.imul(1103515245, s) + 12345) >>> 0;
+    return (s & 0x7fffffff) / 0x7fffffff;
+  };
+}
 
-const hashSeed = (value: string) => {
+function hashCode(str: string): number {
   let hash = 0;
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
   }
-  return hash;
+  return hash >>> 0;
+}
+
+type DummyTrader = {
+  id: string;
+  name: string;
+  country: string;
+  profit: number;
+  trades: number;
+  wins: number;
 };
 
-const getTraderCountryCode = (trader: Partial<TraderSummary>, offset = 0) => {
-  const storedCountryCode = (trader.phone_country ?? trader.phoneCountry ?? "").trim().toUpperCase();
-  if (/^[A-Z]{2}$/u.test(storedCountryCode)) {
-    return storedCountryCode;
-  }
+const TOTAL_TRADERS = 1287;
 
-  const nationalityCode = getCountryOptionByName(trader.nationality)?.code;
-  if (nationalityCode) {
-    return nationalityCode;
+function generateDummyTraders(): DummyTrader[] {
+  const rng = seededRandom(42);
+  const result: DummyTrader[] = [];
+  for (let i = 0; i < TOTAL_TRADERS; i++) {
+    const firstName = FIRST_NAMES[i % FIRST_NAMES.length];
+    const lastName = LAST_NAMES[Math.floor(i / FIRST_NAMES.length) % LAST_NAMES.length];
+    const name = `${firstName} ${lastName}`;
+    const country = COUNTRIES[Math.floor(rng() * COUNTRIES.length)];
+    const profit = Number(((rng() - 0.15) * 25000).toFixed(2));
+    const trades = Math.floor(rng() * 400 + 10);
+    const wins = Math.floor(trades * (0.4 + rng() * 0.5));
+    result.push({ id: `lb-dummy-${i}`, name, country, profit, trades, wins });
   }
+  result.sort((a, b) => b.profit - a.profit);
+  return result;
+}
 
-  const fallbackCodes = ["KE", "NG", "ZA", "GB", "US", "FR", "BR", "IN", "TR", "AE", "CA", "AU", "DE", "JP", "KR", "MX", "EG", "SA"];
-  const seed = trader.id || trader.username || trader.display_name || "trader";
-  return fallbackCodes[(hashSeed(seed) + offset) % fallbackCodes.length];
+const ALL_TRADERS = generateDummyTraders();
+
+const formatProfit = (value: number) => {
+  const sign = value >= 0 ? "+" : "";
+  return `${sign}$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-const getCutoff = (period: LeaderboardPeriod) => {
-  const now = new Date();
-
-  if (period === "daily") {
-    const next = new Date(now);
-    next.setDate(now.getDate() - 1);
-    return next.toISOString();
-  }
-
-  if (period === "weekly") {
-    const next = new Date(now);
-    next.setDate(now.getDate() - 7);
-    return next.toISOString();
-  }
-
-  if (period === "monthly") {
-    const next = new Date(now);
-    next.setMonth(now.getMonth() - 1);
-    return next.toISOString();
-  }
-
-  return null;
+const formatPercent = (profit: number, trades: number) => {
+  const avg = trades > 0 ? profit / trades : 0;
+  const base = 100;
+  const pct = (avg / base) * 100;
+  return `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`;
 };
 
-const formatLeaderboardProfit = (value: number) => {
-  if (value >= 30000) {
-    return "$30,000.00+";
-  }
-
-  return `$${value.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+const getWinRate = (wins: number, trades: number) => {
+  if (trades === 0) return 0;
+  return Math.round((wins / trades) * 100);
 };
 
-const getRankBadgeClass = (rank: number) => {
-  if (rank === 1) return "bg-[#f9d54a] text-[#1b1f2d]";
-  if (rank === 2) return "bg-[#d9e0eb] text-[#1b1f2d]";
-  if (rank === 3) return "bg-[#f0a44a] text-[#1b1f2d]";
-  return "bg-transparent text-white/45";
+const getRankColor = (rank: number) => {
+  if (rank === 1) return "text-yellow-400";
+  if (rank === 2) return "text-slate-300";
+  if (rank === 3) return "text-amber-600";
+  return "text-[#7a8aa8]";
 };
 
-const FlagBadge = ({ code, size = 16, className = "" }: { code: string; size?: number; className?: string }) => (
-  <span className={`inline-flex shrink-0 overflow-hidden rounded-full ring-1 ring-black/35 ${className}`}>
-    <CountryFlag code={code} size={size} className="rounded-full" />
-  </span>
-);
-
-const FlagStack = ({ trader }: { trader: Partial<TraderSummary> }) => (
-  <span className="flex shrink-0 items-center">
-    <FlagBadge code={getTraderCountryCode(trader)} size={16} />
-  </span>
-);
-
-const Avatar = ({ trader }: { trader: Partial<TraderSummary> }) => {
-  const fallback = getTraderDisplayName(trader).charAt(0).toUpperCase();
-
-  if (trader.avatar_url) {
-    return (
-      <img
-        src={trader.avatar_url}
-        alt={getTraderDisplayName(trader)}
-        className="h-7 w-7 rounded-full object-cover ring-1 ring-white/10"
-      />
-    );
-  }
-
-  return (
-    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#252a37] text-[10px] font-black text-white ring-1 ring-white/8">
-      {fallback}
-    </div>
-  );
+const getRankBg = (rank: number) => {
+  if (rank <= 3) return "bg-[#2a3340]";
+  return "bg-transparent";
 };
 
 interface WorkspaceLeaderboardProps {
@@ -141,176 +119,18 @@ interface WorkspaceLeaderboardProps {
 }
 
 export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => {
-  const { profile } = useAuth();
-  const { followTrader, isFollowing, unfollowTrader } = useSocialTrading();
-  const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState<LeaderboardPeriod>("all");
-  const [traders, setTraders] = useState<LeaderboardTrader[]>([]);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const totalPages = Math.ceil(ALL_TRADERS.length / pageSize);
 
-  useEffect(() => {
-    const runLeaderboardQuery = (selectClause: string, cutoff: string | null) => {
-      let query = supabase
-        .from("trades")
-        .select(selectClause)
-        .neq("status", "open")
-        .order("closed_at", { ascending: false })
-        .limit(500);
-
-      if (cutoff) {
-        query = query.gte("closed_at", cutoff);
-      }
-
-      return query;
-    };
-
-    const fetchLeaders = async () => {
-      setLoading(true);
-      let cutoff = getCutoff(period);
-      let { data, error } = await runLeaderboardQuery(LEADERBOARD_SELECT_WITH_COUNTRY, cutoff);
-
-      if (error && isMissingCountryColumnError(error)) {
-        const fallbackResult = await runLeaderboardQuery(LEADERBOARD_SELECT_FALLBACK, cutoff);
-        data = fallbackResult.data;
-        error = fallbackResult.error;
-      }
-
-      if (error) {
-        setTraders([]);
-        setLoading(false);
-        return;
-      }
-
-      let resultRows = data ?? [];
-      if (resultRows.length === 0 && period !== "all") {
-        const fallbackCutoff = getCutoff("all");
-        let fallbackResult = await runLeaderboardQuery(LEADERBOARD_SELECT_WITH_COUNTRY, fallbackCutoff);
-        if (fallbackResult.error && isMissingCountryColumnError(fallbackResult.error)) {
-          fallbackResult = await runLeaderboardQuery(LEADERBOARD_SELECT_FALLBACK, fallbackCutoff);
-        }
-        if (!fallbackResult.error) {
-          resultRows = fallbackResult.data ?? [];
-        }
-      }
-
-      const aggregate = new Map<string, LeaderboardTrader>();
-
-      const addTraderFromProfile = (profileRow: any) => {
-        if (!profileRow?.id) return;
-        const existing = aggregate.get(profileRow.id);
-        const trader = {
-          id: profileRow.id,
-          username: profileRow.username ?? null,
-          display_name: profileRow.display_name ?? null,
-          avatar_url: profileRow.avatar_url ?? null,
-          nationality: profileRow.nationality ?? null,
-          phone_country: profileRow.phone_country ?? null,
-          phoneCountry: profileRow.phoneCountry ?? null,
-          vip_tier: profileRow.vip_tier ?? null,
-          followers_count: profileRow.followers_count ?? 0,
-          following_count: profileRow.following_count ?? 0,
-          total_profit: profileRow.total_profit ?? 0,
-          total_trades: profileRow.total_trades ?? 0,
-          total_wins: profileRow.total_wins ?? 0,
-          rankedProfit: Number(profileRow.total_profit ?? 0),
-          rankedTrades: Number(profileRow.total_trades ?? 0),
-          rankedWins: Number(profileRow.total_wins ?? 0),
-          winRate: computeTraderWinRate(Number(profileRow.total_wins ?? 0), Number(profileRow.total_trades ?? 0)),
-        } as LeaderboardTrader;
-
-        if (existing) {
-          existing.rankedProfit += trader.rankedProfit;
-          existing.rankedTrades += trader.rankedTrades;
-          existing.rankedWins += trader.rankedWins;
-          existing.winRate = computeTraderWinRate(existing.rankedWins, existing.rankedTrades);
-          aggregate.set(profileRow.id, existing as LeaderboardTrader);
-          return;
-        }
-
-        aggregate.set(profileRow.id, trader);
-      };
-
-      (resultRows ?? []).forEach((row: any) => {
-        const profile = row.profiles;
-        const traderId = profile?.id ?? row.user_id;
-        if (!traderId) return;
-
-        const trader: Partial<LeaderboardTrader> = {
-          id: traderId,
-          username: profile?.username ?? null,
-          display_name: profile?.display_name ?? null,
-          avatar_url: profile?.avatar_url ?? null,
-          nationality: profile?.nationality ?? null,
-          phone_country: profile?.phone_country ?? null,
-          phoneCountry: profile?.phoneCountry ?? null,
-        };
-
-        const current = aggregate.get(traderId) ?? {
-          ...trader,
-          rankedProfit: 0,
-          rankedTrades: 0,
-          rankedWins: 0,
-          winRate: 0,
-        };
-
-        current.rankedProfit += Number(row.profit ?? 0);
-        current.rankedTrades += 1;
-        current.rankedWins += row.status === "won" ? 1 : 0;
-        current.winRate = computeTraderWinRate(current.rankedWins, current.rankedTrades);
-        aggregate.set(traderId, current as LeaderboardTrader);
-      });
-
-      if (aggregate.size === 0) {
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select(PROFILE_FALLBACK_SELECT)
-          .order("total_profit", { ascending: false })
-          .limit(30);
-
-        if (!profileError) {
-          (profileData ?? []).forEach(addTraderFromProfile);
-        }
-      }
-
-      const nextTraders = Array.from(aggregate.values())
-        .sort((left, right) => right.rankedProfit - left.rankedProfit)
-        .slice(0, 30);
-
-      setTraders(nextTraders);
-      setLoading(false);
-    };
-
-    void fetchLeaders();
-  }, [period]);
-
-  const currentUserId = profile?.id ?? null;
-  const rankedRows = useMemo(
-    () =>
-      traders.map((trader, index) => ({
-        ...trader,
-        rank: index + 1,
-      })),
-    [traders],
+  const paginatedTraders = useMemo(
+    () => ALL_TRADERS.slice((page - 1) * pageSize, page * pageSize),
+    [page],
   );
-
-  const currentUserEntry = useMemo(
-    () => rankedRows.find((trader) => trader.id === currentUserId) ?? null,
-    [currentUserId, rankedRows],
-  );
-
-  const currentUserLabel = profile?.username?.trim() || profile?.display_name?.trim() || "Your account";
-  const currentUserPosition = currentUserEntry ? `#${currentUserEntry.rank}` : "-";
-  const currentUserProfit = currentUserEntry?.rankedProfit ?? 0;
-  const currentUserCountry = getTraderCountryCode({
-    id: profile?.id,
-    username: profile?.username,
-    display_name: profile?.display_name,
-    nationality: profile?.nationality,
-    phone_country: profile?.phone_country,
-    phoneCountry: profile?.phoneCountry,
-  });
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#191d29] text-white">
+      {/* Header */}
       <div className="flex h-[58px] shrink-0 items-center gap-2 border-b border-white/[0.08] px-3">
         {onClose ? (
           <button
@@ -319,15 +139,13 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
             className="flex h-8 w-8 items-center justify-center rounded-full text-white/65 transition-colors hover:bg-white/[0.06] hover:text-white"
             aria-label="Close leaderboard"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
           </button>
         ) : null}
-
         <div className="min-w-0 flex-1">
           <div className="text-[16px] font-black leading-none text-white">Leader Board</div>
-          <div className="mt-1 text-[11px] font-semibold text-white/42">of the {period === "daily" ? "Day" : PERIODS.find((item) => item.id === period)?.label}</div>
+          <div className="mt-1 text-[11px] font-semibold text-white/42">Today's Top Traders</div>
         </div>
-
         {onClose ? (
           <button
             type="button"
@@ -335,126 +153,120 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
             className="flex h-8 w-8 items-center justify-center rounded-full text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white"
             aria-label="Close leaderboard"
           >
-            <X className="h-4 w-4" />
+            <ChevronDown className="h-4 w-4 rotate-90" />
           </button>
         ) : null}
       </div>
 
+      {/* Stats bar */}
       <div className="shrink-0 border-b border-white/[0.08] px-3 py-2.5">
         <div className="rounded-[5px] bg-[#242837] px-2.5 py-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <FlagBadge code={currentUserCountry} size={17} />
-              <span className="truncate text-[12px] font-black text-white">{currentUserLabel}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-[6px] bg-[#f4b43e]/18 text-[#f4b43e]">
+                <Trophy className="h-4 w-4" />
+              </span>
+              <span className="text-[13px] font-black text-white">
+                {ALL_TRADERS.length.toLocaleString()} Traders Today
+              </span>
             </div>
-            <span className="shrink-0 text-[12px] font-black text-[#00c977]">{formatLeaderboardProfit(currentUserProfit)}</span>
+            <span className="text-[11px] text-white/42">
+              Page {page} of {totalPages.toLocaleString()}
+            </span>
           </div>
-          <div className="mt-2 text-[10px] font-bold text-white/48">Your position: {currentUserPosition}</div>
-        </div>
-
-        <div className="mt-2 flex items-center gap-2 rounded-[5px] bg-[#0e2a4e] px-2.5 py-2 text-left">
-          <span className="flex h-7 w-7 items-center justify-center rounded-[6px] bg-[#f4b43e]/18 text-[#f4b43e]">
-            <HelpCircle className="h-4 w-4" />
-          </span>
-          <div className="min-w-0">
-            <div className="text-[11px] font-black text-[#4da3ff]">How does this rating work?</div>
-            <div className="mt-0.5 truncate text-[10px] text-white/45">Closed trades update this list automatically.</div>
-          </div>
-        </div>
-
-        <div className="mt-2 flex items-center gap-1.5">
-          {PERIODS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setPeriod(item.id)}
-              className={`rounded-[5px] px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] transition-colors ${
-                period === item.id
-                  ? "bg-[#0e8beb] text-white"
-                  : "bg-[#222633] text-white/45 hover:bg-white/[0.08] hover:text-white"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
         </div>
       </div>
 
+      {/* Leaderboard List */}
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">
-        {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#0fa053]/25 border-t-[#0fa053]" />
-          </div>
-        ) : rankedRows.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/[0.04] text-white/35">
-              <Trophy className="h-6 w-6" />
-            </div>
-            <div className="mt-3 text-[13px] font-black text-white">No leaders yet</div>
-            <p className="mt-1.5 text-[11px] leading-5 text-white/42">
-              Closed trades will appear here as soon as traders finish positions.
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-white/[0.06]">
-            {rankedRows.map((trader) => {
-              const following = isFollowing(trader.id);
-              const isSelf = trader.id === currentUserId;
-              const profitClass = trader.rankedProfit >= 0 ? "text-[#00c977]" : "text-[#ff6f6f]";
-
-              return (
-                <div key={trader.id} className="group flex h-[44px] items-center gap-2">
-                  <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${getRankBadgeClass(trader.rank)}`}>
-                    {trader.rank}
-                  </div>
-
-                  <div className="flex shrink-0 items-center">
-                    <Avatar trader={trader} />
-                    <span className="-ml-2 mt-4">
-                      <FlagStack trader={trader} />
-                    </span>
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[11px] font-bold text-white">{getTraderDisplayName(trader)}</div>
-                    <div className="mt-0.5 truncate text-[9px] font-semibold text-white/32">
-                      {isSelf ? "you" : `${trader.winRate}% wins`} - {trader.rankedTrades} trades
-                    </div>
-                  </div>
-
-                  {!isSelf ? (
-                    <button
-                      type="button"
-                      onClick={() => void (following ? unfollowTrader(trader.id) : followTrader(trader.id))}
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border opacity-0 transition-all group-hover:opacity-100 ${
-                        following
-                          ? "border-[#00c977]/35 bg-[#00c977]/14 text-[#00c977]"
-                          : "border-white/[0.08] bg-white/[0.04] text-white/45 hover:text-white"
-                      }`}
-                      aria-label={following ? `Unfollow ${getTraderDisplayName(trader)}` : `Follow ${getTraderDisplayName(trader)}`}
-                    >
-                      {following ? <UserCheck className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
-                    </button>
-                  ) : null}
-
-                  <div className={`w-[76px] shrink-0 text-right text-[11px] font-black ${profitClass}`}>
-                    {formatLeaderboardProfit(trader.rankedProfit)}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="shrink-0 border-t border-white/[0.08] px-3 py-2.5">
-          <a
-            href="/social/traders"
-            className="flex items-center justify-center gap-2 rounded-[5px] bg-[#0fa053]/15 px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] text-[#0fa053] transition-colors hover:bg-[#0fa053]/25"
-          >
-            <Trophy className="h-3.5 w-3.5" />
-            View Full Leaderboard
-          </a>
+        {/* Column headers */}
+        <div className="flex items-center gap-2 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/35">
+          <span className="w-8 text-center">Rank</span>
+          <span className="w-7" />
+          <span className="w-6" />
+          <span className="flex-1">Trader</span>
+          <span className="w-[90px] text-right">Profit</span>
+          <span className="w-[70px] text-right">Return</span>
         </div>
-      </div>    </div>
+
+        <div className="divide-y divide-white/[0.06]">
+          {paginatedTraders.map((trader, idx) => {
+            const rank = (page - 1) * pageSize + idx + 1;
+            const isPositive = trader.profit >= 0;
+            const initial = trader.name.charAt(0).toUpperCase();
+            const iconColor = ICON_COLORS[hashCode(trader.id) % ICON_COLORS.length];
+            const winRate = getWinRate(trader.wins, trader.trades);
+
+            return (
+              <div key={trader.id} className="flex h-[48px] items-center gap-2 px-2 transition-colors hover:bg-white/[0.03]">
+                {/* Rank */}
+                <span className={`w-8 text-center text-[12px] font-black ${getRankColor(rank)}`}>
+                  {rank}
+                </span>
+
+                {/* Profile Icon */}
+                <div
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white ring-1 ring-white/10"
+                  style={{ background: iconColor }}
+                >
+                  {initial}
+                </div>
+
+                {/* Country Flag */}
+                <div className="w-6 shrink-0">
+                  <CountryFlag code={trader.country} size={20} className="rounded-full ring-1 ring-black/20" />
+                </div>
+
+                {/* Username */}
+                <div className="min-w-0 flex-1">
+                  <span className="truncate text-[12px] font-bold text-white">{trader.name}</span>
+                  <span className="ml-2 text-[9px] font-semibold text-white/35">
+                    {winRate}% win · {trader.trades} trades
+                  </span>
+                </div>
+
+                {/* Profit */}
+                <span className={`w-[90px] shrink-0 text-right text-[12px] font-black tabular-nums ${isPositive ? "text-[#00c977]" : "text-[#ff6f6f]"}`}>
+                  {formatProfit(trader.profit)}
+                </span>
+
+                {/* Percentage Gain */}
+                <span className={`w-[70px] shrink-0 text-right text-[11px] font-bold tabular-nums ${isPositive ? "text-[#00c977]" : "text-[#ff6f6f]"}`}>
+                  {isPositive ? <TrendingUp className="inline h-3 w-3 mr-0.5" /> : <TrendingDown className="inline h-3 w-3 mr-0.5" />}
+                  {formatPercent(trader.profit, trader.trades)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Pagination */}
+      <div className="shrink-0 border-t border-white/[0.08] px-3 py-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="inline-flex items-center gap-1 rounded-[5px] bg-[#242837] px-3 py-2 text-[11px] font-bold text-white transition-colors hover:bg-[#2e3348] disabled:opacity-40"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Previous
+          </button>
+          <span className="text-[11px] text-white/42">
+            {page} / {totalPages.toLocaleString()}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="inline-flex items-center gap-1 rounded-[5px] bg-[#242837] px-3 py-2 text-[11px] font-bold text-white transition-colors hover:bg-[#2e3348] disabled:opacity-40"
+          >
+            Next
+            <ChevronDown className="h-3.5 w-3.5 -rotate-90" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
