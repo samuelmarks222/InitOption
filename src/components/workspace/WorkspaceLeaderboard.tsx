@@ -92,19 +92,23 @@ function generateTraders(): TraderData[] {
     const name = `${fn} ${ln}`;
     const country = COUNTRIES[Math.floor(rng() * COUNTRIES.length)];
     const flagUrl = `https://flagcdn.com/w160/${country.toLowerCase()}.png`;
-    const totalTrades = Math.floor(rng() * 1500 + 10);
-    const wins = Math.floor(totalTrades * (0.45 + rng() * 0.4));
+    const totalTrades = Math.floor(rng() * 5000 + 50);
+    const wins = Math.floor(totalTrades * (0.35 + rng() * 0.55));
     const losses = totalTrades - wins;
     const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
-    const avgReturn = Number((rng() * 35 + 5).toFixed(1));
-    const totalProfit = Number(((rng() - 0.2) * 85000).toFixed(2));
-    const todayProfit = Number(((rng() - 0.3) * 2500).toFixed(2));
-    const highestWin = Number((rng() * 5000 + 100).toFixed(2));
-    const longestStreak = Math.floor(rng() * 18 + 1);
-    const currentStreak = Math.floor(rng() * 8);
-    const avgDuration = Number((rng() * 14 + 1).toFixed(1));
-    const avgAmount = Number((rng() * 200 + 10).toFixed(2));
-    const numAssets = Math.floor(rng() * 5 + 2);
+    const avgReturn = Number((rng() * 60 + 3).toFixed(1));
+    // Heavy-tail profit distribution: most traders near zero, few very high
+    const profitRaw = -Math.log(1 - rng() + 0.00001) * 48000;
+    const profitJitter = (rng() - 0.5) * 35000;
+    const isLoss = rng() < 0.08;
+    const totalProfit = Number((isLoss ? -(Math.abs(profitRaw * rng() * 0.6) + 500) : profitRaw + profitJitter).toFixed(2));
+    const todayProfit = Number(((rng() - 0.45) * 12000).toFixed(2));
+    const highestWin = Number((rng() * 15000 + 200).toFixed(2));
+    const longestStreak = Math.floor(rng() * 25 + 1);
+    const currentStreak = Math.floor(rng() * 12);
+    const avgDuration = Number((rng() * 30 + 1).toFixed(1));
+    const avgAmount = Number((rng() * 500 + 10).toFixed(2));
+    const numAssets = Math.floor(rng() * 8 + 2);
     const preferredAssets = [...ASSETS].sort(() => rng() - 0.5).slice(0, numAssets);
     const favExpirations = [...EXPIRATIONS].filter(() => rng() > 0.3);
     const experience = EXPERIENCES[Math.floor(rng() * EXPERIENCES.length)];
@@ -113,7 +117,7 @@ function generateTraders(): TraderData[] {
     const isVerified = rng() > 0.7;
     const followers = Math.floor(rng() * 5000 + 1);
     const successRate = Number((winRate * (0.85 + rng() * 0.3)).toFixed(1));
-    const last30DaysProfit = Number(((rng() - 0.25) * 12000).toFixed(2));
+    const last30DaysProfit = Number(((rng() - 0.35) * 25000).toFixed(2));
     const riskLevel = ["Low","Medium","High"][Math.floor(rng() * 3)];
     const minCopyAmount = Number((rng() * 500 + 50).toFixed(2));
 
@@ -151,10 +155,7 @@ const ALL_TRADERS = generateTraders();
 
 const formatProfit = (value: number) => {
   const sign = value >= 0 ? "+" : "";
-  const abs = Math.abs(value);
-  if (abs >= 1000000) return `${sign}$${(abs / 1000000).toFixed(1)}M`;
-  if (abs >= 1000) return `${sign}$${(abs / 1000).toFixed(1)}K`;
-  return `${sign}$${abs.toFixed(2)}`;
+  return `${sign}$${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 interface WorkspaceLeaderboardProps {
