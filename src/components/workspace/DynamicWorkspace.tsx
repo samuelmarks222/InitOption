@@ -10,6 +10,7 @@ import { WorkspaceLeaderboard } from "./WorkspaceLeaderboard";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { WorkspaceSocial } from "../social/WorkspaceSocial";
 import { WorkspaceSignals } from "./WorkspaceSignals";
+import { GeneralChat } from "./GeneralChat";
 
 interface DynamicWorkspaceProps {
   activeWorkspace: WorkspaceModule;
@@ -34,7 +35,7 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
   const isImmersiveSupport = activeWorkspace === "support" && supportImmersive;
   const isEmbeddedTournaments = activeWorkspace === "tournaments";
   const isDedicatedLeaderboard = activeWorkspace === "leaderboard";
-const workspaceTitleMap: Record<Exclude<WorkspaceModule, null>, string> = {
+  const workspaceTitleMap: Record<Exclude<WorkspaceModule, null>, string> = {
     support: "social",
     account: "account",
     tournaments: "tournaments",
@@ -46,6 +47,7 @@ const workspaceTitleMap: Record<Exclude<WorkspaceModule, null>, string> = {
     referrals: "referrals",
     guides: "guides",
     signals: "signals",
+    generalchat: "general",
   };
   const workspaceTitle = workspaceTitleMap[activeWorkspace];
   const workspaceWidthClass = isImmersiveSupport
@@ -60,6 +62,8 @@ const workspaceTitleMap: Record<Exclude<WorkspaceModule, null>, string> = {
           ? "w-[260px] max-w-[calc(100vw-85px)]"
           : activeWorkspace === "help"
             ? "w-[360px] max-w-[calc(100vw-85px)]"
+      : activeWorkspace === "generalchat"
+          ? "w-[380px] max-w-[calc(100vw-85px)]"
           : "w-[350px] max-w-[calc(100vw-85px)]";
 
   return (
@@ -131,6 +135,11 @@ const workspaceTitleMap: Record<Exclude<WorkspaceModule, null>, string> = {
         {activeWorkspace === "signals" && (
           <div className="flex-1 w-full h-full">
             <WorkspaceSignals onClose={onClose} />
+          </div>
+        )}
+        {activeWorkspace === "generalchat" && (
+          <div className="flex-1 w-full h-full">
+            <GeneralChat onClose={onClose} />
           </div>
         )}
       </div>

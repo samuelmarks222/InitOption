@@ -46,6 +46,21 @@ const SESSION_TOPICS = [
   "Apple",
   "Tesla",
   "Amazon",
+  "GBP/JPY",
+  "USD/JPY",
+  "S&P 500",
+  "Dow Jones",
+  "Ethereum",
+  "USD/CAD",
+  "AUD/USD",
+  "NZD/USD",
+  "Copper",
+  "Natural Gas",
+  "USD/CHF",
+  "Euro Stoxx 50",
+  "Nikkei 225",
+  "FTSE 100",
+  "DAX",
 ];
 
 const TOURNAMENT_MENTIONS = [
@@ -53,6 +68,10 @@ const TOURNAMENT_MENTIONS = [
   "today's competition",
   "this month's challenge",
   "the prize pool event",
+  "the weekend showdown",
+  "the daily leaderboard",
+  "the 50k grand tournament",
+  "today's speed challenge",
 ];
 
 function getRandomDelay(range: { min: number; max: number }): number {
@@ -184,6 +203,56 @@ function generateUniqueHistory(trader: TraderProfile, rng: () => number): ChatMe
     {
       them: "Just hit my 10th win in a row 🔥",
       me: "That's insane! Congrats 👏",
+      delayMins: 2 + Math.floor(rng() * 4),
+    },
+    {
+      them: `Think ${topic} will break resistance today?`,
+      me: "I'm watching it closely, maybe afternoon",
+      delayMins: 3 + Math.floor(rng() * 6),
+    },
+    {
+      them: "I'm testing a new strategy on the 5min chart",
+      me: "Interesting, let me know how it goes",
+      delayMins: 1 + Math.floor(rng() * 4),
+    },
+    {
+      them: "Just had a great webinar on risk management",
+      me: "Nice! Any key takeaways?",
+      delayMins: 2 + Math.floor(rng() * 5),
+    },
+    {
+      them: "My copy trading profits are looking good this week",
+      me: "That's what I like to hear!",
+      delayMins: 1 + Math.floor(rng() * 3),
+    },
+    {
+      them: "What indicators do you rely on most?",
+      me: "Mostly price action and EMA, simple setup",
+      delayMins: 2 + Math.floor(rng() * 4),
+    },
+    {
+      them: `The spread on ${topic} is really good for scalping today`,
+      me: "Yeah I noticed that too, juicy",
+      delayMins: 1 + Math.floor(rng() * 3),
+    },
+    {
+      them: "Been using the trading journal feature, game changer",
+      me: "Right? It helped me spot my mistakes",
+      delayMins: 2 + Math.floor(rng() * 5),
+    },
+    {
+      them: "Took a break over the weekend, feeling refreshed",
+      me: "Smart move. Mental health matters",
+      delayMins: 1 + Math.floor(rng() * 3),
+    },
+    {
+      them: "Voted for your trade on the platform earlier!",
+      me: "Appreciate the support! 🙏",
+      delayMins: 1 + Math.floor(rng() * 2),
+    },
+    {
+      them: "The weekend tournament format is actually pretty fun",
+      me: "Yeah I like the shorter timeframe",
       delayMins: 2 + Math.floor(rng() * 4),
     },
   ];
@@ -322,7 +391,7 @@ export function useChatService(trader: TraderData, userName: string = "You") {
       proactiveTimerRef.current = setTimeout(() => {
         setState((prev) => {
           if (prev.chatState === "idle" && prev.isFocused && prev.traderProfile.isOnline) {
-            const msg = getConversationStarter(prev.traderProfile.personality);
+            const msg = getConversationStarter(toPersonalityFlags(prev.traderProfile.personality));
             const newMsg: ChatMessage = {
               id: `proactive-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               text: msg,
@@ -359,7 +428,8 @@ export function useChatService(trader: TraderData, userName: string = "You") {
     setState((prev) => {
       const { personality } = prev.traderProfile;
       const context = detectContext(userMessage, personality);
-      const replyText = getRandomMessage(context, personality);
+      const pf = toPersonalityFlags(personality);
+      const replyText = getRandomMessage(context, pf);
 
       const delayRange = MESSAGE_DELAYS[personality.responseSpeed];
       const baseDelay = getRandomDelay(delayRange);
@@ -398,7 +468,7 @@ export function useChatService(trader: TraderData, userName: string = "You") {
               if (personality.initiationChance > 0.1 && rngRef.current() < 0.25) {
                 setState((st) => {
                   if (st.chatState === "idle") {
-                    const followUp = getRandomReaction(personality);
+                    const followUp = getRandomReaction(pf);
                     const fMsg: ChatMessage = {
                       id: `followup-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                       text: followUp,
@@ -566,6 +636,18 @@ export function useChatService(trader: TraderData, userName: string = "You") {
     formatDate,
     getOnlineStatusText,
     clearAllTimers,
+  };
+}
+
+function toPersonalityFlags(personality: TraderPersonality): {
+  casual?: boolean; mixed?: boolean; professional?: boolean;
+  verbosity: "brief" | "normal" | "verbose";
+  emojiUsage: "none" | "light" | "heavy";
+} {
+  return {
+    [personality.formality]: true,
+    verbosity: personality.verbosity,
+    emojiUsage: personality.emojiUsage,
   };
 }
 

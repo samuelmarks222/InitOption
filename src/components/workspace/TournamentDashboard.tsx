@@ -495,6 +495,7 @@ const TournamentListView = ({
   participatingTournaments,
   availableTournaments,
   completedTournaments,
+  historyRows,
   joinedIds,
   now,
   isLoading,

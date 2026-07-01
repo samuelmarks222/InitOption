@@ -7,13 +7,14 @@ import {
   HelpCircle,
   LineChart,
   Menu,
+  MessageCircle,
   Settings,
   Trophy,
   User,
   Wifi,
 } from "lucide-react";
 
-export type WorkspaceModule = "support" | "account" | "tournaments" | "leaderboard" | "referrals" | "more" | "settings" | "help" | "guides" | "signals" | null;
+export type WorkspaceModule = "support" | "account" | "tournaments" | "leaderboard" | "referrals" | "more" | "settings" | "help" | "guides" | "signals" | "generalchat" | null;
 
 interface NavigationSidebarProps {
   activeWorkspace: WorkspaceModule;
@@ -54,6 +55,7 @@ export const NavigationSidebar = ({
   const SECONDARY_ITEMS = [
     { id: "tournaments", label: "Tournament", icon: Trophy },
     { id: "support", label: "Chat", icon: Headset },
+    { id: "generalchat", label: "General", icon: MessageCircle },
     { id: "leaderboard", label: "Leaders", icon: BarChart3 },
     { id: "signals", label: "Signals", icon: Wifi },
     { id: "more", label: "More", icon: Grid },
