@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Bell, BellOff, ChevronDown, Eye, EyeOff, MessageCircle, Star, Trophy, Users, X } from "lucide-react";
 import { toast } from "sonner";
+import { getUnreadCount, subscribe } from "./chatUnreadStore";
 import { TraderProfile } from "./TraderProfile";
 import type { CopySettings } from "./TraderProfile";
 import { DataRow } from "./TraderProfile";
@@ -171,6 +172,12 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
   const [selectedTrader, setSelectedTrader] = useState<TraderData | null>(null);
   const [watchingIds, setWatchingIds] = useState<Set<string>>(new Set());
   const [showWatching, setShowWatching] = useState(false);
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const unsub = subscribe(() => setTick((n) => n + 1));
+    return unsub;
+  }, []);
 
   const watchedTraders = useMemo(
     () => ALL_TRADERS.filter((t) => watchingIds.has(t.id)),
@@ -306,7 +313,10 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
                 {/* User info */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="truncate text-[13px] font-semibold text-[#f1f2f4] group-hover:text-white">{trader.name}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="truncate text-[13px] font-semibold text-[#f1f2f4] group-hover:text-white">{trader.name}</span>
+                      {(() => { const uc = getUnreadCount(trader.id); return uc > 0 ? <span className="shrink-0 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[#ef5350] text-[9px] font-bold text-white px-1">{uc > 99 ? "99+" : uc}</span> : null; })()}
+                    </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {isWatched && (
                         <span className="shrink-0 rounded-full bg-[#f4b742]/12 px-1.5 py-0.5 text-[8px] font-bold text-[#f4b742]">WATCHING</span>

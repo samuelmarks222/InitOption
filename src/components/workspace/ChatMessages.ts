@@ -57,7 +57,7 @@ export const TRADER_MESSAGE_LIBRARY: MessageContent[] = [
     context: "close_trade",
   },
   {
-    text: "Been watching USD/PHP all morning",
+    text: "Been watching EUR/USD all morning, finally took a position",
     tags: ["watching", "specific_asset", "session"],
     personality: ["casual", "mixed"],
     verbosity: ["normal"],
@@ -105,7 +105,7 @@ export const TRADER_MESSAGE_LIBRARY: MessageContent[] = [
     context: "win_streak",
   },
   {
-    text: "Market's choppy today, staying out",
+    text: "Market's choppy today, staying out for now",
     tags: ["market_condition", "risk_management", "decision"],
     personality: ["casual", "mixed", "professional"],
     verbosity: ["brief", "normal"],
@@ -153,7 +153,7 @@ export const TRADER_MESSAGE_LIBRARY: MessageContent[] = [
     context: "session_preference",
   },
   {
-    text: "Risk management saved me today",
+    text: "Risk management saved me today, stayed disciplined",
     tags: ["risk_management", "reflection", "lesson"],
     personality: ["mixed", "professional"],
     verbosity: ["brief", "normal"],
@@ -185,7 +185,7 @@ export const TRADER_MESSAGE_LIBRARY: MessageContent[] = [
     context: "stop_hunt",
   },
   {
-    text: "Patience is key in this game",
+    text: "Patience is key in this game, I keep telling myself that",
     tags: ["wisdom", "mindset", "advice"],
     personality: ["mixed", "professional"],
     verbosity: ["brief", "normal"],
@@ -193,7 +193,7 @@ export const TRADER_MESSAGE_LIBRARY: MessageContent[] = [
     context: "trading_wisdom",
   },
   {
-    text: "GBP/JPY looking juicy for a reversal",
+    text: "GBP/JPY looking juicy for a reversal setup",
     tags: ["analysis", "specific_asset", "setup"],
     personality: ["mixed", "professional"],
     verbosity: ["normal"],
@@ -201,7 +201,7 @@ export const TRADER_MESSAGE_LIBRARY: MessageContent[] = [
     context: "setup_sharing",
   },
   {
-    text: "How do you handle the psychological side?",
+    text: "How do you handle the psychological side of trading?",
     tags: ["question", "psychology", "deep", "conversation"],
     personality: ["mixed", "professional"],
     verbosity: ["normal", "verbose"],
@@ -257,7 +257,7 @@ export const TRADER_MESSAGE_LIBRARY: MessageContent[] = [
     context: "discipline_commitment",
   },
   {
-    text: "Anyone trading the Asian session?",
+    text: "Anyone trading the Asian session right now?",
     tags: ["session", "question", "community", "timezone"],
     personality: ["casual", "mixed"],
     verbosity: ["brief"],
@@ -265,7 +265,7 @@ export const TRADER_MESSAGE_LIBRARY: MessageContent[] = [
     context: "session_check",
   },
   {
-    text: "My avg win is finally > avg loss 📈",
+    text: "My avg win is finally bigger than avg loss 📈",
     tags: ["milestone", "risk_reward", "improvement", "metrics"],
     personality: ["mixed", "professional"],
     verbosity: ["brief", "normal"],
@@ -297,7 +297,7 @@ export const TRADER_MESSAGE_LIBRARY: MessageContent[] = [
     context: "edge_discovery",
   },
   {
-    text: "Rough morning, but afternoon session recovered it",
+    text: "Rough morning but afternoon session recovered everything",
     tags: ["recovery", "session", "resilience", "daily_summary"],
     personality: ["casual", "mixed", "professional"],
     verbosity: ["normal"],
@@ -320,6 +320,118 @@ export const TRADER_MESSAGE_LIBRARY: MessageContent[] = [
     emojiUsage: ["heavy"],
     context: "daily_target_hit",
   },
+  {
+    text: "Yeah I'm liking the momentum on NASDAQ this hour",
+    tags: ["momentum", "specific_asset", "excitement"],
+    personality: ["casual", "mixed"],
+    verbosity: ["brief", "normal"],
+    emojiUsage: ["none", "light"],
+    context: "momentum_trading",
+  },
+  {
+    text: "Been testing a new scalping strategy on the 1-min chart",
+    tags: ["strategy", "testing", "scalping"],
+    personality: ["mixed"],
+    verbosity: ["normal"],
+    emojiUsage: ["none"],
+    context: "strategy_experiment",
+  },
+  {
+    text: "That rejection wick at resistance was beautiful",
+    tags: ["technical", "price_action", "analysis"],
+    personality: ["mixed", "professional"],
+    verbosity: ["brief", "normal"],
+    emojiUsage: ["none", "light"],
+    context: "price_action_comment",
+  },
+  {
+    text: "Taking a small loss but I'm fine with it, setup was valid",
+    tags: ["loss_acceptance", "discipline", "mindset"],
+    personality: ["professional", "mixed"],
+    verbosity: ["normal"],
+    emojiUsage: ["none"],
+    context: "loss_acceptance",
+  },
+  {
+    text: "Would you look at that, classic fakeout before the real move 😂",
+    tags: ["market_manipulation", "humor", "observation"],
+    personality: ["casual", "mixed"],
+    verbosity: ["normal"],
+    emojiUsage: ["heavy"],
+    context: "fakeout_comment",
+  },
+  {
+    text: "I've been watching this pair for 3 hours waiting for the right moment",
+    tags: ["patience", "waiting", "dedication"],
+    personality: ["mixed", "professional"],
+    verbosity: ["normal"],
+    emojiUsage: ["none"],
+    context: "patient_waiting",
+  },
+  {
+    text: "3 wins in a row today, feeling good about this setup",
+    tags: ["win_streak", "confidence", "momentum"],
+    personality: ["casual", "mixed"],
+    verbosity: ["normal"],
+    emojiUsage: ["light"],
+    context: "winning_session",
+  },
+  {
+    text: "This is why I love binary options, quick in and out",
+    tags: ["binary_options", "preference", "speed"],
+    personality: ["casual", "mixed"],
+    verbosity: ["brief", "normal"],
+    emojiUsage: ["none", "light"],
+    context: "binary_preference",
+  },
+  {
+    text: "My journaling has really helped spot my weaknesses",
+    tags: ["improvement", "journaling", "self_development"],
+    personality: ["professional", "mixed"],
+    verbosity: ["normal", "verbose"],
+    emojiUsage: ["none"],
+    context: "journaling_benefit",
+  },
+  {
+    text: "Got stopped out but the setup was solid, that's all that matters",
+    tags: ["process_over_outcome", "discipline", "stoic"],
+    personality: ["professional", "mixed"],
+    verbosity: ["normal"],
+    emojiUsage: ["none"],
+    context: "process_focus",
+  },
+  {
+    text: "Anyone catch that BTC pump just now? 🚀",
+    tags: ["crypto", "excitement", "community", "specific_asset"],
+    personality: ["casual", "mixed"],
+    verbosity: ["brief"],
+    emojiUsage: ["heavy"],
+    context: "crypto_pump",
+  },
+  {
+    text: "Been following your trades actually, you're pretty consistent",
+    tags: ["compliment", "observation", "social"],
+    personality: ["casual", "mixed"],
+    verbosity: ["normal"],
+    emojiUsage: ["none", "light"],
+    context: "followers_compliment",
+  },
+  {
+    text: "Let me know if you spot anything interesting",
+    tags: ["collaboration", "open", "friendly"],
+    personality: ["casual", "mixed"],
+    verbosity: ["brief"],
+    emojiUsage: ["none", "light"],
+    context: "collaboration_offer",
+  },
+  {
+    text: "Some days you just gotta take a step back and reset",
+    tags: ["wellness", "break", "mindset"],
+    personality: ["casual", "mixed", "professional"],
+    verbosity: ["normal"],
+    emojiUsage: ["none", "light"],
+    context: "mental_reset",
+  },
 ];
 
 export const TRADER_REACTION_MESSAGES: MessageContent[] = [
@@ -331,6 +443,13 @@ export const TRADER_REACTION_MESSAGES: MessageContent[] = [
   { text: "Thanks!", tags: ["reaction", "gratitude"], personality: ["casual", "mixed", "professional"], verbosity: ["brief"], emojiUsage: ["light"], context: "reaction_thanks" },
   { text: "Exactly", tags: ["reaction", "agreement"], personality: ["casual", "mixed", "professional"], verbosity: ["brief"], emojiUsage: ["none"], context: "reaction_agreement" },
   { text: "True that", tags: ["reaction", "agreement"], personality: ["casual", "mixed"], verbosity: ["brief"], emojiUsage: ["none"], context: "reaction_agreement" },
+  { text: "Agreed 💯", tags: ["reaction", "agreement", "emphasis"], personality: ["casual", "mixed"], verbosity: ["brief"], emojiUsage: ["heavy"], context: "reaction_agreement" },
+  { text: "Fair point", tags: ["reaction", "acknowledgment"], personality: ["professional", "mixed"], verbosity: ["brief"], emojiUsage: ["none"], context: "reaction_acknowledge" },
+  { text: "Interesting 🤔", tags: ["reaction", "curiosity"], personality: ["casual", "mixed"], verbosity: ["brief"], emojiUsage: ["light", "heavy"], context: "reaction_curiosity" },
+  { text: "Wow 😮", tags: ["reaction", "surprise"], personality: ["casual", "mixed"], verbosity: ["brief"], emojiUsage: ["heavy"], context: "reaction_surprise" },
+  { text: "Noted", tags: ["reaction", "acknowledgment"], personality: ["professional"], verbosity: ["brief"], emojiUsage: ["none"], context: "reaction_acknowledge" },
+  { text: "For sure", tags: ["reaction", "agreement"], personality: ["casual", "mixed"], verbosity: ["brief"], emojiUsage: ["none"], context: "reaction_agreement" },
+  { text: "Say less", tags: ["reaction", "agreement", "casual"], personality: ["casual"], verbosity: ["brief"], emojiUsage: ["none", "light"], context: "reaction_agreement" },
 ];
 
 export const TRADER_INITIATION_MESSAGES: MessageContent[] = [
@@ -342,13 +461,28 @@ export const TRADER_INITIATION_MESSAGES: MessageContent[] = [
   { text: "Just wanted to say - your win rate is impressive 📊", tags: ["compliment", "stats", "observation"], personality: ["casual", "mixed", "professional"], verbosity: ["brief", "normal"], emojiUsage: ["light"], context: "stats_compliment" },
   { text: "Anyone else seeing that divergence on GBP/USD?", tags: ["question", "technical", "specific_asset", "community"], personality: ["mixed", "professional"], verbosity: ["brief", "normal"], emojiUsage: ["none"], context: "technical_question" },
   { text: "Hope your week's going well! 👋", tags: ["greeting", "well_wishes"], personality: ["casual", "mixed", "professional"], verbosity: ["brief"], emojiUsage: ["light"], context: "casual_greeting" },
+  { text: "Been quiet today, market slow or just me?", tags: ["observation", "question", "market_mood"], personality: ["casual", "mixed"], verbosity: ["brief", "normal"], emojiUsage: ["none", "light"], context: "quiet_day" },
+  { text: "Yo, check out this setup on NASDAQ rn", tags: ["urgent", "setup", "sharing", "specific_asset"], personality: ["casual", "mixed"], verbosity: ["brief"], emojiUsage: ["none", "light"], context: "setup_alert" },
+  { text: "How's the copy trading working out for you?", tags: ["question", "copy_trading", "follow_up"], personality: ["casual", "mixed"], verbosity: ["normal"], emojiUsage: ["none", "light"], context: "copy_trading_check" },
+  { text: "Just had a monster trade on GBP/JPY 💰", tags: ["excitement", "win", "specific_asset"], personality: ["casual", "mixed"], verbosity: ["brief", "normal"], emojiUsage: ["heavy"], context: "big_win_share" },
+  { text: "What's your most traded asset these days?", tags: ["question", "preference", "conversation"], personality: ["casual", "mixed", "professional"], verbosity: ["brief", "normal"], emojiUsage: ["none"], context: "asset_preference_question" },
+  { text: "I've been on a learning streak lately, reading a lot about price action", tags: ["learning", "improvement", "sharing"], personality: ["mixed", "professional"], verbosity: ["normal", "verbose"], emojiUsage: ["none", "light"], context: "learning_share" },
+  { text: "Noticed you've been consistent lately, any tips? 😄", tags: ["compliment", "question", "learning"], personality: ["casual", "mixed"], verbosity: ["normal"], emojiUsage: ["light", "heavy"], context: "tips_request" },
+];
+
+export const CONVERSATION_STARTERS = [
+  { context: "market_open", weight: 0.3, messages: ["Market just opened, what are we watching?", "London open in 10, ready?", "Asian session was quiet, hoping for volatility", "New York session about to open, got any plans?"] },
+  { context: "tournament_reminder", weight: 0.2, messages: ["Tournament starts in 30 min!", "Don't forget the weekly tournament today", "Prize pool is $50k this week 💰", "You joining the tournament this round?"] },
+  { context: "major_news", weight: 0.15, messages: ["NFP in 15 min, staying out", "CPI data just dropped, watching reaction", "Fed speakers later, expect choppiness", "Big news coming up, be careful out there"] },
+  { context: "check_in", weight: 0.25, messages: ["How's the week going?", "Still copying my trades? 😄", "Seen any good setups today?", "Made any good trades today?", "How's your portfolio looking?"] },
+  { context: "milestone_share", weight: 0.1, messages: ["Hit 100 followers today! 🎉", "First profitable month in a while", "Finally positive expectancy on my journal", "Just crossed 1000 total trades", "New personal best win streak 🏆"] },
 ];
 
 export function getMessagesForContext(
   context: string,
   personality: { casual?: boolean; mixed?: boolean; professional?: boolean; verbosity: "brief" | "normal" | "verbose"; emojiUsage: "none" | "light" | "heavy" }
 ): MessageContent[] {
-  return TRADER_MESSAGE_LIBRARY.filter((msg) => 
+  return TRADER_MESSAGE_LIBRARY.filter((msg) =>
     msg.context === context &&
     msg.personality.some((p) => personality[p as keyof typeof personality]) &&
     msg.verbosity.includes(personality.verbosity) &&
@@ -362,7 +496,7 @@ export function getRandomMessage(
 ): string {
   const candidates = getMessagesForContext(context, personality);
   if (candidates.length === 0) {
-    const fallbacks = TRADER_MESSAGE_LIBRARY.filter((m) => 
+    const fallbacks = TRADER_MESSAGE_LIBRARY.filter((m) =>
       m.personality.some((p) => personality[p as keyof typeof personality])
     );
     return fallbacks[Math.floor(Math.random() * fallbacks.length)].text;
@@ -385,14 +519,6 @@ export function getRandomInitiation(personality: { casual?: boolean; mixed?: boo
   );
   return candidates[Math.floor(Math.random() * candidates.length)].text;
 }
-
-export const CONVERSATION_STARTERS = [
-  { context: "market_open", weight: 0.3, messages: ["Market just opened, what are we watching?", "London open in 10, ready?", "Asian session was quiet, hoping for volatility"] },
-  { context: "tournament_reminder", weight: 0.2, messages: ["Tournament starts in 30 min!", "Don't forget the weekly tournament today", "Prize pool is $50k this week 💰"] },
-  { context: "major_news", weight: 0.15, messages: ["NFP in 15 min, staying out", "CPI data just dropped, watching reaction", "Fed speakers later, expect choppiness"] },
-  { context: "check_in", weight: 0.25, messages: ["How's the week going?", "Still copying my trades? 😄", "Seen any good setups today?"] },
-  { context: "milestone_share", weight: 0.1, messages: ["Hit 100 followers today! 🎉", "First profitable month in a while", "Finally positive expectancy on my journal"] },
-];
 
 export function getConversationStarter(personality: { casual?: boolean; mixed?: boolean; professional?: boolean; emojiUsage: "none" | "light" | "heavy" }): string {
   const starter = CONVERSATION_STARTERS[Math.floor(Math.random() * CONVERSATION_STARTERS.length)];
