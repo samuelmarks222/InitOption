@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import {
-  Bell, BellOff, Flame, Medal, MessageCircle, Shield, Star, Trophy, TrendingUp, X, Zap,
+  Bell, BellOff, Flame, Medal, Shield, Star, Trophy, TrendingUp, X, Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { TraderData } from "./WorkspaceLeaderboard";
-import { ChatDialog } from "./ChatDialog";
 
 const ACHIEVEMENTS = [
   { icon: Trophy, label: "Top Trader", color: "text-yellow-400", bg: "bg-yellow-400/12" },
@@ -44,7 +43,6 @@ interface TraderProfileProps {
 export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isWatched }: TraderProfileProps) => {
   const [activeTab, setActiveTab] = useState<TabId>("trading");
   const [showCopyModal, setShowCopyModal] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const [showWatchConfirm, setShowWatchConfirm] = useState(false);
   const [copyAmount, setCopyAmount] = useState(trader.minCopyAmount);
   const [maxLoss, setMaxLoss] = useState(500);
@@ -53,7 +51,6 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
   const [stopCondition, setStopCondition] = useState("never");
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const chatInputRef = useRef<HTMLInputElement>(null);
 
   const handleCopyWithSettings = (id: string, settings?: CopySettings) => {
     if (settings) {
@@ -68,7 +65,6 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
     }
   };
 
-  const handleMessage = () => setShowChat(true);
   const handleWatch = () => {
     if (isWatched) {
       onUnwatch(trader.id);
@@ -78,12 +74,6 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
       setTimeout(() => setShowWatchConfirm(false), 3000);
     }
   };
-
-  useEffect(() => {
-    if (showChat && chatInputRef.current) {
-      chatInputRef.current.focus();
-    }
-  }, [showChat]);
 
   const isPositive = trader.totalProfit >= 0;
 
@@ -199,16 +189,6 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
               <span className="flex items-center justify-center gap-1.5">
                 {isWatched ? <BellOff className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
                 {isWatched ? "Watching" : "Watch"}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowChat(true)}
-              className="flex-1 rounded-md border border-[#2a3045] bg-[#24293d] px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#2a3045]"
-            >
-              <span className="flex items-center justify-center gap-1.5">
-                <MessageCircle className="h-3.5 w-3.5" />
-                Message
               </span>
             </button>
           </div>
@@ -338,10 +318,6 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
         </div>
       )}
 
-      {/* Chat Dialog */}
-      {showChat && (
-        <ChatDialog trader={trader} onClose={() => setShowChat(false)} />
-      )}
     </>
   );
 };
