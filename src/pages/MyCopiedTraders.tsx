@@ -21,9 +21,9 @@ const MyCopiedTraders = () => {
 
   const summary = useMemo(() => {
     if (!hasData) return { totalCopied: 0, totalProfit: 0, activeCopies: 0 };
-    let totalCopied = 0;
-    let totalProfit = 0;
     let activeCopies = 0;
+    const totalCopied = 0;
+    const totalProfit = 0;
     for (const s of copySettings) {
       if (s.enabled) activeCopies++;
     }
