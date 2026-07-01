@@ -284,7 +284,6 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
           </div>
         ) : (
           displayTraders.map((trader, idx) => {
-            const isPositive = trader.totalProfit >= 0;
             const isWatched = watchingIds.has(trader.id);
             const rowBg = idx % 2 === 0 ? "#282D41" : "#232637";
 
@@ -321,20 +320,18 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
                       {isWatched && (
                         <span className="shrink-0 rounded-full bg-[#f4b742]/12 px-1.5 py-0.5 text-[8px] font-bold text-[#f4b742]">WATCHING</span>
                       )}
-                      <span className="text-[13px] font-bold text-right" style={{ color: isPositive ? "#26a69a" : "#ef5350" }}>
+                      <span className="text-[13px] font-bold text-right text-[#26a69a]">
                         {formatProfit(trader.totalProfit)}
                       </span>
                     </div>
                   </div>
-                  <div className="mt-1 flex items-center gap-2 text-[12px] text-[#787b86]">
-                    <span className="font-semibold text-[#d1d4dc]">{trader.winRate.toFixed(0)}% win rate</span>
-                    <span className="text-white/10">•</span>
-                    <span>{trader.totalTrades.toLocaleString()} trades</span>
-                    <span className="ml-auto text-[11px]">
-                      Today: <span className={trader.todayProfit >= 0 ? "text-[#26a69a]" : "text-[#ef5350]"}>
-                        {formatProfit(trader.todayProfit)}
-                      </span>
-                    </span>
+                  <div className="mt-1 flex justify-between text-[11px] text-[#787b86]">
+                    <span>Number of trades:</span>
+                    <span>Profitable trades:</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[12px] font-bold text-[#d1d4dc]">{trader.totalTrades.toLocaleString()}</span>
+                    <span className="text-[12px] font-bold text-[#d1d4dc]">{trader.winRate.toFixed(0)}%</span>
                   </div>
                 </div>
 
