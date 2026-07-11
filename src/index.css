@@ -35,13 +35,13 @@
     --input: 227 25.5% 18.4%;
     --ring: 212 94% 54%;
 
-    --landing-primary: 152 76% 40%;   /* #10b981 - emerald green */
+    --landing-primary: 164 84% 44%;   /* #12cc9a - teal green */
     --landing-primary-foreground: 0 0% 100%;
-    --landing-secondary: 217 33% 17%; /* #0f172a - deep navy */
-    --landing-border: 215 19% 35%;    /* #475569 - muted slate */
-    --landing-surface: 210 20% 98%;   /* #f8fafc - near-white */
-    --landing-muted: 215 16% 47%;     /* #64748b - slate gray */
-    --landing-accent: 38 92% 50%;     /* #f59e0b - amber/gold */
+    --landing-secondary: 198 52% 25%; /* #1f4c63 - dark teal blue */
+    --landing-border: 198 30% 35%;    /* #3f6d84 - muted teal */
+    --landing-surface: 0 0% 100%;     /* #ffffff - white */
+    --landing-muted: 198 15% 50%;     /* #6e8f9f - muted teal gray */
+    --landing-accent: 164 84% 44%;    /* #12cc9a - teal green */
 
     --radius: 0.375rem;
 

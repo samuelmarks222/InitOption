@@ -32,25 +32,25 @@ const RebrandedLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f3f7fb] flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-[#1f4c63] flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
         <div className="mb-4">
-          <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-[#0f72f0] hover:text-[#0a4fff] transition">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white transition">
             <ArrowLeft size={16} />
             Back to Home
           </Link>
         </div>
-        <div className="bg-white rounded-xl shadow-lg border border-[#e6ecf3]">
+        <div className="bg-white rounded-xl shadow-lg border border-white/10">
           <div className="px-8 py-10">
             <div className="flex justify-center">
               <img src={logo} alt="Logo" className="h-10 w-auto" />
             </div>
 
-            <h1 className="mt-6 text-center text-2xl font-extrabold text-[#0f1724]">Sign In</h1>
-            <p className="mt-2 text-center text-sm text-[#6b7280]">Sign in to access your trading dashboard</p>
-            <div className="mt-6 text-center text-sm text-[#6b7280]">
+            <h1 className="mt-6 text-center text-2xl font-extrabold text-[#1f4c63]">Sign In</h1>
+            <p className="mt-2 text-center text-sm text-[#6d7181]">Sign in to access your trading dashboard</p>
+            <div className="mt-6 text-center text-sm text-[#6d7181]">
               Don't have an account?{' '}
-              <Link to="/register" className="text-[#0f72f0] font-semibold hover:underline">Sign Up</Link>
+              <Link to="/register" className="text-[#12cc9a] font-semibold hover:underline">Sign Up</Link>
             </div>
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
@@ -61,7 +61,7 @@ const RebrandedLogin = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Email"
-                    className="h-10 w-full border-0 border-b border-[#dfe7ef] bg-transparent pl-10 text-sm text-[#0f1724] placeholder:text-[#9aa3b2] focus:ring-0"
+                    className="h-10 w-full border-0 border-b border-[#dfe7ef] bg-transparent pl-10 text-sm text-[#1f4c63] placeholder:text-[#9aa3b2] focus:ring-0"
                   />
                 </div>
               </div>
@@ -74,7 +74,7 @@ const RebrandedLogin = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password"
-                    className="h-10 w-full border-0 border-b border-[#dfe7ef] bg-transparent pl-10 pr-10 text-sm text-[#0f1724] placeholder:text-[#9aa3b2] focus:ring-0"
+                    className="h-10 w-full border-0 border-b border-[#dfe7ef] bg-transparent pl-10 pr-10 text-sm text-[#1f4c63] placeholder:text-[#9aa3b2] focus:ring-0"
                   />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9aa3b2]">
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -83,26 +83,26 @@ const RebrandedLogin = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <label className="inline-flex items-center gap-2 text-sm text-[#6b7280]">
-                  <input type="checkbox" className="h-4 w-4 accent-[#0f72f0]" /> Remember me
+                <label className="inline-flex items-center gap-2 text-sm text-[#6d7181]">
+                  <input type="checkbox" className="h-4 w-4 accent-[#12cc9a]" /> Remember me
                 </label>
-                <Link to="/forgot" className="text-sm text-[#0f72f0] hover:underline">Password recovery</Link>
+                <Link to="/forgot" className="text-sm text-[#12cc9a] hover:underline">Password recovery</Link>
               </div>
 
-              <Button type="submit" size="lg" className="w-full bg-gradient-to-r from-[#0f8dff] to-[#0a4fff] text-white h-11 font-bold shadow-md" disabled={loading}>
+              <Button type="submit" size="lg" className="w-full bg-[#12cc9a] text-white h-11 font-bold shadow-md hover:bg-[#10b589]" disabled={loading}>
                 {loading ? "Signing In..." : "SIGN IN"}
               </Button>
             </form>
 
-            <div className="mt-4 text-center text-sm text-[#6b7280]">
+            <div className="mt-4 text-center text-sm text-[#6d7181]">
               New to Init Option?{' '}
-              <Link to="/register" className="text-[#0f72f0] font-semibold hover:underline">Create an account</Link>
+              <Link to="/register" className="text-[#12cc9a] font-semibold hover:underline">Create an account</Link>
             </div>
 
             <div className="mt-6 text-center text-sm text-[#9aa3b2]">Or login with</div>
 
             <div className="mt-4">
-              <button onClick={handleGoogle} disabled={googleLoading} className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-[#e6ecf3] bg-[#f7fafc] py-2 text-sm font-medium text-[#0f1724] hover:bg-white disabled:opacity-60">
+              <button onClick={handleGoogle} disabled={googleLoading} className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-[#e6ecf3] bg-[#f7fafc] py-2 text-sm font-medium text-[#1f4c63] hover:bg-white disabled:opacity-60">
                 <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -115,7 +115,7 @@ const RebrandedLogin = () => {
           </div>
 
           <div className="border-t border-[#eef3f8] px-8 py-4 bg-[#fbfdff] rounded-b-xl">
-            <div className="flex items-center justify-center gap-6 text-xs text-[#6b7280]">
+            <div className="flex items-center justify-center gap-6 text-xs text-[#6d7181]">
               <Link to="/contacts" className="hover:underline">Contacts</Link>
               <Link to="/aml-kyc" className="hover:underline">AML and KYC policy</Link>
               <Link to="/payment-policy" className="hover:underline">Payment policy</Link>

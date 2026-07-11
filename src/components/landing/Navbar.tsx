@@ -143,9 +143,9 @@ const Navbar = () => {
           inset: 0 0 auto;
           z-index: 50;
           font-family: Arial, system-ui, sans-serif;
-          --io-dark: #06383c;
-          --io-green: #109b42;
-          --io-green-bright: #18b958;
+          --io-dark: #1f4c63;
+          --io-green: #12cc9a;
+          --io-green-bright: #12cc9a;
         }
 
         .io-topbar {
@@ -186,7 +186,7 @@ const Navbar = () => {
         }
 
         .io-topbar-left svg {
-          color: var(--io-green-bright);
+          color: var(--io-green);
         }
 
         .io-topbar-social {
@@ -207,7 +207,7 @@ const Navbar = () => {
         }
 
         .io-topbar-social a:hover {
-          background: var(--io-green-bright);
+          background: var(--io-dark);
           transform: translateY(-1px);
         }
 
@@ -215,8 +215,8 @@ const Navbar = () => {
           min-height: 90px;
           display: flex;
           background: #ffffff;
-          border-bottom: 1px solid rgba(6, 56, 60, 0.08);
-          box-shadow: 0 10px 28px rgba(6, 56, 60, 0.08);
+          border-bottom: 1px solid rgba(31, 76, 99, 0.10);
+          box-shadow: 0 10px 28px rgba(31, 76, 99, 0.08);
         }
 
         .io-logo-panel {
@@ -297,21 +297,21 @@ const Navbar = () => {
         .io-login-link {
           color: var(--io-dark);
           background: #ffffff;
-          border: 2px solid rgba(6, 56, 60, 0.12);
+          border: 2px solid rgba(31, 76, 99, 0.15);
         }
 
         .io-register-link {
           color: #ffffff;
           border: 2px solid var(--io-green);
           background: var(--io-green);
-          box-shadow: 0 13px 28px rgba(16, 155, 66, 0.28);
+          box-shadow: 0 13px 28px rgba(18, 204, 154, 0.32);
         }
 
         .io-register-link:hover {
           transform: translateY(-1px);
           border-color: var(--io-dark);
           background: var(--io-dark);
-          box-shadow: 0 18px 34px rgba(6, 56, 60, 0.22);
+          box-shadow: 0 18px 34px rgba(31, 76, 99, 0.25);
         }
 
         .io-mobile-menu-btn {
@@ -321,7 +321,7 @@ const Navbar = () => {
           border: 0;
           border-radius: 999px;
           color: var(--io-dark);
-          background: rgba(6, 56, 60, 0.08);
+          background: rgba(31, 76, 99, 0.10);
           cursor: pointer;
           align-items: center;
           justify-content: center;
@@ -376,7 +376,7 @@ const Navbar = () => {
             gap: 8px;
             padding: 12px 24px 20px;
             background: #ffffff;
-            border-top: 1px solid rgba(6, 56, 60, 0.08);
+            border-top: 1px solid rgba(31, 76, 99, 0.10);
           }
 
           .io-mobile-link {

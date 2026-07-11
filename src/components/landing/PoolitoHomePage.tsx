@@ -472,7 +472,7 @@ const PoolitoHomePage = () => {
                 100% platform access
               </span>
               <h1 id="poolito-hero-title">
-                The Right Place for Online <span style={{ color: "#109b42" }}>Trading</span> – Simple, Fast, Secure.
+                The Right Place for Online <span style={{ color: "#12cc9a" }}>Trading</span> – Simple, Fast, Secure.
               </h1>
               <p className="poolito-hero-subheadline">
                 Trade 100+ assets with real-time charts, a free demo, and fast withdrawals. All from one clean platform.
@@ -842,12 +842,12 @@ const PoolitoHomePage = () => {
 
       <style>{`
         .poolito-home {
-          --poolito-green: #109b42;
-          --poolito-green-bright: #18b958;
-          --poolito-dark: #06383c;
-          --poolito-deep: #052e31;
+          --poolito-green: #12cc9a;
+          --poolito-green-bright: #12cc9a;
+          --poolito-dark: #1f4c63;
+          --poolito-deep: #1f4c63;
           --poolito-muted: #6d7181;
-          --poolito-line: rgba(6, 56, 60, 0.11);
+          --poolito-line: rgba(31, 76, 99, 0.11);
           font-family: Arial, system-ui, sans-serif;
         }
 
@@ -860,7 +860,7 @@ const PoolitoHomePage = () => {
           position: relative;
           z-index: 20;
           background: #fff;
-          box-shadow: 0 1px 0 rgba(6, 56, 60, 0.08);
+          box-shadow: 0 1px 0 rgba(31, 76, 99, 0.08);
         }
 
         .poolito-topbar {
@@ -987,7 +987,7 @@ const PoolitoHomePage = () => {
           padding: 0 20px;
           border-radius: 999px;
           color: var(--poolito-dark);
-          border: 2px solid rgba(6, 56, 60, 0.14);
+          border: 2px solid rgba(31, 76, 99, 0.14);
           background: #fff;
           font-size: 13px;
           font-weight: 950;
@@ -997,7 +997,7 @@ const PoolitoHomePage = () => {
 
         .poolito-auth-link:hover {
           color: var(--poolito-green);
-          border-color: rgba(16, 155, 66, 0.36);
+          border-color: rgba(18, 204, 154, 0.36);
         }
 
         .poolito-auth-link-primary {
@@ -1162,7 +1162,7 @@ const PoolitoHomePage = () => {
           inset: 0;
           pointer-events: none;
           background:
-            linear-gradient(90deg, rgba(4, 44, 43, 0.62) 0%, rgba(7, 96, 57, 0.34) 48%, rgba(16, 155, 66, 0.2) 100%),
+            linear-gradient(90deg, rgba(4, 44, 43, 0.62) 0%, rgba(7, 96, 57, 0.34) 48%, rgba(18, 204, 154, 0.2) 100%),
             rgba(6, 103, 55, 0.16);
         }
 
@@ -1240,7 +1240,7 @@ const PoolitoHomePage = () => {
           border-radius: 50%;
           color: #fff;
           border: 1px solid rgba(255, 255, 255, 0.24);
-          background: rgba(5, 46, 49, 0.2);
+          background: rgba(31, 76, 99, 0.2);
           box-shadow:
             inset 0 0 0 8px rgba(255, 255, 255, 0.06),
             0 14px 26px rgba(0, 0, 0, 0.16);
@@ -1358,8 +1358,8 @@ const PoolitoHomePage = () => {
           overflow: hidden;
           background: #fff;
           box-shadow:
-            0 22px 48px rgba(6, 56, 60, 0.16),
-            0 0 0 1px rgba(16, 155, 66, 0.08);
+            0 22px 48px rgba(31, 76, 99, 0.16),
+            0 0 0 1px rgba(18, 204, 154, 0.08);
           z-index: 1;
         }
 
@@ -1392,7 +1392,7 @@ const PoolitoHomePage = () => {
           height: 500px;
           border: 10px solid var(--poolito-green);
           box-shadow:
-            0 18px 34px rgba(6, 56, 60, 0.16),
+            0 18px 34px rgba(31, 76, 99, 0.16),
             inset 0 0 0 8px rgba(255, 255, 255, 0.92);
           z-index: 2;
         }
@@ -1401,7 +1401,7 @@ const PoolitoHomePage = () => {
           content: "";
           position: absolute;
           inset: 10px;
-          border: 1px solid rgba(16, 155, 66, 0.16);
+          border: 1px solid rgba(18, 204, 154, 0.16);
           pointer-events: none;
           z-index: 2;
         }
@@ -1441,7 +1441,7 @@ const PoolitoHomePage = () => {
           border: 10px solid rgba(255, 255, 255, 0.22);
           overflow: hidden;
           transform: translate(-50%, -50%);
-          box-shadow: 0 18px 36px rgba(16, 155, 66, 0.26);
+          box-shadow: 0 18px 36px rgba(18, 204, 154, 0.26);
           z-index: 3;
         }
 
@@ -1617,7 +1617,7 @@ const PoolitoHomePage = () => {
           padding: 96px 0 102px;
           color: #fff;
           background:
-            linear-gradient(90deg, rgba(5, 46, 49, 0.95), rgba(5, 46, 49, 0.9)),
+            linear-gradient(90deg, rgba(31, 76, 99, 0.95), rgba(31, 76, 99, 0.9)),
             url("${HOME_ASSETS.abstract}") center/cover;
         }
 
@@ -1666,7 +1666,7 @@ const PoolitoHomePage = () => {
           width: 132px;
           height: 132px;
           border-radius: 50%;
-          background: rgba(16, 155, 66, 0.22);
+          background: rgba(18, 204, 154, 0.22);
         }
 
         .poolito-how-icon {
@@ -1763,10 +1763,10 @@ const PoolitoHomePage = () => {
           gap: 26px;
           overflow: hidden;
           padding: 32px 30px;
-          border: 1px solid rgba(6, 56, 60, 0.1);
+          border: 1px solid rgba(31, 76, 99, 0.1);
           border-radius: 8px;
           background: #fff;
-          box-shadow: 0 14px 34px rgba(6, 56, 60, 0.11);
+          box-shadow: 0 14px 34px rgba(31, 76, 99, 0.11);
         }
 
         .poolito-feature-icon {
@@ -1777,8 +1777,8 @@ const PoolitoHomePage = () => {
           justify-content: center;
           border-radius: 8px;
           color: var(--poolito-dark);
-          border: 1px solid rgba(16, 155, 66, 0.18);
-          background: linear-gradient(135deg, rgba(16, 155, 66, 0.1), rgba(6, 56, 60, 0.04));
+          border: 1px solid rgba(18, 204, 154, 0.18);
+          background: linear-gradient(135deg, rgba(18, 204, 154, 0.1), rgba(31, 76, 99, 0.04));
         }
 
         .poolito-feature-icon svg {
@@ -1804,7 +1804,7 @@ const PoolitoHomePage = () => {
         }
 
         .poolito-feature-icon .poolito-icon-muted-line {
-          stroke: rgba(6, 56, 60, 0.42);
+          stroke: rgba(31, 76, 99, 0.42);
         }
 
         .poolito-feature-icon .poolito-icon-trend {
@@ -1836,7 +1836,7 @@ const PoolitoHomePage = () => {
         .poolito-service-body p {
           margin: 22px 0 0;
           padding-top: 24px;
-          border-top: 2px dashed rgba(6, 56, 60, 0.18);
+          border-top: 2px dashed rgba(31, 76, 99, 0.18);
           color: #717481;
           font-size: 17px;
           line-height: 1.62;
@@ -1867,7 +1867,7 @@ const PoolitoHomePage = () => {
           width: 34%;
           height: 58%;
           pointer-events: none;
-          background-image: radial-gradient(rgba(6, 56, 60, 0.1) 2px, transparent 2px);
+          background-image: radial-gradient(rgba(31, 76, 99, 0.1) 2px, transparent 2px);
           background-size: 18px 18px;
           opacity: 0.34;
         }
@@ -1898,11 +1898,11 @@ const PoolitoHomePage = () => {
         .poolito-market-tab {
           min-height: 38px;
           padding: 0 22px;
-          border: 1px solid rgba(6, 56, 60, 0.12);
+          border: 1px solid rgba(31, 76, 99, 0.12);
           border-radius: 999px;
           color: #607084;
           background: #fff;
-          box-shadow: 0 10px 24px rgba(6, 56, 60, 0.05);
+          box-shadow: 0 10px 24px rgba(31, 76, 99, 0.05);
           font-size: 13px;
           font-weight: 950;
           cursor: pointer;
@@ -1912,7 +1912,7 @@ const PoolitoHomePage = () => {
           color: #fff;
           border-color: var(--poolito-green);
           background: var(--poolito-green);
-          box-shadow: 0 16px 28px rgba(16, 155, 66, 0.24);
+          box-shadow: 0 16px 28px rgba(18, 204, 154, 0.24);
         }
 
         .poolito-market-stage {
@@ -1945,10 +1945,10 @@ const PoolitoHomePage = () => {
         .poolito-market-card {
           min-height: 360px;
           padding: 24px 22px 22px;
-          border: 1px solid rgba(6, 56, 60, 0.08);
+          border: 1px solid rgba(31, 76, 99, 0.08);
           border-radius: 8px;
           background: #fff;
-          box-shadow: 0 18px 40px rgba(6, 56, 60, 0.1);
+          box-shadow: 0 18px 40px rgba(31, 76, 99, 0.1);
         }
 
         .poolito-market-card-head {
@@ -1967,7 +1967,7 @@ const PoolitoHomePage = () => {
         }
 
         .poolito-market-mark {
-          filter: drop-shadow(0 8px 16px rgba(6, 56, 60, 0.18));
+          filter: drop-shadow(0 8px 16px rgba(31, 76, 99, 0.18));
         }
 
         .poolito-market-card h3 {
@@ -2154,7 +2154,7 @@ const PoolitoHomePage = () => {
           text-align: center;
           padding: 40px 24px;
           color: #fff;
-          background: rgba(16, 155, 66, 0.26);
+          background: rgba(18, 204, 154, 0.26);
         }
 
         .poolito-video-panel a:first-child {
@@ -2217,7 +2217,7 @@ const PoolitoHomePage = () => {
           border-radius: 8px;
           color: var(--poolito-green-bright);
           border: 1px solid rgba(24, 185, 88, 0.28);
-          background: rgba(16, 155, 66, 0.13);
+          background: rgba(18, 204, 154, 0.13);
           box-shadow:
             inset 0 0 0 1px rgba(255, 255, 255, 0.05),
             0 10px 20px rgba(0, 0, 0, 0.14);
@@ -2266,9 +2266,9 @@ const PoolitoHomePage = () => {
           flex-direction: column;
           padding: 32px 30px;
           border-radius: 8px;
-          border: 1px solid rgba(6, 56, 60, 0.1);
+          border: 1px solid rgba(31, 76, 99, 0.1);
           background: #fff;
-          box-shadow: 0 16px 36px rgba(6, 56, 60, 0.1);
+          box-shadow: 0 16px 36px rgba(31, 76, 99, 0.1);
         }
 
         .poolito-rating {
@@ -2335,7 +2335,7 @@ const PoolitoHomePage = () => {
           overflow: hidden;
           padding: 96px 0;
           background:
-            linear-gradient(90deg, rgba(5, 46, 49, 0.94), rgba(16, 155, 66, 0.9)),
+            linear-gradient(90deg, rgba(31, 76, 99, 0.94), rgba(18, 204, 154, 0.9)),
             url("${HOME_ASSETS.abstract}") center/cover;
         }
 

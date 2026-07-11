@@ -152,22 +152,22 @@ const Footer = ({ content }: FooterProps) => {
 
   return (
     <footer
-      className="relative overflow-hidden border-t border-emerald-400/20 bg-[#042d32] text-white"
+      className="relative overflow-hidden border-t border-[#12cc9a]/30 bg-[#1f4c63] text-white"
       style={{
         backgroundImage:
-          "linear-gradient(115deg, rgba(4, 46, 49, 0.96), rgba(3, 28, 37, 0.98)), repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 48px), repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 48px)",
+          "linear-gradient(115deg, rgba(31, 76, 99, 0.97), rgba(20, 55, 73, 0.98)), repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 48px), repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 48px)",
       }}
     >
       <div
         aria-hidden="true"
-        className="h-3 w-full border-y border-emerald-300/20 bg-[repeating-linear-gradient(135deg,#19b65a_0_5px,#0f7f46_5px_10px)]"
+        className="h-3 w-full border-y border-[#12cc9a]/25 bg-[repeating-linear-gradient(135deg,#12cc9a_0_5px,#0d9a7a_5px_10px)]"
       />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            "linear-gradient(90deg, rgba(8,92,80,0.2), transparent 30%, rgba(8,92,80,0.18)), radial-gradient(circle at right, rgba(255,255,255,0.06) 1px, transparent 1px)",
+            "linear-gradient(90deg, rgba(31, 76, 99, 0.25), transparent 30%, rgba(31, 76, 99, 0.20)), radial-gradient(circle at right, rgba(255,255,255,0.06) 1px, transparent 1px)",
           backgroundSize: "auto, 18px 18px",
         }}
       />
@@ -186,16 +186,16 @@ const Footer = ({ content }: FooterProps) => {
 
             <a
               href={`mailto:${supportEmail}`}
-              className="mt-7 inline-flex max-w-full items-center gap-4 rounded-sm border border-emerald-300/15 bg-white/[0.03] px-4 py-3 transition-colors hover:border-emerald-300/40 hover:bg-white/[0.06]"
+              className="mt-7 inline-flex max-w-full items-center gap-4 rounded-sm border border-[#12cc9a]/25 bg-white/[0.03] px-4 py-3 transition-colors hover:border-[#12cc9a]/50 hover:bg-white/[0.06]"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-300/30 text-emerald-400">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#12cc9a]/40 text-[#12cc9a]">
                 <Mail className="h-5 w-5" />
               </span>
               <span className="min-w-0">
                 <span className="block truncate font-copy text-base font-black text-white">
                   {supportEmail}
                 </span>
-                <span className="mt-0.5 block font-copy text-xs font-bold uppercase tracking-[0.12em] text-emerald-400">
+                <span className="mt-0.5 block font-copy text-xs font-bold uppercase tracking-[0.12em] text-[#12cc9a]">
                   Support 24/7
                 </span>
               </span>
@@ -203,7 +203,7 @@ const Footer = ({ content }: FooterProps) => {
 
             {visibleSocialLinks.length ? (
               <div className="mt-7 flex flex-wrap items-center gap-3">
-                <span className="font-copy text-sm font-black text-emerald-400">Follow On :</span>
+                <span className="font-copy text-sm font-black text-[#12cc9a]">Follow On :</span>
                 <span className="h-6 w-px bg-white/20" />
                 {visibleSocialLinks.map((item) => {
                   const { Icon, isWhatsApp } = resolveSocialIcon(item.platform);
@@ -215,9 +215,9 @@ const Footer = ({ content }: FooterProps) => {
                       target="_blank"
                       rel="noreferrer"
                       aria-label={item.handle.trim() || item.platform.trim()}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/70 transition-all duration-200 hover:border-emerald-400/50 hover:bg-emerald-500/15 hover:text-emerald-300"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/70 transition-all duration-200 hover:border-[#12cc9a]/60 hover:bg-[#12cc9a]/15 hover:text-[#12cc9a]"
                     >
-                      <Icon className={`h-4 w-4 ${isWhatsApp ? "text-emerald-400" : ""}`} strokeWidth={2.2} />
+                      <Icon className={`h-4 w-4 ${isWhatsApp ? "text-[#12cc9a]" : ""}`} strokeWidth={2.2} />
                     </a>
                   );
                 })}
@@ -227,8 +227,8 @@ const Footer = ({ content }: FooterProps) => {
 
           <div className="lg:col-span-5">
             <h3 className="font-copy text-2xl font-black text-white">Useful Links</h3>
-            <div className="mt-4 h-px w-full bg-emerald-100/15">
-              <div className="h-px w-24 bg-emerald-500" />
+            <div className="mt-4 h-px w-full bg-white/10">
+              <div className="h-px w-24 bg-[#12cc9a]" />
             </div>
 
             <ul className="mt-8 grid gap-x-10 gap-y-4 sm:grid-cols-2">
@@ -238,7 +238,7 @@ const Footer = ({ content }: FooterProps) => {
                     to={item.to}
                     className="group inline-flex items-center gap-3 font-copy text-sm font-bold text-white/70 transition-colors hover:text-white"
                   >
-                    <ChevronRight className="h-4 w-4 text-emerald-500 transition-transform group-hover:translate-x-1" />
+                    <ChevronRight className="h-4 w-4 text-[#12cc9a] transition-transform group-hover:translate-x-1" />
                     <span>{item.label}</span>
                   </Link>
                 </li>
@@ -248,13 +248,13 @@ const Footer = ({ content }: FooterProps) => {
 
           <div className="lg:col-span-3">
             <h3 className="font-copy text-2xl font-black text-white">Risk Notifications</h3>
-            <div className="mt-4 h-px w-full bg-emerald-100/15">
-              <div className="h-px w-20 bg-emerald-500" />
+            <div className="mt-4 h-px w-full bg-white/10">
+              <div className="h-px w-20 bg-[#12cc9a]" />
             </div>
 
-            <div className="mt-8 border-l-2 border-emerald-500/70 bg-white/[0.03] px-5 py-5">
+            <div className="mt-8 border-l-2 border-[#12cc9a]/80 bg-white/[0.03] px-5 py-5">
               <div className="flex items-center gap-2 font-copy text-sm font-black text-white">
-                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                <ShieldCheck className="h-4 w-4 text-[#12cc9a]" />
                 Trading Risk
               </div>
               <p className="mt-3 font-copy text-sm leading-7 text-white/50">
@@ -262,7 +262,7 @@ const Footer = ({ content }: FooterProps) => {
               </p>
               <Link
                 to="/risk-disclaimer"
-                className="mt-4 inline-flex font-copy text-sm font-bold text-emerald-400 transition-colors hover:text-white"
+                className="mt-4 inline-flex font-copy text-sm font-bold text-[#12cc9a] transition-colors hover:text-white"
               >
                 Read full risk disclaimer
               </Link>
@@ -271,10 +271,10 @@ const Footer = ({ content }: FooterProps) => {
         </div>
       </div>
 
-      <div className="relative border-t border-emerald-300/15 bg-[#05242b]/90">
+      <div className="relative border-t border-[#12cc9a]/20 bg-[#1a4052]/90">
         <div
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 hidden w-[52%] bg-[#10993f] lg:block"
+          className="absolute inset-y-0 left-0 hidden w-[52%] bg-[#12cc9a] lg:block"
           style={{ clipPath: "polygon(0 0, 88% 0, 100% 100%, 0 100%)" }}
         />
         <div className="relative mx-auto flex max-w-7xl flex-col gap-5 px-6 py-6 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-10">
@@ -295,7 +295,7 @@ const Footer = ({ content }: FooterProps) => {
                 </span>
               );
             })}
-            <div className="ml-1 flex h-14 w-14 items-center justify-center rounded-full border-2 border-emerald-300/70 bg-white/5 font-copy text-sm font-black text-white shadow-[0_0_0_8px_rgba(255,255,255,0.04)]">
+            <div className="ml-1 flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#12cc9a]/80 bg-white/5 font-copy text-sm font-black text-white shadow-[0_0_0_8px_rgba(255,255,255,0.04)]">
               100%
             </div>
           </div>
