@@ -411,11 +411,19 @@ const Trade = () => {
 
     async function initAssets() {
       try {
-        const { data, error } = await supabase
-          .from("assets_config")
-          .select("*")
-          .eq("status", "active")
-          .order("symbol");
+        const { data, error } = await Promise.race([
+          supabase
+            .from("assets_config")
+            .select("*")
+            .eq("status", "active")
+            .order("symbol"),
+          new Promise<{ data: null; error: Error }>((resolve) =>
+            setTimeout(
+              () => resolve({ data: null, error: new Error("assets_config fetch timed out") }),
+              5000,
+            ),
+          ),
+        ]);
 
         if (cancelled) return;
 
