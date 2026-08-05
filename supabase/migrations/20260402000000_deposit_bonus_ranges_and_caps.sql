@@ -56,6 +56,8 @@ $$;
 create index if not exists deposit_bonus_offers_range_idx
   on public.deposit_bonus_offers(status, position, minimum_deposit_amount, maximum_deposit_amount);
 
+drop function if exists public.get_available_deposit_bonus_offers();
+
 create or replace function public.get_available_deposit_bonus_offers()
 returns table (
   id uuid,

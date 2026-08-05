@@ -1,3 +1,17 @@
+create table if not exists public.withdrawal_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  amount numeric not null check (amount > 0),
+  destination text not null,
+  method text not null,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  admin_note text,
+  processed_by uuid references public.profiles(id) on delete set null,
+  processed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create or replace function public.request_withdrawal(
   p_amount numeric,
   p_method text,

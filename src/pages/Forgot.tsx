@@ -79,33 +79,7 @@ const Forgot = () => {
           </div>
         </div>
       </div>
-    </div>
-          <h2 className="text-xl font-bold text-center">Password recovery</h2>
-          <p className="mt-2 text-center text-sm text-[#6b7280]">Enter your email and follow the instructions</p>
-
-          {!sent ? (
-            <form onSubmit={handleSend} className="mt-6 space-y-4">
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your email" />
-              <Button type="submit" className="w-full" disabled={loading}>{loading ? "Sending..." : "Send Verification Code"} <ArrowRight size={16} /></Button>
-            </form>
-          ) : !verified ? (
-            <form onSubmit={handleVerify} className="mt-6 space-y-4">
-              <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="6-digit code" />
-              <Button type="submit" className="w-full" disabled={loading}>{loading ? "Verifying..." : "Verify Code"} <ArrowRight size={16} /></Button>
-            </form>
-          ) : (
-            <form onSubmit={handleUpdate} className="mt-6 space-y-4">
-              <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password" />
-              <Button type="submit" className="w-full" disabled={loading}>{loading ? "Updating..." : "Update Password"} <ArrowRight size={16} /></Button>
-            </form>
-          )}
-
-          <div className="mt-6 text-center text-sm">
-            <Link to="/login" className="text-[#0f72f0] hover:underline">Back to Sign In</Link>
-          </div>
-        </div>
-      </div>
-    </div>
+     </div>
   );
 };
 

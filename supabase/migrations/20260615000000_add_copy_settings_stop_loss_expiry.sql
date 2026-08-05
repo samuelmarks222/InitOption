@@ -19,6 +19,10 @@ create table if not exists public.copy_settings (
   constraint copy_settings_execution_mode_check check (execution_mode in ('automatic', 'manual'))
 );
 
+alter table public.copy_settings
+  add column if not exists stop_loss_pct numeric,
+  add column if not exists expiry_date timestamptz;
+
 do $$
 begin
   if not exists (
