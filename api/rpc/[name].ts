@@ -1,5 +1,5 @@
-import { rpc, withUser } from "./_lib/db.js";
-import { getClerkUserId } from "./profile/index.js";
+import { rpc, withUser } from "../_lib/db.js";
+import { getClerkUserId } from "../profile/index.js";
 
 type ApiRequest = {
   method?: string;

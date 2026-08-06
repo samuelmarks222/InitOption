@@ -1,4 +1,5 @@
 import pg from "pg";
+import type { Pool as PoolType } from "pg";
 
 const { Pool } = pg;
 
@@ -9,7 +10,7 @@ if (!connectionString) {
   console.error("DATABASE_URL is not set; the Neon/PostgreSQL adapter will be unavailable.");
 }
 
-let pool: Pool | null = null;
+let pool: PoolType | null = null;
 
 const getPool = () => {
   if (!connectionString) {

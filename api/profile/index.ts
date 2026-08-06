@@ -1,9 +1,10 @@
-import { query, queryOne, withUser, getRequiredEnv } from "../_lib/db.js";
+import { query, queryOne, withUser } from "../_lib/db.js";
 
 type ApiRequest = {
   method?: string;
   query?: Record<string, string | string[] | undefined>;
   body?: unknown;
+  headers?: Record<string, string>;
 };
 
 type ApiResponse = {

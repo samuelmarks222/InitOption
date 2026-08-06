@@ -1,4 +1,4 @@
-import { getClerkUserId } from "../profile/index.js";
+import { query } from "./_lib/db.js";
 
 type ApiRequest = {
   method?: string;
