@@ -187,10 +187,6 @@ const apiFetch = async (path: string, opts: RequestInit = {}): Promise<unknown> 
   }
   return payload.data ?? payload;
 };
-    throw error;
-  }
-  return payload.data ?? payload;
-};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { isLoaded, isSignedIn, user: clerkUser } = useUser();
