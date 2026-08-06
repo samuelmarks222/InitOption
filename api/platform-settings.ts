@@ -1,4 +1,5 @@
 import { query } from "./_lib/db.js";
+import { getClerkUserId } from "./profile/index.js";
 
 type ApiRequest = {
   method?: string;
@@ -34,6 +35,10 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   }
 
   const userId = getClerkUserId(request);
+  if (!userId) {
+    response.status(401).json({ error: "Unauthorized: missing or invalid session" });
+    return;
+  }
 
   if (method === "POST") {
     const body = (request.body ?? {}) as Record<string, unknown>;

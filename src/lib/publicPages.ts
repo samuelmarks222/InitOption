@@ -24,7 +24,7 @@ export type PublicPageKey =
 
 export interface PublicPageSection {
   title: string;
-  paragraphs: string[];
+  paragraphs?: string[];
   bullets?: string[];
 }
 
