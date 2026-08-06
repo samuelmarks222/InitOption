@@ -1,5 +1,5 @@
 import { rpc, withUser } from "../_lib/db.js";
-import { getClerkUserId } from "../profile/index.js";
+import { getClerkUserId } from "../profile.js";
 
 type ApiRequest = {
   method?: string;
@@ -35,7 +35,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   }
 
   if (method === "POST") {
-    const payload = request.body as Record<string, unknown>;
+    const payload = (request.body as Record<string, unknown>) ?? {};
     const result = await withUser(userId, async (client) => {
       const res = await rpc(funcName, payload);
       return res;

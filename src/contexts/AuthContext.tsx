@@ -167,23 +167,26 @@ export const useAuth = () => {
 };
 
 // API helper for profile operations
-const apiFetch = async (path: string, opts: RequestInit = {}) => {
+const apiFetch = async (path: string, opts: RequestInit = {}): Promise<unknown> => {
   const token = localStorage.getItem("clerk_session_token");
-  const res = await fetch(`/api${path}`, {
-    ...opts,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(opts.headers ?? {}),
-    },
-  });
+  const headers = new Headers(opts.headers as Record<string, string>);
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  headers.set("Content-Type", "application/json");
 
+  const res = await fetch(`/api${path}`, { ...opts, headers });
   const payload = await res.json().catch(() => ({}));
+
   if (!res.ok) {
     const error: { message: string; status?: number } = {
       message: payload.error || res.statusText,
       status: res.status,
     };
+    throw error;
+  }
+  return payload.data ?? payload;
+};
     throw error;
   }
   return payload.data ?? payload;

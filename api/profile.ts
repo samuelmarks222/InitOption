@@ -1,4 +1,4 @@
-import { query, queryOne, withUser } from "../_lib/db.js";
+import { query, withUser } from "./_lib/db.js";
 
 type ApiRequest = {
   method?: string;
@@ -18,7 +18,6 @@ const getQueryString = (value: string | string[] | undefined) => {
   return value ?? "";
 };
 
-// Extract Clerk user ID from the Authorization header / session token
 const getClerkUserId = (req: ApiRequest): string | null => {
   const authHeader = req.headers?.["authorization"];
   if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
@@ -43,13 +42,10 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
   try {
     if (method === "GET") {
-      // Fetch profile by ID or fetch own profile
+      // Fetch own profile (or any profile by id via query param)
       const profileId = getQueryString(request.query?.id) || userId;
       const profile = await withUser(userId, async (client) => {
-        const row = await client.query(
-          "SELECT * FROM profiles WHERE id = $1",
-          [profileId]
-        );
+        const row = await client.query("SELECT * FROM profiles WHERE id = $1", [profileId]);
         return row.rows[0] ?? null;
       });
 
@@ -64,7 +60,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     }
 
     if (method === "POST") {
-      // Upsert own profile (create if not exists)
+      // Upsert own profile
       const body = (request.body ?? {}) as Record<string, unknown>;
       const allowedFields = [
         "id", "email", "display_name", "username", "avatar_url",
@@ -84,26 +80,15 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       updates.updated_at = new Date().toISOString();
 
       const result = await withUser(userId, async (client) => {
-        const setClause = Object.keys(updates)
-          .filter((k) => k !== "id")
-          .map((k, i) => `${k} = $${i + 2}`)
-          .join(", ");
-        const values = [userId, ...Object.values(
-          Object.fromEntries(Object.entries(updates).filter(([k]) => k !== "id"))
-        )] as unknown[];
+        const columns = Object.keys(updates).join(", ");
+        const values = Object.values(updates);
+        const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
 
-        if (setClause) {
-          await client.query(
-            `INSERT INTO profiles (id, ${Object.keys(updates).filter(k => k !== "id").join(", ")}) VALUES ($1, ${values.slice(1).map((_, i) => `$${i + 2}`).join(", ")})
-             ON CONFLICT (id) DO UPDATE SET ${setClause}, updated_at = now()`,
-            [userId, ...values.slice(1)]
-          );
-        } else {
-          await client.query(
-            `INSERT INTO profiles (id) VALUES ($1) ON CONFLICT (id) DO NOTHING`,
-            [userId]
-          );
-        }
+        await client.query(
+          `INSERT INTO profiles (${columns}) VALUES (${placeholders})
+           ON CONFLICT (id) DO UPDATE SET ${Object.keys(updates).map((k) => `${k} = EXCLUDED.${k}`).join(", ")}`,
+          values
+        );
 
         const row = await client.query("SELECT * FROM profiles WHERE id = $1", [userId]);
         return row.rows[0] ?? null;
@@ -159,4 +144,4 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   }
 }
 
-export { getQueryString, getClerkUserId };
+export { getClerkUserId };
