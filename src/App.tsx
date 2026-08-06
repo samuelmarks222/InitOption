@@ -1,10 +1,10 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Suspense, lazy, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ClerkProvider } from "@/integrations/clerk/client";
 import { AuthProvider } from "@/contexts/AuthContext";
 import TradingRouteProviders from "@/components/TradingRouteProviders";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -93,6 +93,13 @@ const App = () => {
     DEFAULT_PLATFORM_SETTINGS,
   );
 
+  // Import apiFetch here to avoid circular dependency issues
+  const apiFetch = async (path: string): Promise<unknown> => {
+    const res = await fetch(`/api${path}`);
+    const payload = await res.json().catch(() => ({}));
+    return payload.data ?? payload;
+  };
+
   useEffect(() => {
     async function loadPlatformPresentation() {
       const cachedSettings = readPlatformPresentationCache();
@@ -103,7 +110,7 @@ const App = () => {
       }
 
       try {
-        const { data } = await supabase.from("platform_settings").select("*").limit(1).maybeSingle();
+        const data = await apiFetch("/platform-settings/public");
         const resolvedSettings = (data as Partial<PlatformSettingsRecord> | null) ?? DEFAULT_PLATFORM_SETTINGS;
         writePlatformPresentationCache(resolvedSettings);
         setPlatformSettings(resolvedSettings);
@@ -138,8 +145,9 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <RouteSeoManager platformSettings={platformSettings} />
-          <AuthProvider>
-            <Routes>
+          <ClerkProvider>
+            <AuthProvider>
+              <Routes>
                         <Route path="/" element={withRouteSuspense(<Index />)} />
                         <Route path="/about" element={withRouteSuspense(<PublicInfoPage pageKey="about" />)} />
                         <Route path="/facts-and-figures" element={withRouteSuspense(<PublicInfoPage pageKey="facts-and-figures" />)} />
@@ -215,7 +223,8 @@ const App = () => {
 
                         <Route path="*" element={withRouteSuspense(<NotFound />)} />
             </Routes>
-          </AuthProvider>
+            </AuthProvider>
+          </ClerkProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

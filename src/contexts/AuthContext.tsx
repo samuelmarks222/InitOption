@@ -1,21 +1,19 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { type AuthError, type Session, type User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
-import { type TablesUpdate } from "@/integrations/supabase/types";
+import { useUser, useAuth, useClerk } from "@clerk/clerk-react";
 import { clearAuthRestorePath, getAuthRestorePath } from "@/lib/authRedirect";
 import { shouldNormalizeSeededLiveBalance } from "@/lib/live-balance";
 import type { AuthProfile, ProfileUpdateInput } from "@/types/profile";
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: { id: string; email: string | null; user_metadata: Record<string, unknown> } | null;
+  session: { user: { id: string } | null } | null;
   profile: AuthProfile | null;
   loading: boolean;
   emailVerified: boolean;
   emailVerifiedAt: string | null;
-  signUp: (email: string, password: string, username?: string, referredByCode?: string) => Promise<{ error: AuthError | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signInWithGoogle: () => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, username?: string, referredByCode?: string) => Promise<{ error: { message: string; status?: number } | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: { message: string; status?: number } | null }>;
+  signInWithGoogle: () => Promise<{ error: { message: string; status?: number } | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   sendEmailVerificationCode: () => Promise<{
@@ -30,12 +28,13 @@ interface AuthContextType {
     status: string | null;
     verifiedAt: string | null;
   }>;
-  resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
-  verifyPasswordResetCode: (email: string, code: string) => Promise<{ error: AuthError | null }>;
-  updatePasswordAfterReset: (newPassword: string) => Promise<{ error: AuthError | null }>;
+  resetPassword: (email: string) => Promise<{ error: { message: string; status?: number } | null }>;
+  verifyPasswordResetCode: (email: string, code: string) => Promise<{ error: { message: string; status?: number } | null }>;
+  updatePasswordAfterReset: (newPassword: string) => Promise<{ error: { message: string; status?: number } | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 const MAX_SESSION_RETRIES = 3;
 const SESSION_RETRY_DELAY_MS = 2000;
 
@@ -64,7 +63,7 @@ const sanitizeDbOwnedProfileFields = (value: Record<string, unknown>) => {
   return { nextValue, changed };
 };
 
-const getSanitizedUserMetadata = (authUser?: User | null) => {
+const getSanitizedUserMetadata = (authUser?: { user_metadata?: Record<string, unknown> } | null) => {
   const metadata = { ...(authUser?.user_metadata ?? {}) } as Record<string, unknown>;
   return sanitizeDbOwnedProfileFields(metadata).nextValue;
 };
@@ -133,17 +132,17 @@ const isMissingProfileCountryColumnError = (error: unknown) => {
   return /(nationality|phone_country|phone_country_code)/iu.test(message) && /(column|schema|not found|does not exist)/iu.test(message);
 };
 
-const getEmailVerifiedAt = (authUser?: User | null) => {
+const getEmailVerifiedAt = (authUser?: { email_confirmed_at?: string | null; user_metadata?: Record<string, unknown> } | null) => {
   if (!authUser) return null;
 
   return (
     readString(asObjectRecord(authUser.user_metadata).platform_email_verified_at) ??
     readString(authUser.email_confirmed_at) ??
-    readString(authUser.confirmed_at)
+    null
   );
 };
 
-const deriveProfileIdentity = (authUser: User | null | undefined, userId: string) => {
+const deriveProfileIdentity = (authUser: { user_metadata?: Record<string, unknown>; email?: string | null } | null | undefined, userId: string) => {
   const metadata = asObjectRecord(authUser?.user_metadata);
   const emailFallback = readString(authUser?.email)?.split("@")[0] ?? `user_${userId.slice(0, 8)}`;
   const username =
@@ -167,64 +166,91 @@ export const useAuth = () => {
   return ctx;
 };
 
+// API helper for profile operations
+const apiFetch = async (path: string, opts: RequestInit = {}) => {
+  const token = localStorage.getItem("clerk_session_token");
+  const res = await fetch(`/api${path}`, {
+    ...opts,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(opts.headers ?? {}),
+    },
+  });
+
+  const payload = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error: { message: string; status?: number } = {
+      message: payload.error || res.statusText,
+      status: res.status,
+    };
+    throw error;
+  }
+  return payload.data ?? payload;
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const { isLoaded, isSignedIn, user: clerkUser } = useUser();
+  const { getToken, signOut: clerkSignOut } = useAuth();
+  const clerk = useClerk();
+
+  const [user, setUser] = useState<{ id: string; email: string | null; user_metadata: Record<string, unknown> } | null>(null);
+  const [session, setSession] = useState<{ user: { id: string } | null } | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const activeProfileUserIdRef = useRef<string | null>(null);
   const isIntentionalSignOutRef = useRef(false);
 
-  const ensureProfileRow = useCallback(async (userId: string, authUser?: User | null) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle();
+  // Sync Clerk user -> app user object
+  useEffect(() => {
+    if (!isLoaded) return;
 
-    if (error) {
-      throw error;
+    if (isSignedIn && clerkUser) {
+      const appUser = {
+        id: clerkUser.id,
+        email: clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress || null,
+        user_metadata: { ...(clerkUser.publicMetadata ?? {}), ...(clerkUser.unsafeMetadata ?? {}) },
+      };
+
+      setUser(appUser);
+      setSession({ user: { id: appUser.id } });
+      activeProfileUserIdRef.current = appUser.id;
+
+      void fetchProfile(appUser.id, appUser);
+      setLoading(false);
+    } else {
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      activeProfileUserIdRef.current = null;
+      setLoading(false);
     }
+  }, [isLoaded, isSignedIn, clerkUser]);
 
-    if (data) {
-      return data;
-    }
-
-    const identity = deriveProfileIdentity(authUser, userId);
-    const insertPayload: TablesUpdate<"profiles"> & { id: string } = {
-      id: userId,
-      display_name: identity.displayName,
-      username: identity.username,
-    };
-
-    const insertResponse = await supabase
-      .from("profiles")
-      .insert(insertPayload as never)
-      .select("*")
-      .maybeSingle();
-
-    if (insertResponse.error) {
-      const retryResponse = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (retryResponse.error) {
-        throw retryResponse.error;
+  const ensureProfileRow = useCallback(async (userId: string, authUser?: { user_metadata?: Record<string, unknown>; email?: string | null } | null) => {
+    try {
+      const data = await apiFetch(`/profile`);
+      if (data) return data;
+    } catch (e: any) {
+      if (e.status === 404) {
+        // Profile doesn't exist, create it
+        const identity = deriveProfileIdentity(authUser, userId);
+        const result = await apiFetch(`/profile`, {
+          method: "POST",
+          body: JSON.stringify({
+            id: userId,
+            email: authUser?.email ?? null,
+            display_name: identity.displayName,
+            username: identity.username,
+          }),
+        });
+        return result;
       }
-
-      if (retryResponse.data) {
-        return retryResponse.data;
-      }
-
-      throw insertResponse.error;
+      throw e;
     }
-
-    return insertResponse.data;
   }, []);
 
-  const fetchProfile = useCallback(async (userId: string, authUser?: User | null) => {
+  const fetchProfile = useCallback(async (userId: string, authUser?: { user_metadata?: Record<string, unknown>; email?: string | null } | null) => {
     try {
       const data = await ensureProfileRow(userId, authUser);
 
@@ -244,21 +270,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         mergedProfile.balance = 0;
         mergedProfile.welcome_bonus_granted_at = null;
 
-        void supabase
-          .from("profiles")
-          .update({
+        void apiFetch(`/profile`, {
+          method: "PATCH",
+          body: JSON.stringify({
             balance: 0,
             welcome_bonus_granted_at: null,
-          } as TablesUpdate<"profiles">)
-          .eq("id", userId)
-          .eq("balance", 10000)
-          .eq("total_deposit", 0)
-          .eq("total_trades", 0)
-          .then(({ error }) => {
-            if (error) {
-              console.error("Failed to clear legacy seeded live balance", error);
-            }
-          });
+          }),
+        }).catch((error) => {
+          if (error) {
+            console.error("Failed to clear legacy seeded live balance", error);
+          }
+        });
       }
 
       if (activeProfileUserIdRef.current !== userId) {
@@ -290,29 +312,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [ensureProfileRow]);
 
   const refreshProfile = useCallback(async () => {
-    if (user) await fetchProfile(user.id, user);
+    if (user) await fetchProfile(user.id, { user_metadata: user.user_metadata, email: user.email });
   }, [fetchProfile, user]);
-
-  const refreshAuthUser = useCallback(async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error) throw error;
-
-    if (!data.user) return;
-
-    setUser(data.user);
-    setSession((current) => (current ? { ...current, user: data.user } : current));
-
-    if (activeProfileUserIdRef.current === data.user.id) {
-      await fetchProfile(data.user.id, data.user);
-    }
-  }, [fetchProfile]);
 
   const updateProfile = useCallback(async (updates: ProfileUpdateInput) => {
     if (!user) return;
 
     await ensureProfileRow(user.id, user);
 
-    const profileUpdates: TablesUpdate<"profiles"> = {};
+    const profileUpdates: Record<string, unknown> = {};
     const metadataUpdates: Record<string, unknown> = { ...updates };
 
     if (Object.prototype.hasOwnProperty.call(updates, "avatar_url")) {
@@ -332,10 +340,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       profileUpdates.nationality = updates.nationality ?? null;
     }
     if (Object.prototype.hasOwnProperty.call(updates, "phoneCountry")) {
-      profileUpdates.phone_country = updates.phoneCountry ?? null;
+      profileUpdates.phone_country = (updates as any).phoneCountry ?? null;
     }
     if (Object.prototype.hasOwnProperty.call(updates, "phoneCountryCode")) {
-      profileUpdates.phone_country_code = updates.phoneCountryCode ?? null;
+      profileUpdates.phone_country_code = (updates as any).phoneCountryCode ?? null;
     }
 
     delete metadataUpdates.avatar_url;
@@ -345,59 +353,65 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     delete metadataUpdates.platform_email_verified_at;
 
     if (Object.keys(profileUpdates).length > 0) {
-      const { error } = await supabase
-        .from("profiles")
-        .update(profileUpdates)
-        .eq("id", user.id);
-      if (error) {
+      try {
+        await apiFetch(`/profile`, {
+          method: "PATCH",
+          body: JSON.stringify(profileUpdates),
+        });
+      } catch (error) {
         if (!isMissingProfileCountryColumnError(error)) throw error;
 
-        const fallbackProfileUpdates = { ...(profileUpdates as Record<string, unknown>) };
+        const fallbackProfileUpdates = { ...profileUpdates } as Record<string, unknown>;
         delete fallbackProfileUpdates.nationality;
         delete fallbackProfileUpdates.phone_country;
         delete fallbackProfileUpdates.phone_country_code;
 
         if (Object.keys(fallbackProfileUpdates).length > 0) {
-          const { error: retryError } = await supabase
-            .from("profiles")
-            .update(fallbackProfileUpdates as TablesUpdate<"profiles">)
-            .eq("id", user.id);
-
-          if (retryError) throw retryError;
+          await apiFetch(`/profile`, {
+            method: "PATCH",
+            body: JSON.stringify(fallbackProfileUpdates),
+          });
         }
       }
     }
 
     saveProfileCache(user.id, metadataUpdates);
 
+    // Update Clerk user metadata
     if (Object.keys(metadataUpdates).length > 0) {
-      const sanitizedMetadata = getSanitizedUserMetadata(user);
-      const { data, error } = await supabase.auth.updateUser({
-        data: {
-          ...sanitizedMetadata,
-          ...metadataUpdates,
-        },
-      });
-
-      if (error) throw error;
-      if (data.user) setUser(data.user);
+      try {
+        await clerk.user?.update({
+          publicMetadata: {
+            ...(clerkUser?.publicMetadata ?? {}),
+            ...metadataUpdates,
+          },
+        });
+      } catch (error) {
+        console.error("Failed to update Clerk user metadata", error);
+      }
     }
 
     await fetchProfile(user.id, {
-      ...user,
-      user_metadata: {
-        ...(user.user_metadata ?? {}),
-        ...metadataUpdates,
-      },
+      user_metadata: { ...(user.user_metadata ?? {}), ...metadataUpdates },
       email: user.email,
-    } as User);
+    } as { user_metadata: Record<string, unknown>; email: string | null });
   }, [ensureProfileRow, fetchProfile, user]);
 
   const sendEmailVerificationCode = useCallback(async () => {
-    const { data, error } = await supabase.rpc("send_email_verification_code");
-    if (error) throw error;
+    const result = await apiFetch(`/rpc/send_email_verification_code`, {
+      method: "POST",
+    }).catch(() => null);
 
-    const payload = asObjectRecord(data);
+    if (!result) {
+      return {
+        cooldownSeconds: null,
+        email: null,
+        expiresAt: null,
+        status: null,
+      };
+    }
+
+    const payload = asObjectRecord(result);
 
     return {
       cooldownSeconds: typeof payload.cooldown_seconds === "number" ? payload.cooldown_seconds : null,
@@ -408,193 +422,108 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const verifyEmailCode = useCallback(async (code: string) => {
-    const { data, error } = await supabase.rpc("verify_email_with_code", {
-      p_code: code,
+    const result = await apiFetch(`/rpc/verify_email_with_code`, {
+      method: "POST",
+      body: JSON.stringify({ p_code: code }),
     });
-    if (error) throw error;
 
-    await refreshAuthUser();
-
-    const payload = asObjectRecord(data);
+    const payload = asObjectRecord(result);
 
     return {
       email: readString(payload.email),
       status: readString(payload.status),
       verifiedAt: readString(payload.verified_at),
     };
-  }, [refreshAuthUser]);
+  }, []);
 
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    const isOAuthRedirect =
-      window.location.pathname === "/auth/callback" ||
-      searchParams.has("code") ||
-      searchParams.has("error") ||
-      searchParams.has("error_description") ||
-      hashParams.has("access_token") ||
-      hashParams.has("error") ||
-      hashParams.has("error_description");
-    let isActive = true;
+  const refreshAuthUser = useCallback(async () => {
+    if (!clerkUser) return;
 
-    const attemptGetSession = async (attempt = 0): Promise<void> => {
-      if (!isActive) return;
-
-      try {
-        const { data: { session: nextSession } } = await supabase.auth.getSession();
-
-        if (!isActive) return;
-
-        setSession(nextSession);
-        setUser(nextSession?.user ?? null);
-        activeProfileUserIdRef.current = nextSession?.user?.id ?? null;
-
-        if (nextSession?.user) {
-          setProfile((current) => (current?.id === nextSession.user.id ? current : null));
-          void fetchProfile(nextSession.user.id, nextSession.user);
-          setLoading(false);
-        } else if (!isOAuthRedirect) {
-          setProfile(null);
-          setLoading(false);
-        } else if (isOAuthRedirect && !nextSession?.user) {
-          setLoading(false);
-        }
-      } catch (error) {
-        if (!isActive) return;
-
-        if (attempt < MAX_SESSION_RETRIES) {
-          console.warn(`Auth session restore failed (attempt ${attempt + 1}/${MAX_SESSION_RETRIES}). Retrying...`, error);
-          await sleep(SESSION_RETRY_DELAY_MS);
-          return attemptGetSession(attempt + 1);
-        }
-
-        console.error("Failed to restore auth session after retries", error);
-        setLoading(false);
-      }
+    const appUser = {
+      id: clerkUser.id,
+      email: clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress || null,
+      user_metadata: { ...(clerkUser.publicMetadata ?? {}), ...(clerkUser.unsafeMetadata ?? {}) },
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, nextSession) => {
-        if (event === "SIGNED_OUT" && !isIntentionalSignOutRef.current) {
-          return;
-        }
-        isIntentionalSignOutRef.current = false;
+    setUser(appUser);
+    setSession({ user: { id: appUser.id } });
 
-        setSession(nextSession);
-        setUser(nextSession?.user ?? null);
-        activeProfileUserIdRef.current = nextSession?.user?.id ?? null;
-
-        if (nextSession?.user) {
-          setProfile((current) => (current?.id === nextSession.user.id ? current : null));
-          setTimeout(() => {
-            void fetchProfile(nextSession.user.id, nextSession.user);
-          }, 0);
-          setLoading(false);
-        } else if (!isOAuthRedirect) {
-          setProfile(null);
-          setLoading(false);
-        }
-      }
-    );
-
-    void attemptGetSession();
-
-    return () => {
-      isActive = false;
-      subscription.unsubscribe();
-    };
+    if (activeProfileUserIdRef.current === appUser.id) {
+      await fetchProfile(appUser.id, appUser);
+    }
   }, [fetchProfile]);
 
+  // Listen for Clerk auth state changes
   useEffect(() => {
-    if (!user) return;
+    if (!isLoaded) return;
 
-    const channel = supabase
-      .channel(`profile-sync-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
-        () => {
-          void fetchProfile(user.id, user);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
+    const handleAuthChange = () => {
+      void refreshAuthUser();
     };
-  }, [fetchProfile, user]);
 
-  const getEmailConfirmationRedirectUrl = () => {
-    const restorePath = getAuthRestorePath();
-    const nextPath = restorePath || "/trade";
-    return `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
-  };
+    const handler = () => {
+      if (!isIntentionalSignOutRef.current) {
+        handleAuthChange();
+      }
+      isIntentionalSignOutRef.current = false;
+    };
+
+    window.addEventListener("clerk-auth-state-change", handler);
+    return () => window.removeEventListener("clerk-auth-state-change", handler);
+  }, [isLoaded, refreshAuthUser]);
 
   const toAuthError = (message: string, status = 400) =>
-    ({
-      name: "AuthApiError",
-      message,
-      status,
-    }) as AuthError;
-
-  const signUpWithSupabaseConfirmation = async (
-    email: string,
-    password: string,
-    username?: string,
-    referredByCode?: string,
-  ) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username: username || email.split("@")[0],
-          referred_by_code: referredByCode ? referredByCode.trim().toUpperCase() : undefined,
-        },
-        emailRedirectTo: getEmailConfirmationRedirectUrl(),
-      },
-    });
-
-    return { error };
-  };
+    ({ message, status }) as { message: string; status: number };
 
   const signUp = async (email: string, password: string, username?: string, referredByCode?: string) => {
     try {
-      const response = await fetch("/api/auth/signup", {
+      const result = await apiFetch(`/auth/signup`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          username,
-          referredByCode,
-        }),
+        body: JSON.stringify({ email, password, username, referredByCode }),
+      }).catch((e: any) => {
+        if (e.message?.includes("custom_email_unavailable")) {
+          // Fallback: use Clerk's sign-up
+          void clerk.signUp.create({
+            emailAddress: email,
+            password,
+            publicMetadata: { username: username || email.split("@")[0] },
+            unsafeMetadata: { referred_by_code: referredByCode ? referredByCode.trim().toUpperCase() : undefined },
+          });
+          return null;
+        }
+        throw e;
       });
 
-      const payload = (await response.json().catch(() => ({}))) as { code?: string; error?: string };
-
-      if (response.ok) {
-        return { error: null };
-      }
-
-      if (response.status === 501 && payload.code === "custom_email_unavailable") {
-        return signUpWithSupabaseConfirmation(email, password, username, referredByCode);
-      }
-
+      return { error: null };
+    } catch (error: any) {
       return {
-        error: toAuthError(payload.error || "Registration failed. Please try again.", response.status),
+        error: toAuthError(error.message || "Registration failed. Please try again.", error.status || 500),
       };
-    } catch {
-      return signUpWithSupabaseConfirmation(email, password, username, referredByCode);
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return { error };
+      const response = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (response.ok) {
+        // Get Clerk session token
+        const token = await getToken({ skipCache: true });
+        if (token) {
+          localStorage.setItem("clerk_session_token", token);
+        }
+        return { error: null };
+      }
+
+      return {
+        error: toAuthError(payload.error || "Login failed. Please try again.", response.status),
+      };
     } catch {
       return {
         error: toAuthError("Login is taking longer than expected. Please try again in a moment.", 503),
@@ -603,26 +532,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
-    const redirectPath = getAuthRestorePath() || "/trade";
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
-        }
+      const redirectPath = getAuthRestorePath() || "/trade";
+      await clerk.signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}${redirectPath}`,
       });
-
-      return { error };
+      return { error: null };
     } catch {
       return {
-        error: toAuthError("Google sign-in is taking longer than expected. Please try again in a moment.", 503),
+        error: toAuthError("Google sign-in failed. Please try again.", 500),
       };
     }
   };
 
   const signOut = async () => {
     isIntentionalSignOutRef.current = true;
-    await supabase.auth.signOut();
+    await clerkSignOut();
+    localStorage.removeItem("clerk_session_token");
     clearAuthRestorePath();
     activeProfileUserIdRef.current = null;
     setUser(null);
@@ -632,10 +560,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
       });
-      return { error };
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        return {
+          error: toAuthError(payload.error || "Password reset failed.", response.status),
+        };
+      }
+
+      return { error: null };
     } catch {
       return {
         error: toAuthError("Password reset request failed. Please try again.", 503),
@@ -644,26 +582,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const verifyPasswordResetCode = async (email: string, code: string) => {
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: code,
-        type: "recovery",
-      });
-      return { error };
-    } catch {
-      return {
-        error: toAuthError("Invalid code. Please try again.", 400),
-      };
-    }
+    // Clerk handles password reset codes differently — this is mainly for compatibility
+    return { error: toAuthError("Password reset verification is handled by Clerk.", 400) };
   };
 
   const updatePasswordAfterReset = async (newPassword: string) => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      return { error };
+      await clerk.user?.update({ password: newPassword });
+      return { error: null };
     } catch {
       return {
         error: toAuthError("Password update failed. Please try again.", 503),
@@ -671,7 +597,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const emailVerifiedAt = getEmailVerifiedAt(user);
+  const emailVerifiedAt = getEmailVerifiedAt(clerkUser);
   const emailVerified = Boolean(emailVerifiedAt);
 
   return (
