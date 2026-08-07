@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { pusherServer } from "@/lib/pusherServer";
+import { pusherServer } from "../../src/lib/pusherServer";
 
 type ApiRequest = IncomingMessage & {
   headers: Record<string, string | string[] | undefined>;
@@ -41,7 +41,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     const auth = pusherServer.authenticate(socket_id, channel_name);
 
-    sendJson(response, 200, auth);
+    sendJson(response, 200, auth as unknown as Record<string, unknown>);
   } catch (error) {
     console.error("Pusher auth failed:", error);
     sendJson(response, 500, {

@@ -126,13 +126,22 @@ function parseMultipart(buffer: Buffer, boundary: string): Array<{ name: string;
   return parts;
 }
 
-async function uploadToCloudinary(buffer: Buffer, options: { folder: string; public_id?: string; resource_type?: string }): Promise<cloudinary.UploadApiResponse> {
+type UploadResponse = {
+  public_id?: string;
+  secure_url?: string;
+  [key: string]: unknown;
+};
+
+async function uploadToCloudinary(
+  buffer: Buffer,
+  options: { folder: string; public_id?: string; resource_type?: "auto" | "image" | "video" | "raw" }
+): Promise<UploadResponse> {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       { folder: options.folder, public_id: options.public_id, resource_type: options.resource_type },
       (error, result) => {
         if (error) reject(error);
-        else resolve(result!);
+        else resolve((result as UploadResponse | null) ?? {});
       }
     );
     uploadStream.end(buffer);
