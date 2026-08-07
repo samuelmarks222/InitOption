@@ -11,5 +11,8 @@ dist/
 
 *.log
 
+m2.json
+meta.json
+
 .vercel
 .env*
