@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { pusherServer } from "../../src/lib/pusherServer";
+import { pusherServer } from "../../src/lib/pusherServer.js";
 
 type ApiRequest = IncomingMessage & {
   headers: Record<string, string | string[] | undefined>;
