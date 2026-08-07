@@ -8,7 +8,8 @@ import {
   normalizeKenyanPhoneNumber,
 } from "../../src/lib/mobileMoneyShared.js";
 import { readJsonRequestBody } from "../_lib/sasapay.js";
-import { getSupabaseAdminClient, getSupabaseUserClient } from "../_lib/supabaseAdmin.js";
+import { query, queryOne, userRpc } from "../_lib/db.js";
+import { authenticateRequest, clerkUserIdToUuid } from "../_lib/clerkWebhook.js";
 
 type ApiRequest = IncomingMessage & {
   headers: Record<string, string | string[] | undefined>;
@@ -46,15 +47,6 @@ const asString = (value: unknown) => {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
-};
-
-const parseBearerToken = (authorizationHeader: string) => {
-  const trimmed = authorizationHeader.trim();
-  if (!trimmed) return null;
-
-  const [scheme, token] = trimmed.split(/\s+/, 2);
-  if (!scheme || !token || scheme.toLowerCase() !== "bearer") return null;
-  return token.trim() || null;
 };
 
 const getClientIp = (headers: ApiRequest["headers"]) => {
@@ -98,27 +90,11 @@ const isBonusTurnoverError = (message: string) =>
 const formatUsd = (value: number) =>
   Number.isFinite(value) ? value.toFixed(2) : "0.00";
 
-const clearActiveBonusRows = async ({
-  adminClient,
-  userId,
-}: {
-  adminClient: ReturnType<typeof getSupabaseAdminClient>;
-  userId: string;
-}) => {
-  const response = await adminClient
-    .from("deposit_requests")
-    .update({
-      deposit_bonus: 0,
-      promo_bonus: 0,
-      updated_at: new Date().toISOString(),
-      welcome_bonus: 0,
-    })
-    .eq("user_id", userId)
-    .eq("status", "approved");
-
-  if (response.error) {
-    throw response.error;
-  }
+const clearActiveBonusRows = async ({ userId }: { userId: string }) => {
+  await query(
+    "update deposit_requests set deposit_bonus = $1, promo_bonus = $2, updated_at = $3, welcome_bonus = $4 where user_id = $5 and status = $6",
+    [0, 0, new Date().toISOString(), 0, userId, "approved"],
+  );
 };
 
 const createTenXMobileMoneyWithdrawal = async ({
@@ -136,20 +112,13 @@ const createTenXMobileMoneyWithdrawal = async ({
   requestHeaders: ApiRequest["headers"];
   userId: string;
 }) => {
-  const adminClient = getSupabaseAdminClient();
   const nowIso = new Date().toISOString();
 
-  const profileResponse = await adminClient
-    .from("profiles")
-    .select("id,balance,kyc_status,reserved_withdrawal_balance")
-    .eq("id", userId)
-    .maybeSingle();
+  const profile = await queryOne(
+    "select id, balance, kyc_status, reserved_withdrawal_balance from profiles where id = $1",
+    [userId],
+  );
 
-  if (profileResponse.error) {
-    throw profileResponse.error;
-  }
-
-  const profile = profileResponse.data;
   if (!profile) {
     throw new Error("Profile not found");
   }
@@ -158,49 +127,30 @@ const createTenXMobileMoneyWithdrawal = async ({
   const reservedBalance = Number(profile.reserved_withdrawal_balance ?? 0);
   const availableBalance = Math.max(0, balance - reservedBalance);
 
-  const pendingResponse = await adminClient
-    .from("withdrawal_requests")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("status", "pending")
-    .limit(1)
-    .maybeSingle();
+  const pending = await queryOne(
+    "select id from withdrawal_requests where user_id = $1 and status = $2 limit 1",
+    [userId, "pending"],
+  );
 
-  if (pendingResponse.error) {
-    throw pendingResponse.error;
-  }
-
-  if (pendingResponse.data) {
+  if (pending?.id) {
     throw new Error("You already have a pending withdrawal request");
   }
 
-  const settingsResponse = await adminClient
-    .from("platform_settings")
-    .select("require_kyc_withdrawal,mpesa_withdrawal_approval_threshold_kes")
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const settings = await queryOne(
+    "select require_kyc_withdrawal, mpesa_withdrawal_approval_threshold_kes from platform_settings order by updated_at desc limit 1",
+  );
 
-  if (settingsResponse.error) {
-    throw settingsResponse.error;
-  }
-
-  const requireKyc = Boolean(settingsResponse.data?.require_kyc_withdrawal ?? true);
+  const requireKyc = Boolean(settings?.require_kyc_withdrawal ?? true);
   if (requireKyc && !["verified", "approved"].includes(String(profile.kyc_status ?? "").toLowerCase())) {
     throw new Error("Account verification is required before withdrawal");
   }
 
-  const depositsResponse = await adminClient
-    .from("deposit_requests")
-    .select("welcome_bonus,deposit_bonus,promo_bonus")
-    .eq("user_id", userId)
-    .eq("status", "approved");
+  const deposits = await query(
+    "select welcome_bonus, deposit_bonus, promo_bonus from deposit_requests where user_id = $1 and status = $2",
+    [userId, "approved"],
+  );
 
-  if (depositsResponse.error) {
-    throw depositsResponse.error;
-  }
-
-  const bonusTotal = (depositsResponse.data ?? []).reduce((sum, deposit) => {
+  const bonusTotal = deposits.reduce((sum, deposit) => {
     return (
       sum +
       Number(deposit.welcome_bonus ?? 0) +
@@ -214,18 +164,12 @@ const createTenXMobileMoneyWithdrawal = async ({
   const requiredTurnover = Math.round(bonusTotal * 10 * 100) / 100;
 
   if (bonusTotal > 0) {
-    const tradesResponse = await adminClient
-      .from("trades")
-      .select("amount")
-      .eq("user_id", userId)
-      .in("status", ["won", "lost", "expired"])
-      .is("tournament_participant_id", null);
+    const trades = await query(
+      "select amount from trades where user_id = $1 and status = any($2) and tournament_participant_id is null",
+      [userId, ["won", "lost", "expired"]],
+    );
 
-    if (tradesResponse.error) {
-      throw tradesResponse.error;
-    }
-
-    completedTurnover = (tradesResponse.data ?? []).reduce((sum, trade) => sum + Number(trade.amount ?? 0), 0);
+    completedTurnover = trades.reduce((sum, trade) => sum + Number(trade.amount ?? 0), 0);
 
     if (completedTurnover < requiredTurnover) {
       if (!forfeitBonus) {
@@ -249,7 +193,7 @@ const createTenXMobileMoneyWithdrawal = async ({
     throw new Error("Insufficient available balance");
   }
 
-  const approvalThresholdKes = Number(settingsResponse.data?.mpesa_withdrawal_approval_threshold_kes ?? 10000);
+  const approvalThresholdKes = Number(settings?.mpesa_withdrawal_approval_threshold_kes ?? 10000);
   const autoApproved = amountKes <= approvalThresholdKes;
   const merchantRef = `WITHDRAW_${userId.replace(/-/g, "")}_${Date.now()}`;
   const requestIp = getClientIp(requestHeaders);
@@ -296,45 +240,67 @@ const createTenXMobileMoneyWithdrawal = async ({
   let insertedAutoApproved = autoApproved;
   let usesReservation = true;
 
-  const queueInsertResponse = await adminClient
-    .from("withdrawal_requests")
-    .insert(queueInsertPayload)
-    .select("id,status,approval_required,auto_approved")
-    .maybeSingle();
-
-  if (queueInsertResponse.error) {
-    const insertErrorMessage = getErrorMessage(queueInsertResponse.error);
-
+  let queueInsertRow: unknown = null;
+  try {
+    const rows = await query(
+      `insert into withdrawal_requests (
+         amount, approval_required, approval_threshold_kes, approved_at, auto_approved, audit_log,
+         destination, merchant_ref, method, next_retry_at, provider_amount, provider_channel,
+         provider_currency, provider_name, provider_phone_number, provider_status, queued_at,
+         request_ip, request_user_agent, status, user_id
+       ) values (
+         $1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
+         $18, $19, $20, $21
+       ) returning id, status, approval_required, auto_approved`,
+      [
+        amountUsd,
+        !autoApproved,
+        autoApproved ? nowIso : null,
+        autoApproved,
+        queueInsertPayload.audit_log,
+        phoneNumber,
+        merchantRef,
+        MPESA_METHOD_LABEL,
+        nowIso,
+        amountKes,
+        MPESA_CHANNEL_CODE,
+        "KES",
+        "sasapay",
+        phoneNumber,
+        autoApproved ? "queued" : "awaiting_approval",
+        autoApproved ? nowIso : null,
+        requestIp,
+        requestUserAgent,
+        autoApproved ? "approved" : "pending",
+        userId,
+      ],
+    );
+    queueInsertRow = rows[0] ?? null;
+  } catch (rawInsertError) {
+    const insertErrorMessage = getErrorMessage(rawInsertError);
     if (!shouldFallbackToManualWithdrawal(insertErrorMessage)) {
-      throw queueInsertResponse.error;
+      throw rawInsertError;
     }
-
     usesReservation = false;
-    const manualInsertResponse = await adminClient
-      .from("withdrawal_requests")
-      .insert({
-        amount: amountUsd,
-        destination: phoneNumber,
-        method: MPESA_METHOD_LABEL,
-        status: "pending",
-        user_id: userId,
-      })
-      .select("id,status")
-      .maybeSingle();
+  }
 
-    if (manualInsertResponse.error) {
-      throw manualInsertResponse.error;
-    }
-
-    insertedRequestId = asString(manualInsertResponse.data?.id);
-    insertedStatus = asString(manualInsertResponse.data?.status) || "pending";
+  if (!queueInsertRow) {
+    const manualRows = await query(
+      `insert into withdrawal_requests (amount, destination, method, status, user_id)
+       values ($1, $2, $3, $4, $5) returning id, status`,
+      [amountUsd, phoneNumber, MPESA_METHOD_LABEL, "pending", userId],
+    );
+    const manual = manualRows[0] as Record<string, unknown> | undefined;
+    insertedRequestId = asString(manual?.id);
+    insertedStatus = asString(manual?.status) || "pending";
     insertedApprovalRequired = true;
     insertedAutoApproved = false;
   } else {
-    insertedRequestId = asString(queueInsertResponse.data?.id);
-    insertedStatus = asString(queueInsertResponse.data?.status) || insertedStatus;
-    insertedApprovalRequired = Boolean(queueInsertResponse.data?.approval_required ?? insertedApprovalRequired);
-    insertedAutoApproved = Boolean(queueInsertResponse.data?.auto_approved ?? insertedAutoApproved);
+    const queueRow = queueInsertRow as Record<string, unknown>;
+    insertedRequestId = asString(queueRow.id);
+    insertedStatus = asString(queueRow.status) || insertedStatus;
+    insertedApprovalRequired = Boolean(queueRow.approval_required ?? insertedApprovalRequired);
+    insertedAutoApproved = Boolean(queueRow.auto_approved ?? insertedAutoApproved);
   }
 
   if (!insertedRequestId) {
@@ -352,16 +318,21 @@ const createTenXMobileMoneyWithdrawal = async ({
         updated_at: nowIso,
       };
 
-  const profileUpdateResponse = await adminClient.from("profiles").update(profileUpdatePayload).eq("id", userId);
-
-  if (profileUpdateResponse.error) {
-    await adminClient.from("withdrawal_requests").delete().eq("id", insertedRequestId);
-    throw profileUpdateResponse.error;
+  try {
+    await query(
+      `update profiles set ${Object.keys(profileUpdatePayload)
+        .map((key, index) => `${key} = $${index + 1}`)
+        .join(", ")} where id = $${Object.keys(profileUpdatePayload).length + 1}`,
+      [...Object.values(profileUpdatePayload), userId],
+    );
+  } catch (updateError) {
+    await query("delete from withdrawal_requests where id = $1", [insertedRequestId]);
+    throw updateError;
   }
 
   try {
     if (forfeitedBonusAmount > 0) {
-      await clearActiveBonusRows({ adminClient, userId });
+      await clearActiveBonusRows({ userId });
     }
   } catch (error) {
     const rollbackPayload = usesReservation
@@ -375,8 +346,13 @@ const createTenXMobileMoneyWithdrawal = async ({
           updated_at: nowIso,
         };
 
-    await adminClient.from("profiles").update(rollbackPayload).eq("id", userId);
-    await adminClient.from("withdrawal_requests").delete().eq("id", insertedRequestId);
+    await query(
+      `update profiles set ${Object.keys(rollbackPayload)
+        .map((key, index) => `${key} = $${index + 1}`)
+        .join(", ")} where id = $${Object.keys(rollbackPayload).length + 1}`,
+      [...Object.values(rollbackPayload), userId],
+    );
+    await query("delete from withdrawal_requests where id = $1", [insertedRequestId]);
     throw error;
   }
 
@@ -409,11 +385,10 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const body = (await readJsonRequestBody(request)) as RequestPayload;
     const amount = asNumber(body.amount ?? 0);
     const normalizedPhoneNumber = normalizeKenyanPhoneNumber(asString(body.phoneNumber ?? null));
-    const authHeader = getHeaderValue(request.headers, "authorization");
-    const accessToken = parseBearerToken(authHeader);
 
-    if (!accessToken) {
-      sendJson(response, 401, { error: "Missing Bearer token." });
+    const clerkUserId = await authenticateRequest(request.headers);
+    if (!clerkUserId) {
+      sendJson(response, 401, { error: "Missing or invalid Bearer token." });
       return;
     }
 
@@ -429,28 +404,23 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     const amountUsd = Number(amount);
     const amountKes = convertUsdToKesWithdrawalAmount(amountUsd);
-    const userClient = getSupabaseUserClient(accessToken);
-    const authResponse = await userClient.auth.getUser();
-
-    if (authResponse.error || !authResponse.data.user?.id) {
-      sendJson(response, 401, { error: "Invalid authentication token." });
-      return;
-    }
+    const userId = clerkUserIdToUuid(clerkUserId);
 
     const shouldForfeitBonus = body.forfeitBonus === true;
-    let requestResponse = shouldForfeitBonus
-      ? {
-          data: await createTenXMobileMoneyWithdrawal({
-            amountKes,
-            amountUsd,
-            forfeitBonus: true,
-            phoneNumber: normalizedPhoneNumber,
-            requestHeaders: request.headers,
-            userId: authResponse.data.user.id,
-          }),
-          error: null,
-        }
-      : await userClient.rpc("request_mobile_money_withdrawal", {
+    let requestData: Record<string, unknown> | null = null;
+
+    if (shouldForfeitBonus) {
+      requestData = await createTenXMobileMoneyWithdrawal({
+        amountKes,
+        amountUsd,
+        forfeitBonus: true,
+        phoneNumber: normalizedPhoneNumber,
+        requestHeaders: request.headers,
+        userId,
+      });
+    } else {
+      try {
+        const rows = await userRpc("request_mobile_money_withdrawal", clerkUserId, {
           p_amount: amountUsd,
           p_amount_kes: amountKes,
           p_phone_number: normalizedPhoneNumber,
@@ -458,56 +428,50 @@ export default async function handler(request: ApiRequest, response: ApiResponse
           p_request_ip: getClientIp(request.headers),
           p_request_user_agent: asString(getHeaderValue(request.headers, "user-agent")),
         });
+        requestData = rows[0] ?? null;
+      } catch (rpcError) {
+        const mobileMoneyErrorMessage = getErrorMessage(rpcError);
 
-    if (requestResponse.error) {
-      const mobileMoneyErrorMessage = getErrorMessage(requestResponse.error);
-
-      if (isBonusTurnoverError(mobileMoneyErrorMessage)) {
-        requestResponse = {
-          data: await createTenXMobileMoneyWithdrawal({
+        if (isBonusTurnoverError(mobileMoneyErrorMessage)) {
+          requestData = await createTenXMobileMoneyWithdrawal({
             amountKes,
             amountUsd,
             forfeitBonus: false,
             phoneNumber: normalizedPhoneNumber,
             requestHeaders: request.headers,
-            userId: authResponse.data.user.id,
-          }),
-          error: null,
-        };
-      } else if (!shouldFallbackToManualWithdrawal(mobileMoneyErrorMessage)) {
-        throw requestResponse.error;
-      } else {
-        console.warn("Mobile money withdrawal queue unavailable; falling back to manual withdrawal request", requestResponse.error);
-
-        requestResponse = await userClient.rpc("request_withdrawal", {
-          p_amount: amountUsd,
-          p_destination: normalizedPhoneNumber,
-          p_method: MPESA_METHOD_LABEL,
-        });
-
-        if (requestResponse.error) {
-          const manualWithdrawalErrorMessage = getErrorMessage(requestResponse.error);
-
-          if (isBonusTurnoverError(manualWithdrawalErrorMessage)) {
-            requestResponse = {
-              data: await createTenXMobileMoneyWithdrawal({
+            userId,
+          });
+        } else if (shouldFallbackToManualWithdrawal(mobileMoneyErrorMessage)) {
+          console.warn("Mobile money withdrawal queue unavailable; falling back to manual withdrawal request", rpcError);
+          try {
+            const rows = await userRpc("request_withdrawal", clerkUserId, {
+              p_amount: amountUsd,
+              p_destination: normalizedPhoneNumber,
+              p_method: MPESA_METHOD_LABEL,
+            });
+            requestData = rows[0] ?? null;
+          } catch (manualError) {
+            const manualWithdrawalErrorMessage = getErrorMessage(manualError);
+            if (isBonusTurnoverError(manualWithdrawalErrorMessage)) {
+              requestData = await createTenXMobileMoneyWithdrawal({
                 amountKes,
                 amountUsd,
                 forfeitBonus: false,
                 phoneNumber: normalizedPhoneNumber,
                 requestHeaders: request.headers,
-                userId: authResponse.data.user.id,
-              }),
-              error: null,
-            };
-          } else {
-            throw requestResponse.error;
+                userId,
+              });
+            } else {
+              throw manualError;
+            }
           }
+        } else {
+          throw rpcError;
         }
       }
     }
 
-    const requestPayload = (requestResponse.data ?? {}) as {
+    const requestPayload = (requestData ?? {}) as {
       amount?: number | null;
       amount_kes?: number | null;
       approval_required?: boolean;

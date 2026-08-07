@@ -7,7 +7,7 @@ import {
   readJsonRequestBody,
   verifySasaPayCallbackToken,
 } from "../_lib/sasapay.js";
-import { getSupabaseAdminClient } from "../_lib/supabaseAdmin.js";
+import { rpc } from "../_lib/db.js";
 
 type ApiRequest = IncomingMessage & {
   headers: Record<string, string | string[] | undefined>;
@@ -58,11 +58,10 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const payload = await readJsonRequestBody(request);
     const normalized = normalizeCallbackPayload(payload);
     const flow = resolveCallbackFlow(request.url, payload);
-    const adminClient = getSupabaseAdminClient();
 
     if (flow === "withdraw") {
       const friendlyResultDescription = getFriendlySasaPayWithdrawalMessage(normalized.resultDescription);
-      const rpcResponse = await adminClient.rpc("process_mobile_money_withdrawal_callback", {
+      await rpc("process_mobile_money_withdrawal_callback", {
         p_provider_amount: normalized.amountKes,
         p_provider_channel: MPESA_CHANNEL_CODE,
         p_provider_checkout_id: normalized.checkoutId,
@@ -80,15 +79,11 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         p_request_id: asUuid(normalized.requestId),
       });
 
-      if (rpcResponse.error) {
-        throw rpcResponse.error;
-      }
-
       sendJson(response, 200, { flow, ok: true });
       return;
     }
 
-    const rpcResponse = await adminClient.rpc("process_mobile_money_deposit_callback", {
+    await rpc("process_mobile_money_deposit_callback", {
       p_provider_amount: normalized.amountKes,
       p_provider_channel: MPESA_CHANNEL_CODE,
       p_provider_checkout_id: normalized.checkoutId,
@@ -102,10 +97,6 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       p_provider_transaction_ref: normalized.transactionReference,
       p_request_id: asUuid(normalized.requestId),
     });
-
-    if (rpcResponse.error) {
-      throw rpcResponse.error;
-    }
 
     sendJson(response, 200, { flow, ok: true });
   } catch (error) {

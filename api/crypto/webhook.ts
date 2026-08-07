@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { getSupabaseAdminClient } from "../_lib/supabaseAdmin.js";
+import { rpc } from "../_lib/db.js";
 import type { Json } from "../../src/integrations/supabase/types.js";
 import {
   getHeaderValue,
@@ -180,9 +180,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     const normalizedPayload = parsedBody as Record<string, unknown>;
     const payload = normalizeCryptoWebhookPayload(normalizedPayload);
-    const supabase = getSupabaseAdminClient();
 
-    const rpcResponse = await supabase.rpc("process_crypto_deposit_detection", {
+    const rpcRows = await rpc("process_crypto_deposit_detection", {
       p_address: payload.address,
       p_amount_asset: payload.amountAsset,
       p_amount_asset_symbol: payload.amountAssetSymbol,
@@ -197,13 +196,9 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       p_tx_hash: payload.txHash,
     });
 
-    if (rpcResponse.error) {
-      throw rpcResponse.error;
-    }
-
     sendJson(response, 200, {
       ok: true,
-      result: rpcResponse.data,
+      result: rpcRows?.[0] ?? null,
     });
   } catch (error) {
     console.error("Crypto webhook processing failed", error);

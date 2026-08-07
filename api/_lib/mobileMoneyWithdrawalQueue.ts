@@ -1,7 +1,7 @@
 import type { Json } from "../../src/integrations/supabase/types.js";
 import { MPESA_CHANNEL_CODE } from "../../src/lib/mobileMoneyShared.js";
 import { buildSasaPayCallbackUrl, getFriendlySasaPayWithdrawalMessage, requestSasaPayB2CPayout } from "./sasapay.js";
-import { getSupabaseAdminClient } from "./supabaseAdmin.js";
+import { query, rpc } from "./db.js";
 
 type WithdrawalClaimPayload = {
   amount?: number | null;
@@ -79,7 +79,6 @@ const persistAcceptedDispatch = async ({
   phoneNumber: string;
   requestId: string;
 }) => {
-  const adminClient = getSupabaseAdminClient();
   const providerRequestId =
     asString(payload.B2CRequestID) ||
     asString(payload.MerchantRequestID) ||
@@ -100,28 +99,30 @@ const persistAcceptedDispatch = async ({
     asString(payload.TransactionReference) ||
     providerRequestId;
 
-  const updateResponse = await adminClient
-    .from("withdrawal_requests")
-    .update({
-      provider_amount: amountKes,
-      provider_channel: MPESA_CHANNEL_CODE,
-      provider_checkout_id: checkoutRequestId,
-      provider_currency: "KES",
-      provider_payload: payload as Json,
-      provider_phone_number: phoneNumber,
-      provider_request_id: providerRequestId,
-      provider_result_code: providerResultCode,
-      provider_result_desc: providerResultDesc,
-      provider_status: "submitted",
-      provider_transaction_ref: transactionRef,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", requestId)
-    .eq("status", "processing");
-
-  if (updateResponse.error) {
-    console.error("Failed to persist accepted M-PESA withdrawal dispatch", updateResponse.error);
-  }
+  await query(
+    `update withdrawal_requests
+        set provider_amount = $1, provider_channel = $2, provider_checkout_id = $3, provider_currency = $4,
+            provider_payload = $5, provider_phone_number = $6, provider_request_id = $7,
+            provider_result_code = $8, provider_result_desc = $9, provider_status = $10,
+            provider_transaction_ref = $11, updated_at = $12
+      where id = $13 and status = $14`,
+    [
+      amountKes,
+      MPESA_CHANNEL_CODE,
+      checkoutRequestId,
+      "KES",
+      payload as Json,
+      phoneNumber,
+      providerRequestId,
+      providerResultCode,
+      providerResultDesc,
+      "submitted",
+      transactionRef,
+      new Date().toISOString(),
+      requestId,
+      "processing",
+    ],
+  );
 };
 
 const markRetryOrFailure = async ({
@@ -135,11 +136,10 @@ const markRetryOrFailure = async ({
   processingAttempts: number;
   requestId: string;
 }) => {
-  const adminClient = getSupabaseAdminClient();
   const friendlyMessage = getFriendlySasaPayWithdrawalMessage(errorMessage);
   const retryable = isRetryableWithdrawalError(errorMessage) && processingAttempts < MAX_PROCESSING_ATTEMPTS;
 
-  const rpcResponse = await adminClient.rpc("update_mobile_money_withdrawal_dispatch_state", {
+  await rpc("update_mobile_money_withdrawal_dispatch_state", {
     p_failure_reason: friendlyMessage,
     p_next_retry_at: retryable ? getNextRetryIso(processingAttempts) : null,
     p_next_status: retryable ? "approved" : "failed",
@@ -152,34 +152,22 @@ const markRetryOrFailure = async ({
     p_request_id: requestId,
   });
 
-  if (rpcResponse.error) {
-    throw rpcResponse.error;
-  }
-
   return retryable;
 };
 
 const recoverStaleProcessingWithdrawals = async () => {
-  const adminClient = getSupabaseAdminClient();
   const staleBeforeIso = new Date(Date.now() - STALE_PROCESSING_MINUTES * 60_000).toISOString();
-  const { data, error } = await adminClient
-    .from("withdrawal_requests")
-    .select("id")
-    .eq("provider_name", "sasapay")
-    .eq("status", "processing")
-    .lte("processing_started_at", staleBeforeIso);
+  const rows = await query(
+    "select id from withdrawal_requests where provider_name = $1 and status = $2 and processing_started_at <= $3",
+    ["sasapay", "processing", staleBeforeIso],
+  );
 
-  if (error) {
-    console.error("Failed to scan for stale M-PESA withdrawals", error);
-    return;
-  }
-
-  for (const row of data ?? []) {
+  for (const row of rows) {
     const requestId = asString(row.id);
     if (!requestId) continue;
 
     try {
-      await adminClient.rpc("update_mobile_money_withdrawal_dispatch_state", {
+      await rpc("update_mobile_money_withdrawal_dispatch_state", {
         p_failure_reason: "Previous payout attempt timed out before a callback was received.",
         p_next_retry_at: new Date().toISOString(),
         p_next_status: "approved",
@@ -203,7 +191,6 @@ export const processApprovedMobileMoneyWithdrawals = async ({
   limit?: number;
   requestId?: string | null;
 } = {}): Promise<QueueProcessResult> => {
-  const adminClient = getSupabaseAdminClient();
   const maxItems = Math.max(1, Math.min(limit, 10));
   const results: QueueProcessResult = {
     failed: 0,
@@ -214,15 +201,11 @@ export const processApprovedMobileMoneyWithdrawals = async ({
   await recoverStaleProcessingWithdrawals();
 
   for (let index = 0; index < maxItems; index += 1) {
-    const claimResponse = await adminClient.rpc("claim_mobile_money_withdrawal", {
+    const claimRows = await rpc("claim_mobile_money_withdrawal", {
       p_request_id: requestId,
     });
 
-    if (claimResponse.error) {
-      throw claimResponse.error;
-    }
-
-    const claimPayload = (claimResponse.data ?? {}) as WithdrawalClaimPayload;
+    const claimPayload = (claimRows?.[0] ?? {}) as WithdrawalClaimPayload;
     const claimedRequestId = asString(claimPayload.request_id);
 
     if (!claimedRequestId) {

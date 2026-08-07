@@ -16,7 +16,8 @@ import {
 import type { RouteSeoContext } from "../../src/lib/routeSeo.js";
 import { injectPlatformMetadataIntoHtml } from "../../src/lib/serverPlatformMetadata.js";
 import { fetchAllPublishedBlogPostsForSeo, fetchPublicBlogPost, fetchPublicBlogPosts } from "./blog.js";
-import { fetchWithTimeout, resolveWithTimeout } from "./fetchWithTimeout.js";
+import { queryOne } from "./db.js";
+import { resolveWithTimeout } from "./fetchWithTimeout.js";
 import { fetchPublicTournaments, findPublicTournamentBySlug } from "./publicTournaments.js";
 
 type RequestHeaderValue = string | string[] | undefined;
@@ -57,52 +58,13 @@ export const isLocalHostRequest = (request: ApiRequestLike) => {
 export const hasSourceBootstrap = (htmlTemplate: string) =>
   SOURCE_BOOTSTRAP_PATTERNS.some((pattern) => htmlTemplate.includes(pattern));
 
-export const getSupabaseConfig = () => {
-  const url =
-    process.env.SUPABASE_URL ||
-    process.env.VITE_SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    "";
-  const anonKey =
-    process.env.SUPABASE_ANON_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    "";
-
-  return {
-    anonKey,
-    url,
-  };
-};
-
 export const fetchPlatformSettings = async () => {
-  const { anonKey, url } = getSupabaseConfig();
-
-  if (!url || !anonKey) {
-    return DEFAULT_PLATFORM_SETTINGS;
-  }
-
-  const endpoint = new URL("/rest/v1/platform_settings", url);
-  endpoint.searchParams.set("select", "*");
-  endpoint.searchParams.set("limit", "1");
-  endpoint.searchParams.set("order", "created_at.asc.nullslast");
-
   try {
-    const response = await fetchWithTimeout(endpoint, {
-      headers: {
-        apikey: anonKey,
-        authorization: `Bearer ${anonKey}`,
-        accept: "application/json",
-      },
-    });
+    const row = await queryOne(
+      "select * from platform_settings order by created_at asc nulls last limit 1",
+    ) as Partial<PlatformSettingsRecord> | null;
 
-    if (!response.ok) {
-      throw new Error(`Supabase settings fetch failed with ${response.status}`);
-    }
-
-    const payload = (await response.json()) as Partial<PlatformSettingsRecord>[];
-    return normalizePlatformSettings(payload[0] ?? DEFAULT_PLATFORM_SETTINGS);
+    return normalizePlatformSettings(row ?? DEFAULT_PLATFORM_SETTINGS);
   } catch (error) {
     console.warn("Platform settings fetch failed. Falling back to defaults.", error);
     return DEFAULT_PLATFORM_SETTINGS;

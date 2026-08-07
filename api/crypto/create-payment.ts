@@ -8,7 +8,8 @@ import {
   formatDepositBonusOfferRange,
 } from "../../src/lib/depositBonusOffers.js";
 import { buildPlisioInstructionAddress, mapCryptoMethodToPlisioCurrency } from "../../src/lib/plisio.js";
-import { getSupabaseAdminClient, getSupabaseUserClient } from "../_lib/supabaseAdmin.js";
+import { query, queryOne, userRpc } from "../_lib/db.js";
+import { authenticateRequest, clerkUserIdToUuid } from "../_lib/clerkWebhook.js";
 
 type ApiRequest = IncomingMessage & {
   headers: Record<string, string | string[] | undefined>;
@@ -85,15 +86,6 @@ const asNumber = (value: unknown) => {
   return null;
 };
 
-const parseBearerToken = (authorizationHeader: string) => {
-  const trimmed = authorizationHeader.trim();
-  if (!trimmed) return null;
-
-  const [scheme, token] = trimmed.split(/\s+/, 2);
-  if (!scheme || !token || scheme.toLowerCase() !== "bearer") return null;
-  return token.trim() || null;
-};
-
 const getBaseAppUrl = (request: ApiRequest) => {
   const protocol = getHeaderValue(request.headers, "x-forwarded-proto") || "https";
   const host = getHeaderValue(request.headers, "x-forwarded-host") || getHeaderValue(request.headers, "host");
@@ -133,19 +125,12 @@ const getPlisioApiKey = () => {
 };
 
 const releasePendingBonusRedemption = async ({ requestId }: { requestId: string }) => {
-  const adminClient = getSupabaseAdminClient();
   const now = new Date().toISOString();
 
-  await adminClient
-    .from("deposit_bonus_redemptions")
-    .update({
-      credited_at: null,
-      released_at: now,
-      status: "released",
-      updated_at: now,
-    })
-    .eq("deposit_request_id", requestId)
-    .eq("status", "reserved");
+  await query(
+    "update deposit_bonus_redemptions set credited_at = $1, released_at = $2, status = $3, updated_at = $4 where deposit_request_id = $5 and status = $6",
+    [null, now, "released", now, requestId, "reserved"],
+  );
 };
 
 const rejectPendingDepositRequest = async ({
@@ -155,31 +140,21 @@ const rejectPendingDepositRequest = async ({
   reason: string;
   requestId: string;
 }) => {
-  const adminClient = getSupabaseAdminClient();
   const now = new Date().toISOString();
 
-  await adminClient
-    .from("deposit_requests")
-    .update({
-      admin_note: reason,
-      processed_at: now,
-      processed_by: null,
-      status: "rejected",
-      updated_at: now,
-    })
-    .eq("id", requestId)
-    .eq("status", "pending");
+  await query(
+    `update deposit_requests set admin_note = $1, processed_at = $2, processed_by = $3, status = $4, updated_at = $5 where id = $6 and status = $7`,
+    [reason, now, null, "rejected", now, requestId, "pending"],
+  );
 
   await releasePendingBonusRedemption({ requestId });
 };
 
 const resolveSelectedBonusOffer = async ({
-  adminClient,
   amount,
   bonusOfferId,
   userId,
 }: {
-  adminClient: ReturnType<typeof getSupabaseAdminClient>;
   amount: number;
   bonusOfferId: string | null;
   userId: string;
@@ -191,40 +166,19 @@ const resolveSelectedBonusOffer = async ({
     };
   }
 
-  const [profileResponse, offersResponse, redemptionsResponse] = await Promise.all([
-    adminClient
-      .from("profiles")
-      .select("total_deposit")
-      .eq("id", userId)
-      .maybeSingle(),
-    adminClient
-      .from("deposit_bonus_offers")
-      .select("*")
-      .eq("status", "active")
-      .order("position", { ascending: true })
-      .order("deposit_amount", { ascending: true }),
-    adminClient
-      .from("deposit_bonus_redemptions")
-      .select("bonus_offer_id, created_at, status")
-      .eq("user_id", userId),
+  const [profile, offers, redemptions] = await Promise.all([
+    queryOne("select total_deposit from profiles where id = $1", [userId]),
+    query(
+      "select * from deposit_bonus_offers where status = $1 order by position asc, deposit_amount asc",
+      ["active"],
+    ),
+    query("select bonus_offer_id, created_at, status from deposit_bonus_redemptions where user_id = $1", [userId]),
   ]);
 
-  if (profileResponse.error) {
-    throw profileResponse.error;
-  }
-
-  if (offersResponse.error) {
-    throw offersResponse.error;
-  }
-
-  if (redemptionsResponse.error) {
-    throw redemptionsResponse.error;
-  }
-
   const bonusCatalog = buildDepositBonusCatalog({
-    offers: (offersResponse.data ?? []) as DepositBonusOfferRow[],
-    redemptions: (redemptionsResponse.data ?? []) as Pick<DepositBonusRedemptionRow, "bonus_offer_id" | "created_at" | "status">[],
-    totalDeposit: Number(profileResponse.data?.total_deposit ?? 0),
+    offers: (offers ?? []) as DepositBonusOfferRow[],
+    redemptions: (redemptions ?? []) as Pick<DepositBonusRedemptionRow, "bonus_offer_id" | "created_at" | "status">[],
+    totalDeposit: Number(profile?.total_deposit ?? 0),
   });
 
   const selectedOffer = bonusCatalog.find((offer) => offer.id === bonusOfferId) ?? null;
@@ -338,11 +292,10 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const instructionId = asString(body.instructionId);
     const paymentMethodId = asString(body.paymentMethodId);
     const promoId = asString(body.promoId ?? null);
-    const authHeader = getHeaderValue(request.headers, "authorization");
-    const accessToken = parseBearerToken(authHeader);
 
-    if (!accessToken) {
-      sendJson(response, 401, { error: "Missing Bearer token." });
+    const clerkUserId = await authenticateRequest(request.headers);
+    if (!clerkUserId) {
+      sendJson(response, 401, { error: "Missing or invalid Bearer token." });
       return;
     }
 
@@ -363,37 +316,25 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       return;
     }
 
-    const userClient = getSupabaseUserClient(accessToken);
-    const authResponse = await userClient.auth.getUser();
+    const userId = clerkUserIdToUuid(clerkUserId);
+    const userEmail = null;
 
-    if (authResponse.error || !authResponse.data.user?.id) {
-      sendJson(response, 401, { error: "Invalid authentication token." });
-      return;
-    }
-
-    const userId = authResponse.data.user.id;
-    const userEmail = authResponse.data.user.email?.trim() || null;
-    const adminClient = getSupabaseAdminClient();
-
-    const supportedMethodsResponse = await adminClient
-      .from("crypto_payment_methods")
-      .select("symbol, network, confirmations_required, attribution_mode")
-      .eq("status", "active");
-
-    if (supportedMethodsResponse.error) {
-      throw supportedMethodsResponse.error;
-    }
+    const supportedMethodsRows = await query(
+      "select symbol, network, confirmations_required, attribution_mode from crypto_payment_methods where status = $1",
+      ["active"],
+    );
 
     const supportedPlisioCurrencies = Array.from(
       new Set(
-        (supportedMethodsResponse.data ?? []).reduce<string[]>((currencies, entry) => {
-          if (entry.attribution_mode === "static") {
+        (supportedMethodsRows ?? []).reduce<string[]>((currencies, entry) => {
+          const methodEntry = entry as Tables<"crypto_payment_methods">;
+          if (methodEntry.attribution_mode === "static") {
             return currencies;
           }
 
           const currency = mapCryptoMethodToPlisioCurrency({
-            network: entry.network,
-            symbol: entry.symbol,
+            network: methodEntry.network,
+            symbol: methodEntry.symbol,
           });
 
           if (currency) {
@@ -407,18 +348,16 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const appBaseUrl = process.env.APP_BASE_URL?.trim() || getBaseAppUrl(request);
 
     if (instructionId) {
-      const instructionResponse = await adminClient
-        .from("crypto_deposit_instructions")
-        .select("*, payment_method:crypto_payment_methods(*)")
-        .eq("id", instructionId)
-        .eq("user_id", userId)
-        .maybeSingle();
+      const instructionRow = await queryOne(
+        `select ci.*, pm as payment_method from crypto_deposit_instructions ci
+           join crypto_payment_methods pm on pm.id = ci.payment_method_id
+         where ci.id = $1 and ci.user_id = $2`,
+        [instructionId, userId],
+      );
 
-      if (instructionResponse.error) {
-        throw instructionResponse.error;
-      }
-
-      const instruction = instructionResponse.data;
+      const instruction = instructionRow as Tables<"crypto_deposit_instructions"> & {
+        payment_method?: Tables<"crypto_payment_methods">;
+      };
       const paymentMethod = instruction?.payment_method;
 
       if (!instruction || !paymentMethod) {
@@ -493,18 +432,12 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       return;
     }
 
-    const methodResponse = await adminClient
-      .from("crypto_payment_methods")
-      .select("*")
-      .eq("id", paymentMethodId)
-      .eq("status", "active")
-      .maybeSingle();
+    const paymentMethodRow = await queryOne(
+      "select * from crypto_payment_methods where id = $1 and status = $2",
+      [paymentMethodId, "active"],
+    );
 
-    if (methodResponse.error) {
-      throw methodResponse.error;
-    }
-
-    const paymentMethod = methodResponse.data;
+    const paymentMethod = paymentMethodRow as Tables<"crypto_payment_methods">;
     if (!paymentMethod) {
       sendJson(response, 400, { error: "Selected crypto payment method is not active." });
       return;
@@ -541,13 +474,12 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     }
 
     const { bonusAmount: selectedBonusAmount, selectedOffer } = await resolveSelectedBonusOffer({
-      adminClient,
       amount,
       bonusOfferId,
       userId,
     });
 
-    const requestResponse = await userClient.rpc("request_deposit_review", {
+    const requestRows = await userRpc("request_deposit_review", clerkUserId, {
       p_amount: amount,
       p_method: "CRYPTO",
       p_payment_method_id: paymentMethod.id,
@@ -555,11 +487,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       p_tx_hash: null,
     });
 
-    if (requestResponse.error) {
-      throw requestResponse.error;
-    }
-
-    const requestPayload = (requestResponse.data ?? {}) as {
+    const requestPayload = (requestRows?.[0] ?? {}) as {
       promo_bonus?: number | string | null;
       request_id?: string | null;
     };
@@ -574,50 +502,34 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     if (selectedOffer) {
       const now = new Date().toISOString();
-      const bonusUpdateResponse = await adminClient
-        .from("deposit_requests")
-        .update({
-          bonus_offer_id: selectedOffer.id,
-          promo_bonus: effectivePromoBonus,
-          updated_at: now,
-        })
-        .eq("id", depositRequestId)
-        .eq("user_id", userId)
-        .eq("status", "pending")
-        .select("id")
-        .maybeSingle();
+      const bonusUpdateRow = await queryOne(
+        `update deposit_requests
+            set bonus_offer_id = $1, promo_bonus = $2, updated_at = $3
+          where id = $4 and user_id = $5 and status = $6
+          returning id`,
+        [selectedOffer.id, effectivePromoBonus, now, depositRequestId, userId, "pending"],
+      );
 
-      if (bonusUpdateResponse.error) {
+      if (!bonusUpdateRow) {
         await rejectPendingDepositRequest({
-          reason: `Deposit bonus reservation failed: ${bonusUpdateResponse.error.message || "unknown error"}`,
+          reason: "Deposit bonus reservation failed: pending deposit request could not be updated",
           requestId: depositRequestId,
         });
-        throw bonusUpdateResponse.error;
+        throw new Error("Deposit bonus reservation failed");
       }
 
-      const redemptionInsertResponse = await adminClient
-        .from("deposit_bonus_redemptions")
-        .insert({
-          bonus_amount: effectivePromoBonus,
-          bonus_offer_id: selectedOffer.id,
-          deposit_amount: amount,
-          deposit_request_id: depositRequestId,
-          status: "reserved",
-          user_id: userId,
-        });
-
-      if (redemptionInsertResponse.error) {
-        await rejectPendingDepositRequest({
-          reason: `Deposit bonus reservation failed: ${redemptionInsertResponse.error.message || "unknown error"}`,
-          requestId: depositRequestId,
-        });
-        throw redemptionInsertResponse.error;
-      }
+      await query(
+        `insert into deposit_bonus_redemptions
+          (bonus_amount, bonus_offer_id, deposit_amount, deposit_request_id, status, user_id)
+         values ($1, $2, $3, $4, $5, $6)`,
+        [effectivePromoBonus, selectedOffer.id, amount, depositRequestId, "reserved", userId],
+      );
     }
 
     const requiredConfirmations = Math.max(
       Number(paymentMethod.confirmations_required ?? 0),
-      ...(supportedMethodsResponse.data ?? [])
+      ...(supportedMethodsRows ?? [])
+        .map((entry) => entry as Tables<"crypto_payment_methods">)
         .filter((entry) => entry.attribution_mode !== "static")
         .map((entry) => Number(entry.confirmations_required ?? 0)),
     );
@@ -651,34 +563,34 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       throw new Error("Plisio did not return a hosted invoice URL.");
     }
 
-    const instructionResponse = await adminClient
-      .from("crypto_deposit_instructions")
-      .insert({
-        deposit_address: buildPlisioInstructionAddress(depositRequestId),
-        deposit_request_id: depositRequestId,
-        expected_amount_usd: amount,
-        instruction_status: "awaiting_payment",
-        memo_label: null,
-        memo_value: null,
-        payment_method_id: paymentMethod.id,
-        promo_bonus: effectivePromoBonus,
-        required_confirmations: Math.max(requiredConfirmations, 0),
-        user_id: userId,
-      })
-      .select("*")
-      .single();
+    const instructionRow = await queryOne(
+      `insert into crypto_deposit_instructions
+        (deposit_address, deposit_request_id, expected_amount_usd, instruction_status, memo_label, memo_value, payment_method_id, promo_bonus, required_confirmations, user_id)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       returning *`,
+      [
+        buildPlisioInstructionAddress(depositRequestId),
+        depositRequestId,
+        amount,
+        "awaiting_payment",
+        null,
+        null,
+        paymentMethod.id,
+        effectivePromoBonus,
+        Math.max(requiredConfirmations, 0),
+        userId,
+      ],
+    );
 
-    if (instructionResponse.error || !instructionResponse.data) {
+    if (!instructionRow) {
       await rejectPendingDepositRequest({
-        reason: `Deposit instruction creation failed after Plisio checkout: ${
-          instructionResponse.error?.message || "unknown error"
-        }`,
+        reason: "Deposit instruction creation failed after Plisio checkout: no row returned",
         requestId: depositRequestId,
       });
-      throw instructionResponse.error || new Error("Failed to create deposit instruction.");
+      throw new Error("Failed to create deposit instruction.");
     }
 
-    const instruction = instructionResponse.data;
+    const instruction = instructionRow as Tables<"crypto_deposit_instructions">;
 
     sendJson(response, 200, {
       ok: true,

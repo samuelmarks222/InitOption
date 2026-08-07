@@ -1,4 +1,4 @@
-import { getSupabaseAdminClient } from "../_lib/supabaseAdmin.js";
+import { query } from "../_lib/db.js";
 
 type RequestHeaderValue = string | string[] | undefined;
 
@@ -664,44 +664,34 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   }
 
   try {
-    const adminClient = getSupabaseAdminClient() as any;
     const baseUrl = getBaseUrl(request);
     const nowIso = new Date().toISOString();
     const staleProcessingBefore = new Date(Date.now() - STALE_PROCESSING_MINUTES * 60_000).toISOString();
 
-    const { data: settingsRows } = await adminClient
-      .from("platform_settings")
-      .select("platform_name, support_email, logo_url")
-      .order("updated_at", { ascending: false })
-      .limit(1);
+    const settingsRows = await query(
+      "select platform_name, support_email, logo_url from platform_settings order by updated_at desc limit 1",
+    );
 
-    const platformSettings = Array.isArray(settingsRows) ? settingsRows[0] : null;
+    const platformSettings = settingsRows[0] ?? null;
     const platformName = typeof platformSettings?.platform_name === "string" ? platformSettings.platform_name : DEFAULT_PLATFORM_NAME;
     const logoUrl = typeof platformSettings?.logo_url === "string" && platformSettings.logo_url.trim() ? platformSettings.logo_url.trim() : null;
     const supportEmail = typeof platformSettings?.support_email === "string" ? platformSettings.support_email : DEFAULT_SUPPORT_EMAIL;
 
-    await adminClient
-      .from("notification_email_deliveries")
-      .update({
-        status: "pending",
-        updated_at: nowIso,
-      })
-      .eq("status", "processing")
-      .lte("updated_at", staleProcessingBefore);
+    await query(
+      "update notification_email_deliveries set status = $1, updated_at = $2 where status = $3 and updated_at <= $4",
+      ["pending", nowIso, "processing", staleProcessingBefore],
+    );
 
-    const pendingResponse = await adminClient
-      .from("notification_email_deliveries")
-      .select("id, notification_id, notification_type, payload, recipient_email, retry_count, subject")
-      .eq("status", "pending")
-      .lte("next_attempt_at", nowIso)
-      .order("created_at", { ascending: true })
-      .limit(20);
+    const pendingRows = await query(
+      `select id, notification_id, notification_type, payload, recipient_email, retry_count, subject
+         from notification_email_deliveries
+        where status = $1 and next_attempt_at <= $2
+        order by created_at asc
+        limit 20`,
+      ["pending", nowIso],
+    );
 
-    if (pendingResponse.error) {
-      throw pendingResponse.error;
-    }
-
-    const pendingDeliveries = (pendingResponse.data ?? []) as EmailDeliveryRow[];
+    const pendingDeliveries = pendingRows as unknown as EmailDeliveryRow[];
     if (pendingDeliveries.length === 0) {
       sendJson(response, 200, {
         processed: 0,
@@ -712,22 +702,15 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     }
 
     const deliveryIds = pendingDeliveries.map((delivery) => delivery.id);
-    const claimResponse = await adminClient
-      .from("notification_email_deliveries")
-      .update({
-        status: "processing",
-        last_attempt_at: nowIso,
-        updated_at: nowIso,
-      })
-      .in("id", deliveryIds)
-      .eq("status", "pending")
-      .select("id, notification_id, notification_type, payload, recipient_email, retry_count, subject");
+    const claimedRows = await query(
+      `update notification_email_deliveries
+          set status = $1, last_attempt_at = $2, updated_at = $3
+        where id = any($4) and status = $5
+        returning id, notification_id, notification_type, payload, recipient_email, retry_count, subject`,
+      ["processing", nowIso, nowIso, deliveryIds, "pending"],
+    );
 
-    if (claimResponse.error) {
-      throw claimResponse.error;
-    }
-
-    const claimedDeliveries = (claimResponse.data ?? []) as EmailDeliveryRow[];
+    const claimedDeliveries = claimedRows as unknown as EmailDeliveryRow[];
     let sentCount = 0;
     let skippedCount = 0;
 
@@ -749,17 +732,12 @@ export default async function handler(request: ApiRequest, response: ApiResponse
           to: delivery.recipient_email,
         });
 
-        await adminClient
-          .from("notification_email_deliveries")
-          .update({
-            last_error: null,
-            provider_message_id: providerMessageId,
-            retry_count: delivery.retry_count,
-            sent_at: new Date().toISOString(),
-            status: "sent",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", delivery.id);
+        await query(
+          `update notification_email_deliveries
+              set last_error = $1, provider_message_id = $2, retry_count = $3, sent_at = $4, status = $5, updated_at = $6
+            where id = $7`,
+          [null, providerMessageId, delivery.retry_count, new Date().toISOString(), "sent", new Date().toISOString(), delivery.id],
+        );
 
         sentCount += 1;
       } catch (error) {
@@ -767,16 +745,19 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         const finalFailure = nextAttempt >= MAX_ATTEMPTS;
         const retryAt = new Date(Date.now() + getRetryDelayMinutes(nextAttempt) * 60_000).toISOString();
 
-        await adminClient
-          .from("notification_email_deliveries")
-          .update({
-            last_error: error instanceof Error ? error.message : "Unknown email delivery failure.",
-            next_attempt_at: finalFailure ? retryAt : retryAt,
-            retry_count: nextAttempt,
-            status: finalFailure ? "failed" : "pending",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", delivery.id);
+        await query(
+          `update notification_email_deliveries
+              set last_error = $1, next_attempt_at = $2, retry_count = $3, status = $4, updated_at = $5
+            where id = $6`,
+          [
+            error instanceof Error ? error.message : "Unknown email delivery failure.",
+            retryAt,
+            nextAttempt,
+            finalFailure ? "failed" : "pending",
+            new Date().toISOString(),
+            delivery.id,
+          ],
+        );
 
         skippedCount += 1;
       }

@@ -2,9 +2,9 @@ import { buildRequestUrl, buildSeoPayload, fetchPlatformSettings } from "./platf
 import { fetchAllPublishedBlogPostsForSeo, fetchPublicBlogSitemapEntries } from "./blog.js";
 import { fetchPublicTournaments } from "./publicTournaments.js";
 import { readJsonRequestBody } from "./sasapay.js";
-import { getSupabaseAdminClient, getSupabaseUserClient } from "./supabaseAdmin.js";
+import { query, queryOne, rpc } from "./db.js";
+import { authenticateRequest, clerkUserIdToUuid } from "./clerkWebhook.js";
 import { buildTournamentPath } from "../../src/lib/publicTournaments.js";
-import { getHeaderValue } from "../../src/lib/cryptoWebhook.js";
 import {
   DEFAULT_FAVICON_PATH,
   DEFAULT_SHARE_IMAGE_PATH,
@@ -37,13 +37,6 @@ type SignupPayload = {
   password?: unknown;
   referredByCode?: unknown;
   username?: unknown;
-};
-
-type AdminAuthUser = {
-  created_at?: string;
-  email?: string | null;
-  id: string;
-  user_metadata?: Record<string, unknown> | null;
 };
 
 type AdminUserFeedItem = {
@@ -97,44 +90,8 @@ const escapeHtml = (value: string) =>
 
 const normalizeEmail = (value: unknown) => (asString(value) ?? "").toLowerCase();
 
-const resolveSignupBaseUrl = (request: ApiRequest) => {
-  const configuredUrl = process.env.APP_BASE_URL?.trim();
-  if (configuredUrl) return configuredUrl.replace(/\/+$/, "");
-
-  const proto = getHeaderValue(request.headers ?? {}, "x-forwarded-proto") || "https";
-  const host = getHeaderValue(request.headers ?? {}, "x-forwarded-host") || getHeaderValue(request.headers ?? {}, "host");
-  return host ? `${proto}://${host.replace(/\/+$/, "")}` : "http://localhost:3000";
-};
-
-const parseBearerToken = (authorizationHeader: string) => {
-  const trimmed = authorizationHeader.trim();
-  if (!trimmed) return null;
-
-  const [scheme, token] = trimmed.split(/\s+/, 2);
-  if (!scheme || !token || scheme.toLowerCase() !== "bearer") return null;
-  return token.trim() || null;
-};
-
 const isSupportedKycStatus = (value: string | null): value is SupportedKycStatus =>
   value === "Pending" || value === "Verified" || value === "Rejected";
-
-const deriveProfileIdentity = (authUser: AdminAuthUser) => {
-  const metadata = asObjectRecord(authUser.user_metadata);
-  const emailFallback = asString(authUser.email)?.split("@")[0] ?? `user_${authUser.id.slice(0, 8)}`;
-  const username =
-    asString(metadata.username) ??
-    asString(metadata.display_name) ??
-    asString(metadata.full_name) ??
-    asString(metadata.name) ??
-    emailFallback;
-  const displayName =
-    asString(metadata.display_name) ??
-    asString(metadata.full_name) ??
-    asString(metadata.name) ??
-    username;
-
-  return { displayName, username };
-};
 
 const guessMimeTypeFromFilename = (fileName: string | null) => {
   const normalized = (fileName ?? "").trim().toLowerCase();
@@ -172,102 +129,6 @@ const normalizeKycDocuments = (value: unknown) => {
     back: normalizeDocument("back"),
     front: normalizeDocument("front"),
   };
-};
-
-const hasAnyKycDocument = (documents: ReturnType<typeof normalizeKycDocuments>) =>
-  Boolean(documents.front?.url || documents.back?.url);
-
-const listAllAuthUsers = async (adminClient: ReturnType<typeof getSupabaseAdminClient>) => {
-  const users: AdminAuthUser[] = [];
-  let page = 1;
-  const perPage = 200;
-
-  while (true) {
-    const response = await adminClient.auth.admin.listUsers({ page, perPage });
-
-    if (response.error) {
-      throw response.error;
-    }
-
-    const batch = (response.data.users ?? []) as AdminAuthUser[];
-    const nextPage = "nextPage" in response.data ? response.data.nextPage : null;
-    users.push(...batch);
-
-    if (!nextPage || batch.length < perPage) {
-      break;
-    }
-
-    page = nextPage;
-  }
-
-  return users;
-};
-
-const recoverKycDocumentsFromStorage = async (
-  adminClient: ReturnType<typeof getSupabaseAdminClient>,
-  userId: string,
-  currentDocuments: ReturnType<typeof normalizeKycDocuments>,
-) => {
-  if (hasAnyKycDocument(currentDocuments)) {
-    return currentDocuments;
-  }
-
-  try {
-    const storageResponse = await adminClient.storage.from("branding").list(`kyc/${userId}`, {
-      limit: 100,
-    });
-
-    if (storageResponse.error) {
-      return currentDocuments;
-    }
-
-    const recoveredDocuments = {
-      ...currentDocuments,
-    };
-
-    const files = [...(storageResponse.data ?? [])].sort((left, right) => {
-      const leftTime = new Date(left.updated_at ?? left.created_at ?? 0).getTime();
-      const rightTime = new Date(right.updated_at ?? right.created_at ?? 0).getTime();
-      return rightTime - leftTime;
-    });
-
-    for (const file of files) {
-      const fileName = asString(file.name);
-
-      if (!fileName) {
-        continue;
-      }
-
-      const normalizedFileName = fileName.toLowerCase();
-      const slot = normalizedFileName.startsWith("front_")
-        ? "front"
-        : normalizedFileName.startsWith("back_")
-          ? "back"
-          : null;
-
-      if (!slot || recoveredDocuments[slot]?.url) {
-        continue;
-      }
-
-      const path = `kyc/${userId}/${fileName}`;
-      const publicUrl = adminClient.storage.from("branding").getPublicUrl(path).data.publicUrl;
-      const fileMetadata = asObjectRecord((file as unknown as Record<string, unknown>).metadata);
-
-      recoveredDocuments[slot] = {
-        fallback: false,
-        mimeType: asString(fileMetadata.mimetype) ?? guessMimeTypeFromFilename(fileName),
-        name: fileName,
-        path,
-        uploadedAt: asString(file.updated_at) ?? asString(file.created_at) ?? new Date().toISOString(),
-        url: publicUrl,
-      };
-    }
-
-    return recoveredDocuments;
-  } catch (error) {
-    console.error(`Failed to inspect KYC storage for user ${userId}`, error);
-    return currentDocuments;
-  }
 };
 
 const resolveSiteOrigin = async (request: ApiRequest) => {
@@ -337,22 +198,14 @@ const handlePublicBonus = async (request: ApiRequest, response: ApiResponse) => 
   }
 
   try {
-    const supabase = getSupabaseAdminClient();
-    const { data, error } = await supabase
-      .from("deposit_bonus_offers")
-      .select("bonus_percent")
-      .eq("status", "active")
-      .order("bonus_percent", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      throw error;
-    }
+    const bonusRow = await queryOne(
+      "select bonus_percent from deposit_bonus_offers where status = $1 order by bonus_percent desc limit 1",
+      ["active"],
+    );
 
     response.status(200).json({
-      depositBonusEnabled: Boolean(data),
-      depositBonusPercent: Number(data?.bonus_percent ?? DEFAULT_PUBLIC_BONUS_PAYLOAD.depositBonusPercent),
+      depositBonusEnabled: Boolean(bonusRow),
+      depositBonusPercent: Number(bonusRow?.bonus_percent ?? DEFAULT_PUBLIC_BONUS_PAYLOAD.depositBonusPercent),
     });
   } catch (error) {
     console.error("Failed to read public bonus settings", error);
@@ -500,118 +353,6 @@ const handleSeo = async (request: ApiRequest, response: ApiResponse) => {
   response.status(200).json(payload);
 };
 
-const sendViaResend = async ({
-  from,
-  html,
-  subject,
-  text,
-  to,
-}: {
-  from: string;
-  html: string;
-  subject: string;
-  text: string;
-  to: string;
-}) => {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  if (!apiKey) {
-    throw new Error("Missing RESEND_API_KEY.");
-  }
-
-  const resendResponse = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      html,
-      subject,
-      text,
-      to: [to],
-    }),
-  });
-
-  if (!resendResponse.ok) {
-    const errorBody = await resendResponse.text();
-    throw new Error(`Resend API returned ${resendResponse.status}: ${errorBody}`);
-  }
-};
-
-const buildSignupConfirmationEmail = ({
-  actionLink,
-  email,
-  platformName,
-  supportEmail,
-}: {
-  actionLink: string;
-  email: string;
-  platformName: string;
-  supportEmail: string;
-}) => {
-  const safeActionLink = escapeHtml(actionLink);
-  const safeEmail = escapeHtml(email);
-  const safePlatformName = escapeHtml(platformName);
-  const safeSupportEmail = escapeHtml(supportEmail);
-  const subject = `Confirm your ${platformName} email`;
-
-  const html = `<!doctype html>
-<html>
-  <body style="margin:0;background:#f6f8fb;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f8fb;padding:28px 14px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;">
-            <tr>
-              <td style="padding:28px 28px 10px 28px;">
-                <div style="font-size:18px;font-weight:700;color:#111827;">${safePlatformName}</div>
-                <h1 style="margin:22px 0 0 0;font-size:24px;line-height:1.25;color:#111827;">Confirm your email</h1>
-                <p style="margin:12px 0 0 0;font-size:15px;line-height:1.7;color:#4b5563;">
-                  You used <strong>${safeEmail}</strong> to create an account. Click the button below to activate your account.
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:20px 28px 8px 28px;">
-                <a href="${safeActionLink}" style="display:inline-block;border-radius:10px;background:#10b981;padding:13px 18px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">
-                  Confirm email
-                </a>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:16px 28px 26px 28px;">
-                <p style="margin:0;font-size:13px;line-height:1.7;color:#6b7280;">
-                  If the button does not work, copy and paste this link into your browser:
-                </p>
-                <p style="margin:8px 0 0 0;font-size:12px;line-height:1.6;word-break:break-all;color:#2563eb;">
-                  ${safeActionLink}
-                </p>
-                <p style="margin:18px 0 0 0;font-size:12px;line-height:1.7;color:#9ca3af;">
-                  If you did not create this account, you can ignore this email. Need help? Contact ${safeSupportEmail}.
-                </p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
-
-  const text = [
-    `${platformName} - Confirm your email`,
-    "",
-    `You used ${email} to create an account.`,
-    "Open this link to activate your account:",
-    actionLink,
-    "",
-    `If you did not create this account, ignore this email. Need help? Contact ${supportEmail}.`,
-  ].join("\n");
-
-  return { html, subject, text };
-};
-
 const handleAuthSignup = async (request: ApiRequest, response: ApiResponse) => {
   response.setHeader("Content-Type", "application/json; charset=utf-8");
   response.setHeader("Cache-Control", "no-store, max-age=0");
@@ -622,98 +363,27 @@ const handleAuthSignup = async (request: ApiRequest, response: ApiResponse) => {
     return;
   }
 
-  const emailFromAddress = process.env.EMAIL_FROM_ADDRESS?.trim();
-  if (!emailFromAddress || !process.env.RESEND_API_KEY?.trim()) {
-    response.status(501).json({
-      code: "custom_email_unavailable",
-      error: "Custom signup email is not configured.",
-    });
-    return;
-  }
-
   const body = (await readJsonRequestBody(request as never)) as SignupPayload;
   const email = normalizeEmail(body.email);
-  const password = asString(body.password) ?? "";
-  const username = asString(body.username) ?? email.split("@")[0] ?? "trader";
-  const referredByCode = (asString(body.referredByCode) ?? "").toUpperCase();
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     response.status(400).json({ error: "Enter a valid email address." });
     return;
   }
 
-  if (password.length < 6) {
-    response.status(400).json({ error: "Password must be at least 6 characters." });
-    return;
-  }
-
-  const [adminClient, platformSettings] = [getSupabaseAdminClient() as any, await fetchPlatformSettings()];
-  const platformName = platformSettings.platform_name || DEFAULT_PLATFORM_NAME;
-  const supportEmail = platformSettings.support_email || DEFAULT_SUPPORT_EMAIL;
-  const redirectTo = `${resolveSignupBaseUrl(request)}/auth/callback?next=${encodeURIComponent("/trade")}`;
-
-  const { data, error } = await adminClient.auth.admin.generateLink({
-    type: "signup",
-    email,
-    password,
-    options: {
-      data: {
-        username,
-        referred_by_code: referredByCode || undefined,
-      },
-      redirectTo,
-    },
-  });
-
-  if (error) {
-    const message = typeof error.message === "string" ? error.message : "Could not create account.";
-    const alreadyRegistered = /already|registered|exists/i.test(message);
-    response.status(alreadyRegistered ? 409 : 400).json({
-      error: alreadyRegistered ? "This email is already registered. Please sign in instead." : message,
-    });
-    return;
-  }
-
-  const actionLink = asString(data?.properties?.action_link);
-  if (!actionLink) {
-    throw new Error("Supabase did not return a confirmation link.");
-  }
-
-  const emailContent = buildSignupConfirmationEmail({
-    actionLink,
-    email,
-    platformName,
-    supportEmail,
-  });
-
-  await sendViaResend({
-    from: emailFromAddress,
-    to: email,
-    ...emailContent,
-  });
-
-  response.status(200).json({
-    email,
-    status: "confirmation_sent",
+  // Account creation now happens through Clerk (see AuthContext.signUp).
+  // Return the standard "custom email unavailable" code so the client
+  // falls back to the Clerk sign-up flow instead of the legacy Supabase Auth path.
+  response.status(501).json({
+    code: "custom_email_unavailable",
+    error: "Custom signup email is not configured. Using the default sign-up flow.",
   });
 };
 
-const requireKycReviewer = async (accessToken: string) => {
-  const userClient = getSupabaseUserClient(accessToken);
-  const authResponse = await userClient.auth.getUser();
-
-  if (authResponse.error || !authResponse.data.user?.id) {
-    throw new Error("Invalid authentication token.");
-  }
-
-  const reviewerId = authResponse.data.user.id;
-  const rolesResponse = await userClient.from("user_roles").select("role").eq("user_id", reviewerId);
-
-  if (rolesResponse.error) {
-    throw rolesResponse.error;
-  }
-
-  const roles = new Set((rolesResponse.data ?? []).map((row) => row.role));
+const requireKycReviewer = async (clerkUserId: string) => {
+  const reviewerId = clerkUserIdToUuid(clerkUserId);
+  const roleRows = await query("select role from user_roles where user_id = $1", [reviewerId]);
+  const roles = new Set((roleRows ?? []).map((row) => String(row.role)));
 
   if (!roles.has("admin") && !roles.has("support_agent") && !roles.has("finance_manager")) {
     throw new Error("Only support, finance, or super admin staff can review KYC.");
@@ -721,12 +391,10 @@ const requireKycReviewer = async (accessToken: string) => {
 };
 
 const notifyKycStatusChange = async ({
-  adminClient,
   adminNote,
   status,
   userId,
 }: {
-  adminClient: ReturnType<typeof getSupabaseAdminClient>;
   adminNote: string | null;
   status: SupportedKycStatus;
   userId: string;
@@ -741,7 +409,7 @@ const notifyKycStatusChange = async ({
       : `Your verification was rejected.${adminNote ? ` ${adminNote}` : " Please upload clearer documents and try again."}`;
 
   try {
-    await adminClient.rpc("create_notification_internal", {
+    await rpc("create_notification_internal", {
       p_data: {
         admin_note: adminNote,
         kyc_status: status,
@@ -769,11 +437,10 @@ const handleAdminReviewKyc = async (request: ApiRequest, response: ApiResponse) 
   const userId = asString(body.userId);
   const status = asString(body.status);
   const adminNote = asString(body.adminNote);
-  const authHeader = getHeaderValue(request.headers ?? {}, "authorization");
-  const accessToken = parseBearerToken(authHeader);
 
-  if (!accessToken) {
-    response.status(401).json({ error: "Missing Bearer token." });
+  const clerkUserId = await authenticateRequest(request.headers);
+  if (!clerkUserId) {
+    response.status(401).json({ error: "Missing or invalid Bearer token." });
     return;
   }
 
@@ -782,52 +449,40 @@ const handleAdminReviewKyc = async (request: ApiRequest, response: ApiResponse) 
     return;
   }
 
-  await requireKycReviewer(accessToken);
+  await requireKycReviewer(clerkUserId);
 
-  const adminClient = getSupabaseAdminClient();
-  const now = new Date().toISOString();
-  const profileResponse = await adminClient
-    .from("profiles")
-    .select("id, kyc_status")
-    .eq("id", userId)
-    .maybeSingle();
+  const targetUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)
+    ? userId
+    : clerkUserIdToUuid(userId);
 
-  if (profileResponse.error) {
-    throw profileResponse.error;
-  }
+  const profileRow = await queryOne(
+    "select id, kyc_status from profiles where id = $1",
+    [targetUserId],
+  ) as { id: string; kyc_status: string | null } | null;
 
-  if (!profileResponse.data) {
+  if (!profileRow) {
     throw new Error("User profile not found.");
   }
 
-  const updateResponse = await adminClient
-    .from("profiles")
-    .update({
-      kyc_status: status,
-      updated_at: now,
-    } as never)
-    .eq("id", userId)
-    .select("id, kyc_status")
-    .maybeSingle();
+  const now = new Date().toISOString();
+  const updatedRow = await queryOne(
+    "update profiles set kyc_status = $1, updated_at = $2 where id = $3 returning id, kyc_status",
+    [status, now, targetUserId],
+  ) as { id: string; kyc_status: string | null } | null;
 
-  if (updateResponse.error) {
-    throw updateResponse.error;
-  }
-
-  if (!updateResponse.data) {
+  if (!updatedRow) {
     throw new Error("KYC review could not be saved. Refresh and try again.");
   }
 
   await notifyKycStatusChange({
-    adminClient,
     adminNote,
     status,
-    userId,
+    userId: targetUserId,
   });
 
   response.status(200).json({
-    status: updateResponse.data.kyc_status,
-    user_id: updateResponse.data.id,
+    status: updatedRow.kyc_status,
+    user_id: updatedRow.id,
   });
 };
 
@@ -838,30 +493,39 @@ const handleAdminUsers = async (request: ApiRequest, response: ApiResponse) => {
     return;
   }
 
-  const authHeader = getHeaderValue(request.headers ?? {}, "authorization");
-  const accessToken = parseBearerToken(authHeader);
-
-  if (!accessToken) {
-    response.status(401).json({ error: "Missing Bearer token." });
+  const clerkUserId = await authenticateRequest(request.headers);
+  if (!clerkUserId) {
+    response.status(401).json({ error: "Missing or invalid Bearer token." });
     return;
   }
 
-  await requireKycReviewer(accessToken);
+  await requireKycReviewer(clerkUserId);
 
-  const adminClient = getSupabaseAdminClient();
-  const profilesResponse = await adminClient
-    .from("profiles")
-    .select(
-      "id, username, display_name, balance, total_trades, total_wins, total_profit, created_at, total_deposit, total_trade_volume_30d, trade_count_30d, vip_tier_override, kyc_status, kyc_documents",
-    )
-    .order("created_at", { ascending: false })
-    .limit(250);
+  const profileRows = await query(
+    `select id, username, display_name, balance, total_trades, total_wins, total_profit,
+            created_at, total_deposit, total_trade_volume_30d, trade_count_30d,
+            vip_tier_override, kyc_status, kyc_documents
+       from profiles
+      order by created_at desc
+      limit 250`,
+  ) as Array<{
+    balance: unknown;
+    created_at: unknown;
+    display_name: string | null;
+    id: string;
+    kyc_documents: unknown;
+    kyc_status: string | null;
+    total_deposit: unknown;
+    total_profit: unknown;
+    total_trade_volume_30d: unknown;
+    total_trades: unknown;
+    total_wins: unknown;
+    trade_count_30d: unknown;
+    username: string | null;
+    vip_tier_override: string | null;
+  }>;
 
-  if (profilesResponse.error) {
-    throw profilesResponse.error;
-  }
-
-  const users: AdminUserFeedItem[] = (profilesResponse.data ?? []).map((profile) => {
+  const users: AdminUserFeedItem[] = (profileRows ?? []).map((profile) => {
     const storedDocuments = normalizeKycDocuments(profile.kyc_documents);
 
     return {
@@ -877,7 +541,7 @@ const handleAdminUsers = async (request: ApiRequest, response: ApiResponse) => {
       manualOverride: profile.vip_tier_override ?? null,
       name: profile.display_name || profile.username || "Unnamed user",
       registrationDate: profile.created_at
-        ? new Date(profile.created_at).toLocaleDateString("en-GB")
+        ? new Date(profile.created_at as string).toLocaleDateString("en-GB")
         : "-",
       totalDeposit: Number(profile.total_deposit ?? 0),
       totalProfit: Number(profile.total_profit ?? 0),

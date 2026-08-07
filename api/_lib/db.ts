@@ -1,5 +1,6 @@
 import pg from "pg";
 import type { Pool as PoolType } from "pg";
+import { clerkUserIdToUuid } from "./clerkWebhook.js";
 
 const { Pool } = pg;
 
@@ -60,6 +61,34 @@ export const rpc = async (name: string, payload: Record<string, unknown> = {}): 
 };
 
 export type QueryFn = (client: pg.PoolClient) => Promise<unknown>;
+
+// User-scoped RPC: sets app.current_user_id (used by SECURITY DEFINER functions
+// to resolve the acting profile) then invokes `SELECT * FROM fn(args)`.
+export const userRpc = async (name: string, clerkUserId: string, payload: Record<string, unknown> = {}): Promise<QueryResultRow[]> => {
+  if (!isValidIdentifier.test(name)) {
+    throw new Error(`Invalid function name: ${name}`);
+  }
+  const mappedId = clerkUserIdToUuid(clerkUserId);
+  const pool = getPool();
+  const client = await pool.connect();
+  try {
+    await client.query("SET LOCAL app.current_user_id = $1", [mappedId]);
+    const keys = Object.keys(payload);
+    let sql: string;
+    const values: unknown[] = [];
+    if (keys.length === 0) {
+      sql = `SELECT * FROM ${name}()`;
+    } else {
+      const assignments = keys.map((k, i) => `${k} := $${i + 1}`).join(", ");
+      values.push(...keys.map((k) => payload[k]));
+      sql = `SELECT * FROM ${name}(${assignments})`;
+    }
+    const { rows } = await client.query(sql, values);
+    return rows as QueryResultRow[];
+  } finally {
+    client.release();
+  }
+};
 
 export const withUser = async <T>(clerkUserId: string | null, fn: (client: pg.PoolClient) => Promise<T>): Promise<T> => {
   const pool = getPool();

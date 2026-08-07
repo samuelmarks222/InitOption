@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Json } from "../../src/integrations/supabase/types.js";
-import { getHeaderValue } from "../../src/lib/cryptoWebhook.js";
 import { readJsonRequestBody } from "../_lib/sasapay.js";
-import { getSupabaseAdminClient, getSupabaseUserClient } from "../_lib/supabaseAdmin.js";
+import { query, queryOne, rpc, userRpc } from "../_lib/db.js";
+import { authenticateRequest, clerkUserIdToUuid } from "../_lib/clerkWebhook.js";
 
 type ApiRequest = IncomingMessage & {
   headers: Record<string, string | string[] | undefined>;
@@ -33,15 +33,6 @@ const asString = (value: unknown) => {
   return trimmed ? trimmed : null;
 };
 
-const parseBearerToken = (authorizationHeader: string) => {
-  const trimmed = authorizationHeader.trim();
-  if (!trimmed) return null;
-
-  const [scheme, token] = trimmed.split(/\s+/, 2);
-  if (!scheme || !token || scheme.toLowerCase() !== "bearer") return null;
-  return token.trim() || null;
-};
-
 const isSupportedStatus = (value: string | null): value is SupportedStatus =>
   value === "approved" || value === "rejected" || value === "completed" || value === "failed";
 
@@ -50,22 +41,11 @@ const readAuditLog = (value: Json | null): JsonRecord[] =>
 
 const appendAuditEntry = (value: Json | null, entry: JsonRecord) => [...readAuditLog(value), entry];
 
-const requireFinanceUser = async (accessToken: string) => {
-  const userClient = getSupabaseUserClient(accessToken);
-  const authResponse = await userClient.auth.getUser();
+const requireFinanceUser = async (clerkUserId: string) => {
+  const userId = clerkUserIdToUuid(clerkUserId);
+  const roleRows = await query("select role from user_roles where user_id = $1", [userId]);
 
-  if (authResponse.error || !authResponse.data.user?.id) {
-    throw new Error("Invalid authentication token.");
-  }
-
-  const userId = authResponse.data.user.id;
-  const rolesResponse = await userClient.from("user_roles").select("role").eq("user_id", userId);
-
-  if (rolesResponse.error) {
-    throw rolesResponse.error;
-  }
-
-  const roles = new Set((rolesResponse.data ?? []).map((row) => row.role));
+  const roles = new Set((roleRows ?? []).map((row) => String(row.role)));
   if (!roles.has("admin") && !roles.has("finance_manager")) {
     throw new Error("Only finance managers or super admins can review mobile money withdrawal requests.");
   }
@@ -84,20 +64,11 @@ const finalizeManualWithdrawal = async ({
   requestId: string;
   status: "completed" | "failed";
 }) => {
-  const adminClient = getSupabaseAdminClient();
   const now = new Date().toISOString();
-  const requestResponse = await adminClient
-    .from("withdrawal_requests")
-    .select("*")
-    .eq("id", requestId)
-    .eq("provider_name", "sasapay")
-    .maybeSingle();
-
-  if (requestResponse.error) {
-    throw requestResponse.error;
-  }
-
-  const withdrawalRequest = requestResponse.data;
+  const withdrawalRequest = await queryOne(
+    "select * from withdrawal_requests where id = $1 and provider_name = $2",
+    [requestId, "sasapay"],
+  );
 
   if (!withdrawalRequest) {
     throw new Error("Mobile money withdrawal request not found.");
@@ -115,7 +86,7 @@ const finalizeManualWithdrawal = async ({
 
   const updatePayload = {
     admin_note: adminNote,
-    audit_log: appendAuditEntry(withdrawalRequest.audit_log, {
+    audit_log: appendAuditEntry(withdrawalRequest.audit_log as Json | null, {
       action: auditAction,
       actor_id: adminUserId,
       admin_note: adminNote,
@@ -136,80 +107,43 @@ const finalizeManualWithdrawal = async ({
     updated_at: now,
   };
 
-  const profileResponse =
-    status === "completed"
-      ? await adminClient
-          .from("profiles")
-          .select("balance, reserved_withdrawal_balance")
-          .eq("id", withdrawalRequest.user_id)
-          .maybeSingle()
-      : null;
-
-  if (profileResponse?.error) {
-    throw profileResponse.error;
-  }
+  const user_id = String(withdrawalRequest.user_id);
+  const renderedAmount = Number(withdrawalRequest.amount ?? 0);
 
   if (status === "completed") {
-    const balance = Number(profileResponse?.data?.balance ?? 0);
-    const reservedBalance = Number(profileResponse?.data?.reserved_withdrawal_balance ?? 0);
-    const amount = Number(withdrawalRequest.amount ?? 0);
-    const updateProfileResponse = await adminClient
-      .from("profiles")
-      .update({
-        balance: Math.max(0, balance - amount),
-        reserved_withdrawal_balance: Math.max(0, reservedBalance - amount),
-        updated_at: now,
-      })
-      .eq("id", withdrawalRequest.user_id);
-
-    if (updateProfileResponse.error) {
-      throw updateProfileResponse.error;
-    }
+    const profile = await queryOne("select balance, reserved_withdrawal_balance from profiles where id = $1", [user_id]);
+    const balance = Number(profile?.balance ?? 0);
+    const reservedBalance = Number(profile?.reserved_withdrawal_balance ?? 0);
+    await query(
+      "update profiles set balance = $1, reserved_withdrawal_balance = $2, updated_at = $3 where id = $4",
+      [Math.max(0, balance - renderedAmount), Math.max(0, reservedBalance - renderedAmount), now, user_id],
+    );
   } else {
-    const releaseResponse = await adminClient
-      .from("profiles")
-      .select("reserved_withdrawal_balance")
-      .eq("id", withdrawalRequest.user_id)
-      .maybeSingle();
-
-    if (releaseResponse.error) {
-      throw releaseResponse.error;
-    }
-
-    const reservedBalance = Number(releaseResponse.data?.reserved_withdrawal_balance ?? 0);
-    const amount = Number(withdrawalRequest.amount ?? 0);
-    const updateProfileResponse = await adminClient
-      .from("profiles")
-      .update({
-        reserved_withdrawal_balance: Math.max(0, reservedBalance - amount),
-        updated_at: now,
-      })
-      .eq("id", withdrawalRequest.user_id);
-
-    if (updateProfileResponse.error) {
-      throw updateProfileResponse.error;
-    }
+    const profile = await queryOne("select reserved_withdrawal_balance from profiles where id = $1", [user_id]);
+    const reservedBalance = Number(profile?.reserved_withdrawal_balance ?? 0);
+    await query(
+      "update profiles set reserved_withdrawal_balance = $1, updated_at = $2 where id = $3",
+      [Math.max(0, reservedBalance - renderedAmount), now, user_id],
+    );
   }
 
-  const updateResponse = await adminClient
-    .from("withdrawal_requests")
-    .update(updatePayload)
-    .eq("id", requestId)
-    .eq("status", "approved")
-    .select("id, status, amount, method")
-    .maybeSingle();
+  const updatedRow = await queryOne(
+    `update withdrawal_requests
+        set ${Object.keys(updatePayload)
+          .map((key, index) => `${key} = $${index + 1}`)
+          .join(", ")}
+      where id = $${Object.keys(updatePayload).length + 1} and status = $${Object.keys(updatePayload).length + 2}
+      returning id, status, amount, method`,
+    [...Object.values(updatePayload), requestId, "approved"],
+  );
 
-  if (updateResponse.error) {
-    throw updateResponse.error;
-  }
-
-  if (!updateResponse.data) {
+  if (!updatedRow) {
     throw new Error("Withdrawal request was updated by another session. Refresh and try again.");
   }
 
   const amountLabel = Number(withdrawalRequest.amount ?? 0).toFixed(2);
 
-  await adminClient.rpc("create_notification_internal", {
+  await rpc("create_notification_internal", {
     p_data: {
       amount: withdrawalRequest.amount,
       method: withdrawalRequest.method,
@@ -228,7 +162,7 @@ const finalizeManualWithdrawal = async ({
   });
 
   return {
-    request_id: withdrawalRequest.id,
+    request_id: String(withdrawalRequest.id),
     status,
   };
 };
@@ -245,11 +179,10 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const requestId = asString(body.requestId);
     const status = asString(body.status)?.toLowerCase() ?? null;
     const adminNote = asString(body.adminNote);
-    const authHeader = getHeaderValue(request.headers, "authorization");
-    const accessToken = parseBearerToken(authHeader);
 
-    if (!accessToken) {
-      sendJson(response, 401, { error: "Missing Bearer token." });
+    const clerkUserId = await authenticateRequest(request.headers);
+    if (!clerkUserId) {
+      sendJson(response, 401, { error: "Missing or invalid Bearer token." });
       return;
     }
 
@@ -258,19 +191,14 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       return;
     }
 
-    const adminUserId = await requireFinanceUser(accessToken);
-    const userClient = getSupabaseUserClient(accessToken);
+    const adminUserId = await requireFinanceUser(clerkUserId);
 
     if (status === "approved" || status === "rejected") {
-      const reviewResponse = await userClient.rpc("admin_review_mobile_money_withdrawal", {
+      await userRpc("admin_review_mobile_money_withdrawal", clerkUserId, {
         p_admin_note: adminNote,
         p_request_id: requestId,
         p_status: status,
       });
-
-      if (reviewResponse.error) {
-        throw reviewResponse.error;
-      }
     } else {
       await finalizeManualWithdrawal({
         adminNote,

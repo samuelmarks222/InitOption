@@ -10,7 +10,7 @@ import {
 } from "../../src/lib/blogPosts.js";
 import { getStarterBlogCategories, STARTER_BLOG_POSTS } from "../../src/lib/blogStarterContent.js";
 import { normalizeWebsiteContent } from "../../src/lib/websiteContent.js";
-import { fetchWithTimeout } from "./fetchWithTimeout.js";
+import { queryOne } from "./db.js";
 
 type PlatformSettingsBlogRow = {
   platform_name?: string | null;
@@ -31,25 +31,6 @@ type WebsiteContentBlogLike = {
 };
 
 const PAGE_SIZE_DEFAULT = 10;
-
-const getSupabaseConfig = () => {
-  const url =
-    process.env.SUPABASE_URL ||
-    process.env.VITE_SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    "";
-  const anonKey =
-    process.env.SUPABASE_ANON_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    "";
-
-  return {
-    anonKey,
-    url,
-  };
-};
 
 const withFallbackFlag = (response: PaginatedBlogPostsResponse, usesFallback: boolean): PaginatedBlogPostsResponse => ({
   ...response,
@@ -90,32 +71,15 @@ const mergeBySlug = <T extends { slug: string }>(fallbackEntries: T[], managedEn
 };
 
 const loadManagedBlogPayload = async (): Promise<ManagedBlogPayload> => {
-  const { anonKey, url } = getSupabaseConfig();
-
-  if (!url || !anonKey) {
-    return getFallbackBlogPayload();
-  }
-
   try {
-    const endpoint = new URL("/rest/v1/platform_settings", url);
-    endpoint.searchParams.set("select", "platform_name,website_content");
-    endpoint.searchParams.set("limit", "1");
-    endpoint.searchParams.set("order", "created_at.asc.nullslast");
+    const row = await queryOne(
+      "select platform_name, website_content from platform_settings order by created_at asc nulls last limit 1",
+    ) as PlatformSettingsBlogRow | null;
 
-    const response = await fetchWithTimeout(endpoint, {
-      headers: {
-        apikey: anonKey,
-        authorization: `Bearer ${anonKey}`,
-        accept: "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Supabase settings fetch failed with ${response.status}`);
+    if (!row) {
+      return getFallbackBlogPayload();
     }
 
-    const payload = (await response.json()) as PlatformSettingsBlogRow[];
-    const row = payload[0] ?? null;
     const platformName = row?.platform_name?.trim() || DEFAULT_PLATFORM_NAME;
     const websiteContent = normalizeWebsiteContent(row?.website_content ?? "", platformName);
     const managedBlog = (websiteContent as WebsiteContentBlogLike).blog;

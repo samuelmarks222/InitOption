@@ -1,6 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Json, Tables } from "../../src/integrations/supabase/types.js";
-import { getHeaderValue } from "../../src/lib/cryptoWebhook.js";
 import {
   buildDepositBonusCatalog,
   calculateDepositBonusAmountFromOffer,
@@ -15,7 +14,8 @@ import {
   normalizeKenyanPhoneNumber,
 } from "../../src/lib/mobileMoneyShared.js";
 import { buildSasaPayCallbackUrl, readJsonRequestBody, requestSasaPayStkPush } from "../_lib/sasapay.js";
-import { getSupabaseAdminClient, getSupabaseUserClient } from "../_lib/supabaseAdmin.js";
+import { query, queryOne, rpc, userRpc } from "../_lib/db.js";
+import { authenticateRequest, clerkUserIdToUuid } from "../_lib/clerkWebhook.js";
 
 type ApiRequest = IncomingMessage & {
   headers: Record<string, string | string[] | undefined>;
@@ -59,22 +59,11 @@ const asString = (value: unknown) => {
   return trimmed ? trimmed : null;
 };
 
-const parseBearerToken = (authorizationHeader: string) => {
-  const trimmed = authorizationHeader.trim();
-  if (!trimmed) return null;
-
-  const [scheme, token] = trimmed.split(/\s+/, 2);
-  if (!scheme || !token || scheme.toLowerCase() !== "bearer") return null;
-  return token.trim() || null;
-};
-
 const resolveSelectedBonusOffer = async ({
-  adminClient,
   amount,
   bonusOfferId,
   userId,
 }: {
-  adminClient: ReturnType<typeof getSupabaseAdminClient>;
   amount: number;
   bonusOfferId: string | null;
   userId: string;
@@ -86,31 +75,19 @@ const resolveSelectedBonusOffer = async ({
     };
   }
 
-  const [profileResponse, offersResponse, redemptionsResponse] = await Promise.all([
-    adminClient.from("profiles").select("total_deposit").eq("id", userId).maybeSingle(),
-    adminClient
-      .from("deposit_bonus_offers")
-      .select("*")
-      .eq("status", "active")
-      .order("position", { ascending: true })
-      .order("deposit_amount", { ascending: true }),
-    adminClient
-      .from("deposit_bonus_redemptions")
-      .select("bonus_offer_id, created_at, status")
-      .eq("user_id", userId),
+  const [profile, offers, redemptions] = await Promise.all([
+    queryOne("select total_deposit from profiles where id = $1", [userId]),
+    query("select * from deposit_bonus_offers where status = $1 order by position asc, deposit_amount asc", ["active"]),
+    query("select bonus_offer_id, created_at, status from deposit_bonus_redemptions where user_id = $1", [userId]),
   ]);
 
-  if (profileResponse.error) throw profileResponse.error;
-  if (offersResponse.error) throw offersResponse.error;
-  if (redemptionsResponse.error) throw redemptionsResponse.error;
-
   const bonusCatalog = buildDepositBonusCatalog({
-    offers: (offersResponse.data ?? []) as DepositBonusOfferRow[],
-    redemptions: (redemptionsResponse.data ?? []) as Pick<
+    offers: (offers ?? []) as DepositBonusOfferRow[],
+    redemptions: (redemptions ?? []) as Pick<
       DepositBonusRedemptionRow,
       "bonus_offer_id" | "created_at" | "status"
     >[],
-    totalDeposit: Number(profileResponse.data?.total_deposit ?? 0),
+    totalDeposit: Number(profile?.total_deposit ?? 0),
   });
 
   const selectedOffer = bonusCatalog.find((offer) => offer.id === bonusOfferId) ?? null;
@@ -154,11 +131,10 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const amount = asNumber(body.amount ?? 0);
     const bonusOfferId = asString(body.bonusOfferId ?? null);
     normalizedPhoneNumber = normalizeKenyanPhoneNumber(asString(body.phoneNumber ?? null));
-    const authHeader = getHeaderValue(request.headers, "authorization");
-    const accessToken = parseBearerToken(authHeader);
 
-    if (!accessToken) {
-      sendJson(response, 401, { error: "Missing Bearer token." });
+    const clerkUserId = await authenticateRequest(request.headers);
+    if (!clerkUserId) {
+      sendJson(response, 401, { error: "Missing or invalid Bearer token." });
       return;
     }
 
@@ -180,25 +156,15 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       return;
     }
 
-    const userClient = getSupabaseUserClient(accessToken);
-    const authResponse = await userClient.auth.getUser();
-
-    if (authResponse.error || !authResponse.data.user?.id) {
-      sendJson(response, 401, { error: "Invalid authentication token." });
-      return;
-    }
-
-    const userId = authResponse.data.user.id;
-    const adminClient = getSupabaseAdminClient();
+    const userId = clerkUserIdToUuid(clerkUserId);
 
     const { bonusAmount, selectedOffer } = await resolveSelectedBonusOffer({
-      adminClient,
       amount: amountUsd,
       bonusOfferId,
       userId,
     });
 
-    const requestResponse = await userClient.rpc("request_deposit_review", {
+    const requestRows = await userRpc("request_deposit_review", clerkUserId, {
       p_amount: amountUsd,
       p_method: MPESA_METHOD_LABEL,
       p_payment_method_id: null,
@@ -206,11 +172,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       p_tx_hash: null,
     });
 
-    if (requestResponse.error) {
-      throw requestResponse.error;
-    }
-
-    const requestPayload = (requestResponse.data ?? {}) as {
+    const requestPayload = (requestRows?.[0] ?? {}) as {
       request_id?: string | null;
     };
 
@@ -221,35 +183,24 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     if (selectedOffer) {
       const now = new Date().toISOString();
-      const bonusUpdateResponse = await adminClient
-        .from("deposit_requests")
-        .update({
-          bonus_offer_id: selectedOffer.id,
-          promo_bonus: bonusAmount,
-          updated_at: now,
-        })
-        .eq("id", depositRequestId)
-        .eq("user_id", userId)
-        .eq("status", "pending")
-        .select("id")
-        .maybeSingle();
+      const bonusUpdateRow = await queryOne(
+        `update deposit_requests
+            set bonus_offer_id = $1, promo_bonus = $2, updated_at = $3
+          where id = $4 and user_id = $5 and status = $6
+          returning id`,
+        [selectedOffer.id, bonusAmount, now, depositRequestId, userId, "pending"],
+      );
 
-      if (bonusUpdateResponse.error) {
-        throw bonusUpdateResponse.error;
+      if (!bonusUpdateRow) {
+        throw new Error("Deposit bonus reservation failed");
       }
 
-      const redemptionInsertResponse = await adminClient.from("deposit_bonus_redemptions").insert({
-        bonus_amount: bonusAmount,
-        bonus_offer_id: selectedOffer.id,
-        deposit_amount: amountUsd,
-        deposit_request_id: depositRequestId,
-        status: "reserved",
-        user_id: userId,
-      });
-
-      if (redemptionInsertResponse.error) {
-        throw redemptionInsertResponse.error;
-      }
+      await query(
+        `insert into deposit_bonus_redemptions
+          (bonus_amount, bonus_offer_id, deposit_amount, deposit_request_id, status, user_id)
+         values ($1, $2, $3, $4, $5, $6)`,
+        [bonusAmount, selectedOffer.id, amountUsd, depositRequestId, "reserved", userId],
+      );
     }
 
     const sasaPayResponse = await requestSasaPayStkPush({
@@ -266,29 +217,31 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const providerResultCode = asString(sasaPayResponse.ResponseCode) || "0";
     const providerResultDesc = asString(sasaPayResponse.ResponseDescription) || asString(sasaPayResponse.detail);
 
-    const providerUpdate = await adminClient
-      .from("deposit_requests")
-      .update({
-        provider_amount: amountKes,
-        provider_channel: MPESA_CHANNEL_CODE,
-        provider_checkout_id: checkoutRequestId,
-        provider_currency: "KES",
-        provider_name: "sasapay",
-        provider_payload: sasaPayResponse,
-        provider_phone_number: normalizedPhoneNumber,
-        provider_request_id: providerRequestId,
-        provider_result_code: providerResultCode,
-        provider_result_desc: providerResultDesc,
-        provider_status: "pending_customer",
-        provider_transaction_ref: transactionReference,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", depositRequestId)
-      .eq("status", "pending");
-
-    if (providerUpdate.error) {
-      console.error("Failed to persist SasaPay deposit provider metadata", providerUpdate.error);
-    }
+    await query(
+      `update deposit_requests
+          set provider_amount = $1, provider_channel = $2, provider_checkout_id = $3, provider_currency = $4,
+              provider_name = $5, provider_payload = $6, provider_phone_number = $7, provider_request_id = $8,
+              provider_result_code = $9, provider_result_desc = $10, provider_status = $11,
+              provider_transaction_ref = $12, updated_at = $13
+        where id = $14 and status = $15`,
+      [
+        amountKes,
+        MPESA_CHANNEL_CODE,
+        checkoutRequestId,
+        "KES",
+        "sasapay",
+        sasaPayResponse,
+        normalizedPhoneNumber,
+        providerRequestId,
+        providerResultCode,
+        providerResultDesc,
+        "pending_customer",
+        transactionReference,
+        new Date().toISOString(),
+        depositRequestId,
+        "pending",
+      ],
+    );
 
     sendJson(response, 200, {
       amount_kes: amountKes,
@@ -304,8 +257,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   } catch (error) {
     if (depositRequestId) {
       try {
-        const adminClient = getSupabaseAdminClient();
-        await adminClient.rpc("process_mobile_money_deposit_callback", {
+        await rpc("process_mobile_money_deposit_callback", {
           p_provider_amount: amountKes || null,
           p_provider_channel: MPESA_CHANNEL_CODE,
           p_provider_currency: "KES",
