@@ -539,10 +539,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         redirectTo: `${window.location.origin}${redirectPath}`,
       });
       return { error: null };
-    } catch {
-      return {
-        error: toAuthError("Google sign-in failed. Please try again.", 500),
-      };
+    } catch (error: any) {
+      const message =
+        error?.message ||
+        (typeof error === "string" ? error : "") ||
+        "Google sign-in failed. Please try again.";
+      return { error: toAuthError(message, 500) };
     }
   };
 
