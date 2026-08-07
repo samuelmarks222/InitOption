@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { useUser, useAuth, useClerk } from "@clerk/clerk-react";
+import { useUser, useAuth as useClerkAuth, useClerk } from "@clerk/clerk-react";
 import { clearAuthRestorePath, getAuthRestorePath } from "@/lib/authRedirect";
 import { shouldNormalizeSeededLiveBalance } from "@/lib/live-balance";
 import type { AuthProfile, ProfileUpdateInput } from "@/types/profile";
@@ -190,7 +190,7 @@ const apiFetch = async (path: string, opts: RequestInit = {}): Promise<unknown> 
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { isLoaded, isSignedIn, user: clerkUser } = useUser();
-  const { getToken, signOut: clerkSignOut } = useAuth();
+  const { getToken, signOut: clerkSignOut } = useClerkAuth();
   const clerk = useClerk();
 
   const [user, setUser] = useState<{ id: string; email: string | null; user_metadata: Record<string, unknown> } | null>(null);
