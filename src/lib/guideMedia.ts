@@ -1,4 +1,3 @@
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const BASE_PATH = "trading-guide-media";
 
 export interface GuideTopicDef {
@@ -93,10 +92,3 @@ export const getGuideMediaPath = (sectionSlug: string, topicSlug: string): strin
 
 export const getGuideMediaPublicId = (sectionSlug: string, topicSlug: string): string =>
   `${BASE_PATH}/${sectionSlug}/${topicSlug}`;
-
-export const getGuideMediaUrl = (
-  supabaseUrl: string,
-  sectionSlug: string,
-  topicSlug: string,
-): string =>
-  `${supabaseUrl}/storage/v1/object/public/${STORAGE_BUCKET}/${getGuideMediaPath(sectionSlug, topicSlug)}`;

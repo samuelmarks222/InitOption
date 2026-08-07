@@ -130,16 +130,3 @@ export const cloudinaryClient = {
     return result;
   },
 };
-
-export function getCloudinaryUrl(publicId: string, options?: { folder?: string; transformation?: string }): string {
-  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-  if (!cloudName) {
-    console.warn("VITE_CLOUDINARY_CLOUD_NAME not set");
-    return "";
-  }
-
-  const base = `https://res.cloudinary.com/${cloudName}/image/upload`;
-  const folder = options?.folder ? `${options.folder}/` : "";
-  const transformation = options?.transformation ? `${options.transformation}/` : "";
-  return `${base}/${transformation}${folder}${publicId}`;
-}
