@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { useUser, useAuth as useClerkAuth, useClerk } from "@clerk/clerk-react";
+import { useUser, useAuth as useClerkAuth, useClerk, useSignIn, useSignUp } from "@clerk/clerk-react";
 import { toast } from "sonner";
 import { clearAuthRestorePath, getAuthRestorePath } from "@/lib/authRedirect";
 import { shouldNormalizeSeededLiveBalance } from "@/lib/live-balance";
@@ -193,6 +193,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { isLoaded, isSignedIn, user: clerkUser } = useUser();
   const { getToken, signOut: clerkSignOut } = useClerkAuth();
   const clerk = useClerk();
+  const clerkSignIn = useSignIn();
+  const clerkSignUp = useSignUp();
 
   const [user, setUser] = useState<{ id: string; email: string | null; user_metadata: Record<string, unknown> } | null>(null);
   const [session, setSession] = useState<{ user: { id: string } | null } | null>(null);
@@ -476,7 +478,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     ({ message, status }) as { message: string; status: number };
 
   const signUp = async (email: string, password: string, username?: string, referredByCode?: string) => {
-    if (!isLoaded || !clerk.signUp) {
+    if (!isLoaded || !clerkSignUp) {
       return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
     }
 
@@ -486,7 +488,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const attempt = await clerk.signUp.create({
+      const attempt = await clerkSignUp.create({
         emailAddress: email,
         password,
         publicMetadata: { username },
@@ -494,7 +496,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (attempt.status === "complete") {
-        await clerk.signIn.setActive({ session: attempt.createdSessionId ?? undefined });
+        await clerkSignUp.setActive({ session: attempt.createdSessionId ?? undefined });
         const token = await getToken({ skipCache: true });
         if (token) localStorage.setItem("clerk_session_token", token);
         return { error: null };
@@ -515,18 +517,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    if (!isLoaded || !clerk.signIn) {
+    if (!isLoaded || !clerkSignIn) {
       return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
     }
 
     try {
-      const attempt = await clerk.signIn.create({
+      const attempt = await clerkSignIn.create({
         identifier: email,
         password,
       });
 
       if (attempt.status === "complete") {
-        await clerk.signIn.setActive({ session: attempt.createdSessionId ?? undefined });
+        await clerkSignIn.setActive({ session: attempt.createdSessionId ?? undefined });
         const token = await getToken({ skipCache: true });
         if (token) localStorage.setItem("clerk_session_token", token);
         return { error: null };
@@ -544,13 +546,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
-    if (!isLoaded || !clerk.signIn) {
+    if (!isLoaded || !clerkSignIn) {
       return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
     }
 
     try {
       const redirectPath = getAuthRestorePath() || "/trade";
-      await clerk.signIn.authenticateWithRedirect({
+      await clerkSignIn.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: `${window.location.origin}/auth/callback`,
         redirectTo: `${window.location.origin}${redirectPath}`,
