@@ -193,8 +193,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { isLoaded, isSignedIn, user: clerkUser } = useUser();
   const { getToken, signOut: clerkSignOut } = useClerkAuth();
   const clerk = useClerk();
-  const clerkSignIn = useSignIn();
-  const clerkSignUp = useSignUp();
+  const { isLoaded: clerkAuthReady, signUp: clerkSignUp, setActive: setActiveSignUp } = useSignUp();
+  const { isLoaded: clerkSignInReady, signIn: clerkSignIn, setActive: setActiveSignIn } = useSignIn();
 
   const [user, setUser] = useState<{ id: string; email: string | null; user_metadata: Record<string, unknown> } | null>(null);
   const [session, setSession] = useState<{ user: { id: string } | null } | null>(null);
@@ -478,7 +478,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     ({ message, status }) as { message: string; status: number };
 
   const signUp = async (email: string, password: string, username?: string, referredByCode?: string) => {
-    if (!isLoaded || !clerkSignUp) {
+    if (!isLoaded || !clerkAuthReady || !clerkSignUp) {
       return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
     }
 
@@ -496,7 +496,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (attempt.status === "complete") {
-        await clerkSignUp.setActive({ session: attempt.createdSessionId ?? undefined });
+        await setActiveSignUp({ session: attempt.createdSessionId ?? undefined });
         const token = await getToken({ skipCache: true });
         if (token) localStorage.setItem("clerk_session_token", token);
         return { error: null };
@@ -517,7 +517,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    if (!isLoaded || !clerkSignIn) {
+    if (!isLoaded || !clerkSignInReady || !clerkSignIn) {
       return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
     }
 
@@ -528,7 +528,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (attempt.status === "complete") {
-        await clerkSignIn.setActive({ session: attempt.createdSessionId ?? undefined });
+        await setActiveSignIn({ session: attempt.createdSessionId ?? undefined });
         const token = await getToken({ skipCache: true });
         if (token) localStorage.setItem("clerk_session_token", token);
         return { error: null };
@@ -546,7 +546,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
-    if (!isLoaded || !clerkSignIn) {
+    if (!isLoaded || !clerkSignInReady || !clerkSignIn) {
       return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
     }
 
