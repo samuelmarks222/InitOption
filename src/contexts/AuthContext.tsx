@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useUser, useAuth as useClerkAuth, useClerk } from "@clerk/clerk-react";
+import { toast } from "sonner";
 import { clearAuthRestorePath, getAuthRestorePath } from "@/lib/authRedirect";
 import { shouldNormalizeSeededLiveBalance } from "@/lib/live-balance";
 import type { AuthProfile, ProfileUpdateInput } from "@/types/profile";
@@ -475,62 +476,78 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     ({ message, status }) as { message: string; status: number };
 
   const signUp = async (email: string, password: string, username?: string, referredByCode?: string) => {
+    if (!isLoaded || !clerk.signUp) {
+      return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
+    }
+
+    if (!username) {
+      const domain = email.split("@")[0] ?? "trader";
+      username = domain;
+    }
+
     try {
-      const result = await apiFetch(`/auth/signup`, {
-        method: "POST",
-        body: JSON.stringify({ email, password, username, referredByCode }),
-      }).catch((e: any) => {
-        if (e.message?.includes("custom_email_unavailable")) {
-          // Fallback: use Clerk's sign-up
-          void clerk.signUp.create({
-            emailAddress: email,
-            password,
-            publicMetadata: { username: username || email.split("@")[0] },
-            unsafeMetadata: { referred_by_code: referredByCode ? referredByCode.trim().toUpperCase() : undefined },
-          });
-          return null;
-        }
-        throw e;
+      const attempt = await clerk.signUp.create({
+        emailAddress: email,
+        password,
+        publicMetadata: { username },
+        unsafeMetadata: { referred_by_code: referredByCode ? referredByCode.trim().toUpperCase() : undefined },
       });
 
+      if (attempt.status === "complete") {
+        await clerk.signIn.setActive({ session: attempt.createdSessionId ?? undefined });
+        const token = await getToken({ skipCache: true });
+        if (token) localStorage.setItem("clerk_session_token", token);
+        return { error: null };
+      }
+
+      // "missing_1" verification code (email not yet verified) is expected — Clerk
+      // emailed the verification link; the session becomes active after the user
+      // clicks the email verification link or enters the code.
+      toast.info("Check your email to verify your account, then sign in.");
       return { error: null };
     } catch (error: any) {
-      return {
-        error: toAuthError(error.message || "Registration failed. Please try again.", error.status || 500),
-      };
+      const message =
+        error?.message ||
+        error?.errors?.[0]?.message ||
+        "Registration failed. Please try again.";
+      return { error: toAuthError(message, error?.status || 400) };
     }
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!isLoaded || !clerk.signIn) {
+      return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
+    }
+
     try {
-      const response = await fetch("/api/auth/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const attempt = await clerk.signIn.create({
+        identifier: email,
+        password,
       });
 
-      const payload = await response.json().catch(() => ({}));
-
-      if (response.ok) {
-        // Get Clerk session token
+      if (attempt.status === "complete") {
+        await clerk.signIn.setActive({ session: attempt.createdSessionId ?? undefined });
         const token = await getToken({ skipCache: true });
-        if (token) {
-          localStorage.setItem("clerk_session_token", token);
-        }
+        if (token) localStorage.setItem("clerk_session_token", token);
         return { error: null };
       }
 
-      return {
-        error: toAuthError(payload.error || "Login failed. Please try again.", response.status),
-      };
-    } catch {
-      return {
-        error: toAuthError("Login is taking longer than expected. Please try again in a moment.", 503),
-      };
+      // Pending multi-factor or verification step — surface the next-required action.
+      return { error: toAuthError(attempt.nextStrategy?.name || "Authentication flow requires additional steps.", 400) };
+    } catch (error: any) {
+      const message =
+        error?.message ||
+        error?.errors?.[0]?.message ||
+        "Login failed. Please try again.";
+      return { error: toAuthError(message, error?.status || 400) };
     }
   };
 
   const signInWithGoogle = async () => {
+    if (!isLoaded || !clerk.signIn) {
+      return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
+    }
+
     try {
       const redirectPath = getAuthRestorePath() || "/trade";
       await clerk.signIn.authenticateWithRedirect({
