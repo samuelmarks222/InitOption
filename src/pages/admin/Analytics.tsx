@@ -99,8 +99,7 @@ const Analytics = () => {
     const fetchTrades = async () => {
       setLoading(true);
 
-      const { data, error } = await supabase
-        .from("trades")
+      const { data, error } = await api.from("trades")
         .select("amount, asset_symbol, closed_at, direction, profit, status")
         .neq("status", "open")
         .not("closed_at", "is", null)

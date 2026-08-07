@@ -25,16 +25,14 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data: trades } = await supabase
-        .from("trades")
+      const { data: trades } = await api.from("trades")
         .select("*")
         .eq("user_id", user.id)
         .order("opened_at", { ascending: false })
         .limit(10);
       if (trades) setRecentTrades(trades);
 
-      const { data: leaders } = await supabase
-        .from("profiles")
+      const { data: leaders } = await api.from("profiles")
         .select("username, display_name, total_profit, total_trades, total_wins")
         .order("total_profit", { ascending: false })
         .limit(10);

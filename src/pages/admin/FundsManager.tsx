@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Search, User, Wallet, RefreshCw, Loader2, CheckCircle, XCircle } from "lucide-react";
-import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
+import { isSupabaseConfigured } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
@@ -40,8 +41,7 @@ const FundsManager = () => {
     setNotFound(false);
 
     try {
-      const { data, error } = await supabase
-        .from("profiles")
+      const { data, error } = await api.from("profiles")
         .select("id, username, display_name, email, balance, total_deposit, total_profit")
         .or(`username.ilike.%${term}%,display_name.ilike.%${term}%,email.ilike.%${term}%,id.eq.${term}`)
         .maybeSingle();
@@ -86,8 +86,7 @@ const FundsManager = () => {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
+      const { error } = await api.from("profiles")
         .update({
           balance: user.balance + creditAmount,
           total_deposit: user.total_deposit + creditAmount,
@@ -96,14 +95,14 @@ const FundsManager = () => {
 
       if (error) throw error;
 
-      try {
-        await supabase.from("admin_balance_log").insert({
-          user_id: user.id,
-          amount: creditAmount,
-          type: "credit",
-          reason: reason.trim() || "Admin credit",
-        });
-      } catch {
+       try {
+         await api.from("admin_balance_log").insert({
+           user_id: user.id,
+           amount: creditAmount,
+           type: "credit",
+           reason: reason.trim() || "Admin credit",
+         });
+       } catch {
         // Log table may not exist; balance update is sufficient
       }
 
@@ -150,8 +149,7 @@ const FundsManager = () => {
 
     setMySubmitting(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
+      const { error } = await api.from("profiles")
         .update({
           balance: myProfile.balance + creditAmount,
           total_deposit: (myProfile.total_deposit ?? 0) + creditAmount,
@@ -160,14 +158,14 @@ const FundsManager = () => {
 
       if (error) throw error;
 
-      try {
-        await supabase.from("admin_balance_log").insert({
-          user_id: myProfile.id,
-          amount: creditAmount,
-          type: "credit",
-          reason: myReason.trim() || "Admin self credit",
-        });
-      } catch {
+       try {
+         await api.from("admin_balance_log").insert({
+           user_id: myProfile.id,
+           amount: creditAmount,
+           type: "credit",
+           reason: myReason.trim() || "Admin self credit",
+         });
+       } catch {
         // ignore
       }
 

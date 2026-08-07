@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
+import { api } from "@/integrations/api/client";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { BookOpen, Search, ChevronRight, Loader } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 
@@ -82,8 +82,7 @@ const GuideBrowserPage = () => {
   const loadGuides = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("guides")
+      const { data, error } = await api.from("guides")
         .select("*")
         .eq("is_published", true)
         .is("deleted_at", null)
@@ -100,8 +99,7 @@ const GuideBrowserPage = () => {
 
   const loadGuideMedia = async (guideId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("guide_media")
+      const { data, error } = await api.from("guide_media")
         .select("*")
         .eq("guide_id", guideId)
         .in("media_type", ["image", "video", "thumbnail"]);
@@ -115,8 +113,7 @@ const GuideBrowserPage = () => {
 
   const loadGuideSections = async (guideId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("guide_content")
+      const { data, error } = await api.from("guide_content")
         .select("id,guide_id,section_title,section_order,content_type,content_text")
         .eq("guide_id", guideId)
         .order("section_order", { ascending: true });

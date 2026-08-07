@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVip } from "@/contexts/VipContext";
@@ -81,7 +81,7 @@ interface TradingContextValue {
 }
 
 const TradingContext = createContext<TradingContextValue | null>(null);
-const supabaseAny = supabase as any;
+
 
 const requestDepositGuide = (reason: "deposit_required" | "insufficient_balance") => {
   if (typeof window === "undefined") return;
@@ -176,16 +176,14 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
 
     const loadTrades = async () => {
       const [{ data: historyData }, { data: openData }] = await Promise.all([
-        supabase
-          .from("trades")
+        api.from("trades")
           .select("*")
           .eq("user_id", userId)
           .neq("status", "open")
           .gte("closed_at", getTradeHistoryCutoffIso())
           .order("closed_at", { ascending: false })
           .limit(50),
-        supabase
-          .from("trades")
+        api.from("trades")
           .select("*")
           .eq("user_id", userId)
           .eq("status", "open")
@@ -261,8 +259,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     const status: "won" | "lost" = won ? "won" : "lost";
     const settledAt = new Date().toISOString();
 
-    await supabase
-      .from("trades")
+    await api.from("trades")
       .update({
         exit_price: exitPrice,
         status,
@@ -274,7 +271,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     clearStoredTradeMarkerTime(trade.id);
 
     try {
-      await supabase.rpc("process_trade_referral_commission", {
+      await api.rpc("process_trade_referral_commission", {
         p_trade_id: trade.id,
         p_event: "trade_close",
       });
@@ -283,7 +280,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     }
 
     try {
-      await supabaseAny.rpc("process_social_trade_close", {
+      await api.rpc("process_social_trade_close", {
         p_trade_id: trade.id,
       });
     } catch {
@@ -292,8 +289,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
 
     const participantId = trade.tournament_participant_id;
     if (participantId) {
-      const { data: participant } = await supabase
-        .from("tournament_participants")
+      const { data: participant } = await api.from("tournament_participants")
         .select("current_balance")
         .eq("id", participantId)
         .single();
@@ -302,8 +298,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         const tournamentBalanceBefore = Number(participant.current_balance ?? 0);
         const newTournamentBalance = tournamentBalanceBefore + profit;
 
-        await supabase
-          .from("tournament_participants")
+        await api.from("tournament_participants")
           .update({
             current_balance: newTournamentBalance,
             updated_at: settledAt,
@@ -342,8 +337,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     } else if (user && profile) {
       const fundedLiveAccount = hasFundedLiveAccount(profile);
       const creditedAmount = profit;
-      const { data: liveProfileSnapshot } = await supabase
-        .from("profiles")
+      const { data: liveProfileSnapshot } = await api.from("profiles")
         .select("balance, reserved_withdrawal_balance, total_trades, total_wins, total_profit")
         .eq("id", user.id)
         .single();
@@ -359,8 +353,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       const totalWins = Number(liveProfileSnapshot?.total_wins ?? profile.total_wins ?? 0);
       const totalProfit = Number(liveProfileSnapshot?.total_profit ?? profile.total_profit ?? 0);
 
-      await supabase
-        .from("profiles")
+      await api.from("profiles")
         .update({
           balance: nextStoredLiveBalance,
           total_trades: totalTrades + (fundedLiveAccount ? 1 : 0),
@@ -401,8 +394,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     }
 
     if (user) {
-      const { data } = await supabase
-        .from("trades")
+      const { data } = await api.from("trades")
         .select("*")
         .eq("user_id", user.id)
         .neq("status", "open")
@@ -570,8 +562,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       let balanceCommitPromise: Promise<any> | null = null;
 
       if (activePid) {
-        const { data: participant } = await supabase
-          .from("tournament_participants")
+        const { data: participant } = await api.from("tournament_participants")
           .select("current_balance")
           .eq("id", activePid)
           .single();
@@ -592,8 +583,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         reserveTournamentBalance(activePid, normalizedAmount);
         setActiveTrades((prev) => [...prev, optimisticTrade]);
 
-        balanceCommitPromise = supabaseAny
-          .from("tournament_participants")
+        balanceCommitPromise = api.from("tournament_participants")
           .update({
             current_balance: rollbackTournamentBalance - normalizedAmount,
             updated_at: new Date().toISOString(),
@@ -622,8 +612,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         reserveLiveBalance(normalizedAmount);
         setActiveTrades((prev) => [...prev, optimisticTrade]);
 
-        balanceCommitPromise = supabaseAny
-          .from("profiles")
+        balanceCommitPromise = api.from("profiles")
           .update({
             balance: getStoredLiveBalanceAfterPendingTrade(profile, normalizedAmount, pendingLiveBalance),
             updated_at: new Date().toISOString(),
@@ -633,8 +622,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
 
       const [balanceCommitResult, tradeInsertResult] = await Promise.all([
         balanceCommitPromise,
-        supabase
-          .from("trades")
+        api.from("trades")
           .insert(buildTradeInsertPayload({
             userId: user.id,
             assetSymbol,
@@ -661,15 +649,14 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         let balanceRestored = false;
 
         if (insertedTrade?.id && balanceCommitError) {
-          await supabase.from("trades").delete().eq("id", insertedTrade.id);
+          await api.from("trades").delete().eq("id", insertedTrade.id);
         }
 
         if (activePid) {
           releaseTournamentBalance(activePid, normalizedAmount);
 
           if (!balanceCommitError && rollbackTournamentBalance !== null) {
-            const { error: rollbackError } = await supabase
-              .from("tournament_participants")
+            const { error: rollbackError } = await api.from("tournament_participants")
               .update({
                 current_balance: rollbackTournamentBalance,
                 updated_at: rollbackTimestamp,
@@ -682,8 +669,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
           }
         } else {
           if (!balanceCommitError && rollbackLiveBalance !== null) {
-            const { error: rollbackError } = await supabase
-              .from("profiles")
+            const { error: rollbackError } = await api.from("profiles")
               .update({
                 balance: rollbackLiveBalance,
                 updated_at: rollbackTimestamp,
@@ -798,11 +784,11 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       void playTradeOpenSound();
 
       const sideEffects = [
-        supabase.rpc("process_trade_referral_commission", {
+        api.rpc("process_trade_referral_commission", {
           p_trade_id: insertedTrade.id,
           p_event: "trade_open",
         }),
-        supabaseAny.rpc("process_social_trade_open", {
+        api.rpc("process_social_trade_open", {
           p_trade_id: insertedTrade.id,
         }),
       ];

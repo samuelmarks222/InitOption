@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Edit2, Link as LinkIcon, Power, PowerOff, Save, Search, Wallet, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "@/hooks/use-toast";
 
@@ -133,8 +133,8 @@ const CryptoPayments = () => {
     setLoading(true);
 
     const [methodsResponse, poolResponse] = await Promise.all([
-      supabase.from("crypto_payment_methods").select("*").order("coin_name"),
-      supabase.from("crypto_deposit_address_pool").select("*").order("created_at", { ascending: false }),
+      api.from("crypto_payment_methods").select("*").order("coin_name"),
+      api.from("crypto_deposit_address_pool").select("*").order("created_at", { ascending: false }),
     ]);
 
     if (methodsResponse.error) {
@@ -169,8 +169,7 @@ const CryptoPayments = () => {
 
   const handleToggleStatus = async (method: CryptoMethod) => {
     const newStatus = method.status === "active" ? "inactive" : "active";
-    const { error } = await supabase
-      .from("crypto_payment_methods")
+    const { error } = await api.from("crypto_payment_methods")
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq("id", method.id);
 
@@ -191,8 +190,7 @@ const CryptoPayments = () => {
   const saveEdit = async (method: CryptoMethod) => {
     const parsedAddresses = parseAddressPoolEntries(editForm.addressPoolEntries);
 
-    const { error: updateError } = await supabase
-      .from("crypto_payment_methods")
+    const { error: updateError } = await api.from("crypto_payment_methods")
       .update({
         attribution_mode: editForm.attribution_mode,
         confirmations_required: Math.max(0, Number(editForm.confirmations_required) || 0),
@@ -210,7 +208,7 @@ const CryptoPayments = () => {
     }
 
     if (parsedAddresses.length > 0) {
-      const { error: poolInsertError } = await supabase.from("crypto_deposit_address_pool").insert(
+      const { error: poolInsertError } = await api.from("crypto_deposit_address_pool").insert(
         parsedAddresses.map((address) => ({
           address,
           payment_method_id: method.id,

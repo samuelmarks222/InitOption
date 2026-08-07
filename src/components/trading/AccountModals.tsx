@@ -22,14 +22,12 @@ import {
   ShieldAlert,
   Wallet,
   X,
-} from "lucide-react";
+ } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useVip } from "@/contexts/VipContext";
-import { Tables } from "@/integrations/supabase/types";
 import { VipBadge } from "@/components/vip/VipBadge";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { AccountCurrencyModal } from "@/components/profile/AccountCurrencyModal";
@@ -57,6 +55,7 @@ import {
   getDepositBonusPresetOptions,
 } from "@/lib/depositBonusTiers";
 import { isPlisioInstructionAddress, isPlisioSupportedCryptoMethod } from "@/lib/plisio";
+import type { Tables } from "@/integrations/supabase/types";
 
 export type AccountType = "live" | "demo" | "tournament";
 
@@ -360,8 +359,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
 
     const fetchDepositData = async () => {
       setLoading(true);
-      const methodsResponse = await supabase
-        .from("crypto_payment_methods")
+      const methodsResponse = await api.from("crypto_payment_methods")
         .select("*")
         .eq("status", "active")
         .order("coin_name");
@@ -663,7 +661,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
     if (!activeInstruction) return;
 
     let didNotifyCredit = false;
-    const channel = supabase
+    const channel = realtime
       .channel(`deposit-modal-instruction-${activeInstruction.instruction_id}`)
       .on(
         "postgres_changes",
@@ -702,7 +700,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
       .subscribe();
 
     return () => {
-      void supabase.removeChannel(channel);
+      realtime.removeChannel(channel);
     };
   }, [activeInstruction, refreshProfile]);
 
@@ -1406,8 +1404,7 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
 
     const loadCryptoMethods = async () => {
       setLoadingMethods(true);
-      const { data, error } = await supabase
-        .from("crypto_payment_methods")
+      const { data, error } = await api.from("crypto_payment_methods")
         .select("*")
         .eq("status", "active")
         .order("coin_name");

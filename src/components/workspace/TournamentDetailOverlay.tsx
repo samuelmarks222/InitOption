@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { Minus, Plus, X, Crown, Medal, ArrowLeft, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { Database } from "@/integrations/supabase/types";
 import CountryFlag from "@/components/ui/CountryFlag";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
@@ -27,7 +27,6 @@ type LeaderboardEntry = {
   trades_count: number;
 };
 
-const supabaseAny = supabase as any;
 
 interface TournamentDetailOverlayProps {
   tournamentId: string | null;
@@ -151,11 +150,10 @@ export const TournamentDetailOverlay = ({
     let cancelled = false;
     const fetchDetails = async () => {
       setLoading(true);
-      const tournamentPromise = supabase.from("tournaments").select("*").eq("id", tournamentId).single();
+      const tournamentPromise = api.from("tournaments").select("*").eq("id", tournamentId).single();
 
       // 1. Fetch tournament_participants to know user_ids
-      const participantResult = await supabase
-        .from("tournament_participants")
+      const participantResult = await api.from("tournament_participants")
         .select("id, user_id, current_balance, created_at, updated_at")
         .eq("tournament_id", tournamentId)
         .order("current_balance", { ascending: false });
@@ -167,8 +165,7 @@ export const TournamentDetailOverlay = ({
       let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null; phone_country?: string | null }>();
       if (userIds.length > 0) {
         try {
-          const { data: profiles, error: profilesErr } = await supabaseAny
-            .from("profiles")
+          const { data: profiles, error: profilesErr } = await api.from("profiles")
             .select("id, display_name, username, avatar_url, phone_country")
             .in("id", userIds);
           if (profilesErr) console.error("Leaderboard profiles fetch error:", profilesErr);
@@ -183,7 +180,7 @@ export const TournamentDetailOverlay = ({
       // 3. Try RPC for enriched data (balance, trades_count, positions)
       let rpcMap = new Map<string, any>();
       try {
-        const { data: rpcData, error: rpcErr } = await supabaseAny.rpc("get_tournament_leaderboard", {
+        const { data: rpcData, error: rpcErr } = await api.rpc("get_tournament_leaderboard", {
           p_tournament_id: tournamentId,
         });
         if (!rpcErr && Array.isArray(rpcData)) {
@@ -259,8 +256,7 @@ export const TournamentDetailOverlay = ({
     if (!tournamentId) return;
 
     // 1. Fetch current participants to get user_ids
-    const { data: rows } = await supabase
-      .from("tournament_participants")
+    const { data: rows } = await api.from("tournament_participants")
       .select("id, user_id, current_balance, created_at, updated_at")
       .eq("tournament_id", tournamentId)
       .order("current_balance", { ascending: false });
@@ -272,8 +268,7 @@ export const TournamentDetailOverlay = ({
     let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null; phone_country?: string | null }>();
     if (userIds.length > 0) {
       try {
-        const { data: profiles, error: profilesErr } = await supabaseAny
-          .from("profiles")
+        const { data: profiles, error: profilesErr } = await api.from("profiles")
           .select("id, display_name, username, avatar_url, phone_country")
           .in("id", userIds);
         if (profilesErr) console.error("Leaderboard profiles fetch error:", profilesErr);
@@ -288,7 +283,7 @@ export const TournamentDetailOverlay = ({
     // 3. Try RPC for enriched data
     let rpcMap = new Map<string, any>();
     try {
-      const { data: rpcData, error: rpcErr } = await supabaseAny.rpc("get_tournament_leaderboard", {
+      const { data: rpcData, error: rpcErr } = await api.rpc("get_tournament_leaderboard", {
         p_tournament_id: tournamentId,
       });
       if (!rpcErr && Array.isArray(rpcData)) {
@@ -394,7 +389,7 @@ export const TournamentDetailOverlay = ({
     }
     setJoining(true);
     try {
-      const { data, error } = await supabaseAny.rpc("join_tournament", {
+      const { data, error } = await api.rpc("join_tournament", {
         p_tournament_id: tournament.id,
       });
       if (error) throw error;

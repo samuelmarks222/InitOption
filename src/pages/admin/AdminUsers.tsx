@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import type { Tables } from "@/integrations/supabase/types";
 import type { AppRole } from "@/lib/adminRoles";
 import {
@@ -70,8 +70,8 @@ const AdminUsers = () => {
   const loadData = async () => {
     setLoading(true);
     const [profilesResult, rolesResult] = await Promise.all([
-      supabase.from("profiles").select("id, username, display_name, created_at").order("created_at", { ascending: false }),
-      supabase.from("user_roles").select("*"),
+      api.from("profiles").select("id, username, display_name, created_at").order("created_at", { ascending: false }),
+      api.from("user_roles").select("*"),
     ]);
 
     if (profilesResult.error) {
@@ -161,7 +161,7 @@ const AdminUsers = () => {
     }
 
     setAssigning(true);
-    const { error } = await supabase.rpc("assign_staff_role", {
+      const { error } = await api.rpc("assign_staff_role", {
       p_role: selectedRole,
       p_user_id: selectedUserId,
     });
@@ -185,7 +185,7 @@ const AdminUsers = () => {
 
   const handleRevokeRole = async (userId: string) => {
     setRevokingId(userId);
-    const { error } = await supabase.rpc("revoke_staff_role", {
+      const { error } = await api.rpc("revoke_staff_role", {
       p_user_id: userId,
     });
     setRevokingId(null);

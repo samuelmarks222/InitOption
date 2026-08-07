@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
+import { api } from "@/integrations/api/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
@@ -167,8 +168,8 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
 
     const fetchRules = async () => {
       const [platformResponse, bonusResponse] = await Promise.all([
-        supabase.from("platform_settings").select("*").limit(1).maybeSingle(),
-        supabase
+        api.from("platform_settings").select("*").limit(1).maybeSingle(),
+        api
           .from("bonus_settings")
           .select(
             "deposit_bonus_enabled, deposit_bonus_max, deposit_bonus_min, deposit_bonus_percent, referral_commission_enabled, referral_commission_payout_timing, referral_commission_percent, referral_commission_type, welcome_bonus_amount, welcome_bonus_enabled",
@@ -193,7 +194,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
     const fetchPromoMaterials = async () => {
       try {
         setMaterialsLoading(true);
-        const { data, error } = await supabase
+        const { data, error } = await api
           .from("promo_materials")
           .select("*")
           .order("created_at", { ascending: false });
@@ -218,9 +219,9 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
     const fetchReferralData = async () => {
       setCommissionLoading(true);
       const [countResult, referredResult, commissionsResult] = await Promise.all([
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("referred_by", user.id),
-        supabase.from("profiles").select("id, username, display_name, created_at").eq("referred_by", user.id).order("created_at", { ascending: false }),
-        supabase.from("referral_commissions").select("*").eq("referrer_id", user.id).order("created_at", { ascending: false }),
+        api.from("profiles").select("id", { count: "exact", head: true }).eq("referred_by", user.id),
+        api.from("profiles").select("id, username, display_name, created_at").eq("referred_by", user.id).order("created_at", { ascending: false }),
+        api.from("referral_commissions").select("*").eq("referrer_id", user.id).order("created_at", { ascending: false }),
       ]);
       setReferredCount(countResult.count ?? 0);
       if (referredResult.data) setReferredUsers(referredResult.data);

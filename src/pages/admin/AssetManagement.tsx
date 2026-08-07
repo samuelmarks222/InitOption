@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Search, Power, CheckCircle2, Circle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { toast } from "@/hooks/use-toast";
 import { ASSETS_LIBRARY, MasterAsset } from "@/data/assetsLibrary";
 import {
@@ -32,7 +32,7 @@ const AssetManagement = () => {
 
   const fetchAssets = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('assets_config').select('id, symbol, status, payout_pct');
+      const { data, error } = await api.from('assets_config').select('id, symbol, status, payout_pct');
     if (error) console.error("Error fetching assets:", error);
     else {
       const nextAssets = data || [];
@@ -65,8 +65,7 @@ const AssetManagement = () => {
     const nextPayout = clampAssetPayout(getDraftPayout(asset, dbAsset), getAssetDefaultPayout(asset.category));
     setSavingPayoutSymbol(asset.symbol);
 
-    const { error } = await supabase
-      .from('assets_config')
+    const { error } = await api.from('assets_config')
       .update({ payout_pct: nextPayout })
       .eq('id', dbAsset.id);
 
@@ -86,7 +85,7 @@ const AssetManagement = () => {
     if (dbAsset) {
       // Toggle status
       const newStatus = dbAsset.status === 'active' ? 'inactive' : 'active';
-      const { error } = await supabase.from('assets_config').update({ status: newStatus }).eq('id', dbAsset.id);
+      const { error } = await api.from('assets_config').update({ status: newStatus }).eq('id', dbAsset.id);
       if (error) {
         toast({ title: "Failed to update", description: error.message, variant: "destructive" });
       } else {
@@ -96,7 +95,7 @@ const AssetManagement = () => {
     } else {
       // Create new active asset
       const payout = clampAssetPayout(getDraftPayout(master), getAssetDefaultPayout(master.category));
-      const { data, error } = await supabase.from('assets_config').insert({
+      const { data, error } = await api.from('assets_config').insert({
         symbol: master.symbol,
         name: master.name,
         category: master.category,

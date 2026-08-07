@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, Plus, Trash2, CheckCircle, Clock } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { toast } from "@/hooks/use-toast";
 
 interface PromoCode {
@@ -31,7 +31,7 @@ const PromoCodes = () => {
 
   const fetchPromos = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('promo_codes').select('*').order('created_at', { ascending: false });
+      const { data, error } = await api.from('promo_codes').select('*').order('created_at', { ascending: false });
     if (error) {
        console.error("Error fetching promos:", error);
     } else {
@@ -42,7 +42,7 @@ const PromoCodes = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this promo code?")) return;
-    const { error } = await supabase.from('promo_codes').delete().eq('id', id);
+      const { error } = await api.from('promo_codes').delete().eq('id', id);
     if (error) {
       toast({ title: "Failed to delete", description: error.message, variant: "destructive" });
     } else {
@@ -60,7 +60,7 @@ const PromoCodes = () => {
     // Quick UTC conversion for DB
     const expiry = new Date(newPromo.expiry_date).toISOString();
 
-    const { data, error } = await supabase.from('promo_codes').insert({
+      const { data, error } = await api.from('promo_codes').insert({
       code: newPromo.code.toUpperCase(),
       type: newPromo.type,
       reward_value: newPromo.reward_value,

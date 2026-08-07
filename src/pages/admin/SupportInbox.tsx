@@ -14,6 +14,7 @@ import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { toast } from "@/hooks/use-toast";
 import { getRoleLabel } from "@/lib/adminRoles";
 import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import type { Tables } from "@/integrations/supabase/types";
 
 type SupportInboxTab = "live" | "tickets";
@@ -94,9 +95,9 @@ const SupportInbox = () => {
   const loadInbox = async () => {
     setLoading(true);
     const [threadsResult, ticketsResult, profilesResult] = await Promise.all([
-      supabase.from("support_threads").select("*").order("last_message_at", { ascending: false }),
-      supabase.from("support_tickets").select("*").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id, username, display_name, avatar_url"),
+      api.from("support_threads").select("*").order("last_message_at", { ascending: false }),
+      api.from("support_tickets").select("*").order("created_at", { ascending: false }),
+      api.from("profiles").select("id, username, display_name, avatar_url"),
     ]);
 
     if (threadsResult.error) {
@@ -163,11 +164,11 @@ const SupportInbox = () => {
     }
 
     setMessagesLoading(true);
-    const { data, error } = await supabase
-      .from("support_messages")
-      .select("*")
-      .eq("thread_id", threadId)
-      .order("created_at", { ascending: true });
+     const { data, error } = await api
+       .from("support_messages")
+       .select("*")
+       .eq("thread_id", threadId)
+       .order("created_at", { ascending: true });
 
     if (error) {
       toast({
@@ -253,14 +254,14 @@ const SupportInbox = () => {
     setSendingReply(true);
     const displayName = profile?.display_name?.trim() || profile?.username?.trim() || getRoleLabel(primaryRole);
 
-    const { error: updateError } = await supabase
-      .from("support_threads")
-      .update({
-        assigned_role: primaryRole ?? "support_agent",
-        status: "pending",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", selectedThreadId);
+     const { error: updateError } = await api
+       .from("support_threads")
+       .update({
+         assigned_role: primaryRole ?? "support_agent",
+         status: "pending",
+         updated_at: new Date().toISOString(),
+       })
+       .eq("id", selectedThreadId);
 
     if (updateError) {
       setSendingReply(false);
@@ -272,7 +273,7 @@ const SupportInbox = () => {
       return;
     }
 
-    const { error } = await supabase.from("support_messages").insert({
+     const { error } = await api.from("support_messages").insert({
       message: reply.trim(),
       sender_id: user.id,
       sender_name: displayName,
@@ -297,14 +298,14 @@ const SupportInbox = () => {
 
   const handleThreadStatus = async (threadId: string, status: "open" | "pending" | "resolved") => {
     setUpdatingThreadStatus(threadId);
-    const { error } = await supabase
-      .from("support_threads")
-      .update({
-        assigned_role: primaryRole ?? "support_agent",
-        status,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", threadId);
+     const { error } = await api
+       .from("support_threads")
+       .update({
+         assigned_role: primaryRole ?? "support_agent",
+         status,
+         updated_at: new Date().toISOString(),
+       })
+       .eq("id", threadId);
     setUpdatingThreadStatus(null);
 
     if (error) {
@@ -321,8 +322,7 @@ const SupportInbox = () => {
 
   const handleTicketStatus = async (ticketId: string, status: "open" | "pending" | "resolved") => {
     setUpdatingTicketStatus(ticketId);
-    const { error } = await supabase
-      .from("support_tickets")
+    const { error } = await api.from("support_tickets")
       .update({
         status,
         updated_at: new Date().toISOString(),

@@ -1,6 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
 
-const supabaseAny = supabase as any;
 
 export type TradeBalanceAuditEntry = {
   id: string;
@@ -54,7 +52,7 @@ export const insertTradeBalanceAudit = async (entry: InsertTradeBalanceAuditInpu
     context: entry.context ?? {},
   };
 
-  const response = await supabaseAny.from("trade_balance_audit_logs").insert(payload);
+  const response = await api.from("trade_balance_audit_logs").insert(payload);
 
   if (response.error && !isMissingTradeBalanceAuditTableError(response.error)) {
     console.error("Failed to insert trade balance audit log", response.error);
@@ -64,8 +62,7 @@ export const insertTradeBalanceAudit = async (entry: InsertTradeBalanceAuditInpu
 };
 
 export const fetchTradeBalanceAuditEntries = async (tradeId: string) => {
-  const response = await supabaseAny
-    .from("trade_balance_audit_logs")
+  const response = await api.from("trade_balance_audit_logs")
     .select("*")
     .eq("trade_id", tradeId)
     .order("created_at", { ascending: true });

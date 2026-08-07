@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+
 
 export type AdminKycDecision = "Pending" | "Verified" | "Rejected";
 
@@ -44,8 +44,7 @@ interface ReviewUserKycResponse {
 }
 
 const getAccessToken = async () => {
-  const sessionResponse = await supabase.auth.getSession();
-  const accessToken = sessionResponse.data.session?.access_token;
+  const accessToken = localStorage.getItem("clerk_session_token");
 
   if (!accessToken) {
     throw new Error("Authentication required. Please sign in again.");

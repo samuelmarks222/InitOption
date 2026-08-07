@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
+import { useAuth as useClerkAuth, useClerk } from "@clerk/clerk-react";
 import { Shield, Bell, Monitor, Smartphone, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_NOTIFICATION_PREFERENCES, normalizeNotificationPreferences } from "@/lib/profileSettings";
 import type { NotificationPreferences } from "@/types/profile";
 import { CopyTradingSettingsPanel } from "@/components/social/CopyTradingSettingsPanel";
@@ -17,6 +17,7 @@ export const ProfileSettings = () => {
   const [timezone, setTimezone] = useState("UTC+03:00 (Tbilisi, Georgia)");
   const [darkMode, setDarkMode] = useState(() => typeof window !== "undefined" && document.documentElement.classList.contains("dark"));
   const { profile, updateProfile, user, signOut } = useAuth();
+  const clerk = useClerk();
 
   useEffect(() => {
     setNotificationPreferences(normalizeNotificationPreferences(profile?.notificationPreferences));
@@ -67,8 +68,8 @@ export const ProfileSettings = () => {
     setUpdatingPassword(true);
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
+      const { error: signInError } = await clerk.signIn.authenticateWithPassword({
+        identifier: user.email ?? "",
         password: passwordForm.currentPassword,
       });
 
@@ -76,7 +77,7 @@ export const ProfileSettings = () => {
         throw signInError;
       }
 
-      const { error: updateError } = await supabase.auth.updateUser({ password: passwordForm.newPassword });
+      const { error: updateError } = await clerk.user?.update({ password: passwordForm.newPassword });
       if (updateError) throw updateError;
 
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -172,7 +173,7 @@ export const ProfileSettings = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => void supabase.auth.signOut({ scope: "global" })}
+                  onClick={() => void clerk.signOut()}
                   className="w-full mt-2 py-2 text-center text-[12px] text-[#0b65c2] font-bold border border-[#0b65c2]/20 rounded-lg hover:bg-[#0b65c2]/10 transition-colors"
                 >
                   Log Out of All Other Sessions

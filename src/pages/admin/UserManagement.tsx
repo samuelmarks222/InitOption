@@ -142,8 +142,7 @@ const UserManagement = () => {
 
     setUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, manualOverride, currentTier } : user)));
 
-    await supabase
-      .from("profiles")
+    await api.from("profiles")
       .update({
         vip_tier: manualOverride ? getVipTierById(manualOverride).name : null,
         vip_tier_override: manualOverride,

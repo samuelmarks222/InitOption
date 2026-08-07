@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Upload, Download, Trash2, Plus, AlertCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
+import { cloudinaryClient } from "@/integrations/cloudinary/client";
 import { toast } from "@/hooks/use-toast";
 
 interface PromoMaterial {
@@ -28,7 +29,7 @@ const PromoMaterials = () => {
     try {
       setLoading(true);
       // TODO: Create promo_materials table in database
-      const { data, error } = await supabase
+      const { data, error } = await api
         .from("promo_materials")
         .select("*")
         .order("created_at", { ascending: false });
@@ -91,23 +92,13 @@ const PromoMaterials = () => {
     try {
       setUploading(true);
 
-      // Upload file to Supabase Storage
-      const fileName = `${Date.now()}-${file.name}`;
-      const { data, error: uploadError } = await supabase.storage
-        .from("promo_materials")
-        .upload(`banners/${fileName}`, file);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from("promo_materials")
-        .getPublicUrl(`banners/${fileName}`);
+      // Upload file to Cloudinary
+      const uploadResult = await cloudinaryClient.upload(file, "promo_materials");
 
       // Create database record
-      const { error: dbError } = await supabase.from("promo_materials").insert({
+      const { error: dbError } = await api.from("promo_materials").insert({
         name: name.trim(),
-        file_url: urlData.publicUrl,
+        file_url: uploadResult.url,
         file_size: file.size,
       });
 
@@ -137,7 +128,7 @@ const PromoMaterials = () => {
 
     try {
       // Delete from database
-      const { error: dbError } = await supabase
+      const { error: dbError } = await api
         .from("promo_materials")
         .delete()
         .eq("id", id);

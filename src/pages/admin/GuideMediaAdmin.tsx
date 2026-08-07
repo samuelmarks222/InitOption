@@ -8,7 +8,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { cloudinaryClient } from "@/integrations/cloudinary/client";
 import { useToast } from "@/hooks/use-toast";
 import {
   GUIDE_SECTIONS,

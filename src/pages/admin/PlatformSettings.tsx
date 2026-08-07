@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Globe, Image as ImageIcon, Save, Search, Share2, Trash2, UploadCloud } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
+import { cloudinaryClient } from "@/integrations/cloudinary/client";
 import { toast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { WebsiteContentEditor } from "@/components/admin/WebsiteContentEditor";
@@ -204,7 +205,7 @@ const PlatformSettings = () => {
 
   const fetchSettings = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("platform_settings").select("*").limit(1).maybeSingle();
+      const { data, error } = await api.from("platform_settings").select("*").limit(1).maybeSingle();
 
     if (error) {
       console.error("Error fetching settings:", error);
@@ -282,17 +283,9 @@ const PlatformSettings = () => {
     setSaving(true);
     toast({ title: "Uploading image..." });
 
-    const { error: uploadError } = await supabase.storage.from("branding").upload(filePath, file, {
-      upsert: false,
-    });
+    const uploadResult = await cloudinaryClient.upload(file, "branding");
 
-    if (uploadError) {
-      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
-      setSaving(false);
-      return;
-    }
-
-    const { data: publicData } = supabase.storage.from("branding").getPublicUrl(filePath);
+    const publicUrl = uploadResult.url;
 
     if (guideMediaKey) {
       updateGuideMedia(guideMediaKey, publicData.publicUrl);
@@ -331,8 +324,7 @@ const PlatformSettings = () => {
     };
 
     if (id) {
-      const { error } = await supabase
-        .from("platform_settings")
+      const { error } = await api.from("platform_settings")
         .update({ ...payload, updated_at: new Date().toISOString() })
         .eq("id", id);
 
@@ -346,7 +338,7 @@ const PlatformSettings = () => {
         return;
       }
     } else {
-      const { error } = await supabase.from("platform_settings").insert(payload);
+      const { error } = await api.from("platform_settings").insert(payload);
 
       if (error) {
         toast({

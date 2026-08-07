@@ -1,5 +1,3 @@
-import { supabase } from "@/integrations/supabase/client";
-
 export type DepositDecision = "approved" | "rejected";
 
 const PENDING_DEPOSIT_MIGRATION_PATH = "supabase/migrations/20260322_c_pending_deposit_review.sql";
@@ -57,7 +55,7 @@ export const requestDepositReview = async ({
   promoId = null,
   txHash = null,
 }: RequestDepositReviewArgs): Promise<DepositReviewPayload> => {
-  const response = await supabase.rpc("request_deposit_review", {
+  const response = await api.rpc("request_deposit_review", {
     p_amount: amount,
     p_method: method,
     p_payment_method_id: paymentMethodId,
@@ -77,7 +75,7 @@ export const adminUpdateDepositStatus = async ({
   requestId,
   status,
 }: AdminUpdateDepositStatusArgs): Promise<DepositReviewPayload> => {
-  const response = await supabase.rpc("admin_update_deposit_status", {
+  const response = await api.rpc("admin_update_deposit_status", {
     p_admin_note: adminNote,
     p_request_id: requestId,
     p_status: status,

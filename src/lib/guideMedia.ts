@@ -1,4 +1,4 @@
-const STORAGE_BUCKET = "guide-media";
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const BASE_PATH = "trading-guide-media";
 
 export interface GuideTopicDef {

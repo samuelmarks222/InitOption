@@ -204,8 +204,7 @@ export const TournamentDirectory = ({ onOpenDetails, onEnterTournament, onClose,
       return;
     }
     setHistoryLoading(true);
-    const { data } = await supabase
-      .from("tournament_participants")
+    const { data } = await api.from("tournament_participants")
       .select("id, tournament_id, current_balance, created_at, updated_at")
       .eq("user_id", profile.id)
       .order("created_at", { ascending: false });

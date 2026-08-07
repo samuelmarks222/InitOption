@@ -14,10 +14,11 @@ import {
   Send,
   ShieldCheck,
   Ticket,
-} from "lucide-react";
+ } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
+import { realtime } from "@/integrations/pusher/realtime";
 import type { Tables } from "@/integrations/supabase/types";
 import { VipBadge } from "@/components/vip/VipBadge";
 
@@ -237,11 +238,11 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
     }
 
     setLoadingGroup(true);
-    const { data, error } = await supabase
-      .from("chat_messages")
-      .select("*, profiles(username, avatar_url, vip_tier)")
-      .order("created_at", { ascending: false })
-      .limit(60);
+const { data, error } = await api
+  .from("chat_messages")
+  .select("*, profiles(username, avatar_url, vip_tier)")
+  .order("created_at", { ascending: false })
+  .limit(60);
 
     if (error) {
       setGroupError(error.message);
@@ -264,13 +265,13 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
     }
 
     setLoadingSupport(true);
-    const { data: thread, error: threadError } = await supabase
-      .from("support_threads")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+const { data: thread, error: threadError } = await api
+  .from("support_threads")
+  .select("*")
+  .eq("user_id", user.id)
+  .order("updated_at", { ascending: false })
+  .limit(1)
+  .maybeSingle();
 
     if (threadError) {
       setSupportError(threadError.message);
@@ -289,11 +290,11 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
       return;
     }
 
-    const { data: messages, error: messagesError } = await supabase
-      .from("support_messages")
-      .select("*")
-      .eq("thread_id", thread.id)
-      .order("created_at", { ascending: true });
+const { data: messages, error: messagesError } = await api
+  .from("support_messages")
+  .select("*")
+  .eq("thread_id", thread.id)
+  .order("created_at", { ascending: true });
 
     if (messagesError) {
       setSupportError(messagesError.message);
@@ -315,11 +316,11 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
     }
 
     setLoadingTickets(true);
-    const { data, error } = await supabase
-      .from("support_tickets")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+const { data, error } = await api
+  .from("support_tickets")
+  .select("*")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false });
 
     if (error) {
       setTicketError(error.message);
@@ -363,55 +364,39 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
     supportEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [supportMessages, activeTab]);
 
-  useEffect(() => {
+useEffect(() => {
     if (!user?.id) return;
 
-    let channel = supabase.channel(`profile-support-${mode}-${user.id}-${supportThread?.id ?? "new"}`);
+    const channel = realtime.channel(`profile-support-${mode}-${user.id}-${supportThread?.id ?? "new"}`);
 
     if (!isDesk) {
-      channel = channel.on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "chat_messages" },
-        () => {
-          void loadGroupMessages();
-        },
-      );
+      channel.on("postgres_changes", { event: "*", schema: "public", table: "chat_messages" }, () => {
+        void loadGroupMessages();
+      });
     }
 
     if (!isCommunity) {
-      channel = channel.on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "support_threads", filter: `user_id=eq.${user.id}` },
-        () => {
-          void loadSupportDesk();
-        },
-      );
+      channel.on("postgres_changes", { event: "*", schema: "public", table: "support_threads", filter: `user_id=eq.${user.id}` }, () => {
+        void loadSupportDesk();
+      });
 
       if (supportThread?.id) {
-        channel = channel.on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "support_messages", filter: `thread_id=eq.${supportThread.id}` },
-          () => {
-            void loadSupportDesk();
-          },
-        );
+        channel.on("postgres_changes", { event: "*", schema: "public", table: "support_messages", filter: `thread_id=eq.${supportThread.id}` }, () => {
+          void loadSupportDesk();
+        });
       }
     }
 
     if (!isCompact && !isCommunity && !isDesk) {
-      channel = channel.on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "support_tickets", filter: `user_id=eq.${user.id}` },
-        () => {
-          void loadTickets();
-        },
-      );
+      channel.on("postgres_changes", { event: "*", schema: "public", table: "support_tickets", filter: `user_id=eq.${user.id}` }, () => {
+        void loadTickets();
+      });
     }
 
     channel.subscribe();
 
     return () => {
-      void supabase.removeChannel(channel);
+      realtime.removeChannel(channel);
     };
   }, [isCompact, isCommunity, isDesk, mode, supportThread?.id, user?.id]);
 
@@ -420,7 +405,7 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
     if (!user?.id || !groupInput.trim()) return;
 
     setSendingGroup(true);
-    const { error } = await supabase.from("chat_messages").insert({
+    const { error } = await api.from("chat_messages").insert({
       message: groupInput.trim(),
       sender_name: senderName,
       user_id: user.id,
@@ -447,7 +432,7 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
     let nextThreadId = supportThread?.id ?? null;
 
     if (!nextThreadId) {
-      const { data: createdThread, error: threadError } = await supabase
+      const { data: createdThread, error: threadError } = await api
         .from("support_threads")
         .insert({
           assigned_role: "support_agent",
@@ -472,7 +457,7 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
       setSupportThread(createdThread);
     }
 
-    const { error } = await supabase.from("support_messages").insert({
+    const { error } = await api.from("support_messages").insert({
       message: supportInput.trim(),
       sender_id: user.id,
       sender_name: senderName,
@@ -500,7 +485,7 @@ export const ProfileSupport = ({ mode = "full" }: ProfileSupportProps) => {
     if (!user?.id) return;
 
     setSubmittingTicket(true);
-    const { error } = await supabase.from("support_tickets").insert({
+    const { error } = await api.from("support_tickets").insert({
       category: ticketForm.category,
       message: ticketForm.message.trim(),
       priority: ticketForm.priority,

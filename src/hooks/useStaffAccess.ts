@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import type { AppRole } from "@/lib/adminRoles";
 import { getPrimaryStaffRole, isStaffRole } from "@/lib/adminRoles";
 
@@ -22,7 +22,7 @@ export const useStaffAccess = () => {
       }
 
       setLoading(true);
-      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      const { data, error } = await api.from("user_roles").select("role").eq("user_id", user.id);
 
       if (!mounted) return;
 

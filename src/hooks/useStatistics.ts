@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTrading } from "@/hooks/useTrading";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
+import { api } from "@/integrations/api/client";
+import type { Tables } from "@/integrations/supabase/types";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 
 export type TransactionType = "deposit" | "withdrawal" | "bonus" | "trade";
@@ -65,20 +65,20 @@ export const useStatistics = () => {
     let cancelled = false;
 
     const loadDeposits = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await api
         .from("deposit_requests")
         .select("*")
         .eq("user_id", profile.id)
         .order("created_at", { ascending: false });
 
       if (!cancelled && !error) {
-        setDeposits(data ?? []);
+        setDeposits((data as DepositRequest[]) ?? []);
       }
     };
 
     void loadDeposits();
 
-    const channel = supabase
+    const channel = realtime
       .channel(`statistics-deposits-${profile.id}`)
       .on(
         "postgres_changes",
@@ -91,7 +91,7 @@ export const useStatistics = () => {
 
     return () => {
       cancelled = true;
-      void supabase.removeChannel(channel);
+      realtime.removeChannel(channel);
     };
   }, [profile?.id]);
 
@@ -104,20 +104,20 @@ export const useStatistics = () => {
     let cancelled = false;
 
     const loadWithdrawals = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await api
         .from("withdrawal_requests")
         .select("*")
         .eq("user_id", profile.id)
         .order("created_at", { ascending: false });
 
       if (!cancelled && !error) {
-        setWithdrawals(data ?? []);
+        setWithdrawals((data as WithdrawalRequest[]) ?? []);
       }
     };
 
     void loadWithdrawals();
 
-    const channel = supabase
+    const channel = realtime
       .channel(`statistics-withdrawals-${profile.id}`)
       .on(
         "postgres_changes",
@@ -130,7 +130,7 @@ export const useStatistics = () => {
 
     return () => {
       cancelled = true;
-      void supabase.removeChannel(channel);
+      realtime.removeChannel(channel);
     };
   }, [profile?.id]);
   

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { readStoredPlatformName } from "@/lib/platformMetadata";
 import { readWebsiteContentCache, writeWebsiteContentCache } from "@/lib/platformSettingsCache";
 import { createDefaultWebsiteContent, normalizeWebsiteContent } from "@/lib/websiteContent";
@@ -19,8 +19,7 @@ export const useWebsiteContent = () => {
     enabled: !cachedContent,
     queryFn: async () => {
       try {
-        const { data } = await supabase
-          .from("platform_settings")
+        const { data } = await api.from("platform_settings")
           .select("platform_name, website_content")
           .limit(1)
           .maybeSingle();

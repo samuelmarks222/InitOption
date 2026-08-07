@@ -1,64 +1,10 @@
 import { useState, useEffect } from "react";
 import { Search, Plus, Trash2, Edit, Save, Trophy, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { toast } from "@/hooks/use-toast";
 import { Database } from "@/integrations/supabase/types";
 
 type Tournament = Database["public"]["Tables"]["tournaments"]["Row"];
-const supabaseAny = supabase as any;
-
-const createDefaultTournamentDraft = () => ({
-  title: "",
-  description: "",
-  entry_fee: 0,
-  rebuy_cost: 0,
-  prize_pool: 0,
-  starting_balance: 100,
-  number_of_winners: 1,
-  prize_distribution: JSON.stringify([
-    { position: 1, share: 0.5, label: "1st" },
-    { position: 2, share: 0.3, label: "2nd" },
-    { position: 3, share: 0.2, label: "3rd" },
-  ]),
-  status: "upcoming" as const,
-  // default to next Friday 09:00 local -> next Friday + 12 hours end
-  start_date: (() => {
-    const now = new Date();
-    const day = now.getDay();
-    const daysUntilFriday = (5 - day + 7) % 7 || 7; // next Friday (if today is Friday, pick next week)
-    const friday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilFriday, 9, 0, 0);
-    return friday.toISOString().slice(0, 16);
-  })(),
-  end_date: (() => {
-    const now = new Date();
-    const day = now.getDay();
-    const daysUntilFriday = (5 - day + 7) % 7 || 7;
-    const friday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilFriday, 9, 0, 0);
-    const end = new Date(friday.getTime() + 12 * 3600 * 1000); // 12 hours by default
-    return end.toISOString().slice(0, 16);
-  })(),
-});
-
-const parseDistribution = (json: string): Array<{position: number; share: number; label: string}> => {
-  try { const p = JSON.parse(json); if (Array.isArray(p)) return p; } catch {}
-  return [];
-};
-const positionLabel = (pos: number) => pos === 1 ? "1st" : pos === 2 ? "2nd" : pos === 3 ? "3rd" : `${pos}th`;
-const rebuildDistribution = (numWinners: number, existingJson?: string): string => {
-  const existing = existingJson ? parseDistribution(existingJson) : [];
-  const dist: Array<{position: number; share: number; label: string}> = [];
-  for (let i = 1; i <= numWinners; i++) {
-    const match = existing.find(d => d.position === i);
-    dist.push({ position: i, share: match ? match.share : 0, label: positionLabel(i) });
-  }
-  if (dist.length > 0) {
-    const eq = Math.floor((1 / numWinners) * 100) / 100;
-    const rem = Math.round((1 - eq * numWinners) * 100) / 100;
-    dist.forEach(d => { if (d.share === 0) d.share = eq + (d.position === 1 ? rem : 0); });
-  }
-  return JSON.stringify(dist);
-};
-
 const TournamentsAdmin = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,7 +23,7 @@ const TournamentsAdmin = () => {
 
   const fetchTournaments = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('tournaments').select('*').order('created_at', { ascending: false });
+    const { data, error } = await api.from('tournaments').select('*').order('created_at', { ascending: false });
     if (error) console.error("Error fetching tournaments:", error);
     else setTournaments(data || []);
     setLoading(false);
@@ -85,7 +31,7 @@ const TournamentsAdmin = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this tournament? This will also wipe its participant data.")) return;
-    const { error } = await supabase.from('tournaments').delete().eq('id', id);
+    const { error } = await api.from('tournaments').delete().eq('id', id);
     if (error) toast({ title: "Failed to delete", description: error.message, variant: "destructive" });
     else {
       toast({ title: "Tournament deleted!" });
@@ -94,7 +40,7 @@ const TournamentsAdmin = () => {
   };
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
-    const { data, error } = await supabaseAny.rpc("admin_update_tournament_status", {
+    const { data, error } = await api.rpc("admin_update_tournament_status", {
       p_tournament_id: id,
       p_status: newStatus as Tournament["status"],
     });
@@ -124,7 +70,7 @@ const TournamentsAdmin = () => {
       return;
     }
 
-    const { error } = await supabase.from('tournaments').update({ rebuy_cost: draftValue }).eq('id', id);
+    const { error } = await api.from('tournaments').update({ rebuy_cost: draftValue }).eq('id', id);
     if (error) {
       toast({ title: "Failed to update rebuy cost", description: error.message, variant: "destructive" });
       return;
@@ -160,7 +106,7 @@ const TournamentsAdmin = () => {
       try { resolvedPrizeDist = JSON.parse(resolvedPrizeDist); }
       catch { resolvedPrizeDist = undefined; }
     }
-    const { error } = await supabase.from('tournaments').update({
+    const { error } = await api.from('tournaments').update({
       ...(draft.title !== undefined && { title: draft.title }),
       ...(draft.description !== undefined && { description: draft.description }),
       ...(draft.entry_fee !== undefined && { entry_fee: Number(draft.entry_fee) }),
@@ -204,7 +150,7 @@ const TournamentsAdmin = () => {
     let prizeDistribution: any = undefined;
     try { prizeDistribution = JSON.parse(newTour.prize_distribution); } catch {}
 
-    const { data, error } = await supabase.from('tournaments').insert({
+    const { data, error } = await api.from('tournaments').insert({
       title: newTour.title,
       description: newTour.description,
       entry_fee: Number(newTour.entry_fee),

@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+
 
 export type WithdrawalDecision = "approved" | "rejected";
 export type MobileMoneyWithdrawalDecision = "approved" | "rejected" | "completed" | "failed";
@@ -26,8 +26,7 @@ interface AdminUpdateWithdrawalStatusArgs {
 }
 
 const getAccessToken = async () => {
-  const sessionResponse = await supabase.auth.getSession();
-  const accessToken = sessionResponse.data.session?.access_token;
+  const accessToken = localStorage.getItem("clerk_session_token");
 
   if (!accessToken) {
     throw new Error("Authentication required. Please sign in again.");
@@ -82,7 +81,7 @@ export const adminUpdateWithdrawalStatus = async ({
   requestId,
   status,
 }: AdminUpdateWithdrawalStatusArgs): Promise<WithdrawalRequestPayload> => {
-  const response = await supabase.rpc("admin_update_withdrawal_status", {
+  const response = await api.rpc("admin_update_withdrawal_status", {
     p_admin_note: adminNote,
     p_request_id: requestId,
     p_status: status,

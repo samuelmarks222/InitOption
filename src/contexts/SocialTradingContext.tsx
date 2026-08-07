@@ -1,5 +1,4 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -42,8 +41,6 @@ interface SocialTradingContextValue {
 
 const SocialTradingContext = createContext<SocialTradingContextValue | null>(null);
 
-const supabaseAny = supabase as any;
-
 const PROFILE_SUMMARY_SELECT =
   "id, username, display_name, avatar_url, vip_tier, created_at, total_profit, total_trades, total_wins, followers_count, following_count, social_trading_disabled";
 
@@ -69,18 +66,15 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
     setLoading(true);
 
     const [followsResponse, copySettingsResponse, socialFeedResponse] = await Promise.all([
-      supabaseAny
-        .from("follows")
+      api.from("follows")
         .select("*")
         .eq("follower_id", user.id)
         .order("created_at", { ascending: false }),
-      supabaseAny
-        .from("copy_settings")
+      api.from("copy_settings")
         .select("*")
         .eq("user_id", user.id)
         .order("updated_at", { ascending: false }),
-      supabaseAny
-        .from("social_feed")
+      api.from("social_feed")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
@@ -101,8 +95,7 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
     }
 
     const targetIds = [...new Set(copySettingsData.map((setting) => setting.target_user_id))];
-    const { data: targetProfiles } = await supabase
-      .from("profiles")
+    const { data: targetProfiles } = await api.from("profiles")
       .select(PROFILE_SUMMARY_SELECT)
       .in("id", targetIds);
 
@@ -124,7 +117,7 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
   useEffect(() => {
     if (!user?.id) return;
 
-    const channel = supabase
+    const channel = realtime
       .channel(`social-trading-${user.id}`)
       .on(
         "postgres_changes",
@@ -144,13 +137,13 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
       .subscribe();
 
     return () => {
-      void supabase.removeChannel(channel);
+      realtime.removeChannel(channel);
     };
   }, [refreshSocial, user?.id]);
 
   const followTrader = useCallback(
     async (targetUserId: string) => {
-      const { error } = await supabaseAny.rpc("follow_trader", { p_followed_id: targetUserId });
+      const { error } = await api.rpc("follow_trader", { p_followed_id: targetUserId });
       if (error) {
         toast({
           title: "Unable to follow trader",
@@ -169,7 +162,7 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
 
   const unfollowTrader = useCallback(
     async (targetUserId: string) => {
-      const { error } = await supabaseAny.rpc("unfollow_trader", { p_followed_id: targetUserId });
+      const { error } = await api.rpc("unfollow_trader", { p_followed_id: targetUserId });
       if (error) {
         toast({
           title: "Unable to unfollow trader",
@@ -188,7 +181,7 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
 
   const saveCopySetting = useCallback(
     async (targetUserId: string, input: SaveCopySettingInput) => {
-      const { error } = await supabaseAny.rpc("upsert_copy_setting", {
+      const { error } = await api.rpc("upsert_copy_setting", {
         p_target_user_id: targetUserId,
         p_enabled: input.enabled,
         p_amount_type: input.amountType,
@@ -221,7 +214,7 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
 
   const stopCopying = useCallback(
     async (targetUserId: string) => {
-      const { error } = await supabaseAny.rpc("delete_copy_setting", { p_target_user_id: targetUserId });
+      const { error } = await api.rpc("delete_copy_setting", { p_target_user_id: targetUserId });
 
       if (error) {
         toast({
@@ -240,7 +233,7 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
 
   const executeManualCopyTrade = useCallback(
     async (copySettingId: string, sourceTradeId: string) => {
-      const { data, error } = await supabaseAny.rpc("execute_manual_copy_trade", {
+      const { data, error } = await api.rpc("execute_manual_copy_trade", {
         p_copy_setting_id: copySettingId,
         p_source_trade_id: sourceTradeId,
       });

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { api } from "@/integrations/api/client";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft, Copy, Eye, MessageCircle, TrendingUp, Users,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import Navbar from "@/components/landing/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,7 +21,6 @@ import {
 
 type TradeRow = Tables<"trades">;
 
-const supabaseAny = supabase as any;
 const PROFILE_SELECT =
   "id, username, display_name, avatar_url, vip_tier, created_at, total_profit, total_trades, total_wins, followers_count, following_count, social_trading_disabled";
 
@@ -44,8 +43,7 @@ const TraderProfile = () => {
     const load = async () => {
       if (!username) { setLoading(false); return; }
       setLoading(true);
-      const { data: traderData } = await supabase
-        .from("profiles")
+      const { data: traderData } = await api.from("profiles")
         .select(PROFILE_SELECT)
         .eq("username", username)
         .maybeSingle();
@@ -57,8 +55,7 @@ const TraderProfile = () => {
         return;
       }
       setTrader(traderData);
-      const { data: tradesData } = await supabase
-        .from("trades")
+      const { data: tradesData } = await api.from("trades")
         .select("*")
         .eq("user_id", traderData.id)
         .neq("status", "open")

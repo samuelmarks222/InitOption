@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { DatabaseZap, RefreshCw, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { Json, Tables } from "@/integrations/supabase/types";
 import { toast } from "@/hooks/use-toast";
 import { isMissingTradeBalanceAuditTableError, type TradeBalanceAuditEntry } from "@/lib/tradeBalanceAudit";
@@ -97,13 +98,12 @@ const AuditLogs = () => {
     setLoading(true);
 
     const [withdrawalsResponse, profilesResponse, tradeAuditResponse] = await Promise.all([
-      supabase
-        .from("withdrawal_requests")
+      api.from("withdrawal_requests")
         .select("id, amount, provider_amount, audit_log, created_at, status, user_id, provider_name")
         .eq("provider_name", "sasapay")
         .order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id, username, display_name"),
-      supabaseAny.from("trade_balance_audit_logs").select("*").order("created_at", { ascending: false }).limit(300),
+      api.from("profiles").select("id, username, display_name"),
+      api.from("trade_balance_audit_logs").select("*").order("created_at", { ascending: false }).limit(300),
     ]);
 
     if (withdrawalsResponse.error) {

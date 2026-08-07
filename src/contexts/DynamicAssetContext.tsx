@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from "@/integrations/api/client";
 import { useAuth } from '@/contexts/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 import type { CommodityIcon } from "@/lib/assets";
@@ -133,8 +133,7 @@ export const DynamicAssetProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const initAssets = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('assets_config')
+      const { data, error } = await api.from('assets_config')
         .select('*')
         .eq('status', 'active')
         .order('category')

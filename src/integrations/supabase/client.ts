@@ -87,8 +87,7 @@ const createTimeoutFetch =
   };
 
 // Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
-
+// 
 export const supabase = createClient<Database>(
   isSupabaseConfigured ? SUPABASE_URL : FALLBACK_SUPABASE_URL,
   isSupabaseConfigured ? SUPABASE_PUBLISHABLE_KEY : FALLBACK_SUPABASE_PUBLISHABLE_KEY,

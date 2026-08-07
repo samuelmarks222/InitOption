@@ -963,8 +963,7 @@ const useGuideMedia = (platformName: string) => {
     let isMounted = true;
 
     const loadGuideMedia = async () => {
-      const { data, error } = await supabase
-        .from("platform_settings")
+      const { data, error } = await api.from("platform_settings")
         .select("platform_name, website_content")
         .limit(1)
         .maybeSingle();

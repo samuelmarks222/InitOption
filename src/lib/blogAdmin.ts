@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { cloudinaryClient } from "@/integrations/cloudinary/client";
 import { DEFAULT_PLATFORM_SETTINGS } from "./platformMetadataShared";
 import {
   createBlogSummary,
@@ -341,14 +341,8 @@ export const uploadBlogFeaturedImage = async (file: File, slug: string) => {
   const safeSlug = slugifyBlogText(slug) || `post-${Date.now()}`;
   const filePath = `blog/${safeSlug}-${Date.now()}.${extension}`;
 
-  const { error } = await supabase.storage.from("branding").upload(filePath, file, {
-    upsert: false,
-  });
-
-  if (error) throw error;
-
-  const { data } = supabase.storage.from("branding").getPublicUrl(filePath);
-  return data.publicUrl;
+  const result = await cloudinaryClient.upload(file, "blog");
+  return result.url;
 };
 
 export const importStarterBlogPosts = async (_userId?: string) => {

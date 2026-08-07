@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { api } from "@/integrations/api/client";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft, BarChart3, Copy, Eye, MessageCircle, Search,
   TrendingUp, TrendingDown, Users,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSocialTrading } from "@/contexts/SocialTradingContext";
@@ -54,8 +54,7 @@ const SocialTopTraders = () => {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("profiles")
+      const { data, error } = await api.from("profiles")
         .select("id, username, display_name, avatar_url, vip_tier, total_profit, total_trades, total_wins, followers_count, social_trading_disabled")
         .gt("total_trades", 0)
         .order("total_profit", { ascending: false })

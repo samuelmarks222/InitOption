@@ -1,7 +1,8 @@
+import { useUser } from "@clerk/clerk-react";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Edit2, Trash2, Eye, EyeOff, FileText } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { cloudinaryClient } from "@/integrations/cloudinary/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface Guide {
@@ -35,6 +36,7 @@ interface VideoEntry {
 const GuideAdmin = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { user } = useUser();
   const [guides, setGuides] = useState<Guide[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGuide, setSelectedGuide] = useState<Guide | null>(null);
@@ -54,8 +56,7 @@ const GuideAdmin = () => {
   const loadGuides = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("guides")
+      const { data, error } = await api.from("guides")
         .select("*")
         .is("deleted_at", null)
         .order("order_index", { ascending: true });
@@ -76,8 +77,7 @@ const GuideAdmin = () => {
 
   const loadGuideMedia = async (guideId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("guide_media")
+      const { data, error } = await api.from("guide_media")
         .select("*")
         .eq("guide_id", guideId);
 
@@ -124,8 +124,7 @@ const GuideAdmin = () => {
     try {
       if (selectedGuide?.id) {
         // Update existing guide
-        const { error } = await supabase
-          .from("guides")
+        const { error } = await api.from("guides")
           .update(editingGuide)
           .eq("id", selectedGuide.id);
 
@@ -145,12 +144,11 @@ const GuideAdmin = () => {
         });
       } else {
         // Create new guide
-        const { data, error } = await supabase
-          .from("guides")
+        const { data, error } = await api.from("guides")
           .insert([
             {
               ...editingGuide,
-              created_by: (await supabase.auth.getUser()).data.user?.id,
+              created_by: user?.id ?? "",
             },
           ])
           .select()
@@ -181,8 +179,7 @@ const GuideAdmin = () => {
     if (!confirm("Are you sure you want to delete this guide?")) return;
 
     try {
-      const { error } = await supabase
-        .from("guides")
+      const { error } = await api.from("guides")
         .update({ deleted_at: new Date().toISOString() })
         .eq("id", guideId);
 
@@ -209,8 +206,7 @@ const GuideAdmin = () => {
 
   const handleTogglePublish = async (guide: Guide) => {
     try {
-      const { error } = await supabase
-        .from("guides")
+      const { error } = await api.from("guides")
         .update({ is_published: !guide.is_published })
         .eq("id", guide.id);
 
@@ -258,31 +254,21 @@ const GuideAdmin = () => {
       const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
       const filePath = `guides/${selectedGuide.id}/${mediaType}s/${fileName}`;
 
-      // Upload to Supabase storage
-      const { error: uploadError } = await supabase.storage
-        .from("guide-media")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data } = supabase.storage
-        .from("guide-media")
-        .getPublicUrl(filePath);
+// Upload to Cloudinary
+      const uploadResult = await cloudinaryClient.upload(file, `guides/${selectedGuide.id}/${mediaType}s`);
 
       // Save media record
-      const { error: dbError } = await supabase
-        .from("guide_media")
+      const { error: dbError } = await api.from("guide_media")
         .insert([
           {
             guide_id: selectedGuide.id,
             media_type: mediaType,
-            media_url: data.publicUrl,
+            media_url: uploadResult.url,
             alt_text: file.name,
             file_size: file.size,
             mime_type: file.type,
-            storage_path: filePath,
-            created_by: (await supabase.auth.getUser()).data.user?.id,
+            storage_path: uploadResult.public_id,
+            created_by: user?.id ?? "",
           },
         ]);
 
@@ -311,18 +297,13 @@ const GuideAdmin = () => {
     if (!confirm("Delete this media?")) return;
 
     try {
-      // Delete from storage only if it has a path (uploaded file)
+      // Delete from Cloudinary if it has a public_id (Cloudinary path)
       if (storagePath && storagePath.startsWith("guides/")) {
-        const { error: storageError } = await supabase.storage
-          .from("guide-media")
-          .remove([storagePath]);
-
-        if (storageError) throw storageError;
+        await cloudinaryClient.delete(storagePath);
       }
 
       // Delete from database
-      const { error: dbError } = await supabase
-        .from("guide_media")
+      const { error: dbError } = await api.from("guide_media")
         .delete()
         .eq("id", mediaId);
 
@@ -370,8 +351,7 @@ const GuideAdmin = () => {
       const thumbnailUrl = getYoutubeThumbnail(videoId);
 
       // Save YouTube video record
-      const { error: dbError } = await supabase
-        .from("guide_media")
+      const { error: dbError } = await api.from("guide_media")
         .insert([
           {
             guide_id: selectedGuide.id,
@@ -379,24 +359,23 @@ const GuideAdmin = () => {
             media_url: embedUrl,
             alt_text: videoTitle || `YouTube Video - ${videoId}`,
             youtube_url: youtubeUrl,
-            storage_path: `youtube/${videoId}`,
-            created_by: (await supabase.auth.getUser()).data.user?.id,
+             storage_path: `youtube/${videoId}`,
+             created_by: user?.id ?? "",
           },
         ]);
 
       if (dbError) throw dbError;
 
       // Also save thumbnail for preview
-      const { error: thumbError } = await supabase
-        .from("guide_media")
+      const { error: thumbError } = await api.from("guide_media")
         .insert([
           {
             guide_id: selectedGuide.id,
             media_type: "thumbnail",
             media_url: thumbnailUrl,
             alt_text: `Thumbnail - ${videoTitle || videoId}`,
-            storage_path: `youtube/${videoId}/thumbnail`,
-            created_by: (await supabase.auth.getUser()).data.user?.id,
+             storage_path: `youtube/${videoId}/thumbnail`,
+             created_by: user?.id ?? "",
           },
         ]);
 

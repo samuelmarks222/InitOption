@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { SiteLogo } from "@/components/branding/SiteLogo";
@@ -45,12 +45,12 @@ const Referrals = () => {
     const loadData = async () => {
       setLoading(true);
       const [referredResult, commissionsResult] = await Promise.all([
-        supabase
+        api
           .from("profiles")
           .select("id, username, display_name, created_at")
           .eq("referred_by", user.id)
           .order("created_at", { ascending: false }),
-        supabase
+        api
           .from("referral_commissions")
           .select("*")
           .eq("referrer_id", user.id)

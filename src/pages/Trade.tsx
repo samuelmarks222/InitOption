@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { type Tables } from "@/integrations/supabase/types";
 import { NavigationSidebar, WorkspaceModule } from "@/components/navigation/NavigationSidebar";
 import { DynamicWorkspace } from "@/components/workspace/DynamicWorkspace";
@@ -412,11 +412,11 @@ const Trade = () => {
     async function initAssets() {
       try {
         const { data, error } = await Promise.race([
-          supabase
-            .from("assets_config")
-            .select("*")
-            .eq("status", "active")
-            .order("symbol"),
+         api
+             .from("assets_config")
+             .select("*")
+             .eq("status", "active")
+             .order("symbol"),
           new Promise<{ data: null; error: Error }>((resolve) =>
             setTimeout(
               () => resolve({ data: null, error: new Error("assets_config fetch timed out") }),
@@ -851,7 +851,7 @@ const Trade = () => {
 
   const handleEnterTournament = async (tournamentId: string) => {
     if (!profile) return;
-    const { data: pRow } = await supabase.from('tournament_participants').select('id, current_balance')
+    const { data: pRow } = await api.from('tournament_participants').select('id, current_balance')
       .eq('tournament_id', tournamentId).eq('user_id', profile.id).single();
     if (pRow) { setTournamentParticipantId(pRow.id); setTournamentSandboxBalance(pRow.current_balance); }
     setAccountType("tournament");
@@ -1182,11 +1182,11 @@ const Trade = () => {
     let cancelled = false;
 
     const loadTournamentBalance = async () => {
-      const { data } = await supabase
-        .from("tournament_participants")
-        .select("current_balance")
-        .eq("id", tournamentParticipantId)
-        .maybeSingle();
+       const { data } = await api
+         .from("tournament_participants")
+         .select("current_balance")
+         .eq("id", tournamentParticipantId)
+         .maybeSingle();
 
       if (!cancelled && data) {
         setTournamentSandboxBalance(data.current_balance);

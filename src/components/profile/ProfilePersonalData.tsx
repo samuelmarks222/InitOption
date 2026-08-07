@@ -1,7 +1,7 @@
 import { createRef, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, Camera, CheckCircle2, FileText, ShieldCheck, Trash2, UploadCloud, UserRound } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { cloudinaryClient } from "@/integrations/cloudinary/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { KycAvatarBadge } from "./KycAvatarBadge";
 import {
@@ -321,18 +321,8 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
       let url = "";
       let fallback = false;
 
-      const { error: uploadError } = await supabase.storage.from("branding").upload(path, file, {
-        upsert: true,
-      });
-
-      if (uploadError) {
-        if (!file.type.startsWith("image/")) throw uploadError;
-        url = await readFileAsDataUrl(file);
-        fallback = true;
-      } else {
-        const { data } = supabase.storage.from("branding").getPublicUrl(path);
-        url = data.publicUrl;
-      }
+      const result = await cloudinaryClient.upload(file, "kyc");
+      url = result.url;
 
       const nextDocuments: KycDocuments = {
         ...documents,

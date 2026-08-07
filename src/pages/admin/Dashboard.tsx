@@ -24,7 +24,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 
@@ -105,25 +105,24 @@ const AdminDashboard = () => {
         recentTradesR,
         recentWdR,
       ] = await Promise.all([
-        supabase.from("profiles").select("id", { count: "exact", head: true }),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).gt("trade_count_30d", 0),
-        supabase.from("deposit_requests").select("amount").eq("status", "completed"),
-        supabase.from("withdrawal_requests").select("amount").eq("status", "completed"),
-        supabase.from("withdrawal_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
-        supabase.from("trades")
+        api.from("profiles").select("id", { count: "exact", head: true }),
+        api.from("profiles").select("id", { count: "exact", head: true }).gt("trade_count_30d", 0),
+        api.from("deposit_requests").select("amount").eq("status", "completed"),
+        api.from("withdrawal_requests").select("amount").eq("status", "completed"),
+        api.from("trades")
           .select("profit, opened_at, closed_at, amount, status")
           .gte("opened_at", weekAgo.toISOString())
           .limit(10000),
-        supabase.from("trades")
+        api.from("trades")
           .select("id, user_id, asset_symbol, direction, amount, profit, closed_at")
           .order("closed_at", { ascending: false })
           .limit(5),
-        supabase.from("withdrawal_requests")
+        api.from("withdrawal_requests")
           .select("id, user_id, amount, payment_method, created_at")
           .eq("status", "pending")
           .order("created_at", { ascending: false })
-          .limit(5),
-      ]);
+           .limit(5),
+       ]);
 
       setTotalUsers(userCountR.count ?? 0);
       setActiveTraders(activeR.count ?? 0);
@@ -185,8 +184,7 @@ const AdminDashboard = () => {
       ];
       const profileMap = new Map<string, string>();
       if (allUids.length > 0) {
-        const { data: pRows } = await supabase
-          .from("profiles")
+        const { data: pRows } = await api.from("profiles")
           .select("id, display_name, username")
           .in("id", allUids);
         (pRows ?? []).forEach((p) => {

@@ -44,7 +44,7 @@ import IndicatorSettingsModal from "./indicators/IndicatorSettingsModal";
 import { DrawingOverlay } from "./drawings/DrawingOverlay";
 import { dispatchTradeDeskDirectionSubmit, type TradeDeskDirection } from "./tradeDeskEvents";
 import { useDrawings } from "@/contexts/DrawingContext";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { type Tables } from "@/integrations/supabase/types";
 import { CustomCandlestickPaneView, type CustomCandlestickData } from "./CustomCandlestickSeries";
 import {
@@ -2650,7 +2650,7 @@ const TradingChart = ({
   // ─── FETCH THEME GLOBALS ──────────────────────────────────────────
   useEffect(() => {
     async function fetchTheme() {
-      const { data } = await supabase.from('platform_settings').select('chart_bg_color, chart_up_color, chart_down_color').limit(1).maybeSingle();
+      const { data } = await api.from('platform_settings').select('chart_bg_color, chart_up_color, chart_down_color').limit(1).maybeSingle();
       if (data) {
         const payload: PlatformThemeRow = data;
         const newTheme = {

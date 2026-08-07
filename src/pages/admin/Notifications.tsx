@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle, Megaphone, Save, Send, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
@@ -62,8 +62,7 @@ const Notifications = () => {
   const fetchAdminDbRole = async () => {
     if (!user?.id) return null;
 
-    const { data, error } = await supabase
-      .from("user_roles")
+    const { data, error } = await api.from("user_roles")
       .select("role")
       .eq("user_id", user.id);
 
@@ -75,8 +74,7 @@ const Notifications = () => {
   };
 
   const fetchBonusSettings = async () => {
-    const { data, error } = await supabase
-      .from("bonus_settings")
+    const { data, error } = await api.from("bonus_settings")
       .select("*")
       .order("created_at", { ascending: true })
       .limit(1)
@@ -90,8 +88,7 @@ const Notifications = () => {
       return data as BonusSettingsRow;
     }
 
-    const { data: created, error: createError } = await supabase
-      .from("bonus_settings")
+    const { data: created, error: createError } = await api.from("bonus_settings")
       .insert(DEFAULT_BONUS_SETTINGS)
       .select("*")
       .single();
@@ -109,13 +106,13 @@ const Notifications = () => {
     setBonusError(null);
 
     try {
-      await supabase.rpc("dispatch_due_announcements");
+      await api.rpc("dispatch_due_announcements");
     } catch {
       // Ignore if there are no due announcements yet.
     }
 
     const [announcementsResult, bonusResult, adminRoleResult] = await Promise.allSettled([
-      supabase.from("announcements").select("*").order("created_at", { ascending: false }).limit(20),
+      api.from("announcements").select("*").order("created_at", { ascending: false }).limit(20),
       fetchBonusSettings(),
       fetchAdminDbRole(),
     ]);
@@ -191,7 +188,7 @@ const Notifications = () => {
     }
 
     setSending(true);
-    const { error } = await supabase.rpc("admin_create_announcement", {
+      const { error } = await api.rpc("admin_create_announcement", {
       p_title: form.title.trim(),
       p_message: form.message.trim(),
       p_target_roles: targetPayload,
@@ -219,8 +216,7 @@ const Notifications = () => {
   const handleSaveBonuses = async () => {
     if (!bonusSettings) return;
     setSavingBonuses(true);
-    const { error } = await supabase
-      .from("bonus_settings")
+    const { error } = await api.from("bonus_settings")
       .update({
         ...bonusSettings,
         welcome_bonus_trigger: "first_deposit",

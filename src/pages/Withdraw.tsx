@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Bitcoin, Building2, ChevronDown, Gift } from "lucide-react";
@@ -50,7 +50,7 @@ const Withdraw = () => {
     let cancelled = false;
 
     const fetchCrypto = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await api
         .from("crypto_payment_methods")
         .select("*")
         .eq("status", "active")
@@ -86,12 +86,12 @@ const Withdraw = () => {
       setBonusStatus((current) => ({ ...current, isLoading: true }));
 
       const [depositsResponse, tradesResponse] = await Promise.all([
-        supabase
+        api
           .from("deposit_requests")
           .select("welcome_bonus,deposit_bonus,promo_bonus")
           .eq("user_id", user.id)
           .eq("status", "approved"),
-        supabase
+        api
           .from("trades")
           .select("amount")
           .eq("user_id", user.id)

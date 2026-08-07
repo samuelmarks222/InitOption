@@ -8,7 +8,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { NotificationEffectsLayer } from "@/components/notifications/NotificationEffectsLayer";
@@ -76,8 +75,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     }
 
     setLoading(true);
-    const { data, error } = await supabase
-      .from("notifications")
+    const { data, error } = await api.from("notifications")
       .select("*")
       .eq("user_id", user.id)
       .neq("type", "trade_result")
@@ -99,7 +97,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase
+    const channel = realtime
       .channel(`notifications-${user.id}`)
       .on(
         "postgres_changes",
@@ -147,7 +145,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      realtime.removeChannel(channel);
     };
   }, [queueEffect, refreshProfile, user]);
 
@@ -159,8 +157,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         ),
       );
 
-      await supabase
-        .from("notifications")
+      await api.from("notifications")
         .update({ is_read: true })
         .eq("id", id)
         .eq("user_id", user?.id ?? "");
@@ -173,8 +170,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
     setNotifications((current) => current.map((notification) => ({ ...notification, is_read: true })));
 
-    await supabase
-      .from("notifications")
+    await api.from("notifications")
       .update({ is_read: true })
       .eq("user_id", user.id)
       .eq("is_read", false);

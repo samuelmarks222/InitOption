@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { api } from "@/integrations/api/client";
 import {
   Activity,
   ArrowDownRight,
@@ -12,7 +13,6 @@ import {
   Target,
   XCircle,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
 type TradeRow = Tables<"trades">;
@@ -70,14 +70,12 @@ const TradeManagement = () => {
     setLoading(true);
 
     const [openTradesResponse, historyTradesResponse] = await Promise.all([
-      supabase
-        .from("trades")
+      api.from("trades")
         .select("*")
         .eq("status", "open")
         .order("opened_at", { ascending: false })
         .limit(ADMIN_OPEN_TRADES_LIMIT),
-      supabase
-        .from("trades")
+      api.from("trades")
         .select("*")
         .neq("status", "open")
         .order("closed_at", { ascending: false })
@@ -98,8 +96,7 @@ const TradeManagement = () => {
 
     let profilesById = new Map<string, ProfileRow>();
     if (userIds.length > 0) {
-      const { data: profiles, error: profileError } = await supabase
-        .from("profiles")
+      const { data: profiles, error: profileError } = await api.from("profiles")
         .select("id, username, display_name")
         .in("id", userIds);
 

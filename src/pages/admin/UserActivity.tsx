@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { api } from "@/integrations/api/client";
 import { Search, User, Loader2, TrendingUp, TrendingDown, ArrowDownCircle, ArrowUpCircle, Clock, RefreshCw } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -68,8 +69,7 @@ const UserActivity = () => {
     setActivity([]);
 
     try {
-      const { data, error } = await supabase
-        .from("profiles")
+      const { data, error } = await api.from("profiles")
         .select("id, username, display_name, email, balance")
         .or(`username.ilike.%${term}%,display_name.ilike.%${term}%,email.ilike.%${term}%,id.eq.${term}`)
         .maybeSingle();
@@ -106,20 +106,17 @@ const UserActivity = () => {
 
     try {
       const [tradesRes, depositsRes, withdrawalsRes] = await Promise.all([
-        supabase
-          .from("trades")
+        api.from("trades")
           .select("id, asset_symbol, direction, amount, profit, status, opened_at, closed_at")
           .eq("user_id", foundUser.id)
           .order("opened_at", { ascending: false })
           .limit(50),
-        supabase
-          .from("deposit_requests")
+        api.from("deposit_requests")
           .select("id, amount, status, created_at")
           .eq("user_id", foundUser.id)
           .order("created_at", { ascending: false })
           .limit(50),
-        supabase
-          .from("withdrawal_requests")
+        api.from("withdrawal_requests")
           .select("id, amount, status, created_at")
           .eq("user_id", foundUser.id)
           .order("created_at", { ascending: false })

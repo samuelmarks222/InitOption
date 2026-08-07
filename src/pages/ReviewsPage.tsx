@@ -24,7 +24,6 @@ import { WhatsAppLogo } from "@/components/icons/BrandSocialIcons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
-import { supabase } from "@/integrations/supabase/client";
 
 type CustomerReview = {
   id: string;
@@ -416,7 +415,7 @@ const ReviewsPage = () => {
 
     const loadReviews = async () => {
       try {
-        const { data, error } = await (supabase as any)
+        const { data, error } = await api
           .from("customer_reviews")
           .select("id,rating,review_text,created_at,reviewer_name,reviewer_uid,avatar_url,country,status")
           .eq("status", "approved")
@@ -463,7 +462,7 @@ const ReviewsPage = () => {
 
     setSubmitting(true);
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await api
         .from("customer_reviews")
         .insert({
           user_id: user?.id ?? null,

@@ -45,18 +45,15 @@ const RiskManagement = () => {
       setLoading(true);
 
       const [openTradesResult, closedTradesResult, settingsResult] = await Promise.all([
-        supabase
-          .from("trades")
+        api.from("trades")
           .select("id, user_id, asset_symbol, direction, amount, status, opened_at, expiry_seconds")
           .eq("status", "open")
           .limit(2000),
-        supabase
-          .from("trades")
+        api.from("trades")
           .select("user_id, asset_symbol, profit, status")
           .neq("status", "open")
           .limit(4000),
-        supabase
-          .from("platform_settings")
+        api.from("platform_settings")
           .select("enforce_max_exposure, min_trade_amount, max_trade_amount, updated_at")
           .limit(1)
           .maybeSingle(),
@@ -114,8 +111,7 @@ const RiskManagement = () => {
 
       let profilesById = new Map<string, ProfileRow>();
       if (suspiciousIds.length > 0) {
-        const { data: suspiciousProfiles, error: suspiciousProfilesError } = await supabase
-          .from("profiles")
+        const { data: suspiciousProfiles, error: suspiciousProfilesError } = await api.from("profiles")
           .select("id, username, display_name")
           .in("id", suspiciousIds);
 

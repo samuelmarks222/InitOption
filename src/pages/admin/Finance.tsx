@@ -10,6 +10,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "@/hooks/use-toast";
 import { adminUpdateDepositStatus, DepositDecision } from "@/lib/deposits";
@@ -102,10 +103,10 @@ const Finance = () => {
     setLoading(true);
 
     const [depositsResponse, withdrawalsResponse, cryptoMethodsResponse, platformSettingsResponse] = await Promise.all([
-      supabase.from("deposit_requests").select("*").order("created_at", { ascending: false }).limit(FINANCE_REQUEST_LIMIT),
-      supabase.from("withdrawal_requests").select("*").order("created_at", { ascending: false }).limit(FINANCE_REQUEST_LIMIT),
-      supabase.from("crypto_payment_methods").select("id, attribution_mode, symbol, network"),
-      supabase.from("platform_settings").select("id, mpesa_withdrawal_approval_threshold_kes").limit(1).maybeSingle(),
+      api.from("deposit_requests").select("*").order("created_at", { ascending: false }).limit(FINANCE_REQUEST_LIMIT),
+      api.from("withdrawal_requests").select("*").order("created_at", { ascending: false }).limit(FINANCE_REQUEST_LIMIT),
+      api.from("crypto_payment_methods").select("id, attribution_mode, symbol, network"),
+      api.from("platform_settings").select("id, mpesa_withdrawal_approval_threshold_kes").limit(1).maybeSingle(),
     ]);
 
     if (depositsResponse.error) {
@@ -146,7 +147,7 @@ const Finance = () => {
     );
     const profilesResponse =
       userIds.length > 0
-        ? await supabase.from("profiles").select("id, username, display_name").in("id", userIds)
+        ? await api.from("profiles").select("id, username, display_name").in("id", userIds)
         : { data: [], error: null };
 
     if (profilesResponse.error) {
@@ -434,8 +435,7 @@ const Finance = () => {
       const nextValue = Math.max(0, Number(mpesaApprovalThresholdKes) || 0);
 
       if (platformSettingsId) {
-        const { error } = await supabase
-          .from("platform_settings")
+        const { error } = await api.from("platform_settings")
           .update({
             mpesa_withdrawal_approval_threshold_kes: nextValue,
             updated_at: new Date().toISOString(),
@@ -446,8 +446,7 @@ const Finance = () => {
           throw error;
         }
       } else {
-        const { data, error } = await supabase
-          .from("platform_settings")
+        const { data, error } = await api.from("platform_settings")
           .insert({
             mpesa_withdrawal_approval_threshold_kes: nextValue,
           })

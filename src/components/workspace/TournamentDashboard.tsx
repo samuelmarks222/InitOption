@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { Database } from "@/integrations/supabase/types";
 import CountryFlag from "@/components/ui/CountryFlag";
 import { getCountryOptionByName } from "@/lib/countries";
@@ -52,7 +52,6 @@ type LeaderboardEntry = {
   trades_count: number;
 };
 
-const supabaseAny = supabase as any;
 
 const MONEY = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -346,8 +345,7 @@ export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: Tour
       setHistoryRows([]);
       return;
     }
-    const { data } = await supabase
-      .from("tournament_participants")
+    const { data } = await api.from("tournament_participants")
       .select("id, tournament_id, current_balance, created_at, updated_at")
       .eq("user_id", profile.id)
       .order("created_at", { ascending: false });
@@ -424,7 +422,7 @@ export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: Tour
     }
     setJoining(true);
     try {
-      const { error } = await supabaseAny.rpc("join_tournament", { p_tournament_id: tournamentId });
+      const { error } = await api.rpc("join_tournament", { p_tournament_id: tournamentId });
       if (error) throw error;
       await refreshProfile();
       toast.success("Tournament joined successfully.");
@@ -954,12 +952,11 @@ const TournamentDetailView = ({
     try {
       // 1. Always fetch participant list to know user_ids
       const [{ count, error: countErr }, { data: rows, error: rowsErr }] = await Promise.all([
-        supabase
+        api
           .from("tournament_participants")
           .select("id", { count: "exact", head: true })
           .eq("tournament_id", tournament.id),
-        supabase
-          .from("tournament_participants")
+        api.from("tournament_participants")
           .select("id, user_id, current_balance, created_at, updated_at")
           .eq("tournament_id", tournament.id)
           .order("current_balance", { ascending: false }),
@@ -973,8 +970,7 @@ const TournamentDetailView = ({
       let profileMap = new Map<string, { display_name?: string | null; username?: string | null; avatar_url?: string | null; phone_country?: string | null }>();
       if (userIds.length > 0) {
         try {
-          const { data: profiles, error: profilesErr } = await supabaseAny
-            .from("profiles")
+          const { data: profiles, error: profilesErr } = await api.from("profiles")
             .select("id, display_name, username, avatar_url, phone_country")
             .in("id", userIds);
           if (profilesErr) console.error("Leaderboard profiles fetch error:", profilesErr);
@@ -989,7 +985,7 @@ const TournamentDetailView = ({
       // 3. Try RPC for enriched data (balance, trades_count, positions)
       let rpcMap = new Map<string, any>();
       try {
-        const { data: rpcData, error: rpcErr } = await supabaseAny.rpc("get_tournament_leaderboard", {
+        const { data: rpcData, error: rpcErr } = await api.rpc("get_tournament_leaderboard", {
           p_tournament_id: tournament.id,
         });
         if (!rpcErr && Array.isArray(rpcData)) {

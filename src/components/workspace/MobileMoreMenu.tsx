@@ -159,8 +159,7 @@ export const MobileLeaderboardOverlay = ({ onClose }: LeaderboardOverlayProps) =
         "user_id, profit, status, closed_at, profiles(id, username, display_name, avatar_url, nationality, phone_country)";
 
       const runLeaderboardQuery = (select: string) => {
-        let query = supabase
-          .from("trades")
+        let query = api.from("trades")
           .select(select)
           .neq("status", "open")
           .order("closed_at", { ascending: false })

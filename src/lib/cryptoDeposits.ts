@@ -1,5 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
+
 import type { Tables } from "@/integrations/supabase/types";
+import { api } from "@/integrations/api/client";
 import {
   clearCryptoDepositCheckoutCache,
   loadCryptoDepositCheckoutCache,
@@ -230,8 +231,7 @@ export const createCryptoDepositInstruction = async ({
     provider_payment_status: data.provider_payment_status ?? null,
   });
 
-  const sessionResponse = await supabase.auth.getSession();
-  const accessToken = sessionResponse.data.session?.access_token;
+  const accessToken = localStorage.getItem("clerk_session_token");
 
   if (!accessToken) {
     throw new Error("Authentication required. Please sign in again.");
@@ -313,8 +313,7 @@ export const recoverCryptoDepositCheckout = async ({
     provider_payment_status: data.provider_payment_status ?? null,
   });
 
-  const sessionResponse = await supabase.auth.getSession();
-  const accessToken = sessionResponse.data.session?.access_token;
+  const accessToken = localStorage.getItem("clerk_session_token");
 
   if (!accessToken) {
     throw new Error("Authentication required. Please sign in again.");
@@ -368,8 +367,7 @@ export const getLatestOpenCryptoDepositInstruction = async ({
   paymentMethodId?: string | null;
   userId: string;
 }): Promise<CryptoDepositInstructionWithMethod | null> => {
-  let query = supabase
-    .from("crypto_deposit_instructions")
+  let query = api.from("crypto_deposit_instructions")
     .select("*, payment_method:crypto_payment_methods(*)")
     .eq("user_id", userId)
     .in("instruction_status", ["awaiting_payment", "payment_detected", "confirming"])

@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 
@@ -102,7 +103,7 @@ const Deposit = () => {
     let cancelled = false;
 
     const fetchCrypto = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await api
         .from("crypto_payment_methods")
         .select("*")
         .eq("status", "active")
@@ -151,13 +152,13 @@ const Deposit = () => {
       setLoadingBonuses(true);
 
       const [offersResponse, redemptionsResponse] = await Promise.all([
-        supabase
+        api
           .from("deposit_bonus_offers")
           .select("*")
           .eq("status", "active")
           .order("position", { ascending: true })
           .order("deposit_amount", { ascending: true }),
-        supabase
+        api
           .from("deposit_bonus_redemptions")
           .select("bonus_offer_id, created_at, status")
           .eq("user_id", user.id),
@@ -330,7 +331,7 @@ const Deposit = () => {
     };
 
     const syncDepositRequestStatus = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await api
         .from("deposit_requests")
         .select("status, credited_amount, amount")
         .eq("id", requestId)
