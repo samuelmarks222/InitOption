@@ -91,6 +91,9 @@ export const GUIDE_SECTIONS: GuideSectionDef[] = [
 export const getGuideMediaPath = (sectionSlug: string, topicSlug: string): string =>
   `${BASE_PATH}/${sectionSlug}/${topicSlug}.png`;
 
+export const getGuideMediaPublicId = (sectionSlug: string, topicSlug: string): string =>
+  `${BASE_PATH}/${sectionSlug}/${topicSlug}`;
+
 export const getGuideMediaUrl = (
   supabaseUrl: string,
   sectionSlug: string,

@@ -7,6 +7,7 @@ import {
   handlePlatformSettings,
   handleCloudinaryUpload,
   handleCloudinaryDelete,
+  handleCloudinaryExists,
   handleCloudinaryPublicUrl,
   handlePusherAuth,
   handleClerkWebhook,
@@ -47,8 +48,12 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       case "cloudinary-delete":
         await handleCloudinaryDelete(request, res);
         return;
+      case "cloudinary-exists":
+        await handleCloudinaryExists(request, res);
+        return;
       case "cloudinary-public-url":
         await handleCloudinaryPublicUrl(request, res);
+        return;
         return;
       case "pusher-auth":
         await handlePusherAuth(request, res);

@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { toast } from "@/hooks/use-toast";
 import { getRoleLabel } from "@/lib/adminRoles";
-import { supabase } from "@/integrations/supabase/client";
+import { realtime } from "@/integrations/pusher/realtime";
 import { api } from "@/integrations/api/client";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -194,7 +194,7 @@ const SupportInbox = () => {
   }, [selectedThreadId]);
 
   useEffect(() => {
-    const channel = supabase
+    const channel = realtime
       .channel("admin-support-inbox")
       .on("postgres_changes", { event: "*", schema: "public", table: "support_threads" }, () => {
         void loadInbox();
@@ -209,7 +209,7 @@ const SupportInbox = () => {
       .subscribe();
 
     return () => {
-      void supabase.removeChannel(channel);
+      void realtime.removeChannel(channel);
     };
   }, [selectedThreadId]);
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { DatabaseZap, RefreshCw, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { realtime } from "@/integrations/pusher/realtime";
 import { api } from "@/integrations/api/client";
 import { Json, Tables } from "@/integrations/supabase/types";
 import { toast } from "@/hooks/use-toast";
@@ -8,7 +8,6 @@ import { isMissingTradeBalanceAuditTableError, type TradeBalanceAuditEntry } fro
 
 type WithdrawalRequest = Tables<"withdrawal_requests">;
 type ProfileLookup = Pick<Tables<"profiles">, "display_name" | "id" | "username">;
-const supabaseAny = supabase as any;
 
 type AuditEntry = {
   action: string;
@@ -211,7 +210,7 @@ const AuditLogs = () => {
   }, []);
 
   useEffect(() => {
-    const channel = supabase
+    const channel = realtime
       .channel("admin-withdrawal-audit-feed")
       .on("postgres_changes", { event: "*", schema: "public", table: "withdrawal_requests" }, () => {
         void loadAuditEntries();
@@ -222,7 +221,7 @@ const AuditLogs = () => {
       .subscribe();
 
     return () => {
-      void supabase.removeChannel(channel);
+      void realtime.removeChannel(channel);
     };
   }, []);
 

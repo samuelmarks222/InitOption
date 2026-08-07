@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, Trophy, X, Award, TrendingUp, DollarSign, BarChart3, Target } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { type Database } from "@/integrations/supabase/types";
 
 const safe = (v: unknown): string => {

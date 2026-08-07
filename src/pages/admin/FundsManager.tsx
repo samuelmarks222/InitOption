@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Search, User, Wallet, RefreshCw, Loader2, CheckCircle, XCircle } from "lucide-react";
-import { isSupabaseConfigured } from "@/integrations/supabase/client";
-import { api } from "@/integrations/api/client";
+import { isConfigured, api } from "@/integrations/api/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
@@ -27,10 +26,10 @@ const FundsManager = () => {
   const searchUser = useCallback(async () => {
     const term = searchTerm.trim();
     if (!term) return;
-    if (!isSupabaseConfigured) {
+    if (!isConfigured()) {
       toast({
         title: "Search failed",
-        description: "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.",
+        description: "Authentication required. Please sign in to continue.",
         variant: "destructive",
       });
       return;
@@ -142,8 +141,8 @@ const FundsManager = () => {
       return;
     }
 
-    if (!isSupabaseConfigured) {
-      toast({ title: "Search failed", description: "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.", variant: "destructive" });
+    if (!isConfigured()) {
+      toast({ title: "Authentication required. Please sign in to continue.", variant: "destructive" });
       return;
     }
 
@@ -212,7 +211,7 @@ const FundsManager = () => {
           <div className="flex items-end">
             <button
               onClick={handleSelfCredit}
-              disabled={mySubmitting || !myAmount || !isSupabaseConfigured}
+              disabled={mySubmitting || !myAmount || !isConfigured()}
               className="flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white transition-opacity disabled:opacity-50"
               style={{ background: "var(--admin-green)" }}
             >
@@ -252,7 +251,7 @@ const FundsManager = () => {
           </div>
           <button
             onClick={searchUser}
-            disabled={searching || !searchTerm.trim() || !isSupabaseConfigured}
+            disabled={searching || !searchTerm.trim() || !isConfigured()}
             className="flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-medium text-white transition-opacity disabled:opacity-50"
             style={{ background: "var(--admin-orange)" }}
           >

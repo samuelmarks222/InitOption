@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { X, TrendingUp, Trophy, ChevronRight, Wallet, ArrowDownLeft, List, History, LogOut, Globe, ChevronDown, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import CountryFlag from "@/components/ui/CountryFlag";
 import { getCountryOptionByName } from "@/lib/countries";
 

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TournamentDetailOverlay } from "@/components/workspace/TournamentDetailOverlay";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/integrations/api/client";
 
 const updateProfileMock = vi.fn();
 
@@ -53,8 +53,8 @@ vi.mock("@/contexts/AuthContext", () => ({
   }),
 }));
 
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
+vi.mock("@/integrations/api/client", () => ({
+  api: {
     from: vi.fn((table: string) => {
       if (table === "tournaments") return tournamentsQuery;
       if (table === "tournament_participants") return participantsQuery;
@@ -75,8 +75,8 @@ vi.mock("sonner", () => ({
 describe("TournamentDetailOverlay", () => {
   beforeEach(() => {
     updateProfileMock.mockReset();
-    vi.mocked(supabase.rpc).mockReset();
-    vi.mocked(supabase.rpc).mockResolvedValue({ data: [] } as any);
+    vi.mocked(api.rpc).mockReset();
+    vi.mocked(api.rpc).mockResolvedValue({ data: [] } as any);
     tournamentsQuery.select.mockClear();
     tournamentsQuery.eq.mockClear();
     tournamentsQuery.single.mockClear();
@@ -95,7 +95,7 @@ describe("TournamentDetailOverlay", () => {
   });
 
   it("shows registered participants even when the leaderboard rpc throws", async () => {
-    vi.mocked(supabase.rpc).mockRejectedValueOnce(new Error("leaderboard rpc failed"));
+    vi.mocked(api.rpc).mockRejectedValueOnce(new Error("leaderboard rpc failed"));
 
     render(<TournamentDetailOverlay tournamentId="tour-1" onClose={() => {}} onEnterTournament={() => {}} />);
 

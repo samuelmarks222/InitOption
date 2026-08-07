@@ -44,7 +44,6 @@ import {
 } from "@/lib/onboarding";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
-import { supabase } from "@/integrations/supabase/client";
 import { normalizeWebsiteContent, type GuideMediaKey, type GuideMediaSettings } from "@/lib/websiteContent";
 
 type IconType = ComponentType<{ className?: string; strokeWidth?: number }>;

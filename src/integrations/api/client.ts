@@ -249,3 +249,5 @@ class ApiClient {
 }
 
 export const api = ApiClient;
+
+export const isConfigured = () => Boolean(localStorage.getItem("clerk_session_token"));

@@ -296,16 +296,17 @@ export async function handleCloudinaryUpload(request: ApiRequest, response: ApiR
     const parts = parseMultipart(rawBodyBuffer, boundary);
     const filePart = parts.find((p) => p.name === "file");
     const folderPart = parts.find((p) => p.name === "folder");
+    const publicIdPart = parts.find((p) => p.name === "public_id");
 
     if (!filePart) {
       sendJson(response, 400, { error: "No file provided" });
       return;
     }
 
-    const folder = (folderPart?.value as string) ?? "uploads";
+    const folder = folderPart?.value as string | undefined;
     const uploadResult = await uploadToCloudinary(filePart.data, {
-      folder,
-      public_id: filePart.filename ? filePart.filename.replace(/\.[^/.]+$/, "") : undefined,
+      folder: folder || undefined,
+      public_id: publicIdPart ? (publicIdPart.value as string) : (filePart.filename ? filePart.filename.replace(/\.[^/.]+$/, "") : undefined),
       resource_type: "auto",
     });
 
@@ -337,7 +338,9 @@ export async function handleCloudinaryDelete(request: ApiRequest, response: ApiR
       sendJson(response, 400, { error: "Missing or invalid public_id" });
       return;
     }
-    const result = await cloudinary.uploader.destroy(publicId as string);
+    const folder = body.folder;
+    const targetId = folder ? `${String(folder)}/${publicId}` : String(publicId);
+    const result = await cloudinary.uploader.destroy(targetId);
     sendJson(response, 200, { result });
   } catch (error) {
     console.error("Cloudinary delete failed:", error);
@@ -363,6 +366,39 @@ export async function handleCloudinaryPublicUrl(request: ApiRequest, response: A
   } catch (error) {
     console.error("Cloudinary URL generation failed:", error);
     sendJson(response, 500, { error: error instanceof Error ? error.message : "Failed to generate URL" });
+  }
+}
+
+export async function handleCloudinaryExists(request: ApiRequest, response: ApiResponse): Promise<void> {
+  if (request.method !== "GET") {
+    response.setHeader("Allow", "GET");
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+  const publicId = request.query?.public_id;
+  const folder = request.query?.folder;
+  if (!publicId || Array.isArray(publicId)) {
+    sendJson(response, 400, { error: "Missing or invalid public_id parameter" });
+    return;
+  }
+  try {
+    const id = Array.isArray(folder) && folder[0] ? `${folder[0]}/${publicId}` : publicId;
+    cloudinary.api.resource(id, { resource_type: "image" }, (error, result) => {
+      if (error || !result) {
+        sendJson(response, 200, { exists: false });
+        return;
+      }
+      sendJson(response, 200, { exists: true, public_id: result.public_id, url: result.secure_url });
+    });
+    return;
+  } catch (error) {
+    const status = error?.http_code ?? error?.code;
+    if (status === 404 || /not found/i.test(error?.message ?? "")) {
+      sendJson(response, 200, { exists: false });
+      return;
+    }
+    console.error("Cloudinary exists check failed:", error);
+    sendJson(response, 500, { error: error instanceof Error ? error.message : "Failed to check resource" });
   }
 }
 

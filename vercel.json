@@ -63,6 +63,7 @@
     { "source": "/api/cloudinary/upload", "destination": "/api/system?route=cloudinary-upload" },
     { "source": "/api/cloudinary/delete", "destination": "/api/system?route=cloudinary-delete" },
     { "source": "/api/cloudinary/public-url", "destination": "/api/system?route=cloudinary-public-url" },
+    { "source": "/api/cloudinary/exists", "destination": "/api/system?route=cloudinary-exists" },
     { "source": "/api/pusher/auth", "destination": "/api/system?route=pusher-auth" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/assets/(.*)", "destination": "/assets/$1" },

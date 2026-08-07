@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Ban, CheckCircle2, Download, Eye, FileText, Filter, Loader2, RefreshCw, Search, ShieldCheck, Users, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { toast } from "@/hooks/use-toast";
 import { fetchAdminUserManagementFeed, reviewUserKyc, type AdminKycDecision, type AdminKycDocuments, type AdminUserManagementFeedItem } from "@/lib/adminUsers";

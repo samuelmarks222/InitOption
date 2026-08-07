@@ -9,7 +9,7 @@ import {
   Search,
   XCircle,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { realtime } from "@/integrations/pusher/realtime";
 import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "@/hooks/use-toast";
@@ -248,7 +248,7 @@ const Finance = () => {
   }, []);
 
   useEffect(() => {
-    const channel = supabase
+    const channel = realtime
       .channel("admin-finance-review")
       .on("postgres_changes", { event: "*", schema: "public", table: "deposit_requests" }, () => {
         void loadFinanceData();
@@ -259,7 +259,7 @@ const Finance = () => {
       .subscribe();
 
     return () => {
-      void supabase.removeChannel(channel);
+      void realtime.removeChannel(channel);
     };
   }, []);
 

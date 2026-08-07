@@ -24,7 +24,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { normalizeAssetCategory } from "@/lib/assets";
 

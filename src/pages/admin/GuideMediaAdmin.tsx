@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -23,7 +23,7 @@ const BORDER = "#2A2A3A";
 const TEXT_SEC = "#B0B0B0";
 const MAX_BYTES = 2 * 1024 * 1024;
 const VALID_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
-const STORAGE_BUCKET = "guide-media";
+const CLOUDINARY_FOLDER = "trading-guide-media";
 
 type PendingAction =
   | { kind: "upload"; file: File; previewUrl: string }
@@ -56,22 +56,21 @@ const GuideMediaAdmin = () => {
       const result: Record<string, MediaState> = {};
 
       for (const section of GUIDE_SECTIONS) {
-        const { data: files } = await supabase.storage
-          .from(STORAGE_BUCKET)
-          .list(`trading-guide-media/${section.slug}`, { limit: 100 });
-
-        const existingFiles = new Set((files ?? []).map((f) => f.name));
-
         for (const topic of section.topics) {
-          const fileName = `${topic.slug}.png`;
           const path = getGuideMediaPath(section.slug, topic.slug);
-          const exists = existingFiles.has(fileName);
-          result[path] = {
-            remoteUrl: exists ? `${baseUrl()}/${path}` : "",
-            remoteExists: exists,
-            altText: "",
-            pending: null,
-          };
+          const publicId = `${section.slug}/${topic.slug}`;
+          try {
+            const existsResult = await cloudinaryClient.exists(publicId, CLOUDINARY_FOLDER);
+            const exists = existsResult.exists;
+            if (exists) {
+              const url = await cloudinaryClient.getPublicUrl(publicId, CLOUDINARY_FOLDER);
+              result[path] = { remoteUrl: url, remoteExists: true, altText: "", pending: null };
+            } else {
+              result[path] = { remoteUrl: "", remoteExists: false, altText: "", pending: null };
+            }
+          } catch {
+            result[path] = { remoteUrl: "", remoteExists: false, altText: "", pending: null };
+          }
         }
       }
       setMedia(result);
@@ -79,12 +78,6 @@ const GuideMediaAdmin = () => {
     };
     void loadAll();
   }, []);
-
-  const baseUrl = () => {
-    const u = supabase.storage.from(STORAGE_BUCKET).getPublicUrl("").data.publicUrl;
-    const parts = u.replace(`/storage/v1/object/public/${STORAGE_BUCKET}`, "").replace(`/${STORAGE_BUCKET}/`, "");
-    return `https://${parts}/storage/v1/object/public/${STORAGE_BUCKET}`;
-  };
 
   const pendingCount = useMemo(() => {
     let count = 0;
@@ -145,6 +138,13 @@ const GuideMediaAdmin = () => {
     }));
   };
 
+  const pathToCloudinaryPublicId = (path: string): string => {
+    const stripped = path.replace(/\.png$/, "");
+    const parts = stripped.split("/");
+    if (parts.length >= 3) return `${parts[1]}/${parts[2]}`;
+    return path;
+  };
+
   const handleSave = async () => {
     const toUpload: { path: string; file: File }[] = [];
     const toRemove: string[] = [];
@@ -165,26 +165,39 @@ const GuideMediaAdmin = () => {
     let errors = 0;
 
     for (const { path, file } of toUpload) {
-      const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, { upsert: true });
-      if (error) {
+      const sectionTopic = pathToCloudinaryPublicId(path);
+      try {
+        await cloudinaryClient.upload(file, CLOUDINARY_FOLDER, sectionTopic);
+      } catch (error) {
         console.error("Upload failed:", path, error);
         errors++;
       }
     }
 
-    if (toRemove.length > 0) {
-      const { error } = await supabase.storage.from(STORAGE_BUCKET).remove(toRemove);
-      if (error) {
-        console.error("Remove failed:", error);
+    for (const path of toRemove) {
+      const sectionTopic = pathToCloudinaryPublicId(path);
+      try {
+        await cloudinaryClient.delete(sectionTopic, CLOUDINARY_FOLDER);
+      } catch (error) {
+        console.error("Remove failed:", path, error);
         errors++;
+      }
+    }
+
+    const newRemoteUrls: Record<string, string> = {};
+    for (const { path } of toUpload) {
+      const sectionTopic = pathToCloudinaryPublicId(path);
+      try {
+        newRemoteUrls[path] = await cloudinaryClient.getPublicUrl(sectionTopic, CLOUDINARY_FOLDER);
+      } catch {
+        newRemoteUrls[path] = "";
       }
     }
 
     setMedia((prev) => {
       const next = { ...prev };
       for (const { path } of toUpload) {
-        const u = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
-        next[path] = { ...next[path], remoteUrl: u, remoteExists: true, pending: null };
+        next[path] = { ...next[path], remoteUrl: newRemoteUrls[path] ?? "", remoteExists: true, pending: null };
       }
       for (const path of toRemove) {
         next[path] = { ...next[path], remoteUrl: "", remoteExists: false, pending: null };

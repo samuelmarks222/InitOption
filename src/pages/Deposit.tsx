@@ -3,7 +3,7 @@ import { ArrowLeft, BadgeCheck, CircleHelp, Clock3, ShieldCheck, Smartphone, XCi
 import type { LucideIcon } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { realtime } from "@/integrations/pusher/realtime";
 import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -345,7 +345,7 @@ const Deposit = () => {
       handleResolvedDepositStatus(data.status, data.credited_amount, data.amount);
     };
 
-    const channel = supabase
+    const channel = realtime
       .channel(`deposit-request-${requestId}`)
       .on(
         "postgres_changes",
@@ -370,7 +370,7 @@ const Deposit = () => {
     return () => {
       active = false;
       window.clearInterval(pollInterval);
-      void supabase.removeChannel(channel);
+      void realtime.removeChannel(channel);
     };
   }, [amountValue, lastMobileMoneyRequest?.request_id, navigate, refreshProfile, user?.id]);
 
