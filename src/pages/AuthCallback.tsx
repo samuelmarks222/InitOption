@@ -41,11 +41,10 @@ const AuthCallback = () => {
   const queryString = useMemo(() => new URLSearchParams(window.location.search), []);
   const hashString = useMemo(() => new URLSearchParams(window.location.hash.replace(/^#/, "")), []);
 
-  const hasHandshake =
-    queryString.has("__clerk_ticket") ||
-    queryString.has("__clerk_status") ||
-    hashString.has("__clerk_ticket") ||
-    hashString.has("__clerk_status");
+  const hasClerkParam = (params: URLSearchParams) =>
+    Array.from(params.keys()).some((key) => key.startsWith("__clerk_") || key === "__clerk_status");
+
+  const hasHandshake = hasClerkParam(queryString) || hasClerkParam(hashString);
   const hasError = Boolean(callbackParams.error || callbackParams.errorDescription);
   const safeNextPath = useMemo(() => getSafeNextPath(callbackParams.next), [callbackParams.next]);
 
