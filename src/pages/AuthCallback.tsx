@@ -15,13 +15,17 @@ const AuthCallback = () => {
   const hashString = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   const hasHandshake = hasClerkParam(queryString) || hasClerkParam(hashString);
 
-  // If Clerk's own component never resolves (no handshake params at all),
-  // show a manual link instead of silently navigating (avoids flicker loops).
+  // Only mount the SDK handshake component when Clerk actually returned
+  // handshake params. Otherwise the SDK's own handleRedirectCallback() has no
+  // ticket to process and bounces the browser to the hosted accounts portal
+  // (a black/stuck page). In that case show a local card instead.
   useEffect(() => {
-    if (hasHandshake || isSignedIn) return;
-    const t = window.setTimeout(() => setShowFallback(true), 6000);
+    if (isSignedIn) return;
+    const t = window.setTimeout(() => setShowFallback(true), hasHandshake ? 15000 : 2000);
     return () => window.clearTimeout(t);
   }, [hasHandshake, isSignedIn]);
+
+  const showSdk = hasHandshake && !showFallback;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
@@ -30,22 +34,7 @@ const AuthCallback = () => {
           <img src={logo} alt="Init Option" className="h-9 w-auto" />
         </Link>
 
-        {showFallback ? (
-          <>
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-400">
-              <XCircle className="h-6 w-6" />
-            </div>
-            <h1 className="mt-4 text-2xl font-bold text-foreground">Sign-in could not be completed here</h1>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Clerk did not return a sign-in handshake on this page. If this happens right after Google, the app
-              origin may not be fully connected in the Clerk dashboard (Dashboard → URLs → enable{" "}
-              <span className="font-semibold">www.initoption.com</span>).
-            </p>
-            <Button asChild className="mt-6 w-full">
-              <Link to="/login">Back to login</Link>
-            </Button>
-          </>
-        ) : (
+        {!isSignedIn && showSdk ? (
           <>
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -58,6 +47,27 @@ const AuthCallback = () => {
               signUpFallbackRedirectUrl="/login"
               redirectUrlComplete="/trade"
             />
+          </>
+        ) : (
+          <>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-400">
+              <XCircle className="h-6 w-6" />
+            </div>
+            <h1 className="mt-4 text-2xl font-bold text-foreground">
+              {isSignedIn ? "Sign-in complete" : "Sign-in could not be completed here"}
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              {isSignedIn
+                ? "You are signed in. "
+                : "A sign-in handshake was expected but did not finish in time. "}
+              If this happens right after Google, the app origin may not be fully connected in the Clerk dashboard
+              (Dashboard → URLs → enable <span className="font-semibold">www.initoption.com</span>).
+            </p>
+            <Button asChild className="mt-6 w-full">
+              <Link to={isSignedIn ? "/trade" : "/login"}>
+                {isSignedIn ? "Go to trading" : "Back to login"}
+              </Link>
+            </Button>
           </>
         )}
       </div>

@@ -15,9 +15,17 @@ interface ClerkProviderProps {
 }
 
 export function ClerkProvider({ children }: ClerkProviderProps) {
+  const appOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  const signInUrl = `${appOrigin}/login`;
+  const signUpUrl = `${appOrigin}/register`;
+
   return (
     <ClerkReactProvider
       publishableKey={CLERK_PUBLISHABLE_KEY}
+      signInUrl={signInUrl}
+      signUpUrl={signUpUrl}
+      fallbackRedirectUrl="/trade"
+      forceRedirectUrl="/trade"
       afterSignOutUrl="/trade"
     >
       {children}
