@@ -551,8 +551,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
+      const redirectPath = getAuthRestorePath() || "/trade";
       await clerkSignIn.authenticateWithRedirect({
         strategy: "oauth_google",
+        redirectUrl: `${window.location.origin}/auth/callback`,
+        redirectUrlComplete: `${window.location.origin}${redirectPath}`,
       });
       return { error: null };
     } catch (error: any) {

@@ -1,7 +1,8 @@
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useClerk } from "@/integrations/clerk/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { isProtectedRestorePath } from "@/lib/authRedirect";
 import logo from "@/assets/logo.png";
@@ -24,20 +25,31 @@ const getSafeNextPath = (value: string) => {
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const clerk = useClerk();
   const { loading, user, emailVerified } = useAuth();
+  const [redirecting, setRedirecting] = useState(false);
   const callbackParams = useMemo(() => readCallbackParams(), []);
   const safeNextPath = useMemo(() => getSafeNextPath(callbackParams.next), [callbackParams.next]);
   const hasError = Boolean(callbackParams.error || callbackParams.errorDescription);
 
+  // Complete the Clerk OAuth/SAML handshake first, then let the auth listener
+  // pick up the new Clerk session and redirect the user onward.
   useEffect(() => {
-    if (loading || hasError) return;
+    if (hasError || !clerk || !clerk.loaded) return;
+
+    void clerk.handleRedirectCallback().then(() => setRedirecting(false));
+    setRedirecting(true);
+  }, [clerk, hasError]);
+
+  useEffect(() => {
+    if (loading || hasError || redirecting) return;
 
     const timer = window.setTimeout(() => {
       navigate(user ? safeNextPath : "/login", { replace: true });
     }, user ? 250 : 900);
 
     return () => window.clearTimeout(timer);
-  }, [hasError, loading, navigate, safeNextPath, user]);
+  }, [hasError, loading, navigate, redirecting, safeNextPath, user]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
@@ -59,7 +71,7 @@ const AuthCallback = () => {
               <Link to="/login">Back to login</Link>
             </Button>
           </>
-        ) : loading ? (
+        ) : loading || redirecting ? (
           <>
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Loader2 className="h-6 w-6 animate-spin" />
