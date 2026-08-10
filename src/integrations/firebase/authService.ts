@@ -128,6 +128,10 @@ function normalizeError(e: unknown): FirebaseAuthError {
     "auth/weak-password": "Password must be at least 6 characters.",
     "auth/popup-closed-by-user": "Google sign-in was closed. Please try again.",
     "auth/popup-blocked": "Popup was blocked. Please allow pop-ups and try again.",
+    "auth/cancelled-popup-request": "Another sign-in request is in progress. Please wait and try again.",
+    "auth/unauthorized-domain": "This domain is not authorised for Google sign-in. Add it in Firebase Console → Authentication → Settings → Authorized domains.",
+    "auth/network-request-failed": "Network error. Check your connection and try again.",
+    "auth/operation-not-allowed": "Google sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.",
     FIREBASE_CONFIG_MISSING: "Firebase is not configured yet. Set the VITE_FIREBASE_* variables.",
   };
   const message = map[code] ?? err?.message ?? "Authentication failed. Please try again.";
