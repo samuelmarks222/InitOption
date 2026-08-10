@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import {
   signInEmail,
   signUpEmail,
-  signInWithGoogle,
+  signInWithGoogle as signInWithGoogleProvider,
   signOut as firebaseSignOut,
   getIdToken,
   subscribeAuthState,
@@ -585,7 +585,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const { user: fbUser, error } = await signInWithGoogle();
+      const { user: fbUser, error } = await signInWithGoogleProvider();
       if (error) return { error: toAuthError(error.message, 400) };
       void fbUser;
       void persistToken();

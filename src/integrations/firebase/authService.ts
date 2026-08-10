@@ -72,7 +72,6 @@ export async function signInWithGoogle(): Promise<{ user: FirebaseUser | null; e
   try {
     if (!firebaseConfigPresent) throw new Error("FIREBASE_CONFIG_MISSING");
     if (!firebaseAuth) throw new Error("Firebase auth is not initialized");
-    if (!firebaseAuth.currentUser) throw new Error("User is not available for Google sign-in");
     const provider = new GoogleAuthProvider();
     const cred = await signInWithPopup(firebaseAuth, provider);
     return { user: cred.user ?? null, error: null };
