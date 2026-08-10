@@ -27,15 +27,9 @@ export interface MobileMoneyWithdrawalPayload {
   status: string;
 }
 
-const getAccessToken = async () => {
-  const accessToken = localStorage.getItem("clerk_session_token");
+import { getFirebaseIdToken } from "@/integrations/firebase/authService";
 
-  if (!accessToken) {
-    throw new Error("Authentication required. Please sign in again.");
-  }
-
-  return accessToken;
-};
+const getAccessToken = () => getFirebaseIdToken();
 
 const postAuthenticatedJson = async <T>(path: string, body: Record<string, unknown>) => {
   const accessToken = await getAccessToken();

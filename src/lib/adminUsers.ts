@@ -1,5 +1,7 @@
 
 
+import { getFirebaseIdToken } from "@/integrations/firebase/authService";
+
 export type AdminKycDecision = "Pending" | "Verified" | "Rejected";
 
 export type AdminKycDocument = {
@@ -43,15 +45,7 @@ interface ReviewUserKycResponse {
   user_id: string;
 }
 
-const getAccessToken = async () => {
-  const accessToken = localStorage.getItem("clerk_session_token");
-
-  if (!accessToken) {
-    throw new Error("Authentication required. Please sign in again.");
-  }
-
-  return accessToken;
-};
+const getAccessToken = () => getFirebaseIdToken();
 
 const postAuthenticatedJson = async <T>(path: string, body: Record<string, unknown>) => {
   const accessToken = await getAccessToken();

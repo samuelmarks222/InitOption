@@ -56,8 +56,6 @@
     { "source": "/api/profile/(.*)", "destination": "/api/system?route=profile" },
     { "source": "/api/platform-settings", "destination": "/api/system?route=platform-settings" },
     { "source": "/api/platform-settings/(.*)", "destination": "/api/system?route=platform-settings" },
-    { "source": "/api/webhooks/clerk", "destination": "/api/system?route=clerk-webhook" },
-    { "source": "/api/webhooks/clerk/(.*)", "destination": "/api/system?route=clerk-webhook" },
     { "source": "/api/db/(.*)", "destination": "/api/system?route=db&__dbpath=$1" },
     { "source": "/api/rpc/(.*)", "destination": "/api/system?route=rpc&fn=$1" },
     { "source": "/api/cloudinary/upload", "destination": "/api/system?route=cloudinary-upload" },

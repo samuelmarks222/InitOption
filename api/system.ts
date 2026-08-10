@@ -9,8 +9,7 @@ import {
   handleCloudinaryDelete,
   handleCloudinaryExists,
   handleCloudinaryPublicUrl,
-  handlePusherAuth,
-  handleClerkWebhook,
+   handlePusherAuth,
 } from "./_lib/newApi.js";
 
 type ApiRequest = IncomingMessage & {
@@ -57,9 +56,6 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         return;
       case "pusher-auth":
         await handlePusherAuth(request, res);
-        return;
-      case "clerk-webhook":
-        await handleClerkWebhook(request, res);
         return;
       default:
         // Legacy /api/system?resource=... behaviour

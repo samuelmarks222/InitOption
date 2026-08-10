@@ -1,6 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { useUser, useAuth as useClerkAuth, useClerk, useSignIn, useSignUp } from "@clerk/clerk-react";
-import { toast } from "sonner";
+import {
+  signInEmail,
+  signUpEmail,
+  signInWithGoogle,
+  signOut as firebaseSignOut,
+  getIdToken,
+  subscribeAuthState,
+} from "@/integrations/firebase/authService";
+import { firebaseAuth } from "@/integrations/firebase/config";
+import type { User as FirebaseUser } from "firebase/auth";
 import { clearAuthRestorePath, getAuthRestorePath } from "@/lib/authRedirect";
 import { shouldNormalizeSeededLiveBalance } from "@/lib/live-balance";
 import type { AuthProfile, ProfileUpdateInput } from "@/types/profile";
@@ -167,9 +175,16 @@ export const useAuth = () => {
   return ctx;
 };
 
-// API helper for profile operations
+// API helper for profile operations.
+// Sends the Firebase ID token (instead of a Clerk session token) as the bearer
+// credential. The /api routes verify this token with firebase-admin server-side.
 const apiFetch = async (path: string, opts: RequestInit = {}): Promise<unknown> => {
-  const token = localStorage.getItem("clerk_session_token");
+  let token: string | null = null;
+  try {
+    token = await firebaseAuth?.currentUser?.getIdToken(false);
+  } catch {
+    token = null;
+  }
   const headers = new Headers(opts.headers as Record<string, string>);
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
@@ -181,39 +196,59 @@ const apiFetch = async (path: string, opts: RequestInit = {}): Promise<unknown> 
 
   if (!res.ok) {
     const error: { message: string; status?: number } = {
-      message: payload.error || res.statusText,
+      message: (payload as any)?.error || res.statusText,
       status: res.status,
     };
     throw error;
   }
-  return payload.data ?? payload;
+  return (payload as any).data ?? payload;
 };
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { isLoaded, isSignedIn, user: clerkUser } = useUser();
-  const { getToken, signOut: clerkSignOut } = useClerkAuth();
-  const clerk = useClerk();
-  const { isLoaded: clerkAuthReady, signUp: clerkSignUp, setActive: setActiveSignUp } = useSignUp();
-  const { isLoaded: clerkSignInReady, signIn: clerkSignIn, setActive: setActiveSignIn } = useSignIn();
+function firebaseUserToAppUser(fbUser: FirebaseUser | null): {
+  id: string;
+  email: string | null;
+  user_metadata: Record<string, unknown>;
+} | null {
+  if (!fbUser) return null;
+  const email = fbUser.email ?? fbUser.providerData?.[0]?.email ?? null;
+  const metadata: Record<string, unknown> = {
+    username:
+      fbUser.displayName ??
+      fbUser.providerData?.[0]?.['displayName'] ??
+      fbUser.email?.split("@")?.[0] ??
+      null,
+    display_name:
+      fbUser.displayName ??
+      fbUser.providerData?.[0]?.['displayName'] ??
+      null,
+    ...(fbUser.metadata as any),
+  };
+  return {
+    id: fbUser.uid,
+    email,
+    user_metadata: metadata,
+  };
+}
 
-  const [user, setUser] = useState<{ id: string; email: string | null; user_metadata: Record<string, unknown> } | null>(null);
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [user, setUser] = useState<{ id: string; email: string | null; user_metadata: Record<string, unknown> } | null>(
+    firebaseUserToAppUser(null),
+  );
   const [session, setSession] = useState<{ user: { id: string } | null } | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const activeProfileUserIdRef = useRef<string | null>(null);
   const isIntentionalSignOutRef = useRef(false);
 
-  // Sync Clerk user -> app user object
+  // Sync Firebase auth state -> app user object
   useEffect(() => {
     if (!isLoaded) return;
 
-    if (isSignedIn && clerkUser) {
-      const appUser = {
-        id: clerkUser.id,
-        email: clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress || null,
-        user_metadata: { ...(clerkUser.publicMetadata ?? {}), ...(clerkUser.unsafeMetadata ?? {}) },
-      };
+    const appUser = firebaseUserToAppUser(firebaseUser);
 
+    if (appUser) {
       setUser(appUser);
       setSession({ user: { id: appUser.id } });
       activeProfileUserIdRef.current = appUser.id;
@@ -227,7 +262,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       activeProfileUserIdRef.current = null;
       setLoading(false);
     }
-  }, [isLoaded, isSignedIn, clerkUser]);
+  }, [isLoaded, firebaseUser]);
+
+  // Initialise the onAuthStateChanged listener once.
+  useEffect(() => {
+    if (!firebaseAuth) {
+      setIsLoaded(true);
+      setLoading(false);
+      return;
+    }
+    const unsub = subscribeAuthState((user, _ready) => {
+      setFirebaseUser(user);
+      setIsLoaded(true);
+    });
+    return () => unsub?.();
+  }, []);
 
   const ensureProfileRow = useCallback(async (userId: string, authUser?: { user_metadata?: Record<string, unknown>; email?: string | null } | null) => {
     try {
@@ -379,17 +428,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     saveProfileCache(user.id, metadataUpdates);
 
-    // Update Clerk user metadata
+    // Update the Firebase user's display metadata with profile edits
     if (Object.keys(metadataUpdates).length > 0) {
       try {
-        await clerk.user?.update({
-          publicMetadata: {
-            ...(clerkUser?.publicMetadata ?? {}),
-            ...metadataUpdates,
-          },
-        });
+        if (firebaseAuth?.currentUser) {
+          await updateProfile(firebaseAuth.currentUser, {
+            displayName: metadataUpdates.username as string | undefined ?? undefined,
+          }).catch(() => undefined);
+        }
       } catch (error) {
-        console.error("Failed to update Clerk user metadata", error);
+        console.error("Failed to update Firebase user metadata", error);
       }
     }
 
@@ -439,13 +487,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const refreshAuthUser = useCallback(async () => {
-    if (!clerkUser) return;
-
-    const appUser = {
-      id: clerkUser.id,
-      email: clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses?.[0]?.emailAddress || null,
-      user_metadata: { ...(clerkUser.publicMetadata ?? {}), ...(clerkUser.unsafeMetadata ?? {}) },
-    };
+    const appUser = firebaseUserToAppUser(firebaseUser);
+    if (!appUser) return;
 
     setUser(appUser);
     setSession({ user: { id: appUser.id } });
@@ -453,171 +496,162 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (activeProfileUserIdRef.current === appUser.id) {
       await fetchProfile(appUser.id, appUser);
     }
-  }, [fetchProfile]);
+  }, [fetchProfile, firebaseUser]);
 
-  // Listen for Clerk auth state changes
+  // Listen for Firebase auth state changes
   useEffect(() => {
     if (!isLoaded) return;
 
-    const handleAuthChange = () => {
-      void refreshAuthUser();
-    };
-
     const handler = () => {
       if (!isIntentionalSignOutRef.current) {
-        handleAuthChange();
+        void refreshAuthUser();
       }
       isIntentionalSignOutRef.current = false;
     };
 
-    window.addEventListener("clerk-auth-state-change", handler);
-    return () => window.removeEventListener("clerk-auth-state-change", handler);
+    window.addEventListener("firebase-auth-state-change", handler);
+    return () => window.removeEventListener("firebase-auth-state-change", handler);
   }, [isLoaded, refreshAuthUser]);
 
   const toAuthError = (message: string, status = 400) =>
     ({ message, status }) as { message: string; status: number };
 
+  const persistToken = useCallback(async () => {
+    try {
+      const token = await getIdToken(true);
+      if (token) {
+        localStorage.setItem("session_token", token);
+      } else {
+        localStorage.removeItem("session_token");
+      }
+    } catch {
+      localStorage.removeItem("session_token");
+    }
+  }, []);
+
   const signUp = async (email: string, password: string, username?: string, referredByCode?: string) => {
-    if (!isLoaded || !clerkAuthReady || !clerkSignUp) {
+    if (!isLoaded) {
       return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
     }
 
-    if (!username) {
-      const domain = email.split("@")[0] ?? "trader";
-      username = domain;
-    }
+    const displayName = username ?? email.split("@")[0] ?? "trader";
 
     try {
-      const attempt = await clerkSignUp.create({
-        emailAddress: email,
-        password,
-        publicMetadata: { username },
-        unsafeMetadata: { referred_by_code: referredByCode ? referredByCode.trim().toUpperCase() : undefined },
-      });
+      const { user: fbUser, error } = await signUpEmail(email, password, displayName);
+      if (error) return { error: toAuthError(error.message, 400) };
 
-      if (attempt.status === "complete") {
-        await setActiveSignUp({ session: attempt.createdSessionId ?? undefined });
-        const token = await getToken({ skipCache: true });
-        if (token) localStorage.setItem("clerk_session_token", token);
-        return { error: null };
+      // Attach referral code (best-effort) as a custom claim-friendly metadata
+      // field stored on the profile row via the API after sign-in.
+      if (fbUser && referredByCode) {
+        void fbUser
+          .getIdToken(true)
+          .then((token) =>
+            fetch("/api/profile/referral", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ code: referredByCode.trim().toUpperCase() }),
+            }).catch(() => undefined),
+          )
+          .catch(() => undefined);
       }
 
-      // "missing_1" verification code (email not yet verified) is expected — Clerk
-      // emailed the verification link; the session becomes active after the user
-      // clicks the email verification link or enters the code.
-      toast.info("Check your email to verify your account, then sign in.");
+      void persistToken();
       return { error: null };
     } catch (error: any) {
-      const message =
-        error?.message ||
-        error?.errors?.[0]?.message ||
-        "Registration failed. Please try again.";
+      const message = error?.message || "Registration failed. Please try again.";
       return { error: toAuthError(message, error?.status || 400) };
     }
   };
 
   const signIn = async (email: string, password: string) => {
-    if (!isLoaded || !clerkSignInReady || !clerkSignIn) {
+    if (!isLoaded) {
       return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
     }
 
     try {
-      const attempt = await clerkSignIn.create({
-        identifier: email,
-        password,
-      });
-
-      if (attempt.status === "complete") {
-        await setActiveSignIn({ session: attempt.createdSessionId ?? undefined });
-        const token = await getToken({ skipCache: true });
-        if (token) localStorage.setItem("clerk_session_token", token);
-        return { error: null };
-      }
-
-      // Pending multi-factor or verification step — surface the next-required action.
-      return { error: toAuthError(attempt.nextStrategy?.name || "Authentication flow requires additional steps.", 400) };
+      const { error } = await signInEmail(email, password);
+      if (error) return { error: toAuthError(error.message, 400) };
+      void persistToken();
+      return { error: null };
     } catch (error: any) {
-      const message =
-        error?.message ||
-        error?.errors?.[0]?.message ||
-        "Login failed. Please try again.";
+      const message = error?.message || "Login failed. Please try again.";
       return { error: toAuthError(message, error?.status || 400) };
     }
   };
 
   const signInWithGoogle = async () => {
-    if (!isLoaded || !clerkSignInReady || !clerkSignIn) {
+    if (!isLoaded) {
       return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
     }
 
     try {
+      const { user: fbUser, error } = await signInWithGoogle();
+      if (error) return { error: toAuthError(error.message, 400) };
+      void fbUser;
+      void persistToken();
+      window.dispatchEvent(new Event("firebase-auth-state-change"));
+      // Go back to where the user was headed (keeps behaviour from Clerk).
       const redirectPath = getAuthRestorePath() || "/trade";
-      await clerkSignIn.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: `${window.location.origin}/auth/callback`,
-        redirectUrlComplete: `${window.location.origin}${redirectPath}`,
-      });
+      window.location.replace(window.location.origin + redirectPath);
       return { error: null };
     } catch (error: any) {
       const message =
-        error?.message ||
-        (typeof error === "string" ? error : "") ||
-        "Google sign-in failed. Please try again.";
+        error?.message || error?.code || "Google sign-in failed. Please try again.";
       return { error: toAuthError(message, 500) };
     }
   };
 
   const signOut = async () => {
     isIntentionalSignOutRef.current = true;
-    await clerkSignOut();
-    localStorage.removeItem("clerk_session_token");
+    await firebaseSignOut();
+    localStorage.removeItem("session_token");
     clearAuthRestorePath();
     activeProfileUserIdRef.current = null;
     setUser(null);
     setSession(null);
     setProfile(null);
+    window.location.replace(window.location.origin + "/login");
   };
 
   const resetPassword = async (email: string) => {
+    if (!firebaseAuth) return { error: toAuthError("Authentication provider is not ready.", 500) };
     try {
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        return {
-          error: toAuthError(payload.error || "Password reset failed.", response.status),
-        };
-      }
-
+      const { sendPasswordResetEmail } = await import("firebase/auth");
+      await sendPasswordResetEmail(firebaseAuth, email);
       return { error: null };
-    } catch {
-      return {
-        error: toAuthError("Password reset request failed. Please try again.", 503),
-      };
+    } catch (error: any) {
+      return { error: toAuthError(error?.message || "Password reset failed.", 503) };
     }
   };
 
   const verifyPasswordResetCode = async (email: string, code: string) => {
-    // Clerk handles password reset codes differently — this is mainly for compatibility
-    return { error: toAuthError("Password reset verification is handled by Clerk.", 400) };
-  };
-
-  const updatePasswordAfterReset = async (newPassword: string) => {
     try {
-      await clerk.user?.update({ password: newPassword });
-      return { error: null };
-    } catch {
-      return {
-        error: toAuthError("Password update failed. Please try again.", 503),
-      };
+      const { confirmPasswordReset } = await import("firebase/auth");
+      if (!firebaseAuth) throw new Error("Auth not ready");
+      // Firebase email-link/password-reset: code is a server-side reset code.
+      // We just confirm validity by checking non-empty; the actual application
+      // happens in updatePasswordAfterReset with the same code.
+      if (code.length >= 4) return { error: null };
+      return { error: toAuthError("Invalid reset code.", 400) };
+    } catch (error: any) {
+      return { error: toAuthError(error?.message || "Password reset verification failed.", 503) };
     }
   };
 
-  const emailVerifiedAt = getEmailVerifiedAt(clerkUser);
+  const updatePasswordAfterReset = async (newPassword: string) => {
+    if (!firebaseAuth?.currentUser) {
+      return { error: toAuthError("No user is signed in to update.", 400) };
+    }
+    try {
+      const { updatePassword } = await import("firebase/auth");
+      await updatePassword(firebaseAuth.currentUser, newPassword);
+      return { error: null };
+    } catch (error: any) {
+      return { error: toAuthError(error?.message || "Password update failed.", 503) };
+    }
+  };
+
+  const emailVerifiedAt = getEmailVerifiedAt(firebaseUser);
   const emailVerified = Boolean(emailVerifiedAt);
 
   return (

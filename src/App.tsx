@@ -4,8 +4,7 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ClerkProvider } from "@/integrations/clerk/client";
-import { AuthProvider } from "@/contexts/AuthContext";
+import SafeFirebaseProvider from "@/integrations/firebase/FirebaseProvider";
 import TradingRouteProviders from "@/components/TradingRouteProviders";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
@@ -143,11 +142,10 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <RouteSeoManager platformSettings={platformSettings} />
-          <ClerkProvider>
-            <AuthProvider>
-              <Routes>
+         <BrowserRouter>
+           <RouteSeoManager platformSettings={platformSettings} />
+           <SafeFirebaseProvider>
+             <Routes>
                         <Route path="/" element={withRouteSuspense(<Index />)} />
                         <Route path="/about" element={withRouteSuspense(<PublicInfoPage pageKey="about" />)} />
                         <Route path="/facts-and-figures" element={withRouteSuspense(<PublicInfoPage pageKey="facts-and-figures" />)} />
@@ -222,10 +220,9 @@ const App = () => {
                         </Route>
 
                         <Route path="*" element={withRouteSuspense(<NotFound />)} />
-            </Routes>
-            </AuthProvider>
-          </ClerkProvider>
-        </BrowserRouter>
+             </Routes>
+           </SafeFirebaseProvider>
+         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   </AppErrorBoundary>

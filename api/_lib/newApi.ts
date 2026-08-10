@@ -4,7 +4,6 @@ import { transaction, query, queryOne } from "./db.js";
 import {
   clerkUserIdToUuid,
   authenticateRequest,
-  verifyClerkWebhook,
 } from "./clerkWebhook.js";
 import {
   DEFAULT_PLATFORM_SETTINGS,
@@ -438,98 +437,6 @@ export async function handlePusherAuth(request: ApiRequest, response: ApiRespons
   } catch (error) {
     console.error("Pusher auth failed:", error);
     sendJson(response, 500, { error: error instanceof Error ? error.message : "Auth failed" });
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/* Clerk webhook                                                        */
-/* ------------------------------------------------------------------ */
-const toIso = (value: unknown): string | null => {
-  if (!value) return null;
-  const date = new Date(String(value));
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
-};
-
-type ClerkEmail = { id?: unknown; email_address?: unknown; verification?: { status?: unknown } };
-
-const getPrimaryEmail = (data: Row): string | null => {
-  const addresses = Array.isArray(data.email_addresses) ? (data.email_addresses as ClerkEmail[]) : [];
-  const primary = addresses.find((entry) => entry?.id === data.primary_email_address_id);
-  const selected = primary ?? addresses[0];
-  return typeof selected?.email_address === "string" ? selected.email_address : null;
-};
-
-const hasVerifiedEmail = (data: Row): boolean => {
-  const addresses = Array.isArray(data.email_addresses) ? (data.email_addresses as ClerkEmail[]) : [];
-  return addresses.some((entry) => entry?.verification?.status === "verified");
-};
-
-const buildUserMeta = (data: Row) => {
-  const firstName = typeof data.first_name === "string" ? data.first_name.trim() : "";
-  const lastName = typeof data.last_name === "string" ? data.last_name.trim() : "";
-  const fullName = [firstName, lastName].filter(Boolean).join(" ") || null;
-
-  return {
-    ...(data.public_metadata && typeof data.public_metadata === "object" ? data.public_metadata : {}),
-    ...(data.unsafe_metadata && typeof data.unsafe_metadata === "object" ? data.unsafe_metadata : {}),
-    username: data.username ?? null,
-    display_name: fullName,
-    avatar_url: data.image_url ?? null,
-  };
-};
-
-const upsertUser = async (data: Row) => {
-  const id = clerkUserIdToUuid(data.id as string);
-  const email = getPrimaryEmail(data);
-  const meta = buildUserMeta(data);
-  const emailConfirmedAt = hasVerifiedEmail(data) ? toIso(data.created_at) ?? new Date().toISOString() : null;
-  const createdAt = toIso(data.created_at) ?? new Date().toISOString();
-  const updatedAt = toIso(data.updated_at) ?? new Date().toISOString();
-  const lastSignInAt = toIso(data.last_sign_in_at);
-
-  await query(
-    `insert into public.users (id, email, raw_user_meta_data, email_confirmed_at, created_at, updated_at, last_sign_in_at)
-     values ($1, $2, $3, $4, $5, $6, $7)
-     on conflict (id) do update set
-       email = excluded.email,
-       raw_user_meta_data = excluded.raw_user_meta_data,
-       email_confirmed_at = excluded.email_confirmed_at,
-       updated_at = excluded.updated_at,
-       last_sign_in_at = excluded.last_sign_in_at`,
-    [id, email, JSON.stringify(meta), emailConfirmedAt, createdAt, updatedAt, lastSignInAt],
-  );
-};
-
-const deleteUser = async (clerkUserId: string) => {
-  await query("delete from public.users where id = $1", [clerkUserIdToUuid(clerkUserId)]);
-};
-
-export async function handleClerkWebhook(request: ApiRequest, response: ApiResponse): Promise<void> {
-  if (request.method !== "POST") {
-    response.setHeader("Allow", "POST");
-    sendJson(response, 405, { error: "Method not allowed" });
-    return;
-  }
-  try {
-    const rawBody = await readRawBody(request);
-    const event = await verifyClerkWebhook({ rawBody, headers: request.headers });
-
-    switch (event.type) {
-      case "user.created":
-      case "user.updated":
-        await upsertUser((event.data as unknown as Row) ?? {});
-        break;
-      case "user.deleted":
-        await deleteUser((event.data as unknown as Row).id as string);
-        break;
-      default:
-        break;
-    }
-
-    sendJson(response, 200, { ok: true, type: event.type });
-  } catch (error) {
-    console.error("Clerk webhook processing failed", error);
-    sendJson(response, 400, { error: error instanceof Error ? error.message : "Failed to process webhook" });
   }
 }
 

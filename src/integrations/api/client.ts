@@ -3,6 +3,9 @@
 // Supports the supabase-js chain style used across the app:
 //   const { data, error } = await api.from("trades").select("*").eq("user_id", id).order("created_at");
 
+import { getFirebaseIdToken } from "@/integrations/firebase/authService";
+import { firebaseConfigPresent } from "@/integrations/firebase/config";
+
 type Row = Record<string, unknown>;
 
 export type FilterClause =
@@ -16,8 +19,8 @@ type ApiResult<T = Row | Row[] | null> =
 
 const API_BASE = "/api";
 
-function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem("clerk_session_token");
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const token = await getFirebaseIdToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -36,7 +39,7 @@ async function request(
       method,
       headers: {
         "Content-Type": "application/json",
-        ...getAuthHeaders(),
+        ...(await getAuthHeaders()),
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
@@ -250,4 +253,4 @@ class ApiClient {
 
 export const api = ApiClient;
 
-export const isConfigured = () => Boolean(localStorage.getItem("clerk_session_token"));
+export const isConfigured = () => firebaseConfigPresent;

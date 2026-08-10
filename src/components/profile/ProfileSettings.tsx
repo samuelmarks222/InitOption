@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useAuth as useClerkAuth, useClerk } from "@clerk/clerk-react";
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { Shield, Bell, Monitor, Smartphone, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { firebaseAuth } from "@/integrations/firebase/config";
 import { toast } from "@/hooks/use-toast";
 import { DEFAULT_NOTIFICATION_PREFERENCES, normalizeNotificationPreferences } from "@/lib/profileSettings";
 import type { NotificationPreferences } from "@/types/profile";
@@ -17,7 +18,12 @@ export const ProfileSettings = () => {
   const [timezone, setTimezone] = useState("UTC+03:00 (Tbilisi, Georgia)");
   const [darkMode, setDarkMode] = useState(() => typeof window !== "undefined" && document.documentElement.classList.contains("dark"));
   const { profile, updateProfile, user, signOut } = useAuth();
-  const clerk = useClerk();
+
+  // "Log out of all other sessions" isn't available client-side in Firebase Auth;
+  // signing out the current session is the closest client-only equivalent.
+  const handleSignOutAllSessions = async () => {
+    await signOut();
+  };
 
   useEffect(() => {
     setNotificationPreferences(normalizeNotificationPreferences(profile?.notificationPreferences));
@@ -68,17 +74,13 @@ export const ProfileSettings = () => {
     setUpdatingPassword(true);
 
     try {
-      const { error: signInError } = await clerk.signIn.authenticateWithPassword({
-        identifier: user.email ?? "",
-        password: passwordForm.currentPassword,
-      });
-
-      if (signInError) {
-        throw signInError;
+      if (!firebaseAuth?.currentUser || !user?.email) {
+        throw new Error("You must be signed in to change your password.");
       }
 
-      const { error: updateError } = await clerk.user?.update({ password: passwordForm.newPassword });
-      if (updateError) throw updateError;
+      const cred = EmailAuthProvider.credential(user.email, passwordForm.currentPassword);
+      await reauthenticateWithCredential(firebaseAuth.currentUser, cred);
+      await updatePassword(firebaseAuth.currentUser, passwordForm.newPassword);
 
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       toast({ title: "Password updated", description: "Your password has been changed successfully.", variant: "default" });
@@ -165,20 +167,20 @@ export const ProfileSettings = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => void signOut()}
-                    className="text-[12px] text-red-400 font-bold hover:underline"
-                  >
-                    Log Out
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void clerk.signOut()}
-                  className="w-full mt-2 py-2 text-center text-[12px] text-[#0b65c2] font-bold border border-[#0b65c2]/20 rounded-lg hover:bg-[#0b65c2]/10 transition-colors"
+                  onClick={() => void signOut()}
+                  className="text-[12px] text-red-400 font-bold hover:underline"
                 >
-                  Log Out of All Other Sessions
+                  Log Out
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={() => void handleSignOutAllSessions()}
+                className="w-full mt-2 py-2 text-center text-[12px] text-[#0b65c2] font-bold border border-[#0b65c2]/20 rounded-lg hover:bg-[#0b65c2]/10 transition-colors"
+              >
+                Log Out of All Other Sessions
+              </button>
+            </div>
             </SettingsSection>
           </div>
         )}

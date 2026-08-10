@@ -1,8 +1,8 @@
-import { useUser } from "@clerk/clerk-react";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Edit2, Trash2, Eye, EyeOff, FileText } from "lucide-react";
 import { cloudinaryClient } from "@/integrations/cloudinary/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 interface Guide {
@@ -36,7 +36,7 @@ interface VideoEntry {
 const GuideAdmin = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { user } = useUser();
+  const { user } = useAuth();
   const [guides, setGuides] = useState<Guide[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGuide, setSelectedGuide] = useState<Guide | null>(null);

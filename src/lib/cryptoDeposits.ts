@@ -6,6 +6,7 @@ import {
   loadCryptoDepositCheckoutCache,
   saveCryptoDepositCheckoutCache,
 } from "@/lib/cryptoDepositCheckoutCache";
+import { getFirebaseIdToken } from "@/integrations/firebase/authService";
 
 export type CryptoAttributionMode = "static" | "memo" | "dynamic_address";
 export type CryptoInstructionStatus =
@@ -231,7 +232,7 @@ export const createCryptoDepositInstruction = async ({
     provider_payment_status: data.provider_payment_status ?? null,
   });
 
-  const accessToken = localStorage.getItem("clerk_session_token");
+  const accessToken = await getFirebaseIdToken();
 
   if (!accessToken) {
     throw new Error("Authentication required. Please sign in again.");
@@ -313,7 +314,7 @@ export const recoverCryptoDepositCheckout = async ({
     provider_payment_status: data.provider_payment_status ?? null,
   });
 
-  const accessToken = localStorage.getItem("clerk_session_token");
+  const accessToken = await getFirebaseIdToken();
 
   if (!accessToken) {
     throw new Error("Authentication required. Please sign in again.");

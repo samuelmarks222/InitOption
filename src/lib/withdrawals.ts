@@ -1,5 +1,7 @@
 
 
+import { getFirebaseIdToken } from "@/integrations/firebase/authService";
+
 export type WithdrawalDecision = "approved" | "rejected";
 export type MobileMoneyWithdrawalDecision = "approved" | "rejected" | "completed" | "failed";
 
@@ -25,15 +27,7 @@ interface AdminUpdateWithdrawalStatusArgs {
   status: WithdrawalDecision;
 }
 
-const getAccessToken = async () => {
-  const accessToken = localStorage.getItem("clerk_session_token");
-
-  if (!accessToken) {
-    throw new Error("Authentication required. Please sign in again.");
-  }
-
-  return accessToken;
-};
+const getAccessToken = () => getFirebaseIdToken();
 
 const postAuthenticatedJson = async <T>(path: string, body: Record<string, unknown>) => {
   const accessToken = await getAccessToken();
