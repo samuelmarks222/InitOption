@@ -37,7 +37,7 @@ export function DepositStep1({
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <img src="/payment-logos/mpesa.png" alt="M-PESA" className="h-14 w-14 object-contain" />
+            <img src="/payment-logos/mpesa.png" alt="M-PESA" className="h-20 w-20 object-contain" />
             <div className="flex-1">
               <h3 className="font-bold text-lg text-white">M-PESA</h3>
               <p className="text-sm text-white/60 mt-1">Mobile Money</p>
@@ -85,7 +85,7 @@ export function DepositStep1({
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <img src="/payment-logos/bitcoin.png" alt="Bitcoin" className="h-14 w-14 object-contain" />
+            <img src="/payment-logos/bitcoin.png" alt="Bitcoin" className="h-20 w-20 object-contain" />
             <div className="flex-1">
               <h3 className="font-bold text-lg text-white">Cryptocurrency</h3>
               <p className="text-sm text-white/60 mt-1">BTC, USDT, ETH, BNB & more</p>
