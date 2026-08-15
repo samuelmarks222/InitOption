@@ -1,0 +1,86 @@
+/* Landing page scoped styles */
+.landing-section {
+  scroll-margin-top: 4rem;
+}
+
+/* subtle background movement */
+.landing-bg-movement {
+  background:
+    radial-gradient(circle at 12% 20%, rgba(18, 204, 154, 0.05), transparent 24%),
+    radial-gradient(circle at 88% 18%, rgba(28, 129, 248, 0.05), transparent 26%),
+    radial-gradient(circle at 50% 110%, rgba(18, 204, 154, 0.04), transparent 32%),
+    #0b0f1a;
+}
+
+@keyframes lpFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(1deg); }
+}
+
+@keyframes lpPulse {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes lpChartLine {
+  0% { stroke-dashoffset: 400; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes lpShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes lpGlow {
+  0%, 100% { opacity: 0.6; filter: blur(0); }
+  50% { opacity: 0.8; filter: blur(2px); }
+}
+
+@keyframes lpTicker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.lp-float { animation: lpFloat 7s ease-in-out infinite; }
+.lp-pulse-slow { animation: lpPulse 4s ease-in-out infinite; }
+.lp-shimmer { background: linear-gradient(90, hsla(0,0%,100%,0) 0, hsla(0,0%,100%,0.08) 50%, hsla(0,0%,100%,0) 100%); background-size: 200% 100%; animation: lpShimmer 3s linear infinite; }
+.lp-chart-line { stroke-dasharray: 400; animation: lpChartLine 1.4s ease-out forwards; }
+.lp-glow { animation: lpGlow 5s ease-in-out infinite; }
+.lp-ticker { animation: none; }
+.lp-ticker-inner { animation: lpTicker 22s linear infinite; }
+.lp-ticker-inner:hover { animation-play-state: paused; }
+
+/* trading terminal glass surface */
+.lp-terminal {
+  background:
+    radial-gradient(ellipse at top, #131a2b 0%, #0b0f1a 45%, #060b14 100%);
+  border: 1px solid rgba(18, 204, 154, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 24px 70px -8px rgba(0, 0, 0, 0.55),
+    0 0 50px -6px rgba(18, 204, 154, 0.06);
+}
+
+.lp-terminal-grid line {
+  stroke: rgba(94, 232, 195, 0.06);
+}
+
+.lp-terminal-grid path {
+  stroke: rgba(18, 204, 154, 0.08);
+}
+
+/* custom scrollbar for ticker */
+.lp-scroll-container {
+  scrollbar-width: none;
+}
+.lp-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .lp-float, .lp-pulse-slow, .lp-shimmer, .lp-chart-line, .lp-glow, .lp-ticker {
+    animation: none;
+  }
+}

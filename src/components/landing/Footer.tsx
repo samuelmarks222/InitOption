@@ -110,36 +110,39 @@ const Footer = ({ content }: FooterProps) => {
 
   const footerLinkGroups = [
     {
-      title: "About us",
+      title: "Platform",
       items: [
-        { label: "About Init Option", to: "/about" },
-        { label: "Facts and figures", to: "/facts-and-figures" },
-        { label: "How it works", to: "/how-it-works" },
-        { label: "Contact us", to: "/contact" },
+        { label: "Trading", to: "/trade" },
+        { label: "Markets", to: "/" },
+        { label: "Features", to: "/why-choose-init-option" },
+        { label: "How It Works", to: "/how-it-works" },
       ],
     },
     {
-      title: "Explore",
+      title: "Support",
       items: [
-        { label: "Trading guide", to: "/trading-guide" },
+        { label: "Help Center", to: "/trading-guide" },
         { label: "FAQ", to: "/faq" },
-        { label: "Blog", to: "/blog" },
-        { label: "Tournaments", to: "/tournaments" },
+        { label: "Contact us", to: "/contact" },
+        { label: "Payment information", to: "/payment-policy" },
       ],
     },
     {
-      title: "Regulation",
+      title: "Legal",
       items: [
-        { label: "Terms and Conditions", to: "/terms" },
-        { label: "Information Disclosure Policy", to: "/information-disclosure" },
+        { label: "Terms & Conditions", to: "/terms" },
         { label: "Privacy Policy", to: "/privacy" },
-        { label: "Risk disclaimer", to: "/risk-disclaimer" },
+        { label: "Risk Disclosure", to: "/risk-disclaimer" },
+        { label: "Payment Policy", to: "/payment-policy" },
       ],
     },
     {
-      title: "For partners",
+      title: "Company",
       items: [
+        { label: "About us", to: "/about" },
+        { label: "Facts and figures", to: "/facts-and-figures" },
         { label: "Affiliate program", to: "/affiliate-program" },
+        { label: "Site map", to: "/site-map" },
       ],
     },
   ] as const;
