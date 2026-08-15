@@ -1,19 +1,34 @@
-import { useState } from "react";
-import { ArrowLeft, CreditCard, Wallet, History, ArrowRight, ChevronDown } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { ArrowLeft, CreditCard, Wallet, History, ArrowRight, ChevronDown, Loader2, AlertCircle, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/integrations/api/client";
 import { SiteLogo } from "@/components/branding/SiteLogo";
 import { Button } from "@/components/ui/button";
-import { DepositStep1 } from "./deposit/DepositStep1";
-import { DepositStep2 } from "./deposit/DepositStep2";
-import { DepositStep3 } from "./deposit/DepositStep3";
-import { DepositSuccess } from "./deposit/DepositSuccess";
-import { WithdrawStep1 } from "./withdraw/WithdrawStep1";
-import { WithdrawStep2 } from "./withdraw/WithdrawStep2";
-import { WithdrawStep3 } from "./withdraw/WithdrawStep3";
-import { WithdrawSuccess } from "./withdraw/WithdrawSuccess";
-import { TransactionHistory } from "./TransactionHistory";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 import { ProgressSteps } from "./ProgressSteps";
+import { 
+  createCryptoDepositInstruction, 
+  getLatestOpenCryptoDepositInstruction,
+  CryptoDepositInstructionPayload,
+  CryptoPaymentMethodRecord 
+} from "@/lib/cryptoDeposits";
+import { 
+  requestMobileMoneyDeposit, 
+  MobileMoneyDepositPayload 
+} from "@/lib/mobileMoney";
+import { 
+  requestCryptoWithdrawal, 
+  requestMobileMoneyWithdrawal,
+  MobileMoneyWithdrawalPayload,
+  CryptoWithdrawalRequestPayload 
+} from "@/lib/withdrawals";
+import { getEffectiveLiveBalance } from "@/lib/live-balance";
+import { formatCurrencyAmount } from "@/lib/currency";
 
 type PaymentTab = "deposit" | "withdraw" | "history";
 type DepositStep = 1 | 2 | 3 | 4;
@@ -22,25 +37,42 @@ type WithdrawStep = 1 | 2 | 3 | 4;
 const STEP_LABELS_DEPOSIT = ["Payment Method", "Payment Details", "Payment Process", "Completed"];
 const STEP_LABELS_WITHDRAW = ["Withdrawal Method", "Withdrawal Details", "Review & Submit", "Completed"];
 
+interface CryptoPaymentMethodUI {
+  id: string;
+  coin_name: string;
+  symbol: string;
+  network: string;
+  minimum_deposit_amount: number;
+  attribution_mode: string;
+  wallet_address: string;
+}
+
 interface PaymentCenterProps {
   defaultTab?: "deposit" | "withdraw" | "history";
 }
 
 export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) => {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<PaymentTab>(defaultTab);
-  const [depositStep, setDepositStep] = useState<DepositStep>(1);
-  const [withdrawStep, setWithdrawStep] = useState<WithdrawStep>(1);
+  const [activeTab, setActiveTab] = useState<"deposit" | "withdraw" | "history">(defaultTab);
+  const [depositStep, setDepositStep] = useState<1 | 2 | 3 | 4>(1);
+  const [withdrawStep, setWithdrawStep] = useState<1 | 2 | 3 | 4>(1);
 
+  // Deposit state
   const [selectedDepositMethod, setSelectedDepositMethod] = useState<"mpesa" | "crypto" | null>(null);
   const [selectedDepositCoin, setSelectedDepositCoin] = useState<string>("USDT");
   const [selectedDepositNetwork, setSelectedDepositNetwork] = useState<string>("TRC20");
   const [depositAmount, setDepositAmount] = useState<string>("");
   const [depositPhone, setDepositPhone] = useState("");
   const [depositBonusTier, setDepositBonusTier] = useState<number>(3);
+  const [cryptoMethods, setCryptoMethods] = useState<CryptoPaymentMethodUI[]>([]);
+  const [depositLoading, setDepositLoading] = useState(false);
+  const [depositInstruction, setDepositInstruction] = useState<CryptoDepositInstructionPayload | null>(null);
+  const [depositError, setDepositError] = useState<string | null>(null);
+  const [depositStatus, setDepositStatus] = useState<"pending" | "approved" | "rejected" | "processing">("pending");
 
+  // Withdrawal state
   const [selectedWithdrawMethod, setSelectedWithdrawMethod] = useState<"mpesa" | "crypto">("mpesa");
   const [withdrawCoin, setWithdrawCoin] = useState<string>("USDT");
   const [withdrawNetwork, setWithdrawNetwork] = useState<string>("TRC20");
@@ -48,25 +80,306 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
   const [withdrawAddress, setWithdrawAddress] = useState("");
   const [withdrawPhone, setWithdrawPhone] = useState("");
   const [withdrawMemo, setWithdrawMemo] = useState("");
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
-  const availableBalance = 1250.00; // Mock for UI
+  // Balance & History
+  const [balance, setBalance] = useState<number>(0);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [historyFilter, setHistoryFilter] = useState<"all" | "deposits" | "withdrawals" | "bonuses">("all");
+  const [historySearch, setHistorySearch] = useState("");
 
-  const handleBack = () => {
-    if (activeTab === "deposit" && depositStep > 1) {
-      setDepositStep((prev) => (prev - 1) as DepositStep);
-    } else if (activeTab === "withdraw" && withdrawStep > 1) {
-      setWithdrawStep((prev) => (prev - 1) as WithdrawStep);
+  // Loading states
+  const [balanceLoading, setBalanceLoading] = useState(true);
+  const [cryptoMethodsLoading, setCryptoMethodsLoading] = useState(true);
+
+  // Types
+  type CryptoPaymentMethodUI = CryptoPaymentMethodRecord;
+  type Transaction = {
+    id: string;
+    type: "deposit" | "withdrawal" | "bonus";
+    method: string;
+    amount: number;
+    status: "completed" | "pending" | "processing" | "failed" | "rejected";
+    date: string;
+    coin?: string;
+    network?: string;
+    txHash?: string;
+  };
+
+  // Load initial data
+  useEffect(() => {
+    loadInitialData();
+  }, [user?.id]);
+
+  const loadInitialData = useCallback(async () => {
+    if (!user?.id) return;
+    
+    setBalanceLoading(true);
+    setCryptoMethodsLoading(true);
+    
+    try {
+      await Promise.all([
+        loadBalance(),
+        loadCryptoMethods(),
+        loadTransactions(),
+      ]);
+    } catch (error) {
+      console.error("Failed to load initial data:", error);
+    } finally {
+      setBalanceLoading(false);
+      setCryptoMethodsLoading(false);
+    }
+  }, [user?.id]);
+
+  const loadBalance = async () => {
+    if (!profile) return;
+    const balance = getEffectiveLiveBalance(profile);
+    setBalance(balance);
+  };
+
+  const loadCryptoMethods = async () => {
+    try {
+      const { data, error } = await api
+        .from("crypto_payment_methods")
+        .select("*")
+        .eq("status", "active")
+        .order("coin_name");
+      
+      if (!error && data) {
+        setCryptoMethods(data as CryptoPaymentMethodUI[]);
+        if (data[0]?.id && !selectedDepositMethod) {
+          setSelectedDepositMethod("crypto");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load crypto methods:", error);
     }
   };
 
-  const goToDepositStep = (step: DepositStep) => setDepositStep(step);
-  const goToWithdrawStep = (step: WithdrawStep) => setWithdrawStep(step);
+  const loadTransactions = async () => {
+    if (!user?.id) return;
+    
+    setTransactionsLoading(true);
+    try {
+      const { data, error } = await api
+        .from("transactions")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      
+      if (!error && data) {
+        setTransactions(data as Transaction[]);
+      }
+    } catch (error) {
+      console.error("Failed to load transactions:", error);
+    } finally {
+      setTransactionsLoading(false);
+    }
+  };
 
-  const tabConfig = [
-    { id: "deposit", label: "DEPOSIT", icon: Wallet },
-    { id: "withdraw", label: "WITHDRAWAL", icon: CreditCard },
-    { id: "history", label: "HISTORY", icon: History },
-  ] as const;
+  // Refresh functions
+  const refreshAll = async () => {
+    await Promise.all([
+      refreshProfile(),
+      loadBalance(),
+      loadTransactions(),
+    ]);
+  };
+
+  const handleBack = () => {
+    if (activeTab === "deposit" && depositStep > 1) {
+      setDepositStep((prev) => (prev - 1) as 1 | 2 | 3 | 4);
+    } else if (activeTab === "withdraw" && withdrawStep > 1) {
+      setWithdrawStep((prev) => (prev - 1) as 1 | 2 | 3 | 4);
+    }
+  };
+
+  // Deposit handlers
+  const handleDepositMethodSelect = (method: "mpesa" | "crypto") => {
+    setSelectedDepositMethod(method);
+    if (method === "crypto") {
+      setSelectedDepositCoin("USDT");
+      setSelectedDepositNetwork("TRC20");
+    }
+  };
+
+  const handleDepositContinue = async () => {
+    if (!selectedDepositMethod) return;
+    
+    if (selectedDepositMethod === "mpesa") {
+      setDepositStep(2);
+    } else if (selectedDepositMethod === "crypto") {
+      setDepositStep(2);
+    }
+  };
+
+  const handleDepositSubmit = async () => {
+    if (!user || !profile || !depositAmount || Number(depositAmount) <= 0) {
+      toast({ title: "Please enter a valid amount", variant: "destructive" });
+      return;
+    }
+
+    const amountValue = Number(depositAmount);
+    const selectedMethod = cryptoMethods.find(m => m.id === selectedDepositMethod?.split("-")[0]);
+    
+    if (!selectedMethod && selectedDepositMethod === "crypto") {
+      toast({ title: "Choose a crypto method", variant: "destructive" });
+      return;
+    }
+
+    setDepositLoading(true);
+    setDepositError(null);
+
+    try {
+      if (selectedDepositMethod === "mpesa") {
+        if (!depositPhone.trim()) {
+          toast({ title: "Enter M-PESA number", variant: "destructive" });
+          return;
+        }
+        
+        const response = await requestMobileMoneyDeposit({
+          amount: amountValue,
+          bonusOfferId: null,
+          phoneNumber: depositPhone,
+        });
+        
+        if (response.request_id) {
+          setDepositStatus("pending");
+          toast({ 
+            title: "Payment Request Sent", 
+            description: "Check your phone and enter your M-PESA PIN to complete the payment." 
+          });
+          setDepositStep(3); // Go to process step
+        }
+      } else if (selectedDepositMethod === "crypto") {
+        if (!selectedDepositMethod) {
+          toast({ title: "Choose a crypto method", variant: "destructive" });
+          return;
+        }
+
+        // Find the payment method ID for the selected coin/network
+        const paymentMethod = cryptoMethods.find(m => 
+          m.coin_name === selectedDepositCoin && m.network === selectedDepositNetwork
+        );
+        
+        if (!paymentMethod) {
+          toast({ title: "Invalid crypto method selected", variant: "destructive" });
+          return;
+        }
+
+        const instruction = await createCryptoDepositInstruction({
+          amount: amountValue,
+          paymentMethodId: paymentMethod.id,
+          cryptoCurrency: selectedDepositCoin,
+          cryptoNetwork: selectedDepositNetwork,
+        });
+
+        if (instruction.address) {
+          setDepositInstruction(instruction);
+          setDepositStep(3); // Go to process step
+        }
+      }
+    } catch (error) {
+      setDepositError(error instanceof Error ? error.message : "Deposit failed");
+      toast({ title: "Deposit failed", description: error instanceof Error ? error.message : "Error", variant: "destructive" });
+    } finally {
+      setDepositLoading(false);
+    }
+  };
+
+  // Withdrawal handlers
+  const handleWithdrawMethodSelect = (method: "mpesa" | "crypto") => {
+    setSelectedWithdrawMethod(method);
+    if (method === "crypto") {
+      setWithdrawCoin("USDT");
+      setWithdrawNetwork("TRC20");
+    }
+  };
+
+  const handleWithdrawContinue = () => {
+    setWithdrawStep(2);
+  };
+
+  const handleWithdrawSubmit = async () => {
+    if (!user || !profile || !withdrawAmount || Number(withdrawAmount) <= 0) {
+      toast({ title: "Please enter a valid amount", variant: "destructive" });
+      return;
+    }
+
+    const amountValue = Number(withdrawAmount);
+    const availableBal = getEffectiveLiveBalance(profile);
+    
+    if (amountValue < 10) {
+      toast({ title: "Withdrawal amount too low", description: "Minimum withdrawal is $10", variant: "destructive" });
+      return;
+    }
+
+    if (amountValue > availableBal) {
+      toast({ title: "Insufficient funds", variant: "destructive" });
+      return;
+    }
+
+    setWithdrawLoading(true);
+    setWithdrawError(null);
+
+    try {
+      if (selectedWithdrawMethod === "mpesa") {
+        if (!withdrawPhone.trim()) {
+          toast({ title: "Enter your M-PESA number", variant: "destructive" });
+          return;
+        }
+
+        const response = await requestMobileMoneyWithdrawal({
+          amount: amountValue,
+          forfeitBonus: false,
+          phoneNumber: withdrawPhone,
+        });
+
+        if (response.request_id) {
+          toast({ title: "Withdrawal Request Submitted", description: "Your request is pending approval" });
+          setWithdrawStep(4);
+        }
+      } else if (selectedWithdrawMethod === "crypto") {
+        if (!withdrawCoin || !withdrawNetwork || !withdrawAddress.trim()) {
+          toast({ title: "Please fill all required fields", variant: "destructive" });
+          return;
+        }
+
+        const response = await requestCryptoWithdrawal({
+          amount: amountValue,
+          destination: withdrawAddress.trim(),
+          cryptoCurrency: withdrawCoin,
+          cryptoNetwork: withdrawNetwork,
+          cryptoMemo: withdrawMemo,
+          forfeitBonus: false,
+        });
+
+        if (response.request_id) {
+          toast({ title: "Withdrawal Submitted", description: "Your crypto withdrawal is pending admin approval" });
+          setWithdrawStep(4);
+        }
+      }
+    } catch (error) {
+      setWithdrawError(error instanceof Error ? error.message : "Withdrawal failed");
+      toast({ title: "Withdrawal failed", description: error instanceof Error ? error.message : "Error", variant: "destructive" });
+    } finally {
+      setWithdrawLoading(false);
+    }
+  };
+
+  const goToDepositStep = (step: 1 | 2 | 3 | 4) => setDepositStep(step);
+  const goToWithdrawStep = (step: 1 | 2 | 3 | 4) => setWithdrawStep(step);
+
+  // Computed values
+  const availableBalance = getEffectiveLiveBalance({ ...profile, balance } as any);
+  const minimumDepositAmount = selectedDepositMethod === "mpesa" ? 5 : 10;
+  const amountValue = Number(depositAmount) || 0;
+  const withdrawAmountValue = Number(withdrawAmount) || 0;
+
+  const filteredCryptoMethods = cryptoMethods.filter(m => m.status === "active");
 
   return (
     <div className="min-h-screen bg-[#0a0e17] text-white">
@@ -82,7 +395,16 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-white/50">Balance</span>
-            <span className="font-bold text-lg text-white">${(availableBalance).toFixed(2)}</span>
+            <span className="font-bold text-lg text-white">${balance.toFixed(2)}</span>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={async () => { await loadBalance(); await loadTransactions(); }}
+              disabled={balanceLoading}
+              className="ml-2 h-8 w-8"
+            >
+              <RefreshCw className={`h-4 w-4 ${balanceLoading ? "animate-spin" : ""}`} />
+            </Button>
           </div>
         </div>
       </header>
@@ -90,11 +412,15 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
       <div className="mx-auto max-w-[1400px] px-5 py-8 sm:px-8">
         <nav className="mb-8" aria-label="Payment tabs">
           <div className="flex gap-2 bg-[#141a2a] rounded-xl p-1">
-            {tabConfig.map((tab) => (
+            {[
+              { id: "deposit", label: "DEPOSIT", icon: Wallet },
+              { id: "withdraw", label: "WITHDRAWAL", icon: CreditCard },
+              { id: "history", label: "HISTORY", icon: History },
+            ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => {
-                  setActiveTab(tab.id as PaymentTab);
+                  setActiveTab(tab.id);
                   if (tab.id === "deposit") setDepositStep(1);
                   if (tab.id === "withdraw") setWithdrawStep(1);
                 }}
@@ -114,8 +440,7 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
         {activeTab === "deposit" && (
           <DepositFlow
             step={depositStep}
-            onStepChange={goToDepositStep}
-            onBack={handleBack}
+            onStepChange={setDepositStep}
             selectedMethod={selectedDepositMethod}
             setSelectedMethod={setSelectedDepositMethod}
             selectedCoin={selectedDepositCoin}
@@ -128,13 +453,23 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
             setPhone={setDepositPhone}
             bonusTier={depositBonusTier}
             setBonusTier={setDepositBonusTier}
+            cryptoMethods={filteredCryptoMethods}
+            loading={depositLoading}
+            error={depositError}
+            instruction={depositInstruction}
+            status={depositStatus}
+            onMethodSelect={handleDepositMethodSelect}
+            onContinue={handleDepositContinue}
+            onSubmit={handleDepositSubmit}
+            onBack={handleBack}
+            minimumAmount={minimumDepositAmount}
           />
         )}
 
         {activeTab === "withdraw" && (
           <WithdrawFlow
             step={withdrawStep}
-            onStepChange={goToWithdrawStep}
+            onStepChange={setWithdrawStep}
             onBack={handleBack}
             selectedMethod={selectedWithdrawMethod}
             setSelectedMethod={setSelectedWithdrawMethod}
@@ -150,34 +485,32 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
             setPhone={setWithdrawPhone}
             memo={withdrawMemo}
             setMemo={setWithdrawMemo}
-            availableBalance={availableBalance}
+            availableBalance={getEffectiveLiveBalance({ ...profile, balance } as any)}
+            loading={withdrawLoading}
+            error={withdrawError}
+            onMethodSelect={handleWithdrawMethodSelect}
+            onContinue={handleWithdrawContinue}
+            onSubmit={handleWithdrawSubmit}
           />
         )}
 
-        {activeTab === "history" && <TransactionHistory />}
+        {activeTab === "history" && (
+          <TransactionHistory
+            transactions={transactions}
+            loading={transactionsLoading}
+            filter={historyFilter}
+            setFilter={setHistoryFilter}
+            search={historySearch}
+            setSearch={setHistorySearch}
+            onRefresh={loadTransactions}
+          />
+        )}
       </div>
     </div>
   );
 };
 
-interface DepositFlowProps {
-  step: 1 | 2 | 3 | 4;
-  onStepChange: (step: 1 | 2 | 3 | 4) => void;
-  onBack: () => void;
-  selectedMethod: "mpesa" | "crypto" | null;
-  setSelectedMethod: (method: "mpesa" | "crypto") => void;
-  selectedCoin: string;
-  setSelectedCoin: (coin: string) => void;
-  selectedNetwork: string;
-  setSelectedNetwork: (network: string) => void;
-  amount: string;
-  setAmount: (amount: string) => void;
-  phone: string;
-  setPhone: (phone: string) => void;
-  bonusTier: number;
-  setBonusTier: (tier: number) => void;
-}
-
+// Deposit Flow Component
 function DepositFlow({
   step,
   onStepChange,
@@ -194,7 +527,16 @@ function DepositFlow({
   setPhone,
   bonusTier,
   setBonusTier,
-}: DepositFlowProps) {
+  cryptoMethods,
+  loading,
+  error,
+  instruction,
+  status,
+  onMethodSelect,
+  onContinue,
+  onSubmit,
+  minimumAmount,
+}: any) {
   const progressLabels = ["Payment Method", "Payment Details", "Payment Process", "Completed"];
 
   return (
@@ -205,10 +547,8 @@ function DepositFlow({
         {step === 1 && (
           <DepositStep1
             selectedMethod={selectedMethod}
-            onSelectMethod={setSelectedMethod}
-            onContinue={() => {
-              if (selectedMethod) onStepChange(2);
-            }}
+            onSelectMethod={onMethodSelect}
+            onContinue={onContinue}
             onBack={onBack}
           />
         )}
@@ -220,7 +560,7 @@ function DepositFlow({
             setPhone={setPhone}
             bonusTier={bonusTier}
             setBonusTier={setBonusTier}
-            onContinue={() => onStepChange(3)}
+            onContinue={onSubmit}
             onBack={onBack}
           />
         )}
@@ -232,12 +572,16 @@ function DepositFlow({
             setSelectedNetwork={setSelectedNetwork}
             amount={amount}
             setAmount={setAmount}
-            onContinue={() => onStepChange(3)}
+            cryptoMethods={[]}
+            onContinue={onSubmit}
             onBack={onBack}
           />
         )}
         {step === 3 && selectedMethod === "mpesa" && (
           <DepositMpesaProcess
+            phone={phone}
+            amount={amount}
+            status={status}
             onBack={onBack}
             onComplete={() => onStepChange(4)}
           />
@@ -247,11 +591,12 @@ function DepositFlow({
             coin={selectedCoin}
             network={selectedNetwork}
             amount={amount}
+            instruction={instruction}
             onBack={onBack}
             onComplete={() => onStepChange(4)}
           />
         )}
-{step === 4 && (
+        {step === 4 && (
           <DepositSuccess
             method={selectedMethod}
             coin={selectedCoin}
@@ -263,27 +608,6 @@ function DepositFlow({
       </div>
     </div>
   );
-}
-
-interface WithdrawFlowProps {
-  step: 1 | 2 | 3 | 4;
-  onStepChange: (step: 1 | 2 | 3 | 4) => void;
-  onBack: () => void;
-  selectedMethod: "mpesa" | "crypto";
-  setSelectedMethod: (method: "mpesa" | "crypto") => void;
-  coin: string;
-  setCoin: (coin: string) => void;
-  network: string;
-  setNetwork: (network: string) => void;
-  amount: string;
-  setAmount: (amount: string) => void;
-  address: string;
-  setAddress: (address: string) => void;
-  phone: string;
-  setPhone: (phone: string) => void;
-  memo: string;
-  setMemo: (memo: string) => void;
-  availableBalance: number;
 }
 
 function WithdrawFlow({
@@ -305,7 +629,12 @@ function WithdrawFlow({
   memo,
   setMemo,
   availableBalance,
-}: WithdrawFlowProps) {
+  loading,
+  error,
+  onMethodSelect,
+  onContinue,
+  onSubmit,
+}: any) {
   const progressLabels = ["Withdrawal Method", "Withdrawal Details", "Review & Submit", "Completed"];
 
   return (
@@ -317,7 +646,7 @@ function WithdrawFlow({
           <WithdrawStep1
             selectedMethod={selectedMethod}
             onSelectMethod={setSelectedMethod}
-            onContinue={() => onStepChange(2)}
+            onContinue={onContinue}
             onBack={onBack}
           />
         )}
@@ -359,7 +688,9 @@ function WithdrawFlow({
             phone={phone}
             memo={memo}
             availableBalance={availableBalance}
-            onSubmit={() => onStepChange(4)}
+            loading={loading}
+            error={error}
+            onSubmit={onSubmit}
             onBack={onBack}
           />
         )}

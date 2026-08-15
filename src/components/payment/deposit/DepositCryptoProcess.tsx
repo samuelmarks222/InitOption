@@ -2,11 +2,13 @@ import { Loader2, QrCode, Copy, Shield, AlertTriangle, Clock, CheckCircle, Exter
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { CryptoDepositInstructionPayload } from "@/lib/cryptoDeposits";
 
 interface DepositCryptoProcessProps {
   coin: string;
   network: string;
   amount: string;
+  instruction: CryptoDepositInstructionPayload | null;
   onBack: () => void;
   onComplete: () => void;
 }
@@ -48,65 +50,38 @@ export function DepositCryptoProcess({
   coin,
   network,
   amount,
+  instruction,
   onBack,
   onComplete,
 }: DepositCryptoProcessProps) {
   const [status, setStatus] = useState<"waiting" | "detected" | "confirming" | "completed">("waiting");
   const [confirmations, setConfirmations] = useState(0);
-  const [mockAddress] = useState(() => {
-    const prefixes: Record<string, string> = {
-      "BTC": "bc1q",
-      "USDT": "T",
-      "USDC": "0x",
-      "ETH": "0x",
-      "BNB": "0x",
-      "TRX": "T",
-      "LTC": "L",
-      "DOGE": "D",
-      "SOL": "S",
-      "XRP": "r",
-      "TON": "EQ",
-    };
-    const prefix = prefixes[coin] || "0x";
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let addr = prefix;
-    for (let i = 0; i < 34; i++) {
-      addr += "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".charAt(Math.floor(Math.random() * 62));
-    }
-    return addr;
-  });
+
+  const depositAddress = instruction?.address ?? "";
+  const depositAmount = instruction?.amount ?? Number(amount) || 0;
 
   useEffect(() => {
-    if (status === "waiting") {
-      // Simulate payment detection after 3 seconds
-      const detectTimer = setTimeout(() => {
+    if (status === "waiting" && instruction?.instruction_status) {
+      const providerStatus = instruction.instruction_status;
+      if (providerStatus === "completed") {
+        setStatus("completed");
+        setTimeout(() => onComplete(), 1000);
+      } else if (["pending", "paid_unconfirmed", "processing"].includes(providerStatus)) {
         setStatus("detected");
-        setConfirmations(0);
-        toast({ title: "Payment Detected", description: "Waiting for blockchain confirmations..." });
-        
-        // Simulate confirmations
-        const maxConfirmations = NETWORK_INFO[network.toUpperCase()]?.minConfirmations || 3;
-        let current = 0;
-        const confirmTimer = setInterval(() => {
-          current++;
-          setConfirmations(current);
-          if (current >= maxConfirmations) {
-            clearInterval(confirmTimer);
-            setStatus("completed");
-            setTimeout(() => onComplete(), 1000);
-          }
-        }, 2000);
-        return () => clearInterval(confirmTimer);
-      }, 3000);
+        const checkTimer = setInterval(() => {
+          setConfirmations((prev) => prev + 1);
+        }, 4000);
+        return () => clearInterval(checkTimer);
+      }
     }
-  }, [network, coin]);
+  }, [instruction, status]);
 
   const amountValue = Number(amount) || 0;
   const coinInfo = COIN_INFO[coin] || { name: coin, icon: coin, color: "text-white" };
   const networkInfo = NETWORK_INFO[network.toUpperCase()] || { name: network, minConfirmations: 1, approxTime: "~1 min" };
 
   const copyAddress = () => {
-    navigator.clipboard.writeText(mockAddress);
+    if (depositAddress) navigator.clipboard.writeText(depositAddress);
   };
 
   return (
@@ -127,7 +102,7 @@ export function DepositCryptoProcess({
         <div className="grid grid-cols-3 gap-4 text-center mb-6">
           <div className="p-4 rounded-xl bg-white/5">
             <p className="text-white/50 text-sm">Amount</p>
-            <p className="font-bold text-2xl text-white">${Number(amount).toFixed(2)}</p>
+            <p className="font-bold text-2xl text-white">${depositAmount.toFixed(2)}</p>
           </div>
           <div className="p-4 rounded-xl bg-white/5">
             <p className="text-white/50 text-sm">Coin</p>
@@ -140,49 +115,49 @@ export function DepositCryptoProcess({
         </div>
 
         <div className="space-y-4">
-          <div>
-            <div className="flex items-center gap-2 text-sm mb-2">
-              <span className="text-white/60">Deposit Address</span>
-              <span className="text-white/40">•</span>
-              <span className="text-white/60">Network:</span>
-              <span className="font-bold text-white">{network}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 bg-[#0a0d14] border border-white/10 rounded-lg px-4 py-3 font-mono text-sm text-white break-all">
-                {mockAddress}
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(mockAddress);
-                }}
-                className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
-                aria-label="Copy address"
-              >
-                <Copy className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm text-white/60 mb-1 block">QR Code</label>
-            <div className="flex justify-center">
-              <div className="bg-white p-4 rounded-lg">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mockAddress)}`}
-                  alt="Deposit QR Code"
-                  className="h-40 w-40"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-white/10">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+          {depositAddress ? (
+            <>
               <div>
-                <span className="text-white/60">Amount to Send</span>
-                <p className="font-bold text-white">${Number(amount).toFixed(2)}</p>
+                <div className="flex items-center gap-2 text-sm mb-2">
+                  <span className="text-white/60">Deposit Address</span>
+                  <span className="text-white/40">•</span>
+                  <span className="text-white/60">Network:</span>
+                  <span className="font-bold text-white">{network}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-[#0a0d14] border border-white/10 rounded-lg px-4 py-3 font-mono text-sm text-white break-all">
+                    {depositAddress}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={copyAddress}
+                    className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
+                    aria-label="Copy address"
+                  >
+                    <Copy className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
+
+              <div>
+                <label className="text-sm text-white/60 mb-1 block">QR Code</label>
+                <div className="flex justify-center">
+                  <div className="bg-white p-4 rounded-lg">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(depositAddress)}`}
+                      alt="Deposit QR Code"
+                      className="h-40 w-40"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/10">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-white/60">Amount to Send</span>
+                    <p className="font-bold text-white">${depositAmount.toFixed(2)}</p>
+                  </div>
               <div>
                 <span className="text-white/60">Status</span>
                 <p className="font-bold text-white flex items-center gap-2">
@@ -214,6 +189,13 @@ export function DepositCryptoProcess({
               </div>
             </div>
           </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-yellow-400 mb-3" />
+              <p className="text-white/70">Generating your secure deposit address...</p>
+            </div>
+          )}
         </div>
 
         <div className="pt-4 border-t border-white/10">
@@ -235,7 +217,7 @@ export function DepositCryptoProcess({
         <button
           type="button"
           onClick={onComplete}
-          disabled={status !== "completed"}
+          disabled={!depositAddress}
           className="flex-1 h-12 rounded-xl bg-gradient-to-r from-[#f1a526] to-[#f1a526]/80 text-white font-bold text-lg shadow-[0_10px_30px_rgba(241,165,38,0.3)] hover:from-[#f1a526] hover:to-[#f1a526] disabled:from-white/10 disabled:to-white/10 disabled:shadow-none disabled:cursor-not-allowed"
         >
           {status === "completed" ? "Done" : "Continue"}

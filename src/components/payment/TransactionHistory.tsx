@@ -16,19 +16,6 @@ interface Transaction {
   txHash?: string;
 }
 
-const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: "TX-001", type: "deposit", method: "USDT — TRC20", amount: 100, status: "completed", date: "Today, 04:20", txHash: "0xabc123..." },
-  { id: "TX-002", type: "withdrawal", method: "USDT — TRC20", amount: 50, status: "pending", date: "Yesterday, 14:30", txHash: "0xdef456..." },
-  { id: "TX-003", type: "deposit", method: "M-PESA", amount: 200, status: "completed", date: "Aug 13, 2024" },
-  { id: "TX-004", type: "withdrawal", method: "BTC — Bitcoin", amount: 500, status: "processing", date: "Aug 12, 2024", txHash: "0xghi789..." },
-  { id: "TX-005", type: "deposit", method: "USDT — ERC20", amount: 500, status: "completed", date: "Aug 11, 2024", txHash: "0xjkl012..." },
-  { id: "TX-006", type: "withdrawal", method: "M-PESA", amount: 100, status: "failed", date: "Aug 10, 2024" },
-  { id: "TX-007", type: "bonus", method: "Deposit Bonus", amount: 30, status: "completed", date: "Aug 9, 2024" },
-  { id: "TX-008", type: "deposit", method: "BTC — Bitcoin", amount: 1000, status: "completed", date: "Aug 8, 2024", txHash: "0xmno345..." },
-  { id: "TX-009", type: "withdrawal", method: "USDT — ERC20", amount: 250, status: "rejected", date: "Aug 7, 2024" },
-  { id: "TX-010", type: "deposit", method: "USDC — SOL", amount: 150, status: "completed", date: "Aug 6, 2024", txHash: "0xpqr678..." },
-];
-
 const STATUS_STYLES = {
   completed: "bg-green-500/10 text-green-400 border-green-500/20",
   pending: "bg-amber-500/10 text-amber-400 border-amber-500/20",
@@ -43,21 +30,37 @@ const TYPE_ICONS = {
   bonus: Gift,
 };
 
-export function TransactionHistory() {
-  const [filter, setFilter] = useState<"all" | "deposits" | "withdrawals" | "bonuses">("all");
-  const [searchTerm, setSearchTerm] = useState("");
+interface TransactionHistoryProps {
+  transactions: Transaction[];
+  loading: boolean;
+  filter: "all" | "deposits" | "withdrawals" | "bonuses";
+  setFilter: (filter: "all" | "deposits" | "withdrawals" | "bonuses") => void;
+  search: string;
+  setSearch: (search: string) => void;
+  onRefresh: () => void;
+}
+
+export function TransactionHistory({
+  transactions,
+  loading,
+  filter,
+  setFilter,
+  search,
+  setSearch,
+  onRefresh,
+}: TransactionHistoryProps) {
   const [sortBy, setSortBy] = useState<"date" | "amount" | "status">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const filteredTransactions = useMemo(() => {
-    let result = [...MOCK_TRANSACTIONS];
+    let result = [...transactions];
 
     if (filter !== "all") {
       result = result.filter(t => t.type === filter);
     }
 
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
+    if (search) {
+      const term = search.toLowerCase();
       result = result.filter(t => 
         t.id.toLowerCase().includes(term) ||
         t.method.toLowerCase().includes(term) ||
@@ -90,7 +93,7 @@ export function TransactionHistory() {
     });
 
     return result;
-  }, [filter, searchTerm, sortBy, sortOrder]);
+  }, [filter, search, sortBy, sortOrder, transactions]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -116,9 +119,14 @@ export function TransactionHistory() {
           <p className="text-white/60">View all your deposits, withdrawals, and bonuses</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="h-10 px-4 rounded-lg bg-white/5 border-white/10 text-white text-sm font-medium">
-            <Download className="mr-2 h-4 w-4" />
-            Export CSV
+          <Button 
+            variant="outline" 
+            className="h-10 px-4 rounded-lg bg-white/5 border-white/10 text-white text-sm font-medium"
+            onClick={onRefresh}
+            disabled={loading}
+          >
+            <Loader2 className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
           </Button>
         </div>
       </div>
@@ -129,8 +137,8 @@ export function TransactionHistory() {
           <input
             type="text"
             placeholder="Search transactions..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-[#0a0d17] border border-white/10 rounded-xl text-white outline-none placeholder:text-white/30 focus:border-[#0fa053]/50 focus:ring-1 focus:ring-[#0fa053]/20"
           />
         </div>
@@ -181,76 +189,84 @@ export function TransactionHistory() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {filteredTransactions.map((tx) => (
-                <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5">
-                        {getTypeIcon(tx.type)}
-                      </div>
-                      <div>
-                        <p className="font-medium text-white">{tx.id}</p>
-                        <p className="text-xs text-white/50 capitalize">{tx.type}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-white">{tx.method}</span>
-                      {(tx.coin || tx.network) && (
-                        <span className="text-xs text-white/40 px-2 py-0.5 rounded bg-white/5">
-                          {tx.coin} {tx.network ? `— ${tx.network}` : ""}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-bold ${tx.type === "withdrawal" ? "text-red-400" : "text-green-400"}`}>
-                        {tx.type === "withdrawal" ? "-" : "+"}${tx.amount.toFixed(2)}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <Badge variant="outline" className={STATUS_STYLES[tx.status] || "bg-white/10 text-white/60"}>
-                      <div className="flex items-center gap-1.5">
-                        {getStatusIcon(tx.status)}
-                        <span className="capitalize">{tx.status}</span>
-                      </div>
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4 text-white/70">{tx.date}</td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {tx.txHash && (
-                        <button
-                          className="text-white/50 hover:text-white/80 text-xs flex items-center gap-1"
-                          title="View on explorer"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          View
-                        </button>
-                      )}
-                      <button className="text-white/50 hover:text-white/80 text-xs flex items-center gap-1">
-                        Details
-                      </button>
-                    </div>
+              {transactions.length === 0 && loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-white/50" />
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredTransactions.length === 0 && (
-          <div className="py-12 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/5 mb-4">
-              <Filter className="h-6 w-6 text-white/40" />
-            </div>
-            <h3 className="text-lg font-bold text-white">No transactions found</h3>
-            <p className="mt-2 text-white/50">Try adjusting your filters or search terms</p>
+              ) : transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/5 mb-4">
+                      <Filter className="h-6 w-6 text-white/40" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white">No transactions found</h3>
+                    <p className="mt-2 text-white/50">Try adjusting your filters or search terms</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredTransactions.map((tx) => (
+                  <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5">
+                          {getTypeIcon(tx.type)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">{tx.id}</p>
+                          <p className="text-xs text-white/50 capitalize">{tx.type}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-white">{tx.method}</span>
+                        {(tx.coin || tx.network) && (
+                          <span className="text-xs text-white/40 px-2 py-0.5 rounded bg-white/5">
+                            {tx.coin} {tx.network ? `— ${tx.network}` : ""}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-bold ${tx.type === "withdrawal" ? "text-red-400" : "text-green-400"}`}>
+                          {tx.type === "withdrawal" ? "-" : "+"}${tx.amount.toFixed(2)}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge variant="outline" className={STATUS_STYLES[tx.status] || "bg-white/10 text-white/60"}>
+                        <div className="flex items-center gap-1.5">
+                          {getStatusIcon(tx.status)}
+                          <span className="capitalize">{tx.status}</span>
+                        </div>
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 text-white/70">{tx.date}</td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {tx.txHash && (
+                          <button
+                            className="text-white/50 hover:text-white/80 text-xs flex items-center gap-1"
+                            title="View on explorer"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            View
+                          </button>
+                        )}
+                        <button className="text-white/50 hover:text-white/80 text-xs flex items-center gap-1">
+                          Details
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

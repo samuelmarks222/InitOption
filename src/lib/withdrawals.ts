@@ -21,6 +21,26 @@ export interface CryptoWithdrawalRequestPayload extends WithdrawalRequestPayload
   cryptoMemo?: string;
 }
 
+export interface MobileMoneyWithdrawalPayload {
+  amount?: number;
+  amount_kes?: number;
+  amount_usd?: number;
+  approval_required?: boolean;
+  auto_approved?: boolean;
+  bonus_turnover?: unknown;
+  detail?: string;
+  forfeited_bonus_amount?: number;
+  masked_phone_number?: string;
+  request_id?: string;
+  status?: string;
+}
+
+interface RequestMobileMoneyWithdrawalArgs {
+  amount: number;
+  forfeitBonus?: boolean;
+  phoneNumber: string;
+}
+
 interface RequestWithdrawalArgs {
   amount: number;
   destination: string;
@@ -141,5 +161,17 @@ export const requestCryptoWithdrawal = async ({
     cryptoNetwork,
     cryptoMemo,
     forfeitBonus,
+  });
+};
+
+export const requestMobileMoneyWithdrawal = async ({
+  amount,
+  forfeitBonus = false,
+  phoneNumber,
+}: RequestMobileMoneyWithdrawalArgs): Promise<MobileMoneyWithdrawalPayload> => {
+  return postAuthenticatedJson<MobileMoneyWithdrawalPayload>("/api/mobile-money/withdraw", {
+    amount,
+    forfeitBonus,
+    phoneNumber,
   });
 };

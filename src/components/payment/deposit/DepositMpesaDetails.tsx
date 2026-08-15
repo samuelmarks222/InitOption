@@ -31,6 +31,7 @@ export function DepositMpesaDetails({
   bonusTier,
   setBonusTier,
   onContinue,
+  onBack,
 }: DepositMpesaDetailsProps) {
   const amountValue = Number(amount) || 0;
   const activeBonus = BONUS_TIERS.find(b => b.tier === bonusTier) || BONUS_TIERS[2];
@@ -121,14 +122,14 @@ export function DepositMpesaDetails({
       <div className="flex gap-3">
         <button
           type="button"
-          onClick={() => window.history.back()}
+          onClick={onBack}
           className="flex-1 h-12 rounded-xl border border-white/10 bg-white/5 text-white font-bold text-lg transition-colors hover:bg-white/10"
         >
           Back
         </button>
         <button
           type="button"
-          onClick={() => {}}
+          onClick={onContinue}
           disabled={!phone || amountValue < 5}
           className="flex-1 h-12 rounded-xl bg-gradient-to-r from-[#0fa053] to-[#0fa053]/80 text-white font-bold text-lg shadow-[0_10px_30px_rgba(15,160,83,0.3)] hover:from-[#0fa053] hover:to-[#0fa053] disabled:from-white/10 disabled:to-white/10 disabled:shadow-none disabled:cursor-not-allowed"
         >

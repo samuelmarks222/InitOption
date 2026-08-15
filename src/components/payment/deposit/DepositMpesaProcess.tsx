@@ -4,15 +4,20 @@ import { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 
 interface DepositMpesaProcessProps {
+  phone: string;
+  amount: string;
+  status: "pending" | "approved" | "rejected" | "processing";
   onBack: () => void;
   onComplete: () => void;
 }
 
 export function DepositMpesaProcess({
+  phone,
+  amount,
+  status,
   onBack,
   onComplete,
 }: DepositMpesaProcessProps) {
-  const [status, setStatus] = useState<"pending" | "approved" | "rejected">("pending");
   const [timeLeft, setTimeLeft] = useState(120);
 
   const formatTime = (seconds: number) => {
@@ -32,15 +37,7 @@ export function DepositMpesaProcess({
       });
     }, 1000);
 
-    // Simulate payment completion after 5 seconds
-    const completeTimer = setTimeout(() => {
-      setStatus("approved");
-    }, 5000);
-
-    return () => {
-      clearInterval(timer);
-      clearTimeout(completeTimer);
-    };
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -64,6 +61,16 @@ export function DepositMpesaProcess({
               <div>
                 <h3 className="font-bold text-2xl text-white">Payment Request Sent</h3>
                 <p className="text-white/60 mt-2">Check your phone and enter your M-PESA PIN</p>
+                <div className="mt-4 flex items-center justify-center gap-4 text-sm">
+                  <div className="px-4 py-2 rounded-lg bg-white/5">
+                    <p className="text-white/50">Amount</p>
+                    <p className="font-bold text-white">${Number(amount || 0).toFixed(2)}</p>
+                  </div>
+                  <div className="px-4 py-2 rounded-lg bg-white/5">
+                    <p className="text-white/50">Phone</p>
+                    <p className="font-bold text-white">{phone || "—"}</p>
+                  </div>
+                </div>
               </div>
             </div>
           )}

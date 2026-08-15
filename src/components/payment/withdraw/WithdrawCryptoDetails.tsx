@@ -255,7 +255,7 @@ export function WithdrawCryptoDetails({
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={onBack}
             className="flex-1 h-12 rounded-xl border border-white/10 bg-white/5 text-white font-bold text-lg transition-colors hover:bg-white/10"
           >
             Back
