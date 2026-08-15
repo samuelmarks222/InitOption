@@ -234,12 +234,6 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
     }
 
     const amountValue = Number(depositAmount);
-    const selectedMethod = cryptoMethods.find(m => m.id === selectedDepositMethod?.split("-")[0]);
-    
-    if (!selectedMethod && selectedDepositMethod === "crypto") {
-      toast({ title: "Choose a crypto method", variant: "destructive" });
-      return;
-    }
 
     setDepositLoading(true);
     setDepositError(null);
