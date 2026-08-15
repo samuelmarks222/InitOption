@@ -110,39 +110,36 @@ const Footer = ({ content }: FooterProps) => {
 
   const footerLinkGroups = [
     {
-      title: "Platform",
+      title: "About us",
       items: [
-        { label: "Trading", to: "/trade" },
-        { label: "Markets", to: "/" },
-        { label: "Features", to: "/why-choose-init-option" },
-        { label: "How It Works", to: "/how-it-works" },
-      ],
-    },
-    {
-      title: "Support",
-      items: [
-        { label: "Help Center", to: "/trading-guide" },
-        { label: "FAQ", to: "/faq" },
-        { label: "Contact us", to: "/contact" },
-        { label: "Payment information", to: "/payment-policy" },
-      ],
-    },
-    {
-      title: "Legal",
-      items: [
-        { label: "Terms & Conditions", to: "/terms" },
-        { label: "Privacy Policy", to: "/privacy" },
-        { label: "Risk Disclosure", to: "/risk-disclaimer" },
-        { label: "Payment Policy", to: "/payment-policy" },
-      ],
-    },
-    {
-      title: "Company",
-      items: [
-        { label: "About us", to: "/about" },
+        { label: "About Init Option", to: "/about" },
         { label: "Facts and figures", to: "/facts-and-figures" },
+        { label: "How it works", to: "/how-it-works" },
+        { label: "Contact us", to: "/contact" },
+      ],
+    },
+    {
+      title: "Explore",
+      items: [
+        { label: "Trading guide", to: "/trading-guide" },
+        { label: "FAQ", to: "/faq" },
+        { label: "Blog", to: "/blog" },
+        { label: "Tournaments", to: "/tournaments" },
+      ],
+    },
+    {
+      title: "Regulation",
+      items: [
+        { label: "Terms and Conditions", to: "/terms" },
+        { label: "Information Disclosure Policy", to: "/information-disclosure" },
+        { label: "Privacy Policy", to: "/privacy" },
+        { label: "Risk disclaimer", to: "/risk-disclaimer" },
+      ],
+    },
+    {
+      title: "For partners",
+      items: [
         { label: "Affiliate program", to: "/affiliate-program" },
-        { label: "Site map", to: "/site-map" },
       ],
     },
   ] as const;

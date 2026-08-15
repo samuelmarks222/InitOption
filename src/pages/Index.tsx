@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getAuthRestorePath } from "@/lib/authRedirect";
 import { shouldStartAtLoginOnMobile } from "@/lib/mobileLanding";
 import AuthLoadingScreen from "@/components/auth/AuthLoadingScreen";
-import LandingPage from "@/components/landing/LandingPage";
+import PoolitoHomePage from "@/components/landing/PoolitoHomePage";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -20,7 +20,7 @@ const Index = () => {
     return <Navigate to="/login" replace />;
   }
 
-  return <LandingPage />;
+  return <PoolitoHomePage />;
 };
 
 export default Index;
