@@ -8,7 +8,7 @@ import {
   normalizeKenyanPhoneNumber,
 } from "../../src/lib/mobileMoneyShared.js";
 import { readJsonRequestBody } from "../_lib/sasapay.js";
-import { query, queryOne, userRpc } from "../_lib/db.js";
+import { query, queryOne, rpcResultPayload, userRpc } from "../_lib/db.js";
 import { authenticateRequest, clerkUserIdToUuid } from "../_lib/clerkWebhook.js";
 
 type ApiRequest = IncomingMessage & {
@@ -428,7 +428,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
           p_request_ip: getClientIp(request.headers),
           p_request_user_agent: asString(getHeaderValue(request.headers, "user-agent")),
         });
-        requestData = rows[0] ?? null;
+        requestData = rpcResultPayload(rows, "request_mobile_money_withdrawal");
       } catch (rpcError) {
         const mobileMoneyErrorMessage = getErrorMessage(rpcError);
 
@@ -449,7 +449,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
               p_destination: normalizedPhoneNumber,
               p_method: MPESA_METHOD_LABEL,
             });
-            requestData = rows[0] ?? null;
+            requestData = rpcResultPayload(rows, "request_withdrawal");
           } catch (manualError) {
             const manualWithdrawalErrorMessage = getErrorMessage(manualError);
             if (isBonusTurnoverError(manualWithdrawalErrorMessage)) {

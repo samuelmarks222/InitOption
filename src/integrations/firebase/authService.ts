@@ -4,7 +4,8 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   signOut as firebaseSignOut,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   type User as FirebaseUser,
   type UserCredential,
@@ -68,15 +69,44 @@ export async function signUpEmail(
   }
 }
 
-export async function signInWithGoogle(): Promise<{ user: FirebaseUser | null; error: FirebaseAuthError | null }> {
+const getGoogleProvider = () => {
+  const provider = new GoogleAuthProvider();
+  provider.addScope("email");
+  provider.addScope("profile");
+  return provider;
+};
+
+export async function signInWithGoogleRedirect(): Promise<{ user: null; error: FirebaseAuthError | null }> {
   try {
     if (!firebaseConfigPresent) throw new Error("FIREBASE_CONFIG_MISSING");
     if (!firebaseAuth) throw new Error("Firebase auth is not initialized");
-    const provider = new GoogleAuthProvider();
-    const cred = await signInWithPopup(firebaseAuth, provider);
-    return { user: cred.user ?? null, error: null };
+    const provider = getGoogleProvider();
+    await signInWithRedirect(firebaseAuth, provider);
+    return { user: null, error: null };
   } catch (e) {
-    if ((e as any)?.code === "auth/popup-closed-by-user") {
+    if (
+      (e as any)?.code === "auth/redirect-cancelled-by-user" ||
+      (e as any)?.code === "auth/cancelled-popup-request"
+    ) {
+      return { user: null, error: null };
+    }
+    return { user: null, error: normalizeError(e) };
+  }
+}
+
+export async function resolveGoogleRedirectResult(): Promise<{ user: FirebaseUser | null; error: FirebaseAuthError | null }> {
+  try {
+    if (!firebaseConfigPresent) {
+      return { user: null, error: { message: "Firebase is not configured yet.", code: "FIREBASE_CONFIG_MISSING" } };
+    }
+    if (!firebaseAuth) {
+      return { user: null, error: { message: "Firebase auth is not initialized", code: "auth/unknown" } };
+    }
+    await firebaseAuth.authStateReady?.();
+    const cred = await getRedirectResult(firebaseAuth);
+    return { user: cred?.user ?? null, error: null };
+  } catch (e) {
+    if ((e as any)?.code === "auth/redirect-cancelled-by-user") {
       return { user: null, error: null };
     }
     return { user: null, error: normalizeError(e) };

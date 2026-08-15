@@ -16,7 +16,7 @@ export const pusherClient = PUSHER_KEY
 
 export interface RealtimeChannel {
   on(event: string, config: { event: string; schema: string; table: string; filter?: string }, callback: (payload: unknown) => void): RealtimeChannel;
-  subscribe(): void;
+subscribe(): RealtimeChannel;
   unsubscribe(): void;
 }
 
@@ -45,7 +45,7 @@ function createRealtimeChannel(channelName: string): RealtimeChannel {
       return this;
     },
     subscribe() {
-      // Already subscribed on creation
+      return this;
     },
     unsubscribe() {
       for (const [event, callback] of callbacks) {

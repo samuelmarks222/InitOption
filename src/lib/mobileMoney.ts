@@ -27,9 +27,9 @@ export interface MobileMoneyWithdrawalPayload {
   status: string;
 }
 
-import { getFirebaseIdToken } from "@/integrations/firebase/authService";
+import { getAppwriteIdToken } from "@/integrations/appwrite/authService";
 
-const getAccessToken = () => getFirebaseIdToken();
+const getAccessToken = () => getAppwriteIdToken();
 
 const postAuthenticatedJson = async <T>(path: string, body: Record<string, unknown>) => {
   const accessToken = await getAccessToken();

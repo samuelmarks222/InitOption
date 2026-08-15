@@ -1,3 +1,4 @@
+import { api } from "@/integrations/api/client";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Activity,

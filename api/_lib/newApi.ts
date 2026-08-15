@@ -133,12 +133,9 @@ export async function handleProfile(request: ApiRequest, response: ApiResponse):
     }
 
     if (method === "POST") {
-      const requestedId = typeof body.id === "string" ? body.id : clerkUserId;
-      if (requestedId !== clerkUserId) {
-        sendJson(response, 403, { error: "Forbidden" });
-        return;
-      }
-
+      // Identity is derived from the verified token (authenticateRequest returns
+      // the canonical public.users UUID), never from the client-supplied body.id.
+      // This keeps new Appwrite users and email-adopted legacy users consistent.
       const id = clerkUserIdToUuid(clerkUserId);
       const email = typeof body.email === "string" ? body.email : null;
       await ensureUserRow(id, email);
@@ -497,7 +494,7 @@ const normalizeRows = (result: PgResult): Row[] => {
 const runScoped = async (mappedId: string, fn: (client: PgClientLike) => Promise<PgResult>) =>
   transaction(async (client) => {
     await client.query("SET LOCAL ROLE authenticated");
-    await client.query("SET LOCAL app.current_user_id = $1", [mappedId]);
+    await client.query("SELECT set_config('app.current_user_id', $1, true)", [mappedId]);
     const result = await fn(client);
     return { rows: normalizeRows(result) };
   });
@@ -805,7 +802,7 @@ export async function handleRpc(request: ApiRequest, response: ApiResponse): Pro
     const keys = Object.keys(args);
 
     const result = await transaction(async (client) => {
-      await client.query("SET LOCAL app.current_user_id = $1", [mappedId]);
+      await client.query("SELECT set_config('app.current_user_id', $1, true)", [mappedId]);
 
       let sql: string;
       const values: unknown[] = [];

@@ -14,7 +14,7 @@ import {
   normalizeKenyanPhoneNumber,
 } from "../../src/lib/mobileMoneyShared.js";
 import { buildSasaPayCallbackUrl, readJsonRequestBody, requestSasaPayStkPush } from "../_lib/sasapay.js";
-import { query, queryOne, rpc, userRpc } from "../_lib/db.js";
+import { query, queryOne, rpc, userRpc, rpcResultPayload } from "../_lib/db.js";
 import { authenticateRequest, clerkUserIdToUuid } from "../_lib/clerkWebhook.js";
 
 type ApiRequest = IncomingMessage & {
@@ -172,7 +172,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       p_tx_hash: null,
     });
 
-    const requestPayload = (requestRows?.[0] ?? {}) as {
+    const requestPayload = (rpcResultPayload(requestRows, "request_deposit_review") ?? {}) as {
       request_id?: string | null;
     };
 

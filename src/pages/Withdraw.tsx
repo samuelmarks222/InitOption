@@ -12,7 +12,7 @@ import { formatCurrencyAmount } from "@/lib/currency";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { requestMobileMoneyWithdrawal } from "@/lib/mobileMoney";
 import { convertUsdToKesWithdrawalAmount, MPESA_METHOD_LABEL } from "@/lib/mobileMoneyShared";
-import { requestWithdrawal } from "@/lib/withdrawals";
+import { requestWithdrawal, requestCryptoWithdrawal } from "@/lib/withdrawals";
 
 type CryptoMethod = Tables<"crypto_payment_methods">;
 type WithdrawalMethod = "mpesa" | "bank" | "crypto";
@@ -40,7 +40,8 @@ const Withdraw = () => {
   const [loading, setLoading] = useState(false);
   const [method, setMethod] = useState<WithdrawalMethod>("mpesa");
   const [mpesaPhoneNumber, setMpesaPhoneNumber] = useState("");
-  const [address, setAddress] = useState("");
+const [address, setAddress] = useState("");
+  const [cryptoMemo, setCryptoMemo] = useState("");
   const [cryptoMethods, setCryptoMethods] = useState<CryptoMethod[]>([]);
   const [selectedCryptoId, setSelectedCryptoId] = useState("");
   const [bonusStatus, setBonusStatus] = useState<BonusTurnoverStatus>(EMPTY_BONUS_STATUS);
@@ -201,6 +202,11 @@ const Withdraw = () => {
       return;
     }
 
+    if (method === "crypto" && selectedCrypto?.memo_label && !cryptoMemo.trim()) {
+      toast({ title: `Please enter ${selectedCrypto.memo_label}`, variant: "destructive" });
+      return;
+    }
+
     if (method === "mpesa" && !mpesaPhoneNumber.trim()) {
       toast({ title: "Enter your M-PESA number", variant: "destructive" });
       return;
@@ -241,7 +247,7 @@ const Withdraw = () => {
           ? `${selectedCrypto?.symbol.toUpperCase()} (${selectedCrypto?.network.toUpperCase()}) Wallet`
           : "Bank Transfer";
 
-    try {
+try {
       if (method === "mpesa") {
         const payoutResponse = await requestMobileMoneyWithdrawal({
           amount: amountValue,
@@ -267,6 +273,39 @@ const Withdraw = () => {
             (payoutResponse.status === "pending"
               ? `${formatCurrencyAmount(payoutResponse.amount_kes, "KES")} is reserved for ${payoutResponse.masked_phone_number} until approval.`
               : `${formatCurrencyAmount(payoutResponse.amount_kes, "KES")} is reserved for ${payoutResponse.masked_phone_number} while finance sends it manually.`),
+        });
+        return;
+      }
+
+      if (method === "crypto") {
+        if (!selectedCrypto) {
+          toast({ title: "Choose a crypto payout method", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+        const cryptoWithdrawalResponse = await requestCryptoWithdrawal({
+          amount: amountValue,
+          destination: address.trim(),
+          cryptoCurrency: selectedCrypto.symbol,
+          cryptoNetwork: selectedCrypto.network,
+          cryptoMemo: cryptoMemo,
+          forfeitBonus: withdrawWithoutBonus,
+        });
+
+        await refreshProfile();
+        if (withdrawWithoutBonus) {
+          setBonusStatus(EMPTY_BONUS_STATUS);
+          setWithdrawWithoutBonus(false);
+        }
+        setAmount("");
+        setAddress("");
+        setCryptoMemo("");
+        toast({
+          title: "Crypto withdrawal submitted",
+          description:
+            Number(cryptoWithdrawalResponse.forfeited_bonus_amount ?? 0) > 0
+              ? `$${amountValue.toFixed(2)} is now pending admin approval. Active bonus of $${Number(cryptoWithdrawalResponse.forfeited_bonus_amount).toFixed(2)} was removed.`
+              : `$${amountValue.toFixed(2)} is now pending admin approval.`,
         });
         return;
       }
@@ -415,28 +454,47 @@ const Withdraw = () => {
               </div>
             )}
 
-            {method === "crypto" ? (
-              <div className="mt-3 rounded-lg border border-white/10 bg-white/7 p-3">
+{method === "crypto" ? (
+              <div className="mt-3 space-y-3">
                 {cryptoMethods.length === 0 ? (
                   <div className="text-sm text-white/72">Cryptocurrency withdrawals are temporarily unavailable right now.</div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {cryptoMethods.map((crypto) => (
-                      <button
-                        key={crypto.id}
-                        type="button"
-                        onClick={() => setSelectedCryptoId(crypto.id)}
-                        className={`rounded-md border px-3 py-2 text-left text-sm transition ${
-                          selectedCryptoId === crypto.id
-                            ? "border-[#f1a526] bg-[#f1a526]/18 text-white"
-                            : "border-white/12 bg-white/8 text-white/82 hover:border-white/28"
-                        }`}
-                      >
-                        <span className="block truncate font-bold">{crypto.symbol.toUpperCase()}</span>
-                        <span className="block truncate text-[11px] uppercase text-white/56">{crypto.network}</span>
-                      </button>
-                    ))}
-                  </div>
+                  <>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {cryptoMethods.map((crypto) => (
+                        <button
+                          key={crypto.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCryptoId(crypto.id);
+                            setCryptoMemo("");
+                          }}
+                          className={`rounded-md border px-3 py-2 text-left text-sm transition ${
+                            selectedCryptoId === crypto.id
+                              ? "border-[#f1a526] bg-[#f1a526]/18 text-white"
+                              : "border-white/12 bg-white/8 text-white/82 hover:border-white/28"
+                          }`}
+                        >
+                          <span className="block truncate font-bold">{crypto.symbol.toUpperCase()}</span>
+                          <span className="block truncate text-[11px] uppercase text-white/56">{crypto.network}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {selectedCrypto && selectedCrypto.memo_label && (
+                      <div className="mt-3 flex min-h-[48px] overflow-hidden rounded-lg bg-white text-[#111827] shadow-[0_14px_28px_rgba(0,0,0,0.12)]">
+                        <div className="flex shrink-0 items-center border-r border-slate-200 px-4 text-lg text-[#424854]">
+                          {selectedCrypto.memo_label.toUpperCase()}
+                        </div>
+                        <input
+                          type="text"
+                          value={cryptoMemo}
+                          onChange={(event) => setCryptoMemo(event.target.value)}
+                          placeholder={`Enter ${selectedCrypto.memo_label} (optional)`}
+                          className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none placeholder:text-[#7b7f87]"
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ) : null}

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { Shield, Bell, Monitor, Smartphone, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { firebaseAuth } from "@/integrations/firebase/config";
+import { changePassword as appwriteChangePassword } from "@/integrations/appwrite/authService";
 import { toast } from "@/hooks/use-toast";
 import { DEFAULT_NOTIFICATION_PREFERENCES, normalizeNotificationPreferences } from "@/lib/profileSettings";
 import type { NotificationPreferences } from "@/types/profile";
@@ -19,7 +18,7 @@ export const ProfileSettings = () => {
   const [darkMode, setDarkMode] = useState(() => typeof window !== "undefined" && document.documentElement.classList.contains("dark"));
   const { profile, updateProfile, user, signOut } = useAuth();
 
-  // "Log out of all other sessions" isn't available client-side in Firebase Auth;
+  // "Log out of all other sessions" isn't available client-side in Appwrite;
   // signing out the current session is the closest client-only equivalent.
   const handleSignOutAllSessions = async () => {
     await signOut();
@@ -74,13 +73,8 @@ export const ProfileSettings = () => {
     setUpdatingPassword(true);
 
     try {
-      if (!firebaseAuth?.currentUser || !user?.email) {
-        throw new Error("You must be signed in to change your password.");
-      }
-
-      const cred = EmailAuthProvider.credential(user.email, passwordForm.currentPassword);
-      await reauthenticateWithCredential(firebaseAuth.currentUser, cred);
-      await updatePassword(firebaseAuth.currentUser, passwordForm.newPassword);
+      const { error } = await appwriteChangePassword(passwordForm.newPassword, passwordForm.currentPassword);
+      if (error) throw new Error(error.message);
 
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       toast({ title: "Password updated", description: "Your password has been changed successfully.", variant: "default" });

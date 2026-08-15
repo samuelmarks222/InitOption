@@ -1,6 +1,6 @@
 
 
-import { getFirebaseIdToken } from "@/integrations/firebase/authService";
+import { getAppwriteIdToken } from "@/integrations/appwrite/authService";
 
 export type AdminKycDecision = "Pending" | "Verified" | "Rejected";
 
@@ -45,7 +45,7 @@ interface ReviewUserKycResponse {
   user_id: string;
 }
 
-const getAccessToken = () => getFirebaseIdToken();
+const getAccessToken = () => getAppwriteIdToken();
 
 const postAuthenticatedJson = async <T>(path: string, body: Record<string, unknown>) => {
   const accessToken = await getAccessToken();

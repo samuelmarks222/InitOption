@@ -1,3 +1,4 @@
+import { api } from "@/integrations/api/client";
 import { useState, useEffect } from "react";
 import { X, TrendingUp, Trophy, ChevronRight, Wallet, ArrowDownLeft, List, History, LogOut, Globe, ChevronDown, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";

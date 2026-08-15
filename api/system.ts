@@ -9,7 +9,7 @@ import {
   handleCloudinaryDelete,
   handleCloudinaryExists,
   handleCloudinaryPublicUrl,
-   handlePusherAuth,
+  handlePusherAuth,
 } from "./_lib/newApi.js";
 
 type ApiRequest = IncomingMessage & {
@@ -52,7 +52,6 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         return;
       case "cloudinary-public-url":
         await handleCloudinaryPublicUrl(request, res);
-        return;
         return;
       case "pusher-auth":
         await handlePusherAuth(request, res);

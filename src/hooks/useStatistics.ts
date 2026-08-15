@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTrading } from "@/hooks/useTrading";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/integrations/api/client";
+import { realtime } from "@/integrations/pusher/realtime";
 import type { Tables } from "@/integrations/supabase/types";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 

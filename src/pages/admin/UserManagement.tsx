@@ -1,3 +1,4 @@
+import { api } from "@/integrations/api/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Ban, CheckCircle2, Download, Eye, FileText, Filter, Loader2, RefreshCw, Search, ShieldCheck, Users, X } from "lucide-react";
 import { useStaffAccess } from "@/hooks/useStaffAccess";

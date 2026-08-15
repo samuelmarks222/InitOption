@@ -81,8 +81,16 @@ create table if not exists public.users (
   email_confirmed_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  last_sign_in_at timestamptz
+  last_sign_in_at timestamptz,
+  appwrite_user_id text
 );
+
+-- Appwrite identity binding (see api/_lib/clerkWebhook.ts). Existing databases apply
+-- this via neon/007_appwrite_identity.sql (adds the column + unique partial index);
+-- regenerated schemas get it here.
+create unique index if not exists users_appwrite_user_id_idx
+  on public.users (appwrite_user_id)
+  where appwrite_user_id is not null;
 
 -- Ensure the custom GUC exists for current_setting(..., true) reads.
 select current_setting('app.current_user_id', true);

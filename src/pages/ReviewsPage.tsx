@@ -1,3 +1,4 @@
+import { api } from "@/integrations/api/client";
 import {
   BarChart3,
   Copy,

@@ -8,7 +8,7 @@ import {
   formatDepositBonusOfferRange,
 } from "../../src/lib/depositBonusOffers.js";
 import { buildPlisioInstructionAddress, mapCryptoMethodToPlisioCurrency } from "../../src/lib/plisio.js";
-import { query, queryOne, userRpc } from "../_lib/db.js";
+import { query, queryOne, rpcResultPayload, userRpc } from "../_lib/db.js";
 import { authenticateRequest, clerkUserIdToUuid } from "../_lib/clerkWebhook.js";
 
 type ApiRequest = IncomingMessage & {
@@ -113,7 +113,7 @@ const getPlisioCallbackUrl = (request: ApiRequest) => {
     return withJsonResponseFlag(configured);
   }
 
-  return withJsonResponseFlag(`${getBaseAppUrl(request)}/api/crypto/webhook`);
+  return withJsonResponseFlag(`${getBaseAppUrl(request)}/api/crypto/deposit-callback`);
 };
 
 const getPlisioApiKey = () => {
@@ -283,163 +283,40 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     return;
   }
 
-  try {
-    const rawBody = await readRawBody(request);
-    const body = parseJsonBody(rawBody) as RequestPayload;
+  // Read and parse request body once at the top level
+  const rawBody = await readRawBody(request);
+  const body = parseJsonBody(rawBody) as RequestPayload;
 
-    const amount = Number(body.amount ?? 0);
-    const bonusOfferId = asString(body.bonusOfferId ?? null);
+  const clerkUserId = await authenticateRequest(request.headers);
+  const userId = clerkUserIdToUuid(clerkUserId ?? "");
+
+  // -------------------------------------------------------------------
+  // BRANCH 1: Recover existing deposit by instruction ID
+  // -------------------------------------------------------------------
+  if (body.instructionId) {
     const instructionId = asString(body.instructionId);
-    const paymentMethodId = asString(body.paymentMethodId);
-    const promoId = asString(body.promoId ?? null);
 
-    const clerkUserId = await authenticateRequest(request.headers);
-    if (!clerkUserId) {
-      sendJson(response, 401, { error: "Missing or invalid Bearer token." });
+    const instructionRow = await queryOne(
+      `select ci.*, pm as payment_method from crypto_deposit_instructions ci
+         join crypto_payment_methods pm on pm.id = ci.payment_method_id
+       where ci.id = $1 and ci.user_id = $2`,
+      [instructionId, userId],
+    );
+
+    const instruction = instructionRow as Tables<"crypto_deposit_instructions"> & {
+      payment_method?: Tables<"crypto_payment_methods">;
+    };
+    const paymentMethod = instruction?.payment_method;
+
+    if (!instruction || !paymentMethod) {
+      sendJson(response, 404, { error: "Deposit instruction not found." });
       return;
     }
 
-    if (!instructionId && !paymentMethodId) {
-      sendJson(response, 400, { error: "paymentMethodId is required." });
-      return;
-    }
-
-    if (!instructionId && (!Number.isFinite(amount) || amount <= 0)) {
-      sendJson(response, 400, { error: "amount must be a positive number." });
-      return;
-    }
-
-    if (promoId && bonusOfferId) {
+    if (!instruction.deposit_address.startsWith("plisio:")) {
       sendJson(response, 400, {
-        error: "Promo codes cannot be combined with deposit bonus offers.",
+        error: "Hosted checkout recovery is only available for Plisio-backed deposit requests.",
       });
-      return;
-    }
-
-    const userId = clerkUserIdToUuid(clerkUserId);
-    const userEmail = null;
-
-    const supportedMethodsRows = await query(
-      "select symbol, network, confirmations_required, attribution_mode from crypto_payment_methods where status = $1",
-      ["active"],
-    );
-
-    const supportedPlisioCurrencies = Array.from(
-      new Set(
-        (supportedMethodsRows ?? []).reduce<string[]>((currencies, entry) => {
-          const methodEntry = entry as Tables<"crypto_payment_methods">;
-          if (methodEntry.attribution_mode === "static") {
-            return currencies;
-          }
-
-          const currency = mapCryptoMethodToPlisioCurrency({
-            network: methodEntry.network,
-            symbol: methodEntry.symbol,
-          });
-
-          if (currency) {
-            currencies.push(currency);
-          }
-
-          return currencies;
-        }, []),
-      ),
-    );
-    const appBaseUrl = process.env.APP_BASE_URL?.trim() || getBaseAppUrl(request);
-
-    if (instructionId) {
-      const instructionRow = await queryOne(
-        `select ci.*, pm as payment_method from crypto_deposit_instructions ci
-           join crypto_payment_methods pm on pm.id = ci.payment_method_id
-         where ci.id = $1 and ci.user_id = $2`,
-        [instructionId, userId],
-      );
-
-      const instruction = instructionRow as Tables<"crypto_deposit_instructions"> & {
-        payment_method?: Tables<"crypto_payment_methods">;
-      };
-      const paymentMethod = instruction?.payment_method;
-
-      if (!instruction || !paymentMethod) {
-        sendJson(response, 404, { error: "Deposit instruction not found." });
-        return;
-      }
-
-      if (!instruction.deposit_address.startsWith("plisio:")) {
-        sendJson(response, 400, {
-          error: "Hosted checkout recovery is only available for Plisio-backed deposit requests.",
-        });
-        return;
-      }
-
-      const plisioCurrency = mapCryptoMethodToPlisioCurrency({
-        network: paymentMethod.network,
-        symbol: paymentMethod.symbol,
-      });
-
-      if (!plisioCurrency) {
-        sendJson(response, 400, {
-          error: `${paymentMethod.coin_name} (${paymentMethod.symbol} ${paymentMethod.network}) is not supported by the current Plisio configuration.`,
-        });
-        return;
-      }
-
-      const plisioCheckout = await createPlisioHostedCheckout({
-        allowedCurrencies: supportedPlisioCurrencies,
-        amountUsd: Number(instruction.expected_amount_usd ?? 0),
-        callbackUrl: getPlisioCallbackUrl(request),
-        currency: plisioCurrency,
-        failInvoiceUrl: `${appBaseUrl}/deposit`,
-        orderId: instruction.deposit_request_id,
-        successInvoiceUrl: `${appBaseUrl}/trade`,
-        userEmail,
-      });
-
-      const invoiceUrl = asString(plisioCheckout.invoice_url);
-      if (!invoiceUrl) {
-        throw new Error("Plisio did not return a hosted invoice URL.");
-      }
-
-      sendJson(response, 200, {
-        ok: true,
-        instruction: {
-          address: instruction.deposit_address,
-          amount: Number(instruction.expected_amount_usd ?? 0),
-          confirmations_required: Number(instruction.required_confirmations ?? 0),
-          created_at: instruction.created_at,
-          deposit_request_id: instruction.deposit_request_id,
-          hosted_checkout_url: invoiceUrl,
-          instruction_id: instruction.id,
-          instruction_status: instruction.instruction_status,
-          memo_label: instruction.memo_label,
-          memo_value: instruction.memo_value,
-          payment_method_id: instruction.payment_method_id,
-          promo_bonus: Number(instruction.promo_bonus ?? 0),
-          provider_name: "plisio",
-          provider_order_id: instruction.deposit_request_id,
-          provider_pay_amount:
-            asNumber(plisioCheckout.invoice_total_sum) ??
-            asNumber(plisioCheckout.amount) ??
-            asNumber(plisioCheckout.pending_amount),
-          provider_pay_currency:
-            asString(plisioCheckout.currency) ||
-            asString(plisioCheckout.psys_cid) ||
-            plisioCurrency,
-          provider_payment_id: asIdString(plisioCheckout.txn_id),
-          provider_payment_status: asString(plisioCheckout.status) || "new",
-        },
-      });
-      return;
-    }
-
-    const paymentMethodRow = await queryOne(
-      "select * from crypto_payment_methods where id = $1 and status = $2",
-      [paymentMethodId, "active"],
-    );
-
-    const paymentMethod = paymentMethodRow as Tables<"crypto_payment_methods">;
-    if (!paymentMethod) {
-      sendJson(response, 400, { error: "Selected crypto payment method is not active." });
       return;
     }
 
@@ -455,148 +332,29 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       return;
     }
 
-    if (
-      Number(paymentMethod.minimum_deposit_amount ?? 0) > 0 &&
-      amount < Number(paymentMethod.minimum_deposit_amount ?? 0)
-    ) {
-      sendJson(response, 400, {
-        error: `Minimum deposit for ${paymentMethod.symbol} is ${Number(paymentMethod.minimum_deposit_amount).toFixed(2)} USD.`,
-      });
-      return;
-    }
+    const appBaseUrl = process.env.APP_BASE_URL?.trim() || getBaseAppUrl(request);
 
-    if (paymentMethod.attribution_mode === "static") {
-      sendJson(response, 400, {
-        error:
-          "Selected method is still in static/manual mode. Switch it to an automated crypto mode before using Plisio hosted checkout.",
-      });
-      return;
-    }
-
-    const { bonusAmount: selectedBonusAmount, selectedOffer } = await resolveSelectedBonusOffer({
-      amount,
-      bonusOfferId,
-      userId,
+    const plisioCheckout = await createPlisioHostedCheckout({
+      allowedCurrencies: [],
+      amountUsd: Number(instruction.expected_amount_usd ?? 0),
+      callbackUrl: getPlisioCallbackUrl(request),
+      currency: plisioCurrency,
+      failInvoiceUrl: `${appBaseUrl}/deposit`,
+      orderId: instruction.deposit_request_id,
+      successInvoiceUrl: `${appBaseUrl}/trade`,
+      userEmail: null,
     });
-
-    const requestRows = await userRpc("request_deposit_review", clerkUserId, {
-      p_amount: amount,
-      p_method: "CRYPTO",
-      p_payment_method_id: paymentMethod.id,
-      p_promo_id: promoId,
-      p_tx_hash: null,
-    });
-
-    const requestPayload = (requestRows?.[0] ?? {}) as {
-      promo_bonus?: number | string | null;
-      request_id?: string | null;
-    };
-    const depositRequestId = asString(requestPayload.request_id);
-
-    if (!depositRequestId) {
-      throw new Error("Deposit request could not be created.");
-    }
-
-    const requestedPromoBonus = Number(requestPayload.promo_bonus ?? 0);
-    const effectivePromoBonus = promoId ? requestedPromoBonus : Number(selectedBonusAmount ?? 0);
-
-    if (selectedOffer) {
-      const now = new Date().toISOString();
-      const bonusUpdateRow = await queryOne(
-        `update deposit_requests
-            set bonus_offer_id = $1, promo_bonus = $2, updated_at = $3
-          where id = $4 and user_id = $5 and status = $6
-          returning id`,
-        [selectedOffer.id, effectivePromoBonus, now, depositRequestId, userId, "pending"],
-      );
-
-      if (!bonusUpdateRow) {
-        await rejectPendingDepositRequest({
-          reason: "Deposit bonus reservation failed: pending deposit request could not be updated",
-          requestId: depositRequestId,
-        });
-        throw new Error("Deposit bonus reservation failed");
-      }
-
-      await query(
-        `insert into deposit_bonus_redemptions
-          (bonus_amount, bonus_offer_id, deposit_amount, deposit_request_id, status, user_id)
-         values ($1, $2, $3, $4, $5, $6)`,
-        [effectivePromoBonus, selectedOffer.id, amount, depositRequestId, "reserved", userId],
-      );
-    }
-
-    const requiredConfirmations = Math.max(
-      Number(paymentMethod.confirmations_required ?? 0),
-      ...(supportedMethodsRows ?? [])
-        .map((entry) => entry as Tables<"crypto_payment_methods">)
-        .filter((entry) => entry.attribution_mode !== "static")
-        .map((entry) => Number(entry.confirmations_required ?? 0)),
-    );
-
-    let plisioCheckout: JsonObject;
-    try {
-      plisioCheckout = await createPlisioHostedCheckout({
-        allowedCurrencies: supportedPlisioCurrencies,
-        amountUsd: amount,
-        callbackUrl: getPlisioCallbackUrl(request),
-        currency: plisioCurrency,
-        failInvoiceUrl: `${appBaseUrl}/deposit`,
-        orderId: depositRequestId,
-        successInvoiceUrl: `${appBaseUrl}/trade`,
-        userEmail,
-      });
-    } catch (error) {
-      await rejectPendingDepositRequest({
-        reason: `Plisio hosted checkout creation failed: ${error instanceof Error ? error.message : "unknown error"}`,
-        requestId: depositRequestId,
-      });
-      throw error;
-    }
 
     const invoiceUrl = asString(plisioCheckout.invoice_url);
     if (!invoiceUrl) {
-      await rejectPendingDepositRequest({
-        reason: "Plisio did not return a hosted invoice URL.",
-        requestId: depositRequestId,
-      });
       throw new Error("Plisio did not return a hosted invoice URL.");
     }
-
-    const instructionRow = await queryOne(
-      `insert into crypto_deposit_instructions
-        (deposit_address, deposit_request_id, expected_amount_usd, instruction_status, memo_label, memo_value, payment_method_id, promo_bonus, required_confirmations, user_id)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       returning *`,
-      [
-        buildPlisioInstructionAddress(depositRequestId),
-        depositRequestId,
-        amount,
-        "awaiting_payment",
-        null,
-        null,
-        paymentMethod.id,
-        effectivePromoBonus,
-        Math.max(requiredConfirmations, 0),
-        userId,
-      ],
-    );
-
-    if (!instructionRow) {
-      await rejectPendingDepositRequest({
-        reason: "Deposit instruction creation failed after Plisio checkout: no row returned",
-        requestId: depositRequestId,
-      });
-      throw new Error("Failed to create deposit instruction.");
-    }
-
-    const instruction = instructionRow as Tables<"crypto_deposit_instructions">;
 
     sendJson(response, 200, {
       ok: true,
       instruction: {
         address: instruction.deposit_address,
-        amount: Number(instruction.expected_amount_usd ?? amount),
+        amount: Number(instruction.expected_amount_usd ?? 0),
         confirmations_required: Number(instruction.required_confirmations ?? 0),
         created_at: instruction.created_at,
         deposit_request_id: instruction.deposit_request_id,
@@ -606,9 +364,9 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         memo_label: instruction.memo_label,
         memo_value: instruction.memo_value,
         payment_method_id: instruction.payment_method_id,
-        promo_bonus: effectivePromoBonus,
+        promo_bonus: Number(instruction.promo_bonus ?? 0),
         provider_name: "plisio",
-        provider_order_id: depositRequestId,
+        provider_order_id: instruction.deposit_request_id,
         provider_pay_amount:
           asNumber(plisioCheckout.invoice_total_sum) ??
           asNumber(plisioCheckout.amount) ??
@@ -621,10 +379,310 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         provider_payment_status: asString(plisioCheckout.status) || "new",
       },
     });
-  } catch (error) {
-    console.error("Plisio hosted checkout creation failed", error);
-    sendJson(response, 500, {
-      error: error instanceof Error ? error.message : "Failed to create Plisio hosted checkout",
-    });
+    return;
   }
+
+  // -------------------------------------------------------------------
+  // BRANCH 2: New deposit via Plisio "Create a Deposit" API (no hosted checkout)
+  // -------------------------------------------------------------------
+  const { amount, paymentMethodId, cryptoCurrency, cryptoNetwork } = body as {
+    amount?: number;
+    paymentMethodId?: string;
+    cryptoCurrency?: string;
+    cryptoNetwork?: string;
+  };
+
+  if (!amount || !Number.isFinite(amount) || Number(amount) <= 0) {
+    sendJson(response, 400, { error: "Amount must be a positive number." });
+    return;
+  }
+
+  if (!cryptoCurrency || !cryptoNetwork) {
+    sendJson(response, 400, { error: "Crypto currency and network are required." });
+    return;
+  }
+
+  // Map the crypto method to Plisio currency code using coin symbol and network
+  const plisioCurrency = mapCryptoMethodToPlisioCurrency({ network: cryptoNetwork, symbol: cryptoCurrency });
+  if (!plisioCurrency) {
+    sendJson(response, 400, { error: "Unsupported cryptocurrency/network combination." });
+    return;
+  }
+
+  // Check if user already has a Plisio deposit address for this crypto method
+  const existingAddress = await queryOne(
+    "select deposit_address, plisio_uid, updated_at from crypto_deposit_instructions where user_id = $1 and payment_method_id = $2 and instruction_status in ('awaiting_payment', 'payment_detected', 'confirming') order by created_at desc limit 1",
+    [userId, paymentMethodId],
+  );
+
+  let plisioAddress: string;
+  let operationId: string;
+
+  if (existingAddress) {
+    // Reuse existing address
+    plisioAddress = existingAddress.deposit_address;
+    operationId = existingAddress.plisio_uid || "";
+    // Update the updated_at timestamp
+    await query(
+      "update crypto_deposit_instructions set updated_at = $1 where id = $2",
+      [new Date().toISOString(), existingAddress.id],
+    );
+  } else {
+    // Call Plisio Create a Deposit API inline (NO hosted checkout)
+    const plisioCallbackUrl = `${process.env.APP_BASE_URL || getBaseAppUrl(request)}/api/crypto/deposit-callback`;
+
+    const plisioApiKey = process.env.PLISIO_API_KEY ?? "";
+    const plisioUrl = new URL("/shops/deposit/new", "https://api.plisio.net/api/v1");
+    plisioUrl.searchParams.set("api_key", plisioApiKey);
+    plisioUrl.searchParams.set("psys_cid", plisioCurrency);
+    plisioUrl.searchParams.set("uid", userId);
+    plisioUrl.searchParams.set("callback_url", plisioCallbackUrl);
+
+    const plisioResponse = await fetch(plisioUrl.toString(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const plisioData = await plisioResponse.json();
+
+    if (!plisioResponse.ok) {
+      const errorMsg = plisioData?.error ? String(plisioData.error) : `Plisio returned HTTP ${plisioResponse.status}`;
+      await query(
+        `insert into crypto_deposit_instructions (
+           user_id, payment_method_id, cryptocurrency, network, deposit_address, requested_amount, status, plisio_txn_id, callback_payload, created_at, updated_at
+         ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [
+          userId,
+          paymentMethodId,
+          cryptoCurrency,
+          cryptoNetwork,
+          "",
+          amount,
+          "failed",
+          "",
+          JSON.stringify({ error: errorMsg }),
+          new Date().toISOString(),
+          new Date().toISOString(),
+        ],
+      );
+
+      sendJson(response, 500, { error: errorMsg });
+      return;
+    }
+
+    // Extract address and operation ID from Plisio response
+    plisioAddress = String(plisioData?.address ?? plisioResponse?.address ?? "");
+    operationId = String(plisioData?.operation_id ?? plisioResponse?.id ?? "");
+
+    if (!plisioAddress) {
+      sendJson(response, 500, { error: "Plisio did not return a deposit address" });
+      return;
+    }
+
+    // Save the deposit instruction record
+    const depositRequestId = `dep_${userId.replace(/-/g, "")}_${Date.now()}`;
+
+    await query(
+      `insert into crypto_deposit_instructions (
+         user_id, payment_method_id, cryptocurrency, network, deposit_address, requested_amount, status, plisio_txn_id, callback_payload, created_at, updated_at
+       ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      [
+        userId,
+        paymentMethodId,
+        cryptoCurrency,
+        cryptoNetwork,
+        plisioAddress,
+        amount,
+        "pending",
+        operationId,
+        JSON.stringify({ plisioCurrency, createdAt: new Date().toISOString() }),
+        new Date().toISOString(),
+        new Date().toISOString(),
+      ],
+    );
+  }
+
+  // Return the deposit address to the frontend
+  sendJson(response, 200, {
+    address: plisioAddress,
+    cryptocurrency: cryptoCurrency,
+    network: cryptoNetwork,
+    plisioUid: operationId,
+    amount,
+    instructions: `Send ${amount} $${cryptoCurrency.toUpperCase()} (${cryptoNetwork.toUpperCase()}) to the address above.`,
+    qrCode: `plisio:${plisioAddress}`,
+  });
+}
+
+// -------------------------------------------------------------------
+// BRANCH 3: Handle Plisio deposit callback/webhook
+// -------------------------------------------------------------------
+  const urlString = request.url ?? "";
+  const path = typeof urlString === "string" ? urlString.replace(/^\/api/, "") : "";
+
+  if (path.endsWith("/deposit-callback") || path === "/api/crypto/deposit-callback") {
+    const rawPayload = await readRawBody(request);
+    const rawPayloadObj = JSON.parse(rawBody) as Record<string, unknown>;
+
+    const plisioSecret = process.env.PLISIO_API_KEY?.trim();
+    if (!plisioSecret) {
+      console.error("PLISIO_API_KEY not configured for deposit callback verification");
+      sendJson(response, 500, { error: "Server configuration error" });
+      return;
+    }
+
+    const crypto = require("node:crypto");
+    const normalizedPayload = { ...rawPayloadObj };
+    delete normalizedPayload.verify_hash;
+    const expected = crypto.createHmac("sha1", plisioSecret).update(JSON.stringify(normalizedPayload)).digest("hex");
+    const received = asString(rawPayloadObj.verify_hash)?.replace(/^sha1=/i, "");
+    if (!received) {
+      sendJson(response, 401, { error: "Invalid Plisio callback signature" });
+      return;
+    }
+
+    const expectedBuf = Buffer.from(expected, "hex");
+    const receivedBuf = Buffer.from(received, "hex");
+    if (expectedBuf.length !== receivedBuf.length || !crypto.timingSafeEqual(expectedBuf, receivedBuf)) {
+      sendJson(response, 401, { error: "Invalid Plisio callback signature" });
+      return;
+    }
+
+    // Extract deposit data from callback (inline normalization)
+    const data = typeof rawPayloadObj.data === "object" && rawPayloadObj.data !== null ? rawPayloadObj.data : {};
+    const operationId = asString(data.id) ?? asString(rawPayloadObj.id);
+    const status = asString(data.status) ?? asString(rawPayloadObj.status);
+    const amount = asNumber(data.amount) ?? asNumber(rawPayloadObj.amount);
+    const currency = asString(data.currency) ?? asString(rawPayloadObj.currency);
+    const address = asString(data.address) ?? asString(rawPayloadObj.address);
+    const fee = asNumber(data.fee) ?? asNumber(rawPayloadObj.fee);
+    const txHash = asString(data.tx_hash) ?? asString(rawPayloadObj.hash) ?? asString(rawPayloadObj.tx_hash);
+
+    if (!operationId) {
+      sendJson(response, 400, { error: "Missing operation ID in callback" });
+      return;
+    }
+
+    // Find the deposit instruction by Plisio operation ID
+    const depositRows = await query(
+      "select * from crypto_deposit_instructions where plisio_txn_id = $1 order by created_at desc limit 1",
+      [operationId],
+    );
+
+    const depositInstruction = depositRows[0];
+    if (!depositInstruction) {
+      console.warn("Plisio deposit callback: deposit instruction not found", { operationId });
+      sendJson(response, 200, { ok: true, message: "Instruction not found, callback acknowledged" });
+      return;
+    }
+
+    const requestId = String(depositInstruction.id);
+    const now = new Date().toISOString();
+    const lowerStatus = String(status ?? "").toLowerCase();
+
+    const plisioCompletedStatuses = ["completed", "finished", "confirmed"];
+    const plisioFailedStatuses = ["error", "expired", "cancelled", "rejected", "failed"];
+
+    // Prevent duplicate processing
+    if (lowerStatus === "credited" || lowerStatus === "completed") {
+      // Already processed - just acknowledge
+      await query(
+        `update crypto_deposit_instructions
+           set callback_received_at = $1,
+             status = $2,
+             updated_at = $3,
+             plisio_txn_id = $4,
+             transaction_hash = $5,
+             callback_payload = $6
+         where id = $7`,
+        [now, lowerStatus, now, operationId, txHash ?? null, rawPayloadObj, requestId],
+      );
+      sendJson(response, 200, { ok: true, status: "already_processed", request_id: requestId });
+      return;
+    }
+
+    if (plisioCompletedStatuses.includes(lowerStatus)) {
+      // Payment completed - credit the user
+      const userId = String(depositInstruction.user_id);
+      const cryptoCurrency = String(depositInstruction.cryptocurrency ?? "");
+      const network = String(depositInstruction.network ?? "");
+      const requestedAmount = Number(depositInstruction.requested_amount ?? 0);
+
+      // Update deposit status
+      await query(
+        `update crypto_deposit_instructions
+           set completed_at = $1,
+             status = $2,
+             updated_at = $3,
+             plisio_txn_id = $4,
+             transaction_hash = $5,
+             callback_payload = $6
+         where id = $7`,
+        [now, lowerStatus, now, operationId, txHash ?? null, rawPayloadObj, requestId],
+      );
+
+      // Credit the user's balance
+      await query(
+        `update profiles
+           set balance = balance + $1,
+             total_deposit = total_deposit + $1,
+             updated_at = $2
+         where id = $3`,
+        [requestedAmount, now, userId],
+      );
+
+      // Create notification
+      await rpc("create_notification_internal", {
+        p_data: {
+          amount: requestedAmount,
+          method: `CRYPTO ${cryptoCurrency.toUpperCase()} (${network.toUpperCase()})`,
+          plisio_operation_id: operationId,
+          tx_hash: txHash,
+          deposit_id: requestId,
+        },
+        p_external_key: `deposit:${requestId}:completed`,
+        p_link_url: "/deposit",
+        p_message: `Your deposit of $${requestedAmount.toFixed(2)} has been completed successfully. Transaction: ${txHash ?? operationId}`,
+        p_title: "Deposit completed",
+        p_type: "deposit_completed",
+        p_user_id: userId,
+      });
+
+      sendJson(response, 200, { ok: true, status: "completed", request_id: requestId });
+      return;
+    }
+
+    if (plisioFailedStatuses.includes(lowerStatus)) {
+      // Payment failed
+      await query(
+        `update crypto_deposit_instructions
+           set failed_at = $1,
+             status = $2,
+             updated_at = $3,
+             plisio_txn_id = $4,
+             callback_payload = $5
+         where id = $6`,
+        [now, lowerStatus, now, operationId, rawPayloadObj, requestId],
+      );
+
+      sendJson(response, 200, { ok: true, status: "failed", request_id: requestId });
+      return;
+    }
+
+    // Update status to processing or other pending state
+    await query(
+      `update crypto_deposit_instructions
+         set status = $1,
+           updated_at = $2,
+           plisio_txn_id = $3,
+           callback_payload = $4
+       where id = $5`,
+      [lowerStatus, now, operationId, rawPayloadObj, requestId],
+    );
+
+    sendJson(response, 200, { ok: true, status: "pending", request_id: requestId });
+    return;
+  }
+
+  sendJson(response, 404, { error: "Not found" });
 }

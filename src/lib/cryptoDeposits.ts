@@ -6,7 +6,7 @@ import {
   loadCryptoDepositCheckoutCache,
   saveCryptoDepositCheckoutCache,
 } from "@/lib/cryptoDepositCheckoutCache";
-import { getFirebaseIdToken } from "@/integrations/firebase/authService";
+import { getAppwriteIdToken } from "@/integrations/appwrite/authService";
 
 export type CryptoAttributionMode = "static" | "memo" | "dynamic_address";
 export type CryptoInstructionStatus =
@@ -199,12 +199,16 @@ export const createCryptoDepositInstruction = async ({
   applyDepositBonus = false,
   bonusOfferId = null,
   paymentMethodId,
+  cryptoCurrency,
+  cryptoNetwork,
   promoId = null,
 }: {
   amount: number;
   applyDepositBonus?: boolean;
   bonusOfferId?: string | null;
   paymentMethodId: string;
+  cryptoCurrency: string;
+  cryptoNetwork: string;
   promoId?: string | null;
 }): Promise<CryptoDepositInstructionPayload> => {
   void applyDepositBonus;
@@ -232,7 +236,7 @@ export const createCryptoDepositInstruction = async ({
     provider_payment_status: data.provider_payment_status ?? null,
   });
 
-  const accessToken = await getFirebaseIdToken();
+  const accessToken = await getAppwriteIdToken();
 
   if (!accessToken) {
     throw new Error("Authentication required. Please sign in again.");
@@ -248,6 +252,8 @@ export const createCryptoDepositInstruction = async ({
       amount,
       bonusOfferId,
       paymentMethodId,
+      cryptoCurrency,
+      cryptoNetwork,
       promoId,
     }),
   });
@@ -260,27 +266,13 @@ export const createCryptoDepositInstruction = async ({
   }
 
   if (!response.ok) {
-    throw new Error(responseBody?.error || "Failed to create Plisio hosted checkout.");
+    throw new Error(responseBody?.error || "Failed to create Plisio deposit.");
   }
 
   const payload = buildPayloadFromPartial((responseBody?.instruction ?? {}) as Partial<CryptoDepositInstructionPayload>);
 
-  if (payload.instruction_id) {
-    if (payload.hosted_checkout_url) {
-      saveCryptoDepositCheckoutCache({
-        hosted_checkout_url: payload.hosted_checkout_url,
-        instruction_id: payload.instruction_id,
-        payment_method_id: payload.payment_method_id,
-        provider_name: payload.provider_name ?? null,
-        provider_order_id: payload.provider_order_id ?? null,
-        provider_pay_amount: payload.provider_pay_amount ?? null,
-        provider_pay_currency: payload.provider_pay_currency ?? null,
-        provider_payment_id: payload.provider_payment_id ?? null,
-        provider_payment_status: payload.provider_payment_status ?? null,
-      });
-    } else {
-      clearCryptoDepositCheckoutCache(payload.instruction_id);
-    }
+  if (payload.instruction_id && payload.address) {
+    clearCryptoDepositCheckoutCache(payload.instruction_id);
   }
 
   return payload;
@@ -314,7 +306,7 @@ export const recoverCryptoDepositCheckout = async ({
     provider_payment_status: data.provider_payment_status ?? null,
   });
 
-  const accessToken = await getFirebaseIdToken();
+  const accessToken = await getAppwriteIdToken();
 
   if (!accessToken) {
     throw new Error("Authentication required. Please sign in again.");

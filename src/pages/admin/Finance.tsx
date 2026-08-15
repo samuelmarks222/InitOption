@@ -20,6 +20,7 @@ import {
   reviewMobileMoneyWithdrawal,
   WithdrawalDecision,
 } from "@/lib/withdrawals";
+import { getAppwriteIdToken } from "@/integrations/appwrite/authService";
 
 type FinanceTab = "deposits" | "withdrawals" | "history";
 type DepositRequest = Tables<"deposit_requests">;
@@ -360,7 +361,7 @@ const Finance = () => {
     }
   };
 
-  const handleWithdrawalDecision = async ({
+const handleWithdrawalDecision = async ({
     providerName,
     requestId,
     status,
@@ -379,10 +380,10 @@ const Finance = () => {
           status === "approved"
             ? "approval"
             : status === "rejected"
-              ? "rejection"
-              : status === "completed"
-                ? "completion"
-                : "failure";
+            ? "rejection"
+            : status === "completed"
+            ? "completion"
+            : "failure";
         const promptedNote = window.prompt(
           `Add an optional ${promptLabel} note for this M-PESA withdrawal. Leave blank to continue without one.`,
           "",
@@ -396,7 +397,37 @@ const Finance = () => {
         adminNote = promptedNote.trim() || null;
       }
 
-      if (providerName === "sasapay") {
+      if (providerName === "plisio") {
+        // For crypto withdrawals, call the Plisio admin withdrawal endpoint to trigger the payout
+        const accessToken = await getAppwriteIdToken();
+        if (!accessToken) {
+          throw new Error("Authentication required. Please sign in again.");
+        }
+
+        const response = await fetch("/api/crypto/admin-withdrawal", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            requestId,
+            action: status === "approved" ? "approve" : "reject",
+            adminNote,
+          }),
+        });
+
+        let responseBody: { error?: string } & Partial<WithdrawalRequestPayload> = {};
+        try {
+          responseBody = (await response.json()) as { error?: string } & Partial<WithdrawalRequestPayload>;
+        } catch {
+          responseBody = {};
+        }
+
+        if (!response.ok) {
+          throw new Error(responseBody?.error || "Failed to process crypto withdrawal.");
+        }
+      } else if (providerName === "sasapay") {
         await reviewMobileMoneyWithdrawal({ adminNote, requestId, status });
       } else {
         await adminUpdateWithdrawalStatus({ adminNote, requestId, status: status as WithdrawalDecision });

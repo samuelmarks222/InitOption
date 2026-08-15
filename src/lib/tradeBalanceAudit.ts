@@ -1,5 +1,8 @@
 
 
+import { api } from "@/integrations/api/client";
+
+
 export type TradeBalanceAuditEntry = {
   id: string;
   user_id: string;

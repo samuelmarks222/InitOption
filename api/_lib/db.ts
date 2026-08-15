@@ -72,7 +72,9 @@ export const userRpc = async (name: string, clerkUserId: string, payload: Record
   const pool = getPool();
   const client = await pool.connect();
   try {
-    await client.query("SET LOCAL app.current_user_id = $1", [mappedId]);
+    await client.query("BEGIN");
+    // set_config(..., true) = transaction-scoped GUC (SET LOCAL can't take bind params).
+    await client.query("SELECT set_config('app.current_user_id', $1, true)", [mappedId]);
     const keys = Object.keys(payload);
     let sql: string;
     const values: unknown[] = [];
@@ -84,7 +86,11 @@ export const userRpc = async (name: string, clerkUserId: string, payload: Record
       sql = `SELECT * FROM ${name}(${assignments})`;
     }
     const { rows } = await client.query(sql, values);
+    await client.query("COMMIT");
     return rows as QueryResultRow[];
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
   } finally {
     client.release();
   }
@@ -94,10 +100,16 @@ export const withUser = async <T>(clerkUserId: string | null, fn: (client: pg.Po
   const pool = getPool();
   const client = await pool.connect();
   try {
+    await client.query("BEGIN");
     if (clerkUserId) {
-      await client.query("SET LOCAL app.current_user_id = $1", [clerkUserId]);
+      await client.query("SELECT set_config('app.current_user_id', $1, true)", [clerkUserId]);
     }
-    return (await fn(client)) as T;
+    const result = await fn(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
   } finally {
     client.release();
   }
@@ -120,3 +132,31 @@ export const transaction = async <T>(fn: (client: pg.PoolClient) => Promise<T>):
 };
 
 export const adminClient = { query, queryOne, rpc, withUser, transaction, getRequiredEnv };
+
+// `SELECT * FROM fn(...)` returns rows shaped as `{ "<fn_name>": <payload> }` when the
+// function returns a single JSON value. Callers that read fields like `.request_id`
+// directly off the row were silently getting undefined, which surfaced as
+// "Deposit request could not be created." / "Withdrawal request could not be created."
+// This unwraps the JSON payload (or a single-key object row) and falls back to the row
+// itself for functions that return a TABLE/composite (multi-column) result.
+export const rpcResultPayload = <T = Record<string, unknown>>(
+  rows: unknown[],
+  fnName?: string,
+): T | null => {
+  const first = (rows ?? [])[0];
+  if (!first || typeof first !== "object" || Array.isArray(first)) return null;
+  const row = first as Record<string, unknown>;
+
+  if (fnName) {
+    const named = row[fnName];
+    if (named && typeof named === "object" && !Array.isArray(named)) return named as T;
+  }
+
+  const keys = Object.keys(row);
+  if (keys.length === 1) {
+    const only = row[keys[0]];
+    if (only && typeof only === "object" && !Array.isArray(only)) return only as T;
+  }
+
+  return row as T;
+};

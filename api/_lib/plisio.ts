@@ -1,0 +1,194 @@
+import type { Json } from "../../src/integrations/supabase/types.js";
+
+type JsonObject = { [key: string]: Json | undefined };
+
+import { createHmac, timingSafeEqual } from "node:crypto";
+
+let cachedPlisioApiKey: string | null = null;
+
+const getPlisioApiKey = () => {
+  if (cachedPlisioApiKey) return cachedPlisioApiKey;
+  const key = process.env.PLISIO_API_KEY?.trim();
+  if (!key) {
+    throw new Error("Missing required environment variable: PLISIO_API_KEY");
+  }
+  cachedPlisioApiKey = key;
+  return key;
+};
+
+const getPlisioBaseUrl = () => "https://api.plisio.net/api/v1";
+
+const asNumber = (value: Json | undefined) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+};
+
+const asString = (value: Json | undefined) => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+};
+
+const parseJsonResponse = async (response: Response) => {
+  try {
+    return (await response.json()) as JsonObject;
+  } catch {
+    return null;
+  }
+};
+
+const sendPlisioRequest = async (path: string, payload: Record<string, unknown>) => {
+  const apiKey = getPlisioApiKey();
+  const url = new URL(path, getPlisioBaseUrl());
+  url.searchParams.set("api_key", apiKey);
+
+  const response = await fetch(url.toString(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await parseJsonResponse(response);
+
+  const status = asString(data?.status);
+  const error = asString(data?.error) || asString(data?.message);
+
+  if (!response.ok || status !== "success") {
+    throw new Error(error || `Plisio returned HTTP ${response.status}`);
+  }
+
+  return data?.data as JsonObject ?? {};
+};
+
+export const requestPlisioPayout = async ({
+  amount,
+  currency,
+  address,
+  memo,
+  orderId,
+  callbackUrl,
+}: {
+  amount: number;
+  currency: string;
+  address: string;
+  memo?: string | null;
+  orderId: string;
+  callbackUrl: string;
+}) => {
+  const payload: Record<string, unknown> = {
+    amount: amount.toFixed(8),
+    currency,
+    address: address.trim(),
+    order_number: orderId,
+    callback_url: callbackUrl,
+  };
+
+  if (memo) {
+    payload.memo = memo.trim();
+  }
+
+  return sendPlisioRequest("/operations/withdraw", payload);
+};
+
+export const checkPlisioOperationStatus = async (operationId: string) => {
+  const apiKey = getPlisioApiKey();
+  const url = new URL(`/operations/${operationId}`, getPlisioBaseUrl());
+  url.searchParams.set("api_key", apiKey);
+
+  const response = await fetch(url.toString(), { method: "GET" });
+  const data = await parseJsonResponse(response);
+
+  const status = asString(data?.status);
+  const error = asString(data?.error) || asString(data?.message);
+
+  if (!response.ok || status !== "success") {
+    throw new Error(error || `Plisio status check returned HTTP ${response.status}`);
+  }
+
+  return data?.data as JsonObject ?? {};
+};
+
+export const verifyPlisioCallback = (payload: Record<string, unknown>, secret: string) => {
+  const normalizedPayload = { ...payload };
+  delete normalizedPayload.verify_hash;
+
+  const expected = createHmac("sha1", secret).update(JSON.stringify(normalizedPayload)).digest("hex");
+
+  const received = asString(payload.verify_hash)?.replace(/^sha1=/i, "");
+  if (!received) return false;
+
+  const expectedBuf = Buffer.from(expected, "hex");
+  const receivedBuf = Buffer.from(received, "hex");
+
+  return expectedBuf.length === receivedBuf.length && timingSafeEqual(expectedBuf, receivedBuf);
+};
+
+export const buildPlisioCallbackUrl = (path: string) => {
+  const baseUrl = process.env.PLISIO_CALLBACK_BASE_URL?.trim() || process.env.APP_BASE_URL?.trim();
+  if (!baseUrl) {
+    throw new Error("Set PLISIO_CALLBACK_BASE_URL or APP_BASE_URL before using Plisio callbacks.");
+  }
+  const url = new URL(path, baseUrl);
+  return url.toString();
+};
+
+export const fetchPlisioDeposit = async ({
+  apiKey,
+  psysCid,
+  uid,
+  callbackUrl,
+}: {
+  apiKey: string;
+  psysCid: string;
+  uid: string;
+  callbackUrl: string;
+}) => {
+  const url = new URL(`/shops/deposit/new`, "https://api.plisio.net/api/v1");
+  url.searchParams.set("api_key", apiKey);
+  url.searchParams.set("psys_cid", psysCid);
+  url.searchParams.set("uid", uid);
+  url.searchParams.set("callback_url", callbackUrl);
+
+  const response = await fetch(url.toString(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const data = await (response.json() as Promise<JsonObject>);
+
+  if (!response.ok) {
+    const errorMsg = asString(data?.error) || `Plisio returned HTTP ${response.status}`;
+    throw new Error(errorMsg);
+  }
+
+  return data;
+};
+
+export const normalizePlisioPayoutPayload = (payload: Record<string, unknown>) => {
+  const data = (payload.data as JsonObject) ?? {};
+  const dataId = asString(data.id) ?? asString(payload.id);
+  const dataStatus = asString(data.status) ?? asString(payload.status);
+  const dataAmount = asNumber(data.amount) ?? asNumber(payload.amount);
+  const dataCurrency = asString(data.currency) ?? asString(payload.currency);
+  const dataAddress = asString(data.address) ?? asString(payload.address);
+  const dataFee = asNumber(data.fee) ?? asNumber(payload.fee);
+  const dataTxHash = asString(data.tx_hash) ?? asString(data.hash);
+  const dataOrderNumber = asString(data.order_number) ?? asString(payload.order_number);
+
+  return {
+    operationId: dataId,
+    status: dataStatus,
+    amount: dataAmount,
+    currency: dataCurrency,
+    address: dataAddress,
+    fee: dataFee,
+    txHash: dataTxHash,
+    orderNumber: dataOrderNumber,
+    rawPayload: payload,
+  };
+};
+};

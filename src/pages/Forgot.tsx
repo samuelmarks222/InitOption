@@ -12,7 +12,13 @@ const Forgot = () => {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [code, setCode] = useState("");
-  const [verified, setVerified] = useState(false);
+  const [verified, setVerified] = useState(() => {
+    // Appwrite sends a recovery link that returns here with userId + secret in
+    // the query string. When present, skip the email/code steps and go straight
+    // to the new-password form (updatePasswordAfterReset reads the params).
+    const params = new URLSearchParams(window.location.search);
+    return Boolean(params.get("userId") || params.get("user_id")) && Boolean(params.get("secret"));
+  });
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -58,7 +64,7 @@ const Forgot = () => {
           </div>
           <h2 className="text-xl font-bold text-center text-[#1f4c63]">Password recovery</h2>
           <p className="mt-2 text-center text-sm text-[#6d7181]">Enter your email and follow the instructions</p>
-          {!sent ? (
+          {!sent && !verified ? (
             <form onSubmit={handleSend} className="mt-6 space-y-4">
               <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your email" />
               <Button type="submit" className="w-full bg-[#12cc9a] hover:bg-[#10b589] text-white" disabled={loading}>{loading ? "Sending..." : "Send Verification Code"} <ArrowRight size={16} /></Button>

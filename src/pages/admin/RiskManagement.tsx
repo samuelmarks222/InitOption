@@ -1,3 +1,4 @@
+import { api } from "@/integrations/api/client";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { AlertTriangle, ShieldCheck, Target, TrendingDown, TrendingUp, Users } from "lucide-react";

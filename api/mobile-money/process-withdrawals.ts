@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { getHeaderValue } from "../../src/lib/cryptoWebhook.js";
+import { processApprovedMobileMoneyWithdrawals } from "../_lib/mobileMoneyWithdrawalQueue.js";
 
 type ApiRequest = IncomingMessage & {
   headers: Record<string, string | string[] | undefined>;
@@ -30,13 +31,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   }
 
   try {
-    sendJson(response, 200, {
-      ok: true,
-      failed: 0,
-      mode: "manual_finance",
-      processed: 0,
-      queued: 0,
-    });
+    const results = await processApprovedMobileMoneyWithdrawals({ limit: 10 });
+    sendJson(response, 200, { ok: true, ...results });
   } catch (error) {
     console.error("Scheduled mobile money withdrawal processing failed", error);
     sendJson(response, 500, {

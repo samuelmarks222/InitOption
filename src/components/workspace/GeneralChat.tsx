@@ -226,12 +226,14 @@ function generateUsers(): ChatUser[] {
   const usedNames = new Set<string>();
 
   for (let i = 0; i < TOTAL_USERS; i++) {
-    let name: string;
-    do {
-      const fn = FIRST_NAMES[Math.floor(rng() * FIRST_NAMES.length)];
-      const ln = LAST_NAMES[Math.floor(rng() * LAST_NAMES.length)];
-      name = `${fn}_${ln}`;
-    } while (usedNames.has(name));
+    const fn = FIRST_NAMES[Math.floor(rng() * FIRST_NAMES.length)];
+    const ln = LAST_NAMES[Math.floor(rng() * LAST_NAMES.length)];
+    let name = `${fn}_${ln}`;
+    if (usedNames.has(name)) {
+      let suffix = 2;
+      while (usedNames.has(`${name}${suffix}`)) suffix += 1;
+      name = `${name}${suffix}`;
+    }
     usedNames.add(name);
 
     const country = COUNTRIES[Math.floor(rng() * COUNTRIES.length)];

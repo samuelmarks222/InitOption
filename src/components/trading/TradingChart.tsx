@@ -2222,7 +2222,6 @@ const TradingChart = ({
 
     return {
       ...mobileTouchSurface,
-      ...shadow,
       backgroundColor: imageBaseColor,
       backgroundImage: `linear-gradient(${imageOverlay}), url("${activeChartBackgroundImage}")`,
       backgroundPosition: "center",

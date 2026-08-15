@@ -4,7 +4,7 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import SafeFirebaseProvider from "@/integrations/firebase/FirebaseProvider";
+import SafeAppwriteProvider from "@/integrations/appwrite/AppwriteProvider";
 import TradingRouteProviders from "@/components/TradingRouteProviders";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
@@ -144,7 +144,7 @@ const App = () => {
         <Sonner />
          <BrowserRouter>
            <RouteSeoManager platformSettings={platformSettings} />
-           <SafeFirebaseProvider>
+           <SafeAppwriteProvider>
              <Routes>
                         <Route path="/" element={withRouteSuspense(<Index />)} />
                         <Route path="/about" element={withRouteSuspense(<PublicInfoPage pageKey="about" />)} />
@@ -221,7 +221,7 @@ const App = () => {
 
                         <Route path="*" element={withRouteSuspense(<NotFound />)} />
              </Routes>
-           </SafeFirebaseProvider>
+           </SafeAppwriteProvider>
          </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

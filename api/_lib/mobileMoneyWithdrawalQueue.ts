@@ -1,7 +1,7 @@
 import type { Json } from "../../src/integrations/supabase/types.js";
 import { MPESA_CHANNEL_CODE } from "../../src/lib/mobileMoneyShared.js";
 import { buildSasaPayCallbackUrl, getFriendlySasaPayWithdrawalMessage, requestSasaPayB2CPayout } from "./sasapay.js";
-import { query, rpc } from "./db.js";
+import { query, rpc, rpcResultPayload } from "./db.js";
 
 type WithdrawalClaimPayload = {
   amount?: number | null;
@@ -205,7 +205,7 @@ export const processApprovedMobileMoneyWithdrawals = async ({
       p_request_id: requestId,
     });
 
-    const claimPayload = (claimRows?.[0] ?? {}) as WithdrawalClaimPayload;
+    const claimPayload = rpcResultPayload<WithdrawalClaimPayload>(claimRows, "claim_mobile_money_withdrawal") ?? {};
     const claimedRequestId = asString(claimPayload.request_id);
 
     if (!claimedRequestId) {

@@ -1,3 +1,4 @@
+import { api } from "@/integrations/api/client";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Search, Trophy, X, Award, TrendingUp, DollarSign, BarChart3, Target } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";

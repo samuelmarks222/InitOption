@@ -1,6 +1,7 @@
 
 
-import { getFirebaseIdToken } from "@/integrations/firebase/authService";
+import { api } from "@/integrations/api/client";
+import { getAppwriteIdToken } from "@/integrations/appwrite/authService";
 
 export type WithdrawalDecision = "approved" | "rejected";
 export type MobileMoneyWithdrawalDecision = "approved" | "rejected" | "completed" | "failed";
@@ -14,11 +15,26 @@ export interface WithdrawalRequestPayload {
   status?: string;
 }
 
+export interface CryptoWithdrawalRequestPayload extends WithdrawalRequestPayload {
+  cryptoCurrency?: string;
+  cryptoNetwork?: string;
+  cryptoMemo?: string;
+}
+
 interface RequestWithdrawalArgs {
   amount: number;
   destination: string;
   forfeitBonus?: boolean;
   method: string;
+}
+
+interface RequestCryptoWithdrawalArgs {
+  amount: number;
+  destination: string;
+  cryptoCurrency: string;
+  cryptoNetwork: string;
+  cryptoMemo?: string;
+  forfeitBonus?: boolean;
 }
 
 interface AdminUpdateWithdrawalStatusArgs {
@@ -27,7 +43,7 @@ interface AdminUpdateWithdrawalStatusArgs {
   status: WithdrawalDecision;
 }
 
-const getAccessToken = () => getFirebaseIdToken();
+const getAccessToken = () => getAppwriteIdToken();
 
 const postAuthenticatedJson = async <T>(path: string, body: Record<string, unknown>) => {
   const accessToken = await getAccessToken();
@@ -109,3 +125,21 @@ export const reviewMobileMoneyWithdrawal = async ({
     requestId,
     status,
   });
+
+export const requestCryptoWithdrawal = async ({
+  amount,
+  destination,
+  cryptoCurrency,
+  cryptoNetwork,
+  cryptoMemo,
+  forfeitBonus = false,
+}: RequestCryptoWithdrawalArgs): Promise<CryptoWithdrawalRequestPayload> => {
+  return postAuthenticatedJson<CryptoWithdrawalRequestPayload>("/api/crypto/withdrawal", {
+    amount,
+    destination,
+    cryptoCurrency,
+    cryptoNetwork,
+    cryptoMemo,
+    forfeitBonus,
+  });
+};

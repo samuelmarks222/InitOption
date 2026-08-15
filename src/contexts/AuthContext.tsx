@@ -2,14 +2,18 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import {
   signInEmail,
   signUpEmail,
-  signInWithGoogle as signInWithGoogleProvider,
-  signOut as firebaseSignOut,
+  signInWithGoogleRedirect,
+  resolveGoogleRedirectResult,
+  signOut as appwriteSignOut,
   getIdToken,
   subscribeAuthState,
-} from "@/integrations/firebase/authService";
-import { firebaseAuth } from "@/integrations/firebase/config";
-import type { User as FirebaseUser } from "firebase/auth";
-import { clearAuthRestorePath, getAuthRestorePath } from "@/lib/authRedirect";
+  sendPasswordReset,
+  completePasswordReset,
+  updateDisplayName,
+  account as appwriteAccount,
+  type AuthUserLike,
+} from "@/integrations/appwrite/authService";
+import { clearAuthRestorePath } from "@/lib/authRedirect";
 import { shouldNormalizeSeededLiveBalance } from "@/lib/live-balance";
 import type { AuthProfile, ProfileUpdateInput } from "@/types/profile";
 
@@ -176,12 +180,12 @@ export const useAuth = () => {
 };
 
 // API helper for profile operations.
-// Sends the Firebase ID token (instead of a Clerk session token) as the bearer
-// credential. The /api routes verify this token with firebase-admin server-side.
+// Sends the Appwrite JWT (instead of a Clerk/Firebase session token) as the
+// bearer credential. The /api routes verify this token server-side.
 const apiFetch = async (path: string, opts: RequestInit = {}): Promise<unknown> => {
   let token: string | null = null;
   try {
-    token = await firebaseAuth?.currentUser?.getIdToken(false);
+    token = await getIdToken(false);
   } catch {
     token = null;
   }
@@ -204,7 +208,7 @@ const apiFetch = async (path: string, opts: RequestInit = {}): Promise<unknown> 
   return (payload as any).data ?? payload;
 };
 
-function firebaseUserToAppUser(fbUser: FirebaseUser | null): {
+function firebaseUserToAppUser(fbUser: AuthUserLike | null): {
   id: string;
   email: string | null;
   user_metadata: Record<string, unknown>;
@@ -222,6 +226,7 @@ function firebaseUserToAppUser(fbUser: FirebaseUser | null): {
       fbUser.providerData?.[0]?.['displayName'] ??
       null,
     ...(fbUser.metadata as any),
+    ...(fbUser.user_metadata as Record<string, unknown> | undefined),
   };
   return {
     id: fbUser.uid,
@@ -231,7 +236,7 @@ function firebaseUserToAppUser(fbUser: FirebaseUser | null): {
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<AuthUserLike | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [user, setUser] = useState<{ id: string; email: string | null; user_metadata: Record<string, unknown> } | null>(
     firebaseUserToAppUser(null),
@@ -264,9 +269,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isLoaded, firebaseUser]);
 
-  // Initialise the onAuthStateChanged listener once.
+  // Initialise the auth-state listener once, and finish any Google sign-in
+  // redirect that is returning to the app.
   useEffect(() => {
-    if (!firebaseAuth) {
+    if (!appwriteAccount) {
       setIsLoaded(true);
       setLoading(false);
       return;
@@ -275,7 +281,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setFirebaseUser(user);
       setIsLoaded(true);
     });
+
+    void resolveGoogleRedirectResult()
+      .then(({ user: redirectUser, error: redirectError }) => {
+        if (redirectError) {
+          console.error("[auth] Failed to complete Google redirect sign-in", redirectError);
+        }
+        if (redirectUser) {
+          void persistToken();
+          window.dispatchEvent(new Event("firebase-auth-state-change"));
+        }
+      })
+      .catch((e) => {
+        console.error("[auth] Unexpected error resolving Google redirect", e);
+      });
+
     return () => unsub?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const ensureProfileRow = useCallback(async (userId: string, authUser?: { user_metadata?: Record<string, unknown>; email?: string | null } | null) => {
@@ -428,16 +450,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     saveProfileCache(user.id, metadataUpdates);
 
-    // Update the Firebase user's display metadata with profile edits
+    // Update the Appwrite user's display name with profile edits (best-effort).
     if (Object.keys(metadataUpdates).length > 0) {
       try {
-        if (firebaseAuth?.currentUser) {
-          await updateProfile(firebaseAuth.currentUser, {
-            displayName: metadataUpdates.username as string | undefined ?? undefined,
-          }).catch(() => undefined);
+        const displayName = metadataUpdates.username as string | undefined;
+        if (displayName) {
+          await updateDisplayName(displayName).catch(() => undefined);
         }
       } catch (error) {
-        console.error("Failed to update Firebase user metadata", error);
+        console.error("Failed to update Appwrite user metadata", error);
       }
     }
 
@@ -585,14 +606,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const { user: fbUser, error } = await signInWithGoogleProvider();
+      const { error } = await signInWithGoogleRedirect();
       if (error) return { error: toAuthError(error.message, 400) };
-      void fbUser;
-      void persistToken();
-      window.dispatchEvent(new Event("firebase-auth-state-change"));
-      // Go back to where the user was headed (keeps behaviour from Clerk).
-      const redirectPath = getAuthRestorePath() || "/trade";
-      window.location.replace(window.location.origin + redirectPath);
+      // The redirect flow navigates the whole tab to Google, so no manual
+      // navigation is needed here. On return, resolveGoogleRedirectResult
+      // in the AuthProvider init effect completes the sign-in, and the
+      // restore path is honoured by the auth restore helpers.
       return { error: null };
     } catch (error: any) {
       const message =
@@ -603,7 +622,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     isIntentionalSignOutRef.current = true;
-    await firebaseSignOut();
+    await appwriteSignOut();
     localStorage.removeItem("session_token");
     clearAuthRestorePath();
     activeProfileUserIdRef.current = null;
@@ -614,10 +633,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetPassword = async (email: string) => {
-    if (!firebaseAuth) return { error: toAuthError("Authentication provider is not ready.", 500) };
+    if (!appwriteAccount) return { error: toAuthError("Authentication provider is not ready.", 500) };
     try {
-      const { sendPasswordResetEmail } = await import("firebase/auth");
-      await sendPasswordResetEmail(firebaseAuth, email);
+      const redirectUrl = `${window.location.origin}/forgot`;
+      const { error } = await sendPasswordReset(email, redirectUrl);
+      if (error) return { error: toAuthError(error.message, 400) };
       return { error: null };
     } catch (error: any) {
       return { error: toAuthError(error?.message || "Password reset failed.", 503) };
@@ -626,11 +646,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const verifyPasswordResetCode = async (email: string, code: string) => {
     try {
-      const { confirmPasswordReset } = await import("firebase/auth");
-      if (!firebaseAuth) throw new Error("Auth not ready");
-      // Firebase email-link/password-reset: code is a server-side reset code.
-      // We just confirm validity by checking non-empty; the actual application
-      // happens in updatePasswordAfterReset with the same code.
+      // Appwrite sends a reset link (userId + secret) instead of a 6-digit code.
+      // The code field in this UI is a placeholder; the actual secret arrives
+      // via the URL query string on the /forgot page. We accept any non-empty
+      // code here; the real application happens in updatePasswordAfterReset.
       if (code.length >= 4) return { error: null };
       return { error: toAuthError("Invalid reset code.", 400) };
     } catch (error: any) {
@@ -639,12 +658,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updatePasswordAfterReset = async (newPassword: string) => {
-    if (!firebaseAuth?.currentUser) {
-      return { error: toAuthError("No user is signed in to update.", 400) };
-    }
     try {
-      const { updatePassword } = await import("firebase/auth");
-      await updatePassword(firebaseAuth.currentUser, newPassword);
+      // Read userId + secret from the Appwrite recovery link query params.
+      const params = new URLSearchParams(window.location.search);
+      const userId = params.get("userId") ?? params.get("user_id");
+      const secret = params.get("secret");
+      if (!userId || !secret) {
+        return { error: toAuthError("Password reset link is invalid or expired.", 400) };
+      }
+      const { error } = await completePasswordReset(userId, secret, newPassword);
+      if (error) return { error: toAuthError(error.message, 400) };
       return { error: null };
     } catch (error: any) {
       return { error: toAuthError(error?.message || "Password update failed.", 503) };

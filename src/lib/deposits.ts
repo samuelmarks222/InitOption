@@ -1,3 +1,4 @@
+import { api } from "@/integrations/api/client";
 export type DepositDecision = "approved" | "rejected";
 
 const PENDING_DEPOSIT_MIGRATION_PATH = "supabase/migrations/20260322_c_pending_deposit_review.sql";

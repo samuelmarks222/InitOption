@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthLoadingScreen from "@/components/auth/AuthLoadingScreen";
+import { getAuthRestorePath } from "@/lib/authRedirect";
 import logo from "@/assets/logo.png";
 
 const RebrandedLogin = () => {
@@ -16,7 +17,7 @@ const RebrandedLogin = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   if (authLoading) return <AuthLoadingScreen message="Checking your session..." />;
-  if (user) return <Navigate to="/trade" replace />;
+  if (user) return <Navigate to={getAuthRestorePath()} replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

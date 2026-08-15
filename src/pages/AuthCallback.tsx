@@ -1,23 +1,81 @@
-// Firebase Auth uses a popup for Google sign-in and a normal email/password
-// form, so there is no OAuth redirect callback to process. This page simply
-// waits for the session to settle (AuthProvider) and forwards to the app.
-import { useEffect } from "react";
+// Appwrite Google OAuth completes by redirecting the whole tab back to
+// /auth/callback with an Appwrite session cookie set on the Appwrite domain.
+// The AuthProvider hydrates that session, and this page forwards into the app
+// once it is resolved. If the session cannot be read (e.g. cookie not yet
+// committed / CORS preflight), we actively probe it a few times and finally
+// fall back to /login so the user is never stuck on a spinner.
+import { useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getAuthRestorePath } from "@/lib/authRedirect";
+import { refreshSession } from "@/integrations/appwrite/authService";
+import { getAuthRestorePath, clearAuthRestorePath } from "@/lib/authRedirect";
 import logo from "@/assets/logo.png";
+
+const PROBE_ATTEMPTS = 5;
+const PROBE_INTERVAL_MS = 1200;
+const FALLBACK_TIMEOUT_MS = 12000;
 
 const AuthCallback = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const probedRef = useRef(false);
+  const startedAt = useRef(Date.now());
+
+  const tryLeave = useCallback(() => {
+    if (user) {
+      const target = getAuthRestorePath() || "/trade";
+      clearAuthRestorePath();
+      navigate(target, { replace: true });
+      return true;
+    }
+    return false;
+  }, [navigate, user]);
 
   useEffect(() => {
-    if (!loading && user) {
-      const target = getAuthRestorePath() || "/trade";
-      navigate(target, { replace: true });
-    }
-  }, [loading, user, navigate]);
+    if (probedRef.current) return;
+    probedRef.current = true;
+
+    const settle = () => {
+      if (tryLeave()) return;
+      const elapsed = Date.now() - startedAt.current;
+      if (elapsed < FALLBACK_TIMEOUT_MS) {
+        window.setTimeout(probe, PROBE_INTERVAL_MS);
+      } else {
+        console.warn("[auth] callback unable to resolve session, redirecting to /login");
+        navigate("/login", { replace: true });
+      }
+    };
+
+    const probe = () => {
+      let settled = false;
+      const finish = () => {
+        if (!settled) {
+          settled = true;
+          settle();
+        }
+      };
+      // If account.get() never settles, still make progress via the timeout.
+      window.setTimeout(finish, 4000);
+      refreshSession()
+        .then((direct) => {
+          settled = true;
+          console.info("[auth] callback active session probe:", direct?.uid ?? "none");
+          settle();
+        })
+        .catch((e) => {
+          settled = true;
+          console.warn("[auth] callback probe failed", e);
+          settle();
+        });
+    };
+
+    window.setTimeout(probe, 0);
+  }, [navigate, tryLeave, user]);
+
+  useEffect(() => {
+    tryLeave();
+  }, [loading, user, tryLeave]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6 py-12">

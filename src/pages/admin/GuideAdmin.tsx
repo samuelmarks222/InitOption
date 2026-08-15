@@ -1,3 +1,4 @@
+import { api } from "@/integrations/api/client";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Edit2, Trash2, Eye, EyeOff, FileText } from "lucide-react";
