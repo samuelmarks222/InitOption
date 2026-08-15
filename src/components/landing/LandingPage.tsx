@@ -52,10 +52,6 @@ const CTA_GRADIENT = "linear-gradient(135deg, #12cc9a 0%, #1a8cff 50%, #12cc9a 1
 const SECTION_CLASS =
   "landing-section w-full scroll-mt-20 py-16 sm:py-20 md:py-24";
 
-const Container = ({ children }: { children: React.ReactNode }) => (
-  <div className="mx-auto w-full max-w-7xl px-6 sm:px-8 lg:px-10">{children}</div>
-);
-
 const SectionHeading = ({
   eyebrow,
   title,
@@ -536,14 +532,17 @@ function TradingPreview() {
   );
 }
 
-const ActivityList = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M3 6h18v.01" />
-    <path d="M3 12h18v.01" />
-    <path d="M3 18h12" />
-    <circle cx="18" cy="17" r="1.4" />
-  </svg>
-);
+function ActivityList(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 6h18v.01" />
+      <path d="M3 12h18v.01" />
+      <path d="M3 18h12" />
+      <circle cx="18" cy="17" r="1.4" />
+    </svg>
+  );
+}
+
 
 function TerminalFeature({
   icon: Icon,
@@ -683,7 +682,7 @@ function ChartSvg() {
             <stop offset="1" stopColor="rgba(18,204,154,0)" />
           </linearGradient>
         </defs>
-        <lpTerminalGrid />
+        <LpTerminalGrid />
         <path d={area} fill="url(#lpAreaGrad)" />
         <path
           className="lp-chart-line"
@@ -716,7 +715,7 @@ function ChartSvg() {
 }
 
 /* grid background for the chart svg */
-function lpTerminalGrid() {
+function LpTerminalGrid() {
   const lines: JSX.Element[] = [];
   for (let i = 1; i < 8; i++) {
     const y = (180 / 8) * i;
@@ -918,14 +917,17 @@ function FeatureCard({
   );
 }
 
-const LayoutDashboard = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <rect x="3" y="3" width="7" height="7" rx="1" />
-    <rect x="14" y="3" width="7" height="7" rx="1" />
-    <rect x="3" y="14" width="7" height="7" rx="1" />
-    <rect x="14" y="14" width="7" height="7" rx="1" />
-  </svg>
-);
+function LayoutDashboard(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+  );
+}
+
 
 /* ------------------------------------------------------------------ */
 /* Security / Trust                                                   */
@@ -1104,28 +1106,35 @@ function EduCard({ icon: Icon, title, text }: { icon: LucideIcon; title: string;
   );
 }
 
-const BookOpen = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M2 8v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8" />
-    <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2H4z" />
-    <path d="M8 10h.01" />
-    <circle cx={18} cy={6} r={1} />
-  </svg>
-);
+function BookOpen(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M2 8v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8" />
+      <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2H4z" />
+      <path d="M8 10h.01" />
+      <circle cx={18} cy={6} r={1} />
+    </svg>
+  );
+}
 
-const AreaChart = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M3 17l6-6 4 4 5-5 3 3v4H3z" />
-    <path d="M12 12V5" />
-  </svg>
-);
+function AreaChart(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 17l6-6 4 4 5-5 3 3v4H3z" />
+      <path d="M12 12V5" />
+    </svg>
+  );
+}
 
-const ShieldCheck = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    <path d="m9 12l2 2 4-4" />
-  </svg>
-);
+function ShieldCheck(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12l2 2 4-4" />
+    </svg>
+  );
+}
+
 
 /* ------------------------------------------------------------------ */
 /* Demo trading (supported)                                            */
