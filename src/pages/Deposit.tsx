@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { SiteLogo } from "@/components/branding/SiteLogo";
 import { createCryptoDepositInstruction } from "@/lib/cryptoDeposits";
+import { requestMobileMoneyDeposit } from "@/lib/mobileMoney";
 import { isPlisioSupportedCryptoMethod } from "@/lib/plisio";
 
 type CryptoPaymentMethod = Tables<"crypto_payment_methods">;
