@@ -1,5 +1,7 @@
-import { ArrowLeft, Smartphone, ShieldCheck, Zap, ArrowRight, Bitcoin, Building2, CreditCard } from "lucide-react";
+import { ArrowLeft, Smartphone, ShieldCheck, Zap, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import MpesaLogo from "@/assets/payment-logos/mpesa.png";
+import CryptoLogo from "@/assets/payment-logos/bitcoin.png";
 
 interface WithdrawStep1Props {
   selectedMethod: "mpesa" | "crypto";
@@ -35,11 +37,7 @@ export function WithdrawStep1({
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-green-500/20">
-              <svg className="h-8 w-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            </div>
+            <img src="/payment-logos/mpesa.png" alt="M-PESA" className="h-14 w-14 object-contain" />
             <div className="flex-1">
               <h3 className="font-bold text-lg text-white">M-PESA</h3>
               <p className="text-sm text-white/60 mt-1">Mobile Money</p>
@@ -87,11 +85,7 @@ export function WithdrawStep1({
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-amber-500/20">
-              <svg className="h-8 w-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9H3m18 0a9 9 0 01-9-9m9-9a9 9 0 019 9M3 12a9 9 0 019-9h6a9 9 0 010 18H3z" />
-              </svg>
-            </div>
+            <img src="/payment-logos/bitcoin.png" alt="Bitcoin" className="h-14 w-14 object-contain" />
             <div className="flex-1">
               <h3 className="font-bold text-lg text-white">Cryptocurrency</h3>
               <p className="text-sm text-white/60 mt-1">BTC, USDT, ETH, BNB & more</p>
