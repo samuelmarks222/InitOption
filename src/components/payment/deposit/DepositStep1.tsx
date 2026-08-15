@@ -1,11 +1,10 @@
-import { ArrowRight, Smartphone, ShieldCheck, Zap, Clock, HelpCircle } from "lucide-react";
+import { ArrowRight, Smartphone, ShieldCheck, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DepositStep1Props {
   selectedMethod: "mpesa" | "crypto" | null;
   onSelectMethod: (method: "mpesa" | "crypto") => void;
   onContinue: () => void;
-  onBack: () => void;
 }
 
 export function DepositStep1({
@@ -65,11 +64,13 @@ export function DepositStep1({
               </div>
             ) : (
               <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white/20 text-white/40">
-                <ArrowRight className="h-4 w-4" />
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
               </div>
             )}
           </div>
-        </div>
+        </button>
 
         <button
           type="button"
@@ -115,11 +116,13 @@ export function DepositStep1({
               </div>
             ) : (
               <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white/20 text-white/40">
-                <ArrowRight className="h-4 w-4" />
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
               </div>
             )}
           </div>
-        </div>
+        </button>
       </div>
 
       <div className="pt-4">
@@ -129,11 +132,11 @@ export function DepositStep1({
           className="w-full h-12 rounded-xl bg-gradient-to-r from-[#0fa053] to-[#0fa053]/80 text-white font-bold text-lg shadow-[0_10px_30px_rgba(15,160,83,0.3)] hover:from-[#0fa053] hover:to-[#0fa053] disabled:from-white/10 disabled:to-white/10 disabled:shadow-none"
         >
           Continue
-          <ArrowRight className="ml-2 h-5 w-5" />
+          <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
         </Button>
       </div>
     </div>
   );
 }
-
-var selectedMethod = "";

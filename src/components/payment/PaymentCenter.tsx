@@ -22,11 +22,15 @@ type WithdrawStep = 1 | 2 | 3 | 4;
 const STEP_LABELS_DEPOSIT = ["Payment Method", "Payment Details", "Payment Process", "Completed"];
 const STEP_LABELS_WITHDRAW = ["Withdrawal Method", "Withdrawal Details", "Review & Submit", "Completed"];
 
-export const PaymentCenter = () => {
+interface PaymentCenterProps {
+  defaultTab?: "deposit" | "withdraw" | "history";
+}
+
+export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<PaymentTab>("deposit");
+  const [activeTab, setActiveTab] = useState<PaymentTab>(defaultTab);
   const [depositStep, setDepositStep] = useState<DepositStep>(1);
   const [withdrawStep, setWithdrawStep] = useState<WithdrawStep>(1);
 
@@ -124,8 +128,8 @@ export const PaymentCenter = () => {
             setPhone={setDepositPhone}
             bonusTier={depositBonusTier}
             setBonusTier={setDepositBonusTier}
-          )}
-        }
+          />
+        )}
 
         {activeTab === "withdraw" && (
           <WithdrawFlow
@@ -147,8 +151,8 @@ export const PaymentCenter = () => {
             memo={withdrawMemo}
             setMemo={setWithdrawMemo}
             availableBalance={availableBalance}
-          )}
-        )
+          />
+        )}
 
         {activeTab === "history" && <TransactionHistory />}
       </div>
@@ -206,8 +210,8 @@ function DepositFlow({
               if (selectedMethod) onStepChange(2);
             }}
             onBack={onBack}
-          )}
-        }
+          />
+        )}
         {step === 2 && selectedMethod === "mpesa" && (
           <DepositMpesaDetails
             amount={amount}
@@ -218,8 +222,8 @@ function DepositFlow({
             setBonusTier={setBonusTier}
             onContinue={() => onStepChange(3)}
             onBack={onBack}
-          )}
-        }
+          />
+        )}
         {step === 2 && selectedMethod === "crypto" && (
           <DepositCryptoDetails
             selectedCoin={selectedCoin}
@@ -230,14 +234,14 @@ function DepositFlow({
             setAmount={setAmount}
             onContinue={() => onStepChange(3)}
             onBack={onBack}
-          )}
-        }
+          />
+        )}
         {step === 3 && selectedMethod === "mpesa" && (
           <DepositMpesaProcess
             onBack={onBack}
             onComplete={() => onStepChange(4)}
-          )}
-        }
+          />
+        )}
         {step === 3 && selectedMethod === "crypto" && (
           <DepositCryptoProcess
             coin={selectedCoin}
@@ -245,17 +249,17 @@ function DepositFlow({
             amount={amount}
             onBack={onBack}
             onComplete={() => onStepChange(4)}
-          )}
-        }
-        {step === 4 && (
+          />
+        )}
+{step === 4 && (
           <DepositSuccess
             method={selectedMethod}
             coin={selectedCoin}
             network={selectedNetwork}
             amount={amount}
             onBackToTrading={() => window.location.href = "/trade"}
-          )}
-        }
+          />
+        )}
       </div>
     </div>
   );
@@ -315,8 +319,8 @@ function WithdrawFlow({
             onSelectMethod={setSelectedMethod}
             onContinue={() => onStepChange(2)}
             onBack={onBack}
-          )}
-        }
+          />
+        )}
         {step === 2 && selectedMethod === "mpesa" && (
           <WithdrawMpesaDetails
             amount={amount}
@@ -326,8 +330,8 @@ function WithdrawFlow({
             availableBalance={availableBalance}
             onContinue={() => onStepChange(3)}
             onBack={onBack}
-          )}
-        }
+          />
+        )}
         {step === 2 && selectedMethod === "crypto" && (
           <WithdrawCryptoDetails
             coin={coin}
@@ -343,8 +347,8 @@ function WithdrawFlow({
             availableBalance={availableBalance}
             onContinue={() => onStepChange(3)}
             onBack={onBack}
-          )}
-        }
+          />
+        )}
         {step === 3 && (
           <WithdrawReview
             method={selectedMethod}
@@ -357,8 +361,8 @@ function WithdrawFlow({
             availableBalance={availableBalance}
             onSubmit={() => onStepChange(4)}
             onBack={onBack}
-          )}
-        }
+          />
+        )}
         {step === 4 && (
           <WithdrawSuccess
             method={selectedMethod}
@@ -366,7 +370,7 @@ function WithdrawFlow({
             network={network}
             amount={amount}
             onBackToTrading={() => window.location.href = "/trade"}
-          )}
+          />
         )}
       </div>
     </div>
