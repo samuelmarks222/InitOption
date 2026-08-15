@@ -29,6 +29,17 @@ import {
 } from "@/lib/withdrawals";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { formatCurrencyAmount } from "@/lib/currency";
+import { DepositStep1 } from "./deposit/DepositStep1";
+import { DepositMpesaDetails } from "./deposit/DepositMpesaDetails";
+import { DepositCryptoDetails } from "./deposit/DepositCryptoDetails";
+import { DepositMpesaProcess } from "./deposit/DepositMpesaProcess";
+import { DepositCryptoProcess } from "./deposit/DepositCryptoProcess";
+import { DepositSuccess } from "./deposit/DepositSuccess";
+import { WithdrawStep1 } from "./withdraw/WithdrawStep1";
+import { WithdrawMpesaDetails } from "./withdraw/WithdrawMpesaDetails";
+import { WithdrawCryptoDetails } from "./withdraw/WithdrawCryptoDetails";
+import { WithdrawReview } from "./withdraw/WithdrawReview";
+import { WithdrawSuccess } from "./withdraw/WithdrawSuccess";
 
 type PaymentTab = "deposit" | "withdraw" | "history";
 type DepositStep = 1 | 2 | 3 | 4;

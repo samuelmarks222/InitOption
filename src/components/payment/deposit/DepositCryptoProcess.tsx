@@ -58,7 +58,7 @@ export function DepositCryptoProcess({
   const [confirmations, setConfirmations] = useState(0);
 
   const depositAddress = instruction?.address ?? "";
-  const depositAmount = instruction?.amount ?? Number(amount) || 0;
+  const depositAmount = instruction?.amount ?? (Number(amount) || 0);
 
   useEffect(() => {
     if (status === "waiting" && instruction?.instruction_status) {

@@ -84,7 +84,7 @@ export function WithdrawReview({
             </div>
           </div>
 
-          {method === "crypto" ? (
+          {method === "crypto" && (
             <div className="space-y-4">
               <div className="rounded-xl border border-white/10 bg-white/5 p-5">
                 <div className="flex items-center gap-3 mb-4">
@@ -117,7 +117,9 @@ export function WithdrawReview({
                 </div>
               </div>
             </div>
-          )} : (
+          )}
+
+          {method !== "crypto" && (
             <div className="space-y-4">
               <div className="rounded-xl border border-white/10 bg-white/5 p-5">
                 <div className="space-y-3">
@@ -138,7 +140,7 @@ export function WithdrawReview({
                 </div>
               </div>
             </div>
-          )} : null}
+          )}
 
           <div className="rounded-xl border border-white/10 bg-white/5 p-5">
             <div className="grid grid-cols-3 gap-4 text-center">

@@ -88,15 +88,6 @@ export function WithdrawCryptoDetails({
 
   const networkInfo = NETWORK_INFO[network.toUpperCase()] || { name: network, minConfirmations: 1, approxTime: "~1 min", fee: "~1" };
 
-  const handleCoinChange = (newCoin: string) => {
-    setCoin(newCoin);
-    const coinData = COINS.find(c => c.symbol === newCoin);
-    if (coinData && coinData.networks.length > 0) {
-      setNetworks(coinData.networks);
-      setNetwork(coinData.networks[0]);
-    }
-  };
-
   useEffect(() => {
     const coinData = COINS.find(c => c.symbol === coin);
     if (coinData && coinData.networks.length > 0) {
