@@ -266,8 +266,8 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
         }
 
         // Find the payment method ID for the selected coin/network
-        const paymentMethod = cryptoMethods.find(m => 
-          m.coin_name === selectedDepositCoin && m.network === selectedDepositNetwork
+        const paymentMethod = cryptoMethods.find(m =>
+          m.symbol === selectedDepositCoin && m.network === selectedDepositNetwork
         );
         
         if (!paymentMethod) {
