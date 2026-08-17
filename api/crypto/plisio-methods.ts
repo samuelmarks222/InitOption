@@ -85,6 +85,9 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       const priceUsd = asNumber(info.price_usd) ?? asNumber(info.fiat_rate);
       const rateUsd = asNumber(info.rate_usd) ?? (priceUsd && priceUsd > 0 ? 1 / priceUsd : null);
 
+      const maintenance = asString(info.maintenance) === "true" || asNumber(info.maintenance) === 1;
+      if (maintenance) continue;
+
       methods.push({
         symbol,
         network,
@@ -96,6 +99,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         rate_usd: rateUsd,
         min_amount_coin: minAmountCoin,
         min_amount_usd: minAmountCoin != null && priceUsd != null ? minAmountCoin * priceUsd : null,
+        hidden_in_shop: asString(info.hidden) === "true" || asNumber(info.hidden) === 1,
       });
     }
 

@@ -41,7 +41,7 @@ export const mapCryptoMethodToPlisioCurrency = ({
   }
 
   if (normalizedSymbol === "btt" && includesAny(network, ["trc20", "tron", "trx"])) {
-    return "BTT";
+    return "BTT_TRX";
   }
 
   if (normalizedSymbol === "btc") return "BTC";

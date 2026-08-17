@@ -88,40 +88,6 @@ export function DepositCryptoDetails({
   onContinue,
   onBack,
 }: DepositCryptoDetailsProps) {
-  const coins = useMemo(() => {
-    const seen = new Set<string>();
-    return cryptoMethods.filter((method) => {
-      if (seen.has(method.symbol)) return false;
-      seen.add(method.symbol);
-      return true;
-    });
-  }, [cryptoMethods]);
-
-  const activeCoin = coins.find((coin) => coin.symbol === selectedCoin) ?? coins[0];
-
-  const networks = useMemo(
-    () => cryptoMethods.filter((method) => method.symbol === activeCoin?.symbol).map((method) => method.network),
-    [cryptoMethods, activeCoin?.symbol],
-  );
-
-  const activeNetwork = networks.includes(selectedNetwork) ? selectedNetwork : (networks[0] ?? "");
-
-  useEffect(() => {
-    if (activeCoin && activeCoin.symbol !== selectedCoin) {
-      setSelectedCoin(activeCoin.symbol);
-    }
-  }, [activeCoin, selectedCoin, setSelectedCoin]);
-
-  useEffect(() => {
-    if (activeNetwork && activeNetwork !== selectedNetwork) {
-      setSelectedNetwork(activeNetwork);
-    }
-  }, [activeNetwork, selectedNetwork, setSelectedNetwork]);
-
-  const selectedMethod = cryptoMethods.find(
-    (method) => method.symbol === selectedCoin && method.network === selectedNetwork,
-  ) ?? null;
-
   // Live Plisio minimums / rates / logos for every supported method.
   const [plisioInfos, setPlisioInfos] = useState<PlisioMethodMinimumInfo[]>([]);
   const [plisioMinLoading, setPlisioMinLoading] = useState(true);
@@ -139,6 +105,55 @@ export function DepositCryptoDetails({
       cancelled = true;
     };
   }, [cryptoMethods]);
+
+  // Only offer coin/network combos Plisio can actually process (excludes coins not
+  // in Plisio's supported list like XRP, coins in maintenance, and coins not enabled
+  // in the shop). When Plisio data is unavailable, fall back to the full DB list.
+  const supportedMethods = useMemo(() => {
+    if (plisioInfos.length === 0) return cryptoMethods;
+    return cryptoMethods.filter((method) =>
+      plisioInfos.some(
+        (info) =>
+          info.symbol.toUpperCase() === method.symbol.toUpperCase() &&
+          info.network.toUpperCase() === method.network.toUpperCase() &&
+          info.hiddenInShop !== true,
+      ),
+    );
+  }, [cryptoMethods, plisioInfos]);
+
+  const coins = useMemo(() => {
+    const seen = new Set<string>();
+    return supportedMethods.filter((method) => {
+      if (seen.has(method.symbol)) return false;
+      seen.add(method.symbol);
+      return true;
+    });
+  }, [supportedMethods]);
+
+  const activeCoin = coins.find((coin) => coin.symbol === selectedCoin) ?? coins[0];
+
+  const networks = useMemo(
+    () => supportedMethods.filter((method) => method.symbol === activeCoin?.symbol).map((method) => method.network),
+    [supportedMethods, activeCoin?.symbol],
+  );
+
+  const activeNetwork = networks.includes(selectedNetwork) ? selectedNetwork : (networks[0] ?? "");
+
+  useEffect(() => {
+    if (activeCoin && activeCoin.symbol !== selectedCoin) {
+      setSelectedCoin(activeCoin.symbol);
+    }
+  }, [activeCoin, selectedCoin, setSelectedCoin]);
+
+  useEffect(() => {
+    if (activeNetwork && activeNetwork !== selectedNetwork) {
+      setSelectedNetwork(activeNetwork);
+    }
+  }, [activeNetwork, selectedNetwork, setSelectedNetwork]);
+
+  const selectedMethod = supportedMethods.find(
+    (method) => method.symbol === selectedCoin && method.network === selectedNetwork,
+  ) ?? null;
 
   const selectedInfo = useMemo(
     () =>
@@ -175,13 +190,26 @@ export function DepositCryptoDetails({
     approxTime: "~1 min",
   };
 
-  if (cryptoMethods.length === 0) {
+  if (cryptoMethods.length === 0 || plisioMinLoading) {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold text-white">Cryptocurrency Details</h1>
         <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-12 text-center">
           <Loader2 className="h-8 w-8 animate-spin text-yellow-400" />
           <p className="mt-4 text-sm text-white/60">Loading supported cryptocurrencies...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (supportedMethods.length === 0) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold text-white">Cryptocurrency Details</h1>
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-12 text-center">
+          <p className="text-sm text-white/60">
+            No cryptocurrencies are currently supported by the payment provider.
+          </p>
         </div>
       </div>
     );

@@ -121,15 +121,23 @@ const getPlisioApiKey = () => {
 // Plisio returns provider-side minimum-amount rejections as opaque payloads like
 // {"amount":"Invalid minimal amount attribute value, it must be greater than: 67114093.959731543625000000 SHIB"}.
 // Detect that and surface a friendly, actionable message instead of the raw JSON.
+// For any other failure, prefer Plisio's own data.message / data.name fields, then
+// fall back to the raw response body so the real cause is never hidden.
 const formatPlisioCheckoutError = (
   payload: JsonObject | null,
-  payloadData: JsonObject | null,
+  rawText: string,
   httpStatus: number,
 ): string => {
+  const payloadData = payload && typeof payload.data === "object" && payload.data && !Array.isArray(payload.data)
+    ? (payload.data as JsonObject)
+    : null;
+
   const raw =
-    (payloadData && (asString(payloadData.message) || asString(payloadData.error))) ||
+    (payloadData &&
+      (asString(payloadData.message) || asString(payloadData.error) || asString(payloadData.name))) ||
     asString(payload?.message) ||
     asString(payload?.error) ||
+    (rawText && rawText.trim() ? rawText.trim().slice(0, 600) : "") ||
     `Plisio returned HTTP ${httpStatus}`;
 
   const minimalMatch = raw.match(/must be greater than:\s*([0-9]+(?:\.[0-9]+)?)\s+([A-Za-z0-9_]+)/i);
@@ -143,7 +151,11 @@ const formatPlisioCheckoutError = (
     return `The minimum deposit for ${symbol} is ${formattedAmount} ${symbol}. Please increase the deposit amount and try again.`;
   }
 
-  return `Plisio hosted checkout creation failed: ${raw}`;
+  if (httpStatus >= 500) {
+    return `Plisio is currently unavailable (HTTP ${httpStatus}). Please try again in a few minutes.`;
+  }
+
+  return `Plisio hosted checkout creation failed (HTTP ${httpStatus}): ${raw}`;
 };
 
 const createPlisioHostedCheckout = async ({
@@ -191,9 +203,10 @@ const createPlisioHostedCheckout = async ({
     method: "GET",
   });
 
+  const rawText = await response.text();
   let payload: JsonObject | null = null;
   try {
-    payload = (await response.json()) as JsonObject;
+    payload = JSON.parse(rawText) as JsonObject;
   } catch {
     payload = null;
   }
@@ -202,8 +215,16 @@ const createPlisioHostedCheckout = async ({
     ? (payload.data as JsonObject)
     : null;
 
-  if (!response.ok || !payload || asString(payload.status) !== "success" || !payloadData) {
-    throw new Error(formatPlisioCheckoutError(payload, payloadData, response.status));
+  if (!response.ok || !payload || asString(payload.status) !== "success") {
+    console.error("Plisio hosted checkout creation failed", {
+      httpStatus: response.status,
+      responseBody: rawText,
+    });
+    throw new Error(formatPlisioCheckoutError(payload, rawText, response.status));
+  }
+
+  if (!payloadData) {
+    throw new Error("Plisio hosted checkout returned an unexpected response.");
   }
 
   return payloadData;

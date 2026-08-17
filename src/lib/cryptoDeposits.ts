@@ -56,6 +56,7 @@ export interface PlisioMethodMinimumInfo {
   rateUsd: number | null;
   minAmountCoin: number | null;
   minAmountUsd: number | null;
+  hiddenInShop?: boolean | null;
 }
 
 const AUTO_CRYPTO_DEPOSIT_MIGRATION_PATH = "supabase/migrations/20260323_auto_crypto_deposit_automation.sql";

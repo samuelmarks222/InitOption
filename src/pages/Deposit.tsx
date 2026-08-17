@@ -171,16 +171,30 @@ const Deposit = () => {
   }, [user?.id]);
 
   const amountValue = Number(amount) || 0;
+  // Only offer coin/network combos Plisio can actually process (excludes coins not
+  // in Plisio's supported list like XRP, coins in maintenance, and coins not enabled
+  // in the shop). When Plisio data is unavailable, fall back to the full DB list.
+  const supportedCryptoMethods = useMemo(() => {
+    if (plisioInfos.length === 0) return cryptoMethods;
+    return cryptoMethods.filter((m) =>
+      plisioInfos.some(
+        (info) =>
+          info.symbol.toUpperCase() === m.symbol.toUpperCase() &&
+          info.network.toUpperCase() === m.network.toUpperCase() &&
+          info.hiddenInShop !== true,
+      ),
+    );
+  }, [cryptoMethods, plisioInfos]);
   const cryptoCoinOptions = useMemo(
-    () => Array.from(new Set(cryptoMethods.map((m) => m.symbol))),
-    [cryptoMethods],
+    () => Array.from(new Set(supportedCryptoMethods.map((m) => m.symbol))),
+    [supportedCryptoMethods],
   );
   const cryptoNetworkOptions = useMemo(
-    () => cryptoMethods.filter((m) => m.symbol === selectedCoin).map((m) => m.network),
-    [cryptoMethods, selectedCoin],
+    () => supportedCryptoMethods.filter((m) => m.symbol === selectedCoin).map((m) => m.network),
+    [supportedCryptoMethods, selectedCoin],
   );
   const selectedCryptoMethod =
-    cryptoMethods.find((e) => e.symbol === selectedCoin && e.network === selectedCoinNetwork) ?? cryptoMethods[0] ?? null;
+    supportedCryptoMethods.find((e) => e.symbol === selectedCoin && e.network === selectedCoinNetwork) ?? supportedCryptoMethods[0] ?? null;
   const plisioSelectedInfo = useMemo(
     () =>
       plisioInfos.find(
@@ -204,16 +218,16 @@ const Deposit = () => {
   const minimumDepositAmount = selectedMethod === "mpesa" ? 5 : cryptoMinimumUsd;
 
   useEffect(() => {
-    if (cryptoMethods.length === 0) return;
-    const symbols = Array.from(new Set(cryptoMethods.map((m) => m.symbol)));
+    if (supportedCryptoMethods.length === 0) return;
+    const symbols = Array.from(new Set(supportedCryptoMethods.map((m) => m.symbol)));
     if (!symbols.includes(selectedCoin)) {
       setSelectedCoin(symbols[0] ?? "USDT");
     }
-    const networks = cryptoMethods.filter((m) => m.symbol === selectedCoin).map((m) => m.network);
+    const networks = supportedCryptoMethods.filter((m) => m.symbol === selectedCoin).map((m) => m.network);
     if (networks.length > 0 && !networks.includes(selectedCoinNetwork)) {
       setSelectedCoinNetwork(networks[0]);
     }
-  }, [cryptoMethods, selectedCoin, selectedCoinNetwork]);
+  }, [supportedCryptoMethods, selectedCoin, selectedCoinNetwork]);
 
   const syncCryptoCheckoutStatus = async () => {
     let saved: { instruction_id?: string } | null = null;
@@ -404,7 +418,7 @@ const Deposit = () => {
               </button>
               <button
                 type="button"
-                disabled={cryptoMethods.length === 0}
+                disabled={supportedCryptoMethods.length === 0}
                 onClick={() => handleSelectMethod("crypto")}
                 className={`group flex w-full items-center gap-4 rounded-xl border-2 px-4 py-3.5 transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55 ${
                   selectedMethod === "crypto"
@@ -423,7 +437,7 @@ const Deposit = () => {
                 </div>
               </button>
             </div>
-            {cryptoMethods.length === 0 ? (
+            {supportedCryptoMethods.length === 0 ? (
               <p className="mt-3 text-xs leading-5 text-[#8ea0b7]">Cryptocurrency deposits are temporarily unavailable right now.</p>
             ) : null}
           </div>
