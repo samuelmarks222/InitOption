@@ -463,7 +463,7 @@ export const getCryptoDepositPaymentStatus = async ({
 }): Promise<string> => {
   const response = await api
     .from("crypto_deposit_instructions")
-    .select("status, instruction_status")
+    .select("instruction_status")
     .eq("id", instructionId)
     .maybeSingle();
 
@@ -471,7 +471,7 @@ export const getCryptoDepositPaymentStatus = async ({
     throw response.error;
   }
 
-  return String(response.data?.status ?? response.data?.instruction_status ?? "awaiting_payment").toLowerCase();
+  return String(response.data?.instruction_status ?? "awaiting_payment").toLowerCase();
 };
 
 export const getLatestOpenCryptoDepositInstruction = async ({
