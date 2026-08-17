@@ -118,6 +118,34 @@ const getPlisioApiKey = () => {
   return key;
 };
 
+// Plisio returns provider-side minimum-amount rejections as opaque payloads like
+// {"amount":"Invalid minimal amount attribute value, it must be greater than: 67114093.959731543625000000 SHIB"}.
+// Detect that and surface a friendly, actionable message instead of the raw JSON.
+const formatPlisioCheckoutError = (
+  payload: JsonObject | null,
+  payloadData: JsonObject | null,
+  httpStatus: number,
+): string => {
+  const raw =
+    (payloadData && (asString(payloadData.message) || asString(payloadData.error))) ||
+    asString(payload?.message) ||
+    asString(payload?.error) ||
+    `Plisio returned HTTP ${httpStatus}`;
+
+  const minimalMatch = raw.match(/must be greater than:\s*([0-9]+(?:\.[0-9]+)?)\s+([A-Za-z0-9_]+)/i);
+  if (minimalMatch) {
+    const amount = Number(minimalMatch[1]);
+    const symbol = minimalMatch[2].toUpperCase();
+    const formattedAmount =
+      Number.isFinite(amount) && amount > 0
+        ? amount.toLocaleString("en-US", { maximumFractionDigits: 2 })
+        : minimalMatch[1];
+    return `The minimum deposit for ${symbol} is ${formattedAmount} ${symbol}. Please increase the deposit amount and try again.`;
+  }
+
+  return `Plisio hosted checkout creation failed: ${raw}`;
+};
+
 const createPlisioHostedCheckout = async ({
   allowedCurrencies,
   amountUsd,
@@ -175,13 +203,7 @@ const createPlisioHostedCheckout = async ({
     : null;
 
   if (!response.ok || !payload || asString(payload.status) !== "success" || !payloadData) {
-    const plisioError =
-      (payloadData && (asString(payloadData.message) || asString(payloadData.error))) ||
-      asString(payload?.message) ||
-      asString(payload?.error) ||
-      `Plisio returned HTTP ${response.status}`;
-
-    throw new Error(`Plisio hosted checkout creation failed: ${plisioError}`);
+    throw new Error(formatPlisioCheckoutError(payload, payloadData, response.status));
   }
 
   return payloadData;
