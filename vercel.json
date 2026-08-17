@@ -58,6 +58,7 @@
     { "source": "/api/mobile-money/withdraw-callback", "destination": "/api/mobile-money/callback?flow=withdraw" },
     { "source": "/api/profile", "destination": "/api/system?route=profile" },
     { "source": "/api/profile/(.*)", "destination": "/api/system?route=profile" },
+    { "source": "/api/user/profile", "destination": "/api/system?route=profile" },
     { "source": "/api/platform-settings", "destination": "/api/system?route=platform-settings" },
     { "source": "/api/platform-settings/(.*)", "destination": "/api/system?route=platform-settings" },
     { "source": "/api/db/(.*)", "destination": "/api/system?route=db&__dbpath=$1" },

@@ -579,18 +579,22 @@ const parseFilterClauses = (raw: string | undefined): FilterClause[] | null => {
 const isClerkId = (value: unknown): value is string =>
   typeof value === "string" && value.startsWith("user_");
 
-const remapClerkIds = (value: unknown, mappedId: string): unknown => {
+const remapClerkIds = (value: unknown, mappedId: string, clerkUserId?: string | null): unknown => {
   if (isClerkId(value)) return mappedId;
-  if (Array.isArray(value)) return value.map((entry) => remapClerkIds(entry, mappedId));
+  // Appwrite user ids are opaque hex strings, not UUIDs. Remap the authenticated
+  // caller's own uid (e.g. "6a7e8ed439b52c2e7d46") to its canonical uuid so
+  // filters/values against uuid columns (user_id, id, ...) don't 400.
+  if (typeof value === "string" && clerkUserId && value === clerkUserId) return mappedId;
+  if (Array.isArray(value)) return value.map((entry) => remapClerkIds(entry, mappedId, clerkUserId));
   return value;
 };
 
-const remapClauses = (clauses: FilterClause[], mappedId: string): FilterClause[] =>
+const remapClauses = (clauses: FilterClause[], mappedId: string, clerkUserId?: string | null): FilterClause[] =>
   clauses.map((clause) => {
     if (clause.o === "or" && Array.isArray(clause.items)) {
-      return { ...clause, items: remapClauses(clause.items, mappedId) };
+      return { ...clause, items: remapClauses(clause.items, mappedId, clerkUserId) };
     }
-    return { ...clause, v: remapClerkIds(clause.v, mappedId) };
+    return { ...clause, v: remapClerkIds(clause.v, mappedId, clerkUserId) };
   });
 
 export async function handleDb(request: ApiRequest, response: ApiResponse): Promise<void> {
@@ -622,14 +626,14 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
       if (idSegment) {
         const { rows } = await runScoped(mappedId, (client) =>
           client.query(`select ${columns.join(", ")} from public.${table} where "id" = $1`, [
-            remapClerkIds(idSegment, mappedId),
+            remapClerkIds(idSegment, mappedId, clerkUserId),
           ]),
         );
         sendJson(response, 200, { data: rows[0] ?? null });
         return;
       }
 
-      const clauses = remapClauses(parseFilterClauses(firstValue(request.query?.filters)) ?? [], mappedId);
+      const clauses = remapClauses(parseFilterClauses(firstValue(request.query?.filters)) ?? [], mappedId, clerkUserId);
 
       if (firstValue(request.query?.count) === "true") {
         const countParams: unknown[] = [];
@@ -675,7 +679,7 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
     if (matchEntries.length > 0) filterClauses.push(...matchEntries.map(([c, v]) => ({ c, o: "eq", v })));
 
     if (method === "DELETE") {
-      const whereClauses = remapClauses(filterClauses, mappedId);
+      const whereClauses = remapClauses(filterClauses, mappedId, clerkUserId);
       if (whereClauses.length === 0) {
         sendJson(response, 400, { error: "A match filter is required to delete" });
         return;
@@ -690,7 +694,7 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
     }
 
     if (method === "POST") {
-      const entries = Object.entries(body.values ?? {}).map(([k, v]) => [k, remapClerkIds(v, mappedId)] as const);
+      const entries = Object.entries(body.values ?? {}).map(([k, v]) => [k, remapClerkIds(v, mappedId, clerkUserId)] as const);
       if (!entries.every(([k]) => IS_IDENTIFIER.test(k))) {
         sendJson(response, 400, { error: "Invalid column name" });
         return;
@@ -708,12 +712,12 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
     }
 
     if (method === "PATCH") {
-      const entries = Object.entries(body.values ?? {}).map(([k, v]) => [k, remapClerkIds(v, mappedId)] as const);
+      const entries = Object.entries(body.values ?? {}).map(([k, v]) => [k, remapClerkIds(v, mappedId, clerkUserId)] as const);
       if (!entries.every(([k]) => IS_IDENTIFIER.test(k))) {
         sendJson(response, 400, { error: "Invalid column name" });
         return;
       }
-      const betweenClauses = remapClauses(filterClauses, mappedId);
+      const betweenClauses = remapClauses(filterClauses, mappedId, clerkUserId);
       const patchParams: unknown[] = [];
       const whereSql = buildWhere(betweenClauses, patchParams);
       const setClause = entries.map(([k], i) => `"${k}" = $${patchParams.length + i + 1}`).join(", ");

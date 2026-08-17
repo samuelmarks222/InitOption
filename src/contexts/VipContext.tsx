@@ -53,7 +53,7 @@ export const VipProvider = ({ children, initialUser }: VipProviderProps) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      return data;
+      return data?.data ?? data;
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
       return null;
