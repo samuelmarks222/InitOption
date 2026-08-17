@@ -1,10 +1,14 @@
-import { ArrowRight, ChevronDown, Copy, QrCode, AlertTriangle, Shield, Clock, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Clock, Loader2, Shield } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
-import { toast } from "@/hooks/use-toast";
+
+interface DepositCryptoMethodOption {
+  id: string;
+  coin_name: string;
+  symbol: string;
+  network: string;
+  minimum_deposit_amount?: number | null;
+}
 
 interface DepositCryptoDetailsProps {
   selectedCoin: string;
@@ -13,24 +17,10 @@ interface DepositCryptoDetailsProps {
   setSelectedNetwork: (network: string) => void;
   amount: string;
   setAmount: (amount: string) => void;
+  cryptoMethods: DepositCryptoMethodOption[];
   onContinue: () => void;
   onBack: () => void;
 }
-
-const COINS = [
-  { symbol: "BTC", name: "Bitcoin", networks: ["Bitcoin", "Lightning"], icon: "₿", color: "text-amber-400" },
-  { symbol: "USDT", name: "Tether", networks: ["TRC20", "ERC20", "BEP20", "SOL", "TON"], icon: "₮", color: "text-green-400" },
-  { symbol: "USDC", name: "USD Coin", networks: ["ERC20", "SOL", "TRC20", "BEP20", "BASE"], icon: "USDC", color: "text-blue-400" },
-  { symbol: "ETH", name: "Ethereum", networks: ["ERC20", "BASE", "Arbitrum", "Optimism"], icon: "Ξ", color: "text-slate-400" },
-  { symbol: "BNB", name: "BNB", networks: ["BEP20", "BEP2"], icon: "BNB", color: "text-amber-400" },
-  { symbol: "TRX", name: "TRON", networks: ["TRC20"], icon: "TRX", color: "text-red-400" },
-  { symbol: "LTC", name: "Litecoin", networks: ["Litecoin"], icon: "Ł", color: "text-slate-400" },
-  { symbol: "DOGE", name: "Dogecoin", networks: ["Dogecoin"], icon: "Ð", color: "text-amber-400" },
-  { symbol: "SOL", name: "Solana", networks: ["SOL"], icon: "SOL", color: "text-purple-400" },
-  { symbol: "XRP", name: "Ripple", networks: ["XRP Ledger"], icon: "XRP", color: "text-blue-400" },
-  { symbol: "TRX", name: "TRON", networks: ["TRC20"], icon: "TRX", color: "text-red-400" },
-  { symbol: "TON", name: "Toncoin", networks: ["TON"], icon: "TON", color: "text-cyan-400" },
-];
 
 const NETWORK_INFO: Record<string, { name: string; minConfirmations: number; approxTime: string }> = {
   "TRC20": { name: "TRON (TRC20)", minConfirmations: 1, approxTime: "~1-2 min" },
@@ -39,18 +29,21 @@ const NETWORK_INFO: Record<string, { name: string; minConfirmations: number; app
   "SOL": { name: "Solana", minConfirmations: 32, approxTime: "~10 sec" },
   "TON": { name: "TON", minConfirmations: 1, approxTime: "~1 min" },
   "BITCOIN": { name: "Bitcoin", minConfirmations: 2, approxTime: "~10-30 min" },
-  "LIGHTNING": { name: "Lightning Network", minConfirmations: 1, approxTime: "Instant" },
-  "BEP20": { name: "BSC (BEP20)", minConfirmations: 15, approxTime: "~1 min" },
-  "SOL": { name: "Solana", minConfirmations: 32, approxTime: "~10 sec" },
-  "BASE": { name: "Base", minConfirmations: 1, approxTime: "~2 min" },
-  "ARBITRUM": { name: "Arbitrum", minConfirmations: 1, approxTime: "~2 min" },
-  "OPTIMISM": { name: "Optimism", minConfirmations: 1, approxTime: "~2 min" },
-  "BEP2": { name: "BNB Beacon Chain", minConfirmations: 1, approxTime: "~1 min" },
   "LITECOIN": { name: "Litecoin", minConfirmations: 2, approxTime: "~5 min" },
   "DOGECOIN": { name: "Dogecoin", minConfirmations: 6, approxTime: "~5 min" },
-  "SOLANA": { name: "Solana", minConfirmations: 32, approxTime: "~10 sec" },
-  "XRP LEDGER": { name: "XRP Ledger", minConfirmations: 1, approxTime: "~3 sec" },
-  "TON": { name: "TON", minConfirmations: 1, approxTime: "~1 min" },
+};
+
+const COIN_BRAND: Record<string, { icon: string; color: string }> = {
+  "BTC": { icon: "₿", color: "text-amber-400" },
+  "USDT": { icon: "₮", color: "text-green-400" },
+  "ETH": { icon: "Ξ", color: "text-slate-400" },
+  "BNB": { icon: "BNB", color: "text-amber-400" },
+  "SOL": { icon: "SOL", color: "text-purple-400" },
+  "TRX": { icon: "TRX", color: "text-red-400" },
+  "LTC": { icon: "Ł", color: "text-slate-400" },
+  "DOGE": { icon: "Ð", color: "text-amber-400" },
+  "TON": { icon: "TON", color: "text-cyan-400" },
+  "USDC": { icon: "USDC", color: "text-blue-400" },
 };
 
 export function DepositCryptoDetails({
@@ -60,47 +53,90 @@ export function DepositCryptoDetails({
   setSelectedNetwork,
   amount,
   setAmount,
+  cryptoMethods,
   onContinue,
   onBack,
 }: DepositCryptoDetailsProps) {
-  const [networks, setNetworks] = useState<string[]>([]);
-  const [showNetworks, setShowNetworks] = useState(false);
-  const amountValue = Number(amount) || 0;
+  const coins = useMemo(() => {
+    const seen = new Set<string>();
+    return cryptoMethods.filter((method) => {
+      if (seen.has(method.symbol)) return false;
+      seen.add(method.symbol);
+      return true;
+    });
+  }, [cryptoMethods]);
 
-  const coinInfo = COINS.find(c => c.symbol === selectedCoin) || COINS[1];
+  const activeCoin = coins.find((coin) => coin.symbol === selectedCoin) ?? coins[0];
 
-  const handleCoinChange = (coin: string) => {
-    setSelectedCoin(coin);
-    const coinData = COINS.find(c => c.symbol === coin);
-    if (coinData && coinData.networks.length > 0) {
-      setNetworks(coinData.networks);
-      setSelectedNetwork(coinData.networks[0]);
-      setShowNetworks(false);
+  const networks = useMemo(
+    () => cryptoMethods.filter((method) => method.symbol === activeCoin?.symbol).map((method) => method.network),
+    [cryptoMethods, activeCoin?.symbol],
+  );
+
+  const activeNetwork = networks.includes(selectedNetwork) ? selectedNetwork : (networks[0] ?? "");
+
+  useEffect(() => {
+    if (activeCoin && activeCoin.symbol !== selectedCoin) {
+      setSelectedCoin(activeCoin.symbol);
     }
-  };
+  }, [activeCoin, selectedCoin, setSelectedCoin]);
 
-  const networkInfo = NETWORK_INFO[selectedNetwork.toUpperCase()] || { name: selectedNetwork, minConfirmations: 1, approxTime: "~1 min" };
+  useEffect(() => {
+    if (activeNetwork && activeNetwork !== selectedNetwork) {
+      setSelectedNetwork(activeNetwork);
+    }
+  }, [activeNetwork, selectedNetwork, setSelectedNetwork]);
+
+  const selectedMethod = cryptoMethods.find(
+    (method) => method.symbol === selectedCoin && method.network === selectedNetwork,
+  ) ?? null;
+
+  const minimumDeposit = Math.max(Number(selectedMethod?.minimum_deposit_amount ?? 10), 10);
+  const amountValue = Number(amount) || 0;
+  const networkInfo = NETWORK_INFO[activeNetwork.toUpperCase()] || {
+    name: activeNetwork || "—",
+    minConfirmations: 1,
+    approxTime: "~1 min",
+  };
+  const brand = COIN_BRAND[selectedCoin] || { icon: selectedCoin, color: "text-white" };
+
+  if (cryptoMethods.length === 0) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold text-white">Cryptocurrency Details</h1>
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 py-12 text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-yellow-400" />
+          <p className="mt-4 text-sm text-white/60">Loading supported cryptocurrencies...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-white">Cryptocurrency Details</h1>
+      <div>
+        <h1 className="text-3xl font-bold text-white">Cryptocurrency Details</h1>
+        <p className="mt-1 text-sm text-white/50">Select the coin and network, then enter the deposit amount.</p>
+      </div>
 
       <div className="space-y-4">
         <div>
           <label className="text-sm font-medium text-white">Cryptocurrency</label>
           <div className="relative mt-2">
-            <Select value={selectedCoin} onValueChange={handleCoinChange}>
+            <Select value={selectedCoin} onValueChange={setSelectedCoin}>
               <SelectTrigger className="bg-[#0a0d17] border border-white/10 rounded-xl text-white">
                 <SelectValue placeholder="Select cryptocurrency" />
               </SelectTrigger>
               <SelectContent className="bg-[#141a2a] border border-white/10">
-                {COINS.map(coin => (
+                {coins.map((coin) => (
                   <SelectItem key={coin.symbol} value={coin.symbol}>
                     <div className="flex items-center gap-3">
-                      <span className={`font-bold text-lg ${coin.color}`}>{coin.icon}</span>
+                      <span className={`font-bold text-lg ${COIN_BRAND[coin.symbol]?.color || "text-white"}`}>
+                        {COIN_BRAND[coin.symbol]?.icon || coin.symbol}
+                      </span>
                       <div>
                         <p className="font-medium text-white">{coin.symbol}</p>
-                        <p className="text-xs text-white/50">{coin.name}</p>
+                        <p className="text-xs text-white/50">{coin.coin_name}</p>
                       </div>
                     </div>
                   </SelectItem>
@@ -113,16 +149,19 @@ export function DepositCryptoDetails({
         <div>
           <label className="text-sm font-medium text-white">Network</label>
           <div className="relative mt-2">
-            <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
+            <Select value={activeNetwork} onValueChange={setSelectedNetwork}>
               <SelectTrigger className="bg-[#0a0d17] border border-white/10 rounded-xl text-white">
                 <SelectValue placeholder="Select network" />
               </SelectTrigger>
               <SelectContent className="bg-[#141a2a] border border-white/10">
-                {networks.map(net => (
+                {networks.map((net) => (
                   <SelectItem key={net} value={net}>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-4">
                       <span className="font-medium text-white">{NETWORK_INFO[net.toUpperCase()]?.name || net}</span>
-                      <span className="text-xs text-white/50">{NETWORK_INFO[net.toUpperCase()]?.approxTime || "~1 min"}</span>
+                      <span className="flex items-center gap-1 text-xs text-white/50">
+                        <Clock className="h-3 w-3" />
+                        {NETWORK_INFO[net.toUpperCase()]?.approxTime || "~1 min"}
+                      </span>
                     </div>
                   </SelectItem>
                 ))}
@@ -130,9 +169,9 @@ export function DepositCryptoDetails({
             </Select>
           </div>
           <p className="mt-2 text-sm text-white/50">
-            Network: <span className="text-white/70">{networkInfo.name}</span> • 
-            Confirmations: <span className="text-white/70">{networkInfo.minConfirmations}</span> • 
-            Est. time: <span className="text-white/70">{networkInfo.approxTime}</span>
+            Network: <span className="text-white/70">{networkInfo.name}</span> • Confirmations:{" "}
+            <span className="text-white/70">{networkInfo.minConfirmations}</span> • Est. time:{" "}
+            <span className="text-white/70">{networkInfo.approxTime}</span>
           </p>
         </div>
 
@@ -145,10 +184,10 @@ export function DepositCryptoDetails({
             <input
               type="number"
               step="1"
-              min="10"
+              min={minimumDeposit}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="Enter amount"
+              placeholder={`Enter amount (Min $${minimumDeposit})`}
               className="w-full pl-10 pr-4 py-4 bg-[#0a0d17] border border-white/10 rounded-xl text-xl font-bold text-white outline-none placeholder:text-white/30 focus:border-[#0fa053]/50 focus:ring-1 focus:ring-[#0fa053]/20"
             />
           </div>
@@ -156,13 +195,19 @@ export function DepositCryptoDetails({
 
         <div className="rounded-xl border border-white/10 bg-white/5 p-5">
           <div className="flex items-center gap-3 mb-4">
-            <AlertTriangle className="h-5 w-5 text-amber-400" />
-            <span className="text-sm text-white/70">Important: Select the correct network that matches your wallet. Sending via the wrong network will result in permanent loss of funds.</span>
+            <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0" />
+            <span className="text-sm text-white/70">
+              You will be redirected to Plisio's secure checkout to complete the payment. Only {selectedCoin} on the{" "}
+              {activeNetwork} network is accepted for this deposit.
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-white/50">Coin</span>
-              <p className="font-bold text-white">{coinInfo.symbol}</p>
+              <p className="font-bold text-white flex items-center gap-2">
+                <span className={brand.color}>{brand.icon}</span>
+                {selectedCoin}
+              </p>
             </div>
             <div>
               <span className="text-white/50">Network</span>
@@ -170,7 +215,7 @@ export function DepositCryptoDetails({
             </div>
             <div>
               <span className="text-white/50">Min. Deposit</span>
-              <p className="font-bold text-white">$10</p>
+              <p className="font-bold text-white">${minimumDeposit}</p>
             </div>
             <div>
               <span className="text-white/50">Confirmations</span>
@@ -190,10 +235,10 @@ export function DepositCryptoDetails({
           <button
             type="button"
             onClick={onContinue}
-            disabled={!amount || Number(amount) < 10}
+            disabled={!amount || amountValue < minimumDeposit}
             className="flex-1 h-12 rounded-xl bg-gradient-to-r from-[#f1a526] to-[#f1a526]/80 text-white font-bold text-lg shadow-[0_10px_30px_rgba(241,165,38,0.3)] hover:from-[#f1a526] hover:to-[#f1a526] disabled:from-white/10 disabled:to-white/10 disabled:shadow-none disabled:cursor-not-allowed"
           >
-            Continue
+            Continue to Payment
           </button>
         </div>
       </div>

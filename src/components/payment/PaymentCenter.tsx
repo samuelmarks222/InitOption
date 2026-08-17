@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { ProgressSteps } from "./ProgressSteps";
 import { 
-  createCryptoDepositInstruction, 
-  getLatestOpenCryptoDepositInstruction,
+  createPlisioHostedCheckoutDeposit,
+  PENDING_CRYPTO_CHECKOUT_STORAGE_KEY,
   CryptoDepositInstructionPayload,
   CryptoPaymentMethodRecord 
 } from "@/lib/cryptoDeposits";
@@ -275,16 +275,28 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
           return;
         }
 
-        const instruction = await createCryptoDepositInstruction({
+        const instruction = await createPlisioHostedCheckoutDeposit({
           amount: amountValue,
           paymentMethodId: paymentMethod.id,
           cryptoCurrency: selectedDepositCoin,
           cryptoNetwork: selectedDepositNetwork,
         });
 
-        if (instruction.address) {
+        if (instruction.instruction_id) {
+          window.sessionStorage.setItem(
+            PENDING_CRYPTO_CHECKOUT_STORAGE_KEY,
+            JSON.stringify({
+              instruction_id: instruction.instruction_id,
+              amount: amountValue,
+              coin: selectedDepositCoin,
+              network: selectedDepositNetwork,
+            }),
+          );
+        }
+
+        if (instruction.hosted_checkout_url) {
           setDepositInstruction(instruction);
-          setDepositStep(3); // Go to process step
+          setDepositStep(3); // Go to process step (redirects to Plisio)
         }
       }
     } catch (error) {
@@ -577,7 +589,7 @@ function DepositFlow({
             setSelectedNetwork={setSelectedNetwork}
             amount={amount}
             setAmount={setAmount}
-            cryptoMethods={[]}
+            cryptoMethods={cryptoMethods}
             onContinue={onSubmit}
             onBack={onBack}
           />

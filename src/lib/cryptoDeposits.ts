@@ -194,6 +194,98 @@ export const mapCryptoDepositInstructionRecordToPayload = (
   };
 };
 
+const buildCryptoDepositPayloadFromPartial = (
+  data: Partial<CryptoDepositInstructionPayload>,
+): CryptoDepositInstructionPayload => ({
+  address: String(data.address ?? ""),
+  amount: Number(data.amount ?? 0),
+  confirmations_required: Number(data.confirmations_required ?? 0),
+  created_at: typeof data.created_at === "string" && data.created_at ? data.created_at : new Date().toISOString(),
+  deposit_request_id: String(data.deposit_request_id ?? ""),
+  hosted_checkout_url: data.hosted_checkout_url ?? null,
+  instruction_id: String(data.instruction_id ?? ""),
+  instruction_status: (data.instruction_status ?? "awaiting_payment") as CryptoInstructionStatus,
+  memo_label: data.memo_label ?? null,
+  memo_value: data.memo_value ?? null,
+  payment_method_id: String(data.payment_method_id ?? ""),
+  promo_bonus: Number(data.promo_bonus ?? 0),
+  provider_name: data.provider_name ?? null,
+  provider_order_id: data.provider_order_id ?? null,
+  provider_pay_amount: Number.isFinite(Number(data.provider_pay_amount))
+    ? Number(data.provider_pay_amount)
+    : null,
+  provider_pay_currency: data.provider_pay_currency ?? null,
+  provider_payment_id: data.provider_payment_id ?? null,
+  provider_payment_status: data.provider_payment_status ?? null,
+});
+
+export const createPlisioHostedCheckoutDeposit = async ({
+  amount,
+  bonusOfferId = null,
+  paymentMethodId,
+  cryptoCurrency,
+  cryptoNetwork,
+}: {
+  amount: number;
+  bonusOfferId?: string | null;
+  paymentMethodId: string;
+  cryptoCurrency: string;
+  cryptoNetwork: string;
+}): Promise<CryptoDepositInstructionPayload> => {
+  const accessToken = await getAppwriteIdToken();
+
+  if (!accessToken) {
+    throw new Error("Authentication required. Please sign in again.");
+  }
+
+  const response = await fetch("/api/crypto/create-payment", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      amount,
+      bonusOfferId,
+      paymentMethodId,
+      cryptoCurrency,
+      cryptoNetwork,
+      useHostedCheckout: true,
+    }),
+  });
+
+  let responseBody: { error?: string; instruction?: Partial<CryptoDepositInstructionPayload> } | null = null;
+  try {
+    responseBody = (await response.json()) as { error?: string; instruction?: Partial<CryptoDepositInstructionPayload> };
+  } catch {
+    responseBody = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(responseBody?.error || "Failed to start Plisio checkout.");
+  }
+
+  const payload = buildCryptoDepositPayloadFromPartial(
+    (responseBody?.instruction ?? {}) as Partial<CryptoDepositInstructionPayload>,
+  );
+
+  if (payload.instruction_id && payload.hosted_checkout_url) {
+    saveCryptoDepositCheckoutCache({
+      hosted_checkout_url: payload.hosted_checkout_url,
+      instruction_id: payload.instruction_id,
+      payment_method_id: payload.payment_method_id,
+      provider_name: payload.provider_name ?? null,
+      provider_order_id: payload.provider_order_id ?? null,
+      provider_pay_amount: payload.provider_pay_amount ?? null,
+      provider_pay_currency: payload.provider_pay_currency ?? null,
+      provider_payment_id: payload.provider_payment_id ?? null,
+      provider_payment_status: payload.provider_payment_status ?? null,
+    });
+  }
+
+  return payload;
+};
+
 export const createCryptoDepositInstruction = async ({
   amount,
   applyDepositBonus = false,
@@ -351,6 +443,35 @@ export const recoverCryptoDepositCheckout = async ({
   }
 
   return payload;
+};
+
+export const PENDING_CRYPTO_CHECKOUT_STORAGE_KEY = "pending_crypto_deposit_checkout";
+
+const CRYPTO_DEPOSIT_COMPLETED_STATUSES = ["completed", "finished", "confirmed", "credited"];
+const CRYPTO_DEPOSIT_FAILED_STATUSES = ["error", "expired", "cancelled", "rejected", "failed"];
+
+export const isCryptoDepositCompleted = (status: string | null | undefined) =>
+  CRYPTO_DEPOSIT_COMPLETED_STATUSES.includes(String(status ?? "").toLowerCase());
+
+export const isCryptoDepositFailed = (status: string | null | undefined) =>
+  CRYPTO_DEPOSIT_FAILED_STATUSES.includes(String(status ?? "").toLowerCase());
+
+export const getCryptoDepositPaymentStatus = async ({
+  instructionId,
+}: {
+  instructionId: string;
+}): Promise<string> => {
+  const response = await api
+    .from("crypto_deposit_instructions")
+    .select("status, instruction_status")
+    .eq("id", instructionId)
+    .maybeSingle();
+
+  if (response.error) {
+    throw response.error;
+  }
+
+  return String(response.data?.status ?? response.data?.instruction_status ?? "awaiting_payment").toLowerCase();
 };
 
 export const getLatestOpenCryptoDepositInstruction = async ({

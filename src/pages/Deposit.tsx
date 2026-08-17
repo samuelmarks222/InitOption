@@ -9,7 +9,14 @@ import { Button } from "@/components/ui/button";
 
 import { toast } from "@/hooks/use-toast";
 import { SiteLogo } from "@/components/branding/SiteLogo";
-import { createCryptoDepositInstruction } from "@/lib/cryptoDeposits";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  createPlisioHostedCheckoutDeposit,
+  getCryptoDepositPaymentStatus,
+  isCryptoDepositCompleted,
+  isCryptoDepositFailed,
+  PENDING_CRYPTO_CHECKOUT_STORAGE_KEY,
+} from "@/lib/cryptoDeposits";
 import { requestMobileMoneyDeposit } from "@/lib/mobileMoney";
 import { isPlisioSupportedCryptoMethod } from "@/lib/plisio";
 
@@ -31,17 +38,13 @@ const Deposit = () => {
   const [mpesaPhoneNumber, setMpesaPhoneNumber] = useState("");
   const [lastMobileMoneyRequest, setLastMobileMoneyRequest] = useState<MobileMoneyDepositPayload | null>(null);
   const [cryptoMethods, setCryptoMethods] = useState<CryptoPaymentMethod[]>([]);
-  const [selectedCryptoId, setSelectedCryptoId] = useState<string>("");
   const [bonusOffers, setBonusOffers] = useState<DepositBonusOffer[]>([]);
   const [bonusRedemptions, setBonusRedemptions] = useState<Pick<DepositBonusRedemption, "bonus_offer_id" | "created_at" | "status">[]>([]);
   const [mobileMoneyMonitorStatus, setMobileMoneyMonitorStatus] = useState<MobileMoneyRequestMonitorStatus>("idle");
   const redirectTimeoutRef = useRef<number | null>(null);
   const handledMobileMoneyResolutionRef = useRef<string | null>(null);
 
-  const [depositAddress, setDepositAddress] = useState<string>("");
-  const [depositNetwork, setDepositNetwork] = useState<string>("");
-  const [depositCryptocurrency, setDepositCryptocurrency] = useState<string>("");
-  const [showAddress, setShowAddress] = useState(false);
+  const [checkoutStatus, setCheckoutStatus] = useState<"idle" | "opening" | "waiting" | "completed" | "failed">("idle");
 
   // Crypto selection states for improved UX
   const [selectedCoin, setSelectedCoin] = useState<string>("USDT");
@@ -101,7 +104,6 @@ const Deposit = () => {
         .order("coin_name");
       if (cancelled || error) return;
       setCryptoMethods(data ?? []);
-      setSelectedCryptoId(data?.[0]?.id ?? "");
     };
     void fetchCrypto();
     return () => { cancelled = true; };
@@ -141,9 +143,74 @@ const Deposit = () => {
   }, [user?.id]);
 
   const amountValue = Number(amount) || 0;
-  const selectedCryptoMethod = cryptoMethods.find((e) => e.id === selectedCryptoId) ?? null;
+  const cryptoCoinOptions = useMemo(
+    () => Array.from(new Set(cryptoMethods.map((m) => m.symbol))),
+    [cryptoMethods],
+  );
+  const cryptoNetworkOptions = useMemo(
+    () => cryptoMethods.filter((m) => m.symbol === selectedCoin).map((m) => m.network),
+    [cryptoMethods, selectedCoin],
+  );
+  const selectedCryptoMethod =
+    cryptoMethods.find((e) => e.symbol === selectedCoin && e.network === selectedCoinNetwork) ?? cryptoMethods[0] ?? null;
   const minimumDepositAmount =
     selectedMethod === "mpesa" ? 5 : Math.max(Number(selectedCryptoMethod?.minimum_deposit_amount ?? 10), 10);
+
+  useEffect(() => {
+    if (cryptoMethods.length === 0) return;
+    const symbols = Array.from(new Set(cryptoMethods.map((m) => m.symbol)));
+    if (!symbols.includes(selectedCoin)) {
+      setSelectedCoin(symbols[0] ?? "USDT");
+    }
+    const networks = cryptoMethods.filter((m) => m.symbol === selectedCoin).map((m) => m.network);
+    if (networks.length > 0 && !networks.includes(selectedCoinNetwork)) {
+      setSelectedCoinNetwork(networks[0]);
+    }
+  }, [cryptoMethods, selectedCoin, selectedCoinNetwork]);
+
+  const syncCryptoCheckoutStatus = async () => {
+    let saved: { instruction_id?: string } | null = null;
+    try {
+      saved = JSON.parse(window.sessionStorage.getItem(PENDING_CRYPTO_CHECKOUT_STORAGE_KEY) ?? "null");
+    } catch {
+      saved = null;
+    }
+    if (!saved?.instruction_id) return;
+    try {
+      const status = await getCryptoDepositPaymentStatus({ instructionId: saved.instruction_id });
+      if (isCryptoDepositCompleted(status)) {
+        setCheckoutStatus("completed");
+        await refreshProfile();
+        window.sessionStorage.removeItem(PENDING_CRYPTO_CHECKOUT_STORAGE_KEY);
+      } else if (isCryptoDepositFailed(status)) {
+        setCheckoutStatus("failed");
+        window.sessionStorage.removeItem(PENDING_CRYPTO_CHECKOUT_STORAGE_KEY);
+      } else {
+        setCheckoutStatus("waiting");
+      }
+    } catch {
+      // Ignore transient errors; keep polling.
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("checkout") === "plisio" && params.get("status") === "failed") {
+      setCheckoutStatus("failed");
+      window.sessionStorage.removeItem(PENDING_CRYPTO_CHECKOUT_STORAGE_KEY);
+    }
+    let active = true;
+    const run = async () => {
+      if (!active) return;
+      await syncCryptoCheckoutStatus();
+    };
+    void run();
+    const poll = window.setInterval(() => void run(), 6000);
+    return () => {
+      active = false;
+      window.clearInterval(poll);
+    };
+  }, []);
 
   const hasEligibleBonusOffers = bonusOffers.some((o) => o.eligible);
   useEffect(() => {
@@ -221,16 +288,25 @@ const Deposit = () => {
         toast({ title: "Choose a crypto method", variant: "destructive" });
         return;
       }
-      const instr = await createCryptoDepositInstruction({ 
-        amount: Number(amount), 
+      const instr = await createPlisioHostedCheckoutDeposit({
+        amount: Number(amount),
         paymentMethodId: selectedCryptoMethod.id,
-        cryptoCurrency: selectedCryptoMethod.coin_name,
+        cryptoCurrency: selectedCryptoMethod.symbol,
         cryptoNetwork: selectedCryptoMethod.network,
       });
-      setDepositAddress(instr.address || "");
-      setDepositNetwork(selectedCryptoMethod.network || "");
-      setDepositCryptocurrency(selectedCryptoMethod.coin_name || "Crypto");
-      setShowAddress(true);
+      window.sessionStorage.setItem(
+        PENDING_CRYPTO_CHECKOUT_STORAGE_KEY,
+        JSON.stringify({
+          instruction_id: instr.instruction_id,
+          amount: Number(amount),
+          coin: selectedCryptoMethod.symbol,
+          network: selectedCryptoMethod.network,
+        }),
+      );
+      setCheckoutStatus("opening");
+      if (instr.hosted_checkout_url) {
+        window.location.href = instr.hosted_checkout_url;
+      }
     } catch (err) {
       toast({ title: "Deposit failed", variant: "destructive", description: err instanceof Error ? err.message : "Error" });
     } finally { setLoading(false); }
@@ -331,9 +407,37 @@ const Deposit = () => {
                   </div>
                 ) : null}
                 {selectedMethod === "crypto" ? (
-                  <div>
-                    <span className="text-sm text-white">Network:</span>
-                    <span className="font-medium text-white">{selectedCryptoMethod?.network || "Select network"}</span>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-white">Coin</label>
+                      <Select value={selectedCoin} onValueChange={(v) => setSelectedCoin(v)}>
+                        <SelectTrigger className="mt-1 w-full bg-[#0a0d17] border border-white/10 text-white">
+                          <SelectValue placeholder="Select coin" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#141a2a] border border-white/10">
+                          {cryptoCoinOptions.map((symbol) => (
+                            <SelectItem key={symbol} value={symbol}>
+                              <span className="font-medium text-white">{symbol}</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-white">Network</label>
+                      <Select value={selectedCoinNetwork} onValueChange={(v) => setSelectedCoinNetwork(v)}>
+                        <SelectTrigger className="mt-1 w-full bg-[#0a0d17] border border-white/10 text-white">
+                          <SelectValue placeholder="Select network" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#141a2a] border border-white/10">
+                          {cryptoNetworkOptions.map((net) => (
+                            <SelectItem key={net} value={net}>
+                              <span className="font-medium text-white">{net}</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 ) : null}
               </div>
@@ -422,80 +526,121 @@ const Deposit = () => {
               </div>
             )}
 
-            {/* Crypto Deposit Address Panel */}
-            {selectedMethod === "crypto" && showAddress && depositAddress && (
+            {/* Crypto Hosted Checkout Panel */}
+            {selectedMethod === "crypto" && checkoutStatus !== "idle" && (
               <div className="mt-6 rounded-xl border bg-white/5 p-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/20">
-                    <svg className="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l4-4a4 4 0 000-5.656l-4-4a4 4 0 00-5.656 0l-4 4a4 4 0 005.656 5.656l4-4a4 4 0 000-5.656z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-white">Deposit Address Generated</h3>
-                    <p className="text-sm text-white/70 mt-1">Send the exact amount to the address below. Do not send any other currency.</p>
-                  </div>
-                </div>
-                <div className="mt-4 space-y-4">
-                  <div>
-                    <div className="flex items-center gap-2 text-sm mb-2">
-                      <span className="text-white/60">Coin:</span>
-                      <span className="font-bold text-white">{depositCryptocurrency}</span>
-                      <span className="text-white/40">•</span>
-                      <span className="text-white/60">Network:</span>
-                      <span className="font-bold text-white">{depositNetwork}</span>
+                {checkoutStatus === "opening" && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/20">
+                      <svg className="h-6 w-6 animate-spin text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-white">Redirecting to Plisio...</h3>
+                      <p className="text-sm text-white/70 mt-1">
+                        You'll complete the payment on Plisio's secure hosted checkout.
+                      </p>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-sm text-white/60 mb-1 block">Deposit Address</label>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-[#0a0d14] border border-white/10 rounded-lg px-4 py-3 font-mono text-sm text-white break-all">
-                        {depositAddress}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(depositAddress);
-                          toast({ title: "Address copied", description: "Deposit address copied to clipboard" });
-                        }}
-                        className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
-                        aria-label="Copy address"
-                      >
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v12a2 2 0 01-2 2H8a2 2 0 01-2-2V5z" />
-                        </svg>
-                      </button>
+                )}
+                {checkoutStatus === "waiting" && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-500/20">
+                      <svg className="h-6 w-6 animate-spin text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-white">Payment Confirmation Pending</h3>
+                      <p className="text-sm text-white/70 mt-1">
+                        We're waiting for Plisio to confirm your payment. Your balance updates automatically once it's
+                        confirmed on the blockchain.
+                      </p>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-sm text-white/60 mb-1 block">QR Code</label>
-                    <div className="flex justify-center">
-                      <div className="bg-white p-4 rounded-lg">
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(depositAddress)}`}
-                          alt="Deposit QR Code"
-                          className="h-40 w-40"
-                        />
-                      </div>
+                )}
+                {checkoutStatus === "completed" && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/20">
+                      <svg className="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-white">Deposit Successful</h3>
+                      <p className="text-sm text-white/70 mt-1">Your account has been credited.</p>
                     </div>
                   </div>
-                  <div className="pt-4 border-t border-white/10">
+                )}
+                {checkoutStatus === "failed" && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/20">
+                      <svg className="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-white">Payment Not Received</h3>
+                      <p className="text-sm text-white/70 mt-1">
+                        No funds were added to your account. Please try again.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {checkoutStatus === "waiting" ? (
+                  <div className="mt-4 pt-4 border-t border-white/10">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-white/60">Amount to Send</span>
+                        <span className="text-white/60">Amount</span>
                         <p className="font-bold text-white">${Number(amount).toFixed(2)}</p>
                       </div>
                       <div>
+                        <span className="text-white/60">Coin</span>
+                        <p className="font-bold text-white">{selectedCoin}</p>
+                      </div>
+                      <div>
+                        <span className="text-white/60">Network</span>
+                        <p className="font-bold text-white">{selectedCoinNetwork}</p>
+                      </div>
+                      <div>
                         <span className="text-white/60">Status</span>
-                        <p className="font-bold text-white text-green-500">Waiting for payment...</p>
+                        <p className="font-bold text-white text-yellow-400">Confirming...</p>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => void syncCryptoCheckoutStatus()}
+                      className="mt-4 h-11 w-full rounded-lg bg-white/10 text-sm font-bold text-white transition-colors hover:bg-white/20"
+                    >
+                      Check status
+                    </button>
                   </div>
-                </div>
-                <p className="mt-4 text-sm text-white/60">
-                  <strong>Important:</strong> Send only {depositCryptocurrency} on the {depositNetwork} network to this address.
-                  Sending any other currency or using a different network will result in permanent loss of funds.
-                </p>
+                ) : null}
+                {checkoutStatus === "completed" ? (
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/trade", { replace: true })}
+                      className="h-11 w-full rounded-lg bg-[#20be7a] text-sm font-bold text-white transition hover:bg-[#28c985]"
+                    >
+                      Go to Trading
+                    </button>
+                  </div>
+                ) : null}
+                {checkoutStatus === "failed" ? (
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setCheckoutStatus("idle")}
+                      className="h-11 w-full rounded-lg bg-white/10 text-sm font-bold text-white transition-colors hover:bg-white/20"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                ) : null}
               </div>
             )}
 
@@ -513,12 +658,12 @@ const Deposit = () => {
                     ? "Send Payment Prompt"
                     : !selectedCryptoMethod
                       ? "Select payment method first"
-                      : "Next"}
+                      : "Continue to Payment"}
               </Button>
               <p className="mt-3 text-center text-sm leading-5 text-[#a6b2c5]">
                 {selectedMethod === "mpesa"
                   ? "Instructions for your Send Payment Prompt will appear after submission."
-                  : "After you click Next, a deposit address will appear inside Init Option."}
+                  : "You'll be redirected to Plisio's secure checkout to complete your deposit."}
               </p>
             </div>
           </div>
