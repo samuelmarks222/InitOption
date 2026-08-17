@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, BadgeCheck, CircleHelp, Clock3, ShieldCheck, Smartphone, XCircle } from "lucide-react";
+import { ArrowLeft, BadgeCheck, CircleHelp, Clock3, Loader2, ShieldCheck, Smartphone, XCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { realtime } from "@/integrations/pusher/realtime";
@@ -13,9 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   createPlisioHostedCheckoutDeposit,
   getCryptoDepositPaymentStatus,
+  getPlisioMethodMinimums,
   isCryptoDepositCompleted,
   isCryptoDepositFailed,
   PENDING_CRYPTO_CHECKOUT_STORAGE_KEY,
+  PlisioMethodMinimumInfo,
 } from "@/lib/cryptoDeposits";
 import { requestMobileMoneyDeposit } from "@/lib/mobileMoney";
 import { isPlisioSupportedCryptoMethod } from "@/lib/plisio";
@@ -25,6 +27,18 @@ type FundingMethod = "mpesa" | "crypto";
 type MobileMoneyRequestMonitorStatus = "idle" | "pending" | "approved" | "rejected";
 
 const MOBILE_MONEY_PENDING_REQUEST_STORAGE_KEY = "pending_mobile_money_deposit_request";
+
+const formatUsd = (value: number | null | undefined) => {
+  if (value == null || !Number.isFinite(value)) return "—";
+  return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+const formatCoinAmount = (value: number | null | undefined) => {
+  if (value == null || !Number.isFinite(value)) return "—";
+  if (Math.abs(value) >= 100000) return value.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  if (Math.abs(value) >= 1) return value.toLocaleString("en-US", { maximumFractionDigits: 6 });
+  return value.toLocaleString("en-US", { maximumSignificantDigits: 6 });
+};
 
 const Deposit = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -49,6 +63,8 @@ const Deposit = () => {
   // Crypto selection states for improved UX
   const [selectedCoin, setSelectedCoin] = useState<string>("USDT");
   const [selectedCoinNetwork, setSelectedCoinNetwork] = useState<string>("TRC20");
+  const [plisioInfos, setPlisioInfos] = useState<PlisioMethodMinimumInfo[]>([]);
+  const [plisioMinLoading, setPlisioMinLoading] = useState(false);
 
   // M-PESA status display
   const isMpesaPending = lastMobileMoneyRequest?.request_id && mobileMoneyMonitorStatus === "pending";
@@ -110,6 +126,18 @@ const Deposit = () => {
   }, []);
 
   useEffect(() => {
+    if (cryptoMethods.length === 0) return;
+    let cancelled = false;
+    setPlisioMinLoading(true);
+    void getPlisioMethodMinimums({ methods: cryptoMethods }).then((infos) => {
+      if (cancelled) return;
+      setPlisioInfos(infos);
+      setPlisioMinLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [cryptoMethods]);
+
+  useEffect(() => {
     if (!user?.id) {
       setBonusOffers([]);
       setBonusRedemptions([]);
@@ -153,8 +181,27 @@ const Deposit = () => {
   );
   const selectedCryptoMethod =
     cryptoMethods.find((e) => e.symbol === selectedCoin && e.network === selectedCoinNetwork) ?? cryptoMethods[0] ?? null;
-  const minimumDepositAmount =
-    selectedMethod === "mpesa" ? 5 : Math.max(Number(selectedCryptoMethod?.minimum_deposit_amount ?? 10), 10);
+  const plisioSelectedInfo = useMemo(
+    () =>
+      plisioInfos.find(
+        (info) =>
+          info.symbol.toUpperCase() === selectedCoin.toUpperCase() &&
+          info.network.toUpperCase() === selectedCoinNetwork.toUpperCase(),
+      ) ?? null,
+    [plisioInfos, selectedCoin, selectedCoinNetwork],
+  );
+  const symbolIcons = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    for (const info of plisioInfos) {
+      if (map[info.symbol.toUpperCase()] === undefined && info.icon) {
+        map[info.symbol.toUpperCase()] = info.icon;
+      }
+    }
+    return map;
+  }, [plisioInfos]);
+  const cryptoMinimumUsd =
+    plisioSelectedInfo?.minAmountUsd ?? Math.max(Number(selectedCryptoMethod?.minimum_deposit_amount ?? 10), 10);
+  const minimumDepositAmount = selectedMethod === "mpesa" ? 5 : cryptoMinimumUsd;
 
   useEffect(() => {
     if (cryptoMethods.length === 0) return;
@@ -273,6 +320,10 @@ const Deposit = () => {
     }
     if (amountValue < minimumDepositAmount) {
       toast({ title: "Deposit amount too low", variant: "destructive" });
+      return;
+    }
+    if (selectedMethod === "crypto" && plisioMinLoading) {
+      toast({ title: "Checking the minimum deposit...", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -417,7 +468,20 @@ const Deposit = () => {
                         <SelectContent className="bg-[#141a2a] border border-white/10">
                           {cryptoCoinOptions.map((symbol) => (
                             <SelectItem key={symbol} value={symbol}>
-                              <span className="font-medium text-white">{symbol}</span>
+                              <span className="flex items-center gap-2">
+                                {symbolIcons[symbol.toUpperCase()] ? (
+                                  <img
+                                    src={symbolIcons[symbol.toUpperCase()]}
+                                    alt=""
+                                    className="h-5 w-5 rounded-full object-contain"
+                                  />
+                                ) : (
+                                  <span className="flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-white/10 text-xs font-bold text-white/80">
+                                    {symbol.slice(0, 1)}
+                                  </span>
+                                )}
+                                <span className="font-medium text-white">{symbol}</span>
+                              </span>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -437,6 +501,26 @@ const Deposit = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm">
+                      <span className="text-white/50">Minimum deposit: </span>
+                      {plisioMinLoading ? (
+                        <span className="inline-flex items-center gap-1 text-white/70">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Checking...
+                        </span>
+                      ) : (
+                        <span className="font-medium text-white">
+                          {plisioSelectedInfo?.minAmountCoin != null
+                            ? `${formatCoinAmount(plisioSelectedInfo.minAmountCoin)} ${selectedCoin}`
+                            : formatUsd(cryptoMinimumUsd)}
+                          <span className="text-white/50"> ≈ {formatUsd(cryptoMinimumUsd)}</span>
+                        </span>
+                      )}
+                      {amountValue > 0 && amountValue < cryptoMinimumUsd ? (
+                        <span className="mt-1 block text-amber-400">Increase your deposit amount to continue.</span>
+                      ) : amountValue > 0 && amountValue >= cryptoMinimumUsd ? (
+                        <span className="mt-1 block text-emerald-400">Minimum deposit requirement met</span>
+                      ) : null}
                     </div>
                   </div>
                 ) : null}
@@ -647,7 +731,7 @@ const Deposit = () => {
             <div className="mt-6">
               <Button
                 type="submit"
-                disabled={loading || !amount || amountValue < minimumDepositAmount || (selectedMethod === "mpesa" && !mpesaPhoneNumber.trim()) || !selectedCryptoMethod}
+                disabled={loading || !amount || amountValue < minimumDepositAmount || (selectedMethod === "mpesa" && !mpesaPhoneNumber.trim()) || !selectedCryptoMethod || (selectedMethod === "crypto" && plisioMinLoading)}
                 className="mt-5 h-12 w-full rounded-lg bg-[#20be7a] text-base font-bold text-white shadow-[0_14px_32px_rgba(32,190,122,0.28)] transition hover:bg-[#28c985] disabled:cursor-not-allowed disabled:bg-[#20be7a] disabled:text-white/85 disabled:opacity-100"
               >
                 {loading

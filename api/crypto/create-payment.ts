@@ -415,9 +415,13 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   }
 
   // Plisio callbacks must be handled before any deposit-creation logic so the
-  // callback body is never mistaken for a new deposit request.
+  // callback body is never mistaken for a new deposit request. vercel.json rewrites
+  // /api/crypto/deposit-callback -> /api/crypto/create-payment?__callback=1, and the
+  // direct path is also accepted so both routings resolve here.
   const urlPath = (request.url ?? "").replace(/^\/api/, "");
-  if (urlPath.endsWith("/deposit-callback") || urlPath === "/api/crypto/deposit-callback") {
+  const isPlisioCallback =
+    new URL(request.url ?? "/", "http://localhost").searchParams.get("__callback") === "1";
+  if (isPlisioCallback || urlPath.endsWith("/deposit-callback") || urlPath === "/api/crypto/deposit-callback") {
     await handlePlisioDepositCallback(request, response);
     return;
   }

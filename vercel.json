@@ -67,6 +67,7 @@
     { "source": "/api/cloudinary/public-url", "destination": "/api/system?route=cloudinary-public-url" },
     { "source": "/api/cloudinary/exists", "destination": "/api/system?route=cloudinary-exists" },
     { "source": "/api/pusher/auth", "destination": "/api/system?route=pusher-auth" },
+    { "source": "/api/crypto/deposit-callback", "destination": "/api/crypto/create-payment?__callback=1" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/assets/(.*)", "destination": "/assets/$1" },
     { "source": "/favicon.ico", "destination": "/favicon.ico" },

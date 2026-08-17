@@ -112,6 +112,57 @@ export const checkPlisioOperationStatus = async (operationId: string) => {
   return data?.data as JsonObject ?? {};
 };
 
+// -------------------------------------------------------------------
+// Plisio supported-currency info (minimums + live USD rates + official icons)
+// -------------------------------------------------------------------
+let cachedPlisioCurrencies: { at: number; byCode: Record<string, JsonObject> } | null = null;
+const PLISIO_CURRENCIES_TTL_MS = 10 * 60 * 1000;
+
+export const fetchPlisioCurrencies = async (): Promise<Record<string, JsonObject>> => {
+  if (cachedPlisioCurrencies && Date.now() - cachedPlisioCurrencies.at < PLISIO_CURRENCIES_TTL_MS) {
+    return cachedPlisioCurrencies.byCode;
+  }
+
+  const apiKey = getPlisioApiKey();
+  const url = new URL("/currencies/USD", getPlisioBaseUrl());
+  url.searchParams.set("api_key", apiKey);
+
+  const response = await fetch(url.toString(), { method: "GET" });
+  const payload = await parseJsonResponse(response);
+
+  const status = asString(payload?.status);
+  if (!response.ok || status !== "success") {
+    const error =
+      asString(payload?.error) || asString(payload?.message) || `Plisio returned HTTP ${response.status}`;
+    throw new Error(error);
+  }
+
+  const list = payload?.data;
+  if (!Array.isArray(list)) {
+    throw new Error("Plisio returned an unexpected currencies payload.");
+  }
+
+  const byCode: Record<string, JsonObject> = {};
+  for (const entry of list) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+    const row = entry as JsonObject;
+    const code = (asString(row.cid) ?? asString(row.currency))?.toUpperCase();
+    if (code) byCode[code] = row;
+  }
+
+  cachedPlisioCurrencies = { at: Date.now(), byCode };
+  return byCode;
+};
+
+export const fetchPlisioCurrencyInfo = async (plisioCode: string): Promise<JsonObject> => {
+  const byCode = await fetchPlisioCurrencies();
+  const row = byCode[plisioCode.toUpperCase()];
+  if (!row) {
+    throw new Error(`Plisio does not support the ${plisioCode.toUpperCase()} currency.`);
+  }
+  return row;
+};
+
 export const verifyPlisioCallback = (payload: Record<string, unknown>, secret: string) => {
   const normalizedPayload = { ...payload };
   delete normalizedPayload.verify_hash;
@@ -190,5 +241,4 @@ export const normalizePlisioPayoutPayload = (payload: Record<string, unknown>) =
     orderNumber: dataOrderNumber,
     rawPayload: payload,
   };
-};
 };

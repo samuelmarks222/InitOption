@@ -45,6 +45,19 @@ export interface CryptoDepositInstructionWithMethod extends CryptoDepositInstruc
   payment_method: CryptoPaymentMethodRecord | null;
 }
 
+export interface PlisioMethodMinimumInfo {
+  symbol: string;
+  network: string;
+  plisioCode: string;
+  name: string;
+  icon: string | null;
+  precision: number | null;
+  priceUsd: number | null;
+  rateUsd: number | null;
+  minAmountCoin: number | null;
+  minAmountUsd: number | null;
+}
+
 const AUTO_CRYPTO_DEPOSIT_MIGRATION_PATH = "supabase/migrations/20260323_auto_crypto_deposit_automation.sql";
 
 const withAutoCryptoMigrationHint = (error: {
@@ -499,4 +512,60 @@ export const getLatestOpenCryptoDepositInstruction = async ({
   }
 
   return (response.data ?? null) as CryptoDepositInstructionWithMethod | null;
+};
+
+// -------------------------------------------------------------------
+// Plisio live minimums / rates / logos
+// -------------------------------------------------------------------
+export const getPlisioMethodMinimums = async ({
+  methods,
+}: {
+  methods: Array<{ symbol: string; network: string }>;
+}): Promise<PlisioMethodMinimumInfo[]> => {
+  const uniquePairs = new Map<string, { symbol: string; network: string }>();
+  for (const method of methods) {
+    const key = `${method.symbol.toUpperCase()}:${method.network.toUpperCase()}`;
+    if (!uniquePairs.has(key)) uniquePairs.set(key, method);
+  }
+
+  if (uniquePairs.size === 0) return [];
+
+  const accessToken = await getAppwriteIdToken();
+  if (!accessToken) return [];
+
+  const pairs = Array.from(uniquePairs.values());
+  const params = new URLSearchParams();
+  params.set("symbols", pairs.map((p) => p.symbol).join(","));
+  params.set("networks", pairs.map((p) => p.network).join(","));
+
+  let response: Response;
+  try {
+    response = await fetch(`/api/crypto/plisio-methods?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+  } catch {
+    return [];
+  }
+
+  if (!response.ok) return [];
+
+  let body: { ok?: boolean; methods?: PlisioMethodMinimumInfo[] } | null = null;
+  try {
+    body = (await response.json()) as { ok?: boolean; methods?: PlisioMethodMinimumInfo[] };
+  } catch {
+    body = null;
+  }
+
+  return body?.ok && Array.isArray(body.methods) ? body.methods : [];
+};
+
+export const getPlisioMethodMinimum = async ({
+  symbol,
+  network,
+}: {
+  symbol: string;
+  network: string;
+}): Promise<PlisioMethodMinimumInfo | null> => {
+  const [info] = await getPlisioMethodMinimums({ methods: [{ symbol, network }] });
+  return info ?? null;
 };
