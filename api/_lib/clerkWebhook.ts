@@ -136,6 +136,25 @@ export const authenticateRequest = async (
   return resolveCanonicalUserId(user.id, user.email);
 };
 
+// Same verification as authenticateRequest, but also exposes the raw Appwrite uid.
+// Callers that build SQL filters from client-supplied ids (e.g. the /api/db proxy)
+// need the raw uid so they can remap the Appwrite uid to the canonical UUID.
+export const authenticateWithUid = async (
+  headers: AuthRequestHeaders,
+  bearerHandler: (raw: string) => string | null = bearerFromHeader,
+): Promise<{ uid: string; uuid: string } | null> => {
+  const raw = headers["authorization"] ?? headers["Authorization"];
+  const token = Array.isArray(raw) ? bearerHandler(raw[0] ?? "") : bearerHandler(raw ?? "");
+
+  if (!token) return null;
+  if (!appwriteConfigured()) return null;
+
+  const user = await getVerifiedAppwriteUser(token);
+  if (!user) return null;
+
+  return { uid: user.id, uuid: await resolveCanonicalUserId(user.id, user.email) };
+};
+
 export const verifyClerkWebhook = async (): Promise<never> => {
   // Clerk account removed; legacy Clerk webhook endpoint is inactive.
   throw new Error("Clerk webhooks are no longer handled on this deployment.");
