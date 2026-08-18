@@ -97,6 +97,88 @@ export function TransactionHistory({
     return result;
   }, [filter, search, sortBy, sortOrder, transactions]);
 
+  const transactionRows = useMemo(() => {
+    if (transactions.length === 0 && loading) {
+      return (
+        <tr>
+          <td colSpan={6} className="px-6 py-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-white/50" />
+          </td>
+        </tr>
+      );
+    }
+    if (transactions.length === 0 && !loading) {
+      return (
+        <tr>
+          <td colSpan={6} className="px-6 py-12 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/5 mb-4">
+              <Filter className="h-6 w-6 text-white/40" />
+            </div>
+            <h3 className="text-lg font-bold text-white">No transactions found</h3>
+            <p className="mt-2 text-white/50">Try adjusting your filters or search terms</p>
+          </td>
+        </tr>
+      );
+    }
+    return filteredTransactions.map((tx) => (
+      <tr key={tx.id} className="hover:bg-white-opacity-02 transition-colors">
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5">
+              {getTypeIcon(tx.type)}
+            </div>
+            <div>
+              <p className="font-medium text-white">{tx.id}</p>
+              <p className="text-xs text-white/50 capitalize">{tx.type}</p>
+            </div>
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-white">{tx.method}</span>
+            {(tx.coin || tx.network) && (
+              <span className="text-xs text-white/40 px-2 py-0.5 rounded bg-white/5">
+                {tx.coin} {tx.network ? `— ${tx.network}` : ""}
+              </span>
+            )}
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-2">
+            <span className={`font-bold ${tx.type === "withdrawal" ? "text-red-400" : "text-green-400"}`}>
+              {tx.type === "withdrawal" ? "-" : "+"}{formatMoney(tx.amount)}
+            </span>
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <Badge variant="outline" className={STATUS_STYLES[tx.status] || "bg-white/10 text-white/60"}>
+            <div className="flex items-center gap-1.5">
+              {getStatusIcon(tx.status)}
+              <span className="capitalize">{tx.status}</span>
+            </div>
+          </Badge>
+        </td>
+        <td className="px-6 py-4 text-white/70">{tx.date}</td>
+        <td className="px-6 py-4 text-right">
+          <div className="flex items-center justify-end gap-2">
+            {tx.txHash && (
+              <button
+                className="text-white/50 hover:text-white/80 text-xs flex items-center gap-1"
+                title="View on explorer"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                View
+              </button>
+            )}
+            <button className="text-white/50 hover:text-white/80 text-xs flex items-center gap-1">
+              Details
+            </button>
+          </div>
+        </td>
+      </tr>
+    ));
+  }, [transactions, loading, filteredTransactions]);
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed": return <CheckCircle className="h-3.5 w-3.5 text-green-400" />;
@@ -191,85 +273,11 @@ export function TransactionHistory({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {transactions.length === 0 && loading ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-white/50" />
-                  </td>
-                </tr>
-              ) : transactions.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/5 mb-4">
-                      <Filter className="h-6 w-6 text-white/40" />
-                    </div>
-                    <h3 className="text-lg font-bold text-white">No transactions found</h3>
-                    <p className="mt-2 text-white/50">Try adjusting your filters or search terms</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredTransactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5">
-                          {getTypeIcon(tx.type)}
-                        </div>
-                        <div>
-                          <p className="font-medium text-white">{tx.id}</p>
-                          <p className="text-xs text-white/50 capitalize">{tx.type}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-white">{tx.method}</span>
-                        {(tx.coin || tx.network) && (
-                          <span className="text-xs text-white/40 px-2 py-0.5 rounded bg-white/5">
-                            {tx.coin} {tx.network ? `— ${tx.network}` : ""}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className={`font-bold ${tx.type === "withdrawal" ? "text-red-400" : "text-green-400"}`}>
-                          {tx.type === "withdrawal" ? "-" : "+"}{formatMoney(tx.amount)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant="outline" className={STATUS_STYLES[tx.status] || "bg-white/10 text-white/60"}>
-                        <div className="flex items-center gap-1.5">
-                          {getStatusIcon(tx.status)}
-                          <span className="capitalize">{tx.status}</span>
-                        </div>
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 text-white/70">{tx.date}</td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {tx.txHash && (
-                          <button
-                            className="text-white/50 hover:text-white/80 text-xs flex items-center gap-1"
-                            title="View on explorer"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                            View
-                          </button>
-                        )}
-                        <button className="text-white/50 hover:text-white/80 text-xs flex items-center gap-1">
-                          Details
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+              {transactionRows}
+            </tbody>
             </table>
           </div>
         </div>
       </div>
-    </div>
   );
 }
