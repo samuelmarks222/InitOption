@@ -134,7 +134,7 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
 
         {/* Desktop Sidebar */}
         <div
-          className="hidden w-[256px] shrink-0 flex-col overflow-y-auto border-r py-4 md:flex"
+          className="hidden w-[288px] shrink-0 flex-col overflow-y-auto border-r py-4 md:flex"
           style={{ background: "var(--trading-header-bg)", borderColor: "rgba(255,255,255,0.04)" }}
         >
           <div className="px-4 mb-2 text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.35)" }}>
