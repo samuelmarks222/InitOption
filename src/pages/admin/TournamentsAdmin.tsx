@@ -5,6 +5,32 @@ import { toast } from "@/hooks/use-toast";
 import { Database } from "@/integrations/supabase/types";
 
 type Tournament = Database["public"]["Tables"]["tournaments"]["Row"];
+
+const createDefaultTournamentDraft = (): Partial<Tournament> => ({
+  title: "",
+  description: "",
+  entry_fee: 10,
+  rebuy_cost: 5,
+  prize_pool: 500,
+  starting_balance: 10000,
+  number_of_winners: 10,
+  prize_distribution: JSON.stringify([
+    { rank: 1, share: 0.3 },
+    { rank: 2, share: 0.2 },
+    { rank: 3, share: 0.15 },
+    { rank: 4, share: 0.1 },
+    { rank: 5, share: 0.07 },
+    { rank: 6, share: 0.05 },
+    { rank: 7, share: 0.04 },
+    { rank: 8, share: 0.04 },
+    { rank: 9, share: 0.04 },
+    { rank: 10, share: 0.05 },
+  ]),
+  start_date: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
+  end_date: new Date(Date.now() + 172800000).toISOString().slice(0, 16),
+  status: "draft",
+});
+
 const TournamentsAdmin = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
