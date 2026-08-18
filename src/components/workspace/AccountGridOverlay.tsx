@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Camera, User, BadgeDollarSign, Clock, History, Settings, LogOut, X } from "lucide-react";
+import { Camera, User, BadgeDollarSign, Clock, History, Settings, LogOut, X, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProfileUploadPhoto } from "../profile/ProfileUploadPhoto";
 import { ProfilePersonalData } from "../profile/ProfilePersonalData";
@@ -94,8 +94,8 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
 
       {/* ── MOBILE: Scrollable Tab Strip ── */}
       <div
-        className="grid shrink-0 grid-cols-3 gap-1.5 border-b border-white/8 px-2 py-2 md:hidden"
-        style={{ background: "var(--trading-header-bg)" }}
+        className="flex shrink-0 overflow-x-auto gap-2 border-b px-3 py-3 md:hidden"
+        style={{ background: "var(--trading-header-bg)", borderColor: "rgba(255,255,255,0.04)", scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {MENU_ITEMS.map(item => {
           const isActive = activeTab === item.id;
@@ -103,19 +103,27 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
             <button
               key={item.id}
               onClick={() => changeTab(item.id as AccountTab)}
-              className={`flex min-h-[64px] flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-1.5 text-center transition-colors ${
-                isActive ? "border border-[#2f80ed]/35 bg-[#263044] text-white" : "border border-white/[0.04] bg-white/[0.035] text-[var(--trading-muted-color)]"
+              className={`flex flex-col items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-center transition-all duration-200 shrink-0 min-w-[88px] ${
+                isActive
+                  ? "bg-[var(--admin-green)]/10 text-white border border-[var(--admin-green)]/20"
+                  : "bg-white/[0.02] text-[var(--trading-muted-color)] hover:bg-white/[0.05] hover:text-white"
               }`}
+              style={{
+                borderWidth: isActive ? 1 : 0,
+                borderStyle: "solid",
+                borderColor: isActive ? "rgba(0,192,118,0.2)" : "transparent",
+              }}
             >
-              <item.icon className="w-4 h-4" />
-              <span className="text-[10px] font-bold leading-tight">
+              <div className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-200 ${isActive ? "bg-[var(--admin-green)]/15 text-[var(--admin-green)]" : "bg-white/[0.03] text-[#8b9bb0]"}`}>
+                <item.icon className="w-4.5 h-4.5" />
+              </div>
+              <span className="text-[10px] font-semibold leading-tight">
                 {item.id === "balance_history"
                   ? "Balance"
                   : item.id === "trading_history"
                     ? "Trading"
                     : item.label.split(" ")[0]}
               </span>
-              {isActive && <div className="h-[2px] w-4 rounded-full bg-[#2f80ed]" />}
             </button>
           );
         })}
@@ -126,29 +134,48 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
 
         {/* Desktop Sidebar */}
         <div
-          className="hidden w-[244px] shrink-0 flex-col overflow-y-auto border-r border-[var(--trading-border-color)] py-3 md:flex"
-          style={{ background: "var(--trading-header-bg)" }}
+          className="hidden w-[256px] shrink-0 flex-col overflow-y-auto border-r py-4 md:flex"
+          style={{ background: "var(--trading-header-bg)", borderColor: "rgba(255,255,255,0.04)" }}
         >
+          <div className="px-4 mb-2 text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: "rgba(255,255,255,0.35)" }}>
+            Account
+          </div>
           {MENU_ITEMS.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => changeTab(item.id as AccountTab)}
-                className={`mx-2 my-0.5 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-all ${
+                className={`mx-3 my-1.5 flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-left transition-all duration-200 ${
                   isActive
-                    ? "border-[#2f80ed]/35 bg-[var(--trading-header-bg)] text-white shadow-[0_10px_20px_rgba(15,23,42,0.18)]"
-                    : "border-transparent text-[var(--trading-muted-color)] hover:border-white/8 hover:bg-white/[0.04] hover:text-white"
+                    ? "bg-white/[0.04] text-white"
+                    : "text-[var(--trading-muted-color)] hover:bg-white/[0.03] hover:text-white"
                 }`}
+                style={{
+                  backgroundColor: isActive ? "rgba(0, 192, 118, 0.08)" : "transparent",
+                  borderColor: isActive ? "rgba(0, 192, 118, 0.15)" : "transparent",
+                  borderWidth: isActive ? 1 : 0,
+                  borderStyle: "solid",
+                }}
               >
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${isActive ? "bg-[linear-gradient(145deg,#1f3b53,#183144)] text-[#8ecbff]" : "bg-white/[0.04] text-[#9eb2cc]"}`}>
-                  <item.icon className="w-4 h-4" />
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-200 ${
+                  isActive
+                    ? "bg-[var(--admin-green)]/15 text-[var(--admin-green)]"
+                    : "bg-white/[0.03] text-[#8b9bb0]"
+                }`}>
+                  <item.icon className="w-4.5 h-4.5" />
                 </div>
-                <div>
-                  <div className={`text-[13px] font-bold ${isActive ? "text-white" : ""}`}>{item.label}</div>
-                  <div className="mt-0.5 text-[11px] leading-4 text-[#6f7b91]">{item.desc}</div>
+                <div className="flex-1 min-w-0">
+                  <div className={`text-[13px] font-semibold tracking-tight ${isActive ? "text-white" : "text-[#c8d2e6]"}`}>{item.label}</div>
+                  <div className="mt-1 text-[11px] leading-4" style={{ color: isActive ? "rgba(255,255,255,0.55)" : "rgba(139,155,176,0.8)" }}>{item.desc}</div>
                 </div>
-                {isActive && <div className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#78b8ff]" />}
+                {isActive && (
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-[var(--admin-green)] shadow-[0_0_6px_rgba(0,192,118,0.6)]" />
+                    <ChevronRight className="w-3.5 h-3.5 text-[var(--admin-green)]" />
+                  </div>
+                )}
+                {!isActive && <div className="w-7" />}
               </button>
             );
           })}
