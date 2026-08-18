@@ -6,6 +6,7 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { query, queryOne, rpc } from "../_lib/db.js";
 import { authenticateRequest, clerkUserIdToUuid } from "../_lib/clerkWebhook.js";
 import { resolveSelectedBonusOffer } from "../_lib/depositBonus.js";
+import { fetchPlisioCurrencies } from "../_lib/plisio.js";
 
 type ApiRequest = IncomingMessage & {
   headers: Record<string, string | string[] | undefined>;
@@ -431,7 +432,98 @@ const handlePlisioDepositCallback = async (request: ApiRequest, response: ApiRes
   }
 };
 
+const handlePlisioMethods = async (request: ApiRequest, response: ApiResponse) => {
+  if (request.method !== "GET") {
+    response.setHeader("Allow", "GET");
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+
+  const clerkUserId = await authenticateRequest(request.headers);
+  if (!clerkUserId) {
+    sendJson(response, 401, { error: "Missing or invalid Bearer token." });
+    return;
+  }
+
+  const url = new URL(request.url ?? "/", "http://localhost");
+  const symbols = (url.searchParams.get("symbols") ?? "")
+    .split(",")
+    .map((part) => part.trim().toUpperCase())
+    .filter(Boolean);
+  const networks = (url.searchParams.get("networks") ?? "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (symbols.length === 0) {
+    sendJson(response, 400, { error: "symbols is required (comma-separated coin symbols)." });
+    return;
+  }
+
+  if (networks.length !== symbols.length) {
+    sendJson(response, 400, { error: "networks must list one entry per symbol." });
+    return;
+  }
+
+  try {
+    const byCode = await fetchPlisioCurrencies();
+
+    const methods: Array<Record<string, unknown>> = [];
+    for (let i = 0; i < symbols.length; i++) {
+      const symbol = symbols[i];
+      const network = networks[i];
+
+      const plisioCode = mapCryptoMethodToPlisioCurrency({ network, symbol });
+      if (!plisioCode) continue;
+
+      const info = byCode[plisioCode.toUpperCase()];
+      if (!info) continue;
+
+      const minAmountCoin = asNumber(info.min_sum_in);
+      const priceUsd = asNumber(info.price_usd) ?? asNumber(info.fiat_rate);
+      const rateUsd = asNumber(info.rate_usd) ?? (priceUsd && priceUsd > 0 ? 1 / priceUsd : null);
+
+      const maintenance = asString(info.maintenance) === "true" || asNumber(info.maintenance) === 1;
+      if (maintenance) continue;
+
+      methods.push({
+        symbol,
+        network,
+        plisio_code: plisioCode,
+        name: asString(info.name) ?? plisioCode,
+        icon: asString(info.icon) ?? null,
+        precision: asNumber(info.precision),
+        price_usd: priceUsd,
+        rate_usd: rateUsd,
+        min_amount_coin: minAmountCoin,
+        min_amount_usd: minAmountCoin != null && priceUsd != null ? minAmountCoin * priceUsd : null,
+        hidden_in_shop: asString(info.hidden) === "true" || asNumber(info.hidden) === 1,
+      });
+    }
+
+    sendJson(response, 200, { ok: true, methods });
+  } catch (error) {
+    console.error("Failed to load Plisio currency information", error);
+    sendJson(response, 500, {
+      error: error instanceof Error ? error.message : "Failed to load Plisio currency information.",
+    });
+  }
+};
+
 export default async function handler(request: ApiRequest, response: ApiResponse) {
+  const requestUrl = new URL(request.url ?? "/", "http://localhost");
+  const urlPath = (request.url ?? "").replace(/^\/api/, "");
+
+  // vercel.json rewrites /api/crypto/plisio-methods -> /api/crypto/create-payment?route=plisio-methods.
+  if (
+    requestUrl.searchParams.get("route") === "plisio-methods" ||
+    urlPath.endsWith("/plisio-methods") ||
+    urlPath === "/api/crypto/plisio-methods"
+  ) {
+    await handlePlisioMethods(request, response);
+    return;
+  }
+
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
     sendJson(response, 405, { error: "Method not allowed" });
@@ -442,9 +534,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   // callback body is never mistaken for a new deposit request. vercel.json rewrites
   // /api/crypto/deposit-callback -> /api/crypto/create-payment?__callback=1, and the
   // direct path is also accepted so both routings resolve here.
-  const urlPath = (request.url ?? "").replace(/^\/api/, "");
-  const isPlisioCallback =
-    new URL(request.url ?? "/", "http://localhost").searchParams.get("__callback") === "1";
+  const isPlisioCallback = requestUrl.searchParams.get("__callback") === "1";
   if (isPlisioCallback || urlPath.endsWith("/deposit-callback") || urlPath === "/api/crypto/deposit-callback") {
     await handlePlisioDepositCallback(request, response);
     return;
