@@ -18,7 +18,7 @@ const getPlisioApiKey = () => {
 
 const getPlisioBaseUrl = () => "https://api.plisio.net/api/v1";
 
-const asNumber = (value: Json | undefined) => {
+const asNumber = (value: unknown) => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim()) {
     const parsed = Number(value);
@@ -27,7 +27,7 @@ const asNumber = (value: Json | undefined) => {
   return null;
 };
 
-const asString = (value: Json | undefined) => {
+const asString = (value: unknown) => {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed ? trimmed : null;

@@ -726,11 +726,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
         sendJson(response, 404, { error: "Not found" });
       } else {
-        sendJson(response, 404, { error: "Not found" });
+        sendJson(response, 405, { error: "Method not allowed" });
       }
-    } else {
-      sendJson(response, 405, { error: "Method not allowed" });
-    }
   } catch (error) {
     console.error("Crypto withdrawal API failed", error);
     sendJson(response, 500, { error: error instanceof Error ? error.message : "Internal server error" });

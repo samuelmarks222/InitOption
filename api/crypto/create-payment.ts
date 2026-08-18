@@ -283,7 +283,9 @@ const handlePlisioDepositCallback = async (request: ApiRequest, response: ApiRes
     }
 
     // Extract deposit data from callback (inline normalization)
-    const data = typeof rawPayloadObj.data === "object" && rawPayloadObj.data !== null ? rawPayloadObj.data : {};
+    const data = (
+      typeof rawPayloadObj.data === "object" && rawPayloadObj.data !== null ? rawPayloadObj.data : {}
+    ) as Record<string, unknown>;
     const operationId = asString(data.id) ?? asString(rawPayloadObj.id);
     const invoiceId = asString(data.invoice_id) ?? asString(rawPayloadObj.invoice_id);
     const orderNumber = asString(data.order_number) ?? asString(rawPayloadObj.order_number);
@@ -760,8 +762,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
   if (existingAddress) {
     // Reuse existing address
-    plisioAddress = existingAddress.deposit_address;
-    operationId = existingAddress.plisio_uid || "";
+    plisioAddress = asString(existingAddress.deposit_address) ?? "";
+    operationId = asString(existingAddress.plisio_uid) || "";
     // Update the updated_at timestamp
     await query(
       "update crypto_deposit_instructions set updated_at = $1 where id = $2",
@@ -791,8 +793,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     }
 
     // Extract address and operation ID from Plisio response
-    plisioAddress = String(plisioData?.address ?? plisioResponse?.address ?? "");
-    operationId = String(plisioData?.operation_id ?? plisioResponse?.id ?? "");
+    plisioAddress = String(plisioData?.address ?? "");
+    operationId = String(plisioData?.operation_id ?? "");
 
     if (!plisioAddress) {
       sendJson(response, 500, { error: "Plisio did not return a deposit address" });
