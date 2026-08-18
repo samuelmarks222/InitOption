@@ -5,6 +5,7 @@ import { buildPlisioInstructionAddress, mapCryptoMethodToPlisioCurrency } from "
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { query, queryOne, rpc } from "../_lib/db.js";
 import { authenticateRequest, clerkUserIdToUuid } from "../_lib/clerkWebhook.js";
+import { resolveSelectedBonusOffer } from "../_lib/depositBonus.js";
 
 type ApiRequest = IncomingMessage & {
   headers: Record<string, string | string[] | undefined>;
@@ -556,11 +557,12 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   // BRANCH 2: New deposit via Plisio hosted checkout (invoice redirect)
   // -------------------------------------------------------------------
   if (body.useHostedCheckout === true) {
-    const { amount, paymentMethodId, cryptoCurrency, cryptoNetwork } = body as {
+    const { amount, paymentMethodId, cryptoCurrency, cryptoNetwork, bonusOfferId } = body as {
       amount?: number;
       paymentMethodId?: string;
       cryptoCurrency?: string;
       cryptoNetwork?: string;
+      bonusOfferId?: string | null;
     };
 
     if (!amount || !Number.isFinite(amount) || Number(amount) <= 0) {
@@ -637,6 +639,33 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       throw new Error("Deposit request could not be created.");
     }
 
+    const { bonusAmount, selectedOffer } = await resolveSelectedBonusOffer({
+      amount: Number(amount),
+      bonusOfferId: asString(bonusOfferId ?? null),
+      userId,
+    });
+
+    if (selectedOffer) {
+      const bonusUpdateRow = await queryOne(
+        `update deposit_requests
+            set bonus_offer_id = $1, promo_bonus = $2, updated_at = $3
+          where id = $4 and user_id = $5 and status = $6
+          returning id`,
+        [selectedOffer.id, bonusAmount, now, orderId, userId, "pending"],
+      );
+
+      if (!bonusUpdateRow) {
+        throw new Error("Deposit bonus reservation failed");
+      }
+
+      await query(
+        `insert into deposit_bonus_redemptions
+          (bonus_amount, bonus_offer_id, deposit_amount, deposit_request_id, status, user_id)
+         values ($1, $2, $3, $4, $5, $6)`,
+        [bonusAmount, selectedOffer.id, Number(amount), orderId, "reserved", userId],
+      );
+    }
+
     const inserted = await query(
       `insert into crypto_deposit_instructions (
          user_id, deposit_request_id, payment_method_id, instruction_status, deposit_address,
@@ -673,7 +702,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         memo_label: null,
         memo_value: null,
         payment_method_id: paymentMethodId,
-        promo_bonus: 0,
+        promo_bonus: bonusAmount,
         provider_name: "plisio",
         provider_order_id: orderId,
         provider_pay_amount: asNumber(plisioCheckout.invoice_total_sum) ?? Number(amount),

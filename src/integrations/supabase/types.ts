@@ -380,9 +380,11 @@ export type Database = {
       bonus_settings: {
         Row: {
           created_at: string
+          deposit_bonus_crypto_enabled: boolean | null
           deposit_bonus_enabled: boolean
           deposit_bonus_max: number
           deposit_bonus_min: number
+          deposit_bonus_mpesa_enabled: boolean | null
           deposit_bonus_percent: number
           id: string
           referred_deposit_bonus_percent: number
@@ -397,9 +399,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deposit_bonus_crypto_enabled?: boolean | null
           deposit_bonus_enabled?: boolean
           deposit_bonus_max?: number
           deposit_bonus_min?: number
+          deposit_bonus_mpesa_enabled?: boolean | null
           deposit_bonus_percent?: number
           id?: string
           referred_deposit_bonus_percent?: number
@@ -414,9 +418,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deposit_bonus_crypto_enabled?: boolean | null
           deposit_bonus_enabled?: boolean
           deposit_bonus_max?: number
           deposit_bonus_min?: number
+          deposit_bonus_mpesa_enabled?: boolean | null
           deposit_bonus_percent?: number
           id?: string
           referred_deposit_bonus_percent?: number

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { ArrowLeft, CreditCard, Wallet, History, ArrowRight, ChevronDown, Loader2, AlertCircle, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +29,7 @@ import {
 } from "@/lib/withdrawals";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { formatCurrencyAmount } from "@/lib/currency";
+import { useDepositBonus } from "@/hooks/useDepositBonus";
 import { DepositStep1 } from "./deposit/DepositStep1";
 import { DepositMpesaDetails } from "./deposit/DepositMpesaDetails";
 import { DepositCryptoDetails } from "./deposit/DepositCryptoDetails";
@@ -65,6 +66,7 @@ interface PaymentCenterProps {
 export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) => {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const { mpesaEnabled, cryptoEnabled, findMatchingOffer, bonusAmountFor } = useDepositBonus(user?.id);
 
   const [activeTab, setActiveTab] = useState<"deposit" | "withdraw" | "history">(defaultTab);
   const [depositStep, setDepositStep] = useState<1 | 2 | 3 | 4>(1);
@@ -76,7 +78,7 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
   const [selectedDepositNetwork, setSelectedDepositNetwork] = useState<string>("TRC20");
   const [depositAmount, setDepositAmount] = useState<string>("");
   const [depositPhone, setDepositPhone] = useState("");
-  const [depositBonusTier, setDepositBonusTier] = useState<number>(3);
+  const [depositUseBonus, setDepositUseBonus] = useState(true);
   const [cryptoMethods, setCryptoMethods] = useState<CryptoPaymentMethodUI[]>([]);
   const [depositLoading, setDepositLoading] = useState(false);
   const [depositInstruction, setDepositInstruction] = useState<CryptoDepositInstructionPayload | null>(null);
@@ -247,7 +249,7 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
         
         const response = await requestMobileMoneyDeposit({
           amount: amountValue,
-          bonusOfferId: null,
+          bonusOfferId: depositUseBonus && depositBonusEnabled ? (depositBonusOffer?.id ?? null) : null,
           phoneNumber: depositPhone,
         });
         
@@ -277,6 +279,7 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
 
         const instruction = await createPlisioHostedCheckoutDeposit({
           amount: amountValue,
+          bonusOfferId: depositUseBonus && depositBonusEnabled ? (depositBonusOffer?.id ?? null) : null,
           paymentMethodId: paymentMethod.id,
           cryptoCurrency: selectedDepositCoin,
           cryptoNetwork: selectedDepositNetwork,
@@ -396,6 +399,16 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
   const amountValue = Number(depositAmount) || 0;
   const withdrawAmountValue = Number(withdrawAmount) || 0;
 
+  const depositBonusEnabled = selectedDepositMethod === "mpesa" ? mpesaEnabled : cryptoEnabled;
+  const depositBonusOffer = useMemo(() => {
+    if (!depositBonusEnabled) return null;
+    return findMatchingOffer(amountValue);
+  }, [depositBonusEnabled, amountValue, findMatchingOffer]);
+  const depositBonusAmount = useMemo(
+    () => (depositBonusOffer ? bonusAmountFor(amountValue, depositBonusOffer) : 0),
+    [depositBonusOffer, amountValue, bonusAmountFor],
+  );
+
   const filteredCryptoMethods = cryptoMethods.filter(m => m.status === "active");
 
   return (
@@ -468,8 +481,13 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
             setAmount={setDepositAmount}
             phone={depositPhone}
             setPhone={setDepositPhone}
-            bonusTier={depositBonusTier}
-            setBonusTier={setDepositBonusTier}
+            bonusEnabled={depositBonusEnabled}
+            mpesaBonusEnabled={mpesaEnabled}
+            cryptoBonusEnabled={cryptoEnabled}
+            useBonus={depositUseBonus}
+            setUseBonus={setDepositUseBonus}
+            matchingOffer={depositBonusOffer}
+            bonusAmount={depositBonusAmount}
             cryptoMethods={filteredCryptoMethods}
             loading={depositLoading}
             error={depositError}
@@ -531,19 +549,23 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
 function DepositFlow({
   step,
   onStepChange,
-  onBack,
   selectedMethod,
   setSelectedMethod,
   selectedCoin,
   setSelectedCoin,
   selectedNetwork,
   setSelectedNetwork,
-  amount,
+amount,
   setAmount,
   phone,
   setPhone,
-  bonusTier,
-  setBonusTier,
+  bonusEnabled,
+  mpesaBonusEnabled,
+  cryptoBonusEnabled,
+  useBonus,
+  setUseBonus,
+  matchingOffer,
+  bonusAmount,
   cryptoMethods,
   loading,
   error,
@@ -552,6 +574,7 @@ function DepositFlow({
   onMethodSelect,
   onContinue,
   onSubmit,
+  onBack,
   minimumAmount,
 }: any) {
   const progressLabels = ["Payment Method", "Payment Details", "Payment Process", "Completed"];
@@ -567,6 +590,8 @@ function DepositFlow({
             onSelectMethod={onMethodSelect}
             onContinue={onContinue}
             onBack={onBack}
+            mpesaBonus={mpesaBonusEnabled}
+            cryptoBonus={cryptoBonusEnabled}
           />
         )}
         {step === 2 && selectedMethod === "mpesa" && (
@@ -575,8 +600,11 @@ function DepositFlow({
             setAmount={setAmount}
             phone={phone}
             setPhone={setPhone}
-            bonusTier={bonusTier}
-            setBonusTier={setBonusTier}
+            bonusEnabled={bonusEnabled}
+            useBonus={useBonus}
+            setUseBonus={setUseBonus}
+            matchingOffer={matchingOffer}
+            bonusAmount={bonusAmount}
             onContinue={onSubmit}
             onBack={onBack}
           />
@@ -590,6 +618,11 @@ function DepositFlow({
             amount={amount}
             setAmount={setAmount}
             cryptoMethods={cryptoMethods}
+            bonusEnabled={bonusEnabled}
+            useBonus={useBonus}
+            setUseBonus={setUseBonus}
+            matchingOffer={matchingOffer}
+            bonusAmount={bonusAmount}
             onContinue={onSubmit}
             onBack={onBack}
           />

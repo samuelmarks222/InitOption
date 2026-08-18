@@ -383,6 +383,16 @@ const Notifications = () => {
                   <input type="checkbox" checked={bonusSettings.deposit_bonus_enabled} onChange={(e) => setBonusSettings((current) => current ? { ...current, deposit_bonus_enabled: e.target.checked } : current)} className="accent-[#0fa053]" />
                 </label>
 
+                <label className="flex items-center justify-between rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
+                  <span className="text-sm text-slate-200">Deposit bonus — M-PESA deposits</span>
+                  <input type="checkbox" checked={bonusSettings.deposit_bonus_mpesa_enabled ?? bonusSettings.deposit_bonus_enabled} onChange={(e) => setBonusSettings((current) => current ? { ...current, deposit_bonus_mpesa_enabled: e.target.checked } : current)} className="accent-[#0fa053]" />
+                </label>
+
+                <label className="flex items-center justify-between rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-3">
+                  <span className="text-sm text-slate-200">Deposit bonus — Cryptocurrency deposits</span>
+                  <input type="checkbox" checked={bonusSettings.deposit_bonus_crypto_enabled ?? bonusSettings.deposit_bonus_enabled} onChange={(e) => setBonusSettings((current) => current ? { ...current, deposit_bonus_crypto_enabled: e.target.checked } : current)} className="accent-[#0fa053]" />
+                </label>
+
                 <div>
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Welcome bonus amount</label>
                   <input type="number" value={bonusSettings.welcome_bonus_amount} onChange={(e) => setBonusSettings((current) => current ? { ...current, welcome_bonus_amount: Number(e.target.value) } : current)} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white font-mono focus:border-[#0fa053] outline-none" />

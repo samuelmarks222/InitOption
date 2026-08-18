@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, Clock, Loader2, Shield } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getPlisioMethodMinimums, PlisioMethodMinimumInfo } from "@/lib/cryptoDeposits";
+import type { DepositBonusCatalogEntry } from "@/lib/depositBonusOffers";
+import { DepositBonusSelector } from "./DepositBonusSelector";
 
 interface DepositCryptoMethodOption {
   id: string;
@@ -19,6 +21,11 @@ interface DepositCryptoDetailsProps {
   amount: string;
   setAmount: (amount: string) => void;
   cryptoMethods: DepositCryptoMethodOption[];
+  bonusEnabled: boolean;
+  useBonus: boolean;
+  setUseBonus: (value: boolean) => void;
+  matchingOffer: DepositBonusCatalogEntry | null;
+  bonusAmount: number;
   onContinue: () => void;
   onBack: () => void;
 }
@@ -85,6 +92,11 @@ export function DepositCryptoDetails({
   amount,
   setAmount,
   cryptoMethods,
+  bonusEnabled,
+  useBonus,
+  setUseBonus,
+  matchingOffer,
+  bonusAmount,
   onContinue,
   onBack,
 }: DepositCryptoDetailsProps) {
@@ -175,6 +187,20 @@ export function DepositCryptoDetails({
     return map;
   }, [plisioInfos]);
 
+  const coinMinimums = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const method of supportedMethods) {
+      const key = method.symbol.toUpperCase();
+      const info = plisioInfos.find(
+        (candidate) =>
+          candidate.symbol.toUpperCase() === key && candidate.network.toUpperCase() === method.network.toUpperCase(),
+      );
+      const min = info?.minAmountUsd ?? Math.max(Number(method.minimum_deposit_amount ?? 10), 10);
+      map[key] = map[key] === undefined ? min : Math.min(map[key], min);
+    }
+    return map;
+  }, [supportedMethods, plisioInfos]);
+
   const fallbackMinimumUsd = Math.max(Number(selectedMethod?.minimum_deposit_amount ?? 10), 10);
   const minimumUsd = selectedInfo?.minAmountUsd ?? fallbackMinimumUsd;
   const minimumCoin = selectedInfo?.minAmountCoin ?? null;
@@ -189,6 +215,8 @@ export function DepositCryptoDetails({
     minConfirmations: 1,
     approxTime: "~1 min",
   };
+
+  const showNetworkSelect = networks.length > 1;
 
   if (cryptoMethods.length === 0 || plisioMinLoading) {
     return (
@@ -219,56 +247,77 @@ export function DepositCryptoDetails({
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-white">Cryptocurrency Details</h1>
-        <p className="mt-1 text-sm text-white/50">Select the coin and network, then enter the deposit amount.</p>
+        <p className="mt-1 text-sm text-white/50">Choose a coin below, then enter the deposit amount.</p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="text-sm font-medium text-white">Cryptocurrency</label>
-          <div className="relative mt-2">
-            <Select value={selectedCoin} onValueChange={setSelectedCoin}>
-              <SelectTrigger className="bg-[#0a0d17] border border-white/10 rounded-xl text-white">
-                <SelectValue placeholder="Select cryptocurrency" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#141a2a] border border-white/10">
-                {coins.map((coin) => (
-                  <SelectItem key={coin.symbol} value={coin.symbol}>
-                    <div className="flex items-center gap-3">
-                      <CoinBadge icon={symbolIcons[coin.symbol.toUpperCase()]} symbol={coin.symbol} className="h-7 w-7 text-sm" />
-                      <div>
-                        <p className="font-medium text-white">{coin.symbol}</p>
-                        <p className="text-xs text-white/50">{coin.coin_name}</p>
-                      </div>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <label className="text-sm font-medium text-white">Select Cryptocurrency</label>
+          <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {coins.map((coin) => {
+              const isActive = coin.symbol === selectedCoin;
+              return (
+                <button
+                  key={coin.symbol}
+                  type="button"
+                  onClick={() => setSelectedCoin(coin.symbol)}
+                  className={`group relative flex flex-col items-center justify-center gap-2 rounded-xl border bg-[#0a0d17] px-3 py-4 text-center transition-all ${
+                    isActive
+                      ? "border-[#f1a526] bg-[#f1a526]/10 shadow-[0_0_0_1px_rgba(241,165,38,0.6),0_8px_24px_rgba(241,165,38,0.15)]"
+                      : "border-white/10 hover:border-white/25 hover:bg-white/5"
+                  }`}
+                >
+                  {isActive && (
+                    <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#f1a526] text-[10px] font-black text-black">
+                      ✓
+                    </span>
+                  )}
+                  <CoinBadge
+                    icon={symbolIcons[coin.symbol.toUpperCase()]}
+                    symbol={coin.symbol}
+                    className="h-9 w-9 text-sm"
+                  />
+                  <div>
+                    <p className={`text-sm font-bold ${isActive ? "text-white" : "text-white/80"}`}>{coin.symbol}</p>
+                    <p className="mt-0.5 line-clamp-1 text-[11px] text-white/40">{coin.coin_name}</p>
+                  </div>
+                  <p className={`text-[10px] font-semibold ${isActive ? "text-[#f1a526]" : "text-white/35"}`}>
+                    Min {formatUsd(coinMinimums[coin.symbol.toUpperCase()])}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         <div>
           <label className="text-sm font-medium text-white">Network</label>
-          <div className="relative mt-2">
-            <Select value={activeNetwork} onValueChange={setSelectedNetwork}>
-              <SelectTrigger className="bg-[#0a0d17] border border-white/10 rounded-xl text-white">
-                <SelectValue placeholder="Select network" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#141a2a] border border-white/10">
-                {networks.map((net) => (
-                  <SelectItem key={net} value={net}>
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="font-medium text-white">{NETWORK_INFO[net.toUpperCase()]?.name || net}</span>
-                      <span className="flex items-center gap-1 text-xs text-white/50">
-                        <Clock className="h-3 w-3" />
-                        {NETWORK_INFO[net.toUpperCase()]?.approxTime || "~1 min"}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {showNetworkSelect ? (
+            <div className="relative mt-2">
+              <Select value={activeNetwork} onValueChange={setSelectedNetwork}>
+                <SelectTrigger className="bg-[#0a0d17] border border-white/10 rounded-xl text-white">
+                  <SelectValue placeholder="Select network" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#141a2a] border border-white/10">
+                  {networks.map((net) => (
+                    <SelectItem key={net} value={net}>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="font-medium text-white">{NETWORK_INFO[net.toUpperCase()]?.name || net}</span>
+                        <span className="flex items-center gap-1 text-xs text-white/50">
+                          <Clock className="h-3 w-3" />
+                          {NETWORK_INFO[net.toUpperCase()]?.approxTime || "~1 min"}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <div className="mt-2 rounded-xl border border-white/10 bg-[#0a0d17] px-4 py-3 text-sm font-medium text-white">
+              {networkInfo.name}
+            </div>
+          )}
           <p className="mt-2 text-sm text-white/50">
             Network: <span className="text-white/70">{networkInfo.name}</span> • Confirmations:{" "}
             <span className="text-white/70">{networkInfo.minConfirmations}</span> • Est. time:{" "}
@@ -358,6 +407,16 @@ export function DepositCryptoDetails({
             </p>
           </div>
         ) : null}
+
+        <DepositBonusSelector
+          enabled={bonusEnabled}
+          useBonus={useBonus}
+          setUseBonus={setUseBonus}
+          amount={amountValue}
+          matchingOffer={matchingOffer}
+          bonusAmount={bonusAmount}
+          tone="amber"
+        />
 
         <div className="flex gap-3">
           <button

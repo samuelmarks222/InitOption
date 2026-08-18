@@ -7,12 +7,16 @@ interface DepositStep1Props {
   selectedMethod: "mpesa" | "crypto" | null;
   onSelectMethod: (method: "mpesa" | "crypto") => void;
   onContinue: () => void;
+  mpesaBonus?: boolean;
+  cryptoBonus?: boolean;
 }
 
 export function DepositStep1({
   selectedMethod,
   onSelectMethod,
   onContinue,
+  mpesaBonus = false,
+  cryptoBonus = false,
 }: DepositStep1Props) {
   return (
     <div className="space-y-6">
@@ -36,6 +40,13 @@ export function DepositStep1({
               Popular
             </span>
           </div>
+          {mpesaBonus && (
+            <div className="absolute -top-2 left-4">
+              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-400 bg-green-500/20 rounded-full">
+                Bonus
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-4">
             <img src="/payment-logos/mpesa.png" alt="M-PESA" className="h-20 w-20 object-contain" />
             <div className="flex-1">
@@ -84,6 +95,13 @@ export function DepositStep1({
               Crypto
             </span>
           </div>
+          {cryptoBonus && (
+            <div className="absolute -top-2 left-4">
+              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-400 bg-amber-500/20 rounded-full">
+                Bonus
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-4">
             <img src="/payment-logos/bitcoin.png" alt="Bitcoin" className="h-20 w-20 object-contain" />
             <div className="flex-1">
