@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useMemo } from "react";
-import { Outlet, Navigate, useLocation } from "react-router-dom";
+import { Outlet, Link, Navigate, useLocation } from "react-router-dom";
 import {
   DollarSign,
   LayoutDashboard,
