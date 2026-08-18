@@ -409,7 +409,10 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
     [depositBonusOffer, amountValue, bonusAmountFor],
   );
 
-  const filteredCryptoMethods = cryptoMethods.filter(m => m.status === "active");
+  const filteredCryptoMethods = useMemo(
+    () => cryptoMethods.filter((m) => m.status === "active"),
+    [cryptoMethods],
+  );
 
   return (
     <div className="min-h-screen bg-[#0a0e17] text-white">

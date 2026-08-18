@@ -18,6 +18,12 @@ const getPlisioApiKey = () => {
 
 const getPlisioBaseUrl = () => "https://api.plisio.net/api/v1";
 
+// Build an absolute Plisio URL that preserves the /api/v1 prefix. Passing a
+// path to new URL() against a base that already has a path (e.g. ".../api/v1")
+// silently replaces the whole path, producing ".../currencies/USD" instead of
+// ".../api/v1/currencies/USD". Always append instead.
+const buildPlisioUrl = (path: string) => new URL(`${getPlisioBaseUrl()}${path}`);
+
 const asNumber = (value: unknown) => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string" && value.trim()) {
@@ -43,7 +49,7 @@ const parseJsonResponse = async (response: Response) => {
 
 const sendPlisioRequest = async (path: string, payload: Record<string, unknown>) => {
   const apiKey = getPlisioApiKey();
-  const url = new URL(path, getPlisioBaseUrl());
+  const url = buildPlisioUrl(path);
   url.searchParams.set("api_key", apiKey);
 
   const response = await fetch(url.toString(), {
@@ -96,7 +102,7 @@ export const requestPlisioPayout = async ({
 
 export const checkPlisioOperationStatus = async (operationId: string) => {
   const apiKey = getPlisioApiKey();
-  const url = new URL(`/operations/${operationId}`, getPlisioBaseUrl());
+  const url = buildPlisioUrl(`/operations/${operationId}`);
   url.searchParams.set("api_key", apiKey);
 
   const response = await fetch(url.toString(), { method: "GET" });
@@ -124,7 +130,7 @@ export const fetchPlisioCurrencies = async (): Promise<Record<string, JsonObject
   }
 
   const apiKey = getPlisioApiKey();
-  const url = new URL("/currencies/USD", getPlisioBaseUrl());
+  const url = buildPlisioUrl("/currencies/USD");
   url.searchParams.set("api_key", apiKey);
 
   const response = await fetch(url.toString(), { method: "GET" });
@@ -183,7 +189,8 @@ export const buildPlisioCallbackUrl = (path: string) => {
   if (!baseUrl) {
     throw new Error("Set PLISIO_CALLBACK_BASE_URL or APP_BASE_URL before using Plisio callbacks.");
   }
-  const url = new URL(path, baseUrl);
+  const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+  const url = new URL(path.replace(/^\//, ""), normalizedBase);
   return url.toString();
 };
 
@@ -198,7 +205,7 @@ export const fetchPlisioDeposit = async ({
   uid: string;
   callbackUrl: string;
 }) => {
-  const url = new URL(`/shops/deposit/new`, "https://api.plisio.net/api/v1");
+  const url = buildPlisioUrl("/shops/deposit/new");
   url.searchParams.set("api_key", apiKey);
   url.searchParams.set("psys_cid", psysCid);
   url.searchParams.set("uid", uid);

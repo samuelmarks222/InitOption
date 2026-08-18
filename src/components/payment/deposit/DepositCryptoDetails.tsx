@@ -108,11 +108,17 @@ export function DepositCryptoDetails({
     if (cryptoMethods.length === 0) return;
     let cancelled = false;
     setPlisioMinLoading(true);
-    void getPlisioMethodMinimums({ methods: cryptoMethods }).then((infos) => {
-      if (cancelled) return;
-      setPlisioInfos(infos);
-      setPlisioMinLoading(false);
-    });
+    getPlisioMethodMinimums({ methods: cryptoMethods })
+      .then((infos) => {
+        if (cancelled) return;
+        setPlisioInfos(infos);
+      })
+      .catch(() => {
+        // Never leave the screen stuck: fall back to the DB list.
+      })
+      .finally(() => {
+        if (!cancelled) setPlisioMinLoading(false);
+      });
     return () => {
       cancelled = true;
     };

@@ -863,7 +863,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     // Call Plisio Create a Deposit API inline (NO hosted checkout)
     const plisioCallbackUrl = `${process.env.APP_BASE_URL || getBaseAppUrl(request)}/api/crypto/deposit-callback`;
 
-    const plisioUrl = new URL("/shops/deposit/new", "https://api.plisio.net/api/v1");
+    const plisioUrl = new URL("https://api.plisio.net/api/v1/shops/deposit/new");
     plisioUrl.searchParams.set("api_key", getPlisioApiKey());
     plisioUrl.searchParams.set("psys_cid", plisioCurrency);
     plisioUrl.searchParams.set("uid", userId);

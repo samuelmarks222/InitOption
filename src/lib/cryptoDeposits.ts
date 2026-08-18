@@ -531,7 +531,12 @@ export const getPlisioMethodMinimums = async ({
 
   if (uniquePairs.size === 0) return [];
 
-  const accessToken = await getAppwriteIdToken();
+  let accessToken: string | null = null;
+  try {
+    accessToken = await getAppwriteIdToken();
+  } catch {
+    return [];
+  }
   if (!accessToken) return [];
 
   const pairs = Array.from(uniquePairs.values());
@@ -541,9 +546,13 @@ export const getPlisioMethodMinimums = async ({
 
   let response: Response;
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
     response = await fetch(`/api/crypto/plisio-methods?${params.toString()}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
   } catch {
     return [];
   }
