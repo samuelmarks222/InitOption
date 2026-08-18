@@ -22,7 +22,7 @@ const navLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { landingLogoUrl, supportEmail } = useSiteBranding();
+  const { logoUrl, supportEmail } = useSiteBranding();
   const contactEmail = supportEmail || "support@initoption.com";
 
   return (
@@ -47,8 +47,8 @@ const Navbar = () => {
         <div className="io-logo-panel">
           <SiteLogo
             to="/"
-            logoOverride={landingLogoUrl}
-            showText={!landingLogoUrl}
+            logoOverride={logoUrl}
+            showText={!logoUrl}
             className="io-logo"
             imageClassName="h-12 max-w-[230px]"
             markClassName="h-12 w-12 rounded-full bg-white/15 text-white shadow-none"
