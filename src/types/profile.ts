@@ -25,6 +25,7 @@ export type ProfileMetadataFields = {
   idNumber?: string | null;
   kycDocuments?: KycDocumentsLike;
   kycStatus?: string | null;
+  preferred_currency?: string | null;
   notificationPreferences?: NotificationPreferences | null;
 };
 

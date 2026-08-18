@@ -1,4 +1,5 @@
 import { TrendingUp, TrendingDown } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ActiveTrade {
   id: string;
@@ -11,6 +12,7 @@ interface ActiveTrade {
 }
 
 const ActiveTrades = ({ trades }: { trades: ActiveTrade[] }) => {
+  const { formatMoney } = useCurrency();
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
@@ -31,7 +33,7 @@ const ActiveTrades = ({ trades }: { trades: ActiveTrade[] }) => {
                 <TrendingDown className="w-3 h-3 text-trading-red" />
               )}
               <span className="text-xs text-foreground font-medium">{trade.asset_symbol}</span>
-              <span className="text-xs text-muted-foreground">${trade.amount}</span>
+              <span className="text-xs text-muted-foreground">{formatMoney(trade.amount)}</span>
               <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
                 <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
               </div>

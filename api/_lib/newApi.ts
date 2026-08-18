@@ -22,6 +22,11 @@ type ApiRequest = IncomingMessage & {
 type ApiResponse = ServerResponse<IncomingMessage>;
 type Row = Record<string, unknown>;
 
+const isMissingProfileColumnError = (error: unknown, column: string) => {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes("does not exist") && message.includes(column);
+};
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME ?? process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -76,6 +81,7 @@ const PATCH_ALLOWED = new Set([
   "phone_country_code",
   "balance",
   "welcome_bonus_granted_at",
+  "preferred_currency",
 ]);
 
 const fetchProfile = async (clerkUserId: string): Promise<Row | null> => {
@@ -147,17 +153,36 @@ export async function handleProfile(request: ApiRequest, response: ApiResponse):
       const username = typeof body.username === "string" && body.username.trim()
         ? body.username.trim()
         : null;
+      const preferredCurrency = typeof body.preferred_currency === "string" && /^[A-Z]{3}$/.test(body.preferred_currency)
+        ? body.preferred_currency
+        : null;
 
-      const profile = await transaction(async (client) => {
-        const r = await client.query(
+      const insertProfile = async (withCurrency: boolean) => {
+        if (withCurrency && preferredCurrency) {
+          try {
+            const rows = await query(
+              `insert into public.profiles (id, username, display_name, avatar_url, preferred_currency)
+               values ($1, $2, $3, $4, $5)
+               on conflict (id) do nothing
+               returning *`,
+              [id, username, displayName, null, preferredCurrency],
+            );
+            if (rows.length > 0) return rows[0] as Row;
+          } catch (error) {
+            if (!isMissingProfileColumnError(error, "preferred_currency")) throw error;
+          }
+        }
+        const rows = await query(
           `insert into public.profiles (id, username, display_name, avatar_url)
            values ($1, $2, $3, $4)
            on conflict (id) do nothing
            returning *`,
           [id, username, displayName, null],
         );
-        return r.rows.length > 0 ? (r.rows[0] as Row) : null;
-      });
+        return rows.length > 0 ? (rows[0] as Row) : null;
+      };
+
+      const profile = await insertProfile(Boolean(preferredCurrency));
 
       sendJson(response, 200, { data: profile ?? (await fetchProfile(clerkUserId)) });
       return;

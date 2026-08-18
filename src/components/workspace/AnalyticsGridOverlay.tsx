@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, LineChart, BarChart2, Activity, PieChart, ShieldAlert, GitCompare, BellRing } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useStatistics } from "@/hooks/useStatistics";
 
 import { AnalyticsOverview } from "./analytics/AnalyticsOverview";
@@ -23,6 +24,7 @@ export const AnalyticsGridOverlay = ({ onClose, activeAsset }: AnalyticsGridOver
 
   const { profile } = useAuth();
   const { tradeStats } = useStatistics();
+  const { formatMoney } = useCurrency();
 
   const TABS = [
     { id: "overview", icon: BarChart2, label: "Performance Overview" },
@@ -88,14 +90,14 @@ export const AnalyticsGridOverlay = ({ onClose, activeAsset }: AnalyticsGridOver
           style={{ background: "var(--trading-workspace-bg)", borderBottomColor: "var(--trading-border-color)" }}
         >
           <div className="flex overflow-x-auto gap-3 scrollbar-hide">
-            <KPICard label="Net Profit" value={`$${tradeStats.totalProfit.toFixed(2)}`} color={tradeStats.totalProfit >= 0 ? "text-[#00C076]" : "text-red-500"} />
+            <KPICard label="Net Profit" value={formatMoney(tradeStats.totalProfit)} color={tradeStats.totalProfit >= 0 ? "text-[#00C076]" : "text-red-500"} />
             <KPICard label="Total Trades" value={tradeStats.totalTrades} />
             <KPICard label="Win Rate" value={`${tradeStats.winRate}%`} color={tradeStats.winRate >= 50 ? "text-[#00C076]" : "text-[#0fa053]"} />
             <KPICard label="Profit Factor" value={tradeStats.profitFactor > 900 ? "MAX" : tradeStats.profitFactor.toFixed(2)} />
-            <KPICard label="Avg Return" value={`$${tradeStats.averageReturn.toFixed(2)}`} color={tradeStats.averageReturn >= 0 ? "text-[#00C076]" : "text-red-500"} />
-            <KPICard label="Max Drawdown" value={`-$${tradeStats.maxDrawdown.toFixed(2)}`} color="text-red-400" />
+            <KPICard label="Avg Return" value={formatMoney(tradeStats.averageReturn)} color={tradeStats.averageReturn >= 0 ? "text-[#00C076]" : "text-red-500"} />
+            <KPICard label="Max Drawdown" value={`-${formatMoney(tradeStats.maxDrawdown)}`} color="text-red-400" />
             <KPICard label="Sharpe Ratio" value={tradeStats.sharpeRatio.toFixed(2)} />
-            <KPICard label="Current Balance" value={`$${(profile?.balance ?? 0).toFixed(2)}`} color="text-white" />
+            <KPICard label="Current Balance" value={formatMoney(profile?.balance ?? 0)} color="text-white" />
           </div>
         </div>
 

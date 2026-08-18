@@ -1,5 +1,8 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./AuthContext";
+import { preloadUsdRates } from "@/lib/exchangeRates";
+import { setSignedMoneyFormatter } from "@/components/trading/tradeSettlementToast";
+import { attachTradeResultCurrency } from "@/components/trading/TradeResultPresentation";
 import {
   CURRENCY_OPTIONS,
   DEFAULT_CURRENCY,
@@ -8,6 +11,7 @@ import {
   convertUsdToCurrency,
   formatUsdAmount,
   getCurrencyOption,
+  getUsdRate,
   isSupportedCurrency,
 } from "@/lib/currency";
 
@@ -20,6 +24,8 @@ interface CurrencyContextValue {
   formatMoney: (valueUsd: number, options?: Omit<Intl.NumberFormatOptions, "style" | "currency">) => string;
   convertFromUsd: (valueUsd: number) => number;
   convertToUsd: (value: number) => number;
+  rate: number;
+  getRate: (currency: SupportedCurrency) => number;
 }
 
 const CurrencyContext = createContext<CurrencyContextValue | undefined>(undefined);
@@ -30,6 +36,19 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   const { profile, updateProfile } = useAuth();
   const [currency, setCurrencyState] = useState<SupportedCurrency>(DEFAULT_CURRENCY);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    preloadUsdRates();
+  }, []);
+
+  useEffect(() => {
+    setSignedMoneyFormatter((amount) => {
+      const absolute = Math.abs(amount);
+      return `${amount >= 0 ? "+" : "-"}${formatUsdAmount(absolute, currency)}`;
+    });
+    attachTradeResultCurrency(currency);
+    return () => setSignedMoneyFormatter(null);
+  }, [currency]);
 
   useEffect(() => {
     const profileCurrency = (profile as any)?.preferred_currency;
@@ -69,6 +88,8 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
       formatMoney: (valueUsd, options) => formatUsdAmount(valueUsd, currency, options),
       convertFromUsd: (valueUsd) => convertUsdToCurrency(valueUsd, currency),
       convertToUsd: (value) => convertCurrencyToUsd(value, currency),
+      rate: getUsdRate(currency),
+      getRate: (code) => getUsdRate(code),
     }),
     [currency, isUpdating],
   );
@@ -76,8 +97,17 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;
 };
 
-export const useCurrency = () => {
-  const context = useContext(CurrencyContext);
-  if (!context) throw new Error("useCurrency must be used within CurrencyProvider");
-  return context;
+const DEFAULT_CONTEXT: CurrencyContextValue = {
+  currency: DEFAULT_CURRENCY,
+  currencyOption: getCurrencyOption(DEFAULT_CURRENCY),
+  options: CURRENCY_OPTIONS,
+  isUpdating: false,
+  setCurrency: async () => undefined,
+  formatMoney: (valueUsd, options) => formatUsdAmount(valueUsd, DEFAULT_CURRENCY, options),
+  convertFromUsd: (valueUsd) => convertUsdToCurrency(valueUsd, DEFAULT_CURRENCY),
+  convertToUsd: (value) => convertCurrencyToUsd(value, DEFAULT_CURRENCY),
+  rate: getUsdRate(DEFAULT_CURRENCY),
+  getRate: (code) => getUsdRate(code),
 };
+
+export const useCurrency = () => useContext(CurrencyContext) ?? DEFAULT_CONTEXT;

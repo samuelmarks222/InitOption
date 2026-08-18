@@ -7,6 +7,7 @@ import AuthLoadingScreen from "@/components/auth/AuthLoadingScreen";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { getAuthRestorePath } from "@/lib/authRedirect";
+import { CURRENCY_OPTIONS, SupportedCurrency, suggestCurrencyFromLocale } from "@/lib/currency";
 import logo from "@/assets/logo.png";
 
 type AuthMode = "login" | "signup";
@@ -38,6 +39,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   const [password, setPassword] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [currency, setCurrency] = useState<SupportedCurrency>(suggestCurrencyFromLocale());
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
@@ -127,6 +129,8 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
       navigate(getAuthRestorePath(), { replace: true });
       return;
     }
+
+    localStorage.setItem("preferred_currency", currency);
 
     const { error } = await signUp(email, password, fullName.trim(), promoCode.trim());
     setLoading(false);
@@ -620,6 +624,29 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                   placeholder="Enter promo code for bonus"
                   className="h-11 border-[#e5e7eb] bg-[#ffffff] pl-4 text-sm uppercase text-[#1f4c63] placeholder:text-[#536471]/50 focus:border-[#12cc9a] focus:ring-1 focus:ring-[#12cc9a]/30"
                 />
+              </div>
+            ) : null}
+
+            {!isLogin ? (
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="text-xs font-medium text-[#536471]">Preferred Currency</label>
+                  <span className="text-[10px] text-[#536471]/70">Auto-suggested from your location</span>
+                </div>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value as SupportedCurrency)}
+                  className="h-11 w-full rounded-md border border-[#e5e7eb] bg-[#ffffff] pl-4 pr-3 text-sm text-[#1f4c63] outline-none focus:border-[#12cc9a] focus:ring-1 focus:ring-[#12cc9a]/30"
+                >
+                  {CURRENCY_OPTIONS.map((option) => (
+                    <option key={option.code} value={option.code}>
+                      {option.code} — {option.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-[#536471]/70">
+                  Your balance, trades and payouts will be shown in this currency.
+                </p>
               </div>
             ) : null}
 

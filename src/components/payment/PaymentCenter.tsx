@@ -29,6 +29,7 @@ import {
 } from "@/lib/withdrawals";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { formatCurrencyAmount } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useDepositBonus } from "@/hooks/useDepositBonus";
 import { DepositStep1 } from "./deposit/DepositStep1";
 import { DepositMpesaDetails } from "./deposit/DepositMpesaDetails";
@@ -65,6 +66,7 @@ interface PaymentCenterProps {
 
 export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) => {
   const { user, profile, refreshProfile } = useAuth();
+  const { formatMoney } = useCurrency();
   const navigate = useNavigate();
   const { mpesaEnabled, cryptoEnabled, findMatchingOffer, bonusAmountFor } = useDepositBonus(user?.id);
 
@@ -428,7 +430,7 @@ export const PaymentCenter = ({ defaultTab = "deposit" }: PaymentCenterProps) =>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-white/50">Balance</span>
-            <span className="font-bold text-lg text-white">${balance.toFixed(2)}</span>
+            <span className="font-bold text-lg text-white">{formatMoney(balance)}</span>
             <Button 
               variant="ghost" 
               size="icon" 

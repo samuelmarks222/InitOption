@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { SiteLogo } from "@/components/branding/SiteLogo";
 import { formatCurrencyAmount } from "@/lib/currency";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { requestMobileMoneyWithdrawal } from "@/lib/mobileMoney";
 import { convertUsdToKesWithdrawalAmount, MPESA_METHOD_LABEL } from "@/lib/mobileMoneyShared";
@@ -36,6 +37,7 @@ const EMPTY_BONUS_STATUS: BonusTurnoverStatus = {
 
 const Withdraw = () => {
   const { user, profile, refreshProfile } = useAuth();
+  const { formatMoney } = useCurrency();
   const [amount, setAmount] = useState<number | "">("");
   const [loading, setLoading] = useState(false);
   const [method, setMethod] = useState<WithdrawalMethod>("mpesa");
@@ -418,11 +420,11 @@ try {
                 MAX
               </button>
             </div>
-            <p className="mt-3 text-sm text-white/68">
-              Available balance: <span className="font-bold text-white">{effectiveWithdrawalBalance.toFixed(2)} USD</span>
+<p className="mt-3 text-sm text-white/68">
+              Available balance: <span className="font-bold text-white">{formatMoney(effectiveWithdrawalBalance)}</span>
             </p>
             {reservedWithdrawalBalance > 0 ? (
-              <p className="mt-1 text-xs text-white/52">${reservedWithdrawalBalance.toFixed(2)} is reserved for pending M-PESA withdrawals.</p>
+              <p className="mt-1 text-xs text-white/52">{formatMoney(reservedWithdrawalBalance)} is reserved for pending M-PESA withdrawals.</p>
             ) : null}
           </section>
 

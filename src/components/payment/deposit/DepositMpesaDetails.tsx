@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DepositBonusCatalogEntry } from "@/lib/depositBonusOffers";
 import { DepositBonusSelector } from "./DepositBonusSelector";
+import { KesEquivalent } from "@/components/payment/KesEquivalent";
 
 interface DepositMpesaDetailsProps {
   amount: string;
@@ -75,6 +76,8 @@ export function DepositMpesaDetails({
           <p className="mt-2 text-sm text-white/50">You'll receive an M-PESA payment request on your phone</p>
         </div>
       </div>
+
+      {amountValue > 0 && <KesEquivalent amountUsd={amountValue} label="You will pay approximately" />}
 
       <DepositBonusSelector
         enabled={bonusEnabled}

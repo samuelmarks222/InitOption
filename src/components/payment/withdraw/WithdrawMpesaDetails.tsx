@@ -2,6 +2,7 @@ import { Smartphone, ShieldCheck, Zap, ArrowRight, CreditCard, ArrowLeft } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { KesEquivalent } from "@/components/payment/KesEquivalent";
 
 interface WithdrawMpesaDetailsProps {
   amount: string;
@@ -91,6 +92,8 @@ export function WithdrawMpesaDetails({
           </div>
         </div>
       </div>
+
+      {amountValue > 0 && <KesEquivalent amountUsd={amountValue} label="You will receive approximately" />}
 
       <div className="flex gap-3">
         <button

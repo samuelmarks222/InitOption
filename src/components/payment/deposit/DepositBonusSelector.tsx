@@ -1,5 +1,6 @@
 import { BadgeCheck, Gift, Info, XCircle } from "lucide-react";
 import type { DepositBonusCatalogEntry } from "@/lib/depositBonusOffers";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface DepositBonusSelectorProps {
   enabled: boolean;
@@ -11,9 +12,6 @@ interface DepositBonusSelectorProps {
   tone?: "green" | "amber";
 }
 
-const formatUsd = (value: number) =>
-  `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
 export function DepositBonusSelector({
   enabled,
   useBonus,
@@ -23,6 +21,8 @@ export function DepositBonusSelector({
   bonusAmount,
   tone = "green",
 }: DepositBonusSelectorProps) {
+  const { formatMoney } = useCurrency();
+
   if (!enabled) return null;
 
   const accent = tone === "amber" ? "amber" : "green";
@@ -64,33 +64,33 @@ export function DepositBonusSelector({
       {!useBonus ? (
         <div className="mt-4 flex items-center gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white/50">
           <XCircle className="h-4 w-4 shrink-0" />
-          Bonus disabled for this deposit. Only your {formatUsd(amount)} deposit will be credited.
+          Bonus disabled for this deposit. Only your {formatMoney(amount)} deposit will be credited.
         </div>
       ) : amount > 0 && hasMatch ? (
         <>
           <div className="mt-4 grid grid-cols-3 gap-3 text-center">
             <div className="rounded-xl bg-black/25 p-3">
               <p className="text-xs text-white/50">Deposit</p>
-              <p className="mt-1 text-lg font-bold text-white">{formatUsd(amount)}</p>
+              <p className="mt-1 text-lg font-bold text-white">{formatMoney(amount)}</p>
             </div>
             <div className={`rounded-xl ${accentSolid} p-3`}>
               <p className={`text-xs ${accentText}`}>Bonus (+{matchingOffer.bonus_percent}%)</p>
-              <p className={`mt-1 text-lg font-bold ${accentText}`}>+{formatUsd(bonusAmount)}</p>
+              <p className={`mt-1 text-lg font-bold ${accentText}`}>+{formatMoney(bonusAmount)}</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-black/25 p-3">
               <p className="text-xs text-white/50">Total Credited</p>
-              <p className={`mt-1 text-lg font-bold ${accentText}`}>{formatUsd(totalCredited)}</p>
+              <p className={`mt-1 text-lg font-bold ${accentText}`}>{formatMoney(totalCredited)}</p>
             </div>
           </div>
           <p className={`mt-3 flex items-center gap-1.5 text-xs ${accentText}`}>
             <BadgeCheck className="h-3.5 w-3.5 shrink-0" />
-            You will receive {formatUsd(amount)} + {formatUsd(bonusAmount)} bonus = {formatUsd(totalCredited)}
+            You will receive {formatMoney(amount)} + {formatMoney(bonusAmount)} bonus = {formatMoney(totalCredited)}
           </p>
         </>
       ) : amount > 0 ? (
         <div className="mt-4 flex items-center gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white/50">
           <Info className="h-4 w-4 shrink-0" />
-          No active bonus applies to this deposit amount. Only your {formatUsd(amount)} will be credited.
+          No active bonus applies to this deposit amount. Only your {formatMoney(amount)} will be credited.
         </div>
       ) : null}
     </div>

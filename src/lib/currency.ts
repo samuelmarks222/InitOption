@@ -32,30 +32,35 @@ export const isSupportedCurrency = (value: unknown): value is SupportedCurrency 
 export const getCurrencyOption = (currency: unknown) =>
   isSupportedCurrency(currency) ? CURRENCY_MAP[currency] : CURRENCY_MAP[DEFAULT_CURRENCY];
 
-export const convertUsdToCurrency = (value: number, currency: unknown) => {
-  const option = getCurrencyOption(currency);
-  return value * option.rateFromUsd;
+/* ------------------------------------------------------------------ */
+/* Live USD exchange-rate cache (populated by src/lib/exchangeRates.ts) */
+/* ------------------------------------------------------------------ */
+let liveUsdRates: Partial<Record<SupportedCurrency, number>> | null = null;
+
+export const hasLiveRates = () => liveUsdRates !== null;
+
+export const applyLiveUsdRates = (rates: Partial<Record<SupportedCurrency, number>>) => {
+  liveUsdRates = rates;
 };
 
-export const convertCurrencyToUsd = (value: number, currency: unknown) => {
+export const getUsdRate = (currency: unknown) => {
   const option = getCurrencyOption(currency);
-  return option.rateFromUsd === 0 ? value : value / option.rateFromUsd;
+  const live = liveUsdRates?.[option.code];
+  return live && live > 0 ? live : option.rateFromUsd;
+};
+
+export const convertUsdToCurrency = (value: number, currency: unknown) => value * getUsdRate(currency);
+
+export const convertCurrencyToUsd = (value: number, currency: unknown) => {
+  const rate = getUsdRate(currency);
+  return rate === 0 ? value : value / rate;
 };
 
 export const formatUsdAmount = (
   value: number,
   currency: unknown,
   options?: Omit<Intl.NumberFormatOptions, "style" | "currency">,
-) => {
-  const option = getCurrencyOption(currency);
-  return new Intl.NumberFormat(option.locale, {
-    style: "currency",
-    currency: option.code,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-    ...options,
-  }).format(convertUsdToCurrency(value, option.code));
-};
+) => formatCurrencyAmount(convertUsdToCurrency(value, currency), currency, options);
 
 export const formatCurrencyAmount = (
   value: number,
@@ -82,4 +87,46 @@ export const getCurrencySymbol = (currency: unknown) => {
   }).formatToParts(0);
 
   return formatted.find((part) => part.type === "currency")?.value ?? option.code;
+};
+
+/* ------------------------------------------------------------------ */
+/* Locale-based currency suggestion (used during signup)                */
+/* ------------------------------------------------------------------ */
+const COUNTRY_TO_CURRENCY: Record<string, SupportedCurrency> = {
+  KE: "KES",
+  NG: "NGN",
+  GB: "GBP",
+  US: "USD",
+  ZA: "ZAR",
+  AE: "AED",
+  IN: "INR",
+  DE: "EUR",
+  FR: "EUR",
+  ES: "EUR",
+  IT: "EUR",
+  NL: "EUR",
+  PT: "EUR",
+  IE: "EUR",
+  BE: "EUR",
+  AT: "EUR",
+  FI: "EUR",
+  GR: "EUR",
+  SK: "EUR",
+  SI: "EUR",
+  LT: "EUR",
+  LV: "EUR",
+  EE: "EUR",
+  LU: "EUR",
+  MT: "EUR",
+  CY: "EUR",
+  HR: "EUR",
+};
+
+export const suggestCurrencyFromLocale = (locale?: string): SupportedCurrency => {
+  const source =
+    locale ??
+    (typeof navigator !== "undefined" && typeof navigator.language === "string" ? navigator.language : "");
+  const parts = String(source).split("-");
+  const country = parts[parts.length - 1]?.toUpperCase() ?? "";
+  return COUNTRY_TO_CURRENCY[country] ?? DEFAULT_CURRENCY;
 };

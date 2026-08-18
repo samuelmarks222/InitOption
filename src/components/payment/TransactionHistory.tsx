@@ -3,6 +3,7 @@ import { Filter, ChevronDown, ChevronUp, CheckCircle, Clock, XCircle, Loader2, W
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Transaction {
   id: string;
@@ -51,6 +52,7 @@ export function TransactionHistory({
 }: TransactionHistoryProps) {
   const [sortBy, setSortBy] = useState<"date" | "amount" | "status">("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const { formatMoney } = useCurrency();
 
   const filteredTransactions = useMemo(() => {
     let result = [...transactions];
@@ -232,7 +234,7 @@ export function TransactionHistory({
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <span className={`font-bold ${tx.type === "withdrawal" ? "text-red-400" : "text-green-400"}`}>
-                          {tx.type === "withdrawal" ? "-" : "+"}${tx.amount.toFixed(2)}
+                          {tx.type === "withdrawal" ? "-" : "+"}{formatMoney(tx.amount)}
                         </span>
                       </div>
                     </td>

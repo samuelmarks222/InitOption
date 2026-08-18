@@ -12,6 +12,20 @@ import type { TradeHistoryEntry, TradeSettlement, TradeDirection } from "@/hooks
 import AssetSymbolMark from "./AssetSymbolMark";
 import { TRADING_DOWN_COLOR, TRADING_UP_COLOR } from "./tradingPalette";
 import { fetchTradeBalanceAuditEntries, type TradeBalanceAuditEntry } from "@/lib/tradeBalanceAudit";
+import { formatUsdAmount, SupportedCurrency } from "@/lib/currency";
+
+let tradeResultMoneyFormatter: ((amount: number, includeSign: boolean) => string) | null = null;
+
+export const setTradeResultMoneyFormatter = (formatter: ((amount: number, includeSign: boolean) => string) | null) => {
+  tradeResultMoneyFormatter = formatter;
+};
+
+export const attachTradeResultCurrency = (currency: SupportedCurrency) => {
+  tradeResultMoneyFormatter = (amount, includeSign) => {
+    const sign = amount > 0 ? "+" : amount < 0 ? "-" : "";
+    return `${includeSign ? sign : ""}${formatUsdAmount(Math.abs(amount), currency)}`;
+  };
+};
 
 export interface TradeResultPresentationData {
   id: string;
@@ -79,6 +93,10 @@ const formatTradeClock = (seconds: number) => {
 };
 
 const formatMoneySuffix = (amount: number, includeSign = false) => {
+  if (tradeResultMoneyFormatter) {
+    return tradeResultMoneyFormatter(amount, includeSign);
+  }
+
   const absoluteAmount = Math.abs(amount);
   const amountLabel = Number.isInteger(absoluteAmount) ? absoluteAmount.toFixed(0) : absoluteAmount.toFixed(2);
 
@@ -100,7 +118,7 @@ const formatTradeTimestamp = (value: string) =>
     hour12: false,
   }).format(new Date(value)).replace(",", "");
 
-const formatAuditMoney = (value: number) => `${value >= 0 ? "+" : "-"}${Math.abs(value).toFixed(2)} $`;
+const formatAuditMoney = (value: number) => formatMoneySuffix(value, true);
 
 const formatInlineTimestamp = (value: string) => {
   const date = new Date(value);

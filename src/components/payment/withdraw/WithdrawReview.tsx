@@ -1,6 +1,7 @@
 import { ArrowRight, ChevronDown, Copy, QrCode, AlertTriangle, Shield, Clock, Loader2, CheckCircle, AlertCircle, Smartphone, ShieldCheck, Bitcoin, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { KesEquivalent } from "@/components/payment/KesEquivalent";
 
 interface WithdrawReviewProps {
   method: "mpesa" | "crypto";
@@ -139,6 +140,7 @@ export function WithdrawReview({
                   <span className="text-sm text-white/70">Your withdrawal will be reviewed and processed according to our payment policy.</span>
                 </div>
               </div>
+              {amountValue > 0 && <KesEquivalent amountUsd={amountValue} label="You will receive approximately" />}
             </div>
           )}
 

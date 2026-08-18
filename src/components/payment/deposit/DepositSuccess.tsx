@@ -1,6 +1,8 @@
 import { CheckCircle, Wallet, ArrowRight, Clock, ShieldCheck, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { KesEquivalent } from "@/components/payment/KesEquivalent";
 
 interface DepositSuccessProps {
   method: "mpesa" | "crypto" | null;
@@ -20,6 +22,7 @@ export function DepositSuccess({
   const amountValue = Number(amount) || 0;
   const bonusAmount = amountValue * 0.3; // 30% bonus mock
   const totalCredited = amountValue + bonusAmount;
+  const { formatMoney } = useCurrency();
 
   return (
     <div className="space-y-6 text-center">
@@ -36,20 +39,22 @@ export function DepositSuccess({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-white/60">Deposit</span>
-            <span className="font-bold text-xl text-white">${amountValue.toFixed(2)}</span>
+            <span className="font-bold text-xl text-white">{formatMoney(amountValue)}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-white/60">Bonus</span>
-            <span className="font-bold text-xl text-green-400">+${bonusAmount.toFixed(2)}</span>
+            <span className="font-bold text-xl text-green-400">+{formatMoney(bonusAmount)}</span>
           </div>
           <div className="border-t border-white/10 pt-4">
             <div className="flex items-center justify-between">
               <span className="text-2xl font-bold text-white">Total Credited</span>
-              <span className="text-2xl font-bold text-green-400">${totalCredited.toFixed(2)}</span>
+              <span className="text-2xl font-bold text-green-400">{formatMoney(totalCredited)}</span>
             </div>
           </div>
         </div>
       </div>
+
+      {method === "mpesa" && amountValue > 0 && <KesEquivalent amountUsd={amountValue} label="Paid approximately" />}
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-5 max-w-md mx-auto">
         <div className="grid grid-cols-2 gap-4 text-sm">

@@ -2,6 +2,8 @@ import { Loader2, Clock, ShieldCheck, Smartphone, ArrowRight, ArrowLeft, CheckCi
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { convertUsdToCurrency, formatCurrencyAmount } from "@/lib/currency";
 
 interface DepositMpesaProcessProps {
   phone: string;
@@ -19,6 +21,8 @@ export function DepositMpesaProcess({
   onComplete,
 }: DepositMpesaProcessProps) {
   const [timeLeft, setTimeLeft] = useState(120);
+  const { formatMoney } = useCurrency();
+  const amountValue = Number(amount || 0);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -64,7 +68,10 @@ export function DepositMpesaProcess({
                 <div className="mt-4 flex items-center justify-center gap-4 text-sm">
                   <div className="px-4 py-2 rounded-lg bg-white/5">
                     <p className="text-white/50">Amount</p>
-                    <p className="font-bold text-white">${Number(amount || 0).toFixed(2)}</p>
+                    <p className="font-bold text-white">{amountValue > 0 ? formatMoney(amountValue) : "$0.00"}</p>
+                    {amountValue > 0 && (
+                      <p className="text-[11px] text-white/40">{formatCurrencyAmount(convertUsdToCurrency(amountValue, "KES"), "KES")}</p>
+                    )}
                   </div>
                   <div className="px-4 py-2 rounded-lg bg-white/5">
                     <p className="text-white/50">Phone</p>

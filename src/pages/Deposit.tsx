@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, BadgeCheck, CircleHelp, Clock3, Loader2, ShieldCheck, Smartphone, XCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { realtime } from "@/integrations/pusher/realtime";
 import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -42,6 +43,7 @@ const formatCoinAmount = (value: number | null | undefined) => {
 
 const Deposit = () => {
   const { user, profile, refreshProfile } = useAuth();
+  const { formatMoney } = useCurrency();
   const navigate = useNavigate();
   const [amount, setAmount] = useState<number | "">("");
   const [loading, setLoading] = useState(false);
@@ -604,7 +606,7 @@ const Deposit = () => {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-white/60">Amount</span>
-                        <p className="font-bold text-white">${Number(lastMobileMoneyRequest.amount_usd).toFixed(2)}</p>
+                        <p className="font-bold text-white">{formatMoney(Number(lastMobileMoneyRequest.amount_usd) || 0)}</p>
                       </div>
                       <div>
                         <span className="text-white/60">M-PESA Amount</span>
@@ -693,7 +695,7 @@ const Deposit = () => {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-white/60">Amount</span>
-                        <p className="font-bold text-white">${Number(amount).toFixed(2)}</p>
+                        <p className="font-bold text-white">{formatMoney(Number(amount) || 0)}</p>
                       </div>
                       <div>
                         <span className="text-white/60">Coin</span>

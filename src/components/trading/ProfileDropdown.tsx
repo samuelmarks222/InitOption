@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Props {
   email?: string;
@@ -32,9 +33,7 @@ const ProfileDropdown = ({
   onLogout,
 }: Props) => {
   const [selected, setSelected] = useState<"live" | "demo">("demo");
-
-  const formatMoney = (v: number) =>
-    v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const { formatMoney } = useCurrency();
 
   return (
     <>
@@ -96,7 +95,7 @@ const ProfileDropdown = ({
                 </button>
                 <div>
                   <div className="text-[12px] font-bold text-white">Live Account</div>
-                  <div className="mt-0.5 text-[13px] font-bold text-emerald-400">${formatMoney(balance)}</div>
+                  <div className="mt-0.5 text-[13px] font-bold text-emerald-400">{formatMoney(balance)}</div>
                   <div className="mt-0.5 flex items-center gap-1">
                     <span className="text-[10px] text-gray-500">The daily limit is not set</span>
                     <button type="button" className="text-[10px] font-bold text-[#3b82f6] hover:text-blue-400 transition">
@@ -125,7 +124,7 @@ const ProfileDropdown = ({
                 <div>
                   <div className="text-[12px] font-bold text-white">Demo Account</div>
                   <div className="mt-0.5 flex items-center gap-1.5">
-                    <span className="text-[13px] font-bold text-emerald-400">${formatMoney(demoBalance)}</span>
+                    <span className="text-[13px] font-bold text-emerald-400">{formatMoney(demoBalance)}</span>
                     <button type="button" className="text-gray-500 hover:text-gray-300 transition">
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />

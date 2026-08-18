@@ -142,7 +142,7 @@ const readString = (value: unknown) => (typeof value === "string" && value.trim(
 
 const isMissingProfileCountryColumnError = (error: unknown) => {
   const message = error && typeof error === "object" && "message" in error ? String(error.message) : "";
-  return /(nationality|phone_country|phone_country_code)/iu.test(message) && /(column|schema|not found|does not exist)/iu.test(message);
+  return /(nationality|phone_country|phone_country_code|preferred_currency)/iu.test(message) && /(column|schema|not found|does not exist)/iu.test(message);
 };
 
 const getEmailVerifiedAt = (authUser?: { email_confirmed_at?: string | null; user_metadata?: Record<string, unknown> } | null) => {
@@ -308,6 +308,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (e.status === 404) {
         // Profile doesn't exist, create it
         const identity = deriveProfileIdentity(authUser, userId);
+        const storedCurrency = typeof window !== "undefined" ? localStorage.getItem("preferred_currency") : null;
         const result = await apiFetch(`/profile`, {
           method: "POST",
           body: JSON.stringify({
@@ -315,6 +316,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             email: authUser?.email ?? null,
             display_name: identity.displayName,
             username: identity.username,
+            preferred_currency: /^[A-Z]{3}$/.test(storedCurrency ?? "") ? storedCurrency : null,
           }),
         });
         return result;
@@ -361,6 +363,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setProfile(mergedProfile);
+
+      if (!mergedProfile.preferred_currency) {
+        const storedCurrency = typeof window !== "undefined" ? localStorage.getItem("preferred_currency") : null;
+        if (storedCurrency && /^[A-Z]{3}$/.test(storedCurrency)) {
+          void apiFetch(`/profile`, {
+            method: "PATCH",
+            body: JSON.stringify({ preferred_currency: storedCurrency }),
+          }).catch(() => undefined);
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch profile", error);
 
@@ -418,12 +430,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (Object.prototype.hasOwnProperty.call(updates, "phoneCountryCode")) {
       profileUpdates.phone_country_code = (updates as any).phoneCountryCode ?? null;
     }
+    if (Object.prototype.hasOwnProperty.call(updates, "preferred_currency")) {
+      profileUpdates.preferred_currency = (updates as any).preferred_currency ?? null;
+    }
 
     delete metadataUpdates.avatar_url;
     delete metadataUpdates.username;
     delete metadataUpdates.kyc_status;
     delete metadataUpdates.kyc_documents;
     delete metadataUpdates.platform_email_verified_at;
+    delete metadataUpdates.preferred_currency;
 
     if (Object.keys(profileUpdates).length > 0) {
       try {
@@ -438,6 +454,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         delete fallbackProfileUpdates.nationality;
         delete fallbackProfileUpdates.phone_country;
         delete fallbackProfileUpdates.phone_country_code;
+        delete fallbackProfileUpdates.preferred_currency;
 
         if (Object.keys(fallbackProfileUpdates).length > 0) {
           await apiFetch(`/profile`, {

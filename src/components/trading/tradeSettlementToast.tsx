@@ -10,7 +10,16 @@ type TradeSettlementToastPayload = Pick<
   accountLabel?: string;
 };
 
-const formatSignedMoney = (amount: number) => `${amount >= 0 ? "+" : "-"}$${Math.abs(amount).toFixed(2)}`;
+let signedMoneyFormatter: ((amount: number) => string) | null = null;
+
+export const setSignedMoneyFormatter = (formatter: ((amount: number) => string) | null) => {
+  signedMoneyFormatter = formatter;
+};
+
+const formatSignedMoney = (amount: number) =>
+  signedMoneyFormatter
+    ? signedMoneyFormatter(amount)
+    : `${amount >= 0 ? "+" : "-"}$${Math.abs(amount).toFixed(2)}`;
 
 export const showTradeSettlementToast = ({
   asset_symbol,

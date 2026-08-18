@@ -6,6 +6,7 @@ import {
   X, Check, TrendingUp, TrendingDown
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { ActiveTrade, OpenTradeHandler, TradeDirection, TradeHistoryEntry, useTrading } from "@/hooks/useTrading";
 import { toast } from "@/hooks/use-toast";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
@@ -683,6 +684,7 @@ const TradingPanel = ({
   mobileDocked = false,
 }: TradingPanelProps) => {
   const { profile } = useAuth();
+  const { formatMoney } = useCurrency();
   const { t } = useTranslation();
   const { activeTrades, tradeHistory, openTrade } = useTrading();
   const { preferences: tradingPreferences } = useTradingPreferences();
@@ -1200,7 +1202,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
         {/* ── Payout ───────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-2.5 pb-2 text-xs text-gray-400 lg:px-4 lg:pb-3 border-t border-[#262b40]/60 pt-3">
           <span className="font-medium">Your payout:</span>
-          <span className="text-sm font-bold text-white tracking-wide font-mono">{asset.available === false ? "N/A" : `${payout.toFixed(2)} $`}</span>
+          <span className="text-sm font-bold text-white tracking-wide font-mono">{asset.available === false ? "N/A" : formatMoney(payout)}</span>
         </div>
 
         {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}

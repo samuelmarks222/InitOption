@@ -1,5 +1,6 @@
 import { CheckCircle, Wallet, ArrowRight, Clock, ShieldCheck, Zap, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { KesEquivalent } from "@/components/payment/KesEquivalent";
 
 interface WithdrawSuccessProps {
   method: "mpesa" | "crypto";
@@ -47,6 +48,8 @@ export function WithdrawSuccess({
           </div>
         </div>
       </div>
+
+      {method === "mpesa" && amountValue > 0 && <KesEquivalent amountUsd={amountValue} label="You will receive approximately" />}
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-5 max-w-md mx-auto">
         <div className="grid grid-cols-2 gap-4 text-sm">

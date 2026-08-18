@@ -3,6 +3,7 @@ import { ArrowDownRight, ArrowUpRight, Clock3 } from "lucide-react";
 import type { ActiveTrade } from "@/hooks/useTrading";
 import { TRADING_DOWN_COLOR, TRADING_UP_COLOR } from "./tradingPalette";
 import AssetSymbolMark from "./AssetSymbolMark";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const formatCountdown = (timeLeft: number) => {
   const totalSeconds = Math.max(0, Math.ceil(timeLeft));
@@ -35,6 +36,7 @@ export const ActiveTradesHud = ({
   currentPrice?: number;
 }) => {
   const { t } = useTranslation();
+  const { formatMoney } = useCurrency();
 
   const getFocusedTradeStatus = (trade: ActiveTrade, currentPrice?: number) => {
     if (typeof currentPrice !== "number" || !Number.isFinite(currentPrice) || currentPrice <= 0) {
@@ -120,7 +122,7 @@ export const ActiveTradesHud = ({
                     {isHigher ? t("activeTrades.higher") : t("activeTrades.lower")}
                   </div>
                   <div className="mt-1 text-[16px] font-black leading-none text-white">
-                    ${trade.amount.toFixed(2)}
+                    {formatMoney(trade.amount)}
                   </div>
                 </div>
 
@@ -132,7 +134,7 @@ export const ActiveTradesHud = ({
                     className="mt-1 rounded-md px-2 py-1 text-[13px] font-black leading-none text-white"
                     style={{ background: `${accent}22`, color: accent }}
                   >
-                    +${potentialProfit.toFixed(2)}
+                    +{formatMoney(potentialProfit)}
                   </div>
                 </div>
               </div>

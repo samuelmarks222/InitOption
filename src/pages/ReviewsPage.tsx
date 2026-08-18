@@ -23,6 +23,7 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
 import { WhatsAppLogo } from "@/components/icons/BrandSocialIcons";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useToast } from "@/hooks/use-toast";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 
@@ -296,6 +297,7 @@ const AccountRail = ({
   socialButtons: SocialButton[];
 }) => {
   const { profile, user, signOut } = useAuth();
+  const { formatMoney } = useCurrency();
   const displayName = profile?.display_name || profile?.username || user?.email?.split("@")[0] || "Init trader";
   const balance = Number(profile?.balance ?? 0);
   const menuItems = [
@@ -328,7 +330,7 @@ const AccountRail = ({
         <div className="flex h-[40px] w-[44px] items-center justify-center rounded-l-[7px]">
           <Wallet className="h-4 w-4 text-[#1c81f8]" />
         </div>
-        <div className="flex-1 text-center text-xl font-bold text-[#1c81f8]">${balance.toFixed(0)}</div>
+        <div className="flex-1 text-center text-xl font-bold text-[#1c81f8]">{formatMoney(balance)}</div>
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
