@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useMemo } from "react";
-import { Outlet, Link, Navigate, useLocation } from "react-router-dom";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
 import {
   DollarSign,
   LayoutDashboard,
@@ -34,12 +34,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { getRoleLabel, roleAllowsAdminPath } from "@/lib/adminRoles";
+import { AdminHeader } from "@/components/admin/AdminHeader";
 
 const ACCENT = "#D5006C";
-const BG = "#0D0D0D";
-const SURFACE = "#1A1A2A";
-const BORDER = "#2A2A3A";
-const TEXT_SEC = "#B0B0B0";
+const BG = "#0A0E17";
+const SURFACE = "#111827";
+const BORDER = "#1F2A3E";
+const TEXT_SEC = "#94A3B8";
 
 interface NavCategory {
   name: string;
@@ -163,40 +164,43 @@ const AdminLayout = () => {
       style={{
         background: BG,
         color: "#FFFFFF",
-        "--admin-canvas": "#0D0D0D",
-        "--admin-surface": "#1A1A2A",
-        "--admin-elevated": "#222738",
-        "--admin-input": "#13161e",
-        "--admin-border": "#2A2A3A",
+        "--admin-canvas": "#0A0E17",
+        "--admin-surface": "#111827",
+        "--admin-elevated": "#1A2234",
+        "--admin-input": "#0F172A",
+        "--admin-border": "#1F2A3E",
         "--admin-text": "#FFFFFF",
-        "--admin-text-secondary": "#B0B0B0",
-        "--admin-text-muted": "#7890ab",
-        "--admin-hover": "#2A2A3A",
-        "--admin-hover-overlay": "rgba(255,255,255,0.04)",
+        "--admin-text-secondary": "#94A3B8",
+        "--admin-text-muted": "#64748B",
+        "--admin-hover": "#1F2A3E",
+        "--admin-hover-overlay": "rgba(255,255,255,0.03)",
         "--admin-green": "#00C076",
-        "--admin-green-soft": "rgba(0,192,118,0.7)",
+        "--admin-green-soft": "rgba(0,192,118,0.15)",
         "--admin-orange": "#D5006C",
-        "--admin-orange-soft": "#D5006C",
+        "--admin-orange-soft": "rgba(213,0,108,0.15)",
       } as React.CSSProperties}
     >
-      {/* Mobile overlay */}
+      {/* Fixed Header */}
+      <AdminHeader />
+
+      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:relative top-0 bottom-0 left-0 z-50 md:z-auto flex w-64 flex-col border-r transition-transform duration-300 ease-in-out ${
+        className={`fixed md:relative top-14 bottom-0 left-0 z-50 md:z-auto flex w-64 flex-col border-r transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
         style={{ background: BG, borderColor: BORDER }}
       >
-        {/* Brand */}
-        <div className="flex h-16 shrink-0 items-center gap-3 border-b px-5" style={{ borderColor: BORDER }}>
+        {/* Brand - minimal on desktop, hidden on mobile since header has logo */}
+        <div className="md:flex h-12 shrink-0 items-center gap-3 border-b px-5 hidden" style={{ borderColor: BORDER }}>
           {logoUrl ? (
-            <img src={logoUrl} alt={platformName} className="h-8 object-contain" />
+            <img src={logoUrl} alt={platformName} className="h-7 object-contain" />
           ) : (
-            <span className="text-lg font-bold tracking-wide text-white">Init Option</span>
+            <span className="text-sm font-bold tracking-wide text-white">Init Option</span>
           )}
         </div>
 
@@ -210,7 +214,7 @@ const AdminLayout = () => {
                   onClick={() => toggleCat(cat.name)}
                   className="flex w-full items-center justify-between px-2 py-1.5 text-left"
                 >
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: TEXT_SEC }}>
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: TEXT_SEC }}>
                     {cat.name}
                   </span>
                   {expanded ? (
@@ -229,12 +233,12 @@ const AdminLayout = () => {
                           to={item.href}
                           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors"
                           style={{
-                            background: active ? ACCENT : "transparent",
-                            color: active ? "#FFFFFF" : TEXT_SEC,
+                            background: active ? "rgba(0,192,118,0.15)" : "transparent",
+                            color: active ? "#00C076" : TEXT_SEC,
                           }}
                           onMouseEnter={(e) => {
                             if (!active) {
-                              e.currentTarget.style.background = "#2A2A3A";
+                              e.currentTarget.style.background = "rgba(255,255,255,0.03)";
                               e.currentTarget.style.color = "#FFFFFF";
                             }
                           }}
@@ -262,7 +266,7 @@ const AdminLayout = () => {
           <div className="flex items-center gap-3">
             <div
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-              style={{ background: ACCENT }}
+              style={{ background: "#00C076" }}
             >
               {profile?.display_name?.charAt(0) || "A"}
             </div>
@@ -270,7 +274,7 @@ const AdminLayout = () => {
               <p className="truncate text-sm font-semibold text-white">
                 {profile?.display_name || "Admin"}
               </p>
-              <p className="truncate text-xs" style={{ color: ACCENT }}>
+              <p className="truncate text-xs" style={{ color: "#00C076" }}>
                 {getRoleLabel(primaryRole)}
               </p>
             </div>
@@ -286,71 +290,11 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main area */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top bar */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 sm:px-6" style={{ background: SURFACE, borderColor: BORDER }}>
-          <div className="flex items-center gap-3">
-            <button
-              className="rounded-lg p-2 transition-colors hover:bg-white/10 md:hidden"
-              style={{ color: TEXT_SEC }}
-              onClick={() => setSidebarOpen((v) => !v)}
-            >
-              <Menu size={20} />
-            </button>
-            <h1 className="text-lg font-semibold text-white">
-              {visibleCategories
-                .flatMap((c) => c.items)
-                .find((item) => isActive(item.href))?.label || "Dashboard"}
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {/* Search */}
-            <div className="relative hidden sm:block">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: TEXT_SEC }} />
-              <input
-                type="text"
-                placeholder="Search users, trades, assets..."
-                className="h-9 w-56 rounded-lg border bg-transparent pl-9 pr-3 text-sm text-white outline-none placeholder:text-sm"
-                style={{ borderColor: BORDER, color: TEXT_SEC }}
-              />
-            </div>
-
-            {/* Go to Trading */}
-            <Link
-              to="/trade"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-80"
-              style={{ background: ACCENT }}
-            >
-              <TrendingUp size={16} />
-              <span className="hidden sm:inline">Go to Trading</span>
-            </Link>
-
-            {/* Notifications */}
-            <button className="relative rounded-lg p-2 transition-colors hover:bg-white/10" style={{ color: TEXT_SEC }}>
-              <Bell size={20} />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full" style={{ background: ACCENT }} />
-            </button>
-
-            {/* Profile */}
-            <div className="flex items-center gap-2">
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
-                style={{ background: ACCENT }}
-              >
-                {profile?.display_name?.charAt(0) || "A"}
-              </div>
-              <span className="hidden text-sm font-medium text-white sm:block">
-                {profile?.display_name || "Admin"}
-              </span>
-            </div>
-          </div>
-        </header>
-
-        {/* Page content */}
-        <div className="relative flex-1 overflow-auto p-4 sm:p-6 lg:p-8" style={{ background: BG }}>
+      <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
+        {/* Page content - account for fixed header (h-14 = 56px) + mobile nav bar (~44px on mobile) */}
+        <main className="relative flex-1 overflow-auto pt-14 lg:pt-0 pb-4 px-4 sm:px-6 lg:px-8" style={{ background: BG }}>
           <Outlet />
-        </div>
+        </main>
       </div>
     </div>
   );
