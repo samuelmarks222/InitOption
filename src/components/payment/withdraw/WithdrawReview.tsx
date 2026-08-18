@@ -48,8 +48,8 @@ export function WithdrawReview({
 }: WithdrawReviewProps) {
   const amountValue = Number(amount) || 0;
   const networkInfo = NETWORK_INFO[network.toUpperCase()] || { name: network, fee: "~1" };
-  const fee = networkInfo.fee || "~1";
-  const total = amountValue + (method === "crypto" ? 0 : amountValue * 0.02);
+  const fee = method === "crypto" ? (networkInfo.fee || "~1") : "$0.00";
+  const total = amountValue;
 
   return (
     <div className="space-y-6">
@@ -79,7 +79,7 @@ export function WithdrawReview({
               </div>
               <div className="p-4 rounded-xl bg-[#0a0d17] border border-white/10">
                 <p className="text-white/60 text-sm">Total</p>
-                <p className="font-bold text-2xl text-amber-400">${(amountValue + (method === "crypto" ? 0 : amountValue * 0.02)).toFixed(2)}</p>
+                <p className="font-bold text-2xl text-amber-400">${amountValue.toFixed(2)}</p>
               </div>
             </div>
           </div>
@@ -150,11 +150,11 @@ export function WithdrawReview({
               </div>
               <div>
                 <span className="text-white/50 text-sm">Total Deducted</span>
-                <p className="font-bold text-white">${(amountValue + (method === "crypto" ? 0 : amountValue * 0.02)).toFixed(2)}</p>
+                <p className="font-bold text-white">${amountValue.toFixed(2)}</p>
               </div>
               <div>
                 <span className="text-white/50 text-sm">Remaining</span>
-                <p className="font-bold text-white">${(availableBalance - amountValue - (method === "crypto" ? 0 : amountValue * 0.02)).toFixed(2)}</p>
+                <p className="font-bold text-white">${(availableBalance - amountValue).toFixed(2)}</p>
               </div>
             </div>
           </div>

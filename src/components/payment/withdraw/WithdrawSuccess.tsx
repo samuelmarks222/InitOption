@@ -37,12 +37,12 @@ export function WithdrawSuccess({
           </div>
           <div className="flex items-center justify-between">
             <span className="text-white/60">Fee</span>
-            <span className="font-bold text-xl text-amber-400">${method === "crypto" ? "~1" : (amountValue * 0.02).toFixed(2)}</span>
+            <span className="font-bold text-xl text-amber-400">${method === "crypto" ? "~1" : "0.00"}</span>
           </div>
           <div className="border-t border-white/10 pt-4">
             <div className="flex items-center justify-between">
               <span className="text-2xl font-bold text-white">Total</span>
-              <span className="text-2xl font-bold text-amber-400">${(amountValue * 0.98).toFixed(2)}</span>
+              <span className="text-2xl font-bold text-amber-400">${amountValue.toFixed(2)}</span>
             </div>
           </div>
         </div>

@@ -23,8 +23,6 @@ export function WithdrawMpesaDetails({
   onBack,
 }: WithdrawMpesaDetailsProps) {
   const amountValue = Number(amount) || 0;
-  const fee = amountValue * 0.02; // 2% fee mock
-  const total = amountValue + fee;
 
   return (
     <div className="space-y-6">
@@ -69,35 +67,27 @@ export function WithdrawMpesaDetails({
       </div>
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-2 gap-4 text-center">
           <div className="p-4 rounded-xl bg-white/5">
             <p className="text-white/50 text-sm">Amount</p>
             <p className="font-bold text-2xl text-white">${amountValue.toFixed(2)}</p>
           </div>
-          <div className="p-4 rounded-xl bg-white/5">
-            <p className="text-white/50 text-sm">Fee (2%)</p>
-            <p className="font-bold text-white">${(amountValue * 0.02).toFixed(2)}</p>
-          </div>
           <div className="p-4 rounded-xl bg-[#0a0d17] border border-white/10">
             <p className="text-white/60 text-sm">You Receive</p>
-            <p className="font-bold text-2xl text-green-400">${(amountValue * 0.98).toFixed(2)}</p>
+            <p className="font-bold text-2xl text-green-400">${amountValue.toFixed(2)}</p>
           </div>
         </div>
       </div>
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-2 gap-4 text-center">
           <div>
             <span className="text-white/50 text-sm">Available Balance</span>
             <p className="font-bold text-white">${availableBalance.toFixed(2)}</p>
           </div>
           <div>
-            <span className="text-white/50 text-sm">Fee</span>
-            <p className="font-bold text-white">${(amountValue * 0.02).toFixed(2)}</p>
-          </div>
-          <div>
             <span className="text-white/50 text-sm">You Receive</span>
-            <p className="font-bold text-green-400">${(amountValue * 0.98).toFixed(2)}</p>
+            <p className="font-bold text-green-400">${amountValue.toFixed(2)}</p>
           </div>
         </div>
       </div>
@@ -113,7 +103,7 @@ export function WithdrawMpesaDetails({
         <button
           type="button"
           onClick={onContinue}
-          disabled={!phone || amountValue < 10 || amountValue > 0.98 * availableBalance}
+          disabled={!phone || amountValue < 10 || amountValue > availableBalance}
           className="flex-1 h-12 rounded-xl bg-gradient-to-r from-[#0fa053] to-[#0fa053]/80 text-white font-bold text-lg shadow-[0_10px_30px_rgba(15,160,83,0.3)] hover:from-[#0fa053] hover:to-[#0fa053] disabled:from-white/10 disabled:to-white/10 disabled:shadow-none disabled:cursor-not-allowed"
         >
           Continue
