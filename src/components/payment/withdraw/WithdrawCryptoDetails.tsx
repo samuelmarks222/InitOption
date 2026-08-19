@@ -53,7 +53,6 @@ const NETWORK_INFO: Record<string, { name: string; minConfirmations: number; app
   "DOGECOIN": { name: "Dogecoin", minConfirmations: 6, approxTime: "~5 min", fee: "~1 DOGE" },
   "SOLANA": { name: "Solana", minConfirmations: 32, approxTime: "~10 sec", fee: "~0.01 SOL" },
   "XRP LEDGER": { name: "XRP Ledger", minConfirmations: 1, approxTime: "~3 sec", fee: "~0.00001 XRP" },
-  "TON": { name: "TON", minConfirmations: 1, approxTime: "~1 min", fee: "~0.1 TON" },
 };
 
 export function WithdrawCryptoDetails({

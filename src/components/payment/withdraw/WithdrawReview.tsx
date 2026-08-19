@@ -32,7 +32,6 @@ const NETWORK_INFO: Record<string, { name: string; fee: string }> = {
   "DOGECOIN": { name: "Dogecoin", fee: "~1 DOGE" },
   "SOLANA": { name: "Solana", fee: "~0.01 SOL" },
   "XRP LEDGER": { name: "XRP Ledger", fee: "~0.00001 XRP" },
-  "TON": { name: "TON", fee: "~0.1 TON" },
 };
 
 export function WithdrawReview({
