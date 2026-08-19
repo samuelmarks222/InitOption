@@ -146,36 +146,6 @@ const getTraderCountryCode = (trader: { nationality?: string | null; phone_count
   return fallbackCodes[(hashSeed(seed) + offset) % fallbackCodes.length];
 };
 
-function useCountUp(target: number, duration = 2000) {
-  const [count, setCount] = useState(0);
-  const ref = useRef<HTMLSpanElement>(null);
-  const startedRef = useRef(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !startedRef.current) {
-          startedRef.current = true;
-          const start = performance.now();
-          const animate = (now: number) => {
-            const elapsed = now - start;
-            const progress = Math.min(elapsed / duration, 1);
-            setCount(Math.floor((1 - Math.pow(1 - progress, 3)) * target));
-            if (progress < 1) requestAnimationFrame(animate);
-          };
-          requestAnimationFrame(animate);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.3 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [target, duration]);
-  return { count, ref };
-}
-
 function useFadeInUp() {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -199,22 +169,6 @@ const FadeInSection = ({ children, className }: { children: React.ReactNode; cla
   return (
     <div ref={ref} className={cn("transition-all duration-700", visible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0", className)}>
       {children}
-    </div>
-  );
-};
-
-const StatCard = ({ icon: Icon, label, value, suffix }: { icon: any; label: string; value: number; suffix?: string }) => {
-  const { count, ref } = useCountUp(value);
-  return (
-    <div className="rounded-2xl border border-[#334050] bg-[#27303d] p-5 transition-all duration-300 hover:border-[#007aff]/40 hover:shadow-lg hover:shadow-[#007aff]/5">
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[#007aff]/12 text-[#007aff]">
-        <Icon className="h-5 w-5" />
-      </div>
-      <span className="text-[28px] font-black text-white tabular-nums" ref={ref}>
-        {count.toLocaleString()}
-      </span>
-      {suffix && <span className="text-[28px] font-black text-[#00b95b]">{suffix}</span>}
-      <p className="mt-1 text-[13px] text-[#7a8aa8]">{label}</p>
     </div>
   );
 };
@@ -460,7 +414,6 @@ export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: Tour
           now={now}
           isLoading={isLoading}
           isError={isError}
-          onOpenDetails={handleOpenDetails}
           onJoin={handleJoin}
           onEnterTournament={onEnterTournament}
           joining={joining}
@@ -481,7 +434,6 @@ interface TournamentListViewProps {
   now: number;
   isLoading: boolean;
   isError: boolean;
-  onOpenDetails: (id: string) => void;
   onJoin: (id: string) => void;
   onEnterTournament?: (id: string) => void;
   joining: boolean;
@@ -498,33 +450,21 @@ const TournamentListView = ({
   now,
   isLoading,
   isError,
-  onOpenDetails,
   onJoin,
   onEnterTournament,
   joining,
 }: TournamentListViewProps) => {
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-6 py-6">
+    <div className="w-full px-5 py-5 lg:px-6">
 
-
-      {/* ─── Statistics Section ────────────────────────────────────────── */}
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Calendar} label="Weekly Tournaments" value={4} />
-        <StatCard icon={Users} label="Active Traders" value={15000} suffix="+" />
-        <StatCard icon={UserPlus} label="Registered Participants" value={13284} />
-        <StatCard icon={Globe} label="Countries Participating" value={120} suffix="+" />
-        <StatCard icon={DollarSign} label="Total Prize Pool" value={250000} />
-        <StatCard icon={Trophy} label="Weekly Prize Winners" value={400} />
-        <StatCard icon={Flag} label="Completed Tournaments" value={2300} suffix="+" />
-      </div>
 
       {/* ─── Tab Bar ───────────────────────────────────────────────────── */}
-      <div className="mb-6 flex gap-6 border-b border-[#2a3340]">
+      <div className="mb-10 flex gap-8 border-b border-[#3a4050]">
         <button
           type="button"
           onClick={() => onTabChange("active")}
           className={cn(
-            "pb-3 text-[15px] font-semibold transition-colors",
+            "min-w-[150px] pb-4 text-[15px] font-black uppercase transition-colors",
             listTab === "active"
               ? "border-b-2 border-[#007aff] text-white"
               : "text-[#7a8aa8] hover:text-white",
@@ -536,7 +476,7 @@ const TournamentListView = ({
           type="button"
           onClick={() => onTabChange("completed")}
           className={cn(
-            "pb-3 text-[15px] font-semibold transition-colors",
+            "min-w-[150px] pb-4 text-[15px] font-black uppercase transition-colors",
             listTab === "completed"
               ? "border-b-2 border-[#007aff] text-white"
               : "text-[#7a8aa8] hover:text-white",
@@ -561,7 +501,7 @@ const TournamentListView = ({
           {participatingTournaments.length > 0 && (
             <>
               <SectionHeader label={"YOU ARE PARTICIPATING (" + participatingTournaments.length + ")"} />
-              <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="mb-8 grid grid-cols-1 gap-8 xl:grid-cols-2">
                 {participatingTournaments.map((t, i) => (
                   <TournamentCard
                     key={t.id}
@@ -570,7 +510,6 @@ const TournamentListView = ({
                     index={i}
                     hasJoined={true}
                     onJoin={onJoin}
-                    onOpenDetails={onOpenDetails}
                     onEnterTournament={onEnterTournament}
                     joining={joining}
                   />
@@ -582,7 +521,7 @@ const TournamentListView = ({
           {availableTournaments.length > 0 && (
             <>
               <SectionHeader label={"AVAILABLE FOR PARTICIPATION (" + availableTournaments.length + ")"} />
-              <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="mb-8 grid grid-cols-1 gap-8 xl:grid-cols-2">
                 {availableTournaments.map((t, i) => (
                   <TournamentCard
                     key={t.id}
@@ -591,7 +530,6 @@ const TournamentListView = ({
                     index={participatingTournaments.length + i}
                     hasJoined={joinedIds.has(t.id)}
                     onJoin={onJoin}
-                    onOpenDetails={onOpenDetails}
                     onEnterTournament={onEnterTournament}
                     joining={joining}
                   />
@@ -842,7 +780,6 @@ interface TournamentCardProps {
   index: number;
   hasJoined: boolean;
   onJoin: (id: string) => void;
-  onOpenDetails: (id: string) => void;
   onEnterTournament?: (id: string) => void;
   joining: boolean;
 }
@@ -853,7 +790,6 @@ const TournamentCard = ({
   index,
   hasJoined,
   onJoin,
-  onOpenDetails,
   onEnterTournament,
   joining,
 }: TournamentCardProps) => {
@@ -863,54 +799,53 @@ const TournamentCard = ({
   const countdownLabel = isActive ? "Ends in:" : "Starts in:";
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#334050] bg-[#27303d]">
-      <div className="px-5 py-5">
-        {/* Top Bar: badge left, prize pool right */}
-        <div className="mb-4 flex items-center justify-between">
+    <div className="relative min-h-[300px] overflow-hidden rounded-[6px] bg-[#343b51] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[55%] bg-[linear-gradient(110deg,rgba(43,63,77,0.86)_0%,rgba(52,59,81,0.78)_44%,rgba(52,59,81,0.96)_100%)]" />
+      <Trophy className="pointer-events-none absolute left-1/2 top-7 h-44 w-44 -translate-x-1/2 text-[#667187]/10" strokeWidth={1.6} />
+      <div className="relative z-10 flex min-h-[300px] flex-col px-5 py-5">
+        <div className="mb-14 flex items-center justify-between">
           <span
             className={cn(
-              "inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wider",
+              "inline-flex items-center rounded-[6px] px-3 py-2 text-[11px] font-black uppercase tracking-[0.01em]",
               badge.className,
             )}
           >
-            {badge.label}
+            {isActive ? badge.label : tournament.status === "completed" ? "FINISHED" : `${countdownLabel} ${formatCountdown(countdownTarget, now)}`}
           </span>
           <div className="text-right">
-            <p className="text-[24px] font-black leading-none text-[#00b95b]">
-              {formatMoney(tournament.prize_pool)}
+            <span className="block text-[12px] font-black uppercase tracking-[0.05em] text-white/50">Prize pool</span>
+            <p className="mt-4 text-[26px] font-black leading-none text-[#12b76a]">
+              {formatMoney(tournament.prize_pool).replace("$", "")} $
             </p>
-            <span className="text-[11px] text-[#7a8aa8]">PRIZE POOL</span>
           </div>
         </div>
 
-        {/* Middle Section: title left, entry fee + duration below */}
-        <h3 className="mb-3 text-[18px] font-bold text-white">{tournament.title}</h3>
-        <div className="mb-4 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
-          <div>
-            <p className="text-[#7a8aa8]">Entry fee</p>
-            <p className="font-semibold text-white">{formatMoney(tournament.entry_fee, true)}</p>
+        <h3 className="mb-8 text-[25px] font-black text-white md:text-[28px]">{tournament.title}</h3>
+        <div className="mb-6 grid grid-cols-2 text-center">
+          <div className="border-r border-white/10">
+            <p className="text-[27px] font-black text-white">{formatMoney(tournament.entry_fee, true).replace("$", "")}{tournament.entry_fee === 0 ? "" : " $"}</p>
+            <p className="mt-1 text-[12px] font-semibold text-white/40">Entry fee</p>
           </div>
           <div>
-            <p className="text-[#7a8aa8]">Duration</p>
-            <p className="font-semibold text-white">{formatDuration(tournament.start_date, tournament.end_date)}</p>
-          </div>
-          <div>
-            <p className="text-[#7a8aa8]">Start balance</p>
-            <p className="font-semibold text-white">{formatMoney(tournament.starting_balance)}</p>
-          </div>
-          <div>
-            <p className="text-[#7a8aa8]">{isActive ? "Ends" : "Starts"}</p>
-            <p className="font-semibold text-[#3ddf8a]">{formatCountdown(countdownTarget, now)}</p>
+            <p className="text-[27px] font-black text-white">{formatDuration(tournament.start_date, tournament.end_date).replace("d", " day").replace("h", " hour")}</p>
+            <p className="mt-1 text-[12px] font-semibold text-white/40">Duration</p>
           </div>
         </div>
 
-        {/* Bottom Section: full-width Details button */}
         <button
           type="button"
-          onClick={() => onOpenDetails(tournament.id)}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#00b95b] px-4 py-3 text-[14px] font-bold text-white transition-colors hover:bg-[#00a34f]"
+          onClick={() => (hasJoined ? onEnterTournament?.(tournament.id) : onJoin(tournament.id))}
+          disabled={joining || tournament.status === "completed"}
+          className={cn(
+            "mt-auto flex w-full items-center justify-center gap-2 rounded-[4px] px-4 py-4 text-[15px] font-black text-white transition-colors",
+            tournament.status === "completed"
+              ? "cursor-not-allowed bg-[#525b70] text-white/80"
+              : hasJoined
+                ? "bg-[#007aff] hover:bg-[#2290ff]"
+                : "bg-[#596174] hover:bg-[#687187]",
+          )}
         >
-          View details
+          {joining ? "Processing..." : tournament.status === "completed" ? "Finished" : hasJoined ? "Go to trading" : "Join now"}
         </button>
       </div>
     </div>
