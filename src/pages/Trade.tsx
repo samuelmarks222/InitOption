@@ -49,7 +49,7 @@ import {
   readDemoBalanceStorage,
   writeDemoBalanceStorage,
 } from "@/lib/onboarding";
-import { playTradeCloseSound, playTradeOpenSound } from "@/lib/tradeSounds";
+import { playTradeOpenSound, playTradeResultSound } from "@/lib/tradeSounds";
 import { toast } from "@/hooks/use-toast";
 import {
   assetCategoryToRuntimeType,
@@ -623,6 +623,11 @@ const Trade = () => {
         expirySeconds: s.expiry_seconds,
         profit: s.profit,
         status: s.status,
+        entryPrice: s.entry_price,
+        exitPrice: s.exit_price,
+        markerTime: s.marker_time ?? null,
+        markerLogical: s.marker_logical ?? null,
+        expiryTime: s.expiry_time ?? null,
       });
     });
 
@@ -637,6 +642,7 @@ const Trade = () => {
       const now = Date.now();
       const canResolveDemoTrades = latestChartPriceRef.current > 0;
       const settledTrades: TradeHistoryEntry[] = [];
+      const settledAnnouncements: ChartSettlementAnnouncement[] = [];
       let creditedAmount = 0;
 
       const nextActiveTrades = demoActiveTrades.reduce<ActiveTrade[]>((nextTrades, trade) => {
@@ -658,6 +664,11 @@ const Trade = () => {
           (trade.direction === "higher" && exitPrice > trade.entry_price) ||
           (trade.direction === "lower" && exitPrice < trade.entry_price);
         const profit = won ? trade.amount + trade.amount * trade.payout_rate : 0;
+        const status: "won" | "lost" = won ? "won" : "lost";
+        const markerTime =
+          typeof trade.marker_time === "number" && Number.isFinite(trade.marker_time)
+            ? trade.marker_time
+            : Math.floor(new Date(trade.opened_at).getTime() / 1000);
 
         if (won) {
           creditedAmount += profit;
@@ -674,9 +685,26 @@ const Trade = () => {
           expiry_seconds: trade.expiry_seconds,
           payout_rate: trade.payout_rate,
           profit,
-          status: won ? "won" : "lost",
+          status,
           opened_at: trade.opened_at,
           closed_at: new Date().toISOString(),
+        });
+        settledAnnouncements.push({
+          id: trade.id,
+          assetSymbol: trade.asset_symbol,
+          direction: trade.direction,
+          amount: trade.amount,
+          expirySeconds: trade.expiry_seconds,
+          profit,
+          status,
+          entryPrice: trade.entry_price,
+          exitPrice,
+          markerTime,
+          markerLogical:
+            typeof trade.marker_logical === "number" && Number.isFinite(trade.marker_logical)
+              ? trade.marker_logical
+              : null,
+          expiryTime: markerTime + Math.max(1, trade.expiry_seconds || 0),
         });
 
         return nextTrades;
@@ -685,7 +713,9 @@ const Trade = () => {
       setDemoActiveTrades(nextActiveTrades);
 
       if (settledTrades.length > 0) {
-        void playTradeCloseSound();
+        settledAnnouncements.forEach((announcement) => {
+          void playTradeResultSound(announcement.status);
+        });
         if (creditedAmount > 0) {
           setDemoBalance((current) => current + creditedAmount);
         }
@@ -693,17 +723,7 @@ const Trade = () => {
         setDemoTradeHistory((current) =>
           filterRetainedTradeHistory([...settledHistory, ...current]).slice(0, 50),
         );
-        settledTrades.forEach((settledTrade) => {
-          showChartSettlementAnnouncement({
-            id: settledTrade.id,
-            assetSymbol: settledTrade.asset_symbol,
-            direction: settledTrade.direction,
-            amount: settledTrade.amount,
-            expirySeconds: settledTrade.expiry_seconds,
-            profit: settledTrade.profit ?? 0,
-            status: settledTrade.status === "won" ? "won" : "lost",
-          });
-        });
+        settledAnnouncements.forEach(showChartSettlementAnnouncement);
       }
     }, 100);
 

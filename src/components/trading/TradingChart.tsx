@@ -34,6 +34,7 @@ import {
 import { CandleAggregator } from "./CandleAggregator";
 import ChartToolbar, { ChartType, CandleIcon } from "./ChartToolbar";
 import { TradeMarkersOverlay } from "./TradeMarkersOverlay";
+import { TradeResultTicksOverlay } from "./TradeResultTicksOverlay";
 import { LiveChartBeacon } from "./LiveChartBeacon";
 import { TRADING_DOWN_COLOR, TRADING_UP_COLOR } from "./tradingPalette";
 import { ActiveIndicator } from "./indicators/types";
@@ -114,6 +115,11 @@ export interface ChartSettlementAnnouncement {
   expirySeconds: number;
   profit: number;
   status: "won" | "lost";
+  entryPrice?: number;
+  exitPrice?: number;
+  markerTime?: number | null;
+  markerLogical?: number | null;
+  expiryTime?: number | null;
 }
 
 export interface ChartOrderAnnouncement {
@@ -4123,6 +4129,16 @@ const TradingChart = ({
                   timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60}
                   liveLogical={livePriceBeacon?.logical ?? null}
                   livePrice={livePriceBeacon?.price ?? currentPrice}
+                />
+              )}
+              {!mobileHistoryOpen && (
+                <TradeResultTicksOverlay
+                  chart={syncChart}
+                  series={syncSeries}
+                  announcements={settlementAnnouncements?.filter(
+                    (announcement) => announcement.assetSymbol === asset.symbol,
+                  )}
+                  timeframeSeconds={TIMEFRAMES[selectedTf]?.seconds ?? 60}
                 />
               )}
              {!mobileHistoryOpen && !overlayUiSuppressed && (

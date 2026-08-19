@@ -23,7 +23,7 @@ import {
   getStoredTradeMarkerTime,
   setStoredTradeMarkerSnapshot,
 } from "@/lib/tradeMarkerCache";
-import { playTradeCloseSound, playTradeOpenSound } from "@/lib/tradeSounds";
+import { playTradeOpenSound, playTradeResultSound } from "@/lib/tradeSounds";
 
 export type TradeDirection = "higher" | "lower";
 export type TradeHistoryEntry = Tables<"trades">;
@@ -67,6 +67,9 @@ export interface TradeSettlement {
   profit: number;
   status: "won" | "lost";
   settled_at: string;
+  marker_time?: number | null;
+  marker_logical?: number | null;
+  expiry_time?: number | null;
 }
 
 interface TradingContextValue {
@@ -420,6 +423,9 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     const profit = won ? trade.amount + trade.amount * trade.payout_rate : 0;
     const status: "won" | "lost" = won ? "won" : "lost";
     const settledAt = new Date().toISOString();
+    const markerTime = typeof trade.marker_time === "number" && Number.isFinite(trade.marker_time)
+      ? trade.marker_time
+      : null;
     setPendingSettlements((prev) => [
       ...prev,
       {
@@ -434,9 +440,15 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         profit,
         status,
         settled_at: settledAt,
+        marker_time: markerTime,
+        marker_logical:
+          typeof trade.marker_logical === "number" && Number.isFinite(trade.marker_logical)
+            ? trade.marker_logical
+            : null,
+        expiry_time: markerTime !== null ? markerTime + Math.max(1, trade.expiry_seconds || 0) : null,
       },
     ]);
-    void playTradeCloseSound();
+    void playTradeResultSound(status);
   }, []);
 
   const processSettlementQueue = useCallback(async () => {

@@ -6,7 +6,7 @@ declare global {
   }
 }
 
-type TradeSoundKind = "open" | "close";
+type TradeSoundKind = "open" | "close" | "win" | "loss";
 
 type ToneStep = {
   delay: number;
@@ -153,3 +153,18 @@ export const playTradeCloseSound = () =>
     ],
     180,
   );
+
+export const playTradeWinSound = () =>
+  playPattern("win", [
+    { delay: 0, duration: 0.055, frequency: 820, endFrequency: 980, volume: 0.075, type: "triangle" },
+    { delay: 0.085, duration: 0.065, frequency: 1100, endFrequency: 1320, volume: 0.07, type: "sine" },
+  ]);
+
+export const playTradeLossSound = () =>
+  playPattern("loss", [
+    { delay: 0, duration: 0.06, frequency: 360, endFrequency: 300, volume: 0.07, type: "triangle" },
+    { delay: 0.085, duration: 0.065, frequency: 285, endFrequency: 220, volume: 0.065, type: "sine" },
+  ]);
+
+export const playTradeResultSound = (status: "won" | "lost") =>
+  status === "won" ? playTradeWinSound() : playTradeLossSound();
