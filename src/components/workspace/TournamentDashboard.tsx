@@ -10,6 +10,7 @@ import { getDummyTraders } from "@/lib/dummyTraders";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
+  AlertTriangle,
   ArrowLeft,
   Award,
   BarChart3,
@@ -31,6 +32,7 @@ import {
   Trophy,
   UserPlus,
   Users,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -288,10 +290,11 @@ function getTournamentBadge(tournament: Tournament, now: number) {
 
 interface TournamentsPageProps {
   onEnterTournament?: (id: string) => void;
+  onOpenDeposit?: () => void;
   directoryRefreshKey?: number;
 }
 
-export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: TournamentsPageProps) => {
+export const TournamentsPage = ({ onEnterTournament, onOpenDeposit, directoryRefreshKey }: TournamentsPageProps) => {
   const { profile, refreshProfile } = useAuth();
   const [now, setNow] = useState(() => Date.now());
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -299,6 +302,7 @@ export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: Tour
   const [listTab, setListTab] = useState<ListTab>("active");
   const [historyRows, setHistoryRows] = useState<ParticipantRow[]>([]);
   const [joining, setJoining] = useState(false);
+  const [joinPromptTournamentId, setJoinPromptTournamentId] = useState<string | null>(null);
   const { data: tournaments = [], isLoading, isError } = usePublicTournaments();
 
   useEffect(() => {
@@ -362,6 +366,13 @@ export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: Tour
     [tournaments, selectedTournamentId],
   );
 
+  const joinPromptTournament = useMemo(
+    () => tournaments.find((t) => t.id === joinPromptTournamentId) ?? null,
+    [tournaments, joinPromptTournamentId],
+  );
+
+  const liveBalance = getEffectiveLiveBalance(profile);
+
   const handleOpenDetails = (id: string) => {
     setSelectedTournamentId(id);
     setViewMode("detail");
@@ -370,6 +381,36 @@ export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: Tour
   const handleBackToList = () => {
     setSelectedTournamentId(null);
     setViewMode("list");
+  };
+
+  const performJoin = async (tournamentId: string) => {
+    const t = tournaments.find((x) => x.id === tournamentId);
+    if (!t || !profile) {
+      toast.error("You must be logged in to join.");
+      return;
+    }
+    if (joinedIds.has(tournamentId)) {
+      onEnterTournament?.(tournamentId);
+      return;
+    }
+    if (liveBalance < t.entry_fee) {
+      setJoinPromptTournamentId(tournamentId);
+      return;
+    }
+    setJoining(true);
+    try {
+      const { error } = await api.rpc("join_tournament", { p_tournament_id: tournamentId });
+      if (error) throw error;
+      await refreshProfile();
+      setJoinPromptTournamentId(null);
+      toast.success("Tournament joined successfully.");
+      void loadHistory();
+      setTimeout(() => onEnterTournament?.(tournamentId), 450);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to join tournament.");
+    } finally {
+      setJoining(false);
+    }
   };
 
   const handleJoin = async (tournamentId: string) => {
@@ -382,23 +423,16 @@ export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: Tour
       onEnterTournament?.(tournamentId);
       return;
     }
-    if (getEffectiveLiveBalance(profile) < t.entry_fee) {
-      toast.error(`Insufficient balance. You need ${formatMoney(t.entry_fee)} to join.`);
+    if (Number(t.entry_fee ?? 0) > 0) {
+      setJoinPromptTournamentId(tournamentId);
       return;
     }
-    setJoining(true);
-    try {
-      const { error } = await api.rpc("join_tournament", { p_tournament_id: tournamentId });
-      if (error) throw error;
-      await refreshProfile();
-      toast.success("Tournament joined successfully.");
-      void loadHistory();
-      setTimeout(() => onEnterTournament?.(tournamentId), 450);
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to join tournament.");
-    } finally {
-      setJoining(false);
-    }
+    await performJoin(tournamentId);
+  };
+
+  const handleDepositFromJoinPrompt = () => {
+    setJoinPromptTournamentId(null);
+    onOpenDeposit?.();
   };
 
   return (
@@ -432,6 +466,99 @@ export const TournamentsPage = ({ onEnterTournament, directoryRefreshKey }: Tour
           joining={joining}
         />
       )}
+      {joinPromptTournament && (
+        <TournamentJoinPrompt
+          tournament={joinPromptTournament}
+          balance={liveBalance}
+          joining={joining}
+          onClose={() => setJoinPromptTournamentId(null)}
+          onConfirm={() => void performJoin(joinPromptTournament.id)}
+          onDeposit={handleDepositFromJoinPrompt}
+        />
+      )}
+    </div>
+  );
+};
+
+const TournamentJoinPrompt = ({
+  tournament,
+  balance,
+  joining,
+  onClose,
+  onConfirm,
+  onDeposit,
+}: {
+  tournament: Tournament;
+  balance: number;
+  joining: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  onDeposit: () => void;
+}) => {
+  const entryFee = Number(tournament.entry_fee ?? 0);
+  const missing = Math.max(entryFee - balance, 0);
+  const hasEnoughFunds = missing <= 0;
+
+  return (
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[#111827]/65 px-4 backdrop-blur-[6px]">
+      <div className="w-full max-w-[350px] rounded-[6px] bg-[#2d3446] px-5 pb-5 pt-6 text-white shadow-2xl">
+        <div className="mb-7 flex items-start justify-between gap-4">
+          <h2 className="flex-1 text-center text-[20px] font-black leading-tight">Confirm your participation</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center text-white/35 transition-colors hover:text-white"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <p className="mx-auto mb-6 max-w-[260px] text-center text-[14px] leading-snug text-white/45">
+          {hasEnoughFunds
+            ? "Confirm that you want to participate in this tournament"
+            : "You have insufficient funds to participate in the tournament"}
+        </p>
+
+        <div className="border-y border-white/10 py-5">
+          <div className="mb-4 flex items-center justify-between text-[13px]">
+            <span className="font-black text-white">Tournament:</span>
+            <span className="font-black text-white">{tournament.title}</span>
+          </div>
+          <div className="mb-4 flex items-center justify-between text-[13px]">
+            <span className="font-semibold text-white/45">Entry fee:</span>
+            <span className="font-black text-white">{formatCompactMoney(entryFee)}</span>
+          </div>
+          <div className="flex items-center justify-between text-[13px]">
+            <span className="font-semibold text-white/45">Available funds:</span>
+            <span className={cn("inline-flex items-center gap-1 font-black", hasEnoughFunds ? "text-white" : "text-white")}>
+              {!hasEnoughFunds && <AlertTriangle className="h-3.5 w-3.5 fill-[#ff584d] text-[#ff584d]" />}
+              {balance.toFixed(2)} $
+            </span>
+          </div>
+        </div>
+
+        {!hasEnoughFunds && (
+          <div className="mt-10 mb-5 flex items-center justify-center gap-2 text-[14px] font-semibold text-[#ff584d]">
+            <AlertTriangle className="h-5 w-5 fill-[#ff584d] text-[#ff584d]" />
+            You need to deposit {missing.toFixed(2)} $
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={hasEnoughFunds ? onConfirm : onDeposit}
+          disabled={joining}
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-[4px] bg-[#0d86f7] px-4 py-3.5 text-[15px] font-black text-white transition-colors hover:bg-[#2290ff] disabled:opacity-60"
+        >
+          {hasEnoughFunds ? (joining ? "Processing..." : "Confirm") : (
+            <>
+              <span className="text-[24px] leading-none">+</span>
+              Deposit
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 };

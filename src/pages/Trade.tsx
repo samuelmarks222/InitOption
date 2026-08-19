@@ -105,6 +105,7 @@ interface MobileModuleOverlayProps {
   analyticsSignalAsset?: AnalyticsSignalAsset;
   directoryRefreshKey: number;
   onEnterTournament?: (id: string) => void;
+  onOpenDeposit?: () => void;
 }
 
 const DEFAULT_TRADE_ASSET_ROW = {
@@ -267,6 +268,7 @@ const MobileModuleOverlay = ({
   analyticsSignalAsset,
   directoryRefreshKey,
   onEnterTournament,
+  onOpenDeposit,
 }: MobileModuleOverlayProps) => {
   if (!mobileOverlay) return null;
   return (
@@ -285,7 +287,7 @@ const MobileModuleOverlay = ({
             </button>
           </div>
           <div className="flex-1 min-h-0 relative">
-            <TournamentsGridOverlay onEnterTournament={onEnterTournament} directoryRefreshKey={directoryRefreshKey} />
+            <TournamentsGridOverlay onEnterTournament={onEnterTournament} onOpenDeposit={onOpenDeposit} directoryRefreshKey={directoryRefreshKey} />
           </div>
         </div>
       )}
@@ -1304,7 +1306,7 @@ const Trade = () => {
               </div>
             ) : activeWorkspace === "tournaments" ? (
               <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
-                <TournamentsGridOverlay onEnterTournament={handleEnterTournament} onClose={() => setActiveWorkspace(null)} directoryRefreshKey={directoryRefreshKey} />
+                <TournamentsGridOverlay onEnterTournament={handleEnterTournament} onOpenDeposit={openDepositPage} onClose={() => setActiveWorkspace(null)} directoryRefreshKey={directoryRefreshKey} />
               </div>
             ) : activeWorkspace === "referrals" ? (
               <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
@@ -1616,6 +1618,7 @@ const Trade = () => {
           analyticsSignalAsset={analyticsSignalAsset}
           directoryRefreshKey={directoryRefreshKey}
           onEnterTournament={handleEnterTournament}
+          onOpenDeposit={openDepositPage}
         />
 
         {showRealAccountWelcome && (

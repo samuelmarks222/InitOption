@@ -3,11 +3,12 @@ import { TournamentsPage } from "./TournamentDashboard";
 
 interface TournamentsGridOverlayProps {
   onEnterTournament?: (id: string) => void;
+  onOpenDeposit?: () => void;
   onClose?: () => void;
   directoryRefreshKey?: number;
 }
 
-export const TournamentsGridOverlay = ({ onEnterTournament, onClose, directoryRefreshKey }: TournamentsGridOverlayProps) => {
+export const TournamentsGridOverlay = ({ onEnterTournament, onOpenDeposit, onClose, directoryRefreshKey }: TournamentsGridOverlayProps) => {
   return (
     <div className="flex h-full w-full flex-col">
       {onClose && (
@@ -23,7 +24,7 @@ export const TournamentsGridOverlay = ({ onEnterTournament, onClose, directoryRe
         </div>
       )}
       <div className="flex-1 min-h-0">
-        <TournamentsPage onEnterTournament={onEnterTournament} directoryRefreshKey={directoryRefreshKey} />
+        <TournamentsPage onEnterTournament={onEnterTournament} onOpenDeposit={onOpenDeposit} directoryRefreshKey={directoryRefreshKey} />
       </div>
     </div>
   );
