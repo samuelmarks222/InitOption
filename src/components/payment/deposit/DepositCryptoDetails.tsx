@@ -105,7 +105,10 @@ export function DepositCryptoDetails({
   const [plisioMinLoading, setPlisioMinLoading] = useState(true);
 
   useEffect(() => {
-    if (cryptoMethods.length === 0) return;
+    if (cryptoMethods.length === 0) {
+      setPlisioMinLoading(false);
+      return;
+    }
     let cancelled = false;
     setPlisioMinLoading(true);
     getPlisioMethodMinimums({ methods: cryptoMethods })
