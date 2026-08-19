@@ -24,7 +24,7 @@ interface AuthContextType {
   loading: boolean;
   emailVerified: boolean;
   emailVerifiedAt: string | null;
-  signUp: (email: string, password: string, username?: string, referredByCode?: string) => Promise<{ error: { message: string; status?: number } | null }>;
+  signUp: (email: string, password: string, username?: string, referredByCode?: string, preferredCurrency?: string) => Promise<{ error: { message: string; status?: number } | null }>;
   signIn: (email: string, password: string) => Promise<{ error: { message: string; status?: number } | null }>;
   signInWithGoogle: () => Promise<{ error: { message: string; status?: number } | null }>;
   signOut: () => Promise<void>;
@@ -567,7 +567,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const signUp = async (email: string, password: string, username?: string, referredByCode?: string) => {
+  const signUp = async (email: string, password: string, username?: string, referredByCode?: string, preferredCurrency?: string) => {
     if (!isLoaded) {
       return { error: toAuthError("Authentication provider is not ready. Reload the page and try again.", 500) };
     }
@@ -588,6 +588,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               method: "POST",
               headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
               body: JSON.stringify({ code: referredByCode.trim().toUpperCase() }),
+            }).catch(() => undefined),
+          )
+          .catch(() => undefined);
+      }
+
+      // Create profile with preferred currency (best-effort)
+      if (fbUser && preferredCurrency) {
+        void fbUser
+          .getIdToken(true)
+          .then((token) =>
+            fetch("/api/profile", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                id: fbUser.id,
+                email: email,
+                display_name: displayName,
+                username: displayName,
+                preferred_currency: preferredCurrency,
+              }),
             }).catch(() => undefined),
           )
           .catch(() => undefined);

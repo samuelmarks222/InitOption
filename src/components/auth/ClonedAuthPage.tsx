@@ -132,7 +132,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
 
     localStorage.setItem("preferred_currency", currency);
 
-    const { error } = await signUp(email, password, fullName.trim(), promoCode.trim());
+    const { error } = await signUp(email, password, fullName.trim(), promoCode.trim(), currency);
     setLoading(false);
 
     if (error) {
