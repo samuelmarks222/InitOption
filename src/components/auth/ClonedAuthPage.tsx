@@ -72,6 +72,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
+    localStorage.setItem("preferred_currency", currency);
 
     const { error } = await signInWithGoogle();
     if (!error) return;
