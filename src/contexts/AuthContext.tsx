@@ -44,6 +44,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error: { message: string; status?: number } | null }>;
   verifyPasswordResetCode: (email: string, code: string) => Promise<{ error: { message: string; status?: number } | null }>;
   updatePasswordAfterReset: (newPassword: string) => Promise<{ error: { message: string; status?: number } | null }>;
+  refreshSession: () => Promise<{ error: { message: string; status?: number } | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -669,6 +670,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     window.location.replace(window.location.origin + "/login");
   };
 
+  const refreshSession = async () => {
+    if (!appwriteAccount) return { error: toAuthError("Authentication provider is not ready.", 500) };
+    try {
+      const user = await currentAppwriteUser();
+      if (user) {
+        const appUser = firebaseUserToAppUser(user);
+        if (appUser) {
+          setUser(appUser);
+          setSession({ user: { id: appUser.id } });
+          activeProfileUserIdRef.current = appUser.id;
+          await fetchProfile(appUser.id, appUser);
+          return { error: null };
+        }
+      }
+      return { error: toAuthError("Session expired. Please sign in again.", 401) };
+    } catch (error: any) {
+      return { error: toAuthError(error?.message || "Session refresh failed.", 500) };
+    }
+  };
+
   const resetPassword = async (email: string) => {
     if (!appwriteAccount) return { error: toAuthError("Authentication provider is not ready.", 500) };
     try {
@@ -734,6 +755,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         resetPassword,
         verifyPasswordResetCode,
         updatePasswordAfterReset,
+        refreshSession,
       }}
     >
       {children}
