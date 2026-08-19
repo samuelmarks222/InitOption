@@ -4,17 +4,20 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useStatistics, type Trade } from "@/hooks/useStatistics";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
+import type { AccountTab } from "./AccountGridOverlay";
 import type { AnalyticsSignalAsset } from "./analytics/AnalyticsSignals";
 
 type AnalyticsRange = "Day" | "Week" | "Month" | "All";
+export type AnalyticsAccountTab = "Withdrawal" | "Payments" | "Trades" | "My account" | "Market" | "Tournaments" | "Analytics";
 
 interface AnalyticsGridOverlayProps {
   onClose?: () => void;
   activeAsset?: AnalyticsSignalAsset;
+  onNavigate?: (target: { workspace?: "account" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => void;
 }
 
 const RANGE_OPTIONS: AnalyticsRange[] = ["Day", "Week", "Month", "All"];
-const ACCOUNT_TABS = ["Withdrawal", "Payments", "Trades", "My account", "Market", "Tournaments", "Analytics"];
+const ACCOUNT_TABS: AnalyticsAccountTab[] = ["Withdrawal", "Payments", "Trades", "My account", "Market", "Tournaments", "Analytics"];
 const PIE_COLORS = ["#08c66b", "#1d96f2", "#ff5b58", "#bb0039", "#ff950f"];
 
 const rangeStart = (range: AnalyticsRange) => {
@@ -36,7 +39,7 @@ const formatAxisDate = (iso: string) =>
 const formatUsdCompact = (value: number) => `${Math.round(value).toLocaleString("en-US").replace(/,/g, "")} $`;
 const getDemoBalance = (profile: any) => Number(profile?.demo_balance ?? profile?.practice_balance ?? 0);
 
-export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => {
+export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverlayProps) => {
   const { profile, user } = useAuth();
   const { formatMoney } = useCurrency();
   const { trades, assetPerformance } = useStatistics();
@@ -57,17 +60,26 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
   const email = user?.email ?? profile?.email ?? "trader@example.com";
   const displayId = (profile?.id ?? user?.id ?? "84560898").replace(/\D/g, "").slice(0, 8) || "84560898";
   const location = profile?.country ?? profile?.nationality ?? "Kenya";
+  const handleTabClick = (tab: AnalyticsAccountTab) => {
+    if (tab === "Analytics") return;
+    if (tab === "Withdrawal") return onNavigate?.({ route: "withdraw" }) ?? onClose?.();
+    if (tab === "Payments") return onNavigate?.({ workspace: "account", accountTab: "balance_history" }) ?? onClose?.();
+    if (tab === "Trades") return onNavigate?.({ workspace: "account", accountTab: "trading_history" }) ?? onClose?.();
+    if (tab === "My account") return onNavigate?.({ workspace: "account", accountTab: "personal" }) ?? onClose?.();
+    if (tab === "Market") return onNavigate?.({ workspace: "leaderboard" }) ?? onClose?.();
+    if (tab === "Tournaments") return onNavigate?.({ workspace: "tournaments" }) ?? onClose?.();
+  };
 
   return (
     <div className="quotex-glow-home trading-terminal flex h-full w-full flex-col overflow-hidden text-white" style={{ background: "#1b202a" }}>
-      <div className="flex-1 overflow-y-auto px-5 py-5">
-        <div className="mb-10 flex flex-wrap items-center gap-8 rounded-[6px] bg-[#2a3040] px-8 py-3">
+      <div className="flex-1 overflow-y-auto px-4 py-4 lg:px-5 lg:py-5">
+        <div className="mb-6 flex w-fit max-w-full flex-wrap items-center gap-4 rounded-[6px] bg-[#2a3040] px-3 py-2">
           {ACCOUNT_TABS.map((tab) => (
             <button
               key={tab}
               type="button"
-              onClick={() => tab !== "Analytics" && onClose?.()}
-              className={`rounded-[6px] px-6 py-5 text-[20px] font-black transition-colors ${
+              onClick={() => handleTabClick(tab)}
+              className={`rounded-[6px] px-4 py-3 text-[14px] font-black transition-colors xl:px-5 ${
                 tab === "Analytics" ? "bg-[#4a5061] text-white" : "text-white hover:bg-white/5"
               }`}
             >
@@ -76,27 +88,27 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
           ))}
         </div>
 
-        <div className="mb-10 flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-wrap items-center gap-10">
-            <div className="flex items-center gap-5">
-              <div className="relative flex h-20 w-20 items-end justify-center overflow-hidden rounded-full bg-black">
-                <div className="mb-1 h-8 w-16 rounded-t-full bg-[#0d86f7]" />
-                <div className="absolute top-4 h-9 w-9 rounded-full bg-[#0d86f7]" />
+        <div className="mb-6 flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="flex items-center gap-4">
+              <div className="relative flex h-16 w-16 items-end justify-center overflow-hidden rounded-full bg-black">
+                <div className="mb-1 h-7 w-12 rounded-t-full bg-[#0d86f7]" />
+                <div className="absolute top-3 h-8 w-8 rounded-full bg-[#0d86f7]" />
               </div>
               <div>
-                <p className="text-[18px] font-bold text-white/45">{email}</p>
-                <div className="flex items-center gap-3">
-                  <p className="text-[24px] font-black text-white">ID: {displayId}</p>
-                  <Send className="h-6 w-6 fill-[#39d10f] text-[#39d10f]" />
+                <p className="text-[14px] font-bold text-white/45">{email}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-[19px] font-black text-white">ID: {displayId}</p>
+                  <Send className="h-5 w-5 fill-[#39d10f] text-[#39d10f]" />
                 </div>
               </div>
             </div>
 
-            <ProfileMetric label="Location" value={location} />
+            <ProfileMetric label="Location" value={location} compact />
             <ProfileMetric label="In the account" value={formatMoney(liveBalance)} />
             <ProfileMetric label="In the demo" value={formatMoney(demoBalance)} />
-            <button type="button" className="flex h-16 w-24 items-center justify-center rounded-[6px] bg-[#2d3446] text-white">
-              <Eye className="h-7 w-7" />
+            <button type="button" className="flex h-12 w-20 items-center justify-center rounded-[6px] bg-[#2d3446] text-white">
+              <Eye className="h-5 w-5" />
             </button>
           </div>
 
@@ -104,13 +116,13 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
             <button
               type="button"
               onClick={() => setRangeOpen((current) => !current)}
-              className="flex h-[76px] min-w-[260px] items-center justify-between rounded-[6px] bg-[#2d3446] px-6 text-left text-[22px] font-black text-white"
+              className="flex h-[48px] min-w-[220px] items-center justify-between rounded-[6px] bg-[#2d3446] px-5 text-left text-[15px] font-black text-white"
             >
               {range}
-              <ChevronDown className={`h-6 w-6 transition-transform ${rangeOpen ? "rotate-180" : ""}`} />
+              <ChevronDown className={`h-5 w-5 transition-transform ${rangeOpen ? "rotate-180" : ""}`} />
             </button>
             {rangeOpen && (
-              <div className="absolute right-0 top-[84px] z-20 w-full overflow-hidden rounded-[6px] bg-[#2d3446] shadow-xl">
+              <div className="absolute right-0 top-[64px] z-20 w-full overflow-hidden rounded-[6px] bg-[#2d3446] shadow-xl">
                 {RANGE_OPTIONS.map((option) => (
                   <button
                     key={option}
@@ -119,7 +131,7 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
                       setRange(option);
                       setRangeOpen(false);
                     }}
-                    className={`block w-full px-6 py-4 text-left text-[16px] font-bold ${option === range ? "bg-[#4a5061] text-white" : "text-white/70 hover:bg-white/5"}`}
+                    className={`block w-full px-5 py-3 text-left text-[14px] font-bold ${option === range ? "bg-[#4a5061] text-white" : "text-white/70 hover:bg-white/5"}`}
                   >
                     {option}
                   </button>
@@ -129,16 +141,16 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
           </div>
         </div>
 
-        <div className="grid gap-8 xl:grid-cols-[minmax(360px,0.82fr)_minmax(0,1.75fr)]">
-          <div className="space-y-8">
+        <div className="grid gap-5 xl:grid-cols-[minmax(360px,0.72fr)_minmax(0,1.62fr)]">
+          <div className="space-y-5">
             <Panel title="General data">
-              <div className="grid grid-cols-3 gap-y-14 px-10 py-14">
+              <div className="grid grid-cols-3 gap-y-10 px-7 py-10">
                 <RingMetric value={stats.tradesCount.toString()} label="Trades count" />
                 <MoneyMetric value={stats.totalProfit} label="Trades profit" />
                 <RingMetric value={stats.profitableTrades.toString()} sub={`${stats.profitablePct}%`} label="Profitable trades" />
               </div>
-              <div className="mx-10 border-t border-white/10" />
-              <div className="grid grid-cols-3 gap-x-10 gap-y-16 px-10 py-14">
+              <div className="mx-7 border-t border-white/10" />
+              <div className="grid grid-cols-3 gap-x-8 gap-y-12 px-7 py-10">
                 <MoneyMetric value={stats.averageProfit} label="Average profit" />
                 <MoneyMetric value={stats.netTurnover} label="Net turnover" />
                 <MoneyMetric value={stats.hedgedTrades} label="Hedged trades" />
@@ -146,14 +158,14 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
                 <MoneyMetric value={stats.maxTradeAmount} label="Max trade amount" />
                 <MoneyMetric value={stats.maxTradeProfit} label="Max trade profit" />
               </div>
-              <div className="mx-10 mb-10 w-[300px] rounded-[3px] bg-[#3a4050] px-5 py-4">
-                <div className="flex h-4 overflow-hidden">
+              <div className="mx-7 mb-8 w-[230px] rounded-[3px] bg-[#3a4050] px-4 py-3">
+                <div className="flex h-3 overflow-hidden">
                   <div className="w-[24%] bg-[#ff443d]" />
                   <div className="w-[24%] bg-[#f3b13e]" />
                   <div className="w-[24%] bg-[#12b76a]" />
                   <div className="w-[24%] bg-gradient-to-r from-[#12b76a] to-transparent" />
                 </div>
-                <div className="mt-3 flex gap-4 text-[18px] font-bold text-white/45">
+                <div className="mt-2 flex gap-3 text-[14px] font-bold text-white/45">
                   <span>-1K-0</span>
                   <span>0-1K</span>
                   <span>+1K</span>
@@ -162,7 +174,7 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
             </Panel>
 
             <Panel title="Top 5 most profitable instruments among traders">
-              <div className="flex min-h-[310px] items-center justify-center gap-12 px-8 py-10">
+              <div className="flex min-h-[240px] items-center justify-center gap-8 px-6 py-8">
                 <PieChartGraphic items={filteredAssets} />
                 <div className="space-y-4">
                   {filteredAssets.map((asset, index) => (
@@ -176,13 +188,13 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
             </Panel>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-5">
             <Panel title="Statistics of profitable trades">
-              <LineChartGraphic series={profitSeries} min={Math.min(0, ...profitSeries.map((p) => p.value))} max={Math.max(1, ...profitSeries.map((p) => p.value))} height={420} />
+              <LineChartGraphic series={profitSeries} min={Math.min(0, ...profitSeries.map((p) => p.value))} max={Math.max(1, ...profitSeries.map((p) => p.value))} height={300} />
             </Panel>
 
             <Panel title="Percentage % of profitable trades">
-              <LineChartGraphic series={profitableSeries} min={0} max={100} height={430} showGrid />
+              <LineChartGraphic series={profitableSeries} min={0} max={100} height={320} showGrid />
             </Panel>
 
             <div className="grid gap-8 lg:grid-cols-2">
@@ -200,17 +212,17 @@ export const AnalyticsGridOverlay = ({ onClose }: AnalyticsGridOverlayProps) => 
   );
 };
 
-const ProfileMetric = ({ label, value }: { label: string; value: string }) => (
-  <div className="border-l border-white/15 pl-10">
-    <p className="text-[18px] font-bold text-white/45">{label}</p>
-    <p className="mt-2 text-[24px] font-black text-white">{value}</p>
+const ProfileMetric = ({ label, value, compact = false }: { label: string; value: string; compact?: boolean }) => (
+  <div className={`border-l border-white/15 pl-6 ${compact ? "min-w-[90px]" : "min-w-[150px]"}`}>
+    <p className="text-[14px] font-bold text-white/45">{label}</p>
+    <p className="mt-1.5 text-[19px] font-black text-white">{value}</p>
   </div>
 );
 
 const Panel = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="overflow-hidden rounded-[6px] bg-[#2a3040]">
-    <header className="border-b border-white/10 px-9 py-9">
-      <h2 className="text-[24px] font-black text-white">{title}</h2>
+    <header className="border-b border-white/10 px-7 py-6">
+      <h2 className="text-[19px] font-black text-white">{title}</h2>
     </header>
     {children}
   </section>
@@ -218,37 +230,37 @@ const Panel = ({ title, children }: { title: string; children: React.ReactNode }
 
 const RingMetric = ({ value, sub, label }: { value: string; sub?: string; label: string }) => (
   <div className="flex flex-col items-center text-center">
-    <div className="flex h-[110px] w-[110px] items-center justify-center rounded-full bg-[#454c61]">
-      <div className="flex h-[82px] w-[82px] flex-col items-center justify-center rounded-full bg-[#242a39]">
-        <span className="text-[28px] font-black text-white">{value}</span>
-        {sub && <span className="text-[13px] font-black text-white/70">{sub}</span>}
+    <div className="flex h-[86px] w-[86px] items-center justify-center rounded-full bg-[#454c61]">
+      <div className="flex h-[64px] w-[64px] flex-col items-center justify-center rounded-full bg-[#242a39]">
+        <span className="text-[22px] font-black text-white">{value}</span>
+        {sub && <span className="text-[11px] font-black text-white/70">{sub}</span>}
       </div>
     </div>
-    <p className="mt-7 text-[18px] font-bold text-white/70">{label}</p>
+    <p className="mt-5 text-[14px] font-bold text-white/70">{label}</p>
   </div>
 );
 
 const MoneyMetric = ({ value, label }: { value: number; label: string }) => (
   <div className="text-left">
-    <p className="text-[24px] font-black text-white">{formatUsdCompact(value)}</p>
-    <div className="mt-5 flex gap-1">
-      <span className="h-3 w-8 bg-[#454c61]" />
-      <span className="h-3 w-8 bg-[#454c61]" />
-      <span className="h-3 w-8 bg-[#454c61]" />
-      <span className="h-3 w-8 bg-[#454c61]" />
+    <p className="text-[20px] font-black text-white">{formatUsdCompact(value)}</p>
+    <div className="mt-4 flex gap-1">
+      <span className="h-2.5 w-7 bg-[#454c61]" />
+      <span className="h-2.5 w-7 bg-[#454c61]" />
+      <span className="h-2.5 w-7 bg-[#454c61]" />
+      <span className="h-2.5 w-7 bg-[#454c61]" />
     </div>
-    <p className="mt-6 text-[18px] font-bold leading-tight text-white/70">{label}</p>
+    <p className="mt-5 text-[14px] font-bold leading-tight text-white/70">{label}</p>
   </div>
 );
 
 const NoData = () => (
-  <div className="flex h-[92px] items-center justify-center text-[34px] font-black text-white/25">No data</div>
+  <div className="flex h-[86px] items-center justify-center text-[28px] font-black text-white/25">No data</div>
 );
 
 type AssetSlice = { asset: string; share: number; profit: number };
 
 const PieChartGraphic = ({ items }: { items: AssetSlice[] }) => {
-  if (!items.length) return <div className="flex h-[230px] w-[230px] items-center justify-center rounded-full bg-[#222839] text-white/35">No data</div>;
+  if (!items.length) return <div className="flex h-[190px] w-[190px] items-center justify-center rounded-full bg-[#222839] text-white/35">No data</div>;
 
   let cumulative = 0;
   const gradient = items
@@ -260,12 +272,12 @@ const PieChartGraphic = ({ items }: { items: AssetSlice[] }) => {
     .join(", ");
 
   return (
-    <div className="relative flex h-[250px] w-[250px] items-center justify-center rounded-full" style={{ background: `conic-gradient(${gradient})` }}>
-      <div className="h-[58px] w-[58px] rounded-full bg-[#2a3040]" />
+    <div className="relative flex h-[205px] w-[205px] items-center justify-center rounded-full" style={{ background: `conic-gradient(${gradient})` }}>
+      <div className="h-[48px] w-[48px] rounded-full bg-[#2a3040]" />
       {items.slice(0, 3).map((item, index) => (
         <span
           key={item.asset}
-          className="absolute text-[12px] font-bold text-white"
+          className="absolute text-[11px] font-bold text-white"
           style={{
             left: index === 0 ? "68%" : index === 1 ? "35%" : "22%",
             top: index === 0 ? "37%" : index === 1 ? "25%" : "55%",
@@ -294,7 +306,7 @@ const LineChartGraphic = ({
   showGrid?: boolean;
 }) => {
   const width = 1000;
-  const chartHeight = 250;
+  const chartHeight = 230;
   const range = Math.max(max - min, 1);
   const safeSeries = series.length > 1 ? series : [{ label: "", value: min }, { label: "", value: min }];
   const labelEvery = Math.max(1, Math.ceil(safeSeries.length / 12));
@@ -307,20 +319,20 @@ const LineChartGraphic = ({
   const ticks = showGrid ? [100, 75, 50, 25, 0] : [0];
 
   return (
-    <div className="px-8 py-8" style={{ minHeight: height }}>
-      <svg viewBox={`0 0 ${width} ${chartHeight}`} className="h-full min-h-[320px] w-full overflow-visible">
+    <div className="px-7 py-7" style={{ minHeight: height }}>
+      <svg viewBox={`0 0 ${width} ${chartHeight}`} className="h-full min-h-[230px] w-full overflow-visible">
         {ticks.map((tick) => {
           const y = 40 + (1 - (tick - min) / range) * (chartHeight - 70);
           return (
             <g key={tick}>
-              <text x="0" y={y + 5} fill="#ffffff" opacity="0.9" fontSize="14" fontWeight="700">{tick}</text>
+              <text x="0" y={y + 5} fill="#ffffff" opacity="0.9" fontSize="13" fontWeight="700">{tick}</text>
               <line x1="40" x2={width - 20} y1={y} y2={y} stroke="#5a6275" strokeOpacity={showGrid ? 0.45 : 0.18} />
             </g>
           );
         })}
-        <path d={path} fill="none" stroke="#13a66a" strokeWidth="3" />
+        <path d={path} fill="none" stroke="#13a66a" strokeWidth="2.5" />
         {points.map((point, index) => (
-          <text key={`${point.label}-${index}`} x={point.x} y={chartHeight - 4} fill="#d6d9e1" fontSize="13" fontWeight="700" textAnchor="middle">
+          <text key={`${point.label}-${index}`} x={point.x} y={chartHeight - 4} fill="#d6d9e1" fontSize="12" fontWeight="700" textAnchor="middle">
             {index % labelEvery === 0 ? point.label : ""}
           </text>
         ))}

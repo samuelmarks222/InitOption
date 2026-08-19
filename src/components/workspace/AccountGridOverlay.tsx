@@ -8,7 +8,7 @@ import { ProfileBalanceHistory } from "../profile/ProfileBalanceHistory";
 import { ProfileTradingHistory } from "../profile/ProfileTradingHistory";
 import { ProfileSettings } from "../profile/ProfileSettings";
 
-type AccountTab = "upload" | "personal" | "deposit" | "balance_history" | "trading_history" | "settings";
+export type AccountTab = "upload" | "personal" | "deposit" | "balance_history" | "trading_history" | "settings";
 const ACCOUNT_TAB_STORAGE_KEY = "initoption:account-tab";
 const ACCOUNT_TAB_CHANGE_EVENT = "initoption:account-tab-change";
 

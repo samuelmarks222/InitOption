@@ -34,7 +34,7 @@ import { AccountType, RealAccountWelcomeModal } from "@/components/trading/Accou
 import { ProfileDrawer, type ProfileTab } from "@/components/profile/ProfileDrawer";
 import WelcomeGuideModal from "@/components/trading/WelcomeGuideModal";
 import { TournamentsGridOverlay } from "@/components/workspace/TournamentsGridOverlay";
-import { AccountGridOverlay } from "@/components/workspace/AccountGridOverlay";
+import { AccountGridOverlay, type AccountTab } from "@/components/workspace/AccountGridOverlay";
 import { AnalyticsGridOverlay } from "@/components/workspace/AnalyticsGridOverlay";
 import { WorkspaceReferral } from "@/components/workspace/WorkspaceReferral";
 import type { AnalyticsSignalAsset } from "@/components/workspace/analytics/AnalyticsSignals";
@@ -106,6 +106,7 @@ interface MobileModuleOverlayProps {
   directoryRefreshKey: number;
   onEnterTournament?: (id: string) => void;
   onOpenDeposit?: () => void;
+  onAnalyticsNavigate?: (target: { workspace?: "account" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => void;
 }
 
 const DEFAULT_TRADE_ASSET_ROW = {
@@ -269,6 +270,7 @@ const MobileModuleOverlay = ({
   directoryRefreshKey,
   onEnterTournament,
   onOpenDeposit,
+  onAnalyticsNavigate,
 }: MobileModuleOverlayProps) => {
   if (!mobileOverlay) return null;
   return (
@@ -293,7 +295,7 @@ const MobileModuleOverlay = ({
       )}
       {mobileOverlay === "leaderboard" && <MobileLeaderboardOverlay onClose={() => setMobileOverlay(null)} />}
       {mobileOverlay === "analytics_detail" && (
-        <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setMobileOverlay("more")} />
+        <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setMobileOverlay("more")} onNavigate={onAnalyticsNavigate} />
       )}
       {mobileOverlay === "help" && <HelpCenterOverlay onClose={() => setMobileOverlay(null)} />}
       {/* balance/trading history: open account overlay pre-set to that tab */}
@@ -480,6 +482,7 @@ const Trade = () => {
   const [activeIndicators, setActiveIndicators] = useState<ActiveIndicator[]>(() => loadStoredActiveIndicators());
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal");
+  const [accountWorkspaceInitialTab, setAccountWorkspaceInitialTab] = useState<AccountTab>("personal");
   const [depositGuideReason, setDepositGuideReason] = useState<DepositGuideReason | null>(null);
   const [showRealAccountWelcome, setShowRealAccountWelcome] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceModule>(null);
@@ -1218,6 +1221,25 @@ const Trade = () => {
     navigate("/withdraw");
   };
 
+  const handleAnalyticsNavigate = (target: { workspace?: "account" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => {
+    setMobileOverlay(null);
+
+    if (target.route === "withdraw") {
+      openWithdrawPage();
+      return;
+    }
+
+    if (target.workspace === "account") {
+      setAccountWorkspaceInitialTab(target.accountTab ?? "personal");
+      setActiveWorkspace("account");
+      return;
+    }
+
+    if (target.workspace) {
+      setActiveWorkspace(target.workspace);
+    }
+  };
+
   const isFullScreen = ["account", "more", "tournaments", "referrals"].includes(activeWorkspace || "");
   const currentBalance = accountType === "tournament" ? tournamentSandboxBalance : balance;
   const tourEnabled =
@@ -1299,10 +1321,10 @@ const Trade = () => {
 
             {/* Desktop full-screen workspace overlays */}
             {activeWorkspace === "account" ? (
-              <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}><AccountGridOverlay onClose={() => setActiveWorkspace(null)} /></div>
+              <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}><AccountGridOverlay initialTab={accountWorkspaceInitialTab} onClose={() => setActiveWorkspace(null)} /></div>
             ) : activeWorkspace === "more" ? (
               <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
-                <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setActiveWorkspace(null)} />
+                <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setActiveWorkspace(null)} onNavigate={handleAnalyticsNavigate} />
               </div>
             ) : activeWorkspace === "tournaments" ? (
               <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
@@ -1619,6 +1641,7 @@ const Trade = () => {
           directoryRefreshKey={directoryRefreshKey}
           onEnterTournament={handleEnterTournament}
           onOpenDeposit={openDepositPage}
+          onAnalyticsNavigate={handleAnalyticsNavigate}
         />
 
         {showRealAccountWelcome && (
