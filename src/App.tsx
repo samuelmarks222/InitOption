@@ -24,7 +24,7 @@ const PublicInfoPage = lazy(() => import("./pages/PublicInfoPage"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
 const InformationDisclosure = lazy(() => import("./pages/InformationDisclosure"));
 const PublicTournamentDetailPage = lazy(() => import("./pages/PublicTournamentDetailPage"));
-const PublicTournamentsPage = lazy(() => import("./pages/PublicTournamentsPage"));
+const TournamentsPage = lazy(() => import("./pages/TournamentsPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
 const ReviewsPage = lazy(() => import("./pages/ReviewsPage"));
@@ -173,7 +173,7 @@ const App = () => {
                         <Route path="/for-partners" element={withRouteSuspense(<PublicInfoPage pageKey="for-partners" />)} />
                         <Route path="/site-map" element={withRouteSuspense(<PublicInfoPage pageKey="site-map" />)} />
                         <Route path="/traders/:username" element={withRouteSuspense(<TraderProfile />)} />
-                        <Route path="/tournaments" element={withRouteSuspense(<PublicTournamentsPage platformSettings={platformSettings} />)} />
+                        <Route path="/tournaments" element={withRouteSuspense(<TournamentsPage />)} />
                         <Route
                           path="/tournaments/:slug"
                           element={withRouteSuspense(<PublicTournamentDetailPage platformSettings={platformSettings} />)}
