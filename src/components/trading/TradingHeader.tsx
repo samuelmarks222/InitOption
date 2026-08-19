@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
-import { CheckCircle2, ChevronDown, Plus, TrendingDown } from "lucide-react";
+import { CheckCircle2, ChevronDown, Plus, ShieldCheck, TrendingDown } from "lucide-react";
 import { AccountType, AccountDropdown } from "./AccountModals";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useVip } from "@/contexts/VipContext";
@@ -80,6 +81,7 @@ const TradingHeader = ({
   const [chartLayoutMode, setChartLayoutMode] = useState<ChartLayoutMode>(() => loadChartLayoutMode());
   const chartLayoutMenuRef = useRef<HTMLDivElement | null>(null);
   const { profile } = useAuth();
+  const { isStaff } = useStaffAccess();
   const { vip } = useVip();
   const { formatMoney } = useCurrency();
   const { platformName, initials, logoUrl } = useSiteBranding();
@@ -187,6 +189,17 @@ const TradingHeader = ({
         <div className="rounded-[12px] border border-white/5 bg-[#151c28] shadow-[0_10px_24px_rgba(7,12,22,0.22)]">
           <NotificationBell mobile />
         </div>
+
+        {isStaff && (
+          <button
+            onClick={() => navigate("/admin")}
+            className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[12px] border border-white/5 bg-[#151c28] shadow-[0_10px_24px_rgba(7,12,22,0.22)] transition-colors hover:bg-white/[0.07]"
+            title="Admin panel"
+            aria-label="Admin panel"
+          >
+            <ShieldCheck className="h-[18px] w-[18px]" style={{ color: "var(--trading-active-color)" }} />
+          </button>
+        )}
 
         <button
           onClick={() => onOpenProfile()}
@@ -382,6 +395,17 @@ const TradingHeader = ({
         </div>
 
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 pr-2 xl:flex-nowrap">
+          {isStaff && (
+            <button
+              onClick={() => navigate("/admin")}
+              className="flex h-[46px] items-center gap-2 rounded-[14px] border px-3.5 text-[13px] font-bold text-white transition-all hover:border-white/10 hover:bg-white/[0.06]"
+              style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
+              title="Admin panel"
+            >
+              <ShieldCheck className="h-4 w-4" style={{ color: "var(--trading-active-color)" }} />
+              Admin
+            </button>
+          )}
           <div
 
             className="rounded-[14px] border shadow-[0_12px_30px_rgba(7,12,22,0.24)]"
