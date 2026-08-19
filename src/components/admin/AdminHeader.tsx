@@ -38,6 +38,8 @@ import {
 import { SiteLogo } from "@/components/branding/SiteLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
+
 import { getRoleLabel } from "@/lib/adminRoles";
 
 const ACCENT = "#00C076";
@@ -203,12 +205,13 @@ function NotificationDropdown({ isOpen, onClose }: { isOpen: boolean; onClose: (
   );
 }
 
-function ProfileDropdown({ isOpen, onClose, profile, primaryRole, signOut }: {
+function ProfileDropdown({ isOpen, onClose, profile, primaryRole, signOut, isStaff }: {
   isOpen: boolean;
   onClose: () => void;
   profile: { display_name?: string; username?: string } | null;
   primaryRole: string | null;
   signOut: () => void;
+  isStaff: boolean;
 }) {
   return (
     <Dropdown isOpen={isOpen} onClose={onClose} align="right">
@@ -252,6 +255,16 @@ function ProfileDropdown({ isOpen, onClose, profile, primaryRole, signOut }: {
             <Activity size={18} />
             Activity Logs
           </Link>
+          {isStaff && (
+            <Link
+              to="/admin"
+              onClick={onClose}
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-white/[0.05] hover:text-white transition-colors"
+            >
+              <LayoutDashboard size={18} />
+              Admin Panel
+            </Link>
+          )}
           <div className="border-t my-1" style={{ borderColor: BORDER }} />
           <button
             onClick={() => { signOut(); onClose(); }}
@@ -310,9 +323,9 @@ function QuickActionsDropdown({ isOpen, onClose }: { isOpen: boolean; onClose: (
 export function AdminHeader() {
   const { profile, signOut } = useAuth();
   const { logoUrl, platformName } = useSiteBranding();
+  const { isStaff, primaryRole, loading: staffLoading } = useStaffAccess();
   const location = useLocation();
   const navigate = useNavigate();
-  const { isStaff, primaryRole } = { isStaff: true, primaryRole: "super_admin" }; // Use real hooks in production
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -463,6 +476,7 @@ export function AdminHeader() {
               profile={profile}
               primaryRole={primaryRole}
               signOut={signOut}
+              isStaff={isStaff}
             />
           </div>
         </div>
