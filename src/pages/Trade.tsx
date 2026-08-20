@@ -37,6 +37,7 @@ import { TournamentsGridOverlay } from "@/components/workspace/TournamentsGridOv
 import { AccountGridOverlay, type AccountTab } from "@/components/workspace/AccountGridOverlay";
 import { AnalyticsGridOverlay } from "@/components/workspace/AnalyticsGridOverlay";
 import { WorkspaceReferral } from "@/components/workspace/WorkspaceReferral";
+import { WorkspaceSignals } from "@/components/workspace/WorkspaceSignals";
 import type { AnalyticsSignalAsset } from "@/components/workspace/analytics/AnalyticsSignals";
 import { HelpCenterOverlay } from "@/components/workspace/HelpCenterOverlay";
 import { ChevronsLeft, Image, HelpCircle, User, Trophy, MoreHorizontal, X } from "lucide-react";
@@ -106,7 +107,7 @@ interface MobileModuleOverlayProps {
   directoryRefreshKey: number;
   onEnterTournament?: (id: string) => void;
   onOpenDeposit?: () => void;
-  onAnalyticsNavigate?: (target: { workspace?: "account" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => void;
+  onAnalyticsNavigate?: (target: { workspace?: "account" | "analytics" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => void;
 }
 
 const DEFAULT_TRADE_ASSET_ROW = {
@@ -299,6 +300,7 @@ const MobileModuleOverlay = ({
       {mobileOverlay === "analytics_detail" && (
         <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setMobileOverlay("more")} onNavigate={onAnalyticsNavigate} />
       )}
+      {mobileOverlay === "signals" && <WorkspaceSignals onClose={() => setMobileOverlay(null)} />}
       {mobileOverlay === "help" && <HelpCenterOverlay onClose={() => setMobileOverlay(null)} />}
       {/* balance/trading history: open account overlay pre-set to that tab */}
       {mobileOverlay === "balance_history" && (
@@ -1242,7 +1244,7 @@ const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal
     navigate("/withdraw");
   };
 
-  const handleAnalyticsNavigate = (target: { workspace?: "account" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => {
+  const handleAnalyticsNavigate = (target: { workspace?: "account" | "analytics" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => {
     setMobileOverlay(null);
 
     if (target.route === "withdraw") {
@@ -1260,7 +1262,7 @@ if (target.workspace === "account") {
     }
   };
 
-  const isFullScreen = ["account", "more", "tournaments", "referrals"].includes(activeWorkspace || "");
+  const isFullScreen = ["account", "analytics", "tournaments", "referrals"].includes(activeWorkspace || "");
   const currentBalance = accountType === "tournament" ? tournamentSandboxBalance : balance;
   const tourEnabled =
     !mobileOverlay &&
@@ -1271,7 +1273,7 @@ if (target.workspace === "account") {
     !isProfileOpen &&
     !showMobileHistory &&
     !showRealAccountWelcome &&
-    !["account", "tournaments", "more", "referrals", "help"].includes(activeWorkspace || "");
+    !["account", "analytics", "tournaments", "more", "referrals", "help"].includes(activeWorkspace || "");
 
   const isChartNavActive =
     !mobileOverlay &&
@@ -1344,7 +1346,7 @@ if (target.workspace === "account") {
               <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
                 <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab="My account" onClose={() => setActiveWorkspace(null)} onNavigate={handleAnalyticsNavigate} />
               </div>
-            ) : activeWorkspace === "more" ? (
+            ) : activeWorkspace === "analytics" ? (
               <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
                 <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setActiveWorkspace(null)} onNavigate={handleAnalyticsNavigate} />
               </div>

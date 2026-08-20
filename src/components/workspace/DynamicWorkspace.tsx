@@ -38,6 +38,7 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
   const workspaceTitleMap: Record<Exclude<WorkspaceModule, null>, string> = {
     support: "social",
     account: "account",
+    analytics: "analytics",
     tournaments: "tournaments",
     leaderboard: "leaders",
     more: "more",
@@ -109,7 +110,7 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
         )}
         {activeWorkspace === "more" && (
           <div className="flex-1 w-full h-full">
-            <WorkspaceMore />
+            <WorkspaceMore onSelectWorkspace={onSelectWorkspace} />
           </div>
         )}
         {activeWorkspace === "settings" && (

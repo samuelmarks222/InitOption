@@ -47,7 +47,7 @@ interface AnalyticsGridOverlayProps {
   onClose?: () => void;
   activeAsset?: AnalyticsSignalAsset;
   initialTab?: AnalyticsAccountTab;
-  onNavigate?: (target: { workspace?: "account" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => void;
+  onNavigate?: (target: { workspace?: "account" | "analytics" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => void;
 }
 
 const RANGE_OPTIONS: AnalyticsRange[] = ["3 days", "Week", "Month", "Year", "All"];

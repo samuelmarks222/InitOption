@@ -1,50 +1,14 @@
-import { useMemo, useState, useEffect } from "react";
-import { Bell, BellOff, ChevronDown, Eye, EyeOff, MessageCircle, Star, Trophy, Users, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, BarChart3, ChevronDown, HelpCircle, Trophy, Users, X } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/integrations/api/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSocialTrading } from "@/contexts/SocialTradingContext";
+import CountryFlag from "@/components/ui/CountryFlag";
+import { getCountryOptionByName } from "@/lib/countries";
 import { getUnreadCount, subscribe } from "./chatUnreadStore";
 import { TraderProfile } from "./TraderProfile";
 import type { CopySettings } from "./TraderProfile";
-import { DataRow } from "./TraderProfile";
-import type { CopySettings } from "./TraderProfile";
-
-const FIRST_NAMES = [
-  "James","Mary","John","Patricia","Robert","Jennifer","Michael","Linda","David","Elizabeth",
-  "William","Barbara","Richard","Susan","Joseph","Jessica","Thomas","Sarah","Christopher","Karen",
-  "Charles","Lisa","Daniel","Nancy","Matthew","Betty","Anthony","Margaret","Mark","Sandra",
-  "Donald","Ashley","Steven","Dorothy","Paul","Kimberly","Andrew","Emily","Joshua","Donna",
-  "Kenneth","Michelle","Kevin","Carol","Brian","Amanda","George","Melissa","Timothy","Deborah",
-  "Ronald","Stephanie","Edward","Rebecca","Jason","Sharon","Jeffrey","Laura","Ryan","Cynthia",
-  "Jacob","Kathleen","Gary","Amy","Nicholas","Angela","Eric","Shirley","Jonathan","Anna",
-  "Stephen","Brenda","Larry","Pamela","Justin","Emma","Scott","Nicole","Brandon","Helen",
-  "Benjamin","Samantha","Samuel","Katherine","Raymond","Christine","Gregory","Debra","Frank",
-  "Rachel","Alexander","Carolyn","Patrick","Janet","Jack","Catherine","Dennis","Maria",
-  "Jeremy","Heather","Ahmed","Fatima","Omar","Aisha","Kwame","Zara","Chen","Maria",
-  "Carlos","Priya","Yusuf","Lindiwe","Chloe","David","Sofia","Hassan","Naledi","Rajesh",
-];
-
-const LAST_NAMES = [
-  "Smith","Johnson","Williams","Brown","Jones","Garcia","Miller","Davis","Rodriguez","Martinez",
-  "Hernandez","Lopez","Gonzalez","Wilson","Anderson","Thomas","Taylor","Moore","Jackson","Martin",
-  "Lee","Perez","Thompson","White","Harris","Sanchez","Clark","Ramirez","Lewis","Robinson",
-  "Walker","Young","Allen","King","Wright","Scott","Torres","Nguyen","Hill","Flores",
-  "Green","Adams","Nelson","Baker","Hall","Rivera","Campbell","Mitchell","Carter","Roberts",
-  "Gomez","Phillips","Evans","Turner","Diaz","Parker","Cruz","Edwards","Collins","Reyes",
-];
-
-const COUNTRIES = [
-  "US","GB","CA","AU","DE","FR","IT","ES","NL","SE","NO","DK","FI","BR","AR","MX",
-  "CO","CL","ZA","NG","KE","GH","EG","MA","TN","AE","SA","IN","PK","BD","JP","KR",
-  "CN","TH","VN","MY","SG","RU","TR","PL","CZ","HU","RO","UA","GR","PT","IE","CH",
-  "AT","BE","IL","PH","ID","NZ","PE","VE",
-];
-
-function seededRandom(seed: number): () => number {
-  let s = seed >>> 0;
-  return () => {
-    s = (Math.imul(1103515245, s) + 12345) >>> 0;
-    return (s & 0x7fffffff) / 0x7fffffff;
-  };
-}
 
 export type TraderData = {
   id: string;
@@ -80,88 +44,102 @@ export type TraderData = {
   monthlyProfits: number[];
 };
 
-const TOTAL_TRADERS = 12845;
-const ASSETS = ["EUR/USD","GBP/USD","Gold","Bitcoin","Oil","NASDAQ","Silver","Apple","Tesla","Amazon"];
-const EXPIRATIONS = ["30 sec","1 min","5 min","15 min"];
-const DIRECTIONS = ["Higher","Lower"];
-const EXPERIENCES = ["Beginner","Intermediate","Professional"];
+type LeaderProfile = {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  nationality: string | null;
+  phone_country: string | null;
+  total_profit: number | null;
+  total_trades: number | null;
+  total_wins: number | null;
+  followers_count: number | null;
+  created_at: string | null;
+  vip_tier: string | null;
+};
 
-function generateTraders(): TraderData[] {
-  const rng = seededRandom(99);
-  const traders: TraderData[] = [];
-  for (let i = 0; i < TOTAL_TRADERS; i++) {
-    const fn = FIRST_NAMES[i % FIRST_NAMES.length];
-    const ln = LAST_NAMES[Math.floor(i / FIRST_NAMES.length) % LAST_NAMES.length];
-    const name = `${fn} ${ln}`;
-    const country = COUNTRIES[Math.floor(rng() * COUNTRIES.length)];
-    const flagUrl = `https://flagcdn.com/w160/${country.toLowerCase()}.png`;
-    const totalTrades = Math.floor(rng() * 5000 + 50);
-    const wins = Math.floor(totalTrades * (0.35 + rng() * 0.55));
-    const losses = totalTrades - wins;
-    const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
-    const avgReturn = Number((rng() * 60 + 3).toFixed(1));
-    // Pareto distribution: top 100 of 12,845 span ~$1.5K to ~$43K
-    const paretoAlpha = 1.37;
-    const paretoXm = 44;
-    const u = rng();
-    const profitRaw = paretoXm / Math.pow(u, 1 / paretoAlpha);
-    const profitJitter = (rng() - 0.5) * 800;
-    const isLoss = rng() < 0.04;
-    const totalProfit = Number((isLoss ? -(rng() * 800 + 200) : Math.min(profitRaw + profitJitter, 48000)).toFixed(2));
-    const todayProfit = Number(((rng() - 0.45) * 12000).toFixed(2));
-    const highestWin = Number((rng() * 15000 + 200).toFixed(2));
-    const longestStreak = Math.floor(rng() * 25 + 1);
-    const currentStreak = Math.floor(rng() * 12);
-    const avgDuration = Number((rng() * 30 + 1).toFixed(1));
-    const avgAmount = Number((rng() * 500 + 10).toFixed(2));
-    const numAssets = Math.floor(rng() * 8 + 2);
-    const preferredAssets = [...ASSETS].sort(() => rng() - 0.5).slice(0, numAssets);
-    const favExpirations = [...EXPIRATIONS].filter(() => rng() > 0.3);
-    const experience = EXPERIENCES[Math.floor(rng() * EXPERIENCES.length)];
-    const memberSince = `202${Math.floor(rng() * 5)}-${String(Math.floor(rng() * 12) + 1).padStart(2, "0")}-${String(Math.floor(rng() * 28) + 1).padStart(2, "0")}`;
-    const isOnline = rng() > 0.4;
-    const isVerified = rng() > 0.7;
-    const followers = Math.floor(rng() * 5000 + 1);
-    const successRate = Number((winRate * (0.85 + rng() * 0.3)).toFixed(1));
-    const last30DaysProfit = Number(((rng() - 0.35) * 25000).toFixed(2));
-    const riskLevel = ["Low","Medium","High"][Math.floor(rng() * 3)];
-    const minCopyAmount = Number((rng() * 500 + 50).toFixed(2));
+type TradeRow = {
+  amount: number | null;
+  asset_symbol: string | null;
+  closed_at: string | null;
+  direction: string | null;
+  expiry_seconds: number | null;
+  profit: number | null;
+  status: string | null;
+  user_id: string;
+  profiles: LeaderProfile | LeaderProfile[] | null;
+};
 
-    const tradeCount = Math.floor(rng() * 20 + 5);
-    const copyTrades = Array.from({ length: tradeCount }, (_, ti) => {
-      const asset = ASSETS[Math.floor(rng() * ASSETS.length)];
-      const direction = DIRECTIONS[Math.floor(rng() * 2)];
-      const expiration = EXPIRATIONS[Math.floor(rng() * EXPIRATIONS.length)];
-      const investment = Number((rng() * 200 + 5).toFixed(2));
-      const result = rng() > 0.45 ? "Win" : "Loss";
-      const payout = result === "Win" ? Number((investment * (1.5 + rng() * 0.8)).toFixed(2)) : 0;
-      const profit = result === "Win" ? Number((payout - investment).toFixed(2)) : Number((-investment).toFixed(2));
-      const daysAgo = Math.floor(rng() * 30);
-      const date = new Date(Date.now() - daysAgo * 86400000 - Math.floor(rng() * 86400000));
-      return { asset, direction, expiration, investment, payout, result, profit, date: date.toISOString() };
-    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+const profileName = (profile?: Partial<LeaderProfile> | null) =>
+  profile?.display_name || profile?.username || (profile?.id ? `#${String(profile.id).slice(0, 8)}` : "Trader");
 
-    const dailyProfits = Array.from({ length: 30 }, () => Number(((rng() - 0.45) * 3000).toFixed(2)));
-    const weeklyProfits = Array.from({ length: 12 }, () => Number(((rng() - 0.35) * 8000).toFixed(2)));
-    const monthlyProfits = Array.from({ length: 12 }, () => Number(((rng() - 0.3) * 15000).toFixed(2)));
-
-    traders.push({
-      id: `tr-${i}`, name, country, flagUrl, totalProfit, todayProfit, winRate, totalTrades, wins, losses,
-      avgReturn, highestWin, longestStreak, currentStreak, avgDuration, avgAmount,
-      preferredAssets, favExpirations, experience, memberSince, isOnline, isVerified,
-      followers, successRate, last30DaysProfit, riskLevel, minCopyAmount,
-      copyTrades, dailyProfits, weeklyProfits, monthlyProfits,
-    });
+const hashSeed = (value: string) => {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
   }
-  traders.sort((a, b) => b.totalProfit - a.totalProfit);
-  return traders;
-}
+  return hash;
+};
 
-const ALL_TRADERS = generateTraders();
+const getCountryCode = (profile?: Partial<LeaderProfile> | null, offset = 0) => {
+  const stored = String(profile?.phone_country ?? "").trim().toUpperCase();
+  if (/^[A-Z]{2}$/.test(stored)) return stored;
+  const national = getCountryOptionByName(profile?.nationality ?? null)?.code;
+  if (national) return national;
+  const fallbackCodes = ["KE", "NG", "ZA", "GB", "US", "FR", "BR", "IN", "TR", "AE", "CA", "AU"];
+  const seed = profile?.id || profile?.username || profile?.display_name || "trader";
+  return fallbackCodes[(hashSeed(seed) + offset) % fallbackCodes.length];
+};
 
-const formatProfit = (value: number) => {
-  const sign = value >= 0 ? "+" : "";
+const flagUrlFor = (code: string) => `https://flagcdn.com/w160/${code.toLowerCase()}.png`;
+
+const formatMoney = (value: number, showPlus = false) => {
+  const sign = showPlus && value > 0 ? "+" : "";
   return `${sign}$${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+const toTraderData = (profile: LeaderProfile, index: number, totals?: Partial<TraderData>): TraderData => {
+  const totalTrades = Number(totals?.totalTrades ?? profile.total_trades ?? 0);
+  const wins = Number(totals?.wins ?? profile.total_wins ?? 0);
+  const losses = Math.max(0, totalTrades - wins);
+  const totalProfit = Number(totals?.totalProfit ?? profile.total_profit ?? 0);
+  const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
+  const country = getCountryCode(profile, index);
+
+  return {
+    id: profile.id,
+    name: profileName(profile),
+    country,
+    flagUrl: profile.avatar_url || flagUrlFor(country),
+    totalProfit,
+    todayProfit: Number(totals?.todayProfit ?? 0),
+    winRate,
+    totalTrades,
+    wins,
+    losses,
+    avgReturn: totalTrades > 0 ? Number((Math.max(totalProfit, 0) / Math.max(totalTrades, 1)).toFixed(1)) : 0,
+    highestWin: Number(totals?.highestWin ?? Math.max(totalProfit, 0)),
+    longestStreak: Number(totals?.longestStreak ?? 0),
+    currentStreak: Number(totals?.currentStreak ?? 0),
+    avgDuration: Number(totals?.avgDuration ?? 1),
+    avgAmount: Number(totals?.avgAmount ?? 1),
+    preferredAssets: totals?.preferredAssets ?? [],
+    favExpirations: totals?.favExpirations ?? ["1 min"],
+    experience: profile.vip_tier || (totalTrades > 100 ? "Professional" : totalTrades > 20 ? "Intermediate" : "Beginner"),
+    memberSince: profile.created_at || new Date().toISOString(),
+    isOnline: true,
+    isVerified: true,
+    followers: Number(profile.followers_count ?? 0),
+    successRate: winRate,
+    last30DaysProfit: totalProfit,
+    riskLevel: "Medium",
+    minCopyAmount: 1,
+    copyTrades: totals?.copyTrades ?? [],
+    dailyProfits: [],
+    weeklyProfits: [],
+    monthlyProfits: [],
+  };
 };
 
 interface WorkspaceLeaderboardProps {
@@ -169,205 +147,279 @@ interface WorkspaceLeaderboardProps {
 }
 
 export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => {
+  const { profile } = useAuth();
+  const { followTrader, unfollowTrader, isFollowing, saveCopySetting } = useSocialTrading();
+  const [leaders, setLeaders] = useState<TraderData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedTrader, setSelectedTrader] = useState<TraderData | null>(null);
-  const [watchingIds, setWatchingIds] = useState<Set<string>>(new Set());
-  const [showWatching, setShowWatching] = useState(false);
-  const [, setTick] = useState(0);
+  const [period, setPeriod] = useState<"day" | "week" | "month">("day");
+  const [, setUnreadTick] = useState(0);
 
   useEffect(() => {
-    const unsub = subscribe(() => setTick((n) => n + 1));
+    const unsub = subscribe(() => setUnreadTick((value) => value + 1));
     return unsub;
   }, []);
 
-  const watchedTraders = useMemo(
-    () => ALL_TRADERS.filter((t) => watchingIds.has(t.id)),
-    [watchingIds]
-  );
+  useEffect(() => {
+    let cancelled = false;
 
-  const displayTraders = showWatching ? watchedTraders : ALL_TRADERS.slice(0, 100);
+    const fetchLeaders = async () => {
+      setLoading(true);
+      const now = Date.now();
+      const periodMs = period === "day" ? 86400000 : period === "week" ? 7 * 86400000 : 30 * 86400000;
+      const since = new Date(now - periodMs).toISOString();
 
-  const handleCopyWithSettings = (id: string, settings?: CopySettings) => {
-    if (settings) {
-      toast.success(`Now copying ${ALL_TRADERS.find(t => t.id === id)?.name || id}`, {
-        description: `$${settings.amount.toLocaleString()} investment, ${settings.riskMultiplier}x risk, max ${settings.maxLoss.toLocaleString()} daily loss`,
-        duration: 5000,
-      });
-    } else {
-      toast.success("Trader added to copy portfolio", {
-        duration: 3000,
-      });
-    }
-  };
+      try {
+        const { data: trades, error: tradeError } = await api
+          .from("trades")
+          .select("user_id, amount, asset_symbol, closed_at, direction, expiry_seconds, profit, status, profiles(id, username, display_name, avatar_url, nationality, phone_country, total_profit, total_trades, total_wins, followers_count, created_at, vip_tier)")
+          .neq("status", "open")
+          .gte("closed_at", since)
+          .order("closed_at", { ascending: false })
+          .limit(750);
 
-  const handleWatch = (id: string) => {
-    setWatchingIds((prev) => new Set(prev).add(id));
-  };
+        if (tradeError) throw tradeError;
 
-  const handleUnwatch = (id: string) => {
-    setWatchingIds((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
+        const aggregate = new Map<string, { profile: LeaderProfile; trades: TradeRow[]; profit: number; wins: number; amount: number; highestWin: number; assets: Set<string> }>();
+
+        ((trades ?? []) as TradeRow[]).forEach((trade) => {
+          const profileValue = Array.isArray(trade.profiles) ? trade.profiles[0] : trade.profiles;
+          if (!profileValue?.id) return;
+          const current = aggregate.get(profileValue.id) ?? {
+            profile: profileValue,
+            trades: [],
+            profit: 0,
+            wins: 0,
+            amount: 0,
+            highestWin: 0,
+            assets: new Set<string>(),
+          };
+          const profitValue = Number(trade.profit ?? 0);
+          current.trades.push(trade);
+          current.profit += profitValue;
+          current.amount += Number(trade.amount ?? 0);
+          if (profitValue > 0) current.wins += 1;
+          if (profitValue > current.highestWin) current.highestWin = profitValue;
+          if (trade.asset_symbol) current.assets.add(trade.asset_symbol);
+          aggregate.set(profileValue.id, current);
+        });
+
+        let nextLeaders = Array.from(aggregate.values()).map((entry, index) =>
+          toTraderData(entry.profile, index, {
+            totalProfit: entry.profit,
+            todayProfit: entry.profit,
+            totalTrades: entry.trades.length,
+            wins: entry.wins,
+            highestWin: entry.highestWin,
+            avgAmount: entry.trades.length ? entry.amount / entry.trades.length : 0,
+            avgDuration: entry.trades.length
+              ? entry.trades.reduce((sum, trade) => sum + Number(trade.expiry_seconds ?? 0), 0) / entry.trades.length / 60
+              : 1,
+            preferredAssets: Array.from(entry.assets).slice(0, 5),
+            copyTrades: entry.trades.slice(0, 12).map((trade) => ({
+              asset: trade.asset_symbol || "Asset",
+              direction: trade.direction || "Higher",
+              expiration: `${Math.max(1, Math.round(Number(trade.expiry_seconds ?? 60) / 60))} min`,
+              investment: Number(trade.amount ?? 0),
+              payout: Math.max(0, Number(trade.amount ?? 0) + Number(trade.profit ?? 0)),
+              result: Number(trade.profit ?? 0) >= 0 ? "Win" : "Loss",
+              profit: Number(trade.profit ?? 0),
+              date: trade.closed_at || new Date().toISOString(),
+            })),
+          }),
+        );
+
+        if (nextLeaders.length === 0) {
+          const { data: profiles, error: profileError } = await api
+            .from("profiles")
+            .select("id, username, display_name, avatar_url, nationality, phone_country, total_profit, total_trades, total_wins, followers_count, created_at, vip_tier")
+            .order("total_profit", { ascending: false })
+            .limit(50);
+
+          if (profileError) throw profileError;
+          nextLeaders = ((profiles ?? []) as LeaderProfile[]).map((item, index) => toTraderData(item, index));
+        }
+
+        if (!cancelled) {
+          setLeaders(nextLeaders.sort((a, b) => b.totalProfit - a.totalProfit).slice(0, 100));
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn("Failed to load leaderboard", error);
+          const fallbackProfile = profile
+            ? toTraderData({
+                id: profile.id,
+                username: profile.username ?? null,
+                display_name: profile.display_name ?? null,
+                avatar_url: profile.avatar_url ?? null,
+                nationality: profile.nationality ?? null,
+                phone_country: profile.phone_country ?? null,
+                total_profit: Number(profile.total_profit ?? 0),
+                total_trades: Number(profile.total_trades ?? 0),
+                total_wins: Number(profile.total_wins ?? 0),
+                followers_count: Number(profile.followers_count ?? 0),
+                created_at: profile.created_at ?? null,
+                vip_tier: profile.vip_tier ?? null,
+              }, 0)
+            : null;
+          setLeaders(fallbackProfile ? [fallbackProfile] : []);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void fetchLeaders();
+    return () => {
+      cancelled = true;
+    };
+  }, [period, profile]);
+
+  const currentUserRow = useMemo(() => {
+    if (!profile?.id) return null;
+    return leaders.find((leader) => leader.id === profile.id) ?? toTraderData({
+      id: profile.id,
+      username: profile.username ?? null,
+      display_name: profile.display_name ?? null,
+      avatar_url: profile.avatar_url ?? null,
+      nationality: profile.nationality ?? null,
+      phone_country: profile.phone_country ?? null,
+      total_profit: Number(profile.total_profit ?? 0),
+      total_trades: Number(profile.total_trades ?? 0),
+      total_wins: Number(profile.total_wins ?? 0),
+      followers_count: Number(profile.followers_count ?? 0),
+      created_at: profile.created_at ?? null,
+      vip_tier: profile.vip_tier ?? null,
+    }, leaders.length);
+  }, [leaders, profile]);
+
+  const currentUserRank = currentUserRow ? leaders.findIndex((leader) => leader.id === currentUserRow.id) + 1 : 0;
+
+  const handleCopyWithSettings = async (id: string, settings?: CopySettings) => {
+    const trader = leaders.find((leader) => leader.id === id);
+    await saveCopySetting(id, {
+      enabled: true,
+      amountType: "fixed",
+      executionMode: "manual",
+      fixedAmount: settings?.amount ?? trader?.minCopyAmount ?? 1,
+      maxDaily: settings?.maxLoss ?? 100,
     });
   };
 
   return (
-    <div
-      className="flex h-full min-h-0 flex-col text-white"
-      style={{ background: "linear-gradient(180deg, #232637 0%, #282D41 100%)" }}
-    >
-      {/* Header */}
-      <div className="flex h-[58px] shrink-0 items-center gap-2 border-b border-white/[0.06] px-4">
-        {onClose ? (
-          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white" aria-label="Close">
-            <X className="h-4 w-4" />
-          </button>
-        ) : null}
+    <div className="flex h-full min-h-0 flex-col bg-[#1b2030] text-white">
+      <div className="flex h-[68px] shrink-0 items-center gap-2 px-3">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-8 w-8 items-center justify-center rounded-[4px] text-white transition-colors hover:bg-white/[0.06]"
+          aria-label="Back from leaderboard"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
         <div className="min-w-0 flex-1">
+          <h2 className="text-[20px] font-black leading-6 text-white">Leader Board</h2>
+          <p className="text-[12px] font-bold text-[#6f7787]">of the {period === "day" ? "Day" : period === "week" ? "Week" : "Month"}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-8 w-8 items-center justify-center rounded-[4px] text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white"
+          aria-label="Close leaderboard"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="px-4 pb-3">
+        <button
+          type="button"
+          onClick={() => setPeriod((value) => (value === "day" ? "week" : value === "week" ? "month" : "day"))}
+          className="flex h-[38px] w-full items-center justify-between rounded-[4px] bg-[#2a2f40] px-3 text-[12px] font-black text-white"
+        >
+          <span>{period === "day" ? "Top ranked traders for 24h" : period === "week" ? "Top ranked traders for 7 days" : "Top ranked traders for 30 days"}</span>
+          <ChevronDown className="h-4 w-4 text-white/60" />
+        </button>
+      </div>
+
+      {currentUserRow && (
+        <div className="mx-4 mb-3 rounded-[4px] bg-[#2a2f40] px-3 py-3">
           <div className="flex items-center gap-2">
-            <span className="text-[16px] font-black leading-none text-white">Leaders</span>
-            <span className="rounded-full bg-[#26a69a]/12 px-2 py-0.5 text-[10px] font-bold text-[#26a69a]">
-              {ALL_TRADERS.length.toLocaleString()} Traders
-            </span>
-            {watchingIds.size > 0 && (
-              <span className="rounded-full bg-[#f4b742]/12 px-2 py-0.5 text-[10px] font-bold text-[#f4b742]">
-                {watchingIds.size} Watching
-              </span>
-            )}
+            <CountryFlag code={currentUserRow.country} size={18} className="rounded-full" />
+            <span className="min-w-0 flex-1 truncate text-[13px] font-black text-white">#{profile?.username || currentUserRow.name}</span>
+            <span className="text-[13px] font-black text-[#00c878]">{formatMoney(currentUserRow.totalProfit)}</span>
           </div>
-          <div className="mt-0.5 text-[11px] font-semibold text-white/35">Today's Top Ranked Traders</div>
+          <div className="mt-3 text-[11px] font-black text-[#8a93a5]">Your position: {currentUserRank > 0 ? currentUserRank : "-"}</div>
         </div>
-      </div>
+      )}
 
-      {/* Dropdown + Watching toggle */}
-      <div className="shrink-0 px-4 pt-3">
-        <div className="flex items-center gap-2 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3 py-2.5 transition-all hover:bg-white/[0.06]">
-          <span className="text-[13px]">🥇</span>
-          <span className="flex-1 text-[13px] font-medium text-white">Top ranked traders for 24h</span>
-          <ChevronDown className="h-4 w-4 text-[#787b86]" />
-        </div>
+      <button
+        type="button"
+        className="mx-4 mb-5 flex h-[40px] shrink-0 items-center gap-3 rounded-[4px] bg-[#0b3b67] px-4 text-left text-[13px] font-black text-[#1597ff]"
+      >
+        <BarChart3 className="h-5 w-5 text-[#f5c84b]" />
+        How does this rating work?
+      </button>
 
-        {/* Watching toggle */}
-        {watchingIds.size > 0 && (
-          <button
-            type="button"
-            onClick={() => setShowWatching(!showWatching)}
-            className="mt-2 flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-[12px] font-semibold transition-all"
-            style={{
-              borderColor: showWatching ? "#26a69a" : "rgba(255,255,255,0.06)",
-              background: showWatching ? "rgba(38,166,154,0.08)" : "rgba(255,255,255,0.03)",
-              color: showWatching ? "#26a69a" : "#787b86",
-            }}
-          >
-            {showWatching ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-            {showWatching ? `Show All Traders` : `View Watching List (${watchingIds.size})`}
-          </button>
-        )}
-      </div>
-
-      {/* REAL TRADING subheader */}
-      <div className="shrink-0 px-4 pt-3 pb-1">
-        <div className="flex items-center justify-center rounded-md bg-white/[0.03] py-2">
-          <span className="text-[11px] font-bold tracking-[1.5px] text-[#787b86]/60">
-            {showWatching ? "WATCHING" : "REAL TRADING"}
-          </span>
-        </div>
-      </div>
-
-      {/* Scrollable list */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-2">
-        {displayTraders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-[#787b86]">
-            <Users className="mb-2 h-8 w-8 opacity-30" />
-            <p className="text-[13px]">No watched traders yet</p>
-            <p className="mt-1 text-[11px]">Click Watch on a trader profile to start following</p>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-3 no-scrollbar">
+        {loading ? (
+          <div className="flex h-full items-center justify-center text-[13px] font-bold text-white/55">Loading leaderboard...</div>
+        ) : leaders.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-white/55">
+            <Users className="h-9 w-9 opacity-40" />
+            <p className="text-[13px] font-bold">No ranked traders yet.</p>
           </div>
         ) : (
-          displayTraders.map((trader, idx) => {
-            const isWatched = watchingIds.has(trader.id);
-            const rowBg = idx % 2 === 0 ? "#282D41" : "#232637";
-
-            return (
-              <div
-                key={trader.id}
-                onClick={() => setSelectedTrader(trader)}
-                className="group flex cursor-pointer items-center gap-3 px-3 py-3 transition-all hover:brightness-[1.15] active:scale-[0.99]"
-                style={{ background: rowBg }}
-              >
-                {/* Avatar with status badge */}
-                <div className="relative shrink-0">
-                  <img
-                    src={trader.flagUrl}
-                    alt=""
-                    className="h-10 w-10 rounded-full border border-white/[0.08] object-cover ring-1 ring-white/[0.04] transition-all group-hover:ring-[#26a69a]/30"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                  />
-                  {isWatched && (
-                    <span className="absolute -bottom-0.5 -left-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#f4b742] border-2 border-white/[0.15]">
-                      <Star className="h-2 w-2 text-white" />
+          <div className="space-y-0">
+            {leaders.map((trader, index) => {
+              const unread = getUnreadCount(trader.id);
+              return (
+                <button
+                  key={trader.id}
+                  type="button"
+                  onClick={() => setSelectedTrader(trader)}
+                  className="flex h-[45px] w-full items-center gap-2 border-b border-white/[0.055] text-left transition-colors hover:bg-white/[0.035]"
+                >
+                  <span
+                    className={`flex h-[17px] w-[17px] shrink-0 items-center justify-center rounded-full text-[10px] font-black ${
+                      index === 0 ? "bg-[#f8d34d] text-[#4d3b00]" : index === 1 ? "bg-[#e6e8ee] text-[#383b44]" : index === 2 ? "bg-[#f5a13d] text-[#422000]" : "bg-transparent text-[#8c95a8]"
+                    }`}
+                  >
+                    {index + 1}
+                  </span>
+                  <div className="relative flex h-5 w-8 shrink-0 items-center">
+                    <CountryFlag code={trader.country} size={18} className="rounded-full" />
+                    <span className="absolute left-3 flex h-5 w-5 items-center justify-center rounded-full bg-[#283044] text-[9px] font-black text-white ring-2 ring-[#1b2030]">
+                      {trader.name.charAt(0).toUpperCase()}
                     </span>
-                  )}
-                </div>
-
-                {/* User info */}
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="truncate text-[13px] font-semibold text-[#f1f2f4] group-hover:text-white">{trader.name}</span>
-                      {(() => { const uc = getUnreadCount(trader.id); return uc > 0 ? <span className="shrink-0 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-[#ef5350] text-[9px] font-bold text-white px-1">{uc > 99 ? "99+" : uc}</span> : null; })()}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {isWatched && (
-                        <span className="shrink-0 rounded-full bg-[#f4b742]/12 px-1.5 py-0.5 text-[8px] font-bold text-[#f4b742]">WATCHING</span>
-                      )}
-                      <span className="text-[13px] font-bold text-right text-[#26a69a]">
-                        {formatProfit(trader.totalProfit)}
-                      </span>
-                    </div>
                   </div>
-                  <div className="mt-1 flex justify-between text-[11px] text-[#787b86]">
-                    <span>Number of trades:</span>
-                    <span>Profitable trades:</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[12px] font-bold text-[#d1d4dc]">{trader.totalTrades.toLocaleString()}</span>
-                    <span className="text-[12px] font-bold text-[#d1d4dc]">{trader.winRate.toFixed(0)}%</span>
-                  </div>
-                </div>
-
-
-              </div>
-            );
-          })
+                  <span className="min-w-0 flex-1 truncate text-[12px] font-black text-white">
+                    {trader.name}
+                    {unread > 0 && <span className="ml-1 rounded-full bg-[#ef5350] px-1 text-[9px]">{unread > 9 ? "9+" : unread}</span>}
+                  </span>
+                  <span className="shrink-0 text-[12px] font-black text-[#00c878]">{formatMoney(trader.totalProfit)}</span>
+                </button>
+              );
+            })}
+          </div>
         )}
       </div>
 
-      {/* Trader Profile Modal */}
       {selectedTrader && (
         <TraderProfile
           trader={selectedTrader}
           onClose={() => setSelectedTrader(null)}
           onCopy={handleCopyWithSettings}
           onWatch={(id) => {
-            setWatchingIds((prev) => new Set(prev).add(id));
+            void followTrader(id);
+            toast.success("Trader added to your watch list");
           }}
           onUnwatch={(id) => {
-            setWatchingIds((prev) => {
-              const next = new Set(prev);
-              next.delete(id);
-              return next;
-            });
+            void unfollowTrader(id);
           }}
-          isWatched={watchingIds.has(selectedTrader.id)}
+          isWatched={isFollowing(selectedTrader.id)}
         />
       )}
     </div>
   );
 };
-
-const DataRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-center justify-between rounded border-l-[3px] border-[#1fa2ff] bg-[#24293d] px-3.5 py-2.5">
-    <span className="text-[12px] text-[#9ba1b0]">{label}</span>
-    <span className="text-[13px] font-bold text-white">{value}</span>
-  </div>
-);

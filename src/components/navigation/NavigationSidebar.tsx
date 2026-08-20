@@ -9,7 +9,7 @@ import {
   User,
 } from "lucide-react";
 
-export type WorkspaceModule = "support" | "account" | "tournaments" | "leaderboard" | "referrals" | "more" | "settings" | "help" | "guides" | "signals" | "generalchat" | null;
+export type WorkspaceModule = "support" | "account" | "analytics" | "tournaments" | "leaderboard" | "referrals" | "more" | "settings" | "help" | "guides" | "signals" | "generalchat" | null;
 
 interface NavigationSidebarProps {
   activeWorkspace: WorkspaceModule;
