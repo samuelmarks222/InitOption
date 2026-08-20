@@ -50,14 +50,8 @@ import {
   recoverCryptoDepositCheckout,
   type CryptoDepositInstructionPayload,
 } from "@/lib/cryptoDeposits";
-import {
-  calculateDepositBonus,
-  calculateDepositCreditedAmount,
-  getDepositBonusPercent,
-  getDepositBonusPresetOptions,
-} from "@/lib/depositBonusTiers";
+import { useDepositBonus } from "@/hooks/useDepositBonus";
 import { isPlisioInstructionAddress, isPlisioSupportedCryptoMethod } from "@/lib/plisio";
-import type { Tables } from "@/integrations/supabase/types";
 
 export type AccountType = "live" | "demo" | "tournament";
 
@@ -246,11 +240,11 @@ const formatCountdown = (deadline: number | null, now: number) => {
 
 const getMethodIcon = (method: DepositMethodOption) => {
   if (method.symbol === "MPESA") {
-    return <MpesaIcon className="h-8 w-[74px]" />;
+    return <MpesaIcon className="h-8 w-[56px]" />;
   }
 
   if (method.symbol === "AIRTEL") {
-    return <img src="/images/airtel-logo.png" alt="Airtel Money" className="h-8 w-auto max-w-[120px] object-contain" />;
+    return <img src="/images/airtel-logo.png" alt="Airtel Money" className="h-8 w-auto max-w-[56px] object-contain" />;
   }
 
   if (method.iconType === "crypto") {
@@ -382,10 +376,12 @@ const DepositMethodRow = ({
     className={`flex h-[56px] min-w-0 items-center gap-3 rounded-[4px] bg-white px-4 text-left text-[#202638] transition hover:bg-slate-100 ${
       method.available ? "" : "opacity-60"
     }`}
-  >
+>
     <span className="flex h-7 w-10 shrink-0 items-center justify-center overflow-hidden">{getMethodIcon(method)}</span>
     <span className="min-w-0 flex-1">
-      <span className="block truncate text-[15px] font-bold">{method.name}</span>
+      {method.iconType !== "wallet" && (
+        <span className="block truncate text-[15px] font-bold">{method.name}</span>
+      )}
       <span className="block text-[10px] font-bold text-slate-400">Min. {formatCurrency(method.minAmount)}</span>
     </span>
     {repeat ? (
@@ -413,6 +409,9 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
   const [activeInstruction, setActiveInstruction] = useState<ActiveCryptoInstruction | null>(null);
   const [bonusCodeOpen, setBonusCodeOpen] = useState(false);
   const [bonusCode, setBonusCode] = useState("");
+
+  // Dynamic bonus from admin-configured offers
+  const { loading: bonusLoading, cryptoEnabled, findMatchingOffer, bonusAmountFor } = useDepositBonus(user?.id ?? null);
 
   useEffect(() => {
     let cancelled = false;
@@ -552,9 +551,10 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
 
   const headerSubtitle = step === "methods" ? t("accountModals.selectPaymentMethod") : "Complete the payment in Plisio";
   const amountValue = Number(amount) || 0;
-  const bonusPercent = bonusEnabled ? getDepositBonusPercent(amountValue) : 0;
-  const bonusAmount = calculateDepositBonus(amountValue, bonusEnabled);
-  const receiveAmount = calculateDepositCreditedAmount(amountValue, bonusEnabled);
+  const matchingOffer = bonusEnabled && !bonusLoading ? findMatchingOffer(amountValue) : null;
+  const bonusPercent = matchingOffer ? matchingOffer.bonus_percent : 0;
+  const bonusAmount = matchingOffer ? bonusAmountFor(amountValue, matchingOffer) : 0;
+  const receiveAmount = amountValue + bonusAmount;
   const depositToastClassName =
     "rounded-[24px] border-[#5ec893]/35 bg-[#245b47] px-5 py-4 pr-11 text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] backdrop-blur-md";
 
@@ -607,8 +607,15 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
     });
   };
   const bonusPresetOptions = useMemo(
-    () => getDepositBonusPresetOptions(selectedMethod?.minAmount ?? 0),
-    [selectedMethod?.minAmount],
+    () => {
+      const offers = matchingOffer ? [matchingOffer] : [];
+      return offers.filter((offer) => offer.minimum_deposit_amount_resolved >= (selectedMethod?.minAmount ?? 0)).map((offer) => ({
+        amount: offer.minimum_deposit_amount_resolved,
+        percent: offer.bonus_percent,
+        tier: offer,
+      }));
+    },
+    [matchingOffer, selectedMethod?.minAmount],
   );
   const waitingStatusLabel =
     processing
@@ -626,12 +633,12 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
           },
         ]
       : [
-          ...(bonusEnabled && amountValue > 0 && getDepositBonusPercent(amountValue) > 0
+          ...(matchingOffer
             ? [
                 {
                   id: "bonus-credit",
                   tone: "blue" as const,
-                  text: `${getDepositBonusPercent(amountValue)}% bonus is attached to this deposit and will credit automatically after the payment confirms.`,
+                  text: `${matchingOffer.bonus_percent}% bonus is attached to this deposit and will credit automatically after the payment confirms.`,
                 },
               ]
             : []),
@@ -1135,12 +1142,14 @@ const categoryCards = useMemo(
             </div>
           )}
 
-          {step === "checkout" && selectedMethod && (
+{step === "checkout" && selectedMethod && (
             <div className="grid gap-5 lg:grid-cols-[244px_minmax(0,1fr)]">
               <div className="rounded-[4px] bg-white p-5 text-[#202638]">
                 <div className="flex items-center gap-3">
                   <span className="flex h-8 w-12 items-center justify-center overflow-hidden">{getMethodIcon(selectedMethod)}</span>
-                  <span className="text-[15px] font-bold">{selectedMethod.name}</span>
+                  {selectedMethod.iconType !== "wallet" && (
+                    <span className="text-[15px] font-bold">{selectedMethod.name}</span>
+                  )}
                 </div>
                 <div className="my-6 border-t border-dashed border-slate-300" />
                 <div className="space-y-2 text-[13px] font-bold text-slate-400">
