@@ -573,6 +573,7 @@ const MyAccountPanel = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [cards, setCards] = useState<StoredVerificationCard[]>(() => loadStoredJson(cardsKey, []));
@@ -903,24 +904,28 @@ const MyAccountPanel = () => {
             <ToggleSwitch checked={Boolean(security.login2fa)} onChange={() => updateSecurity({ login2fa: !security.login2fa })} label="To enter the platform" />
             <ToggleSwitch checked={Boolean(security.withdraw2fa)} onChange={() => updateSecurity({ withdraw2fa: !security.withdraw2fa })} label="To withdraw funds" />
             <div className="border-t border-dashed border-white/15 pt-5">
-              <div className="flex items-center gap-3">
-                <Lock className="h-5 w-5 text-white/55" />
-                <p className="text-[15px] font-black text-white">Password</p>
-              </div>
-              <p className="mt-2 ml-8 text-[13px] font-bold text-[#9ba5b9]">Change your account password</p>
-              <div className="mt-5 space-y-4">
-                <ProfileInput label="Old password" type="password" value={oldPassword} onChange={setOldPassword} />
-                <ProfileInput label="New password" type="password" value={newPassword} onChange={setNewPassword} />
-                <ProfileInput label="Confirm new password" type="password" value={confirmPassword} onChange={setConfirmPassword} />
-                <button
-                  type="button"
-                  onClick={handlePasswordChange}
-                  disabled={changingPassword}
-                  className="h-11 w-full rounded-[4px] bg-[#0d82df] text-[14px] font-black text-white transition hover:bg-[#118bea] disabled:opacity-60"
-                >
-                  {changingPassword ? "Changing..." : "Change Password"}
-                </button>
-              </div>
+              <button type="button" onClick={() => setPasswordOpen((open) => !open)} className="flex w-full items-center justify-between">
+                <span className="flex items-center gap-3">
+                  <Lock className="h-5 w-5 text-white/55" />
+                  <span className="text-[15px] font-black text-white">Change password</span>
+                </span>
+                <ChevronDown className={`h-4 w-4 text-white/70 transition-transform ${passwordOpen ? "rotate-180" : ""}`} />
+              </button>
+              {passwordOpen && (
+                <div className="mt-4 space-y-4">
+                  <ProfileInput label="Old password" type="password" value={oldPassword} onChange={setOldPassword} />
+                  <ProfileInput label="New password" type="password" value={newPassword} onChange={setNewPassword} />
+                  <ProfileInput label="Confirm new password" type="password" value={confirmPassword} onChange={setConfirmPassword} />
+                  <button
+                    type="button"
+                    onClick={handlePasswordChange}
+                    disabled={changingPassword}
+                    className="h-11 w-full rounded-[4px] bg-[#0d82df] text-[14px] font-black text-white transition hover:bg-[#118bea] disabled:opacity-60"
+                  >
+                    {changingPassword ? "Changing..." : "Change Password"}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
