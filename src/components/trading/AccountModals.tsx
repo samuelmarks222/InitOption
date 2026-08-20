@@ -2232,6 +2232,7 @@ export const AccountDropdown = ({
                   { label: "Trades", action: () => onOpenProfile("trading_history") },
                   { label: "Referrals", action: () => navigate("/referrals") },
                   { label: "My account", action: () => onOpenProfile("personal") },
+                  { label: "Admin Panel", action: () => navigate("/admin") },
                 ].map((item) => (
                   <button
                     key={item.label}
