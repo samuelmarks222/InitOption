@@ -543,7 +543,6 @@ const normalizeRows = (result: PgResult): Row[] => {
 
 const runScoped = async (mappedId: string, fn: (client: PgClientLike) => Promise<PgResult>) =>
   transaction(async (client) => {
-    await client.query("SET LOCAL ROLE authenticated");
     await client.query("SELECT set_config('app.current_user_id', $1, true)", [mappedId]);
     const result = await fn(client);
     return { rows: normalizeRows(result) };
@@ -562,11 +561,36 @@ const parseColumns = (raw: string | undefined): string[] | null => {
 
 const buildWhere = (clauses: FilterClause[], params: unknown[]): string => {
   const parts = clauses.map((clause) => {
-    if (clause.o === "or" && Array.isArray(clause.items) && clause.items.length > 0) {
-      const orParams: unknown[] = [];
-      const orSql = buildWhere(clause.items, orParams);
-      params.push(...orParams);
-      return `(${orSql})`;
+    if (clause.o === "or") {
+      // Handle items as array of FilterClause objects (standard)
+      if (Array.isArray(clause.items) && clause.items.length > 0) {
+        const orParams: unknown[] = [];
+        const orSql = buildWhere(clause.items, orParams);
+        params.push(...orParams);
+        return `(${orSql})`;
+      }
+      // Handle items as comma-separated string: "col.op.val,col2.op2.val2"
+      if (typeof clause.items === "string" && clause.items.trim().length > 0) {
+        const stringClauses = clause.items.split(",").map((s) => s.trim()).filter(Boolean);
+        const parsed: FilterClause[] = [];
+        for (const str of stringClauses) {
+          const parts2 = str.split(".");
+          if (parts2.length >= 3) {
+            const col = parts2[0];
+            const op = parts2[1];
+            const val = parts2.slice(2).join("."); // rejoin in case value contains dots (e.g., timestamps)
+            if (IS_IDENTIFIER.test(col) && OPERATORS.has(op)) {
+              parsed.push({ c: col, o: op, v: val === "null" ? null : val });
+            }
+          }
+        }
+        if (parsed.length > 0) {
+          const orParams: unknown[] = [];
+          const orSql = buildWhere(parsed, orParams);
+          params.push(...orParams);
+          return `(${orSql})`;
+        }
+      }
     }
 
     const col = clause.c ?? "";
