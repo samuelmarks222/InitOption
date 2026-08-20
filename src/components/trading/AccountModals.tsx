@@ -249,6 +249,10 @@ const getMethodIcon = (method: DepositMethodOption) => {
     return <MpesaIcon className="h-8 w-[74px]" />;
   }
 
+  if (method.symbol === "AIRTEL") {
+    return <img src="/images/airtel-logo.png" alt="Airtel Money" className="h-8 w-auto max-w-[120px] object-contain" />;
+  }
+
   if (method.iconType === "crypto") {
     return (
       <img
