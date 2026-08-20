@@ -12,15 +12,40 @@ if (!connectionString) {
 }
 
 let pool: PoolType | null = null;
+let poolCreationError: Error | null = null;
 
 const getPool = () => {
   if (!connectionString) {
     throw new Error("Missing required environment variable: DATABASE_URL");
   }
+  if (poolCreationError) {
+    throw poolCreationError;
+  }
   if (!pool) {
-    pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
+    try {
+      pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false }, max: 10, idleTimeoutMillis: 30000, connectionTimeoutMillis: 10000 });
+      pool.on("error", (err) => {
+        console.error("Unexpected pool error:", err);
+      });
+    } catch (e) {
+      poolCreationError = e instanceof Error ? e : new Error(String(e));
+      throw poolCreationError;
+    }
   }
   return pool;
+};
+
+// Test database connectivity
+export const testDbConnection = async (): Promise<{ ok: boolean; error?: string }> => {
+  try {
+    const p = getPool();
+    const client = await p.connect();
+    await client.query("SELECT 1");
+    client.release();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
 };
 
 export const getRequiredEnv = (name: string) => {

@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { v2 as cloudinary } from "cloudinary";
-import { transaction, query, queryOne } from "./db.js";
+import { transaction, query, queryOne, testDbConnection } from "./db.js";
 import {
   clerkUserIdToUuid,
   authenticateRequest,
@@ -721,6 +721,28 @@ const remapClauses = (
 
 export async function handleDb(request: ApiRequest, response: ApiResponse): Promise<void> {
   const method = request.method || "GET";
+  
+  // Check database connection early
+  if (!process.env.DATABASE_URL?.trim()) {
+    console.error("DATABASE_URL not configured");
+    sendJson(response, 503, { error: "Database not configured" });
+    return;
+  }
+
+  // Test database connectivity
+  try {
+    const dbTest = await testDbConnection();
+    if (!dbTest.ok) {
+      console.error("Database connection failed:", dbTest.error);
+      sendJson(response, 503, { error: "Database unavailable", details: dbTest.error });
+      return;
+    }
+  } catch (e) {
+    console.error("Database test error:", e instanceof Error ? e.message : e);
+    sendJson(response, 503, { error: "Database test failed" });
+    return;
+  }
+
   try {
     const auth = await authenticateWithUid(request.headers);
     if (!auth) {
@@ -861,8 +883,15 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to process request";
     const stack = error instanceof Error ? error.stack : undefined;
-    console.error("db route failed", { message, stack, table: table ?? "unknown", method });
-    sendJson(response, 400, { error: message, details: stack?.split("\n").slice(0, 3).join(" | ") });
+    const isClientError = error instanceof Error && (
+      message.includes("Invalid") ||
+      message.includes("not allowed") ||
+      message.includes("not configured") ||
+      message.includes("Unauthorized")
+    );
+    const statusCode = isClientError ? 400 : 500;
+    console.error("db route failed", { message, stack, table: table ?? "unknown", method, statusCode });
+    sendJson(response, statusCode, { error: message, details: stack?.split("\n").slice(0, 3).join(" | ") });
   }
 }
 
