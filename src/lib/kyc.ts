@@ -10,7 +10,9 @@ export type KycDocumentsLike = {
 } | null | undefined;
 
 export const normalizeKycStatus = (value: unknown): KycStatus => {
-  if (value === "Verified" || value === "Rejected") return value;
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (normalized === "verified" || normalized === "approved") return "Verified";
+  if (normalized === "rejected") return "Rejected";
   return "Pending";
 };
 
@@ -25,5 +27,5 @@ export const getProfileKycLabel = (statusValue: unknown, documents: KycDocuments
 
   if (status === "Verified") return "Verified";
   if (status === "Rejected") return "Rejected";
-  return hasUploadedKycDocuments(documents) ? "Pending verification" : "Not verified";
+  return hasUploadedKycDocuments(documents) ? "Submitted" : "Not verified";
 };

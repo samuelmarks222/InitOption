@@ -602,12 +602,28 @@ const MyAccountPanel = () => {
   const [identityModalStep, setIdentityModalStep] = useState<"privacy" | "document" | "upload">("privacy");
   const [identityPrivacyAccepted, setIdentityPrivacyAccepted] = useState(false);
   const docs = documents as Record<string, any>;
-  const personalDetailsComplete = Boolean(form.country || email || user?.id);
+  const personalDetailsComplete = Boolean(
+    form.username.trim() &&
+    form.firstName.trim() &&
+    form.lastName.trim() &&
+    form.dob &&
+    form.country &&
+    form.address.trim(),
+  );
   const needsBackSide = idType !== "Passport";
   const frontUploaded = Boolean(docs.front?.url);
   const backUploaded = Boolean(docs.back?.url);
+  const hasAnyKycDocument = frontUploaded || backUploaded;
   const requiredDocumentsUploaded = frontUploaded && (!needsBackSide || backUploaded);
-  const documentUploadReady = personalDetailsComplete && Boolean(idType || frontUploaded || backUploaded);
+  const kycLabel = getProfileKycLabel(kycStatus, docs);
+  const kycBadgeClass =
+    kycLabel === "Verified"
+      ? "bg-green-500/15 text-green-400"
+      : kycLabel === "Rejected"
+        ? "bg-red-500/15 text-red-300"
+        : kycLabel === "Submitted"
+          ? "bg-[#0d82df]/15 text-[#58adff]"
+          : "bg-red-500/15 text-red-300";
 
   useEffect(() => {
     setForm(mergeProfileDetails(profile as any, user));
@@ -818,7 +834,7 @@ const MyAccountPanel = () => {
       };
       await persistKycDocuments(nextDocuments);
       toast.success(`${slot === "front" ? "Front" : "Back"} document uploaded successfully.`);
-      setVerificationStatus("Documents uploaded. They are now waiting for admin review.");
+      setVerificationStatus("Documents submitted. They are waiting for admin review.");
     } catch (error: any) {
       toast.error(error?.message || "Failed to upload document.");
     } finally {
@@ -853,7 +869,7 @@ const MyAccountPanel = () => {
     const nextSlot = !frontUploaded ? "front" : needsBackSide && !backUploaded ? "back" : null;
     if (!nextSlot) {
       setIdentityModalOpen(false);
-      setVerificationStatus("Documents uploaded. They are now waiting for admin review.");
+      setVerificationStatus("Documents submitted. They are waiting for admin review.");
       return;
     }
     if (nextSlot === "front") frontInputRef.current?.click();
@@ -908,14 +924,14 @@ const MyAccountPanel = () => {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="truncate text-[13px] font-bold text-white/65">{email || "Account email unavailable"}</p>
-                <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${emailVerified ? "bg-emerald-500/15 text-emerald-300" : "bg-[#0fa053]/15 text-[#d8f6e5]"}`}>
-                  {emailVerified ? "Verified" : "Unverified"}
+                <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${kycBadgeClass}`}>
+                  {kycLabel}
                 </span>
               </div>
               <p className="mt-2 text-[18px] font-black text-white">{displayName || "Your account"}</p>
               <p className="mt-1 text-[14px] font-bold text-white/75">ID: {visible ? displayId : "********"}</p>
-              <span className={`mt-3 inline-flex rounded-[8px] px-3 py-1 text-[12px] font-bold ${emailVerified ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-300"}`}>
-                {emailVerified ? "Verified" : "Not verified"}
+              <span className={`mt-3 inline-flex rounded-[8px] px-3 py-1 text-[12px] font-bold ${kycBadgeClass}`}>
+                {kycLabel}
               </span>
               <p className="mt-2 text-[12px] font-bold text-white/45">Click the photo to upload or replace your profile picture.</p>
             </div>
@@ -1060,12 +1076,12 @@ const MyAccountPanel = () => {
       )}
 
       {!kycVerified && (
-        <div className="mt-6 rounded-[6px] border border-[#0fa053]/25 bg-[#0fa053]/10 px-5 py-5" data-verify-tour="documents">
+        <div className="mt-6 rounded-[6px] border border-white/10 bg-[#202633] px-5 py-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)]" data-verify-tour="documents">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="flex items-center gap-2 text-[18px] font-black text-white">
-                <ShieldCheck className="h-5 w-5 text-[#0fa053]" />
-                ID verification
+                <ShieldCheck className="h-5 w-5 text-[#0d82df]" />
+                Documents verification:
               </h2>
               <p className="mt-1 text-[12px] font-bold text-white/50">
                 {personalDetailsComplete
@@ -1074,15 +1090,9 @@ const MyAccountPanel = () => {
               </p>
             </div>
             <span
-              className={`inline-flex rounded-[8px] px-3 py-1 text-[12px] font-black uppercase tracking-[0.08em] ${
-                kycStatus === "Rejected"
-                  ? "bg-red-500/15 text-red-400"
-                  : documents?.front?.url || documents?.back?.url
-                    ? "bg-[#0fa053]/15 text-[#8be0af]"
-                    : "bg-[#ffce5c]/15 text-[#ffce5c]"
-              }`}
+              className={`inline-flex rounded-[8px] px-3 py-1 text-[12px] font-black uppercase tracking-[0.08em] ${kycBadgeClass}`}
             >
-              {getProfileKycLabel(kycStatus, documents)}
+              {kycLabel}
             </span>
           </div>
 
@@ -1095,7 +1105,7 @@ const MyAccountPanel = () => {
             </div>
           )}
 
-          {personalDetailsComplete && !documentUploadReady && (
+          {personalDetailsComplete && !hasAnyKycDocument && kycStatus !== "Rejected" && (
             <div className="mt-4 rounded-[6px] border border-[#0d82df]/60 bg-[#122d4c] p-5 shadow-[0_18px_40px_rgba(13,130,223,0.14)]">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -1131,7 +1141,7 @@ const MyAccountPanel = () => {
             </div>
           )}
 
-          {personalDetailsComplete && documentUploadReady && (
+          {personalDetailsComplete && (hasAnyKycDocument || kycStatus === "Rejected") && (
           <>
           <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
             <ProfileDropdown label="ID Type" value={idType} onChange={setIdType} options={ID_DOCUMENT_OPTIONS} />
@@ -2170,7 +2180,7 @@ const IdDocumentRow = ({
     </div>
     <div className="flex shrink-0 items-center gap-2">
       <span className={`rounded-[8px] px-2.5 py-1 text-[11px] font-bold ${document?.url ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-300"}`}>
-        {document?.url ? "Uploaded" : "Needed"}
+        {document?.url ? "Submitted" : "Needed"}
       </span>
       <button
         type="button"
