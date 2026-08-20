@@ -548,8 +548,19 @@ const runScoped = async (mappedId: string, fn: (client: PgClientLike) => Promise
     } catch (e) {
       console.warn("SET LOCAL ROLE authenticated failed (role may not exist):", e instanceof Error ? e.message : e);
     }
-    await client.query("SELECT set_config('app.current_user_id', $1, true)", [mappedId]);
-    const result = await fn(client);
+    try {
+      await client.query("SELECT set_config('app.current_user_id', $1, true)", [mappedId]);
+    } catch (e) {
+      console.error("set_config app.current_user_id failed:", e instanceof Error ? e.message : e);
+      throw e;
+    }
+    let result;
+    try {
+      result = await fn(client);
+    } catch (e) {
+      console.error("runScoped query function failed:", e instanceof Error ? e.message : e);
+      throw e;
+    }
     return { rows: normalizeRows(result) };
   });
 
@@ -558,23 +569,25 @@ const getDbPath = (request: ApiRequest) => {
   return fromQuery || (request.url || "").replace(/^\/api\/db\/?/, "");
 };
 
-const parseColumns = (raw: string | undefined): string[] | null => {
-  if (!raw || raw.trim().length === 0) return null;
-  // Allow simple identifiers, *, or join syntax like "profiles(id,username)"
-  const cols = raw.split(",").map((c) => c.trim()).filter(Boolean);
-  const valid = cols.every((c) => {
-    if (c === "*") return true;
-    if (IS_IDENTIFIER.test(c)) return true;
-    // Allow join syntax: table(col1,col2,...)
-    const joinMatch = c.match(/^([A-Za-z_][A-Za-z0-9_]*)\((.+)\)$/);
+const expandColumns = (columns: string[]): string[] => {
+  const expanded: string[] = [];
+  for (const col of columns) {
+    if (col === "*") {
+      expanded.push("*");
+      continue;
+    }
+    const joinMatch = col.match(/^([A-Za-z_][A-Za-z0-9_]*)\((.+)\)$/);
     if (joinMatch) {
       const table = joinMatch[1];
       const innerCols = joinMatch[2].split(",").map((ic) => ic.trim()).filter(Boolean);
-      return IS_IDENTIFIER.test(table) && innerCols.every((ic) => IS_IDENTIFIER.test(ic));
+      for (const ic of innerCols) {
+        expanded.push(`"${table}"."${ic}"`);
+      }
+    } else {
+      expanded.push(`"${col}"`);
     }
-    return false;
-  });
-  return valid ? cols : null;
+  }
+  return expanded;
 };
 
 const buildWhere = (clauses: FilterClause[], params: unknown[]): string => {
@@ -733,10 +746,11 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
         sendJson(response, 400, { error: "Invalid select columns" });
         return;
       }
+      const expandedColumns = expandColumns(columns);
 
       if (idSegment) {
         const { rows } = await runScoped(mappedId, (client) =>
-          client.query(`select ${columns.join(", ")} from public.${table} where "id" = $1`, [
+          client.query(`select ${expandedColumns.join(", ")} from public.${table} where "id" = $1`, [
             remapClerkIds(idSegment, mappedId, appwriteUid, clerkUserId),
           ]),
         );
@@ -763,7 +777,7 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
       const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 1000) : 1000;
       const offset = Number.isFinite(offsetRaw) && offsetRaw > 0 ? offsetRaw : 0;
 
-      let sql = `select ${columns.join(", ")} from public.${table}`;
+      let sql = `select ${expandedColumns.join(", ")} from public.${table}`;
       const whereSql = buildWhere(clauses, params);
       if (whereSql) sql += ` where ${whereSql}`;
       if (orders) sql += ` order by ${orders.join(", ")}`;
