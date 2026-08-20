@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Eye, Image, Send, X } from "lucide-react";
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Eye, EyeOff, Image, Send, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useStatistics, type Trade, type Transaction } from "@/hooks/useStatistics";
 import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/useTrading";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
+import { readDemoBalanceStorage } from "@/lib/onboarding";
 import type { AccountTab } from "./AccountGridOverlay";
 import type { AnalyticsSignalAsset } from "./analytics/AnalyticsSignals";
 import { ProfilePersonalData } from "../profile/ProfilePersonalData";
@@ -173,6 +174,8 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
   const [accountScope, setAccountScope] = useState<AnalyticsAccountScope>("live");
   const [accountScopeOpen, setAccountScopeOpen] = useState(false);
   const [demoHistory, setDemoHistory] = useState<TradeHistoryEntry[]>([]);
+  const [demoBalanceSnapshot, setDemoBalanceSnapshot] = useState<number | null>(null);
+  const [summaryVisible, setSummaryVisible] = useState(true);
   const [paymentsPage, setPaymentsPage] = useState(1);
   const [tradesPage, setTradesPage] = useState(1);
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
@@ -180,16 +183,29 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
   useEffect(() => {
     if (!user?.id || typeof window === "undefined") {
       setDemoHistory([]);
+      setDemoBalanceSnapshot(null);
       return;
     }
 
-    try {
-      const raw = window.localStorage.getItem(getDemoTradeHistoryStorageKey(user.id));
-      const parsed = raw ? JSON.parse(raw) : [];
-      setDemoHistory(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      setDemoHistory([]);
-    }
+    const loadDemoAccountState = () => {
+      try {
+        const raw = window.localStorage.getItem(getDemoTradeHistoryStorageKey(user.id));
+        const parsed = raw ? JSON.parse(raw) : [];
+        setDemoHistory(Array.isArray(parsed) ? parsed : []);
+      } catch {
+        setDemoHistory([]);
+      }
+
+      setDemoBalanceSnapshot(readDemoBalanceStorage(user.id));
+    };
+
+    loadDemoAccountState();
+    window.addEventListener("focus", loadDemoAccountState);
+    window.addEventListener("storage", loadDemoAccountState);
+    return () => {
+      window.removeEventListener("focus", loadDemoAccountState);
+      window.removeEventListener("storage", loadDemoAccountState);
+    };
   }, [user?.id]);
 
   const filteredTrades = useMemo(() => {
@@ -213,12 +229,10 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
   const profitableSeries = useMemo(() => buildProfitableSeries(filteredTrades, range), [filteredTrades, range]);
   const filteredAssets = useMemo(() => buildAssetBreakdown(filteredTrades, assetPerformance), [assetPerformance, filteredTrades]);
   const liveBalance = getEffectiveLiveBalance(profile);
-  const demoBalance = getDemoBalance(profile);
+  const demoBalance = demoBalanceSnapshot ?? getDemoBalance(profile);
   const email = readProfileText(user?.email, (profile as any)?.email) || "Account email unavailable";
   const displayName = readProfileText(profile?.display_name, profile?.username);
-  const displayId = readProfileText(profile?.referral_code)
-    || readProfileText(profile?.id, user?.id).replace(/-/g, "").slice(0, 10)
-    || "-";
+  const displayId = readProfileText(profile?.id, user?.id).replace(/-/g, "").slice(0, 8).toUpperCase() || "-";
   const location = readProfileText(profile?.nationality, profile?.phone_country) || "-";
   const avatarUrl = readProfileText(profile?.avatar_url);
   const handleTabClick = (tab: AnalyticsAccountTab) => {
@@ -244,6 +258,8 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
       liveBalance={formatMoney(liveBalance)}
       demoBalance={formatMoney(demoBalance)}
       avatarUrl={avatarUrl}
+      visible={summaryVisible}
+      onToggleVisible={() => setSummaryVisible((current) => !current)}
     />
   );
   const rangeSelector = (
@@ -455,6 +471,8 @@ const ProfileSummary = ({
   liveBalance,
   demoBalance,
   avatarUrl,
+  visible,
+  onToggleVisible,
 }: {
   email: string;
   displayName: string;
@@ -463,6 +481,8 @@ const ProfileSummary = ({
   liveBalance: string;
   demoBalance: string;
   avatarUrl: string;
+  visible: boolean;
+  onToggleVisible: () => void;
 }) => (
   <div className="flex min-h-[76px] flex-wrap items-center gap-x-7 gap-y-4">
     <div className="flex min-w-[260px] items-center gap-3">
@@ -478,20 +498,26 @@ const ProfileSummary = ({
       </div>
       <div className="min-w-0">
         <p className="truncate text-[13px] font-bold text-white/45">
-          {displayName ? `${displayName} - ${email}` : email}
+          {visible ? (displayName ? `${displayName} - ${email}` : email) : "Hidden account information"}
         </p>
         <div className="mt-0.5 flex items-center gap-2">
-          <p className="truncate text-[17px] font-black text-white">ID: {displayId}</p>
+          <p className="truncate text-[17px] font-black text-white">ID: {visible ? displayId : "********"}</p>
           <Send className="h-4 w-4 shrink-0 fill-[#39d10f] text-[#39d10f]" />
         </div>
       </div>
     </div>
 
-    <ProfileMetric label="Location" value={location} compact />
-    <ProfileMetric label="In the account" value={liveBalance} />
-    <ProfileMetric label="In the demo" value={demoBalance} />
-    <button type="button" className="flex h-10 w-16 items-center justify-center rounded-[6px] bg-[#2d3446] text-white transition hover:bg-[#3a4052]">
-      <Eye className="h-4 w-4" />
+    <ProfileMetric label="Location" value={visible ? location : "****"} compact />
+    <ProfileMetric label="In the account" value={visible ? liveBalance : "****"} />
+    <ProfileMetric label="In the demo" value={visible ? demoBalance : "****"} />
+    <button
+      type="button"
+      onClick={onToggleVisible}
+      className="flex h-10 w-16 items-center justify-center rounded-[6px] bg-[#2d3446] text-white transition hover:bg-[#3a4052]"
+      aria-label={visible ? "Hide account summary" : "Show account summary"}
+      title={visible ? "Hide account summary" : "Show account summary"}
+    >
+      {visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
     </button>
   </div>
 );
