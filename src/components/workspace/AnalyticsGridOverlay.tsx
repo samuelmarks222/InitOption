@@ -14,7 +14,6 @@ import {
   Lock,
   Pencil,
   Send,
-  ShieldCheck,
   Trash2,
   Upload,
   X,
@@ -487,6 +486,7 @@ type StoredVerificationCard = {
 };
 
 const getScopedStorageKey = (userId: string | undefined, key: string) => `${key}:${userId ?? "guest"}`;
+const getProfileDetailsKey = (userId: string | undefined) => getScopedStorageKey(userId, "account_profile_details");
 
 const loadStoredJson = <T,>(key: string, fallback: T): T => {
   if (typeof window === "undefined") return fallback;
@@ -512,6 +512,22 @@ const ToggleSwitch = ({ checked, onChange, label }: { checked: boolean; onChange
   </button>
 );
 
+const mergeProfileDetails = (profile: any, user: { id: string; email: string | null } | null) => {
+  const stored = loadStoredJson<Record<string, string>>(getProfileDetailsKey(user?.id ?? profile?.id), {});
+  const email = readProfileText(user?.email, profile?.email);
+  const username = readProfileText(stored.username, profile?.username, profile?.display_name, email.split("@")[0]);
+
+  return {
+    username,
+    firstName: readProfileText(stored.firstName, profile?.firstName, profile?.first_name),
+    lastName: readProfileText(stored.lastName, profile?.lastName, profile?.last_name),
+    dob: readProfileText(stored.dob, profile?.dob, profile?.dateOfBirth),
+    email,
+    country: readProfileText(stored.country, profile?.nationality, profile?.country),
+    address: readProfileText(stored.address, profile?.address),
+  };
+};
+
 const MyAccountPanel = () => {
   const { profile, user, emailVerified, updateProfile, resetPassword, sendEmailVerificationCode } = useAuth();
   const { currency, options: currencyOptions, setCurrency, formatMoney } = useCurrency();
@@ -521,7 +537,8 @@ const MyAccountPanel = () => {
   const withdrawableBalance = Math.max(0, liveBalance - reservedBalance);
   const displayId = readProfileText(profile?.id, user?.id).replace(/-/g, "").slice(0, 8).toUpperCase() || "-";
   const email = readProfileText(user?.email, (profile as any)?.email);
-  const displayName = readProfileText(profile?.display_name, profile?.username, (profile as any)?.firstName, email.split("@")[0]);
+  const storedProfileDetails = mergeProfileDetails(profile as any, user);
+  const displayName = readProfileText(storedProfileDetails.username, profile?.display_name, profile?.username, email.split("@")[0]);
   const avatarUrl = readProfileText(profile?.avatar_url);
   const settingsKey = getScopedStorageKey(user?.id, "account_security_settings");
   const cardsKey = getScopedStorageKey(user?.id, "account_verification_cards");
@@ -539,27 +556,11 @@ const MyAccountPanel = () => {
       timezone: "(UTC+03:00)",
     }),
   );
-  const [form, setForm] = useState(() => ({
-    username: readProfileText(profile?.username, displayName),
-    firstName: readProfileText((profile as any)?.firstName, (profile as any)?.first_name),
-    lastName: readProfileText((profile as any)?.lastName, (profile as any)?.last_name),
-    dob: readProfileText((profile as any)?.dob, (profile as any)?.dateOfBirth),
-    email,
-    country: readProfileText(profile?.nationality, (profile as any)?.country),
-    address: readProfileText((profile as any)?.address),
-  }));
+  const [form, setForm] = useState(() => storedProfileDetails);
 
   useEffect(() => {
-    setForm({
-      username: readProfileText(profile?.username, displayName),
-      firstName: readProfileText((profile as any)?.firstName, (profile as any)?.first_name),
-      lastName: readProfileText((profile as any)?.lastName, (profile as any)?.last_name),
-      dob: readProfileText((profile as any)?.dob, (profile as any)?.dateOfBirth),
-      email,
-      country: readProfileText(profile?.nationality, (profile as any)?.country),
-      address: readProfileText((profile as any)?.address),
-    });
-  }, [displayName, email, profile]);
+    setForm(mergeProfileDetails(profile as any, user));
+  }, [profile, user]);
 
   useEffect(() => {
     setSecurity(loadStoredJson(settingsKey, {
@@ -585,14 +586,24 @@ const MyAccountPanel = () => {
     setSaving(true);
     setStatus(null);
     try {
-      await updateProfile({
+      const nextDetails = {
         username: form.username.trim(),
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         dob: form.dob,
-        nationality: form.country,
+        country: form.country,
         address: form.address.trim(),
+      };
+      saveStoredJson(getProfileDetailsKey(user?.id ?? profile?.id), nextDetails);
+      await updateProfile({
+        username: nextDetails.username,
+        firstName: nextDetails.firstName,
+        lastName: nextDetails.lastName,
+        dob: nextDetails.dob,
+        nationality: nextDetails.country,
+        address: nextDetails.address,
       });
+      setForm((current) => ({ ...current, ...nextDetails }));
       setStatus("Account details saved.");
     } catch (error: any) {
       setStatus(error?.message || "Could not save account details.");
@@ -657,7 +668,7 @@ const MyAccountPanel = () => {
   };
 
   return (
-    <section className="rounded-[6px] bg-[#202633] px-5 py-5 text-white">
+    <section className="rounded-[6px] bg-[#202633] px-5 py-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.22)]">
       <div className="mb-5 flex flex-wrap items-center justify-end gap-8 border-b border-white/10 pb-4 text-right">
         <div>
           <p className="text-[12px] font-bold text-[#9ba5b9]">My current currency</p>
@@ -669,7 +680,7 @@ const MyAccountPanel = () => {
               className="rounded-[4px] bg-[#167fdd] px-2 py-1 text-[11px] font-black uppercase text-white outline-none"
             >
               {currencyOptions.map((option) => (
-                <option key={option.code} value={option.code}>{option.code}</option>
+                <option key={option.code} value={option.code} className="bg-[#202633] text-white">{option.code}</option>
               ))}
             </select>
           </div>
@@ -681,28 +692,39 @@ const MyAccountPanel = () => {
       <div className="grid gap-7 xl:grid-cols-[minmax(360px,0.95fr)_minmax(320px,0.92fr)_minmax(320px,0.92fr)]">
         <div className="border-white/10 xl:border-r xl:pr-7">
           <h2 className="mb-5 text-[18px] font-black text-white">Personal data:</h2>
-          <div className="mb-5 flex items-center gap-4">
-            <div className="relative flex h-[74px] w-[74px] shrink-0 items-end justify-center overflow-hidden rounded-full bg-black">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={displayName || email || "Profile"} className="h-full w-full object-cover" />
-              ) : (
-                <>
-                  <div className="mb-1 h-8 w-12 rounded-t-full bg-[#0d86f7]" />
-                  <div className="absolute top-4 h-9 w-9 rounded-full bg-[#0d86f7]" />
-                </>
-              )}
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute right-0 top-0 rounded-full bg-[#4a5061] p-1 text-white/80 hover:text-white" aria-label="Change profile photo">
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center">
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="group relative flex h-[98px] w-[98px] shrink-0 items-end justify-center overflow-hidden rounded-full bg-black shadow-[inset_0_0_0_8px_rgba(33,45,68,0.9)]" aria-label="Change profile photo">
+              <span className="relative flex h-full w-full items-end justify-center overflow-hidden rounded-full">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={displayName || email || "Profile"} className="h-full w-full object-cover" />
+                ) : (
+                  <>
+                    <span className="mb-2 h-10 w-14 rounded-t-full bg-[#0d86f7]" />
+                    <span className="absolute top-5 h-10 w-10 rounded-full bg-[#0d86f7]" />
+                  </>
+                )}
+                <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Camera className="h-5 w-5 text-white" />
+                </span>
+              </span>
+              <span className="absolute right-0 top-0 rounded-full bg-[#4a5061] p-1 text-white/80">
                 <Camera className="h-4 w-4" />
-              </button>
+              </span>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-            </div>
+            </button>
             <div className="min-w-0">
-              <p className="truncate text-[14px] font-black text-white">{email || "Account email unavailable"}</p>
-              <p className="mt-1 text-[14px] font-bold text-white">ID: {visible ? displayId : "********"}</p>
-              <span className={`mt-2 inline-flex items-center gap-1 text-[12px] font-black ${emailVerified ? "text-[#21c978]" : "text-[#ff5d52]"}`}>
-                <ShieldCheck className="h-4 w-4" />
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="truncate text-[13px] font-bold text-white/65">{email || "Account email unavailable"}</p>
+                <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${emailVerified ? "bg-emerald-500/15 text-emerald-300" : "bg-[#0fa053]/15 text-[#d8f6e5]"}`}>
+                  {emailVerified ? "Verified" : "Unverified"}
+                </span>
+              </div>
+              <p className="mt-2 text-[18px] font-black text-white">{displayName || "Your account"}</p>
+              <p className="mt-1 text-[14px] font-bold text-white/75">ID: {visible ? displayId : "********"}</p>
+              <span className={`mt-3 inline-flex rounded-[8px] px-3 py-1 text-[12px] font-bold ${emailVerified ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-300"}`}>
                 {emailVerified ? "Verified" : "Not verified"}
               </span>
+              <p className="mt-2 text-[12px] font-bold text-white/45">Click the photo to upload or replace your profile picture.</p>
             </div>
           </div>
           <div className="space-y-4">
@@ -713,8 +735,8 @@ const MyAccountPanel = () => {
             </div>
             <ProfileInput label="Date of birth" type="date" value={form.dob} onChange={(value) => updateFormValue("dob", value)} />
             <ProfileInput label="Email" value={form.email} disabled suffix={emailVerified ? "Verified" : "Not verified"} onChange={() => undefined} />
-            <ProfileSelect label="Country" value={form.country} onChange={(value) => updateFormValue("country", value)} options={["Kenya", "United States", "Nigeria", "South Africa", "United Kingdom", "India"]} />
-            <ProfileInput label="Address" value={form.address} onChange={(value) => updateFormValue("address", value)} />
+            <ProfileDropdown label="Country" value={form.country} onChange={(value) => updateFormValue("country", value)} options={["Kenya", "United States", "Nigeria", "South Africa", "United Kingdom", "India"]} />
+            <ProfileInput label="Address" value={form.address} onChange={(value) => updateFormValue("address", value)} multiline />
             <button type="button" onClick={handleSave} disabled={saving} className="h-11 w-full rounded-[4px] bg-[#0d82df] text-[14px] font-black text-white transition hover:bg-[#118bea] disabled:opacity-60">
               {saving ? "Saving..." : "Save"}
             </button>
@@ -748,8 +770,8 @@ const MyAccountPanel = () => {
         </div>
 
         <div className="space-y-5">
-          <ProfileSelect label="Language" icon={<Globe2 className="h-5 w-5 text-white/45" />} value={security.language} onChange={(value) => updateSecurity({ language: value })} options={LANGUAGE_OPTIONS} />
-          <ProfileSelect label="Timezone" value={security.timezone} onChange={(value) => updateSecurity({ timezone: value })} options={TIMEZONE_OPTIONS} />
+          <ProfileDropdown label="Language" icon={<Globe2 className="h-5 w-5 text-white/45" />} value={security.language} onChange={(value) => updateSecurity({ language: value })} options={LANGUAGE_OPTIONS} />
+          <ProfileDropdown label="Timezone" value={security.timezone} onChange={(value) => updateSecurity({ timezone: value })} options={TIMEZONE_OPTIONS} />
           <div className="border-t border-dashed border-white/15 pt-5">
             <button type="button" onClick={() => { if (typeof window !== "undefined") window.location.assign("/delete-account"); }} className="inline-flex items-center gap-2 text-[13px] font-black text-[#ff5d52] hover:text-[#ff7b72]">
               <Trash2 className="h-4 w-4" />
@@ -812,6 +834,7 @@ const ProfileInput = ({
   type = "text",
   disabled = false,
   suffix,
+  multiline = false,
 }: {
   label: string;
   value: string;
@@ -819,22 +842,33 @@ const ProfileInput = ({
   type?: string;
   disabled?: boolean;
   suffix?: string;
+  multiline?: boolean;
 }) => (
   <label className="relative block">
     <span className="absolute -top-2 left-3 bg-[#202633] px-1 text-[11px] font-bold text-[#778198]">{label}</span>
     {suffix && <span className="absolute -top-2 right-3 bg-[#202633] px-1 text-[10px] font-bold text-[#21c978]">{suffix}</span>}
-    <input
-      type={type}
-      value={value}
-      disabled={disabled}
-      onChange={(event) => onChange(event.target.value)}
-      className="h-12 w-full rounded-[4px] border border-white/18 bg-transparent px-4 text-[14px] font-bold text-white outline-none transition placeholder:text-white/35 focus:border-[#0d82df] disabled:text-white/35"
-      placeholder="Empty"
-    />
+    {multiline ? (
+      <textarea
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        className="min-h-[82px] w-full resize-none rounded-[6px] border border-white/18 bg-[#202633] px-4 py-4 text-[14px] font-bold text-white outline-none shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.12)] transition placeholder:text-white/35 focus:border-[#0d82df] disabled:text-white/35"
+        placeholder="Empty"
+      />
+    ) : (
+      <input
+        type={type}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-12 w-full rounded-[6px] border border-white/18 bg-[#202633] px-4 text-[14px] font-bold text-white outline-none shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.12)] transition placeholder:text-white/35 focus:border-[#0d82df] disabled:text-white/35"
+        placeholder="Empty"
+      />
+    )}
   </label>
 );
 
-const ProfileSelect = ({
+const ProfileDropdown = ({
   label,
   value,
   onChange,
@@ -846,25 +880,51 @@ const ProfileSelect = ({
   onChange: (value: string) => void;
   options: string[];
   icon?: React.ReactNode;
-}) => (
-  <label className="relative block">
-    <span className="absolute -top-2 left-3 bg-[#202633] px-1 text-[11px] font-bold text-[#778198]">{label}</span>
+}) => {
+  const [open, setOpen] = useState(false);
+
+  return (
     <div className="relative">
-      {icon && <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">{icon}</span>}
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className={`h-12 w-full appearance-none rounded-[4px] border border-white/18 bg-transparent ${icon ? "pl-11" : "pl-4"} pr-10 text-[14px] font-bold text-white outline-none transition focus:border-[#0d82df]`}
+      <span className="absolute -top-2 left-3 z-10 bg-[#202633] px-1 text-[11px] font-bold text-[#778198]">{label}</span>
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="flex h-12 w-full items-center rounded-[6px] border border-white/18 bg-[#202633] px-4 text-left text-[14px] font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_8px_24px_rgba(0,0,0,0.12)] transition hover:border-white/28 focus:border-[#0d82df]"
       >
-        <option value="">Select</option>
-        {options.map((option) => (
-          <option key={option} value={option}>{option}</option>
-        ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+        {icon && <span className="mr-3">{icon}</span>}
+        <span className="min-w-0 flex-1 truncate">{value || "Select"}</span>
+        <ChevronDown className={`h-4 w-4 text-white/70 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 top-[54px] z-40 overflow-hidden rounded-[6px] border border-white/12 bg-[#303647] py-1 shadow-[0_22px_54px_rgba(0,0,0,0.35)]">
+          <button
+            type="button"
+            onClick={() => {
+              onChange("");
+              setOpen(false);
+            }}
+            className="block w-full px-4 py-3 text-left text-[14px] font-bold text-white/65 hover:bg-[#3b4255] hover:text-white"
+          >
+            Select
+          </button>
+          {options.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => {
+                onChange(option);
+                setOpen(false);
+              }}
+              className={`block w-full px-4 py-3 text-left text-[14px] font-bold ${option === value ? "bg-[#167fdd] text-white" : "text-white hover:bg-[#3b4255]"}`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
-  </label>
-);
+  );
+};
 
 const ProfileSummary = ({
   email,
