@@ -4,6 +4,7 @@ import {
   AlertCircle,
   Calendar,
   Camera,
+  Check,
   CheckCircle2,
   ChevronDown,
   ChevronLeft,
@@ -11,7 +12,6 @@ import {
   CreditCard,
   Eye,
   EyeOff,
-  FileText,
   Globe2,
   Image,
   Lock,
@@ -602,7 +602,7 @@ const MyAccountPanel = () => {
   const [identityModalStep, setIdentityModalStep] = useState<"privacy" | "document" | "upload">("privacy");
   const [identityPrivacyAccepted, setIdentityPrivacyAccepted] = useState(false);
   const docs = documents as Record<string, any>;
-  const personalDetailsComplete = Boolean(form.username && form.firstName && form.lastName && form.dob && form.country && form.address);
+  const personalDetailsComplete = Boolean(form.country || email || user?.id);
   const needsBackSide = idType !== "Passport";
   const frontUploaded = Boolean(docs.front?.url);
   const backUploaded = Boolean(docs.back?.url);
@@ -1264,6 +1264,15 @@ const CountryMark = ({ country }: { country: string }) => {
   );
 };
 
+const CountryCodeMark = ({ country }: { country: string }) => {
+  const code = country.toLowerCase().includes("kenya") ? "KE" : country.slice(0, 2).toUpperCase();
+  return (
+    <span className="inline-flex h-5 min-w-7 items-center justify-center rounded-[3px] bg-[#1d2738] px-1 text-[11px] font-black text-white ring-1 ring-white/10">
+      {code || "ID"}
+    </span>
+  );
+};
+
 const AccountIdentityVerificationModal = ({
   step,
   privacyAccepted,
@@ -1299,8 +1308,8 @@ const AccountIdentityVerificationModal = ({
   const uploadLabel = !documents.front?.url ? "Upload Front side" : needsBackSide && !documents.back?.url ? "Upload Back side" : "Finish verification";
 
   return (
-    <div className="fixed inset-0 z-[720] flex items-center justify-center bg-[#0b101b]/78 p-4 backdrop-blur-[4px]">
-      <div className="relative w-full max-w-[490px] rounded-[6px] bg-[#2b3142] px-8 py-7 text-white shadow-[0_30px_95px_rgba(0,0,0,0.55)]">
+    <div className="fixed inset-0 z-[720] flex items-center justify-center bg-[#0d1422]/80 p-4 backdrop-blur-[5px]">
+      <div className="relative w-full max-w-[492px] rounded-[6px] border border-white/6 bg-[#2a3040] px-8 py-7 text-white shadow-[0_32px_100px_rgba(0,0,0,0.58)]">
         <button type="button" onClick={onClose} className="absolute right-5 top-5 text-white/45 transition hover:text-white" aria-label="Close">
           <X className="h-5 w-5" />
         </button>
@@ -1314,27 +1323,25 @@ const AccountIdentityVerificationModal = ({
                 </span>
               </div>
               <h4 className="text-[24px] font-black">Data and Privacy</h4>
-              <label className="mt-7 flex items-start gap-4 text-[16px] font-bold leading-6 text-white/80">
+              <label className="mt-7 grid cursor-pointer grid-cols-[26px_1fr] gap-4 text-[16px] font-bold leading-6 text-white/82">
                 <input
                   type="checkbox"
                   checked={privacyAccepted}
                   onChange={(event) => onPrivacyAccepted(event.target.checked)}
-                  className="mt-1 h-5 w-5 rounded border-white/30 bg-[#171c27] accent-[#0d82df]"
+                  className="sr-only"
                 />
+                <span className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-[5px] border transition ${privacyAccepted ? "border-[#1e9bff] bg-[#1e9bff]" : "border-white/35 bg-[#171c27]"}`}>
+                  {privacyAccepted && <Check className="h-4 w-4 stroke-[3] text-white" />}
+                </span>
                 <span>
                   I confirm that I have read the <span className="text-[#0d82df]">Privacy Notice</span> and the <span className="text-[#0d82df]">Notification to Processing of Personal Data</span>
                 </span>
               </label>
-              {!personalDetailsComplete && (
-                <p className="mt-5 rounded-[5px] border border-red-500/25 bg-red-500/10 px-4 py-3 text-[13px] font-bold text-red-200">
-                  Fill in your personal details and save before uploading documents.
-                </p>
-              )}
               <button
                 type="button"
-                disabled={!privacyAccepted || !personalDetailsComplete}
+                disabled={!privacyAccepted}
                 onClick={() => onStepChange("document")}
-                className="mt-7 h-12 w-full rounded-[5px] bg-[#0d82df] text-[16px] font-black text-white transition hover:bg-[#118bea] disabled:cursor-not-allowed disabled:opacity-45"
+                className="mt-8 h-12 w-full rounded-[5px] bg-[#0d82df] text-[16px] font-black text-white shadow-[0_14px_28px_rgba(13,130,223,0.18)] transition hover:bg-[#118bea] disabled:cursor-not-allowed disabled:bg-[#1f5f98] disabled:text-white/55"
               >
                 Continue
               </button>
@@ -1357,7 +1364,7 @@ const AccountIdentityVerificationModal = ({
               <div className="mt-9">
                 <p className="text-[15px] font-black">Issuing country <span className="text-[#ff5d52]">*</span></p>
                 <div className="mt-5 flex items-center gap-3 text-[16px] font-black">
-                  <CountryMark country={country} /> {country || "Kenya"}
+                  <CountryCodeMark country={country} /> {country || "Kenya"}
                   <ChevronDown className="ml-auto h-4 w-4 text-white/65" />
                 </div>
               </div>
@@ -1365,7 +1372,7 @@ const AccountIdentityVerificationModal = ({
                 <p className="text-[15px] font-black">Document type <span className="text-[#ff5d52]">*</span></p>
                 <div className="mt-5 space-y-5">
                   {ID_DOCUMENT_OPTIONS.map((option) => (
-                    <button key={option} type="button" onClick={() => onDocumentSelection(option)} className="flex w-full items-center justify-between text-left text-[16px] font-black text-white">
+                    <button key={option} type="button" onClick={() => onDocumentSelection(option)} className="flex min-h-[38px] w-full items-center justify-between text-left text-[16px] font-black text-white">
                       <span>{option}</span>
                       <span className={`h-6 w-6 rounded-full border ${selectedType === option ? "border-[#0d82df] bg-[#0d82df] shadow-[inset_0_0_0_5px_#1b2130]" : "border-white/35 bg-black/30"}`} />
                     </button>
@@ -1390,9 +1397,21 @@ const AccountIdentityVerificationModal = ({
                   <Globe2 className="h-4 w-4" /> En
                 </span>
               </div>
-              <div className="mx-auto mb-5 flex h-[156px] max-w-[376px] items-center justify-center rounded-[6px] bg-[#6a746f]">
-                <div className="rounded-[4px] border border-dashed border-[#35a6ff] px-16 py-4 text-center">
-                  <FileText className="mx-auto h-20 w-20 text-white/90" />
+              <div className="mx-auto mb-5 flex h-[156px] max-w-[376px] items-center justify-center rounded-[6px] bg-[#67746e] p-3">
+                <div className="flex h-full w-full items-center justify-center rounded-[4px] border border-dashed border-[#35a6ff] bg-[#6f7b76]/55 text-center">
+                  <div className="relative h-[112px] w-[118px]">
+                    <div className="absolute left-5 top-0 h-[64px] w-[82px] rounded-[6px] bg-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]">
+                      <span className="mx-auto mt-4 block h-2 w-14 rounded-full bg-[#b9dcf5]" />
+                      <span className="mx-auto mt-3 block h-2 w-14 rounded-full bg-[#b9dcf5]" />
+                      <span className="absolute bottom-3 left-4 right-4 h-2 rounded-[2px] bg-[#2e9eff]" />
+                    </div>
+                    <div className="absolute bottom-0 left-5 h-[62px] w-[82px] rounded-[6px] bg-white shadow-[0_8px_18px_rgba(0,0,0,0.16)]">
+                      <span className="absolute left-4 top-4 h-10 w-10 rounded-full bg-[#88cfff]" />
+                      <span className="absolute right-4 top-4 h-2 w-8 rounded-full bg-[#4aa8ee]" />
+                      <span className="absolute right-4 top-7 h-2 w-8 rounded-full bg-[#b9dcf5]" />
+                      <span className="absolute right-4 top-10 h-2 w-8 rounded-full bg-[#b9dcf5]" />
+                    </div>
+                  </div>
                 </div>
               </div>
               <h4 className="text-[26px] font-black">Upload your document</h4>
@@ -1402,7 +1421,7 @@ const AccountIdentityVerificationModal = ({
               <div className="mt-7">
                 <p className="text-[15px] font-black">Document type</p>
                 <div className="mt-5 flex items-center gap-3 text-[16px] font-black">
-                  <CountryMark country={country} /> {selectedType}
+                  <CountryCodeMark country={country} /> {selectedType}
                   <Pencil className="ml-auto h-4 w-4 text-white" />
                 </div>
               </div>
