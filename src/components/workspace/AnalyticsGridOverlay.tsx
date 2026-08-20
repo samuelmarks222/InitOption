@@ -36,6 +36,7 @@ export type AnalyticsAccountTab = "Withdrawal" | "Payments" | "Trades" | "My acc
 interface AnalyticsGridOverlayProps {
   onClose?: () => void;
   activeAsset?: AnalyticsSignalAsset;
+  initialTab?: AnalyticsAccountTab;
   onNavigate?: (target: { workspace?: "account" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => void;
 }
 
@@ -189,12 +190,12 @@ const exportTradesCsv = (items: Array<Trade | ActiveTrade>, mode: "history" | "p
   URL.revokeObjectURL(url);
 };
 
-export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverlayProps) => {
+export const AnalyticsGridOverlay = ({ onClose, activeAsset, initialTab = "Analytics", onNavigate }: AnalyticsGridOverlayProps) => {
   const { profile, user } = useAuth();
   const { formatMoney } = useCurrency();
   const { trades, transactions, assetPerformance } = useStatistics();
   const { activeTrades } = useTrading();
-  const [activeTab, setActiveTab] = useState<AnalyticsAccountTab>("Analytics");
+  const [activeTab, setActiveTab] = useState<AnalyticsAccountTab>(initialTab);
   const [tradeMode, setTradeMode] = useState<"history" | "pending">("history");
   const [range, setRange] = useState<AnalyticsRange>("Month");
   const [rangeOpen, setRangeOpen] = useState(false);

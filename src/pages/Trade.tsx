@@ -277,7 +277,7 @@ const MobileModuleOverlay = ({
     <div className="fixed inset-x-0 bottom-[56px] top-0 z-[200] flex items-end justify-center bg-black/60 p-2 sm:p-3">
       <div className="relative flex h-[92dvh] w-full max-w-md overflow-hidden rounded-[28px] border border-white/8 bg-[#0a0d14] shadow-[0_24px_60px_rgba(0,0,0,0.45)]">
       {mobileOverlay === "account" && (
-        <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setMobileOverlay(null)} onNavigate={onAnalyticsNavigate} />
+        <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab="My account" onClose={() => setMobileOverlay(null)} onNavigate={onAnalyticsNavigate} />
       )}
       {mobileOverlay === "tournaments" && (
         <div className="flex flex-col h-full bg-[#0a0d14]">
@@ -1340,7 +1340,11 @@ if (target.workspace === "account") {
             )}
 
             {/* Desktop full-screen workspace overlays */}
-{activeWorkspace === "account" || activeWorkspace === "more" ? (
+            {activeWorkspace === "account" ? (
+              <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
+                <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab="My account" onClose={() => setActiveWorkspace(null)} onNavigate={handleAnalyticsNavigate} />
+              </div>
+            ) : activeWorkspace === "more" ? (
               <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
                 <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setActiveWorkspace(null)} onNavigate={handleAnalyticsNavigate} />
               </div>
