@@ -79,12 +79,27 @@ export const ProfileTourProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const startTour = () => setRunTour(true);
   const stopTour = () => setRunTour(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleStartTour = () => {
+      setRunTour(true);
+      setTourCompleted(false);
+    };
+
+    window.addEventListener("initoption:start-platform-tour", handleStartTour);
+    return () => window.removeEventListener("initoption:start-platform-tour", handleStartTour);
+  }, []);
   
   const finishTour = () => {
     setRunTour(false);
     setTourCompleted(true);
     if (user?.id) {
       localStorage.setItem(`platform_tour_completed:${user.id}`, "true");
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("initoption:platform-tour-finished"));
     }
   };
 

@@ -1,6 +1,4 @@
-import { useAuth } from "@/contexts/AuthContext";
 import { useProfileTour } from "@/contexts/ProfileTourContext";
-import { isNewUserProfile } from "@/lib/onboarding";
 import { X } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
@@ -33,20 +31,16 @@ const TOUR_STEPS: TourStep[] = [
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 export const GuidedTour = ({ enabled = true }: GuidedTourProps) => {
-  const { profile } = useAuth();
-  const { runTour, startTour, finishTour, tourCompleted } = useProfileTour();
+  const { runTour, finishTour } = useProfileTour();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [cardSize, setCardSize] = useState(CARD_DEFAULT_SIZE);
   const cardRef = useRef<HTMLDivElement>(null);
-  const autoStartedForUserRef = useRef<string | null>(null);
   const [isDesktopViewport, setIsDesktopViewport] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(min-width: 1024px)").matches : false,
   );
 
   const currentStep = TOUR_STEPS[currentStepIndex];
-
-  const isNewUser = useMemo(() => isNewUserProfile(profile), [profile]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -60,27 +54,9 @@ export const GuidedTour = ({ enabled = true }: GuidedTourProps) => {
   }, []);
 
   useEffect(() => {
-    autoStartedForUserRef.current = null;
-    setCurrentStepIndex(0);
-    setTargetRect(null);
-  }, [profile?.id]);
-
-  useEffect(() => {
-    if (!enabled || !isNewUser || tourCompleted || runTour || !profile?.id) {
-      return;
-    }
-
-    if (autoStartedForUserRef.current === profile.id) {
-      return;
-    }
-
-    autoStartedForUserRef.current = profile.id;
-    startTour();
-  }, [enabled, isDesktopViewport, isNewUser, profile?.id, runTour, startTour, tourCompleted]);
-
-  useEffect(() => {
     if (!runTour) {
       setCurrentStepIndex(0);
+      setTargetRect(null);
     }
   }, [runTour]);
 

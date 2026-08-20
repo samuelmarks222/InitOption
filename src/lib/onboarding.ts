@@ -20,6 +20,7 @@ export const isNewUserProfile = (profile: OnboardingProfile | null | undefined) 
 
 export const getDemoBalanceStorageKey = (userId: string) => `demo_balance:${userId}`;
 export const getNewUserPromptStorageKey = (userId: string) => `new_user_prompt_seen:${userId}`;
+export const getNewUserAccountChoiceStorageKey = (userId: string) => `new_user_account_choice_seen:${userId}`;
 
 export const readDemoBalanceStorage = (userId: string) => {
   if (typeof window === "undefined") return DEFAULT_DEMO_BALANCE;
@@ -48,4 +49,14 @@ export const hasSeenNewUserPrompt = (userId: string) => {
 export const markNewUserPromptSeen = (userId: string) => {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(getNewUserPromptStorageKey(userId), "true");
+};
+
+export const hasSeenNewUserAccountChoice = (userId: string) => {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(getNewUserAccountChoiceStorageKey(userId)) === "true";
+};
+
+export const markNewUserAccountChoiceSeen = (userId: string) => {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(getNewUserAccountChoiceStorageKey(userId), "true");
 };

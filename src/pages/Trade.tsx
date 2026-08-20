@@ -30,9 +30,10 @@ import { buildIndicatorDefaultParams } from "@/components/trading/indicators/fil
 import { useAuth } from "@/contexts/AuthContext";
 import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/useTrading";
 import { useDynamicAssets, type DynamicAsset } from "@/contexts/DynamicAssetContext";
-import { AccountType, RealAccountWelcomeModal } from "@/components/trading/AccountModals";
+import { AccountType } from "@/components/trading/AccountModals";
 import { ProfileDrawer, type ProfileTab } from "@/components/profile/ProfileDrawer";
 import WelcomeGuideModal from "@/components/trading/WelcomeGuideModal";
+import OnboardingAccountChoiceModal from "@/components/trading/OnboardingAccountChoiceModal";
 import { TournamentsGridOverlay } from "@/components/workspace/TournamentsGridOverlay";
 import { AccountGridOverlay, type AccountTab } from "@/components/workspace/AccountGridOverlay";
 import { AnalyticsGridOverlay } from "@/components/workspace/AnalyticsGridOverlay";
@@ -44,8 +45,10 @@ import { ChevronsLeft, Image, HelpCircle, User, Trophy, MoreHorizontal, X } from
 import { MobileMoreMenu, MobileLeaderboardOverlay } from "@/components/workspace/MobileMoreMenu";
 import {
   DEFAULT_DEMO_BALANCE,
+  hasSeenNewUserAccountChoice,
   hasSeenNewUserPrompt,
   isNewUserProfile,
+  markNewUserAccountChoiceSeen,
   markNewUserPromptSeen,
   readDemoBalanceStorage,
   writeDemoBalanceStorage,
@@ -485,9 +488,10 @@ const Trade = () => {
   const [showMobileHistory, setShowMobileHistory] = useState(false);
   const [activeIndicators, setActiveIndicators] = useState<ActiveIndicator[]>(() => loadStoredActiveIndicators());
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal");
+  const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal");
   const [depositGuideReason, setDepositGuideReason] = useState<DepositGuideReason | null>(null);
   const [showRealAccountWelcome, setShowRealAccountWelcome] = useState(false);
+  const [showOnboardingAccountChoice, setShowOnboardingAccountChoice] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceModule>(null);
   const [selectedTournament, setSelectedTournament] = useState<string | null>(null);
   const [directoryRefreshKey, setDirectoryRefreshKey] = useState(0);
@@ -502,7 +506,6 @@ const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal
 
   const balance = getEffectiveLiveBalance(profile);
   const isNewUser = useMemo(() => isNewUserProfile(profile), [profile]);
-  const canClaimBonus = useMemo(() => isNewUser && !profile?.welcome_bonus_granted_at, [isNewUser, profile?.welcome_bonus_granted_at]);
 
   // Handle guides navigation
   useEffect(() => {
@@ -734,7 +737,13 @@ const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal
   }, [demoActiveTrades.length, showChartSettlementAnnouncement, user?.id]);
 
   useEffect(() => {
-    if (!user?.id || showRealAccountWelcome) {
+    if (!user?.id) {
+      setShowRealAccountWelcome(false);
+      setShowOnboardingAccountChoice(false);
+      return;
+    }
+
+    if (!isNewUser || hasSeenNewUserPrompt(user.id) || showRealAccountWelcome) {
       return;
     }
 
@@ -742,21 +751,45 @@ const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal
       return;
     }
 
-    const sessionKey = `welcome_guide_shown_${user.id}`;
-    if (sessionStorage.getItem(sessionKey)) {
-      return;
-    }
-
     setShowRealAccountWelcome(true);
-    sessionStorage.setItem(sessionKey, "1");
   }, [
     isProfileOpen,
+    isNewUser,
     mobileOverlay,
     selectedTournament,
     showAssetSelector,
     showRealAccountWelcome,
     user?.id,
   ]);
+
+  useEffect(() => {
+    if (!user?.id || !isNewUser) {
+      return;
+    }
+
+    const handleTourFinished = () => {
+      if (!hasSeenNewUserAccountChoice(user.id)) {
+        setShowOnboardingAccountChoice(true);
+      }
+    };
+
+    window.addEventListener("initoption:platform-tour-finished", handleTourFinished);
+    return () => window.removeEventListener("initoption:platform-tour-finished", handleTourFinished);
+  }, [isNewUser, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || !isNewUser || showRealAccountWelcome || showOnboardingAccountChoice) {
+      return;
+    }
+
+    if (hasSeenNewUserAccountChoice(user.id)) {
+      return;
+    }
+
+    if (localStorage.getItem(`platform_tour_completed:${user.id}`) === "true") {
+      setShowOnboardingAccountChoice(true);
+    }
+  }, [isNewUser, showOnboardingAccountChoice, showRealAccountWelcome, user?.id]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1070,6 +1103,34 @@ const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal
     setShowRealAccountWelcome(false);
   };
 
+  const startNewUserTutorial = () => {
+    closeNewUserWelcome();
+    window.dispatchEvent(new CustomEvent("initoption:start-platform-tour"));
+  };
+
+  const closeOnboardingAccountChoice = () => {
+    if (user?.id) {
+      markNewUserAccountChoiceSeen(user.id);
+    }
+    setShowOnboardingAccountChoice(false);
+  };
+
+  const useDemoFromOnboarding = () => {
+    if (user?.id) {
+      markNewUserAccountChoiceSeen(user.id);
+    }
+    setAccountType("demo");
+    setShowOnboardingAccountChoice(false);
+  };
+
+  const depositFromOnboarding = () => {
+    if (user?.id) {
+      markNewUserAccountChoiceSeen(user.id);
+    }
+    setShowOnboardingAccountChoice(false);
+    openDepositPage();
+  };
+
   const handleAddIndicator = (configId: string) => {
     const reg = INDICATOR_REGISTRY.find(c => c.id === configId);
     if (!reg || !STANDARD_INDICATOR_IDS.has(configId)) return;
@@ -1273,6 +1334,7 @@ if (target.workspace === "account") {
     !isProfileOpen &&
     !showMobileHistory &&
     !showRealAccountWelcome &&
+    !showOnboardingAccountChoice &&
     !["account", "analytics", "tournaments", "more", "referrals", "help"].includes(activeWorkspace || "");
 
   const isChartNavActive =
@@ -1671,15 +1733,16 @@ if (target.workspace === "account") {
         {showRealAccountWelcome && (
           <WelcomeGuideModal
             onClose={closeNewUserWelcome}
-            onDeposit={() => {
-              closeNewUserWelcome();
-              openDepositPage();
-            }}
-            onReferral={() => {
-              closeNewUserWelcome();
-              setActiveWorkspace("referrals");
-            }}
-            canClaimBonus={canClaimBonus}
+            onStartTutorial={startNewUserTutorial}
+            onLater={closeNewUserWelcome}
+          />
+        )}
+        {showOnboardingAccountChoice && !showRealAccountWelcome && (
+          <OnboardingAccountChoiceModal
+            demoBalance={demoBalance}
+            onClose={closeOnboardingAccountChoice}
+            onUseDemo={useDemoFromOnboarding}
+            onDeposit={depositFromOnboarding}
           />
         )}
         <ProfileDrawer isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} balance={balance} initialTab={profileInitialTab} />
