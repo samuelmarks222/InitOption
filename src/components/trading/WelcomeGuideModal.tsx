@@ -25,7 +25,7 @@ const WelcomeGuideModal = ({ onClose, onStartTutorial, onLater }: WelcomeGuideMo
           <span className="absolute bottom-4 left-4 h-3 w-3 rounded-full bg-[#9fd6ff]" />
         </div>
 
-        <h2 className="text-[24px] font-bold leading-tight text-white sm:text-[26px]">Welcome to Quotex</h2>
+        <h2 className="text-[24px] font-bold leading-tight text-white sm:text-[26px]">Welcome to InitOption</h2>
         <p className="mx-auto mt-6 max-w-[390px] text-[16px] font-semibold leading-[1.25] text-[#d5d9e4]">
           You're now on a demo account with <span className="text-white">$10,000 in virtual funds.</span> Practice
           trading risk-free and get comfortable before using real money.
