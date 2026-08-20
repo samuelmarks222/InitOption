@@ -33,6 +33,7 @@ const GuideBrowserPage = lazy(() => import("./pages/GuideBrowserPage"));
 const Trade = lazy(() => import("./pages/Trade"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Deposit = lazy(() => import("./pages/Deposit"));
+const DepositModalPage = lazy(() => import("./pages/DepositModalPage"));
 const Withdraw = lazy(() => import("./pages/Withdraw"));
 const PaymentCenter = lazy(() => import("./components/payment/PaymentCenter"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -185,7 +186,7 @@ const App = () => {
                         <Route path="/dashboard" element={withTradingRoute(<Dashboard />)} />
                         <Route path="/trade" element={withTradingRoute(<Trade />)} />
                         <Route path="/trade/*" element={withTradingRoute(<Trade />)} />
-                        <Route path="/deposit" element={withTradingRoute(<PaymentCenter defaultTab="deposit" />)} />
+                        <Route path="/deposit" element={withTradingRoute(<DepositModalPage />)} />
                         <Route path="/withdraw" element={withTradingRoute(<PaymentCenter defaultTab="withdraw" />)} />
                         <Route path="/settings" element={withTradingRoute(<Settings />)} />
                         <Route path="/notifications" element={withTradingRoute(<NotificationsPage />)} />
