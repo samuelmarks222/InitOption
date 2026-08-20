@@ -545,8 +545,8 @@ const runScoped = async (mappedId: string, fn: (client: PgClientLike) => Promise
   transaction(async (client) => {
     try {
       await client.query("SET LOCAL ROLE authenticated");
-    } catch {
-      // Role may not exist in some environments; RLS will use app.current_user_id
+    } catch (e) {
+      console.warn("SET LOCAL ROLE authenticated failed (role may not exist):", e instanceof Error ? e.message : e);
     }
     await client.query("SELECT set_config('app.current_user_id', $1, true)", [mappedId]);
     const result = await fn(client);
@@ -560,8 +560,21 @@ const getDbPath = (request: ApiRequest) => {
 
 const parseColumns = (raw: string | undefined): string[] | null => {
   if (!raw || raw.trim().length === 0) return null;
+  // Allow simple identifiers, *, or join syntax like "profiles(id,username)"
   const cols = raw.split(",").map((c) => c.trim()).filter(Boolean);
-  return cols.every((c) => c === "*" || IS_IDENTIFIER.test(c)) ? cols : null;
+  const valid = cols.every((c) => {
+    if (c === "*") return true;
+    if (IS_IDENTIFIER.test(c)) return true;
+    // Allow join syntax: table(col1,col2,...)
+    const joinMatch = c.match(/^([A-Za-z_][A-Za-z0-9_]*)\((.+)\)$/);
+    if (joinMatch) {
+      const table = joinMatch[1];
+      const innerCols = joinMatch[2].split(",").map((ic) => ic.trim()).filter(Boolean);
+      return IS_IDENTIFIER.test(table) && innerCols.every((ic) => IS_IDENTIFIER.test(ic));
+    }
+    return false;
+  });
+  return valid ? cols : null;
 };
 
 const buildWhere = (clauses: FilterClause[], params: unknown[]): string => {
