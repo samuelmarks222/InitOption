@@ -601,6 +601,7 @@ const MyAccountPanel = () => {
   const [identityModalOpen, setIdentityModalOpen] = useState(false);
   const [identityModalStep, setIdentityModalStep] = useState<"privacy" | "document" | "upload">("privacy");
   const [identityPrivacyAccepted, setIdentityPrivacyAccepted] = useState(false);
+  const [hasUploadedInSession, setHasUploadedInSession] = useState(false);
   const docs = documents as Record<string, any>;
   const personalDetailsComplete = Boolean(
     form.username.trim() &&
@@ -615,7 +616,7 @@ const MyAccountPanel = () => {
   const backUploaded = Boolean(docs.back?.url);
   const hasAnyKycDocument = frontUploaded || backUploaded;
   const requiredDocumentsUploaded = frontUploaded && (!needsBackSide || backUploaded);
-  const kycLabel = getProfileKycLabel(kycStatus, docs);
+  const kycLabel = kycStatus === "Pending" && hasUploadedInSession ? "Submitted" : getProfileKycLabel(kycStatus, docs);
   const kycBadgeClass =
     kycLabel === "Verified"
       ? "bg-green-500/15 text-green-400"
@@ -837,6 +838,7 @@ const MyAccountPanel = () => {
         },
       };
       await persistKycDocuments(nextDocuments);
+      setHasUploadedInSession(true);
       toast.success(`${slot === "front" ? "Front" : "Back"} document uploaded successfully.`);
       setVerificationStatus("Documents submitted. They are waiting for admin review.");
     } catch (error: any) {
@@ -851,6 +853,7 @@ const MyAccountPanel = () => {
     const nextDocuments = { ...documents, [slot]: null };
     try {
       await persistKycDocuments(nextDocuments);
+      setHasUploadedInSession(false);
       toast.success(`${slot === "front" ? "Front" : "Back"} document removed.`);
     } catch (error: any) {
       toast.error(error?.message || "Failed to remove document.");
