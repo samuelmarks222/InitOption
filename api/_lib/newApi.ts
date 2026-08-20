@@ -570,15 +570,20 @@ const buildWhere = (clauses: FilterClause[], params: unknown[]): string => {
         return `(${orSql})`;
       }
       // Handle items as comma-separated string: "col.op.val,col2.op2.val2"
+      // Value may contain dots (e.g., timestamps like "2026-08-20T08:32:22.208Z")
       if (typeof clause.items === "string" && clause.items.trim().length > 0) {
+        // Split on comma only when it's a separator between clauses (not inside a value)
+        // Format: col.op.val where val may have dots, so we split on "," then parse each as col.op.val
         const stringClauses = clause.items.split(",").map((s) => s.trim()).filter(Boolean);
         const parsed: FilterClause[] = [];
         for (const str of stringClauses) {
-          const parts2 = str.split(".");
-          if (parts2.length >= 3) {
-            const col = parts2[0];
-            const op = parts2[1];
-            const val = parts2.slice(2).join("."); // rejoin in case value contains dots (e.g., timestamps)
+          // Find the first two dots to separate col, op, and the rest is val
+          const firstDot = str.indexOf(".");
+          const secondDot = str.indexOf(".", firstDot + 1);
+          if (firstDot > 0 && secondDot > firstDot + 1) {
+            const col = str.slice(0, firstDot);
+            const op = str.slice(firstDot + 1, secondDot);
+            const val = str.slice(secondDot + 1);
             if (IS_IDENTIFIER.test(col) && OPERATORS.has(op)) {
               parsed.push({ c: col, o: op, v: val === "null" ? null : val });
             }
@@ -822,8 +827,10 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
 
     sendJson(response, 405, { error: "Method not allowed" });
   } catch (error) {
-    console.error("db route failed", error);
-    sendJson(response, 400, { error: error instanceof Error ? error.message : "Failed to process request" });
+    const message = error instanceof Error ? error.message : "Failed to process request";
+    const stack = error instanceof Error ? error.stack : undefined;
+    console.error("db route failed", { message, stack, table: table ?? "unknown", method });
+    sendJson(response, 400, { error: message, details: stack?.split("\n").slice(0, 3).join(" | ") });
   }
 }
 
