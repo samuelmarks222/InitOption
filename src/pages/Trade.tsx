@@ -276,7 +276,9 @@ const MobileModuleOverlay = ({
   return (
     <div className="fixed inset-x-0 bottom-[56px] top-0 z-[200] flex items-end justify-center bg-black/60 p-2 sm:p-3">
       <div className="relative flex h-[92dvh] w-full max-w-md overflow-hidden rounded-[28px] border border-white/8 bg-[#0a0d14] shadow-[0_24px_60px_rgba(0,0,0,0.45)]">
-      {mobileOverlay === "account" && <AccountGridOverlay onClose={() => setMobileOverlay(null)} />}
+      {mobileOverlay === "account" && (
+        <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setMobileOverlay(null)} onNavigate={onAnalyticsNavigate} />
+      )}
       {mobileOverlay === "tournaments" && (
         <div className="flex flex-col h-full bg-[#0a0d14]">
           <div className="flex items-center justify-between px-5 py-4 border-b border-white/8 shrink-0 bg-[#111518]">
@@ -481,8 +483,7 @@ const Trade = () => {
   const [showMobileHistory, setShowMobileHistory] = useState(false);
   const [activeIndicators, setActiveIndicators] = useState<ActiveIndicator[]>(() => loadStoredActiveIndicators());
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal");
-  const [accountWorkspaceInitialTab, setAccountWorkspaceInitialTab] = useState<AccountTab>("personal");
+const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal");
   const [depositGuideReason, setDepositGuideReason] = useState<DepositGuideReason | null>(null);
   const [showRealAccountWelcome, setShowRealAccountWelcome] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceModule>(null);
@@ -1249,8 +1250,7 @@ const Trade = () => {
       return;
     }
 
-    if (target.workspace === "account") {
-      setAccountWorkspaceInitialTab(target.accountTab ?? "personal");
+if (target.workspace === "account") {
       setActiveWorkspace("account");
       return;
     }
@@ -1340,9 +1340,7 @@ const Trade = () => {
             )}
 
             {/* Desktop full-screen workspace overlays */}
-            {activeWorkspace === "account" ? (
-              <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}><AccountGridOverlay initialTab={accountWorkspaceInitialTab} onClose={() => setActiveWorkspace(null)} /></div>
-            ) : activeWorkspace === "more" ? (
+{activeWorkspace === "account" || activeWorkspace === "more" ? (
               <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
                 <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setActiveWorkspace(null)} onNavigate={handleAnalyticsNavigate} />
               </div>
