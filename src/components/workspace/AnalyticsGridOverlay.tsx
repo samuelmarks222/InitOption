@@ -1,15 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Eye, Image, Send, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useStatistics, type Trade, type Transaction } from "@/hooks/useStatistics";
-import { useTrading, type ActiveTrade } from "@/hooks/useTrading";
+import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/useTrading";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import type { AccountTab } from "./AccountGridOverlay";
 import type { AnalyticsSignalAsset } from "./analytics/AnalyticsSignals";
 import { ProfilePersonalData } from "../profile/ProfilePersonalData";
 
-type AnalyticsRange = "Day" | "Week" | "Month" | "All";
+type AnalyticsRange = "3 days" | "Week" | "Month" | "Year" | "All";
+type AnalyticsAccountScope = "live" | "demo";
 export type AnalyticsAccountTab = "Withdrawal" | "Payments" | "Trades" | "My account" | "Market" | "Tournaments" | "Analytics";
 
 interface AnalyticsGridOverlayProps {
@@ -18,16 +19,21 @@ interface AnalyticsGridOverlayProps {
   onNavigate?: (target: { workspace?: "account" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => void;
 }
 
-const RANGE_OPTIONS: AnalyticsRange[] = ["Day", "Week", "Month", "All"];
+const RANGE_OPTIONS: AnalyticsRange[] = ["3 days", "Week", "Month", "Year", "All"];
+const ACCOUNT_SCOPE_OPTIONS: Array<{ value: AnalyticsAccountScope; label: string }> = [
+  { value: "live", label: "Live Account" },
+  { value: "demo", label: "Demo Account" },
+];
 const ACCOUNT_TABS: AnalyticsAccountTab[] = ["Withdrawal", "Payments", "Trades", "My account", "Market", "Tournaments", "Analytics"];
 const PIE_COLORS = ["#08c66b", "#1d96f2", "#ff5b58", "#bb0039", "#ff950f"];
 const PAGE_SIZE = 10;
 
 const rangeStart = (range: AnalyticsRange) => {
   const now = Date.now();
-  if (range === "Day") return now - 24 * 60 * 60 * 1000;
+  if (range === "3 days") return now - 3 * 24 * 60 * 60 * 1000;
   if (range === "Week") return now - 7 * 24 * 60 * 60 * 1000;
   if (range === "Month") return now - 31 * 24 * 60 * 60 * 1000;
+  if (range === "Year") return now - 365 * 24 * 60 * 60 * 1000;
   return 0;
 };
 
@@ -84,6 +90,27 @@ const formatDateRange = (trades: Trade[]) => {
   const end = new Date(Math.max(...times)).toLocaleDateString("en-GB").replace(/\//g, ".");
   return `${start} - ${end}`;
 };
+
+const formatSelectedDateRange = (range: AnalyticsRange, trades: Trade[]) => {
+  if (range === "All") return formatDateRange(trades);
+  const start = new Date(rangeStart(range));
+  const end = new Date();
+  const format = (date: Date) => date.toLocaleDateString("en-GB").replace(/\//g, ".");
+  return `${format(start)} - ${format(end)}`;
+};
+
+const getDemoTradeHistoryStorageKey = (userId: string) => `demo_trade_history:${userId}`;
+
+const mapHistoryEntryToTrade = (entry: TradeHistoryEntry): Trade => ({
+  id: entry.id,
+  asset: entry.asset_symbol,
+  direction: entry.direction === "higher" ? "Buy" : "Sell",
+  amount: Number(entry.amount ?? 0),
+  payout: Number(entry.profit ?? 0) > 0 ? Number(entry.amount ?? 0) + Number(entry.profit ?? 0) : 0,
+  profit: Number(entry.profit ?? 0),
+  openTime: entry.opened_at,
+  closeTime: entry.closed_at ?? entry.opened_at,
+});
 
 const formatDuration = (seconds: number) => {
   const safeSeconds = Math.max(0, Math.round(seconds));
@@ -142,14 +169,44 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
   const [tradeMode, setTradeMode] = useState<"history" | "pending">("history");
   const [range, setRange] = useState<AnalyticsRange>("Month");
   const [rangeOpen, setRangeOpen] = useState(false);
+  const [tradeRangeOpen, setTradeRangeOpen] = useState(false);
+  const [accountScope, setAccountScope] = useState<AnalyticsAccountScope>("live");
+  const [accountScopeOpen, setAccountScopeOpen] = useState(false);
+  const [demoHistory, setDemoHistory] = useState<TradeHistoryEntry[]>([]);
   const [paymentsPage, setPaymentsPage] = useState(1);
   const [tradesPage, setTradesPage] = useState(1);
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
+
+  useEffect(() => {
+    if (!user?.id || typeof window === "undefined") {
+      setDemoHistory([]);
+      return;
+    }
+
+    try {
+      const raw = window.localStorage.getItem(getDemoTradeHistoryStorageKey(user.id));
+      const parsed = raw ? JSON.parse(raw) : [];
+      setDemoHistory(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setDemoHistory([]);
+    }
+  }, [user?.id]);
 
   const filteredTrades = useMemo(() => {
     const start = rangeStart(range);
     return trades.filter((trade) => new Date(trade.closeTime || trade.openTime).getTime() >= start);
   }, [range, trades]);
+  const demoTrades = useMemo(() => demoHistory.map(mapHistoryEntryToTrade), [demoHistory]);
+  const accountHistoryTrades = accountScope === "live" ? trades : demoTrades;
+  const accountPendingTrades = accountScope === "live" ? activeTrades : [];
+  const filteredAccountHistoryTrades = useMemo(() => {
+    const start = rangeStart(range);
+    return accountHistoryTrades.filter((trade) => new Date(trade.closeTime || trade.openTime).getTime() >= start);
+  }, [accountHistoryTrades, range]);
+  const filteredAccountPendingTrades = useMemo(() => {
+    const start = rangeStart(range);
+    return accountPendingTrades.filter((trade) => new Date(trade.opened_at).getTime() >= start);
+  }, [accountPendingTrades, range]);
 
   const stats = useMemo(() => buildAnalyticsStats(filteredTrades), [filteredTrades]);
   const profitSeries = useMemo(() => buildProfitSeries(filteredTrades, range), [filteredTrades, range]);
@@ -170,9 +227,14 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
     setActiveTab(tab);
     setPaymentsPage(1);
     setTradesPage(1);
+    setRangeOpen(false);
+    setTradeRangeOpen(false);
+    setAccountScopeOpen(false);
   };
   const pagedTransactions = paginate(transactions, paymentsPage, PAGE_SIZE);
-  const pagedTrades = paginate(tradeMode === "history" ? trades : activeTrades, tradesPage, PAGE_SIZE);
+  const currentTradeItems = tradeMode === "history" ? filteredAccountHistoryTrades : filteredAccountPendingTrades;
+  const pagedTrades = paginate(currentTradeItems, tradesPage, PAGE_SIZE);
+  const accountScopeLabel = ACCOUNT_SCOPE_OPTIONS.find((option) => option.value === accountScope)?.label ?? "Live Account";
   const profileSummary = (
     <ProfileSummary
       email={email}
@@ -274,18 +336,78 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
                 Pending trades
               </button>
               <div className="ml-auto flex items-center gap-5">
-                <button type="button" onClick={() => exportTradesCsv(tradeMode === "history" ? trades : activeTrades, tradeMode)} className="rounded-[4px] bg-[#4a5061] px-5 py-3 text-[13px] font-black text-white">Export to</button>
-                <Pagination page={tradesPage} total={tradeMode === "history" ? trades.length : activeTrades.length} onPageChange={setTradesPage} />
+                <button type="button" onClick={() => exportTradesCsv(currentTradeItems, tradeMode)} className="rounded-[4px] bg-[#4a5061] px-5 py-3 text-[13px] font-black text-white">Export to</button>
+                <Pagination page={tradesPage} total={currentTradeItems.length} onPageChange={setTradesPage} />
               </div>
             </div>
             <div className="mb-5 flex flex-wrap gap-5">
-              <div className="rounded-[4px] border border-white/20 px-4 py-3">
-                <p className="text-[11px] text-white/45">Date Range:</p>
-                <p className="flex items-center gap-2 text-[14px] font-bold text-white"><Calendar className="h-4 w-4" /> {formatDateRange(trades)}</p>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTradeRangeOpen((current) => !current);
+                    setAccountScopeOpen(false);
+                  }}
+                  className="min-w-[250px] rounded-[4px] border border-white/20 px-4 py-3 text-left transition hover:border-white/35"
+                >
+                  <p className="text-[11px] text-white/45">Date Range:</p>
+                  <p className="mt-1 flex items-center gap-2 text-[14px] font-bold text-white">
+                    <Calendar className="h-4 w-4 text-white/55" />
+                    {formatSelectedDateRange(range, accountHistoryTrades)}
+                  </p>
+                </button>
+                {tradeRangeOpen && (
+                  <div className="absolute left-0 top-[76px] z-30 w-[228px] overflow-hidden rounded-[6px] bg-[#4a5061] py-1 shadow-2xl">
+                    {RANGE_OPTIONS.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => {
+                          setRange(option);
+                          setTradesPage(1);
+                          setTradeRangeOpen(false);
+                        }}
+                        className={`block w-full border-b border-white/10 px-4 py-3 text-left text-[14px] font-bold last:border-b-0 ${option === range ? "text-white" : "text-white/80 hover:bg-white/5"}`}
+                      >
+                        {option === "All" ? "Select period..." : option}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="rounded-[4px] border border-white/20 px-4 py-3">
-                <p className="text-[11px] text-white/45">Account Type:</p>
-                <p className="text-[14px] font-bold text-white">Live Account</p>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAccountScopeOpen((current) => !current);
+                    setTradeRangeOpen(false);
+                  }}
+                  className="min-w-[220px] rounded-[4px] border border-white/20 px-4 py-3 text-left transition hover:border-white/35"
+                >
+                  <p className="text-[11px] text-white/45">Account Type:</p>
+                  <p className="mt-1 flex items-center justify-between gap-4 text-[14px] font-bold text-white">
+                    {accountScopeLabel}
+                    <ChevronDown className={`h-4 w-4 transition-transform ${accountScopeOpen ? "rotate-180" : ""}`} />
+                  </p>
+                </button>
+                {accountScopeOpen && (
+                  <div className="absolute left-0 top-[76px] z-30 w-[220px] overflow-hidden rounded-[6px] bg-[#4a5061] py-1 shadow-2xl">
+                    {ACCOUNT_SCOPE_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          setAccountScope(option.value);
+                          setTradesPage(1);
+                          setAccountScopeOpen(false);
+                        }}
+                        className={`block w-full border-b border-white/10 px-4 py-3 text-left text-[14px] font-bold last:border-b-0 ${option.value === accountScope ? "text-white/45" : "text-white hover:bg-white/5"}`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             {tradeMode === "history" ? (
@@ -862,7 +984,7 @@ const fillDaySeries = (values: { date: string; value: number }[], range: Analyti
     return values.map((item) => ({ label: formatAxisDate(item.date), value: valueMap.get(item.date) ?? 0 }));
   }
 
-  const days = range === "Day" ? 1 : range === "Week" ? 7 : 31;
+  const days = range === "3 days" ? 3 : range === "Week" ? 7 : range === "Year" ? 365 : 31;
   const valueMap = new Map(values.map((item) => [item.date, item.value]));
   const start = new Date();
   start.setHours(0, 0, 0, 0);
