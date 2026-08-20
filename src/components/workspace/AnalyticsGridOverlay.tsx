@@ -25,6 +25,7 @@ import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/us
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { readDemoBalanceStorage } from "@/lib/onboarding";
 import type { SupportedCurrency } from "@/lib/currency";
+import { useTradingPreferences, type TradingLanguage } from "@/lib/tradingPreferences";
 import type { AccountTab } from "./AccountGridOverlay";
 import type { AnalyticsSignalAsset } from "./analytics/AnalyticsSignals";
 
@@ -46,7 +47,14 @@ const ACCOUNT_SCOPE_OPTIONS: Array<{ value: AnalyticsAccountScope; label: string
 const ACCOUNT_TABS: AnalyticsAccountTab[] = ["Withdrawal", "Payments", "Trades", "My account", "Market", "Tournaments", "Analytics"];
 const PIE_COLORS = ["#08c66b", "#1d96f2", "#ff5b58", "#bb0039", "#ff950f"];
 const PAGE_SIZE = 10;
-const LANGUAGE_OPTIONS = ["English", "Spanish", "French", "Portuguese", "Arabic", "Hindi"];
+const LANGUAGE_OPTIONS: Array<{ label: string; code: TradingLanguage }> = [
+  { label: "English", code: "en" },
+  { label: "Spanish", code: "es" },
+  { label: "French", code: "fr" },
+  { label: "Portuguese", code: "pt" },
+  { label: "Arabic", code: "ar" },
+  { label: "Hindi", code: "hi" },
+];
 const TIMEZONE_OPTIONS = ["(UTC+03:00)", "(UTC+00:00)", "(UTC+01:00)", "(UTC-05:00)", "(UTC+05:30)", "(UTC+08:00)"];
 
 const rangeStart = (range: AnalyticsRange) => {
@@ -529,8 +537,9 @@ const mergeProfileDetails = (profile: any, user: { id: string; email: string | n
 };
 
 const MyAccountPanel = () => {
-  const { profile, user, emailVerified, updateProfile, resetPassword, sendEmailVerificationCode } = useAuth();
+  const { profile, user, emailVerified, updateProfile, changePassword, deleteAccount, sendEmailVerificationCode } = useAuth();
   const { currency, options: currencyOptions, setCurrency, formatMoney } = useCurrency();
+  const { preferences: tradingPreferences, updatePreferences: updateTradingPreferences } = useTradingPreferences();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const liveBalance = getEffectiveLiveBalance(profile);
   const reservedBalance = Number((profile as any)?.reserved_withdrawal_balance ?? 0);
@@ -547,13 +556,17 @@ const MyAccountPanel = () => {
   const [status, setStatus] = useState<string | null>(null);
   const [cardFormOpen, setCardFormOpen] = useState(false);
   const [cardLast4, setCardLast4] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [cards, setCards] = useState<StoredVerificationCard[]>(() => loadStoredJson(cardsKey, []));
   const [security, setSecurity] = useState(() =>
     loadStoredJson(settingsKey, {
       login2fa: true,
       withdraw2fa: true,
-      language: "English",
-      timezone: "(UTC+03:00)",
     }),
   );
   const [form, setForm] = useState(() => storedProfileDetails);
@@ -566,8 +579,6 @@ const MyAccountPanel = () => {
     setSecurity(loadStoredJson(settingsKey, {
       login2fa: true,
       withdraw2fa: true,
-      language: "English",
-      timezone: "(UTC+03:00)",
     }));
     setCards(loadStoredJson(cardsKey, []));
   }, [cardsKey, settingsKey]);
@@ -628,12 +639,48 @@ const MyAccountPanel = () => {
   };
 
   const handlePasswordChange = async () => {
-    if (!email) {
-      setStatus("Add an email before changing password.");
+    setStatus(null);
+    if (newPassword !== confirmPassword) {
+      setStatus("New passwords do not match.");
       return;
     }
-    const result = await resetPassword(email);
-    setStatus(result.error ? result.error.message : "Password reset email sent.");
+    setChangingPassword(true);
+    const result = await changePassword(oldPassword, newPassword);
+    setChangingPassword(false);
+    if (result.error) {
+      setStatus(result.error.message);
+      return;
+    }
+    setOldPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setStatus("Password changed successfully.");
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
+    const result = await deleteAccount();
+    setDeletingAccount(false);
+    if (result.error) {
+      setStatus(result.error.message);
+      setDeleteConfirmOpen(false);
+    }
+  };
+
+  const selectedLanguageLabel = LANGUAGE_OPTIONS.find((option) => option.code === tradingPreferences.language)?.label ?? "English";
+  const handleLanguageChange = (label: string) => {
+    const option = LANGUAGE_OPTIONS.find((item) => item.label === label);
+    if (!option) return;
+    updateTradingPreferences({ language: option.code });
+    window.localStorage.setItem("profile.language", label);
+    setStatus(`Language changed to ${label}.`);
+  };
+
+  const handleTimezoneChange = (value: string) => {
+    const timezone = value.replace(/[()]/g, "");
+    updateTradingPreferences({ timezone });
+    window.localStorage.setItem("profile.timezone", timezone);
+    setStatus(`Timezone changed to ${timezone}.`);
   };
 
   const handleEmailVerification = async () => {
@@ -764,16 +811,28 @@ const MyAccountPanel = () => {
                 <p className="text-[15px] font-black text-white">Password</p>
               </div>
               <p className="mt-2 ml-8 text-[13px] font-bold text-[#9ba5b9]">Change your account password</p>
-              <button type="button" onClick={handlePasswordChange} className="mt-2 ml-8 text-[13px] font-black text-[#0d82df] hover:text-[#36a1ff]">Change</button>
+              <div className="mt-5 space-y-4">
+                <ProfileInput label="Old password" type="password" value={oldPassword} onChange={setOldPassword} />
+                <ProfileInput label="New password" type="password" value={newPassword} onChange={setNewPassword} />
+                <ProfileInput label="Confirm new password" type="password" value={confirmPassword} onChange={setConfirmPassword} />
+                <button
+                  type="button"
+                  onClick={handlePasswordChange}
+                  disabled={changingPassword}
+                  className="h-11 w-full rounded-[4px] bg-[#0d82df] text-[14px] font-black text-white transition hover:bg-[#118bea] disabled:opacity-60"
+                >
+                  {changingPassword ? "Changing..." : "Change Password"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="space-y-5">
-          <ProfileDropdown label="Language" icon={<Globe2 className="h-5 w-5 text-white/45" />} value={security.language} onChange={(value) => updateSecurity({ language: value })} options={LANGUAGE_OPTIONS} />
-          <ProfileDropdown label="Timezone" value={security.timezone} onChange={(value) => updateSecurity({ timezone: value })} options={TIMEZONE_OPTIONS} />
+          <ProfileDropdown label="Language" icon={<Globe2 className="h-5 w-5 text-white/45" />} value={selectedLanguageLabel} onChange={handleLanguageChange} options={LANGUAGE_OPTIONS.map((option) => option.label)} />
+          <ProfileDropdown label="Timezone" value={`(${tradingPreferences.timezone})`} onChange={handleTimezoneChange} options={TIMEZONE_OPTIONS} />
           <div className="border-t border-dashed border-white/15 pt-5">
-            <button type="button" onClick={() => { if (typeof window !== "undefined") window.location.assign("/delete-account"); }} className="inline-flex items-center gap-2 text-[13px] font-black text-[#ff5d52] hover:text-[#ff7b72]">
+            <button type="button" onClick={() => setDeleteConfirmOpen(true)} className="inline-flex items-center gap-2 text-[13px] font-black text-[#ff5d52] hover:text-[#ff7b72]">
               <Trash2 className="h-4 w-4" />
               Delete My account
             </button>
@@ -788,6 +847,41 @@ const MyAccountPanel = () => {
           </button>
         </div>
       </div>
+
+      {deleteConfirmOpen && (
+        <div className="fixed inset-0 z-[600] flex items-center justify-center bg-[#0b101b]/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-[420px] rounded-[8px] border border-red-500/20 bg-[#2a3040] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.45)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-[19px] font-black text-white">Delete account?</h3>
+                <p className="mt-3 text-[13px] font-bold leading-6 text-white/65">
+                  This will remove your platform profile data, disable your login, and sign you out. This action cannot be undone.
+                </p>
+              </div>
+              <button type="button" onClick={() => setDeleteConfirmOpen(false)} className="text-white/45 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="h-11 flex-1 rounded-[4px] bg-[#4a5061] text-[13px] font-black text-white hover:bg-[#565d70]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deletingAccount}
+                className="h-11 flex-1 rounded-[4px] bg-[#e34d43] text-[13px] font-black text-white hover:bg-[#f05b50] disabled:opacity-60"
+              >
+                {deletingAccount ? "Deleting..." : "Delete account"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-5 border-t border-dashed border-white/15 pt-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

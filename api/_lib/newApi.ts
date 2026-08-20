@@ -219,7 +219,17 @@ export async function handleProfile(request: ApiRequest, response: ApiResponse):
       return;
     }
 
-    response.setHeader("Allow", "GET, POST, PATCH");
+    if (method === "DELETE") {
+      const id = clerkUserIdToUuid(clerkUserId);
+      await transaction(async (client) => {
+        await client.query("delete from public.profiles where id = $1", [id]);
+        await client.query("delete from public.users where id = $1", [id]);
+      });
+      sendJson(response, 200, { data: { deleted: true } });
+      return;
+    }
+
+    response.setHeader("Allow", "GET, POST, PATCH, DELETE");
     sendJson(response, 405, { error: "Method not allowed" });
   } catch (error) {
     console.error("Profile endpoint failed", error);

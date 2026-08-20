@@ -9,6 +9,8 @@ import {
   subscribeAuthState,
   sendPasswordReset,
   completePasswordReset,
+  changePassword as appwriteChangePassword,
+  disableCurrentAccount,
   updateDisplayName,
   account as appwriteAccount,
   type AuthUserLike,
@@ -42,6 +44,8 @@ interface AuthContextType {
     verifiedAt: string | null;
   }>;
   resetPassword: (email: string) => Promise<{ error: { message: string; status?: number } | null }>;
+  changePassword: (oldPassword: string, newPassword: string) => Promise<{ error: { message: string; status?: number } | null }>;
+  deleteAccount: () => Promise<{ error: { message: string; status?: number } | null }>;
   verifyPasswordResetCode: (email: string, code: string) => Promise<{ error: { message: string; status?: number } | null }>;
   updatePasswordAfterReset: (newPassword: string) => Promise<{ error: { message: string; status?: number } | null }>;
   refreshSession: () => Promise<{ error: { message: string; status?: number } | null }>;
@@ -702,6 +706,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const changePassword = async (oldPassword: string, newPassword: string) => {
+    if (!appwriteAccount) return { error: toAuthError("Authentication provider is not ready.", 500) };
+    if (!oldPassword || !newPassword) return { error: toAuthError("Enter your old password and new password.", 400) };
+    if (newPassword.length < 8) return { error: toAuthError("New password must be at least 8 characters.", 400) };
+    const { error } = await appwriteChangePassword(newPassword, oldPassword);
+    return { error: error ? toAuthError(error.message, 400) : null };
+  };
+
+  const deleteAccount = async () => {
+    if (!user) return { error: toAuthError("You must be signed in to delete your account.", 401) };
+
+    try {
+      await apiFetch(`/profile`, { method: "DELETE" });
+      const { error } = await disableCurrentAccount();
+      if (error) return { error: toAuthError(error.message, 400) };
+
+      localStorage.removeItem("session_token");
+      clearAuthRestorePath();
+      activeProfileUserIdRef.current = null;
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      window.location.replace(window.location.origin + "/login");
+      return { error: null };
+    } catch (error: any) {
+      return { error: toAuthError(error?.message || "Account deletion failed.", error?.status || 500) };
+    }
+  };
+
   const verifyPasswordResetCode = async (email: string, code: string) => {
     try {
       // Appwrite sends a reset link (userId + secret) instead of a 6-digit code.
@@ -753,6 +786,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updateProfile,
         verifyEmailCode,
         resetPassword,
+        changePassword,
+        deleteAccount,
         verifyPasswordResetCode,
         updatePasswordAfterReset,
         refreshSession,

@@ -302,6 +302,17 @@ export async function changePassword(password: string, oldPassword?: string): Pr
   }
 }
 
+export async function disableCurrentAccount(): Promise<{ error: AppwriteAuthError | null }> {
+  try {
+    if (!account) throw new Error("Appwrite account is not initialized");
+    await account.updateStatus();
+    notify(null);
+    return { error: null };
+  } catch (e) {
+    return { error: mapError(e) };
+  }
+}
+
 export async function updateDisplayName(name: string): Promise<{ error: AppwriteAuthError | null }> {
   try {
     if (!account) throw new Error("Appwrite account is not initialized");
