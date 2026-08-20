@@ -1,14 +1,33 @@
-import { useEffect, useMemo, useState } from "react";
-import { Calendar, ChevronDown, ChevronLeft, ChevronRight, Eye, EyeOff, Image, Send, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Calendar,
+  Camera,
+  CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CreditCard,
+  Eye,
+  EyeOff,
+  Globe2,
+  Image,
+  Lock,
+  Pencil,
+  Send,
+  ShieldCheck,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useStatistics, type Trade, type Transaction } from "@/hooks/useStatistics";
 import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/useTrading";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { readDemoBalanceStorage } from "@/lib/onboarding";
+import type { SupportedCurrency } from "@/lib/currency";
 import type { AccountTab } from "./AccountGridOverlay";
 import type { AnalyticsSignalAsset } from "./analytics/AnalyticsSignals";
-import { ProfilePersonalData } from "../profile/ProfilePersonalData";
 
 type AnalyticsRange = "3 days" | "Week" | "Month" | "Year" | "All";
 type AnalyticsAccountScope = "live" | "demo";
@@ -28,6 +47,8 @@ const ACCOUNT_SCOPE_OPTIONS: Array<{ value: AnalyticsAccountScope; label: string
 const ACCOUNT_TABS: AnalyticsAccountTab[] = ["Withdrawal", "Payments", "Trades", "My account", "Market", "Tournaments", "Analytics"];
 const PIE_COLORS = ["#08c66b", "#1d96f2", "#ff5b58", "#bb0039", "#ff950f"];
 const PAGE_SIZE = 10;
+const LANGUAGE_OPTIONS = ["English", "Spanish", "French", "Portuguese", "Arabic", "Hindi"];
+const TIMEZONE_OPTIONS = ["(UTC+03:00)", "(UTC+00:00)", "(UTC+01:00)", "(UTC-05:00)", "(UTC+05:30)", "(UTC+08:00)"];
 
 const rangeStart = (range: AnalyticsRange) => {
   const now = Date.now();
@@ -317,8 +338,6 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
           </div>
         )}
 
-        {activeTab === "My account" && <div className="mb-4">{profileSummary}</div>}
-
         {activeTab === "Payments" && (
           <TabbedPanel>
             <div className="mb-8 flex items-center justify-end">
@@ -435,9 +454,7 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
         )}
 
         {activeTab === "My account" && (
-          <TabbedPanel>
-            <ProfilePersonalData compact />
-          </TabbedPanel>
+          <MyAccountPanel />
         )}
 
         {activeTab === "Market" && (
@@ -462,6 +479,392 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
     </div>
   );
 };
+
+type StoredVerificationCard = {
+  id: string;
+  last4: string;
+  createdAt: string;
+};
+
+const getScopedStorageKey = (userId: string | undefined, key: string) => `${key}:${userId ?? "guest"}`;
+
+const loadStoredJson = <T,>(key: string, fallback: T): T => {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const saveStoredJson = (key: string, value: unknown) => {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(key, JSON.stringify(value));
+};
+
+const ToggleSwitch = ({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) => (
+  <button type="button" onClick={onChange} className="flex items-center gap-3 text-left" aria-pressed={checked}>
+    <span className={`flex h-[24px] w-[44px] items-center rounded-full p-[3px] transition ${checked ? "bg-[#1687ee]" : "bg-[#3a4050]"}`}>
+      <span className={`h-[18px] w-[18px] rounded-full bg-white transition-transform ${checked ? "translate-x-5" : "translate-x-0"}`} />
+    </span>
+    <span className="text-[14px] font-black text-white">{label}</span>
+  </button>
+);
+
+const MyAccountPanel = () => {
+  const { profile, user, emailVerified, updateProfile, resetPassword, sendEmailVerificationCode } = useAuth();
+  const { currency, options: currencyOptions, setCurrency, formatMoney } = useCurrency();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const liveBalance = getEffectiveLiveBalance(profile);
+  const reservedBalance = Number((profile as any)?.reserved_withdrawal_balance ?? 0);
+  const withdrawableBalance = Math.max(0, liveBalance - reservedBalance);
+  const displayId = readProfileText(profile?.id, user?.id).replace(/-/g, "").slice(0, 8).toUpperCase() || "-";
+  const email = readProfileText(user?.email, (profile as any)?.email);
+  const displayName = readProfileText(profile?.display_name, profile?.username, (profile as any)?.firstName, email.split("@")[0]);
+  const avatarUrl = readProfileText(profile?.avatar_url);
+  const settingsKey = getScopedStorageKey(user?.id, "account_security_settings");
+  const cardsKey = getScopedStorageKey(user?.id, "account_verification_cards");
+  const [visible, setVisible] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+  const [cardFormOpen, setCardFormOpen] = useState(false);
+  const [cardLast4, setCardLast4] = useState("");
+  const [cards, setCards] = useState<StoredVerificationCard[]>(() => loadStoredJson(cardsKey, []));
+  const [security, setSecurity] = useState(() =>
+    loadStoredJson(settingsKey, {
+      login2fa: true,
+      withdraw2fa: true,
+      language: "English",
+      timezone: "(UTC+03:00)",
+    }),
+  );
+  const [form, setForm] = useState(() => ({
+    username: readProfileText(profile?.username, displayName),
+    firstName: readProfileText((profile as any)?.firstName, (profile as any)?.first_name),
+    lastName: readProfileText((profile as any)?.lastName, (profile as any)?.last_name),
+    dob: readProfileText((profile as any)?.dob, (profile as any)?.dateOfBirth),
+    email,
+    country: readProfileText(profile?.nationality, (profile as any)?.country),
+    address: readProfileText((profile as any)?.address),
+  }));
+
+  useEffect(() => {
+    setForm({
+      username: readProfileText(profile?.username, displayName),
+      firstName: readProfileText((profile as any)?.firstName, (profile as any)?.first_name),
+      lastName: readProfileText((profile as any)?.lastName, (profile as any)?.last_name),
+      dob: readProfileText((profile as any)?.dob, (profile as any)?.dateOfBirth),
+      email,
+      country: readProfileText(profile?.nationality, (profile as any)?.country),
+      address: readProfileText((profile as any)?.address),
+    });
+  }, [displayName, email, profile]);
+
+  useEffect(() => {
+    setSecurity(loadStoredJson(settingsKey, {
+      login2fa: true,
+      withdraw2fa: true,
+      language: "English",
+      timezone: "(UTC+03:00)",
+    }));
+    setCards(loadStoredJson(cardsKey, []));
+  }, [cardsKey, settingsKey]);
+
+  const updateSecurity = (updates: Partial<typeof security>) => {
+    const next = { ...security, ...updates };
+    setSecurity(next);
+    saveStoredJson(settingsKey, next);
+  };
+
+  const updateFormValue = (field: keyof typeof form, value: string) => {
+    setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setStatus(null);
+    try {
+      await updateProfile({
+        username: form.username.trim(),
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+        dob: form.dob,
+        nationality: form.country,
+        address: form.address.trim(),
+      });
+      setStatus("Account details saved.");
+    } catch (error: any) {
+      setStatus(error?.message || "Could not save account details.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        await updateProfile({ avatar_url: String(reader.result) });
+        setStatus("Profile photo updated.");
+      } catch (error: any) {
+        setStatus(error?.message || "Could not update profile photo.");
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePasswordChange = async () => {
+    if (!email) {
+      setStatus("Add an email before changing password.");
+      return;
+    }
+    const result = await resetPassword(email);
+    setStatus(result.error ? result.error.message : "Password reset email sent.");
+  };
+
+  const handleEmailVerification = async () => {
+    try {
+      const result = await sendEmailVerificationCode();
+      setStatus(result.status === "cooldown" ? "Verification code was already sent recently." : "Verification code sent to your email.");
+    } catch (error: any) {
+      setStatus(error?.message || "Could not send verification code.");
+    }
+  };
+
+  const handleCurrencyChange = async (nextCurrency: SupportedCurrency) => {
+    await setCurrency(nextCurrency);
+    setStatus(`Currency changed to ${nextCurrency}.`);
+  };
+
+  const handleAddCard = () => {
+    const last4 = cardLast4.replace(/\D/g, "").slice(-4);
+    if (last4.length !== 4) {
+      setStatus("Enter the last 4 card digits.");
+      return;
+    }
+    const nextCards = [
+      ...cards,
+      { id: `${Date.now()}`, last4, createdAt: new Date().toISOString() },
+    ];
+    setCards(nextCards);
+    saveStoredJson(cardsKey, nextCards);
+    setCardLast4("");
+    setCardFormOpen(false);
+    setStatus("Card added for verification.");
+  };
+
+  return (
+    <section className="rounded-[6px] bg-[#202633] px-5 py-5 text-white">
+      <div className="mb-5 flex flex-wrap items-center justify-end gap-8 border-b border-white/10 pb-4 text-right">
+        <div>
+          <p className="text-[12px] font-bold text-[#9ba5b9]">My current currency</p>
+          <div className="mt-1 flex items-center justify-end gap-2">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2d3446] text-[12px] font-black text-white">$</span>
+            <select
+              value={currency}
+              onChange={(event) => void handleCurrencyChange(event.target.value as SupportedCurrency)}
+              className="rounded-[4px] bg-[#167fdd] px-2 py-1 text-[11px] font-black uppercase text-white outline-none"
+            >
+              {currencyOptions.map((option) => (
+                <option key={option.code} value={option.code}>{option.code}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <ProfileMetric label="Available for withdrawal" value={visible ? formatMoney(withdrawableBalance) : "****"} />
+        <ProfileMetric label="In the account" value={visible ? formatMoney(liveBalance) : "****"} />
+      </div>
+
+      <div className="grid gap-7 xl:grid-cols-[minmax(360px,0.95fr)_minmax(320px,0.92fr)_minmax(320px,0.92fr)]">
+        <div className="border-white/10 xl:border-r xl:pr-7">
+          <h2 className="mb-5 text-[18px] font-black text-white">Personal data:</h2>
+          <div className="mb-5 flex items-center gap-4">
+            <div className="relative flex h-[74px] w-[74px] shrink-0 items-end justify-center overflow-hidden rounded-full bg-black">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={displayName || email || "Profile"} className="h-full w-full object-cover" />
+              ) : (
+                <>
+                  <div className="mb-1 h-8 w-12 rounded-t-full bg-[#0d86f7]" />
+                  <div className="absolute top-4 h-9 w-9 rounded-full bg-[#0d86f7]" />
+                </>
+              )}
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute right-0 top-0 rounded-full bg-[#4a5061] p-1 text-white/80 hover:text-white" aria-label="Change profile photo">
+                <Camera className="h-4 w-4" />
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-[14px] font-black text-white">{email || "Account email unavailable"}</p>
+              <p className="mt-1 text-[14px] font-bold text-white">ID: {visible ? displayId : "********"}</p>
+              <span className={`mt-2 inline-flex items-center gap-1 text-[12px] font-black ${emailVerified ? "text-[#21c978]" : "text-[#ff5d52]"}`}>
+                <ShieldCheck className="h-4 w-4" />
+                {emailVerified ? "Verified" : "Not verified"}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <ProfileInput label="Nickname" value={form.username} onChange={(value) => updateFormValue("username", value)} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ProfileInput label="First Name" value={form.firstName} onChange={(value) => updateFormValue("firstName", value)} />
+              <ProfileInput label="Last Name" value={form.lastName} onChange={(value) => updateFormValue("lastName", value)} />
+            </div>
+            <ProfileInput label="Date of birth" type="date" value={form.dob} onChange={(value) => updateFormValue("dob", value)} />
+            <ProfileInput label="Email" value={form.email} disabled suffix={emailVerified ? "Verified" : "Not verified"} onChange={() => undefined} />
+            <ProfileSelect label="Country" value={form.country} onChange={(value) => updateFormValue("country", value)} options={["Kenya", "United States", "Nigeria", "South Africa", "United Kingdom", "India"]} />
+            <ProfileInput label="Address" value={form.address} onChange={(value) => updateFormValue("address", value)} />
+            <button type="button" onClick={handleSave} disabled={saving} className="h-11 w-full rounded-[4px] bg-[#0d82df] text-[14px] font-black text-white transition hover:bg-[#118bea] disabled:opacity-60">
+              {saving ? "Saving..." : "Save"}
+            </button>
+            {status && <p className="text-[12px] font-bold text-white/60">{status}</p>}
+          </div>
+        </div>
+
+        <div className="border-white/10 xl:border-r xl:pr-7">
+          <h2 className="mb-5 text-[18px] font-black text-white">Security:</h2>
+          <div className="space-y-6">
+            <div>
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 fill-[#21c978] text-[#21c978]" />
+                <p className="text-[15px] font-black text-white">Two-step verification</p>
+              </div>
+              <button type="button" onClick={handleEmailVerification} className="mt-2 ml-8 inline-flex items-center gap-2 text-[13px] font-bold text-[#9ba5b9] hover:text-white">
+                Receiving codes via Email <Pencil className="h-3.5 w-3.5 text-[#0d82df]" />
+              </button>
+            </div>
+            <ToggleSwitch checked={Boolean(security.login2fa)} onChange={() => updateSecurity({ login2fa: !security.login2fa })} label="To enter the platform" />
+            <ToggleSwitch checked={Boolean(security.withdraw2fa)} onChange={() => updateSecurity({ withdraw2fa: !security.withdraw2fa })} label="To withdraw funds" />
+            <div className="border-t border-dashed border-white/15 pt-5">
+              <div className="flex items-center gap-3">
+                <Lock className="h-5 w-5 text-white/55" />
+                <p className="text-[15px] font-black text-white">Password</p>
+              </div>
+              <p className="mt-2 ml-8 text-[13px] font-bold text-[#9ba5b9]">Change your account password</p>
+              <button type="button" onClick={handlePasswordChange} className="mt-2 ml-8 text-[13px] font-black text-[#0d82df] hover:text-[#36a1ff]">Change</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          <ProfileSelect label="Language" icon={<Globe2 className="h-5 w-5 text-white/45" />} value={security.language} onChange={(value) => updateSecurity({ language: value })} options={LANGUAGE_OPTIONS} />
+          <ProfileSelect label="Timezone" value={security.timezone} onChange={(value) => updateSecurity({ timezone: value })} options={TIMEZONE_OPTIONS} />
+          <div className="border-t border-dashed border-white/15 pt-5">
+            <button type="button" onClick={() => { if (typeof window !== "undefined") window.location.assign("/delete-account"); }} className="inline-flex items-center gap-2 text-[13px] font-black text-[#ff5d52] hover:text-[#ff7b72]">
+              <Trash2 className="h-4 w-4" />
+              Delete My account
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setVisible((current) => !current)}
+            className="flex h-11 w-20 items-center justify-center rounded-[6px] bg-[#2d3446] text-white transition hover:bg-[#3a4052]"
+            aria-label={visible ? "Hide profile information" : "Show profile information"}
+          >
+            {visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-5 border-t border-dashed border-white/15 pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-[16px] font-black text-white">Credit / debit card verification:</h2>
+            <p className="mt-3 text-[12px] font-bold text-white/45">
+              {cards.length ? `${cards.length} card${cards.length === 1 ? "" : "s"} added for verification` : "You don't have any credit / debit cards for verification"}
+            </p>
+          </div>
+          <button type="button" onClick={() => setCardFormOpen((current) => !current)} className="rounded-[4px] bg-[#0d82df] px-3 py-2 text-[11px] font-black uppercase text-white hover:bg-[#118bea]">
+            Add new card
+          </button>
+        </div>
+        {cardFormOpen && (
+          <div className="mt-4 flex max-w-md flex-wrap items-end gap-3 rounded-[6px] border border-white/10 bg-[#252b3a] p-4">
+            <ProfileInput label="Last 4 card digits" value={cardLast4} onChange={setCardLast4} />
+            <button type="button" onClick={handleAddCard} className="inline-flex h-11 items-center gap-2 rounded-[4px] bg-[#0d82df] px-4 text-[13px] font-black text-white">
+              <Upload className="h-4 w-4" /> Add
+            </button>
+          </div>
+        )}
+        {cards.length > 0 && (
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {cards.map((card) => (
+              <div key={card.id} className="flex items-center justify-between rounded-[6px] border border-white/10 bg-[#252b3a] px-4 py-3">
+                <span className="inline-flex items-center gap-2 text-[13px] font-black text-white">
+                  <CreditCard className="h-4 w-4 text-[#9ba5b9]" />
+                  Card ending {card.last4}
+                </span>
+                <span className="text-[11px] font-bold text-[#ffce5c]">Pending</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
+const ProfileInput = ({
+  label,
+  value,
+  onChange,
+  type = "text",
+  disabled = false,
+  suffix,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  disabled?: boolean;
+  suffix?: string;
+}) => (
+  <label className="relative block">
+    <span className="absolute -top-2 left-3 bg-[#202633] px-1 text-[11px] font-bold text-[#778198]">{label}</span>
+    {suffix && <span className="absolute -top-2 right-3 bg-[#202633] px-1 text-[10px] font-bold text-[#21c978]">{suffix}</span>}
+    <input
+      type={type}
+      value={value}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value)}
+      className="h-12 w-full rounded-[4px] border border-white/18 bg-transparent px-4 text-[14px] font-bold text-white outline-none transition placeholder:text-white/35 focus:border-[#0d82df] disabled:text-white/35"
+      placeholder="Empty"
+    />
+  </label>
+);
+
+const ProfileSelect = ({
+  label,
+  value,
+  onChange,
+  options,
+  icon,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+  icon?: React.ReactNode;
+}) => (
+  <label className="relative block">
+    <span className="absolute -top-2 left-3 bg-[#202633] px-1 text-[11px] font-bold text-[#778198]">{label}</span>
+    <div className="relative">
+      {icon && <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2">{icon}</span>}
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={`h-12 w-full appearance-none rounded-[4px] border border-white/18 bg-transparent ${icon ? "pl-11" : "pl-4"} pr-10 text-[14px] font-bold text-white outline-none transition focus:border-[#0d82df]`}
+      >
+        <option value="">Select</option>
+        {options.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/70" />
+    </div>
+  </label>
+);
 
 const ProfileSummary = ({
   email,
