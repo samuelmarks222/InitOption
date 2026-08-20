@@ -33,7 +33,6 @@ import { useVip } from "@/contexts/VipContext";
 import { VipBadge } from "@/components/vip/VipBadge";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { AccountCurrencyModal } from "@/components/profile/AccountCurrencyModal";
-import { MpesaIcon } from "@/components/ui/MpesaIcon";
 import { formatCurrencyAmount } from "@/lib/currency";
 import { clearCryptoDepositCheckoutCache } from "@/lib/cryptoDepositCheckoutCache";
 import { requestDepositReview } from "@/lib/deposits";
@@ -135,7 +134,7 @@ const STATIC_DEPOSIT_METHODS: DepositMethodOption[] = [
     name: "M-Pesa",
     subtitle: "Mobile money",
     symbol: "MPESA",
-    minAmount: 10,
+    minAmount: 5,
     maxAmount: 10000,
     available: true,
     iconType: "wallet",
@@ -146,7 +145,7 @@ const STATIC_DEPOSIT_METHODS: DepositMethodOption[] = [
     name: "Airtel Money",
     subtitle: "Instant settlement",
     symbol: "AIRTEL",
-    minAmount: 10,
+    minAmount: 5,
     maxAmount: 10000,
     available: true,
     iconType: "wallet",
@@ -240,11 +239,11 @@ const formatCountdown = (deadline: number | null, now: number) => {
 
 const getMethodIcon = (method: DepositMethodOption) => {
   if (method.symbol === "MPESA") {
-    return <MpesaIcon className="h-8 w-[56px]" />;
+    return <img src="/images/mpesa-logo.png" alt="M-Pesa" className="h-10 w-auto max-w-[80px] object-contain" />;
   }
 
   if (method.symbol === "AIRTEL") {
-    return <img src="/images/airtel-logo.png" alt="Airtel Money" className="h-8 w-auto max-w-[56px] object-contain" />;
+    return <img src="/images/airtel-logo.png" alt="Airtel Money" className="h-10 w-auto max-w-[80px] object-contain" />;
   }
 
   if (method.iconType === "crypto") {
