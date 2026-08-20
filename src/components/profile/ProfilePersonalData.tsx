@@ -16,7 +16,7 @@ import {
 import { getProfileKycLabel, hasCompleteKycDocuments, hasUploadedKycDocuments, normalizeKycStatus } from "@/lib/kyc";
 import { EmailVerificationPanel } from "./EmailVerificationPanel";
 
-type GuideField =
+export type GuideField =
   | "username"
   | "firstName"
   | "lastName"
@@ -29,7 +29,7 @@ type GuideField =
   | "frontDocument"
   | "backDocument";
 
-type GuideTarget = {
+export type GuideTarget = {
   field: GuideField;
   label: string;
 } | null;
@@ -383,7 +383,7 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
       <div className="profile-personal-data-card overflow-hidden rounded-[18px] border border-white/8 bg-[#293042] shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
         <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
           <form onSubmit={handleSave} className="profile-personal-data-form border-b border-white/6 bg-[#293042] p-4 md:p-6 lg:border-b-0 lg:border-r lg:border-white/6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div data-verification-tour="status" className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
@@ -466,7 +466,7 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
               </div>
             </div>
 
-            <div className="profile-fields-grid mt-6 grid gap-5">
+            <div data-verification-tour="personal-details" className="profile-fields-grid mt-6 grid gap-5">
               <FieldShell label="Nickname">
                 <input
                   ref={fieldRefs.username}
@@ -604,7 +604,7 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
             </div>
           </form>
 
-          <div className="profile-documents-panel bg-[#293042] p-4 md:p-6">
+          <div data-verification-tour="documents" className="profile-documents-panel bg-[#293042] p-4 md:p-6">
             <h3 className="text-[18px] font-bold text-white">Documents verification:</h3>
 
             <div

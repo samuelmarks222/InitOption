@@ -1,12 +1,26 @@
-import { useEffect, useState } from "react";
-import { Camera, User, BadgeDollarSign, Clock, History, Settings, LogOut, X, ChevronRight } from "lucide-react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import {
+  BadgeDollarSign,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  Clock,
+  History,
+  IdCard,
+  LogOut,
+  Settings,
+  User,
+  X,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProfileUploadPhoto } from "../profile/ProfileUploadPhoto";
-import { ProfilePersonalData } from "../profile/ProfilePersonalData";
+import { ProfilePersonalData, type GuideField, type GuideTarget } from "../profile/ProfilePersonalData";
 import { ProfileDeposit } from "../profile/ProfileDeposit";
 import { ProfileBalanceHistory } from "../profile/ProfileBalanceHistory";
 import { ProfileTradingHistory } from "../profile/ProfileTradingHistory";
 import { ProfileSettings } from "../profile/ProfileSettings";
+import { normalizeKycStatus } from "@/lib/kyc";
 
 export type AccountTab = "upload" | "personal" | "deposit" | "balance_history" | "trading_history" | "settings";
 const ACCOUNT_TAB_STORAGE_KEY = "initoption:account-tab";
@@ -27,11 +41,20 @@ interface AccountGridOverlayProps {
 
 export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: AccountGridOverlayProps) => {
   const { profile, user, signOut } = useAuth();
+  const p = profile as any;
   const [activeTab, setActiveTab] = useState<AccountTab>(() => {
     if (typeof window === "undefined") return initialTab;
     const storedTab = window.sessionStorage.getItem(ACCOUNT_TAB_STORAGE_KEY);
     return isAccountTab(storedTab) ? storedTab : initialTab;
   });
+  const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
+  const [verificationGuideStep, setVerificationGuideStep] = useState<number | null>(null);
+
+  const kycStatus = normalizeKycStatus(p?.kyc_status ?? p?.kycStatus);
+  const isAccountVerified = kycStatus === "Verified";
+  const verificationPromptKey = user?.id ? `account_verification_prompt_seen:${user.id}` : "";
+
+  const personalGuideTarget = useMemo<GuideTarget>(() => getNextPersonalGuideTarget(p), [profile]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -53,6 +76,27 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
       window.dispatchEvent(new CustomEvent(ACCOUNT_TAB_CHANGE_EVENT, { detail: tab }));
     }
     setActiveTab(tab);
+  };
+
+  useEffect(() => {
+    if (!user?.id || activeTab !== "personal" || isAccountVerified) return;
+    if (typeof window !== "undefined" && window.sessionStorage.getItem(verificationPromptKey) === "true") return;
+
+    const timerId = window.setTimeout(() => setShowVerificationPrompt(true), 220);
+    return () => window.clearTimeout(timerId);
+  }, [activeTab, isAccountVerified, user?.id, verificationPromptKey]);
+
+  const dismissVerificationPrompt = () => {
+    if (verificationPromptKey && typeof window !== "undefined") {
+      window.sessionStorage.setItem(verificationPromptKey, "true");
+    }
+    setShowVerificationPrompt(false);
+  };
+
+  const startVerificationGuide = () => {
+    dismissVerificationPrompt();
+    changeTab("personal");
+    window.setTimeout(() => setVerificationGuideStep(0), 120);
   };
 
   const MENU_ITEMS = [
@@ -185,11 +229,234 @@ export const AccountGridOverlay = ({ onClose, initialTab = "personal" }: Account
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-2 md:p-3">
             {activeTab === "upload" && <ProfileUploadPhoto />}
-            {activeTab === "personal" && <ProfilePersonalData compact />}
+            {activeTab === "personal" && <ProfilePersonalData compact guidedTarget={verificationGuideStep === 1 ? personalGuideTarget : null} />}
             {activeTab === "deposit" && <ProfileDeposit />}
             {activeTab === "balance_history" && <ProfileBalanceHistory />}
             {activeTab === "trading_history" && <ProfileTradingHistory />}
             {activeTab === "settings" && <ProfileSettings />}
+          </div>
+        </div>
+      </div>
+
+      {showVerificationPrompt && !isAccountVerified && (
+        <VerificationStartModal onClose={dismissVerificationPrompt} onStart={startVerificationGuide} />
+      )}
+
+      {verificationGuideStep !== null && !isAccountVerified && activeTab === "personal" && (
+        <VerificationGuideOverlay
+          stepIndex={verificationGuideStep}
+          guideTarget={personalGuideTarget}
+          onClose={() => setVerificationGuideStep(null)}
+          onPrev={() => setVerificationGuideStep((step) => (step === null ? null : Math.max(0, step - 1)))}
+          onNext={() => {
+            setVerificationGuideStep((step) => {
+              if (step === null) return null;
+              return step >= VERIFICATION_GUIDE_STEPS.length - 1 ? null : step + 1;
+            });
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+const getNextPersonalGuideTarget = (profile: any): GuideTarget => {
+  const checks: Array<{ field: GuideField; label: string; completed: boolean }> = [
+    { field: "username", label: "Add your nickname", completed: Boolean(String(profile?.username || "").trim()) },
+    { field: "firstName", label: "Add your first name", completed: Boolean(String(profile?.firstName || "").trim()) },
+    { field: "lastName", label: "Add your last name", completed: Boolean(String(profile?.lastName || "").trim()) },
+    { field: "dob", label: "Add your date of birth", completed: Boolean(String(profile?.dob || "").trim()) },
+    { field: "nationality", label: "Select your country", completed: Boolean(String(profile?.nationality || "").trim()) },
+    { field: "phone", label: "Add your phone number", completed: Boolean(String(profile?.phone || "").trim()) },
+    { field: "address", label: "Add your address", completed: Boolean(String(profile?.address || "").trim()) },
+    { field: "idType", label: "Select your ID type", completed: Boolean(String(profile?.idType || "").trim()) },
+    { field: "idNumber", label: "Add your ID number", completed: Boolean(String(profile?.idNumber || "").trim()) },
+    {
+      field: "frontDocument",
+      label: "Upload the front of your ID",
+      completed: Boolean(profile?.kyc_documents?.front?.url || profile?.kycDocuments?.front?.url),
+    },
+    {
+      field: "backDocument",
+      label: "Upload the back of your ID",
+      completed: Boolean(profile?.kyc_documents?.back?.url || profile?.kycDocuments?.back?.url),
+    },
+  ];
+
+  const next = checks.find((item) => !item.completed);
+  return next ? { field: next.field, label: next.label } : null;
+};
+
+const VerificationStartModal = ({ onClose, onStart }: { onClose: () => void; onStart: () => void }) => (
+  <div className="fixed inset-0 z-[170] flex items-center justify-center bg-[#0b1020]/78 p-4 backdrop-blur-[3px]">
+    <div className="relative w-full max-w-[360px] rounded-[6px] border border-white/[0.06] bg-[#2d3447] px-8 pb-8 pt-7 text-center shadow-[0_30px_90px_rgba(2,7,19,0.58)]">
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute right-5 top-5 flex h-8 w-8 items-center justify-center rounded-full text-[#a5adbd] transition hover:bg-white/5 hover:text-white"
+        aria-label="Close verification guide"
+      >
+        <X className="h-5 w-5" />
+      </button>
+
+      <div className="mx-auto mb-8 flex h-[72px] w-[72px] items-center justify-center rounded-[18px] bg-[#248de8] shadow-[0_16px_35px_rgba(20,116,219,0.24)]">
+        <IdCard className="h-10 w-10 text-[#eef7ff]" />
+        <span className="absolute ml-12 mt-10 flex h-9 w-9 items-center justify-center rounded-full bg-[#394354] text-[#48d078] shadow-[0_10px_22px_rgba(0,0,0,0.24)]">
+          <CheckCircle2 className="h-6 w-6" />
+        </span>
+      </div>
+
+      <h2 className="text-[24px] font-bold leading-tight text-white">Verify your account</h2>
+      <p className="mx-auto mt-6 max-w-[285px] text-[16px] font-semibold leading-[1.25] text-[#d5d9e4]">
+        Verify your account to confirm your identity and unlock full access to all features.
+      </p>
+
+      <button
+        type="button"
+        onClick={onStart}
+        className="mt-6 h-[38px] w-full rounded-[4px] bg-[#12b765] text-[14px] font-bold text-white shadow-[0_10px_24px_rgba(17,180,97,0.28)] transition hover:bg-[#10a85b]"
+      >
+        Start verification
+      </button>
+      <button
+        type="button"
+        onClick={onClose}
+        className="mt-2 h-[38px] w-full rounded-[4px] bg-[#626a83] text-[14px] font-bold text-white transition hover:bg-[#6b748e]"
+      >
+        Later
+      </button>
+    </div>
+  </div>
+);
+
+const VERIFICATION_GUIDE_STEPS = [
+  {
+    selector: "[data-verification-tour='status']",
+    title: "Check your verification status",
+    body: "Verification confirms your identity and gives you full access.",
+  },
+  {
+    selector: "[data-verification-tour='personal-details']",
+    title: "Fill in your personal details",
+    body: "Enter your details and save.",
+  },
+  {
+    selector: "[data-verification-tour='documents']",
+    title: "Upload your documents",
+    body: "Choose your ID type, add the ID number, then upload the front and back of your document.",
+  },
+] as const;
+
+const VerificationGuideOverlay = ({
+  stepIndex,
+  guideTarget,
+  onClose,
+  onPrev,
+  onNext,
+}: {
+  stepIndex: number;
+  guideTarget: GuideTarget;
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+}) => {
+  const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const step = VERIFICATION_GUIDE_STEPS[stepIndex];
+
+  useLayoutEffect(() => {
+    const updateRect = () => {
+      const element = document.querySelector(step.selector) as HTMLElement | null;
+      if (!element) {
+        setTargetRect(null);
+        return;
+      }
+
+      element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      window.requestAnimationFrame(() => setTargetRect(element.getBoundingClientRect()));
+    };
+
+    updateRect();
+    window.addEventListener("resize", updateRect);
+    window.addEventListener("scroll", updateRect, true);
+    return () => {
+      window.removeEventListener("resize", updateRect);
+      window.removeEventListener("scroll", updateRect, true);
+    };
+  }, [step.selector]);
+
+  const tooltipStyle = useMemo(() => {
+    if (!targetRect) return { left: 160, top: 240 };
+    const width = 274;
+    const left = Math.min(Math.max(16, targetRect.left + targetRect.width * 0.15), window.innerWidth - width - 16);
+    const top =
+      stepIndex === 2
+        ? Math.max(16, targetRect.top + 36)
+        : Math.min(window.innerHeight - 220, targetRect.bottom + 14);
+    return { left, top, width };
+  }, [stepIndex, targetRect]);
+
+  return (
+    <div className="fixed inset-0 z-[165] bg-[#0b1020]/74 backdrop-blur-[1px]">
+      {targetRect && (
+        <div
+          className="pointer-events-none fixed rounded-[12px] bg-[#1e2638]/72 shadow-[0_0_0_9999px_rgba(8,12,24,0.62),0_16px_45px_rgba(0,0,0,0.22)] ring-1 ring-[#5c6b86]/45"
+          style={{
+            left: targetRect.left - 10,
+            top: targetRect.top - 10,
+            width: targetRect.width + 20,
+            height: targetRect.height + 20,
+          }}
+        />
+      )}
+
+      <div
+        className="fixed rounded-[4px] bg-[#687189] p-3 text-white shadow-[0_18px_45px_rgba(0,0,0,0.35)]"
+        style={tooltipStyle}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-3 top-3 text-[#d4dae8] transition hover:text-white"
+          aria-label="Close verification tour"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="pr-8 text-[15px] font-bold leading-tight">
+          {stepIndex === 1 && guideTarget?.label ? guideTarget.label : step.title}
+        </div>
+        <div className="mt-4 border-t border-white/16 pt-3 text-[13px] font-semibold leading-[1.35] text-white/92">
+          {step.body}
+        </div>
+        <div className="mt-3 border-t border-white/16 pt-3">
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={onPrev}
+              disabled={stepIndex === 0}
+              className="flex h-8 w-9 items-center justify-center rounded-[4px] bg-white/10 text-white transition hover:bg-white/15 disabled:opacity-35"
+              aria-label="Previous verification step"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <div className="text-center text-[10px] font-black uppercase tracking-[0.08em] text-white">
+              <div>Step {stepIndex + 1} of {VERIFICATION_GUIDE_STEPS.length}</div>
+              <div className="mt-1 flex justify-center gap-1">
+                {VERIFICATION_GUIDE_STEPS.map((_, index) => (
+                  <span key={index} className={`h-1.5 w-1.5 rounded-full ${index === stepIndex ? "bg-white" : "bg-white/45"}`} />
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={onNext}
+              className="flex h-8 w-9 items-center justify-center rounded-[4px] bg-white/10 text-white transition hover:bg-white/15"
+              aria-label={stepIndex === VERIFICATION_GUIDE_STEPS.length - 1 ? "Finish verification tour" : "Next verification step"}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
