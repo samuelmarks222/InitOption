@@ -42,6 +42,12 @@ const formatAxisDate = (iso: string) =>
 const formatUsdCompact = (value: number) => `${Math.round(value).toLocaleString("en-US").replace(/,/g, "")} $`;
 const getDemoBalance = (profile: any) => Number(profile?.demo_balance ?? profile?.practice_balance ?? 0);
 const titleCase = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+const readProfileText = (...values: unknown[]) => {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+};
 
 const paginate = <T,>(items: T[], page: number, pageSize: number) => {
   const pages = Math.max(1, Math.ceil(items.length / pageSize));
@@ -151,9 +157,13 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
   const filteredAssets = useMemo(() => buildAssetBreakdown(filteredTrades, assetPerformance), [assetPerformance, filteredTrades]);
   const liveBalance = getEffectiveLiveBalance(profile);
   const demoBalance = getDemoBalance(profile);
-  const email = user?.email ?? profile?.email ?? "trader@example.com";
-  const displayId = (profile?.id ?? user?.id ?? "84560898").replace(/\D/g, "").slice(0, 8) || "84560898";
-  const location = profile?.country ?? profile?.nationality ?? "Kenya";
+  const email = readProfileText(user?.email, (profile as any)?.email) || "Account email unavailable";
+  const displayName = readProfileText(profile?.display_name, profile?.username);
+  const displayId = readProfileText(profile?.referral_code)
+    || readProfileText(profile?.id, user?.id).replace(/-/g, "").slice(0, 10)
+    || "-";
+  const location = readProfileText(profile?.nationality, profile?.phone_country) || "-";
+  const avatarUrl = readProfileText(profile?.avatar_url);
   const handleTabClick = (tab: AnalyticsAccountTab) => {
     if (tab === "Withdrawal") return onNavigate?.({ route: "withdraw" }) ?? onClose?.();
     if (tab === "Tournaments") return onNavigate?.({ workspace: "tournaments" }) ?? onClose?.();
@@ -163,6 +173,46 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
   };
   const pagedTransactions = paginate(transactions, paymentsPage, PAGE_SIZE);
   const pagedTrades = paginate(tradeMode === "history" ? trades : activeTrades, tradesPage, PAGE_SIZE);
+  const profileSummary = (
+    <ProfileSummary
+      email={email}
+      displayName={displayName}
+      displayId={displayId}
+      location={location}
+      liveBalance={formatMoney(liveBalance)}
+      demoBalance={formatMoney(demoBalance)}
+      avatarUrl={avatarUrl}
+    />
+  );
+  const rangeSelector = (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setRangeOpen((current) => !current)}
+        className="flex h-[42px] min-w-[180px] items-center justify-between rounded-[6px] bg-[#2d3446] px-4 text-left text-[14px] font-black text-white"
+      >
+        {range}
+        <ChevronDown className={`h-4 w-4 transition-transform ${rangeOpen ? "rotate-180" : ""}`} />
+      </button>
+      {rangeOpen && (
+        <div className="absolute right-0 top-[50px] z-20 w-full overflow-hidden rounded-[6px] bg-[#2d3446] shadow-xl">
+          {RANGE_OPTIONS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => {
+                setRange(option);
+                setRangeOpen(false);
+              }}
+              className={`block w-full px-4 py-3 text-left text-[13px] font-bold ${option === range ? "bg-[#4a5061] text-white" : "text-white/70 hover:bg-white/5"}`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="quotex-glow-home trading-terminal flex h-full w-full flex-col overflow-hidden text-white" style={{ background: "#1b202a" }}>
@@ -182,7 +232,14 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
           ))}
         </div>
 
-        {(activeTab === "Analytics" || activeTab === "My account") && <ProfileSummary email={email} displayId={displayId} location={location} liveBalance={formatMoney(liveBalance)} demoBalance={formatMoney(demoBalance)} />}
+        {activeTab === "Analytics" && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+            {profileSummary}
+            {rangeSelector}
+          </div>
+        )}
+
+        {activeTab === "My account" && <div className="mb-4">{profileSummary}</div>}
 
         {activeTab === "Payments" && (
           <TabbedPanel>
@@ -253,36 +310,6 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
 
         {activeTab === "Analytics" && (
           <>
-        <div className="mb-6 flex justify-end">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setRangeOpen((current) => !current)}
-              className="flex h-[48px] min-w-[220px] items-center justify-between rounded-[6px] bg-[#2d3446] px-5 text-left text-[15px] font-black text-white"
-            >
-              {range}
-              <ChevronDown className={`h-5 w-5 transition-transform ${rangeOpen ? "rotate-180" : ""}`} />
-            </button>
-            {rangeOpen && (
-              <div className="absolute right-0 top-[64px] z-20 w-full overflow-hidden rounded-[6px] bg-[#2d3446] shadow-xl">
-                {RANGE_OPTIONS.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => {
-                      setRange(option);
-                      setRangeOpen(false);
-                    }}
-                    className={`block w-full px-5 py-3 text-left text-[14px] font-bold ${option === range ? "bg-[#4a5061] text-white" : "text-white/70 hover:bg-white/5"}`}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
         <AnalyticsDashboard
           stats={stats}
           profitSeries={profitSeries}
@@ -300,41 +327,51 @@ export const AnalyticsGridOverlay = ({ onClose, onNavigate }: AnalyticsGridOverl
 
 const ProfileSummary = ({
   email,
+  displayName,
   displayId,
   location,
   liveBalance,
   demoBalance,
+  avatarUrl,
 }: {
   email: string;
+  displayName: string;
   displayId: string;
   location: string;
   liveBalance: string;
   demoBalance: string;
+  avatarUrl: string;
 }) => (
-  <div className="mb-6 flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-wrap items-center gap-6">
-            <div className="flex items-center gap-4">
-              <div className="relative flex h-16 w-16 items-end justify-center overflow-hidden rounded-full bg-black">
-                <div className="mb-1 h-7 w-12 rounded-t-full bg-[#0d86f7]" />
-                <div className="absolute top-3 h-8 w-8 rounded-full bg-[#0d86f7]" />
-              </div>
-              <div>
-                <p className="text-[14px] font-bold text-white/45">{email}</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-[19px] font-black text-white">ID: {displayId}</p>
-                  <Send className="h-5 w-5 fill-[#39d10f] text-[#39d10f]" />
-                </div>
-              </div>
-            </div>
-
-            <ProfileMetric label="Location" value={location} compact />
-            <ProfileMetric label="In the account" value={liveBalance} />
-            <ProfileMetric label="In the demo" value={demoBalance} />
-            <button type="button" className="flex h-12 w-20 items-center justify-center rounded-[6px] bg-[#2d3446] text-white">
-              <Eye className="h-5 w-5" />
-            </button>
-          </div>
+  <div className="flex min-h-[76px] flex-wrap items-center gap-x-7 gap-y-4">
+    <div className="flex min-w-[260px] items-center gap-3">
+      <div className="relative flex h-14 w-14 shrink-0 items-end justify-center overflow-hidden rounded-full bg-black">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={displayName || email} className="h-full w-full object-cover" />
+        ) : (
+          <>
+            <div className="mb-1 h-6 w-10 rounded-t-full bg-[#0d86f7]" />
+            <div className="absolute top-2.5 h-7 w-7 rounded-full bg-[#0d86f7]" />
+          </>
+        )}
+      </div>
+      <div className="min-w-0">
+        <p className="truncate text-[13px] font-bold text-white/45">
+          {displayName ? `${displayName} - ${email}` : email}
+        </p>
+        <div className="mt-0.5 flex items-center gap-2">
+          <p className="truncate text-[17px] font-black text-white">ID: {displayId}</p>
+          <Send className="h-4 w-4 shrink-0 fill-[#39d10f] text-[#39d10f]" />
         </div>
+      </div>
+    </div>
+
+    <ProfileMetric label="Location" value={location} compact />
+    <ProfileMetric label="In the account" value={liveBalance} />
+    <ProfileMetric label="In the demo" value={demoBalance} />
+    <button type="button" className="flex h-10 w-16 items-center justify-center rounded-[6px] bg-[#2d3446] text-white transition hover:bg-[#3a4052]">
+      <Eye className="h-4 w-4" />
+    </button>
+  </div>
 );
 
 const AnalyticsDashboard = ({
@@ -417,9 +454,9 @@ const AnalyticsDashboard = ({
 );
 
 const ProfileMetric = ({ label, value, compact = false }: { label: string; value: string; compact?: boolean }) => (
-  <div className={`border-l border-white/15 pl-6 ${compact ? "min-w-[90px]" : "min-w-[150px]"}`}>
-    <p className="text-[14px] font-bold text-white/45">{label}</p>
-    <p className="mt-1.5 text-[19px] font-black text-white">{value}</p>
+  <div className={`border-l border-white/15 pl-5 ${compact ? "min-w-[95px]" : "min-w-[135px]"}`}>
+    <p className="text-[12px] font-bold text-white/45">{label}</p>
+    <p className="mt-1 text-[16px] font-black text-white">{value}</p>
   </div>
 );
 
