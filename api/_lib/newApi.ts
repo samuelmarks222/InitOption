@@ -47,6 +47,14 @@ const readRawBody = async (request: ApiRequest): Promise<string> => {
   return Buffer.concat(chunks).toString("utf8");
 };
 
+const readRawBodyBuffer = async (request: ApiRequest): Promise<Buffer> => {
+  const chunks: Buffer[] = [];
+  for await (const chunk of request) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+};
+
 const firstValue = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
 
 /* ------------------------------------------------------------------ */
@@ -242,24 +250,28 @@ export async function handleProfile(request: ApiRequest, response: ApiResponse):
 /* ------------------------------------------------------------------ */
 function parseMultipart(buffer: Buffer, boundary: string): Array<{ name: string; filename?: string; data: Buffer; value?: string }> {
   const parts: Array<{ name: string; filename?: string; data: Buffer; value?: string }> = [];
-  const boundaryBuffer = Buffer.from(`\r\n--${boundary}\r\n`);
-  const endBoundaryBuffer = Buffer.from(`\r\n--${boundary}--\r\n`);
+  const firstBoundary = Buffer.from(`--${boundary}\r\n`);
+  const nextBoundary = Buffer.from(`\r\n--${boundary}\r\n`);
+  const endBoundary = Buffer.from(`\r\n--${boundary}--\r\n`);
 
-  let start = 0;
+  const firstPos = buffer.indexOf(firstBoundary, 0);
+  if (firstPos === -1) return parts;
+
+  let cursor = firstPos + firstBoundary.length;
+
   while (true) {
-    const partStart = buffer.indexOf(boundaryBuffer, start);
-    if (partStart === -1) break;
-
-    let partEnd = buffer.indexOf(boundaryBuffer, partStart + boundaryBuffer.length);
+    let partEnd = buffer.indexOf(nextBoundary, cursor);
+    let isLast = false;
     if (partEnd === -1) {
-      const endPos = buffer.indexOf(endBoundaryBuffer, partStart + boundaryBuffer.length);
+      const endPos = buffer.indexOf(endBoundary, cursor);
       if (endPos === -1) break;
       partEnd = endPos;
+      isLast = true;
     }
 
-    const partData = buffer.slice(partStart + boundaryBuffer.length, partEnd);
+    const partData = buffer.slice(cursor, partEnd);
     const headerEnd = partData.indexOf("\r\n\r\n");
-    if (headerEnd === -1) continue;
+    if (headerEnd === -1) break;
 
     const headers = partData.slice(0, headerEnd).toString();
     const body = partData.slice(headerEnd + 4);
@@ -272,7 +284,9 @@ function parseMultipart(buffer: Buffer, boundary: string): Array<{ name: string;
       parts.push({ name: contentDisposition, filename, data: body, value: filename ? undefined : body.toString() });
     }
 
-    start = partEnd + boundaryBuffer.length;
+    if (isLast) break;
+
+    cursor = partEnd + nextBoundary.length;
   }
 
   return parts;
@@ -317,14 +331,14 @@ export async function handleCloudinaryUpload(request: ApiRequest, response: ApiR
     return;
   }
 
-  const boundary = contentType.split("boundary=")[1];
+  const boundary = contentType.split("boundary=")[1]?.split(";")[0]?.trim();
   if (!boundary) {
     sendJson(response, 400, { error: "Missing boundary in multipart request" });
     return;
   }
 
   try {
-    const rawBodyBuffer = Buffer.from(await readRawBody(request));
+    const rawBodyBuffer = await readRawBodyBuffer(request);
     const parts = parseMultipart(rawBodyBuffer, boundary);
     const filePart = parts.find((p) => p.name === "file");
     const folderPart = parts.find((p) => p.name === "folder");
