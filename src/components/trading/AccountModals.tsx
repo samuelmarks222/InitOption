@@ -16,7 +16,6 @@ import {
   CreditCard,
   Edit2,
   ExternalLink,
-  Landmark,
   LogOut,
   Minus,
   Plus,
@@ -24,7 +23,7 @@ import {
   ShieldAlert,
   Wallet,
   X,
- } from "lucide-react";
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -84,7 +83,7 @@ const CRYPTO_ICON: Record<string, string> = {
 
 type CryptoPaymentMethod = Tables<"crypto_payment_methods">;
 type DepositStep = "methods" | "checkout";
-type DepositCategory = "popular" | "epay" | "banks" | "crypto";
+type DepositCategory = "popular" | "epay" | "crypto";
 type DepositMethodOption = {
   id: string;
   attributionMode?: string | null;
@@ -154,30 +153,8 @@ const STATIC_DEPOSIT_METHODS: DepositMethodOption[] = [
     symbol: "AIRTEL",
     minAmount: 10,
     maxAmount: 10000,
-    available: false,
-    iconType: "wallet",
-  },
-  {
-    id: "bank:visa",
-    category: "banks",
-    name: "Visa / Mastercard",
-    subtitle: "Card processing",
-    symbol: "CARD",
-    minAmount: 10,
-    maxAmount: 50000,
     available: true,
-    iconType: "bank",
-  },
-  {
-    id: "bank:wire",
-    category: "banks",
-    name: "Bank Transfer",
-    subtitle: "Manual review",
-    symbol: "WIRE",
-    minAmount: 100,
-    maxAmount: 100000,
-    available: false,
-    iconType: "bank",
+    iconType: "wallet",
   },
 ];
 
@@ -194,12 +171,6 @@ const CATEGORY_COPY: Record<
   epay: {
     title: "E-Pay",
     description: "Wallets and mobile money",
-    accent: "from-slate-700/90 to-slate-800/90",
-    text: "text-white",
-  },
-  banks: {
-    title: "Banks",
-    description: "Cards and transfers",
     accent: "from-slate-700/90 to-slate-800/90",
     text: "text-white",
   },
@@ -300,7 +271,7 @@ const getMethodIcon = (method: DepositMethodOption) => {
 
   return (
     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1e2330] text-slate-200">
-      <Landmark className="h-5 w-5" />
+      <Building2 className="h-5 w-5" />
     </div>
   );
 };
@@ -343,7 +314,6 @@ const GenericCryptoMethodBadge = () => (
 const DepositCategoryIcon = ({ category }: { category: DepositCategory }) => {
   if (category === "popular") return <Wallet className="h-5 w-5 fill-white text-white" />;
   if (category === "epay") return <CreditCard className="h-5 w-5 text-white" />;
-  if (category === "banks") return <Landmark className="h-5 w-5 text-white" />;
   return <Building2 className="h-5 w-5 fill-white text-white" />;
 };
 
@@ -549,13 +519,11 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
 
   const methodSections = useMemo(() => {
     const epayMethods = STATIC_DEPOSIT_METHODS.filter((method) => method.category === "epay");
-    const bankMethods = STATIC_DEPOSIT_METHODS.filter((method) => method.category === "banks");
 
     if (activeCategory === "popular") {
       return [
         { id: "popular", title: `Popular in your region (${popularMethods.length})`, methods: popularMethods },
         { id: "epay", title: `E-Pay (${epayMethods.length})`, methods: epayMethods },
-        { id: "banks", title: `Banks (${bankMethods.length})`, methods: bankMethods },
       ].filter((section) => section.methods.length > 0);
     }
 
@@ -567,7 +535,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
       return [{ id: "epay", title: `E-Pay (${epayMethods.length})`, methods: epayMethods }];
     }
 
-    return [{ id: "banks", title: `Banks (${bankMethods.length})`, methods: bankMethods }];
+    return [];
   }, [activeCategory, cryptoDepositMethods, popularMethods]);
 
   const selectedMethod =
@@ -829,7 +797,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
     return nextInstruction;
   };
 
-  const categoryCards = useMemo(
+const categoryCards = useMemo(
     () => [
       {
         id: "popular" as DepositCategory,
@@ -842,12 +810,6 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
         count: STATIC_DEPOSIT_METHODS.filter((method) => method.category === "epay").length,
         preview: ["M-Pesa", "Airtel"],
         available: STATIC_DEPOSIT_METHODS.some((method) => method.category === "epay" && method.available),
-      },
-      {
-        id: "banks" as DepositCategory,
-        count: STATIC_DEPOSIT_METHODS.filter((method) => method.category === "banks").length,
-        preview: ["Visa", "Wire"],
-        available: STATIC_DEPOSIT_METHODS.some((method) => method.category === "banks" && method.available),
       },
       {
         id: "crypto" as DepositCategory,
