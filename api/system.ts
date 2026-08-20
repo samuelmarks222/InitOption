@@ -10,6 +10,7 @@ import {
   handleCloudinaryExists,
   handleCloudinaryPublicUrl,
   handlePusherAuth,
+  testDbConnection,
 } from "./_lib/newApi.js";
 
 type ApiRequest = IncomingMessage & {
@@ -29,6 +30,24 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
   try {
     switch (route) {
+      case "health":
+        try {
+          const dbTest = await testDbConnection();
+          if (dbTest.ok) {
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json; charset=utf-8");
+            res.end(JSON.stringify({ ok: true, db: "connected" }));
+          } else {
+            res.statusCode = 503;
+            res.setHeader("Content-Type", "application/json; charset=utf-8");
+            res.end(JSON.stringify({ ok: false, db: "failed", error: dbTest.error }));
+          }
+        } catch (e) {
+          res.statusCode = 503;
+          res.setHeader("Content-Type", "application/json; charset=utf-8");
+          res.end(JSON.stringify({ ok: false, db: "error", error: String(e) }));
+        }
+        return;
       case "db":
         await handleDb(request, res);
         return;

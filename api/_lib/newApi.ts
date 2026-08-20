@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { v2 as cloudinary } from "cloudinary";
 import { transaction, query, queryOne, testDbConnection } from "./db.js";
+export { testDbConnection } from "./db.js";
 import {
   clerkUserIdToUuid,
   authenticateRequest,
@@ -978,7 +979,10 @@ export async function handleRpc(request: ApiRequest, response: ApiResponse): Pro
 
     sendJson(response, 200, { data: normalizeRpcResult(result.rows) });
   } catch (error) {
-    console.error("RPC failed", error);
-    sendJson(response, 400, { error: error instanceof Error ? error.message : "Failed to execute function" });
+    const message = error instanceof Error ? error.message : "Failed to execute function";
+    const stack = error instanceof Error ? error.stack : undefined;
+    console.error("RPC failed", { functionName, message, stack, args });
+    const isNotFound = message.includes("does not exist") || message.includes("function") && message.includes("not found");
+    sendJson(response, isNotFound ? 404 : 400, { error: message, details: stack?.split("\n").slice(0, 3).join(" | ") });
   }
 }
