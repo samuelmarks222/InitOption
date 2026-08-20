@@ -543,6 +543,11 @@ const normalizeRows = (result: PgResult): Row[] => {
 
 const runScoped = async (mappedId: string, fn: (client: PgClientLike) => Promise<PgResult>) =>
   transaction(async (client) => {
+    try {
+      await client.query("SET LOCAL ROLE authenticated");
+    } catch {
+      // Role may not exist in some environments; RLS will use app.current_user_id
+    }
     await client.query("SELECT set_config('app.current_user_id', $1, true)", [mappedId]);
     const result = await fn(client);
     return { rows: normalizeRows(result) };

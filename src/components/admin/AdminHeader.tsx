@@ -28,12 +28,14 @@ import {
   ArrowUpCircle,
   Receipt,
   ShieldCheck,
+  ShieldCheck,
   RefreshCw,
   CheckCircle2,
   AlertCircle,
   UserPlus,
   UserCheck,
   Loader2,
+  LayoutDashboard,
 } from "lucide-react";
 import { SiteLogo } from "@/components/branding/SiteLogo";
 import { useAuth } from "@/contexts/AuthContext";
