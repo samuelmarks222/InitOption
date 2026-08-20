@@ -68,8 +68,8 @@ const LANGUAGE_OPTIONS: Array<{ label: string; code: TradingLanguage }> = [
 ];
 const TIMEZONE_OPTIONS = ["(UTC+03:00)", "(UTC+00:00)", "(UTC+01:00)", "(UTC-05:00)", "(UTC+05:30)", "(UTC+08:00)"];
 const ID_DOCUMENT_OPTIONS = ["ID card", "Passport", "Residence permit", "Driver's license"];
-const KYC_UPLOAD_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif"];
-const KYC_UPLOAD_ACCEPT = "image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif,application/pdf";
+const KYC_UPLOAD_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/webp", "image/heic", "image/heif"];
+const KYC_UPLOAD_ACCEPT = "image/png,image/jpeg,image/webp,image/heic,image/heif,application/pdf";
 
 const rangeStart = (range: AnalyticsRange) => {
   const now = Date.now();
@@ -807,9 +807,12 @@ const MyAccountPanel = () => {
   };
 
   const handleDocumentUpload = async (slot: "front" | "back", file: File) => {
-    if (!user) return;
+    if (!user) {
+      toast.error("Please log in again to upload documents.");
+      return;
+    }
     if (!KYC_UPLOAD_TYPES.includes(file.type)) {
-      toast.error("Upload a PDF, PNG, JPG, WEBP, or HEIC document.");
+      toast.error(`Unsupported file type: ${file.type}. Use PDF, PNG, JPG, WEBP, or HEIC.`);
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
@@ -821,6 +824,7 @@ const MyAccountPanel = () => {
       const extension = file.name.split(".").pop() || "bin";
       const path = `kyc/${user.id}/${slot}_${Date.now()}.${extension}`;
       const result = await cloudinaryClient.upload(file, "kyc");
+      console.log("Cloudinary upload result:", result);
       const nextDocuments = {
         ...documents,
         [slot]: {
@@ -836,7 +840,8 @@ const MyAccountPanel = () => {
       toast.success(`${slot === "front" ? "Front" : "Back"} document uploaded successfully.`);
       setVerificationStatus("Documents submitted. They are waiting for admin review.");
     } catch (error: any) {
-      toast.error(error?.message || "Failed to upload document.");
+      console.error("Document upload failed:", error);
+      toast.error(error?.message || "Failed to upload document. Check console for details.");
     } finally {
       setIsUploadingDoc(null);
     }
