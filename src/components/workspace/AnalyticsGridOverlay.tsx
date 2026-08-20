@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
+  AlertCircle,
   Calendar,
   Camera,
   CheckCircle2,
@@ -9,22 +11,30 @@ import {
   CreditCard,
   Eye,
   EyeOff,
+  FileText,
   Globe2,
   Image,
   Lock,
   Pencil,
   Send,
+  ShieldCheck,
   Trash2,
   Upload,
+  UploadCloud,
   X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useStatistics, type Trade, type Transaction } from "@/hooks/useStatistics";
 import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/useTrading";
+import { cloudinaryClient } from "@/integrations/cloudinary/client";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { readDemoBalanceStorage } from "@/lib/onboarding";
 import type { SupportedCurrency } from "@/lib/currency";
+import {
+  getProfileKycLabel,
+  normalizeKycStatus,
+} from "@/lib/kyc";
 import { useTradingPreferences, type TradingLanguage } from "@/lib/tradingPreferences";
 import type { AccountTab } from "./AccountGridOverlay";
 import type { AnalyticsSignalAsset } from "./analytics/AnalyticsSignals";
@@ -542,6 +552,8 @@ const MyAccountPanel = () => {
   const { currency, options: currencyOptions, setCurrency, formatMoney } = useCurrency();
   const { preferences: tradingPreferences, updatePreferences: updateTradingPreferences } = useTradingPreferences();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const frontInputRef = useRef<HTMLInputElement | null>(null);
+  const backInputRef = useRef<HTMLInputElement | null>(null);
   const liveBalance = getEffectiveLiveBalance(profile);
   const reservedBalance = Number((profile as any)?.reserved_withdrawal_balance ?? 0);
   const withdrawableBalance = Math.max(0, liveBalance - reservedBalance);
@@ -552,6 +564,9 @@ const MyAccountPanel = () => {
   const avatarUrl = readProfileText(profile?.avatar_url);
   const settingsKey = getScopedStorageKey(user?.id, "account_security_settings");
   const cardsKey = getScopedStorageKey(user?.id, "account_verification_cards");
+  const kycStatus = normalizeKycStatus((profile as any)?.kyc_status ?? (profile as any)?.kycStatus);
+  const kycVerified = kycStatus === "Verified";
+  const kycDocuments = ((profile as any)?.kyc_documents ?? (profile as any)?.kycDocuments) ?? {};
   const [visible, setVisible] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -571,6 +586,11 @@ const MyAccountPanel = () => {
     }),
   );
   const [form, setForm] = useState(() => storedProfileDetails);
+  const [idType, setIdType] = useState(() => readProfileText((profile as any)?.idType, (profile as any)?.id_type));
+  const [idNumber, setIdNumber] = useState(() => readProfileText((profile as any)?.idNumber, (profile as any)?.id_number));
+  const [isUploadingDoc, setIsUploadingDoc] = useState<"front" | "back" | null>(null);
+  const [verificationSaving, setVerificationSaving] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
 
   useEffect(() => {
     setForm(mergeProfileDetails(profile as any, user));
@@ -715,6 +735,73 @@ const MyAccountPanel = () => {
     setStatus("Card added for verification.");
   };
 
+  const persistKycDocuments = async (nextDocuments: Record<string, unknown>) => {
+    await updateProfile({ kyc_documents: nextDocuments, kyc_status: "Pending" });
+  };
+
+  const handleSaveVerification = async () => {
+    if (!idType.trim() || !idNumber.trim()) {
+      setVerificationStatus("Select your ID type and enter your ID number first.");
+      return;
+    }
+    setVerificationSaving(true);
+    setVerificationStatus(null);
+    try {
+      await updateProfile({ idType: idType.trim(), idNumber: idNumber.trim() });
+      setVerificationStatus("ID details saved. Upload the front and back of your document to complete verification.");
+    } catch (error: any) {
+      setVerificationStatus(error?.message || "Could not save ID details.");
+    } finally {
+      setVerificationSaving(false);
+    }
+  };
+
+  const handleDocumentUpload = async (slot: "front" | "back", file: File) => {
+    if (!user) return;
+    if (!["application/pdf", "image/png", "image/jpeg", "image/jpg", "image/webp"].includes(file.type)) {
+      toast.error("Upload a PDF, PNG, JPG, or WEBP document.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Documents must be 10MB or smaller.");
+      return;
+    }
+    setIsUploadingDoc(slot);
+    try {
+      const extension = file.name.split(".").pop() || "bin";
+      const path = `kyc/${user.id}/${slot}_${Date.now()}.${extension}`;
+      const result = await cloudinaryClient.upload(file, "kyc");
+      const nextDocuments = {
+        ...kycDocuments,
+        [slot]: {
+          name: file.name,
+          url: result.url,
+          mimeType: file.type,
+          uploadedAt: new Date().toISOString(),
+          path,
+          fallback: false,
+        },
+      };
+      await persistKycDocuments(nextDocuments);
+      toast.success(`${slot === "front" ? "Front" : "Back"} document uploaded successfully.`);
+      setVerificationStatus("Documents uploaded. They are now waiting for admin review.");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to upload document.");
+    } finally {
+      setIsUploadingDoc(null);
+    }
+  };
+
+  const handleDocumentRemove = async (slot: "front" | "back") => {
+    const nextDocuments = { ...kycDocuments, [slot]: null };
+    try {
+      await persistKycDocuments(nextDocuments);
+      toast.success(`${slot === "front" ? "Front" : "Back"} document removed.`);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to remove document.");
+    }
+  };
+
   return (
     <section className="rounded-[6px] bg-[#202633] px-5 py-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.22)]">
       <div className="mb-5 flex flex-wrap items-center justify-end gap-8 border-b border-white/10 pb-4 text-right">
@@ -736,6 +823,99 @@ const MyAccountPanel = () => {
         <ProfileMetric label="Available for withdrawal" value={visible ? formatMoney(withdrawableBalance) : "****"} />
         <ProfileMetric label="In the account" value={visible ? formatMoney(liveBalance) : "****"} />
       </div>
+
+      {!kycVerified && (
+        <div className="mb-6 rounded-[6px] border border-[#0fa053]/25 bg-[#0fa053]/10 px-5 py-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 text-[18px] font-black text-white">
+                <ShieldCheck className="h-5 w-5 text-[#0fa053]" />
+                ID verification
+              </h2>
+              <p className="mt-1 text-[12px] font-bold text-white/50">
+                Verify your identity to unlock full access to your account.
+              </p>
+            </div>
+            <span
+              className={`inline-flex rounded-[8px] px-3 py-1 text-[12px] font-black uppercase tracking-[0.08em] ${
+                kycStatus === "Rejected"
+                  ? "bg-red-500/15 text-red-400"
+                  : kycDocuments?.front?.url || kycDocuments?.back?.url
+                    ? "bg-[#0fa053]/15 text-[#8be0af]"
+                    : "bg-[#ffce5c]/15 text-[#ffce5c]"
+              }`}
+            >
+              {getProfileKycLabel(kycStatus, kycDocuments)}
+            </span>
+          </div>
+
+          {kycStatus === "Rejected" && (
+            <div className="mt-4 flex items-start gap-3 rounded-[6px] border border-red-500/25 bg-red-500/10 px-4 py-3">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
+              <p className="text-[13px] font-bold leading-5 text-red-200">
+                Verification needs attention. Upload clearer front and back document images, then save again.
+              </p>
+            </div>
+          )}
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+            <ProfileDropdown label="ID Type" value={idType} onChange={setIdType} options={["Passport", "Driver's License", "National ID"]} />
+            <ProfileInput label="ID Number" value={idNumber} onChange={setIdNumber} />
+            <button
+              type="button"
+              onClick={handleSaveVerification}
+              disabled={verificationSaving}
+              className="inline-flex h-12 items-center justify-center gap-2 self-end rounded-[6px] bg-[#0d82df] px-5 text-[13px] font-black text-white transition hover:bg-[#118bea] disabled:opacity-60"
+            >
+              {verificationSaving ? "Saving..." : "Save ID"}
+            </button>
+          </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <IdDocumentRow
+              label="Front of document"
+              document={kycDocuments?.front ?? null}
+              uploading={isUploadingDoc === "front"}
+              onUpload={() => frontInputRef.current?.click()}
+              onRemove={() => handleDocumentRemove("front")}
+            />
+            <IdDocumentRow
+              label="Back of document"
+              document={kycDocuments?.back ?? null}
+              uploading={isUploadingDoc === "back"}
+              onUpload={() => backInputRef.current?.click()}
+              onRemove={() => handleDocumentRemove("back")}
+            />
+          </div>
+
+          <input
+            ref={frontInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp,application/pdf"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void handleDocumentUpload("front", file);
+              event.currentTarget.value = "";
+            }}
+          />
+          <input
+            ref={backInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp,application/pdf"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void handleDocumentUpload("back", file);
+              event.currentTarget.value = "";
+            }}
+          />
+
+          {verificationStatus && (
+            <p className="mt-4 text-[12px] font-bold text-white/60">{verificationStatus}</p>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-7 xl:grid-cols-[minmax(360px,0.95fr)_minmax(320px,0.92fr)_minmax(320px,0.92fr)]">
         <div className="border-white/10 xl:border-r xl:pr-7">
@@ -1610,3 +1790,48 @@ const buildAssetBreakdown = (trades: Trade[], fallback: Array<{ asset: string; p
     share: Math.max(1, Math.round((item.profit / total) * 100)),
   }));
 };
+
+const IdDocumentRow = ({
+  label,
+  document,
+  uploading,
+  onUpload,
+  onRemove,
+}: {
+  label: string;
+  document: { name: string; url: string; mimeType: string; uploadedAt: string; path?: string; fallback?: boolean } | null;
+  uploading: boolean;
+  onUpload: () => void;
+  onRemove: () => void;
+}) => (
+  <div className="flex items-center justify-between gap-3 rounded-[6px] border border-white/10 bg-[#202633] px-4 py-4">
+    <div className="min-w-0">
+      <div className="text-[14px] font-black text-white">{label}</div>
+      <div className="mt-1 truncate text-[12px] font-bold text-white/45">
+        {document?.name || "No file uploaded yet"}
+      </div>
+    </div>
+    <div className="flex shrink-0 items-center gap-2">
+      <span className={`rounded-[8px] px-2.5 py-1 text-[11px] font-bold ${document?.url ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-300"}`}>
+        {document?.url ? "Uploaded" : "Needed"}
+      </span>
+      <button
+        type="button"
+        onClick={onUpload}
+        className="inline-flex items-center gap-2 rounded-[6px] bg-[#0d82df] px-3 py-2 text-[12px] font-black text-white transition hover:bg-[#118bea]"
+      >
+        <UploadCloud className="h-4 w-4" />
+        {uploading ? "Uploading..." : "Upload"}
+      </button>
+      {document?.url && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="rounded-[6px] border border-white/10 bg-white/5 px-3 py-2 text-[12px] font-black text-[#ff5d52] transition hover:bg-white/10"
+        >
+          Remove
+        </button>
+      )}
+    </div>
+  </div>
+);
