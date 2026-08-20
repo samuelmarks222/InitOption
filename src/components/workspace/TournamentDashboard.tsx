@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+﻿import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/integrations/api/client";
 import { Database } from "@/integrations/supabase/types";
@@ -12,28 +12,13 @@ import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
   ArrowLeft,
-  Award,
-  BarChart3,
-  Calendar,
   ChevronDown,
   ChevronRight,
   Crown,
-  DollarSign,
-  Flag,
-  Globe,
-  HelpCircle,
   Medal,
-  Play,
   Search,
-  Shield,
-  Star,
-  Target,
-  TrendingUp,
   Trophy,
-  UserPlus,
-  Users,
   X,
-  Zap,
 } from "lucide-react";
 
 type Tournament = Database["public"]["Tables"]["tournaments"]["Row"];
@@ -189,35 +174,6 @@ const FadeInSection = ({ children, className }: { children: React.ReactNode; cla
 
 type ViewMode = "list" | "detail";
 type ListTab = "active" | "completed";
-
-const SCHEDULE = [
-  { day: "Monday", title: "Monday Momentum", entry: "$5", pool: "$50,000", duration: "1 Day", participants: "2,847", icon: Calendar, desc: "Kick off the week with our entry-level tournament. Low stakes, high energy, and a chance to start your week with a win." },
-  { day: "Wednesday", title: "Wednesday Warrior", entry: "$10", pool: "$100,000", duration: "1 Day", participants: "3,124", icon: Zap, desc: "Midweek showdown for serious traders. Higher stakes, bigger prize pool, and fierce competition from top traders worldwide." },
-  { day: "Friday", title: "Friday Free-for-All", entry: "Free", pool: "$25,000", duration: "1 Day", participants: "5,891", icon: Star, desc: "Free entry tournament open to everyone. Perfect for new traders to experience the thrill of competition risk-free." },
-  { day: "Saturday", title: "Weekend Showdown", entry: "$20", pool: "$250,000", duration: "3 Days", participants: "4,562", icon: Trophy, desc: "The flagship weekend event. Massive prize pool, extended trading time, and glory on the line. Only the best survive." },
-];
-
-const FEATURES = [
-  { icon: BarChart3, title: "Live Rankings", desc: "Real-time leaderboard updates as trades settle" },
-  { icon: Users, title: "Thousands of Traders", desc: "Compete against traders from 120+ countries" },
-  { icon: Calendar, title: "Weekly Competitions", desc: "New tournaments every Monday, Wednesday, Friday & Saturday" },
-  { icon: Shield, title: "Fair Competition", desc: "All traders start with the same balance" },
-  { icon: TrendingUp, title: "Instant Leaderboard Updates", desc: "See your rank change instantly after each trade" },
-  { icon: Zap, title: "Fast Reward Distribution", desc: "Prizes credited within 24 hours of tournament end" },
-  { icon: Globe, title: "Global Participants", desc: "Join a worldwide community of traders" },
-  { icon: Target, title: "Secure Trading", desc: "Industry-leading security and fair play guarantees" },
-];
-
-const TOURNAMENT_RULES = [
-  "Every participant trades under the same starting conditions.",
-  "Rankings are based on tournament performance.",
-  "All trades must be placed within the tournament period.",
-  "Fraudulent activity leads to immediate disqualification.",
-  "Tournament decisions made by the administration are final.",
-  "Rewards are distributed after verification within 24 hours.",
-  "Participants must be 18 years or older to compete.",
-  "The platform reserves the right to modify rules at any time.",
-];
 
 const FAQ_ITEMS = [
   { q: "What are trading tournaments?", a: "Trading tournaments are time-limited competitions where traders compete against each other by trading financial instruments. Starting with an equal balance, participants aim to achieve the highest returns within the tournament period to win prizes." },
@@ -600,7 +556,7 @@ const TournamentListView = ({
     <div className="w-full px-5 py-5 lg:px-6">
 
 
-      {/* ─── Tab Bar ───────────────────────────────────────────────────── */}
+      {/* â”€â”€â”€ Tab Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div className="mb-10 flex gap-8 border-b border-[#3a4050]">
         <button
           type="button"
@@ -721,7 +677,7 @@ const TournamentListView = ({
                               key={t.id}
                               className="border-b border-[#334050] transition-colors hover:bg-[#1e2530]"
                             >
-                              <td className="px-4 py-3 font-semibold text-white">—</td>
+                              <td className="px-4 py-3 font-semibold text-white">â€”</td>
                               <td className="px-4 py-3 font-semibold text-white">{t.title}</td>
                               <td className="px-4 py-3 text-[#b0bedd]">
                                 {formatTournamentDateTime(t.start_date)}
@@ -729,9 +685,9 @@ const TournamentListView = ({
                                 {formatTournamentDateTime(t.end_date)}
                               </td>
                               <td className="px-4 py-3 font-semibold text-white">
-                                {historyEntry ? formatMoney(historyEntry.current_balance) : "—"}
+                                {historyEntry ? formatMoney(historyEntry.current_balance) : "â€”"}
                               </td>
-                              <td className="px-4 py-3 font-semibold text-[#00b95b]">—</td>
+                              <td className="px-4 py-3 font-semibold text-[#00b95b]">â€”</td>
                             </tr>
                           );
                         })}
@@ -744,168 +700,6 @@ const TournamentListView = ({
           </div>
         </>
       )}
-
-      {/* ─── Weekly Schedule Section ───────────────────────────────────── */}
-      <div className="mb-8">
-        <FadeInSection>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#007aff]/30 bg-[#007aff]/8 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#007aff]">
-            <Calendar className="h-3.5 w-3.5" />
-            Weekly Schedule
-          </div>
-          <h2 className="mb-6 text-[28px] font-black text-white">Tournament Schedule</h2>
-        </FadeInSection>
-        <div className="grid gap-5 lg:grid-cols-2">
-          {SCHEDULE.map((t) => (
-            <FadeInSection key={t.day}>
-              <div className="group rounded-2xl border border-[#334050] bg-[#27303d] p-6 transition-all duration-300 hover:border-[#007aff]/40 hover:shadow-lg hover:shadow-[#007aff]/5">
-                <div className="mb-4 flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#007aff]/12 text-[#007aff]">
-                      <t.icon className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <div className="inline-flex items-center rounded-full border border-[#334050] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#7a8aa8]">
-                        {t.day}
-                      </div>
-                      <h3 className="mt-1 text-[20px] font-bold text-white">{t.title}</h3>
-                    </div>
-                  </div>
-                </div>
-                <p className="mb-4 text-[14px] leading-relaxed text-[#9aafcf]">{t.desc}</p>
-                <div className="grid grid-cols-2 gap-3 rounded-xl border border-[#334050] bg-[#1e2530] p-4 sm:grid-cols-5">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a8aa8]">Start</p>
-                    <p className="mt-1 text-[13px] font-bold text-white">Every {t.day}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a8aa8]">Duration</p>
-                    <p className="mt-1 text-[13px] font-bold text-white">{t.duration}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a8aa8]">Entry</p>
-                    <p className="mt-1 text-[13px] font-bold text-white">{t.entry}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a8aa8]">Prize</p>
-                    <p className="mt-1 text-[13px] font-bold text-[#00b95b]">{t.pool}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a8aa8]">Participants</p>
-                    <p className="mt-1 text-[13px] font-bold text-white">{t.participants}</p>
-                  </div>
-                </div>
-              </div>
-            </FadeInSection>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── How It Works Section ──────────────────────────────────────── */}
-      <div className="mb-8">
-        <FadeInSection>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#00b95b]/30 bg-[#00b95b]/8 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#00b95b]">
-            <Play className="h-3.5 w-3.5" />
-            How It Works
-          </div>
-          <h2 className="mb-6 text-[28px] font-black text-white">Four Steps to Victory</h2>
-        </FadeInSection>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { icon: UserPlus, step: "Step 1", title: "Join Tournament", desc: "Choose a tournament from the schedule and confirm your participation. Pay the entry fee or join free tournaments." },
-            { icon: TrendingUp, step: "Step 2", title: "Start Trading", desc: "Use your tournament balance to trade across available instruments. Every trade affects your leaderboard position." },
-            { icon: Trophy, step: "Step 3", title: "Climb the Leaderboard", desc: "Watch your rank change in real-time as you compete against thousands of traders worldwide." },
-            { icon: Award, step: "Step 4", title: "Win Rewards", desc: "Top-ranked traders at tournament end receive prizes credited directly to their trading accounts." },
-          ].map((s, i) => (
-            <FadeInSection key={s.step}>
-              <div className="group relative rounded-2xl border border-[#334050] bg-[#27303d] p-6 text-center transition-all duration-300 hover:border-[#00b95b]/40">
-                {i < 3 && (
-                  <div className="absolute -right-3 top-1/2 hidden -translate-y-1/2 text-[#334050] lg:block">
-                    <ChevronRight className="h-6 w-6" />
-                  </div>
-                )}
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#00b95b]/12 text-[#00b95b] transition-all duration-300 group-hover:scale-110 group-hover:bg-[#00b95b]/20">
-                  <s.icon className="h-6 w-6" />
-                </div>
-                <div className="mb-2 inline-flex items-center rounded-full border border-[#00b95b]/20 bg-[#00b95b]/8 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#00b95b]">
-                  {s.step}
-                </div>
-                <h3 className="text-[17px] font-bold text-white">{s.title}</h3>
-                <p className="mt-2 text-[13px] leading-relaxed text-[#9aafcf]">{s.desc}</p>
-              </div>
-            </FadeInSection>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── Features Section ──────────────────────────────────────────── */}
-      <div className="mb-8">
-        <FadeInSection>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#007aff]/30 bg-[#007aff]/8 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#007aff]">
-            <Star className="h-3.5 w-3.5" />
-            Tournament Features
-          </div>
-          <h2 className="mb-6 text-[28px] font-black text-white">Why Trade Tournaments?</h2>
-        </FadeInSection>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map((f) => (
-            <FadeInSection key={f.title}>
-              <div className="group rounded-2xl border border-[#334050] bg-[#27303d] p-5 transition-all duration-300 hover:border-[#007aff]/40 hover:shadow-lg hover:shadow-[#007aff]/5">
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-[#007aff]/12 text-[#007aff] transition-transform duration-300 group-hover:scale-110">
-                  <f.icon className="h-5 w-5" />
-                </div>
-                <h3 className="text-[15px] font-bold text-white">{f.title}</h3>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-[#9aafcf]">{f.desc}</p>
-              </div>
-            </FadeInSection>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── Rules Section ─────────────────────────────────────────────── */}
-      <div className="mb-8">
-        <FadeInSection>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#007aff]/30 bg-[#007aff]/8 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#007aff]">
-            <Shield className="h-3.5 w-3.5" />
-            Tournament Rules
-          </div>
-          <h2 className="mb-6 text-[28px] font-black text-white">Fair Play Guaranteed</h2>
-        </FadeInSection>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {TOURNAMENT_RULES.map((rule, i) => (
-            <FadeInSection key={i}>
-              <div className="flex items-start gap-3 rounded-2xl border border-[#334050] bg-[#27303d] p-4 transition-all duration-300 hover:border-[#007aff]/30">
-                <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#00b95b]/12 text-[#00b95b]">
-                  <Shield className="h-3.5 w-3.5" />
-                </div>
-                <p className="text-[14px] leading-relaxed text-[#c3d2ea]">{rule}</p>
-              </div>
-            </FadeInSection>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── FAQ Section ───────────────────────────────────────────────── */}
-      <div className="mb-8">
-        <FadeInSection>
-          <h2 className="mb-6 text-[28px] font-black text-white">Got Questions?</h2>
-        </FadeInSection>
-        <FAQSection />
-      </div>
-
-      {/* ─── CTA Section ───────────────────────────────────────────────── */}
-      <div className="mb-8">
-        <FadeInSection>
-          <div className="rounded-2xl border border-[#334050] bg-[#27303d] px-8 py-12 text-center">
-            <h2 className="text-[32px] font-black text-white sm:text-[40px]">
-              Ready to <span className="text-[#00b95b]">Compete?</span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed text-[#9aafcf]">
-              Join thousands of traders every Monday, Wednesday, Friday, and Saturday. Improve your trading skills,
-              compete on the live leaderboard, and earn exciting rewards.
-            </p>
-          </div>
-        </FadeInSection>
-      </div>
     </div>
   );
 };
@@ -1073,7 +867,7 @@ const TournamentDetailView = ({
           rpcMap = new Map((rpcData as any[]).map((r: any) => [r.user_id, r]));
         }
       } catch {
-        // RPC unavailable — continue without enriched data
+        // RPC unavailable â€” continue without enriched data
       }
 
       // 4. Merge: use RPC data if available, otherwise build from participants; overlay profile data
@@ -1467,7 +1261,7 @@ const TournamentDetailView = ({
                 </div>
                 <div className="text-center">
                   <p className="text-[13px] font-bold text-[#f4b742]">
-                    {estimatedPrize(userPosition.position) || "—"}
+                    {estimatedPrize(userPosition.position) || "â€”"}
                   </p>
                   <p className="text-[10px] text-[#7a8aa8]">Prize</p>
                 </div>

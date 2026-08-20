@@ -30,7 +30,7 @@ import { buildIndicatorDefaultParams } from "@/components/trading/indicators/fil
 import { useAuth } from "@/contexts/AuthContext";
 import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/useTrading";
 import { useDynamicAssets, type DynamicAsset } from "@/contexts/DynamicAssetContext";
-import { AccountType } from "@/components/trading/AccountModals";
+import { AccountType, DepositModal } from "@/components/trading/AccountModals";
 import WelcomeGuideModal from "@/components/trading/WelcomeGuideModal";
 import OnboardingAccountChoiceModal from "@/components/trading/OnboardingAccountChoiceModal";
 import { TournamentsGridOverlay } from "@/components/workspace/TournamentsGridOverlay";
@@ -489,6 +489,7 @@ const Trade = () => {
   const [activeIndicators, setActiveIndicators] = useState<ActiveIndicator[]>(() => loadStoredActiveIndicators());
   const [accountInitialTab, setAccountInitialTab] = useState<AnalyticsAccountTab>("My account");
   const [depositGuideReason, setDepositGuideReason] = useState<DepositGuideReason | null>(null);
+  const [showDepositModal, setShowDepositModal] = useState(false);
   const [showRealAccountWelcome, setShowRealAccountWelcome] = useState(false);
   const [showOnboardingAccountChoice, setShowOnboardingAccountChoice] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceModule>(null);
@@ -1331,7 +1332,7 @@ const Trade = () => {
   const openDepositPage = () => {
     setDepositGuideReason(null);
     setAccountType("live");
-    navigate("/deposit");
+    setShowDepositModal(true);
   };
 
   const openWithdrawPage = () => {
@@ -1782,6 +1783,9 @@ const Trade = () => {
             onUseDemo={useDemoFromOnboarding}
             onDeposit={depositFromOnboarding}
           />
+        )}
+        {showDepositModal && (
+          <DepositModal onClose={() => setShowDepositModal(false)} />
         )}
         <TournamentDetailOverlay tournamentId={selectedTournament} onClose={() => setSelectedTournament(null)}
           onOpenDeposit={openDepositPage} onEnterTournament={handleEnterTournament}
