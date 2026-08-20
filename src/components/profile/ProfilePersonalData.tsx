@@ -1,5 +1,17 @@
 import { createRef, useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, Camera, CheckCircle2, FileText, ShieldCheck, Trash2, UploadCloud, UserRound } from "lucide-react";
+import {
+  AlertCircle,
+  Camera,
+  CheckCircle2,
+  ChevronUp,
+  FileText,
+  Globe2,
+  ShieldCheck,
+  Trash2,
+  UploadCloud,
+  UserRound,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { cloudinaryClient } from "@/integrations/cloudinary/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,7 +65,7 @@ interface ProfilePersonalDataProps {
   guidedTarget?: GuideTarget;
 }
 
-const ID_OPTIONS = ["Passport", "Driver's License", "National ID"];
+const ID_OPTIONS = ["ID card", "Passport", "Residence permit", "Driver's license"];
 
 const getPhoneStateFromProfile = (profileData: any) => {
   const parsedPhone = splitStoredPhoneNumber(profileData?.phone);
@@ -101,6 +113,10 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
   const [phoneCountryCode, setPhoneCountryCode] = useState(initialPhoneState.phoneCountryCode);
   const [documents, setDocuments] = useState<KycDocuments>(initialDocuments);
   const [kycStatus, setKycStatus] = useState<"Pending" | "Verified" | "Rejected">(normalizeKycStatus(p?.kyc_status ?? p?.kycStatus));
+  const [showIdentityModal, setShowIdentityModal] = useState(false);
+  const [documentUploadReady, setDocumentUploadReady] = useState(
+    Boolean(p?.idType || hasUploadedKycDocuments(initialDocuments)),
+  );
 
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
@@ -140,6 +156,7 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
     setPhoneCountryCode(nextPhoneState.phoneCountryCode);
     setDocuments(((p?.kyc_documents ?? p?.kycDocuments) ?? {}) as KycDocuments);
     setKycStatus(normalizeKycStatus(p?.kyc_status ?? p?.kycStatus));
+    setDocumentUploadReady(Boolean(p?.idType || hasUploadedKycDocuments(((p?.kyc_documents ?? p?.kycDocuments) ?? {}) as KycDocuments)));
   }, [profile]);
 
   useEffect(() => {
@@ -378,6 +395,30 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
     }
   };
 
+  const handleIdentityDocumentSelected = async (selection: { countryName: string; idType: string }) => {
+    setFormData((current) => ({
+      ...current,
+      nationality: selection.countryName,
+      idType: selection.idType,
+    }));
+    setDocumentUploadReady(true);
+    setShowIdentityModal(false);
+
+    try {
+      await updateProfile({
+        nationality: selection.countryName,
+        idType: selection.idType,
+      });
+      toast.success("Document type saved. Upload the required document images to continue.");
+      window.setTimeout(() => {
+        fieldRefs.idNumber.current?.focus();
+        fieldRefs.idNumber.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 120);
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to save document selection.");
+    }
+  };
+
   return (
     <div className={`w-full text-white ${compact ? "profile-personal-data-compact" : ""}`}>
       <div className="profile-personal-data-card overflow-hidden rounded-[18px] border border-white/8 bg-[#293042] shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
@@ -607,84 +648,66 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
           <div data-verification-tour="documents" className="profile-documents-panel bg-[#293042] p-4 md:p-6">
             <h3 className="text-[18px] font-bold text-white">Documents verification:</h3>
 
-            <div
-              className={`profile-verification-notice mt-6 rounded-[14px] border px-5 py-6 ${
-                verificationNotice.tone === "success"
-                  ? "border-[#293042] bg-[#293042] text-white"
-                  : verificationNotice.tone === "warning"
-                    ? "border-[#0fa053]/25 bg-[#0fa053]/10 text-[#d8f6e5]"
-                    : "border-red-500/25 bg-red-500/10 text-red-200"
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                <div
-                  className={`mt-0.5 flex h-10 w-10 items-center justify-center rounded-full ${
-                    verificationNotice.tone === "success"
-                      ? "bg-green-500 text-white"
-                      : verificationNotice.tone === "warning"
-                        ? "bg-[#0fa053] text-white"
-                        : "bg-[#ff6a5f] text-white"
-                  }`}
-                >
-                  <verificationNotice.icon className="h-5 w-5" />
+            {!identityReady ? (
+              <VerificationNotice notice={verificationNotice} />
+            ) : !documentUploadReady && !documentsUploaded ? (
+              <VerificationDocumentsCard onStart={() => setShowIdentityModal(true)} />
+            ) : (
+              <>
+                <VerificationNotice notice={verificationNotice} />
+
+                <div className="mt-6 grid gap-5">
+                  <FieldShell label="ID Type">
+                    <select
+                      ref={fieldRefs.idType}
+                      name="idType"
+                      value={formData.idType}
+                      onChange={handleInputChange}
+                      className="h-[66px] w-full appearance-none bg-transparent px-5 text-[18px] text-white outline-none"
+                    >
+                      <option value="" className="bg-[var(--trading-header-bg)]">
+                        Select document
+                      </option>
+                      {ID_OPTIONS.map((option) => (
+                        <option key={option} value={option} className="bg-[var(--trading-header-bg)]">
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </FieldShell>
+
+                  <FieldShell label="ID Number">
+                    <input
+                      ref={fieldRefs.idNumber}
+                      type="text"
+                      name="idNumber"
+                      value={formData.idNumber}
+                      onChange={handleInputChange}
+                      className="h-[66px] w-full bg-transparent px-5 text-[18px] text-white outline-none placeholder:text-[#626f85]"
+                      placeholder="Empty"
+                    />
+                  </FieldShell>
+
+                  <DocumentRow
+                    label="Front of document"
+                    document={documents.front ?? null}
+                    buttonRef={fieldRefs.frontDocument}
+                    uploading={isUploadingDoc === "front"}
+                    onUpload={() => frontInputRef.current?.click()}
+                    onRemove={() => removeDocument("front")}
+                  />
+
+                  <DocumentRow
+                    label="Back of document"
+                    document={documents.back ?? null}
+                    buttonRef={fieldRefs.backDocument}
+                    uploading={isUploadingDoc === "back"}
+                    onUpload={() => backInputRef.current?.click()}
+                    onRemove={() => removeDocument("back")}
+                  />
                 </div>
-                <div>
-                  <div className="text-[17px] font-semibold text-white">{verificationNotice.title}</div>
-                  <div className="mt-1 text-[14px] leading-6 text-inherit/90">{verificationNotice.text}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-5">
-              <FieldShell label="ID Type">
-                <select
-                  ref={fieldRefs.idType}
-                  name="idType"
-                  value={formData.idType}
-                  onChange={handleInputChange}
-                  className="h-[66px] w-full appearance-none bg-transparent px-5 text-[18px] text-white outline-none"
-                >
-                  <option value="" className="bg-[var(--trading-header-bg)]">
-                    Select document
-                  </option>
-                  {ID_OPTIONS.map((option) => (
-                    <option key={option} value={option} className="bg-[var(--trading-header-bg)]">
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </FieldShell>
-
-              <FieldShell label="ID Number">
-                <input
-                  ref={fieldRefs.idNumber}
-                  type="text"
-                  name="idNumber"
-                  value={formData.idNumber}
-                  onChange={handleInputChange}
-                  className="h-[66px] w-full bg-transparent px-5 text-[18px] text-white outline-none placeholder:text-[#626f85]"
-                  placeholder="Empty"
-                />
-              </FieldShell>
-
-              <DocumentRow
-                label="Front of document"
-                document={documents.front ?? null}
-                buttonRef={fieldRefs.frontDocument}
-                uploading={isUploadingDoc === "front"}
-                onUpload={() => frontInputRef.current?.click()}
-                onRemove={() => removeDocument("front")}
-              />
-
-              <DocumentRow
-                label="Back of document"
-                document={documents.back ?? null}
-                buttonRef={fieldRefs.backDocument}
-                uploading={isUploadingDoc === "back"}
-                onUpload={() => backInputRef.current?.click()}
-                onRemove={() => removeDocument("back")}
-              />
-            </div>
+              </>
+            )}
 
             <input
               ref={avatarInputRef}
@@ -721,6 +744,238 @@ export const ProfilePersonalData = ({ compact = false, guidedTarget = null }: Pr
             />
           </div>
         </div>
+      </div>
+
+      {showIdentityModal && (
+        <IdentityVerificationModal
+          initialCountry={formData.nationality}
+          initialIdType={formData.idType}
+          onClose={() => setShowIdentityModal(false)}
+          onComplete={handleIdentityDocumentSelected}
+        />
+      )}
+    </div>
+  );
+};
+
+const VerificationNotice = ({
+  notice,
+}: {
+  notice: {
+    icon: typeof AlertCircle;
+    title: string;
+    text: string;
+    tone: "success" | "warning" | "danger";
+  };
+}) => (
+  <div
+    className={`profile-verification-notice mt-6 rounded-[14px] border px-5 py-6 ${
+      notice.tone === "success"
+        ? "border-[#293042] bg-[#293042] text-white"
+        : notice.tone === "warning"
+          ? "border-[#0fa053]/25 bg-[#0fa053]/10 text-[#d8f6e5]"
+          : "border-red-500/25 bg-red-500/10 text-red-200"
+    }`}
+  >
+    <div className="flex items-start gap-4">
+      <div
+        className={`mt-0.5 flex h-10 w-10 items-center justify-center rounded-full ${
+          notice.tone === "success"
+            ? "bg-green-500 text-white"
+            : notice.tone === "warning"
+              ? "bg-[#0fa053] text-white"
+              : "bg-[#ff6a5f] text-white"
+        }`}
+      >
+        <notice.icon className="h-5 w-5" />
+      </div>
+      <div>
+        <div className="text-[17px] font-semibold text-white">{notice.title}</div>
+        <div className="mt-1 text-[14px] leading-6 text-inherit/90">{notice.text}</div>
+      </div>
+    </div>
+  </div>
+);
+
+const VerificationDocumentsCard = ({ onStart }: { onStart: () => void }) => (
+  <div className="mt-6 rounded-[4px] border border-[#0e72c8] bg-[#21334a] p-5 shadow-[0_14px_34px_rgba(0,0,0,0.18)]">
+    <div className="flex items-center justify-between gap-4 border-b border-white/12 pb-4">
+      <div className="flex items-center gap-3">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1587e8] text-white">
+          <AlertCircle className="h-5 w-5" />
+        </span>
+        <h4 className="text-[16px] font-bold text-white">Verification of documents</h4>
+      </div>
+      <ChevronUp className="h-5 w-5 text-white" />
+    </div>
+
+    <p className="mt-3 max-w-[360px] text-[14px] font-semibold leading-[1.35] text-white">
+      Please upload a color photo or scanned image of your regular civil passport, driving license, or National
+      Identity card.
+    </p>
+
+    <button
+      type="button"
+      onClick={onStart}
+      className="mt-4 h-11 w-full rounded-[4px] bg-[#117bd8] text-[15px] font-bold text-white shadow-[0_10px_24px_rgba(17,123,216,0.22)] transition hover:bg-[#1387ec]"
+    >
+      Upload Documents
+    </button>
+
+    <p className="mt-3 text-[10px] font-semibold leading-[1.25] text-[#74839b]">
+      Account verification means the provision of an official document certifying the Client's identity. This procedure
+      can be initiated by the Company's security department at any time.
+    </p>
+  </div>
+);
+
+const IdentityVerificationModal = ({
+  initialCountry,
+  initialIdType,
+  onClose,
+  onComplete,
+}: {
+  initialCountry: string;
+  initialIdType: string;
+  onClose: () => void;
+  onComplete: (selection: { countryName: string; idType: string }) => Promise<void>;
+}) => {
+  const [step, setStep] = useState<"privacy" | "document">("privacy");
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const [countryName, setCountryName] = useState(initialCountry || "Kenya");
+  const [idType, setIdType] = useState(initialIdType || "");
+  const [isSavingSelection, setIsSavingSelection] = useState(false);
+
+  const country = getCountryOptionByName(countryName) ?? getCountryOptionByName("Kenya") ?? COUNTRY_OPTIONS[0];
+
+  const finishSelection = async () => {
+    if (!countryName || !idType) return;
+    setIsSavingSelection(true);
+    try {
+      await onComplete({ countryName, idType });
+    } finally {
+      setIsSavingSelection(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[180] flex items-center justify-center bg-[#0b1020]/78 p-4 backdrop-blur-[5px]">
+      <div className="relative w-full max-w-[492px] rounded-[6px] border border-white/[0.06] bg-[#2d3447] px-8 pb-7 pt-8 text-white shadow-[0_30px_90px_rgba(2,7,19,0.58)]">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-5 top-5 text-[#98a1b4] transition hover:text-white"
+          aria-label="Close identity verification"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <h2 className="text-[22px] font-bold">Identity Verification</h2>
+        <div className="mt-5 border-t border-dashed border-white/14" />
+
+        {step === "privacy" ? (
+          <div className="mx-auto mt-8 max-w-[390px]">
+            <div className="mb-8 flex justify-end">
+              <span className="inline-flex h-11 items-center gap-2 rounded-full bg-[#17191f] px-4 text-[15px] font-bold">
+                <Globe2 className="h-4 w-4" />
+                En
+              </span>
+            </div>
+
+            <h3 className="text-[25px] font-bold">Data and Privacy</h3>
+            <label className="mt-8 flex cursor-pointer items-start gap-4 text-[16px] font-semibold leading-[1.45] text-[#eef2f8]">
+              <input
+                type="checkbox"
+                checked={acceptedPrivacy}
+                onChange={(event) => setAcceptedPrivacy(event.target.checked)}
+                className="mt-1 h-6 w-6 shrink-0 appearance-none rounded-[7px] border border-white/40 bg-[#202636] checked:border-[#1587e8] checked:bg-[#1587e8]"
+              />
+              <span>
+                I confirm that I have read the <span className="text-[#108ef2]">Privacy Notice</span> and the{" "}
+                <span className="text-[#108ef2]">Notification to Processing of Personal Data</span>
+              </span>
+            </label>
+
+            <button
+              type="button"
+              disabled={!acceptedPrivacy}
+              onClick={() => setStep("document")}
+              className="mt-5 h-12 w-full rounded-[10px] bg-[#1067b2] text-[16px] font-bold text-white shadow-[0_12px_28px_rgba(0,0,0,0.18)] transition hover:bg-[#1376ca] disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              Continue
+            </button>
+          </div>
+        ) : (
+          <div className="mt-8 px-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <span className="text-[17px] font-bold">Step</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-full border border-white/50 text-[16px] font-bold">
+                  1/1
+                </span>
+              </div>
+              <span className="inline-flex h-11 items-center gap-2 rounded-full bg-[#17191f] px-4 text-[15px] font-bold">
+                <Globe2 className="h-4 w-4" />
+                En
+              </span>
+            </div>
+
+            <h3 className="mt-9 max-w-[330px] text-[25px] font-bold leading-[1.25]">
+              Select type and issuing country of your identity document
+            </h3>
+
+            <label className="mt-9 block text-[16px] font-bold">
+              Issuing country <span className="text-[#ff5b4f]">*</span>
+            </label>
+            <div className="mt-4 flex items-center gap-3 border-b border-white/10 pb-4">
+              <span className="text-[20px]">{country?.code === "KE" ? "🇰🇪" : "🌐"}</span>
+              <select
+                value={countryName}
+                onChange={(event) => setCountryName(event.target.value)}
+                className="w-full appearance-none bg-transparent text-[16px] font-semibold text-white outline-none"
+              >
+                {COUNTRY_OPTIONS.map((option) => (
+                  <option key={option.code} value={option.name} className="bg-[#2d3447] text-white">
+                    {option.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mt-8 text-[16px] font-bold">
+              Document type <span className="text-[#ff5b4f]">*</span>
+            </div>
+            <div className="mt-4 space-y-5">
+              {ID_OPTIONS.map((option) => (
+                <label key={option} className="flex cursor-pointer items-center justify-between gap-4 text-[16px] font-semibold">
+                  <span>{option}</span>
+                  <input
+                    type="radio"
+                    name="identity-document-type"
+                    value={option}
+                    checked={idType === option}
+                    onChange={(event) => setIdType(event.target.value)}
+                    className="h-6 w-6 appearance-none rounded-full border border-white/45 bg-[#1d2230] checked:border-[#ffffff] checked:bg-[#117bd8]"
+                  />
+                </label>
+              ))}
+            </div>
+
+            <div className="mt-8 text-[13px] font-bold text-[#9aa3b5]">
+              <span className="text-[#ff5b4f]">*</span> Required fields
+            </div>
+            <button
+              type="button"
+              disabled={!countryName || !idType || isSavingSelection}
+              onClick={finishSelection}
+              className="mt-3 h-12 w-full rounded-[10px] bg-[#1067b2] text-[16px] font-bold text-white shadow-[0_12px_28px_rgba(0,0,0,0.18)] transition hover:bg-[#1376ca] disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              {isSavingSelection ? "Saving..." : "Continue"}
+            </button>
+          </div>
+        )}
+
+        <div className="mt-7 text-center text-[11px] font-bold text-[#9aa3b5]">Powered by sumsub</div>
       </div>
     </div>
   );
