@@ -143,7 +143,7 @@ const STATIC_DEPOSIT_METHODS: DepositMethodOption[] = [
     symbol: "MPESA",
     minAmount: 10,
     maxAmount: 10000,
-    available: false,
+    available: true,
     iconType: "wallet",
   },
   {
@@ -165,7 +165,7 @@ const STATIC_DEPOSIT_METHODS: DepositMethodOption[] = [
     symbol: "CARD",
     minAmount: 10,
     maxAmount: 50000,
-    available: false,
+    available: true,
     iconType: "bank",
   },
   {
@@ -340,6 +340,87 @@ const GenericCryptoMethodBadge = () => (
   </div>
 );
 
+const DepositCategoryIcon = ({ category }: { category: DepositCategory }) => {
+  if (category === "popular") return <Wallet className="h-5 w-5 fill-white text-white" />;
+  if (category === "epay") return <CreditCard className="h-5 w-5 text-white" />;
+  if (category === "banks") return <Landmark className="h-5 w-5 text-white" />;
+  return <Building2 className="h-5 w-5 fill-white text-white" />;
+};
+
+const DepositCategoryCard = ({
+  active,
+  category,
+  count,
+  onClick,
+  preview,
+}: {
+  active: boolean;
+  category: DepositCategory;
+  count: number;
+  onClick: () => void;
+  preview: string[];
+}) => {
+  const copy = CATEGORY_COPY[category];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`h-[92px] rounded-[6px] border px-5 py-4 text-left transition ${
+        active
+          ? "border-[#15b963] bg-[#13b65d] text-white shadow-[0_12px_28px_rgba(19,182,93,0.22)]"
+          : "border-white/12 bg-[#343a4c] text-white hover:border-white/22 hover:bg-[#3a4054]"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <DepositCategoryIcon category={category} />
+        <div className="min-w-0">
+          <div className="text-[15px] font-black uppercase leading-none">{copy.title}</div>
+          <div className={`mt-2 text-[14px] font-bold ${active ? "text-white/45" : "text-white/35"}`}>{count} methods</div>
+        </div>
+      </div>
+      <div className="mt-3 flex items-center gap-2 pl-8">
+        {preview.slice(0, 4).map((entry) => (
+          <span key={entry} className="scale-75 origin-left">
+            {getPreviewBadge(entry)}
+          </span>
+        ))}
+        {count > preview.length && (
+          <span className="rounded-[5px] bg-white/15 px-2 py-1 text-[10px] font-black text-white">+{count - preview.length}</span>
+        )}
+      </div>
+    </button>
+  );
+};
+
+const DepositMethodRow = ({
+  method,
+  onClick,
+  repeat,
+}: {
+  method: DepositMethodOption;
+  onClick: () => void;
+  repeat?: boolean;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`flex h-[56px] min-w-0 items-center gap-3 rounded-[4px] bg-white px-4 text-left text-[#202638] transition hover:bg-slate-100 ${
+      method.available ? "" : "opacity-60"
+    }`}
+  >
+    <span className="flex h-7 w-10 shrink-0 items-center justify-center overflow-hidden">{getMethodIcon(method)}</span>
+    <span className="min-w-0 flex-1">
+      <span className="block truncate text-[15px] font-bold">{method.name}</span>
+      <span className="block text-[10px] font-bold text-slate-400">Min. {formatCurrency(method.minAmount)}</span>
+    </span>
+    {repeat ? (
+      <span className="rounded-[4px] bg-[#11ad5d] px-4 py-2 text-[12px] font-black text-white">Repeat</span>
+    ) : (
+      <ChevronRight className="h-5 w-5 text-slate-300" />
+    )}
+  </button>
+);
+
 export const DepositModal = ({ onClose }: { onClose: () => void }) => {
   const { t } = useTranslation();
   const { user, profile, refreshProfile } = useAuth();
@@ -355,6 +436,8 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
   const [checkoutDeadline, setCheckoutDeadline] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
   const [activeInstruction, setActiveInstruction] = useState<ActiveCryptoInstruction | null>(null);
+  const [bonusCodeOpen, setBonusCodeOpen] = useState(false);
+  const [bonusCode, setBonusCode] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -758,13 +841,13 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
         id: "epay" as DepositCategory,
         count: STATIC_DEPOSIT_METHODS.filter((method) => method.category === "epay").length,
         preview: ["M-Pesa", "Airtel"],
-        available: false,
+        available: STATIC_DEPOSIT_METHODS.some((method) => method.category === "epay" && method.available),
       },
       {
         id: "banks" as DepositCategory,
         count: STATIC_DEPOSIT_METHODS.filter((method) => method.category === "banks").length,
         preview: ["Visa", "Wire"],
-        available: false,
+        available: STATIC_DEPOSIT_METHODS.some((method) => method.category === "banks" && method.available),
       },
       {
         id: "crypto" as DepositCategory,
@@ -812,6 +895,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
     }
 
     setSelectedMethodId(method.id);
+    setStep("checkout");
     setAmount((current) => {
       const numericAmount = Number(current);
       if (!Number.isFinite(numericAmount) || numericAmount < method.minAmount) {
@@ -867,10 +951,10 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
       return;
     }
 
-    if (!selectedMethod.available || (!selectedMethodIsAutomated && !selectedMethod.walletAddress)) {
+    if (!selectedMethod.available) {
       toast({
         title: t("accountModals.methodNotReady"),
-        description: "Choose one of the active crypto methods to continue.",
+        description: "Choose one of the enabled payment methods to continue.",
         variant: "destructive",
       });
       return;
@@ -910,6 +994,11 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
         setStep("checkout");
         return;
       }
+    }
+
+    if (!selectedMethodIsAutomated) {
+      await handleConfirmDeposit();
+      return;
     }
 
     if (selectedMethodIsAutomated) {
@@ -1010,374 +1099,236 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
     }
   };
 
-  const headerTitle =
-    step === "checkout" && selectedMethod
-      ? `${t("accountModals.depositTitle")} ${formatCurrency(amountValue)} via Cryptocurrency`
-      : t("accountModals.depositTitle");
-
   return (
-    <div className="fixed inset-0 z-50 bg-[#05070d]/82 p-3 backdrop-blur-sm sm:p-4">
-      <div
-        className="mx-auto flex h-auto max-h-[calc(100dvh-24px)] w-full max-w-[430px] flex-col overflow-hidden rounded-[20px] border text-white shadow-[0_32px_90px_rgba(0,0,0,0.55)] sm:max-h-[calc(100dvh-32px)]"
-        style={{ background: `linear-gradient(180deg, ${MODAL_BG} 0%, ${INNER_BG} 100%)`, borderColor: PANEL_BORDER }}
-      >
-        <div
-          className="flex items-start justify-between gap-4 border-b px-4 py-4 sm:px-6 sm:py-5"
-          style={{ backgroundColor: MODAL_BG, borderColor: PANEL_BORDER }}
-        >
-          <div className="min-w-0">
-            <div className="flex items-center gap-3">
-              {step === "checkout" && (
-                <button
-                  onClick={() => setStep("methods")}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-gray-200 transition hover:bg-white/15 hover:text-white"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-              )}
-              <div className="min-w-0">
-                <h2 className="truncate text-[22px] font-semibold text-white sm:text-[26px]">{headerTitle}</h2>
-                <p className="mt-1 text-sm text-[#9dc2c8]">{headerSubtitle}</p>
-              </div>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b101b]/78 p-4 backdrop-blur-[5px]">
+      <div className="flex max-h-[calc(100dvh-32px)] w-full max-w-[905px] flex-col overflow-hidden rounded-[6px] bg-[#2b3142] px-8 py-7 text-white shadow-[0_32px_100px_rgba(0,0,0,0.58)]">
+        <div className="flex items-center justify-between border-b border-dashed border-white/16 pb-6">
+          <div className="flex items-center gap-3">
+            {step === "checkout" && (
+              <button
+                type="button"
+                onClick={() => setStep("methods")}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/80 transition hover:bg-white/16 hover:text-white"
+                aria-label="Back to payment methods"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+            )}
+            <h2 className="text-[20px] font-black">Deposit</h2>
           </div>
-
-          <button
-            onClick={onClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
-          >
-            <X className="h-5 w-5" />
+          <button type="button" onClick={onClose} className="text-white/50 transition hover:text-white" aria-label="Close deposit">
+            <X className="h-6 w-6" />
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+        <div className="min-h-0 flex-1 overflow-y-auto pt-5 pr-1 deposit-scrollbar">
           {step === "methods" && (
-            <div className="mx-auto w-full max-w-[380px] space-y-4">
-              <div className="rounded-[22px] border bg-white/5 p-5 sm:p-6" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+            <div className="grid gap-5 lg:grid-cols-[262px_minmax(0,1fr)]">
+              <div className="space-y-2">
+                {categoryCards.map((category) => (
+                  <DepositCategoryCard
+                    key={category.id}
+                    active={activeCategory === category.id}
+                    category={category.id}
+                    count={category.count}
+                    preview={category.preview}
+                    onClick={() => handleSelectCategory(category.id)}
+                  />
+                ))}
+              </div>
+
+              <div className="space-y-5">
                 {loading ? (
-                  <div className="flex min-h-[240px] items-center justify-center rounded-[18px] border border-dashed bg-black/20 px-6 text-slate-300" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
+                  <div className="flex min-h-[270px] items-center justify-center rounded-[6px] border border-dashed border-white/14 bg-black/10 px-6 text-white/70">
                     <div className="flex items-center gap-3">
                       <RefreshCw className="h-5 w-5 animate-spin" />
-                      Loading crypto wallets...
+                      Loading payment methods...
                     </div>
-                  </div>
-                ) : cryptoDepositMethods.length === 0 || !selectedMethod ? (
-                  <div className="flex min-h-[240px] items-center justify-center rounded-[18px] border border-dashed bg-black/20 px-6 text-center text-slate-400" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
-                    No Plisio-compatible crypto methods are active yet. Enable at least one supported crypto method in Admin -&gt; Crypto Payments.
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    <div>
-                      <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">{t("accountModals.selectPaymentMethod")}</div>
-                      <h3 className="mt-2 text-[20px] font-bold text-white sm:text-[22px]">Choose how you want to deposit</h3>
-                      <p className="mt-2 text-sm leading-6 text-[#9dc2c8]">
-                        Start with cryptocurrency here, then Plisio will handle the exact coin and network choice on the hosted invoice.
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSelectMethod(selectedMethod)}
-                      className="group flex w-full items-center gap-3 rounded-[18px] border border-[#1e2330] bg-[#1e2330] px-4 py-4 text-left text-white shadow-[0_12px_26px_rgba(14,26,40,0.28)] transition hover:-translate-y-0.5"
-                    >
-                      <GenericCryptoMethodBadge />
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-[15px] font-bold leading-tight">Cryptocurrency</div>
-                        <div className="mt-1 text-xs text-slate-300">Choose the coin inside Plisio</div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-[#0fa053]" />
-                    </button>
+                  <div className="space-y-5">
+                    {methodSections.map((section) => (
+                      <section key={section.id} className="space-y-3">
+                        <h3 className="text-[16px] font-black text-white">{section.title}</h3>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {section.methods.map((method, index) => (
+                            <DepositMethodRow
+                              key={method.id}
+                              method={method}
+                              repeat={section.id === "popular" && index === 0}
+                              onClick={() => handleSelectMethod(method)}
+                            />
+                          ))}
+                        </div>
+                      </section>
+                    ))}
                   </div>
                 )}
               </div>
-
-              {selectedMethod && (
-                <div className="rounded-[22px] border bg-white/5 p-5 sm:p-6" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                  <div className="text-[12px] font-black uppercase tracking-[0.18em] text-[#8eb3bf]">Enter your amount</div>
-                  <div className="mt-2 text-xs text-[#9dc2c8]">
-                    Amount in USD should stay between {formatCurrency(selectedMethod.minAmount)} and {formatCurrency(selectedMethod.maxAmount)}.
-                  </div>
-
-                  {activeInstruction && (
-                    <div className="mt-4 rounded-[14px] border border-[#1e2330] bg-[#1e2330] px-4 py-3 text-sm leading-6 text-slate-200">
-                      {activeInstructionIsPlisio
-                        ? "An active Plisio invoice already exists for this deposit flow. Continuing will reopen or restore it."
-                        : "A previous gateway deposit is already active and is being monitored for confirmations."}
-                    </div>
-                  )}
-
-                  <div className="mt-4 rounded-[18px] border border-white/8 bg-[#1e2330] p-4 shadow-[0_18px_42px_rgba(5,10,20,0.22)]">
-                    <div className="mt-3 flex flex-col gap-3 rounded-[16px] bg-[#1e2330] px-4 py-3 lg:flex-row lg:items-center">
-                      <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <span className="text-[22px] font-black text-[#0fa053]">USD</span>
-                        <input
-                          type="number"
-                          min={selectedMethod.minAmount}
-                          max={selectedMethod.maxAmount}
-                          value={amount}
-                          onChange={(event) => setAmount(event.target.value)}
-                          className="w-full bg-transparent text-[26px] font-bold text-white outline-none placeholder:text-slate-500"
-                        />
-                      </div>
-
-                      <div className="min-w-[108px] text-left lg:text-right">
-                        <div className="text-sm font-bold text-[#ff9a3d]">
-                          {bonusEnabled && bonusAmount > 0 ? `+${formatCurrency(bonusAmount)}` : "Bonus off"}
-                        </div>
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a7c4d7]">
-                          {bonusEnabled && bonusPercent > 0 ? `${bonusPercent}% reward` : "Base deposit"}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 self-start lg:self-auto">
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustAmount(-1)}
-                          className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-white/10 text-white transition hover:bg-white/15"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleAdjustAmount(1)}
-                          className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-white/10 text-white transition hover:bg-white/15"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={bonusEnabled}
-                          onClick={() => setBonusEnabled((current) => !current)}
-                          className={`relative inline-flex h-7 w-12 items-center rounded-full border transition ${
-                            bonusEnabled ? "border-[#ff9a3d]/70 bg-[#ff9a3d]" : "border-white/12 bg-white/10"
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-5 w-5 rounded-full bg-white shadow transition ${
-                              bonusEnabled ? "translate-x-6" : "translate-x-1"
-                            }`}
-                          />
-                        </button>
-
-                        <div>
-                          <div className="text-base font-semibold text-[#ffc27a]">Activate bonus</div>
-                          <p className="text-xs text-[#b8cadc]">
-                            {bonusEnabled && bonusPercent > 0
-                              ? `${bonusPercent}% bonus selected for this deposit amount.`
-                              : "Turn this on to receive the matching deposit tier bonus."}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-[#b8cadc]">
-                        <CircleHelp className="h-4 w-4" />
-                      </div>
-                    </div>
-
-                    <div className="mt-5">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9dc2c8]">{t("accountModals.selectPaymentMethod")}</div>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        {bonusPresetOptions.map((option) => {
-                          const isSelected = amountValue === option.amount;
-                          const projectedCredit = calculateDepositCreditedAmount(option.amount, bonusEnabled);
-
-                          return (
-                            <button
-                              key={option.amount}
-                              type="button"
-                              onClick={() => setAmount(String(option.amount))}
-                              className={`rounded-[16px] border px-4 py-4 text-left transition ${
-                                isSelected
-                                  ? "border-[#ff9a3d] bg-[#1e2330] text-white shadow-[0_16px_26px_rgba(255,154,61,0.18)]"
-                                  : "border-transparent bg-[#1e2330] text-white hover:border-[#ffc27a]/40"
-                              }`}
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="text-lg font-bold">{option.amount} USD</div>
-                                <span
-                                  className={`rounded-[10px] px-2.5 py-1 text-xs font-bold ${
-                                    isSelected ? "bg-[#ff9a3d] text-[#1c1f2d]" : "bg-[#1e2330] text-[#ff9a3d]"
-                                  }`}
-                                >
-                                  {bonusEnabled ? `+${option.percent}%` : "OFF"}
-                                </span>
-                              </div>
-                              <div className={`mt-3 text-xs font-medium ${isSelected ? "text-white/90" : "text-[#b7cbe0]"}`}>
-                                {bonusEnabled ? `${formatCurrency(projectedCredit)} credited` : "Deposit without bonus"}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  {amountError && (
-                    <div className="mt-4 rounded-[14px] border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                      {amountError}
-                    </div>
-                  )}
-
-                  <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/8 pt-4">
-                    <div>
-                      <div className="text-base font-medium text-[#d8e2f1]">Will be credited</div>
-                      <div className="mt-1 text-xs text-[#9fc2d8]">
-                        {bonusEnabled && bonusAmount > 0
-                          ? `${formatCurrency(amountValue)} + ${formatCurrency(bonusAmount)} bonus`
-                          : "Base deposit only"}
-                      </div>
-                    </div>
-                    <span className="text-2xl font-bold text-white">{formatCurrency(receiveAmount)}</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={loading || processing || !selectedMethod || Boolean(amountError)}
-                    onClick={() => void handleProceedToCheckout()}
-                    className="mt-5 w-full rounded-[14px] bg-[#179c59] px-6 py-4 text-base font-bold text-white transition hover:bg-[#1db768] disabled:cursor-not-allowed disabled:bg-[#21573d] disabled:text-white/70"
-                  >
-                    {processing
-                      ? "Preparing payment..."
-                      : activeInstruction?.detected_tx_hash
-                        ? "View payment status"
-                        : activeInstructionIsPlisio
-                          ? activeInstruction?.hosted_checkout_url
-                            ? "Continue to Plisio"
-                            : "Restore Plisio"
-                          : "Continue to Plisio"}
-                  </button>
-                  <p className="mt-3 text-center text-xs leading-5 text-[#9dc2c8]">
-                    The wallet address, QR code, and supported coin list appear in Plisio after this step.
-                  </p>
-                </div>
-              )}
             </div>
           )}
 
           {step === "checkout" && selectedMethod && (
-            <div className="grid gap-5 xl:grid-cols-[240px,minmax(0,1fr)]">
-              <div className="space-y-3">
-                {paymentWarnings.map((warning) => (
-                  <div
-                    key={warning.id}
-                    className={`rounded-[14px] border px-4 py-3 text-sm leading-6 ${
-                      warning.tone === "amber"
-                        ? "border-[#1e2330] bg-[#1e2330] text-slate-200"
-                        : "border-[#1e2330] bg-[#1e2330] text-slate-200"
-                    }`}
-                  >
-                    {warning.text}
+            <div className="grid gap-5 lg:grid-cols-[244px_minmax(0,1fr)]">
+              <div className="rounded-[4px] bg-white p-5 text-[#202638]">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-12 items-center justify-center overflow-hidden">{getMethodIcon(selectedMethod)}</span>
+                  <span className="text-[15px] font-bold">{selectedMethod.name}</span>
+                </div>
+                <div className="my-6 border-t border-dashed border-slate-300" />
+                <div className="space-y-2 text-[13px] font-bold text-slate-400">
+                  <div className="flex items-center justify-between">
+                    <span>Min amount:</span>
+                    <span className="text-slate-600">{formatCurrency(selectedMethod.minAmount)}</span>
                   </div>
-                ))}
+                  <div className="flex items-center justify-between">
+                    <span>Max amount:</span>
+                    <span className="text-slate-600">{formatCurrency(selectedMethod.maxAmount)}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStep("methods")}
+                  className="mt-8 inline-flex items-center gap-2 text-[14px] font-medium text-[#0d82df] transition hover:text-[#31a0ff]"
+                >
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0d82df] text-white">
+                    <ChevronLeft className="h-4 w-4" />
+                  </span>
+                  Change method
+                </button>
               </div>
 
-              <div className="space-y-4">
-                <div className="rounded-[22px] border bg-white/5 p-5 sm:p-6" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                  <div className="space-y-5">
-                    <div className="rounded-[16px] border border-white/8 bg-[#101922] px-5 py-5">
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7bb7ff]">
-                        {activeInstruction && !activeInstructionIsPlisio ? "Deposit monitoring" : "Hosted checkout"}
-                      </div>
-                      <div className="mt-3 text-[24px] font-bold text-white sm:text-[28px]">
-                        {activeInstruction && !activeInstructionIsPlisio ? "Waiting for blockchain confirmations" : "Finish this deposit in Plisio"}
-                      </div>
-                      <p className="mt-3 max-w-[620px] text-sm leading-7 text-[#d4e2f8]">
-                        {activeInstruction && !activeInstructionIsPlisio ? (
-                          <>
-                            This active deposit was created on the previous gateway and is already on-chain. We are now waiting for
-                            <span className="font-bold text-white"> confirmations</span> before crediting the balance.
-                          </>
-                        ) : (
-                          <>
-                            We created a hosted crypto invoice for <span className="font-bold text-white">{amountValue.toFixed(2)} USD</span>.
-                            Plisio will show the exact wallet, QR code, and any network-specific steps on the next screen.
-                          </>
-                        )}
-                      </p>
-                    </div>
+              <div className="min-w-0">
+                {selectedMethod && amountError && (
+                  <div className="mb-4 flex items-center gap-3 rounded-[3px] bg-[#4a342f] px-3 py-3 text-[13px] font-bold text-white">
+                    <AlertTriangle className="h-4 w-4 shrink-0 fill-[#ff9b25] text-[#ff9b25]" />
+                    Minimum amount - {formatCurrency(selectedMethod.minAmount).replace(".00", "")}. Smaller payments won't be credited.
+                  </div>
+                )}
 
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <button
-                        type="button"
-                        onClick={() => handleCopy("amount", amountValue.toFixed(2))}
-                        className="inline-flex items-center justify-center gap-2 rounded-[12px] bg-[#0b65c2] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#0d75df]"
-                      >
-                        {copiedField === "amount" ? <CheckCircle className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-                        Copy amount
-                      </button>
-                      {activeInstruction && isPlisioInstructionAddress(activeInstruction.address) ? (
+                <label className="relative block">
+                  <span className="absolute -top-2 left-3 bg-[#2b3142] px-2 text-[12px] font-bold text-white/35">Deposit amount</span>
+                  <input
+                    type="number"
+                    min={selectedMethod.minAmount}
+                    max={selectedMethod.maxAmount}
+                    value={amount}
+                    onChange={(event) => setAmount(event.target.value)}
+                    className="h-12 w-full rounded-[3px] border border-white/25 bg-transparent px-4 pr-10 text-[16px] font-bold text-white outline-none transition focus:border-[#0d82df]"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[18px] font-black text-white/55">$</span>
+                </label>
+
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {[150, 200, 300, 500].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setAmount(String(Math.max(preset, selectedMethod.minAmount)))}
+                      className={`h-8 min-w-[70px] rounded-[4px] px-4 text-[13px] font-black transition ${
+                        amountValue === preset ? "bg-[#596074] text-white" : "bg-[#3c4356] text-white hover:bg-[#4b5266]"
+                      }`}
+                    >
+                      {preset} $
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-5 overflow-hidden rounded-[6px] border border-white/10 bg-[#202637]">
+                  <button
+                    type="button"
+                    onClick={() => setBonusCodeOpen((current) => !current)}
+                    className="flex h-12 w-full items-center justify-between px-4 text-left"
+                  >
+                    <span className="flex items-center gap-3 text-[14px] font-black">
+                      <span className="inline-flex h-4 w-5 items-center justify-center rounded-[2px] bg-[#ff5d58]" />
+                      Bonus Code
+                    </span>
+                    <span className="flex items-center gap-3 text-[13px] font-black uppercase text-[#0d82df]">
+                      {bonusEnabled ? "Activate" : "Inactive"}
+                      <ChevronDown className={`h-4 w-4 transition ${bonusCodeOpen ? "rotate-180" : ""}`} />
+                    </span>
+                  </button>
+                  {bonusCodeOpen && (
+                    <div className="border-t border-white/10 px-4 pb-4 pt-3">
+                      <div className="flex h-12 items-center overflow-hidden rounded-[4px] border border-white/55 bg-[#202637]">
+                        <input
+                          value={bonusCode}
+                          onChange={(event) => setBonusCode(event.target.value)}
+                          placeholder="Select or enter code"
+                          className="min-w-0 flex-1 bg-transparent px-4 text-[15px] font-bold text-white outline-none placeholder:text-white/35"
+                        />
                         <button
                           type="button"
                           onClick={() => {
-                            if (activeInstruction.hosted_checkout_url) {
-                              openHostedCheckout(activeInstruction.hosted_checkout_url);
-                              return;
-                            }
-
-                            void (async () => {
-                              try {
-                                const restoredInstruction = await restoreHostedCheckout(activeInstruction);
-                                openHostedCheckout(restoredInstruction?.hosted_checkout_url);
-                              } catch (error) {
-                                toast({
-                                  title: t("accountModals.restorePlisioFailed"),
-                                  description:
-                                    error instanceof Error ? error.message : t("accountModals.plisioRestoreFailedDesc"),
-                                  variant: "destructive",
-                                });
-                              }
-                            })();
+                            setBonusEnabled(true);
+                            toast({ title: "Bonus code activated", description: "The deposit bonus will be applied when eligible." });
                           }}
-                          className="inline-flex items-center justify-center gap-2 rounded-[12px] bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-slate-100"
+                          className="h-full px-5 text-[13px] font-bold text-[#0d82df] transition hover:text-[#31a0ff]"
                         >
-                          <ExternalLink className="h-5 w-5" />
-                          {activeInstruction.hosted_checkout_url ? "Open Plisio" : "Restore Plisio Link"}
+                          Apply
                         </button>
-                      ) : null}
-                    </div>
-
-                    {activeInstruction?.provider_payment_id ? (
-                      <div className="rounded-[14px] border border-white/8 bg-[#101922] px-4 py-3 text-sm text-[#d4e2f8]">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7bb7ff]">Plisio payment ID</div>
-                        <div className="mt-2 break-all font-mono text-white">{activeInstruction.provider_payment_id}</div>
                       </div>
-                    ) : null}
-                  </div>
+                      <div className="mt-1 overflow-hidden rounded-[4px] bg-[#575e72]">
+                        {[
+                          ["WELCOME50", "+50% BONUS if you deposit more than $30.00", 50],
+                          ["DEPOSIT50", "+50% BONUS if you deposit more than $100.00", 100],
+                          ["DEPOSIT40", "+40% BONUS if you deposit more than $80.00", 80],
+                          ["DEPOSIT30", "+30% BONUS if you deposit more than $70.00", 70],
+                        ].map(([code, label, min]) => (
+                          <button
+                            key={String(code)}
+                            type="button"
+                            onClick={() => {
+                              setBonusCode(String(code));
+                              setBonusEnabled(true);
+                              setAmount((current) => String(Math.max(Number(current) || 0, Number(min))));
+                            }}
+                            className="block w-full border-b border-white/10 px-4 py-3 text-left text-[12px] font-black text-white transition last:border-b-0 hover:bg-white/8"
+                          >
+                            <span className="block">{code}</span>
+                            <span className="block text-[11px] text-white/75">{label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex flex-col gap-3 rounded-[16px] border border-white/8 bg-white/5 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                    <Clock3 className="h-4 w-4 text-[#2f87ff]" />
-                    <span>Time remaining: {formatCountdown(checkoutDeadline, now)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm font-medium text-[#2f87ff]">
-                    <RefreshCw className={`h-4 w-4 ${processing ? "animate-spin" : activeInstruction?.detected_tx_hash ? "" : "animate-spin"}`} />
-                    <span>{waitingStatusLabel}</span>
-                  </div>
+                <div className="mt-6 flex items-center gap-2 text-[14px] font-black text-white/40">
+                  <span>You will receive</span>
+                  <span className="h-px flex-1 border-t border-dashed border-white/18" />
+                  <span className="text-white">{formatCurrency(receiveAmount)}</span>
                 </div>
 
-                {activeInstruction?.detected_tx_hash ? (
-                  <div className="rounded-[16px] border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                {activeInstruction?.provider_payment_id && (
+                  <div className="mt-4 rounded-[4px] border border-white/10 bg-[#202637] px-4 py-3 text-[12px] font-bold text-white/70">
+                    Plisio payment ID: <span className="break-all text-white">{activeInstruction.provider_payment_id}</span>
+                  </div>
+                )}
+
+                {activeInstruction?.detected_tx_hash && (
+                  <div className="mt-4 rounded-[4px] border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[13px] font-bold text-emerald-100">
                     Transaction detected: {activeInstruction.detected_tx_hash}
                   </div>
-                ) : null}
-
-                {!selectedMethodIsAutomated && (
-                  <button
-                    type="button"
-                    onClick={() => void handleConfirmDeposit()}
-                    disabled={processing}
-                    className="w-full rounded-[14px] bg-[#0b65c2] px-6 py-4 text-base font-bold text-white transition hover:bg-[#0d75df] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {processing ? "Processing..." : "I've sent the payment"}
-                  </button>
                 )}
+
+                <button
+                  type="button"
+                  disabled={loading || processing || !selectedMethod || Boolean(amountError)}
+                  onClick={() => void handleProceedToCheckout()}
+                  className="mt-4 h-11 w-full rounded-[4px] bg-[#0d82df] text-[15px] font-black text-white transition hover:bg-[#118bea] disabled:cursor-not-allowed disabled:bg-[#1f5f98] disabled:text-white/55"
+                >
+                  {processing
+                    ? "Preparing payment..."
+                    : selectedMethodIsAutomated
+                      ? activeInstructionIsPlisio
+                        ? activeInstruction?.hosted_checkout_url
+                          ? "Continue to Pay"
+                          : "Restore Payment"
+                        : "Proceed to Pay"
+                      : "Proceed to Pay"}
+                </button>
               </div>
             </div>
           )}
