@@ -17,7 +17,6 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/integrations/api/client";
-import { api } from "@/integrations/api/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
@@ -44,7 +43,6 @@ type BonusSettingsRow = Pick<
 >;
 
 const PRODUCTION_REFERRAL_ORIGIN = "https://initoption.com";
-const ACCOUNT_TAB_STORAGE_KEY = "initoption:account-tab";
 
 const formatMoney = (value: number, precision = 2) =>
   `$${Number.isFinite(value) ? value.toFixed(precision) : "0.00"}`;
@@ -239,16 +237,12 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
   };
 
   const openAccountTab = (tab: AccountTabTarget) => {
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(ACCOUNT_TAB_STORAGE_KEY, tab);
-    }
-
     if (onSelectWorkspace) {
       onSelectWorkspace("account");
       return;
     }
 
-    navigate(tab === "settings" ? "/settings" : "/dashboard");
+    navigate("/trade", { state: { accountTab: tab } });
   };
 
   const handleTabClick = (tab: ReferralTab) => {

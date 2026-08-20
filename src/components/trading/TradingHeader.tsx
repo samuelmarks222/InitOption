@@ -9,7 +9,6 @@ import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useVip } from "@/contexts/VipContext";
 import { VipBadge } from "@/components/vip/VipBadge";
-import type { ProfileTab } from "@/components/profile/ProfileDrawer";
 import { KycAvatarBadge } from "@/components/profile/KycAvatarBadge";
 import { getStoredLiveBalance } from "@/lib/live-balance";
 import { normalizeKycStatus, type KycDocumentsLike } from "@/lib/kyc";
@@ -20,6 +19,8 @@ import {
   TRADE_CHART_LAYOUT_MODE_CHANGED_EVENT,
   TRADE_CHART_LAYOUT_SET_EVENT,
 } from "./chartLayout";
+
+export type ProfileTab = "personal" | "deposit" | "support" | "balance_history" | "trading_history" | "settings";
 
 interface TradingHeaderProps {
   balance: number;

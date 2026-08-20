@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "@/integrations/api/client";
 import { type Tables } from "@/integrations/supabase/types";
 import { NavigationSidebar, WorkspaceModule } from "@/components/navigation/NavigationSidebar";
 import { DynamicWorkspace } from "@/components/workspace/DynamicWorkspace";
 import { TournamentDetailOverlay } from "@/components/workspace/TournamentDetailOverlay";
-import TradingHeader from "@/components/trading/TradingHeader";
+import TradingHeader, { type ProfileTab } from "@/components/trading/TradingHeader";
 import TradingChart, { type ChartOrderAnnouncement, type ChartSettlementAnnouncement } from "@/components/trading/TradingChart";
 import TradingPanel from "@/components/trading/TradingPanel";
 import { TradingDeskProvider } from "@/components/trading/TradingDeskContext";
@@ -31,12 +31,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/useTrading";
 import { useDynamicAssets, type DynamicAsset } from "@/contexts/DynamicAssetContext";
 import { AccountType } from "@/components/trading/AccountModals";
-import { ProfileDrawer, type ProfileTab } from "@/components/profile/ProfileDrawer";
 import WelcomeGuideModal from "@/components/trading/WelcomeGuideModal";
 import OnboardingAccountChoiceModal from "@/components/trading/OnboardingAccountChoiceModal";
 import { TournamentsGridOverlay } from "@/components/workspace/TournamentsGridOverlay";
-import { AccountGridOverlay, type AccountTab } from "@/components/workspace/AccountGridOverlay";
-import { AnalyticsGridOverlay } from "@/components/workspace/AnalyticsGridOverlay";
+import { AnalyticsGridOverlay, type AnalyticsAccountTab } from "@/components/workspace/AnalyticsGridOverlay";
 import { WorkspaceReferral } from "@/components/workspace/WorkspaceReferral";
 import { WorkspaceSignals } from "@/components/workspace/WorkspaceSignals";
 import type { AnalyticsSignalAsset } from "@/components/workspace/analytics/AnalyticsSignals";
@@ -110,7 +108,8 @@ interface MobileModuleOverlayProps {
   directoryRefreshKey: number;
   onEnterTournament?: (id: string) => void;
   onOpenDeposit?: () => void;
-  onAnalyticsNavigate?: (target: { workspace?: "account" | "analytics" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => void;
+  accountInitialTab: AnalyticsAccountTab;
+  onAnalyticsNavigate?: (target: { workspace?: "account" | "analytics" | "tournaments" | "leaderboard" | "more"; accountTab?: ProfileTab; route?: "withdraw" }) => void;
 }
 
 const DEFAULT_TRADE_ASSET_ROW = {
@@ -274,6 +273,7 @@ const MobileModuleOverlay = ({
   directoryRefreshKey,
   onEnterTournament,
   onOpenDeposit,
+  accountInitialTab,
   onAnalyticsNavigate,
 }: MobileModuleOverlayProps) => {
   if (!mobileOverlay) return null;
@@ -281,7 +281,7 @@ const MobileModuleOverlay = ({
     <div className="fixed inset-x-0 bottom-[56px] top-0 z-[200] flex items-end justify-center bg-black/60 p-2 sm:p-3">
       <div className="relative flex h-[92dvh] w-full max-w-md overflow-hidden rounded-[28px] border border-white/8 bg-[#0a0d14] shadow-[0_24px_60px_rgba(0,0,0,0.45)]">
       {mobileOverlay === "account" && (
-        <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab="My account" onClose={() => setMobileOverlay(null)} onNavigate={onAnalyticsNavigate} />
+        <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab={accountInitialTab} onClose={() => setMobileOverlay(null)} onNavigate={onAnalyticsNavigate} />
       )}
       {mobileOverlay === "tournaments" && (
         <div className="flex flex-col h-full bg-[#0a0d14]">
@@ -305,12 +305,11 @@ const MobileModuleOverlay = ({
       )}
       {mobileOverlay === "signals" && <WorkspaceSignals onClose={() => setMobileOverlay(null)} />}
       {mobileOverlay === "help" && <HelpCenterOverlay onClose={() => setMobileOverlay(null)} />}
-      {/* balance/trading history: open account overlay pre-set to that tab */}
       {mobileOverlay === "balance_history" && (
-        <AccountGridOverlay initialTab="balance_history" onClose={() => setMobileOverlay(null)} />
+        <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab="Payments" onClose={() => setMobileOverlay(null)} onNavigate={onAnalyticsNavigate} />
       )}
       {mobileOverlay === "trading_history" && (
-        <AccountGridOverlay initialTab="trading_history" onClose={() => setMobileOverlay(null)} />
+        <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab="Trades" onClose={() => setMobileOverlay(null)} onNavigate={onAnalyticsNavigate} />
       )}
       {mobileOverlay === "more" && (
         <MobileMoreMenu
@@ -351,6 +350,7 @@ const Trade = () => {
     setTournamentParticipantId,
   } = useTrading();
   const navigate = useNavigate();
+  const location = useLocation();
   const latestChartPriceRef = useRef(0);
   const latestChartMarkerTimeRef = useRef<number | null>(null);
   const latestChartMarkerTimesBySymbolRef = useRef<Record<string, number>>({});
@@ -487,8 +487,7 @@ const Trade = () => {
   const [showDrawingsPanel, setShowDrawingsPanel] = useState(false);
   const [showMobileHistory, setShowMobileHistory] = useState(false);
   const [activeIndicators, setActiveIndicators] = useState<ActiveIndicator[]>(() => loadStoredActiveIndicators());
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal");
+  const [accountInitialTab, setAccountInitialTab] = useState<AnalyticsAccountTab>("My account");
   const [depositGuideReason, setDepositGuideReason] = useState<DepositGuideReason | null>(null);
   const [showRealAccountWelcome, setShowRealAccountWelcome] = useState(false);
   const [showOnboardingAccountChoice, setShowOnboardingAccountChoice] = useState(false);
@@ -747,13 +746,12 @@ const Trade = () => {
       return;
     }
 
-    if (selectedTournament || showAssetSelector || mobileOverlay || isProfileOpen) {
+    if (selectedTournament || showAssetSelector || mobileOverlay) {
       return;
     }
 
     setShowRealAccountWelcome(true);
   }, [
-    isProfileOpen,
     isNewUser,
     mobileOverlay,
     selectedTournament,
@@ -922,9 +920,45 @@ const Trade = () => {
   };
 
   const handleOpenProfile = (tab: ProfileTab = "personal") => {
-    setProfileInitialTab(tab);
-    setIsProfileOpen(true);
+    if (tab === "deposit") {
+      openDepositPage();
+      return;
+    }
+    if (tab === "support") {
+      if (isDesktopViewport) {
+        setActiveWorkspace("help");
+      } else {
+        setMobileOverlay("help");
+      }
+      return;
+    }
+
+    const nextTab: AnalyticsAccountTab =
+      tab === "balance_history" ? "Payments" :
+      tab === "trading_history" ? "Trades" :
+      "My account";
+
+    setAccountInitialTab(nextTab);
+    if (isDesktopViewport) {
+      setActiveWorkspace("account");
+    } else {
+      setMobileOverlay("account");
+    }
   };
+
+  useEffect(() => {
+    const state = location.state as { accountTab?: ProfileTab } | null;
+    if (!state?.accountTab) return;
+
+    const nextTab: AnalyticsAccountTab =
+      state.accountTab === "balance_history" ? "Payments" :
+      state.accountTab === "trading_history" ? "Trades" :
+      "My account";
+
+    setAccountInitialTab(nextTab);
+    setActiveWorkspace("account");
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   const handleSwitchAccount = (nextType: AccountType) => {
     if (nextType === "tournament" && !tournamentParticipantId) {
@@ -1305,7 +1339,7 @@ const Trade = () => {
     navigate("/withdraw");
   };
 
-  const handleAnalyticsNavigate = (target: { workspace?: "account" | "analytics" | "tournaments" | "leaderboard" | "more"; accountTab?: AccountTab; route?: "withdraw" }) => {
+  const handleAnalyticsNavigate = (target: { workspace?: "account" | "analytics" | "tournaments" | "leaderboard" | "more"; accountTab?: ProfileTab; route?: "withdraw" }) => {
     setMobileOverlay(null);
 
     if (target.route === "withdraw") {
@@ -1313,7 +1347,12 @@ const Trade = () => {
       return;
     }
 
-if (target.workspace === "account") {
+    if (target.workspace === "account") {
+      const nextTab: AnalyticsAccountTab =
+        target.accountTab === "balance_history" ? "Payments" :
+        target.accountTab === "trading_history" ? "Trades" :
+        "My account";
+      setAccountInitialTab(nextTab);
       setActiveWorkspace("account");
       return;
     }
@@ -1331,7 +1370,6 @@ if (target.workspace === "account") {
     !showAssetSelector &&
     !showIndicatorsPanel &&
     !showDrawingsPanel &&
-    !isProfileOpen &&
     !showMobileHistory &&
     !showRealAccountWelcome &&
     !showOnboardingAccountChoice &&
@@ -1340,7 +1378,6 @@ if (target.workspace === "account") {
   const isChartNavActive =
     !mobileOverlay &&
     !selectedTournament &&
-    !isProfileOpen &&
     !showAssetSelector;
   const isHelpNavActive = mobileOverlay === "help";
   const isAccountNavActive = mobileOverlay === "account" || mobileOverlay === "balance_history" || mobileOverlay === "trading_history";
@@ -1406,7 +1443,7 @@ if (target.workspace === "account") {
             {/* Desktop full-screen workspace overlays */}
             {activeWorkspace === "account" ? (
               <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
-                <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab="My account" onClose={() => setActiveWorkspace(null)} onNavigate={handleAnalyticsNavigate} />
+                <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab={accountInitialTab} onClose={() => setActiveWorkspace(null)} onNavigate={handleAnalyticsNavigate} />
               </div>
             ) : activeWorkspace === "analytics" ? (
               <div className="flex-1 w-full h-full relative z-30" style={{ background: "var(--trading-workspace-panel-bg)" }}>
@@ -1727,6 +1764,7 @@ if (target.workspace === "account") {
           directoryRefreshKey={directoryRefreshKey}
           onEnterTournament={handleEnterTournament}
           onOpenDeposit={openDepositPage}
+          accountInitialTab={accountInitialTab}
           onAnalyticsNavigate={handleAnalyticsNavigate}
         />
 
@@ -1745,7 +1783,6 @@ if (target.workspace === "account") {
             onDeposit={depositFromOnboarding}
           />
         )}
-        <ProfileDrawer isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} balance={balance} initialTab={profileInitialTab} />
         <TournamentDetailOverlay tournamentId={selectedTournament} onClose={() => setSelectedTournament(null)}
           onOpenDeposit={openDepositPage} onEnterTournament={handleEnterTournament}
           onJoined={() => setDirectoryRefreshKey((k) => k + 1)} />

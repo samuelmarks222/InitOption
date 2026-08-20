@@ -36,11 +36,11 @@ import {
   normalizeKycStatus,
 } from "@/lib/kyc";
 import { useTradingPreferences, type TradingLanguage } from "@/lib/tradingPreferences";
-import type { AccountTab } from "./AccountGridOverlay";
 import type { AnalyticsSignalAsset } from "./analytics/AnalyticsSignals";
 
 type AnalyticsRange = "3 days" | "Week" | "Month" | "Year" | "All";
 type AnalyticsAccountScope = "live" | "demo";
+type AccountTab = "personal" | "deposit" | "balance_history" | "trading_history" | "settings";
 export type AnalyticsAccountTab = "Withdrawal" | "Payments" | "Trades" | "My account" | "Market" | "Tournaments" | "Analytics";
 
 interface AnalyticsGridOverlayProps {
@@ -67,6 +67,9 @@ const LANGUAGE_OPTIONS: Array<{ label: string; code: TradingLanguage }> = [
   { label: "Hindi", code: "hi" },
 ];
 const TIMEZONE_OPTIONS = ["(UTC+03:00)", "(UTC+00:00)", "(UTC+01:00)", "(UTC-05:00)", "(UTC+05:30)", "(UTC+08:00)"];
+const ID_DOCUMENT_OPTIONS = ["ID card", "Passport", "Residence permit", "Driver's license"];
+const KYC_UPLOAD_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif"];
+const KYC_UPLOAD_ACCEPT = "image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif,application/pdf";
 
 const rangeStart = (range: AnalyticsRange) => {
   const now = Date.now();
@@ -594,10 +597,31 @@ const MyAccountPanel = () => {
   const [isUploadingDoc, setIsUploadingDoc] = useState<"front" | "back" | null>(null);
   const [verificationSaving, setVerificationSaving] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
+  const [verificationPromptOpen, setVerificationPromptOpen] = useState(false);
+  const [identityModalOpen, setIdentityModalOpen] = useState(false);
+  const [identityModalStep, setIdentityModalStep] = useState<"privacy" | "document" | "upload">("privacy");
+  const [identityPrivacyAccepted, setIdentityPrivacyAccepted] = useState(false);
+  const docs = documents as Record<string, any>;
+  const personalDetailsComplete = Boolean(form.username && form.firstName && form.lastName && form.dob && form.country && form.address);
+  const needsBackSide = idType !== "Passport";
+  const frontUploaded = Boolean(docs.front?.url);
+  const backUploaded = Boolean(docs.back?.url);
+  const requiredDocumentsUploaded = frontUploaded && (!needsBackSide || backUploaded);
+  const documentUploadReady = personalDetailsComplete && Boolean(idType || frontUploaded || backUploaded);
 
   useEffect(() => {
     setForm(mergeProfileDetails(profile as any, user));
   }, [profile, user]);
+
+  useEffect(() => {
+    if (kycVerified) {
+      setVerificationPromptOpen(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => setVerificationPromptOpen(true), 250);
+    return () => window.clearTimeout(timer);
+  }, [kycVerified]);
 
   useEffect(() => {
     setDocuments(((profile as any)?.kyc_documents ?? (profile as any)?.kycDocuments) ?? {});
@@ -768,12 +792,12 @@ const MyAccountPanel = () => {
 
   const handleDocumentUpload = async (slot: "front" | "back", file: File) => {
     if (!user) return;
-    if (!["application/pdf", "image/png", "image/jpeg", "image/jpg", "image/webp"].includes(file.type)) {
-      toast.error("Upload a PDF, PNG, JPG, or WEBP document.");
+    if (!KYC_UPLOAD_TYPES.includes(file.type)) {
+      toast.error("Upload a PDF, PNG, JPG, WEBP, or HEIC document.");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Documents must be 10MB or smaller.");
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("Documents must be 50MB or smaller.");
       return;
     }
     setIsUploadingDoc(slot);
@@ -812,6 +836,30 @@ const MyAccountPanel = () => {
     }
   };
 
+  const openIdentityVerification = () => {
+    setVerificationPromptOpen(false);
+    setIdentityModalStep("privacy");
+    setIdentityPrivacyAccepted(false);
+    setIdentityModalOpen(true);
+  };
+
+  const handleIdentityDocumentSelection = async (nextIdType: string) => {
+    setIdType(nextIdType);
+    await updateProfile({ idType: nextIdType, nationality: form.country || "Kenya" });
+    setIdentityModalStep("upload");
+  };
+
+  const handleIdentityUpload = async () => {
+    const nextSlot = !frontUploaded ? "front" : needsBackSide && !backUploaded ? "back" : null;
+    if (!nextSlot) {
+      setIdentityModalOpen(false);
+      setVerificationStatus("Documents uploaded. They are now waiting for admin review.");
+      return;
+    }
+    if (nextSlot === "front") frontInputRef.current?.click();
+    if (nextSlot === "back") backInputRef.current?.click();
+  };
+
   return (
     <section className="rounded-[6px] bg-[#202633] px-5 py-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.22)]">
       <div className="mb-5 flex flex-wrap items-center justify-end gap-8 border-b border-white/10 pb-4 text-right">
@@ -835,7 +883,7 @@ const MyAccountPanel = () => {
       </div>
 
       <div className="grid gap-7 xl:grid-cols-[minmax(360px,0.95fr)_minmax(320px,0.92fr)_minmax(320px,0.92fr)]">
-        <div className="border-white/10 xl:border-r xl:pr-7">
+        <div className="border-white/10 xl:border-r xl:pr-7" data-verify-tour="status">
           <h2 className="mb-5 text-[18px] font-black text-white">Personal data:</h2>
           <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center">
             <button type="button" onClick={() => fileInputRef.current?.click()} className="group relative flex h-[98px] w-[98px] shrink-0 items-end justify-center overflow-hidden rounded-full bg-black shadow-[inset_0_0_0_8px_rgba(33,45,68,0.9)]" aria-label="Change profile photo">
@@ -872,7 +920,7 @@ const MyAccountPanel = () => {
               <p className="mt-2 text-[12px] font-bold text-white/45">Click the photo to upload or replace your profile picture.</p>
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4" data-verify-tour="details-form">
             <ProfileInput label="Nickname" value={form.username} onChange={(value) => updateFormValue("username", value)} />
             <div className="grid gap-4 sm:grid-cols-2">
               <ProfileInput label="First Name" value={form.firstName} onChange={(value) => updateFormValue("firstName", value)} />
@@ -985,8 +1033,34 @@ const MyAccountPanel = () => {
         </div>
       )}
 
+      {!kycVerified && verificationPromptOpen && (
+        <VerifyAccountIntroModal
+          onClose={() => setVerificationPromptOpen(false)}
+          onStart={openIdentityVerification}
+        />
+      )}
+
+      {identityModalOpen && (
+        <AccountIdentityVerificationModal
+          step={identityModalStep}
+          privacyAccepted={identityPrivacyAccepted}
+          country={form.country || "Kenya"}
+          idType={idType}
+          documents={docs}
+          uploadingSlot={isUploadingDoc}
+          personalDetailsComplete={personalDetailsComplete}
+          needsBackSide={needsBackSide}
+          requiredDocumentsUploaded={requiredDocumentsUploaded}
+          onPrivacyAccepted={setIdentityPrivacyAccepted}
+          onStepChange={setIdentityModalStep}
+          onClose={() => setIdentityModalOpen(false)}
+          onDocumentSelection={(nextType) => void handleIdentityDocumentSelection(nextType)}
+          onUploadDocument={() => void handleIdentityUpload()}
+        />
+      )}
+
       {!kycVerified && (
-        <div className="mt-6 rounded-[6px] border border-[#0fa053]/25 bg-[#0fa053]/10 px-5 py-5">
+        <div className="mt-6 rounded-[6px] border border-[#0fa053]/25 bg-[#0fa053]/10 px-5 py-5" data-verify-tour="documents">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="flex items-center gap-2 text-[18px] font-black text-white">
@@ -994,7 +1068,9 @@ const MyAccountPanel = () => {
                 ID verification
               </h2>
               <p className="mt-1 text-[12px] font-bold text-white/50">
-                Verify your identity to unlock full access to your account.
+                {personalDetailsComplete
+                  ? "Upload a color photo or scanned copy of your identity document."
+                  : "Complete your personal details first, then upload your identity document."}
               </p>
             </div>
             <span
@@ -1010,6 +1086,42 @@ const MyAccountPanel = () => {
             </span>
           </div>
 
+          {!personalDetailsComplete && (
+            <div className="mt-4 flex items-start gap-3 rounded-[6px] border border-red-500/25 bg-red-500/10 px-4 py-3">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
+              <p className="text-[13px] font-bold leading-5 text-red-200">
+                You need full identity information before verifying your account. Fill in your name, date of birth, country, and address, then save.
+              </p>
+            </div>
+          )}
+
+          {personalDetailsComplete && !documentUploadReady && (
+            <div className="mt-4 rounded-[6px] border border-[#0d82df]/60 bg-[#122d4c] p-5 shadow-[0_18px_40px_rgba(13,130,223,0.14)]">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="flex items-center gap-2 text-[16px] font-black text-white">
+                    <AlertCircle className="h-5 w-5 fill-[#0d82df] text-[#0d82df]" />
+                    Verification of documents
+                  </h3>
+                  <p className="mt-3 max-w-[640px] text-[13px] font-bold leading-5 text-white">
+                    Please upload a color photo or scanned image of your regular civil passport, driving license, residence permit, or national identity card.
+                  </p>
+                  <p className="mt-3 max-w-[620px] text-[11px] font-bold leading-4 text-white/35">
+                    Account verification means providing an official document certifying the client's identity.
+                  </p>
+                </div>
+                <ChevronDown className="mt-1 h-5 w-5 rotate-180 text-white" />
+              </div>
+              <button
+                type="button"
+                onClick={openIdentityVerification}
+                className="mt-4 h-11 w-full rounded-[4px] bg-[#0d82df] text-[14px] font-black text-white transition hover:bg-[#118bea]"
+              >
+                Upload Documents
+              </button>
+            </div>
+          )}
+
           {kycStatus === "Rejected" && (
             <div className="mt-4 flex items-start gap-3 rounded-[6px] border border-red-500/25 bg-red-500/10 px-4 py-3">
               <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
@@ -1019,8 +1131,10 @@ const MyAccountPanel = () => {
             </div>
           )}
 
+          {personalDetailsComplete && documentUploadReady && (
+          <>
           <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-            <ProfileDropdown label="ID Type" value={idType} onChange={setIdType} options={["Passport", "Driver's License", "National ID"]} />
+            <ProfileDropdown label="ID Type" value={idType} onChange={setIdType} options={ID_DOCUMENT_OPTIONS} />
             <ProfileInput label="ID Number" value={idNumber} onChange={setIdNumber} />
             <button
               type="button"
@@ -1052,7 +1166,7 @@ const MyAccountPanel = () => {
           <input
             ref={frontInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/jpg,image/webp,application/pdf"
+            accept={KYC_UPLOAD_ACCEPT}
             className="hidden"
             onChange={(event) => {
               const file = event.target.files?.[0];
@@ -1063,7 +1177,7 @@ const MyAccountPanel = () => {
           <input
             ref={backInputRef}
             type="file"
-            accept="image/png,image/jpeg,image/jpg,image/webp,application/pdf"
+            accept={KYC_UPLOAD_ACCEPT}
             className="hidden"
             onChange={(event) => {
               const file = event.target.files?.[0];
@@ -1074,6 +1188,8 @@ const MyAccountPanel = () => {
 
           {verificationStatus && (
             <p className="mt-4 text-[12px] font-bold text-white/60">{verificationStatus}</p>
+          )}
+          </>
           )}
         </div>
       )}
@@ -1115,6 +1231,214 @@ const MyAccountPanel = () => {
     </section>
   );
 };
+
+const VerifyAccountIntroModal = ({ onClose, onStart }: { onClose: () => void; onStart: () => void }) => (
+  <div className="fixed inset-0 z-[700] flex items-center justify-center bg-[#0b101b]/78 p-4 backdrop-blur-[3px]">
+    <div className="relative w-full max-w-[360px] rounded-[8px] bg-[#2b3142] px-8 py-8 text-center shadow-[0_28px_90px_rgba(0,0,0,0.5)]">
+      <button type="button" onClick={onClose} className="absolute right-5 top-5 text-white/55 transition hover:text-white" aria-label="Close">
+        <X className="h-5 w-5" />
+      </button>
+      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[24px] bg-[#1687ee]/15">
+        <ShieldCheck className="h-11 w-11 fill-[#1687ee] text-[#8fd0ff]" />
+      </div>
+      <h3 className="mt-6 text-[24px] font-black text-white">Verify your account</h3>
+      <p className="mx-auto mt-5 max-w-[270px] text-[16px] font-bold leading-6 text-white/75">
+        Verify your account to confirm your identity and unlock full access to all features.
+      </p>
+      <button type="button" onClick={onStart} className="mt-6 h-11 w-full rounded-[4px] bg-[#12b76a] text-[14px] font-black text-white shadow-[0_12px_28px_rgba(18,183,106,0.25)] transition hover:bg-[#19c477]">
+        Start verification
+      </button>
+      <button type="button" onClick={onClose} className="mt-2 h-10 w-full rounded-[4px] bg-[#5a6278] text-[13px] font-black text-white transition hover:bg-[#667088]">
+        Later
+      </button>
+    </div>
+  </div>
+);
+
+const CountryMark = ({ country }: { country: string }) => {
+  const code = country.toLowerCase().includes("kenya") ? "KE" : country.slice(0, 2).toUpperCase();
+  return (
+    <span className="inline-flex h-5 min-w-7 items-center justify-center rounded-[3px] bg-[#1d2738] px-1 text-[12px] font-black text-white">
+      {code === "KE" ? "🇰🇪" : code}
+    </span>
+  );
+};
+
+const AccountIdentityVerificationModal = ({
+  step,
+  privacyAccepted,
+  country,
+  idType,
+  documents,
+  uploadingSlot,
+  personalDetailsComplete,
+  needsBackSide,
+  requiredDocumentsUploaded,
+  onPrivacyAccepted,
+  onStepChange,
+  onClose,
+  onDocumentSelection,
+  onUploadDocument,
+}: {
+  step: "privacy" | "document" | "upload";
+  privacyAccepted: boolean;
+  country: string;
+  idType: string;
+  documents: Record<string, any>;
+  uploadingSlot: "front" | "back" | null;
+  personalDetailsComplete: boolean;
+  needsBackSide: boolean;
+  requiredDocumentsUploaded: boolean;
+  onPrivacyAccepted: (checked: boolean) => void;
+  onStepChange: (step: "privacy" | "document" | "upload") => void;
+  onClose: () => void;
+  onDocumentSelection: (documentType: string) => void;
+  onUploadDocument: () => void;
+}) => {
+  const selectedType = idType || "ID card";
+  const uploadLabel = !documents.front?.url ? "Upload Front side" : needsBackSide && !documents.back?.url ? "Upload Back side" : "Finish verification";
+
+  return (
+    <div className="fixed inset-0 z-[720] flex items-center justify-center bg-[#0b101b]/78 p-4 backdrop-blur-[4px]">
+      <div className="relative w-full max-w-[490px] rounded-[6px] bg-[#2b3142] px-8 py-7 text-white shadow-[0_30px_95px_rgba(0,0,0,0.55)]">
+        <button type="button" onClick={onClose} className="absolute right-5 top-5 text-white/45 transition hover:text-white" aria-label="Close">
+          <X className="h-5 w-5" />
+        </button>
+        <h3 className="text-[20px] font-black">Identity Verification</h3>
+        <div className="mt-5 border-t border-dashed border-white/16 pt-7">
+          {step === "privacy" && (
+            <div>
+              <div className="mb-9 flex justify-end">
+                <span className="inline-flex items-center gap-2 rounded-full bg-black/45 px-4 py-2 text-[14px] font-black">
+                  <Globe2 className="h-4 w-4" /> En
+                </span>
+              </div>
+              <h4 className="text-[24px] font-black">Data and Privacy</h4>
+              <label className="mt-7 flex items-start gap-4 text-[16px] font-bold leading-6 text-white/80">
+                <input
+                  type="checkbox"
+                  checked={privacyAccepted}
+                  onChange={(event) => onPrivacyAccepted(event.target.checked)}
+                  className="mt-1 h-5 w-5 rounded border-white/30 bg-[#171c27] accent-[#0d82df]"
+                />
+                <span>
+                  I confirm that I have read the <span className="text-[#0d82df]">Privacy Notice</span> and the <span className="text-[#0d82df]">Notification to Processing of Personal Data</span>
+                </span>
+              </label>
+              {!personalDetailsComplete && (
+                <p className="mt-5 rounded-[5px] border border-red-500/25 bg-red-500/10 px-4 py-3 text-[13px] font-bold text-red-200">
+                  Fill in your personal details and save before uploading documents.
+                </p>
+              )}
+              <button
+                type="button"
+                disabled={!privacyAccepted || !personalDetailsComplete}
+                onClick={() => onStepChange("document")}
+                className="mt-7 h-12 w-full rounded-[5px] bg-[#0d82df] text-[16px] font-black text-white transition hover:bg-[#118bea] disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Continue
+              </button>
+              <p className="mt-6 text-center text-[11px] font-black text-white/45">Powered by sumsub</p>
+            </div>
+          )}
+
+          {step === "document" && (
+            <div>
+              <div className="mb-8 flex items-center justify-between">
+                <span className="inline-flex items-center gap-4 text-[16px] font-black">
+                  <span>Step</span>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/55">1/1</span>
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-black/45 px-4 py-2 text-[14px] font-black">
+                  <Globe2 className="h-4 w-4" /> En
+                </span>
+              </div>
+              <h4 className="max-w-[340px] text-[26px] font-black leading-tight">Select type and issuing country of your identity document</h4>
+              <div className="mt-9">
+                <p className="text-[15px] font-black">Issuing country <span className="text-[#ff5d52]">*</span></p>
+                <div className="mt-5 flex items-center gap-3 text-[16px] font-black">
+                  <CountryMark country={country} /> {country || "Kenya"}
+                  <ChevronDown className="ml-auto h-4 w-4 text-white/65" />
+                </div>
+              </div>
+              <div className="mt-9">
+                <p className="text-[15px] font-black">Document type <span className="text-[#ff5d52]">*</span></p>
+                <div className="mt-5 space-y-5">
+                  {ID_DOCUMENT_OPTIONS.map((option) => (
+                    <button key={option} type="button" onClick={() => onDocumentSelection(option)} className="flex w-full items-center justify-between text-left text-[16px] font-black text-white">
+                      <span>{option}</span>
+                      <span className={`h-6 w-6 rounded-full border ${selectedType === option ? "border-[#0d82df] bg-[#0d82df] shadow-[inset_0_0_0_5px_#1b2130]" : "border-white/35 bg-black/30"}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="mt-8 text-[13px] font-bold text-white/50"><span className="text-[#ff5d52]">*</span> Required fields</p>
+              <button type="button" disabled={!idType} onClick={() => onStepChange("upload")} className="mt-4 h-12 w-full rounded-[5px] bg-[#0d82df] text-[16px] font-black text-white transition hover:bg-[#118bea] disabled:opacity-45">
+                Continue
+              </button>
+              <p className="mt-6 text-center text-[11px] font-black text-white/45">Powered by sumsub</p>
+            </div>
+          )}
+
+          {step === "upload" && (
+            <div>
+              <div className="mb-7 flex items-center justify-between">
+                <button type="button" onClick={() => onStepChange("document")} className="flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-white">
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <span className="inline-flex items-center gap-2 rounded-full bg-black/45 px-4 py-2 text-[14px] font-black">
+                  <Globe2 className="h-4 w-4" /> En
+                </span>
+              </div>
+              <div className="mx-auto mb-5 flex h-[156px] max-w-[376px] items-center justify-center rounded-[6px] bg-[#6a746f]">
+                <div className="rounded-[4px] border border-dashed border-[#35a6ff] px-16 py-4 text-center">
+                  <FileText className="mx-auto h-20 w-20 text-white/90" />
+                </div>
+              </div>
+              <h4 className="text-[26px] font-black">Upload your document</h4>
+              <p className="mt-3 max-w-[340px] text-[16px] font-bold leading-6 text-white/85">
+                Ensure all details on the photo is visible and easy to read
+              </p>
+              <div className="mt-7">
+                <p className="text-[15px] font-black">Document type</p>
+                <div className="mt-5 flex items-center gap-3 text-[16px] font-black">
+                  <CountryMark country={country} /> {selectedType}
+                  <Pencil className="ml-auto h-4 w-4 text-white" />
+                </div>
+              </div>
+              <div className="mt-5 space-y-3">
+                <ModalDocumentState label={selectedType === "Passport" ? "Passport photo page" : "Front side"} required document={documents.front} uploading={uploadingSlot === "front"} />
+                {needsBackSide && <ModalDocumentState label="Back side" required document={documents.back} uploading={uploadingSlot === "back"} />}
+              </div>
+              <p className="mt-4 text-center text-[13px] font-black text-white/45">JPG, PNG, HEIC, WEBP or PDF (max 50 MB)</p>
+              <p className="mt-6 text-[13px] font-bold text-white/50"><span className="text-[#ff5d52]">*</span> Required fields</p>
+              <button type="button" onClick={onUploadDocument} disabled={Boolean(uploadingSlot)} className="mt-3 h-12 w-full rounded-[5px] bg-[#0d82df] text-[16px] font-black text-white transition hover:bg-[#118bea] disabled:opacity-55">
+                {uploadingSlot ? "Uploading..." : requiredDocumentsUploaded ? "Finish verification" : uploadLabel}
+              </button>
+              <p className="mt-6 text-center text-[11px] font-black text-white/45">Powered by sumsub</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ModalDocumentState = ({ label, required, document, uploading }: { label: string; required?: boolean; document?: any; uploading?: boolean }) => (
+  <div className="flex min-h-[82px] items-center gap-4 rounded-[6px] border border-dashed border-white/35 bg-black/45 px-4 py-3">
+    <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[10px] bg-white/8">
+      {document?.url ? <CheckCircle2 className="h-7 w-7 text-[#12b76a]" /> : <UploadCloud className="h-7 w-7 text-white/55" />}
+    </span>
+    <div className="min-w-0">
+      <p className="text-[16px] font-black text-white">
+        {label} {required && <span className="text-[#ff5d52]">*</span>}
+      </p>
+      <p className="mt-1 text-[14px] font-bold text-white/60">
+        {uploading ? "Uploading..." : document?.name ? document.name : <><span className="text-[#0d82df]">Choose</span> or drag and drop</>}
+      </p>
+    </div>
+  </div>
+);
 
 const ProfileInput = ({
   label,

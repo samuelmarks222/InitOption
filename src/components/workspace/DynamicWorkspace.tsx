@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { type WorkspaceModule } from "../navigation/NavigationSidebar";
-import { WorkspaceAccount } from "./WorkspaceAccount";
 import { WorkspaceTournaments } from "./WorkspaceTournaments";
 import { WorkspaceMore } from "./WorkspaceMore";
 import { WorkspaceReferral } from "./WorkspaceReferral";
@@ -96,11 +95,6 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
         {activeWorkspace === "support" && (
           <div className="flex-1 w-full h-full overflow-hidden">
             <WorkspaceSocial onClose={onClose} onImmersiveChange={setSupportImmersive} />
-          </div>
-        )}
-        {activeWorkspace === "account" && (
-          <div className="flex-1 w-full h-full">
-            <WorkspaceAccount />
           </div>
         )}
         {activeWorkspace === "tournaments" && (

@@ -31,9 +31,8 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { TradeDeskShortcut } from "@/components/navigation/TradeDeskShortcut";
 import { NavigationSidebar, type WorkspaceModule } from "@/components/navigation/NavigationSidebar";
-import TradingHeader from "@/components/trading/TradingHeader";
+import TradingHeader, { type ProfileTab } from "@/components/trading/TradingHeader";
 import type { AccountType, KycDocumentsLike } from "@/components/trading/AccountModals";
-import { ProfileDrawer, type ProfileTab } from "@/components/profile/ProfileDrawer";
 import { ProfileTourProvider } from "@/contexts/ProfileTourContext";
 import TradingRouteProviders from "@/components/TradingRouteProviders";
 import { useAuth } from "@/contexts/AuthContext";
@@ -1231,8 +1230,6 @@ const TradingGuidePage = () => {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceModule>(null);
   const [accountType, setAccountType] = useState<AccountType>("live");
   const [demoBalance, setDemoBalance] = useState(DEFAULT_DEMO_BALANCE);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [profileInitialTab, setProfileInitialTab] = useState<ProfileTab>("personal");
 
   const balance = getEffectiveLiveBalance(profile);
   const currentBalance = balance;
@@ -1255,8 +1252,11 @@ const TradingGuidePage = () => {
   };
 
   const handleOpenProfile = (tab: ProfileTab = "personal") => {
-    setProfileInitialTab(tab);
-    setIsProfileOpen(true);
+    if (tab === "deposit") {
+      openDepositPage();
+      return;
+    }
+    navigate("/trade", { state: { accountTab: tab } });
   };
 
   const handleDemoBalanceUpdate = (value: number) => {
@@ -2062,12 +2062,6 @@ const TradingGuidePage = () => {
         onResetDemoBalance={() => handleDemoBalanceUpdate(DEFAULT_DEMO_BALANCE)}
         onOpenSettings={() => handleOpenProfile("settings")}
         onOpenHistory={() => {}}
-      />
-
-      <ProfileDrawer
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        initialTab={profileInitialTab}
       />
 
       <div className="flex-1 flex w-full overflow-hidden min-h-0" style={{ background: "var(--trading-workspace-bg)" }}>
