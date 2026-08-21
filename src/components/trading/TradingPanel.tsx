@@ -877,8 +877,9 @@ const TradingPanel = ({
     if (asset.available === false) return;
 
     if (!tradingPreferences.oneClickTrade) {
+      const directionLabel = direction === "higher" ? t("tradingPanel.up") : t("tradingPanel.down");
       const confirmed = window.confirm(
-        `Confirm ${direction === "higher" ? "Up" : "Down"} trade on ${asset.symbol} for ${formatStake(effectiveInvestment)}?`,
+        t("tradingPanel.confirmTrade", { direction: directionLabel, symbol: asset.symbol, amount: formatStake(effectiveInvestment) }),
       );
 
       if (!confirmed) {
@@ -1103,7 +1104,7 @@ const TradingPanel = ({
                       </span>
                     </div>
                     <span className="text-[9px] font-medium uppercase tracking-[0.06em] text-[#8fb0cf]">
-                      Time
+                      {t("tradingPanel.timeLabelShort")}
                     </span>
                   </button>
 
@@ -1112,7 +1113,7 @@ const TradingPanel = ({
                   onClick={() => setShowTimeSwitcher((value) => !value)}
                   className="relative hidden lg:flex flex-col group cursor-pointer"
                 >
-                  <div className="absolute -top-2 left-3 z-10 bg-[#242a3c] px-1 text-[10px] font-semibold text-[#777f92]">Time</div>
+                  <div className="absolute -top-2 left-3 z-10 bg-[#242a3c] px-1 text-[10px] font-semibold text-[#777f92]">{t("tradingPanel.timeLabelShort")}</div>
                   <div className="flex h-[47px] cursor-pointer items-center justify-between rounded-[4px] border border-[#687086] bg-[#2a3040] px-2 transition hover:border-blue-500/50">
 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
 onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}>
@@ -1146,9 +1147,9 @@ onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}>
                       style={{ fontFamily: "Arial, sans-serif" }}
                     />
                   </div>
-                  <span className="text-[9px] font-medium uppercase tracking-[0.06em] text-[#8fb0cf]">
-                    Amount
-                  </span>
+<span className="text-[9px] font-medium uppercase tracking-[0.06em] text-[#8fb0cf]">
+                      {t("tradingPanel.amountLabel")}
+                    </span>
                 </div>
 
                 <div
@@ -1156,7 +1157,7 @@ onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}>
                   onClick={() => setShowInvestmentSwitcher((v) => !v)}
                   className="relative hidden lg:flex flex-col group cursor-pointer"
                 >
-                  <div className="absolute -top-2 left-3 z-10 bg-[#242a3c] px-1 text-[10px] font-semibold text-[#777f92]">Investment</div>
+                  <div className="absolute -top-2 left-3 z-10 bg-[#242a3c] px-1 text-[10px] font-semibold text-[#777f92]">{t("tradingPanel.investmentLabel")}</div>
                   <div className="flex h-[47px] cursor-pointer items-center justify-between rounded-[4px] border border-[#687086] bg-[#2a3040] px-2 transition hover:border-blue-500/50">
 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
 onClick={(e) => { e.stopPropagation(); adjustInvestment(-1); }}>
@@ -1179,7 +1180,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
                       <Plus className="w-3 h-3" />
                     </span>
                   </div>
-                  <div className="mt-0.5 w-full text-center"><span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">Switch</span></div>
+                  <div className="mt-0.5 w-full text-center"><span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">{t("tradingPanel.switchTime")}</span></div>
                 </div>
                 {showInvestmentSwitcher && (
                   <AmountPopover
@@ -1201,7 +1202,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
 
         {/* ── Payout ───────────────────────────────────────────────── */}
         <div className="flex items-center justify-between border-t border-dashed border-[#4a5267] px-2.5 pb-2 pt-2 text-xs text-gray-400 lg:mx-4 lg:px-0 lg:pb-3">
-          <span className="font-semibold">Payout</span>
+          <span className="font-semibold">{t("tradingPanel.yourPayout")}</span>
           <span className="text-[13px] font-black tracking-wide text-white">{asset.available === false ? "N/A" : formatMoney(payout)}</span>
         </div>
 
@@ -1239,7 +1240,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
               color: "var(--trading-danger-contrast-color)",
               boxShadow: lowerButtonFocused ? "var(--trading-danger-focus-shadow)" : "0 4px 16px rgba(220,60,60,0.30)",
             }}>
-            <span>Down</span>
+            <span>{t("tradingPanel.down")}</span>
             <span className="flex w-[20px] h-[20px] items-center justify-center rounded-full bg-white/20 text-[10px] lg:w-[22px] lg:h-[22px]">
               <ArrowDown className="w-3 h-3" strokeWidth={3} />
             </span>
