@@ -1078,6 +1078,29 @@ const MyAccountPanel = () => {
         />
       )}
 
+      <input
+        ref={frontInputRef}
+        type="file"
+        accept={KYC_UPLOAD_ACCEPT}
+        style={{ display: "none" }}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) void handleDocumentUpload("front", file);
+          event.currentTarget.value = "";
+        }}
+      />
+      <input
+        ref={backInputRef}
+        type="file"
+        accept={KYC_UPLOAD_ACCEPT}
+        style={{ display: "none" }}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) void handleDocumentUpload("back", file);
+          event.currentTarget.value = "";
+        }}
+      />
+
       {identityModalOpen && (
         <AccountIdentityVerificationModal
           step={identityModalStep}
@@ -1195,29 +1218,6 @@ const MyAccountPanel = () => {
               onRemove={() => handleDocumentRemove("back")}
             />
           </div>
-
-          <input
-            ref={frontInputRef}
-            type="file"
-            accept={KYC_UPLOAD_ACCEPT}
-            style={{ display: "none" }}
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) void handleDocumentUpload("front", file);
-              event.currentTarget.value = "";
-            }}
-          />
-          <input
-            ref={backInputRef}
-            type="file"
-            accept={KYC_UPLOAD_ACCEPT}
-            style={{ display: "none" }}
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) void handleDocumentUpload("back", file);
-              event.currentTarget.value = "";
-            }}
-          />
 
           {verificationStatus && (
             <p className="mt-4 text-[12px] font-bold text-white/60">{verificationStatus}</p>
