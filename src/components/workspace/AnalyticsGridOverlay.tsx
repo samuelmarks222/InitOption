@@ -1185,7 +1185,7 @@ const MyAccountPanel = () => {
             ref={frontInputRef}
             type="file"
             accept={KYC_UPLOAD_ACCEPT}
-            className="hidden"
+            style={{ display: "none" }}
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) void handleDocumentUpload("front", file);
@@ -1196,7 +1196,7 @@ const MyAccountPanel = () => {
             ref={backInputRef}
             type="file"
             accept={KYC_UPLOAD_ACCEPT}
-            className="hidden"
+            style={{ display: "none" }}
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) void handleDocumentUpload("back", file);
