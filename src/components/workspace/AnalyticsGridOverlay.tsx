@@ -1094,6 +1094,7 @@ const MyAccountPanel = () => {
           onClose={() => setIdentityModalOpen(false)}
           onDocumentSelection={(nextType) => void handleIdentityDocumentSelection(nextType)}
           onUploadDocument={() => void handleIdentityUpload()}
+          onCountryChange={handleIdentityCountryChange}
         />
       )}
 
@@ -1335,7 +1336,9 @@ const AccountIdentityVerificationModal = ({
   onClose: () => void;
   onDocumentSelection: (documentType: string) => void;
   onUploadDocument: () => void;
+  onCountryChange: (country: string) => void;
 }) => {
+  const { onCountryChange } = props;
   const selectedType = idType || "ID card";
   const uploadLabel = !documents.front?.url ? "Upload Front side" : needsBackSide && !documents.back?.url ? "Upload Back side" : "Finish verification";
 
@@ -1398,7 +1401,7 @@ const AccountIdentityVerificationModal = ({
                 <div className="mt-5">
                   <select
                     value={country}
-                    onChange={(event) => handleIdentityCountryChange(event.target.value)}
+                    onChange={(event) => onCountryChange(event.target.value)}
                     className="w-full h-12 rounded-[6px] border border-white/10 bg-[#1e2435] px-4 text-[16px] font-black text-white focus:border-[#0d82df] focus:outline-none"
                   >
                     {COUNTRY_OPTIONS.map((opt) => (

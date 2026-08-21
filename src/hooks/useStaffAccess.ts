@@ -50,6 +50,7 @@ export const useStaffAccess = () => {
 
     return {
       isStaff: roles.some((role) => isStaffRole(role)),
+      isAdmin: roles.includes("admin"),
       loading,
       primaryRole,
       roles,

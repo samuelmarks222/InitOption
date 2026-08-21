@@ -207,13 +207,13 @@ function NotificationDropdown({ isOpen, onClose }: { isOpen: boolean; onClose: (
   );
 }
 
-function ProfileDropdown({ isOpen, onClose, profile, primaryRole, signOut, isStaff }: {
+function ProfileDropdown({ isOpen, onClose, profile, primaryRole, signOut, isAdmin }: {
   isOpen: boolean;
   onClose: () => void;
   profile: { display_name?: string; username?: string } | null;
   primaryRole: string | null;
   signOut: () => void;
-  isStaff: boolean;
+  isAdmin: boolean;
 }) {
   return (
     <Dropdown isOpen={isOpen} onClose={onClose} align="right">
@@ -257,7 +257,7 @@ function ProfileDropdown({ isOpen, onClose, profile, primaryRole, signOut, isSta
             <Activity size={18} />
             Activity Logs
           </Link>
-          {isStaff && (
+          {isAdmin && (
             <Link
               to="/admin"
               onClick={onClose}
@@ -325,7 +325,7 @@ function QuickActionsDropdown({ isOpen, onClose }: { isOpen: boolean; onClose: (
 export function AdminHeader() {
   const { profile, signOut } = useAuth();
   const { logoUrl, platformName } = useSiteBranding();
-  const { isStaff, primaryRole, loading: staffLoading } = useStaffAccess();
+  const { isAdmin, primaryRole, loading: staffLoading } = useStaffAccess();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -478,7 +478,7 @@ export function AdminHeader() {
               profile={profile}
               primaryRole={primaryRole}
               signOut={signOut}
-              isStaff={isStaff}
+              isAdmin={isAdmin}
             />
           </div>
         </div>
