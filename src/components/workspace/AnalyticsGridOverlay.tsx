@@ -1321,6 +1321,7 @@ const AccountIdentityVerificationModal = ({
   onClose,
   onDocumentSelection,
   onUploadDocument,
+  onCountryChange,
 }: {
   step: "privacy" | "document" | "upload";
   privacyAccepted: boolean;
@@ -1338,7 +1339,6 @@ const AccountIdentityVerificationModal = ({
   onUploadDocument: () => void;
   onCountryChange: (country: string) => void;
 }) => {
-  const { onCountryChange } = props;
   const selectedType = idType || "ID card";
   const uploadLabel = !documents.front?.url ? "Upload Front side" : needsBackSide && !documents.back?.url ? "Upload Back side" : "Finish verification";
 
