@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 import { PenTool, Activity, Compass, Zap, Flame, TrendingUp, Waves, BarChart2, ArrowRight } from "lucide-react";
 import { SUPPORTED_CHART_TIMEFRAMES, type SupportedChartTimeframe } from "./engine/priceEngine";
 
@@ -91,6 +92,7 @@ const MODAL_STYLE = {
   onToggleIndicatorsPanel,
   onToggleDrawingsPanel
 }: ChartToolbarProps) => {
+  const { t } = useTranslation();
   const [activeMenu, setActiveMenu] = useState<"time" | "inds" | "added" | null>(null);
   const [menuStyle, setMenuStyle] = useState<CSSProperties | null>(null);
   const [analysisTab, setAnalysisTab] = useState("INDICATORS");
@@ -172,13 +174,13 @@ const MODAL_STYLE = {
       {activeMenu && <button type="button" aria-label="Close toolbar menu" onClick={dismissMenu} className="fixed inset-0 z-[41]" />}
       <div className="pointer-events-auto flex flex-col gap-2">
         
-        {/* Graphical Tools (Pencil) */}
+{/* Graphical Tools (Pencil) */}
         <div className="relative">
           <button
             id="tour-drawings"
             onClick={onToggleDrawingsPanel}
             className={menuBtnClass(activeDrawTool !== null)}
-            title="Graphical Tools"
+            title={t("chartToolbar.graphicalTools")}
           >
             <PenTool className="h-[15px] w-[15px]" />
           </button>
@@ -191,10 +193,10 @@ const MODAL_STYLE = {
             id="tour-timeframe"
             onClick={() => toggleMenu("time", timeframeButtonRef.current, 224, 220)}
             className={menuBtnClass(activeMenu === "time", "green")}
-            title="Time Interval"
+            title={t("chartToolbar.timeInterval")}
           >
-              <span className={`text-[12px] font-black tracking-[-0.03em] ${activeMenu === "time" ? "text-[var(--trading-tool-active-text)]" : "text-[var(--trading-timeframe-text)]"}`}>
-                {selectedTf}
+            <span className={`text-[12px] font-black tracking-[-0.03em] ${activeMenu === "time" ? "text-[var(--trading-tool-active-text)]" : "text-[var(--trading-timeframe-text)]"}`}>
+              {selectedTf}
               </span>
           </button>
 
@@ -223,8 +225,8 @@ const MODAL_STYLE = {
             id="tour-chart-type"
             onClick={onOpenStyleEditor}
             className={menuBtnClass(styleEditorOpen)}
-            title="Chart settings"
-            aria-label="Open chart settings"
+            title={t("chartToolbar.chartSettings")}
+            aria-label={t("chartToolbar.openChartSettings")}
           >
             <CandleIcon className="h-[15px] w-[15px]" />
           </button>
@@ -236,7 +238,7 @@ const MODAL_STYLE = {
             id="tour-indicators"
             onClick={onToggleIndicatorsPanel}
             className={menuBtnClass(false)}
-            title="Indicators"
+            title={t("chartToolbar.indicators")}
           >
             <Compass className="h-[15px] w-[15px]" />
           </button>
