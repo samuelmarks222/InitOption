@@ -36,6 +36,7 @@ import {
   normalizeKycStatus,
 } from "@/lib/kyc";
 import { useTradingPreferences, type TradingLanguage } from "@/lib/tradingPreferences";
+import { COUNTRY_OPTIONS } from "@/lib/countries";
 import type { AnalyticsSignalAsset } from "./analytics/AnalyticsSignals";
 
 type AnalyticsRange = "3 days" | "Week" | "Month" | "Year" | "All";
@@ -873,6 +874,10 @@ const MyAccountPanel = () => {
     setIdentityModalStep("upload");
   };
 
+  const handleIdentityCountryChange = (nextCountry: string) => {
+    setForm((prev) => ({ ...prev, country: nextCountry }));
+  };
+
   const handleIdentityUpload = async () => {
     const nextSlot = !frontUploaded ? "front" : needsBackSide && !backUploaded ? "back" : null;
     if (!nextSlot) {
@@ -1381,9 +1386,18 @@ const AccountIdentityVerificationModal = ({
               <h4 className="max-w-[340px] text-[26px] font-black leading-tight">Select type and issuing country of your identity document</h4>
               <div className="mt-9">
                 <p className="text-[15px] font-black">Issuing country <span className="text-[#ff5d52]">*</span></p>
-                <div className="mt-5 flex items-center gap-3 text-[16px] font-black">
-                  <CountryCodeMark country={country} /> {country || "Kenya"}
-                  <ChevronDown className="ml-auto h-4 w-4 text-white/65" />
+                <div className="mt-5">
+                  <select
+                    value={country}
+                    onChange={(event) => handleIdentityCountryChange(event.target.value)}
+                    className="w-full h-12 rounded-[6px] border border-white/10 bg-[#1e2435] px-4 text-[16px] font-black text-white focus:border-[#0d82df] focus:outline-none"
+                  >
+                    {COUNTRY_OPTIONS.map((opt) => (
+                      <option key={opt.code} value={opt.name}>
+                        {opt.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="mt-9">
