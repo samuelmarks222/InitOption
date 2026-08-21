@@ -187,7 +187,12 @@
     "profile": "Profile",
     "withdrawal": "Withdrawal",
     "goToTrade": "Go to Trade",
-    "subtitle": "WEB TRADING PLATFORM"
+    "subtitle": "WEB TRADING PLATFORM",
+    "account": "Account",
+    "multiScreenAria": "Multi-screen layout",
+    "depositButton": "Deposit",
+    "withdrawal": "Withdrawal",
+    "goToTradeButton": "Go to Trade"
   },
   "tradingPanel": {
     "timePresets": {

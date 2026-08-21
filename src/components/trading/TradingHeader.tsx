@@ -195,8 +195,8 @@ const TradingHeader = ({
           <button
             onClick={() => navigate("/admin")}
             className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[12px] border border-white/5 bg-[#151c28] shadow-[0_10px_24px_rgba(7,12,22,0.22)] transition-colors hover:bg-white/[0.07]"
-            title="Admin panel"
-            aria-label="Admin panel"
+            title={t("tradingHeader.adminPanel")}
+            aria-label={t("tradingHeader.adminPanel")}
           >
             <ShieldCheck className="h-[18px] w-[18px]" style={{ color: "var(--trading-active-color)" }} />
           </button>
@@ -208,7 +208,7 @@ const TradingHeader = ({
         >
           <div className="relative">
             {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
+              <img src={profile.avatar_url} alt={t("tradingHeader.avatar")} className="h-8 w-8 rounded-full object-cover" />
             ) : (
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2f80ed,#1e2330)] text-sm font-black text-white">
                 {profileInitial}
@@ -264,10 +264,10 @@ const TradingHeader = ({
             color: "var(--trading-active-color)",
             boxShadow: "var(--trading-control-shadow)",
           }}
-          title="Admin Panel"
+          title={t("tradingHeader.adminPanel")}
         >
           <ShieldCheck className="h-4 w-4 inline-block mr-1.5" />
-          Admin
+          {t("tradingHeader.admin")}
         </button>
 
         <button
@@ -283,7 +283,7 @@ const TradingHeader = ({
             boxShadow: highlightDepositButton ? "var(--trading-success-focus-shadow)" : "var(--trading-success-shadow)",
           }}
         >
-          Deposit
+          {t("tradingHeader.depositButton")}
           {highlightDepositButton && (
             <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[#18a038] shadow-[0_8px_18px_rgba(0,0,0,0.32)]">
               <CheckCircle2 className="h-4 w-4" />
@@ -416,10 +416,10 @@ const TradingHeader = ({
               onClick={() => navigate("/admin")}
               className="flex h-[46px] items-center gap-2 rounded-[14px] border px-3.5 text-[13px] font-bold text-white transition-all hover:border-white/10 hover:bg-white/[0.06]"
               style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
-              title="Admin panel"
+              title={t("tradingHeader.adminPanel")}
             >
               <ShieldCheck className="h-4 w-4" style={{ color: "var(--trading-active-color)" }} />
-              Admin
+              {t("tradingHeader.admin")}
             </button>
           )}
           <div
@@ -438,7 +438,7 @@ const TradingHeader = ({
             >
               <div className="relative shrink-0">
                 {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="Avatar" className="h-9 w-9 rounded-full object-cover ring-1 ring-white/10" />
+                  <img src={profile.avatar_url} alt={t("tradingHeader.avatar")} className="h-9 w-9 rounded-full object-cover ring-1 ring-white/10" />
                 ) : (
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2f80ed,#1e2330)] text-[15px] font-black text-white ring-1 ring-white/10">
                     {profileInitial}
