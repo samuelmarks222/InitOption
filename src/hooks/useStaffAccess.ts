@@ -5,7 +5,7 @@ import type { AppRole } from "@/lib/adminRoles";
 import { getPrimaryStaffRole, isStaffRole } from "@/lib/adminRoles";
 
 export const useStaffAccess = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -13,7 +13,9 @@ export const useStaffAccess = () => {
     let mounted = true;
 
     const loadRoles = async () => {
-      if (!user?.id) {
+      // Use profile.id (canonical UUID) instead of user.id (Appwrite UID)
+      const canonicalUserId = profile?.id ?? user?.id;
+      if (!canonicalUserId) {
         if (mounted) {
           setRoles([]);
           setLoading(false);
@@ -22,7 +24,7 @@ export const useStaffAccess = () => {
       }
 
       setLoading(true);
-      const { data, error } = await api.from("user_roles").select("role").eq("user_id", user.id);
+      const { data, error } = await api.from("user_roles").select("role").eq("user_id", canonicalUserId);
 
       if (!mounted) return;
 
@@ -41,7 +43,7 @@ export const useStaffAccess = () => {
     return () => {
       mounted = false;
     };
-  }, [user?.id]);
+  }, [profile?.id, user?.id]);
 
   return useMemo(() => {
     const primaryRole = getPrimaryStaffRole(roles);
