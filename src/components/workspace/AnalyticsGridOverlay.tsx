@@ -61,11 +61,20 @@ const PIE_COLORS = ["#08c66b", "#1d96f2", "#ff5b58", "#bb0039", "#ff950f"];
 const PAGE_SIZE = 10;
 const LANGUAGE_OPTIONS: Array<{ label: string; code: TradingLanguage }> = [
   { label: "English", code: "en" },
-  { label: "Spanish", code: "es" },
-  { label: "French", code: "fr" },
-  { label: "Portuguese", code: "pt" },
-  { label: "Arabic", code: "ar" },
-  { label: "Hindi", code: "hi" },
+  { label: "中文 (Chinese)", code: "zh" },
+  { label: "Español (Spanish)", code: "es" },
+  { label: "Français (French)", code: "fr" },
+  { label: "Deutsch (German)", code: "de" },
+  { label: "Português (Portuguese)", code: "pt" },
+  { label: "हिन्दी (Hindi)", code: "hi" },
+  { label: "العربية (Arabic)", code: "ar" },
+  { label: "বাংলা (Bengali)", code: "bn" },
+  { label: "اردو (Urdu)", code: "ur" },
+  { label: "Kiswahili (Swahili)", code: "sw" },
+  { label: "Русский (Russian)", code: "ru" },
+  { label: "日本語 (Japanese)", code: "ja" },
+  { label: "Türkçe (Turkish)", code: "tr" },
+  { label: "Bahasa Indonesia (Indonesian)", code: "id" },
 ];
 const TIMEZONE_OPTIONS = ["(UTC+03:00)", "(UTC+00:00)", "(UTC+01:00)", "(UTC-05:00)", "(UTC+05:30)", "(UTC+08:00)"];
 const ID_DOCUMENT_OPTIONS = ["ID card", "Passport", "Residence permit", "Driver's license"];
