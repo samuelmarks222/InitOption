@@ -570,6 +570,18 @@ const getDbPath = (request: ApiRequest) => {
   return fromQuery || (request.url || "").replace(/^\/api\/db\/?/, "");
 };
 
+const parseColumns = (raw: string | undefined): string[] | null => {
+  if (!raw || raw.trim().length === 0) return null;
+  if (raw.trim() === "*") return ["*"];
+  const columns: string[] = [];
+  for (const part of raw.split(",")) {
+    const trimmed = part.trim();
+    if (!trimmed || !IS_IDENTIFIER.test(trimmed)) return null;
+    columns.push(trimmed);
+  }
+  return columns.length > 0 ? columns : null;
+};
+
 const expandColumns = (columns: string[]): string[] => {
   const expanded: string[] = [];
   for (const col of columns) {
@@ -744,6 +756,9 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
     return;
   }
 
+  const segments = getDbPath(request).split("/").filter(Boolean);
+  const table = segments[0] ?? "";
+
   try {
     const auth = await authenticateWithUid(request.headers);
     if (!auth) {
@@ -754,8 +769,6 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
     const appwriteUid = auth.uid;
     const mappedId = clerkUserIdToUuid(clerkUserId);
 
-    const segments = getDbPath(request).split("/").filter(Boolean);
-    const table = segments[0] ?? "";
     if (!ALLOWED_TABLES.has(table)) {
       sendJson(response, 400, { error: "Table not allowed" });
       return;
