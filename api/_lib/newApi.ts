@@ -946,8 +946,10 @@ export async function handleRpc(request: ApiRequest, response: ApiResponse): Pro
     sendJson(response, 405, { error: "Method not allowed" });
     return;
   }
+  const functionName = extractFunctionName(request);
+  let args: Record<string, unknown> = {};
+
   try {
-    const functionName = extractFunctionName(request);
     if (!functionName || !IS_VALID_IDENTIFIER.test(functionName)) {
       sendJson(response, 400, { error: "Invalid RPC function name" });
       return;
@@ -960,7 +962,7 @@ export async function handleRpc(request: ApiRequest, response: ApiResponse): Pro
     }
 
     const rawBody = await readRawBody(request);
-    let args: Record<string, unknown> = {};
+    args = {};
     if (rawBody) {
       try {
         const parsed = JSON.parse(rawBody) as unknown;
