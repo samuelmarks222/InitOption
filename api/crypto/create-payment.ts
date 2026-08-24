@@ -181,6 +181,7 @@ const createPlisioHostedCheckout = async ({
 }) => {
   const requestUrl = new URL("https://api.plisio.net/api/v1/invoices/new");
   requestUrl.searchParams.set("api_key", getPlisioApiKey());
+  requestUrl.searchParams.set("json", "true");
   if (allowedCurrencies.length > 0) {
     requestUrl.searchParams.set("allowed_psys_cids", allowedCurrencies.join(","));
   }
@@ -865,6 +866,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     const plisioUrl = new URL("https://api.plisio.net/api/v1/shops/deposit/new");
     plisioUrl.searchParams.set("api_key", getPlisioApiKey());
+    plisioUrl.searchParams.set("json", "true");
     plisioUrl.searchParams.set("psys_cid", plisioCurrency);
     plisioUrl.searchParams.set("uid", userId);
     plisioUrl.searchParams.set("callback_url", plisioCallbackUrl);
@@ -874,11 +876,24 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       headers: { "Content-Type": "application/json" },
     });
 
-    const plisioData = await plisioResponse.json();
+    const plisioRaw = await plisioResponse.text();
+    let plisioData: JsonObject | null = null;
+    try {
+      plisioData = JSON.parse(plisioRaw);
+    } catch {
+      plisioData = null;
+    }
 
-    if (!plisioResponse.ok) {
-      const errorMsg = plisioData?.error ? String(plisioData.error) : `Plisio returned HTTP ${plisioResponse.status}`;
-      sendJson(response, 500, { error: errorMsg });
+    if (!plisioResponse.ok || !plisioData || asString(plisioData.status) !== "success") {
+      const errorMsg =
+        asString(plisioData?.error) ||
+        asString(plisioData?.message) ||
+        `Plisio returned HTTP ${plisioResponse.status}`;
+      console.error("Plisio deposit creation failed", {
+        httpStatus: plisioResponse.status,
+        body: plisioRaw.slice(0, 500),
+      });
+      sendJson(response, 500, { error: `Plisio deposit creation failed: ${errorMsg}` });
       return;
     }
 

@@ -22,7 +22,11 @@ const getPlisioBaseUrl = () => "https://api.plisio.net/api/v1";
 // path to new URL() against a base that already has a path (e.g. ".../api/v1")
 // silently replaces the whole path, producing ".../currencies/USD" instead of
 // ".../api/v1/currencies/USD". Always append instead.
-const buildPlisioUrl = (path: string) => new URL(`${getPlisioBaseUrl()}${path}`);
+const buildPlisioUrl = (path: string) => {
+  const url = new URL(`${getPlisioBaseUrl()}${path}`);
+  url.searchParams.set("json", "true");
+  return url;
+};
 
 const asNumber = (value: unknown) => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -216,11 +220,19 @@ export const fetchPlisioDeposit = async ({
     headers: { "Content-Type": "application/json" },
   });
 
-  const data = await (response.json() as Promise<JsonObject>);
+  const rawText = await response.text();
+  let data: JsonObject | null = null;
+  try {
+    data = JSON.parse(rawText);
+  } catch {
+    data = null;
+  }
 
-  if (!response.ok) {
-    const errorMsg = asString(data?.error) || `Plisio returned HTTP ${response.status}`;
-    throw new Error(errorMsg);
+  if (!response.ok || !data || asString(data.status) !== "success") {
+    const errorMsg =
+      asString(data?.error) || asString(data?.message) || `Plisio returned HTTP ${response.status}`;
+    console.error("Plisio deposit request failed", { httpStatus: response.status, body: rawText.slice(0, 500) });
+    throw new Error(errorMsg || "Plisio returned an unexpected response");
   }
 
   return data;
