@@ -982,6 +982,8 @@ const categoryCards = useMemo(
           amount: amountValue,
           applyDepositBonus: bonusEnabled,
           paymentMethodId: selectedMethod.id,
+          cryptoCurrency: selectedMethod.symbol,
+          cryptoNetwork: selectedMethod.network,
         });
 
         setActiveInstruction(
