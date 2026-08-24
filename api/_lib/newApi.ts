@@ -513,7 +513,7 @@ interface FilterClause {
   c?: string;
   o?: string;
   v?: unknown;
-  items?: FilterClause[];
+  items?: FilterClause[] | string;
 }
 
 interface PgResult {
