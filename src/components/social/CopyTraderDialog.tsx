@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, Shield, SlidersHorizontal } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { AlertTriangle, Shield, SlidersHorizontal, Wallet } from "lucide-react";
 import { VipBadge } from "@/components/vip/VipBadge";
+import { useAuth } from "@/contexts/AuthContext";
+import { getEffectiveLiveBalance } from "@/lib/live-balance";
+import { toast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +45,11 @@ export const CopyTraderDialog = ({
   open,
   trader,
 }: CopyTraderDialogProps) => {
+  const navigate = useNavigate();
+  const { profile: currentProfile } = useAuth();
+  const liveBalance = getEffectiveLiveBalance(currentProfile);
+  const hasNoBalance = liveBalance <= 0;
+
   const [enabled, setEnabled] = useState(existingSetting?.enabled ?? true);
   const [amountType, setAmountType] = useState<CopyAmountType>(existingSetting?.amount_type ?? "fixed");
   const [executionMode, setExecutionMode] = useState<CopyExecutionMode>(existingSetting?.execution_mode ?? "automatic");
@@ -68,6 +77,17 @@ export const CopyTraderDialog = ({
   }, [existingSetting, open]);
 
   const handleSave = async () => {
+    if (hasNoBalance) {
+      toast({
+        title: "Deposit Required",
+        description: "You must add money to your account in order to copy trades.",
+        variant: "destructive",
+      });
+      onOpenChange(false);
+      navigate("/deposit");
+      return;
+    }
+
     setSaving(true);
     await onSave({
       enabled,

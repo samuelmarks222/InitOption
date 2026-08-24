@@ -1,20 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/integrations/api/client";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Copy,
   Eye,
   MessageCircle,
+  ShieldAlert,
   Star,
   ThumbsDown,
   ThumbsUp,
   TrendingUp,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import { VipBadge } from "@/components/vip/VipBadge";
 import { useSocialTrading } from "@/contexts/SocialTradingContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { getEffectiveLiveBalance } from "@/lib/live-balance";
+import { toast } from "@/hooks/use-toast";
 import {
   computeTraderWinRate,
   formatDirectionLabel,
@@ -26,7 +31,7 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type Period = "today" | "week" | "month" | "all";
 type ModalTab = "statistics" | "social" | "achievements";
-type ViewMode = "profile" | "copy";
+type ViewMode = "profile" | "copy" | "deposit_required";
 
 interface TraderProfileModalProps {
   trader: TraderSummary;
@@ -49,6 +54,7 @@ const RATIO_PRESETS = [
 ];
 
 export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps) => {
+  const navigate = useNavigate();
   const { profile: currentProfile } = useAuth();
   const { followTrader, getCopySetting, isFollowing, saveCopySetting, unfollowTrader, stopCopying } = useSocialTrading();
 
@@ -58,6 +64,9 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
   const [trades, setTrades] = useState<Tables<"trades">[]>([]);
   const [loadingTrades, setLoadingTrades] = useState(true);
   const [fullProfile, setFullProfile] = useState<TraderSummary>(trader);
+
+  const effectiveLiveBalance = getEffectiveLiveBalance(currentProfile);
+  const hasNoBalance = effectiveLiveBalance <= 0;
 
   // Copy settings state
   const existingSetting = getCopySetting(trader.id);
@@ -115,7 +124,30 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
     };
   }, [trades]);
 
+  const handleStartCopyClick = () => {
+    if (hasNoBalance) {
+      toast({
+        title: "Deposit Required",
+        description: "You must add money to your account in order to copy trades.",
+        variant: "destructive",
+      });
+      setView("deposit_required");
+      return;
+    }
+    setView("copy");
+  };
+
   const handleConfirmCopy = async () => {
+    if (hasNoBalance) {
+      toast({
+        title: "Deposit Required",
+        description: "Your balance is $0.00. Please deposit funds before enabling copy trading.",
+        variant: "destructive",
+      });
+      setView("deposit_required");
+      return;
+    }
+
     setSavingCopy(true);
     await saveCopySetting(trader.id, {
       enabled: true,
@@ -210,7 +242,7 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
               {!isSelf && (
                 <div className="mt-5 flex gap-2">
                   <button
-                    onClick={() => setView("copy")}
+                    onClick={handleStartCopyClick}
                     disabled={fullProfile.social_trading_disabled}
                     className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0fa053] px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#0d8f47] active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -234,11 +266,20 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
                 </div>
               )}
 
-              {/* Balance warning */}
-              {!isSelf && (
-                <div className="mt-3 rounded-xl border border-orange-500/20 bg-orange-500/10 px-3 py-2 text-xs text-orange-300">
-                  Add money to your account in order to copy trades.
-                </div>
+              {/* Balance warning banner */}
+              {!isSelf && hasNoBalance && (
+                <button
+                  onClick={() => navigate("/deposit")}
+                  className="mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-orange-500/30 bg-orange-500/15 px-3.5 py-2.5 text-left text-xs font-semibold text-orange-200 transition-colors hover:bg-orange-500/25"
+                >
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-orange-400 shrink-0" />
+                    <span>Add money to your account in order to copy trades ($0.00)</span>
+                  </div>
+                  <span className="shrink-0 rounded-lg bg-orange-500 px-2 py-1 text-[10px] font-black uppercase text-black">
+                    Deposit
+                  </span>
+                </button>
               )}
             </div>
 
@@ -561,6 +602,44 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
               </button>
             </div>
           </>
+        )}
+
+        {/* ─── DEPOSIT REQUIRED VIEW ─── */}
+        {view === "deposit_required" && (
+          <div className="px-6 py-8 text-center space-y-4">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-orange-500/15 text-orange-400">
+              <ShieldAlert className="h-8 w-8" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">Deposit Required</h3>
+              <p className="mt-2 text-xs text-gray-400 leading-5">
+                You cannot copy trades from <span className="font-semibold text-white">{getTraderDisplayName(fullProfile)}</span> because your live account balance is <span className="font-bold text-orange-400">$0.00</span>.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 p-4 text-xs text-orange-300 text-left">
+              <p className="font-bold">Why do I need to deposit?</p>
+              <p className="mt-1 text-orange-300/80">
+                Automated copy trading mirrors real order stakes on your live account in real time. Please top up your live wallet balance to begin.
+              </p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setView("profile")}
+                className="flex-1 rounded-xl border border-white/10 bg-white/5 py-3 text-xs font-bold text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                Back
+              </button>
+              <button
+                onClick={() => {
+                  onClose();
+                  navigate("/deposit");
+                }}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0fa053] py-3 text-xs font-black uppercase tracking-wider text-white transition-colors hover:bg-[#0d8f47]"
+              >
+                <Wallet className="h-4 w-4" /> Deposit Now
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
