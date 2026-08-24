@@ -56,7 +56,8 @@ function splitStatements(text) {
   return stmts;
 }
 
-const NON_TX_RE = /^\s*(create\s+extension|create\s+role)\b/i; // cannot run in a transaction block
+const NON_TX_RE = /^\s*(create\s+extension|create\s+role|create\s+type)\b/i;
+const benign = /already exists|duplicate|already defined|relation .* already exists|column .* already exists|policy .* already exists|function .* already exists/i;
 const short = (s) => s.replace(/\s+/g, " ").slice(0, 80);
 
 (async () => {
@@ -68,47 +69,73 @@ const short = (s) => s.replace(/\s+/g, " ").slice(0, 80);
     if (NON_TX_RE.test(s)) pre.push(s);
     else tx.push(s);
   }
-  console.log(`Parsed ${all.length} statements (${pre.length} non-transactional, ${tx.length} transactional).`);
+  console.log(`Parsed ${all.length} statements (${pre.length} non-tx, ${tx.length} tx).`);
 
   try {
     await client.connect();
 
-    // Phase A: autocommit non-transactional DDL; tolerate "already exists".
+    // Pre-phase (autocommit): extensions, roles, types. Tolerate "already exists".
     for (const s of pre) {
       try {
         await client.query(s);
         console.log("pre ok:    " + short(s));
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        if (/already exists/i.test(msg) || /duplicate role/i.test(msg)) {
-          console.log("pre skip:  " + short(s) + "  (already exists)");
+        if (/^\s*create\s+type/i.test(s) && /already exists/i.test(msg)) {
+          // ensure all enum values referenced by this type exist
+          const m = s.match(/create\s+type\s+([^\s]+)\s+as\s+enum\s*\(([\s\S]*)\)/i);
+          if (m) {
+            for (const v of [...m[2].matchAll(/'([^']*)'/g)].map((x) => x[1])) {
+              try { await client.query(`ALTER TYPE ${m[1]} ADD VALUE IF NOT EXISTS '${v.replace(/'/g, "''")}'`); }
+              catch (e2) { const m2 = e2 instanceof Error ? e2.message : String(e2); if (!/already exists/i.test(m2)) console.error("enum add fail: " + m2); }
+            }
+          }
           continue;
         }
+        if (benign.test(msg) || /duplicate role/i.test(msg)) { console.log("pre skip:  " + short(s) + "  (already exists)"); continue; }
         console.error("PRE FAILURE: " + msg);
         await client.end();
         process.exit(1);
       }
     }
 
-    // Phase B: transactional schema.
-    await client.query("BEGIN");
+    // Ensure every enum value referenced anywhere in the schema exists (autocommit).
+    const enumRefs = {};
+    let cm;
+    const castRe = /'([^']+)'::([A-Za-z_][\w.]*)/g;
+    while ((cm = castRe.exec(sql))) { (enumRefs[cm[2]] ??= new Set()).add(cm[1]); }
+    const typeDefRe = /create\s+type\s+([^\s]+)\s+as\s+enum\s*\(([\s\S]*?)\)/gi;
+    while ((cm = typeDefRe.exec(sql))) {
+      if (!enumRefs[cm[1]]) enumRefs[cm[1]] = new Set();
+      [...cm[2].matchAll(/'([^']*)'/g)].map((x) => x[1]).forEach((v) => enumRefs[cm[1]].add(v));
+    }
+    for (const [typ, vals] of Object.entries(enumRefs)) {
+      for (const v of vals) {
+        try { await client.query(`ALTER TYPE ${typ} ADD VALUE IF NOT EXISTS '${v.replace(/'/g, "''")}'`); }
+        catch (e) { const m2 = e instanceof Error ? e.message : String(e); if (!/already exists/i.test(m2)) console.error("enum ensure fail: " + typ + " " + v + " " + m2); }
+      }
+    }
+
+    // Tx-phase (autocommit, tolerant): each statement persists independently so a
+    // drifted DB (existing tables missing newer columns, etc.) converges without
+    // rolling everything back on the first conflict.
+    let applied = 0;
+    const failures = [];
     for (let i = 0; i < tx.length; i++) {
       try {
         await client.query(tx[i]);
+        applied++;
       } catch (err) {
-        await client.query("ROLLBACK");
-        console.error(`Transactional statement #${i + 1} / ${tx.length} FAILED:`);
-        console.error(err instanceof Error ? err.message : err);
-        console.error("---- statement (first 1500 chars) ----");
-        console.error(tx[i].slice(0, 1500));
-        await client.end();
-        process.exit(1);
+        const msg = err instanceof Error ? err.message : String(err);
+        if (!benign.test(msg)) failures.push(`#${i + 1}: ${short(tx[i])} :: ${msg.split("\n")[0].slice(0, 120)}`);
       }
     }
-    await client.query("COMMIT");
-    console.log(`SUCCESS: pre=${pre.length} ok, schema=${tx.length} committed (COMMIT).`);
+    console.log(`tx autocommit: applied=${applied}, non-benign failures=${failures.length}.`);
+    failures.slice(0, 50).forEach((f) => console.error("  FAIL " + f));
+
+    console.log(`DONE: schema applied (drift-tolerant).`);
     await client.end();
-    process.exit(0);
+    process.exit(failures.length ? 1 : 0);
   } catch (err) {
     console.error("Fatal error:", err instanceof Error ? err.stack : err);
     try { await client.end(); } catch {}
