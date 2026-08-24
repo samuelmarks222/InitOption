@@ -7,9 +7,11 @@ import {
   Menu,
   Trophy,
   User,
+  Users,
+  Zap,
 } from "lucide-react";
 
-export type WorkspaceModule = "support" | "account" | "analytics" | "tournaments" | "leaderboard" | "referrals" | "more" | "settings" | "help" | "guides" | "signals" | "generalchat" | null;
+export type WorkspaceModule = "support" | "social" | "account" | "analytics" | "tournaments" | "leaderboard" | "referrals" | "more" | "settings" | "help" | "guides" | "signals" | "generalchat" | null;
 
 interface NavigationSidebarProps {
   activeWorkspace: WorkspaceModule;
@@ -38,6 +40,7 @@ export const NavigationSidebar = ({
   ] as const;
 
   const SECONDARY_ITEMS = [
+    { id: "social", label: "Social", icon: Zap },
     { id: "support", label: "Support", icon: HelpCircle },
     { id: "account", label: "Account", icon: User },
     { id: "tournaments", label: "Tourna- ments", icon: Trophy, badge: "4" },
