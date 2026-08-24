@@ -765,6 +765,39 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
       sendJson(response, 401, { error: "Unauthorized" });
       return;
     }
+export async function handleDb(request: ApiRequest, response: ApiResponse): Promise<void> {
+  const method = request.method || "GET";
+  
+  // Check database connection early
+  if (!process.env.DATABASE_URL?.trim()) {
+    console.error("DATABASE_URL not configured");
+    sendJson(response, 503, { error: "Database not configured" });
+    return;
+  }
+
+  // Test database connectivity
+  try {
+    const dbTest = await testDbConnection();
+    if (!dbTest.ok) {
+      console.error("Database connection failed:", dbTest.error);
+      sendJson(response, 503, { error: "Database unavailable", details: dbTest.error });
+      return;
+    }
+  } catch (e) {
+    console.error("Database test error:", e instanceof Error ? e.message : e);
+    sendJson(response, 503, { error: "Database test failed" });
+    return;
+  }
+
+  const segments = getDbPath(request).split("/").filter(Boolean);
+  const table = segments[0] ?? "";
+
+  try {
+    const auth = await authenticateWithUid(request.headers);
+    if (!auth) {
+      sendJson(response, 401, { error: "Unauthorized" });
+      return;
+    }
     const clerkUserId = auth.uuid;
     const appwriteUid = auth.uid;
     const mappedId = clerkUserIdToUuid(clerkUserId);
@@ -879,14 +912,13 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
         return;
       }
       const betweenClauses = remapClauses(filterClauses, mappedId, appwriteUid, clerkUserId);
-      const patchParams: unknown[] = [];
-      const whereSql = buildWhere(betweenClauses, patchParams);
-      const setClause = entries.map(([k], i) => `"${k}" = $${patchParams.length + i + 1}`).join(", ");
-      const setParams = entries.map(([, v]) => v);
+      const params: unknown[] = entries.map(([, v]) => v);
+      const setClause = entries.map(([k], i) => `"${k}" = $${i + 1}`).join(", ");
+      const whereSql = buildWhere(betweenClauses, params);
       const { rows } = await runScoped(mappedId, (client) =>
         client.query(
           `update public.${table} set ${setClause} ${whereSql ? `where ${whereSql}` : ""} returning *`,
-          [...setParams, ...patchParams],
+          params,
         ),
       );
       sendJson(response, 200, { data: rows });
@@ -906,98 +938,5 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
     const statusCode = isClientError ? 400 : 500;
     console.error("db route failed", { message, stack, table: table ?? "unknown", method, statusCode });
     sendJson(response, statusCode, { error: message, details: stack?.split("\n").slice(0, 3).join(" | ") });
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/* RPC                                                                  */
-/* ------------------------------------------------------------------ */
-const IS_VALID_IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/;
-
-const extractFunctionName = (request: ApiRequest): string | null => {
-  const fromQuery = request.query?.fn ?? request.query?.name;
-  const qName = Array.isArray(fromQuery) ? fromQuery[0] : fromQuery;
-  if (typeof qName === "string" && qName.trim().length > 0) return qName.trim();
-
-  const pathname = (request.url || "").split("?")[0];
-  const prefixes = ["/api/rpc/", "/rpc/"];
-  for (const prefix of prefixes) {
-    if (pathname.startsWith(prefix)) {
-      const first = pathname.slice(prefix.length).split("/")[0];
-      if (first) return first;
-    }
-  }
-  return null;
-};
-
-const normalizeRpcResult = (rows: Array<Record<string, unknown>>): unknown => {
-  if (rows.length === 0) return null;
-  if (rows.length === 1) {
-    const record = rows[0];
-    const keys = Object.keys(record);
-    return keys.length === 1 ? record[keys[0]] : record;
-  }
-  return rows;
-};
-
-export async function handleRpc(request: ApiRequest, response: ApiResponse): Promise<void> {
-  if (request.method !== "POST") {
-    response.setHeader("Allow", "POST");
-    sendJson(response, 405, { error: "Method not allowed" });
-    return;
-  }
-  const functionName = extractFunctionName(request);
-  let args: Record<string, unknown> = {};
-
-  try {
-    if (!functionName || !IS_VALID_IDENTIFIER.test(functionName)) {
-      sendJson(response, 400, { error: "Invalid RPC function name" });
-      return;
-    }
-
-    const clerkUserId = await authenticateRequest(request.headers);
-    if (!clerkUserId) {
-      sendJson(response, 401, { error: "Unauthorized" });
-      return;
-    }
-
-    const rawBody = await readRawBody(request);
-    args = {};
-    if (rawBody) {
-      try {
-        const parsed = JSON.parse(rawBody) as unknown;
-        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-          args = parsed as Record<string, unknown>;
-        }
-      } catch {
-        // No JSON body; treat as no arguments.
-      }
-    }
-
-    const mappedId = clerkUserIdToUuid(clerkUserId);
-    const keys = Object.keys(args);
-
-    const result = await transaction(async (client) => {
-      await client.query("SELECT set_config('app.current_user_id', $1, true)", [mappedId]);
-
-      let sql: string;
-      const values: unknown[] = [];
-      if (keys.length === 0) {
-        sql = `SELECT * FROM ${functionName}()`;
-      } else {
-        const assignments = keys.map((key, index) => `${key} := $${index + 1}`).join(", ");
-        values.push(...keys.map((key) => args[key]));
-        sql = `SELECT * FROM ${functionName}(${assignments})`;
-      }
-      return client.query(sql, values);
-    });
-
-    sendJson(response, 200, { data: normalizeRpcResult(result.rows) });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to execute function";
-    const stack = error instanceof Error ? error.stack : undefined;
-    console.error("RPC failed", { functionName, message, stack, args });
-    const isNotFound = message.includes("does not exist") || message.includes("function") && message.includes("not found");
-    sendJson(response, isNotFound ? 404 : 400, { error: message, details: stack?.split("\n").slice(0, 3).join(" | ") });
   }
 }

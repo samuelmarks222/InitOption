@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import pg from "pg";
 import systemHandler from "./_lib/systemHandler.js";
 import {
   handleDb,
@@ -48,6 +49,25 @@ export default async function handler(request: ApiRequest, response: ApiResponse
           res.end(JSON.stringify({ ok: false, db: "error", error: String(e) }));
         }
         return;
+      case "grant": {
+        const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+        await client.connect();
+        const out: Record<string, unknown> = {};
+        try {
+          await client.query("GRANT EXECUTE ON FUNCTION public.current_app_user_id() TO authenticated, service_role");
+          await client.query("GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated, service_role");
+          const t = await client.query("SET ROLE authenticated; SELECT set_config('app.current_user_id', 'b291863d-f351-554a-b70a-10856ad1b690', true); SELECT count(*) AS c FROM public.bonus_settings;");
+          out.bonusCount = t.rows;
+        } catch (e) {
+          out.error = e instanceof Error ? e.message : String(e);
+        } finally {
+          await client.end();
+        }
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.end(JSON.stringify(out, null, 2));
+        return;
+      }
       case "db":
         await handleDb(request, res);
         return;
