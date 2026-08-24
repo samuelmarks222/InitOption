@@ -63,115 +63,121 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
+      try {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
 
-      const weekAgo = new Date(todayStart);
-      weekAgo.setDate(weekAgo.getDate() - 6);
+        const weekAgo = new Date(todayStart);
+        weekAgo.setDate(weekAgo.getDate() - 6);
 
-      const [
-        userCountR,
-        activeR,
-        depSumR,
-        wdSumR,
-        wdPendingR,
-        chartTradesR,
-        recentTradesR,
-        recentWdR,
-      ] = await Promise.all([
-        api.from("profiles").select("id", { count: "exact", head: true }),
-        api.from("profiles").select("id", { count: "exact", head: true }).gt("trade_count_30d", 0),
-        api.from("deposit_requests").select("amount").eq("status", "completed"),
-        api.from("withdrawal_requests").select("amount").eq("status", "completed"),
-        api.from("trades")
-          .select("profit, opened_at, closed_at, amount, status")
-          .gte("opened_at", weekAgo.toISOString())
-          .limit(10000),
-        api.from("trades")
-          .select("id, user_id, asset_symbol, direction, amount, profit, closed_at, status")
-          .order("closed_at", { ascending: false })
-          .limit(8),
-        api.from("withdrawal_requests")
-          .select("id, user_id, amount, payment_method, created_at")
-          .eq("status", "pending")
-          .order("created_at", { ascending: false })
-          .limit(5),
-      ]);
+        const [
+          userCountR,
+          activeR,
+          depSumR,
+          wdSumR,
+          chartTradesR,
+          recentTradesR,
+          recentWdR,
+        ] = await Promise.all([
+          api.from("profiles").select("id", { count: "exact", head: true }),
+          api.from("profiles").select("id", { count: "exact", head: true }).gt("trade_count_30d", 0),
+          api.from("deposit_requests").select("amount").eq("status", "completed"),
+          api.from("withdrawal_requests").select("amount").eq("status", "completed"),
+          api.from("trades")
+            .select("profit, opened_at, closed_at, amount, status")
+            .gte("opened_at", weekAgo.toISOString())
+            .limit(10000),
+          api.from("trades")
+            .select("id, user_id, asset_symbol, direction, amount, profit, closed_at, status")
+            .order("closed_at", { ascending: false })
+            .limit(8),
+          api.from("withdrawal_requests")
+            .select("id, user_id, amount, payment_method, created_at")
+            .eq("status", "pending")
+            .order("created_at", { ascending: false })
+            .limit(5),
+        ]);
 
-      setTotalUsers(userCountR.count ?? 0);
-      setActiveTraders(activeR.count ?? 0);
-      setTotalDeposits((depSumR.data ?? []).reduce((s, r) => s + Number(r.amount ?? 0), 0));
-      setTotalWithdrawals((wdSumR.data ?? []).reduce((s, r) => s + Number(r.amount ?? 0), 0));
+        setTotalUsers(userCountR?.count ?? 0);
+        setActiveTraders(activeR?.count ?? 0);
+        setTotalDeposits((depSumR?.data ?? []).reduce((s, r) => s + Number(r.amount ?? 0), 0));
+        setTotalWithdrawals((wdSumR?.data ?? []).reduce((s, r) => s + Number(r.amount ?? 0), 0));
 
-      const trades = chartTradesR.data ?? [];
-      let totVol = 0;
-      let totProfit = 0;
-      trades.forEach((t) => {
-        totVol += Number(t.amount ?? 0);
-        totProfit += (Number(t.amount ?? 0) - Number(t.profit ?? 0));
-      });
-      setTradingVolume(totVol);
-      setNetProfitLoss(totProfit);
+        const trades = chartTradesR?.data ?? [];
+        let totVol = 0;
+        let totProfit = 0;
+        trades.forEach((t) => {
+          totVol += Number(t.amount ?? 0);
+          totProfit += (Number(t.amount ?? 0) - Number(t.profit ?? 0));
+        });
+        setTradingVolume(totVol);
+        setNetProfitLoss(totProfit);
 
-      const days = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(weekAgo);
-        d.setDate(d.getDate() + i);
-        return d;
-      });
+        const days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(weekAgo);
+          d.setDate(d.getDate() + i);
+          return d;
+        });
 
-      setProfitData(
-        days.map((d) => {
-          const dayEnd = new Date(d);
-          dayEnd.setDate(d.getDate() + 1);
-          const dayTrades = trades.filter((t) => t.closed_at && new Date(t.closed_at) >= d && new Date(t.closed_at) < dayEnd);
-          const profit = dayTrades.reduce((s, t) => s + (Number(t.amount ?? 0) - Number(t.profit ?? 0)), 0);
-          return { name: d.toLocaleDateString("en-US", { weekday: "short" }), profit };
-        })
-      );
+        setProfitData(
+          days.map((d) => {
+            const dayEnd = new Date(d);
+            dayEnd.setDate(d.getDate() + 1);
+            const dayTrades = trades.filter((t) => t.closed_at && new Date(t.closed_at) >= d && new Date(t.closed_at) < dayEnd);
+            const profit = dayTrades.reduce((s, t) => s + (Number(t.amount ?? 0) - Number(t.profit ?? 0)), 0);
+            return { name: d.toLocaleDateString("en-US", { weekday: "short" }), profit };
+          })
+        );
 
-      setVolumeData(
-        days.map((d) => {
-          const dayEnd = new Date(d);
-          dayEnd.setDate(d.getDate() + 1);
-          const vol = trades
-            .filter((t) => new Date(t.opened_at) >= d && new Date(t.opened_at) < dayEnd)
-            .reduce((s, t) => s + Number(t.amount ?? 0), 0);
-          return { name: d.toLocaleDateString("en-US", { weekday: "short" }), volume: vol };
-        })
-      );
+        setVolumeData(
+          days.map((d) => {
+            const dayEnd = new Date(d);
+            dayEnd.setDate(d.getDate() + 1);
+            const vol = trades
+              .filter((t) => t.opened_at && new Date(t.opened_at) >= d && new Date(t.opened_at) < dayEnd)
+              .reduce((s, t) => s + Number(t.amount ?? 0), 0);
+            return { name: d.toLocaleDateString("en-US", { weekday: "short" }), volume: vol };
+          })
+        );
 
-      const allUids = [...new Set([...(recentTradesR.data ?? []).map((t) => t.user_id), ...(recentWdR.data ?? []).map((w) => w.user_id)])];
-      const profileMap = new Map<string, string>();
-      if (allUids.length > 0) {
-        const { data: pRows } = await api.from("profiles").select("id, display_name, username").in("id", allUids);
-        (pRows ?? []).forEach((p) => { profileMap.set(p.id, p.display_name || p.username || p.id.slice(0, 8)); });
+        const recentTradesList = recentTradesR?.data ?? [];
+        const recentWdList = recentWdR?.data ?? [];
+
+        const allUids = [...new Set([...recentTradesList.map((t) => t.user_id), ...recentWdList.map((w) => w.user_id)])];
+        const profileMap = new Map<string, string>();
+        if (allUids.length > 0) {
+          const { data: pRows } = await api.from("profiles").select("id, display_name, username").in("id", allUids);
+          (pRows ?? []).forEach((p) => { profileMap.set(p.id, p.display_name || p.username || p.id.slice(0, 8)); });
+        }
+
+        setRecentTrades(
+          recentTradesList.map((t) => ({
+            id: t.id,
+            user: profileMap.get(t.user_id) || "User",
+            asset: t.asset_symbol,
+            direction: t.direction,
+            amount: formatMoney(Number(t.amount ?? 0)),
+            result: Number(t.profit ?? 0) >= 0 ? `+$${Number(t.profit ?? 0).toFixed(2)}` : `-$${Number(t.amount ?? 0).toFixed(2)}`,
+            time: t.closed_at ? new Date(t.closed_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "LIVE",
+            won: Number(t.profit ?? 0) >= 0,
+            status: t.status ?? "closed",
+          }))
+        );
+
+        setPendingWds(
+          recentWdList.map((w) => ({
+            id: w.id,
+            user: profileMap.get(w.user_id) || "User",
+            amount: formatMoney(Number(w.amount ?? 0)),
+            method: w.payment_method || "M-PESA",
+            time: new Date(w.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+          }))
+        );
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+      } finally {
+        setLoading(false);
       }
-
-      setRecentTrades(
-        (recentTradesR.data ?? []).map((t) => ({
-          id: t.id,
-          user: profileMap.get(t.user_id) || "User",
-          asset: t.asset_symbol,
-          direction: t.direction,
-          amount: formatMoney(Number(t.amount ?? 0)),
-          result: Number(t.profit ?? 0) >= 0 ? `+$${Number(t.profit ?? 0).toFixed(2)}` : `-$${Number(t.amount ?? 0).toFixed(2)}`,
-          time: t.closed_at ? new Date(t.closed_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "LIVE",
-          won: Number(t.profit ?? 0) >= 0,
-          status: t.status ?? "closed",
-        }))
-      );
-
-      setPendingWds(
-        (recentWdR.data ?? []).map((w) => ({
-          id: w.id,
-          user: profileMap.get(w.user_id) || "User",
-          amount: formatMoney(Number(w.amount ?? 0)),
-          method: w.payment_method || "M-PESA",
-          time: new Date(w.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-        }))
-      );
-
-      setLoading(false);
     };
 
     void fetchAll();
