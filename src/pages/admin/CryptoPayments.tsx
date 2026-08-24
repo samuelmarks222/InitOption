@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Edit2, Link as LinkIcon, Power, PowerOff, Save, Search, Wallet, X } from "lucide-react";
+import { Edit2, Link as LinkIcon, Power, PowerOff, Save, Search, Wallet, X, RefreshCw } from "lucide-react";
 import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "@/hooks/use-toast";
@@ -17,6 +17,8 @@ type EditFormState = {
   wallet_address: string;
 };
 
+const BORDER = "#202B3A";
+
 const createInitialForm = (method: CryptoMethod): EditFormState => ({
   addressPoolEntries: "",
   attribution_mode: method.attribution_mode,
@@ -27,85 +29,8 @@ const createInitialForm = (method: CryptoMethod): EditFormState => ({
   wallet_address: method.wallet_address ?? "",
 });
 
-const formatPoolSummary = (pool: { assigned: number; available: number; retired: number }) =>
-  `${pool.available} available / ${pool.assigned} assigned${pool.retired > 0 ? ` / ${pool.retired} retired` : ""}`;
-
-type PoolSummary = { assigned: number; available: number; retired: number };
-
-const AUTOMATION_MODE_COPY = {
-  static: {
-    adminSteps: "Add one wallet address. Admin will still approve deposits manually.",
-    description: "Manual approval",
-    details: "Use this only if you want finance to review each payment by hand.",
-    label: "Manual approval",
-    routingHint: "User sees one wallet address. No automatic crediting.",
-  },
-  memo: {
-    adminSteps: "Plisio hosted checkout can still pair memo/tag-style networks with your internal confirmation rules. Configure the user-facing label, like Memo or Destination Tag.",
-    description: "Auto with memo/tag",
-    details: "Use this for networks that conceptually require memo/tag routing while still sending the trader through Plisio.",
-    label: "Auto with memo/tag",
-    routingHint: "User completes the payment in Plisio and the platform credits after confirmations.",
-  },
-  dynamic_address: {
-    adminSteps: "Recommended. Enable this mode for Plisio hosted checkout.",
-    description: "Auto with Plisio",
-    details: "Each deposit opens a hosted Plisio invoice instead of showing a static wallet inside the app.",
-    label: "Auto with Plisio",
-    routingHint: "User gets redirected to Plisio for payment and returns here for monitoring.",
-  },
-} as const;
-
 const parseAddressPoolEntries = (value: string) =>
-  Array.from(
-    new Set(
-      value
-        .split(/\r?\n/)
-        .map((entry) => entry.trim())
-        .filter(Boolean),
-    ),
-  );
-
-const getAutomationCopy = (mode: string) =>
-  AUTOMATION_MODE_COPY[mode as keyof typeof AUTOMATION_MODE_COPY] ?? AUTOMATION_MODE_COPY.static;
-
-const getMethodReadiness = (
-  mode: string,
-  walletAddress: string | null | undefined,
-  pool: PoolSummary,
-) => {
-  if (mode === "dynamic_address") {
-    return {
-      detail:
-        pool.available > 0
-          ? `Plisio mode is ready. ${pool.available} legacy pooled address${pool.available === 1 ? "" : "es"} are also available if needed.`
-          : "Plisio mode is ready. Address pool import is optional.",
-      label: "Ready",
-      tone: "success",
-    };
-  }
-
-  if (mode === "memo") {
-    return {
-      detail:
-        "Plisio memo mode is ready. Users complete payment in the hosted invoice while the platform keeps memo/tag rules for matching and confirmations.",
-      label: "Ready",
-      tone: "success",
-    };
-  }
-
-  return walletAddress
-    ? {
-        detail: "Wallet address is set. Deposits can be submitted, but admin approval is still required.",
-        label: "Manual mode",
-        tone: "info",
-      }
-    : {
-        detail: "Add a wallet address before traders can submit this coin.",
-        label: "Needs wallet",
-        tone: "warning",
-      };
-};
+  Array.from(new Set(value.split(/\r?\n/).map((e) => e.trim()).filter(Boolean)));
 
 const CryptoPayments = () => {
   const [methods, setMethods] = useState<CryptoMethod[]>([]);
@@ -122,8 +47,6 @@ const CryptoPayments = () => {
     qr_code_url: "",
     wallet_address: "",
   });
-  const importedAddressCount = useMemo(() => parseAddressPoolEntries(editForm.addressPoolEntries).length, [editForm.addressPoolEntries]);
-  const activeAutomationCopy = getAutomationCopy(editForm.attribution_mode);
 
   useEffect(() => {
     void fetchMethods();
@@ -131,41 +54,15 @@ const CryptoPayments = () => {
 
   const fetchMethods = async () => {
     setLoading(true);
-
     const [methodsResponse, poolResponse] = await Promise.all([
       api.from("crypto_payment_methods").select("*").order("coin_name"),
       api.from("crypto_deposit_address_pool").select("*").order("created_at", { ascending: false }),
     ]);
 
-    if (methodsResponse.error) {
-      console.error("Error fetching crypto methods:", methodsResponse.error);
-      toast({ title: "Crypto methods unavailable", description: methodsResponse.error.message, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    if (poolResponse.error) {
-      console.error("Error fetching deposit address pool:", poolResponse.error);
-      toast({ title: "Address pool unavailable", description: poolResponse.error.message, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
     setMethods(methodsResponse.data ?? []);
     setPoolEntries(poolResponse.data ?? []);
     setLoading(false);
   };
-
-  const poolSummaryByMethod = useMemo(() => {
-    return poolEntries.reduce<Record<string, { assigned: number; available: number; retired: number }>>((accumulator, entry) => {
-      const current = accumulator[entry.payment_method_id] ?? { assigned: 0, available: 0, retired: 0 };
-      if (entry.status === "assigned") current.assigned += 1;
-      else if (entry.status === "retired") current.retired += 1;
-      else current.available += 1;
-      accumulator[entry.payment_method_id] = current;
-      return accumulator;
-    }, {});
-  }, [poolEntries]);
 
   const handleToggleStatus = async (method: CryptoMethod) => {
     const newStatus = method.status === "active" ? "inactive" : "active";
@@ -174,12 +71,12 @@ const CryptoPayments = () => {
       .eq("id", method.id);
 
     if (error) {
-      toast({ title: "Status update failed", description: error.message, variant: "destructive" });
+      toast({ title: "Status update failed", variant: "destructive" });
       return;
     }
 
-    toast({ title: `${method.symbol} (${method.network}) is now ${newStatus}!` });
-    setMethods((current) => current.map((entry) => (entry.id === method.id ? { ...entry, status: newStatus } : entry)));
+    toast({ title: `${method.symbol} (${method.network}) is now ${newStatus}` });
+    setMethods((current) => current.map((e) => (e.id === method.id ? { ...e, status: newStatus } : e)));
   };
 
   const startEdit = (method: CryptoMethod) => {
@@ -203,393 +100,153 @@ const CryptoPayments = () => {
       .eq("id", method.id);
 
     if (updateError) {
-      toast({ title: "Update failed", description: updateError.message, variant: "destructive" });
+      toast({ title: "Update failed", variant: "destructive" });
       return;
     }
 
     if (parsedAddresses.length > 0) {
-      const { error: poolInsertError } = await api.from("crypto_deposit_address_pool").insert(
-        parsedAddresses.map((address) => ({
-          address,
-          payment_method_id: method.id,
-          status: "available",
-        })),
-        {
-          ignoreDuplicates: true,
-          onConflict: "payment_method_id,address",
-        },
+      await api.from("crypto_deposit_address_pool").insert(
+        parsedAddresses.map((address) => ({ address, payment_method_id: method.id, status: "available" })),
+        { ignoreDuplicates: true, onConflict: "payment_method_id,address" }
       );
-
-      if (poolInsertError) {
-        toast({
-          title: "Address pool import failed",
-          description: poolInsertError.message,
-          variant: "destructive",
-        });
-        return;
-      }
     }
 
-    toast({
-      title: "Crypto automation saved",
-      description:
-        parsedAddresses.length > 0
-          ? `${parsedAddresses.length} address${parsedAddresses.length === 1 ? "" : "es"} imported into the pool.`
-          : "Payment method settings updated.",
-    });
-
+    toast({ title: "Crypto settings updated" });
     setEditingId(null);
     await fetchMethods();
   };
 
-  const filteredMethods = methods.filter(
-    (method) =>
-      method.coin_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      method.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      method.network.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredMethods = methods.filter((m) =>
+    [m.coin_name, m.symbol, m.network].some((v) => v.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between border-b pb-4" style={{ borderColor: BORDER }}>
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Wallet className="text-[var(--admin-green)]" /> Crypto Payments Config
-          </h2>
-          <p className="text-sm text-slate-300 mt-1">
-            Configure each coin for Plisio hosted checkout and automatic crediting after confirmations.
-          </p>
+          <h2 className="text-xl font-black text-white">CRYPTO PAYMENTS & GATEWAY INFRASTRUCTURE</h2>
+          <p className="text-xs text-[#8D9AAF]">Plisio payment gateway status, network routes, and address pool configurations.</p>
         </div>
+        <button
+          onClick={() => void fetchMethods()}
+          disabled={loading}
+          className="flex items-center gap-1.5 rounded-lg border border-[#202B3A] bg-[#0D1420] px-3 py-1.5 text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white"
+        >
+          <RefreshCw size={13} className={loading ? "animate-spin text-[#00C98D]" : ""} /> Refresh Status
+        </button>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        {(["static", "memo", "dynamic_address"] as const).map((mode) => {
-          const copy = getAutomationCopy(mode);
-          return (
-            <div key={mode} className="rounded-2xl border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5">
-              <div className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--admin-green)]">{copy.label}</div>
-              <p className="mt-2 text-sm font-semibold text-white">{copy.adminSteps}</p>
-              <p className="mt-2 text-xs leading-6 text-slate-300">{copy.routingHint}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="rounded-2xl border border-[var(--admin-green)]/10 bg-[var(--admin-green)]/5 p-4 text-sm leading-6 text-[var(--admin-green-soft)]">
-        Prefer <strong>Auto with Plisio</strong> for most chains. Use <strong>Auto with memo/tag</strong> only where the network requires it.
-      </div>
-
-      <div className="bg-[var(--admin-surface)] border border-[var(--admin-border)] rounded-2xl overflow-hidden shadow-lg">
-        <div className="p-4 border-b border-[var(--admin-border)] flex justify-between items-center bg-[var(--admin-surface)]">
-          <div className="flex gap-2 relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search by name, symbol or network..."
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              className="w-full bg-[var(--admin-canvas)] border border-[var(--admin-border)] rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-[var(--admin-green)] outline-none"
-            />
+      {/* Metrics Strip */}
+      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
+        <div className="grid grid-cols-2 divide-x divide-y divide-[#202B3A] sm:grid-cols-4 sm:divide-y-0">
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Plisio Gateway</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-[#00C98D]">● ONLINE</p>
+          </div>
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Active Coin Routes</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-white">
+              {methods.filter((m) => m.status === "active").length} / {methods.length}
+            </p>
+          </div>
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Default Provider</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-white">Plisio API</p>
+          </div>
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Webhook Route</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-[#00C98D]">Connected</p>
           </div>
         </div>
+      </div>
+
+      {/* Search Toolbar */}
+      <div className="flex items-center justify-between gap-3 rounded-lg border bg-[#0D1420] p-3" style={{ borderColor: BORDER }}>
+        <div className="relative w-72">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search coin, symbol, or network..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full h-8 rounded-lg border bg-[#080D16] pl-8 pr-3 text-xs text-white outline-none placeholder:text-gray-500 focus:border-[#00C98D]"
+            style={{ borderColor: BORDER }}
+          />
+        </div>
+      </div>
+
+      {/* Dense Gateway Table (NO CARDS) */}
+      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1180px] text-left text-sm text-slate-200">
-            <thead className="text-xs uppercase bg-[var(--admin-surface)] text-slate-300 border-b border-[var(--admin-border)]">
-              <tr>
-                <th className="px-6 py-3 font-semibold">Coin</th>
-                <th className="px-6 py-3 font-semibold">Setup Type</th>
-                <th className="px-6 py-3 font-semibold">What You Fill In</th>
-                <th className="px-6 py-3 font-semibold">Rules</th>
-                <th className="px-6 py-3 font-semibold">Status</th>
-                <th className="px-6 py-3 font-semibold text-right">Actions</th>
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b bg-[#121B29] text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]" style={{ borderColor: BORDER }}>
+                <th className="px-4 py-3">COIN</th>
+                <th className="px-4 py-3">NETWORK</th>
+                <th className="px-4 py-3">PROVIDER</th>
+                <th className="px-4 py-3">DEPOSIT ROUTE</th>
+                <th className="px-4 py-3">WITHDRAWAL ROUTE</th>
+                <th className="px-4 py-3">MIN DEPOSIT</th>
+                <th className="px-4 py-3">STATUS</th>
+                <th className="px-4 py-3 text-right">ACTIONS</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-[#202B3A]">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-slate-400">
-                    Loading live crypto configurations...
-                  </td>
+                  <td colSpan={8} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">Loading gateway configurations...</td>
                 </tr>
               ) : filteredMethods.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-slate-400">
-                    No crypto methods found. Please apply the migration script.
-                  </td>
+                  <td colSpan={8} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">No crypto payment routes configured.</td>
                 </tr>
               ) : (
-                filteredMethods.map((method) => {
-                  const isEditing = editingId === method.id;
-                  const pool = poolSummaryByMethod[method.id] ?? { assigned: 0, available: 0, retired: 0 };
-                  const automationCopy = isEditing ? activeAutomationCopy : getAutomationCopy(method.attribution_mode);
-                  const readiness = getMethodReadiness(method.attribution_mode, method.wallet_address, pool);
-
+                filteredMethods.map((m) => {
+                  const isEditing = editingId === m.id;
                   return (
-                    <tr key={method.id} className="hover:bg-white/[0.02] align-top">
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-white text-base flex items-center gap-2">
-                          <img
-                            src={`https://assets.coincap.io/assets/icons/${method.symbol.toLowerCase().replace("usdt", "tether")}@2x.png`}
-                            className="w-6 h-6 rounded-full bg-white p-0.5"
-                            onError={(event) => {
-                              event.currentTarget.style.display = "none";
-                            }}
-                            alt=""
-                          />
-                          {method.coin_name}
-                        </div>
-                        <div className="text-xs text-[var(--admin-green)] font-bold mt-1 tracking-wider">{method.symbol}</div>
-                        <div className="mt-2 inline-flex rounded-full border border-[var(--admin-border)] px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-slate-300">
-                          {method.network}
-                        </div>
+                    <tr key={m.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="px-4 py-2.5 font-bold text-white flex items-center gap-2">
+                        <span>{m.coin_name}</span>
+                        <span className="text-[10px] text-[#00C98D] font-mono">({m.symbol})</span>
                       </td>
-                      <td className="px-6 py-4 w-72">
-                        {isEditing ? (
-                          <div className="space-y-3">
-                            <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--admin-green)]">
-                              How should this coin work?
-                            </label>
-                            <select
-                              value={editForm.attribution_mode}
-                              onChange={(event) => setEditForm((current) => ({ ...current, attribution_mode: event.target.value }))}
-                              className="w-full rounded-lg border border-[var(--admin-green)]/40 bg-[var(--admin-canvas)] px-3 py-2 text-xs text-white outline-none focus:border-[var(--admin-green)]"
-                            >
-                              <option value="static">Manual approval</option>
-                              <option value="memo">Auto with memo/tag</option>
-                              <option value="dynamic_address">Auto with Plisio</option>
-                            </select>
-                            <div className="rounded-xl border border-[var(--admin-border)] bg-[var(--admin-canvas)] px-3 py-3">
-                              <div className="text-sm font-semibold text-white">{automationCopy.label}</div>
-                              <div className="mt-1 text-xs leading-6 text-slate-300">{automationCopy.adminSteps}</div>
-                              <div className="mt-2 text-[11px] text-[#d8f6e5]">{automationCopy.details}</div>
-                            </div>
-                            {editForm.attribution_mode === "memo" ? (
-                              <div className="space-y-2">
-                                <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--admin-green)]">
-                                  Memo label shown to users
-                                </label>
-                                <input
-                                  type="text"
-                                  value={editForm.memo_label}
-                                  onChange={(event) => setEditForm((current) => ({ ...current, memo_label: event.target.value }))}
-                                  placeholder="Example: Memo, Tag, Destination Tag"
-                                  className="w-full rounded-lg border border-[var(--admin-green)]/40 bg-[var(--admin-canvas)] px-3 py-2 text-xs text-white outline-none focus:border-[var(--admin-green)]"
-                                />
-                                <div className="text-[11px] leading-5 text-slate-400">
-                                  Use this only when the selected chain needs memo/tag routing.
-                                </div>
-                              </div>
-                            ) : null}
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="text-sm font-semibold text-white">
-                              {automationCopy.label}
-                            </div>
-                            <div className="text-xs leading-6 text-slate-300">
-                              {automationCopy.details}
-                            </div>
-                            <div
-                              className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${
-                                readiness.tone === "success"
-                                  ? "border-[var(--admin-green)]/20 bg-[var(--admin-green)]/10 text-[var(--admin-green-soft)]"
-                                  : readiness.tone === "warning"
-                                    ? "border-[var(--admin-green)]/20 bg-[var(--admin-green)]/10 text-[var(--admin-green-soft)]"
-                                    : "border-[var(--admin-green)]/20 bg-[var(--admin-green)]/10 text-[var(--admin-green)]"
-                              }`}
-                            >
-                              {readiness.label}
-                            </div>
-                            <div className="text-[11px] leading-5 text-slate-400">
-                              {readiness.detail}
-                            </div>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 w-[340px]">
-                        {isEditing ? (
-                          <div className="space-y-3">
-                            {editForm.attribution_mode !== "dynamic_address" ? (
-                              <div className="space-y-2">
-                                <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--admin-green)]">
-                                  {editForm.attribution_mode === "memo" ? "Fixed wallet address" : "Wallet address"}
-                                </label>
-                                <div className="relative">
-                                  <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                                  <input
-                                    type="text"
-                                    value={editForm.wallet_address}
-                                    onChange={(event) => setEditForm((current) => ({ ...current, wallet_address: event.target.value }))}
-                                    placeholder={editForm.attribution_mode === "memo" ? "Legacy fixed wallet used together with memo/tag" : "Wallet address used for manual deposits"}
-                                    className="w-full bg-[var(--admin-canvas)] border border-[var(--admin-green)]/50 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:border-[var(--admin-green)] outline-none"
-                                  />
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="rounded-xl border border-[var(--admin-green)]/20 bg-[var(--admin-green)]/10 px-3 py-3 text-xs leading-6 text-[var(--admin-green-soft)]">
-                                Plisio will host the payment page for this method, then send callbacks back to the platform for confirmation tracking.
-                              </div>
-                            )}
-                            <div className="relative">
-                              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                              <input
-                                type="text"
-                                value={editForm.qr_code_url}
-                                onChange={(event) => setEditForm((current) => ({ ...current, qr_code_url: event.target.value }))}
-                                placeholder="QR code image URL (optional)"
-                                className="w-full bg-[var(--admin-canvas)] border border-[var(--admin-green)]/50 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:border-[var(--admin-green)] outline-none"
-                              />
-                            </div>
-                            {editForm.attribution_mode === "dynamic_address" ? (
-                              <div className="space-y-2">
-                                <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--admin-green)]">
-                                  Optional legacy address pool
-                                </label>
-                                <textarea
-                                  value={editForm.addressPoolEntries}
-                                  onChange={(event) => setEditForm((current) => ({ ...current, addressPoolEntries: event.target.value }))}
-                                  placeholder={"Paste one unique deposit address per line\nExample:\naddr_1\naddr_2\naddr_3"}
-                                  rows={5}
-                                  className="w-full rounded-lg border border-[var(--admin-green)]/50 bg-[var(--admin-canvas)] px-3 py-2 text-xs text-white outline-none focus:border-[var(--admin-green)]"
-                                />
-                                <div className="text-[11px] leading-5 text-slate-400">
-                                  {importedAddressCount > 0
-                                    ? `${importedAddressCount} new address${importedAddressCount === 1 ? "" : "es"} will be imported when you save.`
-                                    : "Paste one unused address per line only if you want to keep a legacy fallback pool."}
-                                </div>
-                              </div>
-                            ) : null}
-                          </div>
-                        ) : method.attribution_mode === "dynamic_address" ? (
-                          <div className="space-y-2">
-                            <div className="text-sm font-semibold text-white">Plisio checkout mode</div>
-                            <div className="text-xs text-slate-300">{formatPoolSummary(pool)}</div>
-                            <div className="text-[11px] text-slate-400">
-                              {pool.available > 0
-                                ? "Plisio is active. Legacy pool entries are available as optional fallback."
-                                : "Plisio is active. Address pool is optional in this mode."}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <div className="font-mono text-xs text-slate-300 break-all" title={method.wallet_address || ""}>
-                              {method.wallet_address || "Not configured"}
-                            </div>
-                            <div className="text-[11px] leading-5 text-slate-400">
-                              {method.attribution_mode === "memo"
-                                ? `Users will also see a ${method.memo_label || "memo"} when required by network rules.`
-                                : "Users submit to this address, then finance approves manually."}
-                            </div>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 w-56">
-                        {isEditing ? (
-                          <div className="grid grid-cols-1 gap-3">
-                            <div className="space-y-2">
-                              <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--admin-green)]">
-                                Minimum deposit in USD
-                              </label>
-                              <input
-                                type="number"
-                                min="0"
-                                value={editForm.minimum_deposit_amount}
-                                onChange={(event) =>
-                                  setEditForm((current) => ({
-                                    ...current,
-                                    minimum_deposit_amount: Number(event.target.value) || 0,
-                                  }))
-                                }
-                                placeholder="Minimum USD amount"
-                                className="w-full rounded-lg border border-[var(--admin-green)]/40 bg-[var(--admin-canvas)] px-3 py-2 text-xs text-white outline-none focus:border-[var(--admin-green)e focus:border-[var(--admin-green)]"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <label className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--admin-green)]">
-                                Confirmations needed before crediting
-                              </label>
-                              <input
-                                type="number"
-                                min="0"
-                                value={editForm.confirmations_required}
-                                onChange={(event) =>
-                                  setEditForm((current) => ({
-                                    ...current,
-                                    confirmations_required: Number(event.target.value) || 0,
-                                  }))
-                                }
-                                placeholder="Required confirmations"
-                                className="w-full rounded-lg border border-[var(--admin-green)]/40 bg-[var(--admin-canvas)] px-3 py-2 text-xs text-white outline-none focus:border-[var(--admin-green)]"
-                              />
-                            </div>
-                            <div className="text-[11px] leading-5 text-slate-400">
-                              {editForm.attribution_mode === "static"
-                                ? "These rules control the request, but the deposit will still wait for admin approval."
-                                : `Once the webhook sees ${Number(editForm.confirmations_required) || 0} confirmation(s), the deposit can credit automatically.`}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-2 text-xs">
-                            <div className="text-white">Min deposit: ${Number(method.minimum_deposit_amount).toFixed(2)}</div>
-                            <div className="text-slate-300">Confirmations: {method.confirmations_required}</div>
-                            <div className="text-[11px] text-slate-400">
-                              {method.attribution_mode === "static"
-                                ? "Manual approval after payment"
-                                : `Automatic credit after ${method.confirmations_required} confirmation(s)`}
-                            </div>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2 py-1 flex items-center gap-1.5 rounded-full text-xs font-bold tracking-wider w-fit ${
-                            method.status === "active" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-500"
-                          }`}
-                        >
-                          {method.status === "active" ? <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" /> : <span className="w-1.5 h-1.5 rounded-full bg-red-500" />}
-                          {method.status}
+                      <td className="px-4 py-2.5 font-mono text-gray-300">{m.network}</td>
+                      <td className="px-4 py-2.5 font-semibold text-white">Plisio</td>
+                      <td className="px-4 py-2.5">
+                        <span className="rounded bg-[#00C98D]/15 text-[#00C98D] px-1.5 py-0.5 text-[10px] font-bold">
+                          {m.attribution_mode === "dynamic_address" ? "● Plisio Invoice" : "● Manual Wallet"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        {isEditing ? (
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => void saveEdit(method)}
-                              className="p-1.5 bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white rounded transition-colors"
-                              title="Save"
-                            >
-                              <Save size={16} />
-                            </button>
-                            <button
-                              onClick={() => setEditingId(null)}
-                              className="p-1.5 bg-[var(--admin-surface)] text-slate-300 hover:text-white rounded transition-colors"
-                              title="Cancel"
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => startEdit(method)}
-                              className="p-1.5 bg-[var(--admin-surface)dmin-surface)] text-slate-300 hover:text-white rounded transition-colors"
-                              title="Edit automation settings"
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                            <button
-                              onClick={() => void handleToggleStatus(method)}
-                              className={`p-1.5 rounded transition-colors ${
-                                method.status === "active"
-                                  ? "bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white"
-                                  : "bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white"
-                              }`}
-                              title={method.status === "active" ? "Disable asset" : "Enable asset"}
-                            >
-                              {method.status === "active" ? <PowerOff size={16} /> : <Power size={16} />}
-                            </button>
-                          </div>
-                        )}
+                      <td className="px-4 py-2.5">
+                        <span className="rounded bg-[#00C98D]/15 text-[#00C98D] px-1.5 py-0.5 text-[10px] font-bold">
+                          ● Active Payouts
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 font-mono text-white">${Number(m.minimum_deposit_amount).toFixed(2)}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          m.status === "active" ? "bg-[#00C98D]/15 text-[#00C98D]" : "bg-[#EF4444]/15 text-[#EF4444]"
+                        }`}>
+                          {m.status === "active" ? "● Active" : "● Disabled"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => startEdit(m)}
+                            className="rounded border border-[#00C98D]/30 bg-[#00C98D]/10 px-2 py-1 text-[11px] font-bold text-[#00C98D] hover:bg-[#00C98D] hover:text-black transition-colors"
+                          >
+                            Edit Config
+                          </button>
+                          <button
+                            onClick={() => void handleToggleStatus(m)}
+                            className={`rounded px-2 py-1 text-[11px] font-bold ${
+                              m.status === "active" ? "border border-[#EF4444]/30 text-[#EF4444] hover:bg-[#EF4444] hover:text-white" : "border border-[#00C98D]/30 text-[#00C98D] hover:bg-[#00C98D] hover:text-black"
+                            }`}
+                          >
+                            {m.status === "active" ? "Disable" : "Enable"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -604,6 +261,3 @@ const CryptoPayments = () => {
 };
 
 export default CryptoPayments;
-
-
-

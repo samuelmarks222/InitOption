@@ -127,7 +127,7 @@ export const withUser = async <T>(clerkUserId: string | null, fn: (client: pg.Po
   try {
     await client.query("BEGIN");
     if (clerkUserId) {
-      await client.query("SELECT set_config('app.current_user_id', $1, true)", [clerkUserId]);
+      await client.query("SELECT set_config('app.current_user_id', $1, true)", [clerkUserIdToUuid(clerkUserId)]);
     }
     const result = await fn(client);
     await client.query("COMMIT");

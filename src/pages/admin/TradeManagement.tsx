@@ -1,17 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { api } from "@/integrations/api/client";
 import {
-  Activity,
-  ArrowDownRight,
-  ArrowUpRight,
-  CheckCircle2,
-  Clock3,
-  RefreshCw,
-  Search,
-  Users,
-  DollarSign,
-  Target,
-  XCircle,
+  Activity, ArrowDownRight, ArrowUpRight, CheckCircle2, Clock, Filter, RefreshCw, Search, Users, XCircle, DollarSign, Target,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -22,23 +12,16 @@ type TradeWithUser = TradeRow & {
   userLabel: string;
 };
 
+const BORDER = "#202B3A";
 const formatMoney = (value: number) => `$${value.toFixed(2)}`;
-
-const formatSignedMoney = (value: number) =>
-  `${value > 0 ? "+" : value < 0 ? "-" : ""}$${Math.abs(value).toFixed(2)}`;
+const formatSignedMoney = (value: number) => `${value > 0 ? "+" : value < 0 ? "-" : ""}$${Math.abs(value).toFixed(2)}`;
 
 const formatTimeRemaining = (trade: TradeRow, nowMs: number) => {
   const expiryMs = new Date(trade.opened_at).getTime() + trade.expiry_seconds * 1000;
   const remainingMs = Math.max(0, expiryMs - nowMs);
   const totalSeconds = Math.floor(remainingMs / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-
-  if (hours > 0) {
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  }
-
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 };
 
@@ -47,19 +30,15 @@ const getUserLabel = (profilesById: Map<string, ProfileRow>, userId: string) => 
   return profile?.display_name || profile?.username || `User ${userId.slice(0, 8).toUpperCase()}`;
 };
 
-const REFRESH_INTERVAL_MS = 10000;
-const ADMIN_OPEN_TRADES_LIMIT = 500;
-const ADMIN_TRADE_HISTORY_LIMIT = 500;
-
 const TradeManagement = () => {
   const [activeTab, setActiveTab] = useState<"live" | "history">("live");
   const [searchTerm, setSearchTerm] = useState("");
   const [userFilter, setUserFilter] = useState<string>("");
+  const [assetFilter, setAssetFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [trades, setTrades] = useState<TradeWithUser[]>([]);
   const [users, setUsers] = useState<ProfileRow[]>([]);
   const [nowMs, setNowMs] = useState(Date.now());
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     const interval = window.setInterval(() => setNowMs(Date.now()), 1000);
@@ -68,98 +47,51 @@ const TradeManagement = () => {
 
   const fetchTrades = useCallback(async () => {
     setLoading(true);
-
-    const [openTradesResponse, historyTradesResponse] = await Promise.all([
-      api.from("trades")
-        .select("*")
-        .eq("status", "open")
-        .order("opened_at", { ascending: false })
-        .limit(ADMIN_OPEN_TRADES_LIMIT),
-      api.from("trades")
-        .select("*")
-        .neq("status", "open")
-        .order("closed_at", { ascending: false })
-        .limit(ADMIN_TRADE_HISTORY_LIMIT),
+    const [openRes, histRes] = await Promise.all([
+      api.from("trades").select("*").eq("status", "open").order("opened_at", { ascending: false }).limit(500),
+      api.from("trades").select("*").neq("status", "open").order("closed_at", { ascending: false }).limit(500),
     ]);
 
-    const tradeError = openTradesResponse.error ?? historyTradesResponse.error;
-    const tradeRows = [...(openTradesResponse.data ?? []), ...(historyTradesResponse.data ?? [])];
-
-    if (tradeError) {
-      console.error("Failed to load trades for admin trade management", tradeError);
-      setTrades([]);
-      setLoading(false);
-      return;
-    }
-
-    const userIds = Array.from(new Set((tradeRows ?? []).map((trade) => trade.user_id)));
+    const tradeRows = [...(openRes.data ?? []), ...(histRes.data ?? [])];
+    const userIds = Array.from(new Set(tradeRows.map((t) => t.user_id)));
 
     let profilesById = new Map<string, ProfileRow>();
     if (userIds.length > 0) {
-      const { data: profiles, error: profileError } = await api.from("profiles")
-        .select("id, username, display_name")
-        .in("id", userIds);
-
-      if (profileError) {
-        console.error("Failed to load profiles for admin trade management", profileError);
-      } else {
-        profilesById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
-      }
+      const { data: profiles } = await api.from("profiles").select("id, username, display_name").in("id", userIds);
+      profilesById = new Map((profiles ?? []).map((p) => [p.id, p]));
     }
 
-    setTrades(
-      (tradeRows ?? []).map((trade) => ({
-        ...trade,
-        userLabel: getUserLabel(profilesById, trade.user_id),
-      })),
-    );
-
+    setTrades(tradeRows.map((t) => ({ ...t, userLabel: getUserLabel(profilesById, t.user_id) })));
     setUsers(Array.from(profilesById.values()));
-    setLastUpdated(new Date());
     setLoading(false);
   }, []);
 
   useEffect(() => {
     void fetchTrades();
-    const interval = window.setInterval(() => void fetchTrades(), REFRESH_INTERVAL_MS);
+    const interval = window.setInterval(() => void fetchTrades(), 8000);
     return () => window.clearInterval(interval);
   }, [fetchTrades]);
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
-  const liveTrades = useMemo(
-    () =>
-      trades
-        .filter((trade) => trade.status === "open")
-        .filter((trade) => {
-          if (userFilter && trade.user_id !== userFilter) return false;
-          if (!normalizedSearch) return true;
-          return [trade.userLabel, trade.asset_symbol, trade.id].some((value) =>
-            value.toLowerCase().includes(normalizedSearch),
-          );
-        })
-        .sort((left, right) => new Date(right.opened_at).getTime() - new Date(left.opened_at).getTime()),
-    [normalizedSearch, trades, userFilter],
-  );
+  const availableAssets = useMemo(() => {
+    const set = new Set<string>();
+    trades.forEach((t) => set.add(t.asset_symbol));
+    return Array.from(set);
+  }, [trades]);
 
-  const historyTrades = useMemo(
-    () =>
-      trades
-        .filter((trade) => trade.status !== "open")
-        .filter((trade) => {
-          if (userFilter && trade.user_id !== userFilter) return false;
-          if (!normalizedSearch) return true;
-          return [trade.userLabel, trade.asset_symbol, trade.id].some((value) =>
-            value.toLowerCase().includes(normalizedSearch),
-          );
-        })
-        .sort(
-          (left, right) =>
-            new Date(right.closed_at ?? right.opened_at).getTime() -
-            new Date(left.closed_at ?? left.opened_at).getTime(),
-        ),
-    [normalizedSearch, trades, userFilter],
-  );
+  const filteredTrades = useMemo(() => {
+    return trades.filter((t) => {
+      if (activeTab === "live" && t.status !== "open") return false;
+      if (activeTab === "history" && t.status === "open") return false;
+      if (userFilter && t.user_id !== userFilter) return false;
+      if (assetFilter !== "all" && t.asset_symbol !== assetFilter) return false;
+      if (normalizedSearch) {
+        return [t.userLabel, t.asset_symbol, t.id].some((v) => v.toLowerCase().includes(normalizedSearch));
+      }
+      return true;
+    });
+  }, [activeTab, assetFilter, normalizedSearch, trades, userFilter]);
 
   const stats = useMemo(() => {
     const openTrades = trades.filter((t) => t.status === "open");
@@ -169,102 +101,86 @@ const TradeManagement = () => {
     return { totalOpen: openTrades.length, totalVolume, totalPayout, uniqueUsers };
   }, [trades]);
 
-  const formatLastUpdated = () => {
-    if (!lastUpdated) return "";
-    return lastUpdated.toLocaleTimeString();
-  };
-
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-5">
+      {/* Header & Refresh */}
+      <div className="flex flex-wrap items-center justify-between border-b pb-4" style={{ borderColor: BORDER }}>
         <div>
-          <h2 className="text-2xl font-bold text-white">Trade Management</h2>
-          <p className="mt-1 text-sm text-slate-300">Monitor real open positions and review historical trade outcomes.</p>
+          <h2 className="text-xl font-black text-white">LIVE TRADING OPERATIONS CONSOLE</h2>
+          <p className="text-xs text-[#8D9AAF]">Real-time open positions monitor and trade execution settlement ledger.</p>
         </div>
+        <button
+          onClick={() => void fetchTrades()}
+          disabled={loading}
+          className="flex items-center gap-1.5 rounded-lg border border-[#202B3A] bg-[#0D1420] px-3 py-1.5 text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white"
+        >
+          <RefreshCw size={13} className={loading ? "animate-spin text-[#00C98D]" : ""} /> Refresh Engine
+        </button>
+      </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-500">
-            {lastUpdated ? `Last updated: ${formatLastUpdated()}` : ""}
-          </span>
-          <button
-            onClick={() => void fetchTrades()}
-            disabled={loading}
-            className="flex items-center gap-2 rounded-xl border border-[#2a2f42] bg-[#0e1017] px-4 py-2.5 text-sm text-slate-300 transition-colors hover:border-white/10 hover:text-white disabled:opacity-50"
-          >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-            Refresh
-          </button>
+      {/* Structured Metrics Strip */}
+      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
+        <div className="grid grid-cols-2 divide-x divide-y divide-[#202B3A] sm:grid-cols-4 sm:divide-y-0">
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Open Trades</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-white">{stats.totalOpen}</p>
+          </div>
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Open Stake Volume</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-white">{formatMoney(stats.totalVolume)}</p>
+          </div>
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Potential Payout</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-[#00C98D]">{formatMoney(stats.totalPayout)}</p>
+          </div>
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Active Traders</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-white">{stats.uniqueUsers}</p>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4 shadow-lg">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            <Activity size={14} />
-            Open Trades
-          </div>
-          <div className="mt-2 text-2xl font-bold text-white">{stats.totalOpen}</div>
-        </div>
-        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4 shadow-lg">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            <DollarSign size={14} />
-            Open Volume
-          </div>
-          <div className="mt-2 text-2xl font-bold text-white">{formatMoney(stats.totalVolume)}</div>
-        </div>
-        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4 shadow-lg">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            <Target size={14} />
-            Potential Payout
-          </div>
-          <div className="mt-2 text-2xl font-bold text-[#0fa053]">{formatMoney(stats.totalPayout)}</div>
-        </div>
-        <div className="rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-4 shadow-lg">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            <Users size={14} />
-            Active Users
-          </div>
-          <div className="mt-2 text-2xl font-bold text-white">{stats.uniqueUsers}</div>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex w-fit items-center gap-2 rounded-xl border border-[#2a2f42] bg-[#1a1e2b] p-1">
+      {/* Toolbar & Filters Strip */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-[#0D1420] p-3" style={{ borderColor: BORDER }}>
+        {/* Tabs */}
+        <div className="flex items-center gap-1 rounded-md border border-[#202B3A] bg-[#080D16] p-1">
           <button
             onClick={() => setActiveTab("live")}
-            className={`flex items-center gap-2 rounded-lg px-6 py-2 text-sm font-bold transition-colors ${
-              activeTab === "live" ? "bg-[#0fa053] text-white shadow-lg" : "text-slate-300 hover:text-white"
+            className={`rounded px-3 py-1 text-xs font-bold transition-colors ${
+              activeTab === "live" ? "bg-[#00C98D] text-black" : "text-[#8D9AAF] hover:text-white"
             }`}
           >
-            <Activity size={16} className={activeTab === "live" ? "animate-pulse" : ""} />
-            Live Trades
+            Live Trades ({stats.totalOpen})
           </button>
           <button
             onClick={() => setActiveTab("history")}
-            className={`flex items-center gap-2 rounded-lg px-6 py-2 text-sm font-bold transition-colors ${
-              activeTab === "history" ? "bg-[#0fa053] text-white shadow-lg" : "text-slate-300 hover:text-white"
+            className={`rounded px-3 py-1 text-xs font-bold transition-colors ${
+              activeTab === "history" ? "bg-[#00C98D] text-black" : "text-[#8D9AAF] hover:text-white"
             }`}
           >
-            <Clock3 size={16} />
             Trade History
           </button>
         </div>
 
-        <div className="flex flex-1 items-center gap-3 sm:max-w-lg">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative w-48">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500 pointer-events-none" />
             <input
               type="text"
               value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search by trade ID, user, or asset..."
-              className="w-full rounded-xl border border-[#2a2f42] bg-[#0e1017] py-2.5 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-slate-400 focus:border-[#0fa053]"
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Trade ID, user, asset..."
+              className="w-full h-8 rounded-lg border bg-[#080D16] pl-8 pr-2.5 text-xs text-white outline-none placeholder:text-gray-500 focus:border-[#00C98D]"
+              style={{ borderColor: BORDER }}
             />
           </div>
+
           <select
             value={userFilter}
             onChange={(e) => setUserFilter(e.target.value)}
-            className="rounded-xl border border-[#2a2f42] bg-[#0e1017] px-3 py-2.5 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
+            className="h-8 rounded-lg border bg-[#080D16] px-2.5 text-xs text-white outline-none focus:border-[#00C98D]"
+            style={{ borderColor: BORDER }}
           >
             <option value="">All Users</option>
             {users.map((u) => (
@@ -273,144 +189,102 @@ const TradeManagement = () => {
               </option>
             ))}
           </select>
+
+          {availableAssets.length > 0 && (
+            <select
+              value={assetFilter}
+              onChange={(e) => setAssetFilter(e.target.value)}
+              className="h-8 rounded-lg border bg-[#080D16] px-2.5 text-xs text-white outline-none focus:border-[#00C98D]"
+              style={{ borderColor: BORDER }}
+            >
+              <option value="all">All Assets</option>
+              {availableAssets.map((asset) => (
+                <option key={asset} value={asset}>{asset}</option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
-      {activeTab === "live" ? (
-        <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
-          <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
-            <h3 className="flex items-center gap-2 font-bold text-white">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
-              Active Positions
-            </h3>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm text-slate-200">
-              <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
+      {/* Operations Data Table (Dense Table, NO CARDS) */}
+      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b bg-[#121B29] text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]" style={{ borderColor: BORDER }}>
+                <th className="px-4 py-3">TIME</th>
+                <th className="px-4 py-3">TRADE ID</th>
+                <th className="px-4 py-3">USER</th>
+                <th className="px-4 py-3">ASSET</th>
+                <th className="px-4 py-3">DIRECTION</th>
+                <th className="px-4 py-3">STAKE</th>
+                <th className="px-4 py-3">PAYOUT / P&L</th>
+                <th className="px-4 py-3">EXPIRY / TIMER</th>
+                <th className="px-4 py-3">RESULT</th>
+                <th className="px-4 py-3 text-right">STATUS</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#202B3A]">
+              {loading ? (
                 <tr>
-                  <th className="px-6 py-3 font-semibold">User</th>
-                  <th className="px-6 py-3 font-semibold">Asset & Direction</th>
-                  <th className="px-6 py-3 font-semibold">Amount</th>
-                  <th className="px-6 py-3 font-semibold">Entry Price</th>
-                  <th className="px-6 py-3 font-semibold">Potential Profit</th>
-                  <th className="px-6 py-3 font-semibold">Time Remaining</th>
-                  <th className="px-6 py-3 font-semibold">Status</th>
+                  <td colSpan={10} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">Loading trade positions...</td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">
-                      Loading live trades...
-                    </td>
-                  </tr>
-                ) : liveTrades.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">
-                      No live trades match the current filters.
-                    </td>
-                  </tr>
-                ) : (
-                  liveTrades.map((trade) => (
-                    <tr key={trade.id} className="transition-colors hover:bg-white/[0.02]">
-                      <td className="px-6 py-4 font-medium text-white">{trade.userLabel}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 font-bold text-white">
-                          {trade.asset_symbol}
-                          {trade.direction === "higher" ? (
-                            <ArrowUpRight size={14} className="text-green-400" />
-                          ) : (
-                            <ArrowDownRight size={14} className="text-red-400" />
-                          )}
-                        </div>
-                        <div className="mt-0.5 text-xs text-slate-400">{trade.id.slice(0, 8).toUpperCase()}</div>
+              ) : filteredTrades.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">No trades matching selected filters.</td>
+                </tr>
+              ) : (
+                filteredTrades.map((t) => {
+                  const isWon = t.status === "won";
+                  const isLost = t.status === "lost";
+                  const profit = Number(t.profit ?? 0);
+
+                  return (
+                    <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="px-4 py-2.5 font-mono text-[#8D9AAF]">
+                        {new Date(t.opened_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                       </td>
-                      <td className="px-6 py-4 font-mono">{formatMoney(trade.amount)}</td>
-                      <td className="px-6 py-4 font-mono text-slate-200">{trade.entry_price.toFixed(5)}</td>
-                      <td className="px-6 py-4 font-mono text-green-400">{formatMoney(trade.amount * trade.payout_rate)}</td>
-                      <td className="px-6 py-4 font-mono font-bold text-[#0fa053]">{formatTimeRemaining(trade, nowMs)}</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center rounded-full bg-[#0fa053]/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-[#0fa053]">
-                          Open
+                      <td className="px-4 py-2.5 font-mono text-gray-400 font-semibold">#{t.id.slice(0, 8).toUpperCase()}</td>
+                      <td className="px-4 py-2.5 font-semibold text-white truncate max-w-[120px]">{t.userLabel}</td>
+                      <td className="px-4 py-2.5 font-bold text-white">{t.asset_symbol}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                          t.direction === "higher" || t.direction === "CALL" ? "bg-[#00C98D]/15 text-[#00C98D]" : "bg-[#EF4444]/15 text-[#EF4444]"
+                        }`}>
+                          {t.direction?.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 font-mono text-white">${t.amount}</td>
+                      <td className={`px-4 py-2.5 font-mono font-bold ${t.status === "open" ? "text-[#00C98D]" : isWon ? "text-[#00C98D]" : "text-[#EF4444]"}`}>
+                        {t.status === "open" ? `$${(t.amount * t.payout_rate).toFixed(2)}` : formatSignedMoney(profit)}
+                      </td>
+                      <td className="px-4 py-2.5 font-mono font-semibold text-white">
+                        {t.status === "open" ? formatTimeRemaining(t, nowMs) : `${t.expiry_seconds}s`}
+                      </td>
+                      <td className="px-4 py-2.5 font-bold uppercase">
+                        {t.status === "open" ? (
+                          <span className="text-[#3B82F6]">—</span>
+                        ) : isWon ? (
+                          <span className="text-[#00C98D]">WIN</span>
+                        ) : (
+                          <span className="text-[#EF4444]">LOSS</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                          t.status === "open" ? "bg-[#00C98D]/15 text-[#00C98D]" : "bg-[#202B3A] text-gray-400"
+                        }`}>
+                          {t.status}
                         </span>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
-      ) : (
-        <div className="overflow-hidden rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] shadow-lg">
-          <div className="border-b border-[#2a2f42] bg-[#1a1e2b] p-4">
-            <h3 className="font-bold text-white">Historical Trades</h3>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm text-slate-200">
-              <thead className="border-b border-[#2a2f42] bg-[#1a1e2b] text-xs uppercase text-slate-300">
-                <tr>
-                  <th className="px-6 py-3 font-semibold">User</th>
-                  <th className="px-6 py-3 font-semibold">Asset / Dir</th>
-                  <th className="px-6 py-3 font-semibold">Amount</th>
-                  <th className="px-6 py-3 font-semibold">Entry / Exit</th>
-                  <th className="px-6 py-3 font-semibold">Net P&L</th>
-                  <th className="px-6 py-3 font-semibold">Outcome</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
-                      Loading trade history...
-                    </td>
-                  </tr>
-                ) : historyTrades.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
-                      No historical trades match the current filters.
-                    </td>
-                  </tr>
-                ) : (
-                  historyTrades.map((trade) => {
-                    const outcome = trade.status === "won" ? "won" : trade.status === "lost" ? "lost" : trade.status;
-                    const profit = Number(trade.profit ?? 0);
-
-                    return (
-                      <tr key={trade.id} className="transition-colors hover:bg-white/[0.02]">
-                        <td className="px-6 py-4 font-medium text-white">{trade.userLabel}</td>
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-white">{trade.asset_symbol}</div>
-                          <div className="text-xs uppercase text-slate-400">{trade.direction}</div>
-                        </td>
-                        <td className="px-6 py-4 font-mono">{formatMoney(trade.amount)}</td>
-                        <td className="px-6 py-4 font-mono text-slate-300">
-                          {trade.entry_price.toFixed(5)} → {trade.exit_price?.toFixed(5) ?? "—"}
-                        </td>
-                        <td className={`px-6 py-4 font-mono font-bold ${profit >= 0 ? "text-green-400" : "text-red-400"}`}>
-                          {formatSignedMoney(profit)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex w-fit items-center gap-1 rounded px-2 py-1 text-xs font-bold uppercase tracking-wider ${
-                              outcome === "won" ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
-                            }`}
-                          >
-                            {outcome === "won" ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                            {outcome}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

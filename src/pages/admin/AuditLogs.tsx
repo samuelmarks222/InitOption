@@ -261,109 +261,83 @@ const AuditLogs = () => {
   }, [normalizedSearch, tradeAuditEntries]);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between border-b pb-4" style={{ borderColor: "#202B3A" }}>
         <div>
-          <h2 className="text-2xl font-bold text-white">Audit Logs</h2>
-          <p className="mt-1 text-sm text-slate-300">
-            Review the full M-PESA withdrawal timeline, including finance approvals, manual payout notes, and final outcomes.
-          </p>
+          <h2 className="text-xl font-black text-white">AUDIT & COMPLIANCE LEDGER</h2>
+          <p className="text-xs text-[#8D9AAF]">M-PESA withdrawal timeline, staff actions, and trade balance change log.</p>
         </div>
         <button
-          type="button"
-          onClick={() => void loadAuditEntries()}
-          disabled={loading}
-          className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-70" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)", }}
+          type="button" onClick={() => void loadAuditEntries()} disabled={loading}
+          className="flex items-center gap-1.5 rounded-lg border border-[#202B3A] bg-[#0D1420] px-3 py-1.5 text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white"
         >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          Refresh
+          <RefreshCw size={13} className={loading ? "animate-spin text-[#00C98D]" : ""} /> Refresh Feed
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-        <div className="border-b p-4" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full max-w-sm">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search request, actor, note or status..."
-                className="w-full rounded-lg border py-2 pl-9 pr-4 text-sm text-white outline-none transition-colors" style={{ borderColor: "var(--admin-border)", background: "var(--admin-canvas)" }}
-              />
-            </div>
-          </div>
+      {/* Search Toolbar */}
+      <div className="flex items-center gap-3 rounded-lg border bg-[#0D1420] p-3" style={{ borderColor: "#202B3A" }}>
+        <div className="relative w-80">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500 pointer-events-none" />
+          <input
+            type="text" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search request, actor, note or status..."
+            className="w-full h-8 rounded-lg border bg-[#080D16] pl-8 pr-3 text-xs text-white outline-none placeholder:text-gray-500 focus:border-[#00C98D]"
+            style={{ borderColor: "#202B3A" }}
+          />
         </div>
+      </div>
 
+      {/* M-PESA Withdrawal Audit Table */}
+      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: "#202B3A" }}>
+        <div className="border-b bg-[#121B29] px-4 py-2.5" style={{ borderColor: "#202B3A" }}>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">M-PESA Withdrawal Audit Trail</p>
+        </div>
         {loading ? (
-          <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "var(--admin-green)/0.10" }}>
-              <RefreshCw className="h-8 w-8 animate-spin" style={{ color: "var(--admin-green)" }} />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white">Loading audit feed</h3>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-                Pulling the latest M-PESA withdrawal actions from your live manual payout workflow.
-              </p>
-            </div>
-          </div>
+          <div className="px-4 py-12 text-center text-xs text-[#5E6B7D]">Loading audit feed...</div>
         ) : filteredEntries.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ background: "var(--admin-green)/0.10" }}>
-              <DatabaseZap className="h-8 w-8" style={{ color: "var(--admin-green)" }} />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white">No audit events yet</h3>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-                New M-PESA withdrawal requests, approvals, manual payout notes, and final outcomes will appear here automatically.
-              </p>
-            </div>
-          </div>
+          <div className="px-4 py-12 text-center text-xs text-[#5E6B7D]">No audit events recorded yet.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1080px] text-left text-sm text-slate-200">
-              <thead className="border-b text-xs uppercase text-slate-300" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-                <tr>
-                  <th className="px-6 py-3 font-semibold">Time</th>
-                  <th className="px-6 py-3 font-semibold">Action</th>
-                  <th className="px-6 py-3 font-semibold">Trader</th>
-                  <th className="px-6 py-3 font-semibold">Staff / Source</th>
-                  <th className="px-6 py-3 font-semibold">Amount</th>
-                  <th className="px-6 py-3 font-semibold">Request</th>
-                  <th className="px-6 py-3 font-semibold">Status</th>
-                  <th className="px-6 py-3 font-semibold">Note</th>
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b bg-[#121B29] text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]" style={{ borderColor: "#202B3A" }}>
+                  <th className="px-4 py-3">TIME</th>
+                  <th className="px-4 py-3">ACTION</th>
+                  <th className="px-4 py-3">TRADER</th>
+                  <th className="px-4 py-3">STAFF / SOURCE</th>
+                  <th className="px-4 py-3">AMOUNT</th>
+                  <th className="px-4 py-3">REQUEST</th>
+                  <th className="px-4 py-3">STATUS</th>
+                  <th className="px-4 py-3">NOTE</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-[#202B3A]">
                 {filteredEntries.map((entry) => (
-                  <tr key={`${entry.requestId}:${entry.action}:${entry.createdAt}`} className="hover:bg-white/[0.02]">
-                    <td className="px-6 py-4 text-slate-300">{formatDateTime(entry.createdAt)}</td>
-                    <td className="px-6 py-4 font-medium text-white">{ACTION_LABELS[entry.action] ?? entry.action}</td>
-                    <td className="px-6 py-4 text-slate-200">{entry.userName}</td>
-                    <td className="px-6 py-4 text-slate-300">
+                  <tr key={`${entry.requestId}:${entry.action}:${entry.createdAt}`} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-4 py-2.5 font-mono text-[#8D9AAF]">{formatDateTime(entry.createdAt)}</td>
+                    <td className="px-4 py-2.5 font-semibold text-white">{ACTION_LABELS[entry.action] ?? entry.action}</td>
+                    <td className="px-4 py-2.5 text-gray-300">{entry.userName}</td>
+                    <td className="px-4 py-2.5 text-gray-300">
                       {entry.actorName ? (
                         <div>
-                          <div className="text-white">{entry.actorName}</div>
-                          {entry.actorHandle ? <div className="text-xs text-slate-400">@{entry.actorHandle}</div> : null}
+                          <div className="font-semibold text-white">{entry.actorName}</div>
+                          {entry.actorHandle ? <div className="text-[10px] text-[#5E6B7D]">@{entry.actorHandle}</div> : null}
                         </div>
-                      ) : (
-                        "System"
-                      )}
+                      ) : "System"}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-2.5">
                       <div className="font-mono font-bold text-white">${entry.amount.toFixed(2)}</div>
-                      {entry.amountKes != null ? (
-                        <div className="mt-1 text-xs text-slate-400">KES {entry.amountKes.toFixed(2)}</div>
-                      ) : null}
+                      {entry.amountKes != null ? <div className="text-[10px] text-[#5E6B7D]">KES {entry.amountKes.toFixed(2)}</div> : null}
                     </td>
-                    <td className="px-6 py-4 font-mono text-slate-300">{entry.requestId.slice(0, 8).toUpperCase()}</td>
-                    <td className="px-6 py-4 text-slate-200">{entry.status || "-"}</td>
-                    <td className="px-6 py-4 text-slate-300">
-                      <div className="max-w-[340px] whitespace-normal break-words">
-                        {entry.note || "-"}
-                      </div>
+                    <td className="px-4 py-2.5 font-mono text-[#8D9AAF]">{entry.requestId.slice(0, 8).toUpperCase()}</td>
+                    <td className="px-4 py-2.5">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        entry.status === "completed" ? "bg-[#00C98D]/15 text-[#00C98D]" : entry.status === "rejected" || entry.status === "failed" ? "bg-[#EF4444]/15 text-[#EF4444]" : "bg-[#F59E0B]/15 text-[#F59E0B]"
+                      }`}>{entry.status || "-"}</span>
                     </td>
+                    <td className="px-4 py-2.5 text-[#8D9AAF] max-w-[280px] whitespace-normal break-words">{entry.note || "-"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -372,57 +346,54 @@ const AuditLogs = () => {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-        <div className="border-b p-4" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-          <div className="text-lg font-bold text-white">Trade Balance Audit</div>
-          <div className="mt-1 text-sm text-slate-300">
-            Every trade open and close records the exact balance before, change amount, and balance after.
-          </div>
+      {/* Trade Balance Audit Table */}
+      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: "#202B3A" }}>
+        <div className="border-b bg-[#121B29] px-4 py-2.5" style={{ borderColor: "#202B3A" }}>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Trade Balance Audit Log — Every balance change recorded before & after</p>
         </div>
-
         {loading ? (
-          <div className="px-6 py-10 text-center text-sm text-slate-400">Loading trade balance audit...</div>
+          <div className="px-4 py-12 text-center text-xs text-[#5E6B7D]">Loading trade balance audit...</div>
         ) : filteredTradeAuditEntries.length === 0 ? (
-          <div className="px-6 py-10 text-center text-sm text-slate-400">No trade balance audit events yet.</div>
+          <div className="px-4 py-12 text-center text-xs text-[#5E6B7D]">No trade balance audit events yet.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1120px] text-left text-sm text-slate-200">
-              <thead className="border-b text-xs uppercase text-slate-300" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-                <tr>
-                  <th className="px-6 py-3 font-semibold">Time</th>
-                  <th className="px-6 py-3 font-semibold">Event</th>
-                  <th className="px-6 py-3 font-semibold">Trader</th>
-                  <th className="px-6 py-3 font-semibold">Asset</th>
-                  <th className="px-6 py-3 font-semibold">Change</th>
-                  <th className="px-6 py-3 font-semibold">Stored Balance</th>
-                  <th className="px-6 py-3 font-semibold">Available Balance</th>
-                  <th className="px-6 py-3 font-semibold">Reserved</th>
-                  <th className="px-6 py-3 font-semibold">Status</th>
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b bg-[#121B29] text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]" style={{ borderColor: "#202B3A" }}>
+                  <th className="px-4 py-3">TIME</th>
+                  <th className="px-4 py-3">EVENT</th>
+                  <th className="px-4 py-3">TRADER</th>
+                  <th className="px-4 py-3">ASSET</th>
+                  <th className="px-4 py-3">CHANGE</th>
+                  <th className="px-4 py-3">STORED BALANCE</th>
+                  <th className="px-4 py-3">AVAILABLE</th>
+                  <th className="px-4 py-3">RESERVED</th>
+                  <th className="px-4 py-3">STATUS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-[#202B3A]">
                 {filteredTradeAuditEntries.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-white/[0.02]">
-                    <td className="px-6 py-4 text-slate-300">{formatDateTime(entry.createdAt)}</td>
-                    <td className="px-6 py-4 font-medium text-white">
+                  <tr key={entry.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="px-4 py-2.5 font-mono text-[#8D9AAF]">{formatDateTime(entry.createdAt)}</td>
+                    <td className="px-4 py-2.5 font-semibold text-white">
                       {entry.eventType === "trade_open" ? "Trade Open" : "Trade Close"}
                     </td>
-                    <td className="px-6 py-4 text-slate-200">{entry.userName}</td>
-                    <td className="px-6 py-4 text-white">
-                      {entry.assetSymbol}
-                      <div className="mt-1 text-xs uppercase text-slate-400">{entry.direction}</div>
+                    <td className="px-4 py-2.5 text-gray-300">{entry.userName}</td>
+                    <td className="px-4 py-2.5">
+                      <span className="font-semibold text-white">{entry.assetSymbol}</span>
+                      <div className="text-[10px] uppercase text-[#5E6B7D]">{entry.direction}</div>
                     </td>
-                    <td className={`px-6 py-4 font-mono font-bold ${entry.changeAmount >= 0 ? "text-green-400" : "text-red-400"}`}>
+                    <td className={`px-4 py-2.5 font-mono font-bold ${entry.changeAmount >= 0 ? "text-[#00C98D]" : "text-[#EF4444]"}`}>
                       {entry.changeAmount >= 0 ? "+" : "-"}${Math.abs(entry.changeAmount).toFixed(2)}
                     </td>
-                    <td className="px-6 py-4 font-mono text-slate-200">
-                      {`$${entry.balanceBefore.toFixed(2)} -> $${entry.balanceAfter.toFixed(2)}`}
+                    <td className="px-4 py-2.5 font-mono text-gray-300">
+                      ${entry.balanceBefore.toFixed(2)} → ${entry.balanceAfter.toFixed(2)}
                     </td>
-                    <td className="px-6 py-4 font-mono text-slate-300">
-                      {`$${entry.availableBefore.toFixed(2)} -> $${entry.availableAfter.toFixed(2)}`}
+                    <td className="px-4 py-2.5 font-mono text-gray-300">
+                      ${entry.availableBefore.toFixed(2)} → ${entry.availableAfter.toFixed(2)}
                     </td>
-                    <td className="px-6 py-4 font-mono text-slate-300">${entry.reservedAmount.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-slate-200">{entry.status || "-"}</td>
+                    <td className="px-4 py-2.5 font-mono text-gray-300">${entry.reservedAmount.toFixed(2)}</td>
+                    <td className="px-4 py-2.5 text-gray-300">{entry.status || "-"}</td>
                   </tr>
                 ))}
               </tbody>
