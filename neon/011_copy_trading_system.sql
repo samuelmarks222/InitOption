@@ -409,9 +409,9 @@ DECLARE
 BEGIN
   SELECT COUNT(DISTINCT user_id) INTO v_total_traders FROM public.trades WHERE status != 'open';
   
-  SELECT COUNT(*) INTO v_active_relationships 
-  FROM public.copy_trading_settings WHERE status = 'active'
-  + (SELECT COUNT(*) FROM public.copy_settings WHERE enabled = true);
+  SELECT (SELECT COUNT(*) FROM public.copy_trading_settings WHERE status = 'active')
+       + (SELECT COUNT(*) FROM public.copy_settings WHERE enabled = true)
+    INTO v_active_relationships;
 
   SELECT COUNT(*) INTO v_total_followers FROM public.follows;
 

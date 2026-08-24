@@ -93,6 +93,8 @@ export const CopyTradingSettingsPanel = ({ compact = false }: CopyTradingSetting
                       ratio: setting.ratio,
                       maxPerTrade: setting.max_per_trade,
                       maxDaily: setting.max_daily,
+                      stopLossPct: setting.stop_loss_pct,
+                      expiryDate: setting.expiry_date,
                     })
                   }
                   className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-[12px] font-semibold text-gray-300 transition-colors hover:bg-white/5 hover:text-white"

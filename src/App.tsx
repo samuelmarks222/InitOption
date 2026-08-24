@@ -174,7 +174,7 @@ const App = () => {
                         <Route path="/regulation" element={withRouteSuspense(<PublicInfoPage pageKey="regulation" />)} />
                         <Route path="/for-partners" element={withRouteSuspense(<PublicInfoPage pageKey="for-partners" />)} />
                         <Route path="/site-map" element={withRouteSuspense(<PublicInfoPage pageKey="site-map" />)} />
-                        <Route path="/traders/:username" element={withRouteSuspense(<TraderProfile />)} />
+                        <Route path="/traders/:username" element={withTradingRoute(<TraderProfile />)} />
                         <Route path="/tournaments" element={withRouteSuspense(<TournamentsPage />)} />
                         <Route
                           path="/tournaments/:slug"
