@@ -200,27 +200,31 @@ class TableBuilder {
   }
 
   private unwrap(ok: boolean, payload: unknown, isMutation: boolean): ApiResult {
-    const data = (payload as { data?: unknown })?.data ?? payload;
-    const count = (payload as { count?: unknown })?.count;
+    const isObj = typeof payload === "object" && payload !== null;
+    const payloadErr = isObj && "error" in payload ? (payload as { error?: unknown }).error : null;
+    const isErrorPayload = Boolean(payloadErr);
+    const hasDataField = isObj && "data" in payload;
+    const rawData = hasDataField ? (payload as { data?: unknown }).data : payload;
+    const count = isObj && "count" in payload ? (payload as { count?: unknown }).count : undefined;
     const parsedCount = count === undefined ? undefined : typeof count === "number" ? count : Number(count);
 
-    if (!ok) {
+    if (!ok || isErrorPayload) {
       const message =
-        typeof (payload as { error?: string }).error === "string"
-          ? (payload as { error: string }).error
-          : "Request failed";
+        typeof payloadErr === "string"
+          ? payloadErr
+          : typeof (payloadErr as { message?: string })?.message === "string"
+            ? (payloadErr as { message: string }).message
+            : "Request failed";
       return { data: null, error: { message } };
     }
 
-    if (this.mode === "single") {
-      const rows = Array.isArray(data) ? data : [];
+    if (this.mode === "single" || this.mode === "maybeSingle") {
+      const rows = Array.isArray(rawData) ? rawData : [];
       return { data: (rows[0] ?? null) as Row | null, error: null, count: parsedCount };
     }
-    if (this.mode === "maybeSingle") {
-      const rows = Array.isArray(data) ? data : [];
-      return { data: (rows[0] ?? null) as Row | null, error: null, count: parsedCount };
-    }
-    return { data: data as Row[] | Row | null, error: null, count: parsedCount };
+
+    const rows = Array.isArray(rawData) ? rawData : [];
+    return { data: rows as Row[], error: null, count: parsedCount };
   }
 
   // Makes the builder awaitable, mirroring supabase-js:
