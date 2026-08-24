@@ -246,20 +246,23 @@ const Analytics = () => {
 
   const emptyRange = !loading && filteredTrades.length === 0;
 
+  const BORDER = "#202B3A";
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between border-b pb-4" style={{ borderColor: BORDER }}>
         <div>
-          <h2 className="text-2xl font-bold text-white">Platform Profit Analytics</h2>
-          <p className="mt-1 text-sm text-slate-300">Closed-trade performance, trade mix, and platform-side profitability.</p>
+          <h2 className="text-xl font-black text-white">PLATFORM PROFIT ANALYTICS</h2>
+          <p className="text-xs text-[#8D9AAF]">Closed-trade performance, trade mix, and platform-side profitability.</p>
         </div>
-        <div className="flex items-center gap-2 rounded-lg p-1" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
+        <div className="flex items-center gap-1 rounded-lg border border-[#202B3A] bg-[#0D1420] p-1">
           {['7D', '30D', '3M', '1Y', 'ALL'].map((range) => (
             <button
               key={range}
               onClick={() => setTimeRange(range)}
-              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-                timeRange === range ? "bg-[var(--admin-green)] text-white shadow" : "text-slate-300 hover:bg-[var(--admin-surface)] hover:text-white"
+              className={`rounded px-3 py-1 text-xs font-bold transition-colors ${
+                timeRange === range ? "bg-[#00C98D] text-black" : "text-[#8D9AAF] hover:text-white"
               }`}
             >
               {range}
@@ -268,96 +271,103 @@ const Analytics = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {kpiCards.map((kpi) => (
-          <div key={kpi.label} className="rounded-2xl border p-6 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-            <p className="text-sm font-medium text-slate-300">{kpi.label}</p>
-            <h3 className="mt-1 text-3xl font-bold text-white">{loading ? "..." : kpi.value}</h3>
-            <div className="mt-4 flex items-center gap-1.5">
-              {kpi.trend === "up" ? <ArrowUpRight size={16} className="text-green-400" /> : <ArrowDownRight size={16} className="text-red-400" />}
-              <span className={`text-sm font-medium ${kpi.trend === "up" ? "text-green-400" : "text-red-400"}`}>
-                {loading ? "Loading..." : `${kpi.change} vs previous period`}
-              </span>
+      {/* KPI Metrics Strip */}
+      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
+        <div className="grid grid-cols-2 divide-x divide-y divide-[#202B3A] sm:grid-cols-4 sm:divide-y-0">
+          {kpiCards.map((kpi) => (
+            <div key={kpi.label} className="p-3.5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">{kpi.label}</p>
+              <p className="mt-0.5 text-xl font-black font-mono text-white">{loading ? "..." : kpi.value}</p>
+              <div className="mt-1 flex items-center gap-1">
+                {kpi.trend === "up" ? <ArrowUpRight size={12} className="text-[#00C98D]" /> : <ArrowDownRight size={12} className="text-[#EF4444]" />}
+                <span className={`text-[10px] font-semibold ${kpi.trend === "up" ? "text-[#00C98D]" : "text-[#EF4444]"}`}>
+                  {loading ? "..." : `${kpi.change} vs prev`}
+                </span>
+              </div>
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Advanced Metrics — secondary strip */}
+      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
+        <div className="grid grid-cols-3 divide-x divide-[#202B3A]">
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">User Loss Rate</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-white">{loading ? "..." : `${advancedMetrics.userLossRate.toFixed(1)}%`}</p>
+            <p className="mt-0.5 text-[10px] text-[#5E6B7D]">Share of OTM closed trades</p>
           </div>
-        ))}
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Avg Trade Amount</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-white">{loading ? "..." : formatMoney(advancedMetrics.averageTradeAmount)}</p>
+            <p className="mt-0.5 text-[10px] text-[#5E6B7D]">Average stake in selected range</p>
+          </div>
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Daily P&L Volatility</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-white">{loading ? "..." : `±${formatMoney(advancedMetrics.dailyVolatility)}`}</p>
+            <p className="mt-0.5 text-[10px] text-[#5E6B7D]">Std dev of daily platform profit</p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <MetricsCard
-          title="User Loss Rate"
-          value={loading ? "..." : `${advancedMetrics.userLossRate.toFixed(1)}%`}
-          icon={<Target size={20} />}
-          subtitle="Share of closed trades that ended out-of-the-money for traders."
-        />
-        <MetricsCard
-          title="Average Trade Amount"
-          value={loading ? "..." : formatMoney(advancedMetrics.averageTradeAmount)}
-          icon={<DollarSign size={20} />}
-          subtitle="Average stake size across the selected time range."
-        />
-        <MetricsCard
-          title="Daily Profit Volatility"
-          value={loading ? "..." : `±${formatMoney(advancedMetrics.dailyVolatility)}`}
-          icon={<Activity size={20} />}
-          subtitle="Standard deviation of daily platform profit in the selected period."
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="flex h-[400px] flex-col rounded-2xl border p-6 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-          <h3 className="mb-6 text-lg font-bold text-white">Daily Platform Profit</h3>
-          <div className="flex-1">
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="flex h-[380px] flex-col overflow-hidden rounded-lg border bg-[#0D1420] lg:col-span-2" style={{ borderColor: BORDER }}>
+          <div className="border-b bg-[#121B29] px-4 py-2.5" style={{ borderColor: BORDER }}>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Daily Platform Profit — {timeRange}</p>
+          </div>
+          <div className="flex-1 p-4">
             {emptyRange ? (
-              <EmptyPanel message="No closed trades are available in the selected range." />
+              <EmptyPanel message="No closed trades in selected range." />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={dailyProfitData}>
                   <defs>
                     <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#00C98D" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#00C98D" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                  <XAxis dataKey="label" stroke="#8A939F" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#8A939F" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#202B3A" vertical={false} />
+                  <XAxis dataKey="label" stroke="#5E6B7D" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#5E6B7D" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
                   <RechartsTooltip
-                    contentStyle={{ backgroundColor: "var(--admin-surface)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "8px", color: "var(--admin-text)" }}
+                    contentStyle={{ backgroundColor: "#0D1420", border: "1px solid #202B3A", borderRadius: "6px", color: "#F1F5F9", fontSize: 11 }}
                     formatter={(value: number) => [formatSignedMoney(value), "Platform P&L"]}
                   />
-                  <Area type="monotone" dataKey="profit" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorProfit)" />
+                  <Area type="monotone" dataKey="profit" stroke="#00C98D" strokeWidth={2} fillOpacity={1} fill="url(#colorProfit)" />
                 </AreaChart>
               </ResponsiveContainer>
             )}
           </div>
         </div>
 
-        <div className="flex h-[400px] flex-col rounded-2xl border p-6 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-          <h3 className="mb-2 text-lg font-bold text-white">Trade Volume by Asset Class</h3>
-          <p className="mb-4 text-xs text-slate-400">Volume contribution within the selected range.</p>
-          <div className="relative flex flex-1 items-center justify-center">
+        <div className="flex h-[380px] flex-col overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
+          <div className="border-b bg-[#121B29] px-4 py-2.5" style={{ borderColor: BORDER }}>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Volume by Asset Class</p>
+          </div>
+          <div className="relative flex flex-1 items-center justify-center p-2">
             {emptyRange || assetVolumeData.length === 0 ? (
-              <EmptyPanel message="No asset-class volume data is available for this range." compact />
+              <EmptyPanel message="No asset-class volume data for this range." compact />
             ) : (
               <>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={assetVolumeData} innerRadius={60} outerRadius={100} paddingAngle={4} dataKey="value" stroke="none">
+                    <Pie data={assetVolumeData} innerRadius={60} outerRadius={95} paddingAngle={4} dataKey="value" stroke="none">
                       {assetVolumeData.map((entry) => (
                         <Cell key={entry.name} fill={entry.color} />
                       ))}
                     </Pie>
                     <RechartsTooltip
-                      contentStyle={{ backgroundColor: "var(--admin-surface)", border: "none", borderRadius: "8px", color: "var(--admin-text)" }}
+                      contentStyle={{ backgroundColor: "#0D1420", border: "1px solid #202B3A", borderRadius: "6px", color: "#F1F5F9", fontSize: 11 }}
                       formatter={(value: number) => [formatMoney(value), "Volume"]}
                     />
-                    <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: "12px", color: "#8A939F" }} />
+                    <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: "11px", color: "#8D9AAF" }} />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pb-6">
-                  <span className="text-xs text-slate-300">Selected</span>
-                  <span className="text-lg font-bold text-white">{formatMoney(sumTradeVolume(filteredTrades))}</span>
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pb-8">
+                  <span className="text-[10px] text-[#5E6B7D]">Selected</span>
+                  <span className="text-base font-black font-mono text-white">{formatMoney(sumTradeVolume(filteredTrades))}</span>
                 </div>
               </>
             )}
@@ -365,77 +375,70 @@ const Analytics = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="flex h-[350px] flex-col rounded-2xl border p-6 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-          <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-white">
-            <Activity className="h-5 w-5 text-[var(--admin-text-secondary)]" />
-            Trading Volume
-          </h3>
-          <div className="flex-1">
+      {/* Volume Bar + Direction Bias */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <div className="flex h-[320px] flex-col overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
+          <div className="border-b bg-[#121B29] px-4 py-2.5" style={{ borderColor: BORDER }}>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Trading Volume — {timeRange}</p>
+          </div>
+          <div className="flex-1 p-4">
             {emptyRange ? (
-              <EmptyPanel message="No trading volume is available for this range." />
+              <EmptyPanel message="No trading volume for this range." />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dailyProfitData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                  <XAxis dataKey="label" stroke="#8A939F" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#8A939F" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${Math.round(value / 1000)}k`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#202B3A" vertical={false} />
+                  <XAxis dataKey="label" stroke="#5E6B7D" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#5E6B7D" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(value) => `$${Math.round(value / 1000)}k`} />
                   <RechartsTooltip
                     cursor={{ fill: "#ffffff05" }}
-                    contentStyle={{ backgroundColor: "var(--admin-surface)", border: "1px solid var(--admin-border)", borderRadius: "8px", color: "#fff" }}
+                    contentStyle={{ backgroundColor: "#0D1420", border: "1px solid #202B3A", borderRadius: "6px", color: "#F1F5F9", fontSize: 11 }}
                     formatter={(value: number) => [formatMoney(value), "Volume"]}
                   />
-                  <Bar dataKey="volume" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="volume" fill="#3B82F6" radius={[3, 3, 0, 0]} maxBarSize={36} />
                 </BarChart>
               </ResponsiveContainer>
             )}
           </div>
         </div>
 
-        <div className="flex h-[350px] flex-col rounded-2xl border p-6 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-          <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-white">
-            <PieChartIcon className="h-5 w-5 text-[var(--admin-green)]" />
-            Trade Direction Bias
-          </h3>
+        <div className="flex h-[320px] flex-col overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
+          <div className="border-b bg-[#121B29] px-4 py-2.5" style={{ borderColor: BORDER }}>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Trade Direction Bias</p>
+          </div>
           {emptyRange ? (
-            <EmptyPanel message="No trade direction data is available for this range." />
+            <div className="flex flex-1 items-center justify-center">
+              <EmptyPanel message="No direction data for this range." />
+            </div>
           ) : (
-            <div className="flex flex-1 items-center justify-center p-4">
-              <div className="w-full max-w-sm space-y-6">
+            <div className="flex flex-1 items-center justify-center px-8">
+              <div className="w-full max-w-sm space-y-5">
                 <div>
-                  <div className="mb-2 flex justify-between text-sm">
-                    <span className="flex items-center gap-1 font-bold text-green-400">
-                      <TrendingUp size={16} />
-                      Calls (Higher)
-                    </span>
-                    <span className="font-bold text-white">{directionCounts.callsPct}%</span>
+                  <div className="mb-1.5 flex justify-between text-xs">
+                    <span className="flex items-center gap-1 font-bold text-[#00C98D]"><TrendingUp size={12} /> Calls (Higher)</span>
+                    <span className="font-black font-mono text-white">{directionCounts.callsPct}%</span>
                   </div>
-                  <div className="h-3 w-full overflow-hidden rounded-full" style={{ background: "var(--admin-surface)" }}>
-                    <div className="h-full rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" style={{ width: `${directionCounts.callsPct}%` }} />
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#121B29]">
+                    <div className="h-full rounded-full bg-[#00C98D]" style={{ width: `${directionCounts.callsPct}%` }} />
                   </div>
                 </div>
-
                 <div>
-                  <div className="mb-2 flex justify-between text-sm">
-                    <span className="flex items-center gap-1 font-bold text-red-400">
-                      <TrendingDown size={16} />
-                      Puts (Lower)
-                    </span>
-                    <span className="font-bold text-white">{directionCounts.putsPct}%</span>
+                  <div className="mb-1.5 flex justify-between text-xs">
+                    <span className="flex items-center gap-1 font-bold text-[#EF4444]"><TrendingDown size={12} /> Puts (Lower)</span>
+                    <span className="font-black font-mono text-white">{directionCounts.putsPct}%</span>
                   </div>
-                  <div className="h-3 w-full overflow-hidden rounded-full" style={{ background: "var(--admin-surface)" }}>
-                    <div className="h-full rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" style={{ width: `${directionCounts.putsPct}%` }} />
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#121B29]">
+                    <div className="h-full rounded-full bg-[#EF4444]" style={{ width: `${directionCounts.putsPct}%` }} />
                   </div>
                 </div>
-
-                <div className="mt-8 rounded-xl border p-4" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-                  <p className="text-sm text-[#d8f6e5]">
-                    <strong>Insight:</strong>{" "}
+                <div className="rounded-lg border border-[#202B3A] bg-[#121B29] px-3 py-2">
+                  <p className="text-[11px] text-[#8D9AAF]">
+                    <span className="font-bold text-white">Insight: </span>
                     {directionCounts.calls === directionCounts.puts
-                      ? "Trader direction is evenly split across higher and lower positions in this range."
+                      ? "Direction evenly split."
                       : directionCounts.calls > directionCounts.puts
-                        ? "Higher-side positioning is dominating the selected trade set."
-                        : "Lower-side positioning is dominating the selected trade set."}
+                        ? "Higher-side positioning dominant in this range."
+                        : "Lower-side positioning dominant in this range."}
                   </p>
                 </div>
               </div>
@@ -447,31 +450,8 @@ const Analytics = () => {
   );
 };
 
-const MetricsCard = ({
-  title,
-  value,
-  icon,
-  subtitle,
-}: {
-  title: string;
-  value: string;
-  icon: ReactNode;
-  subtitle?: string;
-}) => (
-  <div className="relative overflow-hidden rounded-2xl border p-5 shadow-lg" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
-    <div className="flex items-start justify-between">
-      <div>
-        <p className="text-sm font-medium text-slate-300">{title}</p>
-        <h3 className="mt-1 text-2xl font-bold text-white">{value}</h3>
-      </div>
-      <div className="rounded-xl border p-2.5" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)", color: "var(--admin-green)" }}>{icon}</div>
-    </div>
-    {subtitle && <p className="mt-3 text-xs text-slate-400">{subtitle}</p>}
-  </div>
-);
-
 const EmptyPanel = ({ message, compact = false }: { message: string; compact?: boolean }) => (
-  <div className={`flex h-full items-center justify-center rounded-xl border-dashed text-center text-sm text-slate-400 ${compact ? "p-4" : "p-6"}`} style={{ borderColor: "var(--admin-border)" }}>
+  <div className={`flex h-full items-center justify-center text-center text-xs text-[#5E6B7D] ${compact ? "p-4" : "p-6"}`}>
     {message}
   </div>
 );

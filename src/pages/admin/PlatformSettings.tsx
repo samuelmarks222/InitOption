@@ -26,22 +26,12 @@ import {
 type UploadTarget =
   | "logo"
   | "landing_logo"
-  | "favicon"
-  | "social"
-  | "twitter"
-  | "chartBackground"
-  | `guide:${GuideMediaKey}`;
 
-const CARD_CLASS = "rounded-2xl border border-[#2a2f42] bg-[#1a1e2b] p-6 shadow-lg";
+const CARD_CLASS = "overflow-hidden rounded-lg border border-[#202B3A] bg-[#0D1420] p-4";
 const INPUT_CLASS =
-  "w-full rounded-lg border border-[#2a2f42] bg-[#0e1017] px-4 py-2 text-sm text-white outline-none transition-colors focus:border-[#0fa053]";
+  "w-full rounded-lg border border-[#202B3A] bg-[#080D16] px-3 py-1.5 text-xs text-white outline-none transition-colors focus:border-[#00C98D]";
 const TEXTAREA_CLASS =
-  "min-h-[110px] rounded-lg border border-[#2a2f42] bg-[#0e1017] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#0fa053]";
-
-const MAX_META_DESCRIPTION_LENGTH = 160;
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
-const MIN_SOCIAL_WIDTH = 600;
-const MIN_SOCIAL_HEIGHT = 315;
+  "min-h-[90px] rounded-lg border border-[#202B3A] bg-[#080D16] px-3 py-2 text-xs text-white outline-none transition-colors focus:border-[#00C98D] resize-none";
 
 const ROBOTS_OPTIONS = [
   "index, follow",

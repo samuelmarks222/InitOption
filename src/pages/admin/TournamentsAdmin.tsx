@@ -31,6 +31,32 @@ const createDefaultTournamentDraft = (): Partial<Tournament> => ({
   status: "draft",
 });
 
+const parseDistribution = (raw: string | undefined): Array<{ label: string; position: number; share: number }> => {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((item: any, idx: number) => ({
+      label: item.label || item.rank ? `#${item.rank || idx + 1}` : `Top ${idx + 1}`,
+      position: item.rank || idx + 1,
+      share: Number(item.share) || 0,
+    }));
+  } catch {
+    return [];
+  }
+};
+
+const rebuildDistribution = (winnersCount: number, existingRaw?: string) => {
+  const current = parseDistribution(existingRaw);
+  const equalShare = Number((1 / winnersCount).toFixed(4));
+  const next = Array.from({ length: winnersCount }, (_, i) => {
+    const rank = i + 1;
+    const found = current.find((c) => c.position === rank);
+    return { rank, share: found ? found.share : equalShare };
+  });
+  return JSON.stringify(next);
+};
+
 const TournamentsAdmin = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,24 +115,6 @@ const TournamentsAdmin = () => {
     setTournaments(tournaments.map(t => t.id === id ? { ...t, status: newStatus as any } : t));
   };
 
-  const handleSaveRebuyCost = async (id: string) => {
-    const draftValue = Number(rebuyDrafts[id] ?? 0);
-    if (draftValue < 0) {
-      toast({ title: "Validation Error", description: "Rebuy cost cannot be negative.", variant: "destructive" });
-      return;
-    }
-
-    const { error } = await api.from('tournaments').update({ rebuy_cost: draftValue }).eq('id', id);
-    if (error) {
-      toast({ title: "Failed to update rebuy cost", description: error.message, variant: "destructive" });
-      return;
-    }
-
-    toast({ title: "Rebuy cost updated" });
-    setTournaments((current) => current.map((t) => (t.id === id ? { ...t, rebuy_cost: draftValue } : t)));
-    setEditingRebuyId(null);
-  };
-
   const handleSaveEdit = async (id: string) => {
     const draft = editDrafts[id];
     if (!draft) return;
@@ -163,18 +171,12 @@ const TournamentsAdmin = () => {
       toast({ title: "Validation Error", description: "Tournament title is required.", variant: "destructive" });
       return;
     }
-    if (newTour.rebuy_cost < 0) {
-      toast({ title: "Validation Error", description: "Rebuy cost cannot be negative.", variant: "destructive" });
-      return;
-    }
 
-    // Ensure dates are correctly formatted for timestamptz (ISO strings from datetime-local input lack the Z or timezone info, but Supabase casts it fine usually if valid).
-    // Let's force an ISO string conversion.
-    const sDate = new Date(newTour.start_date).toISOString();
-    const eDate = new Date(newTour.end_date).toISOString();
+    const sDate = new Date(newTour.start_date!).toISOString();
+    const eDate = new Date(newTour.end_date!).toISOString();
 
     let prizeDistribution: any = undefined;
-    try { prizeDistribution = JSON.parse(newTour.prize_distribution); } catch {}
+    try { prizeDistribution = JSON.parse(newTour.prize_distribution!); } catch {}
 
     const { data, error } = await api.from('tournaments').insert({
       title: newTour.title,
@@ -202,198 +204,181 @@ const TournamentsAdmin = () => {
 
   const filtered = tournaments.filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()));
 
+  const BORDER = "#202B3A";
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between border-b pb-4" style={{ borderColor: BORDER }}>
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2"><Trophy className="text-yellow-500" /> Live Tournaments Engine</h2>
-          <p className="text-sm text-slate-300 mt-1">Configure competition schedules, sandbox balances, prize pools, and entry rules.</p>
+          <h2 className="text-xl font-black text-white flex items-center gap-2">
+            <Trophy className="text-[#F59E0B]" size={20} /> LIVE TOURNAMENTS ENGINE
+          </h2>
+          <p className="text-xs text-[#8D9AAF]">Competition schedules, sandbox balances, prize pools, and automated payout rules.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button 
-             onClick={() => setIsCreating(!isCreating)}
-             className="flex items-center gap-2 bg-[#0fa053] hover:bg-[#1a1e2b] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-lg shadow-[#0fa053]/20"
-          >
-            <Plus size={16} /> {isCreating ? "Cancel" : "Create Tournament"}
-          </button>
-        </div>
+        <button
+          onClick={() => setIsCreating(!isCreating)}
+          className="flex items-center gap-1.5 rounded-lg border border-[#00C98D]/30 bg-[#00C98D]/10 px-3 py-1.5 text-xs font-bold text-[#00C98D] hover:bg-[#00C98D] hover:text-black transition-colors"
+        >
+          <Plus size={13} /> {isCreating ? "Cancel" : "New Tournament"}
+        </button>
       </div>
 
+      {/* Create Form */}
       {isCreating && (
-        <div className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl p-6 shadow-lg">
-          <h3 className="text-lg font-bold text-white mb-4">New Tournament Config</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 items-end">
+        <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
+          <div className="border-b bg-[#121B29] px-4 py-2.5" style={{ borderColor: BORDER }}>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">New Tournament Configuration</p>
+          </div>
+          <div className="grid grid-cols-1 gap-3.5 p-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
             <div className="col-span-2">
-              <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Title</label>
-              <input type="text" value={newTour.title} onChange={e => setNewTour({...newTour, title: e.target.value})} placeholder="Weekend Alpha Cup" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Title</label>
+              <input type="text" value={newTour.title} onChange={e => setNewTour({...newTour, title: e.target.value})} placeholder="Weekend Alpha Cup" className="w-full h-8 rounded-lg border bg-[#080D16] px-3 text-xs text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
             </div>
             <div className="col-span-2 lg:col-span-5">
-              <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Description / Rules</label>
-              <input type="text" value={newTour.description} onChange={e => setNewTour({...newTour, description: e.target.value})} placeholder="Top 10 traders win cash prizes. (mention winners here)" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Description / Rules</label>
+              <input type="text" value={newTour.description} onChange={e => setNewTour({...newTour, description: e.target.value})} placeholder="Top 10 traders win cash prizes." className="w-full h-8 rounded-lg border bg-[#080D16] px-3 text-xs text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
             </div>
             
-            <div className="col-span-1 border-t border-[#2a2f42] pt-4">
-              <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Entry Fee ($)</label>
-              <input type="number" value={newTour.entry_fee} onChange={e => setNewTour({...newTour, entry_fee: Number(e.target.value)})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+            <div className="col-span-1 border-t pt-3" style={{ borderColor: BORDER }}>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Entry Fee ($)</label>
+              <input type="number" value={newTour.entry_fee} onChange={e => setNewTour({...newTour, entry_fee: Number(e.target.value)})} className="w-full h-8 rounded-lg border bg-[#080D16] px-3 text-xs text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
             </div>
-            <div className="col-span-1 border-t border-[#2a2f42] pt-4">
-              <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Rebuy Cost ($)</label>
-              <input type="number" min="0" value={newTour.rebuy_cost} onChange={e => setNewTour({...newTour, rebuy_cost: Number(e.target.value)})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
+            <div className="col-span-1 border-t pt-3" style={{ borderColor: BORDER }}>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Rebuy Cost ($)</label>
+              <input type="number" min="0" value={newTour.rebuy_cost} onChange={e => setNewTour({...newTour, rebuy_cost: Number(e.target.value)})} className="w-full h-8 rounded-lg border bg-[#080D16] px-3 text-xs text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
             </div>
-            <div className="col-span-1 border-t border-[#2a2f42] pt-4">
-              <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Prize Pool ($)</label>
-              <input type="number" value={newTour.prize_pool} onChange={e => setNewTour({...newTour, prize_pool: Number(e.target.value)})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-yellow-500 font-bold focus:border-[#0fa053] outline-none" />
+            <div className="col-span-1 border-t pt-3" style={{ borderColor: BORDER }}>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Prize Pool ($)</label>
+              <input type="number" value={newTour.prize_pool} onChange={e => setNewTour({...newTour, prize_pool: Number(e.target.value)})} className="w-full h-8 rounded-lg border bg-[#080D16] px-3 text-xs text-[#F59E0B] font-mono font-bold outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
             </div>
-             <div className="col-span-1 border-t border-[#2a2f42] pt-4">
-               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Winners</label>
-               <input type="number" min="1" value={newTour.number_of_winners}
-                 onChange={e => {
-                   const num = Math.max(1, Number(e.target.value));
-                   setNewTour(prev => ({ ...prev, number_of_winners: num, prize_distribution: rebuildDistribution(num, prev.prize_distribution) }));
-                 }}
-                 className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-white font-bold focus:border-[#0fa053] outline-none" />
-             </div>
-             <div className="col-span-1 sm:col-span-2 border-t border-[#2a2f42] pt-4">
-               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Prize Distribution</label>
-               <div className="space-y-1.5">
-                 {parseDistribution(newTour.prize_distribution).map((entry) => (
-                   <div key={entry.position} className="flex items-center gap-2">
-                     <span className="w-8 text-sm font-semibold text-slate-300">{entry.label}</span>
-                     <div className="flex items-center gap-1.5 flex-1">
-                       <input
-                         type="number" min="0" max="100"
-                         value={Math.round(entry.share * 100)}
-                         onChange={e => {
-                           const pct = Math.max(0, Math.min(100, Number(e.target.value) || 0));
-                           const cur = parseDistribution(newTour.prize_distribution);
-                           setNewTour(prev => ({ ...prev, prize_distribution: JSON.stringify(cur.map(d => d.position === entry.position ? { ...d, share: pct / 100 } : d)) }));
-                         }}
-                         className="w-16 bg-[#0e1017] border border-[#2a2f42] rounded px-2 py-1 text-sm text-white text-center focus:border-[#0fa053] outline-none" />
-                       <span className="text-xs text-slate-500">%</span>
-                       <span className="text-xs text-green-400 font-mono">${Math.round(newTour.prize_pool * entry.share).toLocaleString()}</span>
-                     </div>
-                   </div>
-                 ))}
-               </div>
-             </div>
-              <div className="col-span-1 border-t border-[#2a2f42] pt-4">
-               <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Start Balance ($)</label>
-              <input type="number" value={newTour.starting_balance} onChange={e => setNewTour({...newTour, starting_balance: Number(e.target.value)})} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-4 py-2 text-sm text-green-400 font-bold focus:border-[#0fa053] outline-none" />
+            <div className="col-span-1 border-t pt-3" style={{ borderColor: BORDER }}>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Winners</label>
+              <input type="number" min="1" value={newTour.number_of_winners}
+                onChange={e => {
+                  const num = Math.max(1, Number(e.target.value));
+                  setNewTour(prev => ({ ...prev, number_of_winners: num, prize_distribution: rebuildDistribution(num, prev.prize_distribution) }));
+                }}
+                className="w-full h-8 rounded-lg border bg-[#080D16] px-3 text-xs text-white font-mono font-bold outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
+            </div>
+            <div className="col-span-1 sm:col-span-2 border-t pt-3" style={{ borderColor: BORDER }}>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Prize Distribution</label>
+              <div className="space-y-1">
+                {parseDistribution(newTour.prize_distribution).map((entry) => (
+                  <div key={entry.position} className="flex items-center gap-2">
+                    <span className="w-6 text-[11px] font-semibold text-[#8D9AAF]">{entry.label}</span>
+                    <input
+                      type="number" min="0" max="100"
+                      value={Math.round(entry.share * 100)}
+                      onChange={e => {
+                        const pct = Math.max(0, Math.min(100, Number(e.target.value) || 0));
+                        const cur = parseDistribution(newTour.prize_distribution);
+                        setNewTour(prev => ({ ...prev, prize_distribution: JSON.stringify(cur.map(d => d.position === entry.position ? { ...d, share: pct / 100 } : d)) }));
+                      }}
+                      className="w-14 h-6 rounded border bg-[#080D16] text-center font-mono text-xs text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
+                    <span className="text-[10px] text-[#5E6B7D]">%</span>
+                    <span className="font-mono text-[10px] text-[#00C98D]">${Math.round((newTour.prize_pool ?? 0) * entry.share).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="col-span-1 border-t pt-3" style={{ borderColor: BORDER }}>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Start Balance ($)</label>
+              <input type="number" value={newTour.starting_balance} onChange={e => setNewTour({...newTour, starting_balance: Number(e.target.value)})} className="w-full h-8 rounded-lg border bg-[#080D16] px-3 text-xs font-mono text-[#00C98D] font-bold outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
             </div>
 
-            <div className="col-span-1 lg:col-span-1 border-t border-[#2a2f42] pt-4">
-              <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Starts (Local)</label>
-              <input type="text" value={newTour.start_date} onChange={e => setNewTour({...newTour, start_date: e.target.value})} placeholder="2026-06-19T09:00" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-2 text-xs text-white focus:border-[#0fa053] outline-none" />
+            <div className="col-span-1 lg:col-span-1 border-t pt-3" style={{ borderColor: BORDER }}>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Starts (Local)</label>
+              <input type="text" value={newTour.start_date} onChange={e => setNewTour({...newTour, start_date: e.target.value})} placeholder="2026-06-19T09:00" className="w-full h-8 rounded-lg border bg-[#080D16] px-2 text-xs font-mono text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
             </div>
-            <div className="col-span-1 lg:col-span-1 border-t border-[#2a2f42] pt-4">
-              <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Ends (Local)</label>
-              <input type="text" value={newTour.end_date} onChange={e => setNewTour({...newTour, end_date: e.target.value})} placeholder="2026-06-19T21:00" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-2 text-xs text-white focus:border-[#0fa053] outline-none" />
+            <div className="col-span-1 lg:col-span-1 border-t pt-3" style={{ borderColor: BORDER }}>
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Ends (Local)</label>
+              <input type="text" value={newTour.end_date} onChange={e => setNewTour({...newTour, end_date: e.target.value})} placeholder="2026-06-19T21:00" className="w-full h-8 rounded-lg border bg-[#080D16] px-2 text-xs font-mono text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
             </div>
 
-            <div className="col-span-1 lg:col-span-1 flex justify-end">
-               <button onClick={handleCreateTour} className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg text-sm font-bold transition-colors w-full h-[38px] flex items-center justify-center">
-                 Publish
-               </button>
+            <div className="col-span-1 lg:col-span-1 flex items-end">
+              <button onClick={handleCreateTour} className="w-full h-8 rounded-lg bg-[#00C98D] px-4 text-xs font-bold text-black hover:bg-[#00b37d] transition-colors">
+                Publish
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="bg-[#1a1e2b] border border-[#2a2f42] rounded-2xl overflow-hidden shadow-lg">
-        <div className="p-4 border-b border-[#2a2f42] flex justify-between items-center bg-[#1a1e2b]">
-          <div className="flex gap-2 relative w-full max-w-sm">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-             <input type="text" placeholder="Search tournaments..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:border-[#0fa053] outline-none" />
-          </div>
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 rounded-lg border bg-[#0D1420] p-3" style={{ borderColor: BORDER }}>
+        <div className="relative w-72">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500 pointer-events-none" />
+          <input type="text" placeholder="Search tournaments..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full h-8 rounded-lg border bg-[#080D16] pl-8 pr-3 text-xs text-white outline-none placeholder:text-gray-500 focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
         </div>
+      </div>
+
+      {/* Dense Table */}
+      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left text-sm text-slate-200">
-            <thead className="text-xs uppercase bg-[#1a1e2b] text-slate-300 border-b border-[#2a2f42]">
-              <tr>
-                <th className="px-6 py-3 font-semibold">Tournament Title</th>
-                <th className="px-6 py-3 font-semibold">Entry Fee</th>
-                <th className="px-6 py-3 font-semibold">Rebuy Cost</th>
-                <th className="px-6 py-3 font-semibold text-yellow-500">Prize Pool</th>
-                <th className="px-6 py-3 font-semibold">Winners</th>
-                <th className="px-6 py-3 font-semibold text-green-400">Sandbox Bal</th>
-                <th className="px-6 py-3 font-semibold">Timeline</th>
-                <th className="px-6 py-3 font-semibold">Status</th>
-                <th className="px-6 py-3 font-semibold text-right">Actions</th>
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b bg-[#121B29] text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]" style={{ borderColor: BORDER }}>
+                <th className="px-4 py-3">TOURNAMENT TITLE</th>
+                <th className="px-4 py-3">ENTRY FEE</th>
+                <th className="px-4 py-3">REBUY COST</th>
+                <th className="px-4 py-3 text-[#F59E0B]">PRIZE POOL</th>
+                <th className="px-4 py-3">WINNERS</th>
+                <th className="px-4 py-3 text-[#00C98D]">SANDBOX BAL</th>
+                <th className="px-4 py-3">TIMELINE</th>
+                <th className="px-4 py-3">STATUS</th>
+                <th className="px-4 py-3 text-right">ACTIONS</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-[#202B3A]">
               {loading ? (
-                  <tr><td colSpan={9} className="text-center py-8 text-slate-400">Loading tournaments...</td></tr>
-               ) : filtered.length === 0 ? (
-                  <tr><td colSpan={9} className="text-center py-8 text-slate-400">No tournaments configured. Deploy one to begin.</td></tr>
+                <tr><td colSpan={9} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">Loading tournaments...</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan={9} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">No tournaments configured. Deploy one to begin.</td></tr>
               ) : filtered.map((t) => (
-                <tr key={t.id} className="hover:bg-white/[0.02]">
-                  <td className="px-6 py-4">
-                      {editingRowId === t.id ? (
-                      <div className="space-y-2">
-                        <input type="text" value={editDrafts[t.id]?.title ?? t.title} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], title: e.target.value } }))} className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#0fa053] outline-none" />
-                        <input type="text" value={editDrafts[t.id]?.description ?? t.description ?? ""} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], description: e.target.value } }))} placeholder="Description" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:border-[#0fa053] outline-none" />
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Prize Distribution</label>
-                          <div className="text-[10px] text-slate-500 mb-1.5">{editDrafts[t.id]?.number_of_winners ?? (t as any).number_of_winners ?? 1} winner{(editDrafts[t.id]?.number_of_winners ?? (t as any).number_of_winners ?? 1) !== 1 ? "s" : ""}</div>
-                          <div className="space-y-1">
-                            {parseDistribution(editDrafts[t.id]?.prize_distribution ?? JSON.stringify((t as any).prize_distribution ?? [])).map((entry) => (
-                              <div key={entry.position} className="flex items-center gap-2">
-                                <span className="w-6 text-[11px] font-semibold text-slate-400">{entry.label}</span>
-                                <input
-                                  type="number" min="0" max="100"
-                                  value={Math.round(entry.share * 100)}
-                                  onChange={e => {
-                                    const pct = Math.max(0, Math.min(100, Number(e.target.value) || 0));
-                                    const cur = parseDistribution(editDrafts[t.id]?.prize_distribution ?? JSON.stringify((t as any).prize_distribution ?? []));
-                                    const updated = JSON.stringify(cur.map(d => d.position === entry.position ? { ...d, share: pct / 100 } : d));
-                                    setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], prize_distribution: updated } }));
-                                  }}
-                                  className="w-14 bg-[#0e1017] border border-[#2a2f42] rounded px-1.5 py-1 text-[11px] text-white text-center focus:border-[#0fa053] outline-none" />
-                                <span className="text-[10px] text-slate-500">%</span>
-                                <span className="text-[10px] text-green-400 font-mono">${Math.round(Number((t as any).prize_pool ?? 0) * entry.share).toLocaleString()}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
+                  <td className="px-4 py-2.5">
+                    {editingRowId === t.id ? (
+                      <div className="space-y-1.5">
+                        <input type="text" value={editDrafts[t.id]?.title ?? t.title} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], title: e.target.value } }))} className="w-full h-7 rounded border bg-[#080D16] px-2 text-xs text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
+                        <input type="text" value={editDrafts[t.id]?.description ?? t.description ?? ""} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], description: e.target.value } }))} placeholder="Description" className="w-full h-7 rounded border bg-[#080D16] px-2 text-xs text-[#8D9AAF] outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
                       </div>
                     ) : (
                       <>
-                        <div className="font-bold text-white text-base">{t.title}</div>
-                        <div className="text-xs text-slate-400 max-w-[200px] truncate">{t.description}</div>
+                        <div className="font-bold text-white text-xs">{t.title}</div>
+                        <div className="text-[10px] text-[#5E6B7D] max-w-[200px] truncate">{t.description}</div>
                       </>
                     )}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2.5 font-mono">
                     {editingRowId === t.id ? (
-                      <input type="number" value={editDrafts[t.id]?.entry_fee ?? t.entry_fee} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], entry_fee: Number(e.target.value) } }))} className="w-24 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#0fa053] outline-none" />
+                      <input type="number" value={editDrafts[t.id]?.entry_fee ?? t.entry_fee} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], entry_fee: Number(e.target.value) } }))} className="w-20 h-7 rounded border bg-[#080D16] px-2 text-xs text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
                     ) : (
-                      <span className="font-mono font-bold">{t.entry_fee === 0 ? <span className="text-green-400">FREE</span> : `$${t.entry_fee}`}</span>
+                      <span className="font-bold">{t.entry_fee === 0 ? <span className="text-[#00C98D]">FREE</span> : `$${t.entry_fee}`}</span>
                     )}
                   </td>
-                  <td className="px-6 py-4 font-mono font-bold">
+                  <td className="px-4 py-2.5 font-mono font-bold">
                     {editingRebuyId === t.id ? (
                       <input
-                        type="number"
-                        min="0"
+                        type="number" min="0"
                         value={rebuyDrafts[t.id] ?? Number(t.rebuy_cost ?? 0)}
                         onChange={(e) => setRebuyDrafts((current) => ({ ...current, [t.id]: Number(e.target.value) }))}
-                        className="w-28 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-2 text-sm text-white focus:border-[#0fa053] outline-none"
+                        className="w-20 h-7 rounded border bg-[#080D16] px-2 text-xs text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }}
                       />
                     ) : editingRowId === t.id ? (
-                      <input type="number" min="0" value={editDrafts[t.id]?.rebuy_cost ?? t.rebuy_cost} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], rebuy_cost: Number(e.target.value) } }))} className="w-24 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#0fa053] outline-none" />
+                      <input type="number" min="0" value={editDrafts[t.id]?.rebuy_cost ?? t.rebuy_cost} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], rebuy_cost: Number(e.target.value) } }))} className="w-20 h-7 rounded border bg-[#080D16] px-2 text-xs text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
                     ) : (
-                      t.rebuy_cost === 0 ? <span className="text-green-400">FREE</span> : `$${t.rebuy_cost}`
+                      t.rebuy_cost === 0 ? <span className="text-[#00C98D]">FREE</span> : `$${t.rebuy_cost}`
                     )}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2.5 font-mono font-bold text-[#F59E0B]">
                     {editingRowId === t.id ? (
-                      <input type="number" value={editDrafts[t.id]?.prize_pool ?? t.prize_pool} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], prize_pool: Number(e.target.value) } }))} className="w-24 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-yellow-500 font-bold focus:border-[#0fa053] outline-none" />
+                      <input type="number" value={editDrafts[t.id]?.prize_pool ?? t.prize_pool} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], prize_pool: Number(e.target.value) } }))} className="w-20 h-7 rounded border bg-[#080D16] px-2 text-xs text-[#F59E0B] outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
                     ) : (
-                      <span className="font-mono font-bold text-yellow-500">${t.prize_pool}</span>
+                      `$${t.prize_pool}`
                     )}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2.5 font-mono font-bold text-white">
                     {editingRowId === t.id ? (
                       <input type="number" min="1" value={editDrafts[t.id]?.number_of_winners ?? t.number_of_winners}
                         onChange={e => {
@@ -401,41 +386,36 @@ const TournamentsAdmin = () => {
                           const existing = editDrafts[t.id]?.prize_distribution ?? JSON.stringify((t as any).prize_distribution ?? []);
                           setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], number_of_winners: num, prize_distribution: rebuildDistribution(num, existing) } }));
                         }}
-                        className="w-16 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-white font-bold focus:border-[#0fa053] outline-none" />
+                        className="w-14 h-7 rounded border bg-[#080D16] px-2 text-xs text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
                     ) : (
-                      <span className="font-mono font-bold">{t.number_of_winners}</span>
+                      t.number_of_winners
                     )}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2.5 font-mono font-bold text-[#00C98D]">
                     {editingRowId === t.id ? (
-                      <input type="number" value={editDrafts[t.id]?.starting_balance ?? t.starting_balance} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], starting_balance: Number(e.target.value) } }))} className="w-24 bg-[#0e1017] border border-[#2a2f42] rounded-lg px-3 py-1.5 text-sm text-green-400 font-bold focus:border-[#0fa053] outline-none" />
+                      <input type="number" value={editDrafts[t.id]?.starting_balance ?? t.starting_balance} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], starting_balance: Number(e.target.value) } }))} className="w-20 h-7 rounded border bg-[#080D16] px-2 text-xs text-[#00C98D] outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
                     ) : (
-                      <span className="font-mono font-medium text-green-400">${t.starting_balance}</span>
+                      `$${t.starting_balance}`
                     )}
                   </td>
-                  <td className="px-6 py-4 text-xs font-mono">
+                  <td className="px-4 py-2.5 text-[10px] font-mono text-[#8D9AAF]">
                     {editingRowId === t.id ? (
-                      <div className="space-y-1.5">
-                        <input type="text" value={editDrafts[t.id]?.start_date?.slice(0, 16) ?? t.start_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], start_date: e.target.value } }))} placeholder="2026-06-19T09:00" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-1 text-xs text-white focus:border-[#0fa053] outline-none" />
-                        <input type="text" value={editDrafts[t.id]?.end_date?.slice(0, 16) ?? t.end_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], end_date: e.target.value } }))} placeholder="2026-06-19T21:00" className="w-full bg-[#0e1017] border border-[#2a2f42] rounded-lg px-2 py-1 text-xs text-white focus:border-[#0fa053] outline-none" />
+                      <div className="space-y-1">
+                        <input type="text" value={editDrafts[t.id]?.start_date?.slice(0, 16) ?? t.start_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], start_date: e.target.value } }))} className="w-full h-6 rounded border bg-[#080D16] px-1 text-[10px] text-white outline-none" style={{ borderColor: BORDER }} />
+                        <input type="text" value={editDrafts[t.id]?.end_date?.slice(0, 16) ?? t.end_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], end_date: e.target.value } }))} className="w-full h-6 rounded border bg-[#080D16] px-1 text-[10px] text-white outline-none" style={{ borderColor: BORDER }} />
                       </div>
                     ) : (
                       <>
-                        <div className="text-slate-300">S: {new Date(t.start_date).toLocaleString()}</div>
-                        <div className="text-slate-400">E: {new Date(t.end_date).toLocaleString()}</div>
+                        <div>S: {new Date(t.start_date).toLocaleString("en-GB", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</div>
+                        <div>E: {new Date(t.end_date).toLocaleString("en-GB", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</div>
                       </>
                     )}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2.5">
                     <select 
                       value={t.status}
                       onChange={(e) => handleUpdateStatus(t.id, e.target.value)}
-                      className={`px-2 py-1 rounded bg-[#0e1017] border text-xs font-bold uppercase tracking-wider outline-none ${
-                        t.status === 'active' ? 'text-green-400 border-[#0fa053]/30' : 
-                        t.status === 'completed' ? 'text-[#0fa053] border-[#0fa053]/30' : 
-                        t.status === 'cancelled' ? 'text-red-400 border-red-500/30' : 
-                        'text-yellow-400 border-yellow-500/30'
-                      }`}
+                      className="rounded bg-[#080D16] border border-[#202B3A] px-2 py-1 text-[10px] font-bold text-white outline-none"
                     >
                       <option value="upcoming">Upcoming</option>
                       <option value="active">Active</option>
@@ -443,33 +423,24 @@ const TournamentsAdmin = () => {
                       <option value="cancelled">Cancelled</option>
                     </select>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="px-4 py-2.5 text-right">
+                    <div className="flex items-center justify-end gap-1">
                       {editingRowId === t.id ? (
                         <>
-                          <button onClick={() => handleSaveEdit(t.id)} className="p-1.5 bg-[#1a1e2b] text-green-400 hover:text-white rounded transition-colors" title="Save All Changes">
-                            <Save size={16} />
+                          <button onClick={() => handleSaveEdit(t.id)} className="rounded border border-[#00C98D]/30 p-1 text-[#00C98D] hover:bg-[#00C98D] hover:text-black transition-colors">
+                            <Save size={12} />
                           </button>
-                          <button onClick={() => { setEditingRowId(null); setEditDrafts((d) => { const next = { ...d }; delete next[t.id]; return next; }); }} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-red-400 rounded transition-colors" title="Cancel Editing">
-                            <X size={16} />
+                          <button onClick={() => { setEditingRowId(null); setEditDrafts((d) => { const next = { ...d }; delete next[t.id]; return next; }); }} className="rounded border border-[#EF4444]/30 p-1 text-[#EF4444] hover:bg-[#EF4444] hover:text-white transition-colors">
+                            <X size={12} />
                           </button>
                         </>
                       ) : (
                         <>
-                          <button onClick={() => { setEditingRowId(t.id); setEditDrafts((d) => ({ ...d, [t.id]: { prize_distribution: JSON.stringify((t as any).prize_distribution ?? []), number_of_winners: t.number_of_winners } })); setEditingRebuyId(null); }} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-[#0fa053] rounded transition-colors" title="Edit All Fields">
-                            <Edit size={16} />
+                          <button onClick={() => { setEditingRowId(t.id); setEditDrafts((d) => ({ ...d, [t.id]: { prize_distribution: JSON.stringify((t as any).prize_distribution ?? []), number_of_winners: t.number_of_winners } })); setEditingRebuyId(null); }} className="rounded border border-[#202B3A] p-1 text-[#8D9AAF] hover:text-white transition-colors">
+                            <Edit size={12} />
                           </button>
-                          {editingRebuyId === t.id ? (
-                            <button onClick={() => handleSaveRebuyCost(t.id)} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-green-400 rounded transition-colors" title="Save Rebuy Cost">
-                              <Save size={16} />
-                            </button>
-                          ) : editingRowId !== t.id ? (
-                            <button onClick={() => { setEditingRebuyId(t.id); setRebuyDrafts((current) => ({ ...current, [t.id]: Number(t.rebuy_cost ?? 0) })); }} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-[#0fa053] rounded transition-colors" title="Edit Rebuy Cost">
-                              <Edit size={16} />
-                            </button>
-                          ) : null}
-                          <button onClick={() => handleDelete(t.id)} className="p-1.5 bg-[#1a1e2b] text-slate-300 hover:text-red-400 rounded transition-colors" title="Delete Tournament">
-                            <Trash2 size={16} />
+                          <button onClick={() => handleDelete(t.id)} className="rounded border border-[#EF4444]/30 p-1 text-[#EF4444] hover:bg-[#EF4444] hover:text-white transition-colors">
+                            <Trash2 size={12} />
                           </button>
                         </>
                       )}
@@ -486,5 +457,3 @@ const TournamentsAdmin = () => {
 };
 
 export default TournamentsAdmin;
-
-
