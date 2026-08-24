@@ -165,83 +165,31 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
 
     const fetchLeaders = async () => {
       setLoading(true);
-      const now = Date.now();
-      const periodMs = period === "day" ? 86400000 : period === "week" ? 7 * 86400000 : 30 * 86400000;
-      const since = new Date(now - periodMs).toISOString();
-
       try {
-        const { data: trades, error: tradeError } = await api
-          .from("trades")
-          .select("user_id, amount, asset_symbol, closed_at, direction, expiry_seconds, profit, status, profiles(id, username, display_name, avatar_url, nationality, phone_country, total_profit, total_trades, total_wins, followers_count, created_at, vip_tier)")
-          .neq("status", "open")
-          .gte("closed_at", since)
-          .order("closed_at", { ascending: false })
-          .limit(750);
+        const { data: profiles, error } = await api
+          .from("profiles")
+          .select("id, username, display_name, avatar_url, nationality, phone_country, total_profit, total_trades, total_wins, followers_count, created_at, vip_tier")
+          .gt("total_trades", 0)
+          .order("total_profit", { ascending: false })
+          .limit(100);
 
-        if (tradeError) throw tradeError;
+        if (error) throw error;
 
-        const aggregate = new Map<string, { profile: LeaderProfile; trades: TradeRow[]; profit: number; wins: number; amount: number; highestWin: number; assets: Set<string> }>();
-
-        ((trades ?? []) as TradeRow[]).forEach((trade) => {
-          const profileValue = Array.isArray(trade.profiles) ? trade.profiles[0] : trade.profiles;
-          if (!profileValue?.id) return;
-          const current = aggregate.get(profileValue.id) ?? {
-            profile: profileValue,
-            trades: [],
-            profit: 0,
-            wins: 0,
-            amount: 0,
-            highestWin: 0,
-            assets: new Set<string>(),
-          };
-          const profitValue = Number(trade.profit ?? 0);
-          current.trades.push(trade);
-          current.profit += profitValue;
-          current.amount += Number(trade.amount ?? 0);
-          if (profitValue > 0) current.wins += 1;
-          if (profitValue > current.highestWin) current.highestWin = profitValue;
-          if (trade.asset_symbol) current.assets.add(trade.asset_symbol);
-          aggregate.set(profileValue.id, current);
-        });
-
-        let nextLeaders = Array.from(aggregate.values()).map((entry, index) =>
-          toTraderData(entry.profile, index, {
-            totalProfit: entry.profit,
-            todayProfit: entry.profit,
-            totalTrades: entry.trades.length,
-            wins: entry.wins,
-            highestWin: entry.highestWin,
-            avgAmount: entry.trades.length ? entry.amount / entry.trades.length : 0,
-            avgDuration: entry.trades.length
-              ? entry.trades.reduce((sum, trade) => sum + Number(trade.expiry_seconds ?? 0), 0) / entry.trades.length / 60
-              : 1,
-            preferredAssets: Array.from(entry.assets).slice(0, 5),
-            copyTrades: entry.trades.slice(0, 12).map((trade) => ({
-              asset: trade.asset_symbol || "Asset",
-              direction: trade.direction || "Higher",
-              expiration: `${Math.max(1, Math.round(Number(trade.expiry_seconds ?? 60) / 60))} min`,
-              investment: Number(trade.amount ?? 0),
-              payout: Math.max(0, Number(trade.amount ?? 0) + Number(trade.profit ?? 0)),
-              result: Number(trade.profit ?? 0) >= 0 ? "Win" : "Loss",
-              profit: Number(trade.profit ?? 0),
-              date: trade.closed_at || new Date().toISOString(),
-            })),
-          }),
-        );
+        const profileList = (Array.isArray(profiles) ? profiles : []) as LeaderProfile[];
+        
+        let nextLeaders = profileList.map((item, index) => toTraderData(item, index));
 
         if (nextLeaders.length === 0) {
-          const { data: profiles, error: profileError } = await api
+          const { data: fallbackProfiles } = await api
             .from("profiles")
             .select("id, username, display_name, avatar_url, nationality, phone_country, total_profit, total_trades, total_wins, followers_count, created_at, vip_tier")
             .order("total_profit", { ascending: false })
             .limit(50);
-
-          if (profileError) throw profileError;
-          nextLeaders = ((profiles ?? []) as LeaderProfile[]).map((item, index) => toTraderData(item, index));
+          nextLeaders = (Array.isArray(fallbackProfiles) ? fallbackProfiles : [] as LeaderProfile[]).map((item, index) => toTraderData(item, index));
         }
 
         if (!cancelled) {
-          setLeaders(nextLeaders.sort((a, b) => b.totalProfit - a.totalProfit).slice(0, 100));
+          setLeaders(nextLeaders.sort((a, b) => b.totalProfit - a.totalProfit));
         }
       } catch (error) {
         if (!cancelled) {
