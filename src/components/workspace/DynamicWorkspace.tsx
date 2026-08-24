@@ -108,6 +108,9 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
           </div>
         )}
         {activeWorkspace === "tournaments" && (
+          <div className="flex-1 w-full h-full">
+            <WorkspaceTournaments onOpenDetails={onOpenTournament} onEnterTournament={onEnterTournament} onClose={onClose} directoryRefreshKey={directoryRefreshKey} />
+          </div>
         )}
         {activeWorkspace === "more" && (
           <div className="flex-1 w-full h-full">
