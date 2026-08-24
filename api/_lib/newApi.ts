@@ -493,7 +493,7 @@ export async function handlePusherAuth(request: ApiRequest, response: ApiRespons
 /* ------------------------------------------------------------------ */
 const ALLOWED_TABLES = new Set([
   "admin_balance_log", "announcements", "assets_config", "bonus_settings", "chat_messages", "copy_settings",
-  "crypto_deposit_address_pool", "crypto_deposit_events", "crypto_deposit_instructions",
+  "copy_trading_settings", "copied_trades", "crypto_deposit_address_pool", "crypto_deposit_events", "crypto_deposit_instructions",
   "crypto_payment_methods", "customer_reviews", "deposit_bonus_offers",
   "deposit_bonus_redemptions", "deposit_requests", "email_verification_codes", "follows",
   "notification_email_deliveries", "notifications", "platform_settings", "profiles",

@@ -86,7 +86,7 @@ export const roleAllowsAdminPath = (role: AppRole | null, pathname: string) => {
         pathname.startsWith(path),
       );
     case "trade_risk_manager":
-      return ["/admin/trades", "/admin/risk", "/admin/analytics", "/admin/assets", "/admin/tournaments"].some((path) =>
+      return ["/admin/trades", "/admin/risk", "/admin/analytics", "/admin/assets", "/admin/tournaments", "/admin/social"].some((path) =>
         pathname.startsWith(path),
       );
     case "content_marketing_manager":
@@ -94,7 +94,7 @@ export const roleAllowsAdminPath = (role: AppRole | null, pathname: string) => {
         (path) => pathname.startsWith(path),
       );
     case "auditor":
-      return ["/admin/audit", "/admin/reports", "/admin/finance", "/admin/trades", "/admin/analytics"].some((path) =>
+      return ["/admin/audit", "/admin/reports", "/admin/finance", "/admin/trades", "/admin/analytics", "/admin/social"].some((path) =>
         pathname.startsWith(path),
       );
     default:

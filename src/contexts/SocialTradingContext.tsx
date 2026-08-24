@@ -196,6 +196,27 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
         p_expiry_date: input.expiryDate ?? null,
       });
 
+      if (user?.id) {
+        const copyPercentage = input.ratio ? Math.round(input.ratio * 100) : (input.fixedAmount ? Math.min(100, Math.max(1, input.fixedAmount)) : 20);
+        const minAmount = input.fixedAmount ? Math.max(1, input.fixedAmount) : 1;
+        const maxAmount = input.maxPerTrade ? Math.max(minAmount, input.maxPerTrade) : 50;
+
+        await api.from("copy_trading_settings").delete().eq("follower_user_id", user.id).eq("master_user_id", targetUserId);
+
+        if (input.enabled) {
+          await api.from("copy_trading_settings").insert({
+            follower_user_id: user.id,
+            master_user_id: targetUserId,
+            status: "active",
+            copy_percentage: copyPercentage,
+            minimum_trade_amount: minAmount,
+            maximum_trade_amount: maxAmount,
+            stop_balance: 0,
+            auto_copy: input.executionMode === "automatic",
+          });
+        }
+      }
+
       if (error) {
         toast({
           title: "Copy settings not saved",
@@ -211,12 +232,16 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
       });
       await refreshSocial();
     },
-    [refreshSocial],
+    [refreshSocial, user?.id],
   );
 
   const stopCopying = useCallback(
     async (targetUserId: string) => {
       const { error } = await api.rpc("delete_copy_setting", { p_target_user_id: targetUserId });
+
+      if (user?.id) {
+        await api.from("copy_trading_settings").delete().eq("follower_user_id", user.id).eq("master_user_id", targetUserId);
+      }
 
       if (error) {
         toast({
@@ -230,7 +255,7 @@ export const SocialTradingProvider = ({ children }: { children: React.ReactNode 
       toast({ title: "Copy trading stopped" });
       await refreshSocial();
     },
-    [refreshSocial],
+    [refreshSocial, user?.id],
   );
 
   const executeManualCopyTrade = useCallback(

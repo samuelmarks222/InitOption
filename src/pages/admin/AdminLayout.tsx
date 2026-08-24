@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Outlet, Link, Navigate, useLocation } from "react-router-dom";
 import {
   DollarSign,
@@ -57,6 +57,7 @@ const NAV_CATEGORIES: NavCategory[] = [
     items: [
       { label: "Live Trades", href: "/admin/trades", icon: <CandlestickChart size={20} /> },
       { label: "Trade History", href: "/admin/trades?tab=history", icon: <Clock size={20} /> },
+      { label: "Social Trading", href: "/admin/social", icon: <Users size={20} /> },
       { label: "Assets", href: "/admin/assets", icon: <Wallet size={20} /> },
     ],
   },
