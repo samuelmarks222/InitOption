@@ -176,7 +176,7 @@ const CryptoPayments = () => {
         </div>
       </div>
 
-      {/* Dense Gateway Table (NO CARDS) */}
+      {/* Gateway Table */}
       <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
@@ -203,7 +203,6 @@ const CryptoPayments = () => {
                 </tr>
               ) : (
                 filteredMethods.map((m) => {
-                  const isEditing = editingId === m.id;
                   return (
                     <tr key={m.id} className="hover:bg-white/[0.02] transition-colors">
                       <td className="px-4 py-2.5 font-bold text-white flex items-center gap-2">
@@ -233,14 +232,16 @@ const CryptoPayments = () => {
                       <td className="px-4 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
+                            type="button"
                             onClick={() => startEdit(m)}
-                            className="rounded border border-[#00C98D]/30 bg-[#00C98D]/10 px-2 py-1 text-[11px] font-bold text-[#00C98D] hover:bg-[#00C98D] hover:text-black transition-colors"
+                            className="rounded border border-[#00C98D]/30 bg-[#00C98D]/10 px-2.5 py-1 text-[11px] font-bold text-[#00C98D] hover:bg-[#00C98D] hover:text-black transition-colors"
                           >
                             Edit Config
                           </button>
                           <button
+                            type="button"
                             onClick={() => void handleToggleStatus(m)}
-                            className={`rounded px-2 py-1 text-[11px] font-bold ${
+                            className={`rounded px-2.5 py-1 text-[11px] font-bold transition-colors ${
                               m.status === "active" ? "border border-[#EF4444]/30 text-[#EF4444] hover:bg-[#EF4444] hover:text-white" : "border border-[#00C98D]/30 text-[#00C98D] hover:bg-[#00C98D] hover:text-black"
                             }`}
                           >
@@ -256,6 +257,161 @@ const CryptoPayments = () => {
           </table>
         </div>
       </div>
+
+      {/* Edit Modal Dialog */}
+      {(() => {
+        const editingMethod = methods.find((m) => m.id === editingId);
+        if (!editingMethod) return null;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-150">
+            <div className="w-full max-w-lg overflow-hidden rounded-xl border bg-[#0D1420] text-white shadow-2xl" style={{ borderColor: BORDER }}>
+              <div className="flex items-center justify-between border-b bg-[#121B29] px-5 py-4" style={{ borderColor: BORDER }}>
+                <div>
+                  <h3 className="text-sm font-black uppercase text-white tracking-wider flex items-center gap-2">
+                    <Wallet size={16} className="text-[#00C98D]" />
+                    CONFIGURE {editingMethod.coin_name} ({editingMethod.symbol})
+                  </h3>
+                  <p className="text-[11px] text-[#8D9AAF]">Network: {editingMethod.network}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditingId(null)}
+                  className="rounded p-1 text-gray-400 hover:bg-white/10 hover:text-white transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="max-h-[70vh] overflow-y-auto p-5 space-y-4 text-xs">
+                {/* Deposit Route Mode */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D] mb-1.5">
+                    Deposit Route Mode
+                  </label>
+                  <select
+                    value={editForm.attribution_mode}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, attribution_mode: e.target.value }))}
+                    className="w-full h-9 rounded-lg border bg-[#080D16] px-3 text-xs text-white outline-none focus:border-[#00C98D]"
+                    style={{ borderColor: BORDER }}
+                  >
+                    <option value="dynamic_address">Plisio Automated Gateway (Dynamic Invoice)</option>
+                    <option value="static">Static Wallet Address / Manual Address Pool</option>
+                  </select>
+                </div>
+
+                {/* Minimum Deposit Amount */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D] mb-1.5">
+                    Minimum Deposit Amount ($)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editForm.minimum_deposit_amount}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, minimum_deposit_amount: Number(e.target.value) }))}
+                    className="w-full h-9 rounded-lg border bg-[#080D16] px-3 text-xs font-mono text-white outline-none focus:border-[#00C98D]"
+                    style={{ borderColor: BORDER }}
+                  />
+                </div>
+
+                {/* Static Wallet Address */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D] mb-1.5">
+                    Primary Wallet Address
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="0x... or T..."
+                    value={editForm.wallet_address}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, wallet_address: e.target.value }))}
+                    className="w-full h-9 rounded-lg border bg-[#080D16] px-3 text-xs font-mono text-white outline-none focus:border-[#00C98D]"
+                    style={{ borderColor: BORDER }}
+                  />
+                </div>
+
+                {/* Memo / Tag Label */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D] mb-1.5">
+                    Memo / Destination Tag Label (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Destination Tag / Memo ID"
+                    value={editForm.memo_label}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, memo_label: e.target.value }))}
+                    className="w-full h-9 rounded-lg border bg-[#080D16] px-3 text-xs text-white outline-none focus:border-[#00C98D]"
+                    style={{ borderColor: BORDER }}
+                  />
+                </div>
+
+                {/* Required Confirmations */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D] mb-1.5">
+                    Required Block Confirmations
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={editForm.confirmations_required}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, confirmations_required: Number(e.target.value) }))}
+                    className="w-full h-9 rounded-lg border bg-[#080D16] px-3 text-xs font-mono text-white outline-none focus:border-[#00C98D]"
+                    style={{ borderColor: BORDER }}
+                  />
+                </div>
+
+                {/* QR Code URL */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D] mb-1.5">
+                    QR Code Image URL (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="https://..."
+                    value={editForm.qr_code_url}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, qr_code_url: e.target.value }))}
+                    className="w-full h-9 rounded-lg border bg-[#080D16] px-3 text-xs text-white outline-none focus:border-[#00C98D]"
+                    style={{ borderColor: BORDER }}
+                  />
+                </div>
+
+                {/* Bulk Address Pool */}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D] mb-1.5">
+                    Bulk Address Pool (One per line)
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Address 1&#10;Address 2"
+                    value={editForm.addressPoolEntries}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, addressPoolEntries: e.target.value }))}
+                    className="w-full rounded-lg border bg-[#080D16] p-3 text-xs font-mono text-white outline-none focus:border-[#00C98D]"
+                    style={{ borderColor: BORDER }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t bg-[#121B29] px-5 py-3" style={{ borderColor: BORDER }}>
+                <button
+                  type="button"
+                  onClick={() => setEditingId(null)}
+                  className="rounded-lg border border-[#202B3A] px-4 py-2 text-xs font-bold text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void saveEdit(editingMethod)}
+                  className="flex items-center gap-1.5 rounded-lg bg-[#00C98D] px-5 py-2 text-xs font-bold text-black hover:bg-[#00b37d] transition-colors"
+                >
+                  <Save size={14} /> Save Configuration
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
