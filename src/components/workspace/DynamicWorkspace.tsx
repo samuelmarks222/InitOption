@@ -8,7 +8,6 @@ import { WorkspaceHelp } from "./WorkspaceHelp";
 import { WorkspaceLeaderboard } from "./WorkspaceLeaderboard";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { WorkspaceSocial } from "../social/WorkspaceSocial";
-import { SocialTradingPanel } from "../social/SocialTradingPanel";
 import { WorkspaceSignals } from "./WorkspaceSignals";
 import { GeneralChat } from "./GeneralChat";
 
@@ -35,9 +34,7 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
   const isImmersiveSupport = activeWorkspace === "support" && supportImmersive;
   const isEmbeddedTournaments = activeWorkspace === "tournaments";
   const isDedicatedLeaderboard = activeWorkspace === "leaderboard";
-  const isSocialModule = activeWorkspace === "social";
   const workspaceTitleMap: Record<Exclude<WorkspaceModule, null>, string> = {
-    social: "social trading",
     support: "support",
     account: "account",
     analytics: "analytics",
@@ -57,8 +54,6 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
     ? "w-[318px] max-w-[calc(100vw-85px)]"
     : activeWorkspace === "support"
       ? "w-[318px] max-w-[calc(100vw-85px)]"
-      : isSocialModule
-        ? "w-[350px] max-w-[calc(100vw-85px)]"
       : activeWorkspace === "tournaments"
       ? "w-[430px] max-w-[calc(100vw-85px)]"
       : isDedicatedLeaderboard
@@ -78,7 +73,7 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
     >
       
       {/* Workspace Header Component */}
-      {!isImmersiveSupport && !isEmbeddedTournaments && !isDedicatedLeaderboard && activeWorkspace !== "help" && !isSocialModule ? (
+      {!isImmersiveSupport && !isEmbeddedTournaments && !isDedicatedLeaderboard && activeWorkspace !== "help" ? (
       <div
         className="flex items-center justify-between p-4 border-b"
         style={{ background: "var(--trading-header-bg)", borderBottomColor: "var(--trading-border-color)" }}
@@ -97,11 +92,6 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
 
       {/* Scrollable Body */}
       <div className="flex-1 flex flex-col w-full relative overflow-hidden">
-        {activeWorkspace === "social" && (
-          <div className="flex-1 w-full h-full overflow-hidden">
-            <SocialTradingPanel onClose={onClose} />
-          </div>
-        )}
         {activeWorkspace === "support" && (
           <div className="flex-1 w-full h-full overflow-hidden">
             <WorkspaceSocial onClose={onClose} onImmersiveChange={setSupportImmersive} />
