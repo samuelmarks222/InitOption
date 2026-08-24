@@ -255,20 +255,22 @@ const TradingHeader = ({
           )}
         </div>
 
-        <button
-          onClick={() => navigate("/admin")}
-          className="relative px-3 sm:px-4 h-[34px] rounded-lg text-[12px] sm:text-[13px] font-black text-white transition-all active:scale-95 shrink-0"
-          style={{
-            background: "var(--trading-control-bg)",
-            border: "1px solid var(--trading-control-border)",
-            color: "var(--trading-active-color)",
-            boxShadow: "var(--trading-control-shadow)",
-          }}
-          title={t("tradingHeader.adminPanel")}
-        >
-          <ShieldCheck className="h-4 w-4 inline-block mr-1.5" />
-          {t("tradingHeader.admin")}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => navigate("/admin")}
+            className="relative px-3 sm:px-4 h-[34px] rounded-lg text-[12px] sm:text-[13px] font-black text-white transition-all active:scale-95 shrink-0"
+            style={{
+              background: "var(--trading-control-bg)",
+              border: "1px solid var(--trading-control-border)",
+              color: "var(--trading-active-color)",
+              boxShadow: "var(--trading-control-shadow)",
+            }}
+            title={t("tradingHeader.adminPanel")}
+          >
+            <ShieldCheck className="h-4 w-4 inline-block mr-1.5" />
+            {t("tradingHeader.admin")}
+          </button>
+        )}
 
         <button
           id="tour-deposit-button"
