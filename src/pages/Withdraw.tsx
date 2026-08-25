@@ -61,6 +61,7 @@ const Withdraw = () => {
   const [walletAddress, setWalletAddress] = useState("");
   const [cryptoMemo, setCryptoMemo] = useState("");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [withdrawalOpen, setWithdrawalOpen] = useState(true);
 
   const [userDeposits, setUserDeposits] = useState<DepositRecord[]>([]);
   const [userWithdrawals, setUserWithdrawals] = useState<WithdrawalRecord[]>([]);
@@ -182,6 +183,7 @@ const Withdraw = () => {
       />
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Desktop sidebar — hidden on mobile */}
         <div className="hidden shrink-0 transition-[width] duration-300 ease-out lg:block">
           <NavigationSidebar
             activeWorkspace={activeWorkspace}
@@ -192,7 +194,9 @@ const Withdraw = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-0 bg-[#1c2230]">
-          <div className="border-b border-[#263043] bg-[#1a2130] px-6">
+
+          {/* ─── Desktop tab bar (hidden on mobile) ─── */}
+          <div className="hidden lg:block border-b border-[#263043] bg-[#1a2130] px-6">
             <div className="flex items-center gap-0 text-[13px] font-bold text-[#8d99ae]">
               {["Withdrawal","Payments","Trades","My Account","Market","Tournaments","Analytics"].map((tab) => (
                 <span key={tab} className={`cursor-pointer border-b-2 px-4 py-3 transition-colors hover:text-white ${tab === "Withdrawal" ? "border-white text-white" : "border-transparent hover:border-white/30"}`}>{tab}</span>
@@ -200,9 +204,41 @@ const Withdraw = () => {
             </div>
           </div>
 
-          <div className="p-6 space-y-10">
+          {/* ─── Mobile collapsible Withdrawal header ─── */}
+          <div className="lg:hidden mx-4 mt-4 mb-2">
+            <button
+              type="button"
+              onClick={() => setWithdrawalOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-[6px] bg-[#222736] px-4 py-3.5 text-[15px] font-black text-white"
+            >
+              <span>Withdrawal</span>
+              <ArrowRight className={`h-5 w-5 text-white/50 transition-transform duration-200 ${withdrawalOpen ? "rotate-90" : "-rotate-90"}`} />
+            </button>
+          </div>
+
+          {/* ─── Main content ─── */}
+          <div className="p-4 lg:p-6 space-y-6">
+
+            {/* Mobile Account section — always visible on mobile */}
+            <div className="lg:hidden space-y-1 px-1">
+              <h3 className="text-[14px] font-black text-white">Account:</h3>
+              <div className="border-b border-white/10 pb-4 space-y-3 pt-2">
+                <div>
+                  <p className="text-[12px] font-bold text-[#8d99ae]">In the account:</p>
+                  <p className="mt-0.5 text-[22px] font-black text-white">{liveBalance.toFixed(2)} $</p>
+                </div>
+                <div>
+                  <p className="text-[12px] font-bold text-[#8d99ae]">Available for withdrawal:</p>
+                  <p className="mt-0.5 text-[22px] font-black text-white">{liveBalance.toFixed(2)} $</p>
+                </div>
+              </div>
+            </div>
+
+            {/* ─── FORM ─── */}
             <form onSubmit={handleConfirmWithdrawal} className="grid gap-10 lg:grid-cols-[160px_minmax(0,380px)_1fr]">
-              <div className="space-y-6 pt-1 hidden sm:block">
+
+              {/* Desktop Account column */}
+              <div className="hidden lg:block space-y-6 pt-1">
                 <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8d99ae]">Account:</h3>
                 <div className="space-y-5">
                   <div>
@@ -216,9 +252,12 @@ const Withdraw = () => {
                 </div>
               </div>
 
+              {/* Withdrawal form fields */}
               <div className="space-y-5">
                 <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8d99ae]">Withdrawal:</h3>
-                <div className="grid gap-4 sm:grid-cols-2">
+
+                {/* Amount + Payment method: side-by-side on desktop, stacked on mobile */}
+                <div className="grid gap-4 lg:grid-cols-2">
                   <FLabel label="Amount">
                     <div className="flex">
                       <input type="number" min={10} value={amount} onChange={(e) => setAmount(e.target.value)} className="h-11 w-full rounded-l-[4px] border border-r-0 border-[#323d53] bg-[#1d2535] px-3 text-sm font-bold text-white outline-none focus:border-[#0084FF] transition-colors" />
@@ -251,12 +290,13 @@ const Withdraw = () => {
                   </div>
                 )}
 
-                <button type="submit" disabled={loading} className="flex h-10 min-w-[140px] items-center justify-center gap-2 rounded bg-[#0084FF] px-6 text-xs font-bold text-white shadow hover:bg-[#0070df] active:scale-95 disabled:opacity-50 transition-all">
+                <button type="submit" disabled={loading} className="flex h-11 w-full lg:w-auto lg:min-w-[140px] items-center justify-center gap-2 rounded bg-[#0084FF] px-6 text-sm font-bold text-white shadow hover:bg-[#0070df] active:scale-95 disabled:opacity-50 transition-all">
                   {loading ? "Confirming..." : <>Confirm <ArrowRight size={14} /></>}
                 </button>
               </div>
 
-              <div className="space-y-4 pt-1">
+              {/* FAQ column — desktop only */}
+              <div className="hidden lg:block space-y-4 pt-1">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8d99ae]">FAQ:</h3>
                   <span className="flex items-center gap-1 cursor-pointer text-[11px] font-bold text-[#0084FF] hover:underline">Check out full FAQ <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white">&gt;</span></span>
@@ -279,12 +319,32 @@ const Withdraw = () => {
               </div>
             </form>
 
+            {/* FAQ — mobile only, below form */}
+            <div className="lg:hidden space-y-3 border-t border-[#252e40] pt-5">
+              <div className="flex items-center justify-between">
+                <h3 className="text-[12px] font-black text-white/60 uppercase tracking-widest">FAQ:</h3>
+                <span className="flex items-center gap-1 cursor-pointer text-[11px] font-bold text-[#0084FF] hover:underline">Check out full FAQ <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white">&gt;</span></span>
+              </div>
+              <div className="space-y-3 text-xs">
+                {[...FAQ_COL_1, ...FAQ_COL_2].map((item) => (
+                  <div key={item.id}>
+                    <button type="button" onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)} className="flex items-start gap-1.5 text-left text-xs font-bold text-gray-300 hover:text-white transition-colors w-full">
+                      <span className="text-gray-500 shrink-0">v</span>
+                      <span>{item.question}</span>
+                    </button>
+                    {expandedFaq === item.id && <p className="mt-1 pl-4 text-[11px] font-normal leading-relaxed text-gray-400">{item.answer}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Latest withdrawal requests */}
             <div className="space-y-4 border-t border-dashed border-[#2d374d] pt-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold text-gray-300">Some of your latest requests:</h3>
                 <span className="flex items-center gap-1 cursor-pointer text-[11px] font-bold text-[#0084FF] hover:underline">All financial history <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white">&gt;</span></span>
               </div>
-              <div className="space-y-0 text-xs font-bold">
+              <div className="space-y-0 text-xs font-bold overflow-x-auto">
                 {userWithdrawals.length === 0 ? (
                   <p className="py-4 text-center text-[11px] text-[#6c7a91]">No withdrawal requests yet.</p>
                 ) : (
@@ -295,15 +355,15 @@ const Withdraw = () => {
                     const isFailed = status === "failed" || status === "rejected";
                     return (
                       <div key={w.id} className={`flex items-center justify-between py-2.5 ${i < userWithdrawals.length - 1 ? "border-b border-[#252e40]" : ""} text-gray-400`}>
-                        <div className="flex items-center gap-6 min-w-0">
-                          <span className="font-mono text-gray-300 shrink-0">{String(w.id).slice(-9)}</span>
-                          <span className="shrink-0">{formatDate(w.created_at)}</span>
+                        <div className="flex items-center gap-3 lg:gap-6 min-w-0">
+                          <span className="font-mono text-gray-300 shrink-0 text-[11px]">{String(w.id).slice(-9)}</span>
+                          <span className="shrink-0 hidden sm:inline">{formatDate(w.created_at)}</span>
                           <span className={`flex items-center gap-1.5 shrink-0 ${isFailed ? "text-red-400" : "text-gray-300"}`}>
                             <span className={`h-2 w-2 rounded-full shrink-0 ${dotColor}`} />{statusLabel}
                           </span>
                         </div>
-                        <div className="flex items-center gap-10 shrink-0">
-                          <span className="text-gray-300">{w.method ?? "-"}</span>
+                        <div className="flex items-center gap-4 lg:gap-10 shrink-0">
+                          <span className="text-gray-300 hidden sm:inline">{w.method ?? "-"}</span>
                           <span className="font-mono text-[#0fa055]">+{Number(w.amount ?? 0).toFixed(2)} $</span>
                         </div>
                       </div>
