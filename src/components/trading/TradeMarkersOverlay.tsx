@@ -307,6 +307,161 @@ export const TradeMarkersOverlay = ({
         ctx.shadowBlur = 0;
       }
 
+      // ── Phase 3e: Vertical "Beginning of trade" & "End of trade" boundary lines ──
+      const drawRoundedRect = (
+        c: CanvasRenderingContext2D,
+        rx: number,
+        ry: number,
+        rw: number,
+        rh: number,
+        rad: number
+      ) => {
+        if (typeof c.roundRect === "function") {
+          c.roundRect(rx, ry, rw, rh, rad);
+        } else {
+          c.beginPath();
+          c.moveTo(rx + rad, ry);
+          c.lineTo(rx + rw - rad, ry);
+          c.quadraticCurveTo(rx + rw, ry, rx + rw, ry + rad);
+          c.lineTo(rx + rw, ry + rh - rad);
+          c.quadraticCurveTo(rx + rw, ry + rh, rx + rw - rad, ry + rh);
+          c.lineTo(rx + rad, ry + rh);
+          c.quadraticCurveTo(rx, ry + rh, rx, ry + rh - rad);
+          c.lineTo(rx, ry + rad);
+          c.quadraticCurveTo(rx, ry, rx + rad, ry);
+          c.closePath();
+        }
+      };
+
+      const drawBoundaryLine = (
+        targetTime: number,
+        labelLeft: string,
+        labelRight: string,
+        color: string = "rgba(255, 255, 255, 0.45)",
+        dash: number[] = [4, 4],
+        clockCountDown?: number
+      ) => {
+        let lineX: number | null = null;
+        try {
+          const cx = ts.timeToCoordinate(targetTime as Time);
+          if (isFin(cx)) lineX = cx;
+        } catch {}
+
+        if (lineX === null) {
+          try {
+            const nowBucket = Math.floor(nowSec / safeTf) * safeTf;
+            const nowX = ts.timeToCoordinate(nowBucket as Time);
+            if (isFin(nowX)) {
+              const dt = targetTime - nowBucket;
+              lineX = nowX + (dt / safeTf) * ts.options().barSpacing;
+            }
+          } catch {}
+        }
+
+        if (lineX === null || lineX < 0 || lineX > w + 150) return;
+
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash(dash);
+        ctx.beginPath();
+        ctx.moveTo(lineX, 36);
+        ctx.lineTo(lineX, h - 25);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Top badges
+        const topY = 36;
+        ctx.font = `bold 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+
+        if (labelLeft) {
+          const tw = ctx.measureText(labelLeft).width;
+          const bw = tw + 14;
+          const bh = 18;
+          const bx = lineX - bw - 4;
+          const by = topY - 9;
+
+          ctx.fillStyle = "rgba(13, 18, 28, 0.9)";
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          drawRoundedRect(ctx, bx, by, bw, bh, 4);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = "#A0AEC0";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(labelLeft, bx + bw / 2, by + bh / 2);
+        }
+
+        if (labelRight) {
+          const tw = ctx.measureText(labelRight).width;
+          const bw = tw + 14;
+          const bh = 18;
+          const bx = lineX + 4;
+          const by = topY - 9;
+
+          ctx.fillStyle = "rgba(13, 18, 28, 0.9)";
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          drawRoundedRect(ctx, bx, by, bw, bh, 4);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = "#A0AEC0";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(labelRight, bx + bw / 2, by + bh / 2);
+        }
+
+        if (clockCountDown !== undefined && clockCountDown > 0) {
+          const clockStr = fmtClock(clockCountDown);
+          const tw = ctx.measureText(clockStr).width;
+          const bw = tw + 12;
+          const bh = 16;
+          const bx = lineX - bw / 2;
+          const by = topY + 12;
+
+          ctx.fillStyle = "#1e88e5";
+          ctx.beginPath();
+          drawRoundedRect(ctx, bx, by, bw, bh, 4);
+          ctx.fill();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(clockStr, bx + bw / 2, by + bh / 2);
+        }
+
+        ctx.restore();
+      };
+
+      // Determine Trade Boundary Times
+      if (relevant.length > 0) {
+        const earliestEntry = Math.min(...relevant.map((t) => getTradeTimes(t, nowSec).entry));
+        const latestExpiry = Math.max(...relevant.map((t) => getTradeTimes(t, nowSec).expiry));
+        const activeTimeLeft = Math.max(0, latestExpiry - nowSec);
+
+        drawBoundaryLine(earliestEntry, "Beginning of trade", "", "rgba(255, 255, 255, 0.4)", [4, 4]);
+        drawBoundaryLine(latestExpiry, "", "End of trade", "rgba(255, 255, 255, 0.6)", [4, 4], activeTimeLeft);
+      } else {
+        const cycleStart = Math.floor(nowSec / safeTf) * safeTf;
+        const cycleEnd = cycleStart + safeTf;
+        const purchaseDeadline = cycleEnd - Math.min(30, Math.floor(safeTf / 2));
+        const deadlineLeft = Math.max(0, purchaseDeadline - nowSec);
+
+        drawBoundaryLine(
+          purchaseDeadline,
+          "Beginning of trade",
+          "End of trade",
+          "rgba(255, 255, 255, 0.45)",
+          [4, 4],
+          deadlineLeft > 0 ? deadlineLeft : undefined
+        );
+      }
+
       rafRef.current = requestAnimationFrame(draw);
     };
 
