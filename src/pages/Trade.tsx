@@ -1337,7 +1337,8 @@ const Trade = () => {
 
   const openWithdrawPage = () => {
     setAccountType("live");
-    navigate("/withdraw");
+    setAccountInitialTab("Withdrawal");
+    setActiveWorkspace("account");
   };
 
   const handleAnalyticsNavigate = (target: { workspace?: "account" | "analytics" | "tournaments" | "leaderboard" | "more"; accountTab?: ProfileTab; route?: "withdraw" }) => {
