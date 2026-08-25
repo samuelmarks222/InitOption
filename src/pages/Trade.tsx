@@ -1341,7 +1341,11 @@ const Trade = () => {
   const openWithdrawPage = () => {
     setAccountType("live");
     setAccountInitialTab("Withdrawal");
-    setActiveWorkspace("account");
+    if (isDesktopViewport) {
+      setActiveWorkspace("account");
+    } else {
+      setMobileOverlay("account");
+    }
   };
 
   const handleAnalyticsNavigate = (target: { workspace?: "account" | "analytics" | "tournaments" | "leaderboard" | "more"; accountTab?: ProfileTab; route?: "withdraw" }) => {
