@@ -96,7 +96,7 @@ const TradingHeader = ({
     "text-[#00C98D]";
 
   return (
-    <header className="relative flex h-[62px] shrink-0 items-center justify-between px-4 bg-[#0E141F] border-b border-[#1F293D] text-white z-30 select-none">
+    <header className="relative flex h-[62px] shrink-0 items-center justify-between px-4 bg-[var(--trading-header-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white z-30 select-none">
 
       {/* ── MOBILE layout (hidden on lg+) ── */}
       <div className="flex lg:hidden flex-1 items-center justify-between gap-2">

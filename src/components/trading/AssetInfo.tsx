@@ -87,7 +87,7 @@ const AssetInfo = ({
   };
 
   return (
-    <div className="relative flex h-[48px] shrink-0 items-center justify-between overflow-hidden hidden lg:flex px-2 bg-[#0A0F18] border-b border-[#1A2436] text-white select-none">
+    <div className="relative flex h-[48px] shrink-0 items-center justify-between overflow-hidden hidden lg:flex px-2 bg-[var(--trading-tabs-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white select-none">
       {/* Scrollable strip */}
       <div
         ref={stripRef}
@@ -131,8 +131,8 @@ const AssetInfo = ({
                 onClick={() => (onSelectTab ? onSelectTab(tab.symbol) : onOpenSelector())}
                 className={`group relative flex h-[38px] min-w-[120px] shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded border px-2 transition-all ${
                   isActive
-                    ? "bg-[#182335] border-[#2A3B56]"
-                    : "bg-[#101724] border-[#1A2436] hover:bg-[#151F30]"
+                    ? "bg-[var(--trading-panel-bg,#23283b)] border-[var(--trading-border-strong-color,rgba(143,164,210,0.38))]"
+                    : "bg-[var(--trading-panel-soft-bg,#191d2b)] border-[var(--trading-border-color,rgba(143,164,210,0.16))] hover:bg-[#23283b]"
                 }`}
               >
                 {/* Active trade progress bar */}
@@ -183,33 +183,12 @@ const AssetInfo = ({
         </div>
       </div>
 
-      {/* Right panel: active asset summary + pending trade toggle */}
-      <div className="flex shrink-0 items-center gap-3 border-l border-[#1A2436] pl-3 pr-1">
-        <div className="flex items-center gap-1.5">
-          <AssetSymbolMark symbol={asset.symbol} category={asset.type} size={18} />
-          <div className="leading-none">
-            <p className="text-[11px] font-black uppercase text-white">{asset.symbol}</p>
-            <p className="text-[10px] font-extrabold text-[#FFA500]">
-              {Math.round(asset.maxProfit ?? 85)}%
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 border-l border-[#1A2436] pl-3">
-          <span className="text-[9px] font-black uppercase tracking-widest text-[#5E6B7D]">PENDING TRADE</span>
-          <label className="relative inline-flex cursor-pointer items-center">
-            <input type="checkbox" className="peer sr-only" />
-            <div className="peer h-4 w-7 rounded-full bg-[#1E2736] after:absolute after:left-[2px] after:top-[2px] after:h-3 after:w-3 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#0084FF] peer-checked:after:translate-x-3 peer-focus:outline-none" />
-          </label>
-        </div>
-      </div>
-
       {/* Scroll arrows */}
       {canScrollLeft && (
         <button
           type="button"
           onClick={() => scrollTabs("left")}
-          className="absolute left-[86px] top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[#1A2436] bg-[#0A0F18] text-gray-400 shadow-md hover:text-white transition-colors"
+          className="absolute left-[86px] top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--trading-border-color)] bg-[var(--trading-tabs-bg)] text-gray-400 shadow-md hover:text-white transition-colors"
         >
           <ChevronLeft className="h-3 w-3" strokeWidth={3} />
         </button>
@@ -219,7 +198,7 @@ const AssetInfo = ({
         <button
           type="button"
           onClick={() => scrollTabs("right")}
-          className="absolute right-[220px] top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[#1A2436] bg-[#0A0F18] text-gray-400 shadow-md hover:text-white transition-colors"
+          className="absolute right-3 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--trading-border-color)] bg-[var(--trading-tabs-bg)] text-gray-400 shadow-md hover:text-white transition-colors"
         >
           <ChevronRight className="h-3 w-3" strokeWidth={3} />
         </button>
