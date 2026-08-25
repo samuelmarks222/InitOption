@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import type { ActiveTrade } from "@/hooks/useTrading";
 import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrencyAmount } from "@/lib/currency";
 import { getLiveAssetTradeSummary } from "@/lib/liveTradeSummary";
 import { Asset } from "./data/assets";
 import { AssetSymbolMark } from "./AssetSymbolMark";
@@ -50,7 +51,7 @@ const AssetInfo = ({
   livePrices = {},
 }: AssetInfoProps) => {
   const { getAsset } = useDynamicAssets();
-  const { formatMoney } = useCurrency();
+  const { formatMoney, currency } = useCurrency();
   const tabs = openTabs.length > 0 ? openTabs : [asset];
   const stripRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -117,6 +118,13 @@ const AssetInfo = ({
             const progressPercent = getTradeProgressPercent(activeTrade);
             const payout = Math.round(dynamicTab?.maxProfit ?? tab.maxProfit ?? 82);
 
+            // Badge text: +1.77 Ksh (winning) or 0 Ksh (losing)
+            const badgeText = isWinningTrade
+              ? `+${formatCurrencyAmount(Math.abs(totalLiveResult), currency)}`
+              : isLosingTrade
+              ? formatCurrencyAmount(0, currency)
+              : null;
+
             return (
               <div
                 key={tab.symbol}
@@ -127,7 +135,15 @@ const AssetInfo = ({
                     : "bg-[#2a3040] border-[#384259] hover:bg-[#343b4f] hover:border-gray-500/50"
                 }`}
               >
-                {/* Active trade progress bar */}
+                {/* Left-edge vertical indicator stripe for active trades */}
+                {hasActiveTrade && (
+                  <span
+                    className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-lg"
+                    style={{ background: isWinningTrade ? "#0FA053" : "#E03E3E" }}
+                  />
+                )}
+
+                {/* Active trade progress bar at bottom */}
                 {hasActiveTrade && (
                   <div className="absolute inset-x-0 bottom-0 h-[2.5px] overflow-hidden rounded-full bg-black/40">
                     <div
@@ -145,11 +161,16 @@ const AssetInfo = ({
 
                 <div className="min-w-0 flex-1 leading-none">
                   <p className="truncate text-[13px] font-black uppercase tracking-wide text-white">{tab.symbol}</p>
-                  <p className={`mt-0.5 text-[11px] font-black ${hasActiveTrade ? (isWinningTrade ? "text-[#18d87d]" : isLosingTrade ? "text-[#ff6a72]" : "text-[#FFB800]") : "text-[#FFB800]"}`}>
-                    {hasActiveTrade
-                      ? `${totalLiveResult >= 0 ? "+" : ""}${formatMoney(Math.abs(totalLiveResult), { maximumFractionDigits: 2 })}`
-                      : `${payout}%`}
-                  </p>
+                  {hasActiveTrade && badgeText ? (
+                    <span
+                      className="mt-0.5 inline-block rounded-[3px] px-1.5 py-0.5 text-[11px] font-bold text-white leading-none"
+                      style={{ background: isWinningTrade ? "#0FA053" : "#E03E3E" }}
+                    >
+                      {badgeText}
+                    </span>
+                  ) : (
+                    <p className="mt-0.5 text-[11px] font-black text-[#FFB800]">{payout}%</p>
+                  )}
                 </div>
 
                 {/* Timer badge for active trades */}
