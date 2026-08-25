@@ -386,7 +386,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
     const Icon = current.icon;
 
     return (
-      <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 overflow-y-auto lg:overflow-hidden">
+      <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 overflow-y-auto">
         <section className="flex min-h-0 flex-col rounded-[10px] border p-5" style={panelStyle}>
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0b7557]/15 text-[#5ee0bd]">
@@ -427,10 +427,10 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
 
   return (
     <div
-      className="relative h-full w-full overflow-y-auto lg:overflow-hidden px-3 py-3 text-[var(--trading-text-color)]"
+      className="relative h-full w-full overflow-y-auto px-3 py-4 text-[var(--trading-text-color)]"
       style={{ background: "var(--trading-workspace-bg)" }}
     >
-      <div className="grid min-h-0 grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-4 pb-16 lg:pb-0">
+      <div className="grid min-h-0 grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-4 pb-20">
         <aside className="flex min-h-0 flex-col rounded-[12px] border p-4" style={panelStyle}>
           <div className="hidden lg:flex h-[128px] shrink-0 items-center justify-center">
             <MiniBrandMark />
