@@ -1002,7 +1002,7 @@ const GuideArticleReader = ({
 
 // ─── MAIN COMPONENT ────────────────────────────────────────────────────────
 export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { startTourOfType, restartTour, tourProgress } = useProfileTour();
   const [activeTab, setActiveTab] = useState<HelpTab>("faq");
   const [selectedCategory, setSelectedCategory] = useState<FaqCategory>("trading");
@@ -1055,7 +1055,7 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
     ];
   });
 
-  const { profile } = useAuth();
+
   const [activeTicket, setActiveTicket] = useState<SupportTicket | null>(null);
   const [replyText, setReplyText] = useState("");
 
