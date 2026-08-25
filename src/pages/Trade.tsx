@@ -279,8 +279,8 @@ const MobileModuleOverlay = ({
 }: MobileModuleOverlayProps) => {
   if (!mobileOverlay) return null;
   return (
-    <div className="fixed inset-x-0 bottom-[56px] top-0 z-[200] flex items-end justify-center bg-black/60 p-2 sm:p-3">
-      <div className="relative flex h-[92dvh] w-full max-w-md overflow-hidden rounded-[28px] border border-white/8 bg-[#0a0d14] shadow-[0_24px_60px_rgba(0,0,0,0.45)]">
+    <div className="fixed inset-x-0 bottom-[56px] top-0 z-[200] flex items-stretch justify-center bg-[#0a0d14] w-full">
+      <div className="relative flex h-full w-full overflow-hidden bg-[#0a0d14]">
       {mobileOverlay === "account" && (
         <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab={accountInitialTab} onClose={() => setMobileOverlay(null)} onNavigate={onAnalyticsNavigate} />
       )}
