@@ -2,9 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  CheckCircle2,
   ChevronDown,
-  Menu,
   Plus,
   ShieldCheck,
   Send,
@@ -15,16 +13,12 @@ import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useVip } from "@/contexts/VipContext";
-import { VipBadge } from "@/components/vip/VipBadge";
-import { KycAvatarBadge } from "@/components/profile/KycAvatarBadge";
 import { getStoredLiveBalance } from "@/lib/live-balance";
-import { normalizeKycStatus, type KycDocumentsLike } from "@/lib/kyc";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import {
   type ChartLayoutMode,
   loadChartLayoutMode,
   TRADE_CHART_LAYOUT_MODE_CHANGED_EVENT,
-  TRADE_CHART_LAYOUT_SET_EVENT,
 } from "./chartLayout";
 
 export type ProfileTab = "personal" | "deposit" | "support" | "balance_history" | "trading_history" | "settings";
@@ -59,18 +53,14 @@ const TradingHeader = ({
   onOpenProfile,
   onUpdateDemoBalance,
   onResetDemoBalance,
-  highlightDepositButton = false,
 }: TradingHeaderProps) => {
   const navigate = useNavigate();
   const [showAccountDrop, setShowAccountDrop] = useState(false);
-  const [showChartLayoutMenu, setShowChartLayoutMenu] = useState(false);
   const [chartLayoutMode, setChartLayoutMode] = useState<ChartLayoutMode>(() => loadChartLayoutMode());
-  const chartLayoutMenuRef = useRef<HTMLDivElement | null>(null);
   const { profile } = useAuth();
   const { isAdmin } = useStaffAccess();
-  const { vip } = useVip();
   const { formatMoney } = useCurrency();
-  const { platformName, initials, logoUrl } = useSiteBranding();
+  const { platformName, logoUrl } = useSiteBranding();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -82,14 +72,12 @@ const TradingHeader = ({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-
     const handleLayoutModeChanged = (event: Event) => {
       const mode = (event as CustomEvent<{ mode?: number }>).detail?.mode;
       if (mode === 1 || mode === 2 || mode === 3 || mode === 4) {
         setChartLayoutMode(mode);
       }
     };
-
     window.addEventListener(TRADE_CHART_LAYOUT_MODE_CHANGED_EVENT, handleLayoutModeChanged as EventListener);
     return () => window.removeEventListener(TRADE_CHART_LAYOUT_MODE_CHANGED_EVENT, handleLayoutModeChanged as EventListener);
   }, []);
@@ -107,31 +95,19 @@ const TradingHeader = ({
     accountType === "tournament" ? "text-blue-400" :
     "text-[#00C98D]";
 
-  const toggleSidebar = () => {
-    window.dispatchEvent(new CustomEvent("toggle_navigation_sidebar"));
-  };
-
   return (
-    <header
-      className="relative flex h-[58px] shrink-0 items-center justify-between px-3 bg-[#0E141F] border-b border-[#1F293D] text-white z-30 select-none"
-    >
-      {/* Left: Mobile View Controls */}
-      <div className="flex lg:hidden flex-1 items-center justify-between gap-2">
-        <button
-          onClick={toggleSidebar}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-[#161F2E] text-gray-300 hover:text-white"
-        >
-          <Menu size={18} />
-        </button>
+    <header className="relative flex h-[62px] shrink-0 items-center justify-between px-4 bg-[#0E141F] border-b border-[#1F293D] text-white z-30 select-none">
 
+      {/* ── MOBILE layout (hidden on lg+) ── */}
+      <div className="flex lg:hidden flex-1 items-center justify-between gap-2">
         {/* Brand */}
-        <div className="flex items-center gap-2">
+        <Link to="/trade" className="flex items-center">
           {logoUrl ? (
-            <img src={logoUrl} alt={platformName} className="h-6 w-auto object-contain" />
+            <img src={logoUrl} alt={platformName} className="h-8 w-auto max-w-[160px] object-contain" />
           ) : (
-            <span className="font-black text-white text-base tracking-wider">{platformName.toUpperCase()}</span>
+            <span className="font-black text-white text-base tracking-wider uppercase">{platformName}</span>
           )}
-        </div>
+        </Link>
 
         {/* Mobile Account Pill */}
         <div className="relative flex items-center">
@@ -168,45 +144,44 @@ const TradingHeader = ({
         </button>
       </div>
 
-      {/* Desktop Header Layout */}
+      {/* ── DESKTOP layout (hidden below lg) ── */}
       <div className="hidden lg:flex w-full items-center justify-between gap-4">
-        {/* Left Section: Menu + Logo + Subtitle */}
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={toggleSidebar}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#1F293D] bg-[#162030] text-gray-300 hover:bg-[#1E2B3E] hover:text-white transition-colors"
-            title="Toggle Menu"
-          >
-            <Menu size={18} />
-          </button>
 
-          <Link to="/trade" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
-            {logoUrl ? (
-              <img src={logoUrl} alt={platformName} className="h-7 w-auto object-contain max-w-[140px]" />
-            ) : (
-              <span className="font-black text-lg tracking-wider text-white uppercase">{platformName}</span>
-            )}
-            <span className="text-[#3A495E] font-bold text-xs">•</span>
-            <span className="text-[11px] font-black tracking-widest text-[#5E6B7D] uppercase">
-              WEB TRADING PLATFORM
-            </span>
-          </Link>
-        </div>
+        {/* Left: Logo + Subtitle — broader area, bigger logo */}
+        <Link
+          to="/trade"
+          className="flex shrink-0 items-center gap-3 hover:opacity-90 transition-opacity min-w-[220px]"
+        >
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={platformName}
+              className="h-9 w-auto object-contain"
+              style={{ maxWidth: "180px" }}
+            />
+          ) : (
+            <span className="font-black text-xl tracking-wider text-white uppercase">{platformName}</span>
+          )}
+          <span className="text-[#2A3A52] font-bold text-sm">•</span>
+          <span className="text-[11px] font-black tracking-widest text-[#5E6B7D] uppercase whitespace-nowrap">
+            WEB TRADING PLATFORM
+          </span>
+        </Link>
 
-        {/* Center Section: Promotional Bonus Banner Pill */}
-        <div className="flex-1 flex justify-center items-center px-4">
+        {/* Center: Promo Bonus Banner */}
+        <div className="flex-1 flex justify-center items-center">
           <button
             onClick={onOpenDeposit}
-            className="group flex items-center gap-2.5 rounded-full bg-[#00C98D] px-4 py-1.5 text-xs font-extrabold text-black shadow-lg shadow-[#00C98D]/20 hover:bg-[#00b37d] transition-all transform hover:scale-[1.02] active:scale-95"
+            className="group flex items-center gap-2.5 rounded-full bg-[#00C98D] px-5 py-2 text-xs font-extrabold text-black shadow-lg shadow-[#00C98D]/25 hover:bg-[#00b37d] transition-all transform hover:scale-[1.02] active:scale-95"
           >
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-sm">🚀</span>
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25 text-sm">🚀</span>
             <span>Get a 50% bonus on your deposit!</span>
-            <span className="rounded-full bg-black/20 px-2 py-0.5 text-[11px] font-black text-white">50%</span>
+            <span className="rounded-full bg-black/20 px-2.5 py-0.5 text-[11px] font-black text-white">50%</span>
           </button>
         </div>
 
-        {/* Right Section: Admin Badge + Notification + Account Selector + Deposit + Withdrawal */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Right: Admin + Bell + Account + Deposit + Withdrawal */}
+        <div className="flex items-center gap-2.5 shrink-0">
           {isAdmin && (
             <button
               onClick={() => navigate("/admin")}
@@ -223,22 +198,23 @@ const TradingHeader = ({
             <NotificationBell />
           </div>
 
-          {/* Account Selector Pill */}
+          {/* Account Selector */}
           <div className="relative flex items-center">
             <button
+              id="tour-account-switch"
               onClick={() => setShowAccountDrop((v) => !v)}
-              className="flex h-9 items-center gap-3 rounded-lg border border-[#1F293D] bg-[#162030] px-3 hover:bg-[#1E2B3E] transition-colors"
+              className="flex h-9 items-center gap-2.5 rounded-lg border border-[#1F293D] bg-[#162030] px-3.5 hover:bg-[#1E2B3E] transition-colors"
             >
-              <Send size={14} className="text-[#00C98D]" />
+              <Send size={14} className="text-[#00C98D] shrink-0" />
               <div className="text-left leading-none">
                 <p className={`text-[9px] font-black uppercase tracking-wider ${accountBadgeColor}`}>
                   {accountTitle}
                 </p>
-                <p className="mt-0.5 font-mono text-xs font-black text-white">
+                <p className="mt-0.5 font-mono text-[13px] font-black text-white">
                   {formatMoney(displayBalance)}
                 </p>
               </div>
-              <ChevronDown size={14} className="text-gray-400 ml-1" />
+              <ChevronDown size={14} className="text-gray-400 ml-0.5" />
             </button>
 
             {showAccountDrop && (
@@ -259,18 +235,20 @@ const TradingHeader = ({
 
           {/* Deposit Button */}
           <button
+            id="tour-deposit-button"
+            data-deposit-trigger="true"
             onClick={onOpenDeposit}
-            className="flex h-9 items-center gap-1.5 rounded-lg bg-[#00C98D] px-4 text-xs font-black text-black shadow-md shadow-[#00C98D]/20 hover:bg-[#00b37d] transition-all transform active:scale-95"
+            className="flex h-9 items-center gap-1.5 rounded-lg bg-[#00C98D] px-4 text-[13px] font-black text-black shadow-md shadow-[#00C98D]/20 hover:bg-[#00b37d] transition-all active:scale-95"
           >
-            <Plus size={14} className="stroke-[3]" /> Deposit
+            <Plus size={14} strokeWidth={3} /> {t("tradingHeader.deposit")}
           </button>
 
           {/* Withdrawal Button */}
           <button
             onClick={onOpenWithdrawal}
-            className="flex h-9 items-center rounded-lg border border-[#2B3548] bg-[#1E2736] px-4 text-xs font-bold text-white hover:bg-[#283447] hover:border-gray-500 transition-colors"
+            className="flex h-9 items-center rounded-lg border border-[#2B3548] bg-[#1E2736] px-4 text-[13px] font-bold text-white hover:bg-[#283447] hover:border-[#3a4a60] transition-colors"
           >
-            Withdrawal
+            {t("tradingHeader.withdrawal")}
           </button>
         </div>
       </div>
@@ -279,8 +257,3 @@ const TradingHeader = ({
 };
 
 export default TradingHeader;
-
-
-
-
-
