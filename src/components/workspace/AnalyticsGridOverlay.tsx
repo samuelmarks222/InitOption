@@ -237,6 +237,7 @@ export const AnalyticsGridOverlay = ({ onClose, activeAsset, initialTab = "Analy
   const [paymentsPage, setPaymentsPage] = useState(1);
   const [tradesPage, setTradesPage] = useState(1);
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
+  const [tabMenuOpen, setTabMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!user?.id || typeof window === "undefined") {
@@ -352,19 +353,47 @@ export const AnalyticsGridOverlay = ({ onClose, activeAsset, initialTab = "Analy
   return (
     <div className="quotex-glow-home trading-terminal flex h-full w-full flex-col overflow-hidden text-white" style={{ background: "#1b202a" }}>
       <div className="flex-1 overflow-y-auto px-4 py-4 lg:px-5 lg:py-5">
-        <div className="mb-6 flex w-fit max-w-full flex-wrap items-center gap-4 rounded-[6px] bg-[#2a3040] px-3 py-2">
-          {ACCOUNT_TABS.map((tab) => (
+        <div className="mb-6">
+          <div className="block xl:hidden">
             <button
-              key={tab}
               type="button"
-              onClick={() => handleTabClick(tab)}
-              className={`rounded-[6px] px-4 py-3 text-[14px] font-black transition-colors xl:px-5 ${
-                tab === activeTab ? "bg-[#4a5061] text-white" : "text-white hover:bg-white/5"
-              }`}
+              onClick={() => setTabMenuOpen((o) => !o)}
+              className="flex w-full items-center justify-between rounded-[6px] bg-[#2a3040] px-4 py-3 text-[14px] font-black text-white"
             >
-              {tab}
+              <span>{activeTab}</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${tabMenuOpen ? "rotate-180" : ""}`} />
             </button>
-          ))}
+            {tabMenuOpen && (
+              <div className="mt-1 overflow-hidden rounded-[6px] bg-[#2a3040] shadow-xl">
+                {ACCOUNT_TABS.map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => { handleTabClick(tab); setTabMenuOpen(false); }}
+                    className={`block w-full border-b border-white/10 px-4 py-3 text-left text-[14px] font-black last:border-b-0 ${
+                      tab === activeTab ? "bg-[#4a5061] text-white" : "text-white/80 hover:bg-white/5"
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="hidden xl:flex w-fit max-w-full flex-wrap items-center gap-4 rounded-[6px] bg-[#2a3040] px-3 py-2">
+            {ACCOUNT_TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => handleTabClick(tab)}
+                className={`rounded-[6px] px-5 py-3 text-[14px] font-black transition-colors ${
+                  tab === activeTab ? "bg-[#4a5061] text-white" : "text-white hover:bg-white/5"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
         </div>
 
         {activeTab === "Analytics" && (
@@ -845,8 +874,6 @@ const MyAccountPanel = () => {
   const [visible, setVisible] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
-  const [cardFormOpen, setCardFormOpen] = useState(false);
-  const [cardLast4, setCardLast4] = useState("");
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -1042,23 +1069,6 @@ const MyAccountPanel = () => {
     setStatus(`Currency changed to ${nextCurrency}.`);
   };
 
-  const handleAddCard = () => {
-    const last4 = cardLast4.replace(/\D/g, "").slice(-4);
-    if (last4.length !== 4) {
-      setStatus("Enter the last 4 card digits.");
-      return;
-    }
-    const nextCards = [
-      ...cards,
-      { id: `${Date.now()}`, last4, createdAt: new Date().toISOString() },
-    ];
-    setCards(nextCards);
-    saveStoredJson(cardsKey, nextCards);
-    setCardLast4("");
-    setCardFormOpen(false);
-    setStatus("Card added for verification.");
-  };
-
   const persistKycDocuments = async (nextDocuments: Record<string, unknown>) => {
     await updateProfile({ kyc_documents: nextDocuments, kyc_status: "Pending" });
     setDocuments(nextDocuments);
@@ -1165,7 +1175,7 @@ const MyAccountPanel = () => {
 
   return (
     <section className="rounded-[6px] bg-[#202633] px-5 py-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.22)]">
-      <div className="mb-5 flex flex-wrap items-center justify-end gap-8 border-b border-white/10 pb-4 text-right">
+      <div className="mb-5 flex flex-wrap items-center justify-end gap-6 border-b border-white/10 pb-4 text-right">
         <div>
           <p className="text-[12px] font-bold text-[#9ba5b9]">My current currency</p>
           <div className="mt-1 flex items-center justify-end gap-2">
@@ -1188,39 +1198,35 @@ const MyAccountPanel = () => {
       <div className="grid gap-7 xl:grid-cols-[minmax(360px,0.95fr)_minmax(320px,0.92fr)_minmax(320px,0.92fr)]">
         <div className="border-white/10 xl:border-r xl:pr-7" data-verify-tour="status">
           <h2 className="mb-5 text-[18px] font-black text-white">Personal data:</h2>
-          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center">
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="group relative flex h-[98px] w-[98px] shrink-0 items-end justify-center overflow-hidden rounded-full bg-black shadow-[inset_0_0_0_8px_rgba(33,45,68,0.9)]" aria-label="Change profile photo">
+          <div className="mb-5 flex flex-row items-center gap-4">
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="group relative flex h-[72px] w-[72px] shrink-0 items-end justify-center overflow-hidden rounded-full bg-black shadow-[inset_0_0_0_5px_rgba(33,45,68,0.9)]" aria-label="Change profile photo">
               <span className="relative flex h-full w-full items-end justify-center overflow-hidden rounded-full">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={displayName || email || "Profile"} className="h-full w-full object-cover" />
                 ) : (
                   <>
-                    <span className="mb-2 h-10 w-14 rounded-t-full bg-[#0d86f7]" />
-                    <span className="absolute top-5 h-10 w-10 rounded-full bg-[#0d86f7]" />
+                    <span className="mb-1.5 h-8 w-12 rounded-t-full bg-[#0d86f7]" />
+                    <span className="absolute top-4 h-9 w-9 rounded-full bg-[#0d86f7]" />
                   </>
                 )}
                 <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
-                  <Camera className="h-5 w-5 text-white" />
+                  <Camera className="h-4 w-4 text-white" />
                 </span>
               </span>
-              <span className="absolute right-0 top-0 rounded-full bg-[#4a5061] p-1 text-white/80">
-                <Camera className="h-4 w-4" />
+              <span className="absolute right-0 top-0 rounded-full bg-[#4a5061] p-0.5 text-white/80">
+                <Camera className="h-3.5 w-3.5" />
               </span>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
             </button>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="truncate text-[13px] font-bold text-white/65">{email || "Account email unavailable"}</p>
-                <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${kycBadgeClass}`}>
-                  {kycLabel}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[12px] font-bold text-white/65">{email || "Account email unavailable"}</p>
+              <p className="mt-0.5 text-[13px] font-bold text-white/60">ID: {visible ? displayId : "********"}</p>
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#21c978]">
+                  <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </span>
+                <span className={`text-[11px] font-black uppercase tracking-[0.1em] ${kycBadgeClass.includes("green") || kycBadgeClass.includes("21c978") ? "text-[#21c978]" : "text-[#f59e0b]"}`}>{kycLabel}</span>
               </div>
-              <p className="mt-2 text-[18px] font-black text-white">{displayName || "Your account"}</p>
-              <p className="mt-1 text-[14px] font-bold text-white/75">ID: {visible ? displayId : "********"}</p>
-              <span className={`mt-3 inline-flex rounded-[8px] px-3 py-1 text-[12px] font-bold ${kycBadgeClass}`}>
-                {kycLabel}
-              </span>
-              <p className="mt-2 text-[12px] font-bold text-white/45">Click the photo to upload or replace your profile picture.</p>
             </div>
           </div>
           <div className="space-y-4" data-verify-tour="details-form">
@@ -1242,7 +1248,7 @@ const MyAccountPanel = () => {
 
         <div className="border-white/10 xl:border-r xl:pr-7">
           <h2 className="mb-5 text-[18px] font-black text-white">Security:</h2>
-          <div className="space-y-6">
+          <div className="space-y-5">
             <div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="h-5 w-5 fill-[#21c978] text-[#21c978]" />
@@ -1255,15 +1261,22 @@ const MyAccountPanel = () => {
             <ToggleSwitch checked={Boolean(security.login2fa)} onChange={() => updateSecurity({ login2fa: !security.login2fa })} label="To enter the platform" />
             <ToggleSwitch checked={Boolean(security.withdraw2fa)} onChange={() => updateSecurity({ withdraw2fa: !security.withdraw2fa })} label="To withdraw funds" />
             <div className="border-t border-dashed border-white/15 pt-5">
-              <button type="button" onClick={() => setPasswordOpen((open) => !open)} className="flex w-full items-center justify-between">
-                <span className="flex items-center gap-3">
-                  <Lock className="h-5 w-5 text-white/55" />
-                  <span className="text-[15px] font-black text-white">Change password</span>
-                </span>
-                <ChevronDown className={`h-4 w-4 text-white/70 transition-transform ${passwordOpen ? "rotate-180" : ""}`} />
-              </button>
+              <div className="flex items-center gap-3">
+                <Lock className="h-5 w-5 text-white/55" />
+                <div>
+                  <p className="text-[15px] font-black text-white">Password</p>
+                  <p className="text-[12px] font-bold text-white/50">Change your account password</p>
+                  <button
+                    type="button"
+                    onClick={() => setPasswordOpen((open) => !open)}
+                    className="mt-1 text-[13px] font-black text-[#0d82df] hover:underline"
+                  >
+                    Change
+                  </button>
+                </div>
+              </div>
               {passwordOpen && (
-                <div className="mt-4 space-y-4">
+                <div className="mt-4 space-y-4 pl-8">
                   <ProfileInput label="Old password" type="password" value={oldPassword} onChange={setOldPassword} />
                   <ProfileInput label="New password" type="password" value={newPassword} onChange={setNewPassword} />
                   <ProfileInput label="Confirm new password" type="password" value={confirmPassword} onChange={setConfirmPassword} />
@@ -1286,7 +1299,7 @@ const MyAccountPanel = () => {
           <ProfileDropdown label="Timezone" value={`(${tradingPreferences.timezone})`} onChange={handleTimezoneChange} options={TIMEZONE_OPTIONS} />
           <div className="border-t border-dashed border-white/15 pt-5">
             <button type="button" onClick={() => setDeleteConfirmOpen(true)} className="inline-flex items-center gap-2 text-[13px] font-black text-[#ff5d52] hover:text-[#ff7b72]">
-              <Trash2 className="h-4 w-4" />
+              <X className="h-4 w-4" />
               Delete My account
             </button>
           </div>
