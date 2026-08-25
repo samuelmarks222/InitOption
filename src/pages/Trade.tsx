@@ -320,7 +320,7 @@ const MobileModuleOverlay = ({
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex-1 min-h-0 relative">
+          <div className="flex-1 min-h-0 relative overflow-y-auto">
             <WorkspaceReferral onSelectWorkspace={() => setMobileOverlay(null)} />
           </div>
         </div>

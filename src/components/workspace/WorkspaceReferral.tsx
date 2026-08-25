@@ -386,7 +386,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
     const Icon = current.icon;
 
     return (
-      <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_320px] gap-4">
+      <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 overflow-y-auto lg:overflow-hidden">
         <section className="flex min-h-0 flex-col rounded-[10px] border p-5" style={panelStyle}>
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#0b7557]/15 text-[#5ee0bd]">
@@ -397,7 +397,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
               <p className="mt-1 text-[12px] font-medium text-[var(--trading-muted-color)]">{current.intro}</p>
             </div>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-3">
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
             {current.stats.map((stat) => (
               <div key={stat.label} className="rounded-[9px] border p-4" style={softPanelStyle}>
                 <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--trading-muted-color)]">{stat.label}</div>
@@ -427,12 +427,12 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden px-4 py-3 text-[var(--trading-text-color)]"
+      className="relative h-full w-full overflow-y-auto lg:overflow-hidden px-3 py-3 text-[var(--trading-text-color)]"
       style={{ background: "var(--trading-workspace-bg)" }}
     >
-      <div className="grid h-full min-h-0 grid-cols-[280px_minmax(0,1fr)] gap-4">
+      <div className="grid min-h-0 grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-4 pb-16 lg:pb-0">
         <aside className="flex min-h-0 flex-col rounded-[12px] border p-4" style={panelStyle}>
-          <div className="flex h-[128px] shrink-0 items-center justify-center">
+          <div className="hidden lg:flex h-[128px] shrink-0 items-center justify-center">
             <MiniBrandMark />
           </div>
 
@@ -519,14 +519,14 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
           </div>
         </aside>
 
-        <main className="grid min-h-0 grid-rows-[34px_minmax(0,1fr)] gap-3">
-          <div className="flex min-h-0 flex-wrap gap-2 overflow-hidden">
+        <main className="flex flex-col min-h-0 gap-3">
+          <div className="flex min-h-0 gap-2 overflow-x-auto pb-1.5 shrink-0 no-scrollbar">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => handleTabClick(tab.id)}
-                className={`h-[34px] rounded-[7px] border px-4 text-[11px] font-bold uppercase tracking-[0.04em] transition-colors ${
+                className={`h-[34px] shrink-0 rounded-[7px] border px-4 text-[11px] font-bold uppercase tracking-[0.04em] transition-colors whitespace-nowrap ${
                   activeTab === tab.id ? "border-[#0b7557]/50 bg-[#0b7557] text-white" : "text-[var(--trading-muted-color)] hover:text-white"
                 }`}
                 style={activeTab === tab.id ? undefined : softPanelStyle}
@@ -540,7 +540,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
             renderInfoTab()
           ) : (
             <div className="flex min-h-0 flex-col gap-3 overflow-y-auto">
-              <section className="grid min-h-0 shrink-0 grid-cols-[minmax(0,1fr)_320px] overflow-hidden rounded-[12px] border" style={panelStyle}>
+              <section className="grid min-h-0 shrink-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] overflow-hidden rounded-[12px] border" style={panelStyle}>
                 <div className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0b7557]/15 text-[#5ee0bd]">
@@ -554,7 +554,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                     </div>
                   </div>
 
-                  <ol className="mt-4 grid grid-cols-3 gap-3 text-[12px] font-bold leading-5">
+                  <ol className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-[12px] font-bold leading-5">
                     <li className="rounded-[9px] border p-3" style={softPanelStyle}>1. Copy your Init Option referral link.</li>
                     <li className="rounded-[9px] border p-3" style={softPanelStyle}>2. Share the link or promo code with a friend.</li>
                     <li className="rounded-[9px] border p-3" style={softPanelStyle}>3. Earn {referralPercent}% when the referral rule qualifies.</li>
@@ -585,12 +585,14 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                     </button>
                   </div>
                 </div>
-                <PromoIllustration />
+                <div className="hidden lg:block h-full relative">
+                  <PromoIllustration />
+                </div>
               </section>
 
               <section className="min-h-0 shrink-0 rounded-[12px] border p-4" style={panelStyle}>
                 {detailMode === "calculator" ? (
-                  <div className="grid h-full min-h-0 grid-cols-[minmax(0,1fr)_1fr_1fr] gap-4">
+                  <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <h2 className="text-[18px] font-bold">Bonus Calculator</h2>
                       <p className="mt-2 text-[12px] font-semibold text-[var(--trading-muted-color)]">
@@ -633,7 +635,7 @@ export const WorkspaceReferral = ({ onSelectWorkspace }: WorkspaceReferralProps)
                     </div>
                   </div>
                 ) : (
-                  <div className="grid h-full min-h-0 grid-cols-3 gap-3">
+                  <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-3 gap-3">
                     {[
                       `Referral commission is ${referralPercent}% and is paid ${referralTiming}.`,
                       `The qualifying basis is ${referralBasis}; admins can change it in Bonus & Referral Rules.`,
