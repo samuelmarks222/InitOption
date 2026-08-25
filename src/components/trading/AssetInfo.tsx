@@ -93,13 +93,6 @@ const AssetInfo = ({
         ref={stripRef}
         className="relative flex h-full flex-1 items-center gap-1.5 overflow-x-auto overflow-y-hidden pr-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {/* Blue TRADE tab button */}
-        <button
-          onClick={onAddAssetClick ?? onOpenSelector}
-          className="flex h-[34px] shrink-0 items-center gap-1.5 rounded bg-[#0084FF] px-3 text-[11px] font-black uppercase text-white shadow-md shadow-[#0084FF]/30 hover:bg-[#0070df] transition-all"
-        >
-          <span>🖼️</span> TRADE
-        </button>
 
         {/* Plus button */}
         <button
@@ -188,7 +181,7 @@ const AssetInfo = ({
         <button
           type="button"
           onClick={() => scrollTabs("left")}
-          className="absolute left-[86px] top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--trading-border-color)] bg-[var(--trading-tabs-bg)] text-gray-400 shadow-md hover:text-white transition-colors"
+          className="absolute left-[44px] top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--trading-border-color)] bg-[var(--trading-tabs-bg)] text-gray-400 shadow-md hover:text-white transition-colors"
         >
           <ChevronLeft className="h-3 w-3" strokeWidth={3} />
         </button>
