@@ -661,23 +661,22 @@ const MiniTradeChart = ({
   const paddingX = 25;
   const paddingY = 25;
 
-  const pointsCount = 25;
+  const pointsCount = 45;
   const rawValues: number[] = [openQuote];
 
-  let currentVal = openQuote;
   const diff = closeQuote - openQuote;
   for (let i = 1; i < pointsCount - 1; i++) {
     const progress = i / (pointsCount - 1);
     const trend = openQuote + diff * progress;
-    const wave = Math.sin(progress * Math.PI * 3.5) * (Math.abs(diff) * 0.4 + 0.0003);
-    currentVal = trend + wave;
-    rawValues.push(currentVal);
+    const seed = (Math.sin(i * 14.3 + openQuote * 100) * 43758.5453) % 1;
+    const noise = (seed - 0.5) * (Math.abs(diff) * 0.35 + 0.00015);
+    rawValues.push(trend + noise);
   }
   rawValues.push(closeQuote);
 
   const minVal = Math.min(...rawValues, openQuote);
   const maxVal = Math.max(...rawValues, openQuote);
-  const valRange = Math.max(maxVal - minVal, 0.0005);
+  const valRange = Math.max(maxVal - minVal, 0.0004);
 
   const points = rawValues.map((val, idx) => {
     const x = paddingX + (idx / (pointsCount - 1)) * (width - 2 * paddingX);
@@ -693,15 +692,18 @@ const MiniTradeChart = ({
   const bottomY = height;
 
   const areaPathD = `${smoothPathD} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
-  const entryMarkerX = points[Math.floor(points.length * 0.15)].x;
+  const entryMarkerX = points[Math.floor(points.length * 0.18)].x;
   const entryMarkerY = entryY;
+
+  const pillText = stakeText;
+  const textWidth = Math.max(38, pillText.length * 6.5 + 14);
 
   return (
     <div className="relative h-[210px] w-full bg-[#161c28] overflow-hidden select-none">
       <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full">
         <defs>
           <linearGradient id="modalChartAreaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#2585f1" stopOpacity="0.4" />
+            <stop offset="0%" stopColor="#2585f1" stopOpacity="0.38" />
             <stop offset="100%" stopColor="#2585f1" stopOpacity="0.02" />
           </linearGradient>
         </defs>
@@ -746,10 +748,11 @@ const MiniTradeChart = ({
         <path d={smoothPathD} fill="none" stroke="#2585f1" strokeWidth="2.5" strokeLinecap="round" />
 
         <g transform={`translate(${entryMarkerX}, ${entryMarkerY})`}>
+          <line x1="0" y1="0" x2="0" y2="-10" stroke={isUp ? "#0fa055" : "#e03e3e"} strokeWidth="1.5" />
           <circle r="4" fill="#ffffff" stroke={isUp ? "#0fa055" : "#e03e3e"} strokeWidth="2" />
-          <g transform="translate(-18, -12)">
+          <g transform={`translate(-${textWidth / 2}, -26)`}>
             <rect
-              width="44"
+              width={textWidth}
               height="18"
               rx="9"
               fill={isUp ? "#0fa055" : "#e03e3e"}
@@ -757,14 +760,14 @@ const MiniTradeChart = ({
               strokeWidth="1"
             />
             <text
-              x="22"
+              x={textWidth / 2}
               y="12"
               fill="#ffffff"
-              fontSize="9"
+              fontSize="9.5"
               fontWeight="900"
               textAnchor="middle"
             >
-              {stakeText}
+              {pillText}
             </text>
           </g>
         </g>
