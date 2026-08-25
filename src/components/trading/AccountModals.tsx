@@ -36,7 +36,7 @@ import { AccountCurrencyModal } from "@/components/profile/AccountCurrencyModal"
 import { formatCurrencyAmount } from "@/lib/currency";
 import { clearCryptoDepositCheckoutCache } from "@/lib/cryptoDepositCheckoutCache";
 import { requestDepositReview } from "@/lib/deposits";
-import { requestMobileMoneyWithdrawal } from "@/lib/mobileMoney";
+import { requestMobileMoneyDeposit, requestMobileMoneyWithdrawal, type MobileMoneyDepositPayload } from "@/lib/mobileMoney";
 import AccountLevelsModal from "./AccountLevelsModal";
 import { convertUsdToKesWithdrawalAmount, MPESA_METHOD_LABEL } from "@/lib/mobileMoneyShared";
 import { requestWithdrawal } from "@/lib/withdrawals";
@@ -131,11 +131,11 @@ const STATIC_DEPOSIT_METHODS: DepositMethodOption[] = [
   {
     id: "epay:mpesa",
     category: "epay",
-    name: "M-Pesa",
+    name: "M-Pesa (Instant Pay)",
     subtitle: "Mobile money",
     symbol: "MPESA",
     minAmount: 5,
-    maxAmount: 10000,
+    maxAmount: 2000,
     available: true,
     iconType: "wallet",
   },
@@ -146,7 +146,7 @@ const STATIC_DEPOSIT_METHODS: DepositMethodOption[] = [
     subtitle: "Instant settlement",
     symbol: "AIRTEL",
     minAmount: 5,
-    maxAmount: 10000,
+    maxAmount: 2000,
     available: true,
     iconType: "wallet",
   },
@@ -239,11 +239,11 @@ const formatCountdown = (deadline: number | null, now: number) => {
 
 const getMethodIcon = (method: DepositMethodOption) => {
   if (method.symbol === "MPESA") {
-    return <img src="/images/mpesa-logo.png" alt="M-Pesa" className="h-10 w-auto max-w-[80px] object-contain" />;
+    return <img src="/images/mpesa-logo.png" alt="M-Pesa" className="h-8 w-auto max-w-[72px] object-contain" onError={(e) => { e.currentTarget.style.display="none"; }} />;
   }
 
   if (method.symbol === "AIRTEL") {
-    return <img src="/images/airtel-logo.png" alt="Airtel Money" className="h-10 w-auto max-w-[80px] object-contain" />;
+    return <img src="/images/airtel-logo.png" alt="Airtel Money" className="h-8 w-auto max-w-[72px] object-contain" onError={(e) => { e.currentTarget.style.display="none"; }} />;
   }
 
   if (method.iconType === "crypto") {
@@ -372,16 +372,14 @@ const DepositMethodRow = ({
   <button
     type="button"
     onClick={onClick}
-    className={`flex h-[56px] min-w-0 items-center gap-3 rounded-[4px] bg-white px-4 text-left text-[#202638] transition hover:bg-slate-100 ${
+    className={`flex h-[64px] min-w-0 items-center gap-3 rounded-[4px] bg-white px-4 text-left text-[#202638] transition hover:bg-slate-100 ${
       method.available ? "" : "opacity-60"
     }`}
 >
-    <span className="flex h-7 w-10 shrink-0 items-center justify-center overflow-hidden">{getMethodIcon(method)}</span>
+    <span className="flex h-10 w-20 shrink-0 items-center justify-start overflow-visible">{getMethodIcon(method)}</span>
     <span className="min-w-0 flex-1">
-      {method.iconType !== "wallet" && (
-        <span className="block truncate text-[15px] font-bold">{method.name}</span>
-      )}
-      <span className="block text-[10px] font-bold text-slate-400">Min. {formatCurrency(method.minAmount)}</span>
+      <span className="block truncate text-[14px] font-bold text-[#202638]">{method.name}</span>
+      <span className="block text-[11px] font-bold text-slate-400">Min. {formatCurrency(method.minAmount)} · Max. {formatCurrency(method.maxAmount)}</span>
     </span>
     {repeat ? (
       <span className="rounded-[4px] bg-[#11ad5d] px-4 py-2 text-[12px] font-black text-white">Repeat</span>
@@ -412,6 +410,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
   const [bonusCodeOpen, setBonusCodeOpen] = useState(false);
   const [bonusCode, setBonusCode] = useState("");
   const [activeDbPromos, setActiveDbPromos] = useState<Tables<"promo_codes">[]>([]);
+  const [mpesaResult, setMpesaResult] = useState<MobileMoneyDepositPayload | null>(null);
 
   // Dynamic bonus from admin-configured offers
   const { loading: bonusLoading, cryptoEnabled, findMatchingOffer, bonusAmountFor } = useDepositBonus(user?.id ?? null);
@@ -1065,18 +1064,41 @@ const categoryCards = useMemo(
       return;
     }
 
-    if (selectedMethodIsAutomated) {
-      onClose();
-      return;
-    }
-
     if (amountError) {
       toast({ title: amountError, variant: "destructive" });
       return;
     }
 
-    setProcessing(true);
+    // ── M-Pesa / Airtel: trigger real SasaPay STK push ──
+    if (selectedMethod.symbol === "MPESA" || selectedMethod.symbol === "AIRTEL") {
+      if (!phone.trim()) {
+        toast({ title: "Phone number required", description: "Enter your M-Pesa registered phone number.", variant: "destructive" });
+        return;
+      }
 
+      setProcessing(true);
+      try {
+        const result = await requestMobileMoneyDeposit({
+          amount: amountValue,
+          bonusOfferId: null, // promo codes handled server-side via bonus offers
+          phoneNumber: phone.trim(),
+        });
+        setMpesaResult(result);
+      } catch (error) {
+        showDepositStatusToast({
+          title: "M-Pesa deposit failed",
+          badge: "Action needed",
+          description: error instanceof Error ? error.message : "Could not initiate M-Pesa STK push. Check your phone number and try again.",
+          icon: ShieldAlert,
+          tone: "failure",
+        });
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+
+    setProcessing(true);
     try {
       const payload = await requestDepositReview({
         amount: amountValue,
@@ -1135,7 +1157,60 @@ const categoryCards = useMemo(
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto pt-5 pr-1 deposit-scrollbar">
-          {step === "methods" && (
+          {/* ── M-Pesa STK Push Sent Confirmation ── */}
+          {mpesaResult && (
+            <div className="flex flex-col items-center gap-6 py-8 text-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#0fa055]/15 ring-4 ring-[#0fa055]/20">
+                <CheckCircle className="h-10 w-10 text-[#0fa055]" />
+              </div>
+              <div>
+                <h3 className="text-[22px] font-black text-white">Check Your Phone!</h3>
+                <p className="mt-1 text-[14px] font-medium text-white/60">
+                  An M-Pesa STK push has been sent to
+                </p>
+                <p className="mt-1 text-[16px] font-black text-white">{mpesaResult.masked_phone_number}</p>
+              </div>
+
+              <div className="w-full max-w-[420px] rounded-[6px] border border-white/10 bg-[#1f2536] divide-y divide-white/10">
+                <div className="flex items-center justify-between px-5 py-3.5">
+                  <span className="text-[13px] font-bold text-white/50">Amount (USD)</span>
+                  <span className="text-[14px] font-black text-white">${mpesaResult.amount_usd?.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between px-5 py-3.5">
+                  <span className="text-[13px] font-bold text-white/50">Amount (KES)</span>
+                  <span className="text-[14px] font-black text-white">KES {mpesaResult.amount_kes?.toLocaleString()}</span>
+                </div>
+                {mpesaResult.customer_message && (
+                  <div className="px-5 py-3.5">
+                    <p className="text-[12px] font-medium text-white/60 text-left">{mpesaResult.customer_message}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-[6px] border border-amber-500/30 bg-amber-500/10 px-5 py-3.5 text-[13px] font-medium text-amber-200 max-w-[420px] w-full text-left">
+                <strong className="font-black">Instructions:</strong> Enter your M-Pesa PIN on your phone when prompted. Your balance will be credited automatically once payment is confirmed.
+              </div>
+
+              <div className="flex w-full max-w-[420px] gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setMpesaResult(null); }}
+                  className="flex-1 h-11 rounded-[4px] border border-white/20 text-[14px] font-bold text-white hover:bg-white/10 transition"
+                >
+                  Try Again
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 h-11 rounded-[4px] bg-[#0fa055] text-[14px] font-black text-white hover:bg-[#0d8a49] transition shadow-lg shadow-[#0fa055]/20"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!mpesaResult && step === "methods" && (
             <div className="grid gap-5 lg:grid-cols-[262px_minmax(0,1fr)]">
               <div className="space-y-2">
                 {categoryCards.map((category) => (
@@ -1180,15 +1255,13 @@ const categoryCards = useMemo(
               </div>
             </div>
           )}
-{step === "checkout" && selectedMethod && (
+{!mpesaResult && step === "checkout" && selectedMethod && (
             <div className="grid gap-5 lg:grid-cols-[244px_minmax(0,1fr)]">
               <div className="flex flex-col justify-between rounded-[4px] bg-white p-5 text-[#202638] shadow-md">
                 <div>
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-12 items-center justify-center overflow-hidden">{getMethodIcon(selectedMethod)}</span>
-                    {selectedMethod.iconType !== "wallet" && (
-                      <span className="text-[15px] font-bold">{selectedMethod.name}</span>
-                    )}
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-10 w-20 shrink-0 items-center justify-start overflow-visible">{getMethodIcon(selectedMethod)}</span>
+                    <span className="text-[14px] font-bold leading-tight">{selectedMethod.name}</span>
                   </div>
                   <div className="my-6 border-t border-dashed border-slate-300" />
                   <div className="space-y-2 text-[13px] font-bold text-slate-400">
