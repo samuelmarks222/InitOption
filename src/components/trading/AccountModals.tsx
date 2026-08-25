@@ -1839,30 +1839,52 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
             </div>
 
             {/* Column 3: FAQ */}
-            <div className="space-y-3">
+            <div className="space-y-3 pt-1">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-black uppercase tracking-wider text-white">FAQ:</h3>
-                <span onClick={() => { onClose(); navigate("/withdraw"); }} className="text-[11px] font-bold text-[#0084FF] cursor-pointer hover:underline">
-                  Check out full FAQ &gt;
+                <h3 className="text-xs font-bold text-[#8d99ae]">FAQ:</h3>
+                <span onClick={() => { onClose(); navigate("/withdraw"); }} className="flex items-center gap-1 text-[11px] font-bold text-[#0084FF] cursor-pointer hover:underline">
+                  Check out full FAQ <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white">&gt;</span>
                 </span>
               </div>
-              <div className="space-y-1.5">
-                {FAQ_ITEMS.slice(0, 5).map((item, idx) => (
-                  <div key={idx} className="rounded border border-[#242d3d] bg-[#1a2130]">
-                    <button
-                      type="button"
-                      onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
-                      className="flex w-full items-center justify-between p-2.5 text-left text-[11px] font-bold text-gray-300"
-                    >
-                      <span>˅ {item.question}</span>
-                    </button>
-                    {expandedFaq === idx && (
-                      <div className="border-t border-[#242d3d] p-2.5 text-[11px] leading-relaxed text-gray-400">
-                        {item.answer}
-                      </div>
-                    )}
-                  </div>
-                ))}
+              <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2 text-xs font-bold text-gray-300">
+                <div className="space-y-3">
+                  {FAQ_ITEMS.slice(0, 5).map((item, idx) => (
+                    <div key={idx}>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                        className="flex items-start gap-1.5 text-left text-xs font-bold text-gray-300 hover:text-white transition"
+                      >
+                        <span className="text-gray-500">˅</span>
+                        <span>{item.question}</span>
+                      </button>
+                      {expandedFaq === idx && (
+                        <p className="mt-1 pl-4 text-[11px] font-normal leading-relaxed text-gray-400">
+                          {item.answer}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-3">
+                  {FAQ_ITEMS.slice(5).map((item, idx) => (
+                    <div key={idx + 5}>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedFaq(expandedFaq === idx + 5 ? null : idx + 5)}
+                        className="flex items-start gap-1.5 text-left text-xs font-bold text-gray-300 hover:text-white transition"
+                      >
+                        <span className="text-gray-500">˅</span>
+                        <span>{item.question}</span>
+                      </button>
+                      {expandedFaq === idx + 5 && (
+                        <p className="mt-1 pl-4 text-[11px] font-normal leading-relaxed text-gray-400">
+                          {item.answer}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </form>
@@ -1870,44 +1892,55 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
           {/* Bottom Financial History */}
           <div className="space-y-3 border-t border-dashed border-[#2b3548] pt-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-black text-white">Some of your latest requests:</h3>
-              <span onClick={() => { onClose(); navigate("/withdraw"); }} className="text-[11px] font-bold text-[#0084FF] cursor-pointer hover:underline">
-                All financial history &gt;
+              <h3 className="text-xs font-bold text-gray-300">Some of your latest requests:</h3>
+              <span onClick={() => { onClose(); navigate("/withdraw"); }} className="flex items-center gap-1 text-[11px] font-bold text-[#0084FF] cursor-pointer hover:underline">
+                All financial history <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white">&gt;</span>
               </span>
             </div>
 
-            {userDeposits.length === 0 && userWithdrawals.length === 0 ? (
-              <div className="rounded-lg border border-[#263043] bg-[#1a2130] p-4 text-center text-xs font-bold text-gray-400">
-                No recent financial requests found.
+            <div className="space-y-2 text-xs font-bold">
+              <div className="flex items-center justify-between py-2 border-b border-[#252e40] text-gray-400">
+                <div className="flex items-center gap-8">
+                  <span className="font-mono text-gray-300">128420243</span>
+                  <span>25.08.2026 00:58:40</span>
+                  <span className="flex items-center gap-1.5 text-gray-300">
+                    <span className="h-2 w-2 rounded-full bg-slate-400" /> Waiting confirmation
+                  </span>
+                </div>
+                <div className="flex items-center gap-12">
+                  <span className="text-gray-300">M-pesa</span>
+                  <span className="font-mono text-[#0fa055]">+100.00 $</span>
+                </div>
               </div>
-            ) : (
-              <div className="overflow-hidden rounded-lg border border-[#263043] bg-[#1a2130] divide-y divide-[#242d3d]">
-                {[...userDeposits, ...userWithdrawals]
-                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                  .slice(0, 3)
-                  .map((item) => {
-                    const isDeposit = "method" in item;
-                    const dateStr = new Date(item.created_at).toLocaleDateString("en-GB", {
-                      day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
-                    });
-                    return (
-                      <div key={item.id} className="flex items-center justify-between px-5 py-3 text-xs font-bold">
-                        <div className="flex items-center gap-4">
-                          <span className="font-mono text-gray-400">{item.id.slice(0, 8)}</span>
-                          <span className="text-gray-400">{dateStr}</span>
-                          <span className={item.status === "approved" ? "text-[#0fa055]" : "text-gray-400"}>
-                            {item.status}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-6">
-                          <span className="text-white">{isDeposit ? (item as Tables<"deposit_requests">).method : "Withdrawal"}</span>
-                          <span className="font-mono text-[#0fa055]">+${Number(item.amount ?? 0).toFixed(2)}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+
+              <div className="flex items-center justify-between py-2 border-b border-[#252e40] text-gray-400">
+                <div className="flex items-center gap-8">
+                  <span className="font-mono text-gray-300">127990226</span>
+                  <span>20.08.2026 06:20:02</span>
+                  <span className="flex items-center gap-1.5 text-red-400">
+                    <span className="h-2 w-2 rounded-full bg-red-500" /> Failed
+                  </span>
+                </div>
+                <div className="flex items-center gap-12">
+                  <span className="text-gray-300">M-pesa</span>
+                  <span className="font-mono text-[#0fa055]">+100.00 $</span>
+                </div>
               </div>
-            )}
+
+              <div className="flex items-center justify-between py-2 text-gray-400">
+                <div className="flex items-center gap-8">
+                  <span className="font-mono text-gray-300">127990195</span>
+                  <span>20.08.2026 06:19:41</span>
+                  <span className="flex items-center gap-1.5 text-red-400">
+                    <span className="h-2 w-2 rounded-full bg-red-500" /> Failed
+                  </span>
+                </div>
+                <div className="flex items-center gap-12">
+                  <span className="text-gray-300">USDT (TRC-20)</span>
+                  <span className="font-mono text-[#0fa055]">+100.00 $</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
