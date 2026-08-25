@@ -329,15 +329,19 @@ const MobileModuleOverlay = ({
           onClose={() => setMobileOverlay(null)}
           onOpenDeposit={onOpenDeposit}
           onOpenOverlay={(section) => {
-            if (section === "analytics") setMobileOverlay("analytics_detail");
-            else if (section === "account") {
+            if (section === "analytics") {
+              setMobileOverlay("analytics_detail");
+            } else if (section === "account") {
               setAccountInitialTab("My account");
               setMobileOverlay("account");
-            }
-            else if (section === "referrals") {
+            } else if (section === "withdrawal") {
+              setAccountInitialTab("Withdrawal");
+              setMobileOverlay("account");
+            } else if (section === "referrals") {
               setMobileOverlay("referrals");
+            } else {
+              setMobileOverlay(section);
             }
-            else setMobileOverlay(section);
           }}
         />
       )}
