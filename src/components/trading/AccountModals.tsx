@@ -1140,8 +1140,8 @@ const categoryCards = useMemo(
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b101b]/78 p-4 backdrop-blur-[5px]">
-      <div className="flex max-h-[calc(100dvh-32px)] w-full max-w-[905px] flex-col overflow-hidden rounded-[6px] bg-[#2b3142] px-8 py-7 text-white shadow-[0_32px_100px_rgba(0,0,0,0.58)]">
+    <div className="fixed inset-0 z-[350] flex items-center justify-center bg-[#0b101b]/78 p-4 backdrop-blur-[5px]">
+      <div className="flex max-h-[calc(100dvh-32px)] w-full max-w-[905px] flex-col overflow-hidden rounded-[6px] bg-[#2b3142] px-4 py-4 text-white shadow-[0_32px_100px_rgba(0,0,0,0.58)] md:px-8 md:py-7">
         <div className="flex items-center justify-between border-b border-dashed border-white/16 pb-6">
           <div className="flex items-center gap-3">
             {step === "checkout" && (
@@ -1680,7 +1680,7 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b101b]/85 p-4 backdrop-blur-md">
+    <div className="fixed inset-0 z-[350] flex items-center justify-center bg-[#0b101b]/85 p-4 backdrop-blur-md">
       <div className="flex max-h-[calc(100dvh-32px)] w-full max-w-[1200px] flex-col overflow-hidden rounded-[8px] bg-[#161c28] text-white shadow-[0_32px_100px_rgba(0,0,0,0.7)]">
         {/* Top Header Navigation Bar */}
         <div className="flex items-center justify-between border-b border-[#263043] bg-[#1a2130] px-6 py-3">
