@@ -188,7 +188,7 @@ const App = () => {
                         <Route path="/trade" element={withTradingRoute(<Trade />)} />
                         <Route path="/trade/*" element={withTradingRoute(<Trade />)} />
                         <Route path="/deposit" element={withTradingRoute(<DepositModalPage />)} />
-                        <Route path="/withdraw" element={withTradingRoute(<PaymentCenter defaultTab="withdraw" />)} />
+                        <Route path="/withdraw" element={withTradingRoute(<Withdraw />)} />
                         <Route path="/settings" element={withTradingRoute(<Settings />)} />
                         <Route path="/notifications" element={withTradingRoute(<NotificationsPage />)} />
                         <Route path="/social/traders" element={withTradingRoute(<SocialTopTraders />)} />

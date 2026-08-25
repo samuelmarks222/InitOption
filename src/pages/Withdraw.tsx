@@ -231,7 +231,7 @@ const Withdraw = () => {
     } catch (err) {
       toast({
         title: "Withdrawal request failed",
-        description: err instanceof Error ? error.message : "An error occurred while submitting your withdrawal request.",
+        description: err instanceof Error ? err.message : "An error occurred while submitting your withdrawal request.",
         variant: "destructive",
       });
     } finally {
