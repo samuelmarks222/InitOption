@@ -87,24 +87,23 @@ const AssetInfo = ({
   };
 
   return (
-    <div className="relative flex h-[48px] shrink-0 items-center justify-between overflow-hidden hidden lg:flex px-2 bg-[var(--trading-tabs-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white select-none">
+    <div className="relative flex h-[56px] shrink-0 items-center justify-between overflow-hidden hidden lg:flex px-3 bg-[var(--trading-tabs-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white select-none">
       {/* Scrollable strip */}
       <div
         ref={stripRef}
-        className="relative flex h-full flex-1 items-center gap-1.5 overflow-x-auto overflow-y-hidden pr-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="relative flex h-full flex-1 items-center gap-2 overflow-x-auto overflow-y-hidden pr-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-
         {/* Plus button */}
         <button
           onClick={onAddAssetClick ?? onOpenSelector}
-          className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded bg-[#0084FF] text-white shadow-md shadow-[#0084FF]/30 hover:bg-[#0070df] transition-all"
+          className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg bg-[#0084FF] text-white shadow-md shadow-[#0084FF]/30 hover:bg-[#0070df] transition-all"
           title="Add asset pair"
         >
-          <Plus className="h-4 w-4" strokeWidth={3} />
+          <Plus className="h-6 w-6 stroke-[3.5]" />
         </button>
 
         {/* Asset tab chips */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           {tabs.map((tab) => {
             const dynamicTab = getAsset(tab.symbol);
             const isActive = (activeTabId ?? asset.symbol) === tab.symbol;
@@ -122,15 +121,15 @@ const AssetInfo = ({
               <div
                 key={tab.symbol}
                 onClick={() => (onSelectTab ? onSelectTab(tab.symbol) : onOpenSelector())}
-                className={`group relative flex h-[38px] min-w-[120px] shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded border px-2 transition-all ${
+                className={`group relative flex h-[42px] min-w-[150px] shrink-0 cursor-pointer items-center gap-2.5 overflow-hidden rounded-lg border px-3 transition-all ${
                   isActive
-                    ? "bg-[var(--trading-panel-bg,#23283b)] border-[var(--trading-border-strong-color,rgba(143,164,210,0.38))]"
-                    : "bg-[var(--trading-panel-soft-bg,#191d2b)] border-[var(--trading-border-color,rgba(143,164,210,0.16))] hover:bg-[#23283b]"
+                    ? "bg-[#232B3E] border-[#3B4C69] shadow-md ring-1 ring-white/10"
+                    : "bg-[#151D2A] border-[#222D3E] hover:bg-[#1C2738] hover:border-gray-600/50"
                 }`}
               >
                 {/* Active trade progress bar */}
                 {hasActiveTrade && (
-                  <div className="absolute inset-x-0 bottom-0 h-[2px] overflow-hidden rounded-full bg-black/40">
+                  <div className="absolute inset-x-0 bottom-0 h-[2.5px] overflow-hidden rounded-full bg-black/40">
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
@@ -142,11 +141,11 @@ const AssetInfo = ({
                   </div>
                 )}
 
-                <AssetSymbolMark symbol={tab.symbol} category={tab.type} size={16} />
+                <AssetSymbolMark symbol={tab.symbol} category={tab.type} size={20} />
 
-                <div className="min-w-0 flex-1 leading-tight">
-                  <p className="truncate text-[11px] font-black uppercase text-white">{tab.symbol}</p>
-                  <p className={`text-[10px] font-extrabold ${hasActiveTrade ? (isWinningTrade ? "text-[#18d87d]" : isLosingTrade ? "text-[#ff6a72]" : "text-[#FFA500]") : "text-[#FFA500]"}`}>
+                <div className="min-w-0 flex-1 leading-none">
+                  <p className="truncate text-[13px] font-black uppercase tracking-wide text-white">{tab.symbol}</p>
+                  <p className={`mt-0.5 text-[11px] font-black ${hasActiveTrade ? (isWinningTrade ? "text-[#18d87d]" : isLosingTrade ? "text-[#ff6a72]" : "text-[#FFB800]") : "text-[#FFB800]"}`}>
                     {hasActiveTrade
                       ? `${totalLiveResult >= 0 ? "+" : ""}${formatMoney(Math.abs(totalLiveResult), { maximumFractionDigits: 2 })}`
                       : `${payout}%`}
@@ -155,7 +154,7 @@ const AssetInfo = ({
 
                 {/* Timer badge for active trades */}
                 {activeTrade && (
-                  <span className="shrink-0 rounded bg-black/40 px-1 py-px text-[9px] font-black text-white/80">
+                  <span className="shrink-0 rounded bg-black/50 px-1.5 py-0.5 text-[9px] font-black text-white">
                     {formatCompactTimer(activeTrade.timeLeft)}
                   </span>
                 )}
@@ -165,9 +164,9 @@ const AssetInfo = ({
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onRemoveTab(tab.symbol); }}
-                    className="absolute right-0.5 top-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-gray-500 opacity-0 transition-opacity hover:text-white group-hover:opacity-100"
+                    className="ml-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-gray-400 opacity-60 transition-all hover:bg-white/15 hover:text-white hover:opacity-100"
                   >
-                    <X className="h-2.5 w-2.5" strokeWidth={2.5} />
+                    <X className="h-3 w-3" strokeWidth={2.5} />
                   </button>
                 )}
               </div>
@@ -181,9 +180,9 @@ const AssetInfo = ({
         <button
           type="button"
           onClick={() => scrollTabs("left")}
-          className="absolute left-[44px] top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--trading-border-color)] bg-[var(--trading-tabs-bg)] text-gray-400 shadow-md hover:text-white transition-colors"
+          className="absolute left-[54px] top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--trading-border-color)] bg-[var(--trading-tabs-bg)] text-gray-300 shadow-md hover:text-white transition-colors"
         >
-          <ChevronLeft className="h-3 w-3" strokeWidth={3} />
+          <ChevronLeft className="h-3.5 w-3.5" strokeWidth={3} />
         </button>
       )}
 
@@ -191,9 +190,9 @@ const AssetInfo = ({
         <button
           type="button"
           onClick={() => scrollTabs("right")}
-          className="absolute right-3 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--trading-border-color)] bg-[var(--trading-tabs-bg)] text-gray-400 shadow-md hover:text-white transition-colors"
+          className="absolute right-3 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--trading-border-color)] bg-[var(--trading-tabs-bg)] text-gray-300 shadow-md hover:text-white transition-colors"
         >
-          <ChevronRight className="h-3 w-3" strokeWidth={3} />
+          <ChevronRight className="h-3.5 w-3.5" strokeWidth={3} />
         </button>
       )}
     </div>
