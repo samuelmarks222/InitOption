@@ -396,8 +396,11 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
   const { user, profile, refreshProfile } = useAuth();
   const [step, setStep] = useState<DepositStep>("methods");
   const [activeCategory, setActiveCategory] = useState<DepositCategory>("crypto");
-  const [amount, setAmount] = useState("150");
-  const [bonusEnabled, setBonusEnabled] = useState(true);
+  const [amount, setAmount] = useState("100");
+  const [bonusEnabled, setBonusEnabled] = useState(false);
+  const [firstName, setFirstName] = useState(() => profile?.full_name?.split(" ")[0] ?? "");
+  const [lastName, setLastName] = useState(() => profile?.full_name?.split(" ").slice(1).join(" ") ?? "");
+  const [phone, setPhone] = useState(() => profile?.phone_number ?? "");
   const [cryptoMethods, setCryptoMethods] = useState<CryptoPaymentMethod[]>([]);
   const [selectedMethodId, setSelectedMethodId] = useState("");
   const [copiedField, setCopiedField] = useState<"amount" | "address" | "memo" | null>(null);
@@ -1177,68 +1180,70 @@ const categoryCards = useMemo(
               </div>
             </div>
           )}
-
 {step === "checkout" && selectedMethod && (
             <div className="grid gap-5 lg:grid-cols-[244px_minmax(0,1fr)]">
-              <div className="rounded-[4px] bg-white p-5 text-[#202638]">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-12 items-center justify-center overflow-hidden">{getMethodIcon(selectedMethod)}</span>
-                  {selectedMethod.iconType !== "wallet" && (
-                    <span className="text-[15px] font-bold">{selectedMethod.name}</span>
-                  )}
-                </div>
-                <div className="my-6 border-t border-dashed border-slate-300" />
-                <div className="space-y-2 text-[13px] font-bold text-slate-400">
-                  <div className="flex items-center justify-between">
-                    <span>Min amount:</span>
-                    <span className="text-slate-600">{formatCurrency(selectedMethod.minAmount)}</span>
+              <div className="flex flex-col justify-between rounded-[4px] bg-white p-5 text-[#202638] shadow-md">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-8 w-12 items-center justify-center overflow-hidden">{getMethodIcon(selectedMethod)}</span>
+                    {selectedMethod.iconType !== "wallet" && (
+                      <span className="text-[15px] font-bold">{selectedMethod.name}</span>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span>Max amount:</span>
-                    <span className="text-slate-600">{formatCurrency(selectedMethod.maxAmount)}</span>
+                  <div className="my-6 border-t border-dashed border-slate-300" />
+                  <div className="space-y-2 text-[13px] font-bold text-slate-400">
+                    <div className="flex items-center justify-between">
+                      <span>Min amount:</span>
+                      <span className="text-slate-700 font-extrabold">{formatCurrency(selectedMethod.minAmount)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Max amount:</span>
+                      <span className="text-slate-700 font-extrabold">{formatCurrency(selectedMethod.maxAmount)}</span>
+                    </div>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setStep("methods")}
-                  className="mt-8 inline-flex items-center gap-2 text-[14px] font-medium text-[#0d82df] transition hover:text-[#31a0ff]"
+                  className="mt-8 inline-flex items-center gap-2 text-[14px] font-bold text-[#0084FF] transition hover:text-[#0070df]"
                 >
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0d82df] text-white">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0084FF] text-white">
                     <ChevronLeft className="h-4 w-4" />
                   </span>
                   Change method
                 </button>
               </div>
 
-              <div className="min-w-0">
-                {selectedMethod && amountError && (
-                  <div className="mb-4 flex items-center gap-3 rounded-[3px] bg-[#4a342f] px-3 py-3 text-[13px] font-bold text-white">
-                    <AlertTriangle className="h-4 w-4 shrink-0 fill-[#ff9b25] text-[#ff9b25]" />
-                    Minimum amount - {formatCurrency(selectedMethod.minAmount).replace(".00", "")}. Smaller payments won't be credited.
-                  </div>
-                )}
+              <div className="min-w-0 space-y-4">
+                {/* Alert banner */}
+                <div className="flex items-center gap-2.5 rounded-[4px] bg-[#4a342f] border border-[#6b473f] px-3.5 py-3 text-[12px] font-bold text-white">
+                  <AlertTriangle className="h-4 w-4 shrink-0 fill-[#ff9b25] text-[#ff9b25]" />
+                  Minimum amount - {formatCurrency(selectedMethod.minAmount).replace(".00", "")}. Smaller payments won't be credited.
+                </div>
 
-                <label className="relative block">
-                  <span className="absolute -top-2 left-3 bg-[#2b3142] px-2 text-[12px] font-bold text-white/35">Deposit amount</span>
+                {/* Deposit Amount input */}
+                <div className="relative">
+                  <span className="absolute -top-2.5 left-3 z-10 bg-[#2b3142] px-1.5 text-[11px] font-bold text-white/50">Deposit amount</span>
                   <input
                     type="number"
                     min={selectedMethod.minAmount}
                     max={selectedMethod.maxAmount}
                     value={amount}
                     onChange={(event) => setAmount(event.target.value)}
-                    className="h-12 w-full rounded-[3px] border border-white/25 bg-transparent px-4 pr-10 text-[16px] font-bold text-white outline-none transition focus:border-[#0d82df]"
+                    className="h-12 w-full rounded-[4px] border border-white/20 bg-transparent px-4 pr-10 text-[16px] font-bold text-white outline-none transition focus:border-[#0084FF]"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[18px] font-black text-white/55">$</span>
-                </label>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[16px] font-bold text-white/60">$</span>
+                </div>
 
-                <div className="mt-1 flex flex-wrap gap-1">
+                {/* Quick preset buttons */}
+                <div className="flex flex-wrap gap-2 pt-0.5">
                   {[150, 200, 300, 500].map((preset) => (
                     <button
                       key={preset}
                       type="button"
                       onClick={() => setAmount(String(Math.max(preset, selectedMethod.minAmount)))}
-                      className={`h-8 min-w-[70px] rounded-[4px] px-4 text-[13px] font-black transition ${
-                        amountValue === preset ? "bg-[#596074] text-white" : "bg-[#3c4356] text-white hover:bg-[#4b5266]"
+                      className={`h-8 rounded-[4px] px-5 text-[12px] font-black transition ${
+                        amountValue === preset ? "bg-[#596074] text-white ring-1 ring-white/20" : "bg-[#373e52] text-white hover:bg-[#434b63]"
                       }`}
                     >
                       {preset} $
@@ -1246,42 +1251,48 @@ const categoryCards = useMemo(
                   ))}
                 </div>
 
-                <div className="mt-5 overflow-hidden rounded-[6px] border border-white/10 bg-[#202637]">
+                {/* Bonus Code bar */}
+                <div className="overflow-hidden rounded-[4px] border border-white/10 bg-[#1f2536]">
                   <button
                     type="button"
                     onClick={() => setBonusCodeOpen((current) => !current)}
                     className="flex h-12 w-full items-center justify-between px-4 text-left"
                   >
-                    <span className="flex items-center gap-3 text-[14px] font-black">
-                      <span className="inline-flex h-4 w-5 items-center justify-center rounded-[2px] bg-[#ff5d58]" />
+                    <span className="flex items-center gap-2.5 text-[14px] font-black text-white">
+                      <span className="inline-flex h-4 w-5 items-center justify-center rounded-[2px] bg-[#ff5d58] text-[10px]">🎟️</span>
                       Bonus Code
                     </span>
-                    <span className="flex items-center gap-3 text-[13px] font-black uppercase text-[#0d82df]">
-                      {bonusEnabled ? "Activate" : "Inactive"}
-                      <ChevronDown className={`h-4 w-4 transition ${bonusCodeOpen ? "rotate-180" : ""}`} />
+                    <span className="flex items-center gap-2 text-[12px] font-black uppercase text-[#0084FF] hover:text-[#31a0ff]">
+                      {bonusEnabled ? "ACTIVE ✓" : "ACTIVATE"}
+                      <ChevronRight className={`h-4 w-4 transition ${bonusCodeOpen ? "rotate-90" : ""}`} />
                     </span>
                   </button>
                   {bonusCodeOpen && (
-                    <div className="border-t border-white/10 px-4 pb-4 pt-3">
-                      <div className="flex h-12 items-center overflow-hidden rounded-[4px] border border-white/55 bg-[#202637]">
+                    <div className="border-t border-white/10 px-4 pb-4 pt-3 space-y-3">
+                      <div className="flex h-11 items-center overflow-hidden rounded-[4px] border border-white/30 bg-[#252b3d]">
                         <input
                           value={bonusCode}
                           onChange={(event) => setBonusCode(event.target.value)}
                           placeholder="Select or enter code"
-                          className="min-w-0 flex-1 bg-transparent px-4 text-[15px] font-bold text-white outline-none placeholder:text-white/35"
+                          className="min-w-0 flex-1 bg-transparent px-3.5 text-[14px] font-bold text-white outline-none placeholder:text-white/35"
                         />
                         <button
                           type="button"
                           onClick={() => {
+                            if (!bonusCode.trim()) {
+                              toast({ title: "Please select or enter a bonus code", variant: "destructive" });
+                              return;
+                            }
                             setBonusEnabled(true);
-                            toast({ title: "Bonus code activated", description: "The deposit bonus will be applied when eligible." });
+                            toast({ title: `Bonus code ${bonusCode} activated`, description: "The deposit bonus will be applied on settlement." });
                           }}
-                          className="h-full px-5 text-[13px] font-bold text-[#0d82df] transition hover:text-[#31a0ff]"
+                          className="h-full px-5 text-[13px] font-bold bg-[#0084FF] text-white hover:bg-[#0070df] transition"
                         >
                           Apply
                         </button>
                       </div>
-                      <div className="mt-2 overflow-hidden rounded-[4px] bg-[#3a4154] border border-white/10">
+
+                      <div className="overflow-hidden rounded-[4px] bg-[#2a3040] border border-white/10">
                         {activeDbPromos.length === 0 ? (
                           <div className="p-3 text-[12px] font-bold text-white/50 text-center">
                             No active deposit bonus codes configured.
@@ -1296,7 +1307,7 @@ const categoryCards = useMemo(
                                 promo.code === "DEPOSIT30" ? 70 : 0
                               ),
                             );
-                            const isSelected = bonusCode.toUpperCase() === promo.code.toUpperCase();
+                            const isSelected = bonusCode.toUpperCase() === promo.code.toUpperCase() && bonusEnabled;
                             return (
                               <button
                                 key={promo.id}
@@ -1313,7 +1324,7 @@ const categoryCards = useMemo(
                                   });
                                 }}
                                 className={`block w-full border-b border-white/10 px-4 py-3 text-left transition last:border-b-0 hover:bg-white/12 ${
-                                  isSelected ? "bg-[#0d82df]/25 border-l-4 border-l-[#0d82df]" : ""
+                                  isSelected ? "bg-[#0084FF]/25 border-l-4 border-l-[#0084FF]" : ""
                                 }`}
                               >
                                 <div className="flex items-center justify-between">
@@ -1332,42 +1343,92 @@ const categoryCards = useMemo(
                           })
                         )}
                       </div>
+
+                      {bonusEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setBonusEnabled(false);
+                            setBonusCode("");
+                            toast({ title: "Bonus removed", description: "Deposit will proceed without any bonus." });
+                          }}
+                          className="text-[11px] font-bold text-red-400 hover:text-red-300 underline block"
+                        >
+                          Remove active bonus
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
 
-                <div className="mt-6 flex items-center gap-2 text-[14px] font-black text-white/40">
+                {/* Floating label inputs for First Name, Last Name, Phone */}
+                <div className="space-y-4 pt-1">
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#2b3142] px-1.5 text-[11px] font-bold text-white/50">First name</span>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="First name"
+                      className="h-12 w-full rounded-[4px] border border-white/20 bg-transparent px-4 text-[15px] font-bold text-white outline-none transition focus:border-[#0084FF]"
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#2b3142] px-1.5 text-[11px] font-bold text-white/50">Last name</span>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Last name"
+                      className="h-12 w-full rounded-[4px] border border-white/20 bg-transparent px-4 text-[15px] font-bold text-white outline-none transition focus:border-[#0084FF]"
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#2b3142] px-1.5 text-[11px] font-bold text-white/50">Phone</span>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="254XXXXXXXXX"
+                      className="h-12 w-full rounded-[4px] border border-white/20 bg-transparent px-4 text-[15px] font-bold text-white outline-none transition focus:border-[#0084FF]"
+                    />
+                  </div>
+                </div>
+
+                {/* Receive Summary line */}
+                <div className="flex items-center gap-2 pt-2 text-[14px] font-black text-white/40">
                   <span>You will receive</span>
                   <span className="h-px flex-1 border-t border-dashed border-white/18" />
-                  <span className="text-white">{formatCurrency(receiveAmount)}</span>
+                  <span className="text-white font-extrabold">{formatCurrency(receiveAmount)}</span>
                 </div>
 
                 {activeInstruction?.provider_payment_id && (
-                  <div className="mt-4 rounded-[4px] border border-white/10 bg-[#202637] px-4 py-3 text-[12px] font-bold text-white/70">
+                  <div className="rounded-[4px] border border-white/10 bg-[#202637] px-4 py-3 text-[12px] font-bold text-white/70">
                     Plisio payment ID: <span className="break-all text-white">{activeInstruction.provider_payment_id}</span>
                   </div>
                 )}
 
                 {activeInstruction?.detected_tx_hash && (
-                  <div className="mt-4 rounded-[4px] border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[13px] font-bold text-emerald-100">
+                  <div className="rounded-[4px] border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-[13px] font-bold text-emerald-100">
                     Transaction detected: {activeInstruction.detected_tx_hash}
                   </div>
                 )}
 
+                {/* Submit Action button */}
                 <button
                   type="button"
                   disabled={loading || processing || !selectedMethod || Boolean(amountError)}
                   onClick={() => void handleProceedToCheckout()}
-                  className="mt-4 h-11 w-full rounded-[4px] bg-[#0d82df] text-[15px] font-black text-white transition hover:bg-[#118bea] disabled:cursor-not-allowed disabled:bg-[#1f5f98] disabled:text-white/55"
+                  className="h-12 w-full rounded-[4px] bg-[#0084FF] text-[16px] font-black text-white shadow-lg shadow-[#0084FF]/25 transition hover:bg-[#0070df] active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-white/50"
                 >
                   {processing
                     ? "Preparing payment..."
-                    : selectedMethodIsAutomated
-                      ? activeInstructionIsPlisio
-                        ? activeInstruction?.hosted_checkout_url
-                          ? "Continue to Pay"
-                          : "Restore Payment"
-                        : "Proceed to Pay"
+                    : selectedMethodIsAutomated && activeInstructionIsPlisio
+                      ? activeInstruction?.hosted_checkout_url
+                        ? "Continue to Pay"
+                        : "Restore Payment"
                       : "Proceed to Pay"}
                 </button>
               </div>

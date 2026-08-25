@@ -5,6 +5,7 @@ import {
   HelpCircle,
   Image,
   Menu,
+  Settings,
   Trophy,
   User,
   Users,
@@ -50,6 +51,7 @@ export const NavigationSidebar = ({
   const UTILITY_ITEMS = [
     { id: "referrals", label: "Join us", icon: Gift },
     { id: "help", label: "Help", icon: HelpCircle },
+    { id: "settings", label: "Settings", icon: Settings },
   ] as const;
 
   const selectPrimaryItem = (item: (typeof PRIMARY_ITEMS)[number]) => {
