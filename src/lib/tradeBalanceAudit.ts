@@ -65,14 +65,18 @@ export const insertTradeBalanceAudit = async (entry: InsertTradeBalanceAuditInpu
 };
 
 export const fetchTradeBalanceAuditEntries = async (tradeId: string) => {
-  const response = await api.from("trade_balance_audit_logs")
-    .select("*")
-    .eq("trade_id", tradeId)
-    .order("created_at", { ascending: true });
+  try {
+    const response = await api.from("trade_balance_audit_logs")
+      .select("*")
+      .eq("trade_id", tradeId)
+      .order("created_at", { ascending: true });
 
-  if (response.error && !isMissingTradeBalanceAuditTableError(response.error)) {
-    console.error("Failed to fetch trade balance audit logs", response.error);
+    if (response.error && !isMissingTradeBalanceAuditTableError(response.error)) {
+      // Ignore missing audit log table errors silently
+    }
+
+    return (response.data ?? []) as TradeBalanceAuditEntry[];
+  } catch {
+    return [];
   }
-
-  return (response.data ?? []) as TradeBalanceAuditEntry[];
 };

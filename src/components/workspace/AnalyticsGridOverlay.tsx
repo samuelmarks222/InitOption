@@ -2214,6 +2214,39 @@ const MarketTable = ({ assets, formatMoney }: { assets: Array<{ asset: string; t
   </div>
 );
 
+type AssetSlice = { asset: string; share: number; profit: number };
+
+const PieChartGraphic = ({ items }: { items: AssetSlice[] }) => {
+  if (!items.length) return <div className="flex h-[190px] w-[190px] items-center justify-center rounded-full bg-[#222839] text-white/35">No data</div>;
+
+  let cumulative = 0;
+  const gradient = items
+    .map((item, index) => {
+      const start = cumulative;
+      cumulative += item.share;
+      return `${PIE_COLORS[index % PIE_COLORS.length]} ${start}% ${cumulative}%`;
+    })
+    .join(", ");
+
+  return (
+    <div className="relative flex h-[205px] w-[205px] items-center justify-center rounded-full" style={{ background: `conic-gradient(${gradient})` }}>
+      <div className="h-[54px] w-[54px] rounded-full bg-[#2a3040]" />
+      {items.slice(0, 3).map((item, index) => (
+        <span
+          key={item.asset}
+          className="absolute text-[11px] font-bold text-white drop-shadow"
+          style={{
+            left: index === 0 ? "68%" : index === 1 ? "35%" : "22%",
+            top: index === 0 ? "37%" : index === 1 ? "25%" : "55%",
+          }}
+        >
+          {item.share}%
+        </span>
+      ))}
+    </div>
+  );
+};
+
 const LineChartGraphic = ({
   series,
   min,
