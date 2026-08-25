@@ -1403,103 +1403,114 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
         )}
       </div>
 
-      {/* ── SEARCH BAR (visible on FAQ and Guides tabs) ── */}
-      {(activeTab === "faq" || activeTab === "guides") && (
-        <div className="px-4 sm:px-8 lg:px-16 py-4 bg-[#161b26] border-b border-white/5 shrink-0">
-          <div className="max-w-[720px] mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/35 pointer-events-none" />
-            <input
-              ref={searchRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search help center… e.g. 'how do I withdraw?'"
-              className="w-full h-11 pl-10 pr-10 rounded-[8px] bg-[#1f2738] border border-white/10 text-[14px] text-white placeholder-white/30 outline-none focus:border-[#1175d5]/60 transition-colors"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+      {/* ── MAIN CONTENT AREA ── */}
+      <div className="flex-1 overflow-y-auto px-4 py-8 sm:px-8 lg:px-12 deposit-scrollbar">
+        <div className="max-w-[1280px] mx-auto space-y-10">
 
-          {/* Search Results Dropdown */}
-          {searchQuery.trim().length >= 2 && (
-            <div className="max-w-[720px] mx-auto mt-2 rounded-[8px] bg-[#1f2738] border border-white/10 overflow-hidden shadow-xl">
-              {isSearching ? (
-                <div className="p-4 text-center text-[13px] text-white/40">Searching…</div>
-              ) : searchResults.length === 0 ? (
-                <div className="p-4 text-center text-[13px] text-white/40">
-                  No results found for "{searchQuery}"
-                </div>
-              ) : (
-                <div className="divide-y divide-white/5">
-                  {searchResults.map((result) => (
-                    <button
-                      key={result.id}
-                      type="button"
-                      onClick={() => {
-                        if (result.faqCategory) {
-                          setActiveTab("faq");
-                          setSelectedCategory(result.faqCategory);
-                          setExpandedFaqId(result.id);
-                          setSearchQuery("");
-                        }
-                      }}
-                      className="w-full text-left p-4 hover:bg-white/5 transition-colors"
-                    >
-                      <div className="flex items-start gap-3">
-                        <HelpCircle className="h-4 w-4 text-[#1175d5] shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-[13px] font-bold text-white leading-tight">{result.question}</p>
-                          <p className="text-[11px] text-white/40 mt-1">{result.categoryLabel}</p>
-                        </div>
+          {/* ════════════════ HERO HEADER & SEARCH SECTION (Visible on FAQ & Guides) ════════════════ */}
+          {(activeTab === "faq" || activeTab === "guides") && !selectedGuideCategory && (
+            <div className="text-center max-w-[840px] mx-auto pt-2 pb-6 space-y-4 animate-fadeIn">
+              <h1 className="text-[28px] sm:text-[34px] font-black text-white uppercase tracking-wider">
+                How can we help you?
+              </h1>
+              <p className="text-[14px] sm:text-[15px] font-medium text-white/60 leading-relaxed max-w-[620px] mx-auto">
+                Find answers, explore platform guides, or take an interactive guided tour of InitOption.
+              </p>
+
+              {/* Large Prominent Hero Search Bar */}
+              <div className="relative max-w-[720px] mx-auto pt-2">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-[#00B8FF] pointer-events-none" />
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search the Help Center... (Try 'How do I withdraw?')"
+                  className="w-full h-14 pl-14 pr-12 rounded-[10px] bg-[#1d2636] border border-[#00B8FF]/30 text-[15px] font-medium text-white placeholder-white/40 outline-none focus:border-[#00B8FF] focus:ring-1 focus:ring-[#00B8FF] shadow-[0_8px_30px_rgba(0,0,0,0.35)] transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
+
+                {/* Search Results Dropdown */}
+                {searchQuery.trim().length >= 2 && (
+                  <div className="absolute left-0 right-0 top-full mt-2 rounded-[10px] bg-[#1d2636] border border-[#00B8FF]/30 overflow-hidden shadow-2xl z-50 text-left">
+                    {isSearching ? (
+                      <div className="p-4 text-center text-[13px] text-white/40">Searching…</div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="p-4 text-center text-[13px] text-white/40">
+                        No results found for "{searchQuery}"
                       </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+                    ) : (
+                      <div className="divide-y divide-white/5 max-h-[320px] overflow-y-auto deposit-scrollbar">
+                        {searchResults.map((result) => (
+                          <button
+                            key={result.id}
+                            type="button"
+                            onClick={() => {
+                              if (result.faqCategory) {
+                                setActiveTab("faq");
+                                setSelectedCategory(result.faqCategory);
+                                setExpandedFaqId(result.id);
+                                setSearchQuery("");
+                              }
+                            }}
+                            className="w-full text-left p-4 hover:bg-white/5 transition-colors flex items-start gap-3"
+                          >
+                            <HelpCircle className="h-4 w-4 text-[#00B8FF] shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-[13.5px] font-bold text-white leading-tight">{result.question}</p>
+                              <p className="text-[11px] text-[#00B8FF]/70 mt-1 font-semibold">{result.categoryLabel}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Popular Topics Chips */}
+              <div className="flex items-center justify-center gap-2 pt-2 flex-wrap">
+                <span className="text-[11px] font-black uppercase tracking-wider text-white/35 mr-1">Popular topics:</span>
+                {[
+                  { label: "Trading", tab: "faq", category: "trading" },
+                  { label: "Deposits", tab: "faq", category: "payment" },
+                  { label: "Withdrawals", tab: "faq", category: "payouts" },
+                  { label: "Security", tab: "faq", category: "verification" },
+                  { label: "Copy Trading", tab: "guides", guideCategory: "copy_trading" },
+                  { label: "Tournaments", tab: "faq", category: "tournaments" },
+                ].map((topic) => (
+                  <button
+                    key={topic.label}
+                    type="button"
+                    onClick={() => {
+                      if (topic.tab === "faq") {
+                        setActiveTab("faq");
+                        setSelectedCategory(topic.category as FaqCategory);
+                      } else if (topic.tab === "guides") {
+                        setActiveTab("guides");
+                        setSelectedGuideCategory(topic.guideCategory as GuideCategory);
+                        setSelectedArticle(null);
+                      }
+                    }}
+                    className="px-3.5 py-1.5 rounded-full bg-[#1b2333] border border-[#00B8FF]/20 text-[12px] font-bold text-white/75 hover:border-[#00B8FF]/50 hover:text-white hover:bg-[#00B8FF]/10 transition-all"
+                  >
+                    {topic.label}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* ── MAIN CONTENT AREA ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 lg:px-16 deposit-scrollbar">
         {/* ════════════════════════════════ TAB: FAQ ════════════════════════════════ */}
         {activeTab === "faq" && (
-          <div className="max-w-[1100px] mx-auto space-y-8">
-            {/* Hero: New to InitOption Banner */}
-            <div className="rounded-[14px] bg-gradient-to-br from-[#0c3a72] via-[#0d3566] to-[#1a2a4a] border border-[#1a4a8a]/40 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[14px] bg-[#1175d5]/30 border border-[#1175d5]/40">
-                <Compass className="h-7 w-7 text-[#5da6ff]" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#5da6ff]">
-                    New to InitOption?
-                  </span>
-                </div>
-                <h2 className="text-[19px] font-black text-white mb-1">Take a Guided Platform Tour</h2>
-                <p className="text-[13px] text-white/55 leading-relaxed">
-                  Learn how to navigate InitOption, place trades, manage your account, deposit funds, withdraw your
-                  balance, and use the platform's main features.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleLaunchTour("platform")}
-                className="flex shrink-0 items-center gap-2 rounded-[10px] bg-[#1175d5] px-5 py-3 text-[14px] font-black text-white hover:bg-[#0d69c2] transition-colors shadow-[0_4px_20px_rgba(17,117,213,0.35)]"
-              >
-                <PlayCircle className="h-4 w-4" />
-                Start Platform Tour
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
+          <div className="space-y-8 animate-fadeIn">
 
             {/* Popular Guides chips */}
             <div>
@@ -1617,117 +1628,82 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
           </div>
         )}
 
-        {/* ════════════════════════════════ TAB: GUIDES ════════════════════════════════ */}
+        {/* ════════════════════════════════ TAB: GUIDES & OVERVIEW ════════════════════════════════ */}
         {activeTab === "guides" && (
-          <div className="max-w-[1100px] mx-auto">
-            {/* Tour launcher section */}
+          <div className="space-y-10">
             {!selectedGuideCategory && (
               <>
-                <div className="mb-8 text-center">
-                  <h1 className="text-[26px] font-black text-white mb-1">Platform Guides & Tours</h1>
-                  <p className="text-[13px] text-white/45">
-                    Interactive tours and comprehensive guides to help you master InitOption
-                  </p>
+                {/* ── GET STARTED: Single Primary Platform Walkthrough Banner ── */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[11px] font-black uppercase tracking-[0.14em] text-[#00B8FF]">GET STARTED</span>
+                  </div>
+                  <div className="rounded-[14px] bg-[#1a2336] border border-[#00B8FF]/25 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 hover:border-[#00B8FF]/45 transition-all shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[12px] bg-[#00B8FF]/10 border border-[#00B8FF]/25 text-[#00B8FF]">
+                        <Compass className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-[#00B8FF]">Interactive Walkthrough</span>
+                        </div>
+                        <h3 className="text-[19px] font-black text-white mb-1">New to InitOption? Take the Complete Platform Tour</h3>
+                        <p className="text-[13px] font-medium text-white/60 leading-relaxed">
+                          Learn trading terminal controls • deposits & funding • withdrawals • account verification • copy trading
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleLaunchTour("platform")}
+                      className="whitespace-nowrap shrink-0 flex items-center gap-2 rounded-[8px] bg-[#00B8FF] px-6 py-3.5 text-[14px] font-black text-black hover:bg-[#33c6ff] transition-all shadow-[0_4px_20px_rgba(0,184,255,0.3)]"
+                    >
+                      <PlayCircle className="h-4.5 w-4.5" />
+                      Start Platform Tour
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
-                {/* Interactive Tours Grid */}
-                <div className="mb-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Compass className="h-4 w-4 text-[#5da6ff]" />
-                    <h2 className="text-[15px] font-black text-white">Interactive Tours</h2>
-                    <span className="text-[12px] text-white/35 font-semibold">— Highlights real platform controls</span>
+                {/* ── PLATFORM GUIDES GRID (Unified Financial Color Scheme - No Rainbow Cards!) ── */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-[11px] font-black uppercase tracking-[0.14em] text-white/40">PLATFORM GUIDES</h2>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {TOUR_TYPE_CONFIG.map((tourConfig) => {
-                      const Icon = tourConfig.icon;
-                      const TourIcon = getTourIcon(tourConfig.type);
-                      const progress = tourProgress?.[tourConfig.type];
-                      const isCompleted = progress?.completed;
-                      const isInProgress = progress?.started && !progress?.completed && !progress?.skipped;
-
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[
+                      { id: "trading", title: "Trading", description: "Learn the trading terminal, candlestick charts & execution", count: "7 guides", icon: TrendingUp },
+                      { id: "deposits", title: "Deposits", description: "Fund your trading account with M-Pesa & crypto", count: "4 guides", icon: Wallet },
+                      { id: "withdrawals", title: "Withdrawals", description: "Withdraw your funds to mobile money & wallets", count: "3 guides", icon: ArrowUpFromLine },
+                      { id: "account_security", title: "Account & Security", description: "KYC verification, profile details & security controls", count: "4 guides", icon: ShieldCheck },
+                      { id: "copy_trading", title: "Copy Trading", description: "Follow top traders and configure automated copy settings", count: "3 guides", icon: Users },
+                      { id: "bonuses", title: "Bonuses", description: "Understand promo codes, deposit bonuses & requirements", count: "2 guides", icon: Gift },
+                      { id: "tournaments", title: "Tournaments", description: "Learn about competitions, rankings & prize pools", count: "3 guides", icon: Trophy },
+                    ].map((guide) => {
+                      const Icon = guide.icon;
                       return (
                         <div
-                          key={tourConfig.type}
-                          className="flex flex-col bg-[#1f2738] border border-white/8 rounded-[12px] p-5 hover:border-white/15 transition-all"
-                        >
-                          <div className="flex items-center gap-3 mb-3">
-                            <div
-                              className="flex h-9 w-9 items-center justify-center rounded-[8px]"
-                              style={{ background: `${tourConfig.color}22`, border: `1px solid ${tourConfig.color}44` }}
-                            >
-                              <Icon className="h-4.5 w-4.5" style={{ color: tourConfig.color }} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[14px] font-black text-white">{tourConfig.label}</span>
-                                {isCompleted && (
-                                  <CheckCircle2 className="h-3.5 w-3.5 text-[#22c55e] shrink-0" />
-                                )}
-                                {isInProgress && (
-                                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 rounded px-1.5 py-0.5">
-                                    In Progress
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[11px] text-white/40">{tourConfig.steps} steps</span>
-                            </div>
-                          </div>
-                          <p className="text-[12px] text-white/55 leading-relaxed mb-4 flex-1">
-                            {tourConfig.description}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => handleLaunchTour(tourConfig.type)}
-                            className="flex items-center justify-center gap-2 rounded-[8px] py-2.5 text-[13px] font-black transition-colors"
-                            style={{
-                              background: `${tourConfig.color}22`,
-                              border: `1px solid ${tourConfig.color}44`,
-                              color: tourConfig.color,
-                            }}
-                          >
-                            <TourIcon className="h-3.5 w-3.5" />
-                            {getTourButtonLabel(tourConfig.type)}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Help Center Knowledge Base */}
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <FileText className="h-4 w-4 text-white/50" />
-                    <h2 className="text-[15px] font-black text-white">Knowledge Base</h2>
-                    <span className="text-[12px] text-white/35 font-semibold">— In-depth articles and guides</span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {GUIDE_SECTIONS.map((section) => {
-                      const Icon = section.icon;
-                      return (
-                        <button
-                          key={section.id}
-                          type="button"
+                          key={guide.id}
                           onClick={() => {
-                            setSelectedGuideCategory(section.id);
+                            setSelectedGuideCategory(guide.id as GuideCategory);
                             setSelectedArticle(null);
                           }}
-                          className="flex items-center gap-4 bg-[#1f2738] border border-white/8 rounded-[12px] p-4 text-left hover:border-white/20 hover:bg-[#253048] transition-all"
+                          className="group flex flex-col justify-between bg-[#192130] border border-white/10 rounded-[12px] p-5 hover:border-[#00B8FF]/40 hover:bg-[#1d273a] transition-all cursor-pointer shadow-md"
                         >
-                          <div
-                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px]"
-                            style={{ background: `${section.color}18`, border: `1px solid ${section.color}35` }}
-                          >
-                            <Icon className="h-5 w-5" style={{ color: section.color }} />
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#00B8FF]/10 border border-[#00B8FF]/20 text-[#00B8FF] group-hover:bg-[#00B8FF]/20 group-hover:border-[#00B8FF]/40 transition-all">
+                                <Icon className="h-5 w-5" />
+                              </div>
+                              <span className="text-[12px] font-bold text-[#00B8FF] group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                                {guide.count}
+                                <ArrowRight className="h-3.5 w-3.5" />
+                              </span>
+                            </div>
+                            <h3 className="text-[16px] font-black text-white mb-1.5 group-hover:text-[#00B8FF] transition-colors">{guide.title}</h3>
+                            <p className="text-[12.5px] font-medium text-white/55 leading-relaxed mb-2">{guide.description}</p>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[14px] font-black text-white">{section.title}</p>
-                            <p className="text-[12px] text-white/40">
-                              {section.articles.length} articles
-                            </p>
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-white/25 shrink-0" />
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -1746,33 +1722,90 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                   }}
                   className="flex items-center gap-2 text-[13px] font-bold text-white/40 hover:text-white/80 transition-colors mb-6"
                 >
-                  <ChevronRight className="h-3.5 w-3.5 rotate-180" />
+                  <ArrowRight className="h-3.5 w-3.5 rotate-180" />
                   Back to Guides
                 </button>
+
+                {/* Sub-tour launch callout inside category view */}
+                {selectedGuideCategory === "trading" && (
+                  <div className="mb-6 rounded-[12px] bg-[#1a2336] border border-[#00B8FF]/25 p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Compass className="h-5 w-5 text-[#00B8FF]" />
+                      <div>
+                        <p className="text-[13px] font-bold text-white">Want an interactive walkthrough of the Trading Terminal?</p>
+                        <p className="text-[11px] text-white/45">Step-by-step tour highlighting live charts, timeframes, indicators & trade panel.</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleLaunchTour("trading")}
+                      className="px-4 py-2 rounded-[6px] bg-[#00B8FF] text-black text-[12px] font-black hover:bg-[#33c6ff] transition-all flex items-center gap-1.5 shrink-0"
+                    >
+                      <PlayCircle className="h-3.5 w-3.5" />
+                      Start Trading Tour
+                    </button>
+                  </div>
+                )}
+
+                {selectedGuideCategory === "deposits" && (
+                  <div className="mb-6 rounded-[12px] bg-[#1a2336] border border-[#00B8FF]/25 p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Compass className="h-5 w-5 text-[#00B8FF]" />
+                      <div>
+                        <p className="text-[13px] font-bold text-white">Want an interactive walkthrough of Deposits?</p>
+                        <p className="text-[11px] text-white/45">Step-by-step tour covering M-Pesa & Crypto deposit steps.</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleLaunchTour("deposit")}
+                      className="px-4 py-2 rounded-[6px] bg-[#00B8FF] text-black text-[12px] font-black hover:bg-[#33c6ff] transition-all flex items-center gap-1.5 shrink-0"
+                    >
+                      <PlayCircle className="h-3.5 w-3.5" />
+                      Start Deposit Tour
+                    </button>
+                  </div>
+                )}
+
+                {selectedGuideCategory === "withdrawals" && (
+                  <div className="mb-6 rounded-[12px] bg-[#1a2336] border border-[#00B8FF]/25 p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Compass className="h-5 w-5 text-[#00B8FF]" />
+                      <div>
+                        <p className="text-[13px] font-bold text-white">Want an interactive walkthrough of Withdrawals?</p>
+                        <p className="text-[11px] text-white/45">Step-by-step tour covering withdrawal requests & payouts.</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleLaunchTour("withdrawal")}
+                      className="px-4 py-2 rounded-[6px] bg-[#00B8FF] text-black text-[12px] font-black hover:bg-[#33c6ff] transition-all flex items-center gap-1.5 shrink-0"
+                    >
+                      <PlayCircle className="h-3.5 w-3.5" />
+                      Start Withdrawal Tour
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3 mb-6">
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-[10px]"
-                    style={{
-                      background: `${currentGuideSection.color}18`,
-                      border: `1px solid ${currentGuideSection.color}35`,
-                    }}
-                  >
-                    <currentGuideSection.icon className="h-5 w-5" style={{ color: currentGuideSection.color }} />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#00B8FF]/10 border border-[#00B8FF]/25 text-[#00B8FF]">
+                    <currentGuideSection.icon className="h-5 w-5" />
                   </div>
                   <div>
                     <h2 className="text-[22px] font-black text-white">{currentGuideSection.title}</h2>
                     <p className="text-[12px] text-white/40">{currentGuideSection.articles.length} articles</p>
                   </div>
                 </div>
+
                 <div className="space-y-2">
                   {currentGuideSection.articles.map((article) => (
                     <button
                       key={article.id}
                       type="button"
                       onClick={() => setSelectedArticle(article)}
-                      className="w-full flex items-center gap-4 bg-[#1f2738] border border-white/8 rounded-[10px] p-4 text-left hover:border-white/20 hover:bg-[#253048] transition-all"
+                      className="w-full flex items-center gap-4 bg-[#192130] border border-white/8 rounded-[10px] p-4 text-left hover:border-[#00B8FF]/30 hover:bg-[#1d273a] transition-all"
                     >
-                      <span className="text-[11px] font-black text-white/25 w-7 shrink-0">{article.number}</span>
+                      <span className="text-[11px] font-black text-[#00B8FF]/60 w-7 shrink-0">{article.number}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-[14px] font-bold text-white">{article.title}</p>
                         <p className="text-[12px] text-white/45 mt-0.5">{article.summary}</p>
@@ -1962,6 +1995,7 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
           </div>
         )}
       </div>
+    </div>
 
       {/* ── TICKET DETAIL DISCUSSION THREAD MODAL ── */}
       {activeTicket && (
