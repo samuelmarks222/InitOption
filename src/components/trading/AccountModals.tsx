@@ -1434,41 +1434,43 @@ const categoryCards = useMemo(
                   )}
                 </div>
 
-                {/* Floating label inputs for First Name, Last Name, Phone */}
-                <div className="space-y-4 pt-1">
-                  <div className="relative">
-                    <span className="absolute -top-2.5 left-3 z-10 bg-[#2b3142] px-1.5 text-[11px] font-bold text-white/50">First name</span>
-                    <input
-                      type="text"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder="First name"
-                      className="h-12 w-full rounded-[4px] border border-white/20 bg-transparent px-4 text-[15px] font-bold text-white outline-none transition focus:border-[#0084FF]"
-                    />
-                  </div>
+                {/* Floating label inputs for First Name, Last Name, Phone (ONLY for M-Pesa / E-Pay) */}
+                {(selectedMethod.category === "epay" || selectedMethod.symbol === "MPESA" || selectedMethod.symbol === "AIRTEL") && (
+                  <div className="space-y-4 pt-1">
+                    <div className="relative">
+                      <span className="absolute -top-2.5 left-3 z-10 bg-[#2b3142] px-1.5 text-[11px] font-bold text-white/50">First name</span>
+                      <input
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="First name"
+                        className="h-12 w-full rounded-[4px] border border-white/20 bg-transparent px-4 text-[15px] font-bold text-white outline-none transition focus:border-[#0084FF]"
+                      />
+                    </div>
 
-                  <div className="relative">
-                    <span className="absolute -top-2.5 left-3 z-10 bg-[#2b3142] px-1.5 text-[11px] font-bold text-white/50">Last name</span>
-                    <input
-                      type="text"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder="Last name"
-                      className="h-12 w-full rounded-[4px] border border-white/20 bg-transparent px-4 text-[15px] font-bold text-white outline-none transition focus:border-[#0084FF]"
-                    />
-                  </div>
+                    <div className="relative">
+                      <span className="absolute -top-2.5 left-3 z-10 bg-[#2b3142] px-1.5 text-[11px] font-bold text-white/50">Last name</span>
+                      <input
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Last name"
+                        className="h-12 w-full rounded-[4px] border border-white/20 bg-transparent px-4 text-[15px] font-bold text-white outline-none transition focus:border-[#0084FF]"
+                      />
+                    </div>
 
-                  <div className="relative">
-                    <span className="absolute -top-2.5 left-3 z-10 bg-[#2b3142] px-1.5 text-[11px] font-bold text-white/50">Phone</span>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="254XXXXXXXXX"
-                      className="h-12 w-full rounded-[4px] border border-white/20 bg-transparent px-4 text-[15px] font-bold text-white outline-none transition focus:border-[#0084FF]"
-                    />
+                    <div className="relative">
+                      <span className="absolute -top-2.5 left-3 z-10 bg-[#2b3142] px-1.5 text-[11px] font-bold text-white/50">Phone</span>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="254XXXXXXXXX"
+                        className="h-12 w-full rounded-[4px] border border-white/20 bg-transparent px-4 text-[15px] font-bold text-white outline-none transition focus:border-[#0084FF]"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Receive Summary line */}
                 <div className="flex items-center gap-2 pt-2 text-[14px] font-black text-white/40">
