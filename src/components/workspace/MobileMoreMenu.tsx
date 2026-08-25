@@ -2,7 +2,6 @@ import {
   BarChart3,
   BarChart2,
   ChevronRight,
-  Download,
   LogOut,
   MessageCircle,
   RadioTower,
@@ -10,7 +9,6 @@ import {
   Trophy,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
 import { WorkspaceLeaderboard } from "./WorkspaceLeaderboard";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -149,24 +147,14 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay, onOpenDeposit }: Mobile
         {/* Divider */}
         <div className="my-3 border-t border-white/[0.07]" />
 
-        {/* Install App & Join Us Side-by-Side (Matching Image 1) */}
-        <div className="grid grid-cols-2 gap-3 pt-1 pb-4">
-          <button
-            type="button"
-            onClick={() => {
-              toast.info("Install App: Tap your browser menu and select 'Add to Home Screen'");
-            }}
-            className="flex items-center justify-center gap-2 rounded-[6px] bg-[#122842] border border-[#1689e8]/30 py-3 text-[14px] font-black text-white hover:bg-[#1a385c] transition-colors"
-          >
-            <Download className="h-4 w-4 text-[#1689e8]" strokeWidth={2.3} />
-            Install App
-          </button>
+        {/* Join Us — Full Width */}
+        <div className="pb-4">
           <button
             type="button"
             onClick={handleJoinUs}
-            className="flex items-center justify-center gap-2 rounded-[6px] bg-[#122842] border border-[#1689e8]/30 py-3 text-[14px] font-black text-white hover:bg-[#1a385c] transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-[6px] bg-[#1689e8] py-3 text-[14px] font-black text-white transition-colors hover:bg-[#1e9fff]"
           >
-            <MessageCircle className="h-4 w-4 text-[#1689e8]" strokeWidth={2.3} />
+            <MessageCircle className="h-4 w-4" strokeWidth={2.3} />
             Join Us
           </button>
         </div>
