@@ -209,7 +209,7 @@ export const fetchPlisioDeposit = async ({
   uid: string;
   callbackUrl: string;
 }) => {
-  const url = new URL("https://plisio.net/api/v1/shops/deposit/new");
+  const url = new URL("https://api.plisio.net/api/v1/shops/deposit/new");
   url.searchParams.set("json", "true");
   url.searchParams.set("api_key", apiKey);
   url.searchParams.set("psys_cid", psysCid);

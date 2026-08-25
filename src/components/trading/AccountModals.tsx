@@ -551,7 +551,9 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
   const selectedMethod =
     methodCatalog.find((method) => method.id === selectedMethodId) ?? null;
   const selectedMethodIsAutomated = Boolean(
-    selectedMethod?.attributionMode && isAutomatedCryptoMode(selectedMethod.attributionMode),
+    selectedMethod?.category === "crypto" ||
+      selectedMethod?.iconType === "crypto" ||
+      (selectedMethod?.attributionMode && isAutomatedCryptoMode(selectedMethod.attributionMode)),
   );
   const activeInstructionIsPlisio = Boolean(activeInstruction && isPlisioInstructionAddress(activeInstruction.address));
 

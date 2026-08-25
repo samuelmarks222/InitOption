@@ -361,6 +361,7 @@ export const createCryptoDepositInstruction = async ({
       cryptoCurrency,
       cryptoNetwork,
       promoId,
+      useHostedCheckout: true,
     }),
   });
 
