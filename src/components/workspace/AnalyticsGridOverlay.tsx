@@ -30,6 +30,7 @@ import { requestCryptoWithdrawal } from "@/lib/withdrawals";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { AssetSymbolMark } from "@/components/trading/AssetSymbolMark";
 import { useStatistics, type Trade, type Transaction } from "@/hooks/useStatistics";
 import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/useTrading";
 import { cloudinaryClient } from "@/integrations/cloudinary/client";
@@ -515,6 +516,259 @@ export const AnalyticsGridOverlay = ({ onClose, activeAsset, initialTab = "Analy
 
         {selectedTrade && <TradeDetailModal trade={selectedTrade} formatMoney={formatMoney} onClose={() => setSelectedTrade(null)} />}
       </div>
+    </div>
+  );
+};
+
+const getSmoothPathD = (points: { x: number; y: number }[]) => {
+  if (points.length < 2) return "";
+  let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[Math.max(i - 1, 0)];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[Math.min(i + 2, points.length - 1)];
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
+};
+
+const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; formatMoney: (amount: number) => string; onClose: () => void }) => {
+  const isUp = trade.direction === "Buy" || trade.direction === "Higher";
+  const isWon = trade.profit > 0;
+  const openQuoteStr = estimateOpeningQuote(trade);
+  const closeQuoteStr = estimateClosingQuote(trade);
+  const openQuote = Number(openQuoteStr);
+  const closeQuote = Number(closeQuoteStr);
+  const pointDiff = Math.round(Math.abs(closeQuote - openQuote) * 100000);
+
+  const durationSec = Math.max(1, (new Date(trade.closeTime).getTime() - new Date(trade.openTime).getTime()) / 1000);
+  const formatDurationHHMMSS = (sec: number) => {
+    const s = Math.round(sec);
+    const hrs = Math.floor(s / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    const p = (n: number) => String(n).padStart(2, "0");
+    return hrs > 0 ? `${p(hrs)}:${p(mins)}:${p(secs)}` : `${p(mins)}:${p(secs)}`;
+  };
+
+  const formatDateTime = (iso: string) => {
+    try {
+      const d = new Date(iso);
+      const p = (n: number) => String(n).padStart(2, "0");
+      return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    } catch {
+      return iso;
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-[540px] overflow-hidden rounded-[8px] border border-[#2b364a] bg-[#1e2638] text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-[#2b364a] px-6 py-4">
+          <div>
+            <h3 className="text-base font-black text-white">Trade ID</h3>
+            <p className="mt-0.5 font-mono text-xs font-semibold text-gray-300">{trade.id}</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-white/10 hover:text-white transition-colors">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-4 gap-2 bg-[#1b2130] px-6 py-4 border-b border-[#2b364a]">
+          <div>
+            <p className="text-[11px] font-bold text-gray-400">Asset:</p>
+            <div className="mt-1 flex items-center gap-1.5">
+              <AssetSymbolMark symbol={trade.asset} size={18} />
+              <span className="text-xs font-black text-white">{trade.asset}</span>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[11px] font-bold text-gray-400">Type:</p>
+            <div className="mt-1 flex items-center gap-1">
+              <span className={`inline-flex items-center gap-1 rounded-[3px] px-1.5 py-0.5 text-[11px] font-extrabold text-white ${isUp ? "bg-[#0fa055]" : "bg-[#e03e3e]"}`}>
+                {isUp ? "↑" : "↓"} {formatMoney(trade.amount)}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[11px] font-bold text-gray-400">Duration:</p>
+            <p className="mt-1 text-xs font-black text-white">{formatDurationHHMMSS(durationSec)}</p>
+          </div>
+
+          <div>
+            <p className="text-[11px] font-bold text-gray-400">Result:</p>
+            <p className={`mt-1 text-xs font-black ${isWon ? "text-[#18d87d]" : "text-[#ff5d52]"}`}>
+              {isWon ? `+${formatMoney(trade.profit)}` : formatMoney(0)}
+            </p>
+          </div>
+        </div>
+
+        <MiniTradeChart
+          openQuote={openQuote}
+          closeQuote={closeQuote}
+          isUp={isUp}
+          isWon={isWon}
+          stakeText={`${isUp ? "↑" : "↓"} ${formatMoney(trade.amount)}`}
+        />
+
+        <div className="grid grid-cols-3 gap-4 border-t border-[#2b364a] bg-[#1a2130] px-6 py-4 text-xs">
+          <div>
+            <p className="text-[11px] font-bold text-gray-400">Opening quote:</p>
+            <p className="mt-0.5 text-sm font-black text-white">{openQuoteStr}</p>
+            <p className="text-[10px] font-medium text-gray-400">{formatDateTime(trade.openTime)}</p>
+          </div>
+
+          <div>
+            <p className="text-[11px] font-bold text-gray-400">Closing quote:</p>
+            <p className="mt-0.5 text-sm font-black text-white">{closeQuoteStr}</p>
+            <p className="text-[10px] font-medium text-gray-400">{formatDateTime(trade.closeTime)}</p>
+          </div>
+
+          <div>
+            <p className="text-[11px] font-bold text-gray-400">Difference:</p>
+            <p className="mt-0.5 text-sm font-black text-white">{pointDiff} points</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MiniTradeChart = ({
+  openQuote,
+  closeQuote,
+  isUp,
+  isWon,
+  stakeText,
+}: {
+  openQuote: number;
+  closeQuote: number;
+  isUp: boolean;
+  isWon: boolean;
+  stakeText: string;
+}) => {
+  const width = 540;
+  const height = 210;
+  const paddingX = 25;
+  const paddingY = 25;
+
+  const pointsCount = 25;
+  const rawValues: number[] = [openQuote];
+
+  let currentVal = openQuote;
+  const diff = closeQuote - openQuote;
+  for (let i = 1; i < pointsCount - 1; i++) {
+    const progress = i / (pointsCount - 1);
+    const trend = openQuote + diff * progress;
+    const wave = Math.sin(progress * Math.PI * 3.5) * (Math.abs(diff) * 0.4 + 0.0003);
+    currentVal = trend + wave;
+    rawValues.push(currentVal);
+  }
+  rawValues.push(closeQuote);
+
+  const minVal = Math.min(...rawValues, openQuote);
+  const maxVal = Math.max(...rawValues, openQuote);
+  const valRange = Math.max(maxVal - minVal, 0.0005);
+
+  const points = rawValues.map((val, idx) => {
+    const x = paddingX + (idx / (pointsCount - 1)) * (width - 2 * paddingX);
+    const y = height - paddingY - ((val - minVal) / valRange) * (height - 2 * paddingY);
+    return { x, y };
+  });
+
+  const entryY = height - paddingY - ((openQuote - minVal) / valRange) * (height - 2 * paddingY);
+  const smoothPathD = getSmoothPathD(points);
+
+  const firstX = points[0].x;
+  const lastX = points[points.length - 1].x;
+  const bottomY = height;
+
+  const areaPathD = `${smoothPathD} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
+  const entryMarkerX = points[Math.floor(points.length * 0.15)].x;
+  const entryMarkerY = entryY;
+
+  return (
+    <div className="relative h-[210px] w-full bg-[#161c28] overflow-hidden select-none">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full">
+        <defs>
+          <linearGradient id="modalChartAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#2585f1" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#2585f1" stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+
+        {Array.from({ length: 9 }).map((_, i) => (
+          <line
+            key={`vgrid-${i}`}
+            x1={i * 65 + 10}
+            x2={i * 65 + 10}
+            y1="0"
+            y2={height}
+            stroke="#263147"
+            strokeOpacity="0.5"
+            strokeWidth="1"
+          />
+        ))}
+        {Array.from({ length: 6 }).map((_, i) => (
+          <line
+            key={`hgrid-${i}`}
+            x1="0"
+            x2={width}
+            y1={i * 38 + 10}
+            y2={i * 38 + 10}
+            stroke="#263147"
+            strokeOpacity="0.5"
+            strokeWidth="1"
+          />
+        ))}
+
+        <path d={areaPathD} fill="url(#modalChartAreaGrad)" />
+
+        <line
+          x1="0"
+          x2={width}
+          y1={entryY}
+          y2={entryY}
+          stroke={isUp ? "#0fa055" : "#e03e3e"}
+          strokeWidth="1.5"
+          strokeOpacity="0.9"
+        />
+
+        <path d={smoothPathD} fill="none" stroke="#2585f1" strokeWidth="2.5" strokeLinecap="round" />
+
+        <g transform={`translate(${entryMarkerX}, ${entryMarkerY})`}>
+          <circle r="4" fill="#ffffff" stroke={isUp ? "#0fa055" : "#e03e3e"} strokeWidth="2" />
+          <g transform="translate(-18, -12)">
+            <rect
+              width="44"
+              height="18"
+              rx="9"
+              fill={isUp ? "#0fa055" : "#e03e3e"}
+              stroke="#ffffff"
+              strokeWidth="1"
+            />
+            <text
+              x="22"
+              y="12"
+              fill="#ffffff"
+              fontSize="9"
+              fontWeight="900"
+              textAnchor="middle"
+            >
+              {stakeText}
+            </text>
+          </g>
+        </g>
+      </svg>
     </div>
   );
 };
@@ -1296,24 +1550,6 @@ const VerifyAccountIntroModal = ({ onClose, onStart }: { onClose: () => void; on
   </div>
 );
 
-const CountryMark = ({ country }: { country: string }) => {
-  const code = country.toLowerCase().includes("kenya") ? "KE" : country.slice(0, 2).toUpperCase();
-  return (
-    <span className="inline-flex h-5 min-w-7 items-center justify-center rounded-[3px] bg-[#1d2738] px-1 text-[12px] font-black text-white">
-      {code === "KE" ? "🇰🇪" : code}
-    </span>
-  );
-};
-
-const CountryCodeMark = ({ country }: { country: string }) => {
-  const code = country.toLowerCase().includes("kenya") ? "KE" : country.slice(0, 2).toUpperCase();
-  return (
-    <span className="inline-flex h-5 min-w-7 items-center justify-center rounded-[3px] bg-[#1d2738] px-1 text-[11px] font-black text-white ring-1 ring-white/10">
-      {code || "ID"}
-    </span>
-  );
-};
-
 const AccountIdentityVerificationModal = ({
   step,
   privacyAccepted,
@@ -1975,86 +2211,6 @@ const MarketTable = ({ assets, formatMoney }: { assets: Array<{ asset: string; t
   </div>
 );
 
-const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; formatMoney: (amount: number) => string; onClose: () => void }) => (
-  <div className="fixed inset-0 z-[500] flex items-center justify-center bg-[#0d1320]/70 p-4 backdrop-blur-sm" onClick={onClose}>
-    <div className="w-full max-w-[550px] rounded-[6px] bg-[#2a3040] shadow-2xl" onClick={(event) => event.stopPropagation()}>
-      <div className="flex items-start justify-between px-7 py-5">
-        <div>
-          <h3 className="text-[22px] font-black text-white">Trade ID</h3>
-          <p className="mt-2 text-[14px] font-bold text-white/75">{trade.id}</p>
-        </div>
-        <button type="button" onClick={onClose} className="text-white/45 hover:text-white"><X className="h-5 w-5" /></button>
-      </div>
-      <div className="grid grid-cols-4 gap-4 px-7 pb-4 text-[13px]">
-        <DetailItem label="Asset:" value={trade.asset} />
-        <DetailItem label="Type:" value={`${trade.direction} ${formatMoney(trade.amount)}`} tone={trade.direction === "Buy" || trade.direction === "Higher" ? "up" : "down"} />
-        <DetailItem label="Duration:" value={formatDuration((new Date(trade.closeTime).getTime() - new Date(trade.openTime).getTime()) / 1000)} />
-        <DetailItem label="Result:" value={formatMoney(Math.abs(trade.profit))} tone={trade.profit > 0 ? "up" : "down"} />
-      </div>
-      <MiniTradeChart won={trade.profit > 0} />
-      <div className="grid grid-cols-3 gap-5 px-7 py-7 text-[13px]">
-        <DetailItem label="Opening quote:" value={estimateOpeningQuote(trade)} />
-        <DetailItem label="Closing quote:" value={estimateClosingQuote(trade)} />
-        <DetailItem label="Difference:" value={`${Math.abs(Number(estimateClosingQuote(trade)) - Number(estimateOpeningQuote(trade))).toFixed(3)} points`} />
-      </div>
-    </div>
-  </div>
-);
-
-const DetailItem = ({ label, value, tone }: { label: string; value: string; tone?: "up" | "down" }) => (
-  <div>
-    <p className="text-[12px] font-bold text-white/45">{label}</p>
-    <p className={`mt-1 font-black ${tone === "up" ? "text-[#00c878]" : tone === "down" ? "text-[#ff5d52]" : "text-white"}`}>{value}</p>
-  </div>
-);
-
-const MiniTradeChart = ({ won }: { won: boolean }) => (
-  <div className="h-[190px] bg-[#24364e]">
-    <svg viewBox="0 0 550 190" className="h-full w-full">
-      {Array.from({ length: 8 }).map((_, index) => <line key={`v-${index}`} x1={index * 80} x2={index * 80} y1="0" y2="190" stroke="#526079" strokeOpacity="0.28" />)}
-      {Array.from({ length: 5 }).map((_, index) => <line key={`h-${index}`} x1="0" x2="550" y1={index * 45 + 8} y2={index * 45 + 8} stroke="#526079" strokeOpacity="0.28" />)}
-      <path d={won ? "M0 150 L45 135 L85 112 L130 95 L175 72 L230 63 L285 70 L330 96 L380 82 L430 68 L485 54 L550 42" : "M0 80 L50 92 L100 110 L160 120 L220 132 L300 124 L370 145 L440 152 L500 165 L550 171"} fill="none" stroke="#279bff" strokeWidth="3" />
-      <path d={won ? "M0 150 L45 135 L85 112 L130 95 L175 72 L230 63 L285 70 L330 96 L380 82 L430 68 L485 54 L550 42 L550 190 L0 190 Z" : "M0 80 L50 92 L100 110 L160 120 L220 132 L300 124 L370 145 L440 152 L500 165 L550 171 L550 190 L0 190 Z"} fill="#279bff" opacity="0.14" />
-      <line x1="0" x2="550" y1="112" y2="112" stroke="#ff5d52" strokeWidth="2" />
-    </svg>
-  </div>
-);
-
-type AssetSlice = { asset: string; share: number; profit: number };
-
-const PieChartGraphic = ({ items }: { items: AssetSlice[] }) => {
-  if (!items.length) return <div className="flex h-[190px] w-[190px] items-center justify-center rounded-full bg-[#222839] text-white/35">No data</div>;
-
-  let cumulative = 0;
-  const gradient = items
-    .map((item, index) => {
-      const start = cumulative;
-      cumulative += item.share;
-      return `${PIE_COLORS[index % PIE_COLORS.length]} ${start}% ${cumulative}%`;
-    })
-    .join(", ");
-
-  return (
-    <div className="relative flex h-[205px] w-[205px] items-center justify-center rounded-full" style={{ background: `conic-gradient(${gradient})` }}>
-      <div className="h-[48px] w-[48px] rounded-full bg-[#2a3040]" />
-      {items.slice(0, 3).map((item, index) => (
-        <span
-          key={item.asset}
-          className="absolute text-[11px] font-bold text-white"
-          style={{
-            left: index === 0 ? "68%" : index === 1 ? "35%" : "22%",
-            top: index === 0 ? "37%" : index === 1 ? "25%" : "55%",
-          }}
-        >
-          {item.share}%
-        </span>
-      ))}
-    </div>
-  );
-};
-
-type ChartPoint = { label: string; value: number };
-
 const LineChartGraphic = ({
   series,
   min,
@@ -2078,12 +2234,23 @@ const LineChartGraphic = ({
     const y = 40 + (1 - (point.value - min) / range) * (chartHeight - 70);
     return { ...point, x, y };
   });
-  const path = points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+
+  const smoothPathD = getSmoothPathD(points);
+  const firstX = points[0].x;
+  const lastX = points[points.length - 1].x;
+  const bottomY = chartHeight - 30;
+  const areaPathD = `${smoothPathD} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
   const ticks = showGrid ? [100, 75, 50, 25, 0] : [0];
 
   return (
     <div className="px-7 py-7" style={{ minHeight: height }}>
       <svg viewBox={`0 0 ${width} ${chartHeight}`} className="h-full min-h-[230px] w-full overflow-visible">
+        <defs>
+          <linearGradient id="analyticsAreaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#13a66a" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#13a66a" stopOpacity="0.01" />
+          </linearGradient>
+        </defs>
         {ticks.map((tick) => {
           const y = 40 + (1 - (tick - min) / range) * (chartHeight - 70);
           return (
@@ -2093,7 +2260,8 @@ const LineChartGraphic = ({
             </g>
           );
         })}
-        <path d={path} fill="none" stroke="#13a66a" strokeWidth="2.5" />
+        <path d={areaPathD} fill="url(#analyticsAreaGrad)" />
+        <path d={smoothPathD} fill="none" stroke="#13a66a" strokeWidth="3" strokeLinecap="round" />
         {points.map((point, index) => (
           <text key={`${point.label}-${index}`} x={point.x} y={chartHeight - 4} fill="#d6d9e1" fontSize="12" fontWeight="700" textAnchor="middle">
             {index % labelEvery === 0 ? point.label : ""}
