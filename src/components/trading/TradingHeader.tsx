@@ -159,15 +159,6 @@ const TradingHeader = ({
 
       {/* ── MOBILE layout (hidden on lg+) ── */}
       <div className="flex lg:hidden flex-1 items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-        {/* Brand */}
-        <Link to="/trade" className="flex items-center shrink-0">
-          {logoUrl ? (
-            <img src={logoUrl} alt={platformName} className="h-7 w-auto max-w-[120px] object-contain" />
-          ) : (
-            <span className="font-black text-white text-sm tracking-wider uppercase">{platformName}</span>
-          )}
-        </Link>
-
         {/* Mobile Header Actions */}
         <div className="flex items-center gap-2 shrink-0">
           {renderAccountPill()}
