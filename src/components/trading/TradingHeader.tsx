@@ -93,7 +93,7 @@ const TradingHeader = ({
   const accountBadgeColor =
     accountType === "demo" ? "text-amber-400" :
     accountType === "tournament" ? "text-blue-400" :
-    "text-[#00C98D]";
+    "text-[#0fa055]";
 
   return (
     <header className="relative flex h-[62px] shrink-0 items-center justify-between px-4 bg-[var(--trading-header-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white z-30 select-none">
@@ -115,8 +115,8 @@ const TradingHeader = ({
             onClick={() => setShowAccountDrop((v) => !v)}
             className="flex h-9 items-center gap-1.5 rounded-lg border border-white/10 bg-[#161F2E] px-2.5 text-xs font-bold text-white"
           >
-            <Send size={13} className="text-[#00C98D]" />
-            <span className="font-mono text-[#00C98D]">{formatMoney(displayBalance)}</span>
+            <Send size={13} className="text-[#0fa055]" />
+            <span className="font-mono text-[#0fa055]">{formatMoney(displayBalance)}</span>
             <ChevronDown size={13} className="text-gray-400" />
           </button>
           {showAccountDrop && (
@@ -138,7 +138,7 @@ const TradingHeader = ({
         {/* Mobile Deposit Button */}
         <button
           onClick={onOpenDeposit}
-          className="flex h-9 items-center justify-center rounded-lg bg-[#00C98D] px-3 text-xs font-bold text-black hover:bg-[#00b37d]"
+          className="flex h-9 items-center justify-center rounded-lg bg-[#0fa055] px-3 text-xs font-bold text-white hover:bg-[#0d8a49]"
         >
           + Deposit
         </button>
@@ -172,7 +172,7 @@ const TradingHeader = ({
         <div className="flex-1 flex justify-center items-center">
           <button
             onClick={onOpenDeposit}
-            className="group flex items-center gap-2.5 rounded-full bg-[#00C98D] px-5 py-2 text-xs font-extrabold text-black shadow-lg shadow-[#00C98D]/25 hover:bg-[#00b37d] transition-all transform hover:scale-[1.02] active:scale-95"
+            className="group flex items-center gap-2.5 rounded-full bg-[#0fa055] px-5 py-2 text-xs font-extrabold text-white shadow-lg shadow-[#0fa055]/25 hover:bg-[#0d8a49] transition-all transform hover:scale-[1.02] active:scale-95"
           >
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25 text-sm">🚀</span>
             <span>Get a 50% bonus on your deposit!</span>
@@ -185,7 +185,7 @@ const TradingHeader = ({
           {isAdmin && (
             <button
               onClick={() => navigate("/admin")}
-              className="flex h-9 items-center gap-1.5 rounded-lg border border-[#00C98D]/30 bg-[#00C98D]/10 px-3 text-xs font-bold text-[#00C98D] hover:bg-[#3D4759] hover:border-[#526078] hover:text-white transition-colors"
+              className="flex h-9 items-center gap-1.5 rounded-lg border border-[#0fa055]/30 bg-[#0fa055]/10 px-3 text-xs font-bold text-[#0fa055] hover:bg-[#3D4759] hover:border-[#526078] hover:text-white transition-colors"
               title="Admin Panel"
             >
               <ShieldCheck size={14} />
@@ -205,7 +205,7 @@ const TradingHeader = ({
               onClick={() => setShowAccountDrop((v) => !v)}
               className="flex h-9 items-center gap-2.5 rounded-lg border border-[#1F293D] bg-[#162030] px-3.5 hover:bg-[#3D4759] hover:border-[#526078] transition-colors"
             >
-              <Send size={14} className="text-[#00C98D] shrink-0" />
+              <Send size={14} className="text-[#0fa055] shrink-0" />
               <div className="text-left leading-none">
                 <p className={`text-[9px] font-black uppercase tracking-wider ${accountBadgeColor}`}>
                   {accountTitle}
@@ -238,7 +238,7 @@ const TradingHeader = ({
             id="tour-deposit-button"
             data-deposit-trigger="true"
             onClick={onOpenDeposit}
-            className="flex h-9 items-center gap-1.5 rounded-lg bg-[#00C98D] px-4 text-[13px] font-black text-black shadow-md shadow-[#00C98D]/20 hover:bg-[#00b37d] transition-all active:scale-95"
+            className="flex h-9 items-center gap-1.5 rounded-lg bg-[#0fa055] px-4 text-[13px] font-black text-white shadow-md shadow-[#0fa055]/20 hover:bg-[#0d8a49] transition-all active:scale-95"
           >
             <Plus size={14} strokeWidth={3} /> {t("tradingHeader.deposit")}
           </button>

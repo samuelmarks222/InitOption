@@ -450,12 +450,12 @@
     --trading-active-color: #8fb3ea;
     --trading-active-soft-color: rgba(143, 179, 234, 0.16);
     --trading-active-border-color: rgba(143, 179, 234, 0.36);
-    --trading-success-color: #21a566;
-    --trading-success-soft-color: rgba(33, 165, 102, 0.18);
-    --trading-success-border-color: rgba(33, 165, 102, 0.42);
+    --trading-success-color: #0fa055;
+    --trading-success-soft-color: rgba(15, 160, 85, 0.18);
+    --trading-success-border-color: rgba(15, 160, 85, 0.42);
     --trading-success-contrast-color: #ffffff;
-    --trading-success-shadow: 0 10px 22px rgba(33, 165, 102, 0.22);
-    --trading-success-focus-shadow: 0 0 0 2px rgba(33, 165, 102, 0.36), 0 0 0 6px rgba(33, 165, 102, 0.16), 0 10px 24px rgba(33, 165, 102, 0.26);
+    --trading-success-shadow: 0 10px 22px rgba(15, 160, 85, 0.22);
+    --trading-success-focus-shadow: 0 0 0 2px rgba(15, 160, 85, 0.36), 0 0 0 6px rgba(15, 160, 85, 0.16), 0 10px 24px rgba(15, 160, 85, 0.26);
     --trading-danger-color: #d96059;
     --trading-danger-soft-color: rgba(217, 96, 89, 0.18);
     --trading-danger-border-color: rgba(217, 96, 89, 0.42);
