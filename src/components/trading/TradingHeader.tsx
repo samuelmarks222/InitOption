@@ -185,7 +185,7 @@ const TradingHeader = ({
           {isAdmin && (
             <button
               onClick={() => navigate("/admin")}
-              className="flex h-9 items-center gap-1.5 rounded-lg border border-[#0fa055]/30 bg-[#0fa055]/10 px-3 text-xs font-bold text-[#0fa055] hover:bg-[#3D4759] hover:border-[#526078] hover:text-white transition-colors"
+              className="flex h-9 items-center gap-1.5 rounded-lg border border-[#0fa055]/30 bg-[#2a3040] px-3 text-xs font-bold text-[#0fa055] hover:bg-[#343b4f] hover:border-[#526078] hover:text-white transition-colors"
               title="Admin Panel"
             >
               <ShieldCheck size={14} />
@@ -194,7 +194,7 @@ const TradingHeader = ({
           )}
 
           {/* Notification Bell */}
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#1F293D] bg-[#162030] hover:bg-[#3D4759] hover:border-[#526078] transition-colors">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#384259] bg-[#2a3040] hover:bg-[#343b4f] hover:border-[#526078] transition-colors">
             <NotificationBell />
           </div>
 
@@ -203,7 +203,7 @@ const TradingHeader = ({
             <button
               id="tour-account-switch"
               onClick={() => setShowAccountDrop((v) => !v)}
-              className="flex h-9 items-center gap-2.5 rounded-lg border border-[#1F293D] bg-[#162030] px-3.5 hover:bg-[#3D4759] hover:border-[#526078] transition-colors"
+              className="flex h-9 items-center gap-2.5 rounded-lg border border-[#384259] bg-[#2a3040] px-3.5 hover:bg-[#343b4f] hover:border-[#526078] transition-colors"
             >
               <Send size={14} className="text-[#0fa055] shrink-0" />
               <div className="text-left leading-none">
@@ -246,7 +246,7 @@ const TradingHeader = ({
           {/* Withdrawal Button */}
           <button
             onClick={onOpenWithdrawal}
-            className="flex h-9 items-center rounded-lg border border-[#2B3548] bg-[#1E2736] px-4 text-[13px] font-bold text-white hover:bg-[#3D4759] hover:border-[#526078] transition-colors"
+            className="flex h-9 items-center rounded-lg border border-[#384259] bg-[#2a3040] px-4 text-[13px] font-bold text-white hover:bg-[#343b4f] hover:border-[#526078] transition-colors"
           >
             {t("tradingHeader.withdrawal")}
           </button>

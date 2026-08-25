@@ -123,8 +123,8 @@ const AssetInfo = ({
                 onClick={() => (onSelectTab ? onSelectTab(tab.symbol) : onOpenSelector())}
                 className={`group relative flex h-[42px] min-w-[150px] shrink-0 cursor-pointer items-center gap-2.5 overflow-hidden rounded-lg border px-3 transition-all ${
                   isActive
-                    ? "bg-[#232B3E] border-[#3B4C69] shadow-md ring-1 ring-white/10"
-                    : "bg-[#151D2A] border-[#222D3E] hover:bg-[#1C2738] hover:border-gray-600/50"
+                    ? "bg-[#2a3040] border-[#4b5773] shadow-md ring-1 ring-white/15"
+                    : "bg-[#2a3040] border-[#384259] hover:bg-[#343b4f] hover:border-gray-500/50"
                 }`}
               >
                 {/* Active trade progress bar */}
