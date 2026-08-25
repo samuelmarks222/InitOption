@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
+  GraduationCap,
   Plus,
   ShieldCheck,
   Send,
@@ -91,63 +92,94 @@ const TradingHeader = ({
     "LIVE ACCOUNT";
 
   const accountBadgeColor =
-    accountType === "demo" ? "text-amber-400" :
+    accountType === "demo" ? "text-[#ff7a00]" :
     accountType === "tournament" ? "text-blue-400" :
     "text-[#0fa055]";
+
+  const AccountPillIcon = accountType === "demo" ? GraduationCap : ShieldCheck;
+
+  const renderAccountPill = () => (
+    <div className="relative flex items-center shrink-0">
+      <button
+        id="tour-account-switch"
+        onClick={() => setShowAccountDrop((v) => !v)}
+        className="flex h-10 items-center gap-2.5 rounded-[8px] border border-[#353f54] bg-[#1c2230] px-3.5 hover:bg-[#232c3d] hover:border-[#465470] transition-colors"
+      >
+        <AccountPillIcon size={18} className={accountType === "demo" ? "text-white shrink-0" : "text-[#0fa055] shrink-0"} />
+        <div className="text-left leading-none">
+          <p className={`text-[10px] font-black uppercase tracking-wider ${accountBadgeColor}`}>
+            {accountTitle}
+          </p>
+          <p className="mt-0.5 text-[15px] font-black text-white font-sans tracking-tight">
+            {formatMoney(displayBalance)}
+          </p>
+        </div>
+        <ChevronDown size={14} className="text-gray-400 ml-0.5 shrink-0" />
+      </button>
+
+      {showAccountDrop && (
+        <AccountDropdown
+          accountType={accountType}
+          balance={liveBalance}
+          demoBalance={demoBalance}
+          onSwitch={onSwitchAccount}
+          onOpenDeposit={onOpenDeposit}
+          onOpenWithdrawal={onOpenWithdrawal}
+          onOpenProfile={onOpenProfile}
+          onUpdateDemoBalance={onUpdateDemoBalance}
+          onResetDemoBalance={onResetDemoBalance}
+          onClose={() => setShowAccountDrop(false)}
+        />
+      )}
+    </div>
+  );
+
+  const renderDepositButton = () => (
+    <button
+      id="tour-deposit-button"
+      data-deposit-trigger="true"
+      onClick={onOpenDeposit}
+      className="flex h-10 items-center gap-1.5 shrink-0 rounded-[8px] bg-[#00c853] px-4 sm:px-5 text-[14px] font-black text-white shadow-md shadow-[#00c853]/20 hover:bg-[#00b248] active:scale-95 transition-all"
+    >
+      <Plus size={16} strokeWidth={3} /> Deposit
+    </button>
+  );
+
+  const renderWithdrawalButton = () => (
+    <button
+      onClick={onOpenWithdrawal}
+      className="flex h-10 items-center shrink-0 rounded-[8px] bg-[#4a5366] px-4 sm:px-5 text-[14px] font-black text-white hover:bg-[#576278] active:scale-95 transition-colors"
+    >
+      Withdrawal
+    </button>
+  );
 
   return (
     <header className="relative flex h-[62px] shrink-0 items-center justify-between px-4 bg-[var(--trading-header-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white z-30 select-none">
 
       {/* ── MOBILE layout (hidden on lg+) ── */}
-      <div className="flex lg:hidden flex-1 items-center justify-between gap-2">
+      <div className="flex lg:hidden flex-1 items-center justify-between gap-2 overflow-x-auto no-scrollbar">
         {/* Brand */}
-        <Link to="/trade" className="flex items-center">
+        <Link to="/trade" className="flex items-center shrink-0">
           {logoUrl ? (
-            <img src={logoUrl} alt={platformName} className="h-8 w-auto max-w-[160px] object-contain" />
+            <img src={logoUrl} alt={platformName} className="h-7 w-auto max-w-[120px] object-contain" />
           ) : (
-            <span className="font-black text-white text-base tracking-wider uppercase">{platformName}</span>
+            <span className="font-black text-white text-sm tracking-wider uppercase">{platformName}</span>
           )}
         </Link>
 
-        {/* Mobile Account Pill */}
-        <div className="relative flex items-center">
-          <button
-            onClick={() => setShowAccountDrop((v) => !v)}
-            className="flex h-9 items-center gap-1.5 rounded-lg border border-white/10 bg-[#161F2E] px-2.5 text-xs font-bold text-white"
-          >
-            <Send size={13} className="text-[#0fa055]" />
-            <span className="font-mono text-[#0fa055]">{formatMoney(displayBalance)}</span>
-            <ChevronDown size={13} className="text-gray-400" />
-          </button>
-          {showAccountDrop && (
-            <AccountDropdown
-              accountType={accountType}
-              balance={liveBalance}
-              demoBalance={demoBalance}
-              onSwitch={onSwitchAccount}
-              onOpenDeposit={onOpenDeposit}
-              onOpenWithdrawal={onOpenWithdrawal}
-              onOpenProfile={onOpenProfile}
-              onUpdateDemoBalance={onUpdateDemoBalance}
-              onResetDemoBalance={onResetDemoBalance}
-              onClose={() => setShowAccountDrop(false)}
-            />
-          )}
+        {/* Mobile Header Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          {renderAccountPill()}
+          {renderDepositButton()}
+          {renderWithdrawalButton()}
         </div>
-
-        {/* Mobile Deposit Button */}
-        <button
-          onClick={onOpenDeposit}
-          className="flex h-9 items-center justify-center rounded-lg bg-[#0fa055] px-3 text-xs font-bold text-white hover:bg-[#0d8a49]"
-        >
-          + Deposit
-        </button>
       </div>
 
       {/* ── DESKTOP layout (hidden below lg) ── */}
       <div className="hidden lg:flex w-full items-center justify-between gap-4">
 
-        {/* Left: Logo + Subtitle — broader area, bigger logo */}
+        {/* Left: Logo + Subtitle */}
         <Link
           to="/trade"
           className="flex shrink-0 items-center gap-3 hover:opacity-90 transition-opacity min-w-[220px]"
@@ -199,57 +231,13 @@ const TradingHeader = ({
           </div>
 
           {/* Account Selector */}
-          <div className="relative flex items-center">
-            <button
-              id="tour-account-switch"
-              onClick={() => setShowAccountDrop((v) => !v)}
-              className="flex h-9 items-center gap-2.5 rounded-lg border border-[#384259] bg-[#2a3040] px-3.5 hover:bg-[#343b4f] hover:border-[#526078] transition-colors"
-            >
-              <Send size={14} className="text-[#0fa055] shrink-0" />
-              <div className="text-left leading-none">
-                <p className={`text-[9px] font-black uppercase tracking-wider ${accountBadgeColor}`}>
-                  {accountTitle}
-                </p>
-                <p className="mt-0.5 font-mono text-[13px] font-black text-white">
-                  {formatMoney(displayBalance)}
-                </p>
-              </div>
-              <ChevronDown size={14} className="text-gray-400 ml-0.5" />
-            </button>
-
-            {showAccountDrop && (
-              <AccountDropdown
-                accountType={accountType}
-                balance={liveBalance}
-                demoBalance={demoBalance}
-                onSwitch={onSwitchAccount}
-                onOpenDeposit={onOpenDeposit}
-                onOpenWithdrawal={onOpenWithdrawal}
-                onOpenProfile={onOpenProfile}
-                onUpdateDemoBalance={onUpdateDemoBalance}
-                onResetDemoBalance={onResetDemoBalance}
-                onClose={() => setShowAccountDrop(false)}
-              />
-            )}
-          </div>
+          {renderAccountPill()}
 
           {/* Deposit Button */}
-          <button
-            id="tour-deposit-button"
-            data-deposit-trigger="true"
-            onClick={onOpenDeposit}
-            className="flex h-9 items-center gap-1.5 rounded-lg bg-[#0fa055] px-4 text-[13px] font-black text-white shadow-md shadow-[#0fa055]/20 hover:bg-[#0d8a49] transition-all active:scale-95"
-          >
-            <Plus size={14} strokeWidth={3} /> {t("tradingHeader.deposit")}
-          </button>
+          {renderDepositButton()}
 
           {/* Withdrawal Button */}
-          <button
-            onClick={onOpenWithdrawal}
-            className="flex h-9 items-center rounded-lg border border-[#384259] bg-[#2a3040] px-4 text-[13px] font-bold text-white hover:bg-[#343b4f] hover:border-[#526078] transition-colors"
-          >
-            {t("tradingHeader.withdrawal")}
-          </button>
+          {renderWithdrawalButton()}
         </div>
       </div>
     </header>
