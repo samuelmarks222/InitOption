@@ -1393,7 +1393,7 @@ const Trade = () => {
     }
   };
 
-  const isFullScreen = ["account", "analytics", "tournaments", "referrals"].includes(activeWorkspace || "");
+  const isFullScreen = ["account", "analytics", "tournaments", "referrals", "help"].includes(activeWorkspace || "");
   const currentBalance = accountType === "tournament" ? tournamentSandboxBalance : balance;
   const tourEnabled =
     !mobileOverlay &&
@@ -1487,6 +1487,10 @@ const Trade = () => {
             ) : activeWorkspace === "referrals" ? (
               <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
                 <WorkspaceReferral onSelectWorkspace={setActiveWorkspace} />
+              </div>
+            ) : activeWorkspace === "help" ? (
+              <div className="flex-1 w-full h-full relative z-30 overflow-y-auto" style={{ background: "var(--trading-workspace-bg)" }}>
+                <HelpCenterOverlay onClose={() => setActiveWorkspace(null)} />
               </div>
             ) : (
               <>
