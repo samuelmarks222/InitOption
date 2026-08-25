@@ -222,7 +222,7 @@ const FAQ_DATA: Record<FaqCategory, Array<{ id: string; question: string; answer
   payouts: [
     {
       id: "po1",
-      question: "How to withdraw money from the account?",
+      question: "How to withdraw money from my account?",
       answer:
         "Navigate to the Withdrawal tab in the Account menu. Enter your withdrawal amount ($10 minimum), select your verified payout destination (M-Pesa or Crypto Wallet), fill in your recipient details, and click 'Confirm'.",
     },
@@ -240,7 +240,7 @@ const FAQ_DATA: Record<FaqCategory, Array<{ id: string; question: string; answer
     },
     {
       id: "po4",
-      question: "Is there any fee for depositing or withdrawing funds from the account?",
+      question: "Is there any fee for depositing or withdrawing funds from my account?",
       answer:
         "No. Our platform imposes 0% commission on both deposits and withdrawals.",
     },
@@ -254,45 +254,45 @@ const FAQ_DATA: Record<FaqCategory, Array<{ id: string; question: string; answer
   tournaments: [
     {
       id: "tr1",
-      question: "What are trading tournaments?",
+      question: "What is a tournament?",
       answer:
         "Tournaments are competitive trading contests where participants trade on equal virtual tournament balances to achieve the highest balance percentage. Top traders on the leaderboard win real cash prize funds credited directly to their live balance.",
     },
     {
       id: "tr2",
-      question: "How do I participate in a tournament?",
+      question: "Are there free tournaments?",
       answer:
-        "Open the Tournaments section from the left menu bar. Browse active contests, review rules and prize distributions, and click 'Enter Tournament' to join.",
+        "Yes! We regularly host free-entry tournaments (Daily Freebies) with real cash prize pools that anyone can join for free without paying an entry fee.",
     },
     {
       id: "tr3",
-      question: "Can I rebuy if my tournament balance runs out?",
+      question: "What is the price of entering a tournament?",
       answer:
-        "Yes! Most tournaments feature unlimited rebuys, allowing you to reset your tournament starting balance and continue competing for leaderboard positions.",
+        "Entry fees vary by event: Freebies cost $0, while premium paid tournaments have entry fees ranging from $1 to $50 depending on the total prize pool.",
     },
     {
       id: "tr4",
-      question: "How is the tournament leaderboard calculated?",
+      question: "What is a rebuy?",
       answer:
-        "Leaderboard rankings are calculated in real time based on the total net virtual balance accumulated in the tournament workspace.",
+        "A rebuy allows you to reset your tournament starting balance back to $1,000 if your virtual contest balance drops below the initial starting level during an active event.",
     },
     {
       id: "tr5",
-      question: "When are tournament prizes distributed?",
+      question: "How a winner is determined?",
       answer:
-        "Cash prizes are automatically deposited into winners' live accounts within 1 hour after the tournament countdown timer expires.",
+        "Winners are determined automatically by ranking all participants according to their final net virtual balance in the tournament workspace when the contest timer expires.",
     },
     {
       id: "tr6",
-      question: "Are tournament winnings withdrawable?",
+      question: "If I win, when will I receive my prize?",
       answer:
-        "Yes! All cash prizes awarded from tournaments are real funds without turnover restrictions and can be withdrawn or traded immediately.",
+        "Cash prizes are credited directly to winners' real live balances within 1 hour after the tournament countdown timer reaches zero.",
     },
     {
       id: "tr7",
-      question: "Is there a fee to enter a tournament?",
+      question: "What are the reasons for disqualification?",
       answer:
-        "We host both Free-Entry Tournaments (Freebies) with guaranteed cash prizes and Premium Tournaments with enlarged prize pools.",
+        "Disqualification occurs if a participant uses automated arbitrage bots, exploits system glitches, or operates multiple accounts in the same tournament event.",
     },
   ],
 };
