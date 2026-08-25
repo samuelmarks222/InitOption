@@ -311,15 +311,31 @@ const MobileModuleOverlay = ({
       {mobileOverlay === "trading_history" && (
         <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab="Trades" onClose={() => setMobileOverlay(null)} onNavigate={onAnalyticsNavigate} />
       )}
+      {mobileOverlay === "referrals" && (
+        <div className="flex flex-col h-full bg-[#0a0d14] w-full overflow-y-auto">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/8 shrink-0 bg-[#111518]">
+            <span className="text-white font-bold text-[18px]">Referral Program</span>
+            <button onClick={() => setMobileOverlay(null)} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex-1 min-h-0 relative">
+            <WorkspaceReferral onSelectWorkspace={() => setMobileOverlay(null)} />
+          </div>
+        </div>
+      )}
       {mobileOverlay === "more" && (
         <MobileMoreMenu
           onClose={() => setMobileOverlay(null)}
           onOpenDeposit={onOpenDeposit}
           onOpenOverlay={(section) => {
             if (section === "analytics") setMobileOverlay("analytics_detail");
-            else if (section === "account" || section === "referrals") {
+            else if (section === "account") {
               setAccountInitialTab("My account");
               setMobileOverlay("account");
+            }
+            else if (section === "referrals") {
+              setMobileOverlay("referrals");
             }
             else setMobileOverlay(section);
           }}

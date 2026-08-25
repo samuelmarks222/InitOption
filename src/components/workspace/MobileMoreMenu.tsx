@@ -2,7 +2,6 @@ import {
   BarChart3,
   BarChart2,
   ChevronRight,
-  Download,
   LogOut,
   MessageCircle,
   RadioTower,
@@ -56,11 +55,7 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay, onOpenDeposit }: Mobile
     await signOut();
   };
 
-  const handleInstallApp = () => {
-    if ("standalone" in window.navigator && (window.navigator as any).standalone) return;
-    // PWA install prompt or open store link
-    window.open("https://play.google.com/store", "_blank");
-  };
+
 
   const handleJoinUs = () => {
     onClose();
@@ -152,20 +147,12 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay, onOpenDeposit }: Mobile
         {/* Divider */}
         <div className="my-3 border-t border-white/[0.07]" />
 
-        {/* Install App | Join Us */}
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={handleInstallApp}
-            className="flex flex-1 items-center justify-center gap-2 rounded-[6px] bg-[#1689e8] py-3 text-[14px] font-black text-white transition-colors hover:bg-[#1e9fff]"
-          >
-            <Download className="h-4 w-4" strokeWidth={2.3} />
-            Install App
-          </button>
+        {/* Join Us (Referral Program) */}
+        <div>
           <button
             type="button"
             onClick={handleJoinUs}
-            className="flex flex-1 items-center justify-center gap-2 rounded-[6px] bg-[#1689e8] py-3 text-[14px] font-black text-white transition-colors hover:bg-[#1e9fff]"
+            className="flex w-full items-center justify-center gap-2 rounded-[6px] bg-[#1689e8] py-3 text-[14px] font-black text-white transition-colors hover:bg-[#1e9fff]"
           >
             <MessageCircle className="h-4 w-4" strokeWidth={2.3} />
             Join Us
