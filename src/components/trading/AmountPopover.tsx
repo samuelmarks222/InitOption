@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { getCurrencySymbol } from "@/lib/currency";
 
 interface Props {
   value: number;
@@ -10,6 +12,7 @@ interface Props {
 }
 
 const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => {
+  const { currency } = useCurrency();
   const cardRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const [display, setDisplay] = useState(String(value));
@@ -96,7 +99,7 @@ const AmountPopover = ({ value, onChange, onClose, max, triggerRef }: Props) => 
           {/* Display + multiplier ops + multiplier badge */}
           <div className="flex items-center gap-1.5 h-12">
             <div className="flex-1 h-full bg-[#151926] border border-[#22283d] rounded-lg px-3.5 flex items-center text-lg font-semibold text-white tracking-wide">
-              $<span>{display}</span>
+              <span className="mr-1 text-gray-400 text-sm font-bold">{getCurrencySymbol(currency)}</span><span>{display}</span>
             </div>
             <div className="w-7 h-full flex flex-col justify-between">
               <button

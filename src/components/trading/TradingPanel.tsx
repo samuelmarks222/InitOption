@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { formatCurrencyAmount, getCurrencySymbol } from "@/lib/currency";
 import { ActiveTrade, OpenTradeHandler, TradeDirection, TradeHistoryEntry, useTrading } from "@/hooks/useTrading";
 import { toast } from "@/hooks/use-toast";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
@@ -684,7 +685,7 @@ const TradingPanel = ({
   mobileDocked = false,
 }: TradingPanelProps) => {
   const { profile } = useAuth();
-  const { formatMoney } = useCurrency();
+  const { currency, formatMoney } = useCurrency();
   const { t } = useTranslation();
   const { activeTrades, tradeHistory, openTrade } = useTrading();
   const { preferences: tradingPreferences } = useTradingPreferences();
@@ -1134,7 +1135,9 @@ onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}>
               <div className="relative">
                 <div className="relative flex h-[44px] w-full items-center justify-between rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden">
                   <div className="flex items-center gap-2">
-                    <span className="text-[15px] font-bold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>$</span>
+                    <span className="text-[13px] font-bold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>
+                      {getCurrencySymbol(currency)}
+                    </span>
                     <input
                       type="number"
                       value={investment}
@@ -1203,7 +1206,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
         {/* ── Payout ───────────────────────────────────────────────── */}
         <div className="flex items-center justify-between border-t border-dashed border-[#4a5267] px-2.5 pb-2 pt-2 text-xs text-gray-400 lg:mx-4 lg:px-0 lg:pb-3">
           <span className="font-semibold">{t("tradingPanel.yourPayout")}</span>
-          <span className="text-[13px] font-black tracking-wide text-white">{asset.available === false ? "N/A" : formatMoney(payout)}</span>
+          <span className="text-[13px] font-black tracking-wide text-white">{asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}</span>
         </div>
 
         {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
