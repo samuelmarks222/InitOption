@@ -185,8 +185,8 @@ const TradingHeader = ({
           ) : (
             <span className="font-black text-2xl tracking-tight text-white">{platformName}</span>
           )}
-          <span className="text-[#4A5768] font-black text-base">•</span>
-          <span className="text-sm font-black tracking-wider text-[#CBD5E1] uppercase whitespace-nowrap">
+          <span className="text-[#3A4659] font-bold text-base">•</span>
+          <span className="text-sm font-bold tracking-wider text-white/40 uppercase whitespace-nowrap">
             WEB TRADING PLATFORM
           </span>
         </Link>
