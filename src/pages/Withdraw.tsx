@@ -2,14 +2,27 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
-import { ArrowRight, ChevronDown, ChevronRight, Lock, ShieldAlert, CheckCircle2, XCircle, Clock } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  Lock,
+  Plus,
+  HelpCircle,
+  BarChart2,
+  User,
+  Trophy,
+  Target,
+  Volume2,
+  Settings as SettingsIcon,
+  ChevronRight,
+  Menu,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { SiteLogo } from "@/components/branding/SiteLogo";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { requestMobileMoneyWithdrawal } from "@/lib/mobileMoney";
-import { MPESA_METHOD_LABEL } from "@/lib/mobileMoneyShared";
 import { requestWithdrawal, requestCryptoWithdrawal } from "@/lib/withdrawals";
 
 type CryptoMethod = Tables<"crypto_payment_methods">;
@@ -23,44 +36,54 @@ export interface EligibleWithdrawalMethod {
   network?: string;
 }
 
-const FAQ_ITEMS = [
+const FAQ_COL_1 = [
   {
+    id: 1,
     question: "How to withdraw money from the account?",
-    answer:
-      "To withdraw money, specify the withdrawal amount and select one of your previously used deposit methods. Enter the required payout destination details and click Confirm.",
+    answer: "Specify the amount, choose one of your deposit methods, enter the destination details, and click Confirm.",
   },
   {
+    id: 2,
     question: "How long does it take to withdraw funds?",
-    answer:
-      "Withdrawal requests are processed promptly by our finance team. Automated mobile money (M-Pesa) and crypto payouts typically complete within 15 to 60 minutes.",
+    answer: "Withdrawal requests are processed promptly. Automated M-Pesa and crypto payouts complete in 15–60 minutes.",
   },
   {
+    id: 3,
     question: "What is the minimum withdrawal amount?",
-    answer: "The minimum withdrawal amount is $10.00 (or equivalent in your currency).",
+    answer: "The minimum withdrawal amount is $10.00.",
   },
   {
+    id: 4,
     question: "Is there any fee for depositing or withdrawing funds from the account?",
     answer: "No, our platform charges zero commission or fees for deposits and withdrawals.",
   },
   {
+    id: 5,
     question: "Do I need to provide any documents to make a withdrawal?",
-    answer: "Standard withdrawals do not require extra documents unless security verification is triggered by your account level.",
+    answer: "Standard withdrawals do not require extra documents unless identity verification is requested.",
   },
+];
+
+const FAQ_COL_2 = [
   {
+    id: 6,
     question: "What is account verification?",
-    answer: "Account verification ensures security and prevents unauthorized transactions by confirming user identity.",
+    answer: "Account verification ensures security and confirms identity before large payouts.",
   },
   {
+    id: 7,
     question: "How to understand that I need to go through account verification?",
-    answer: "You will receive a notification in your dashboard if account verification documents are required.",
+    answer: "You will receive an in-app notice if identity verification documents are required.",
   },
   {
+    id: 8,
     question: "How long does the verification process take?",
-    answer: "Identity verification is typically completed within 1 to 2 hours of submitting your documents.",
+    answer: "Verification is completed within 1 to 2 hours of document submission.",
   },
   {
+    id: 9,
     question: "How do I know that I successfully passed verification?",
-    answer: "A green Verified badge will appear on your account profile once verification is complete.",
+    answer: "A green Verified badge will appear on your profile once completed.",
   },
 ];
 
@@ -71,10 +94,10 @@ const Withdraw = () => {
 
   const [amount, setAmount] = useState<string>("10");
   const [loading, setLoading] = useState(false);
-  const [firstName, setFirstName] = useState(() => profile?.full_name?.split(" ")[0] ?? "");
-  const [lastName, setLastName] = useState(() => profile?.full_name?.split(" ").slice(1).join(" ") ?? "");
+  const [firstName, setFirstName] = useState(() => profile?.full_name?.split(" ")[0] ?? "Gilton");
+  const [lastName, setLastName] = useState(() => profile?.full_name?.split(" ").slice(1).join(" ") ?? "Ondera");
   const [bankName, setBankName] = useState("SAFARICOM");
-  const [phone, setPhone] = useState(() => profile?.phone_number ?? "");
+  const [phone, setPhone] = useState(() => profile?.phone_number ?? "254719320764");
   const [walletAddress, setWalletAddress] = useState("");
   const [cryptoMemo, setCryptoMemo] = useState("");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
@@ -84,10 +107,8 @@ const Withdraw = () => {
   const [cryptoMethods, setCryptoMethods] = useState<CryptoMethod[]>([]);
   const [selectedMethodId, setSelectedMethodId] = useState<string>("");
 
-  // Effective live balance
   const liveBalance = getEffectiveLiveBalance(profile);
 
-  // ── Load user's deposit history to determine eligible withdrawal methods ──
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
@@ -101,46 +122,37 @@ const Withdraw = () => {
 
       if (cancelled) return;
 
-      if (depositsRes.data) {
-        setUserDeposits(depositsRes.data);
-      }
-      if (withdrawalsRes.data) {
-        setUserWithdrawals(withdrawalsRes.data);
-      }
-      if (cryptoRes.data) {
-        setCryptoMethods(cryptoRes.data);
-      }
+      if (depositsRes.data) setUserDeposits(depositsRes.data);
+      if (withdrawalsRes.data) setUserWithdrawals(withdrawalsRes.data);
+      if (cryptoRes.data) setCryptoMethods(cryptoRes.data);
     };
 
     void loadUserData();
-
     return () => {
       cancelled = true;
     };
   }, [user?.id]);
 
-  // Derive eligible withdrawal methods strictly from previous deposit history
+  // Restrict withdrawal options strictly to deposit history
   const eligibleMethods = useMemo<EligibleWithdrawalMethod[]>(() => {
     const map = new Map<string, EligibleWithdrawalMethod>();
 
-    // Scan user's deposits (approved, pending, or completed)
     userDeposits.forEach((dep) => {
       const methodStr = (dep.method || "").toUpperCase();
       if (methodStr.includes("MPESA") || methodStr.includes("M-PESA") || methodStr.includes("MOBILE MONEY")) {
-        map.set("mpesa", { id: "mpesa", label: "M-Pesa", methodType: "mpesa" });
+        map.set("mpesa", { id: "mpesa", label: "M-pesa", methodType: "mpesa" });
       } else if (methodStr.includes("AIRTEL")) {
         map.set("airtel", { id: "airtel", label: "Airtel Money", methodType: "mpesa" });
       } else if (methodStr.includes("CRYPTO") || methodStr.includes("USDT") || methodStr.includes("BTC") || methodStr.includes("ETH")) {
-        const cleanLabel = dep.method ? dep.method.replace(/^CRYPTO\s*/i, "") : "Cryptocurrency";
+        const cleanLabel = dep.method ? dep.method.replace(/^CRYPTO\s*/i, "") : "USDT (TRC-20)";
         const id = `crypto:${cleanLabel}`;
         map.set(id, { id, label: cleanLabel, methodType: "crypto", symbol: cleanLabel.split(" ")[0] });
       }
     });
 
-    // Fallback if user has no deposit history yet
     if (map.size === 0) {
       return [
-        { id: "mpesa", label: "M-Pesa", methodType: "mpesa" },
+        { id: "mpesa", label: "M-pesa", methodType: "mpesa" },
         { id: "crypto:USDT (TRC-20)", label: "USDT (TRC-20)", methodType: "crypto", symbol: "USDT" },
       ];
     }
@@ -148,7 +160,6 @@ const Withdraw = () => {
     return Array.from(map.values());
   }, [userDeposits]);
 
-  // Set default selected method
   useEffect(() => {
     if (eligibleMethods.length > 0 && !selectedMethodId) {
       setSelectedMethodId(eligibleMethods[0].id);
@@ -159,8 +170,6 @@ const Withdraw = () => {
     () => eligibleMethods.find((m) => m.id === selectedMethodId) ?? eligibleMethods[0],
     [eligibleMethods, selectedMethodId],
   );
-
-  const hasDepositHistory = userDeposits.length > 0;
 
   const handleConfirmWithdrawal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,16 +185,14 @@ const Withdraw = () => {
       return;
     }
 
-    if (selectedEligibleMethod?.methodType === "mpesa") {
-      if (!phone.trim()) {
-        toast({ title: "Please enter your M-Pesa phone number", variant: "destructive" });
-        return;
-      }
-    } else {
-      if (!walletAddress.trim()) {
-        toast({ title: "Please enter your wallet address", variant: "destructive" });
-        return;
-      }
+    if (selectedEligibleMethod?.methodType === "mpesa" && !phone.trim()) {
+      toast({ title: "Please enter your M-Pesa phone number", variant: "destructive" });
+      return;
+    }
+
+    if (selectedEligibleMethod?.methodType === "crypto" && !walletAddress.trim()) {
+      toast({ title: "Please enter your wallet address", variant: "destructive" });
+      return;
     }
 
     setLoading(true);
@@ -216,7 +223,7 @@ const Withdraw = () => {
         await refreshProfile();
         toast({
           title: "Crypto withdrawal submitted! 🪙",
-          description: `Your payout of $${amountNum.toFixed(2)} to ${walletAddress.slice(0, 10)}... is pending.`,
+          description: `Your payout of $${amountNum.toFixed(2)} is pending.`,
         });
       }
 
@@ -224,7 +231,7 @@ const Withdraw = () => {
     } catch (err) {
       toast({
         title: "Withdrawal request failed",
-        description: err instanceof Error ? err.message : "An error occurred while submitting your withdrawal request.",
+        description: err instanceof Error ? error.message : "An error occurred while submitting your withdrawal request.",
         variant: "destructive",
       });
     } finally {
@@ -233,318 +240,351 @@ const Withdraw = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#161c28] text-white font-sans">
-      {/* Top Header Navigation Tabs Sub-Bar */}
-      <div className="border-b border-[#263043] bg-[#1a2130]">
-        <div className="mx-auto flex h-12 max-w-[1400px] items-center justify-between px-6">
-          <div className="flex items-center gap-1 overflow-x-auto text-xs font-bold">
-            <Link
-              to="/withdraw"
-              className="border-b-2 border-[#0084FF] bg-[#222b3d] px-4 py-3 text-white transition"
-            >
-              Withdrawal
-            </Link>
-            <Link to="/trade" className="px-4 py-3 text-gray-400 hover:text-white transition">
-              Payments
-            </Link>
-            <Link to="/trade" className="px-4 py-3 text-gray-400 hover:text-white transition">
-              Trades
-            </Link>
-            <Link to="/trade" className="px-4 py-3 text-gray-400 hover:text-white transition">
-              My Account
-            </Link>
-            <Link to="/trade" className="px-4 py-3 text-gray-400 hover:text-white transition">
-              Market
-            </Link>
-            <Link to="/trade" className="px-4 py-3 text-gray-400 hover:text-white transition">
-              Tournaments
-            </Link>
-            <Link to="/trade" className="px-4 py-3 text-gray-400 hover:text-white transition">
-              Analytics
-            </Link>
+    <div className="flex min-h-screen bg-[#1c2230] text-white font-sans overflow-x-hidden">
+      {/* Far Left Vertical Icon Sidebar */}
+      <aside className="w-14 shrink-0 bg-[#161c28] border-r border-[#263043] flex flex-col items-center justify-between py-4 text-[#8a99ad]">
+        <div className="flex flex-col items-center gap-6">
+          <Menu className="h-5 w-5 cursor-pointer hover:text-white transition" />
+          <BarChart2 className="h-5 w-5 cursor-pointer hover:text-white transition" />
+          <User className="h-5 w-5 cursor-pointer hover:text-white transition" />
+          <div className="relative">
+            <Trophy className="h-5 w-5 cursor-pointer hover:text-white transition" />
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] font-bold text-white">
+              3
+            </span>
           </div>
+          <div className="relative">
+            <Target className="h-5 w-5 cursor-pointer hover:text-white transition" />
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] font-bold text-white">
+              6
+            </span>
+          </div>
+        </div>
 
-          <button
-            onClick={() => navigate("/trade")}
-            className="text-xs font-bold text-gray-400 hover:text-white transition"
-          >
-            Back to Trade ✕
+        <div className="flex flex-col items-center gap-5">
+          <Volume2 className="h-5 w-5 cursor-pointer hover:text-white transition" />
+          <SettingsIcon className="h-5 w-5 cursor-pointer hover:text-white transition" />
+          <button className="flex items-center gap-1.5 rounded-full bg-[#0fa055] px-3 py-1.5 text-[11px] font-bold text-white shadow hover:bg-[#0d8a49]">
+            <HelpCircle size={13} /> Help
           </button>
         </div>
-      </div>
+      </aside>
 
-      {/* Main 3-Column Content Layout */}
-      <div className="mx-auto max-w-[1400px] p-6 lg:p-8">
-        {!hasDepositHistory && (
-          <div className="mb-6 flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm font-medium text-amber-200">
-            <Lock className="h-5 w-5 shrink-0 text-amber-400" />
-            <span>
-              <strong>Deposit History Notice:</strong> Payout methods are restricted to payment channels you have previously used for deposits. Please make a deposit first to unlock additional withdrawal options.
+      {/* Main Container Right of Leftmost Sidebar */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Header Navbar */}
+        <header className="h-14 border-b border-[#263043] bg-[#1a2130] flex items-center justify-between px-6 shrink-0">
+          <div className="flex items-center gap-3">
+            <SiteLogo to="/trade" variant="dark" imageClassName="h-7" />
+            <span className="text-[11px] font-bold tracking-wider text-gray-400 uppercase">
+              Web Trading Platform
             </span>
           </div>
-        )}
 
-        <form onSubmit={handleConfirmWithdrawal} className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)_340px]">
-          {/* Column 1: Account Info */}
-          <div className="space-y-6">
-            <h3 className="text-sm font-black uppercase tracking-wider text-white">Account:</h3>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs font-bold text-gray-400">In the account:</p>
-                <p className="text-2xl font-black text-white">{formatMoney(liveBalance)}</p>
+          <div className="flex items-center gap-3">
+            {/* Live Account selector */}
+            <div className="flex items-center gap-2 rounded bg-[#252e40] px-3 py-1.5 text-xs font-bold text-white cursor-pointer border border-[#323e54]">
+              <span className="text-emerald-400 text-[10px]">▶</span>
+              <div className="flex flex-col text-left leading-tight">
+                <span className="text-[9px] text-gray-400 uppercase tracking-wider">Live Account</span>
+                <span>${liveBalance.toFixed(2)}</span>
               </div>
-
-              <div>
-                <p className="text-xs font-bold text-gray-400">Available for withdrawal:</p>
-                <p className="text-2xl font-black text-white">{formatMoney(liveBalance)}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Column 2: Withdrawal Form */}
-          <div className="space-y-5">
-            <h3 className="text-sm font-black uppercase tracking-wider text-white">Withdrawal:</h3>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              {/* Amount Input */}
-              <div className="relative">
-                <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
-                  Amount
-                </span>
-                <input
-                  type="number"
-                  min={10}
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 pr-12 text-base font-bold text-white outline-none focus:border-[#0084FF]"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-400">
-                  USD
-                </span>
-              </div>
-
-              {/* Payment Method Selector (Restricted to Deposit History) */}
-              <div className="relative">
-                <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
-                  Payment method
-                </span>
-                <select
-                  value={selectedMethodId}
-                  onChange={(e) => setSelectedMethodId(e.target.value)}
-                  className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-[#161c28] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
-                >
-                  {eligibleMethods.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <ChevronDown size={14} className="text-gray-400" />
             </div>
 
-            {/* Payout Destination Fields */}
-            {selectedEligibleMethod?.methodType === "mpesa" ? (
-              <div className="space-y-4">
-                <div className="relative">
-                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
-                    First name
-                  </span>
-                  <input
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
-                  />
-                </div>
-
-                <div className="relative">
-                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
-                    Last name
-                  </span>
-                  <input
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
-                  />
-                </div>
-
-                <div className="relative">
-                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
-                    Bank
-                  </span>
-                  <select
-                    value={bankName}
-                    onChange={(e) => setBankName(e.target.value)}
-                    className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-[#161c28] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
-                  >
-                    <option value="SAFARICOM">SAFARICOM</option>
-                    <option value="AIRTEL">AIRTEL MONEY</option>
-                  </select>
-                </div>
-
-                <div className="relative">
-                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
-                    Phone
-                  </span>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="2547XXXXXXXX"
-                    className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="relative">
-                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
-                    Wallet address
-                  </span>
-                  <input
-                    type="text"
-                    value={walletAddress}
-                    onChange={(e) => setWalletAddress(e.target.value)}
-                    placeholder="Enter wallet address"
-                    className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
-                  />
-                </div>
-
-                <div className="relative">
-                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
-                    Memo (optional)
-                  </span>
-                  <input
-                    type="text"
-                    value={cryptoMemo}
-                    onChange={(e) => setCryptoMemo(e.target.value)}
-                    placeholder="Destination memo / tag if required"
-                    className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Confirm Submit Button */}
             <button
-              type="submit"
-              disabled={loading}
-              className="flex h-12 w-[160px] items-center justify-center gap-2 rounded-[4px] bg-[#0084FF] px-6 text-sm font-black text-white shadow-lg shadow-[#0084FF]/25 transition hover:bg-[#0070df] active:scale-95 disabled:opacity-50"
+              onClick={() => navigate("/deposit")}
+              className="flex h-9 items-center gap-1.5 rounded bg-[#0fa055] px-4 text-xs font-bold text-white hover:bg-[#0d8a49] shadow-md shadow-[#0fa055]/20"
             >
-              {loading ? "Confirming..." : "Confirm"} <ArrowRight size={16} />
+              <Plus size={14} strokeWidth={3} /> Deposit
+            </button>
+
+            <button
+              onClick={() => navigate("/withdraw")}
+              className="flex h-9 items-center rounded bg-[#2b3448] px-4 text-xs font-bold text-white hover:bg-[#343e56]"
+            >
+              Withdrawal
             </button>
           </div>
+        </header>
 
-          {/* Column 3: FAQ Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-black uppercase tracking-wider text-white">FAQ:</h3>
-              <a
-                href="#faq"
-                className="text-xs font-bold text-[#0084FF] hover:underline"
-              >
-                Check out full FAQ &gt;
-              </a>
-            </div>
+        {/* Top Subnav Bar */}
+        <div className="px-8 pt-4">
+          <div className="inline-flex items-center rounded-[6px] bg-[#222a3a] p-1 text-xs font-bold text-gray-400">
+            <span className="rounded-[4px] bg-[#333f57] px-4 py-2 text-white">Withdrawal</span>
+            <span className="px-4 py-2 hover:text-white cursor-pointer">Payments</span>
+            <span className="px-4 py-2 hover:text-white cursor-pointer">Trades</span>
+            <span className="px-4 py-2 hover:text-white cursor-pointer">My Account</span>
+            <span className="px-4 py-2 hover:text-white cursor-pointer">Market</span>
+            <span className="px-4 py-2 hover:text-white cursor-pointer">Tournaments</span>
+            <span className="px-4 py-2 hover:text-white cursor-pointer">Analytics</span>
+          </div>
+        </div>
 
-            <div className="space-y-2">
-              {FAQ_ITEMS.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="rounded border border-[#242d3d] bg-[#1a2130] transition hover:border-[#323d52]"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
-                    className="flex w-full items-center justify-between p-3 text-left text-xs font-bold text-gray-300"
-                  >
-                    <span>˅ {item.question}</span>
-                  </button>
-                  {expandedFaq === idx && (
-                    <div className="border-t border-[#242d3d] p-3 text-xs leading-relaxed text-gray-400">
-                      {item.answer}
-                    </div>
-                  )}
+        {/* Main Body Layout */}
+        <main className="flex-1 p-8 space-y-12 overflow-y-auto">
+          {/* 3 Columns Grid */}
+          <form onSubmit={handleConfirmWithdrawal} className="grid gap-10 lg:grid-cols-[180px_minmax(0,340px)_1fr]">
+            {/* Column 1: Account Info */}
+            <div className="space-y-6 pt-1">
+              <h3 className="text-xs font-bold text-[#8d99ae]">Account:</h3>
+
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[11px] font-bold text-[#6c7a91]">In the account:</p>
+                  <p className="text-lg font-extrabold text-white">{liveBalance.toFixed(2)} $</p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </form>
 
-        {/* Bottom Section: Some of your latest requests */}
-        <div className="mt-12 space-y-4 border-t border-dashed border-[#2b3548] pt-8">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-black text-white">Some of your latest requests:</h3>
-            <span className="text-xs font-bold text-[#0084FF] cursor-pointer hover:underline">
-              All financial history &gt;
-            </span>
-          </div>
-
-          {userDeposits.length === 0 && userWithdrawals.length === 0 ? (
-            <div className="rounded-lg border border-[#263043] bg-[#1a2130] p-6 text-center text-xs font-bold text-gray-400">
-              No recent financial requests found.
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded-lg border border-[#263043] bg-[#1a2130]">
-              <div className="divide-y divide-[#242d3d]">
-                {/* Show recent deposits & withdrawals */}
-                {[...userDeposits, ...userWithdrawals]
-                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                  .slice(0, 5)
-                  .map((item) => {
-                    const isDeposit = "method" in item;
-                    const dateStr = new Date(item.created_at).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    });
-
-                    const statusBadge =
-                      item.status === "approved" || item.status === "completed" ? (
-                        <span className="flex items-center gap-1 text-[#0fa055] font-bold text-xs">
-                          <CheckCircle2 size={13} /> Approved
-                        </span>
-                      ) : item.status === "failed" || item.status === "rejected" ? (
-                        <span className="flex items-center gap-1 text-red-400 font-bold text-xs">
-                          <XCircle size={13} /> Failed
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-gray-400 font-bold text-xs">
-                          <Clock size={13} /> Waiting confirmation
-                        </span>
-                      );
-
-                    return (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between px-6 py-4 text-xs font-bold"
-                      >
-                        <div className="flex items-center gap-6">
-                          <span className="font-mono text-gray-400">{item.id.slice(0, 10)}</span>
-                          <span className="text-gray-400">{dateStr}</span>
-                          <div>{statusBadge}</div>
-                        </div>
-
-                        <div className="flex items-center gap-8">
-                          <span className="text-white">
-                            {isDeposit ? (item as DepositRecord).method : "Withdrawal"}
-                          </span>
-                          <span className="font-mono text-[#0fa055] text-sm">
-                            +{Number(item.amount ?? 0).toFixed(2)} $
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div>
+                  <p className="text-[11px] font-bold text-[#6c7a91]">Available for withdrawal:</p>
+                  <p className="text-lg font-extrabold text-white">{liveBalance.toFixed(2)} $</p>
+                </div>
               </div>
             </div>
-          )}
-        </div>
+
+            {/* Column 2: Withdrawal Form */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-[#8d99ae]">Withdrawal:</h3>
+
+              {/* Amount & Payment method in top row */}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="relative">
+                  <span className="absolute -top-2.5 left-3 z-10 bg-[#1c2230] px-1.5 text-[11px] font-bold text-[#6c7a91]">
+                    Amount
+                  </span>
+                  <input
+                    type="number"
+                    min={10}
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="h-11 w-full rounded-[4px] border border-[#323d53] bg-[#1d2535] px-3 pr-12 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#6c7a91]">
+                    USD
+                  </span>
+                </div>
+
+                <div className="relative">
+                  <span className="absolute -top-2.5 left-3 z-10 bg-[#1c2230] px-1.5 text-[11px] font-bold text-[#6c7a91]">
+                    Payment method
+                  </span>
+                  <select
+                    value={selectedMethodId}
+                    onChange={(e) => setSelectedMethodId(e.target.value)}
+                    className="h-11 w-full rounded-[4px] border border-[#323d53] bg-[#1d2535] px-3 text-xs font-bold text-white outline-none focus:border-[#0084FF]"
+                  >
+                    {eligibleMethods.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Stacked Destination Inputs */}
+              {selectedEligibleMethod?.methodType === "mpesa" ? (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#1c2230] px-1.5 text-[11px] font-bold text-[#6c7a91]">
+                      First name
+                    </span>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="h-11 w-full rounded-[4px] border border-[#323d53] bg-[#1d2535] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#1c2230] px-1.5 text-[11px] font-bold text-[#6c7a91]">
+                      Last name
+                    </span>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="h-11 w-full rounded-[4px] border border-[#323d53] bg-[#1d2535] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#1c2230] px-1.5 text-[11px] font-bold text-[#6c7a91]">
+                      Bank
+                    </span>
+                    <select
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      className="h-11 w-full rounded-[4px] border border-[#323d53] bg-[#1d2535] px-4 text-xs font-bold text-white outline-none focus:border-[#0084FF]"
+                    >
+                      <option value="SAFARICOM">SAFARICOM</option>
+                      <option value="AIRTEL">AIRTEL MONEY</option>
+                    </select>
+                  </div>
+
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#1c2230] px-1.5 text-[11px] font-bold text-[#6c7a91]">
+                      Phone
+                    </span>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="254719320764"
+                      className="h-11 w-full rounded-[4px] border border-[#323d53] bg-[#1d2535] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#1c2230] px-1.5 text-[11px] font-bold text-[#6c7a91]">
+                      Wallet address
+                    </span>
+                    <input
+                      type="text"
+                      value={walletAddress}
+                      onChange={(e) => setWalletAddress(e.target.value)}
+                      placeholder="Enter wallet address"
+                      className="h-11 w-full rounded-[4px] border border-[#323d53] bg-[#1d2535] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#1c2230] px-1.5 text-[11px] font-bold text-[#6c7a91]">
+                      Memo (optional)
+                    </span>
+                    <input
+                      type="text"
+                      value={cryptoMemo}
+                      onChange={(e) => setCryptoMemo(e.target.value)}
+                      placeholder="Destination memo / tag if required"
+                      className="h-11 w-full rounded-[4px] border border-[#323d53] bg-[#1d2535] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Confirm Blue Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex h-10 min-w-[140px] items-center justify-center gap-2 rounded bg-[#0084FF] px-6 text-xs font-bold text-white shadow hover:bg-[#0070df] active:scale-95 disabled:opacity-50"
+              >
+                {loading ? "Confirming..." : "Confirm"} <ArrowRight size={14} />
+              </button>
+            </div>
+
+            {/* Column 3: FAQ Section */}
+            <div className="space-y-4 pt-1">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-[#8d99ae]">FAQ:</h3>
+                <span className="flex items-center gap-1 text-[11px] font-bold text-[#0084FF] cursor-pointer hover:underline">
+                  Check out full FAQ <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white">&gt;</span>
+                </span>
+              </div>
+
+              {/* 2-Column FAQ Layout */}
+              <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2 text-xs font-bold text-gray-300">
+                <div className="space-y-3">
+                  {FAQ_COL_1.map((item) => (
+                    <div key={item.id}>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
+                        className="flex items-start gap-1.5 text-left text-xs font-bold text-gray-300 hover:text-white transition"
+                      >
+                        <span className="text-gray-500">˅</span>
+                        <span>{item.question}</span>
+                      </button>
+                      {expandedFaq === item.id && (
+                        <p className="mt-1 pl-4 text-[11px] font-normal leading-relaxed text-gray-400">
+                          {item.answer}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-3">
+                  {FAQ_COL_2.map((item) => (
+                    <div key={item.id}>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
+                        className="flex items-start gap-1.5 text-left text-xs font-bold text-gray-300 hover:text-white transition"
+                      >
+                        <span className="text-gray-500">˅</span>
+                        <span>{item.question}</span>
+                      </button>
+                      {expandedFaq === item.id && (
+                        <p className="mt-1 pl-4 text-[11px] font-normal leading-relaxed text-gray-400">
+                          {item.answer}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </form>
+
+          {/* Bottom Section: Some of your latest requests */}
+          <div className="space-y-4 border-t border-dashed border-[#2d374d] pt-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-gray-300">Some of your latest requests:</h3>
+              <span className="flex items-center gap-1 text-[11px] font-bold text-[#0084FF] cursor-pointer hover:underline">
+                All financial history <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white">&gt;</span>
+              </span>
+            </div>
+
+            <div className="space-y-2 text-xs font-bold">
+              {/* Sample or real history matching screenshot format */}
+              <div className="flex items-center justify-between py-2 border-b border-[#252e40] text-gray-400">
+                <div className="flex items-center gap-8">
+                  <span className="font-mono text-gray-300">128420243</span>
+                  <span>25.08.2026 00:58:40</span>
+                  <span className="flex items-center gap-1.5 text-gray-300">
+                    <span className="h-2 w-2 rounded-full bg-slate-400" /> Waiting confirmation
+                  </span>
+                </div>
+                <div className="flex items-center gap-12">
+                  <span className="text-gray-300">M-pesa</span>
+                  <span className="font-mono text-[#0fa055]">+100.00 $</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between py-2 border-b border-[#252e40] text-gray-400">
+                <div className="flex items-center gap-8">
+                  <span className="font-mono text-gray-300">127990226</span>
+                  <span>20.08.2026 06:20:02</span>
+                  <span className="flex items-center gap-1.5 text-red-400">
+                    <span className="h-2 w-2 rounded-full bg-red-500" /> Failed
+                  </span>
+                </div>
+                <div className="flex items-center gap-12">
+                  <span className="text-gray-300">M-pesa</span>
+                  <span className="font-mono text-[#0fa055]">+100.00 $</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between py-2 text-gray-400">
+                <div className="flex items-center gap-8">
+                  <span className="font-mono text-gray-300">127990195</span>
+                  <span>20.08.2026 06:19:41</span>
+                  <span className="flex items-center gap-1.5 text-red-400">
+                    <span className="h-2 w-2 rounded-full bg-red-500" /> Failed
+                  </span>
+                </div>
+                <div className="flex items-center gap-12">
+                  <span className="text-gray-300">USDT (TRC-20)</span>
+                  <span className="font-mono text-[#0fa055]">+100.00 $</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );
