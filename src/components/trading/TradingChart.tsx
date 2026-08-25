@@ -727,8 +727,50 @@ const calcHeikinAshi = (candles: OHLCCandle[]): OHLCCandle[] => {
   return ha;
 };
 
+const sanitizeCandleData = (candles: OHLCCandle[]): OHLCCandle[] => {
+  if (!candles || candles.length === 0) return [];
+
+  const sorted = [...candles].sort((a, b) => a.time - b.time);
+  const result: OHLCCandle[] = [];
+
+  for (const c of sorted) {
+    if (!c || typeof c.time !== "number" || !Number.isFinite(c.time) || c.time <= 0) continue;
+
+    const open = Number.isFinite(c.open) ? c.open : c.close;
+    const close = Number.isFinite(c.close) ? c.close : open;
+    const high = Math.max(open, close, Number.isFinite(c.high) ? c.high : Math.max(open, close));
+    const low = Math.min(open, close, Number.isFinite(c.low) ? c.low : Math.min(open, close));
+
+    const item: OHLCCandle = {
+      time: Math.floor(c.time),
+      open,
+      high,
+      low,
+      close,
+      volume: c.volume ?? 0,
+    };
+
+    if (result.length === 0) {
+      result.push(item);
+    } else {
+      const prev = result[result.length - 1];
+      if (item.time > prev.time) {
+        result.push(item);
+      } else if (item.time === prev.time) {
+        prev.high = Math.max(prev.high, item.high);
+        prev.low = Math.min(prev.low, item.low);
+        prev.close = item.close;
+        prev.volume += item.volume;
+      }
+    }
+  }
+
+  return result;
+};
+
 const getMainSeriesData = (chartType: ChartType, candles: OHLCCandle[]) => {
-  const candlesToRender = chartType === "heikinAshi" ? calcHeikinAshi(candles) : candles;
+  const cleanCandles = sanitizeCandleData(candles);
+  const candlesToRender = chartType === "heikinAshi" ? calcHeikinAshi(cleanCandles) : cleanCandles;
   return chartType === "line" ? toLineChartData(candlesToRender) : toOhlcChartData(candlesToRender);
 };
 
@@ -3275,7 +3317,18 @@ const TradingChart = ({
     const websocketUrl = import.meta.env.VITE_MARKET_DATA_WS_URL;
     const step = tf.seconds;
     const nowSec = Date.now() / 1000;
-    const cacheKey = asset.symbol;
+    const cacheKey = `${asset.symbol}_${selectedTf}`;
+
+    // Clean up any stale feeds for this symbol with a different timeframe
+    persistedFeeds.forEach((entry, entryKey) => {
+      if (entry.symbol === asset.symbol && entry.timeframe !== selectedTf) {
+        if (entry.disconnectTimer) clearTimeout(entry.disconnectTimer);
+        entry.feed?.disconnect();
+        entry.aggregator?.destroy();
+        persistedFeeds.delete(entryKey);
+        feedCallbackRefs.delete(entryKey);
+      }
+    });
     const engineBasePrice =
       typeof asset.basePrice === "number" && Number.isFinite(asset.basePrice) && asset.basePrice > 0
         ? asset.basePrice
@@ -3366,7 +3419,7 @@ renderOverlayIndicators(getIndicatorHistory());
         liveTargetRef.current = null;
         liveDisplayRef.current = null;
         if (aggregatorRef.current) aggregatorRef.current.setCallbacks(() => {}, () => {});
-        const key = asset.symbol;
+        const key = `${asset.symbol}_${selectedTf}`;
         const prevEntry = persistedFeeds.get(key);
         if (prevEntry?.disconnectTimer) clearTimeout(prevEntry.disconnectTimer);
         const disconnectTimer = setTimeout(() => {
@@ -3496,7 +3549,7 @@ renderOverlayIndicators(getIndicatorHistory());
       liveTargetRef.current = null;
       liveDisplayRef.current = null;
       if (aggregatorRef.current) aggregatorRef.current.setCallbacks(() => {}, () => {});
-      const key = asset.symbol;
+      const key = `${asset.symbol}_${selectedTf}`;
       const prevEntry = persistedFeeds.get(key);
       if (prevEntry?.disconnectTimer) clearTimeout(prevEntry.disconnectTimer);
       const disconnectTimer = setTimeout(() => {
