@@ -1565,20 +1565,42 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
     };
   }, [user?.id]);
 
-  // Derive eligible withdrawal methods strictly from user deposit history
+  // Derive eligible withdrawal methods strictly from user deposit history, ranking top method by total deposit sum
   const eligibleMethods = useMemo<EligibleWithdrawalMethod[]>(() => {
-    const map = new Map<string, EligibleWithdrawalMethod>();
+    const map = new Map<string, EligibleWithdrawalMethod & { totalAmount: number; count: number }>();
 
     userDeposits.forEach((dep) => {
       const methodStr = (dep.method || "").toUpperCase();
+      const depAmount = Number(dep.amount || 0);
+      let key = "";
+      let label = "";
+      let methodType: "mpesa" | "crypto" = "mpesa";
+      let symbol: string | undefined = undefined;
+
       if (methodStr.includes("MPESA") || methodStr.includes("M-PESA") || methodStr.includes("MOBILE MONEY")) {
-        map.set("mpesa", { id: "mpesa", label: "M-Pesa", methodType: "mpesa" });
+        key = "mpesa";
+        label = "M-Pesa";
+        methodType = "mpesa";
       } else if (methodStr.includes("AIRTEL")) {
-        map.set("airtel", { id: "airtel", label: "Airtel Money", methodType: "mpesa" });
+        key = "airtel";
+        label = "Airtel Money";
+        methodType = "mpesa";
       } else if (methodStr.includes("CRYPTO") || methodStr.includes("USDT") || methodStr.includes("BTC") || methodStr.includes("ETH")) {
         const cleanLabel = dep.method ? dep.method.replace(/^CRYPTO\s*/i, "") : "Cryptocurrency";
-        const id = `crypto:${cleanLabel}`;
-        map.set(id, { id, label: cleanLabel, methodType: "crypto", symbol: cleanLabel.split(" ")[0] });
+        key = `crypto:${cleanLabel}`;
+        label = cleanLabel;
+        methodType = "crypto";
+        symbol = cleanLabel.split(" ")[0];
+      }
+
+      if (key) {
+        const existing = map.get(key);
+        if (existing) {
+          existing.totalAmount += depAmount;
+          existing.count += 1;
+        } else {
+          map.set(key, { id: key, label, methodType, symbol, totalAmount: depAmount, count: 1 });
+        }
       }
     });
 
@@ -1589,7 +1611,7 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
       ];
     }
 
-    return Array.from(map.values());
+    return Array.from(map.values()).sort((a, b) => b.totalAmount - a.totalAmount || b.count - a.count);
   }, [userDeposits]);
 
   useEffect(() => {

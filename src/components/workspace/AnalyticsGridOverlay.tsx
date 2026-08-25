@@ -2457,7 +2457,7 @@ const IdDocumentRow = ({
           onClick={onRemove}
           className="rounded-[6px] border border-white/10 bg-white/5 px-3 py-2 text-[12px] font-black text-[#ff5d52] transition hover:bg-white/10"
         >
-          Remove
+                 Remove
         </button>
       )}
     </div>
@@ -2474,7 +2474,6 @@ const WithdrawalPanel = () => {
   const [walletAddress, setWalletAddress] = useState("");
   const [cryptoMemo, setCryptoMemo] = useState("");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
-
   const [userDeposits, setUserDeposits] = useState<Tables<"deposit_requests">[]>([]);
   const [userWithdrawals, setUserWithdrawals] = useState<Tables<"withdrawals">[]>([]);
   const [cryptoMethods, setCryptoMethods] = useState<Tables<"crypto_payment_methods">[]>([]);
@@ -2501,26 +2500,62 @@ const WithdrawalPanel = () => {
   }, [user?.id]);
 
   const eligibleMethods = useMemo(() => {
-    const map = new Map<string, { id: string; label: string; methodType: "mpesa" | "crypto"; symbol?: string }>();
+    const map = new Map<string, { id: string; label: string; methodType: "mpesa" | "crypto"; symbol?: string; totalAmount: number; count: number }>();
     userDeposits.forEach((dep) => {
       const methodStr = (dep.method || "").toUpperCase();
+      const depAmount = Number(dep.amount || 0);
+      let key = "";
+      let label = "";
+      let methodType: "mpesa" | "crypto" = "mpesa";
+      let symbol: string | undefined = undefined;
+
       if (methodStr.includes("MPESA") || methodStr.includes("M-PESA") || methodStr.includes("MOBILE MONEY")) {
-        map.set("mpesa", { id: "mpesa", label: "M-pesa", methodType: "mpesa" });
+        key = "mpesa";
+        label = "M-pesa";
+        methodType = "mpesa";
       } else if (methodStr.includes("AIRTEL")) {
-        map.set("airtel", { id: "airtel", label: "Airtel Money", methodType: "mpesa" });
+        key = "airtel";
+        label = "Airtel Money";
+        methodType = "mpesa";
       } else if (methodStr.includes("CRYPTO") || methodStr.includes("USDT") || methodStr.includes("BTC") || methodStr.includes("ETH")) {
         const cleanLabel = dep.method ? dep.method.replace(/^CRYPTO\s*/i, "") : "USDT (TRC-20)";
-        const id = `crypto:${cleanLabel}`;
-        map.set(id, { id, label: cleanLabel, methodType: "crypto", symbol: cleanLabel.split(" ")[0] });
+        key = `crypto:${cleanLabel}`;
+        label = cleanLabel;
+        methodType = "crypto";
+        symbol = cleanLabel.split(" ")[0];
+      }
+
+      if (key) {
+        const existing = map.get(key);
+        if (existing) {
+          existing.totalAmount += depAmount;
+          existing.count += 1;
+        } else {
+          map.set(key, { id: key, label, methodType, symbol, totalAmount: depAmount, count: 1 });
+        }
       }
     });
-    if (map.size === 0) return [{ id: "mpesa", label: "M-pesa", methodType: "mpesa" as const }, { id: "crypto:USDT (TRC-20)", label: "USDT (TRC-20)", methodType: "crypto" as const, symbol: "USDT" }];
-    return Array.from(map.values());
+
+    if (map.size === 0) {
+      return [
+        { id: "mpesa", label: "M-pesa", methodType: "mpesa" as const, totalAmount: 0, count: 0 },
+        { id: "crypto:USDT (TRC-20)", label: "USDT (TRC-20)", methodType: "crypto" as const, symbol: "USDT", totalAmount: 0, count: 0 },
+      ];
+    }
+
+    return Array.from(map.values()).sort((a, b) => b.totalAmount - a.totalAmount || b.count - a.count);
   }, [userDeposits]);
 
-  useEffect(() => { if (eligibleMethods.length > 0 && !selectedMethodId) setSelectedMethodId(eligibleMethods[0].id); }, [eligibleMethods, selectedMethodId]);
+  useEffect(() => {
+    if (eligibleMethods.length > 0 && (!selectedMethodId || !eligibleMethods.some((m) => m.id === selectedMethodId))) {
+      setSelectedMethodId(eligibleMethods[0].id);
+    }
+  }, [eligibleMethods, selectedMethodId]);
 
-  const selectedEligibleMethod = useMemo(() => eligibleMethods.find((m) => m.id === selectedMethodId) ?? eligibleMethods[0], [eligibleMethods, selectedMethodId]);
+  const selectedEligibleMethod = useMemo(
+    () => eligibleMethods.find((m) => m.id === selectedMethodId) ?? eligibleMethods[0],
+    [eligibleMethods, selectedMethodId],
+  );
 
   const refreshWithdrawals = async () => {
     if (!user?.id) return;
@@ -2555,7 +2590,6 @@ const WithdrawalPanel = () => {
       setLoading(false);
     }
   };
-
 
   const formatDate = (iso: string) => {
     try {

@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -15,7 +15,7 @@ import { DEFAULT_DEMO_BALANCE, readDemoBalanceStorage, writeDemoBalanceStorage }
 
 type CryptoMethod = Tables<"crypto_payment_methods">;
 type DepositRecord = Tables<"deposit_requests">;
-type WithdrawalRecord = Tables<"withdrawals">;
+type WithdrawalRecord = Tables<"withdrawal_requests">;
 
 export interface EligibleWithdrawalMethod {
   id: string;
@@ -75,7 +75,7 @@ const Withdraw = () => {
     const loadUserData = async () => {
       const [depositsRes, withdrawalsRes, cryptoRes] = await Promise.all([
         api.from("deposit_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-        api.from("withdrawals").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+        api.from("withdrawal_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
         api.from("crypto_payment_methods").select("*").eq("status", "active").order("coin_name"),
       ]);
       if (cancelled) return;
@@ -113,7 +113,7 @@ const Withdraw = () => {
 
   const refreshWithdrawals = async () => {
     if (!user?.id) return;
-    const res = await api.from("withdrawals").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
+    const res = await api.from("withdrawal_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
     if (res.data) setUserWithdrawals(res.data);
   };
 
