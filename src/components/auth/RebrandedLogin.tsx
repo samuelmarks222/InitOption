@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, ArrowLeft } from "lucide-react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Mail, Lock, ArrowLeft, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,27 +9,49 @@ import { getAuthRestorePath } from "@/lib/authRedirect";
 import logo from "@/assets/logo.png";
 
 const RebrandedLogin = () => {
+  const navigate = useNavigate();
   const { signIn, signInWithGoogle, user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (authLoading) return <AuthLoadingScreen message="Checking your session..." />;
   if (user) return <Navigate to={getAuthRestorePath()} replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
+    if (!email || !password) {
+      setErrorMsg("Please enter your email and password");
+      return;
+    }
     setLoading(true);
-    await signIn(email, password).catch(() => {});
+    const { error } = await signIn(email, password).catch((err: any) => ({
+      error: { message: err?.message || "Login failed. Please check your network connection." },
+    }));
     setLoading(false);
+
+    if (error) {
+      setErrorMsg(error.message || "Invalid credentials");
+      return;
+    }
+
+    navigate(getAuthRestorePath(), { replace: true });
   };
 
   const handleGoogle = async () => {
+    setErrorMsg(null);
     setGoogleLoading(true);
-    await signInWithGoogle().catch(() => {});
-    setGoogleLoading(false);
+    const { error } = await signInWithGoogle().catch((err: any) => ({
+      error: { message: err?.message || "Google sign-in failed." },
+    }));
+    if (error) {
+      setErrorMsg(error.message);
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -53,6 +75,14 @@ const RebrandedLogin = () => {
               Don't have an account?{' '}
               <Link to="/register" className="text-[#12cc9a] font-semibold hover:underline">Sign Up</Link>
             </div>
+
+            {errorMsg && (
+              <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-600 font-medium">
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
                 <div className="relative">

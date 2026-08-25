@@ -244,9 +244,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [firebaseUser, setFirebaseUser] = useState<AuthUserLike | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [user, setUser] = useState<{ id: string; email: string | null; user_metadata: Record<string, unknown> } | null>(
-    firebaseUserToAppUser(null),
+    () => {
+      try {
+        if (typeof window !== "undefined") {
+          const cached = localStorage.getItem("cached_auth_user");
+          return cached ? JSON.parse(cached) : null;
+        }
+      } catch {}
+      return firebaseUserToAppUser(null);
+    }
   );
-  const [session, setSession] = useState<{ user: { id: string } | null } | null>(null);
+  const [session, setSession] = useState<{ user: { id: string } | null } | null>(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem("cached_auth_user");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          return parsed?.id ? { user: { id: parsed.id } } : null;
+        }
+      }
+    } catch {}
+    return null;
+  });
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const activeProfileUserIdRef = useRef<string | null>(null);
@@ -262,6 +281,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(appUser);
       setSession({ user: { id: appUser.id } });
       activeProfileUserIdRef.current = appUser.id;
+      try {
+        localStorage.setItem("cached_auth_user", JSON.stringify(appUser));
+      } catch {}
 
       void fetchProfile(appUser.id, appUser);
       setLoading(false);
@@ -270,6 +292,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(null);
       setProfile(null);
       activeProfileUserIdRef.current = null;
+      try {
+        localStorage.removeItem("cached_auth_user");
+      } catch {}
       setLoading(false);
     }
   }, [isLoaded, firebaseUser]);
@@ -666,6 +691,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isIntentionalSignOutRef.current = true;
     await appwriteSignOut();
     localStorage.removeItem("session_token");
+    localStorage.removeItem("cached_auth_user");
     clearAuthRestorePath();
     activeProfileUserIdRef.current = null;
     setUser(null);
