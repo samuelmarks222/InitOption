@@ -9,6 +9,7 @@ import {
   Trophy,
   X,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { WorkspaceLeaderboard } from "./WorkspaceLeaderboard";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -34,11 +35,17 @@ const linkSections = [
 
 export const MobileMoreMenu = ({ onClose, onOpenOverlay, onOpenDeposit }: MobileMoreMenuProps) => {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   const handleSection = (action: string) => {
     if (action === "deposit") {
       onClose();
       onOpenDeposit?.();
+      return;
+    }
+    if (action === "withdrawal") {
+      onClose();
+      navigate("/withdraw");
       return;
     }
     if (action === "analytics") {
