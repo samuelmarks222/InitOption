@@ -2556,6 +2556,7 @@ const WithdrawalPanel = () => {
     }
   };
 
+
   const formatDate = (iso: string) => {
     try {
       const d = new Date(iso);
@@ -2572,133 +2573,186 @@ const WithdrawalPanel = () => {
   );
 
   const inputCls = "h-11 w-full rounded-[4px] border border-[#323d53] bg-[#1d2535] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF] transition-colors";
-  const FAQ_1 = [
+  
+  const allFaqs = [
     { id: 1, question: "How to withdraw money from the account?", answer: "Specify the amount, choose one of your deposit methods, enter the destination details, and click Confirm." },
     { id: 2, question: "How long does it take to withdraw funds?", answer: "Withdrawal requests are processed promptly. Automated M-Pesa and crypto payouts complete in 15-60 minutes." },
     { id: 3, question: "What is the minimum withdrawal amount?", answer: "The minimum withdrawal amount is $10.00." },
     { id: 4, question: "Is there any fee for depositing or withdrawing funds from the account?", answer: "No, our platform charges zero commission or fees for deposits and withdrawals." },
     { id: 5, question: "Do I need to provide any documents to make a withdrawal?", answer: "Standard withdrawals do not require extra documents unless identity verification is requested." },
-  ];
-  const FAQ_2 = [
     { id: 6, question: "What is account verification?", answer: "Account verification ensures security and confirms identity before large payouts." },
     { id: 7, question: "How to understand that I need to go through account verification?", answer: "You will receive an in-app notice if identity verification documents are required." },
     { id: 8, question: "How long does the verification process take?", answer: "Verification is completed within 1 to 2 hours of document submission." },
     { id: 9, question: "How do I know that I successfully passed verification?", answer: "A green Verified badge will appear on your profile once completed." },
   ];
-  const STAT_COLORS: Record<string, string> = { pending: "bg-yellow-500", completed: "bg-green-500", approved: "bg-green-500", failed: "bg-red-500", rejected: "bg-red-500", waiting: "bg-slate-400" };
-  const STAT_LABELS: Record<string, string> = { pending: "Waiting confirmation", completed: "Completed", approved: "Completed", failed: "Failed", rejected: "Failed", waiting: "Waiting" };
+  const STAT_COLORS: Record<string, string> = { pending: "bg-yellow-500", completed: "bg-green-500", approved: "bg-green-500", failed: "text-[#ff5d52]", rejected: "text-[#ff5d52]", waiting: "text-yellow-400" };
+  const STAT_LABELS: Record<string, string> = { pending: "Waiting confirmation", completed: "Completed", approved: "Completed", failed: "Failed", rejected: "Failed", waiting: "Waiting confirmation" };
 
   return (
-    <div className="p-2 space-y-10">
-      <form onSubmit={handleConfirmWithdrawal} className="grid gap-10 lg:grid-cols-[160px_minmax(0,380px)_1fr]">
-        <div className="space-y-6 pt-1">
-          <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8d99ae]">Account:</h3>
-          <div className="space-y-5">
+    <div className="space-y-8 p-1 sm:p-3 text-white">
+      <form onSubmit={handleConfirmWithdrawal} className="space-y-8">
+        <div className="space-y-4">
+          <h3 className="text-[14px] font-black text-white">Account:</h3>
+          <div className="space-y-4 pl-1">
             <div>
-              <p className="text-[11px] font-bold text-[#6c7a91]">In the account:</p>
-              <p className="mt-1 text-xl font-extrabold text-white">{liveBalance.toFixed(2)} $</p>
+              <p className="text-[12px] font-bold text-[#8d99ae]">In the account:</p>
+              <p className="mt-1 text-[22px] font-black text-white">{liveBalance.toFixed(2)} $</p>
             </div>
             <div>
-              <p className="text-[11px] font-bold text-[#6c7a91]">Available for withdrawal:</p>
-              <p className="mt-1 text-xl font-extrabold text-white">{liveBalance.toFixed(2)} $</p>
+              <p className="text-[12px] font-bold text-[#8d99ae]">Available for withdrawal:</p>
+              <p className="mt-1 text-[22px] font-black text-white">{liveBalance.toFixed(2)} $</p>
             </div>
           </div>
         </div>
 
         <div className="space-y-5">
-          <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8d99ae]">Withdrawal:</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <h3 className="text-[14px] font-black text-white">Withdrawal:</h3>
+          
+          <div className="space-y-4">
             <FLabel label="Amount">
-              <div className="flex">
-                <input type="number" min={10} value={amount} onChange={(e) => setAmount(e.target.value)} className="h-11 w-full rounded-l-[4px] border border-r-0 border-[#323d53] bg-[#1d2535] px-3 text-sm font-bold text-white outline-none focus:border-[#0084FF] transition-colors" />
-                <span className="flex h-11 items-center rounded-r-[4px] border border-l-0 border-[#323d53] bg-[#1d2535] px-3 text-xs font-bold text-[#6c7a91]">USD</span>
+              <div className="relative flex items-center">
+                <input
+                  type="number"
+                  min={10}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="h-11 w-full rounded-[4px] border border-[#323d53] bg-[#1d2535] px-4 pr-14 text-sm font-bold text-white outline-none focus:border-[#0084FF] transition-colors"
+                />
+                <span className="absolute right-3 text-xs font-bold text-[#6c7a91]">USD</span>
               </div>
             </FLabel>
+
             <FLabel label="Payment method">
-              <select value={selectedMethodId} onChange={(e) => setSelectedMethodId(e.target.value)} className={inputCls + " appearance-none"}>
-                {eligibleMethods.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
-              </select>
-            </FLabel>
-          </div>
-
-          {selectedEligibleMethod?.methodType === "mpesa" ? (
-            <div className="space-y-4">
-              <FLabel label="First name"><input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputCls} /></FLabel>
-              <FLabel label="Last name"><input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputCls} /></FLabel>
-              <FLabel label="Bank">
-                <select value={bankName} onChange={(e) => setBankName(e.target.value)} className={inputCls + " appearance-none"}>
-                  <option value="SAFARICOM">SAFARICOM</option>
-                  <option value="AIRTEL">AIRTEL MONEY</option>
+              <div className="relative">
+                <select
+                  value={selectedMethodId}
+                  onChange={(e) => setSelectedMethodId(e.target.value)}
+                  className={inputCls + " appearance-none pr-10"}
+                >
+                  {eligibleMethods.map((m) => (
+                    <option key={m.id} value={m.id} className="bg-[#1d2535] text-white">{m.label}</option>
+                  ))}
                 </select>
-              </FLabel>
-              <FLabel label="Phone"><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="254719320764" className={inputCls} /></FLabel>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <FLabel label="Wallet address"><input type="text" value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} placeholder="Enter wallet address" className={inputCls} /></FLabel>
-              <FLabel label="Memo (optional)"><input type="text" value={cryptoMemo} onChange={(e) => setCryptoMemo(e.target.value)} placeholder="Destination memo / tag if required" className={inputCls} /></FLabel>
-            </div>
-          )}
-
-          <button type="submit" disabled={loading} className="flex h-10 min-w-[140px] items-center justify-center gap-2 rounded bg-[#0084FF] px-6 text-xs font-bold text-white shadow hover:bg-[#0070df] active:scale-95 disabled:opacity-50 transition-all">
-            {loading ? "Confirming..." : <>Confirm <ArrowRight size={14} /></>}
-          </button>
-        </div>
-
-        <div className="space-y-4 pt-1">
-          <div className="flex items-center justify-between">
-            <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8d99ae]">FAQ:</h3>
-            <span className="flex items-center gap-1 cursor-pointer text-[11px] font-bold text-[#0084FF] hover:underline">Check out full FAQ <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white">&gt;</span></span>
-          </div>
-          <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2 text-xs">
-            {[FAQ_1, FAQ_2].map((col, ci) => (
-              <div key={ci} className="space-y-3">
-                {col.map((item) => (
-                  <div key={item.id}>
-                    <button type="button" onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)} className="flex items-start gap-1.5 text-left text-xs font-bold text-gray-300 hover:text-white transition-colors">
-                      <span className="text-gray-500 shrink-0">v</span>
-                      <span>{item.question}</span>
-                    </button>
-                    {expandedFaq === item.id && <p className="mt-1 pl-4 text-[11px] font-normal leading-relaxed text-gray-400">{item.answer}</p>}
-                  </div>
-                ))}
+                <ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-white/50" />
               </div>
-            ))}
+            </FLabel>
+
+            {selectedEligibleMethod?.methodType === "mpesa" ? (
+              <>
+                <FLabel label="First name">
+                  <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputCls} />
+                </FLabel>
+                <FLabel label="Last name">
+                  <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputCls} />
+                </FLabel>
+                <FLabel label="Bank">
+                  <div className="relative">
+                    <select value={bankName} onChange={(e) => setBankName(e.target.value)} className={inputCls + " appearance-none pr-10"}>
+                      <option value="SAFARICOM" className="bg-[#1d2535] text-white">SAFARICOM</option>
+                      <option value="AIRTEL" className="bg-[#1d2535] text-white">AIRTEL</option>
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-white/50" />
+                  </div>
+                </FLabel>
+                <FLabel label="Phone">
+                  <div className="relative">
+                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="254719320764" className={inputCls + " pr-10"} />
+                    <ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-white/50" />
+                  </div>
+                </FLabel>
+              </>
+            ) : (
+              <>
+                <FLabel label="Wallet address">
+                  <input type="text" value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} placeholder="Enter wallet address" className={inputCls} />
+                </FLabel>
+                <FLabel label="Memo (optional)">
+                  <input type="text" value={cryptoMemo} onChange={(e) => setCryptoMemo(e.target.value)} placeholder="Destination memo / tag if required" className={inputCls} />
+                </FLabel>
+              </>
+            )}
           </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex h-12 w-full items-center justify-between rounded-[6px] bg-[#0084FF] px-5 text-[15px] font-black text-white shadow-lg transition-all hover:bg-[#0070df] active:scale-[0.99] disabled:opacity-50"
+          >
+            <span>{loading ? "Confirming..." : "Confirm"}</span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white">
+              <ArrowRight className="h-4 w-4" strokeWidth={3} />
+            </span>
+          </button>
         </div>
       </form>
 
-      <div className="space-y-4 border-t border-dashed border-[#2d374d] pt-6">
+      <div className="border-t border-dashed border-white/15" />
+
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-gray-300">Some of your latest requests:</h3>
-          <span className="flex items-center gap-1 cursor-pointer text-[11px] font-bold text-[#0084FF] hover:underline">All financial history <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white">&gt;</span></span>
+          <h3 className="text-[15px] font-extrabold text-white">Some of your latest requests:</h3>
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0084FF] text-white">
+            <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+          </span>
         </div>
-        <div className="space-y-0 text-xs font-bold">
+
+        <div className="space-y-3">
           {userWithdrawals.length === 0 ? (
-            <p className="py-4 text-center text-[11px] text-[#6c7a91]">No withdrawal requests yet.</p>
+            <p className="py-2 text-[12px] font-bold text-white/40">No withdrawal requests yet.</p>
           ) : (
-            userWithdrawals.slice(0, 10).map((w, i) => {
+            userWithdrawals.slice(0, 10).map((w) => {
               const status = (w.status || "pending").toLowerCase();
-              const dotColor = STAT_COLORS[status] ?? "bg-slate-400";
-              const statusLabel = STAT_LABELS[status] ?? status;
-              const isFailed = status === "failed" || status === "rejected";
+              const statusText = STAT_LABELS[status] ?? status;
+              const statusClass = STAT_COLORS[status] ?? "text-yellow-400";
               return (
-                <div key={w.id} className={`flex items-center justify-between py-2.5 ${i < userWithdrawals.length - 1 ? "border-b border-[#252e40]" : ""} text-gray-400`}>
-                  <div className="flex items-center gap-6 min-w-0">
-                    <span className="font-mono text-gray-300 shrink-0">{String(w.id).slice(-9)}</span>
-                    <span className="shrink-0">{formatDate(w.created_at)}</span>
-                    <span className={`flex items-center gap-1.5 shrink-0 ${isFailed ? "text-red-400" : "text-gray-300"}`}>
-                      <span className={`h-2 w-2 rounded-full shrink-0 ${dotColor}`} />{statusLabel}
-                    </span>
+                <div key={w.id} className="border-b border-white/10 pb-3 last:border-b-0 space-y-1">
+                  <div className="flex items-center justify-between text-[14px] font-black">
+                    <span className="font-mono text-white/90">{String(w.id).slice(-9)}</span>
+                    <span className="font-mono text-[#00c853]">+{Number(w.amount ?? 0).toFixed(2)} $</span>
                   </div>
-                  <div className="flex items-center gap-10 shrink-0">
-                    <span className="text-gray-300">{w.method ?? "-"}</span>
-                    <span className="font-mono text-[#0fa055]">+{Number(w.amount ?? 0).toFixed(2)} $</span>
+                  <div className="flex items-center justify-between text-[12px] font-bold text-white/45">
+                    <span>{formatDate(w.created_at)}</span>
+                    <span>{w.method ?? "M-pesa"}</span>
+                  </div>
+                  <div className={`text-[12px] font-black ${statusClass}`}>
+                    {statusText}
                   </div>
                 </div>
               );
             })
           )}
+        </div>
+      </div>
+
+      <div className="border-t border-dashed border-white/15" />
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-[15px] font-extrabold text-white">FAQ:</h3>
+          <button type="button" onClick={() => window.open("/help", "_blank")} className="flex items-center gap-2 text-[13px] font-bold text-[#0084FF] hover:underline">
+            Check out full FAQ
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0084FF] text-white">
+              <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </span>
+          </button>
+        </div>
+
+        <div className="space-y-3 text-[13px]">
+          {allFaqs.map((item) => (
+            <div key={item.id} className="border-b border-white/5 pb-2">
+              <button
+                type="button"
+                onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
+                className="flex w-full items-start gap-2 text-left font-bold text-white/90 hover:text-white transition-colors"
+              >
+                <ChevronDown className={`mt-0.5 h-4 w-4 shrink-0 text-white/60 transition-transform ${expandedFaq === item.id ? "rotate-180" : ""}`} />
+                <span>{item.question}</span>
+              </button>
+              {expandedFaq === item.id && (
+                <p className="mt-2 pl-6 text-[12px] font-normal leading-relaxed text-white/60">{item.answer}</p>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -17,10 +17,13 @@ import {
   CreditCard,
   Edit2,
   ExternalLink,
+  Eye,
+  EyeOff,
   LogOut,
   Minus,
   Plus,
   RefreshCw,
+  Send,
   ShieldAlert,
   Wallet,
   X,
@@ -2189,39 +2192,19 @@ export const AccountDropdown = ({
   onSwitch: (t: AccountType) => void;
   onOpenDeposit: () => void;
   onOpenWithdrawal: () => void;
-  onOpenProfile: (tab?: "personal" | "balance_history" | "trading_history") => void;
+  onOpenProfile: (tab?: "personal" | "balance_history" | "trading_history" | "settings") => void;
   onUpdateDemoBalance: (value: number) => void;
   onResetDemoBalance: () => void;
   onClose: () => void;
 }) => {
-  const { t } = useTranslation();
-  const { profile, signOut } = useAuth();
-  const { vip } = useVip();
+  const { profile } = useAuth();
   const { currency, formatMoney } = useCurrency();
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showDemoBalanceModal, setShowDemoBalanceModal] = useState(false);
-  const [showLevelsModal, setShowLevelsModal] = useState(false);
-  const [isSigningOut, setIsSigningOut] = useState(false);
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    if (isSigningOut) return;
-
-    setIsSigningOut(true);
-
-    try {
-      onClose();
-      await signOut();
-      navigate("/login", { replace: true });
-    } finally {
-      setIsSigningOut(false);
-    }
-  };
+  const [visible, setVisible] = useState(true);
 
   const profileEmail = profile?.email || "trader@platform.com";
-  const accountId = profile?.id?.slice(0, 8).toUpperCase() || "--------";
-  const accountBadgeLabel =
-    accountType === "tournament" ? t("accountModals.accountBadgeTournament") : accountType === "demo" ? t("accountModals.accountBadgeDemo") : t("accountModals.accountBadgeLive");
+  const accountId = profile?.id?.replace(/-/g, "").slice(0, 8).toUpperCase() || "84560898";
 
   return (
     <>
@@ -2232,237 +2215,133 @@ export const AccountDropdown = ({
         onClose={() => setShowDemoBalanceModal(false)}
         onSave={onUpdateDemoBalance}
       />
-      <AccountLevelsModal isOpen={showLevelsModal} onClose={() => setShowLevelsModal(false)} />
       <div className="fixed inset-0 z-[110]" onClick={onClose} />
       <div
-        className="fixed left-2 right-2 top-[58px] z-[120] mx-auto w-auto max-w-[368px] overflow-y-auto rounded-[20px] font-copy text-left shadow-2xl max-h-[calc(100dvh-180px)] lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-3 lg:w-[520px] lg:max-w-[min(520px,calc(100vw-32px))] lg:max-h-[520px]"
-        style={{
-          background: "hsl(228 20% 14%)",
-          border: "1px solid hsl(228 15% 20%)",
-        }}
+        className="fixed left-3 right-3 top-[58px] z-[120] mx-auto w-auto max-w-[340px] overflow-hidden rounded-[12px] bg-[#161c28] p-4 text-left shadow-[0_20px_60px_rgba(0,0,0,0.5)] lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-2 lg:w-[340px]"
+        style={{ border: "1px solid #252e42" }}
       >
-        <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_220px]">
-          <div className="border-b border-white/5 lg:border-b-0 lg:border-r lg:border-white/5">
-            <div className="border-b border-white/5 px-4 py-3" style={{ background: "hsl(228 20% 12%)" }}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-3">
-                  <div className="min-w-0">
-                    <div className="mt-1.5 truncate text-[13px] font-extrabold text-white">{profileEmail}</div>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); setShowLevelsModal(true); }}
-                      className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-[#3b82f6] hover:text-blue-400 transition cursor-pointer"
-                    >
-                      View levels
-                    </button>
-                  </div>
-                </div>
-
-                <div className="rounded-full bg-white/5 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#8fa3c8]">
-                  {accountBadgeLabel}
-                </div>
-              </div>
-
-              <div className="mt-2.5 flex items-end justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-gray-500">{t("accountModals.accountId")}</div>
-                  <div className="mt-1 font-display text-[12px] font-semibold text-[#d5d9e5]">{accountId}</div>
-                </div>
-
-                <div className="min-w-0 text-right">
-                  <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-gray-500">{t("accountModals.currency")}</div>
-                  <div className="mt-1 flex items-center justify-end gap-2">
-                    <span className="font-display text-[12px] font-bold text-white">{currency}</span>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setShowCurrencyModal(true);
-                      }}
-                      className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#86c9d4] transition-colors hover:text-white"
-                    >
-                      {t("accountModals.changeCurrency")}
-                    </button>
-                  </div>
-                </div>
-              </div>
+        {/* Top Header Card — matches Reference Image 2 */}
+        <div className="rounded-[8px] bg-[#1d2536] p-3.5 border border-white/5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 rounded-[6px] bg-[#252e42] px-3 py-1.5 text-[12px] font-black text-white">
+              <Send className="h-4 w-4 text-[#00c853]" />
+              <span>STANDARD:</span>
+              <span className="text-[#00c853]">+0% profit</span>
             </div>
+            <button
+              type="button"
+              onClick={() => setVisible((v) => !v)}
+              className="flex h-8 w-8 items-center justify-center rounded-[6px] bg-[#252e42] text-white/70 hover:text-white transition-colors"
+            >
+              {visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            </button>
+          </div>
 
-            <div className="space-y-2 p-3">
+          <div>
+            <p className="truncate text-[14px] font-extrabold text-white">{profileEmail}</p>
+            <p className="mt-0.5 text-[12px] font-bold text-white/50">ID: {visible ? accountId : "********"}</p>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-[13px] font-bold text-white/70">
+                Currency: <strong className="text-white">{currency}</strong>
+              </span>
               <button
                 type="button"
-                onClick={() => {
-                  onSwitch("live");
-                  onClose();
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCurrencyModal(true);
                 }}
-                className={`w-full text-left ${
-                   accountType === "live"
-                     ? "text-white"
-                     : "text-gray-300 hover:text-white"
-                 }`}
+                className="rounded-[4px] bg-[#0084FF] px-2.5 py-1 text-[11px] font-black uppercase text-white hover:bg-[#0070df] transition-colors"
               >
-                <div className="flex items-start gap-3">
-                  <div className="pt-0.5">
-                    {accountType === "live" ? (
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0b65c2]">
-                        <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
-                      </div>
-                    ) : (
-                      <div className="h-5 w-5 rounded-full border-[1.5px] border-gray-400" />
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-[14px] font-bold leading-tight text-white">{t("accountModals.liveAccountLabel")}</div>
-                        <div className={`mt-0.5 font-display text-[17px] font-bold ${accountType === "live" ? "text-white" : "text-gray-300"}`}>
-                          {formatMoney(balance)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                CHANGE
               </button>
+            </div>
+          </div>
+        </div>
 
-              <div className="border-t border-white/10" />
-
-              <button
-                type="button"
-                onClick={() => {
-                  onSwitch("demo");
-                  onClose();
-                }}
-                className={`w-full text-left ${
-                   accountType === "demo"
-                     ? "text-white"
-                     : "text-gray-300 hover:text-white"
-                 }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="pt-0.5">
-                    {accountType === "demo" ? (
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0b65c2]">
-                        <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
-                      </div>
-                    ) : (
-                      <div className="h-5 w-5 rounded-full border-[1.5px] border-gray-400" />
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-[14px] font-bold leading-tight text-white">{t("accountModals.demoAccountLabel")}</div>
-                        <div className={`mt-0.5 font-display text-[17px] font-bold ${accountType === "demo" ? "text-white" : "text-gray-300"}`}>
-                          {formatMoney(demoBalance)}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onResetDemoBalance();
-                          }}
-                          className="rounded-md p-1 text-gray-500 transition-colors hover:bg-white/5 hover:text-white"
-                          title="Reset demo balance"
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setShowDemoBalanceModal(true);
-                          }}
-                          className="rounded-md p-1 text-gray-500 transition-colors hover:bg-white/5 hover:text-white"
-                          title="Edit demo balance"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              </button>
-
-              <div className="border-t border-white/10" />
-
-              <button
-                type="button"
-                onClick={() => {
-                  onSwitch("tournament");
-                  onClose();
-                }}
-                className={`w-full text-left ${
-                   accountType === "tournament"
-                     ? "text-[#00C076]"
-                     : "text-gray-300 hover:text-white"
-                 }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="pt-0.5">
-                    {accountType === "tournament" ? (
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#00C076]">
-                        <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
-                      </div>
-                    ) : (
-                      <div className="h-5 w-5 rounded-full border-[1.5px] border-gray-400" />
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[14px] font-bold leading-tight text-[#00C076]">{t("accountModals.tournamentAccountLabel")}</div>
-                    <div className="mt-0.5 font-display text-[14px] font-semibold text-white">
-                      {accountType === "tournament" ? t("accountModals.tournamentActive") : t("accountModals.tournamentJoin")}
-                    </div>
-                  </div>
-                </div>
-              </button>
-
-              <div className="border-t border-white/10" />
-
+        {/* Account Options */}
+        <div className="mt-4 space-y-3">
+          {/* Live Account */}
+          <div
+            onClick={() => {
+              onSwitch("live");
+              onClose();
+            }}
+            className={`cursor-pointer rounded-[8px] p-3 transition-colors ${
+              accountType === "live" ? "bg-[#21293a] border border-[#0084FF]/40" : "hover:bg-white/5"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-white/40">
+                {accountType === "live" && <div className="h-2.5 w-2.5 rounded-full bg-[#0084FF]" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-extrabold text-white">Live Account</p>
+                <p className="mt-0.5 text-[18px] font-black text-white">
+                  {visible ? formatMoney(balance) : "****"}
+                </p>
+                <p className="mt-1 text-[12px] font-bold text-white/40">The daily limit is not set</p>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenProfile("settings");
+                    onClose();
+                  }}
+                  className="mt-1 text-[11px] font-black uppercase text-[#0084FF] hover:underline"
+                >
+                  SET LIMIT
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 bg-[#121824] p-3 lg:bg-transparent">
-            <div>
-              <div className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#7f8ea8]">{t("accountModals.quickActions")}</div>
-              <div className="space-y-1">
-                {[
-                  { label: "Deposit", action: onOpenDeposit },
-                  { label: "Withdrawal", action: onOpenWithdrawal },
-                  { label: "Payments", action: () => onOpenProfile("balance_history") },
-                  { label: "Trades", action: () => onOpenProfile("trading_history") },
-                  { label: "Referrals", action: () => navigate("/referrals") },
-                  { label: "My account", action: () => onOpenProfile("personal") },
-                  { label: "Admin Panel", action: () => navigate("/admin") },
-                ].map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    onClick={item.action}
-                    className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-[13px] font-semibold text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
-                  >
-                    {item.label}
-                    <ChevronRight className="h-3.5 w-3.5 text-gray-500" />
-                  </button>
-                ))}
+          {/* Demo Account */}
+          <div
+            onClick={() => {
+              onSwitch("demo");
+              onClose();
+            }}
+            className={`cursor-pointer rounded-[8px] p-3 transition-colors ${
+              accountType === "demo" ? "bg-[#21293a] border border-[#0084FF]/40" : "hover:bg-white/5"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-white/40">
+                {accountType === "demo" && <div className="h-2.5 w-2.5 rounded-full bg-[#0084FF]" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-extrabold text-white">Demo Account</p>
+                <div className="mt-0.5 flex items-center justify-between">
+                  <span className="text-[18px] font-black text-white">
+                    {visible ? formatMoney(demoBalance) : "****"}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onResetDemoBalance();
+                      }}
+                      className="p-1.5 text-white/50 hover:text-white transition-colors"
+                      title="Reset demo balance"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDemoBalanceModal(true);
+                      }}
+                      className="p-1.5 text-white/50 hover:text-white transition-colors"
+                      title="Edit demo balance"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={isSigningOut}
-              className="flex w-full items-center justify-center gap-2 rounded-[12px] border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-[13px] font-extrabold text-red-300 transition-colors hover:bg-red-500/15 hover:text-white disabled:opacity-60"
-            >
-              <LogOut className="h-4 w-4" />
-              {isSigningOut ? t("accountModals.loggingOut") : t("accountModals.logOut")}
-            </button>
           </div>
         </div>
       </div>
