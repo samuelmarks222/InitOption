@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   BarChart3,
   User,
@@ -8,15 +8,16 @@ import {
   Trophy,
   ChevronDown,
   MessageSquare,
+  MessageCircle,
   Plus,
-  UploadCloud,
   X,
-  CheckCircle2,
-  Clock,
   Send,
   Paperclip,
   ArrowRight,
   HelpCircle,
+  Headphones,
+  Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
@@ -25,7 +26,7 @@ interface HelpCenterOverlayProps {
   onClose?: () => void;
 }
 
-type HelpTab = "my_requests" | "create_request" | "faq";
+type HelpTab = "my_requests" | "create_request" | "live_chat" | "faq";
 type FaqCategory = "trading" | "account" | "verification" | "payment" | "payouts" | "tournaments";
 
 interface SupportTicket {
@@ -41,6 +42,13 @@ interface SupportTicket {
     text: string;
     timestamp: string;
   }>;
+}
+
+interface ChatMessage {
+  id: string;
+  sender: "user" | "support";
+  text: string;
+  timestamp: string;
 }
 
 const FAQ_CATEGORIES: Array<{
@@ -290,6 +298,7 @@ const FAQ_DATA: Record<FaqCategory, Array<{ id: string; question: string; answer
 };
 
 const STORAGE_TICKETS_KEY = "initoption_support_tickets";
+const STORAGE_LIVE_CHAT_KEY = "initoption_live_support_chat";
 
 export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
   const { user, profile } = useAuth();
@@ -341,13 +350,43 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
   const [activeTicket, setActiveTicket] = useState<SupportTicket | null>(null);
   const [replyText, setReplyText] = useState("");
 
+  // Live Support Chat State
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_LIVE_CHAT_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // silent catch
+    }
+    return [
+      {
+        id: "c1",
+        sender: "support",
+        text: "👋 Hello! Welcome to InitOption 24/7 Live Support. How can our support team assist your trading today?",
+        timestamp: new Date().toISOString(),
+      },
+    ];
+  });
+  const [chatInput, setChatInput] = useState("");
+  const [isBotTyping, setIsBotTyping] = useState(false);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_TICKETS_KEY, JSON.stringify(tickets));
     } catch {
-      // localStorage silent catch
+      // silent
     }
   }, [tickets]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_LIVE_CHAT_KEY, JSON.stringify(chatMessages));
+    } catch {
+      // silent
+    }
+    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, activeTab]);
 
   const handleCreateTicket = (e: React.FormEvent) => {
     e.preventDefault();
@@ -421,17 +460,60 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
     toast({ title: "Reply sent to support staff." });
   };
 
+  // Handle sending a live chat message
+  const handleSendChatMessage = (customText?: string) => {
+    const textToSend = customText || chatInput.trim();
+    if (!textToSend) return;
+
+    const userMsg: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      sender: "user",
+      text: textToSend,
+      timestamp: new Date().toISOString(),
+    };
+
+    setChatMessages((prev) => [...prev, userMsg]);
+    if (!customText) setChatInput("");
+    setIsBotTyping(true);
+
+    // Simulate intelligent support response
+    setTimeout(() => {
+      let botReply = "Thank you for reaching out to InitOption Live Support. An agent has been assigned to your ticket. How else can we assist you?";
+      const lower = textToSend.toLowerCase();
+
+      if (lower.includes("mpesa") || lower.includes("m-pesa") || lower.includes("deposit")) {
+        botReply = "💳 To deposit via M-Pesa: Click the green '+ Deposit' button at the top right, select M-Pesa, enter your deposit amount ($10 minimum), and enter your phone number. You will receive an instant STK push prompt on your mobile phone to complete payment.";
+      } else if (lower.includes("withdraw") || lower.includes("payout")) {
+        botReply = "💸 Withdrawals are processed instantly to your verified M-Pesa or Crypto wallet (15-60 minutes average processing time). Navigate to Account -> Withdrawal to place a request.";
+      } else if (lower.includes("verif") || lower.includes("kyc")) {
+        botReply = "🔐 Verification requires submitting a valid government-issued ID (Passport, National ID, or Driver's License) in your Settings tab. Processing takes 15 to 60 minutes.";
+      } else if (lower.includes("digital option") || lower.includes("trade") || lower.includes("how to")) {
+        botReply = "📈 Digital options allow you to forecast asset price direction (UP or DOWN) within a fixed timeframe (5s to 4h). If correct, you earn up to 98% profit payout!";
+      }
+
+      const botMsg: ChatMessage = {
+        id: `msg-bot-${Date.now()}`,
+        sender: "support",
+        text: botReply,
+        timestamp: new Date().toISOString(),
+      };
+
+      setChatMessages((prev) => [...prev, botMsg]);
+      setIsBotTyping(false);
+    }, 1000);
+  };
+
   const currentFaqs = useMemo(() => FAQ_DATA[selectedCategory] || [], [selectedCategory]);
 
   return (
     <div className="flex flex-col h-full w-full bg-[#161b26] text-white overflow-hidden select-none">
-      {/* ── TOP SUB-NAVIGATION BAR (Quotex Style) ── */}
+      {/* ── TOP SUB-NAVIGATION BAR (Quotex Style + Live Support Chat) ── */}
       <div className="flex items-center justify-between px-6 py-4 bg-[#1b2232] border-b border-[#252e42] shrink-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
             onClick={() => setActiveTab("my_requests")}
-            className={`px-6 py-2.5 rounded-[4px] text-[14px] font-bold transition-all ${
+            className={`px-5 py-2.5 rounded-[4px] text-[14px] font-bold transition-all ${
               activeTab === "my_requests"
                 ? "bg-[#273248] text-white shadow-sm border border-white/10"
                 : "text-white/60 hover:text-white hover:bg-white/5"
@@ -442,7 +524,7 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
           <button
             type="button"
             onClick={() => setActiveTab("create_request")}
-            className={`px-6 py-2.5 rounded-[4px] text-[14px] font-bold transition-all ${
+            className={`px-5 py-2.5 rounded-[4px] text-[14px] font-bold transition-all ${
               activeTab === "create_request"
                 ? "bg-[#273248] text-white shadow-sm border border-white/10"
                 : "text-white/60 hover:text-white hover:bg-white/5"
@@ -450,10 +532,29 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
           >
             Create request
           </button>
+
+          {/* 💬 LIVE SUPPORT CHAT TAB */}
+          <button
+            type="button"
+            onClick={() => setActiveTab("live_chat")}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-[4px] text-[14px] font-extrabold transition-all ${
+              activeTab === "live_chat"
+                ? "bg-[#0084FF] text-white shadow-md"
+                : "bg-white/5 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/10"
+            }`}
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span>Live Support Chat</span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+          </button>
+
           <button
             type="button"
             onClick={() => setActiveTab("faq")}
-            className={`px-6 py-2.5 rounded-[4px] text-[14px] font-bold transition-all ${
+            className={`px-5 py-2.5 rounded-[4px] text-[14px] font-bold transition-all ${
               activeTab === "faq"
                 ? "bg-[#273248] text-white shadow-sm border border-white/10"
                 : "text-white/60 hover:text-white hover:bg-white/5"
@@ -475,7 +576,7 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
       </div>
 
       {/* ── MAIN WORKSPACE CONTENT AREA ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-8 sm:px-10 lg:px-16 deposit-scrollbar">
+      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-10 lg:px-16 deposit-scrollbar">
         {/* ── TAB 1: FAQ (Frequently Asked Questions) ── */}
         {activeTab === "faq" && (
           <div className="max-w-[1100px] mx-auto space-y-10">
@@ -551,29 +652,182 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
               })}
             </div>
 
-            {/* Bottom Contact Customer Support Floating Box (Quotex Style) */}
-            <div className="pt-8 pb-4 flex justify-center">
+            {/* Bottom Contact Customer Support Floating Box (Quotex Style + Live Chat Button) */}
+            <div className="pt-8 pb-4 flex justify-center gap-4 flex-wrap">
               <div className="bg-[#1f293d] border border-white/10 rounded-[12px] p-4 sm:px-8 flex items-center gap-4 max-w-md w-full shadow-lg">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0084FF] text-white">
                   <MessageSquare className="h-5 w-5" />
                 </div>
-                <div className="text-left text-[13px]">
+                <div className="text-left text-[13px] flex-1">
                   <p className="font-bold text-white/80">Didn't find an answer to your question?</p>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("create_request")}
-                    className="mt-0.5 font-extrabold text-[#0084FF] hover:underline flex items-center gap-1"
-                  >
-                    Contact customer support
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="mt-1 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("live_chat")}
+                      className="font-black text-[#0084FF] hover:underline flex items-center gap-1"
+                    >
+                      Start Live Chat
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="text-white/30">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("create_request")}
+                      className="font-bold text-white/60 hover:text-white hover:underline"
+                    >
+                      Submit Ticket
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── TAB 2: Create Request (Support Ticket Submission) ── */}
+        {/* ── TAB 2: LIVE SUPPORT CHAT 💬 ── */}
+        {activeTab === "live_chat" && (
+          <div className="max-w-[850px] mx-auto flex flex-col h-[calc(100vh-170px)] min-h-[520px] bg-[#1f2738] border border-white/10 rounded-[16px] shadow-2xl overflow-hidden text-left">
+            {/* Live Chat Agent Header */}
+            <div className="flex items-center justify-between px-6 py-4 bg-[#181e2b] border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-3.5">
+                <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#0084FF] text-white shadow-md">
+                  <Headphones className="h-5 w-5" />
+                  <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#181e2b] bg-emerald-500" />
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-extrabold text-white flex items-center gap-2">
+                    InitOption 24/7 Live Support
+                    <span className="rounded-[4px] bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-400">
+                      LIVE
+                    </span>
+                  </h3>
+                  <p className="text-[11.5px] font-bold text-white/50">
+                    Average response time: <strong className="text-emerald-400">&lt; 1 min</strong>
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setChatMessages([
+                    {
+                      id: "c1",
+                      sender: "support",
+                      text: "👋 Hello! Welcome to InitOption 24/7 Live Support. How can our support team assist your trading today?",
+                      timestamp: new Date().toISOString(),
+                    },
+                  ]);
+                  toast({ title: "Chat session refreshed." });
+                }}
+                className="flex items-center gap-1.5 rounded-[6px] bg-white/5 px-3 py-1.5 text-xs font-bold text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+                title="Restart chat session"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                <span>Reset Chat</span>
+              </button>
+            </div>
+
+            {/* Quick Prompt Recommendation Pills */}
+            <div className="px-6 py-2.5 bg-[#161b26] border-b border-white/5 flex items-center gap-2 overflow-x-auto shrink-0 deposit-scrollbar">
+              <span className="text-[11px] font-extrabold uppercase text-white/40 shrink-0 flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-yellow-400" /> Quick Topics:
+              </span>
+              {[
+                "💳 M-Pesa Deposit Guide",
+                "💸 Withdrawal Processing Time",
+                "🔐 Verification Help",
+                "📈 How Digital Options Work",
+              ].map((topic, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => handleSendChatMessage(topic)}
+                  className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11.5px] font-bold text-white/80 transition-colors hover:border-[#0084FF] hover:bg-[#0084FF]/20 hover:text-white"
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
+
+            {/* Chat Messages Log */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 deposit-scrollbar bg-[#161b26]/50">
+              {chatMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
+                >
+                  <div
+                    className={`max-w-[80%] sm:max-w-[70%] rounded-[14px] p-4 text-[13.5px] leading-relaxed shadow-sm ${
+                      msg.sender === "user"
+                        ? "bg-[#0084FF] text-white rounded-br-none"
+                        : "bg-[#273248] text-white/95 border border-white/10 rounded-bl-none"
+                    }`}
+                  >
+                    {msg.sender === "support" && (
+                      <p className="font-extrabold text-[11px] text-[#0084FF] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <Headphones className="h-3 w-3" /> Support Agent
+                      </p>
+                    )}
+                    <p className="whitespace-pre-line">{msg.text}</p>
+                  </div>
+                  <span className="text-[10px] font-bold text-white/40 mt-1 px-1">
+                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+              ))}
+
+              {isBotTyping && (
+                <div className="flex items-center gap-2 text-xs font-bold text-white/50 italic bg-[#273248]/50 w-fit px-4 py-2 rounded-full border border-white/5">
+                  <div className="flex gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce delay-150" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce delay-300" />
+                  </div>
+                  <span>Support Agent is typing...</span>
+                </div>
+              )}
+              <div ref={chatBottomRef} />
+            </div>
+
+            {/* Chat Input Bar */}
+            <div className="p-4 bg-[#181e2b] border-t border-white/10 flex items-center gap-3 shrink-0">
+              <label className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] bg-white/5 text-white/50 hover:bg-white/10 hover:text-white cursor-pointer transition-colors">
+                <Paperclip className="h-5 w-5" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      handleSendChatMessage(`[Attached image: ${e.target.files[0].name}]`);
+                    }
+                  }}
+                  className="hidden"
+                />
+              </label>
+
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSendChatMessage()}
+                placeholder="Type your message to support..."
+                className="h-11 flex-1 rounded-[8px] border border-white/15 bg-[#161b26] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF] transition-colors"
+              />
+
+              <button
+                type="button"
+                onClick={() => handleSendChatMessage()}
+                className="flex h-11 px-5 items-center justify-center gap-2 rounded-[8px] bg-[#0084FF] text-sm font-black text-white hover:bg-[#0070df] transition-all active:scale-[0.98]"
+              >
+                <Send className="h-4 w-4" />
+                <span className="hidden sm:inline">Send</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 3: Create Request (Support Ticket Submission) ── */}
         {activeTab === "create_request" && (
           <div className="max-w-[700px] mx-auto space-y-6">
             <div className="text-center space-y-1">
@@ -669,7 +923,7 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
           </div>
         )}
 
-        {/* ── TAB 3: My Requests (Submitted Support Tickets) ── */}
+        {/* ── TAB 4: My Requests (Submitted Support Tickets) ── */}
         {activeTab === "my_requests" && (
           <div className="max-w-[900px] mx-auto space-y-6">
             <div className="flex items-center justify-between">
