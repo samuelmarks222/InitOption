@@ -2589,56 +2589,66 @@ const WithdrawalPanel = () => {
   const STAT_LABELS: Record<string, string> = { pending: "Waiting confirmation", completed: "Completed", approved: "Completed", failed: "Failed", rejected: "Failed", waiting: "Waiting confirmation" };
 
   return (
-    <div className="space-y-8 p-1 sm:p-3 text-white">
-      <form onSubmit={handleConfirmWithdrawal} className="space-y-8">
-        <div className="space-y-4">
-          <h3 className="text-[14px] font-black text-white">Account:</h3>
-          <div className="space-y-4 pl-1">
-            <div>
-              <p className="text-[12px] font-bold text-[#8d99ae]">In the account:</p>
-              <p className="mt-1 text-[22px] font-black text-white">{liveBalance.toFixed(2)} $</p>
-            </div>
-            <div>
-              <p className="text-[12px] font-bold text-[#8d99ae]">Available for withdrawal:</p>
-              <p className="mt-1 text-[22px] font-black text-white">{liveBalance.toFixed(2)} $</p>
+    <div className="space-y-8 p-1 sm:p-3 text-white max-w-[1280px]">
+      {/* ── Desktop 2-column layout / Mobile 1-column layout ── */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
+        {/* Left Column: Account & Withdrawal Form */}
+        <div className="space-y-8 lg:col-span-6 xl:col-span-5">
+          {/* Account Section */}
+          <div className="space-y-3">
+            <h3 className="text-[14px] font-black text-white">Account:</h3>
+            <div className="space-y-3 pt-1 border-b border-white/10 pb-5">
+              <div>
+                <p className="text-[12px] font-bold text-[#8d99ae]">In the account:</p>
+                <p className="mt-0.5 text-[22px] font-black text-white">{liveBalance.toFixed(2)} $</p>
+              </div>
+              <div>
+                <p className="text-[12px] font-bold text-[#8d99ae]">Available for withdrawal:</p>
+                <p className="mt-0.5 text-[22px] font-black text-white">{liveBalance.toFixed(2)} $</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="space-y-5">
-          <h3 className="text-[14px] font-black text-white">Withdrawal:</h3>
-          
-          <div className="space-y-4">
-            <FLabel label="Amount">
-              <div className="relative flex items-center">
-                <input
-                  type="number"
-                  min={10}
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="h-11 w-full rounded-[4px] border border-[#323d53] bg-[#1d2535] px-4 pr-14 text-sm font-bold text-white outline-none focus:border-[#0084FF] transition-colors"
-                />
-                <span className="absolute right-3 text-xs font-bold text-[#6c7a91]">USD</span>
-              </div>
-            </FLabel>
+          {/* Withdrawal Form */}
+          <form onSubmit={handleConfirmWithdrawal} className="space-y-5">
+            <h3 className="text-[14px] font-black text-white">Withdrawal:</h3>
 
-            <FLabel label="Payment method">
-              <div className="relative">
-                <select
-                  value={selectedMethodId}
-                  onChange={(e) => setSelectedMethodId(e.target.value)}
-                  className={inputCls + " appearance-none pr-10"}
-                >
-                  {eligibleMethods.map((m) => (
-                    <option key={m.id} value={m.id} className="bg-[#1d2535] text-white">{m.label}</option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-white/50" />
-              </div>
-            </FLabel>
+            {/* Row 1: Amount & Payment method side-by-side */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FLabel label="Amount">
+                <div className="relative flex items-center">
+                  <input
+                    type="number"
+                    min={10}
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="h-11 w-full rounded-[4px] border border-[#323d53] bg-[#1d2535] px-4 pr-14 text-sm font-bold text-white outline-none focus:border-[#0084FF] transition-colors"
+                  />
+                  <span className="absolute right-3 text-xs font-bold text-[#6c7a91]">USD</span>
+                </div>
+              </FLabel>
 
+              <FLabel label="Payment method">
+                <div className="relative">
+                  <select
+                    value={selectedMethodId}
+                    onChange={(e) => setSelectedMethodId(e.target.value)}
+                    className={inputCls + " appearance-none pr-10"}
+                  >
+                    {eligibleMethods.map((m) => (
+                      <option key={m.id} value={m.id} className="bg-[#1d2535] text-white">
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-white/50" />
+                </div>
+              </FLabel>
+            </div>
+
+            {/* Method-specific inputs */}
             {selectedEligibleMethod?.methodType === "mpesa" ? (
-              <>
+              <div className="space-y-4">
                 <FLabel label="First name">
                   <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputCls} />
                 </FLabel>
@@ -2660,99 +2670,121 @@ const WithdrawalPanel = () => {
                     <ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-white/50" />
                   </div>
                 </FLabel>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="space-y-4">
                 <FLabel label="Wallet address">
                   <input type="text" value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} placeholder="Enter wallet address" className={inputCls} />
                 </FLabel>
                 <FLabel label="Memo (optional)">
                   <input type="text" value={cryptoMemo} onChange={(e) => setCryptoMemo(e.target.value)} placeholder="Destination memo / tag if required" className={inputCls} />
                 </FLabel>
-              </>
+              </div>
             )}
+
+            {/* Compact Confirm Button matching Quotex Image 2 */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex h-10 w-full sm:w-[150px] items-center justify-between rounded-[6px] bg-[#0084FF] px-4 text-sm font-bold text-white shadow-md transition-all hover:bg-[#0070df] active:scale-[0.99] disabled:opacity-50"
+              >
+                <span>{loading ? "Confirming..." : "Confirm"}</span>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-white">
+                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={3} />
+                </span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Right Column: FAQ Section matching Reference Image 2 */}
+        <div className="space-y-4 lg:col-span-6 xl:col-span-7">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[14px] font-black text-white">FAQ:</h3>
+            <button
+              type="button"
+              onClick={() => window.open("/help", "_blank")}
+              className="flex items-center gap-1.5 text-[12px] font-bold text-[#0084FF] hover:underline"
+            >
+              Check out full FAQ
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0084FF] text-white">
+                <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
+              </span>
+            </button>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex h-12 w-full items-center justify-between rounded-[6px] bg-[#0084FF] px-5 text-[15px] font-black text-white shadow-lg transition-all hover:bg-[#0070df] active:scale-[0.99] disabled:opacity-50"
-          >
-            <span>{loading ? "Confirming..." : "Confirm"}</span>
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white">
-              <ArrowRight className="h-4 w-4" strokeWidth={3} />
-            </span>
-          </button>
+          <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2 text-[12.5px]">
+            {allFaqs.map((item) => (
+              <div key={item.id} className="border-b border-white/5 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
+                  className="flex w-full items-start gap-2 text-left font-bold text-white/85 hover:text-white transition-colors"
+                >
+                  <ChevronDown
+                    className={`mt-0.5 h-3.5 w-3.5 shrink-0 text-white/50 transition-transform ${expandedFaq === item.id ? "rotate-180" : ""}`}
+                  />
+                  <span>{item.question}</span>
+                </button>
+                {expandedFaq === item.id && (
+                  <p className="mt-2 pl-5 text-[11.5px] font-normal leading-relaxed text-white/60">{item.answer}</p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
-      </form>
+      </div>
 
-      <div className="border-t border-dashed border-white/15" />
-
-      <div className="space-y-4">
+      {/* Bottom Section: Latest Requests Table matching Reference Image 2 */}
+      <div className="border-t border-dashed border-white/15 pt-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-[15px] font-extrabold text-white">Some of your latest requests:</h3>
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0084FF] text-white">
-            <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+          <h3 className="text-[14px] font-black text-white">Some of your latest requests:</h3>
+          <span className="flex items-center gap-1 cursor-pointer text-[12px] font-bold text-[#0084FF] hover:underline">
+            All financial history
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0084FF] text-white">
+              <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
+            </span>
           </span>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {userWithdrawals.length === 0 ? (
             <p className="py-2 text-[12px] font-bold text-white/40">No withdrawal requests yet.</p>
           ) : (
-            userWithdrawals.slice(0, 10).map((w) => {
+            userWithdrawals.slice(0, 10).map((w, i) => {
               const status = (w.status || "pending").toLowerCase();
               const statusText = STAT_LABELS[status] ?? status;
-              const statusClass = STAT_COLORS[status] ?? "text-yellow-400";
+              const isFailed = status === "failed" || status === "rejected";
+              const isCompleted = status === "completed" || status === "approved";
+
               return (
-                <div key={w.id} className="border-b border-white/10 pb-3 last:border-b-0 space-y-1">
-                  <div className="flex items-center justify-between text-[14px] font-black">
-                    <span className="font-mono text-white/90">{String(w.id).slice(-9)}</span>
+                <div
+                  key={w.id}
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between py-2.5 ${
+                    i < userWithdrawals.length - 1 ? "border-b border-white/10" : ""
+                  } text-[12.5px] gap-2 font-bold`}
+                >
+                  <div className="flex items-center gap-4 sm:gap-8 min-w-0">
+                    <span className="font-mono text-white/80 shrink-0">{String(w.id).slice(-9)}</span>
+                    <span className="text-white/45 shrink-0">{formatDate(w.created_at)}</span>
+                    <span
+                      className={`flex items-center gap-1.5 shrink-0 ${
+                        isFailed ? "text-red-400" : isCompleted ? "text-emerald-400" : "text-yellow-400"
+                      }`}
+                    >
+                      <span className="text-[11px]">{isFailed ? "✕" : isCompleted ? "✓" : "⟳"}</span>
+                      {statusText}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0">
+                    <span className="text-white/60">{w.method ?? "M-pesa"}</span>
                     <span className="font-mono text-[#00c853]">+{Number(w.amount ?? 0).toFixed(2)} $</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[12px] font-bold text-white/45">
-                    <span>{formatDate(w.created_at)}</span>
-                    <span>{w.method ?? "M-pesa"}</span>
-                  </div>
-                  <div className={`text-[12px] font-black ${statusClass}`}>
-                    {statusText}
                   </div>
                 </div>
               );
             })
           )}
-        </div>
-      </div>
-
-      <div className="border-t border-dashed border-white/15" />
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-[15px] font-extrabold text-white">FAQ:</h3>
-          <button type="button" onClick={() => window.open("/help", "_blank")} className="flex items-center gap-2 text-[13px] font-bold text-[#0084FF] hover:underline">
-            Check out full FAQ
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0084FF] text-white">
-              <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
-            </span>
-          </button>
-        </div>
-
-        <div className="space-y-3 text-[13px]">
-          {allFaqs.map((item) => (
-            <div key={item.id} className="border-b border-white/5 pb-2">
-              <button
-                type="button"
-                onClick={() => setExpandedFaq(expandedFaq === item.id ? null : item.id)}
-                className="flex w-full items-start gap-2 text-left font-bold text-white/90 hover:text-white transition-colors"
-              >
-                <ChevronDown className={`mt-0.5 h-4 w-4 shrink-0 text-white/60 transition-transform ${expandedFaq === item.id ? "rotate-180" : ""}`} />
-                <span>{item.question}</span>
-              </button>
-              {expandedFaq === item.id && (
-                <p className="mt-2 pl-6 text-[12px] font-normal leading-relaxed text-white/60">{item.answer}</p>
-              )}
-            </div>
-          ))}
         </div>
       </div>
     </div>
