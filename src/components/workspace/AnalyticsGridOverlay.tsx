@@ -1177,7 +1177,7 @@ const MyAccountPanel = () => {
 
   return (
     <section className="rounded-[6px] bg-[#202633] px-5 py-5 text-white shadow-[0_18px_70px_rgba(0,0,0,0.22)]">
-      <div className="mb-5 flex flex-wrap items-center justify-end gap-6 border-b border-white/10 pb-4 text-right">
+      <div className="mb-5 hidden sm:flex flex-wrap items-center justify-end gap-6 border-b border-white/10 pb-4 text-right">
         <div>
           <p className="text-[12px] font-bold text-[#9ba5b9]">My current currency</p>
           <div className="mt-1 flex items-center justify-end gap-2">
