@@ -32,7 +32,7 @@ export function DepositBonusSelector({
   const accentSolid = tone === "amber" ? "bg-amber-400/20" : "bg-green-500/20";
 
   const totalCredited = amount + bonusAmount;
-  const hasMatch = useBonus && amount > 0 && matchingOffer !== null && matchingOffer.eligible;
+  const hasMatch = useBonus && amount > 0 && (bonusAmount > 0 || (matchingOffer !== null && matchingOffer.eligible));
 
   return (
     <div className={`rounded-xl border ${accentBorder} ${accentBg} p-5`}>

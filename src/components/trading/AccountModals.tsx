@@ -408,6 +408,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
   const [activeInstruction, setActiveInstruction] = useState<ActiveCryptoInstruction | null>(null);
   const [bonusCodeOpen, setBonusCodeOpen] = useState(false);
   const [bonusCode, setBonusCode] = useState("");
+  const [activeDbPromos, setActiveDbPromos] = useState<Tables<"promo_codes">[]>([]);
 
   // Dynamic bonus from admin-configured offers
   const { loading: bonusLoading, cryptoEnabled, findMatchingOffer, bonusAmountFor } = useDepositBonus(user?.id ?? null);
@@ -417,12 +418,16 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
 
     const fetchDepositData = async () => {
       setLoading(true);
-      const methodsResponse = await api.from("crypto_payment_methods")
-        .select("*")
-        .eq("status", "active")
-        .order("coin_name");
+      const [methodsResponse, promosResponse] = await Promise.all([
+        api.from("crypto_payment_methods").select("*").eq("status", "active").order("coin_name"),
+        api.from("promo_codes").select("*").eq("status", "active").order("created_at", { ascending: false }),
+      ]);
 
       if (cancelled) return;
+
+      if (promosResponse.data) {
+        setActiveDbPromos(promosResponse.data);
+      }
 
       if (methodsResponse.error) {
         toast({
@@ -550,9 +555,39 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
 
   const headerSubtitle = step === "methods" ? t("accountModals.selectPaymentMethod") : "Complete the payment in Plisio";
   const amountValue = Number(amount) || 0;
+  const activeMatchedPromo = useMemo(() => {
+    if (!bonusEnabled || !bonusCode.trim()) return null;
+    const cleanCode = bonusCode.trim().toUpperCase();
+    return activeDbPromos.find((p) => p.code.toUpperCase() === cleanCode) ?? null;
+  }, [activeDbPromos, bonusCode, bonusEnabled]);
+
   const matchingOffer = bonusEnabled && !bonusLoading ? findMatchingOffer(amountValue) : null;
-  const bonusPercent = matchingOffer ? matchingOffer.bonus_percent : 0;
-  const bonusAmount = matchingOffer ? bonusAmountFor(amountValue, matchingOffer) : 0;
+
+  const resolvedBonusPercent = useMemo(() => {
+    if (!bonusEnabled) return 0;
+    if (activeMatchedPromo) {
+      const val = parseFloat(activeMatchedPromo.reward_value);
+      return Number.isFinite(val) ? val : 0;
+    }
+    return matchingOffer ? matchingOffer.bonus_percent : 0;
+  }, [activeMatchedPromo, bonusEnabled, matchingOffer]);
+
+  const bonusAmount = useMemo(() => {
+    if (!bonusEnabled || amountValue <= 0 || resolvedBonusPercent <= 0) return 0;
+    if (activeMatchedPromo) {
+      const minDep = Number(
+        activeMatchedPromo.minimum_deposit_amount ?? (
+          activeMatchedPromo.code === "WELCOME50" ? 30 :
+          activeMatchedPromo.code === "DEPOSIT50" ? 100 :
+          activeMatchedPromo.code === "DEPOSIT40" ? 80 :
+          activeMatchedPromo.code === "DEPOSIT30" ? 70 : 0
+        ),
+      );
+      if (minDep > 0 && amountValue < minDep) return 0;
+    }
+    return Math.round(amountValue * (resolvedBonusPercent / 100) * 100) / 100;
+  }, [activeMatchedPromo, amountValue, bonusEnabled, resolvedBonusPercent]);
+
   const receiveAmount = amountValue + bonusAmount;
   const depositToastClassName =
     "rounded-[24px] border-[#5ec893]/35 bg-[#245b47] px-5 py-4 pr-11 text-white shadow-[0_24px_50px_rgba(7,38,24,0.34)] backdrop-blur-md";
@@ -1246,27 +1281,56 @@ const categoryCards = useMemo(
                           Apply
                         </button>
                       </div>
-                      <div className="mt-1 overflow-hidden rounded-[4px] bg-[#575e72]">
-                        {[
-                          ["WELCOME50", "+50% BONUS if you deposit more than $30.00", 50],
-                          ["DEPOSIT50", "+50% BONUS if you deposit more than $100.00", 100],
-                          ["DEPOSIT40", "+40% BONUS if you deposit more than $80.00", 80],
-                          ["DEPOSIT30", "+30% BONUS if you deposit more than $70.00", 70],
-                        ].map(([code, label, min]) => (
-                          <button
-                            key={String(code)}
-                            type="button"
-                            onClick={() => {
-                              setBonusCode(String(code));
-                              setBonusEnabled(true);
-                              setAmount((current) => String(Math.max(Number(current) || 0, Number(min))));
-                            }}
-                            className="block w-full border-b border-white/10 px-4 py-3 text-left text-[12px] font-black text-white transition last:border-b-0 hover:bg-white/8"
-                          >
-                            <span className="block">{code}</span>
-                            <span className="block text-[11px] text-white/75">{label}</span>
-                          </button>
-                        ))}
+                      <div className="mt-2 overflow-hidden rounded-[4px] bg-[#3a4154] border border-white/10">
+                        {activeDbPromos.length === 0 ? (
+                          <div className="p-3 text-[12px] font-bold text-white/50 text-center">
+                            No active deposit bonus codes configured.
+                          </div>
+                        ) : (
+                          activeDbPromos.map((promo) => {
+                            const minDep = Number(
+                              promo.minimum_deposit_amount ?? (
+                                promo.code === "WELCOME50" ? 30 :
+                                promo.code === "DEPOSIT50" ? 100 :
+                                promo.code === "DEPOSIT40" ? 80 :
+                                promo.code === "DEPOSIT30" ? 70 : 0
+                              ),
+                            );
+                            const isSelected = bonusCode.toUpperCase() === promo.code.toUpperCase();
+                            return (
+                              <button
+                                key={promo.id}
+                                type="button"
+                                onClick={() => {
+                                  setBonusCode(promo.code);
+                                  setBonusEnabled(true);
+                                  if (minDep > 0) {
+                                    setAmount((current) => String(Math.max(Number(current) || 0, minDep)));
+                                  }
+                                  toast({
+                                    title: `Bonus Code ${promo.code} Applied`,
+                                    description: `+${promo.reward_value} bonus applied for deposits >= $${minDep}!`,
+                                  });
+                                }}
+                                className={`block w-full border-b border-white/10 px-4 py-3 text-left transition last:border-b-0 hover:bg-white/12 ${
+                                  isSelected ? "bg-[#0d82df]/25 border-l-4 border-l-[#0d82df]" : ""
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-mono font-black text-[#00C98D] text-[13px] tracking-wider">
+                                    {promo.code}
+                                  </span>
+                                  <span className="rounded bg-[#00C98D]/20 px-2 py-0.5 text-[10px] font-bold text-[#00C98D]">
+                                    +{promo.reward_value} BONUS
+                                  </span>
+                                </div>
+                                <span className="mt-1 block text-[11px] font-medium text-white/80">
+                                  +{promo.reward_value} bonus if you deposit more than ${minDep.toFixed(2)}
+                                </span>
+                              </button>
+                            );
+                          })
+                        )}
                       </div>
                     </div>
                   )}

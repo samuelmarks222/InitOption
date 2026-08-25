@@ -609,7 +609,7 @@ const buildWhere = (clauses: FilterClause[], params: unknown[]): string => {
       // Handle items as array of FilterClause objects (standard)
       if (Array.isArray(clause.items) && clause.items.length > 0) {
         const orParams: unknown[] = [];
-        const orSql = buildWhere(clause.items, orParams);
+        const orSql = buildWhere(clause.items, params);
         params.push(...orParams);
         return `(${orSql})`;
       }
@@ -635,7 +635,7 @@ const buildWhere = (clauses: FilterClause[], params: unknown[]): string => {
         }
         if (parsed.length > 0) {
           const orParams: unknown[] = [];
-          const orSql = buildWhere(parsed, orParams);
+          const orSql = buildWhere(parsed, params);
           params.push(...orParams);
           return `(${orSql})`;
         }
