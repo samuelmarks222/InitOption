@@ -173,20 +173,20 @@ const TradingHeader = ({
         {/* Left: Logo + Subtitle */}
         <Link
           to="/trade"
-          className="flex shrink-0 items-center gap-3 hover:opacity-90 transition-opacity min-w-[220px]"
+          className="flex shrink-0 items-center gap-3 hover:opacity-90 transition-opacity"
         >
           {logoUrl ? (
             <img
               src={logoUrl}
               alt={platformName}
-              className="h-9 w-auto object-contain"
-              style={{ maxWidth: "180px" }}
+              className="h-10 w-auto object-contain"
+              style={{ maxWidth: "200px" }}
             />
           ) : (
-            <span className="font-black text-xl tracking-wider text-white uppercase">{platformName}</span>
+            <span className="font-black text-2xl tracking-tight text-white">{platformName}</span>
           )}
-          <span className="text-[#2A3A52] font-bold text-sm">•</span>
-          <span className="text-[11px] font-black tracking-widest text-[#5E6B7D] uppercase whitespace-nowrap">
+          <span className="text-[#4A5768] font-black text-base">•</span>
+          <span className="text-sm font-black tracking-wider text-[#CBD5E1] uppercase whitespace-nowrap">
             WEB TRADING PLATFORM
           </span>
         </Link>
