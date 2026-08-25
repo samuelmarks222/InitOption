@@ -2,341 +2,229 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bitcoin, Building2, ChevronDown, Gift } from "lucide-react";
-import { MpesaIcon } from "@/components/ui/MpesaIcon";
-import { Link } from "react-router-dom";
+import { ArrowRight, ChevronDown, ChevronRight, Lock, ShieldAlert, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { SiteLogo } from "@/components/branding/SiteLogo";
-import { formatCurrencyAmount } from "@/lib/currency";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { requestMobileMoneyWithdrawal } from "@/lib/mobileMoney";
-import { convertUsdToKesWithdrawalAmount, MPESA_METHOD_LABEL } from "@/lib/mobileMoneyShared";
+import { MPESA_METHOD_LABEL } from "@/lib/mobileMoneyShared";
 import { requestWithdrawal, requestCryptoWithdrawal } from "@/lib/withdrawals";
 
 type CryptoMethod = Tables<"crypto_payment_methods">;
-type WithdrawalMethod = "mpesa" | "bank" | "crypto";
-type BonusTurnoverStatus = {
-  bonusTotal: number;
-  completedTurnover: number;
-  isLoading: boolean;
-  remainingTurnover: number;
-  requiredTurnover: number;
-};
+type DepositRecord = Tables<"deposit_requests">;
 
-const BONUS_TURNOVER_MULTIPLIER = 10;
+export interface EligibleWithdrawalMethod {
+  id: string;
+  label: string;
+  methodType: "mpesa" | "crypto";
+  symbol?: string;
+  network?: string;
+}
 
-const EMPTY_BONUS_STATUS: BonusTurnoverStatus = {
-  bonusTotal: 0,
-  completedTurnover: 0,
-  isLoading: false,
-  remainingTurnover: 0,
-  requiredTurnover: 0,
-};
+const FAQ_ITEMS = [
+  {
+    question: "How to withdraw money from the account?",
+    answer:
+      "To withdraw money, specify the withdrawal amount and select one of your previously used deposit methods. Enter the required payout destination details and click Confirm.",
+  },
+  {
+    question: "How long does it take to withdraw funds?",
+    answer:
+      "Withdrawal requests are processed promptly by our finance team. Automated mobile money (M-Pesa) and crypto payouts typically complete within 15 to 60 minutes.",
+  },
+  {
+    question: "What is the minimum withdrawal amount?",
+    answer: "The minimum withdrawal amount is $10.00 (or equivalent in your currency).",
+  },
+  {
+    question: "Is there any fee for depositing or withdrawing funds from the account?",
+    answer: "No, our platform charges zero commission or fees for deposits and withdrawals.",
+  },
+  {
+    question: "Do I need to provide any documents to make a withdrawal?",
+    answer: "Standard withdrawals do not require extra documents unless security verification is triggered by your account level.",
+  },
+  {
+    question: "What is account verification?",
+    answer: "Account verification ensures security and prevents unauthorized transactions by confirming user identity.",
+  },
+  {
+    question: "How to understand that I need to go through account verification?",
+    answer: "You will receive a notification in your dashboard if account verification documents are required.",
+  },
+  {
+    question: "How long does the verification process take?",
+    answer: "Identity verification is typically completed within 1 to 2 hours of submitting your documents.",
+  },
+  {
+    question: "How do I know that I successfully passed verification?",
+    answer: "A green Verified badge will appear on your account profile once verification is complete.",
+  },
+];
 
 const Withdraw = () => {
   const { user, profile, refreshProfile } = useAuth();
   const { formatMoney } = useCurrency();
-  const [amount, setAmount] = useState<number | "">("");
+  const navigate = useNavigate();
+
+  const [amount, setAmount] = useState<string>("10");
   const [loading, setLoading] = useState(false);
-  const [method, setMethod] = useState<WithdrawalMethod>("mpesa");
-  const [mpesaPhoneNumber, setMpesaPhoneNumber] = useState("");
-const [address, setAddress] = useState("");
+  const [firstName, setFirstName] = useState(() => profile?.full_name?.split(" ")[0] ?? "");
+  const [lastName, setLastName] = useState(() => profile?.full_name?.split(" ").slice(1).join(" ") ?? "");
+  const [bankName, setBankName] = useState("SAFARICOM");
+  const [phone, setPhone] = useState(() => profile?.phone_number ?? "");
+  const [walletAddress, setWalletAddress] = useState("");
   const [cryptoMemo, setCryptoMemo] = useState("");
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+
+  const [userDeposits, setUserDeposits] = useState<DepositRecord[]>([]);
+  const [userWithdrawals, setUserWithdrawals] = useState<Tables<"withdrawals">[]>([]);
   const [cryptoMethods, setCryptoMethods] = useState<CryptoMethod[]>([]);
-  const [selectedCryptoId, setSelectedCryptoId] = useState("");
-  const [bonusStatus, setBonusStatus] = useState<BonusTurnoverStatus>(EMPTY_BONUS_STATUS);
-  const [withdrawWithoutBonus, setWithdrawWithoutBonus] = useState(false);
+  const [selectedMethodId, setSelectedMethodId] = useState<string>("");
 
+  // Effective live balance
+  const liveBalance = getEffectiveLiveBalance(profile);
+
+  // ── Load user's deposit history to determine eligible withdrawal methods ──
   useEffect(() => {
+    if (!user?.id) return;
     let cancelled = false;
 
-    const fetchCrypto = async () => {
-      const { data, error } = await api
-        .from("crypto_payment_methods")
-        .select("*")
-        .eq("status", "active")
-        .order("coin_name");
-
-      if (cancelled || error) {
-        return;
-      }
-
-      const methods = (data ?? []) as CryptoMethod[];
-      setCryptoMethods(methods);
-      setSelectedCryptoId((current) =>
-        current && methods.some((entry) => entry.id === current) ? current : methods[0]?.id ?? "",
-      );
-    };
-
-    void fetchCrypto();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchBonusStatus = async () => {
-      if (!user?.id) {
-        setBonusStatus(EMPTY_BONUS_STATUS);
-        return;
-      }
-
-      setBonusStatus((current) => ({ ...current, isLoading: true }));
-
-      const [depositsResponse, tradesResponse] = await Promise.all([
-        api
-          .from("deposit_requests")
-          .select("welcome_bonus,deposit_bonus,promo_bonus")
-          .eq("user_id", user.id)
-          .eq("status", "approved"),
-        api
-          .from("trades")
-          .select("amount")
-          .eq("user_id", user.id)
-          .in("status", ["won", "lost", "expired"])
-          .is("tournament_participant_id", null),
+    const loadUserData = async () => {
+      const [depositsRes, withdrawalsRes, cryptoRes] = await Promise.all([
+        api.from("deposit_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        api.from("withdrawals").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        api.from("crypto_payment_methods").select("*").eq("status", "active").order("coin_name"),
       ]);
 
-      if (cancelled) {
-        return;
+      if (cancelled) return;
+
+      if (depositsRes.data) {
+        setUserDeposits(depositsRes.data);
       }
-
-      if (depositsResponse.error || tradesResponse.error) {
-        console.error("Failed to load withdrawal bonus status", depositsResponse.error || tradesResponse.error);
-        setBonusStatus(EMPTY_BONUS_STATUS);
-        return;
+      if (withdrawalsRes.data) {
+        setUserWithdrawals(withdrawalsRes.data);
       }
-
-      const bonusTotal = (depositsResponse.data ?? []).reduce(
-        (sum, deposit) =>
-          sum +
-          Number(deposit.welcome_bonus ?? 0) +
-          Number(deposit.deposit_bonus ?? 0) +
-          Number(deposit.promo_bonus ?? 0),
-        0,
-      );
-      const completedTurnover = (tradesResponse.data ?? []).reduce((sum, trade) => sum + Number(trade.amount ?? 0), 0);
-      const requiredTurnover = Math.round(bonusTotal * BONUS_TURNOVER_MULTIPLIER * 100) / 100;
-
-      setBonusStatus({
-        bonusTotal,
-        completedTurnover,
-        isLoading: false,
-        remainingTurnover: Math.max(0, requiredTurnover - completedTurnover),
-        requiredTurnover,
-      });
+      if (cryptoRes.data) {
+        setCryptoMethods(cryptoRes.data);
+      }
     };
 
-    void fetchBonusStatus();
+    void loadUserData();
 
     return () => {
       cancelled = true;
     };
   }, [user?.id]);
 
-  const minimumWithdrawalAmount = 10;
-  const amountValue = Number(amount) || 0;
-  const amountKes = convertUsdToKesWithdrawalAmount(amountValue);
-  const selectedCrypto = useMemo(
-    () => cryptoMethods.find((crypto) => crypto.id === selectedCryptoId) ?? null,
-    [cryptoMethods, selectedCryptoId],
+  // Derive eligible withdrawal methods strictly from previous deposit history
+  const eligibleMethods = useMemo<EligibleWithdrawalMethod[]>(() => {
+    const map = new Map<string, EligibleWithdrawalMethod>();
+
+    // Scan user's deposits (approved, pending, or completed)
+    userDeposits.forEach((dep) => {
+      const methodStr = (dep.method || "").toUpperCase();
+      if (methodStr.includes("MPESA") || methodStr.includes("M-PESA") || methodStr.includes("MOBILE MONEY")) {
+        map.set("mpesa", { id: "mpesa", label: "M-Pesa", methodType: "mpesa" });
+      } else if (methodStr.includes("AIRTEL")) {
+        map.set("airtel", { id: "airtel", label: "Airtel Money", methodType: "mpesa" });
+      } else if (methodStr.includes("CRYPTO") || methodStr.includes("USDT") || methodStr.includes("BTC") || methodStr.includes("ETH")) {
+        const cleanLabel = dep.method ? dep.method.replace(/^CRYPTO\s*/i, "") : "Cryptocurrency";
+        const id = `crypto:${cleanLabel}`;
+        map.set(id, { id, label: cleanLabel, methodType: "crypto", symbol: cleanLabel.split(" ")[0] });
+      }
+    });
+
+    // Fallback if user has no deposit history yet
+    if (map.size === 0) {
+      return [
+        { id: "mpesa", label: "M-Pesa", methodType: "mpesa" },
+        { id: "crypto:USDT (TRC-20)", label: "USDT (TRC-20)", methodType: "crypto", symbol: "USDT" },
+      ];
+    }
+
+    return Array.from(map.values());
+  }, [userDeposits]);
+
+  // Set default selected method
+  useEffect(() => {
+    if (eligibleMethods.length > 0 && !selectedMethodId) {
+      setSelectedMethodId(eligibleMethods[0].id);
+    }
+  }, [eligibleMethods, selectedMethodId]);
+
+  const selectedEligibleMethod = useMemo(
+    () => eligibleMethods.find((m) => m.id === selectedMethodId) ?? eligibleMethods[0],
+    [eligibleMethods, selectedMethodId],
   );
 
-  const availableBalance = getEffectiveLiveBalance(profile);
-  const reservedWithdrawalBalance = Number(profile?.reserved_withdrawal_balance ?? 0);
-  const hasBonus = bonusStatus.bonusTotal > 0;
-  const bonusTurnoverComplete = hasBonus && bonusStatus.remainingTurnover <= 0;
-  const bonusBlocksWithdrawal = hasBonus && !bonusTurnoverComplete;
-  const effectiveWithdrawalBalance =
-    bonusBlocksWithdrawal && withdrawWithoutBonus
-      ? Math.max(0, availableBalance - bonusStatus.bonusTotal)
-      : availableBalance;
-  const bonusProgress =
-    bonusStatus.requiredTurnover > 0
-      ? Math.min(100, Math.max(0, (bonusStatus.completedTurnover / bonusStatus.requiredTurnover) * 100))
-      : 100;
-  const destination = method === "mpesa" ? mpesaPhoneNumber.trim() : address.trim();
+  const hasDepositHistory = userDeposits.length > 0;
 
-  useEffect(() => {
-    if (!bonusBlocksWithdrawal) {
-      setWithdrawWithoutBonus(false);
-    }
-  }, [bonusBlocksWithdrawal]);
+  const handleConfirmWithdrawal = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleAmountChange = (value: string) => {
-    if (value === "") {
-      setAmount("");
+    const amountNum = Number(amount);
+    if (!Number.isFinite(amountNum) || amountNum < 10) {
+      toast({ title: "Minimum withdrawal is $10.00", variant: "destructive" });
       return;
     }
 
-    const nextAmount = Number(value);
-    if (!Number.isFinite(nextAmount)) {
+    if (amountNum > liveBalance) {
+      toast({ title: "Insufficient funds in your account balance", variant: "destructive" });
       return;
     }
 
-    setAmount(nextAmount);
-  };
-
-  const handleWithdraw = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!user || !profile || !amount || Number(amount) <= 0) {
-      toast({ title: "Please enter a valid amount", variant: "destructive" });
-      return;
-    }
-
-    if (amountValue < minimumWithdrawalAmount) {
-      toast({
-        title: "Withdrawal amount too low",
-        description: `Minimum withdrawal is $${minimumWithdrawalAmount.toFixed(2)}.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (method === "crypto" && !selectedCrypto) {
-      toast({ title: "Choose a crypto payout method", variant: "destructive" });
-      return;
-    }
-
-    if (method === "crypto" && selectedCrypto?.memo_label && !cryptoMemo.trim()) {
-      toast({ title: `Please enter ${selectedCrypto.memo_label}`, variant: "destructive" });
-      return;
-    }
-
-    if (method === "mpesa" && !mpesaPhoneNumber.trim()) {
-      toast({ title: "Enter your M-PESA number", variant: "destructive" });
-      return;
-    }
-
-    if (method !== "mpesa" && !address.trim()) {
-      toast({ title: "Please enter withdrawal destination", variant: "destructive" });
-      return;
-    }
-
-    if (bonusBlocksWithdrawal && !withdrawWithoutBonus) {
-      toast({
-        title: "Bonus turnover is still active",
-        description: "Complete the turnover first, or choose Withdraw without bonus to remove the bonus and continue.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (amountValue > effectiveWithdrawalBalance) {
-      toast({
-        title: "Insufficient funds",
-        description:
-          bonusBlocksWithdrawal && withdrawWithoutBonus
-            ? `After removing the active bonus, you can withdraw up to $${effectiveWithdrawalBalance.toFixed(2)}.`
-            : `Your balance is $${availableBalance.toFixed(2)}.`,
-        variant: "destructive",
-      });
-      return;
+    if (selectedEligibleMethod?.methodType === "mpesa") {
+      if (!phone.trim()) {
+        toast({ title: "Please enter your M-Pesa phone number", variant: "destructive" });
+        return;
+      }
+    } else {
+      if (!walletAddress.trim()) {
+        toast({ title: "Please enter your wallet address", variant: "destructive" });
+        return;
+      }
     }
 
     setLoading(true);
 
-    const withdrawalMethod =
-      method === "mpesa"
-        ? MPESA_METHOD_LABEL
-        : method === "crypto"
-          ? `${selectedCrypto?.symbol.toUpperCase()} (${selectedCrypto?.network.toUpperCase()}) Wallet`
-          : "Bank Transfer";
-
-try {
-      if (method === "mpesa") {
-        const payoutResponse = await requestMobileMoneyWithdrawal({
-          amount: amountValue,
-          forfeitBonus: withdrawWithoutBonus,
-          phoneNumber: mpesaPhoneNumber,
+    try {
+      if (selectedEligibleMethod?.methodType === "mpesa") {
+        const res = await requestMobileMoneyWithdrawal({
+          amount: amountNum,
+          phoneNumber: phone.trim(),
         });
-
         await refreshProfile();
-        if (withdrawWithoutBonus) {
-          setBonusStatus(EMPTY_BONUS_STATUS);
-          setWithdrawWithoutBonus(false);
-        }
-        setAmount("");
         toast({
-          title:
-            payoutResponse.status === "pending"
-              ? "Withdrawal awaiting approval"
-              : payoutResponse.status === "approved"
-                ? "Withdrawal ready for finance payout"
-                : "Withdrawal request received",
-          description:
-            payoutResponse.detail ||
-            (payoutResponse.status === "pending"
-              ? `${formatCurrencyAmount(payoutResponse.amount_kes, "KES")} is reserved for ${payoutResponse.masked_phone_number} until approval.`
-              : `${formatCurrencyAmount(payoutResponse.amount_kes, "KES")} is reserved for ${payoutResponse.masked_phone_number} while finance sends it manually.`),
+          title: "Withdrawal request submitted! 📲",
+          description: `Your payout of $${amountNum.toFixed(2)} (${res.amount_kes} KES) to ${res.masked_phone_number} is pending.`,
         });
-        return;
-      }
+      } else {
+        const matchingCrypto = cryptoMethods.find(
+          (c) => c.symbol.toUpperCase() === (selectedEligibleMethod?.symbol || "USDT").toUpperCase(),
+        ) ?? cryptoMethods[0];
 
-      if (method === "crypto") {
-        if (!selectedCrypto) {
-          toast({ title: "Choose a crypto payout method", variant: "destructive" });
-          setLoading(false);
-          return;
-        }
-        const cryptoWithdrawalResponse = await requestCryptoWithdrawal({
-          amount: amountValue,
-          destination: address.trim(),
-          cryptoCurrency: selectedCrypto.symbol,
-          cryptoNetwork: selectedCrypto.network,
-          cryptoMemo: cryptoMemo,
-          forfeitBonus: withdrawWithoutBonus,
+        await requestCryptoWithdrawal({
+          amount: amountNum,
+          destination: walletAddress.trim(),
+          cryptoCurrency: matchingCrypto?.symbol || "USDT",
+          cryptoNetwork: matchingCrypto?.network || "TRC-20",
+          cryptoMemo: cryptoMemo.trim() || undefined,
         });
-
         await refreshProfile();
-        if (withdrawWithoutBonus) {
-          setBonusStatus(EMPTY_BONUS_STATUS);
-          setWithdrawWithoutBonus(false);
-        }
-        setAmount("");
-        setAddress("");
-        setCryptoMemo("");
         toast({
-          title: "Crypto withdrawal submitted",
-          description:
-            Number(cryptoWithdrawalResponse.forfeited_bonus_amount ?? 0) > 0
-              ? `$${amountValue.toFixed(2)} is now pending admin approval. Active bonus of $${Number(cryptoWithdrawalResponse.forfeited_bonus_amount).toFixed(2)} was removed.`
-              : `$${amountValue.toFixed(2)} is now pending admin approval.`,
+          title: "Crypto withdrawal submitted! 🪙",
+          description: `Your payout of $${amountNum.toFixed(2)} to ${walletAddress.slice(0, 10)}... is pending.`,
         });
-        return;
       }
 
-      const withdrawalResponse = await requestWithdrawal({
-        amount: amountValue,
-        destination,
-        forfeitBonus: withdrawWithoutBonus,
-        method: withdrawalMethod,
-      });
-
-      await refreshProfile();
-      if (withdrawWithoutBonus) {
-        setBonusStatus(EMPTY_BONUS_STATUS);
-        setWithdrawWithoutBonus(false);
-      }
-      setAmount("");
-      setAddress("");
+      setAmount("10");
+    } catch (err) {
       toast({
-        title: "Withdrawal submitted",
-        description:
-          Number(withdrawalResponse.forfeited_bonus_amount ?? 0) > 0
-            ? `$${amountValue.toFixed(2)} is now being prepared. Active bonus of $${Number(withdrawalResponse.forfeited_bonus_amount).toFixed(2)} was removed.`
-            : `$${amountValue.toFixed(2)} is now being prepared.`,
-      });
-    } catch (error: unknown) {
-      toast({
-        title: "Withdrawal failed",
-        description: error instanceof Error ? error.message : "Something went wrong while submitting the withdrawal.",
+        title: "Withdrawal request failed",
+        description: err instanceof Error ? err.message : "An error occurred while submitting your withdrawal request.",
         variant: "destructive",
       });
     } finally {
@@ -345,255 +233,319 @@ try {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#171f2b] text-white">
-      <div className="border-b border-white/10 bg-[#192230]/92">
-        <div className="mx-auto flex min-h-[68px] w-full max-w-[1360px] items-center justify-between gap-4 px-5 sm:px-8">
-          <SiteLogo to="/" variant="dark" imageClassName="h-9 sm:h-10" />
-          <Link to="/trade" className="flex shrink-0 items-center gap-2 text-sm text-white/90 transition hover:text-white">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Trading
-          </Link>
+    <div className="min-h-screen bg-[#161c28] text-white font-sans">
+      {/* Top Header Navigation Tabs Sub-Bar */}
+      <div className="border-b border-[#263043] bg-[#1a2130]">
+        <div className="mx-auto flex h-12 max-w-[1400px] items-center justify-between px-6">
+          <div className="flex items-center gap-1 overflow-x-auto text-xs font-bold">
+            <Link
+              to="/withdraw"
+              className="border-b-2 border-[#0084FF] bg-[#222b3d] px-4 py-3 text-white transition"
+            >
+              Withdrawal
+            </Link>
+            <Link to="/trade" className="px-4 py-3 text-gray-400 hover:text-white transition">
+              Payments
+            </Link>
+            <Link to="/trade" className="px-4 py-3 text-gray-400 hover:text-white transition">
+              Trades
+            </Link>
+            <Link to="/trade" className="px-4 py-3 text-gray-400 hover:text-white transition">
+              My Account
+            </Link>
+            <Link to="/trade" className="px-4 py-3 text-gray-400 hover:text-white transition">
+              Market
+            </Link>
+            <Link to="/trade" className="px-4 py-3 text-gray-400 hover:text-white transition">
+              Tournaments
+            </Link>
+            <Link to="/trade" className="px-4 py-3 text-gray-400 hover:text-white transition">
+              Analytics
+            </Link>
+          </div>
+
+          <button
+            onClick={() => navigate("/trade")}
+            className="text-xs font-bold text-gray-400 hover:text-white transition"
+          >
+            Back to Trade ✕
+          </button>
         </div>
       </div>
 
-      <form onSubmit={handleWithdraw} className="mx-auto grid w-full max-w-[900px] gap-10 px-5 py-10 sm:px-6 md:grid-cols-[minmax(0,466px)_368px] md:items-start md:py-14">
-        <main className="min-w-0">
-          <h1 className="text-[34px] font-bold leading-tight text-white sm:text-[38px]">Withdraw Funds</h1>
-          <p className="mt-3 text-base leading-6 text-white/62">Withdraw funds for the application and, withdraw funds.</p>
+      {/* Main 3-Column Content Layout */}
+      <div className="mx-auto max-w-[1400px] p-6 lg:p-8">
+        {!hasDepositHistory && (
+          <div className="mb-6 flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm font-medium text-amber-200">
+            <Lock className="h-5 w-5 shrink-0 text-amber-400" />
+            <span>
+              <strong>Deposit History Notice:</strong> Payout methods are restricted to payment channels you have previously used for deposits. Please make a deposit first to unlock additional withdrawal options.
+            </span>
+          </div>
+        )}
 
-          <section className="mt-11">
-            <div className="text-lg font-bold text-white">Select Withdrawal Method</div>
-            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <button
-                type="button"
-                onClick={() => setMethod("mpesa")}
-                className={`flex min-h-[96px] flex-col items-center justify-center rounded-lg border bg-white px-4 text-center text-[#111827] shadow-[0_12px_22px_rgba(0,0,0,0.12)] transition hover:-translate-y-0.5 ${
-                  method === "mpesa" ? "border-[#1ec677] ring-2 ring-[#1ec677]/45" : "border-white/70"
-                }`}
-              >
-                <MpesaIcon className="h-8 w-[92px]" />
-                <span className="mt-2 text-base font-bold">Mobile Money</span>
-              </button>
+        <form onSubmit={handleConfirmWithdrawal} className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)_340px]">
+          {/* Column 1: Account Info */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-black uppercase tracking-wider text-white">Account:</h3>
 
-              <button
-                type="button"
-                onClick={() => setMethod("bank")}
-                className={`flex min-h-[96px] flex-col items-center justify-center rounded-lg border bg-white px-4 text-center text-[#111827] shadow-[0_12px_22px_rgba(0,0,0,0.12)] transition hover:-translate-y-0.5 ${
-                  method === "bank" ? "border-[#2f82ff] ring-2 ring-[#2f82ff]/35" : "border-white/70"
-                }`}
-              >
-                <Building2 className="h-9 w-9 text-[#475569]" />
-                <span className="mt-2 text-base font-bold">Bank Transfer</span>
-              </button>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-bold text-gray-400">In the account:</p>
+                <p className="text-2xl font-black text-white">{formatMoney(liveBalance)}</p>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setMethod("crypto")}
-                className={`flex min-h-[96px] flex-col items-center justify-center rounded-lg border bg-white px-4 text-center text-[#111827] shadow-[0_12px_22px_rgba(0,0,0,0.12)] transition hover:-translate-y-0.5 ${
-                  method === "crypto" ? "border-[#f1a526] ring-2 ring-[#f1a526]/35" : "border-white/70"
-                }`}
-              >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ee9f26] text-white">
-                  <Bitcoin className="h-6 w-6" />
+              <div>
+                <p className="text-xs font-bold text-gray-400">Available for withdrawal:</p>
+                <p className="text-2xl font-black text-white">{formatMoney(liveBalance)}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 2: Withdrawal Form */}
+          <div className="space-y-5">
+            <h3 className="text-sm font-black uppercase tracking-wider text-white">Withdrawal:</h3>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/* Amount Input */}
+              <div className="relative">
+                <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
+                  Amount
                 </span>
-                <span className="mt-2 text-base font-bold">Cryptocurrency</span>
-              </button>
-            </div>
-          </section>
-
-          <section className="mt-10">
-            <label className="text-lg font-bold text-white">Enter Amount (USD)</label>
-            <div className="mt-3 flex min-h-[48px] overflow-hidden rounded-lg bg-white shadow-[0_14px_28px_rgba(0,0,0,0.12)]">
-              <input
-                type="number"
-                step="1"
-                value={amount}
-                onChange={(event) => handleAmountChange(event.target.value)}
-                placeholder=""
-                className="min-w-0 flex-1 bg-transparent px-4 text-base font-semibold text-[#111827] outline-none placeholder:text-slate-400"
-              />
-              <button
-                type="button"
-                onClick={() => setAmount(Number(effectiveWithdrawalBalance.toFixed(2)))}
-                className="m-2 rounded-md bg-[#eef0f4] px-3 text-sm font-bold text-[#111827] transition hover:bg-[#e2e5eb]"
-              >
-                MAX
-              </button>
-            </div>
-<p className="mt-3 text-sm text-white/68">
-              Available balance: <span className="font-bold text-white">{formatMoney(effectiveWithdrawalBalance)}</span>
-            </p>
-            {reservedWithdrawalBalance > 0 ? (
-              <p className="mt-1 text-xs text-white/52">{formatMoney(reservedWithdrawalBalance)} is reserved for pending M-PESA withdrawals.</p>
-            ) : null}
-          </section>
-
-          <section className="mt-10">
-            <label className="text-lg font-bold text-white">Select Account/Address</label>
-            {method === "mpesa" ? (
-              <div className="mt-3 flex min-h-[48px] overflow-hidden rounded-lg bg-white text-[#111827] shadow-[0_14px_28px_rgba(0,0,0,0.12)]">
-                <div className="flex shrink-0 items-center border-r border-slate-200 px-4 text-lg text-[#424854]">M-PESA</div>
                 <input
-                  type="tel"
-                  value={mpesaPhoneNumber}
-                  onChange={(event) => setMpesaPhoneNumber(event.target.value)}
-                  placeholder="Select Account/Address"
-                  className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none placeholder:text-[#7b7f87]"
+                  type="number"
+                  min={10}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 pr-12 text-base font-bold text-white outline-none focus:border-[#0084FF]"
                 />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-400">
+                  USD
+                </span>
+              </div>
+
+              {/* Payment Method Selector (Restricted to Deposit History) */}
+              <div className="relative">
+                <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
+                  Payment method
+                </span>
+                <select
+                  value={selectedMethodId}
+                  onChange={(e) => setSelectedMethodId(e.target.value)}
+                  className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-[#161c28] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                >
+                  {eligibleMethods.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Payout Destination Fields */}
+            {selectedEligibleMethod?.methodType === "mpesa" ? (
+              <div className="space-y-4">
+                <div className="relative">
+                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
+                    First name
+                  </span>
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                  />
+                </div>
+
+                <div className="relative">
+                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
+                    Last name
+                  </span>
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                  />
+                </div>
+
+                <div className="relative">
+                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
+                    Bank
+                  </span>
+                  <select
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                    className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-[#161c28] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                  >
+                    <option value="SAFARICOM">SAFARICOM</option>
+                    <option value="AIRTEL">AIRTEL MONEY</option>
+                  </select>
+                </div>
+
+                <div className="relative">
+                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
+                    Phone
+                  </span>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="2547XXXXXXXX"
+                    className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                  />
+                </div>
               </div>
             ) : (
-              <div className="mt-3 flex min-h-[48px] overflow-hidden rounded-lg bg-white text-[#111827] shadow-[0_14px_28px_rgba(0,0,0,0.12)]">
-                <div className="flex shrink-0 items-center border-r border-slate-200 px-4 text-lg text-[#424854]">
-                  {method === "bank" ? "BANK" : selectedCrypto?.symbol.toUpperCase() ?? "CRYPTO"}
+              <div className="space-y-4">
+                <div className="relative">
+                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
+                    Wallet address
+                  </span>
+                  <input
+                    type="text"
+                    value={walletAddress}
+                    onChange={(e) => setWalletAddress(e.target.value)}
+                    placeholder="Enter wallet address"
+                    className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                  />
                 </div>
-                <input
-                  type="text"
-                  value={address}
-                  onChange={(event) => setAddress(event.target.value)}
-                  placeholder={method === "bank" ? "Enter bank account details" : "Enter wallet address"}
-                  className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none placeholder:text-[#7b7f87]"
-                />
+
+                <div className="relative">
+                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">
+                    Memo (optional)
+                  </span>
+                  <input
+                    type="text"
+                    value={cryptoMemo}
+                    onChange={(e) => setCryptoMemo(e.target.value)}
+                    placeholder="Destination memo / tag if required"
+                    className="h-12 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                  />
+                </div>
               </div>
             )}
 
-{method === "crypto" ? (
-              <div className="mt-3 space-y-3">
-                {cryptoMethods.length === 0 ? (
-                  <div className="text-sm text-white/72">Cryptocurrency withdrawals are temporarily unavailable right now.</div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {cryptoMethods.map((crypto) => (
-                        <button
-                          key={crypto.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedCryptoId(crypto.id);
-                            setCryptoMemo("");
-                          }}
-                          className={`rounded-md border px-3 py-2 text-left text-sm transition ${
-                            selectedCryptoId === crypto.id
-                              ? "border-[#f1a526] bg-[#f1a526]/18 text-white"
-                              : "border-white/12 bg-white/8 text-white/82 hover:border-white/28"
-                          }`}
-                        >
-                          <span className="block truncate font-bold">{crypto.symbol.toUpperCase()}</span>
-                          <span className="block truncate text-[11px] uppercase text-white/56">{crypto.network}</span>
-                        </button>
-                      ))}
+            {/* Confirm Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex h-12 w-[160px] items-center justify-center gap-2 rounded-[4px] bg-[#0084FF] px-6 text-sm font-black text-white shadow-lg shadow-[#0084FF]/25 transition hover:bg-[#0070df] active:scale-95 disabled:opacity-50"
+            >
+              {loading ? "Confirming..." : "Confirm"} <ArrowRight size={16} />
+            </button>
+          </div>
+
+          {/* Column 3: FAQ Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black uppercase tracking-wider text-white">FAQ:</h3>
+              <a
+                href="#faq"
+                className="text-xs font-bold text-[#0084FF] hover:underline"
+              >
+                Check out full FAQ &gt;
+              </a>
+            </div>
+
+            <div className="space-y-2">
+              {FAQ_ITEMS.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="rounded border border-[#242d3d] bg-[#1a2130] transition hover:border-[#323d52]"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                    className="flex w-full items-center justify-between p-3 text-left text-xs font-bold text-gray-300"
+                  >
+                    <span>˅ {item.question}</span>
+                  </button>
+                  {expandedFaq === idx && (
+                    <div className="border-t border-[#242d3d] p-3 text-xs leading-relaxed text-gray-400">
+                      {item.answer}
                     </div>
-                    {selectedCrypto && selectedCrypto.memo_label && (
-                      <div className="mt-3 flex min-h-[48px] overflow-hidden rounded-lg bg-white text-[#111827] shadow-[0_14px_28px_rgba(0,0,0,0.12)]">
-                        <div className="flex shrink-0 items-center border-r border-slate-200 px-4 text-lg text-[#424854]">
-                          {selectedCrypto.memo_label.toUpperCase()}
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </form>
+
+        {/* Bottom Section: Some of your latest requests */}
+        <div className="mt-12 space-y-4 border-t border-dashed border-[#2b3548] pt-8">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-black text-white">Some of your latest requests:</h3>
+            <span className="text-xs font-bold text-[#0084FF] cursor-pointer hover:underline">
+              All financial history &gt;
+            </span>
+          </div>
+
+          {userDeposits.length === 0 && userWithdrawals.length === 0 ? (
+            <div className="rounded-lg border border-[#263043] bg-[#1a2130] p-6 text-center text-xs font-bold text-gray-400">
+              No recent financial requests found.
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-[#263043] bg-[#1a2130]">
+              <div className="divide-y divide-[#242d3d]">
+                {/* Show recent deposits & withdrawals */}
+                {[...userDeposits, ...userWithdrawals]
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                  .slice(0, 5)
+                  .map((item) => {
+                    const isDeposit = "method" in item;
+                    const dateStr = new Date(item.created_at).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    });
+
+                    const statusBadge =
+                      item.status === "approved" || item.status === "completed" ? (
+                        <span className="flex items-center gap-1 text-[#0fa055] font-bold text-xs">
+                          <CheckCircle2 size={13} /> Approved
+                        </span>
+                      ) : item.status === "failed" || item.status === "rejected" ? (
+                        <span className="flex items-center gap-1 text-red-400 font-bold text-xs">
+                          <XCircle size={13} /> Failed
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-gray-400 font-bold text-xs">
+                          <Clock size={13} /> Waiting confirmation
+                        </span>
+                      );
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between px-6 py-4 text-xs font-bold"
+                      >
+                        <div className="flex items-center gap-6">
+                          <span className="font-mono text-gray-400">{item.id.slice(0, 10)}</span>
+                          <span className="text-gray-400">{dateStr}</span>
+                          <div>{statusBadge}</div>
                         </div>
-                        <input
-                          type="text"
-                          value={cryptoMemo}
-                          onChange={(event) => setCryptoMemo(event.target.value)}
-                          placeholder={`Enter ${selectedCrypto.memo_label} (optional)`}
-                          className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none placeholder:text-[#7b7f87]"
-                        />
+
+                        <div className="flex items-center gap-8">
+                          <span className="text-white">
+                            {isDeposit ? (item as DepositRecord).method : "Withdrawal"}
+                          </span>
+                          <span className="font-mono text-[#0fa055] text-sm">
+                            +{Number(item.amount ?? 0).toFixed(2)} $
+                          </span>
+                        </div>
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
-            ) : null}
-          </section>
-        </main>
-
-        <aside className="min-w-0 space-y-4">
-          <section className="rounded-lg bg-white p-5 text-[#0f1117] shadow-[0_16px_34px_rgba(0,0,0,0.16)]">
-            <h2 className="text-lg font-bold">Payout Summary</h2>
-            <div className="mt-5 space-y-3 text-base">
-              <div className="flex items-center justify-between gap-4">
-                <span>Requested Amount:</span>
-                <span className="font-bold">{amountValue.toFixed(2)} $</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span>Estimated Fees:</span>
-                <span className="font-bold">0.00 $</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span>Estimated Payout in KES:</span>
-                <span className="font-bold">{method === "mpesa" ? formatCurrencyAmount(amountKes, "KES") : "0.00 KES"}</span>
+                    );
+                  })}
               </div>
             </div>
-            <div className="mt-4 border-t border-slate-200 pt-5">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-2xl font-bold">Total Payout:</span>
-                <span className="text-2xl font-bold">{amountValue.toFixed(2)} $</span>
-              </div>
-            </div>
-          </section>
-
-          <section className="rounded-lg bg-white p-4 text-[#0f1117] shadow-[0_16px_34px_rgba(0,0,0,0.16)]">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-bold">Bonus Turnover Status</h2>
-              <ChevronDown className="h-5 w-5 rotate-180" />
-            </div>
-            <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1 text-sm">
-              <span>Requested Amount: {amountValue.toFixed(2)} $</span>
-              <span>Estimated Fees: 0.00 $</span>
-            </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#e7e9ef]">
-              <div className="h-full rounded-full bg-[#2f72f6]" style={{ width: `${bonusProgress}%` }} />
-            </div>
-
-            {hasBonus ? (
-              <div className="mt-4 space-y-3 text-xs leading-5 text-slate-600">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="inline-flex items-center gap-2 font-bold text-slate-800">
-                    <Gift className="h-4 w-4 text-[#f1a526]" />
-                    {bonusTurnoverComplete ? "Turnover complete" : "Turnover active"}
-                  </span>
-                  <span>{bonusStatus.isLoading ? "Checking..." : `${bonusProgress.toFixed(0)}%`}</span>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-1">
-                  <div>Active bonus: <strong>${bonusStatus.bonusTotal.toFixed(2)}</strong></div>
-                  <div>Required volume: <strong>${bonusStatus.requiredTurnover.toFixed(2)}</strong></div>
-                  <div>Remaining: <strong>${bonusStatus.remainingTurnover.toFixed(2)}</strong></div>
-                </div>
-                {bonusBlocksWithdrawal ? (
-                  <label className="flex cursor-pointer items-start gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={withdrawWithoutBonus}
-                      onChange={(event) => setWithdrawWithoutBonus(event.target.checked)}
-                      className="mt-1 h-4 w-4 shrink-0 accent-[#2f72f6]"
-                    />
-                    <span>
-                      Withdraw without bonus. Your max withdrawable balance becomes{" "}
-                      <strong>${Math.max(0, availableBalance - bonusStatus.bonusTotal).toFixed(2)}</strong>.
-                    </span>
-                  </label>
-                ) : null}
-              </div>
-            ) : null}
-          </section>
-
-          <Button
-            type="submit"
-            disabled={
-              loading ||
-              !amount ||
-              amountValue < minimumWithdrawalAmount ||
-              (bonusBlocksWithdrawal && !withdrawWithoutBonus) ||
-              amountValue > effectiveWithdrawalBalance ||
-              (method === "mpesa" ? !mpesaPhoneNumber.trim() : !address.trim()) ||
-              (method === "crypto" && !selectedCrypto)
-            }
-            className="h-12 w-full rounded-lg bg-[#2f72f6] text-lg font-bold text-white shadow-[0_18px_36px_rgba(47,114,246,0.35)] transition hover:bg-[#3980ff] disabled:cursor-not-allowed disabled:bg-[#2f72f6] disabled:text-white/85 disabled:opacity-100"
-          >
-            {loading ? (method === "mpesa" ? "Sending payout..." : "Submitting withdrawal...") : method === "mpesa" ? "Withdraw to M-PESA" : "Submit Withdrawal"}
-          </Button>
-
-          <p className="mx-auto max-w-[320px] text-center text-xs leading-5 text-white/62">
-            <Link to="/terms" className="underline underline-offset-2 hover:text-white">Terms and Conditions</Link> are priority considerations to terms and condition-in matterity.
-          </p>
-        </aside>
-      </form>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

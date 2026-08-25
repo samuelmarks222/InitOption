@@ -1519,84 +1519,91 @@ const categoryCards = useMemo(
 
 export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose: () => void }) => {
   const { t } = useTranslation();
-  const { refreshProfile } = useAuth();
-  const [amount, setAmount] = useState("50");
-  const [method, setMethod] = useState<"mpesa" | "bank" | "crypto">("mpesa");
-  const [mpesaPhoneNumber, setMpesaPhoneNumber] = useState("");
-  const [bankAccountName, setBankAccountName] = useState("");
-  const [bankAccountNumber, setBankAccountNumber] = useState("");
+  const { user, profile, refreshProfile } = useAuth();
+  const { formatMoney } = useCurrency();
+  const navigate = useNavigate();
+
+  const [amount, setAmount] = useState("10");
+  const [firstName, setFirstName] = useState(() => profile?.full_name?.split(" ")[0] ?? "");
+  const [lastName, setLastName] = useState(() => profile?.full_name?.split(" ").slice(1).join(" ") ?? "");
+  const [bankName, setBankName] = useState("SAFARICOM");
+  const [phone, setPhone] = useState(() => profile?.phone_number ?? "");
   const [walletAddress, setWalletAddress] = useState("");
+  const [cryptoMemo, setCryptoMemo] = useState("");
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+
+  const [userDeposits, setUserDeposits] = useState<Tables<"deposit_requests">[]>([]);
+  const [userWithdrawals, setUserWithdrawals] = useState<Tables<"withdrawals">[]>([]);
   const [cryptoMethods, setCryptoMethods] = useState<CryptoPaymentMethod[]>([]);
-  const [selectedCryptoId, setSelectedCryptoId] = useState("");
-  const [loadingMethods, setLoadingMethods] = useState(false);
+  const [selectedMethodId, setSelectedMethodId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    if (!user?.id) return;
     let cancelled = false;
 
-    const loadCryptoMethods = async () => {
-      setLoadingMethods(true);
-      const { data, error } = await api.from("crypto_payment_methods")
-        .select("*")
-        .eq("status", "active")
-        .order("coin_name");
+    const loadData = async () => {
+      const [depositsRes, withdrawalsRes, cryptoRes] = await Promise.all([
+        api.from("deposit_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        api.from("withdrawals").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        api.from("crypto_payment_methods").select("*").eq("status", "active").order("coin_name"),
+      ]);
 
       if (cancelled) return;
 
-      if (error) {
-        toast({
-          title: t("accountModals.cryptoMethodsUnavailable"),
-          description: error.message,
-          variant: "destructive",
-        });
-        setLoadingMethods(false);
-        return;
-      }
-
-      const methods = data ?? [];
-      setCryptoMethods(methods);
-      if (methods[0]) {
-        setSelectedCryptoId((current) => current || methods[0].id);
-      }
-      setLoadingMethods(false);
+      if (depositsRes.data) setUserDeposits(depositsRes.data);
+      if (withdrawalsRes.data) setUserWithdrawals(withdrawalsRes.data);
+      if (cryptoRes.data) setCryptoMethods(cryptoRes.data);
     };
 
-    void loadCryptoMethods();
-
+    void loadData();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user?.id]);
+
+  // Derive eligible withdrawal methods strictly from user deposit history
+  const eligibleMethods = useMemo<EligibleWithdrawalMethod[]>(() => {
+    const map = new Map<string, EligibleWithdrawalMethod>();
+
+    userDeposits.forEach((dep) => {
+      const methodStr = (dep.method || "").toUpperCase();
+      if (methodStr.includes("MPESA") || methodStr.includes("M-PESA") || methodStr.includes("MOBILE MONEY")) {
+        map.set("mpesa", { id: "mpesa", label: "M-Pesa", methodType: "mpesa" });
+      } else if (methodStr.includes("AIRTEL")) {
+        map.set("airtel", { id: "airtel", label: "Airtel Money", methodType: "mpesa" });
+      } else if (methodStr.includes("CRYPTO") || methodStr.includes("USDT") || methodStr.includes("BTC") || methodStr.includes("ETH")) {
+        const cleanLabel = dep.method ? dep.method.replace(/^CRYPTO\s*/i, "") : "Cryptocurrency";
+        const id = `crypto:${cleanLabel}`;
+        map.set(id, { id, label: cleanLabel, methodType: "crypto", symbol: cleanLabel.split(" ")[0] });
+      }
+    });
+
+    if (map.size === 0) {
+      return [
+        { id: "mpesa", label: "M-Pesa", methodType: "mpesa" },
+        { id: "crypto:USDT (TRC-20)", label: "USDT (TRC-20)", methodType: "crypto", symbol: "USDT" },
+      ];
+    }
+
+    return Array.from(map.values());
+  }, [userDeposits]);
+
+  useEffect(() => {
+    if (eligibleMethods.length > 0 && !selectedMethodId) {
+      setSelectedMethodId(eligibleMethods[0].id);
+    }
+  }, [eligibleMethods, selectedMethodId]);
+
+  const selectedEligibleMethod = useMemo(
+    () => eligibleMethods.find((m) => m.id === selectedMethodId) ?? eligibleMethods[0],
+    [eligibleMethods, selectedMethodId],
+  );
 
   const amountValue = Number(amount) || 0;
-  const amountKes = convertUsdToKesWithdrawalAmount(amountValue);
-  const selectedCrypto = cryptoMethods.find((entry) => entry.id === selectedCryptoId) ?? null;
-  const destination =
-    method === "mpesa"
-      ? mpesaPhoneNumber.trim()
-      : method === "bank"
-      ? [bankAccountName.trim(), bankAccountNumber.trim()].filter(Boolean).join(" | ")
-      : walletAddress.trim();
-  const destinationPreview =
-    method === "mpesa"
-      ? mpesaPhoneNumber.trim() || "Waiting for M-PESA number"
-      : method === "bank"
-      ? bankAccountNumber.trim() || "Waiting for account details"
-      : walletAddress.trim() || "Waiting for wallet address";
-  const methodLabel =
-    method === "mpesa"
-      ? MPESA_METHOD_LABEL
-      : method === "bank"
-      ? "Bank Transfer"
-      : selectedCrypto
-        ? `${selectedCrypto.symbol.toUpperCase()} (${selectedCrypto.network.toUpperCase()}) Wallet`
-        : "Crypto Wallet";
 
-  const handleSubmit = async () => {
-    if (amountValue <= 0) {
-      toast({ title: t("accountModals.withdrawalEnterValidAmount"), variant: "destructive" });
-      return;
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
     if (amountValue < 10) {
       toast({ title: t("accountModals.withdrawalMinAmount"), variant: "destructive" });
@@ -1612,67 +1619,44 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
       return;
     }
 
-    if (method === "mpesa") {
-      if (!mpesaPhoneNumber.trim()) {
-        toast({
-          title: t("accountModals.enterMpesaNumber"),
-          description: "Provide the phone number that should receive the payout.",
-          variant: "destructive",
-        });
-        return;
-      }
-    } else if (method === "bank") {
-      if (!bankAccountName.trim() || !bankAccountNumber.trim()) {
-        toast({
-          title: t("accountModals.addBankDetails"),
-          description: "Enter both the account holder name and the account number.",
-          variant: "destructive",
-        });
-        return;
-      }
-    } else {
-      if (!selectedCrypto) {
-        toast({ title: t("accountModals.chooseCryptoMethod"), variant: "destructive" });
-        return;
-      }
+    if (selectedEligibleMethod?.methodType === "mpesa" && !phone.trim()) {
+      toast({ title: t("accountModals.enterMpesaNumber"), variant: "destructive" });
+      return;
+    }
 
-      if (!walletAddress.trim()) {
-        toast({ title: t("accountModals.enterWalletAddress"), variant: "destructive" });
-        return;
-      }
+    if (selectedEligibleMethod?.methodType === "crypto" && !walletAddress.trim()) {
+      toast({ title: t("accountModals.enterWalletAddress"), variant: "destructive" });
+      return;
     }
 
     setIsSubmitting(true);
 
     try {
-      if (method === "mpesa") {
+      if (selectedEligibleMethod?.methodType === "mpesa") {
         const payoutResponse = await requestMobileMoneyWithdrawal({
           amount: amountValue,
-          phoneNumber: mpesaPhoneNumber,
+          phoneNumber: phone.trim(),
         });
 
         await refreshProfile();
         toast({
-          title:
-            payoutResponse.status === "pending"
-              ? t("accountModals.withdrawalAwaitingApproval")
-              : payoutResponse.status === "processing"
-                ? t("accountModals.withdrawalProcessing")
-                : t("accountModals.withdrawalRequestReceived"),
-          description:
-            payoutResponse.detail ||
-            (payoutResponse.status === "pending"
-              ? `${formatCurrencyAmount(amountKes, "KES")} is reserved for ${payoutResponse.masked_phone_number} until approval.`
-              : `${formatCurrencyAmount(amountKes, "KES")} is queued for ${payoutResponse.masked_phone_number}.`),
+          title: payoutResponse.status === "pending" ? t("accountModals.withdrawalAwaitingApproval") : t("accountModals.withdrawalRequestReceived"),
+          description: payoutResponse.detail || `${formatCurrencyAmount(payoutResponse.amount_kes, "KES")} is queued for ${payoutResponse.masked_phone_number}.`,
         });
         onClose();
         return;
       }
 
-      await requestWithdrawal({
+      const matchingCrypto = cryptoMethods.find(
+        (c) => c.symbol.toUpperCase() === (selectedEligibleMethod?.symbol || "USDT").toUpperCase(),
+      ) ?? cryptoMethods[0];
+
+      await requestCryptoWithdrawal({
         amount: amountValue,
-        destination,
-        method: methodLabel,
+        destination: walletAddress.trim(),
+        cryptoCurrency: matchingCrypto?.symbol || "USDT",
+        cryptoNetwork: matchingCrypto?.network || "TRC-20",
+        cryptoMemo: cryptoMemo.trim() || undefined,
       });
 
       await refreshProfile();
@@ -1693,251 +1677,237 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#05070d]/82 p-3 backdrop-blur-sm sm:p-4">
-      <div
-        className="mx-auto flex h-[calc(100dvh-24px)] w-full max-w-[980px] flex-col overflow-hidden rounded-[22px] border text-white shadow-[0_32px_90px_rgba(0,0,0,0.55)] sm:h-[min(900px,calc(100dvh-32px))]"
-        style={{ background: `linear-gradient(180deg, ${MODAL_BG} 0%, ${INNER_BG} 100%)`, borderColor: PANEL_BORDER }}
-      >
-        <div
-          className="flex items-start justify-between gap-4 border-b px-4 py-4 sm:px-6 sm:py-5"
-          style={{ backgroundColor: MODAL_BG, borderColor: PANEL_BORDER }}
-        >
-          <div className="min-w-0">
-            <div className="text-[22px] font-semibold text-white sm:text-[30px]">{t("accountModals.withdrawFunds")}</div>
-            <div className="mt-1 text-sm text-[#9dc2c8]">
-              Medium full-screen withdrawal desk with clear payout details and quick confirmation.
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b101b]/85 p-4 backdrop-blur-md">
+      <div className="flex max-h-[calc(100dvh-32px)] w-full max-w-[1200px] flex-col overflow-hidden rounded-[8px] bg-[#161c28] text-white shadow-[0_32px_100px_rgba(0,0,0,0.7)]">
+        {/* Top Header Navigation Bar */}
+        <div className="flex items-center justify-between border-b border-[#263043] bg-[#1a2130] px-6 py-3">
+          <div className="flex items-center gap-1 overflow-x-auto text-xs font-bold">
+            <span className="border-b-2 border-[#0084FF] bg-[#222b3d] px-4 py-2 text-white">
+              Withdrawal
+            </span>
+            <span className="px-4 py-2 text-gray-400">Payments</span>
+            <span className="px-4 py-2 text-gray-400">Trades</span>
+            <span className="px-4 py-2 text-gray-400">My Account</span>
+            <span className="px-4 py-2 text-gray-400">Market</span>
+            <span className="px-4 py-2 text-gray-400">Tournaments</span>
+            <span className="px-4 py-2 text-gray-400">Analytics</span>
           </div>
-          <button
-            onClick={onClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition" aria-label="Close withdrawal">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-hidden">
-          <div className="grid h-full lg:grid-cols-[1.15fr_0.85fr]">
-            <div className="min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+        {/* Modal Scrollable Body */}
+        <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-8 deposit-scrollbar">
+          {userDeposits.length === 0 && (
+            <div className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs font-medium text-amber-200">
+              <Lock className="h-4 w-4 shrink-0 text-amber-400" />
+              <span>
+                <strong>Deposit History Notice:</strong> Withdrawal options are restricted to payment methods previously used for deposits. Please make a deposit first to unlock additional payout channels.
+              </span>
+            </div>
+          )}
+
+          {/* 3-Column Layout */}
+          <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-[200px_minmax(0,1fr)_340px]">
+            {/* Column 1: Account Info */}
+            <div className="space-y-5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-white">Account:</h3>
               <div className="space-y-4">
-                <div className="rounded-[22px] border bg-white/5 p-5 sm:p-6" style={{ borderColor: PANEL_BORDER }}>
-                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#86c9d4]">Payout Method</div>
-                  <h3 className="mt-2 text-xl font-semibold text-white sm:text-2xl">Choose destination type</h3>
-                  <div className="mt-5 grid grid-cols-3 gap-2">
-                    {(["mpesa", "bank", "crypto"] as const).map((entry) => (
-                      <button
-                        key={entry}
-                        onClick={() => setMethod(entry)}
-                        className={`rounded-[14px] border px-4 py-3 text-[12px] font-bold uppercase tracking-[0.14em] transition ${
-                          method === entry
-                            ? "border-[#86c9d4] bg-[#86c9d4] text-[#121f27]"
-                            : "border-transparent bg-white/5 text-gray-300 hover:border-white/10 hover:bg-white/10 hover:text-white"
-                        }`}
-                      >
-                        {entry === "mpesa" ? "M-PESA" : entry === "bank" ? "Bank Transfer" : "Crypto Wallet"}
-                      </button>
-                    ))}
-                  </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-400">In the account:</p>
+                  <p className="text-xl font-black text-white">{formatCurrency(balance)}</p>
                 </div>
-
-                <div className="rounded-[22px] border bg-white/5 p-5 sm:p-6" style={{ borderColor: PANEL_BORDER }}>
-                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#86c9d4]">Amount</div>
-                  <h3 className="mt-2 text-xl font-semibold text-white sm:text-2xl">Withdrawal amount</h3>
-                  <p className="mt-2 text-sm leading-6 text-[#9dc2c8]">
-                    Enter how much you want to transfer from your live balance.
-                  </p>
-
-                  <div className="mt-5">
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-slate-400">$</span>
-                      <input
-                        type="number"
-                        value={amount}
-                        onChange={(event) => setAmount(event.target.value)}
-                        min="10"
-                        max={balance}
-                        className="w-full rounded-[16px] border border-white/10 bg-black/25 py-4 pl-10 pr-4 text-2xl font-bold text-white outline-none transition focus:border-[#86c9d4] sm:text-3xl"
-                      />
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {[50, 100, 250].map((preset) => (
-                        <button
-                          key={preset}
-                          onClick={() => setAmount(String(preset))}
-                          className={`rounded-xl border px-4 py-2.5 text-sm font-bold transition sm:text-base ${
-                            amount === String(preset)
-                              ? "border-[#86c9d4] bg-[#86c9d4] text-[#121f27]"
-                              : "border-white/10 bg-black/20 text-white hover:border-white/20 hover:bg-white/10"
-                          }`}
-                        >
-                          {formatCurrency(preset)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-[22px] border bg-white/5 p-5 sm:p-6" style={{ borderColor: PANEL_BORDER }}>
-                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#86c9d4]">Destination</div>
-                  <h3 className="mt-2 text-xl font-semibold text-white sm:text-2xl">
-                    {method === "mpesa" ? "M-PESA payout number" : method === "bank" ? "Bank payout details" : "Destination wallet"}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-[#9dc2c8]">
-                    {method === "mpesa"
-                      ? "Enter the M-PESA number that should receive the payout."
-                      : method === "bank"
-                      ? "Enter the receiving account name and number exactly as required."
-                      : "Select the payout coin and paste the receiving wallet address."}
-                  </p>
-
-                  <div className="mt-5">
-                    {method === "mpesa" ? (
-                      <div className="space-y-3">
-                        <input
-                          value={mpesaPhoneNumber}
-                          onChange={(event) => setMpesaPhoneNumber(event.target.value)}
-                          placeholder="0712345678 or 254712345678"
-                          className="w-full rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[#86c9d4]"
-                        />
-                        <div className="rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 text-xs leading-6 text-[#9dc2c8]">
-                          SasaPay converts this request to <span className="font-semibold text-white">{formatCurrencyAmount(amountKes, "KES")}</span> and sends it directly to that M-PESA line.
-                        </div>
-                      </div>
-                    ) : method === "bank" ? (
-                      <div className="space-y-3">
-                        <input
-                          value={bankAccountName}
-                          onChange={(event) => setBankAccountName(event.target.value)}
-                          placeholder="Account holder name"
-                          className="w-full rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[#86c9d4]"
-                        />
-                        <input
-                          value={bankAccountNumber}
-                          onChange={(event) => setBankAccountNumber(event.target.value)}
-                          placeholder="IBAN / Account number"
-                          className="w-full rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[#86c9d4]"
-                        />
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="grid max-h-[220px] gap-2 overflow-y-auto pr-1">
-                          {loadingMethods ? (
-                            <div className="rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-[#9dc2c8]">
-                              Loading crypto methods...
-                            </div>
-                          ) : cryptoMethods.length === 0 ? (
-                            <div className="rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 text-sm text-[#9dc2c8]">
-                              No active crypto payout methods found yet.
-                            </div>
-                          ) : (
-                            cryptoMethods.map((crypto) => {
-                              const isActive = selectedCryptoId === crypto.id;
-                              return (
-                                <button
-                                  key={crypto.id}
-                                  type="button"
-                                  onClick={() => setSelectedCryptoId(crypto.id)}
-                                  className={`flex items-center gap-3 rounded-[14px] border px-4 py-3 text-left transition ${
-                                    isActive
-                                      ? "border-[#86c9d4] bg-[#86c9d4]/10"
-                                      : "border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/10"
-                                  }`}
-                                >
-                                  <img
-                                    src={getCryptoIcon(crypto.symbol)}
-                                    alt={crypto.symbol}
-                                    className="h-9 w-9 rounded-full bg-white object-cover"
-                                    onError={(event) => {
-                                      event.currentTarget.style.display = "none";
-                                    }}
-                                  />
-                                  <div className="min-w-0">
-                                    <div className="truncate text-sm font-semibold text-white">
-                                      {crypto.symbol.toUpperCase()} ({crypto.network.toUpperCase()})
-                                    </div>
-                                    <div className="truncate text-[11px] text-[#9dc2c8]">{crypto.coin_name}</div>
-                                  </div>
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-
-                        <input
-                          value={walletAddress}
-                          onChange={(event) => setWalletAddress(event.target.value)}
-                          placeholder="Your wallet address"
-                          className="w-full rounded-[14px] border border-white/10 bg-black/20 px-4 py-3 font-mono text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-[#86c9d4]"
-                        />
-                      </div>
-                    )}
-                  </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-400">Available for withdrawal:</p>
+                  <p className="text-xl font-black text-white">{formatCurrency(balance)}</p>
                 </div>
               </div>
             </div>
 
-            <aside
-              className="min-h-0 overflow-y-auto border-t px-4 py-4 sm:px-6 sm:py-6 lg:border-l lg:border-t-0"
-              style={{ borderColor: PANEL_BORDER, background: "rgba(0,0,0,0.16)" }}
-            >
-              <div className="space-y-4">
-                <div className="rounded-[22px] border bg-white/5 p-5 sm:p-6" style={{ borderColor: PANEL_BORDER }}>
-                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-[#86c9d4]">{t("accountModals.availableBalance")}</div>
-                  <div className="mt-2 text-[34px] font-bold text-white">{formatCurrency(balance)}</div>
-                  <div className="mt-2 text-sm leading-6 text-[#9dc2c8]">
-                    {method === "mpesa"
-                      ? "Minimum withdrawal is $10. M-PESA payouts go to SasaPay immediately and auto-refund if the provider rejects them."
-                      : "Minimum withdrawal is $10. Requests are reviewed before processing."}
-                  </div>
+            {/* Column 2: Withdrawal Inputs */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-wider text-white">Withdrawal:</h3>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* Amount */}
+                <div className="relative">
+                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">Amount</span>
+                  <input
+                    type="number"
+                    min={10}
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="h-11 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 pr-12 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-400">USD</span>
                 </div>
 
-                <div className="rounded-[22px] border border-white/8 bg-black/20 p-5" style={{ borderColor: PANEL_BORDER }}>
-                  <div className="text-xl font-semibold text-white">Review</div>
-                  <div className="mt-4 flex items-center justify-between text-sm text-[#9dc2c8]">
-                    <span>Method</span>
-                    <span className="max-w-[210px] text-right font-semibold text-white">{methodLabel}</span>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-sm text-[#9dc2c8]">
-                    <span>Amount</span>
-                    <span className="font-semibold text-white">{formatCurrency(amountValue)}</span>
-                  </div>
-                  <div className="mt-3 flex items-start justify-between gap-4 text-sm text-[#9dc2c8]">
-                    <span>Destination</span>
-                    <span className="max-w-[220px] break-all text-right font-semibold text-white">{destinationPreview}</span>
-                  </div>
-                  {method === "mpesa" ? (
-                    <div className="mt-3 flex items-center justify-between gap-4 text-sm text-[#9dc2c8]">
-                      <span>M-PESA amount</span>
-                      <span className="font-semibold text-white">{formatCurrencyAmount(amountKes, "KES")}</span>
-                    </div>
-                  ) : null}
+                {/* Payment method dropdown (restricted to deposit history) */}
+                <div className="relative">
+                  <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">Payment method</span>
+                  <select
+                    value={selectedMethodId}
+                    onChange={(e) => setSelectedMethodId(e.target.value)}
+                    className="h-11 w-full rounded-[4px] border border-[#2b3548] bg-[#161c28] px-4 text-xs font-bold text-white outline-none focus:border-[#0084FF]"
+                  >
+                    {eligibleMethods.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={
-                    isSubmitting ||
-                    (method === "mpesa" ? !mpesaPhoneNumber.trim() : method === "bank" ? !bankAccountName.trim() || !bankAccountNumber.trim() : !walletAddress.trim())
-                  }
-                  className="w-full rounded-[16px] bg-[#86c9d4] px-6 py-4 text-base font-bold text-[#121f27] transition hover:bg-[#9ad9e2] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 sm:text-lg"
-                >
-                  {isSubmitting
-                    ? method === "mpesa"
-                      ? "Sending M-PESA payout..."
-                      : "Submitting request..."
-                    : method === "mpesa"
-                      ? `Withdraw ${amount || "0"} to M-PESA`
-                      : `Request Withdrawal ${amount || "0"}`}
-                </button>
-                <p className="text-center text-[12px] text-[#7fa5ab]">
-                  {method === "mpesa"
-                    ? "M-PESA payouts are sent through SasaPay immediately after the request is accepted."
-                    : "Requests are reviewed manually and usually processed within 24 hours."}
-                </p>
               </div>
-            </aside>
+
+              {/* Dynamic Payout Inputs */}
+              {selectedEligibleMethod?.methodType === "mpesa" ? (
+                <div className="space-y-3.5">
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">First name</span>
+                    <input
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="h-11 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-xs font-bold text-white outline-none focus:border-[#0084FF]"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">Last name</span>
+                    <input
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="h-11 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-xs font-bold text-white outline-none focus:border-[#0084FF]"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">Bank</span>
+                    <select
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      className="h-11 w-full rounded-[4px] border border-[#2b3548] bg-[#161c28] px-4 text-xs font-bold text-white outline-none focus:border-[#0084FF]"
+                    >
+                      <option value="SAFARICOM">SAFARICOM</option>
+                      <option value="AIRTEL">AIRTEL MONEY</option>
+                    </select>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">Phone</span>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="2547XXXXXXXX"
+                      className="h-11 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-xs font-bold text-white outline-none focus:border-[#0084FF]"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3.5">
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">Wallet address</span>
+                    <input
+                      type="text"
+                      value={walletAddress}
+                      onChange={(e) => setWalletAddress(e.target.value)}
+                      placeholder="Enter wallet address"
+                      className="h-11 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-xs font-bold text-white outline-none focus:border-[#0084FF]"
+                    />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute -top-2.5 left-3 z-10 bg-[#161c28] px-1.5 text-[11px] font-bold text-white/50">Memo (optional)</span>
+                    <input
+                      type="text"
+                      value={cryptoMemo}
+                      onChange={(e) => setCryptoMemo(e.target.value)}
+                      placeholder="Destination memo / tag if required"
+                      className="h-11 w-full rounded-[4px] border border-[#2b3548] bg-transparent px-4 text-xs font-bold text-white outline-none focus:border-[#0084FF]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Confirm Button */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex h-11 w-[150px] items-center justify-center gap-2 rounded-[4px] bg-[#0084FF] px-5 text-xs font-black text-white shadow-md shadow-[#0084FF]/25 transition hover:bg-[#0070df] active:scale-95 disabled:opacity-50"
+              >
+                {isSubmitting ? "Confirming..." : "Confirm"} <ChevronRight size={14} />
+              </button>
+            </div>
+
+            {/* Column 3: FAQ */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black uppercase tracking-wider text-white">FAQ:</h3>
+                <span onClick={() => { onClose(); navigate("/withdraw"); }} className="text-[11px] font-bold text-[#0084FF] cursor-pointer hover:underline">
+                  Check out full FAQ &gt;
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {FAQ_ITEMS.slice(0, 5).map((item, idx) => (
+                  <div key={idx} className="rounded border border-[#242d3d] bg-[#1a2130]">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                      className="flex w-full items-center justify-between p-2.5 text-left text-[11px] font-bold text-gray-300"
+                    >
+                      <span>˅ {item.question}</span>
+                    </button>
+                    {expandedFaq === idx && (
+                      <div className="border-t border-[#242d3d] p-2.5 text-[11px] leading-relaxed text-gray-400">
+                        {item.answer}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </form>
+
+          {/* Bottom Financial History */}
+          <div className="space-y-3 border-t border-dashed border-[#2b3548] pt-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black text-white">Some of your latest requests:</h3>
+              <span onClick={() => { onClose(); navigate("/withdraw"); }} className="text-[11px] font-bold text-[#0084FF] cursor-pointer hover:underline">
+                All financial history &gt;
+              </span>
+            </div>
+
+            {userDeposits.length === 0 && userWithdrawals.length === 0 ? (
+              <div className="rounded-lg border border-[#263043] bg-[#1a2130] p-4 text-center text-xs font-bold text-gray-400">
+                No recent financial requests found.
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-lg border border-[#263043] bg-[#1a2130] divide-y divide-[#242d3d]">
+                {[...userDeposits, ...userWithdrawals]
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                  .slice(0, 3)
+                  .map((item) => {
+                    const isDeposit = "method" in item;
+                    const dateStr = new Date(item.created_at).toLocaleDateString("en-GB", {
+                      day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
+                    });
+                    return (
+                      <div key={item.id} className="flex items-center justify-between px-5 py-3 text-xs font-bold">
+                        <div className="flex items-center gap-4">
+                          <span className="font-mono text-gray-400">{item.id.slice(0, 8)}</span>
+                          <span className="text-gray-400">{dateStr}</span>
+                          <span className={item.status === "approved" ? "text-[#0fa055]" : "text-gray-400"}>
+                            {item.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-6">
+                          <span className="text-white">{isDeposit ? (item as Tables<"deposit_requests">).method : "Withdrawal"}</span>
+                          <span className="font-mono text-[#0fa055]">+${Number(item.amount ?? 0).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
           </div>
         </div>
       </div>
