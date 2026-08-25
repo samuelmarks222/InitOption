@@ -202,7 +202,7 @@ const Withdraw = () => {
 
           <div className="p-6 space-y-10">
             <form onSubmit={handleConfirmWithdrawal} className="grid gap-10 lg:grid-cols-[160px_minmax(0,380px)_1fr]">
-              <div className="space-y-6 pt-1">
+              <div className="space-y-6 pt-1 hidden sm:block">
                 <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8d99ae]">Account:</h3>
                 <div className="space-y-5">
                   <div>

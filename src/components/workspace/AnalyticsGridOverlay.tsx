@@ -2629,7 +2629,7 @@ const WithdrawalPanel = () => {
         {/* Left Column: Account & Withdrawal Form */}
         <div className="space-y-8 lg:col-span-6 xl:col-span-5">
           {/* Account Section */}
-          <div className="space-y-3">
+          <div className="space-y-3 hidden sm:block">
             <h3 className="text-[14px] font-black text-white">Account:</h3>
             <div className="space-y-3 pt-1 border-b border-white/10 pb-5">
               <div>

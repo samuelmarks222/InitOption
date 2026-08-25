@@ -29,6 +29,8 @@ import {
   Clock,
   CheckCircle2,
   FileText,
+  Gift,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileTour, TourType } from "@/contexts/ProfileTourContext";
