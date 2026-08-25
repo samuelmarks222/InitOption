@@ -337,7 +337,11 @@ const MobileModuleOverlay = ({
               setMobileOverlay("account");
             } else if (section === "withdrawal") {
               setAccountInitialTab("Withdrawal");
-              setMobileOverlay("account");
+              if (isDesktopViewport) {
+                setMobileOverlay("account");
+              } else {
+                navigate("/withdraw");
+              }
             } else if (section === "referrals") {
               setMobileOverlay("referrals");
             } else {
@@ -1367,7 +1371,7 @@ const Trade = () => {
     if (isDesktopViewport) {
       setActiveWorkspace("account");
     } else {
-      setMobileOverlay("account");
+      navigate("/withdraw");
     }
   };
 
