@@ -66,6 +66,133 @@ interface SupportTicket {
   }>;
 }
 
+// ─── AUTHENTIC CUSTOM FINANCIAL & PLATFORM ICONS (Non-Generic) ───────────
+
+export function TradingChartIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="24" height="24" rx="6" fill="#0D2818" stroke="#00C853" strokeWidth="1.2" strokeOpacity="0.4" />
+      <line x1="7.5" y1="6" x2="7.5" y2="20" stroke="#FF5252" strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="6" y="9" width="3" height="8" rx="0.8" fill="#FF5252" />
+      <line x1="14" y1="5" x2="14" y2="22" stroke="#00E676" strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="12.5" y="8" width="3" height="10" rx="0.8" fill="#00E676" />
+      <line x1="20.5" y1="4" x2="20.5" y2="19" stroke="#00E676" strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="19" y="5" width="3" height="11" rx="0.8" fill="#00E676" />
+      <path d="M4 18L10.5 13L16.5 14.5L24 7" stroke="#69F0AE" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="24" cy="7" r="1.8" fill="#FFFFFF" stroke="#00E676" strokeWidth="1" />
+    </svg>
+  );
+}
+
+export function RocketLaunchIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="24" height="24" rx="6" fill="#2A1B00" stroke="#FFD600" strokeWidth="1.2" strokeOpacity="0.4" />
+      <path
+        d="M17.5 5C17.5 5 21.5 7.5 21.5 11.5C21.5 14 20 16 18.5 17.5L10.5 9.5C12 8 14 6.5 16.5 6.5C16.5 6.5 17.5 5 17.5 5Z"
+        fill="#FFD600"
+      />
+      <path d="M14.5 13.5L7.5 20.5C6.5 21.5 5 22 5 22C5 22 5.5 20.5 6.5 19.5L13.5 12.5L14.5 13.5Z" fill="#FFAB00" />
+      <path d="M10.5 9.5L7 11.5L8.5 15L13.5 12.5L10.5 9.5Z" fill="#FF6D00" />
+      <path d="M17.5 16.5L15.5 20L12 18.5L14.5 13.5L17.5 16.5Z" fill="#FF6D00" />
+      <circle cx="16" cy="11" r="1.8" fill="#121824" stroke="#FFF" strokeWidth="0.8" />
+      <path d="M7 21C6 22.5 4.5 23 4 23C4 23 4.5 21.5 6 20.5L7 21Z" fill="#FF3D00" />
+    </svg>
+  );
+}
+
+export function MpesaCardIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="24" height="24" rx="6" fill="#1C0B36" stroke="#B388FF" strokeWidth="1.2" strokeOpacity="0.4" />
+      <rect x="5" y="7" width="18" height="12" rx="2.5" fill="#7C4DFF" />
+      <rect x="5" y="10" width="18" height="2.5" fill="#311B92" />
+      <rect x="8" y="14" width="3.5" height="2.5" rx="0.5" fill="#FFD700" />
+      <circle cx="19" cy="18" r="4.5" fill="#00E676" stroke="#1C0B36" strokeWidth="1.2" />
+      <path d="M17.5 18L18.5 19L20.5 17" stroke="#003300" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function WithdrawMoneyIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="24" height="24" rx="6" fill="#2E1B00" stroke="#FFAB00" strokeWidth="1.2" strokeOpacity="0.4" />
+      <rect x="5" y="9" width="18" height="13" rx="2.5" fill="#FF8F00" />
+      <path d="M5 12H23" stroke="#FFE082" strokeWidth="1" strokeDasharray="2 2" />
+      <circle cx="14" cy="15.5" r="2.8" fill="#FFF8E1" stroke="#FF6F00" strokeWidth="1" />
+      <text x="14" y="17.2" fontSize="7" fontWeight="bold" textAnchor="middle" fill="#FF6F00">
+        $
+      </text>
+      <path d="M14 8V3M14 3L11 6M14 3L17 6" stroke="#00E676" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function SecurityShieldIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="24" height="24" rx="6" fill="#002233" stroke="#00B0FF" strokeWidth="1.2" strokeOpacity="0.4" />
+      <path
+        d="M14 5L7 8V13.5C7 18 10.2 21.8 14 23C17.8 21.8 21 18 21 13.5V8L14 5Z"
+        fill="#0091EA"
+        stroke="#80D8FF"
+        strokeWidth="1.2"
+      />
+      <path
+        d="M11 13.5L13 15.5L17 11.5"
+        stroke="#FFFFFF"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function CopyTradingIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="24" height="24" rx="6" fill="#300020" stroke="#FF4081" strokeWidth="1.2" strokeOpacity="0.4" />
+      <circle cx="11" cy="11" r="3.5" fill="#F50057" />
+      <path d="M6.5 19.5C6.5 16.5 8.5 15.5 11 15.5C13.5 15.5 15.5 16.5 15.5 19.5" stroke="#FF4081" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="19" cy="11" r="2.8" fill="#00E676" />
+      <path d="M15.5 18C15.5 15.5 17 14.8 19 14.8C21 14.8 22.5 15.5 22.5 18" stroke="#00E676" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M12.5 8.5L16.5 8.5M16.5 8.5L14.5 6.5M16.5 8.5L14.5 10.5" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function TrophyCupIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="24" height="24" rx="6" fill="#331A00" stroke="#FFC107" strokeWidth="1.2" strokeOpacity="0.4" />
+      <path d="M7 8H5C4 8 3 9 3 10V12C3 13.5 4.2 14.5 5.5 14.5H7" stroke="#FFD54F" strokeWidth="1.3" />
+      <path d="M21 8H23C24 8 25 9 25 10V12C25 13.5 23.8 14.5 22.5 14.5H21" stroke="#FFD54F" strokeWidth="1.3" />
+      <path d="M7 6H21V12C21 15.8 17.8 18 14 18C10.2 18 7 15.8 7 12V6Z" fill="#FFC107" stroke="#FFE082" strokeWidth="1" />
+      <path d="M14 18V21M10 23H18" stroke="#FFB300" strokeWidth="2" strokeLinecap="round" />
+      <path d="M14 8.5L15 10.5L17.2 10.7L15.5 12.2L16 14.3L14 13.2L12 14.3L12.5 12.2L10.8 10.7L13 10.5L14 8.5Z" fill="#FFFFFF" />
+    </svg>
+  );
+}
+
+export function BonusGiftIcon({ className = "h-6 w-6" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="24" height="24" rx="6" fill="#330A00" stroke="#FF6D00" strokeWidth="1.2" strokeOpacity="0.4" />
+      <rect x="5" y="11" width="18" height="12" rx="2" fill="#FF6D00" />
+      <rect x="4" y="8" width="20" height="3.5" rx="1.5" fill="#FFAB00" />
+      <rect x="12.5" y="8" width="3" height="15" fill="#FFFFFF" />
+      <circle cx="11" cy="6.5" r="2" fill="#FF8F00" stroke="#FFF" strokeWidth="1" />
+      <circle cx="17" cy="6.5" r="2" fill="#FF8F00" stroke="#FFF" strokeWidth="1" />
+      <circle cx="19" cy="18" r="4.5" fill="#D500F9" stroke="#FFF" strokeWidth="1" />
+      <text x="19" y="20.2" fontSize="6.5" fontWeight="black" textAnchor="middle" fill="#FFF">
+        %
+      </text>
+    </svg>
+  );
+}
+
 // ─── TOUR TYPE CONFIG ──────────────────────────────────────────────────────
 const TOUR_TYPE_CONFIG: Array<{
   type: TourType;
@@ -79,7 +206,7 @@ const TOUR_TYPE_CONFIG: Array<{
     type: "platform",
     label: "Full Platform Tour",
     description: "Complete walkthrough of all platform features",
-    icon: Compass,
+    icon: RocketLaunchIcon,
     color: "#1175d5",
     steps: 12,
   },
@@ -87,15 +214,15 @@ const TOUR_TYPE_CONFIG: Array<{
     type: "trading",
     label: "Trading Tour",
     description: "Charts, indicators, trade panel & execution",
-    icon: TrendingUp,
-    color: "#0a8a3c",
+    icon: TradingChartIcon,
+    color: "#00c853",
     steps: 7,
   },
   {
     type: "deposit",
     label: "Deposit Tour",
     description: "M-Pesa & crypto deposit process",
-    icon: CreditCard,
+    icon: MpesaCardIcon,
     color: "#7c3aed",
     steps: 4,
   },
@@ -103,24 +230,24 @@ const TOUR_TYPE_CONFIG: Array<{
     type: "withdrawal",
     label: "Withdrawal Tour",
     description: "How to withdraw funds from your account",
-    icon: ArrowUpFromLine,
-    color: "#d97706",
+    icon: WithdrawMoneyIcon,
+    color: "#ffab00",
     steps: 4,
   },
   {
     type: "account",
     label: "Account Tour",
     description: "Profile, KYC verification & security",
-    icon: ShieldCheck,
-    color: "#0891b2",
+    icon: SecurityShieldIcon,
+    color: "#00b0ff",
     steps: 4,
   },
   {
     type: "copy_trading",
     label: "Copy Trading Tour",
     description: "Finding traders and configuring copy settings",
-    icon: Copy,
-    color: "#db2777",
+    icon: CopyTradingIcon,
+    color: "#ff4081",
     steps: 4,
   },
 ];
@@ -133,12 +260,12 @@ const FAQ_CATEGORIES: Array<{
   countNum: number;
   icon: React.ElementType;
 }> = [
-  { id: "trading", title: "Trading Platform", countLabel: "11 questions", countNum: 11, icon: BarChart3 },
-  { id: "account", title: "My account", countLabel: "4 questions", countNum: 4, icon: User },
-  { id: "verification", title: "Verification", countLabel: "5 questions", countNum: 5, icon: ShieldCheck },
-  { id: "payment", title: "Payment", countLabel: "4 questions", countNum: 4, icon: Wallet },
-  { id: "payouts", title: "Payouts", countLabel: "5 questions", countNum: 5, icon: Banknote },
-  { id: "tournaments", title: "Tournaments", countLabel: "7 questions", countNum: 7, icon: Trophy },
+  { id: "trading", title: "Trading Platform", countLabel: "11 questions", countNum: 11, icon: TradingChartIcon },
+  { id: "account", title: "My account", countLabel: "4 questions", countNum: 4, icon: RocketLaunchIcon },
+  { id: "verification", title: "Verification", countLabel: "5 questions", countNum: 5, icon: SecurityShieldIcon },
+  { id: "payment", title: "Payment", countLabel: "4 questions", countNum: 4, icon: MpesaCardIcon },
+  { id: "payouts", title: "Payouts", countLabel: "5 questions", countNum: 5, icon: WithdrawMoneyIcon },
+  { id: "tournaments", title: "Tournaments", countLabel: "7 questions", countNum: 7, icon: TrophyCupIcon },
 ];
 
 const FAQ_DATA: Record<FaqCategory, Array<{ id: string; question: string; answer: string }>> = {
@@ -392,7 +519,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "getting_started",
     title: "Getting Started",
-    icon: Zap,
+    icon: RocketLaunchIcon,
     color: "#eab308",
     articles: [
       {
@@ -448,7 +575,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "trading",
     title: "Trading",
-    icon: TrendingUp,
+    icon: TradingChartIcon,
     color: "#22c55e",
     articles: [
       {
@@ -504,7 +631,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "deposits",
     title: "Deposits",
-    icon: CreditCard,
+    icon: MpesaCardIcon,
     color: "#7c3aed",
     articles: [
       {
@@ -560,7 +687,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "withdrawals",
     title: "Withdrawals",
-    icon: ArrowUpFromLine,
+    icon: WithdrawMoneyIcon,
     color: "#f59e0b",
     articles: [
       {
@@ -604,7 +731,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "account_security",
     title: "Account & Security",
-    icon: ShieldCheck,
+    icon: SecurityShieldIcon,
     color: "#06b6d4",
     articles: [
       {
@@ -660,7 +787,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "copy_trading",
     title: "Copy Trading",
-    icon: Copy,
+    icon: CopyTradingIcon,
     color: "#ec4899",
     articles: [
       {
@@ -704,7 +831,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "bonuses",
     title: "Bonuses",
-    icon: Star,
+    icon: BonusGiftIcon,
     color: "#f97316",
     articles: [
       {
@@ -736,7 +863,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
   {
     id: "tournaments",
     title: "Tournaments",
-    icon: Trophy,
+    icon: TrophyCupIcon,
     color: "#d97706",
     articles: [
       {
