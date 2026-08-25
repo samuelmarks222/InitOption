@@ -314,8 +314,11 @@ const MobileModuleOverlay = ({
       {mobileOverlay === "more" && (
         <MobileMoreMenu
           onClose={() => setMobileOverlay(null)}
+          onOpenDeposit={onOpenDeposit}
           onOpenOverlay={(section) => {
             if (section === "analytics") setMobileOverlay("analytics_detail");
+            else if (section === "account") setMobileOverlay("account");
+            else if (section === "referrals") setMobileOverlay("account");
             else setMobileOverlay(section);
           }}
         />
