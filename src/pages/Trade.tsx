@@ -20,6 +20,7 @@ import {
 import AssetInfo from "@/components/trading/AssetInfo";
 import { ProfileTourProvider } from "@/contexts/ProfileTourContext";
 import { GuidedTour } from "@/components/tour/GuidedTour";
+import { PlatformTourOverlay } from "@/components/tour/PlatformTourOverlay";
 import { AssetSelectorModal, type AssetSelectorAsset } from "@/components/trading/AssetSelectorModal";
 
 import IndicatorsPanel from "@/components/trading/indicators/IndicatorsPanel";
@@ -1438,6 +1439,7 @@ const Trade = () => {
       >
         <div className="trading-terminal h-[100dvh] flex flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
           <GuidedTour enabled={tourEnabled} />
+          <PlatformTourOverlay />
           <TradingHeader balance={currentBalance} demoBalance={demoBalance} accountType={accountType}
           onSwitchAccount={handleSwitchAccount} activeTabId={activeTabId} onSelectTab={handleSelectTab}
           openTabs={openTabs} onRemoveTab={handleRemoveTab} onAddAssetClick={() => setShowAssetSelector(true)}

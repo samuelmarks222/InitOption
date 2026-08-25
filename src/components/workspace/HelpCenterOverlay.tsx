@@ -8,26 +8,48 @@ import {
   Trophy,
   ChevronDown,
   MessageSquare,
-  MessageCircle,
   Plus,
   X,
   Send,
   Paperclip,
   ArrowRight,
   HelpCircle,
-  Headphones,
-  Sparkles,
-  RefreshCw,
+  Search,
+  Compass,
+  PlayCircle,
+  RotateCcw,
+  ChevronRight,
+  BookOpen,
+  TrendingUp,
+  CreditCard,
+  ArrowUpFromLine,
+  Copy,
+  Star,
+  Zap,
+  Clock,
+  CheckCircle2,
+  FileText,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfileTour, TourType } from "@/contexts/ProfileTourContext";
+import { TOUR_LABELS } from "@/components/tour/GuidedTour";
 import { toast } from "@/components/ui/use-toast";
 
 interface HelpCenterOverlayProps {
   onClose?: () => void;
 }
 
-type HelpTab = "my_requests" | "create_request" | "live_chat" | "faq";
+type HelpTab = "my_requests" | "create_request" | "faq" | "guides";
 type FaqCategory = "trading" | "account" | "verification" | "payment" | "payouts" | "tournaments";
+type GuideCategory =
+  | "getting_started"
+  | "trading"
+  | "deposits"
+  | "withdrawals"
+  | "account_security"
+  | "copy_trading"
+  | "bonuses"
+  | "tournaments";
 
 interface SupportTicket {
   id: string;
@@ -44,13 +66,66 @@ interface SupportTicket {
   }>;
 }
 
-interface ChatMessage {
-  id: string;
-  sender: "user" | "support";
-  text: string;
-  timestamp: string;
-}
+// ─── TOUR TYPE CONFIG ──────────────────────────────────────────────────────
+const TOUR_TYPE_CONFIG: Array<{
+  type: TourType;
+  label: string;
+  description: string;
+  icon: React.ElementType;
+  color: string;
+  steps: number;
+}> = [
+  {
+    type: "platform",
+    label: "Full Platform Tour",
+    description: "Complete walkthrough of all platform features",
+    icon: Compass,
+    color: "#1175d5",
+    steps: 12,
+  },
+  {
+    type: "trading",
+    label: "Trading Tour",
+    description: "Charts, indicators, trade panel & execution",
+    icon: TrendingUp,
+    color: "#0a8a3c",
+    steps: 7,
+  },
+  {
+    type: "deposit",
+    label: "Deposit Tour",
+    description: "M-Pesa & crypto deposit process",
+    icon: CreditCard,
+    color: "#7c3aed",
+    steps: 4,
+  },
+  {
+    type: "withdrawal",
+    label: "Withdrawal Tour",
+    description: "How to withdraw funds from your account",
+    icon: ArrowUpFromLine,
+    color: "#d97706",
+    steps: 4,
+  },
+  {
+    type: "account",
+    label: "Account Tour",
+    description: "Profile, KYC verification & security",
+    icon: ShieldCheck,
+    color: "#0891b2",
+    steps: 4,
+  },
+  {
+    type: "copy_trading",
+    label: "Copy Trading Tour",
+    description: "Finding traders and configuring copy settings",
+    icon: Copy,
+    color: "#db2777",
+    steps: 4,
+  },
+];
 
+// ─── FAQ DATA ──────────────────────────────────────────────────────────────
 const FAQ_CATEGORIES: Array<{
   id: FaqCategory;
   title: string;
@@ -235,14 +310,12 @@ const FAQ_DATA: Record<FaqCategory, Array<{ id: string; question: string; answer
     {
       id: "po3",
       question: "What is the minimum withdrawal amount?",
-      answer:
-        "The minimum withdrawal amount is $10.00.",
+      answer: "The minimum withdrawal amount is $10.00.",
     },
     {
       id: "po4",
       question: "Is there any fee for depositing or withdrawing funds from my account?",
-      answer:
-        "No. Our platform imposes 0% commission on both deposits and withdrawals.",
+      answer: "No. Our platform imposes 0% commission on both deposits and withdrawals.",
     },
     {
       id: "po5",
@@ -297,14 +370,520 @@ const FAQ_DATA: Record<FaqCategory, Array<{ id: string; question: string; answer
   ],
 };
 
-const STORAGE_TICKETS_KEY = "initoption_support_tickets";
-const STORAGE_LIVE_CHAT_KEY = "initoption_live_support_chat";
+// ─── GUIDES DATA ───────────────────────────────────────────────────────────
+interface GuideArticle {
+  id: string;
+  number: string;
+  title: string;
+  summary: string;
+  readTime: string;
+  content: string[];
+}
 
+interface GuideSection {
+  id: GuideCategory;
+  title: string;
+  icon: React.ElementType;
+  color: string;
+  articles: GuideArticle[];
+}
+
+const GUIDE_SECTIONS: GuideSection[] = [
+  {
+    id: "getting_started",
+    title: "Getting Started",
+    icon: Zap,
+    color: "#eab308",
+    articles: [
+      {
+        id: "gs1",
+        number: "1.1",
+        title: "Welcome to InitOption",
+        summary: "Introduction to the platform and how it works",
+        readTime: "2 min",
+        content: [
+          "InitOption is a professional digital options trading platform built for traders of all experience levels. Whether you are a complete beginner or an experienced trader, InitOption provides all the tools you need to analyze markets and trade efficiently.",
+          "The platform operates 24/7 and provides access to hundreds of trading assets including forex pairs, cryptocurrencies, commodities, and stock indices. Every user gets a free $10,000 Demo Account to practice before committing real money.",
+          "Our platform is fully web-based — no download or installation required. Simply log in from any modern browser on Desktop, Mobile, or Tablet and start trading within minutes of registration.",
+        ],
+      },
+      {
+        id: "gs2",
+        number: "1.2",
+        title: "Creating your account",
+        summary: "How to register and get started",
+        readTime: "2 min",
+        content: [
+          "Creating your InitOption account takes less than 60 seconds. Navigate to the registration page and enter a valid email address along with a strong password. You will receive a verification email — click the confirmation link to activate your account.",
+          "After registration, you immediately get access to your $10,000 Demo Account. No personal documents, ID verification, or deposit is required to start practicing on the demo. You can explore every feature of the platform risk-free.",
+          "When you are ready to trade with real money, complete your profile with your personal information and make your first deposit using M-Pesa, Cryptocurrency, or another supported payment method.",
+        ],
+      },
+      {
+        id: "gs3",
+        number: "1.3",
+        title: "Understanding your dashboard",
+        summary: "Overview of the trading terminal layout",
+        readTime: "3 min",
+        content: [
+          "The InitOption trading terminal is your central workspace. The main chart area occupies most of the screen and displays live candlestick price data for your selected trading asset.",
+          "On the right side (Desktop) or bottom (Mobile), the trade panel lets you configure your trade: asset, amount, expiry time, and direction (Up or Down). Above the chart, the toolbar provides access to timeframes, chart types, indicators, and drawing tools.",
+          "The header bar shows your current account balance, lets you switch between Live and Demo accounts, provides a deposit shortcut, and gives access to all account management features.",
+        ],
+      },
+      {
+        id: "gs4",
+        number: "1.4",
+        title: "Understanding account balances",
+        summary: "Live balance, Demo balance, and how they work",
+        readTime: "2 min",
+        content: [
+          "Your account has two separate balances: a Live Balance (real funds) and a Demo Balance (virtual $10,000). These balances are completely independent — trades placed on Demo use only virtual funds and do not affect your real money.",
+          "Your Available Balance is the total funds ready to be invested, minus any amounts currently tied up in open active trades. Open trades temporarily reserve the investment amount until they settle at expiration.",
+          "You can switch between Live and Demo accounts at any time using the account switcher at the top of the trading panel. We strongly recommend practicing new strategies on Demo before using real funds.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "trading",
+    title: "Trading",
+    icon: TrendingUp,
+    color: "#22c55e",
+    articles: [
+      {
+        id: "tr_a1",
+        number: "2.1",
+        title: "How to place a trade",
+        summary: "Step-by-step guide to opening a position",
+        readTime: "3 min",
+        content: [
+          "Placing a trade on InitOption is simple and fast. First, select the asset you want to trade from the asset selector at the top of the terminal. Browse by category (Forex, Crypto, Commodities, Stocks) or use the search bar.",
+          "Next, set your trade amount in the trade panel. This is the amount you are willing to invest in this specific trade. The platform will show you the potential profit payout percentage before you confirm.",
+          "Choose your expiration time — how long until the trade closes and settles. You can pick from 5 seconds up to 4 hours depending on your strategy. Finally, click the green UP button if you predict the price will rise, or the red DOWN button if you predict it will fall.",
+        ],
+      },
+      {
+        id: "tr_a2",
+        number: "2.2",
+        title: "Understanding the trading panel",
+        summary: "Trade amount, expiry, direction, and payout",
+        readTime: "3 min",
+        content: [
+          "The trading panel contains all controls needed to build and confirm a trade. The Amount field determines how much of your balance you are risking on this trade. Most traders risk between 1% and 5% of their total balance per trade.",
+          "The Expiry control determines when the trade closes. Short expirations (5s–60s) are called 'Turbo' trades and are suited for high-volatility assets. Longer expirations (5m–4h) are better for trend-following strategies using indicators.",
+          "The Payout percentage shown in the panel represents your potential profit if your forecast is correct. A payout of 92% means a $100 trade would return $192 total ($100 investment + $92 profit) if you win.",
+        ],
+      },
+      {
+        id: "tr_a3",
+        number: "2.3",
+        title: "Understanding charts",
+        summary: "Candlestick charts, timeframes, and chart types",
+        readTime: "4 min",
+        content: [
+          "The price chart is the most important tool in trading. Each candle represents price action over a defined time period. A green (bullish) candle means the price closed higher than it opened. A red (bearish) candle means it closed lower.",
+          "The Open, High, Low, and Close (OHLC) data shown by each candle reveals the full story of market sentiment during that period. The wicks (shadows) above and below the candle body show the extreme price points reached during the period.",
+          "Choose your timeframe based on your trading style. Short timeframes (5s, 15s, 30s, 1m) show detailed price movement and are used for turbo trading. Longer timeframes (15m, 1h, 4h) reveal broader trends and are used by swing traders.",
+        ],
+      },
+      {
+        id: "tr_a4",
+        number: "2.4",
+        title: "Trade history",
+        summary: "How to review and analyze your past trades",
+        readTime: "2 min",
+        content: [
+          "Your complete trade history is available in the Trades section of your Account panel. Every trade is recorded with its asset, amount, direction, opening time, expiration time, entry price, exit price, result, and profit or loss.",
+          "Use your trade history to analyze your performance over time. Look for patterns in winning and losing trades — what assets, timeframes, or market conditions correlate with your best results.",
+          "Regularly reviewing your trade history is essential for improving your strategy. Identify which types of trades are most profitable and which are consistently losing, then adjust your approach accordingly.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "deposits",
+    title: "Deposits",
+    icon: CreditCard,
+    color: "#7c3aed",
+    articles: [
+      {
+        id: "dep1",
+        number: "3.1",
+        title: "How to deposit",
+        summary: "Step-by-step guide to funding your account",
+        readTime: "3 min",
+        content: [
+          "To deposit funds, click the green '+ Deposit' button in the trading terminal header. The deposit panel will open, showing all available payment methods for your region.",
+          "Select your preferred payment method — M-Pesa (recommended for Kenya), Cryptocurrency (USDT TRC-20, BTC, ETH, SOL), or other supported options. Enter your deposit amount (minimum $10) and follow the on-screen payment instructions.",
+          "M-Pesa deposits are processed instantly — you'll receive a payment prompt on your registered mobile number within seconds. Cryptocurrency deposits are confirmed after the required blockchain confirmations and typically complete within 5–30 minutes.",
+        ],
+      },
+      {
+        id: "dep2",
+        number: "3.2",
+        title: "M-Pesa deposits",
+        summary: "How to deposit using M-Pesa mobile money",
+        readTime: "3 min",
+        content: [
+          "M-Pesa is the fastest and most convenient way to deposit if you are in Kenya or another supported M-Pesa market. Select M-Pesa from the payment methods list and enter the amount you wish to deposit.",
+          "You will be prompted to enter your M-Pesa registered phone number. Double-check the number — it must be the number registered to your M-Pesa account. Click Confirm to initiate the payment.",
+          "An M-Pesa payment STK Push prompt will appear on your mobile phone within seconds. Enter your M-Pesa PIN to authorize the payment. Your balance will be updated immediately after confirmation.",
+        ],
+      },
+      {
+        id: "dep3",
+        number: "3.3",
+        title: "Cryptocurrency deposits",
+        summary: "How to deposit using USDT, BTC, ETH, and other crypto",
+        readTime: "4 min",
+        content: [
+          "To deposit using cryptocurrency, select your preferred cryptocurrency (USDT TRC-20, BTC, ETH, SOL, or others shown) from the payment methods list. A unique deposit wallet address will be generated for your account.",
+          "Send the exact cryptocurrency amount to the displayed wallet address from your personal crypto wallet or exchange. Make sure you select the correct network — sending USDT on the wrong network (e.g., ERC-20 instead of TRC-20) may result in lost funds.",
+          "Crypto deposits require blockchain confirmations before crediting: usually 1–3 confirmations for most networks (approximately 5–30 minutes). Do not send an amount below the displayed minimum — transactions below minimum are not processed.",
+        ],
+      },
+      {
+        id: "dep4",
+        number: "3.4",
+        title: "Deposit status and failed deposits",
+        summary: "Understanding deposit statuses and what to do if a deposit fails",
+        readTime: "2 min",
+        content: [
+          "After initiating a deposit, you can track its status in the Payments section of your Account panel. Statuses include: Pending (waiting for confirmation), Processing (being verified), Completed (credited to balance), and Failed.",
+          "M-Pesa deposits that fail are usually caused by an incorrect phone number, insufficient M-Pesa balance, or entering the wrong PIN. If your M-Pesa deposit fails, the amount is not deducted — simply try again.",
+          "If a cryptocurrency deposit is not credited within 60 minutes after the blockchain confirms the transaction, submit a support ticket with your transaction hash (TXID). Include the amount, cryptocurrency, and network used.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "withdrawals",
+    title: "Withdrawals",
+    icon: ArrowUpFromLine,
+    color: "#f59e0b",
+    articles: [
+      {
+        id: "wd1",
+        number: "4.1",
+        title: "How to withdraw",
+        summary: "Step-by-step guide to withdrawing your funds",
+        readTime: "3 min",
+        content: [
+          "To withdraw funds, open your Account panel and select Withdrawal. Choose your withdrawal method — M-Pesa or Cryptocurrency — and enter the amount you wish to withdraw (minimum $10).",
+          "Enter your recipient details: your M-Pesa phone number or cryptocurrency wallet address. Review all details carefully before confirming, as withdrawals cannot be reversed once submitted.",
+          "After submission, your withdrawal request is reviewed and processed by our payments team. Standard processing time is 15–60 minutes for M-Pesa and crypto withdrawals. You'll receive a notification when the payment is sent.",
+        ],
+      },
+      {
+        id: "wd2",
+        number: "4.2",
+        title: "Withdrawal requirements",
+        summary: "What you need to complete a withdrawal",
+        readTime: "2 min",
+        content: [
+          "To request a withdrawal, your account must have a verified email address. For large withdrawals or your first withdrawal, you may be required to complete KYC identity verification by submitting a government-issued ID.",
+          "Your withdrawal method should ideally match your deposit method for fraud prevention reasons. The name on your payout destination (M-Pesa, bank, or crypto wallet) must match the name registered on your InitOption account.",
+          "Any active bonuses on your account may have wagering requirements that must be met before withdrawal. Check the Bonus section of your account for any applicable trading volume requirements before submitting a withdrawal request.",
+        ],
+      },
+      {
+        id: "wd3",
+        number: "4.3",
+        title: "Withdrawal status",
+        summary: "Tracking your withdrawal progress",
+        readTime: "2 min",
+        content: [
+          "Track all withdrawal requests in the Payments section of your Account panel. Each withdrawal shows its status: Pending (in queue), Processing (being handled), Completed (payment sent), or Rejected (see reason).",
+          "If your withdrawal status shows Rejected, review the rejection reason displayed in the status details. Common reasons include: insufficient balance, unmet bonus conditions, missing KYC documents, or account security flags.",
+          "For completed withdrawals that have not arrived after 60 minutes (M-Pesa) or 24 hours (Crypto), submit a support ticket with your withdrawal ID from the Payments section. Our team will investigate and resolve within 24 hours.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "account_security",
+    title: "Account & Security",
+    icon: ShieldCheck,
+    color: "#06b6d4",
+    articles: [
+      {
+        id: "ac1",
+        number: "5.1",
+        title: "Account settings",
+        summary: "Managing your personal information",
+        readTime: "2 min",
+        content: [
+          "Your account settings are accessible through the Account panel in the platform navigation. Here you can update your personal information including your full name, date of birth, country of residence, phone number, and address.",
+          "Keep your personal information accurate and up to date. Your registered name must match the name on your government-issued ID to successfully complete KYC verification and process withdrawals without delays.",
+          "You can also update your notification preferences — choose which alerts you want to receive via email for trade results, deposits, withdrawals, and promotional offers.",
+        ],
+      },
+      {
+        id: "ac2",
+        number: "5.2",
+        title: "Password and Two-Factor Authentication",
+        summary: "Keeping your account secure",
+        readTime: "3 min",
+        content: [
+          "Use a strong, unique password for your InitOption account. A strong password is at least 12 characters long, uses a mix of uppercase and lowercase letters, numbers, and symbols, and is not reused from other websites.",
+          "Enable Two-Factor Authentication (2FA) for an additional security layer. With 2FA enabled, anyone attempting to log in to your account must also provide a time-based code from an authenticator app (Google Authenticator, Authy) — even if they know your password.",
+          "To set up 2FA: go to Account Settings → Security → Enable Two-Factor Authentication. Scan the QR code with your authenticator app and verify with the generated code. Store your backup codes in a safe place in case you lose access to your device.",
+        ],
+      },
+      {
+        id: "ac3",
+        number: "5.3",
+        title: "KYC verification",
+        summary: "Identity verification process and requirements",
+        readTime: "3 min",
+        content: [
+          "KYC (Know Your Customer) verification is required to comply with financial regulations and protect our users from fraud. Verified accounts have higher withdrawal limits and access to all platform features.",
+          "To complete KYC verification, navigate to Account Settings → Verification and upload the required documents: a clear photo or scan of a valid government-issued photo ID (passport, national ID card, or driver's license), and a selfie holding your ID (for some verification levels).",
+          "Documents must be valid (not expired), clearly readable, and show all four corners of the document. Photos taken in good lighting with no glare are processed fastest. Our compliance team reviews submissions within 15 minutes to 2 hours during business hours.",
+        ],
+      },
+      {
+        id: "ac4",
+        number: "5.4",
+        title: "Security recommendations",
+        summary: "Best practices to protect your account",
+        readTime: "2 min",
+        content: [
+          "Never share your password, PIN, or 2FA codes with anyone — including people claiming to be InitOption support staff. Our support team will never ask for your password.",
+          "Only access the platform from trusted devices and networks. Avoid logging in from public computers, shared devices, or unsecured public WiFi networks. Always log out after sessions on shared devices.",
+          "Watch for phishing attempts — fraudulent emails or websites impersonating InitOption. Always verify you are on the correct website URL before entering your login credentials. Enable email alerts for new logins to your account.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "copy_trading",
+    title: "Copy Trading",
+    icon: Copy,
+    color: "#ec4899",
+    articles: [
+      {
+        id: "ct1",
+        number: "6.1",
+        title: "What is Copy Trading?",
+        summary: "How copy trading works on InitOption",
+        readTime: "3 min",
+        content: [
+          "Copy Trading is a feature that allows you to automatically replicate trades from experienced, high-performing traders. When a trader you are copying opens a position, the same trade is instantly mirrored in your account at a proportional investment amount.",
+          "Copy Trading is designed to help less experienced traders benefit from the strategies of verified expert traders while they are still learning the markets. You can copy multiple traders simultaneously and set independent copy settings for each.",
+          "Important: Past performance of any trader does not guarantee future results. Copy Trading involves real financial risk. Always apply appropriate risk management settings and never invest more than you can afford to lose.",
+        ],
+      },
+      {
+        id: "ct2",
+        number: "6.2",
+        title: "Finding and following a trader",
+        summary: "How to browse the trader directory and start copying",
+        readTime: "3 min",
+        content: [
+          "Browse the Trader Directory to find traders to copy. Each trader profile shows their performance statistics: win rate, total profit, number of trades, average payout, active followers, and maximum drawdown (risk indicator).",
+          "Review a trader's full performance history before following. Look for consistent performance over extended time periods (at least 30–90 days) rather than short periods of exceptional returns. High win rates (above 65%) with moderate average profits are often more sustainable than extreme short-term gains.",
+          "To start copying, visit a trader's profile and click 'Copy Trader'. Set your copy investment amount (how much to allocate per copied trade), a maximum copy loss limit, and a stop-copying threshold. Click Confirm to begin — trades are mirrored in real time.",
+        ],
+      },
+      {
+        id: "ct3",
+        number: "6.3",
+        title: "Managing copied trades",
+        summary: "Monitoring and stopping copy trading",
+        readTime: "2 min",
+        content: [
+          "View all your active copy trading positions in your Account panel under Copy Trading. You can see each trader you are copying, your current allocation, total profit or loss from that trader, and all open mirrored trades.",
+          "You can pause copying from a specific trader at any time without stopping other copy relationships. Pausing means new trades from that trader are not replicated, but existing open trades remain until they expire.",
+          "To stop copying a trader completely, click 'Stop Copying' on their profile. All existing open mirrored trades will continue until expiry but no new trades will be copied. Your allocated copy funds are returned to your available balance.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "bonuses",
+    title: "Bonuses",
+    icon: Star,
+    color: "#f97316",
+    articles: [
+      {
+        id: "bn1",
+        number: "7.1",
+        title: "Welcome bonuses",
+        summary: "First deposit bonuses and promotional offers",
+        readTime: "2 min",
+        content: [
+          "InitOption offers promotional deposit bonuses to eligible new traders. Welcome bonuses typically add a percentage of extra trading funds on your first deposit, giving you more capital to practice and trade with.",
+          "Bonus funds are credited to your account balance automatically when the bonus is activated. Check the active promotions page for current bonus offers and their eligibility requirements before depositing.",
+          "Note: Bonus funds typically come with trading volume requirements that must be completed before bonus-related profits can be withdrawn. Read the specific terms of each bonus offer carefully.",
+        ],
+      },
+      {
+        id: "bn2",
+        number: "7.2",
+        title: "Referral bonuses",
+        summary: "Earning rewards by inviting friends",
+        readTime: "2 min",
+        content: [
+          "The InitOption Referral Program lets you earn rewards when you invite friends or colleagues to join the platform. You receive a unique referral link from the Referral Program section in the navigation menu.",
+          "When someone registers using your referral link and completes a qualifying deposit, you earn a referral reward. The reward amount varies based on your referral's deposit size and trading activity.",
+          "You can track all your referrals, pending rewards, and paid commissions in the Referral Program section. Rewards are credited directly to your live trading balance.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "tournaments",
+    title: "Tournaments",
+    icon: Trophy,
+    color: "#d97706",
+    articles: [
+      {
+        id: "tn1",
+        number: "8.1",
+        title: "How tournaments work",
+        summary: "Overview of trading competitions on InitOption",
+        readTime: "3 min",
+        content: [
+          "Tournaments are competitive trading events where all participants trade on equal virtual tournament balances. Unlike your regular live or demo account, all tournament traders start with the same virtual balance regardless of their real account size.",
+          "During the tournament, participants trade on the tournament balance trying to achieve the highest possible balance by the time the tournament ends. The leaderboard updates in real time so you can track your ranking against other participants.",
+          "When the tournament timer reaches zero, the leaderboard is finalized. Cash prizes from the prize pool are distributed to the top-ranked traders. Prize amounts depend on your final ranking and the tournament's prize structure.",
+        ],
+      },
+      {
+        id: "tn2",
+        number: "8.2",
+        title: "Joining a tournament",
+        summary: "How to enter tournaments and start competing",
+        readTime: "2 min",
+        content: [
+          "Browse available tournaments in the Tournaments section of the platform. Each tournament listing shows the entry fee, prize pool, number of participants, start time, and duration. Free tournaments show $0 entry fee.",
+          "To join a tournament, click 'Join Tournament' and confirm your entry. For paid tournaments, the entry fee is deducted from your live account balance. For free tournaments, no payment is required.",
+          "Once joined, your tournament balance is credited and you can begin trading. Switch to tournament mode using the account switcher — trades placed in tournament mode use your tournament balance only, not your live funds.",
+        ],
+      },
+      {
+        id: "tn3",
+        number: "8.3",
+        title: "Tournament prize distribution",
+        summary: "How prizes are awarded to winners",
+        readTime: "2 min",
+        content: [
+          "Prize distribution varies by tournament. Most tournaments pay prizes to the top 3, 5, or 10 traders by final ranking. The prize pool breakdown is displayed on the tournament details page before you enter.",
+          "Prizes are credited directly to the winners' live trading balances within 1 hour after the tournament concludes. You will receive a notification when your prize has been credited.",
+          "Some tournaments also offer additional rewards such as bonus credits, VIP status upgrades, or exclusive trading signals subscriptions for top performers. Check the individual tournament details for any special prizes.",
+        ],
+      },
+    ],
+  },
+];
+
+// ─── POPULAR QUICK LINKS ───────────────────────────────────────────────────
+const POPULAR_GUIDES = [
+  { label: "Getting Started", category: "getting_started" as GuideCategory },
+  { label: "How to Trade", category: "trading" as GuideCategory },
+  { label: "Deposits & Payments", category: "deposits" as GuideCategory },
+  { label: "Withdrawals", category: "withdrawals" as GuideCategory },
+  { label: "Account & Security", category: "account_security" as GuideCategory },
+  { label: "Copy Trading", category: "copy_trading" as GuideCategory },
+  { label: "Tournaments", category: "tournaments" as GuideCategory },
+  { label: "Bonuses", category: "bonuses" as GuideCategory },
+];
+
+// ─── SUPPORT TICKET STORAGE ────────────────────────────────────────────────
+const STORAGE_TICKETS_KEY = "initoption_support_tickets";
+
+// ─── SEARCH FUNCTION ───────────────────────────────────────────────────────
+interface SearchResult {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
+  categoryLabel: string;
+  faqCategory?: FaqCategory;
+}
+
+function searchAllFaqs(query: string): SearchResult[] {
+  const q = query.toLowerCase().trim();
+  if (!q) return [];
+  const results: SearchResult[] = [];
+  const catLabels: Record<FaqCategory, string> = {
+    trading: "Trading Platform",
+    account: "My Account",
+    verification: "Verification",
+    payment: "Payment",
+    payouts: "Payouts",
+    tournaments: "Tournaments",
+  };
+  (Object.keys(FAQ_DATA) as FaqCategory[]).forEach((cat) => {
+    FAQ_DATA[cat].forEach((item) => {
+      if (item.question.toLowerCase().includes(q) || item.answer.toLowerCase().includes(q)) {
+        results.push({
+          id: item.id,
+          question: item.question,
+          answer: item.answer,
+          category: cat,
+          categoryLabel: catLabels[cat],
+          faqCategory: cat,
+        });
+      }
+    });
+  });
+  return results.slice(0, 8);
+}
+
+// ─── GUIDE ARTICLE READER ──────────────────────────────────────────────────
+const GuideArticleReader = ({
+  article,
+  sectionTitle,
+  onBack,
+}: {
+  article: GuideArticle;
+  sectionTitle: string;
+  onBack: () => void;
+}) => (
+  <div className="animate-fadeIn">
+    <button
+      type="button"
+      onClick={onBack}
+      className="flex items-center gap-2 text-[13px] font-bold text-white/40 hover:text-white/80 transition-colors mb-6"
+    >
+      <ChevronRight className="h-3.5 w-3.5 rotate-180" />
+      Back to {sectionTitle}
+    </button>
+    <div className="flex items-center gap-3 mb-1">
+      <span className="text-[11px] font-black uppercase tracking-[0.1em] text-white/35">{article.number}</span>
+      <span className="text-[11px] font-black uppercase tracking-[0.1em] text-white/35">·</span>
+      <div className="flex items-center gap-1 text-[11px] text-white/35">
+        <Clock className="h-3 w-3" />
+        <span>{article.readTime} read</span>
+      </div>
+    </div>
+    <h2 className="text-[22px] font-black text-white mb-6">{article.title}</h2>
+    <div className="space-y-4">
+      {article.content.map((para, i) => (
+        <p key={i} className="text-[14px] leading-[1.75] text-white/70">
+          {para}
+        </p>
+      ))}
+    </div>
+  </div>
+);
+
+// ─── MAIN COMPONENT ────────────────────────────────────────────────────────
 export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { startTourOfType, restartTour, tourProgress } = useProfileTour();
   const [activeTab, setActiveTab] = useState<HelpTab>("faq");
   const [selectedCategory, setSelectedCategory] = useState<FaqCategory>("trading");
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>("t1");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedGuideCategory, setSelectedGuideCategory] = useState<GuideCategory | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<GuideArticle | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   // Support Ticket Form State
   const [ticketCategory, setTicketCategory] = useState("Trading Platform");
@@ -350,27 +929,6 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
   const [activeTicket, setActiveTicket] = useState<SupportTicket | null>(null);
   const [replyText, setReplyText] = useState("");
 
-  // Live Support Chat State
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_LIVE_CHAT_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // silent catch
-    }
-    return [
-      {
-        id: "c1",
-        sender: "support",
-        text: "👋 Hello! Welcome to InitOption 24/7 Live Support. How can our support team assist your trading today?",
-        timestamp: new Date().toISOString(),
-      },
-    ];
-  });
-  const [chatInput, setChatInput] = useState("");
-  const [isBotTyping, setIsBotTyping] = useState(false);
-  const chatBottomRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_TICKETS_KEY, JSON.stringify(tickets));
@@ -379,14 +937,28 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
     }
   }, [tickets]);
 
+  // Live search
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_LIVE_CHAT_KEY, JSON.stringify(chatMessages));
-    } catch {
-      // silent
+    const q = searchQuery.trim();
+    if (q.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
     }
-    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages, activeTab]);
+    setIsSearching(true);
+    const timer = setTimeout(() => {
+      setSearchResults(searchAllFaqs(q));
+      setIsSearching(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Listen for open-help-center event (from tour completion screen)
+  useEffect(() => {
+    const handler = () => setActiveTab("guides");
+    window.addEventListener("initoption:open-help-center", handler);
+    return () => window.removeEventListener("initoption:open-help-center", handler);
+  }, []);
 
   const handleCreateTicket = (e: React.FormEvent) => {
     e.preventDefault();
@@ -398,7 +970,6 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
       toast({ title: "Please provide a detailed description (at least 10 characters).", variant: "destructive" });
       return;
     }
-
     setIsSubmitting(true);
     setTimeout(() => {
       const newTicket: SupportTicket = {
@@ -417,182 +988,240 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
           },
         ],
       };
-
       setTickets((prev) => [newTicket, ...prev]);
       setIsSubmitting(false);
       setTicketSubject("");
       setTicketMessage("");
       setTicketAttachment(null);
-
       toast({
         title: "Support ticket submitted!",
         description: `Ticket ${newTicket.id} created. Our support team will respond shortly.`,
       });
-
       setActiveTab("my_requests");
     }, 600);
   };
 
   const handleSendReply = () => {
     if (!activeTicket || !replyText.trim()) return;
-
     const newReply = {
       id: `r-${Date.now()}`,
       sender: "user" as const,
       text: replyText.trim(),
       timestamp: new Date().toISOString(),
     };
-
     const updatedTickets = tickets.map((t) => {
       if (t.id === activeTicket.id) {
-        return {
-          ...t,
-          status: "Open" as const,
-          replies: [...t.replies, newReply],
-        };
+        return { ...t, status: "Open" as const, replies: [...t.replies, newReply] };
       }
       return t;
     });
-
     setTickets(updatedTickets);
     setActiveTicket((prev) => (prev ? { ...prev, status: "Open", replies: [...prev.replies, newReply] } : null));
     setReplyText("");
     toast({ title: "Reply sent to support staff." });
   };
 
-  // Handle sending a live chat message
-  const handleSendChatMessage = (customText?: string) => {
-    const textToSend = customText || chatInput.trim();
-    if (!textToSend) return;
-
-    const userMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      sender: "user",
-      text: textToSend,
-      timestamp: new Date().toISOString(),
-    };
-
-    setChatMessages((prev) => [...prev, userMsg]);
-    if (!customText) setChatInput("");
-    setIsBotTyping(true);
-
-    // Simulate intelligent support response
-    setTimeout(() => {
-      let botReply = "Thank you for reaching out to InitOption Live Support. An agent has been assigned to your ticket. How else can we assist you?";
-      const lower = textToSend.toLowerCase();
-
-      if (lower.includes("mpesa") || lower.includes("m-pesa") || lower.includes("deposit")) {
-        botReply = "💳 To deposit via M-Pesa: Click the green '+ Deposit' button at the top right, select M-Pesa, enter your deposit amount ($10 minimum), and enter your phone number. You will receive an instant STK push prompt on your mobile phone to complete payment.";
-      } else if (lower.includes("withdraw") || lower.includes("payout")) {
-        botReply = "💸 Withdrawals are processed instantly to your verified M-Pesa or Crypto wallet (15-60 minutes average processing time). Navigate to Account -> Withdrawal to place a request.";
-      } else if (lower.includes("verif") || lower.includes("kyc")) {
-        botReply = "🔐 Verification requires submitting a valid government-issued ID (Passport, National ID, or Driver's License) in your Settings tab. Processing takes 15 to 60 minutes.";
-      } else if (lower.includes("digital option") || lower.includes("trade") || lower.includes("how to")) {
-        botReply = "📈 Digital options allow you to forecast asset price direction (UP or DOWN) within a fixed timeframe (5s to 4h). If correct, you earn up to 98% profit payout!";
-      }
-
-      const botMsg: ChatMessage = {
-        id: `msg-bot-${Date.now()}`,
-        sender: "support",
-        text: botReply,
-        timestamp: new Date().toISOString(),
-      };
-
-      setChatMessages((prev) => [...prev, botMsg]);
-      setIsBotTyping(false);
-    }, 1000);
+  const handleLaunchTour = (type: TourType) => {
+    const progress = tourProgress?.[type];
+    if (progress?.started && !progress?.completed) {
+      restartTour(type);
+    } else {
+      startTourOfType(type);
+    }
+    onClose?.();
   };
 
   const currentFaqs = useMemo(() => FAQ_DATA[selectedCategory] || [], [selectedCategory]);
 
+  const currentGuideSection = useMemo(
+    () => GUIDE_SECTIONS.find((s) => s.id === selectedGuideCategory) || null,
+    [selectedGuideCategory],
+  );
+
+  const getTourButtonLabel = (type: TourType) => {
+    const progress = tourProgress?.[type];
+    if (progress?.completed) return "Restart Tour";
+    if (progress?.started && !progress?.completed && !progress?.skipped) return "Resume Tour";
+    return "Start Tour";
+  };
+
+  const getTourIcon = (type: TourType) => {
+    const progress = tourProgress?.[type];
+    if (progress?.completed) return RotateCcw;
+    if (progress?.started && !progress?.completed && !progress?.skipped) return PlayCircle;
+    return PlayCircle;
+  };
+
   return (
     <div className="flex flex-col h-full w-full bg-[#161b26] text-white overflow-hidden select-none">
-      {/* ── TOP SUB-NAVIGATION BAR (Quotex Style + Live Support Chat) ── */}
-      <div className="flex items-center justify-between px-6 py-4 bg-[#1b2232] border-b border-[#252e42] shrink-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => setActiveTab("my_requests")}
-            className={`px-5 py-2.5 rounded-[4px] text-[14px] font-bold transition-all ${
-              activeTab === "my_requests"
-                ? "bg-[#273248] text-white shadow-sm border border-white/10"
-                : "text-white/60 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            My requests
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("create_request")}
-            className={`px-5 py-2.5 rounded-[4px] text-[14px] font-bold transition-all ${
-              activeTab === "create_request"
-                ? "bg-[#273248] text-white shadow-sm border border-white/10"
-                : "text-white/60 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            Create request
-          </button>
-
-          {/* 💬 LIVE SUPPORT CHAT TAB */}
-          <button
-            type="button"
-            onClick={() => setActiveTab("live_chat")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-[4px] text-[14px] font-extrabold transition-all ${
-              activeTab === "live_chat"
-                ? "bg-[#0084FF] text-white shadow-md"
-                : "bg-white/5 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/10"
-            }`}
-          >
-            <MessageCircle className="h-4 w-4" />
-            <span>Live Support Chat</span>
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("faq")}
-            className={`px-5 py-2.5 rounded-[4px] text-[14px] font-bold transition-all ${
-              activeTab === "faq"
-                ? "bg-[#273248] text-white shadow-sm border border-white/10"
-                : "text-white/60 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            FAQ
-          </button>
+      {/* ── TOP NAVIGATION BAR ── */}
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-[#1b2232] border-b border-[#252e42] shrink-0">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+          {(
+            [
+              { id: "faq", label: "FAQ" },
+              { id: "guides", label: "Guides" },
+              { id: "my_requests", label: "My Requests" },
+              { id: "create_request", label: "Create Request" },
+            ] as { id: HelpTab; label: string }[]
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`whitespace-nowrap px-4 py-2 rounded-[4px] text-[13px] font-bold transition-all ${
+                activeTab === tab.id
+                  ? "bg-[#273248] text-white shadow-sm border border-white/10"
+                  : "text-white/60 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
-
         {onClose && (
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-colors"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-colors ml-2"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         )}
       </div>
 
-      {/* ── MAIN WORKSPACE CONTENT AREA ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-10 lg:px-16 deposit-scrollbar">
-        {/* ── TAB 1: FAQ (Frequently Asked Questions) ── */}
+      {/* ── SEARCH BAR (visible on FAQ and Guides tabs) ── */}
+      {(activeTab === "faq" || activeTab === "guides") && (
+        <div className="px-4 sm:px-8 lg:px-16 py-4 bg-[#161b26] border-b border-white/5 shrink-0">
+          <div className="max-w-[720px] mx-auto relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/35 pointer-events-none" />
+            <input
+              ref={searchRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search help center… e.g. 'how do I withdraw?'"
+              className="w-full h-11 pl-10 pr-10 rounded-[8px] bg-[#1f2738] border border-white/10 text-[14px] text-white placeholder-white/30 outline-none focus:border-[#1175d5]/60 transition-colors"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Search Results Dropdown */}
+          {searchQuery.trim().length >= 2 && (
+            <div className="max-w-[720px] mx-auto mt-2 rounded-[8px] bg-[#1f2738] border border-white/10 overflow-hidden shadow-xl">
+              {isSearching ? (
+                <div className="p-4 text-center text-[13px] text-white/40">Searching…</div>
+              ) : searchResults.length === 0 ? (
+                <div className="p-4 text-center text-[13px] text-white/40">
+                  No results found for "{searchQuery}"
+                </div>
+              ) : (
+                <div className="divide-y divide-white/5">
+                  {searchResults.map((result) => (
+                    <button
+                      key={result.id}
+                      type="button"
+                      onClick={() => {
+                        if (result.faqCategory) {
+                          setActiveTab("faq");
+                          setSelectedCategory(result.faqCategory);
+                          setExpandedFaqId(result.id);
+                          setSearchQuery("");
+                        }
+                      }}
+                      className="w-full text-left p-4 hover:bg-white/5 transition-colors"
+                    >
+                      <div className="flex items-start gap-3">
+                        <HelpCircle className="h-4 w-4 text-[#1175d5] shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-[13px] font-bold text-white leading-tight">{result.question}</p>
+                          <p className="text-[11px] text-white/40 mt-1">{result.categoryLabel}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── MAIN CONTENT AREA ── */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 lg:px-16 deposit-scrollbar">
+        {/* ════════════════════════════════ TAB: FAQ ════════════════════════════════ */}
         {activeTab === "faq" && (
-          <div className="max-w-[1100px] mx-auto space-y-10">
-            {/* Header Title */}
-            <div className="text-center space-y-2">
-              <h1 className="text-[26px] sm:text-[30px] font-black text-white tracking-wide">
+          <div className="max-w-[1100px] mx-auto space-y-8">
+            {/* Hero: New to InitOption Banner */}
+            <div className="rounded-[14px] bg-gradient-to-br from-[#0c3a72] via-[#0d3566] to-[#1a2a4a] border border-[#1a4a8a]/40 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[14px] bg-[#1175d5]/30 border border-[#1175d5]/40">
+                <Compass className="h-7 w-7 text-[#5da6ff]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#5da6ff]">
+                    New to InitOption?
+                  </span>
+                </div>
+                <h2 className="text-[19px] font-black text-white mb-1">Take a Guided Platform Tour</h2>
+                <p className="text-[13px] text-white/55 leading-relaxed">
+                  Learn how to navigate InitOption, place trades, manage your account, deposit funds, withdraw your
+                  balance, and use the platform's main features.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleLaunchTour("platform")}
+                className="flex shrink-0 items-center gap-2 rounded-[10px] bg-[#1175d5] px-5 py-3 text-[14px] font-black text-white hover:bg-[#0d69c2] transition-colors shadow-[0_4px_20px_rgba(17,117,213,0.35)]"
+              >
+                <PlayCircle className="h-4 w-4" />
+                Start Platform Tour
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Popular Guides chips */}
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.1em] text-white/30 mb-3">Popular Guides</p>
+              <div className="flex flex-wrap gap-2">
+                {POPULAR_GUIDES.map((g) => (
+                  <button
+                    key={g.category}
+                    type="button"
+                    onClick={() => {
+                      setActiveTab("guides");
+                      setSelectedGuideCategory(g.category);
+                      setSelectedArticle(null);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-[12.5px] font-bold text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <BookOpen className="h-3 w-3" />
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Header */}
+            <div className="text-center space-y-1">
+              <h1 className="text-[24px] sm:text-[28px] font-black text-white tracking-wide">
                 Frequently Asked Questions
               </h1>
             </div>
 
-            {/* 6 Category Interactive Cards Grid (Quotex Reference Image) */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+            {/* FAQ Category Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {FAQ_CATEGORIES.map((cat) => {
                 const Icon = cat.icon;
                 const isSelected = selectedCategory === cat.id;
-
                 return (
                   <button
                     key={cat.id}
@@ -601,17 +1230,21 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                       setSelectedCategory(cat.id);
                       setExpandedFaqId(FAQ_DATA[cat.id]?.[0]?.id ?? null);
                     }}
-                    className={`flex flex-col items-center justify-center p-5 rounded-[12px] transition-all text-center ${
+                    className={`flex flex-col items-center justify-center p-4 rounded-[12px] transition-all text-center ${
                       isSelected
                         ? "bg-white text-[#161b26] shadow-[0_12px_30px_rgba(0,0,0,0.35)] scale-[1.03]"
                         : "bg-[#1f2738] text-white/70 hover:bg-[#273248] hover:text-white border border-white/5"
                     }`}
                   >
-                    <div className={`p-2.5 rounded-full mb-3 ${isSelected ? "bg-[#161b26]/10 text-[#161b26]" : "bg-white/5 text-white"}`}>
-                      <Icon className="h-6 w-6" strokeWidth={2.2} />
+                    <div
+                      className={`p-2 rounded-full mb-2 ${
+                        isSelected ? "bg-[#161b26]/10 text-[#161b26]" : "bg-white/5 text-white"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" strokeWidth={2.2} />
                     </div>
-                    <span className="text-[14px] font-extrabold leading-snug">{cat.title}</span>
-                    <span className={`text-[11.5px] font-bold mt-1 ${isSelected ? "text-[#161b26]/60" : "text-white/40"}`}>
+                    <span className="text-[13px] font-extrabold leading-snug">{cat.title}</span>
+                    <span className={`text-[11px] font-bold mt-0.5 ${isSelected ? "text-[#161b26]/60" : "text-white/40"}`}>
                       {cat.countLabel}
                     </span>
                   </button>
@@ -619,31 +1252,28 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
               })}
             </div>
 
-            {/* Horizontal Line Divider */}
-            <div className="border-t border-white/10 my-6" />
+            <div className="border-t border-white/10" />
 
-            {/* 2-Column Accordion FAQ Questions Grid */}
+            {/* FAQ Accordion */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-4 text-left">
               {currentFaqs.map((item) => {
                 const isExpanded = expandedFaqId === item.id;
-
                 return (
                   <div key={item.id} className="border-b border-white/10 pb-4">
                     <button
                       type="button"
                       onClick={() => setExpandedFaqId(isExpanded ? null : item.id)}
-                      className="flex w-full items-start gap-3 text-left font-extrabold text-[14.5px] text-white/90 hover:text-white transition-colors"
+                      className="flex w-full items-start gap-3 text-left font-extrabold text-[14px] text-white/90 hover:text-white transition-colors"
                     >
                       <ChevronDown
-                        className={`mt-1 h-4 w-4 shrink-0 text-white/50 transition-transform duration-200 ${
-                          isExpanded ? "rotate-180 text-[#0084FF]" : ""
+                        className={`mt-0.5 h-4 w-4 shrink-0 text-white/50 transition-transform duration-200 ${
+                          isExpanded ? "rotate-180 text-[#1175d5]" : ""
                         }`}
                       />
                       <span>{item.question}</span>
                     </button>
-
                     {isExpanded && (
-                      <div className="mt-3 pl-7 pr-2 text-[13px] font-normal leading-relaxed text-white/70 whitespace-pre-line animate-fadeIn">
+                      <div className="mt-3 pl-7 pr-2 text-[13px] font-normal leading-relaxed text-white/65 whitespace-pre-line animate-fadeIn">
                         {item.answer}
                       </div>
                     )}
@@ -652,182 +1282,211 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
               })}
             </div>
 
-            {/* Bottom Contact Customer Support Floating Box (Quotex Style + Live Chat Button) */}
-            <div className="pt-8 pb-4 flex justify-center gap-4 flex-wrap">
+            {/* Contact Support CTA */}
+            <div className="pb-4 flex justify-center">
               <div className="bg-[#1f293d] border border-white/10 rounded-[12px] p-4 sm:px-8 flex items-center gap-4 max-w-md w-full shadow-lg">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0084FF] text-white">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1175d5] text-white">
                   <MessageSquare className="h-5 w-5" />
                 </div>
-                <div className="text-left text-[13px] flex-1">
+                <div className="text-left text-[13px]">
                   <p className="font-bold text-white/80">Didn't find an answer to your question?</p>
-                  <div className="mt-1 flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("live_chat")}
-                      className="font-black text-[#0084FF] hover:underline flex items-center gap-1"
-                    >
-                      Start Live Chat
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </button>
-                    <span className="text-white/30">|</span>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("create_request")}
-                      className="font-bold text-white/60 hover:text-white hover:underline"
-                    >
-                      Submit Ticket
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("create_request")}
+                    className="mt-0.5 font-extrabold text-[#1175d5] hover:underline flex items-center gap-1"
+                  >
+                    Contact customer support
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── TAB 2: LIVE SUPPORT CHAT 💬 ── */}
-        {activeTab === "live_chat" && (
-          <div className="max-w-[850px] mx-auto flex flex-col h-[calc(100vh-170px)] min-h-[520px] bg-[#1f2738] border border-white/10 rounded-[16px] shadow-2xl overflow-hidden text-left">
-            {/* Live Chat Agent Header */}
-            <div className="flex items-center justify-between px-6 py-4 bg-[#181e2b] border-b border-white/10 shrink-0">
-              <div className="flex items-center gap-3.5">
-                <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#0084FF] text-white shadow-md">
-                  <Headphones className="h-5 w-5" />
-                  <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#181e2b] bg-emerald-500" />
-                </div>
-                <div>
-                  <h3 className="text-[15px] font-extrabold text-white flex items-center gap-2">
-                    InitOption 24/7 Live Support
-                    <span className="rounded-[4px] bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-400">
-                      LIVE
-                    </span>
-                  </h3>
-                  <p className="text-[11.5px] font-bold text-white/50">
-                    Average response time: <strong className="text-emerald-400">&lt; 1 min</strong>
+        {/* ════════════════════════════════ TAB: GUIDES ════════════════════════════════ */}
+        {activeTab === "guides" && (
+          <div className="max-w-[1100px] mx-auto">
+            {/* Tour launcher section */}
+            {!selectedGuideCategory && (
+              <>
+                <div className="mb-8 text-center">
+                  <h1 className="text-[26px] font-black text-white mb-1">Platform Guides & Tours</h1>
+                  <p className="text-[13px] text-white/45">
+                    Interactive tours and comprehensive guides to help you master InitOption
                   </p>
                 </div>
-              </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setChatMessages([
-                    {
-                      id: "c1",
-                      sender: "support",
-                      text: "👋 Hello! Welcome to InitOption 24/7 Live Support. How can our support team assist your trading today?",
-                      timestamp: new Date().toISOString(),
-                    },
-                  ]);
-                  toast({ title: "Chat session refreshed." });
-                }}
-                className="flex items-center gap-1.5 rounded-[6px] bg-white/5 px-3 py-1.5 text-xs font-bold text-white/60 hover:bg-white/10 hover:text-white transition-colors"
-                title="Restart chat session"
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                <span>Reset Chat</span>
-              </button>
-            </div>
+                {/* Interactive Tours Grid */}
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Compass className="h-4 w-4 text-[#5da6ff]" />
+                    <h2 className="text-[15px] font-black text-white">Interactive Tours</h2>
+                    <span className="text-[12px] text-white/35 font-semibold">— Highlights real platform controls</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {TOUR_TYPE_CONFIG.map((tourConfig) => {
+                      const Icon = tourConfig.icon;
+                      const TourIcon = getTourIcon(tourConfig.type);
+                      const progress = tourProgress?.[tourConfig.type];
+                      const isCompleted = progress?.completed;
+                      const isInProgress = progress?.started && !progress?.completed && !progress?.skipped;
 
-            {/* Quick Prompt Recommendation Pills */}
-            <div className="px-6 py-2.5 bg-[#161b26] border-b border-white/5 flex items-center gap-2 overflow-x-auto shrink-0 deposit-scrollbar">
-              <span className="text-[11px] font-extrabold uppercase text-white/40 shrink-0 flex items-center gap-1">
-                <Sparkles className="h-3 w-3 text-yellow-400" /> Quick Topics:
-              </span>
-              {[
-                "💳 M-Pesa Deposit Guide",
-                "💸 Withdrawal Processing Time",
-                "🔐 Verification Help",
-                "📈 How Digital Options Work",
-              ].map((topic, i) => (
+                      return (
+                        <div
+                          key={tourConfig.type}
+                          className="flex flex-col bg-[#1f2738] border border-white/8 rounded-[12px] p-5 hover:border-white/15 transition-all"
+                        >
+                          <div className="flex items-center gap-3 mb-3">
+                            <div
+                              className="flex h-9 w-9 items-center justify-center rounded-[8px]"
+                              style={{ background: `${tourConfig.color}22`, border: `1px solid ${tourConfig.color}44` }}
+                            >
+                              <Icon className="h-4.5 w-4.5" style={{ color: tourConfig.color }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[14px] font-black text-white">{tourConfig.label}</span>
+                                {isCompleted && (
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-[#22c55e] shrink-0" />
+                                )}
+                                {isInProgress && (
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 rounded px-1.5 py-0.5">
+                                    In Progress
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-white/40">{tourConfig.steps} steps</span>
+                            </div>
+                          </div>
+                          <p className="text-[12px] text-white/55 leading-relaxed mb-4 flex-1">
+                            {tourConfig.description}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => handleLaunchTour(tourConfig.type)}
+                            className="flex items-center justify-center gap-2 rounded-[8px] py-2.5 text-[13px] font-black transition-colors"
+                            style={{
+                              background: `${tourConfig.color}22`,
+                              border: `1px solid ${tourConfig.color}44`,
+                              color: tourConfig.color,
+                            }}
+                          >
+                            <TourIcon className="h-3.5 w-3.5" />
+                            {getTourButtonLabel(tourConfig.type)}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Help Center Knowledge Base */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <FileText className="h-4 w-4 text-white/50" />
+                    <h2 className="text-[15px] font-black text-white">Knowledge Base</h2>
+                    <span className="text-[12px] text-white/35 font-semibold">— In-depth articles and guides</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {GUIDE_SECTIONS.map((section) => {
+                      const Icon = section.icon;
+                      return (
+                        <button
+                          key={section.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedGuideCategory(section.id);
+                            setSelectedArticle(null);
+                          }}
+                          className="flex items-center gap-4 bg-[#1f2738] border border-white/8 rounded-[12px] p-4 text-left hover:border-white/20 hover:bg-[#253048] transition-all"
+                        >
+                          <div
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px]"
+                            style={{ background: `${section.color}18`, border: `1px solid ${section.color}35` }}
+                          >
+                            <Icon className="h-5 w-5" style={{ color: section.color }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[14px] font-black text-white">{section.title}</p>
+                            <p className="text-[12px] text-white/40">
+                              {section.articles.length} articles
+                            </p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-white/25 shrink-0" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Guide Section Article List */}
+            {selectedGuideCategory && currentGuideSection && !selectedArticle && (
+              <div className="animate-fadeIn">
                 <button
-                  key={i}
                   type="button"
-                  onClick={() => handleSendChatMessage(topic)}
-                  className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11.5px] font-bold text-white/80 transition-colors hover:border-[#0084FF] hover:bg-[#0084FF]/20 hover:text-white"
-                >
-                  {topic}
-                </button>
-              ))}
-            </div>
-
-            {/* Chat Messages Log */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 deposit-scrollbar bg-[#161b26]/50">
-              {chatMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
-                >
-                  <div
-                    className={`max-w-[80%] sm:max-w-[70%] rounded-[14px] p-4 text-[13.5px] leading-relaxed shadow-sm ${
-                      msg.sender === "user"
-                        ? "bg-[#0084FF] text-white rounded-br-none"
-                        : "bg-[#273248] text-white/95 border border-white/10 rounded-bl-none"
-                    }`}
-                  >
-                    {msg.sender === "support" && (
-                      <p className="font-extrabold text-[11px] text-[#0084FF] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                        <Headphones className="h-3 w-3" /> Support Agent
-                      </p>
-                    )}
-                    <p className="whitespace-pre-line">{msg.text}</p>
-                  </div>
-                  <span className="text-[10px] font-bold text-white/40 mt-1 px-1">
-                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </span>
-                </div>
-              ))}
-
-              {isBotTyping && (
-                <div className="flex items-center gap-2 text-xs font-bold text-white/50 italic bg-[#273248]/50 w-fit px-4 py-2 rounded-full border border-white/5">
-                  <div className="flex gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce delay-150" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-white/60 animate-bounce delay-300" />
-                  </div>
-                  <span>Support Agent is typing...</span>
-                </div>
-              )}
-              <div ref={chatBottomRef} />
-            </div>
-
-            {/* Chat Input Bar */}
-            <div className="p-4 bg-[#181e2b] border-t border-white/10 flex items-center gap-3 shrink-0">
-              <label className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] bg-white/5 text-white/50 hover:bg-white/10 hover:text-white cursor-pointer transition-colors">
-                <Paperclip className="h-5 w-5" />
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                      handleSendChatMessage(`[Attached image: ${e.target.files[0].name}]`);
-                    }
+                  onClick={() => {
+                    setSelectedGuideCategory(null);
+                    setSelectedArticle(null);
                   }}
-                  className="hidden"
-                />
-              </label>
+                  className="flex items-center gap-2 text-[13px] font-bold text-white/40 hover:text-white/80 transition-colors mb-6"
+                >
+                  <ChevronRight className="h-3.5 w-3.5 rotate-180" />
+                  Back to Guides
+                </button>
+                <div className="flex items-center gap-3 mb-6">
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-[10px]"
+                    style={{
+                      background: `${currentGuideSection.color}18`,
+                      border: `1px solid ${currentGuideSection.color}35`,
+                    }}
+                  >
+                    <currentGuideSection.icon className="h-5 w-5" style={{ color: currentGuideSection.color }} />
+                  </div>
+                  <div>
+                    <h2 className="text-[22px] font-black text-white">{currentGuideSection.title}</h2>
+                    <p className="text-[12px] text-white/40">{currentGuideSection.articles.length} articles</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {currentGuideSection.articles.map((article) => (
+                    <button
+                      key={article.id}
+                      type="button"
+                      onClick={() => setSelectedArticle(article)}
+                      className="w-full flex items-center gap-4 bg-[#1f2738] border border-white/8 rounded-[10px] p-4 text-left hover:border-white/20 hover:bg-[#253048] transition-all"
+                    >
+                      <span className="text-[11px] font-black text-white/25 w-7 shrink-0">{article.number}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-bold text-white">{article.title}</p>
+                        <p className="text-[12px] text-white/45 mt-0.5">{article.summary}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 text-white/30">
+                        <Clock className="h-3 w-3" />
+                        <span className="text-[11px]">{article.readTime}</span>
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSendChatMessage()}
-                placeholder="Type your message to support..."
-                className="h-11 flex-1 rounded-[8px] border border-white/15 bg-[#161b26] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF] transition-colors"
+            {/* Article Reader */}
+            {selectedArticle && currentGuideSection && (
+              <GuideArticleReader
+                article={selectedArticle}
+                sectionTitle={currentGuideSection.title}
+                onBack={() => setSelectedArticle(null)}
               />
-
-              <button
-                type="button"
-                onClick={() => handleSendChatMessage()}
-                className="flex h-11 px-5 items-center justify-center gap-2 rounded-[8px] bg-[#0084FF] text-sm font-black text-white hover:bg-[#0070df] transition-all active:scale-[0.98]"
-              >
-                <Send className="h-4 w-4" />
-                <span className="hidden sm:inline">Send</span>
-              </button>
-            </div>
+            )}
           </div>
         )}
 
-        {/* ── TAB 3: Create Request (Support Ticket Submission) ── */}
+        {/* ════════════════════════════════ TAB: CREATE REQUEST ════════════════════════════════ */}
         {activeTab === "create_request" && (
           <div className="max-w-[700px] mx-auto space-y-6">
             <div className="text-center space-y-1">
@@ -836,8 +1495,10 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                 Our support team is available 24/7. Submit your query and we will respond promptly.
               </p>
             </div>
-
-            <form onSubmit={handleCreateTicket} className="bg-[#1f2738] p-6 sm:p-8 rounded-[12px] border border-white/10 space-y-5 shadow-xl text-left">
+            <form
+              onSubmit={handleCreateTicket}
+              className="bg-[#1f2738] p-6 sm:p-8 rounded-[12px] border border-white/10 space-y-5 shadow-xl text-left"
+            >
               <div>
                 <label className="block text-[12px] font-extrabold text-white/70 uppercase tracking-wider mb-2">
                   Category
@@ -845,17 +1506,17 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                 <select
                   value={ticketCategory}
                   onChange={(e) => setTicketCategory(e.target.value)}
-                  className="h-11 w-full rounded-[6px] border border-white/15 bg-[#161b26] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF] transition-colors"
+                  className="h-11 w-full rounded-[6px] border border-white/15 bg-[#161b26] px-4 text-sm font-bold text-white outline-none focus:border-[#1175d5] transition-colors"
                 >
                   <option value="Trading Platform">Trading Platform & Execution</option>
                   <option value="Account & Verification">Account & KYC Verification</option>
                   <option value="Deposits & Payments">Deposits & Payments</option>
                   <option value="Payouts & Withdrawals">Payouts & Withdrawals</option>
                   <option value="Tournaments">Tournaments & Promotions</option>
+                  <option value="Copy Trading">Copy Trading</option>
                   <option value="Technical Issue">Technical Issue</option>
                 </select>
               </div>
-
               <div>
                 <label className="block text-[12px] font-extrabold text-white/70 uppercase tracking-wider mb-2">
                   Subject
@@ -865,10 +1526,9 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                   value={ticketSubject}
                   onChange={(e) => setTicketSubject(e.target.value)}
                   placeholder="e.g. Question regarding M-Pesa deposit processing"
-                  className="h-11 w-full rounded-[6px] border border-white/15 bg-[#161b26] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF] transition-colors"
+                  className="h-11 w-full rounded-[6px] border border-white/15 bg-[#161b26] px-4 text-sm font-bold text-white outline-none focus:border-[#1175d5] transition-colors"
                 />
               </div>
-
               <div>
                 <label className="block text-[12px] font-extrabold text-white/70 uppercase tracking-wider mb-2">
                   Message Description
@@ -878,17 +1538,16 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                   value={ticketMessage}
                   onChange={(e) => setTicketMessage(e.target.value)}
                   placeholder="Please describe your issue in detail. Include any relevant transaction IDs, dates, or error descriptions..."
-                  className="w-full rounded-[6px] border border-white/15 bg-[#161b26] p-4 text-sm font-bold text-white outline-none focus:border-[#0084FF] transition-colors resize-none"
+                  className="w-full rounded-[6px] border border-white/15 bg-[#161b26] p-4 text-sm font-bold text-white outline-none focus:border-[#1175d5] transition-colors resize-none"
                 />
               </div>
-
               <div>
                 <label className="block text-[12px] font-extrabold text-white/70 uppercase tracking-wider mb-2">
                   Attachment (Optional Screenshot)
                 </label>
                 <div className="flex items-center gap-3">
                   <label className="flex h-11 items-center gap-2 rounded-[6px] border border-dashed border-white/20 bg-[#161b26] px-4 text-xs font-bold text-white/70 hover:text-white cursor-pointer transition-colors">
-                    <Paperclip className="h-4 w-4 text-[#0084FF]" />
+                    <Paperclip className="h-4 w-4 text-[#1175d5]" />
                     <span>{ticketAttachment ? ticketAttachment.name : "Attach Screenshot or File"}</span>
                     <input
                       type="file"
@@ -908,12 +1567,11 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                   )}
                 </div>
               </div>
-
               <div className="pt-2">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-[6px] bg-[#0084FF] text-[15px] font-black text-white shadow-md transition-all hover:bg-[#0070df] active:scale-[0.99] disabled:opacity-50"
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-[6px] bg-[#1175d5] text-[15px] font-black text-white shadow-md transition-all hover:bg-[#0d69c2] active:scale-[0.99] disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />
                   <span>{isSubmitting ? "Submitting..." : "Submit Support Request"}</span>
@@ -923,7 +1581,7 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
           </div>
         )}
 
-        {/* ── TAB 4: My Requests (Submitted Support Tickets) ── */}
+        {/* ════════════════════════════════ TAB: MY REQUESTS ════════════════════════════════ */}
         {activeTab === "my_requests" && (
           <div className="max-w-[900px] mx-auto space-y-6">
             <div className="flex items-center justify-between">
@@ -936,13 +1594,12 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
               <button
                 type="button"
                 onClick={() => setActiveTab("create_request")}
-                className="flex items-center gap-2 rounded-[6px] bg-[#0084FF] px-4 py-2 text-xs font-bold text-white hover:bg-[#0070df]"
+                className="flex items-center gap-2 rounded-[6px] bg-[#1175d5] px-4 py-2 text-xs font-bold text-white hover:bg-[#0d69c2]"
               >
                 <Plus className="h-4 w-4" />
                 New Request
               </button>
             </div>
-
             {tickets.length === 0 ? (
               <div className="bg-[#1f2738] p-12 rounded-[12px] border border-white/10 text-center space-y-4">
                 <HelpCircle className="h-12 w-12 text-white/20 mx-auto" />
@@ -950,7 +1607,7 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                 <button
                   type="button"
                   onClick={() => setActiveTab("create_request")}
-                  className="inline-flex items-center gap-2 rounded-[6px] bg-[#0084FF] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0070df]"
+                  className="inline-flex items-center gap-2 rounded-[6px] bg-[#1175d5] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0d69c2]"
                 >
                   Create request
                 </button>
@@ -961,17 +1618,16 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                   <div
                     key={t.id}
                     onClick={() => setActiveTicket(t)}
-                    className="bg-[#1f2738] p-5 rounded-[10px] border border-white/10 hover:border-[#0084FF]/50 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left"
+                    className="bg-[#1f2738] p-5 rounded-[10px] border border-white/10 hover:border-[#1175d5]/50 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left"
                   >
                     <div className="space-y-1 min-w-0">
                       <div className="flex items-center gap-3">
-                        <span className="font-mono text-[13px] font-bold text-[#0084FF]">{t.id}</span>
+                        <span className="font-mono text-[13px] font-bold text-[#1175d5]">{t.id}</span>
                         <span className="text-[11px] font-bold text-white/40">{t.category}</span>
                       </div>
                       <h3 className="text-[15px] font-bold text-white truncate">{t.subject}</h3>
                       <p className="text-[12px] text-white/50 line-clamp-1">{t.message}</p>
                     </div>
-
                     <div className="flex items-center gap-4 shrink-0">
                       <span
                         className={`px-3 py-1 rounded-full text-[11px] font-black uppercase ${
@@ -1000,14 +1656,13 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
           <div className="flex max-h-[85dvh] w-full max-w-[650px] flex-col overflow-hidden rounded-[12px] bg-[#1a2130] border border-white/15 text-white shadow-2xl text-left">
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-[#20293c]">
               <div>
-                <span className="font-mono text-xs font-bold text-[#0084FF]">{activeTicket.id}</span>
+                <span className="font-mono text-xs font-bold text-[#1175d5]">{activeTicket.id}</span>
                 <h3 className="text-[16px] font-bold text-white">{activeTicket.subject}</h3>
               </div>
               <button type="button" onClick={() => setActiveTicket(null)} className="text-white/40 hover:text-white">
                 <X className="h-5 w-5" />
               </button>
             </div>
-
             <div className="flex-1 overflow-y-auto p-6 space-y-4 deposit-scrollbar">
               {activeTicket.replies.map((reply) => (
                 <div
@@ -1017,7 +1672,7 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                   <div
                     className={`max-w-[85%] rounded-[10px] p-4 text-[13px] leading-relaxed ${
                       reply.sender === "user"
-                        ? "bg-[#0084FF] text-white rounded-br-none"
+                        ? "bg-[#1175d5] text-white rounded-br-none"
                         : "bg-[#253046] text-white/90 border border-white/10 rounded-bl-none"
                     }`}
                   >
@@ -1032,7 +1687,6 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                 </div>
               ))}
             </div>
-
             <div className="p-4 border-t border-white/10 bg-[#161b26] flex items-center gap-3">
               <input
                 type="text"
@@ -1040,12 +1694,12 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                 onChange={(e) => setReplyText(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSendReply()}
                 placeholder="Type a message to support..."
-                className="h-11 flex-1 rounded-[6px] border border-white/15 bg-[#20293c] px-4 text-sm font-bold text-white outline-none focus:border-[#0084FF]"
+                className="h-11 flex-1 rounded-[6px] border border-white/15 bg-[#20293c] px-4 text-sm font-bold text-white outline-none focus:border-[#1175d5]"
               />
               <button
                 type="button"
                 onClick={handleSendReply}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[6px] bg-[#0084FF] text-white hover:bg-[#0070df]"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[6px] bg-[#1175d5] text-white hover:bg-[#0d69c2]"
               >
                 <Send className="h-4 w-4" />
               </button>

@@ -8,15 +8,30 @@ export interface ProfileStep {
   completed: boolean;
 }
 
+export type TourType = "platform" | "trading" | "deposit" | "withdrawal" | "account" | "copy_trading";
+
+interface TourProgress {
+  started: boolean;
+  completed: boolean;
+  skipped: boolean;
+  lastStepIndex: number;
+}
+
 interface ProfileTourContextState {
   percentage: number;
   steps: ProfileStep[];
   runTour: boolean;
   tourCompleted: boolean;
+  activeTourType: TourType;
+  tourProgress: Record<TourType, TourProgress>;
   startTour: () => void;
+  startTourOfType: (type: TourType) => void;
   stopTour: () => void;
   markStepCompleted: (id: string) => void;
   finishTour: () => void;
+  skipTour: () => void;
+  restartTour: (type?: TourType) => void;
+  saveTourStep: (type: TourType, stepIndex: number) => void;
 }
 
 const ProfileTourContext = createContext<ProfileTourContextState | undefined>(undefined);
@@ -30,23 +45,46 @@ export const DEFAULT_STEPS = [
   { id: "trade", name: "First trade placed", weight: 15, completed: false },
 ];
 
+const DEFAULT_PROGRESS: TourProgress = {
+  started: false,
+  completed: false,
+  skipped: false,
+  lastStepIndex: 0,
+};
+
+function getDefaultProgressMap(): Record<TourType, TourProgress> {
+  return {
+    platform: { ...DEFAULT_PROGRESS },
+    trading: { ...DEFAULT_PROGRESS },
+    deposit: { ...DEFAULT_PROGRESS },
+    withdrawal: { ...DEFAULT_PROGRESS },
+    account: { ...DEFAULT_PROGRESS },
+    copy_trading: { ...DEFAULT_PROGRESS },
+  };
+}
+
 export const ProfileTourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [steps, setSteps] = useState<ProfileStep[]>(DEFAULT_STEPS);
   const [runTour, setRunTour] = useState(false);
   const [tourCompleted, setTourCompleted] = useState(false);
+  const [activeTourType, setActiveTourType] = useState<TourType>("platform");
+  const [tourProgress, setTourProgress] = useState<Record<TourType, TourProgress>>(getDefaultProgressMap());
 
   useEffect(() => {
     if (!user?.id) {
       setSteps(DEFAULT_STEPS);
       setRunTour(false);
       setTourCompleted(false);
+      setTourProgress(getDefaultProgressMap());
       return;
     }
 
     const stepsKey = `profile_steps:${user.id}`;
     const tourKey = `platform_tour_completed:${user.id}`;
+    const progressKey = `tour_progress:${user.id}`;
     const savedSteps = localStorage.getItem(stepsKey);
+    const savedProgress = localStorage.getItem(progressKey);
 
     if (savedSteps) {
       try {
@@ -70,6 +108,15 @@ export const ProfileTourProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setSteps(DEFAULT_STEPS);
     }
 
+    if (savedProgress) {
+      try {
+        const parsed = JSON.parse(savedProgress);
+        setTourProgress({ ...getDefaultProgressMap(), ...parsed });
+      } catch {
+        setTourProgress(getDefaultProgressMap());
+      }
+    }
+
     setRunTour(false);
     setTourCompleted(localStorage.getItem(tourKey) === "true");
   }, [user?.id]);
@@ -77,8 +124,66 @@ export const ProfileTourProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Recalculate percentage natively
   const percentage = steps.reduce((acc, step) => acc + (step.completed ? step.weight : 0), 0);
 
-  const startTour = () => setRunTour(true);
+  const saveTourStep = (type: TourType, stepIndex: number) => {
+    setTourProgress(prev => {
+      const next = {
+        ...prev,
+        [type]: { ...prev[type], started: true, lastStepIndex: stepIndex },
+      };
+      if (user?.id) {
+        localStorage.setItem(`tour_progress:${user.id}`, JSON.stringify(next));
+      }
+      return next;
+    });
+  };
+
+  const startTour = () => {
+    setActiveTourType("platform");
+    setRunTour(true);
+    setTourCompleted(false);
+    setTourProgress(prev => {
+      const next = { ...prev, platform: { ...prev.platform, started: true } };
+      if (user?.id) localStorage.setItem(`tour_progress:${user.id}`, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const startTourOfType = (type: TourType) => {
+    setActiveTourType(type);
+    setRunTour(true);
+    setTourCompleted(false);
+    setTourProgress(prev => {
+      const next = { ...prev, [type]: { ...prev[type], started: true, skipped: false } };
+      if (user?.id) localStorage.setItem(`tour_progress:${user.id}`, JSON.stringify(next));
+      return next;
+    });
+  };
+
   const stopTour = () => setRunTour(false);
+
+  const skipTour = () => {
+    setRunTour(false);
+    setTourProgress(prev => {
+      const next = { ...prev, [activeTourType]: { ...prev[activeTourType], skipped: true } };
+      if (user?.id) localStorage.setItem(`tour_progress:${user.id}`, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const restartTour = (type?: TourType) => {
+    const target = type || activeTourType;
+    setActiveTourType(target);
+    setRunTour(true);
+    setTourCompleted(false);
+    setTourProgress(prev => {
+      const next = {
+        ...prev,
+        [target]: { started: true, completed: false, skipped: false, lastStepIndex: 0 },
+      };
+      if (user?.id) localStorage.setItem(`tour_progress:${user.id}`, JSON.stringify(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -86,18 +191,36 @@ export const ProfileTourProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const handleStartTour = () => {
       setRunTour(true);
       setTourCompleted(false);
+      setActiveTourType("platform");
+    };
+
+    const handleStartTourOfType = (e: Event) => {
+      const customEvent = e as CustomEvent<{ type: TourType }>;
+      if (customEvent.detail?.type) {
+        startTourOfType(customEvent.detail.type);
+      }
     };
 
     window.addEventListener("initoption:start-platform-tour", handleStartTour);
-    return () => window.removeEventListener("initoption:start-platform-tour", handleStartTour);
+    window.addEventListener("initoption:start-tour", handleStartTourOfType);
+    return () => {
+      window.removeEventListener("initoption:start-platform-tour", handleStartTour);
+      window.removeEventListener("initoption:start-tour", handleStartTourOfType);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
+
   const finishTour = () => {
     setRunTour(false);
     setTourCompleted(true);
-    if (user?.id) {
-      localStorage.setItem(`platform_tour_completed:${user.id}`, "true");
-    }
+    setTourProgress(prev => {
+      const next = { ...prev, [activeTourType]: { ...prev[activeTourType], completed: true } };
+      if (user?.id) {
+        localStorage.setItem(`tour_progress:${user.id}`, JSON.stringify(next));
+        localStorage.setItem(`platform_tour_completed:${user.id}`, "true");
+      }
+      return next;
+    });
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("initoption:platform-tour-finished"));
     }
@@ -120,10 +243,16 @@ export const ProfileTourProvider: React.FC<{ children: React.ReactNode }> = ({ c
         steps,
         runTour,
         tourCompleted,
+        activeTourType,
+        tourProgress,
         startTour,
+        startTourOfType,
         stopTour,
+        markStepCompleted,
         finishTour,
-        markStepCompleted
+        skipTour,
+        restartTour,
+        saveTourStep,
       }}
     >
       {children}
