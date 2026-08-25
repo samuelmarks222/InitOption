@@ -1025,34 +1025,14 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
   const [tickets, setTickets] = useState<SupportTicket[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_TICKETS_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed: SupportTicket[] = JSON.parse(saved);
+        return parsed.filter((t) => t.id !== "TK-928104");
+      }
     } catch {
       // fallback
     }
-    return [
-      {
-        id: "TK-928104",
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        category: "Deposits & Payments",
-        subject: "Deposit confirmation status",
-        message: "I completed an M-Pesa deposit of 100 USD. Requesting status update.",
-        status: "Answered",
-        replies: [
-          {
-            id: "r1",
-            sender: "user",
-            text: "I completed an M-Pesa deposit of 100 USD. Requesting status update.",
-            timestamp: new Date(Date.now() - 86400000).toISOString(),
-          },
-          {
-            id: "r2",
-            sender: "support",
-            text: "Hello! Your M-Pesa deposit of $100.00 has been verified and credited to your live balance.",
-            timestamp: new Date(Date.now() - 43200000).toISOString(),
-          },
-        ],
-      },
-    ];
+    return [];
   });
 
 
@@ -1146,9 +1126,7 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
         }
       });
 
-      if (mergedTickets.length > 0) {
-        setTickets(mergedTickets);
-      }
+      setTickets(mergedTickets);
     } catch (err) {
       console.warn("Failed to load DB support tickets:", err);
     }
