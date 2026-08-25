@@ -88,7 +88,19 @@ export function TradingChartIcon({ className = "h-6 w-6" }: { className?: string
   );
 }
 
-export function RocketLaunchIcon({ className = "h-6 w-6" }: { className?: string }) {
+export function AccountUserBadgeIcon({ className = "h-10 w-10" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="24" height="24" rx="6" fill="#1C1800" stroke="#FFD600" strokeWidth="1.2" strokeOpacity="0.4" />
+      <circle cx="14" cy="10" r="4.5" fill="#FFD600" />
+      <path d="M7 21C7 17.2 10 15.5 14 15.5C18 15.5 21 17.2 21 21" fill="#FFAB00" />
+      <circle cx="20" cy="8" r="3.5" fill="#00E676" stroke="#1C1800" strokeWidth="1" />
+      <path d="M18.8 8L19.8 9L21.5 7.2" stroke="#003300" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function RocketLaunchIcon({ className = "h-10 w-10" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect x="2" y="2" width="24" height="24" rx="6" fill="#2A1B00" stroke="#FFD600" strokeWidth="1.2" strokeOpacity="0.4" />
@@ -265,7 +277,7 @@ const FAQ_CATEGORIES: Array<{
   icon: React.ElementType;
 }> = [
   { id: "trading", title: "Trading Platform", countLabel: "11 questions", countNum: 11, icon: TradingChartIcon },
-  { id: "account", title: "My account", countLabel: "4 questions", countNum: 4, icon: RocketLaunchIcon },
+  { id: "account", title: "My account", countLabel: "4 questions", countNum: 4, icon: AccountUserBadgeIcon },
   { id: "verification", title: "Verification", countLabel: "5 questions", countNum: 5, icon: SecurityShieldIcon },
   { id: "payment", title: "Payment", countLabel: "4 questions", countNum: 4, icon: MpesaCardIcon },
   { id: "payouts", title: "Payouts", countLabel: "5 questions", countNum: 5, icon: WithdrawMoneyIcon },
@@ -1544,7 +1556,7 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
             </div>
 
             {/* FAQ Category Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
               {FAQ_CATEGORIES.map((cat) => {
                 const Icon = cat.icon;
                 const isSelected = selectedCategory === cat.id;
@@ -1556,23 +1568,21 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
                       setSelectedCategory(cat.id);
                       setExpandedFaqId(FAQ_DATA[cat.id]?.[0]?.id ?? null);
                     }}
-                    className={`flex flex-col items-center justify-center p-4 rounded-[12px] transition-all text-center ${
+                    className={`flex flex-col items-center justify-between p-4 sm:p-5 rounded-[16px] min-h-[145px] transition-all text-center group cursor-pointer ${
                       isSelected
-                        ? "bg-white text-[#161b26] shadow-[0_12px_30px_rgba(0,0,0,0.35)] scale-[1.03]"
-                        : "bg-[#1f2738] text-white/70 hover:bg-[#273248] hover:text-white border border-white/5"
+                        ? "bg-[#182335] border-2 border-[#00B8FF] text-white shadow-[0_10px_28px_rgba(0,184,255,0.22)] scale-[1.03]"
+                        : "bg-[#131926] border border-white/[0.08] text-white/70 hover:bg-[#1a2336] hover:border-white/20 hover:text-white"
                     }`}
                   >
-                    <div
-                      className={`p-2 rounded-full mb-2 ${
-                        isSelected ? "bg-[#161b26]/10 text-[#161b26]" : "bg-white/5 text-white"
-                      }`}
-                    >
-                      <Icon className="h-5 w-5" strokeWidth={2.2} />
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-black/40 group-hover:scale-110 transition-transform">
+                      <Icon className="h-10 w-10" />
                     </div>
-                    <span className="text-[13px] font-extrabold leading-snug">{cat.title}</span>
-                    <span className={`text-[11px] font-bold mt-0.5 ${isSelected ? "text-[#161b26]/60" : "text-white/40"}`}>
-                      {cat.countLabel}
-                    </span>
+                    <div className="mt-3">
+                      <span className="block text-[14px] font-black leading-tight text-white">{cat.title}</span>
+                      <span className={`block text-[11px] font-extrabold mt-1 ${isSelected ? "text-[#00B8FF]" : "text-white/40"}`}>
+                        {cat.countLabel}
+                      </span>
+                    </div>
                   </button>
                 );
               })}
