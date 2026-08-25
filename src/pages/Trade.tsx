@@ -317,8 +317,10 @@ const MobileModuleOverlay = ({
           onOpenDeposit={onOpenDeposit}
           onOpenOverlay={(section) => {
             if (section === "analytics") setMobileOverlay("analytics_detail");
-            else if (section === "account") setMobileOverlay("account");
-            else if (section === "referrals") setMobileOverlay("account");
+            else if (section === "account" || section === "referrals") {
+              setAccountInitialTab("My account");
+              setMobileOverlay("account");
+            }
             else setMobileOverlay(section);
           }}
         />
@@ -1726,7 +1728,10 @@ const Trade = () => {
               type="button"
               aria-label="Open account"
               id="tour-account"
-              onClick={() => setMobileOverlay("account")}
+              onClick={() => {
+                setAccountInitialTab("My account");
+                setMobileOverlay("account");
+              }}
               className={getMobileNavButtonClass(isAccountNavActive)}
             >
               <span className={getMobileNavIconClass(isAccountNavActive)}>
