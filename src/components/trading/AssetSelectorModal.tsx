@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useState, useMemo, useEffect } from "react";
-import { X, Search, ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { X, Search, ArrowDown, ArrowUp, ArrowUpDown, Info } from "lucide-react";
 import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
 import { useTrading } from "@/hooks/useTrading";
 import {
@@ -13,6 +13,7 @@ import {
   type SelectorAssetCategory,
 } from "@/lib/assets";
 import AssetSymbolMark from "./AssetSymbolMark";
+import { PairInfoModal } from "./PairInfoModal";
 
 export interface AssetSelectorAsset {
   symbol: string;
@@ -48,6 +49,7 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
   const [sortAsc, setSortAsc] = useState(false);
   const [liveAssets, setLiveAssets] = useState<AssetSelectorAsset[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [pairInfoSymbol, setPairInfoSymbol] = useState<string | null>(null);
 
   const { assets } = useDynamicAssets();
   const { activeTrades } = useTrading();
@@ -279,8 +281,19 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                     </div>
 
                     {/* Profit 1+ min */}
-                    <div className="flex items-center justify-end">
+                    <div className="flex items-center justify-end gap-1">
                       <span className="text-[13px] font-bold text-white">{asset.profit1m}%</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPairInfoSymbol(asset.symbol);
+                        }}
+                        title="View pair info"
+                        className="flex h-5 w-5 items-center justify-center rounded-full text-gray-400 opacity-60 hover:bg-white/10 hover:text-white hover:opacity-100 transition-all"
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </button>
                     </div>
 
                     {/* Profit 5+ min */}
@@ -294,6 +307,20 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
           </div>
         </div>
       </div>
+
+      {pairInfoSymbol && (
+        <PairInfoModal
+          symbol={pairInfoSymbol}
+          onClose={() => setPairInfoSymbol(null)}
+          onTradeNow={(s) => {
+            const found = liveAssets.find((a) => a.symbol === s);
+            if (found) {
+              onSelect(found);
+              onClose();
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

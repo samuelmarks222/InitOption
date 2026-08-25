@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info, Plus, X } from "lucide-react";
 import type { ActiveTrade } from "@/hooks/useTrading";
 import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -7,6 +7,7 @@ import { formatCurrencyAmount } from "@/lib/currency";
 import { getLiveAssetTradeSummary } from "@/lib/liveTradeSummary";
 import { Asset } from "./data/assets";
 import { AssetSymbolMark } from "./AssetSymbolMark";
+import { PairInfoModal } from "./PairInfoModal";
 
 interface AssetInfoProps {
   asset: Asset & { price: number; change: number };
@@ -56,6 +57,7 @@ const AssetInfo = ({
   const stripRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [pairInfoSymbol, setPairInfoSymbol] = useState<string | null>(null);
 
   useEffect(() => {
     const element = stripRef.current;
@@ -180,12 +182,22 @@ const AssetInfo = ({
                   </span>
                 )}
 
+                {/* Info button */}
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setPairInfoSymbol(tab.symbol); }}
+                  title="View pair info"
+                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-gray-400 opacity-50 transition-all hover:bg-white/15 hover:text-white hover:opacity-100"
+                >
+                  <Info className="h-3 w-3" />
+                </button>
+
                 {/* Close button */}
                 {onRemoveTab && (
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onRemoveTab(tab.symbol); }}
-                    className="ml-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-gray-400 opacity-60 transition-all hover:bg-white/15 hover:text-white hover:opacity-100"
+                    className="ml-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-gray-400 opacity-60 transition-all hover:bg-white/15 hover:text-white hover:opacity-100"
                   >
                     <X className="h-3 w-3" strokeWidth={2.5} />
                   </button>
@@ -215,6 +227,15 @@ const AssetInfo = ({
         >
           <ChevronRight className="h-3.5 w-3.5" strokeWidth={3} />
         </button>
+      )}
+      {pairInfoSymbol && (
+        <PairInfoModal
+          symbol={pairInfoSymbol}
+          onClose={() => setPairInfoSymbol(null)}
+          onTradeNow={(sym) => {
+            if (onSelectTab) onSelectTab(sym);
+          }}
+        />
       )}
     </div>
   );
