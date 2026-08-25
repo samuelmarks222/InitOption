@@ -882,6 +882,8 @@ const MyAccountPanel = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [cards, setCards] = useState<StoredVerificationCard[]>(() => loadStoredJson(cardsKey, []));
+  const [cardFormOpen, setCardFormOpen] = useState(false);
+  const [cardLast4, setCardLast4] = useState("");
   const [security, setSecurity] = useState(() =>
     loadStoredJson(settingsKey, {
       login2fa: true,
@@ -1069,27 +1071,27 @@ const MyAccountPanel = () => {
     setStatus(`Currency changed to ${nextCurrency}.`);
   };
 
+  const handleAddCard = () => {
+    const last4 = cardLast4.replace(/\D/g, "").slice(-4);
+    if (last4.length !== 4) {
+      setStatus("Enter the last 4 card digits.");
+      return;
+    }
+    const nextCards = [
+      ...cards,
+      { id: `${Date.now()}`, last4, createdAt: new Date().toISOString() },
+    ];
+    setCards(nextCards);
+    saveStoredJson(cardsKey, nextCards);
+    setCardLast4("");
+    setCardFormOpen(false);
+    setStatus("Card added for verification.");
+  };
+
   const persistKycDocuments = async (nextDocuments: Record<string, unknown>) => {
     await updateProfile({ kyc_documents: nextDocuments, kyc_status: "Pending" });
     setDocuments(nextDocuments);
     setKycStatus("Pending");
-  };
-
-  const handleSaveVerification = async () => {
-    if (!idType.trim() || !idNumber.trim()) {
-      setVerificationStatus("Select your ID type and enter your ID number first.");
-      return;
-    }
-    setVerificationSaving(true);
-    setVerificationStatus(null);
-    try {
-      await updateProfile({ idType: idType.trim(), idNumber: idNumber.trim() });
-      setVerificationStatus("ID details saved. Upload the front and back of your document to complete verification.");
-    } catch (error: any) {
-      setVerificationStatus(error?.message || "Could not save ID details.");
-    } finally {
-      setVerificationSaving(false);
-    }
   };
 
   const handleDocumentUpload = async (slot: "front" | "back", file: File) => {
