@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   BarChart3,
   User,
@@ -34,6 +34,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfileTour, TourType } from "@/contexts/ProfileTourContext";
 import { TOUR_LABELS } from "@/components/tour/GuidedTour";
 import { toast } from "@/components/ui/use-toast";
+import { api } from "@/integrations/api/client";
+import { realtime } from "@/integrations/pusher/realtime";
 
 interface HelpCenterOverlayProps {
   onClose?: () => void;
@@ -1053,9 +1055,11 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
     ];
   });
 
+  const { profile } = useAuth();
   const [activeTicket, setActiveTicket] = useState<SupportTicket | null>(null);
   const [replyText, setReplyText] = useState("");
 
+  // Sync tickets to LocalStorage fallback
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_TICKETS_KEY, JSON.stringify(tickets));
@@ -1063,6 +1067,125 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
       // silent
     }
   }, [tickets]);
+
+  // Fetch real tickets & messages from Database
+  const fetchDbTickets = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const [ticketsRes, threadsRes] = await Promise.all([
+        api.from("support_tickets").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        api.from("support_threads").select("*").eq("user_id", user.id).order("last_message_at", { ascending: false }),
+      ]);
+
+      const dbTickets = ticketsRes.data ?? [];
+      const dbThreads = threadsRes.data ?? [];
+
+      const allIds = Array.from(new Set([
+        ...dbTickets.map((t) => t.id),
+        ...dbThreads.map((t) => t.id),
+      ]));
+
+      let messagesMap = new Map<string, Array<{ id: string; sender: "user" | "support"; text: string; timestamp: string }>>();
+
+      if (allIds.length > 0) {
+        const messagesRes = await api
+          .from("support_messages")
+          .select("*")
+          .in("thread_id", allIds)
+          .order("created_at", { ascending: true });
+
+        const messagesData = messagesRes.data ?? [];
+        messagesData.forEach((msg) => {
+          const list = messagesMap.get(msg.thread_id) || [];
+          list.push({
+            id: msg.id,
+            sender: msg.sender_role === "staff" ? "support" : "user",
+            text: msg.message,
+            timestamp: msg.created_at,
+          });
+          messagesMap.set(msg.thread_id, list);
+        });
+      }
+
+      const mergedTickets: SupportTicket[] = [];
+
+      dbTickets.forEach((t) => {
+        const msgs = messagesMap.get(t.id) || [];
+        const statusLabel = t.status === "open" ? "Open" : t.status === "resolved" ? "Closed" : t.status === "pending" ? "Answered" : (t.status as any);
+        mergedTickets.push({
+          id: t.id,
+          createdAt: t.created_at,
+          category: t.category,
+          subject: t.subject,
+          message: t.message,
+          status: statusLabel,
+          replies: msgs.length > 0 ? msgs : [
+            {
+              id: `init-${t.id}`,
+              sender: "user",
+              text: t.message,
+              timestamp: t.created_at,
+            },
+          ],
+        });
+      });
+
+      dbThreads.forEach((th) => {
+        if (!mergedTickets.some((t) => t.id === th.id)) {
+          const msgs = messagesMap.get(th.id) || [];
+          const statusLabel = th.status === "open" ? "Open" : th.status === "resolved" ? "Closed" : th.status === "pending" ? "Answered" : (th.status as any);
+          mergedTickets.push({
+            id: th.id,
+            createdAt: th.created_at,
+            category: th.category,
+            subject: th.subject,
+            message: msgs[0]?.text || th.subject,
+            status: statusLabel,
+            replies: msgs,
+          });
+        }
+      });
+
+      if (mergedTickets.length > 0) {
+        setTickets(mergedTickets);
+      }
+    } catch (err) {
+      console.warn("Failed to load DB support tickets:", err);
+    }
+  }, [user?.id]);
+
+  // Real-time Database Listener & Fetch Initial Tickets
+  useEffect(() => {
+    void fetchDbTickets();
+
+    if (!user?.id) return;
+
+    const channel = realtime
+      .channel(`user-support-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "support_tickets" }, () => {
+        void fetchDbTickets();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "support_threads" }, () => {
+        void fetchDbTickets();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "support_messages" }, () => {
+        void fetchDbTickets();
+      })
+      .subscribe();
+
+    return () => {
+      void realtime.removeChannel(channel);
+    };
+  }, [user?.id, fetchDbTickets]);
+
+  // Sync activeTicket with latest replies when tickets state changes
+  useEffect(() => {
+    if (!activeTicket) return;
+    const latest = tickets.find((t) => t.id === activeTicket.id);
+    if (latest && (latest.replies.length !== activeTicket.replies.length || latest.status !== activeTicket.status)) {
+      setActiveTicket(latest);
+    }
+  }, [tickets, activeTicket]);
 
   // Live search
   useEffect(() => {
@@ -1087,7 +1210,7 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
     return () => window.removeEventListener("initoption:open-help-center", handler);
   }, []);
 
-  const handleCreateTicket = (e: React.FormEvent) => {
+  const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ticketSubject.trim()) {
       toast({ title: "Please enter a subject for your request.", variant: "destructive" });
@@ -1097,54 +1220,139 @@ export const HelpCenterOverlay = ({ onClose }: HelpCenterOverlayProps) => {
       toast({ title: "Please provide a detailed description (at least 10 characters).", variant: "destructive" });
       return;
     }
+
     setIsSubmitting(true);
-    setTimeout(() => {
-      const newTicket: SupportTicket = {
-        id: `TK-${Math.floor(100000 + Math.random() * 900000)}`,
-        createdAt: new Date().toISOString(),
-        category: ticketCategory,
-        subject: ticketSubject.trim(),
-        message: ticketMessage.trim(),
-        status: "Open",
-        replies: [
-          {
-            id: `r-${Date.now()}`,
-            sender: "user",
-            text: ticketMessage.trim(),
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      };
-      setTickets((prev) => [newTicket, ...prev]);
-      setIsSubmitting(false);
-      setTicketSubject("");
-      setTicketMessage("");
-      setTicketAttachment(null);
-      toast({
-        title: "Support ticket submitted!",
-        description: `Ticket ${newTicket.id} created. Our support team will respond shortly.`,
-      });
-      setActiveTab("my_requests");
-    }, 600);
+    const ticketId = `TK-${Math.floor(100000 + Math.random() * 900000)}`;
+    const nowIso = new Date().toISOString();
+
+    const newTicket: SupportTicket = {
+      id: ticketId,
+      createdAt: nowIso,
+      category: ticketCategory,
+      subject: ticketSubject.trim(),
+      message: ticketMessage.trim(),
+      status: "Open",
+      replies: [
+        {
+          id: `r-${Date.now()}`,
+          sender: "user",
+          text: ticketMessage.trim(),
+          timestamp: nowIso,
+        },
+      ],
+    };
+
+    setTickets((prev) => [newTicket, ...prev]);
+
+    // Push to Database so Admin Support Inbox sees it in real time
+    if (user?.id) {
+      try {
+        const userName = profile?.display_name?.trim() || profile?.username?.trim() || user.email || "Trader";
+
+        // Insert into support_tickets table
+        await api.from("support_tickets").insert({
+          id: ticketId,
+          user_id: user.id,
+          category: ticketCategory,
+          subject: ticketSubject.trim(),
+          message: ticketMessage.trim(),
+          priority: "normal",
+          status: "open",
+          created_at: nowIso,
+          updated_at: nowIso,
+        });
+
+        // Insert into support_threads table
+        await api.from("support_threads").insert({
+          id: ticketId,
+          user_id: user.id,
+          category: ticketCategory,
+          subject: ticketSubject.trim(),
+          status: "open",
+          created_at: nowIso,
+          updated_at: nowIso,
+          last_message_at: nowIso,
+        });
+
+        // Insert initial message into support_messages
+        await api.from("support_messages").insert({
+          thread_id: ticketId,
+          sender_id: user.id,
+          sender_name: userName,
+          sender_role: "user",
+          message: ticketMessage.trim(),
+          created_at: nowIso,
+        });
+      } catch (err) {
+        console.warn("Could not sync ticket to database:", err);
+      }
+    }
+
+    setIsSubmitting(false);
+    setTicketSubject("");
+    setTicketMessage("");
+    setTicketAttachment(null);
+    toast({
+      title: "Support ticket submitted!",
+      description: `Ticket ${ticketId} created. Our support team will respond shortly.`,
+    });
+    setActiveTab("my_requests");
   };
 
-  const handleSendReply = () => {
+  const handleSendReply = async () => {
     if (!activeTicket || !replyText.trim()) return;
+
+    const replyMsg = replyText.trim();
+    const nowIso = new Date().toISOString();
+    const replyId = `r-${Date.now()}`;
+
     const newReply = {
-      id: `r-${Date.now()}`,
+      id: replyId,
       sender: "user" as const,
-      text: replyText.trim(),
-      timestamp: new Date().toISOString(),
+      text: replyMsg,
+      timestamp: nowIso,
     };
+
     const updatedTickets = tickets.map((t) => {
       if (t.id === activeTicket.id) {
         return { ...t, status: "Open" as const, replies: [...t.replies, newReply] };
       }
       return t;
     });
+
     setTickets(updatedTickets);
     setActiveTicket((prev) => (prev ? { ...prev, status: "Open", replies: [...prev.replies, newReply] } : null));
     setReplyText("");
+
+    // Database Sync
+    if (user?.id) {
+      try {
+        const userName = profile?.display_name?.trim() || profile?.username?.trim() || user.email || "Trader";
+
+        await api.from("support_messages").insert({
+          thread_id: activeTicket.id,
+          sender_id: user.id,
+          sender_name: userName,
+          sender_role: "user",
+          message: replyMsg,
+          created_at: nowIso,
+        });
+
+        await api.from("support_threads").update({
+          status: "open",
+          last_message_at: nowIso,
+          updated_at: nowIso,
+        }).eq("id", activeTicket.id);
+
+        await api.from("support_tickets").update({
+          status: "open",
+          updated_at: nowIso,
+        }).eq("id", activeTicket.id);
+      } catch (err) {
+        console.warn("Could not sync reply to database:", err);
+      }
+    }
+
     toast({ title: "Reply sent to support staff." });
   };
 
