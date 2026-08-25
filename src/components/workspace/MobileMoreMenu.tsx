@@ -65,7 +65,7 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay, onOpenDeposit }: Mobile
   };
 
   return (
-    <div className="trading-terminal flex h-full flex-col bg-[#1b2030]">
+    <div className="trading-terminal flex h-full w-full flex-col bg-[#1b2030]">
       {/* Header */}
       <div className="flex h-[52px] shrink-0 items-center justify-between px-4 border-b border-white/[0.07]">
         <h2 className="text-[20px] font-black text-white">More</h2>
