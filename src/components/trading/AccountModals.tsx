@@ -1536,7 +1536,7 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   const [userDeposits, setUserDeposits] = useState<Tables<"deposit_requests">[]>([]);
-  const [userWithdrawals, setUserWithdrawals] = useState<Tables<"withdrawals">[]>([]);
+  const [userWithdrawals, setUserWithdrawals] = useState<Tables<"withdrawal_requests">[]>([]);
   const [cryptoMethods, setCryptoMethods] = useState<CryptoPaymentMethod[]>([]);
   const [selectedMethodId, setSelectedMethodId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1548,7 +1548,7 @@ export const WithdrawalModal = ({ balance, onClose }: { balance: number; onClose
     const loadData = async () => {
       const [depositsRes, withdrawalsRes, cryptoRes] = await Promise.all([
         api.from("deposit_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-        api.from("withdrawals").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        api.from("withdrawal_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
         api.from("crypto_payment_methods").select("*").eq("status", "active").order("coin_name"),
       ]);
 
@@ -2211,15 +2211,15 @@ export const AccountDropdown = ({
   accountType: AccountType;
   balance: number;
   demoBalance: number;
-  onSwitch: (t: AccountType) => void;
+  onSwitch: (type: AccountType) => void;
   onOpenDeposit: () => void;
   onOpenWithdrawal: () => void;
-  onOpenProfile: (tab?: "personal" | "balance_history" | "trading_history" | "settings") => void;
-  onUpdateDemoBalance: (value: number) => void;
+  onOpenProfile: (tab?: ProfileTab) => void;
+  onUpdateDemoBalance: (newBalance: number) => void;
   onResetDemoBalance: () => void;
   onClose: () => void;
 }) => {
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
   const { currency, formatMoney } = useCurrency();
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showDemoBalanceModal, setShowDemoBalanceModal] = useState(false);
@@ -2227,6 +2227,11 @@ export const AccountDropdown = ({
 
   const profileEmail = profile?.email || "trader@platform.com";
   const accountId = profile?.id?.replace(/-/g, "").slice(0, 8).toUpperCase() || "84560898";
+
+  const handleLogout = async () => {
+    onClose();
+    await signOut();
+  };
 
   return (
     <>
@@ -2239,130 +2244,202 @@ export const AccountDropdown = ({
       />
       <div className="fixed inset-0 z-[110]" onClick={onClose} />
       <div
-        className="fixed left-3 right-3 top-[58px] z-[120] mx-auto w-auto max-w-[340px] overflow-hidden rounded-[12px] bg-[#161c28] p-4 text-left shadow-[0_20px_60px_rgba(0,0,0,0.5)] lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-2 lg:w-[340px]"
+        className="fixed left-3 right-3 top-[58px] z-[120] mx-auto w-auto max-w-[340px] overflow-hidden rounded-[12px] bg-[#161c28] p-3.5 text-left shadow-[0_20px_60px_rgba(0,0,0,0.55)] lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-2 lg:w-[480px] lg:max-w-[480px]"
         style={{ border: "1px solid #252e42" }}
       >
-        {/* Top Header Card — matches Reference Image 2 */}
-        <div className="rounded-[8px] bg-[#1d2536] p-3.5 border border-white/5 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 rounded-[6px] bg-[#252e42] px-3 py-1.5 text-[12px] font-black text-white">
-              <Send className="h-4 w-4 text-[#00c853]" />
-              <span>STANDARD:</span>
-              <span className="text-[#00c853]">+0% profit</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setVisible((v) => !v)}
-              className="flex h-8 w-8 items-center justify-center rounded-[6px] bg-[#252e42] text-white/70 hover:text-white transition-colors"
-            >
-              {visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-            </button>
-          </div>
-
-          <div>
-            <p className="truncate text-[14px] font-extrabold text-white">{profileEmail}</p>
-            <p className="mt-0.5 text-[12px] font-bold text-white/50">ID: {visible ? accountId : "********"}</p>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-[13px] font-bold text-white/70">
-                Currency: <strong className="text-white">{currency}</strong>
-              </span>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowCurrencyModal(true);
-                }}
-                className="rounded-[4px] bg-[#0084FF] px-2.5 py-1 text-[11px] font-black uppercase text-white hover:bg-[#0070df] transition-colors"
-              >
-                CHANGE
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Account Options */}
-        <div className="mt-4 space-y-3">
-          {/* Live Account */}
-          <div
-            onClick={() => {
-              onSwitch("live");
-              onClose();
-            }}
-            className={`cursor-pointer rounded-[8px] p-3 transition-colors ${
-              accountType === "live" ? "bg-[#21293a] border border-[#0084FF]/40" : "hover:bg-white/5"
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-white/40">
-                {accountType === "live" && <div className="h-2.5 w-2.5 rounded-full bg-[#0084FF]" />}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-extrabold text-white">Live Account</p>
-                <p className="mt-0.5 text-[18px] font-black text-white">
-                  {visible ? formatMoney(balance) : "****"}
-                </p>
-                <p className="mt-1 text-[12px] font-bold text-white/40">The daily limit is not set</p>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
+          {/* Left Column: Cards & Account Options */}
+          <div className="flex-1 space-y-3 min-w-0">
+            {/* Top Header Card — matches Quotex Reference Image */}
+            <div className="rounded-[8px] bg-[#1d2536] p-3 border border-white/5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 rounded-[4px] bg-[#252e42] px-2.5 py-1 text-[11px] font-black text-white">
+                  <Send className="h-3.5 w-3.5 text-[#00c853]" />
+                  <span>STANDARD:</span>
+                  <span className="text-[#00c853]">+0% profit</span>
+                </div>
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenProfile("settings");
-                    onClose();
-                  }}
-                  className="mt-1 text-[11px] font-black uppercase text-[#0084FF] hover:underline"
+                  onClick={() => setVisible((v) => !v)}
+                  className="flex h-7 w-7 items-center justify-center rounded-[4px] bg-[#252e42] text-white/70 hover:text-white transition-colors"
                 >
-                  SET LIMIT
+                  {visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                 </button>
               </div>
-            </div>
-          </div>
 
-          {/* Demo Account */}
-          <div
-            onClick={() => {
-              onSwitch("demo");
-              onClose();
-            }}
-            className={`cursor-pointer rounded-[8px] p-3 transition-colors ${
-              accountType === "demo" ? "bg-[#21293a] border border-[#0084FF]/40" : "hover:bg-white/5"
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-white/40">
-                {accountType === "demo" && <div className="h-2.5 w-2.5 rounded-full bg-[#0084FF]" />}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-extrabold text-white">Demo Account</p>
-                <div className="mt-0.5 flex items-center justify-between">
-                  <span className="text-[18px] font-black text-white">
-                    {visible ? formatMoney(demoBalance) : "****"}
+              <div>
+                <p className="truncate text-[13px] font-extrabold text-white">{profileEmail}</p>
+                <p className="mt-0.5 text-[11.5px] font-bold text-white/50">ID: {visible ? accountId : "********"}</p>
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-[12px] font-bold text-white/70">
+                    Currency: <strong className="text-white">{currency}</strong>
                   </span>
-                  <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCurrencyModal(true);
+                    }}
+                    className="rounded-[4px] bg-[#0084FF] px-2 py-0.5 text-[10px] font-black uppercase text-white hover:bg-[#0070df] transition-colors"
+                  >
+                    CHANGE
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Options */}
+            <div className="space-y-2.5">
+              {/* Live Account */}
+              <div
+                onClick={() => {
+                  onSwitch("live");
+                  onClose();
+                }}
+                className={`cursor-pointer rounded-[8px] p-3 transition-colors ${
+                  accountType === "live" ? "bg-[#21293a] border border-[#0084FF]/40" : "hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-white/40">
+                    {accountType === "live" && <div className="h-2 w-2 rounded-full bg-[#0084FF]" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-extrabold text-white">Live Account</p>
+                    <p className="mt-0.5 text-[16px] font-black text-white">
+                      {visible ? formatMoney(balance) : "****"}
+                    </p>
+                    <p className="mt-1 text-[11px] font-bold text-white/40">The daily limit is not set</p>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onResetDemoBalance();
+                        onOpenProfile("settings");
+                        onClose();
                       }}
-                      className="p-1.5 text-white/50 hover:text-white transition-colors"
-                      title="Reset demo balance"
+                      className="mt-0.5 text-[10.5px] font-black uppercase text-[#0084FF] hover:underline"
                     >
-                      <RefreshCw className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowDemoBalanceModal(true);
-                      }}
-                      className="p-1.5 text-white/50 hover:text-white transition-colors"
-                      title="Edit demo balance"
-                    >
-                      <Edit2 className="h-4 w-4" />
+                      SET LIMIT
                     </button>
                   </div>
                 </div>
               </div>
+
+              {/* Demo Account */}
+              <div
+                onClick={() => {
+                  onSwitch("demo");
+                  onClose();
+                }}
+                className={`cursor-pointer rounded-[8px] p-3 transition-colors ${
+                  accountType === "demo" ? "bg-[#21293a] border border-[#0084FF]/40" : "hover:bg-white/5 border border-transparent"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-white/40">
+                    {accountType === "demo" && <div className="h-2 w-2 rounded-full bg-[#0084FF]" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-extrabold text-white">Demo Account</p>
+                    <div className="mt-0.5 flex items-center justify-between">
+                      <span className="text-[16px] font-black text-white">
+                        {visible ? formatMoney(demoBalance) : "****"}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onResetDemoBalance();
+                          }}
+                          className="p-1 text-white/50 hover:text-white transition-colors"
+                          title="Reset demo balance"
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDemoBalanceModal(true);
+                          }}
+                          className="p-1 text-white/50 hover:text-white transition-colors"
+                          title="Edit demo balance"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Quick Actions Navigation Links — matches Quotex Reference Image */}
+          <div className="flex flex-col justify-between border-t border-white/10 pt-3 lg:w-[130px] lg:shrink-0 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
+            <div className="space-y-3.5 text-[13px] font-bold text-white/80">
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenDeposit();
+                  onClose();
+                }}
+                className="block w-full text-left hover:text-white transition-colors"
+              >
+                Deposit
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenWithdrawal();
+                  onClose();
+                }}
+                className="block w-full text-left hover:text-white transition-colors"
+              >
+                Withdrawal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenProfile("balance_history");
+                  onClose();
+                }}
+                className="block w-full text-left hover:text-white transition-colors"
+              >
+                Payments
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenProfile("trading_history");
+                  onClose();
+                }}
+                className="block w-full text-left hover:text-white transition-colors"
+              >
+                Trades
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenProfile("personal");
+                  onClose();
+                }}
+                className="block w-full text-left hover:text-white transition-colors"
+              >
+                My account
+              </button>
+            </div>
+
+            <div className="pt-4 lg:pt-0">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 text-[13px] font-bold text-[#e53935] hover:text-[#ff5252] transition-colors"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>Logout</span>
+              </button>
             </div>
           </div>
         </div>

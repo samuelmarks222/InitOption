@@ -2475,7 +2475,7 @@ const WithdrawalPanel = () => {
   const [cryptoMemo, setCryptoMemo] = useState("");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [userDeposits, setUserDeposits] = useState<Tables<"deposit_requests">[]>([]);
-  const [userWithdrawals, setUserWithdrawals] = useState<Tables<"withdrawals">[]>([]);
+  const [userWithdrawals, setUserWithdrawals] = useState<Tables<"withdrawal_requests">[]>([]);
   const [cryptoMethods, setCryptoMethods] = useState<Tables<"crypto_payment_methods">[]>([]);
   const [selectedMethodId, setSelectedMethodId] = useState<string>("");
 
@@ -2487,7 +2487,7 @@ const WithdrawalPanel = () => {
     const loadUserData = async () => {
       const [depositsRes, withdrawalsRes, cryptoRes] = await Promise.all([
         api.from("deposit_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-        api.from("withdrawals").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+        api.from("withdrawal_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
         api.from("crypto_payment_methods").select("*").eq("status", "active").order("coin_name"),
       ]);
       if (cancelled) return;
@@ -2559,7 +2559,7 @@ const WithdrawalPanel = () => {
 
   const refreshWithdrawals = async () => {
     if (!user?.id) return;
-    const res = await api.from("withdrawals").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
+    const res = await api.from("withdrawal_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
     if (res.data) setUserWithdrawals(res.data);
   };
 
