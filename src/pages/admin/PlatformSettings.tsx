@@ -27,6 +27,9 @@ type UploadTarget =
   | "logo"
   | "landing_logo"
 
+const MAX_META_DESCRIPTION_LENGTH = 160;
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+
 const CARD_CLASS = "overflow-hidden rounded-lg border border-[#202B3A] bg-[#0D1420] p-4";
 const INPUT_CLASS =
   "w-full rounded-lg border border-[#202B3A] bg-[#080D16] px-3 py-1.5 text-xs text-white outline-none transition-colors focus:border-[#00C98D]";

@@ -622,6 +622,26 @@ const getHistoryBackfillIncrement = (containerWidth: number, timeframe: Supporte
 
 const getChartRightOffset = (visibleBars: number) => Math.max(6, Math.min(24, Math.round(visibleBars * 0.06)));
 
+/**
+ * Compute the correct barSpacing so candles fill the chart width like Quotex.
+ * barSpacing = usable chart width / number of visible bars.
+ * We clamp between minBarSpacing and a sensible max to keep candles readable.
+ */
+const getBarSpacingForTimeframe = (
+  containerWidth: number,
+  timeframe: SupportedChartTimeframe,
+  availableBars?: number,
+): number => {
+  const safeWidth = Math.max(320, containerWidth);
+  // Reserve ~55px for right price scale, 4px padding
+  const usableWidth = Math.max(200, safeWidth - 59);
+  const visibleBars = getInitialVisibleBars(safeWidth, timeframe, availableBars ?? Number.POSITIVE_INFINITY);
+  const computed = usableWidth / Math.max(1, visibleBars);
+  const min = MIN_BAR_SPACING_MAP[timeframe] ?? 1.5;
+  const max = Math.max(60, BAR_SPACING_MAP[timeframe] ?? 8) * 2.5;
+  return Math.max(min, Math.min(computed, max));
+};
+
 const getDefaultVisibleBars = (
   containerWidth: number,
   timeframe: SupportedChartTimeframe,
@@ -1868,8 +1888,8 @@ const OscillatorPane = ({
         timeVisible: true,
         secondsVisible: tf.seconds < 60,
         rightOffset,
-        barSpacing: 6,
-        minBarSpacing: 1.5,
+        barSpacing: getBarSpacingForTimeframe(containerRef.current?.clientWidth ?? 960, selectedTf),
+        minBarSpacing: MIN_BAR_SPACING_MAP[selectedTf] ?? 1.5,
         fixLeftEdge: true,
         fixRightEdge: false,
         rightBarStaysOnScroll: false,
@@ -2946,9 +2966,9 @@ const TradingChart = ({
           timeVisible: true, 
           secondsVisible: true,
           tickMarkFormatter: (time: number) => formatTimeScaleTick(time, TIMEFRAMES["1m"].seconds),
-          rightOffset: 6,
-          barSpacing: 6,
-          minBarSpacing: 1.5,
+          rightOffset: getChartRightOffset(getInitialVisibleBars(mainRef.current?.clientWidth ?? 960, "1m")),
+          barSpacing: getBarSpacingForTimeframe(mainRef.current?.clientWidth ?? 960, "1m"),
+          minBarSpacing: MIN_BAR_SPACING_MAP["1m"] ?? 1.5,
           fixLeftEdge: true,
           fixRightEdge: false,
           rightBarStaysOnScroll: false,
@@ -3368,8 +3388,8 @@ const TradingChart = ({
       const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, historyRef.current.length);
       const rightOffset = getChartRightOffset(trendContextBars);
       chartRef.current.timeScale().applyOptions({
-        barSpacing: 6,
-        minBarSpacing: 1.5,
+        barSpacing: getBarSpacingForTimeframe(containerWidth, selectedTf, historyRef.current.length),
+        minBarSpacing: MIN_BAR_SPACING_MAP[selectedTf] ?? 1.5,
         rightOffset,
         timeVisible: true,
         secondsVisible: tf.seconds < 60,
@@ -3487,8 +3507,8 @@ renderOverlayIndicators(getIndicatorHistory());
     const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, history.length);
     const rightOffset = getChartRightOffset(trendContextBars);
     chartRef.current.timeScale().applyOptions({
-      barSpacing: 6,
-      minBarSpacing: 1.5,
+      barSpacing: getBarSpacingForTimeframe(containerWidth, selectedTf, history.length),
+      minBarSpacing: MIN_BAR_SPACING_MAP[selectedTf] ?? 1.5,
       rightOffset,
       timeVisible: true,
       secondsVisible: tf.seconds < 60,
@@ -3723,8 +3743,8 @@ renderOverlayIndicators(getIndicatorHistory());
       currentRange.to >= dataPointCount - Math.max(4, rightOffset * 0.7);
 
     timeScale.applyOptions({
-      barSpacing: 6,
-      minBarSpacing: 1.5,
+      barSpacing: getBarSpacingForTimeframe(containerWidth, selectedTf, historyRef.current.length),
+      minBarSpacing: MIN_BAR_SPACING_MAP[selectedTf] ?? 1.5,
       rightOffset,
       timeVisible: true,
       secondsVisible: tf.seconds < 60,
