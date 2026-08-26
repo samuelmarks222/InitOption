@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, Shield, SlidersHorizontal, Wallet } from "lucide-react";
+import { AlertTriangle, Check, ShieldCheck, SlidersHorizontal, Wallet, X } from "lucide-react";
 import { VipBadge } from "@/components/vip/VipBadge";
 import { useAuth } from "@/contexts/AuthContext";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
@@ -32,10 +32,12 @@ interface CopyTraderDialogProps {
   trader: TraderSummary;
 }
 
+const PRESET_AMOUNTS = [10, 25, 50, 100];
+
 const RATIO_OPTIONS = [
   { value: "0.5", label: "0.5x (Half)" },
-  { value: "1", label: "1x (Same)" },
-  { value: "2", label: "2x (Double)" },
+  { value: "1", label: "1.0x (Exact)" },
+  { value: "2", label: "2.0x (Double)" },
 ];
 
 export const CopyTraderDialog = ({
@@ -52,35 +54,26 @@ export const CopyTraderDialog = ({
 
   const [enabled, setEnabled] = useState(existingSetting?.enabled ?? true);
   const [amountType, setAmountType] = useState<CopyAmountType>(existingSetting?.amount_type ?? "fixed");
-  const [executionMode, setExecutionMode] = useState<CopyExecutionMode>(existingSetting?.execution_mode ?? "automatic");
+  const [executionMode] = useState<CopyExecutionMode>(existingSetting?.execution_mode ?? "automatic");
   const [fixedAmount, setFixedAmount] = useState(existingSetting?.fixed_amount?.toString() ?? "10");
   const [ratio, setRatio] = useState(existingSetting?.ratio?.toString() ?? "1");
-  const [maxPerTrade, setMaxPerTrade] = useState(existingSetting?.max_per_trade?.toString() ?? "50");
   const [maxDaily, setMaxDaily] = useState(existingSetting?.max_daily?.toString() ?? "250");
-  const [stopLossEnabled, setStopLossEnabled] = useState(!!existingSetting?.stop_loss_pct);
-  const [stopLossPct, setStopLossPct] = useState(existingSetting?.stop_loss_pct?.toString() ?? "20");
-  const [expiryDate, setExpiryDate] = useState(existingSetting?.expiry_date?.slice(0, 10) ?? "");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setEnabled(existingSetting?.enabled ?? true);
     setAmountType(existingSetting?.amount_type ?? "fixed");
-    setExecutionMode(existingSetting?.execution_mode ?? "automatic");
     setFixedAmount(existingSetting?.fixed_amount?.toString() ?? "10");
     setRatio(existingSetting?.ratio?.toString() ?? "1");
-    setMaxPerTrade(existingSetting?.max_per_trade?.toString() ?? "50");
     setMaxDaily(existingSetting?.max_daily?.toString() ?? "250");
-    setStopLossEnabled(!!existingSetting?.stop_loss_pct);
-    setStopLossPct(existingSetting?.stop_loss_pct?.toString() ?? "20");
-    setExpiryDate(existingSetting?.expiry_date?.slice(0, 10) ?? "");
   }, [existingSetting, open]);
 
   const handleSave = async () => {
     if (hasNoBalance) {
       toast({
         title: "Deposit Required",
-        description: "You must add money to your account in order to copy trades.",
+        description: "You need active balance in your account to copy trade. Please deposit first.",
         variant: "destructive",
       });
       onOpenChange(false);
@@ -89,158 +82,189 @@ export const CopyTraderDialog = ({
     }
 
     setSaving(true);
-    await onSave({
-      enabled,
-      amountType,
-      executionMode,
-      fixedAmount: amountType === "fixed" ? Number(fixedAmount || 0) : null,
-      ratio: amountType === "ratio" ? Number(ratio || 0) : null,
-      maxPerTrade: Number(maxPerTrade || 0) || null,
-      maxDaily: Number(maxDaily || 0) || null,
-      stopLossPct: stopLossEnabled ? Number(stopLossPct || 0) || null : null,
-      expiryDate: expiryDate ? new Date(expiryDate).toISOString() : null,
-    });
-    setSaving(false);
-    onOpenChange(false);
+    try {
+      await onSave({
+        enabled,
+        amountType,
+        executionMode,
+        fixedAmount: amountType === "fixed" ? Number(fixedAmount || 10) : null,
+        ratio: amountType === "ratio" ? Number(ratio || 1) : null,
+        maxPerTrade: null,
+        maxDaily: Number(maxDaily || 250),
+      });
+
+      toast({
+        title: enabled ? "Copying Activated!" : "Copy Setting Saved",
+        description: `Now copying trades from ${getTraderDisplayName(trader)} automatically.`,
+      });
+      onOpenChange(false);
+    } catch (err) {
+      toast({
+        title: "Error Saving Copy Setup",
+        description: err instanceof Error ? err.message : "Something went wrong.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[520px] border-white/10 bg-[#1A1A2A] text-white">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-white">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0fa053]/15 text-[#9be1bc]">
-              <SlidersHorizontal className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span>Copy trades from {getTraderDisplayName(trader)}</span>
-                <VipBadge tierId={(trader.vip_tier as any) ?? "standard"} size={20} />
+      <DialogContent className="max-w-[480px] border-white/10 bg-[#121824] p-6 text-white shadow-2xl rounded-2xl">
+        <DialogHeader className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {trader.avatar_url ? (
+                <img src={trader.avatar_url} alt="" className="h-11 w-11 rounded-full object-cover ring-2 ring-[#1689e8]" />
+              ) : (
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#1689e8] to-purple-600 text-base font-black text-white">
+                  {getTraderDisplayName(trader).charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <DialogTitle className="flex items-center gap-2 text-lg font-black text-white">
+                  <span>{getTraderDisplayName(trader)}</span>
+                  <VipBadge tierId={(trader.vip_tier as any) ?? "standard"} size={18} />
+                </DialogTitle>
+                <DialogDescription className="text-xs text-gray-400">
+                  Configure automatic trade copying parameters
+                </DialogDescription>
               </div>
             </div>
-          </DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Configure how trades from this trader will be copied to your account.
-          </DialogDescription>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-5">
-          {/* Copy Amount */}
-          <Field label="Copy Amount ($)" hint="Fixed amount per copied trade.">
-            <input
-              type="number"
-              value={fixedAmount}
-              step="0.01"
-              min="1"
-              onChange={(e) => setFixedAmount(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
-            />
-          </Field>
+        <div className="mt-4 space-y-5">
+          {/* Mode Selector: Fixed Amount vs Proportional Ratio */}
+          <div>
+            <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-400">
+              Copy Amount Type
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setAmountType("fixed")}
+                className={`rounded-xl border px-3 py-2.5 text-xs font-bold transition ${
+                  amountType === "fixed"
+                    ? "border-[#1689e8] bg-[#1689e8]/15 text-white"
+                    : "border-white/10 bg-white/[0.03] text-gray-400 hover:text-white"
+                }`}
+              >
+                Fixed Amount ($)
+              </button>
 
-          {/* Copy Ratio */}
-          <Field label="Copy Ratio" hint="Relative to the trader's stake.">
-            <div className="grid grid-cols-3 gap-2">
-              {RATIO_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => { setAmountType("ratio"); setRatio(opt.value); }}
-                  className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
-                    ratio === opt.value && amountType === "ratio"
-                      ? "border-[#0fa053]/40 bg-[#0fa053]/15 text-white"
-                      : "border-white/10 bg-black/20 text-gray-400 hover:text-white"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={() => setAmountType("ratio")}
+                className={`rounded-xl border px-3 py-2.5 text-xs font-bold transition ${
+                  amountType === "ratio"
+                    ? "border-[#1689e8] bg-[#1689e8]/15 text-white"
+                    : "border-white/10 bg-white/[0.03] text-gray-400 hover:text-white"
+                }`}
+              >
+                Proportional Multiplier
+              </button>
             </div>
-          </Field>
+          </div>
 
-          {/* Max Daily Copies */}
-          <Field label="Max Daily Copies" hint="Limit copies per day.">
+          {/* Fixed Amount Controls */}
+          {amountType === "fixed" ? (
+            <div className="space-y-2">
+              <span className="block text-xs font-bold uppercase tracking-wider text-gray-400">
+                Amount Per Trade ($)
+              </span>
+              <div className="grid grid-cols-4 gap-2">
+                {PRESET_AMOUNTS.map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setFixedAmount(amt.toString())}
+                    className={`rounded-lg border px-2 py-2 text-xs font-mono font-bold transition ${
+                      fixedAmount === amt.toString()
+                        ? "border-[#1689e8] bg-[#1689e8] text-white"
+                        : "border-white/10 bg-black/20 text-gray-300 hover:text-white"
+                    }`}
+                  >
+                    ${amt}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="number"
+                value={fixedAmount}
+                min="1"
+                step="1"
+                onChange={(e) => setFixedAmount(e.target.value)}
+                placeholder="Custom amount..."
+                className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 text-sm font-mono font-bold text-white outline-none transition focus:border-[#1689e8]"
+              />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <span className="block text-xs font-bold uppercase tracking-wider text-gray-400">
+                Copy Ratio Multiplier
+              </span>
+              <div className="grid grid-cols-3 gap-2">
+                {RATIO_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setRatio(opt.value)}
+                    className={`rounded-xl border px-3 py-2.5 text-xs font-bold transition ${
+                      ratio === opt.value
+                        ? "border-[#1689e8] bg-[#1689e8]/20 text-white"
+                        : "border-white/10 bg-black/20 text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Max Daily Limit */}
+          <div className="space-y-1.5">
+            <span className="block text-xs font-bold uppercase tracking-wider text-gray-400">
+              Max Daily Loss Cap ($)
+            </span>
             <input
               type="number"
               value={maxDaily}
-              min="1"
+              min="10"
               onChange={(e) => setMaxDaily(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
+              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 text-sm font-mono font-bold text-white outline-none transition focus:border-[#1689e8]"
             />
-          </Field>
-
-          {/* Stop Loss */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-white">Stop Loss</p>
-                <p className="text-xs text-gray-400">Stop copying if trader loses X%</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setStopLossEnabled(!stopLossEnabled)}
-                className={`relative h-7 w-12 rounded-full transition-colors ${stopLossEnabled ? "bg-[#0fa053]" : "bg-gray-600"}`}
-              >
-                <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${stopLossEnabled ? "left-6" : "left-1"}`} />
-              </button>
-            </div>
-            {stopLossEnabled && (
-              <div className="mt-3 flex items-center gap-3">
-                <input
-                  type="number"
-                  value={stopLossPct}
-                  min="1"
-                  max="100"
-                  onChange={(e) => setStopLossPct(e.target.value)}
-                  className="w-24 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
-                />
-                <span className="text-sm text-gray-400">% loss threshold</span>
-              </div>
-            )}
+            <p className="text-[11px] text-gray-500">Stop copying automatically if daily copied losses exceed this limit.</p>
           </div>
 
-          {/* Expiry */}
-          <Field label="Expiry (Optional)" hint="Automatically stop copying after this date.">
-            <input
-              type="date"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-colors focus:border-[#0fa053]"
-            />
-          </Field>
-
-          {/* Warning */}
-          <div className="rounded-2xl border border-[#F6465D]/20 bg-[#F6465D]/10 px-4 py-3">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#F6465D]" />
-              <div>
-                <p className="text-sm font-semibold text-[#F6465D]">Risk Warning</p>
-                <p className="mt-1 text-xs leading-5 text-[#F6465D]/80">
-                  Copy trading involves risk. You may lose money. Copying does not guarantee profits.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <label className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+          {/* Active Status Toggle */}
+          <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] p-3.5">
             <div>
-              <p className="text-sm font-semibold text-white">Enable Copying</p>
-              <p className="text-xs text-gray-400">Pause or resume without losing your saved setup.</p>
+              <p className="text-xs font-bold text-white">Active Status</p>
+              <p className="text-[11px] text-gray-400">Pause or resume copying anytime</p>
             </div>
+
             <button
               type="button"
               onClick={() => setEnabled(!enabled)}
-              className={`relative h-7 w-12 rounded-full transition-colors ${enabled ? "bg-[#0fa053]" : "bg-gray-600"}`}
+              className={`relative h-6 w-11 rounded-full transition ${enabled ? "bg-[#00c878]" : "bg-gray-600"}`}
             >
-              <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${enabled ? "left-6" : "left-1"}`} />
+              <span
+                className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${
+                  enabled ? "left-6" : "left-1"
+                }`}
+              />
             </button>
-          </label>
+          </div>
         </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="mt-6 gap-2">
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm font-semibold text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
+            className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-gray-300 transition hover:bg-white/10 hover:text-white"
           >
             Cancel
           </button>
@@ -248,7 +272,7 @@ export const CopyTraderDialog = ({
             type="button"
             onClick={() => void handleSave()}
             disabled={saving}
-            className="rounded-xl bg-[#0fa053] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0d8f47] disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-xl bg-[#1689e8] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#1272c4] disabled:opacity-50"
           >
             {saving ? "Saving..." : "Start Copying"}
           </button>
@@ -257,20 +281,3 @@ export const CopyTraderDialog = ({
     </Dialog>
   );
 };
-
-const Field = ({
-  children,
-  hint,
-  label,
-}: {
-  children: React.ReactNode;
-  hint: string;
-  label: string;
-}) => (
-  <label className="block">
-    <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">{label}</span>
-    {children}
-    <span className="mt-1.5 block text-xs text-gray-500">{hint}</span>
-  </label>
-);
-
