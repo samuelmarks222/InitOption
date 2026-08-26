@@ -416,7 +416,7 @@ export const DepositModal = ({ onClose }: { onClose: () => void }) => {
   const [mpesaResult, setMpesaResult] = useState<MobileMoneyDepositPayload | null>(null);
 
   // Dynamic bonus from admin-configured offers
-  const { loading: bonusLoading, cryptoEnabled, findMatchingOffer, bonusAmountFor } = useDepositBonus(user?.id ?? null);
+  const { loading: bonusLoading, catalog = [], cryptoEnabled, findMatchingOffer, bonusAmountFor } = useDepositBonus(user?.id ?? null);
 
   useEffect(() => {
     let cancelled = false;
