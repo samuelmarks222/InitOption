@@ -68,11 +68,41 @@ const hydrate = async (): Promise<AuthUserLike | null> => {
     return null;
   }
   try {
+    if (isBrowser()) {
+      const params = new URLSearchParams(window.location.search);
+      const userId = params.get("userId") ?? params.get("user_id");
+      const secret = params.get("secret");
+
+      if (userId && secret) {
+        try {
+          await (account as any).createSession(userId, secret);
+        } catch (e) {
+          console.warn("[auth] OAuth createSession error:", e);
+        }
+      }
+    }
     const user = await account.get();
     const mapped = toAuthUserLike(user);
+    if (isBrowser()) {
+      try {
+        localStorage.setItem("cached_auth_user", JSON.stringify(mapped));
+      } catch {}
+    }
     notify(mapped);
     return mapped;
   } catch {
+    if (isBrowser()) {
+      try {
+        const cached = localStorage.getItem("cached_auth_user");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && (parsed.id || parsed.uid)) {
+            notify(parsed);
+            return parsed;
+          }
+        }
+      } catch {}
+    }
     notify(null);
     return null;
   }
@@ -184,11 +214,43 @@ export async function resolveGoogleRedirectResult(): Promise<{ user: AuthUserLik
     if (!account) {
       return { user: null, error: { message: "Appwrite account is not initialized", code: "appwrite/unknown" } };
     }
+
+    if (isBrowser()) {
+      const params = new URLSearchParams(window.location.search);
+      const userId = params.get("userId") ?? params.get("user_id");
+      const secret = params.get("secret");
+
+      if (userId && secret) {
+        try {
+          await (account as any).createSession(userId, secret);
+        } catch (e) {
+          console.warn("[auth] resolveGoogleRedirectResult createSession error:", e);
+        }
+      }
+    }
+
     const user = await account.get();
     const mapped = toAuthUserLike(user);
+    if (isBrowser()) {
+      try {
+        localStorage.setItem("cached_auth_user", JSON.stringify(mapped));
+      } catch {}
+    }
     notify(mapped);
     return { user: mapped, error: null };
   } catch (e) {
+    if (isBrowser()) {
+      try {
+        const cached = localStorage.getItem("cached_auth_user");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && (parsed.id || parsed.uid)) {
+            notify(parsed);
+            return { user: parsed, error: null };
+          }
+        }
+      } catch {}
+    }
     return { user: null, error: mapError(e) };
   }
 }
@@ -255,11 +317,42 @@ export async function currentAppwriteUser(): Promise<AuthUserLike | null> {
 export async function refreshSession(): Promise<AuthUserLike | null> {
   if (!account) return null;
   try {
+    if (isBrowser()) {
+      const params = new URLSearchParams(window.location.search);
+      const userId = params.get("userId") ?? params.get("user_id");
+      const secret = params.get("secret");
+
+      if (userId && secret) {
+        try {
+          await (account as any).createSession(userId, secret);
+        } catch (e) {
+          console.warn("[auth] refreshSession createSession error:", e);
+        }
+      }
+    }
+
     const user = await account.get();
     const mapped = toAuthUserLike(user);
+    if (isBrowser()) {
+      try {
+        localStorage.setItem("cached_auth_user", JSON.stringify(mapped));
+      } catch {}
+    }
     notify(mapped);
     return mapped;
   } catch {
+    if (isBrowser()) {
+      try {
+        const cached = localStorage.getItem("cached_auth_user");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && (parsed.id || parsed.uid)) {
+            notify(parsed);
+            return parsed;
+          }
+        }
+      } catch {}
+    }
     notify(null);
     return null;
   }
