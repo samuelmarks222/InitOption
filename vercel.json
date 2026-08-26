@@ -70,7 +70,6 @@
     { "source": "/api/pusher/auth", "destination": "/api/system?route=pusher-auth" },
     { "source": "/api/crypto/deposit-callback", "destination": "/api/crypto/create-payment?__callback=1" },
     { "source": "/api/crypto/plisio-methods", "destination": "/api/crypto/create-payment?route=plisio-methods" },
-    { "source": "/api/appwrite/(.*)", "destination": "/api/system?route=appwrite-proxy&upstream=$1" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/assets/(.*)", "destination": "/assets/$1" },
     { "source": "/favicon.ico", "destination": "/favicon.ico" },

@@ -1,6 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import systemHandler from "./_lib/systemHandler.js";
-import { handleAppwriteProxy } from "./_lib/appwriteProxy.js";
 import {
   handleDb,
   handleProfile,
@@ -71,9 +70,6 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         return;
       case "pusher-auth":
         await handlePusherAuth(request, res);
-        return;
-      case "appwrite-proxy":
-        await handleAppwriteProxy(request as never, res as never);
         return;
       default:
         await systemHandler(request as never, res as never);
