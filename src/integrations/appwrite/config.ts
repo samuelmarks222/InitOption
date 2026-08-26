@@ -2,7 +2,12 @@
 // Reads browser-visible config from VITE_APPWRITE_* env vars (never secrets).
 import { Client, Account, type Models } from "appwrite";
 
-export const APPWRITE_ENDPOINT = import.meta.env.VITE_APPWRITE_ENDPOINT as string | undefined;
+const rawAppwriteEndpoint = import.meta.env.VITE_APPWRITE_ENDPOINT as string | undefined;
+
+export const APPWRITE_ENDPOINT =
+  rawAppwriteEndpoint && rawAppwriteEndpoint.startsWith("/")
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}${rawAppwriteEndpoint}`
+    : rawAppwriteEndpoint;
 export const APPWRITE_PROJECT_ID = import.meta.env.VITE_APPWRITE_PROJECT_ID as string | undefined;
 
 const isValidConfig =
