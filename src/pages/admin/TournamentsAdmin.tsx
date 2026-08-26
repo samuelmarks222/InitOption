@@ -175,8 +175,27 @@ const TournamentsAdmin = () => {
     const sDate = new Date(newTour.start_date!).toISOString();
     const eDate = new Date(newTour.end_date!).toISOString();
 
-    let prizeDistribution: any = undefined;
-    try { prizeDistribution = JSON.parse(newTour.prize_distribution!); } catch {}
+    let prizeDistribution: any = null;
+    if (newTour.prize_distribution) {
+      const raw = String(newTour.prize_distribution).trim();
+      if (raw) {
+        try {
+          prizeDistribution = JSON.parse(raw);
+        } catch {
+          const numbers = raw
+            .replace(/%/g, "")
+            .split(",")
+            .map((s) => Number(s.trim()))
+            .filter((n) => Number.isFinite(n));
+
+          if (numbers.length > 0) {
+            prizeDistribution = numbers;
+          } else {
+            prizeDistribution = { raw };
+          }
+        }
+      }
+    }
 
     const { data, error } = await api.from('tournaments').insert({
       title: newTour.title,
