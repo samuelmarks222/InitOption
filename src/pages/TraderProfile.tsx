@@ -43,10 +43,20 @@ const TraderProfile = () => {
     const load = async () => {
       if (!username) { setLoading(false); return; }
       setLoading(true);
-      const { data: traderData } = await api.from("profiles")
-        .select(PROFILE_SELECT)
-        .eq("username", username)
-        .maybeSingle();
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username);
+      let traderData: Tables<"profiles"> | null = null;
+
+      if (isUuid) {
+        const { data } = await api.from("profiles").select(PROFILE_SELECT).eq("id", username).maybeSingle();
+        traderData = data as Tables<"profiles"> | null;
+      } else {
+        const { data } = await api.from("profiles").select(PROFILE_SELECT).eq("username", username).maybeSingle();
+        traderData = data as Tables<"profiles"> | null;
+        if (!traderData) {
+          const { data: fallbackData } = await api.from("profiles").select(PROFILE_SELECT).eq("id", username).maybeSingle();
+          traderData = fallbackData as Tables<"profiles"> | null;
+        }
+      }
       if (!traderData) {
         toast({ title: "Trader not found", description: "The requested profile does not exist.", variant: "destructive" });
         setTrader(null);

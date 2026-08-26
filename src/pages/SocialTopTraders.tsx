@@ -467,9 +467,9 @@ export const SocialTopTraders = () => {
                                 </div>
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <span className="font-bold text-white truncate max-w-[140px]">
+                                    <Link to={`/traders/${trader.username || trader.id}`} className="font-bold text-white hover:text-[#1689e8] hover:underline truncate max-w-[140px]">
                                       {getTraderDisplayName(trader)}
-                                    </span>
+                                    </Link>
                                     <VipBadge tierId={(trader.vip_tier as any) ?? "standard"} size={16} />
                                   </div>
                                   <span className="text-xs font-semibold text-gray-400">Verified Master</span>
