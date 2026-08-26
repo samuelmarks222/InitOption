@@ -1,4 +1,4 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
+﻿import type { IncomingMessage, ServerResponse } from "node:http";
 import { v2 as cloudinary } from "cloudinary";
 import { transaction, query, queryOne, userRpc, testDbConnection } from "./db.js";
 export { testDbConnection } from "./db.js";
@@ -771,198 +771,6 @@ const remapClauses = (
     return { ...clause, v: remapClerkIds(clause.v, mappedId, uid, canonicalUuid) };
   });
 
-export async function handleDb(request: ApiRequest, response: ApiResponse): Promise<void> {
-  const method = request.method || "GET";
-  
-  // Check database connection early
-  if (!process.env.DATABASE_URL?.trim()) {
-    console.error("DATABASE_URL not configured");
-    sendJson(response, 503, { error: "Database not configured" });
-    return;
-  }
-
-  // Test database connectivity
-  try {
-    const dbTest = await testDbConnection();
-    if (!dbTest.ok) {
-      console.error("Database connection failed:", dbTest.error);
-      sendJson(response, 503, { error: "Database unavailable", details: dbTest.error });
-      return;
-    }
-  } catch (e) {
-    console.error("Database test error:", e instanceof Error ? e.message : e);
-    sendJson(response, 503, { error: "Database test failed" });
-    return;
-  }
-
-  const segments = getDbPath(request).split("/").filter(Boolean);
-  const table = segments[0] ?? "";
-
-  try {
-    const auth = await authenticateWithUid(request.headers);
-    if (!auth) {
-      sendJson(response, 401, { error: "Unauthorized" });
-      return;
-    }
-    const clerkUserId = auth.uuid;
-    const appwriteUid = auth.uid;
-    const mappedId = clerkUserIdToUuid(clerkUserId);
-
-    if (!ALLOWED_TABLES.has(table)) {
-      sendJson(response, 400, { error: "Table not allowed" });
-      return;
-    }
-    const idSegment = segments[1] ?? undefined;
-    const params: unknown[] = [];
-
-    if (method === "GET") {
-      const parsedSelect = parseColumns(firstValue(request.query?.select) || "*");
-      if (!parsedSelect) {
-        sendJson(response, 400, { error: "Invalid select columns" });
-        return;
-      }
-      const { selectList, joins } = buildSelectAndJoins(parsedSelect, table);
-
-      if (idSegment) {
-        const { rows } = await runScoped(mappedId, (client) =>
-          client.query(`select ${selectList.join(", ")} from public.${table} ${joins.join(" ")} where "id" = $1`, [
-            remapClerkIds(idSegment, mappedId, appwriteUid, clerkUserId),
-          ]),
-        );
-        sendJson(response, 200, { data: rows[0] ?? null });
-        return;
-      }
-
-      const clauses = remapClauses(parseFilterClauses(firstValue(request.query?.filters)) ?? [], mappedId, appwriteUid, clerkUserId);
-
-      if (firstValue(request.query?.count) === "true") {
-        const countParams: unknown[] = [];
-        let sql = `select count(*) as count from public.${table}`;
-        const whereSql = buildWhere(clauses, countParams);
-        if (whereSql) sql += ` where ${whereSql}`;
-        const { rows } = await runScoped(mappedId, (client) => client.query(sql, countParams));
-        const count = rows[0]?.count;
-        sendJson(response, 200, { data: [], count: typeof count === "number" ? count : Number(count ?? 0) });
-        return;
-      }
-
-      const orders = parseOrders(firstValue(request.query?.order));
-      const limitRaw = parseInt(firstValue(request.query?.limit) ?? "1000", 10);
-      const offsetRaw = parseInt(firstValue(request.query?.offset) ?? "0", 10);
-      const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 1000) : 1000;
-      const offset = Number.isFinite(offsetRaw) && offsetRaw > 0 ? offsetRaw : 0;
-
-      let sql = `select ${selectList.join(", ")} from public.${table} ${joins.join(" ")}`;
-      const whereSql = buildWhere(clauses, params);
-      if (whereSql) sql += ` where ${whereSql}`;
-      if (orders) sql += ` order by ${orders.join(", ")}`;
-      sql += ` limit ${limit} offset ${offset}`;
-
-      const { rows } = await runScoped(mappedId, (client) => client.query(sql, params));
-      sendJson(response, 200, { data: rows });
-      return;
-    }
-
-    const rawBody = await readRawBody(request);
-    let body: { values?: Row; match?: Row; filters?: FilterClause[] } = {};
-    if (rawBody) {
-      try {
-        body = JSON.parse(rawBody) as typeof body;
-      } catch {
-        sendJson(response, 400, { error: "Invalid JSON body" });
-        return;
-      }
-    }
-
-    const filterClauses = body.filters ?? [];
-    const matchEntries = Object.entries(body.match ?? {});
-    if (matchEntries.length > 0) filterClauses.push(...matchEntries.map(([c, v]) => ({ c, o: "eq", v })));
-
-    if (method === "DELETE") {
-      const whereClauses = remapClauses(filterClauses, mappedId, appwriteUid, clerkUserId);
-      if (whereClauses.length === 0) {
-      case "lte": params.push(val); return `"${col}" <= $${index}`;
-      case "in": {
-        const values = Array.isArray(val) ? val : [];
-        params.push(values);
-        return `"${col}"::text = any($${index}::text[])`;
-      }
-      case "is":
-        if (val === null) return `"${col}" is null`;
-        params.push(val);
-        return `"${col}" is not distinct from $${index}`;
-      case "contains":
-        params.push(JSON.stringify(val));
-        return `"${col}" @> $${index}::jsonb`;
-      default:
-        throw new Error("Invalid filter operator");
-    }
-  });
-  return parts.join(" and ");
-};
-
-const parseOrders = (raw: string | undefined): string[] | null => {
-  if (!raw || raw.trim().length === 0) return null;
-  const orders: string[] = [];
-  for (const part of raw.split(",")) {
-    const trimmed = part.trim();
-    if (!trimmed) continue;
-
-    if (trimmed === "*") {
-      orders.push("*");
-      continue;
-    }
-    const [col, direction] = trimmed.split(":");
-    if (!col || !IS_IDENTIFIER.test(col)) return null;
-    const dir = direction === "desc" ? "desc" : "asc";
-    orders.push(`"${col}" ${dir}`);
-  }
-  return orders.length > 0 ? orders : null;
-};
-
-const parseFilterClauses = (raw: string | undefined): FilterClause[] | null => {
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    return Array.isArray(parsed) ? (parsed as FilterClause[]) : null;
-  } catch {
-    return null;
-  }
-};
-
-const isClerkId = (value: unknown): value is string =>
-  typeof value === "string" && value.startsWith("user_");
-
-const remapClerkIds = (
-  value: unknown,
-  mappedId: string,
-  uid?: string | null,
-  canonicalUuid?: string | null,
-): unknown => {
-  if (isClerkId(value)) return mappedId;
-  // Remap the authenticated caller's own id to its canonical uuid so filters and
-  // values against uuid columns (user_id, id, ...) don't 400. The raw Appwrite uid
-  // (e.g. "6a7e8ed439b52c2e7d46") never matches the canonical uuid returned by
-  // authenticateRequest, so both spellings must be handled.
-  if (typeof value === "string" && uid && value === uid) return mappedId;
-  if (typeof value === "string" && canonicalUuid && value === canonicalUuid) return mappedId;
-  if (Array.isArray(value)) return value.map((entry) => remapClerkIds(entry, mappedId, uid, canonicalUuid));
-  return value;
-};
-
-const remapClauses = (
-  clauses: FilterClause[],
-  mappedId: string,
-  uid?: string | null,
-  canonicalUuid?: string | null,
-): FilterClause[] =>
-  clauses.map((clause) => {
-    if (clause.o === "or" && Array.isArray(clause.items)) {
-      return { ...clause, items: remapClauses(clause.items, mappedId, uid, canonicalUuid) };
-    }
-    return { ...clause, v: remapClerkIds(clause.v, mappedId, uid, canonicalUuid) };
-  });
-
 export async function handleDb(request: ApiRequest, response: ApiResponse): Promise<void> {
   const method = request.method || "GET";
   

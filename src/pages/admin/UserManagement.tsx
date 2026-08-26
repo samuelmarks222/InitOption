@@ -6,7 +6,7 @@ import {
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { toast } from "@/hooks/use-toast";
 import { fetchAdminUserManagementFeed, reviewUserKyc, type AdminKycDecision, type AdminKycDocuments, type AdminUserManagementFeedItem } from "@/lib/adminUsers";
-import { formatVipCurrency, getVipTierById, VipTierId } from "@/lib/vip";
+import { formatVipCurrency, VipTierId } from "@/lib/vip";
 import { VipBadge } from "@/components/vip/VipBadge";
 
 type KycDocument = AdminKycDocuments["front"];
@@ -31,7 +31,7 @@ type AdminUserRow = {
   kycDocuments: KycDocuments;
 };
 
-const BORDER = "#202B3A";
+const BORDER = "#1b2333";
 const TIER_OPTIONS: Array<{ label: string; value: VipTierId | "auto" }> = [
   { label: "Auto", value: "auto" },
   { label: "STANDARD", value: "standard" },
@@ -40,9 +40,9 @@ const TIER_OPTIONS: Array<{ label: string; value: VipTierId | "auto" }> = [
 ];
 
 const STATUS_STYLES: Record<KycStatus, string> = {
-  Pending: "bg-[#F59E0B]/15 text-[#F59E0B]",
-  Verified: "bg-[#00C98D]/15 text-[#00C98D]",
-  Rejected: "bg-[#EF4444]/15 text-[#EF4444]",
+  Pending: "bg-[#f5a13d]/20 text-[#f5a13d] border border-[#f5a13d]/30",
+  Verified: "bg-[#00c878]/20 text-[#00c878] border border-[#00c878]/30",
+  Rejected: "bg-[#ff4a5a]/20 text-[#ff4a5a] border border-[#ff4a5a]/30",
 };
 
 const isVipTierId = (value: string | null | undefined): value is VipTierId =>
@@ -100,289 +100,334 @@ const UserManagement = () => {
       toast({ title: "VIP update not allowed", description: "Super admin role required.", variant: "destructive" });
       return;
     }
-    const manualOverride = nextValue === "auto" ? null : nextValue;
-    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, manualOverride } : u)));
 
-    await api.from("profiles")
-      .update({ vip_tier: manualOverride ? getVipTierById(manualOverride).name : null, vip_tier_override: manualOverride } as any)
-      .eq("id", userId);
+    const nextOverride = nextValue === "auto" ? null : nextValue;
+
+    try {
+      const { error } = await api
+        .from("profiles")
+        .update({ vip_tier_manual_override: nextOverride })
+        .eq("id", userId);
+
+      if (error) throw new Error(error.message);
+
+      setUsers((current) =>
+        current.map((item) => {
+          if (item.id !== userId) return item;
+          const balance = Number(item.balance ?? 0);
+          const autoTier: VipTierId = balance >= 10000 ? "vip" : balance >= 5000 ? "pro" : "standard";
+
+          return {
+            ...item,
+            currentTier: nextOverride ?? autoTier,
+            manualOverride: nextOverride,
+          };
+        }),
+      );
+
+      toast({
+        title: "VIP tier updated",
+        description: `Set to ${nextOverride ? nextOverride.toUpperCase() : "AUTOMATIC (Balance-based)"}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to update VIP tier",
+        description: error instanceof Error ? error.message : "Database error.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleKycDecision = async (userId: string, status: KycStatus, adminNote?: string | null) => {
-    if (!canReviewKyc) {
-      toast({ title: "KYC review not allowed", variant: "destructive" });
-      return;
-    }
+  const handleKycReviewSubmit = async (decision: KycStatus) => {
+    if (!selectedUser || !canReviewKyc) return;
 
     setIsSavingKyc(true);
     try {
-      await reviewUserKyc({ adminNote: adminNote?.trim() ? adminNote.trim() : null, status, userId });
-      setUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, kycStatus: status } : user)));
-      setSelectedUser((prev) => (prev && prev.id === userId ? { ...prev, kycStatus: status } : prev));
-      setKycAdminNote("");
-      toast({ title: `KYC ${status}` });
+      await reviewUserKyc({
+        adminNote: kycAdminNote.trim() || null,
+        status: decision,
+        userId: selectedUser.id,
+      });
+
+      setUsers((current) =>
+        current.map((item) => (item.id === selectedUser.id ? { ...item, kycStatus: decision } : item)),
+      );
+
+      setSelectedUser((current) => (current ? { ...current, kycStatus: decision } : null));
+
+      toast({
+        title: `KYC ${decision}`,
+        description: `User ${selectedUser.username} has been updated.`,
+      });
     } catch (error) {
-      toast({ title: "KYC update failed", variant: "destructive" });
+      toast({
+        title: "KYC Review failed",
+        description: error instanceof Error ? error.message : "Update error.",
+        variant: "destructive",
+      });
     } finally {
       setIsSavingKyc(false);
     }
   };
 
   const filteredUsers = useMemo(() => {
-    return users.filter((user) => {
-      const search = searchTerm.toLowerCase();
-      const matchesSearch =
-        user.name.toLowerCase().includes(search) ||
-        user.username.toLowerCase().includes(search) ||
-        user.id.toLowerCase().includes(search);
-      const matchesTier = selectedTier === "all" || user.currentTier === selectedTier;
-      const matchesKyc = selectedKyc === "all" || user.kycStatus === selectedKyc;
-      return matchesSearch && matchesTier && matchesKyc;
+    return users.filter((u) => {
+      const matchSearch =
+        u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.id.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchTier = selectedTier === "all" || u.currentTier === selectedTier;
+      const matchKyc = selectedKyc === "all" || u.kycStatus === selectedKyc;
+
+      return matchSearch && matchTier && matchKyc;
     });
-  }, [searchTerm, selectedKyc, selectedTier, users]);
+  }, [users, searchTerm, selectedTier, selectedKyc]);
 
   return (
-    <div className="space-y-5">
-      {/* Header Toolbar */}
-      <div className="flex flex-wrap items-center justify-between border-b pb-4" style={{ borderColor: BORDER }}>
+    <div className="space-y-6">
+      {/* Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#131a27] p-6 shadow-2xl">
         <div>
-          <h2 className="text-xl font-black text-white">USER DIRECTORY & CRM CONSOLE</h2>
-          <p className="text-xs text-[#8D9AAF]">Account monitoring, balance audits, VIP tier overrides, and KYC document verification.</p>
+          <div className="flex items-center gap-2.5">
+            <Users className="h-6 w-6 text-[#1689e8]" />
+            <h1 className="text-xl font-black text-white uppercase tracking-wider">User Directory & KYC Verification</h1>
+          </div>
+          <p className="mt-1 text-xs font-bold text-gray-400">
+            Manage user balances, inspect trading activity, review identity documentation, and adjust VIP permissions.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => void loadUsers()}
-            className="flex items-center gap-1.5 rounded-lg border border-[#202B3A] bg-[#0D1420] px-3 py-1.5 text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white"
-          >
-            <RefreshCw size={13} className={isLoadingUsers ? "animate-spin text-[#00C98D]" : ""} /> Refresh
-          </button>
-        </div>
+
+        <button
+          onClick={() => void loadUsers(true)}
+          disabled={isLoadingUsers}
+          className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b1018] px-4 py-2.5 text-xs font-black text-white hover:border-[#1689e8] transition disabled:opacity-50"
+        >
+          <RefreshCw className={`h-4 w-4 ${isLoadingUsers ? "animate-spin text-[#1689e8]" : ""}`} />
+          Refresh Directory
+        </button>
       </div>
 
-      {/* Metrics Strip */}
-      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
-        <div className="grid grid-cols-2 divide-x divide-y divide-[#202B3A] sm:grid-cols-4 sm:divide-y-0">
-          <div className="p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Total Users</p>
-            <p className="mt-0.5 text-xl font-black font-mono text-white">{users.length}</p>
-          </div>
-          <div className="p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">KYC Pending</p>
-            <p className="mt-0.5 text-xl font-black font-mono text-[#F59E0B]">
-              {users.filter((u) => u.kycStatus === "Pending").length}
-            </p>
-          </div>
-          <div className="p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">KYC Verified</p>
-            <p className="mt-0.5 text-xl font-black font-mono text-[#00C98D]">
-              {users.filter((u) => u.kycStatus === "Verified").length}
-            </p>
-          </div>
-          <div className="p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Docs Uploaded</p>
-            <p className="mt-0.5 text-xl font-black font-mono text-white">
-              {users.filter((u) => u.kycDocuments.front?.url || u.kycDocuments.back?.url).length}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Toolbar & Filters */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-[#0D1420] p-3" style={{ borderColor: BORDER }}>
-        <div className="relative w-72">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500 pointer-events-none" />
+      {/* Filter Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#131a27] p-4 shadow-xl">
+        <div className="relative flex-1 min-w-[260px]">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search user ID, username, or name..."
+            placeholder="Search by name, handle, or ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-8 rounded-lg border bg-[#080D16] pl-8 pr-3 text-xs text-white outline-none placeholder:text-gray-500 focus:border-[#00C98D]"
-            style={{ borderColor: BORDER }}
+            className="w-full rounded-xl border border-white/10 bg-[#0b1018] py-2.5 pl-10 pr-4 text-xs font-bold text-white placeholder-gray-500 outline-none focus:border-[#1689e8] transition"
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <select
             value={selectedTier}
             onChange={(e) => setSelectedTier(e.target.value)}
-            className="h-8 rounded-lg border bg-[#080D16] px-2.5 text-xs text-white outline-none focus:border-[#00C98D]"
-            style={{ borderColor: BORDER }}
+            className="rounded-xl border border-white/10 bg-[#0b1018] px-3.5 py-2 text-xs font-bold text-white outline-none focus:border-[#1689e8]"
           >
             <option value="all">All Tiers</option>
-            <option value="standard">STANDARD</option>
-            <option value="pro">PRO</option>
+            <option value="standard">Standard</option>
+            <option value="pro">Pro</option>
             <option value="vip">VIP</option>
           </select>
 
           <select
             value={selectedKyc}
-            onChange={(e) => setSelectedKyc(e.target.value as "all" | KycStatus)}
-            className="h-8 rounded-lg border bg-[#080D16] px-2.5 text-xs text-white outline-none focus:border-[#00C98D]"
-            style={{ borderColor: BORDER }}
+            onChange={(e) => setSelectedKyc(e.target.value as any)}
+            className="rounded-xl border border-white/10 bg-[#0b1018] px-3.5 py-2 text-xs font-bold text-white outline-none focus:border-[#1689e8]"
           >
             <option value="all">All KYC Statuses</option>
-            <option value="Pending">Pending</option>
             <option value="Verified">Verified</option>
+            <option value="Pending">Pending</option>
             <option value="Rejected">Rejected</option>
           </select>
         </div>
       </div>
 
-      {/* Dense Users Table (NO CARDS) */}
-      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b bg-[#121B29] text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]" style={{ borderColor: BORDER }}>
-                <th className="px-4 py-3">USER</th>
-                <th className="px-4 py-3">USER ID</th>
-                <th className="px-4 py-3">VIP TIER</th>
-                <th className="px-4 py-3">BALANCE</th>
-                <th className="px-4 py-3">30D VOLUME</th>
-                <th className="px-4 py-3">TRADES</th>
-                <th className="px-4 py-3">KYC STATUS</th>
-                <th className="px-4 py-3 text-right">ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#202B3A]">
-              {isLoadingUsers ? (
-                <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">Loading user database...</td>
+      {/* Main Table Container */}
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#131a27] shadow-xl">
+        {isLoadingUsers ? (
+          <div className="flex h-64 items-center justify-center text-sm font-bold text-gray-400">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin text-[#1689e8]" /> Loading users feed...
+          </div>
+        ) : loadError ? (
+          <div className="p-8 text-center text-xs font-bold text-[#ff4a5a]">{loadError}</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-white/10 bg-[#0b1018]/80 text-[11px] font-black uppercase tracking-wider text-gray-400">
+                  <th className="py-3.5 px-4">User</th>
+                  <th className="py-3.5 px-4">Live Balance</th>
+                  <th className="py-3.5 px-4">Total Deposits</th>
+                  <th className="py-3.5 px-4">VIP Tier</th>
+                  <th className="py-3.5 px-4">KYC Status</th>
+                  <th className="py-3.5 px-4">Registered</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
-              ) : filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">No users found matching your filters.</td>
-                </tr>
-              ) : (
-                filteredUsers.map((user) => {
-                  const tier = getVipTierById(user.currentTier);
-                  return (
-                    <tr key={user.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#00C98D] text-xs font-bold text-black">
-                            {user.name.charAt(0)}
+              </thead>
+              <tbody className="divide-y divide-white/5 font-semibold">
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-gray-400">No users found matching query.</td>
+                  </tr>
+                ) : (
+                  filteredUsers.map((u) => (
+                    <tr key={u.id} className="hover:bg-white/[0.02] transition">
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#1689e8] to-indigo-600 font-black text-white">
+                            {u.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <span className="font-semibold text-white block leading-tight">{user.name}</span>
-                            <span className="text-[10px] text-[#8D9AAF]">{user.username}</span>
+                            <div className="font-extrabold text-white">{u.name}</div>
+                            <div className="text-[10px] text-gray-400">@{u.username}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-2.5 font-mono text-gray-400 font-semibold">#{user.id.slice(0, 8).toUpperCase()}</td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-1.5">
-                          <VipBadge tierId={user.currentTier} size={16} />
-                          <span className="font-semibold text-white">{tier.name}</span>
+
+                      <td className="py-3.5 px-4 font-black text-[#00c878]">
+                        {formatVipCurrency(u.balance)}
+                      </td>
+
+                      <td className="py-3.5 px-4 font-bold text-white">
+                        {formatVipCurrency(u.totalDeposit)}
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-2">
+                          <VipBadge tierId={u.currentTier} size={16} />
+                          {canEditVip ? (
+                            <select
+                              value={u.manualOverride ?? "auto"}
+                              onChange={(e) => void handleOverride(u.id, e.target.value as any)}
+                              className="rounded-lg border border-white/10 bg-[#0b1018] px-2 py-1 text-[10px] font-bold text-gray-300 outline-none"
+                            >
+                              {TIER_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="text-[10px] font-black uppercase text-gray-400">{u.currentTier}</span>
+                          )}
                         </div>
                       </td>
-                      <td className="px-4 py-2.5 font-mono font-bold text-white">{formatVipCurrency(user.balance)}</td>
-                      <td className="px-4 py-2.5 font-mono text-gray-300">{formatVipCurrency(user.volume30d)}</td>
-                      <td className="px-4 py-2.5 font-mono text-gray-300">{user.totalTrades} ({user.totalWins} W)</td>
-                      <td className="px-4 py-2.5">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_STYLES[user.kycStatus]}`}>
-                          {user.kycStatus}
+
+                      <td className="py-3.5 px-4">
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase ${STATUS_STYLES[u.kycStatus]}`}>
+                          {u.kycStatus}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <select
-                            value={user.manualOverride ?? "auto"}
-                            onChange={(e) => handleOverride(user.id, e.target.value as VipTierId | "auto")}
-                            disabled={!canEditVip}
-                            className="h-7 rounded border bg-[#080D16] px-1.5 text-[11px] text-white outline-none focus:border-[#00C98D]"
-                            style={{ borderColor: BORDER }}
-                          >
-                            {TIER_OPTIONS.map((o) => (
-                              <option key={o.value} value={o.value}>{o.label}</option>
-                            ))}
-                          </select>
 
-                          <button
-                            onClick={() => { setSelectedUser(user); setKycAdminNote(""); }}
-                            className="rounded border border-[#00C98D]/30 bg-[#00C98D]/10 px-2 py-1 text-[11px] font-bold text-[#00C98D] hover:bg-[#00C98D] hover:text-black transition-colors"
-                          >
-                            Review
-                          </button>
-                        </div>
+                      <td className="py-3.5 px-4 text-gray-400">
+                        {new Date(u.registrationDate).toLocaleDateString()}
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right">
+                        <button
+                          onClick={() => { setSelectedUser(u); setKycAdminNote(""); }}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-[#0b1018] px-3 py-1.5 text-xs font-black text-[#1689e8] hover:border-[#1689e8] transition"
+                        >
+                          <Eye className="h-3.5 w-3.5" /> Details & KYC
+                        </button>
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* Slide-Over KYC / User Workspace Modal */}
+      {/* User Details & KYC Modal */}
       {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-4xl rounded-xl border bg-[#0D1420] p-5 text-xs shadow-2xl" style={{ borderColor: BORDER }}>
-            <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: BORDER }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md" onClick={() => setSelectedUser(null)}>
+          <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#131a27] p-6 text-white shadow-2xl space-y-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div>
-                <h3 className="text-base font-bold text-white">KYC & User Audit Console</h3>
-                <p className="text-gray-400">{selectedUser.name} ({selectedUser.username}) • ID: {selectedUser.id}</p>
+                <h3 className="text-lg font-black">{selectedUser.name}</h3>
+                <p className="text-xs text-gray-400">@{selectedUser.username} • ID: {selectedUser.id}</p>
               </div>
-              <button onClick={() => setSelectedUser(null)} className="rounded p-1 text-gray-400 hover:bg-white/10 hover:text-white">
-                <X size={18} />
+              <button onClick={() => setSelectedUser(null)} className="rounded-lg p-1.5 text-gray-400 hover:bg-white/10 hover:text-white">
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              {/* Document Front */}
-              <div className="rounded-lg border bg-[#080D16] p-3" style={{ borderColor: BORDER }}>
-                <span className="font-bold text-white block mb-2">Front Document</span>
-                {selectedUser.kycDocuments.front?.url ? (
-                  <img src={selectedUser.kycDocuments.front.url} alt="Front ID" className="h-48 w-full object-cover rounded" />
-                ) : (
-                  <div className="flex h-48 items-center justify-center text-gray-500 border border-dashed rounded" style={{ borderColor: BORDER }}>
-                    No front document uploaded.
-                  </div>
-                )}
+            <div className="grid grid-cols-3 gap-3 text-xs">
+              <div className="rounded-xl border border-white/5 bg-[#0b1018] p-3">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Live Balance</span>
+                <div className="text-base font-black text-[#00c878] mt-1">{formatVipCurrency(selectedUser.balance)}</div>
               </div>
-
-              {/* Document Back */}
-              <div className="rounded-lg border bg-[#080D16] p-3" style={{ borderColor: BORDER }}>
-                <span className="font-bold text-white block mb-2">Back Document</span>
-                {selectedUser.kycDocuments.back?.url ? (
-                  <img src={selectedUser.kycDocuments.back.url} alt="Back ID" className="h-48 w-full object-cover rounded" />
-                ) : (
-                  <div className="flex h-48 items-center justify-center text-gray-500 border border-dashed rounded" style={{ borderColor: BORDER }}>
-                    No back document uploaded.
-                  </div>
-                )}
+              <div className="rounded-xl border border-white/5 bg-[#0b1018] p-3">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Total Deposits</span>
+                <div className="text-base font-black text-white mt-1">{formatVipCurrency(selectedUser.totalDeposit)}</div>
+              </div>
+              <div className="rounded-xl border border-white/5 bg-[#0b1018] p-3">
+                <span className="text-[10px] uppercase font-bold text-gray-400">30D Volume</span>
+                <div className="text-base font-black text-[#1689e8] mt-1">{formatVipCurrency(selectedUser.volume30d)}</div>
               </div>
             </div>
 
-            {/* Decision Controls */}
-            <div className="mt-4 border-t pt-4 flex flex-wrap items-center justify-between gap-3" style={{ borderColor: BORDER }}>
-              <input
-                type="text"
-                placeholder="Optional reviewer note..."
-                value={kycAdminNote}
-                onChange={(e) => setKycAdminNote(e.target.value)}
-                className="h-8 flex-1 rounded border bg-[#080D16] px-3 text-xs text-white outline-none focus:border-[#00C98D]"
-                style={{ borderColor: BORDER }}
-              />
+            {/* KYC Documents Inspection */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-black uppercase text-gray-300">Identity Verification Documents</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-xl border border-white/5 bg-[#0b1018] p-3">
+                  <span className="text-[10px] font-bold text-gray-400">Front Document ID</span>
+                  {selectedUser.kycDocuments.front?.url ? (
+                    <img src={selectedUser.kycDocuments.front.url} alt="Front" className="mt-2 h-32 w-full rounded-lg object-cover border border-white/10" />
+                  ) : (
+                    <div className="mt-2 flex h-32 items-center justify-center rounded-lg border border-dashed border-white/10 text-xs text-gray-500">
+                      Not Uploaded
+                    </div>
+                  )}
+                </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleKycDecision(selectedUser.id, "Verified", kycAdminNote)}
-                  disabled={isSavingKyc}
-                  className="rounded bg-[#00C98D] px-4 py-1.5 font-bold text-black transition-colors hover:bg-emerald-400"
-                >
-                  Approve KYC
-                </button>
-                <button
-                  onClick={() => handleKycDecision(selectedUser.id, "Rejected", kycAdminNote)}
-                  disabled={isSavingKyc}
-                  className="rounded bg-[#EF4444] px-4 py-1.5 font-bold text-white transition-colors hover:bg-red-600"
-                >
-                  Reject KYC
-                </button>
+                <div className="rounded-xl border border-white/5 bg-[#0b1018] p-3">
+                  <span className="text-[10px] font-bold text-gray-400">Back Document ID</span>
+                  {selectedUser.kycDocuments.back?.url ? (
+                    <img src={selectedUser.kycDocuments.back.url} alt="Back" className="mt-2 h-32 w-full rounded-lg object-cover border border-white/10" />
+                  ) : (
+                    <div className="mt-2 flex h-32 items-center justify-center rounded-lg border border-dashed border-white/10 text-xs text-gray-500">
+                      Not Uploaded
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* Admin KYC Review Decision */}
+            {canReviewKyc && (
+              <div className="space-y-3 border-t border-white/10 pt-4">
+                <textarea
+                  placeholder="Admin review note (optional)..."
+                  value={kycAdminNote}
+                  onChange={(e) => setKycAdminNote(e.target.value)}
+                  className="w-full h-20 rounded-xl border border-white/10 bg-[#0b1018] p-3 text-xs text-white outline-none focus:border-[#1689e8]"
+                />
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => void handleKycReviewSubmit("Verified")}
+                    disabled={isSavingKyc}
+                    className="flex-1 rounded-xl bg-[#00c878] py-2.5 text-xs font-black text-white hover:bg-[#00b26b] transition disabled:opacity-50"
+                  >
+                    Approve & Verify KYC
+                  </button>
+
+                  <button
+                    onClick={() => void handleKycReviewSubmit("Rejected")}
+                    disabled={isSavingKyc}
+                    className="flex-1 rounded-xl bg-[#ff4a5a] py-2.5 text-xs font-black text-white hover:bg-[#e03b4b] transition disabled:opacity-50"
+                  >
+                    Reject KYC
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { api } from "@/integrations/api/client";
 import {
-  Activity, ArrowDownRight, ArrowUpRight, CheckCircle2, Clock, Filter, RefreshCw, Search, Users, XCircle, DollarSign, Target,
+  Activity, ArrowDownRight, ArrowUpRight, CheckCircle2, Clock, Filter, RefreshCw, Search, Users, XCircle, DollarSign, Target, CandlestickChart,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -12,9 +12,8 @@ type TradeWithUser = TradeRow & {
   userLabel: string;
 };
 
-const BORDER = "#202B3A";
+const BORDER = "#1b2333";
 const formatMoney = (value: number) => `$${value.toFixed(2)}`;
-const formatSignedMoney = (value: number) => `${value > 0 ? "+" : value < 0 ? "-" : ""}$${Math.abs(value).toFixed(2)}`;
 
 const formatTimeRemaining = (trade: TradeRow, nowMs: number) => {
   const expiryMs = new Date(trade.opened_at).getTime() + trade.expiry_seconds * 1000;
@@ -37,7 +36,6 @@ const TradeManagement = () => {
   const [assetFilter, setAssetFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [trades, setTrades] = useState<TradeWithUser[]>([]);
-  const [users, setUsers] = useState<ProfileRow[]>([]);
   const [nowMs, setNowMs] = useState(Date.now());
 
   useEffect(() => {
@@ -62,7 +60,6 @@ const TradeManagement = () => {
     }
 
     setTrades(tradeRows.map((t) => ({ ...t, userLabel: getUserLabel(profilesById, t.user_id) })));
-    setUsers(Array.from(profilesById.values()));
     setLoading(false);
   }, []);
 
@@ -98,182 +95,157 @@ const TradeManagement = () => {
     const totalVolume = openTrades.reduce((sum, t) => sum + t.amount, 0);
     const totalPayout = openTrades.reduce((sum, t) => sum + t.amount * t.payout_rate, 0);
     const uniqueUsers = new Set(openTrades.map((t) => t.user_id)).size;
-    return { totalOpen: openTrades.length, totalVolume, totalPayout, uniqueUsers };
+
+    return {
+      openCount: openTrades.length,
+      totalVolume,
+      totalPayout,
+      uniqueUsers,
+    };
   }, [trades]);
 
   return (
-    <div className="space-y-5">
-      {/* Header & Refresh */}
-      <div className="flex flex-wrap items-center justify-between border-b pb-4" style={{ borderColor: BORDER }}>
+    <div className="space-y-6">
+      {/* Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#131a27] p-6 shadow-2xl">
         <div>
-          <h2 className="text-xl font-black text-white">LIVE TRADING OPERATIONS CONSOLE</h2>
-          <p className="text-xs text-[#8D9AAF]">Real-time open positions monitor and trade execution settlement ledger.</p>
+          <div className="flex items-center gap-2.5">
+            <CandlestickChart className="h-6 w-6 text-[#1689e8]" />
+            <h1 className="text-xl font-black text-white uppercase tracking-wider">Live Trading Supervision Console</h1>
+          </div>
+          <p className="mt-1 text-xs font-bold text-gray-400">
+            Realtime monitoring of open positions, risk exposure, settlement timers, and trade history logs.
+          </p>
         </div>
+
         <button
           onClick={() => void fetchTrades()}
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-lg border border-[#202B3A] bg-[#0D1420] px-3 py-1.5 text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white"
+          className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b1018] px-4 py-2.5 text-xs font-black text-white hover:border-[#1689e8] transition disabled:opacity-50"
         >
-          <RefreshCw size={13} className={loading ? "animate-spin text-[#00C98D]" : ""} /> Refresh Engine
+          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-[#1689e8]" : ""}`} />
+          Refresh Trades
         </button>
       </div>
 
-      {/* Structured Metrics Strip */}
-      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
-        <div className="grid grid-cols-2 divide-x divide-y divide-[#202B3A] sm:grid-cols-4 sm:divide-y-0">
-          <div className="p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Open Trades</p>
-            <p className="mt-0.5 text-xl font-black font-mono text-white">{stats.totalOpen}</p>
-          </div>
-          <div className="p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Open Stake Volume</p>
-            <p className="mt-0.5 text-xl font-black font-mono text-white">{formatMoney(stats.totalVolume)}</p>
-          </div>
-          <div className="p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Potential Payout</p>
-            <p className="mt-0.5 text-xl font-black font-mono text-[#00C98D]">{formatMoney(stats.totalPayout)}</p>
-          </div>
-          <div className="p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Active Traders</p>
-            <p className="mt-0.5 text-xl font-black font-mono text-white">{stats.uniqueUsers}</p>
-          </div>
+      {/* Exposure Metrics KPI Cards */}
+      <div className="grid gap-4 sm:grid-cols-4">
+        <div className="rounded-2xl border border-white/10 bg-[#131a27] p-4 shadow-xl">
+          <span className="text-[10px] font-black uppercase text-gray-400">Active Open Positions</span>
+          <div className="mt-2 text-2xl font-black text-white">{stats.openCount}</div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-[#131a27] p-4 shadow-xl">
+          <span className="text-[10px] font-black uppercase text-gray-400">Total Live Exposure</span>
+          <div className="mt-2 text-2xl font-black text-[#1689e8]">{formatMoney(stats.totalVolume)}</div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-[#131a27] p-4 shadow-xl">
+          <span className="text-[10px] font-black uppercase text-gray-400">Max Potential Payout</span>
+          <div className="mt-2 text-2xl font-black text-amber-400">{formatMoney(stats.totalPayout)}</div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-[#131a27] p-4 shadow-xl">
+          <span className="text-[10px] font-black uppercase text-gray-400">Active Traders On-Chart</span>
+          <div className="mt-2 text-2xl font-black text-[#00c878]">{stats.uniqueUsers}</div>
         </div>
       </div>
 
-      {/* Toolbar & Filters Strip */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-[#0D1420] p-3" style={{ borderColor: BORDER }}>
-        {/* Tabs */}
-        <div className="flex items-center gap-1 rounded-md border border-[#202B3A] bg-[#080D16] p-1">
-          <button
-            onClick={() => setActiveTab("live")}
-            className={`rounded px-3 py-1 text-xs font-bold transition-colors ${
-              activeTab === "live" ? "bg-[#00C98D] text-black" : "text-[#8D9AAF] hover:text-white"
-            }`}
-          >
-            Live Trades ({stats.totalOpen})
-          </button>
-          <button
-            onClick={() => setActiveTab("history")}
-            className={`rounded px-3 py-1 text-xs font-bold transition-colors ${
-              activeTab === "history" ? "bg-[#00C98D] text-black" : "text-[#8D9AAF] hover:text-white"
-            }`}
-          >
-            Trade History
-          </button>
+      {/* Filters & Tab Switcher Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#131a27] p-4 shadow-xl">
+        <div className="relative flex-1 min-w-[240px]">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by asset symbol, trader name, trade ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-[#0b1018] py-2.5 pl-10 pr-4 text-xs font-bold text-white placeholder-gray-500 outline-none focus:border-[#1689e8]"
+          />
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-48">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500 pointer-events-none" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Trade ID, user, asset..."
-              className="w-full h-8 rounded-lg border bg-[#080D16] pl-8 pr-2.5 text-xs text-white outline-none placeholder:text-gray-500 focus:border-[#00C98D]"
-              style={{ borderColor: BORDER }}
-            />
-          </div>
-
+        <div className="flex items-center gap-3">
           <select
-            value={userFilter}
-            onChange={(e) => setUserFilter(e.target.value)}
-            className="h-8 rounded-lg border bg-[#080D16] px-2.5 text-xs text-white outline-none focus:border-[#00C98D]"
-            style={{ borderColor: BORDER }}
+            value={assetFilter}
+            onChange={(e) => setAssetFilter(e.target.value)}
+            className="rounded-xl border border-white/10 bg-[#0b1018] px-3.5 py-2 text-xs font-bold text-white outline-none focus:border-[#1689e8]"
           >
-            <option value="">All Users</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.display_name || u.username || u.id.slice(0, 8)}
-              </option>
+            <option value="all">All Asset Pairs</option>
+            {availableAssets.map((asset) => (
+              <option key={asset} value={asset}>{asset}</option>
             ))}
           </select>
 
-          {availableAssets.length > 0 && (
-            <select
-              value={assetFilter}
-              onChange={(e) => setAssetFilter(e.target.value)}
-              className="h-8 rounded-lg border bg-[#080D16] px-2.5 text-xs text-white outline-none focus:border-[#00C98D]"
-              style={{ borderColor: BORDER }}
+          <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-[#0b1018] p-1">
+            <button
+              onClick={() => setActiveTab("live")}
+              className={`rounded-lg px-4 py-1.5 text-xs font-black transition ${
+                activeTab === "live" ? "bg-[#1689e8] text-white shadow-md" : "text-gray-400 hover:text-white"
+              }`}
             >
-              <option value="all">All Assets</option>
-              {availableAssets.map((asset) => (
-                <option key={asset} value={asset}>{asset}</option>
-              ))}
-            </select>
-          )}
+              Live ({trades.filter((t) => t.status === "open").length})
+            </button>
+
+            <button
+              onClick={() => setActiveTab("history")}
+              className={`rounded-lg px-4 py-1.5 text-xs font-black transition ${
+                activeTab === "history" ? "bg-[#1689e8] text-white shadow-md" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Settled History
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Operations Data Table (Dense Table, NO CARDS) */}
-      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
+      {/* Trades Table */}
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#131a27] shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b bg-[#121B29] text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]" style={{ borderColor: BORDER }}>
-                <th className="px-4 py-3">TIME</th>
-                <th className="px-4 py-3">TRADE ID</th>
-                <th className="px-4 py-3">USER</th>
-                <th className="px-4 py-3">ASSET</th>
-                <th className="px-4 py-3">DIRECTION</th>
-                <th className="px-4 py-3">STAKE</th>
-                <th className="px-4 py-3">PAYOUT / P&L</th>
-                <th className="px-4 py-3">EXPIRY / TIMER</th>
-                <th className="px-4 py-3">RESULT</th>
-                <th className="px-4 py-3 text-right">STATUS</th>
+              <tr className="border-b border-white/10 bg-[#0b1018]/80 text-[11px] font-black uppercase tracking-wider text-gray-400">
+                <th className="py-3.5 px-4">Trade ID</th>
+                <th className="py-3.5 px-4">Asset</th>
+                <th className="py-3.5 px-4">User</th>
+                <th className="py-3.5 px-4">Direction</th>
+                <th className="py-3.5 px-4">Entry Price</th>
+                <th className="py-3.5 px-4">Stake</th>
+                <th className="py-3.5 px-4">{activeTab === "live" ? "Time Left" : "Profit Payout"}</th>
+                <th className="py-3.5 px-4 text-right">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#202B3A]">
-              {loading ? (
+            <tbody className="divide-y divide-white/5 font-semibold">
+              {filteredTrades.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">Loading trade positions...</td>
-                </tr>
-              ) : filteredTrades.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">No trades matching selected filters.</td>
+                  <td colSpan={8} className="py-12 text-center text-gray-400">No trades matching current filter criteria.</td>
                 </tr>
               ) : (
                 filteredTrades.map((t) => {
-                  const isWon = t.status === "won";
-                  const isLost = t.status === "lost";
-                  const profit = Number(t.profit ?? 0);
-
+                  const isCall = t.direction.toUpperCase() === "CALL" || t.direction.toUpperCase() === "HIGHER";
+                  const isWon = Number(t.profit ?? 0) > 0;
                   return (
-                    <tr key={t.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-4 py-2.5 font-mono text-[#8D9AAF]">
-                        {new Date(t.opened_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                      </td>
-                      <td className="px-4 py-2.5 font-mono text-gray-400 font-semibold">#{t.id.slice(0, 8).toUpperCase()}</td>
-                      <td className="px-4 py-2.5 font-semibold text-white truncate max-w-[120px]">{t.userLabel}</td>
-                      <td className="px-4 py-2.5 font-bold text-white">{t.asset_symbol}</td>
-                      <td className="px-4 py-2.5">
-                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
-                          t.direction === "higher" || t.direction === "CALL" ? "bg-[#00C98D]/15 text-[#00C98D]" : "bg-[#EF4444]/15 text-[#EF4444]"
-                        }`}>
-                          {t.direction?.toUpperCase()}
+                    <tr key={t.id} className="hover:bg-white/[0.02] transition">
+                      <td className="py-3.5 px-4 font-mono text-gray-400">{t.id.slice(0, 8)}...</td>
+                      <td className="py-3.5 px-4 font-extrabold text-white">{t.asset_symbol}</td>
+                      <td className="py-3.5 px-4 text-gray-300">{t.userLabel}</td>
+                      <td className="py-3.5 px-4">
+                        <span className={`inline-flex items-center gap-1 rounded px-2.5 py-0.5 font-black text-[10px] uppercase ${isCall ? "bg-[#00c878]/20 text-[#00c878]" : "bg-[#ff4a5a]/20 text-[#ff4a5a]"}`}>
+                          {isCall ? "↑ CALL" : "↓ PUT"}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 font-mono text-white">${t.amount}</td>
-                      <td className={`px-4 py-2.5 font-mono font-bold ${t.status === "open" ? "text-[#00C98D]" : isWon ? "text-[#00C98D]" : "text-[#EF4444]"}`}>
-                        {t.status === "open" ? `$${(t.amount * t.payout_rate).toFixed(2)}` : formatSignedMoney(profit)}
-                      </td>
-                      <td className="px-4 py-2.5 font-mono font-semibold text-white">
-                        {t.status === "open" ? formatTimeRemaining(t, nowMs) : `${t.expiry_seconds}s`}
-                      </td>
-                      <td className="px-4 py-2.5 font-bold uppercase">
+                      <td className="py-3.5 px-4 font-mono text-gray-300">{Number(t.entry_price).toFixed(5)}</td>
+                      <td className="py-3.5 px-4 font-black text-white">{formatMoney(Number(t.amount))}</td>
+                      <td className="py-3.5 px-4">
                         {t.status === "open" ? (
-                          <span className="text-[#3B82F6]">—</span>
-                        ) : isWon ? (
-                          <span className="text-[#00C98D]">WIN</span>
+                          <span className="font-mono font-extrabold text-[#1689e8]">{formatTimeRemaining(t, nowMs)}</span>
                         ) : (
-                          <span className="text-[#EF4444]">LOSS</span>
+                          <span className={`font-black ${isWon ? "text-[#00c878]" : "text-[#ff4a5a]"}`}>
+                            {formatMoney(Number(t.profit ?? 0))}
+                          </span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-right">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                          t.status === "open" ? "bg-[#00C98D]/15 text-[#00C98D]" : "bg-[#202B3A] text-gray-400"
-                        }`}>
+                      <td className="py-3.5 px-4 text-right">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase ${t.status === "open" ? "bg-[#1689e8]/20 text-[#1689e8]" : isWon ? "bg-[#00c878]/20 text-[#00c878]" : "bg-[#ff4a5a]/20 text-[#ff4a5a]"}`}>
                           {t.status}
                         </span>
                       </td>

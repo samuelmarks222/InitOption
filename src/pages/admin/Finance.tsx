@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownToLine, ArrowUpFromLine, CheckCircle, Clock3, Filter, RefreshCw, Search, XCircle, DollarSign,
+  ShieldCheck, AlertCircle, ArrowDownCircle, ArrowUpCircle, Check, X,
 } from "lucide-react";
 import { realtime } from "@/integrations/pusher/realtime";
 import { api } from "@/integrations/api/client";
@@ -35,14 +36,14 @@ type WithdrawalWithUser = WithdrawalRequest & {
   userName: string;
 };
 
-const BORDER = "#202B3A";
+const BORDER = "#1b2333";
 const STATUS_BADGES: Record<string, { bg: string; icon: string; label: string; text: string }> = {
-  approved: { bg: "bg-[#00C98D]/15", text: "text-[#00C98D]", icon: "🟢", label: "Approved" },
-  completed: { bg: "bg-[#00C98D]/15", text: "text-[#00C98D]", icon: "🟢", label: "Completed" },
-  failed: { bg: "bg-[#EF4444]/15", text: "text-[#EF4444]", icon: "🔴", label: "Failed" },
-  pending: { bg: "bg-[#F59E0B]/15", text: "text-[#F59E0B]", icon: "🟡", label: "Pending" },
-  processing: { bg: "bg-[#3B82F6]/15", text: "text-[#3B82F6]", icon: "🔵", label: "Processing" },
-  rejected: { bg: "bg-[#EF4444]/15", text: "text-[#EF4444]", icon: "🔴", label: "Rejected" },
+  approved: { bg: "bg-[#00c878]/20 border border-[#00c878]/30", text: "text-[#00c878]", icon: "🟢", label: "Approved" },
+  completed: { bg: "bg-[#00c878]/20 border border-[#00c878]/30", text: "text-[#00c878]", icon: "🟢", label: "Completed" },
+  failed: { bg: "bg-[#ff4a5a]/20 border border-[#ff4a5a]/30", text: "text-[#ff4a5a]", icon: "🔴", label: "Failed" },
+  pending: { bg: "bg-[#f5a13d]/20 border border-[#f5a13d]/30", text: "text-[#f5a13d]", icon: "🟡", label: "Pending Review" },
+  processing: { bg: "bg-[#1689e8]/20 border border-[#1689e8]/30", text: "text-[#1689e8]", icon: "🔵", label: "Processing" },
+  rejected: { bg: "bg-[#ff4a5a]/20 border border-[#ff4a5a]/30", text: "text-[#ff4a5a]", icon: "🔴", label: "Rejected" },
 };
 
 const FINANCE_REQUEST_LIMIT = 300;
@@ -103,30 +104,30 @@ const Finance = () => {
       };
     });
 
-    const latestMpesaPhoneMap = new Map<string, string>();
-    for (const req of depositsRes.data ?? []) {
-      if (!latestMpesaPhoneMap.has(req.user_id) && req.provider_phone_number) {
-        latestMpesaPhoneMap.set(req.user_id, req.provider_phone_number);
-      }
-    }
-
     const nextWithdrawals = (withdrawalsRes.data ?? []).map((req) => {
       const profile = profilesById.get(req.user_id);
+      const providerPayload = typeof req.provider_payload === "object" && req.provider_payload !== null ? (req.provider_payload as Record<string, unknown>) : {};
       return {
-        ...req,
-        payoutPhone: req.provider_phone_number || req.destination || null,
+        payoutPhone: typeof providerPayload.phone_number === "string" ? providerPayload.phone_number : req.destination,
         providerLabel: req.provider_name ? `${req.provider_name}${req.provider_status ? ` - ${req.provider_status}` : ""}` : null,
-        referenceMpesaPhone: latestMpesaPhoneMap.get(req.user_id) ?? null,
+        referenceMpesaPhone: req.provider_phone_number ?? null,
+        ...req,
         userHandle: getUserHandle(profile, req.user_id),
         userName: getUserName(profile, req.user_id),
       };
     });
 
-    const settingsRow = platformSettingsRes.data as PlatformSettingsLookup | null;
     setDeposits(nextDeposits);
     setWithdrawals(nextWithdrawals);
-    setMpesaApprovalThresholdKes(Number(settingsRow?.mpesa_withdrawal_approval_threshold_kes ?? 10000));
-    setPlatformSettingsId(settingsRow?.id ?? null);
+
+    const settingsData = platformSettingsRes.data as PlatformSettingsLookup | null;
+    if (settingsData?.id) {
+      setPlatformSettingsId(settingsData.id);
+      if (typeof settingsData.mpesa_withdrawal_approval_threshold_kes === "number") {
+        setMpesaApprovalThresholdKes(settingsData.mpesa_withdrawal_approval_threshold_kes);
+      }
+    }
+
     setLoading(false);
   };
 
@@ -134,283 +135,284 @@ const Finance = () => {
     void loadFinanceData();
   }, []);
 
-  const normalizedSearch = searchTerm.trim().toLowerCase();
-
-  const filteredDeposits = useMemo(() => {
-    if (!normalizedSearch) return deposits;
-    return deposits.filter((r) => [r.id, r.userName, r.userHandle, r.method, r.provider_name, r.status].some((v) => String(v ?? "").toLowerCase().includes(normalizedSearch)));
-  }, [deposits, normalizedSearch]);
-
-  const filteredWithdrawals = useMemo(() => {
-    if (!normalizedSearch) return withdrawals;
-    return withdrawals.filter((r) => [r.id, r.userName, r.userHandle, r.method, r.destination, r.status].some((v) => String(v ?? "").toLowerCase().includes(normalizedSearch)));
-  }, [normalizedSearch, withdrawals]);
-
-  const pendingDeposits = useMemo(() => filteredDeposits.filter((r) => r.status === "pending"), [filteredDeposits]);
-  const actionableWithdrawals = useMemo(() => filteredWithdrawals.filter((r) => r.status === "pending" || r.status === "approved" || r.status === "processing"), [filteredWithdrawals]);
-
-  const handleDepositDecision = async (requestId: string, status: DepositDecision) => {
-    setProcessingDepositId(requestId);
+  const handleSaveThreshold = async () => {
+    if (!platformSettingsId) return;
+    setSavingThreshold(true);
     try {
-      await adminUpdateDepositStatus({ requestId, status });
-      toast({ title: `Deposit ${status}` });
+      const { error } = await api
+        .from("platform_settings")
+        .update({ mpesa_withdrawal_approval_threshold_kes: mpesaApprovalThresholdKes })
+        .eq("id", platformSettingsId);
+
+      if (error) throw new Error(error.message);
+      toast({ title: "M-PESA Threshold Updated", description: `Approval threshold set to KES ${mpesaApprovalThresholdKes.toLocaleString()}` });
+    } catch (err) {
+      toast({ title: "Failed to save threshold", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
+    } finally {
+      setSavingThreshold(false);
+    }
+  };
+
+  const handleDepositDecision = async (depositId: string, decision: DepositDecision) => {
+    setProcessingDepositId(depositId);
+    try {
+      await adminUpdateDepositStatus({ decision, depositId });
+      toast({ title: `Deposit ${decision}`, description: `Deposit request status updated.` });
       await loadFinanceData();
     } catch (err) {
-      toast({ title: "Deposit update failed", variant: "destructive" });
+      toast({ title: "Deposit update failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
     } finally {
       setProcessingDepositId(null);
     }
   };
 
-  const handleWithdrawalDecision = async ({ providerName, requestId, status }: { providerName?: string | null; requestId: string; status: WithdrawalDecision | MobileMoneyWithdrawalDecision }) => {
-    setProcessingWithdrawalId(requestId);
+  const handleWithdrawalDecision = async (withdrawalId: string, decision: WithdrawalDecision) => {
+    setProcessingWithdrawalId(withdrawalId);
     try {
-      if (providerName === "plisio") {
-        const accessToken = await getAppwriteIdToken();
-        const res = await fetch("/api/crypto/admin-withdrawal", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ requestId, action: status === "approved" ? "approve" : "reject" }),
-        });
-        if (!res.ok) throw new Error("Crypto payout failed");
-      } else if (providerName === "sasapay") {
-        await reviewMobileMoneyWithdrawal({ requestId, status });
-      } else {
-        await adminUpdateWithdrawalStatus({ requestId, status: status as WithdrawalDecision });
-      }
-      toast({ title: `Withdrawal ${status}` });
+      await adminUpdateWithdrawalStatus({ decision, withdrawalId });
+      toast({ title: `Withdrawal ${decision}`, description: `Withdrawal request status updated.` });
       await loadFinanceData();
     } catch (err) {
-      toast({ title: "Withdrawal update failed", variant: "destructive" });
+      toast({ title: "Withdrawal update failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
     } finally {
       setProcessingWithdrawalId(null);
     }
   };
 
+  const filteredDeposits = useMemo(() => {
+    return deposits.filter((d) =>
+      d.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.userHandle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [deposits, searchTerm]);
+
+  const filteredWithdrawals = useMemo(() => {
+    return withdrawals.filter((w) =>
+      w.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      w.userHandle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      w.id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [withdrawals, searchTerm]);
+
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between border-b pb-4" style={{ borderColor: BORDER }}>
+    <div className="space-y-6">
+      {/* Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#131a27] p-6 shadow-2xl">
         <div>
-          <h2 className="text-xl font-black text-white">FINANCIAL OPERATIONS CONSOLE</h2>
-          <p className="text-xs text-[#8D9AAF]">Real-time deposits queue, withdrawal authorization, and gateway logs.</p>
+          <div className="flex items-center gap-2.5">
+            <DollarSign className="h-6 w-6 text-[#1689e8]" />
+            <h1 className="text-xl font-black text-white uppercase tracking-wider">Financial Operations Console</h1>
+          </div>
+          <p className="mt-1 text-xs font-bold text-gray-400">
+            Review live deposit notifications, approve or reject M-PESA & Crypto withdrawals, and manage threshold limits.
+          </p>
         </div>
+
         <button
           onClick={() => void loadFinanceData()}
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-lg border border-[#202B3A] bg-[#0D1420] px-3 py-1.5 text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white"
+          className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b1018] px-4 py-2.5 text-xs font-black text-white hover:border-[#1689e8] transition disabled:opacity-50"
         >
-          <RefreshCw size={13} className={loading ? "animate-spin text-[#00C98D]" : ""} /> Refresh Desk
+          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin text-[#1689e8]" : ""}`} />
+          Refresh Ledger
         </button>
       </div>
 
-      {/* Metrics Strip */}
-      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
-        <div className="grid grid-cols-2 divide-x divide-y divide-[#202B3A] sm:grid-cols-4 sm:divide-y-0">
-          <div className="p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Pending Deposits</p>
-            <p className="mt-0.5 text-xl font-black font-mono text-[#F59E0B]">{pendingDeposits.length}</p>
-          </div>
-          <div className="p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Pending Withdrawals</p>
-            <p className="mt-0.5 text-xl font-black font-mono text-[#F59E0B]">{actionableWithdrawals.length}</p>
-          </div>
-          <div className="p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Completed Deposits</p>
-            <p className="mt-0.5 text-xl font-black font-mono text-[#00C98D]">
-              {deposits.filter((r) => r.status === "completed").length}
-            </p>
-          </div>
-          <div className="p-3.5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Completed Payouts</p>
-            <p className="mt-0.5 text-xl font-black font-mono text-[#00C98D]">
-              {withdrawals.filter((r) => r.status === "completed").length}
-            </p>
-          </div>
+      {/* Threshold & Automation Config Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#131a27] p-4 shadow-xl">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-black uppercase text-gray-300">M-PESA Auto-Approve Threshold (KES):</span>
+          <input
+            type="number"
+            value={mpesaApprovalThresholdKes}
+            onChange={(e) => setMpesaApprovalThresholdKes(Number(e.target.value))}
+            className="w-32 rounded-xl border border-white/10 bg-[#0b1018] px-3 py-1.5 text-xs font-black text-white outline-none focus:border-[#1689e8]"
+          />
+          <button
+            onClick={() => void handleSaveThreshold()}
+            disabled={savingThreshold}
+            className="rounded-xl bg-[#1689e8] px-4 py-1.5 text-xs font-black text-white hover:bg-[#0f7cd5] transition disabled:opacity-50"
+          >
+            {savingThreshold ? "Saving..." : "Save Threshold"}
+          </button>
         </div>
-      </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-[#0D1420] p-3" style={{ borderColor: BORDER }}>
-        <div className="flex items-center gap-1 rounded-md border border-[#202B3A] bg-[#080D16] p-1">
+        {/* Tab Controls */}
+        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b1018] p-1">
           <button
             onClick={() => setActiveTab("deposits")}
-            className={`rounded px-3 py-1 text-xs font-bold transition-colors ${
-              activeTab === "deposits" ? "bg-[#00C98D] text-black" : "text-[#8D9AAF] hover:text-white"
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-black transition ${
+              activeTab === "deposits" ? "bg-[#1689e8] text-white shadow-md" : "text-gray-400 hover:text-white"
             }`}
           >
-            Deposits Queue ({pendingDeposits.length})
+            <ArrowDownCircle className="h-4 w-4" /> Deposits ({deposits.length})
           </button>
+
           <button
             onClick={() => setActiveTab("withdrawals")}
-            className={`rounded px-3 py-1 text-xs font-bold transition-colors ${
-              activeTab === "withdrawals" ? "bg-[#00C98D] text-black" : "text-[#8D9AAF] hover:text-white"
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-black transition ${
+              activeTab === "withdrawals" ? "bg-[#1689e8] text-white shadow-md" : "text-gray-400 hover:text-white"
             }`}
           >
-            Withdrawals Queue ({actionableWithdrawals.length})
+            <ArrowUpCircle className="h-4 w-4" /> Withdrawals ({withdrawals.length})
           </button>
-          <button
-            onClick={() => setActiveTab("history")}
-            className={`rounded px-3 py-1 text-xs font-bold transition-colors ${
-              activeTab === "history" ? "bg-[#00C98D] text-black" : "text-[#8D9AAF] hover:text-white"
-            }`}
-          >
-            History Ledger
-          </button>
-        </div>
-
-        <div className="relative w-64">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search reference, user, method..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-8 rounded-lg border bg-[#080D16] pl-8 pr-3 text-xs text-white outline-none placeholder:text-gray-500 focus:border-[#00C98D]"
-            style={{ borderColor: BORDER }}
-          />
         </div>
       </div>
 
-      {/* Main Dense Table (NO CARDS) */}
-      <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b bg-[#121B29] text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]" style={{ borderColor: BORDER }}>
-                <th className="px-4 py-3">TIME</th>
-                <th className="px-4 py-3">REF ID</th>
-                <th className="px-4 py-3">USER</th>
-                <th className="px-4 py-3">METHOD</th>
-                <th className="px-4 py-3">AMOUNT</th>
-                <th className="px-4 py-3">DESTINATION / PHONE</th>
-                <th className="px-4 py-3">STATUS</th>
-                <th className="px-4 py-3 text-right">ACTION</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#202B3A]">
-              {loading ? (
-                <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">Loading financial records...</td>
+      {/* Search Input */}
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Filter requests by user, handle, reference ID..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full rounded-2xl border border-white/10 bg-[#131a27] py-3 pl-10 pr-4 text-xs font-bold text-white placeholder-gray-500 outline-none focus:border-[#1689e8]"
+        />
+      </div>
+
+      {/* Main Request Queue Table */}
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#131a27] shadow-xl">
+        {loading ? (
+          <div className="flex h-64 items-center justify-center text-xs font-bold text-gray-400">
+            <RefreshCw className="mr-2 h-5 w-5 animate-spin text-[#1689e8]" /> Loading financial records...
+          </div>
+        ) : activeTab === "deposits" ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-white/10 bg-[#0b1018]/80 text-[11px] font-black uppercase tracking-wider text-gray-400">
+                  <th className="py-3.5 px-4">User</th>
+                  <th className="py-3.5 px-4">Amount</th>
+                  <th className="py-3.5 px-4">Method</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4">Submitted</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
-              ) : activeTab === "deposits" ? (
-                pendingDeposits.length === 0 ? (
+              </thead>
+              <tbody className="divide-y divide-white/5 font-semibold">
+                {filteredDeposits.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">No pending deposit requests in queue.</td>
+                    <td colSpan={6} className="py-12 text-center text-gray-400">No deposit records found.</td>
                   </tr>
                 ) : (
-                  pendingDeposits.map((d) => {
-                    const badge = STATUS_BADGES[d.status] ?? STATUS_BADGES.pending;
+                  filteredDeposits.map((d) => {
+                    const badge = STATUS_BADGES[d.status.toLowerCase()] ?? STATUS_BADGES.pending;
                     return (
-                      <tr key={d.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="px-4 py-2.5 font-mono text-[#8D9AAF]">{formatDateTime(d.created_at)}</td>
-                        <td className="px-4 py-2.5 font-mono text-gray-400 font-semibold">#{d.id.slice(0, 8).toUpperCase()}</td>
-                        <td className="px-4 py-2.5 font-semibold text-white truncate max-w-[120px]">{d.userName}</td>
-                        <td className="px-4 py-2.5 font-semibold text-white">{d.method}</td>
-                        <td className="px-4 py-2.5 font-mono font-bold text-[#00C98D]">${Number(d.amount).toFixed(2)}</td>
-                        <td className="px-4 py-2.5 font-mono text-gray-400">{d.provider_phone_number || d.tx_hash?.slice(0, 10) || "Direct"}</td>
-                        <td className="px-4 py-2.5">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.bg} ${badge.text}`}>
-                            {badge.icon} {badge.label}
+                      <tr key={d.id} className="hover:bg-white/[0.02] transition">
+                        <td className="py-3.5 px-4">
+                          <div className="font-extrabold text-white">{d.userName}</div>
+                          <div className="text-[10px] text-gray-400">@{d.userHandle}</div>
+                        </td>
+                        <td className="py-3.5 px-4 font-black text-[#00c878]">
+                          ${Number(d.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-3.5 px-4 text-gray-300">
+                          {d.payment_method?.toUpperCase() || "M-PESA"}
+                          {d.cryptoLabel && <span className="block text-[10px] text-gray-500">{d.cryptoLabel}</span>}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase ${badge.bg} ${badge.text}`}>
+                            {badge.label}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => void handleDepositDecision(d.id, "approved")}
-                              disabled={processingDepositId === d.id}
-                              className="rounded border border-[#00C98D]/30 bg-[#00C98D]/10 px-2 py-1 text-[11px] font-bold text-[#00C98D] hover:bg-[#00C98D] hover:text-black transition-colors"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => void handleDepositDecision(d.id, "rejected")}
-                              disabled={processingDepositId === d.id}
-                              className="rounded border border-[#EF4444]/30 bg-[#EF4444]/10 px-2 py-1 text-[11px] font-bold text-[#EF4444] hover:bg-[#EF4444] hover:text-white transition-colors"
-                            >
-                              Reject
-                            </button>
-                          </div>
+                        <td className="py-3.5 px-4 text-gray-400">{formatDateTime(d.created_at)}</td>
+                        <td className="py-3.5 px-4 text-right space-x-2">
+                          {d.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() => void handleDepositDecision(d.id, "completed")}
+                                disabled={processingDepositId === d.id}
+                                className="rounded-lg bg-[#00c878] px-3 py-1 text-xs font-black text-white hover:bg-[#00b26b] transition disabled:opacity-50"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => void handleDepositDecision(d.id, "rejected")}
+                                disabled={processingDepositId === d.id}
+                                className="rounded-lg bg-[#ff4a5a] px-3 py-1 text-xs font-black text-white hover:bg-[#e03b4b] transition disabled:opacity-50"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     );
                   })
-                )
-              ) : activeTab === "withdrawals" ? (
-                actionableWithdrawals.length === 0 ? (
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-white/10 bg-[#0b1018]/80 text-[11px] font-black uppercase tracking-wider text-gray-400">
+                  <th className="py-3.5 px-4">User</th>
+                  <th className="py-3.5 px-4">Amount</th>
+                  <th className="py-3.5 px-4">Method & Destination</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4">Requested</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 font-semibold">
+                {filteredWithdrawals.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">No withdrawal requests awaiting approval.</td>
+                    <td colSpan={6} className="py-12 text-center text-gray-400">No withdrawal requests found.</td>
                   </tr>
                 ) : (
-                  actionableWithdrawals.map((w) => {
-                    const badge = STATUS_BADGES[w.status] ?? STATUS_BADGES.pending;
-                    const isCrypto = w.provider_name === "plisio" || w.method.toLowerCase().includes("crypto");
+                  filteredWithdrawals.map((w) => {
+                    const badge = STATUS_BADGES[w.status.toLowerCase()] ?? STATUS_BADGES.pending;
                     return (
-                      <tr key={w.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="px-4 py-2.5 font-mono text-[#8D9AAF]">{formatDateTime(w.created_at)}</td>
-                        <td className="px-4 py-2.5 font-mono text-gray-400 font-semibold">#{w.id.slice(0, 8).toUpperCase()}</td>
-                        <td className="px-4 py-2.5 font-semibold text-white truncate max-w-[120px]">{w.userName}</td>
-                        <td className="px-4 py-2.5 font-semibold text-white">{w.method}</td>
-                        <td className="px-4 py-2.5 font-mono font-bold text-[#F59E0B]">${Number(w.amount).toFixed(2)}</td>
-                        <td className="px-4 py-2.5 font-mono text-gray-300">{w.payoutPhone || w.destination || "-"}</td>
-                        <td className="px-4 py-2.5">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.bg} ${badge.text}`}>
-                            {badge.icon} {badge.label}
+                      <tr key={w.id} className="hover:bg-white/[0.02] transition">
+                        <td className="py-3.5 px-4">
+                          <div className="font-extrabold text-white">{w.userName}</div>
+                          <div className="text-[10px] text-gray-400">@{w.userHandle}</div>
+                        </td>
+                        <td className="py-3.5 px-4 font-black text-amber-400">
+                          ${Number(w.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-3.5 px-4 text-gray-300">
+                          <div>{w.method?.toUpperCase() || "M-PESA"}</div>
+                          <div className="text-[10px] text-gray-500">{w.destination}</div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase ${badge.bg} ${badge.text}`}>
+                            {badge.label}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => void handleWithdrawalDecision({ providerName: w.provider_name, requestId: w.id, status: "approved" })}
-                              disabled={processingWithdrawalId === w.id}
-                              className="rounded border border-[#00C98D]/30 bg-[#00C98D]/10 px-2.5 py-1 text-[11px] font-bold text-[#00C98D] hover:bg-[#00C98D] hover:text-black transition-colors"
-                            >
-                              {isCrypto ? "Approve & Pay" : "Approve & Send"}
-                            </button>
-                            <button
-                              onClick={() => void handleWithdrawalDecision({ providerName: w.provider_name, requestId: w.id, status: "rejected" })}
-                              disabled={processingWithdrawalId === w.id}
-                              className="rounded border border-[#EF4444]/30 bg-[#EF4444]/10 px-2 py-1 text-[11px] font-bold text-[#EF4444] hover:bg-[#EF4444] hover:text-white transition-colors"
-                            >
-                              Reject
-                            </button>
-                          </div>
+                        <td className="py-3.5 px-4 text-gray-400">{formatDateTime(w.created_at)}</td>
+                        <td className="py-3.5 px-4 text-right space-x-2">
+                          {w.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() => void handleWithdrawalDecision(w.id, "approved")}
+                                disabled={processingWithdrawalId === w.id}
+                                className="rounded-lg bg-[#00c878] px-3 py-1 text-xs font-black text-white hover:bg-[#00b26b] transition disabled:opacity-50"
+                              >
+                                Approve Payout
+                              </button>
+                              <button
+                                onClick={() => void handleWithdrawalDecision(w.id, "rejected")}
+                                disabled={processingWithdrawalId === w.id}
+                                className="rounded-lg bg-[#ff4a5a] px-3 py-1 text-xs font-black text-white hover:bg-[#e03b4b] transition disabled:opacity-50"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     );
                   })
-                )
-              ) : (
-                /* History Tab */
-                [...filteredDeposits.filter((r) => r.status !== "pending"), ...filteredWithdrawals.filter((r) => r.status !== "pending")].length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-xs text-[#5E6B7D]">No processed history entries found.</td>
-                  </tr>
-                ) : (
-                  [...filteredDeposits.filter((r) => r.status !== "pending"), ...filteredWithdrawals.filter((r) => r.status !== "pending")].map((h: any) => {
-                    const badge = STATUS_BADGES[h.status] ?? STATUS_BADGES.completed;
-                    return (
-                      <tr key={h.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="px-4 py-2.5 font-mono text-[#8D9AAF]">{formatDateTime(h.created_at)}</td>
-                        <td className="px-4 py-2.5 font-mono text-gray-400 font-semibold">#{h.id.slice(0, 8).toUpperCase()}</td>
-                        <td className="px-4 py-2.5 font-semibold text-white">{h.userName}</td>
-                        <td className="px-4 py-2.5 font-semibold text-white">{h.method}</td>
-                        <td className="px-4 py-2.5 font-mono font-bold text-white">${Number(h.amount).toFixed(2)}</td>
-                        <td className="px-4 py-2.5 font-mono text-gray-400">{h.provider_phone_number || h.destination || "-"}</td>
-                        <td className="px-4 py-2.5">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.bg} ${badge.text}`}>
-                            {badge.icon} {badge.label}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-right font-mono text-gray-500">Processed</td>
-                      </tr>
-                    );
-                  })
-                )
-              )}
-            </tbody>
-          </table>
-        </div>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

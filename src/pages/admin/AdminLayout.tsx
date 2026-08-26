@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
 import {
   Activity, ArrowDownCircle, ArrowUpCircle, BarChart3, Bell, BookOpen,
   CandlestickChart, ChevronDown, ChevronRight, Clock, CreditCard, DollarSign,
-  FileText, LayoutDashboard, LogOut, Receipt, Search, Settings, ShieldCheck,
-  TrendingUp, Trophy, Users, Wallet, Image, Sliders, Shield, RefreshCw,
+  FileText, LayoutDashboard, LogOut, Receipt, Settings, ShieldCheck,
+  TrendingUp, Trophy, Users, Wallet, Sliders, Shield, Sparkles, MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
@@ -12,88 +12,72 @@ import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { getRoleLabel, roleAllowsAdminPath } from "@/lib/adminRoles";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 
-const ACCENT = "#00C98D";
-const BG_CANVAS = "#080D16";
-const BG_SIDEBAR = "#0D1420";
-const BORDER = "#202B3A";
-const TEXT_MUTED = "#5E6B7D";
-const TEXT_SECONDARY = "#8D9AAF";
+const ACCENT = "#1689e8";
+const BG_CANVAS = "#0b1018";
+const BG_SIDEBAR = "#0d131f";
+const BORDER = "#1b2333";
 
 interface NavCategory {
-  items: { href: string; icon: React.ReactNode; label: string }[];
+  items: { href: string; icon: React.ReactNode; label: string; badge?: string }[];
   name: string;
 }
 
 const NAV_CATEGORIES: NavCategory[] = [
   {
-    name: "MAIN",
-    items: [{ label: "Dashboard", href: "/admin", icon: <LayoutDashboard size={15} /> }],
+    name: "OVERVIEW",
+    items: [{ label: "Dashboard", href: "/admin", icon: <LayoutDashboard size={16} /> }],
   },
   {
-    name: "TRADING",
+    name: "TRADING & ASSETS",
     items: [
-      { label: "Live Trades", href: "/admin/trades", icon: <CandlestickChart size={15} /> },
-      { label: "Trade History", href: "/admin/trades?tab=history", icon: <Clock size={15} /> },
-      { label: "Assets Config", href: "/admin/assets", icon: <Wallet size={15} /> },
+      { label: "Live Trades", href: "/admin/trades", icon: <CandlestickChart size={16} />, badge: "LIVE" },
+      { label: "Trade History", href: "/admin/trades?tab=history", icon: <Clock size={16} /> },
+      { label: "Assets Config", href: "/admin/assets", icon: <Wallet size={16} /> },
+      { label: "Copy Trading", href: "/admin/social", icon: <Sliders size={16} /> },
     ],
   },
   {
-    name: "USERS",
+    name: "USER & COMPLIANCE",
     items: [
-      { label: "All Users", href: "/admin/users", icon: <Users size={15} /> },
-      { label: "KYC Verification", href: "/admin/users?tab=kyc", icon: <ShieldCheck size={15} /> },
-      { label: "User Activity", href: "/admin/user-activity", icon: <Activity size={15} /> },
-      { label: "Risk Management", href: "/admin/risk", icon: <Shield size={15} /> },
+      { label: "All Users", href: "/admin/users", icon: <Users size={16} /> },
+      { label: "KYC Verification", href: "/admin/users?tab=kyc", icon: <ShieldCheck size={16} /> },
+      { label: "User Activity", href: "/admin/user-activity", icon: <Activity size={16} /> },
+      { label: "Risk Management", href: "/admin/risk", icon: <Shield size={16} /> },
     ],
   },
   {
-    name: "FINANCE",
+    name: "FINANCE & PAYMENTS",
     items: [
-      { label: "Deposits Queue", href: "/admin/finance?tab=deposits", icon: <ArrowDownCircle size={15} /> },
-      { label: "Withdrawals Queue", href: "/admin/finance?tab=withdrawals", icon: <ArrowUpCircle size={15} /> },
-      { label: "Ledger Transactions", href: "/admin/finance?tab=transactions", icon: <Receipt size={15} /> },
-      { label: "Funds Manager", href: "/admin/funds", icon: <DollarSign size={15} /> },
+      { label: "Deposits Queue", href: "/admin/finance?tab=deposits", icon: <ArrowDownCircle size={16} /> },
+      { label: "Withdrawals Queue", href: "/admin/finance?tab=withdrawals", icon: <ArrowUpCircle size={16} /> },
+      { label: "Ledger Transactions", href: "/admin/finance?tab=transactions", icon: <Receipt size={16} /> },
+      { label: "Funds Manager", href: "/admin/funds", icon: <DollarSign size={16} /> },
+      { label: "Crypto Payments", href: "/admin/crypto-payments", icon: <CreditCard size={16} /> },
     ],
   },
   {
-    name: "PAYMENTS",
+    name: "MARKETING & GROWTH",
     items: [
-      { label: "Crypto Payments", href: "/admin/crypto-payments", icon: <CreditCard size={15} /> },
+      { label: "Promo Codes", href: "/admin/promos", icon: <Sparkles size={16} /> },
+      { label: "Tournaments", href: "/admin/tournaments", icon: <Trophy size={16} /> },
+      { label: "Support Inbox", href: "/admin/support", icon: <MessageSquare size={16} /> },
+      { label: "Blog & Content", href: "/admin/blog", icon: <BookOpen size={16} /> },
     ],
   },
   {
-    name: "GROWTH",
+    name: "ANALYTICS & SYSTEM",
     items: [
-      { label: "Promo Codes", href: "/admin/promos", icon: <DollarSign size={15} /> },
-      { label: "Tournaments", href: "/admin/tournaments", icon: <Trophy size={15} /> },
-    ],
-  },
-  {
-    name: "SOCIAL",
-    items: [
-      { label: "Copy Trading", href: "/admin/social", icon: <Sliders size={15} /> },
-    ],
-  },
-  {
-    name: "ANALYTICS",
-    items: [
-      { label: "Profit Reports", href: "/admin/reports", icon: <TrendingUp size={15} /> },
-      { label: "Trading Analytics", href: "/admin/analytics", icon: <BarChart3 size={15} /> },
-    ],
-  },
-  {
-    name: "SYSTEM",
-    items: [
-      { label: "Announcements", href: "/admin/notifications", icon: <Bell size={15} /> },
-      { label: "Audit Logs", href: "/admin/audit", icon: <FileText size={15} /> },
-      { label: "Platform Settings", href: "/admin/settings", icon: <Settings size={15} /> },
+      { label: "Profit Reports", href: "/admin/reports", icon: <TrendingUp size={16} /> },
+      { label: "Trading Analytics", href: "/admin/analytics", icon: <BarChart3 size={16} /> },
+      { label: "Announcements", href: "/admin/notifications", icon: <Bell size={16} /> },
+      { label: "Audit Logs", href: "/admin/audit", icon: <FileText size={16} /> },
+      { label: "Platform Settings", href: "/admin/settings", icon: <Settings size={16} /> },
     ],
   },
 ];
 
 const AdminLayout = () => {
   const { profile, signOut } = useAuth();
-  const { logoUrl, platformName } = useSiteBranding();
   const { isStaff, loading: staffLoading, primaryRole } = useStaffAccess();
   const location = useLocation();
 
@@ -120,8 +104,11 @@ const AdminLayout = () => {
 
   if (staffLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#080D16]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#00C98D] border-t-transparent" />
+      <div className="flex h-screen items-center justify-center bg-[#0b1018]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#1689e8] border-t-transparent" />
+          <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Loading Console...</span>
+        </div>
       </div>
     );
   }
@@ -130,24 +117,24 @@ const AdminLayout = () => {
   if (!roleAllowsAdminPath(primaryRole, location.pathname)) return <Navigate to="/admin" replace />;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#080D16] text-[#F1F5F9]">
+    <div className="flex h-screen overflow-hidden bg-[#0b1018] text-[#f1f5f9] font-sans antialiased">
       {/* Top Header */}
       <AdminHeader />
 
-      <div className="flex flex-1 pt-13">
+      <div className="flex flex-1 pt-14 overflow-hidden">
         {/* Sidebar */}
         <aside
-          className="w-56 shrink-0 border-r flex flex-col justify-between overflow-y-auto no-scrollbar"
+          className="w-60 shrink-0 border-r flex flex-col justify-between overflow-y-auto no-scrollbar shadow-2xl z-20"
           style={{ background: BG_SIDEBAR, borderColor: BORDER }}
         >
-          <div className="py-3 px-2">
+          <div className="py-4 px-3 space-y-4">
             {visibleCategories.map((cat) => {
               const expanded = expandedCats[cat.name] ?? true;
               return (
-                <div key={cat.name} className="mb-2">
+                <div key={cat.name} className="space-y-1">
                   <button
                     onClick={() => toggleCat(cat.name)}
-                    className="flex w-full items-center justify-between px-2 py-1 text-left text-[10px] font-bold tracking-wider uppercase text-[#5E6B7D]"
+                    className="flex w-full items-center justify-between px-2.5 py-1 text-left text-[10px] font-black tracking-widest uppercase text-gray-400 hover:text-white transition-colors"
                   >
                     <span>{cat.name}</span>
                     {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
@@ -160,18 +147,27 @@ const AdminLayout = () => {
                           <Link
                             key={item.label}
                             to={item.href}
-                            className={`relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                            className={`group relative flex items-center justify-between rounded-lg px-3 py-2 text-xs font-bold transition-all ${
                               active
-                                ? "bg-[#00C98D]/10 text-[#00C98D]"
-                                : "text-[#8D9AAF] hover:bg-white/[0.03] hover:text-white"
+                                ? "bg-[#1689e8]/15 text-[#1689e8] shadow-sm"
+                                : "text-gray-400 hover:bg-white/[0.04] hover:text-white"
                             }`}
                           >
-                            {/* Thin vertical green indicator for active item */}
                             {active && (
-                              <span className="absolute left-0 top-1 bottom-1 w-0.5 rounded-r bg-[#00C98D]" />
+                              <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#1689e8] shadow-[0_0_8px_#1689e8]" />
                             )}
-                            <span className={active ? "text-[#00C98D]" : "text-gray-400"}>{item.icon}</span>
-                            <span className="truncate">{item.label}</span>
+                            <div className="flex items-center gap-3 truncate">
+                              <span className={active ? "text-[#1689e8]" : "text-gray-400 group-hover:text-gray-300"}>
+                                {item.icon}
+                              </span>
+                              <span className="truncate">{item.label}</span>
+                            </div>
+
+                            {item.badge && (
+                              <span className="rounded bg-[#00c878]/20 px-1.5 py-0.5 text-[9px] font-black text-[#00c878] tracking-wider">
+                                {item.badge}
+                              </span>
+                            )}
                           </Link>
                         );
                       })}
@@ -182,21 +178,32 @@ const AdminLayout = () => {
             })}
           </div>
 
-          {/* Footer User Info */}
-          <div className="border-t p-3 flex items-center justify-between" style={{ borderColor: BORDER }}>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-bold text-white">{profile?.display_name || "Admin User"}</p>
-              <p className="truncate text-[10px] font-semibold text-[#00C98D]">{getRoleLabel(primaryRole)}</p>
+          {/* Footer Admin User Info */}
+          <div className="border-t p-3.5 flex items-center justify-between bg-[#080d16]/80 backdrop-blur-md" style={{ borderColor: BORDER }}>
+            <div className="min-w-0 flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#1689e8] to-indigo-600 text-xs font-black text-white shadow-md">
+                {profile?.display_name?.charAt(0).toUpperCase() || "A"}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-xs font-black text-white">{profile?.display_name || "Super Admin"}</p>
+                <p className="truncate text-[10px] font-extrabold uppercase tracking-wider text-[#1689e8]">{getRoleLabel(primaryRole)}</p>
+              </div>
             </div>
-            <button onClick={signOut} className="p-1 text-gray-400 hover:text-[#EF4444] transition-colors" title="Sign Out">
-              <LogOut size={14} />
+            <button
+              onClick={() => void signOut()}
+              className="p-2 text-gray-400 hover:bg-red-500/10 hover:text-[#ff4a5a] rounded-lg transition-colors"
+              title="Sign Out"
+            >
+              <LogOut size={15} />
             </button>
           </div>
         </aside>
 
         {/* Main Content Workspace Area */}
-        <main className="flex-1 overflow-y-auto bg-[#080D16] p-5">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto bg-[#0b1018] p-4 md:p-6 no-scrollbar">
+          <div className="mx-auto max-w-7xl">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
