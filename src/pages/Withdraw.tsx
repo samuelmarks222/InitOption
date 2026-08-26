@@ -70,23 +70,43 @@ const Withdraw = () => {
 
   const liveBalance = getEffectiveLiveBalance(profile);
 
+  const [completedTurnover, setCompletedTurnover] = useState(0);
+
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
     const loadUserData = async () => {
-      const [depositsRes, withdrawalsRes, cryptoRes] = await Promise.all([
+      const [depositsRes, withdrawalsRes, cryptoRes, tradesRes] = await Promise.all([
         api.from("deposit_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
         api.from("withdrawal_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
         api.from("crypto_payment_methods").select("*").eq("status", "active").order("coin_name"),
+        api.from("trades").select("amount").eq("user_id", user.id).in("status", ["won", "lost", "expired"]),
       ]);
       if (cancelled) return;
-      if (depositsRes.data) setUserDeposits(depositsRes.data);
-      if (withdrawalsRes.data) setUserWithdrawals(withdrawalsRes.data);
-      if (cryptoRes.data) setCryptoMethods(cryptoRes.data);
+      if (depositsRes.data) setUserDeposits(depositsRes.data as DepositRecord[]);
+      if (withdrawalsRes.data) setUserWithdrawals(withdrawalsRes.data as WithdrawalRecord[]);
+      if (cryptoRes.data) setCryptoMethods(cryptoRes.data as CryptoMethod[]);
+      if (tradesRes.data) {
+        const total = tradesRes.data.reduce((sum, t) => sum + Number(t.amount ?? 0), 0);
+        setCompletedTurnover(total);
+      }
     };
     void loadUserData();
     return () => { cancelled = true; };
   }, [user?.id]);
+
+  const bonusTotal = useMemo(() => {
+    return userDeposits
+      .filter((d) => (d.status || "").toLowerCase() === "approved")
+      .reduce((sum, d) => sum + Number(d.welcome_bonus ?? 0) + Number(d.deposit_bonus ?? 0) + Number(d.promo_bonus ?? 0), 0);
+  }, [userDeposits]);
+
+  const requiredTurnover = useMemo(() => Math.round(bonusTotal * 10 * 100) / 100, [bonusTotal]);
+  const remainingTurnover = useMemo(() => Math.max(0, requiredTurnover - completedTurnover), [requiredTurnover, completedTurnover]);
+  const isBonusLocked = bonusTotal > 0 && remainingTurnover > 0;
+  const lockedBonusAmount = isBonusLocked ? bonusTotal : 0;
+  const withdrawableBalance = Math.max(0, liveBalance - lockedBonusAmount);
+  const progressPercent = requiredTurnover > 0 ? Math.min(100, Math.round((completedTurnover / requiredTurnover) * 100)) : 100;
 
   useEffect(() => { if (user?.id) setDemoBalance(readDemoBalanceStorage(user.id)); }, [user?.id]);
 
@@ -115,14 +135,25 @@ const Withdraw = () => {
   const refreshWithdrawals = async () => {
     if (!user?.id) return;
     const res = await api.from("withdrawal_requests").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
-    if (res.data) setUserWithdrawals(res.data);
+    if (res.data) setUserWithdrawals(res.data as WithdrawalRecord[]);
   };
 
   const handleConfirmWithdrawal = async (e: React.FormEvent) => {
     e.preventDefault();
     const amountNum = Number(amount);
     if (!Number.isFinite(amountNum) || amountNum < 10) { toast({ title: "Minimum withdrawal is $10.00", variant: "destructive" }); return; }
-    if (amountNum > liveBalance) { toast({ title: "Insufficient funds in your account balance", variant: "destructive" }); return; }
+    if (amountNum > withdrawableBalance) {
+      if (isBonusLocked) {
+        toast({
+          title: "Requested amount exceeds withdrawable balance",
+          description: `Your requested amount ($${amountNum.toFixed(2)}) exceeds your withdrawable balance of $${withdrawableBalance.toFixed(2)}. Your $${lockedBonusAmount.toFixed(2)} bonus is locked until trading requirements are met ($${remainingTurnover.toFixed(2)} volume remaining).`,
+          variant: "destructive",
+        });
+        return;
+      }
+      toast({ title: "Insufficient funds in your withdrawable balance", description: `Maximum withdrawable amount is $${withdrawableBalance.toFixed(2)}.`, variant: "destructive" });
+      return;
+    }
     if (selectedEligibleMethod?.methodType === "mpesa" && !phone.trim()) { toast({ title: "Please enter your M-Pesa phone number", variant: "destructive" }); return; }
     if (selectedEligibleMethod?.methodType === "crypto" && !walletAddress.trim()) { toast({ title: "Please enter your wallet address", variant: "destructive" }); return; }
     setLoading(true);
@@ -219,6 +250,64 @@ const Withdraw = () => {
           {/* ─── Main content ─── */}
           <div className="p-4 lg:p-6 space-y-6">
 
+            {/* Bonus Trading Requirement & Progress Card */}
+            {bonusTotal > 0 && (
+              <div className="rounded-xl border border-[#2a364f] bg-[#181e2b] p-4 lg:p-5 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🎁</span>
+                    <h3 className="text-sm font-bold text-white">Bonus Trading Requirement</h3>
+                  </div>
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
+                    isBonusLocked
+                      ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                      : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                  }`}>
+                    {isBonusLocked ? "🔒 Locked" : "🔓 Available for Withdrawal"}
+                  </span>
+                </div>
+
+                {/* 4 Metrics Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="rounded-lg bg-[#222b3d] p-3">
+                    <p className="text-[#8d99ae] font-medium">Bonus Received</p>
+                    <p className="mt-1 text-sm font-black text-amber-400">${bonusTotal.toFixed(2)}</p>
+                  </div>
+                  <div className="rounded-lg bg-[#222b3d] p-3">
+                    <p className="text-[#8d99ae] font-medium">Required Volume</p>
+                    <p className="mt-1 text-sm font-black text-white">${requiredTurnover.toFixed(2)}</p>
+                  </div>
+                  <div className="rounded-lg bg-[#222b3d] p-3">
+                    <p className="text-[#8d99ae] font-medium">Completed</p>
+                    <p className="mt-1 text-sm font-black text-emerald-400">${completedTurnover.toFixed(2)}</p>
+                  </div>
+                  <div className="rounded-lg bg-[#222b3d] p-3">
+                    <p className="text-[#8d99ae] font-medium">Remaining</p>
+                    <p className="mt-1 text-sm font-black text-amber-300">${remainingTurnover.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between text-xs text-[#8d99ae] font-medium">
+                    <span>Trading Progress ({progressPercent}%)</span>
+                    <span>${completedTurnover.toFixed(2)} / ${requiredTurnover.toFixed(2)}</span>
+                  </div>
+                  <div className="h-2.5 w-full rounded-full bg-[#242d40] overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-500 ${isBonusLocked ? "bg-amber-400" : "bg-emerald-400"}`}
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  {isBonusLocked && (
+                    <p className="text-[11px] text-amber-300/80 italic">
+                      ℹ️ Complete ${remainingTurnover.toFixed(2)} more in trades to unlock your bonus for full withdrawal.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Mobile Account section — always visible on mobile */}
             <div className="lg:hidden space-y-1 px-1">
               <h3 className="text-[14px] font-black text-white">Account:</h3>
@@ -227,9 +316,15 @@ const Withdraw = () => {
                   <p className="text-[12px] font-bold text-[#8d99ae]">In the account:</p>
                   <p className="mt-0.5 text-[22px] font-black text-white">{liveBalance.toFixed(2)} $</p>
                 </div>
+                {isBonusLocked && (
+                  <div>
+                    <p className="text-[12px] font-bold text-amber-400">Locked bonus:</p>
+                    <p className="mt-0.5 text-[18px] font-black text-amber-400">-${lockedBonusAmount.toFixed(2)} $ 🔒</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-[12px] font-bold text-[#8d99ae]">Available for withdrawal:</p>
-                  <p className="mt-0.5 text-[22px] font-black text-white">{liveBalance.toFixed(2)} $</p>
+                  <p className="mt-0.5 text-[22px] font-black text-emerald-400">{withdrawableBalance.toFixed(2)} $</p>
                 </div>
               </div>
             </div>
@@ -245,9 +340,15 @@ const Withdraw = () => {
                     <p className="text-[11px] font-bold text-[#6c7a91]">In the account:</p>
                     <p className="mt-1 text-xl font-extrabold text-white">{liveBalance.toFixed(2)} $</p>
                   </div>
+                  {isBonusLocked && (
+                    <div>
+                      <p className="text-[11px] font-bold text-amber-400">Locked bonus:</p>
+                      <p className="mt-1 text-base font-extrabold text-amber-400">-${lockedBonusAmount.toFixed(2)} $ 🔒</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-[11px] font-bold text-[#6c7a91]">Available for withdrawal:</p>
-                    <p className="mt-1 text-xl font-extrabold text-white">{liveBalance.toFixed(2)} $</p>
+                    <p className="mt-1 text-xl font-extrabold text-emerald-400">{withdrawableBalance.toFixed(2)} $</p>
                   </div>
                 </div>
               </div>

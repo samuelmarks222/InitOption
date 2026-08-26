@@ -198,24 +198,19 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         const availableBalance = Math.max(0, balance - reservedBalance);
 
         const turnover = await getTurnoverSnapshot(userId);
-        const needsBonusForfeit = turnover.bonusTotal > 0 && !turnover.isComplete;
-        const forfeitBonus = body.forfeitBonus === true;
-        const forfeitedBonusAmount = needsBonusForfeit && forfeitBonus ? turnover.bonusTotal : 0;
-        const availableAfterBonus = Math.max(0, availableBalance - forfeitedBonusAmount);
+        const isBonusLocked = turnover.bonusTotal > 0 && !turnover.isComplete;
+        const withdrawableBalance = Math.max(0, availableBalance - (isBonusLocked ? turnover.bonusTotal : 0));
 
-        if (needsBonusForfeit && !forfeitBonus) {
+        if (amount > withdrawableBalance) {
+          if (isBonusLocked) {
+            sendJson(response, 400, {
+              error: `Your requested amount ($${formatUsd(amount)}) exceeds your withdrawable balance of $${formatUsd(withdrawableBalance)}. Your $${formatUsd(turnover.bonusTotal)} bonus is locked until trading requirements are met ($${formatUsd(turnover.remainingTurnover)} volume remaining).`,
+            });
+            return;
+          }
           sendJson(response, 400, {
-            error: `Bonus turnover requirement not met. Required volume: $${formatUsd(turnover.requiredTurnover)}, completed: $${formatUsd(turnover.completedTurnover)}.`,
+            error: `Insufficient withdrawable balance. Maximum withdrawable: $${formatUsd(withdrawableBalance)}.`,
           });
-          return;
-        }
-
-        if (amount > availableAfterBonus) {
-          const balanceLabel =
-            forfeitedBonusAmount > 0
-              ? `Your withdrawable balance after removing the active bonus is $${formatUsd(availableAfterBonus)}.`
-              : `Your available balance is $${formatUsd(availableBalance)}.`;
-          sendJson(response, 400, { error: `Insufficient available balance. ${balanceLabel}` });
           return;
         }
 

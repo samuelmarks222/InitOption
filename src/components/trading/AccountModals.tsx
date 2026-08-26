@@ -1386,11 +1386,20 @@ const categoryCards = useMemo(
                               ),
                             );
                             const isSelected = bonusCode.toUpperCase() === promo.code.toUpperCase() && bonusEnabled;
+                            const isAlreadyUsed = catalog.some((c) => c.already_used && (c.code?.toUpperCase() === promo.code.toUpperCase() || c.title?.toUpperCase().includes(promo.code.toUpperCase())));
                             return (
                               <button
                                 key={promo.id}
                                 type="button"
                                 onClick={() => {
+                                  if (isAlreadyUsed) {
+                                    toast({
+                                      title: "Bonus Already Used",
+                                      description: "You have already used this bonus. This bonus can only be used once. Please select another available bonus.",
+                                      variant: "destructive",
+                                    });
+                                    return;
+                                  }
                                   setBonusCode(promo.code);
                                   setBonusEnabled(true);
                                   if (minDep > 0) {
@@ -1403,18 +1412,26 @@ const categoryCards = useMemo(
                                 }}
                                 className={`block w-full border-b border-white/10 px-4 py-3 text-left transition last:border-b-0 hover:bg-white/12 ${
                                   isSelected ? "bg-[#0084FF]/25 border-l-4 border-l-[#0084FF]" : ""
-                                }`}
+                                } ${isAlreadyUsed ? "opacity-60 bg-black/20" : ""}`}
                               >
                                 <div className="flex items-center justify-between">
                                   <span className="font-mono font-black text-[#00C98D] text-[13px] tracking-wider">
                                     {promo.code}
                                   </span>
-                                  <span className="rounded bg-[#00C98D]/20 px-2 py-0.5 text-[10px] font-bold text-[#00C98D]">
-                                    +{promo.reward_value} BONUS
-                                  </span>
+                                  {isAlreadyUsed ? (
+                                    <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                                      ALREADY USED (1-TIME)
+                                    </span>
+                                  ) : (
+                                    <span className="rounded bg-[#00C98D]/20 px-2 py-0.5 text-[10px] font-bold text-[#00C98D]">
+                                      +{promo.reward_value} BONUS
+                                    </span>
+                                  )}
                                 </div>
                                 <span className="mt-1 block text-[11px] font-medium text-white/80">
-                                  +{promo.reward_value} bonus if you deposit more than ${minDep.toFixed(2)}
+                                  {isAlreadyUsed
+                                    ? "This bonus has already been claimed on your account."
+                                    : `+${promo.reward_value} bonus if you deposit more than $${minDep.toFixed(2)}`}
                                 </span>
                               </button>
                             );

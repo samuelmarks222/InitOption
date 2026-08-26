@@ -172,25 +172,22 @@ const createTenXMobileMoneyWithdrawal = async ({
     completedTurnover = trades.reduce((sum, trade) => sum + Number(trade.amount ?? 0), 0);
 
     if (completedTurnover < requiredTurnover) {
-      if (!forfeitBonus) {
+      const withdrawableBalance = Math.max(0, availableBalance - bonusTotal);
+      if (amountUsd > withdrawableBalance) {
+        const remainingVolume = Math.max(0, requiredTurnover - completedTurnover);
         throw new Error(
-          `Bonus turnover requirement not met. Required volume: $${formatUsd(requiredTurnover)}, completed: $${formatUsd(completedTurnover)}.`,
+          `Your requested amount ($${formatUsd(amountUsd)}) exceeds your withdrawable balance of $${formatUsd(withdrawableBalance)}. Your $${formatUsd(bonusTotal)} bonus is locked until trading requirements are met ($${formatUsd(remainingVolume)} volume remaining).`,
         );
       }
-
-      const availableAfterBonusRemoval = Math.max(0, availableBalance - bonusTotal);
-      if (amountUsd > availableAfterBonusRemoval) {
-        throw new Error(
-          `Insufficient available balance. Your withdrawable balance after removing the active bonus is $${formatUsd(availableAfterBonusRemoval)}.`,
-        );
-      }
-
-      forfeitedBonusAmount = bonusTotal;
     }
   }
 
-  if (amountUsd > Math.max(0, availableBalance - forfeitedBonusAmount)) {
-    throw new Error("Insufficient available balance");
+  const withdrawableBalance = bonusTotal > 0 && completedTurnover < requiredTurnover
+    ? Math.max(0, availableBalance - bonusTotal)
+    : availableBalance;
+
+  if (amountUsd > withdrawableBalance) {
+    throw new Error(`Insufficient withdrawable balance. Maximum withdrawable: $${formatUsd(withdrawableBalance)}.`);
   }
 
   const approvalThresholdKes = Number(settings?.mpesa_withdrawal_approval_threshold_kes ?? 10000);

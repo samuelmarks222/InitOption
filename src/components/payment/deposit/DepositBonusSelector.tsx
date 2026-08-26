@@ -66,6 +66,11 @@ export function DepositBonusSelector({
           <XCircle className="h-4 w-4 shrink-0" />
           Bonus disabled for this deposit. Only your {formatMoney(amount)} deposit will be credited.
         </div>
+      ) : matchingOffer?.already_used ? (
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-300">
+          <Info className="h-4 w-4 shrink-0 text-amber-400" />
+          You have already used this bonus. This bonus can only be used once. Please select another available bonus.
+        </div>
       ) : amount > 0 && hasMatch ? (
         <>
           <div className="mt-4 grid grid-cols-3 gap-3 text-center">
