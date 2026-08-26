@@ -9,6 +9,7 @@ import {
   handleCloudinaryExists,
   handleCloudinaryPublicUrl,
   handlePusherAuth,
+  handleRpc,
   testDbConnection,
 } from "./_lib/newApi.js";
 
@@ -70,6 +71,9 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         return;
       case "pusher-auth":
         await handlePusherAuth(request, res);
+        return;
+      case "rpc":
+        await handleRpc(request, res);
         return;
       default:
         await systemHandler(request as never, res as never);

@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { v2 as cloudinary } from "cloudinary";
-import { transaction, query, queryOne, testDbConnection } from "./db.js";
+import { transaction, query, queryOne, userRpc, testDbConnection } from "./db.js";
 export { testDbConnection } from "./db.js";
 import {
   clerkUserIdToUuid,
@@ -1142,5 +1142,75 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
     const statusCode = isClientError ? 400 : 500;
     console.error("db route failed", { message, stack, table: table ?? "unknown", method, statusCode });
     sendJson(response, statusCode, { error: message, details: stack?.split("\n").slice(0, 3).join(" | ") });
+  }
+}
+
+// Allowed RPC functions that can be invoked by authenticated users.
+// Only functions that are safe to call by any authenticated user are listed here.
+const ALLOWED_RPC_FUNCTIONS = new Set([
+  // Social / copy trading
+  "follow_trader",
+  "unfollow_trader",
+  "upsert_copy_setting",
+  "delete_copy_setting",
+  "execute_manual_copy_trade",
+  // Trade side-effects (called after trade insertion)
+  "process_social_trade_open",
+  "process_trade_referral_commission",
+  // Notifications
+  "create_notification_internal",
+  // KYC / onboarding
+  "complete_onboarding",
+  // Tournaments
+  "join_tournament",
+  "leave_tournament",
+]);
+
+export async function handleRpc(request: ApiRequest, response: ApiResponse): Promise<void> {
+  try {
+    // Authenticate the request — returns the canonical user UUID or null
+    const canonicalUserId = await authenticateRequest(request);
+    if (!canonicalUserId) {
+      sendJson(response, 401, { error: "Unauthorized" });
+      return;
+    }
+
+    // Get function name from ?fn= query param (set by vercel.json rewrite)
+    const firstValue = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
+    const fn = firstValue(request.query?.fn).trim();
+
+    if (!fn) {
+      sendJson(response, 400, { error: "Missing RPC function name" });
+      return;
+    }
+
+    if (!ALLOWED_RPC_FUNCTIONS.has(fn)) {
+      sendJson(response, 400, { error: `RPC function '${fn}' is not allowed` });
+      return;
+    }
+
+    // Parse request body as the RPC arguments
+    let body: Record<string, unknown> = {};
+    try {
+      const rawBody = await readRawBody(request);
+      if (rawBody) {
+        body = JSON.parse(rawBody) as Record<string, unknown>;
+      }
+    } catch {
+      sendJson(response, 400, { error: "Invalid JSON body" });
+      return;
+    }
+
+    // Execute the RPC with user context (sets app.current_user_id in DB session).
+    // authenticateRequest already returns the canonical UUID, so we pass it directly.
+    const rows = await userRpc(fn, canonicalUserId, body);
+
+    // Return the first result row as data, or null if empty
+    const result = rows.length > 0 ? rows[0] : null;
+    sendJson(response, 200, { data: result });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "RPC call failed";
+    console.error("handleRpc failed:", message);
+    sendJson(response, 500, { error: message });
   }
 }
