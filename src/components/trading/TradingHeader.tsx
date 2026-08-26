@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -6,14 +6,13 @@ import {
   GraduationCap,
   Plus,
   ShieldCheck,
-  Send,
+  User,
 } from "lucide-react";
 import { AccountType, AccountDropdown } from "./AccountModals";
 import { useAuth } from "@/contexts/AuthContext";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { useVip } from "@/contexts/VipContext";
 import { getStoredLiveBalance } from "@/lib/live-balance";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import {
@@ -57,12 +56,11 @@ const TradingHeader = ({
 }: TradingHeaderProps) => {
   const navigate = useNavigate();
   const [showAccountDrop, setShowAccountDrop] = useState(false);
-  const [chartLayoutMode, setChartLayoutMode] = useState<ChartLayoutMode>(() => loadChartLayoutMode());
+  const [, setChartLayoutMode] = useState<ChartLayoutMode>(() => loadChartLayoutMode());
   const { profile } = useAuth();
   const { isAdmin } = useStaffAccess();
   const { formatMoney } = useCurrency();
   const { platformName, logoUrl } = useSiteBranding();
-  const { t } = useTranslation();
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent("mobile_account_dropdown", { detail: { open: showAccountDrop } }));
@@ -139,7 +137,7 @@ const TradingHeader = ({
       id="tour-deposit-button"
       data-deposit-trigger="true"
       onClick={onOpenDeposit}
-      className="flex h-10 items-center gap-1.5 shrink-0 rounded-[8px] bg-[#00c853] px-4 sm:px-5 text-[14px] font-black text-white shadow-md shadow-[#00c853]/20 hover:bg-[#00b248] active:scale-95 transition-all"
+      className="flex h-10 items-center gap-1.5 shrink-0 rounded-[8px] bg-[#00c853] px-3 sm:px-5 text-[14px] font-black text-white shadow-md shadow-[#00c853]/20 hover:bg-[#00b248] active:scale-95 transition-all"
     >
       <Plus size={16} strokeWidth={3} /> Deposit
     </button>
@@ -148,9 +146,29 @@ const TradingHeader = ({
   const renderWithdrawalButton = () => (
     <button
       onClick={onOpenWithdrawal}
-      className="flex h-10 items-center shrink-0 rounded-[8px] bg-[#4a5366] px-4 sm:px-5 text-[14px] font-black text-white hover:bg-[#576278] active:scale-95 transition-colors"
+      className="flex h-10 items-center shrink-0 rounded-[8px] bg-[#4a5366] px-3 sm:px-5 text-[14px] font-black text-white hover:bg-[#576278] active:scale-95 transition-colors"
     >
       Withdrawal
+    </button>
+  );
+
+  const avatarUrl = profile?.avatar_url;
+  const userDisplayName = profile?.display_name || profile?.username || "Account";
+
+  const renderProfileAvatarButton = () => (
+    <button
+      type="button"
+      onClick={() => onOpenProfile("personal")}
+      className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-[#2a3040] transition hover:border-[#00c853]"
+      title="Open Profile"
+    >
+      {avatarUrl ? (
+        <img src={avatarUrl} alt={userDisplayName} className="h-full w-full object-cover" />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1689e8] to-purple-600 font-black text-white text-sm uppercase">
+          {userDisplayName.charAt(0)}
+        </div>
+      )}
     </button>
   );
 
@@ -159,11 +177,21 @@ const TradingHeader = ({
 
       {/* ── MOBILE layout (hidden on lg+) ── */}
       <div className="flex lg:hidden flex-1 items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-        {/* Mobile Header Actions */}
         <div className="flex items-center gap-2 shrink-0">
           {renderAccountPill()}
           {renderDepositButton()}
           {renderWithdrawalButton()}
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin")}
+              className="flex h-10 items-center gap-1 rounded-lg border border-[#0fa055]/30 bg-[#2a3040] px-2.5 text-xs font-black text-[#0fa055] hover:bg-[#343b4f]"
+              title="Admin Panel"
+            >
+              <ShieldCheck size={14} />
+              ADMIN
+            </button>
+          )}
+          {renderProfileAvatarButton()}
         </div>
       </div>
 
@@ -181,6 +209,10 @@ const TradingHeader = ({
               alt={platformName}
               className="h-10 w-auto object-contain"
               style={{ maxWidth: "200px" }}
+              onError={(e) => {
+                // If custom logo image fails, fallback to text logo
+                (e.target as HTMLElement).style.display = "none";
+              }}
             />
           ) : (
             <span className="font-black text-2xl tracking-tight text-white">{platformName}</span>
@@ -203,7 +235,7 @@ const TradingHeader = ({
           </button>
         </div>
 
-        {/* Right: Admin + Bell + Account + Deposit + Withdrawal */}
+        {/* Right: Admin + Bell + Account + Deposit + Withdrawal + Avatar */}
         <div className="flex items-center gap-2.5 shrink-0">
           {isAdmin && (
             <button
@@ -229,6 +261,9 @@ const TradingHeader = ({
 
           {/* Withdrawal Button */}
           {renderWithdrawalButton()}
+
+          {/* Profile Avatar Logo Button */}
+          {renderProfileAvatarButton()}
         </div>
       </div>
     </header>

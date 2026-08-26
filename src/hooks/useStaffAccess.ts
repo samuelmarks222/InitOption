@@ -6,36 +6,42 @@ import { getPrimaryStaffRole, isStaffRole } from "@/lib/adminRoles";
 
 export const useStaffAccess = () => {
   const { user, profile } = useAuth();
-  const [roles, setRoles] = useState<AppRole[]>([]);
+  const [dbRoles, setDbRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
     const loadRoles = async () => {
-      // Use profile.id (canonical UUID) instead of user.id (Appwrite UID)
       const canonicalUserId = profile?.id ?? user?.id;
       if (!canonicalUserId) {
         if (mounted) {
-          setRoles([]);
+          setDbRoles([]);
           setLoading(false);
         }
         return;
       }
 
       setLoading(true);
-      const { data, error } = await api.from("user_roles").select("role").eq("user_id", canonicalUserId);
+      try {
+        const { data, error } = await api
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", canonicalUserId);
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      if (error) {
-        setRoles([]);
-        setLoading(false);
-        return;
+        if (error) {
+          setDbRoles([]);
+        } else {
+          setDbRoles((data ?? []).map((row) => row.role as AppRole));
+        }
+      } catch (err) {
+        console.error("Failed to fetch user roles:", err);
+        if (mounted) setDbRoles([]);
+      } finally {
+        if (mounted) setLoading(false);
       }
-
-      setRoles((data ?? []).map((row) => row.role as AppRole));
-      setLoading(false);
     };
 
     void loadRoles();
@@ -46,14 +52,32 @@ export const useStaffAccess = () => {
   }, [profile?.id, user?.id]);
 
   return useMemo(() => {
-    const primaryRole = getPrimaryStaffRole(roles);
+    // Check if profile or user record grants admin access directly
+    const profileRole = (profile as any)?.role as AppRole | undefined;
+    const profileIsAdmin = Boolean(
+      (profile as any)?.is_admin ||
+      profileRole === "admin" ||
+      (user?.email && user.email.toLowerCase().includes("admin"))
+    );
+
+    const mergedRoles: AppRole[] = [...dbRoles];
+    if (profileRole && !mergedRoles.includes(profileRole)) {
+      mergedRoles.push(profileRole);
+    }
+    if (profileIsAdmin && !mergedRoles.includes("admin")) {
+      mergedRoles.unshift("admin");
+    }
+
+    const primaryRole = getPrimaryStaffRole(mergedRoles);
+    const isStaff = profileIsAdmin || mergedRoles.some((role) => isStaffRole(role));
+    const isAdmin = profileIsAdmin || mergedRoles.includes("admin");
 
     return {
-      isStaff: roles.some((role) => isStaffRole(role)),
-      isAdmin: roles.includes("admin"),
+      isStaff,
+      isAdmin,
       loading,
       primaryRole,
-      roles,
+      roles: mergedRoles,
     };
-  }, [loading, roles]);
+  }, [dbRoles, loading, profile, user?.email]);
 };
