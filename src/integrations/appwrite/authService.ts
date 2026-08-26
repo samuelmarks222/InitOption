@@ -207,6 +207,7 @@ export async function signInWithGoogleRedirect(): Promise<{ user: null; error: A
 }
 
 export async function resolveGoogleRedirectResult(): Promise<{ user: AuthUserLike | null; error: AppwriteAuthError | null }> {
+  let hasOAuthParams = false;
   try {
     if (!appwriteConfigPresent) {
       return { user: null, error: { message: "Appwrite is not configured yet.", code: "APPWRITE_CONFIG_MISSING" } };
@@ -217,10 +218,14 @@ export async function resolveGoogleRedirectResult(): Promise<{ user: AuthUserLik
 
     if (isBrowser()) {
       const params = new URLSearchParams(window.location.search);
-      const userId = params.get("userId") ?? params.get("user_id");
-      const secret = params.get("secret");
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const userId =
+        params.get("userId") ?? params.get("user_id") ??
+        hashParams.get("userId") ?? hashParams.get("user_id");
+      const secret = params.get("secret") ?? hashParams.get("secret");
+      hasOAuthParams = !!(userId && secret);
 
-      if (userId && secret) {
+      if (hasOAuthParams) {
         try {
           await (account as any).createSession(userId, secret);
         } catch (e) {
@@ -251,6 +256,9 @@ export async function resolveGoogleRedirectResult(): Promise<{ user: AuthUserLik
         }
       } catch {}
     }
+    // If there were no OAuth params in the URL this is just a normal
+    // unauthenticated (guest) page load, not a failed Google redirect.
+    if (!hasOAuthParams) return { user: null, error: null };
     return { user: null, error: mapError(e) };
   }
 }
@@ -319,8 +327,11 @@ export async function refreshSession(): Promise<AuthUserLike | null> {
   try {
     if (isBrowser()) {
       const params = new URLSearchParams(window.location.search);
-      const userId = params.get("userId") ?? params.get("user_id");
-      const secret = params.get("secret");
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const userId =
+        params.get("userId") ?? params.get("user_id") ??
+        hashParams.get("userId") ?? hashParams.get("user_id");
+      const secret = params.get("secret") ?? hashParams.get("secret");
 
       if (userId && secret) {
         try {
