@@ -152,26 +152,6 @@ const TradingHeader = ({
     </button>
   );
 
-  const avatarUrl = profile?.avatar_url;
-  const userDisplayName = profile?.display_name || profile?.username || "Account";
-
-  const renderProfileAvatarButton = () => (
-    <button
-      type="button"
-      onClick={() => onOpenProfile("personal")}
-      className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-[#2a3040] transition hover:border-[#00c853]"
-      title="Open Profile"
-    >
-      {avatarUrl ? (
-        <img src={avatarUrl} alt={userDisplayName} className="h-full w-full object-cover" />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#1689e8] to-purple-600 font-black text-white text-sm uppercase">
-          {userDisplayName.charAt(0)}
-        </div>
-      )}
-    </button>
-  );
-
   return (
     <header className="relative flex h-[62px] shrink-0 items-center justify-between px-4 bg-[var(--trading-header-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white z-30 select-none">
 
@@ -191,7 +171,6 @@ const TradingHeader = ({
               ADMIN
             </button>
           )}
-          {renderProfileAvatarButton()}
         </div>
       </div>
 
@@ -210,7 +189,6 @@ const TradingHeader = ({
               className="h-10 w-auto object-contain"
               style={{ maxWidth: "200px" }}
               onError={(e) => {
-                // If custom logo image fails, fallback to text logo
                 (e.target as HTMLElement).style.display = "none";
               }}
             />
@@ -235,7 +213,7 @@ const TradingHeader = ({
           </button>
         </div>
 
-        {/* Right: Admin + Bell + Account + Deposit + Withdrawal + Avatar */}
+        {/* Right: Admin + Bell + Account + Deposit + Withdrawal */}
         <div className="flex items-center gap-2.5 shrink-0">
           {isAdmin && (
             <button
@@ -261,9 +239,6 @@ const TradingHeader = ({
 
           {/* Withdrawal Button */}
           {renderWithdrawalButton()}
-
-          {/* Profile Avatar Logo Button */}
-          {renderProfileAvatarButton()}
         </div>
       </div>
     </header>
