@@ -51,24 +51,24 @@ export const DynamicWorkspace = ({ activeWorkspace, onClose, onOpenTournament, o
   };
   const workspaceTitle = workspaceTitleMap[activeWorkspace];
   const workspaceWidthClass = isImmersiveSupport
-    ? "w-[318px] max-w-[calc(100vw-85px)]"
+    ? "w-full max-w-full lg:w-[318px] lg:max-w-[calc(100vw-85px)]"
     : activeWorkspace === "support"
-      ? "w-[318px] max-w-[calc(100vw-85px)]"
+      ? "w-full max-w-full lg:w-[318px] lg:max-w-[calc(100vw-85px)]"
       : activeWorkspace === "tournaments"
-      ? "w-[430px] max-w-[calc(100vw-85px)]"
+      ? "w-full max-w-full lg:w-[430px] lg:max-w-[calc(100vw-85px)]"
       : isDedicatedLeaderboard
-        ? "w-[340px] max-w-[calc(100vw-85px)]"
+        ? "w-full max-w-full lg:w-[340px] lg:max-w-[calc(100vw-85px)]"
       : activeWorkspace === "settings"
-          ? "w-[260px] max-w-[calc(100vw-85px)]"
+          ? "w-full max-w-full lg:w-[260px] lg:max-w-[calc(100vw-85px)]"
           : activeWorkspace === "help"
-            ? "w-[360px] max-w-[calc(100vw-85px)]"
+            ? "w-full max-w-full lg:w-[360px] lg:max-w-[calc(100vw-85px)]"
       : activeWorkspace === "generalchat"
-          ? "w-[380px] max-w-[calc(100vw-85px)]"
-          : "w-[350px] max-w-[calc(100vw-85px)]";
+          ? "w-full max-w-full lg:w-[380px] lg:max-w-[calc(100vw-85px)]"
+          : "w-full max-w-full lg:w-[350px] lg:max-w-[calc(100vw-85px)]";
 
   return (
     <div
-      className={`h-full flex flex-col border-r z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.5)] ${workspaceWidthClass}`}
+      className={`h-full flex flex-col border-r z-30 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.5)] max-lg:w-full max-lg:max-w-none ${workspaceWidthClass}`}
       style={{ background: "var(--trading-workspace-panel-bg)", borderRightColor: "var(--trading-border-color)" }}
     >
       

@@ -171,5 +171,7 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay, onOpenDeposit }: Mobile
 };
 
 export const MobileLeaderboardOverlay = ({ onClose }: { onClose: () => void }) => (
-  <WorkspaceLeaderboard onClose={onClose} />
+  <div className="h-full w-full">
+    <WorkspaceLeaderboard onClose={onClose} />
+  </div>
 );

@@ -255,7 +255,7 @@ export const WorkspaceLeaderboard = ({ onClose }: WorkspaceLeaderboardProps) => 
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#1b2030] text-white">
+    <div className="flex h-full w-full min-h-0 flex-col bg-[#1b2030] text-white">
       <div className="flex h-[68px] shrink-0 items-center gap-2 px-3">
         <button
           type="button"
