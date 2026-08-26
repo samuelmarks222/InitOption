@@ -1893,7 +1893,7 @@ const OscillatorPane = ({
         fixLeftEdge: true,
         fixRightEdge: false,
         rightBarStaysOnScroll: false,
-        shiftVisibleRangeOnNewBar: false,
+        shiftVisibleRangeOnNewBar: true,
         allowShiftVisibleRangeOnWhitespaceReplacement: false,
         lockVisibleTimeRangeOnResize: true,
       },
@@ -2779,7 +2779,7 @@ const TradingChart = ({
       chart.timeScale().applyOptions({
         rightOffset,
         rightBarStaysOnScroll: false,
-        shiftVisibleRangeOnNewBar: false,
+        shiftVisibleRangeOnNewBar: true,
         allowShiftVisibleRangeOnWhitespaceReplacement: false,
       });
       applyResponsivePriceScale(visibleSpan, true);
@@ -2972,7 +2972,7 @@ const TradingChart = ({
           fixLeftEdge: true,
           fixRightEdge: false,
           rightBarStaysOnScroll: false,
-          shiftVisibleRangeOnNewBar: false,
+          shiftVisibleRangeOnNewBar: true,
           allowShiftVisibleRangeOnWhitespaceReplacement: false,
           lockVisibleTimeRangeOnResize: true,
         },
@@ -3397,7 +3397,7 @@ const TradingChart = ({
         fixLeftEdge: true,
         fixRightEdge: false,
         rightBarStaysOnScroll: false,
-        shiftVisibleRangeOnNewBar: false,
+        shiftVisibleRangeOnNewBar: true,
         allowShiftVisibleRangeOnWhitespaceReplacement: false,
       });
       scrollChartToLiveEdge(historyRef.current.length);
@@ -3516,7 +3516,7 @@ renderOverlayIndicators(getIndicatorHistory());
       fixLeftEdge: true,
       fixRightEdge: false,
       rightBarStaysOnScroll: false,
-      shiftVisibleRangeOnNewBar: false,
+      shiftVisibleRangeOnNewBar: true,
       allowShiftVisibleRangeOnWhitespaceReplacement: false,
     });
     scrollChartToLiveEdge(history.length);
@@ -3752,7 +3752,7 @@ renderOverlayIndicators(getIndicatorHistory());
       fixLeftEdge: true,
       fixRightEdge: false,
       rightBarStaysOnScroll: false,
-      shiftVisibleRangeOnNewBar: false,
+      shiftVisibleRangeOnNewBar: true,
       allowShiftVisibleRangeOnWhitespaceReplacement: false,
     });
     applyResponsivePriceScale(currentRange ? currentRange.to - currentRange.from : initialVisibleBars + rightOffset, true);
