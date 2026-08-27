@@ -439,37 +439,54 @@ const BAR_SPACING_MAP: Record<string, number> = {
 };
 
 const MIN_VISIBLE_BAR_COUNT_MAP: Record<string, number> = {
-  "1s": 78,
-  "5s": 84,
-  "15s": 80,
-  "30s": 84,
-  "1m": 84,
-  "2m": 90,
-  "3m": 94,
-  "4m": 96,
-  "5m": 98,
-  "10m": 60,
-  "15m": 50,
-  "30m": 40,
-  "1h": 30,
+  "1s": 60,
+  "5s": 64,
+  "15s": 64,
+  "30s": 64,
+  "1m": 60,
+  "2m": 60,
+  "3m": 56,
+  "4m": 56,
+  "5m": 52,
+  "10m": 48,
+  "15m": 44,
+  "30m": 36,
+  "1h": 28,
   "2h": 24,
 };
 
 const MAX_VISIBLE_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
-  "1s": 300,
-  "5s": 300,
-  "15s": 300,
-  "30s": 300,
-  "1m": 300,
-  "2m": 300,
-  "3m": 300,
-  "4m": 300,
-  "5m": 300,
-  "10m": 300,
-  "15m": 300,
-  "30m": 300,
-  "1h": 250,
-  "2h": 200,
+  "1s": 240,
+  "5s": 240,
+  "15s": 240,
+  "30s": 240,
+  "1m": 240,
+  "2m": 240,
+  "3m": 240,
+  "4m": 240,
+  "5m": 240,
+  "10m": 200,
+  "15m": 180,
+  "30m": 160,
+  "1h": 140,
+  "2h": 120,
+};
+
+const MIN_BAR_SPACING_MAP: Record<string, number> = {
+  "1s": 4.5,
+  "5s": 4.5,
+  "15s": 4.5,
+  "30s": 4.5,
+  "1m": 4.5,
+  "2m": 5.0,
+  "3m": 5.0,
+  "4m": 5.5,
+  "5m": 5.5,
+  "10m": 6.5,
+  "15m": 7.5,
+  "30m": 8.5,
+  "1h": 10.0,
+  "2h": 12.0,
 };
 
 const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, number>> = {
@@ -487,23 +504,6 @@ const MAX_READABLE_ZOOM_BAR_COUNT_MAP: Partial<Record<SupportedChartTimeframe, n
   "30m": 600,
   "1h": 480,
   "2h": 360,
-};
-
-const MIN_BAR_SPACING_MAP: Record<string, number> = {
-  "1s": 1.5,
-  "5s": 1.5,
-  "15s": 1.5,
-  "30s": 1.5,
-  "1m": 1.5,
-  "2m": 1.5,
-  "3m": 1.5,
-  "4m": 1.5,
-  "5m": 1.5,
-  "10m": 2.0,
-  "15m": 2.5,
-  "30m": 3.0,
-  "1h": 4.0,
-  "2h": 5.0,
 };
 
 const PROFESSIONAL_HIGH_TIMEFRAME_SECONDS = 30 * 60;
@@ -1004,7 +1004,7 @@ const getSeriesPriceFormat = (price: number) => {
 const formatTimeScaleTick = (time: number, timeframeSeconds: number) => {
   const date = new Date(time * 1000);
 
-  if (timeframeSeconds < 60) {
+  if (timeframeSeconds < 5 * 60) {
     return date.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -1013,17 +1013,7 @@ const formatTimeScaleTick = (time: number, timeframeSeconds: number) => {
     });
   }
 
-  if (timeframeSeconds < 12 * 60 * 60) {
-    if (timeframeSeconds >= 4 * 60 * 60) {
-      return date.toLocaleString([], {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
-    }
-
+  if (timeframeSeconds < 24 * 60 * 60) {
     return date.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -1031,19 +1021,12 @@ const formatTimeScaleTick = (time: number, timeframeSeconds: number) => {
     });
   }
 
-  if (timeframeSeconds < 24 * 60 * 60) {
-    return date.toLocaleString([], {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  }
-
-  return date.toLocaleDateString([], {
+  return date.toLocaleString([], {
     month: "short",
     day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
 };
 

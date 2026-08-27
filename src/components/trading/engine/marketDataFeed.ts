@@ -1,4 +1,5 @@
 import { OTCPriceEngine, type OHLCCandle, type TimeframeConfig } from "./priceEngine";
+import { getDeterministicPriceAt } from "@/lib/deterministicMarket";
 
 export type MarketFeedStatus =
   | "connecting"
@@ -184,56 +185,29 @@ export const simulateDeterministicTickPrice = ({
   velocity,
 }: DeterministicTickSimulationInput): DeterministicTickSimulationOutput => {
   const safeBasePrice = Number.isFinite(basePrice) && basePrice > 0 ? basePrice : 1;
-  const safeAnchorPrice = Number.isFinite(anchorPrice) && anchorPrice > 0 ? anchorPrice : safeBasePrice;
   const referencePrice =
-    Number.isFinite(previousPrice) && previousPrice > 0 ? previousPrice : safeAnchorPrice;
-  // The displayed chart timeframe should not change the underlying market path.
-  // We always simulate against a fixed microstructure and let CandleAggregator
-  // build the selected chart timeframe from that shared tick stream.
-  const marketTimeframeSeconds = LIVE_MARKET_MICROSTRUCTURE_SECONDS;
-  const stepRatio = getSyntheticStepRatio(marketTimeframeSeconds);
+    Number.isFinite(previousPrice) && previousPrice > 0 ? previousPrice : safeBasePrice;
+
+  const dt = 0.5;
+  const priceNow = getDeterministicPriceAt({ symbol, basePrice: safeBasePrice, timestamp, category: null });
+  const priceNext = getDeterministicPriceAt({ symbol, basePrice: safeBasePrice, timestamp: timestamp + dt, category: null });
+  const trendDirection = (priceNext - priceNow) / Math.max(safeBasePrice * 0.00001, 1e-9);
+
+  const stepRatio = 0.000006;
   const fastNoise = noiseAt(symbol, "tick-fast", timestamp / 0.28);
-  const slowNoise = noiseAt(
-    symbol,
-    "tick-slow",
-    timestamp / Math.max(1.5, marketTimeframeSeconds * 0.65),
-  );
+  const slowNoise = noiseAt(symbol, "tick-slow", timestamp / 1.5);
   const waveOne =
     Math.sin(timestamp * (2.2 + hashUnit(symbol, "wave-one-speed") * 1.2) + hashUnit(symbol, "wave-one-phase") * TAU);
-  const waveTwo =
-    Math.sin(timestamp * (5.6 + hashUnit(symbol, "wave-two-speed") * 2.2) + hashUnit(symbol, "wave-two-phase") * TAU);
   const microPulse =
     Math.sin(timestamp * (13 + hashUnit(symbol, "micro-pulse-speed") * 7) + hashUnit(symbol, "micro-pulse-phase") * TAU);
-  const intraBucketFraction = getIntraBucketFraction(timestamp, marketTimeframeSeconds);
-  const intrabarSwing =
-    Math.sin(
-      intraBucketFraction *
-        TAU *
-        3.2 +
-        hashUnit(symbol, "intrabar-phase") * TAU,
-    );
-  const intrabarNoise = noiseAt(
-    symbol,
-    "intrabar-noise",
-    timestamp / Math.max(0.12, marketTimeframeSeconds * 0.16),
-  );
-  const shock =
-    safeBasePrice *
-    stepRatio *
-    (fastNoise * 0.6 + slowNoise * 0.28 + waveOne * 0.26 + waveTwo * 0.14 + microPulse * 0.38);
-  const intrabarShock =
-    safeBasePrice *
-    stepRatio *
-    0.52 *
-    (intrabarSwing * 0.44 + intrabarNoise * 0.26);
-  const nextVelocity = velocity * 0.35 + shock * 0.48 + intrabarShock;
-  const meanReversionStrength = clamp(0.05 + marketTimeframeSeconds / 1600, 0.05, 0.12);
-  const meanReversion = (safeAnchorPrice - referencePrice) * meanReversionStrength;
-  const anchorDistanceRatio =
-    Math.abs(safeAnchorPrice - referencePrice) / Math.max(safeBasePrice * stepRatio * 6, 1e-9);
-  const stepCap = safeBasePrice * stepRatio * (1 + Math.min(2.35, anchorDistanceRatio * 0.72));
-  const rawNextPrice = referencePrice + meanReversion + nextVelocity;
-  const boundedDelta = clamp(rawNextPrice - referencePrice, -stepCap, stepCap);
+
+  const trendForce = trendDirection * safeBasePrice * stepRatio * 8;
+  const noiseShock = safeBasePrice * stepRatio * (fastNoise * 0.3 + slowNoise * 0.15 + waveOne * 0.12 + microPulse * 0.18);
+  const nextVelocity = velocity * 0.55 + trendForce * 0.4 + noiseShock * 0.25;
+
+  const stepCap = safeBasePrice * stepRatio * 2.5;
+  const rawDelta = nextVelocity;
+  const boundedDelta = clamp(rawDelta, -stepCap, stepCap);
   const boundedPrice = clamp(referencePrice + boundedDelta, safeBasePrice * 0.25, safeBasePrice * 4);
   const precision = getPricePrecision(safeBasePrice);
 
