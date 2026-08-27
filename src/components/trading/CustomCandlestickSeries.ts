@@ -84,13 +84,9 @@ class CustomCandlestickPaneRenderer implements ICustomSeriesPaneRenderer {
         if (options.wickVisible) {
           ctx.save();
           ctx.strokeStyle = wickColor;
-          ctx.lineWidth = WICK_LINE_WIDTH;
+          ctx.lineWidth = 1.2;
           ctx.beginPath();
           ctx.moveTo(wickX, highY);
-          ctx.lineTo(wickX, bodyTop);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(wickX, bodyBottom);
           ctx.lineTo(wickX, lowY);
           ctx.stroke();
           ctx.restore();
