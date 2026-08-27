@@ -280,49 +280,31 @@ export const TradeMarkersOverlay = ({
         ctx.stroke();
       }
 
-      // 3d: Quotex-style trade pill badges
+      // 3d: text labels
       for (const m of markers) {
-        const padX = 6;
-        const pillW = Math.max(52, m.labelWidth + padX * 2 + 10);
-        const pillH = 26;
-        
-        // Position badge to the right of entry dot in whitespace buffer
-        const pillX = Math.min(w - pillW - 60, m.dotX + 10 + m.horizontalShift);
-        const pillY = m.dotY - pillH / 2;
+        const refX = m.dotX - DOT_SIZE / 2 - CONNECTOR_GAP;
+        const textRight = refX - m.horizontalShift;
+        const label1Y = m.dotY - TEXT_HEIGHT / 2 + TEXT_ROW1_H;
+        const label2Y = label1Y + TEXT_LINE_GAP;
 
-        ctx.save();
-        // Pill background & border
-        ctx.fillStyle = "rgba(13, 19, 31, 0.94)";
-        ctx.strokeStyle = m.color;
-        ctx.lineWidth = 1;
-        ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-        ctx.shadowBlur = 6;
-        
-        drawRoundedRect(ctx, pillX, pillY, pillW, pillH, 4);
-        ctx.fill();
-        ctx.stroke();
-        ctx.shadowColor = "transparent";
-        ctx.shadowBlur = 0;
+        ctx.textBaseline = "bottom";
+        ctx.textAlign = "right";
+        ctx.shadowColor = "rgba(0,0,0,0.85)";
+        ctx.shadowBlur = 1;
 
-        // Direction indicator dot
-        ctx.beginPath();
-        ctx.arc(pillX + 8, pillY + pillH / 2, 3, 0, Math.PI * 2);
-        ctx.fillStyle = m.color;
-        ctx.fill();
-
-        // Line 1: arrow + amount
+        // Line 1: arrow + amount, strictly white
         ctx.font = fontBold;
         ctx.fillStyle = "#ffffff";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "top";
-        ctx.fillText(m.fullLine1, pillX + 16, pillY + 3);
+        ctx.fillText(m.fullLine1, textRight, label1Y);
 
-        // Line 2: countdown timer
+        // Line 2: clock
         ctx.font = fontNorm;
-        ctx.fillStyle = "#a0aec0";
-        ctx.fillText(m.clockStr, pillX + 16, pillY + 14);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(m.clockStr, textRight, label2Y + TEXT_ROW2_H);
 
-        ctx.restore();
+        // Reset shadow
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
       }
 
       // ── Phase 3e: Vertical "Beginning of trade" & "End of trade" boundary lines ──

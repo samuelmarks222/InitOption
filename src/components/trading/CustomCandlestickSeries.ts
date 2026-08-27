@@ -68,12 +68,14 @@ class CustomCandlestickPaneRenderer implements ICustomSeriesPaneRenderer {
         const openY = priceConverter(d.open);
         if (openY === null) continue;
 
+        const adjustedOpenY = prevCloseY !== null ? prevCloseY : openY;
+
         const isUp = d.close >= d.open;
         const bodyColor = isUp ? options.upColor : options.downColor;
         const wickColor = isUp ? options.wickUpColor : options.wickDownColor;
 
-        const bodyTop = Math.min(openY, closeY);
-        const bodyBottom = Math.max(openY, closeY);
+        const bodyTop = Math.min(adjustedOpenY, closeY);
+        const bodyBottom = Math.max(adjustedOpenY, closeY);
         const bodyHeight = Math.max(1, bodyBottom - bodyTop);
 
         const left = x - halfBody;
@@ -82,9 +84,13 @@ class CustomCandlestickPaneRenderer implements ICustomSeriesPaneRenderer {
         if (options.wickVisible) {
           ctx.save();
           ctx.strokeStyle = wickColor;
-          ctx.lineWidth = 1.2;
+          ctx.lineWidth = WICK_LINE_WIDTH;
           ctx.beginPath();
           ctx.moveTo(wickX, highY);
+          ctx.lineTo(wickX, bodyTop);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(wickX, bodyBottom);
           ctx.lineTo(wickX, lowY);
           ctx.stroke();
           ctx.restore();

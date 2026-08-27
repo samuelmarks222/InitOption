@@ -121,10 +121,12 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 
 const hashString = (input: string) => {
   let hash = 2166136261;
+
   for (let index = 0; index < input.length; index += 1) {
     hash ^= input.charCodeAt(index);
     hash = Math.imul(hash, 16777619);
   }
+
   return hash >>> 0;
 };
 
@@ -142,6 +144,7 @@ const noiseAt = (symbol: string, salt: string, position: number) => {
   const amount = smoothstep(position - leftIndex);
   const leftNoise = signedHash(symbol, `${salt}:${leftIndex}`);
   const rightNoise = signedHash(symbol, `${salt}:${rightIndex}`);
+
   return lerp(leftNoise, rightNoise, amount);
 };
 
@@ -160,13 +163,10 @@ const roundPrice = (value: number, referencePrice: number) => {
   return Number(value.toFixed(precision));
 };
 
-const HIGH_TIMEFRAME_PROFESSIONAL_SECONDS = 3 * 60;
+const HIGH_TIMEFRAME_PROFESSIONAL_SECONDS = 30 * 60;
 
 const resolveProfile = (symbol: string, category?: string | null) =>
   CATEGORY_PROFILES[normalizeAssetCategory(category, symbol)];
-
-const clampPriceToBounds = (price: number, basePrice: number) =>
-  clamp(price, basePrice * 0.25, basePrice * 4);
 
 const getHighTimeframeSmoothingWeight = (timeframeSeconds?: number) => {
   if (
@@ -176,6 +176,7 @@ const getHighTimeframeSmoothingWeight = (timeframeSeconds?: number) => {
   ) {
     return 0;
   }
+
   return clamp(
     0.38 + Math.log2(timeframeSeconds / HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) / 3.4,
     0.38,
@@ -192,22 +193,22 @@ const getDeterministicRelativeOffset = (
   const primaryPhase = hashUnit(normalizedSymbol, "primary-phase") * TAU;
   const secondaryPhase = hashUnit(normalizedSymbol, "secondary-phase") * TAU;
   const smoothingWeight = getHighTimeframeSmoothingWeight(timeframeSeconds);
-  const driftWeight = 1 + smoothingWeight * 0.8;
-  const swingWeight = 1 + smoothingWeight * 1.2;
+  const driftWeight = 1 + smoothingWeight * 0.2;
+  const swingWeight = 1 + smoothingWeight * 0.85;
   const pulseWeight = 1 - smoothingWeight * 0.65;
   const microWeight = 1 - smoothingWeight * 0.96;
   const tickWeight = 1 - smoothingWeight;
-  const cycleWeight = 1 + smoothingWeight * 0.75;
-  const secondaryCycleWeight = 1 + smoothingWeight * 0.5;
+  const cycleWeight = 1 + smoothingWeight * 0.42;
+  const secondaryCycleWeight = 1 + smoothingWeight * 0.28;
   const macroShape =
     smoothingWeight *
     (
       noiseAt(normalizedSymbol, "macro-drift", timestampSec / (profile.driftScaleSeconds * 1.7)) *
         profile.driftAmplitude *
-        0.8 +
+        0.3 +
       Math.sin((timestampSec / (profile.cycleSeconds * 2.35)) * TAU + hashUnit(normalizedSymbol, "macro-phase") * TAU) *
         profile.swingAmplitude *
-        1.1
+        0.55
     );
 
   return (
@@ -247,6 +248,7 @@ const getDeterministicPriceAtForTimeframe = ({
     timestampSec,
     timeframeSeconds,
   );
+
   const price = safeBasePrice * Math.exp(relativeOffset);
   return Math.max(safeBasePrice * 0.25, price);
 };
@@ -276,20 +278,31 @@ export const getDeterministicChange24h = ({
     timestamp: normalizeUnixSeconds(timestamp) - 24 * 60 * 60,
     category,
   });
-  if (!Number.isFinite(previousPrice) || previousPrice <= 0) return 0;
+
+  if (!Number.isFinite(previousPrice) || previousPrice <= 0) {
+    return 0;
+  }
+
   return ((currentPrice - previousPrice) / previousPrice) * 100;
 };
 
 const getPriceStep = (price: number) => Number(`1e-${getPricePrecision(price)}`);
 
+const clampPriceToBounds = (price: number, basePrice: number) =>
+  clamp(price, basePrice * 0.25, basePrice * 4);
+
 const getSampleStepSeconds = (timeframeSeconds: number) => {
   if (timeframeSeconds <= 1) return 0.1;
-  if (timeframeSeconds <= 5) return 0.5;
+  if (timeframeSeconds <= 5) return 0.25;
   if (timeframeSeconds <= 15) return 1;
-  if (timeframeSeconds <= 60) return 3;
-  if (timeframeSeconds <= 300) return 5;
-  if (timeframeSeconds <= 900) return 15;
-  return 30;
+  if (timeframeSeconds <= 60) return 5;
+  if (timeframeSeconds <= 15 * 60) return 15;
+  if (timeframeSeconds < HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) return 60;
+  if (timeframeSeconds <= 60 * 60) return 2 * 60;
+  if (timeframeSeconds <= 4 * 60 * 60) return 5 * 60;
+  if (timeframeSeconds <= 12 * 60 * 60) return 15 * 60;
+  if (timeframeSeconds <= 24 * 60 * 60) return 30 * 60;
+  return Math.max(60 * 60, Math.floor(timeframeSeconds / 24));
 };
 
 const getInteriorProbeCount = (timeframeSeconds: number) => {
@@ -317,7 +330,7 @@ const getTargetWickDelta = (
             : 6;
   const wickMultiplier =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 1.0
+      ? 1.2
       : timeframeSeconds <= 1
         ? 1.18
         : timeframeSeconds <= 5
@@ -330,6 +343,7 @@ const getTargetWickDelta = (
     const effectivePipValue = referencePrice * 0.00006;
     return effectivePipValue * configuredPips * wickMultiplier;
   }
+
   return priceStep * configuredPips * wickMultiplier;
 };
 
@@ -365,6 +379,7 @@ const getMaxWickLength = ({
             ? 0.42
             : 0.58;
   const minimumWick = priceStep * (timeframeSeconds <= 1 ? 1.1 : timeframeSeconds <= 5 ? 1.3 : 1.6);
+
   return Math.max(minimumWick, bodySize * bodyFactor + targetWickDelta * wickFactor);
 };
 
@@ -386,7 +401,9 @@ const buildInteriorProbePrices = ({
   targetWickDelta: number;
 }) => {
   const probeCount = getInteriorProbeCount(timeframeSeconds);
-  if (probeCount === 0 || targetWickDelta <= 0) return [];
+  if (probeCount === 0 || targetWickDelta <= 0) {
+    return [];
+  }
 
   const durationSeconds = Math.max(0.0001, endTimeSec - startTimeSec);
   const wickPhase = hashUnit(symbol, `wick-phase:${startTimeSec}`) * TAU;
@@ -406,6 +423,7 @@ const buildInteriorProbePrices = ({
     const jitter = noiseAt(symbol, "wick-noise", timestamp / Math.max(0.04, durationSeconds / 5));
     const impulse = noiseAt(symbol, "wick-impulse", (startTimeSec + index) / Math.max(1, timeframeSeconds));
     const displacement = targetWickDelta * (oscillation * 0.15 + jitter * 0.1 + impulse * 0.05);
+
     return clampPriceToBounds(basePriceAtTime + displacement, basePrice);
   });
 };
@@ -439,30 +457,50 @@ export const buildDeterministicCandle = ({
     sampleTimes.push(sampleTime);
   }
 
+  if (sampleTimes[sampleTimes.length - 1] !== safeEndTimeSec) {
+    sampleTimes.push(safeEndTimeSec);
+  }
+
   const prices = sampleTimes.map((timestamp) =>
     getDeterministicPriceAtForTimeframe({ symbol, basePrice, timestamp, category, timeframeSeconds }),
   );
   const rawOpen = prices[0];
   const rawClose = prices[prices.length - 1];
   const referencePrice = Math.max(rawOpen, rawClose, basePrice);
+  const priceStep = getPriceStep(referencePrice);
+  const targetWickDelta = getTargetWickDelta(referencePrice, timeframeSeconds, targetWickPips);
+  const interiorProbePrices = buildInteriorProbePrices({
+    symbol,
+    basePrice,
+    timeframeSeconds,
+    startTimeSec,
+    endTimeSec: safeEndTimeSec,
+    category,
+    targetWickDelta,
+  });
+  const sampledHigh = Math.max(...prices, ...interiorProbePrices);
+  const sampledLow = Math.min(...prices, ...interiorProbePrices);
   const upperBody = Math.max(rawOpen, rawClose);
   const lowerBody = Math.min(rawOpen, rawClose);
   const bodySize = Math.abs(rawClose - rawOpen);
-  const pip = referencePrice * 0.00008;
-
-  // High-frequency noise for natural, varying wick lengths across candles
-  const noiseU = (noiseAt(symbol, "wick-upper-var", startTimeSec / 3) + 1) / 2; // 0..1
-  const noiseL = (noiseAt(symbol, "wick-lower-var", startTimeSec / 3) + 1) / 2; // 0..1
-
-  // Natural upper & lower wick extension with realistic variance per candle
-  const upperWickBase = bodySize * (0.04 + noiseU * 0.28) + pip * (0.4 + noiseU * 2.2);
-  const lowerWickBase = bodySize * (0.04 + noiseL * 0.28) + pip * (0.4 + noiseL * 2.2);
-
-  const sampledHigh = Math.max(...prices);
-  const sampledLow = Math.min(...prices);
-
-  const rawHigh = Math.max(upperBody, sampledHigh, upperBody + upperWickBase);
-  const rawLow = Math.min(lowerBody, sampledLow, lowerBody - lowerWickBase);
+  const maxWickLength = getMaxWickLength({
+    bodySize,
+    priceStep,
+    targetWickDelta,
+    timeframeSeconds,
+  });
+  const upperWickMultiplier = Math.abs(signedHash(symbol, `wick-upper:${startTimeSec}`)) * 0.35 + 0.02;
+  const lowerWickMultiplier = Math.abs(signedHash(symbol, `wick-lower:${startTimeSec}`)) * 0.35 + 0.02;
+  const upperWickLength = Math.min(
+    maxWickLength,
+    Math.max(sampledHigh - upperBody, targetWickDelta * upperWickMultiplier),
+  );
+  const lowerWickLength = Math.min(
+    maxWickLength,
+    Math.max(lowerBody - sampledLow, targetWickDelta * lowerWickMultiplier),
+  );
+  const rawHigh = upperBody + upperWickLength;
+  const rawLow = lowerBody - lowerWickLength;
   const profile = resolveProfile(symbol, category);
   const volumeNoise = (noiseAt(symbol, "volume", startTimeSec / Math.max(1, timeframeSeconds)) + 1) / 2;
   const bodyMagnitude = Math.abs(rawClose - rawOpen) / Math.max(rawOpen, 0.000001);
@@ -505,23 +543,17 @@ export const buildDeterministicClosedCandles = ({
 
   for (let index = 0; index < candleCount; index += 1) {
     const candleStart = firstBucketStart + index * timeframeSeconds;
-    const candle = buildDeterministicCandle({
-      symbol,
-      basePrice,
-      timeframeSeconds,
-      startTimeSec: candleStart,
-      endTimeSec: candleStart + timeframeSeconds,
-      category,
-      targetWickPips,
-    });
-
-    if (candles.length > 0) {
-      candle.open = candles[candles.length - 1].close;
-      candle.high = Math.max(candle.high, candle.open, candle.close);
-      candle.low = Math.min(candle.low, candle.open, candle.close);
-    }
-
-    candles.push(candle);
+    candles.push(
+      buildDeterministicCandle({
+        symbol,
+        basePrice,
+        timeframeSeconds,
+        startTimeSec: candleStart,
+        endTimeSec: candleStart + timeframeSeconds,
+        category,
+        targetWickPips,
+      }),
+    );
   }
 
   return candles;
@@ -536,7 +568,9 @@ export const aggregateDeterministicCandles = ({
   targetSeconds: number;
   nowSec?: number;
 }) => {
-  if (candles.length === 0) return [];
+  if (candles.length === 0) {
+    return [];
+  }
 
   const currentTargetStart =
     Math.floor(normalizeUnixSeconds(nowSec ?? Date.now() / 1000) / targetSeconds) * targetSeconds;
@@ -544,7 +578,10 @@ export const aggregateDeterministicCandles = ({
 
   candles.forEach((candle) => {
     const bucketStart = Math.floor(candle.time / targetSeconds) * targetSeconds;
-    if (bucketStart >= currentTargetStart) return;
+    if (bucketStart >= currentTargetStart) {
+      return;
+    }
+
     const bucket = grouped.get(bucketStart) ?? [];
     bucket.push(candle);
     grouped.set(bucketStart, bucket);

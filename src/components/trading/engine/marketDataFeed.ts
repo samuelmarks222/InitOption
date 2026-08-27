@@ -1,5 +1,4 @@
 import { OTCPriceEngine, type OHLCCandle, type TimeframeConfig } from "./priceEngine";
-import { getDeterministicPriceAt } from "@/lib/deterministicMarket";
 
 export type MarketFeedStatus =
   | "connecting"
@@ -120,12 +119,12 @@ const getPricePrecision = (price: number) => {
 };
 
 const getSyntheticStepRatio = (timeframeSeconds: number) => {
-  if (timeframeSeconds <= 1) return 0.000012;
-  if (timeframeSeconds <= 5) return 0.000003;
-  if (timeframeSeconds <= 15) return 0.0000038;
-  if (timeframeSeconds <= 30) return 0.000005;
-  if (timeframeSeconds <= 60) return 0.0000065;
-  return 0.000008;
+  if (timeframeSeconds <= 1) return 0.0000055;
+  if (timeframeSeconds <= 5) return 0.0000065;
+  if (timeframeSeconds <= 15) return 0.000008;
+  if (timeframeSeconds <= 30) return 0.0000105;
+  if (timeframeSeconds <= 60) return 0.0000135;
+  return 0.000016;
 };
 
 const LIVE_MARKET_MICROSTRUCTURE_SECONDS = 1;
@@ -139,11 +138,6 @@ const getIntraBucketFraction = (timestamp: number, timeframeSeconds: number) => 
   const safePeriod = Math.max(1, timeframeSeconds);
   const remainder = ((timestamp % safePeriod) + safePeriod) % safePeriod;
   return remainder / safePeriod;
-};
-
-export const getTickIntervalMsForTimeframe = (timeframe: TimeframeConfig | undefined) => {
-  const configured = Number.isFinite(timeframe?.updateIntervalMs) ? timeframe!.updateIntervalMs : 50;
-  return Math.max(16, Math.floor(configured));
 };
 
 export interface DeterministicTickSimulationInput {
@@ -185,29 +179,56 @@ export const simulateDeterministicTickPrice = ({
   velocity,
 }: DeterministicTickSimulationInput): DeterministicTickSimulationOutput => {
   const safeBasePrice = Number.isFinite(basePrice) && basePrice > 0 ? basePrice : 1;
+  const safeAnchorPrice = Number.isFinite(anchorPrice) && anchorPrice > 0 ? anchorPrice : safeBasePrice;
   const referencePrice =
-    Number.isFinite(previousPrice) && previousPrice > 0 ? previousPrice : safeBasePrice;
-
-  const dt = 0.5;
-  const priceNow = getDeterministicPriceAt({ symbol, basePrice: safeBasePrice, timestamp, category: null });
-  const priceNext = getDeterministicPriceAt({ symbol, basePrice: safeBasePrice, timestamp: timestamp + dt, category: null });
-  const trendDirection = (priceNext - priceNow) / Math.max(safeBasePrice * 0.00001, 1e-9);
-
-  const stepRatio = 0.000006;
+    Number.isFinite(previousPrice) && previousPrice > 0 ? previousPrice : safeAnchorPrice;
+  // The displayed chart timeframe should not change the underlying market path.
+  // We always simulate against a fixed microstructure and let CandleAggregator
+  // build the selected chart timeframe from that shared tick stream.
+  const marketTimeframeSeconds = LIVE_MARKET_MICROSTRUCTURE_SECONDS;
+  const stepRatio = getSyntheticStepRatio(marketTimeframeSeconds);
   const fastNoise = noiseAt(symbol, "tick-fast", timestamp / 0.28);
-  const slowNoise = noiseAt(symbol, "tick-slow", timestamp / 1.5);
+  const slowNoise = noiseAt(
+    symbol,
+    "tick-slow",
+    timestamp / Math.max(1.5, marketTimeframeSeconds * 0.65),
+  );
   const waveOne =
     Math.sin(timestamp * (2.2 + hashUnit(symbol, "wave-one-speed") * 1.2) + hashUnit(symbol, "wave-one-phase") * TAU);
+  const waveTwo =
+    Math.sin(timestamp * (5.6 + hashUnit(symbol, "wave-two-speed") * 2.2) + hashUnit(symbol, "wave-two-phase") * TAU);
   const microPulse =
     Math.sin(timestamp * (13 + hashUnit(symbol, "micro-pulse-speed") * 7) + hashUnit(symbol, "micro-pulse-phase") * TAU);
-
-  const trendForce = trendDirection * safeBasePrice * stepRatio * 8;
-  const noiseShock = safeBasePrice * stepRatio * (fastNoise * 0.3 + slowNoise * 0.15 + waveOne * 0.12 + microPulse * 0.18);
-  const nextVelocity = velocity * 0.55 + trendForce * 0.4 + noiseShock * 0.25;
-
-  const stepCap = safeBasePrice * stepRatio * 2.5;
-  const rawDelta = nextVelocity;
-  const boundedDelta = clamp(rawDelta, -stepCap, stepCap);
+  const intraBucketFraction = getIntraBucketFraction(timestamp, marketTimeframeSeconds);
+  const intrabarSwing =
+    Math.sin(
+      intraBucketFraction *
+        TAU *
+        3.2 +
+        hashUnit(symbol, "intrabar-phase") * TAU,
+    );
+  const intrabarNoise = noiseAt(
+    symbol,
+    "intrabar-noise",
+    timestamp / Math.max(0.12, marketTimeframeSeconds * 0.16),
+  );
+  const shock =
+    safeBasePrice *
+    stepRatio *
+    (fastNoise * 0.9 + slowNoise * 0.42 + waveOne * 0.38 + waveTwo * 0.2 + microPulse * 0.58);
+  const intrabarShock =
+    safeBasePrice *
+    stepRatio *
+    0.78 *
+    (intrabarSwing * 0.66 + intrabarNoise * 0.4);
+  const nextVelocity = velocity * 0.5 + shock * 0.72 + intrabarShock;
+  const meanReversionStrength = clamp(0.035 + marketTimeframeSeconds / 1600, 0.035, 0.11);
+  const meanReversion = (safeAnchorPrice - referencePrice) * meanReversionStrength;
+  const anchorDistanceRatio =
+    Math.abs(safeAnchorPrice - referencePrice) / Math.max(safeBasePrice * stepRatio * 6, 1e-9);
+  const stepCap = safeBasePrice * stepRatio * (1 + Math.min(2.35, anchorDistanceRatio * 0.72));
+  const rawNextPrice = referencePrice + meanReversion + nextVelocity;
+  const boundedDelta = clamp(rawNextPrice - referencePrice, -stepCap, stepCap);
   const boundedPrice = clamp(referencePrice + boundedDelta, safeBasePrice * 0.25, safeBasePrice * 4);
   const precision = getPricePrecision(safeBasePrice);
 
@@ -250,8 +271,6 @@ class DeterministicTickFeed implements MarketDataFeed {
   private connected = false;
   private nextTickAtMs = 0;
   private timer: TimerHandle | null = null;
-  private previousPrice: number = 0;
-  private velocity: number = 0;
 
   constructor(subscription: MarketFeedSubscription, callbacks: MarketFeedCallbacks) {
     this.subscription = subscription;
@@ -265,11 +284,6 @@ class DeterministicTickFeed implements MarketDataFeed {
     this.connected = true;
     this.nextTickAtMs = Date.now();
     this.callbacks.onStatusChange?.("fallback");
-
-    const seedPrice = getSharedLivePriceAt(this.engine, this.nextTickAtMs / 1000);
-    this.previousPrice = seedPrice;
-    this.velocity = 0;
-
     this.schedulePump(0);
   }
 
@@ -292,30 +306,13 @@ class DeterministicTickFeed implements MarketDataFeed {
   private pump() {
     if (!this.connected) return;
 
-    const tickIntervalMs = getTickIntervalMsForTimeframe(this.subscription.timeframe);
+    const tickIntervalMs = Math.max(25, this.subscription.timeframe.updateIntervalMs);
     const nowMs = Date.now();
     let guard = 0;
 
-    if (nowMs - this.nextTickAtMs > tickIntervalMs * 128) {
-      this.nextTickAtMs = nowMs;
-    }
-
-    while (this.nextTickAtMs <= nowMs && guard < 8) {
+    while (this.nextTickAtMs <= nowMs && guard < 64) {
       const timestamp = this.nextTickAtMs / 1000;
-      const anchorPrice = getSharedLivePriceAt(this.engine, timestamp);
-
-      const { price, velocity } = simulateDeterministicTickPrice({
-        symbol: this.subscription.symbol,
-        basePrice: this.subscription.basePrice,
-        timeframeSeconds: this.subscription.timeframe.seconds,
-        timestamp,
-        previousPrice: this.previousPrice,
-        anchorPrice,
-        velocity: this.velocity,
-      });
-
-      this.previousPrice = price;
-      this.velocity = velocity;
+      const price = getSharedLivePriceAt(this.engine, timestamp);
 
       this.callbacks.onTick({
         symbol: this.subscription.symbol,
@@ -328,7 +325,11 @@ class DeterministicTickFeed implements MarketDataFeed {
       guard += 1;
     }
 
-    this.schedulePump(Math.max(16, this.nextTickAtMs - Date.now()));
+    if (nowMs - this.nextTickAtMs > tickIntervalMs * 8) {
+      this.nextTickAtMs = nowMs + tickIntervalMs;
+    }
+
+    this.schedulePump(Math.max(4, this.nextTickAtMs - Date.now()));
   }
 }
 
