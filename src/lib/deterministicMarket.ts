@@ -163,7 +163,7 @@ const roundPrice = (value: number, referencePrice: number) => {
   return Number(value.toFixed(precision));
 };
 
-const HIGH_TIMEFRAME_PROFESSIONAL_SECONDS = 30 * 60;
+const HIGH_TIMEFRAME_PROFESSIONAL_SECONDS = 3 * 60;
 
 const resolveProfile = (symbol: string, category?: string | null) =>
   CATEGORY_PROFILES[normalizeAssetCategory(category, symbol)];
@@ -193,22 +193,22 @@ const getDeterministicRelativeOffset = (
   const primaryPhase = hashUnit(normalizedSymbol, "primary-phase") * TAU;
   const secondaryPhase = hashUnit(normalizedSymbol, "secondary-phase") * TAU;
   const smoothingWeight = getHighTimeframeSmoothingWeight(timeframeSeconds);
-  const driftWeight = 1 + smoothingWeight * 0.2;
-  const swingWeight = 1 + smoothingWeight * 0.85;
+  const driftWeight = 1 + smoothingWeight * 0.8;
+  const swingWeight = 1 + smoothingWeight * 1.2;
   const pulseWeight = 1 - smoothingWeight * 0.65;
   const microWeight = 1 - smoothingWeight * 0.96;
   const tickWeight = 1 - smoothingWeight;
-  const cycleWeight = 1 + smoothingWeight * 0.42;
-  const secondaryCycleWeight = 1 + smoothingWeight * 0.28;
+  const cycleWeight = 1 + smoothingWeight * 0.75;
+  const secondaryCycleWeight = 1 + smoothingWeight * 0.5;
   const macroShape =
     smoothingWeight *
     (
       noiseAt(normalizedSymbol, "macro-drift", timestampSec / (profile.driftScaleSeconds * 1.7)) *
         profile.driftAmplitude *
-        0.3 +
+        0.8 +
       Math.sin((timestampSec / (profile.cycleSeconds * 2.35)) * TAU + hashUnit(normalizedSymbol, "macro-phase") * TAU) *
         profile.swingAmplitude *
-        0.55
+        1.1
     );
 
   return (
@@ -330,7 +330,7 @@ const getTargetWickDelta = (
             : 6;
   const wickMultiplier =
     timeframeSeconds >= HIGH_TIMEFRAME_PROFESSIONAL_SECONDS
-      ? 1.2
+      ? 1.0
       : timeframeSeconds <= 1
         ? 1.18
         : timeframeSeconds <= 5
@@ -467,7 +467,6 @@ export const buildDeterministicCandle = ({
   const rawOpen = prices[0];
   const rawClose = prices[prices.length - 1];
   const referencePrice = Math.max(rawOpen, rawClose, basePrice);
-  const priceStep = getPriceStep(referencePrice);
   const targetWickDelta = getTargetWickDelta(referencePrice, timeframeSeconds, targetWickPips);
   const interiorProbePrices = buildInteriorProbePrices({
     symbol,
@@ -482,25 +481,10 @@ export const buildDeterministicCandle = ({
   const sampledLow = Math.min(...prices, ...interiorProbePrices);
   const upperBody = Math.max(rawOpen, rawClose);
   const lowerBody = Math.min(rawOpen, rawClose);
-  const bodySize = Math.abs(rawClose - rawOpen);
-  const maxWickLength = getMaxWickLength({
-    bodySize,
-    priceStep,
-    targetWickDelta,
-    timeframeSeconds,
-  });
-  const upperWickMultiplier = Math.abs(signedHash(symbol, `wick-upper:${startTimeSec}`)) * 0.35 + 0.02;
-  const lowerWickMultiplier = Math.abs(signedHash(symbol, `wick-lower:${startTimeSec}`)) * 0.35 + 0.02;
-  const upperWickLength = Math.min(
-    maxWickLength,
-    Math.max(sampledHigh - upperBody, targetWickDelta * upperWickMultiplier),
-  );
-  const lowerWickLength = Math.min(
-    maxWickLength,
-    Math.max(lowerBody - sampledLow, targetWickDelta * lowerWickMultiplier),
-  );
-  const rawHigh = upperBody + upperWickLength;
-  const rawLow = lowerBody - lowerWickLength;
+  
+  // Real price high/low without artificial forced wicks on both sides
+  const rawHigh = Math.max(upperBody, sampledHigh);
+  const rawLow = Math.min(lowerBody, sampledLow);
   const profile = resolveProfile(symbol, category);
   const volumeNoise = (noiseAt(symbol, "volume", startTimeSec / Math.max(1, timeframeSeconds)) + 1) / 2;
   const bodyMagnitude = Math.abs(rawClose - rawOpen) / Math.max(rawOpen, 0.000001);
@@ -543,17 +527,24 @@ export const buildDeterministicClosedCandles = ({
 
   for (let index = 0; index < candleCount; index += 1) {
     const candleStart = firstBucketStart + index * timeframeSeconds;
-    candles.push(
-      buildDeterministicCandle({
-        symbol,
-        basePrice,
-        timeframeSeconds,
-        startTimeSec: candleStart,
-        endTimeSec: candleStart + timeframeSeconds,
-        category,
-        targetWickPips,
-      }),
-    );
+    const candle = buildDeterministicCandle({
+      symbol,
+      basePrice,
+      timeframeSeconds,
+      startTimeSec: candleStart,
+      endTimeSec: candleStart + timeframeSeconds,
+      category,
+      targetWickPips,
+    });
+
+    if (candles.length > 0) {
+      // Chain open seamlessly to previous candle close (Quotex continuous price chain)
+      candle.open = candles[candles.length - 1].close;
+      candle.high = Math.max(candle.high, candle.open, candle.close);
+      candle.low = Math.min(candle.low, candle.open, candle.close);
+    }
+
+    candles.push(candle);
   }
 
   return candles;

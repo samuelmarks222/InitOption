@@ -190,16 +190,12 @@ export class OTCPriceEngine {
     };
     let candles: OHLCCandle[];
 
-    if (effectiveConfig.seconds >= HIGH_TIMEFRAME_DIRECT_SECONDS) {
+    if (effectiveConfig.seconds >= 180) {
       candles = this.getClosedHistory(effectiveConfig, effectiveConfig.historical, nowSec);
     } else if (effectiveConfig.seconds < TIMEFRAMES["1m"].seconds) {
       candles = this.aggregateFromBase(effectiveConfig, TIMEFRAMES["1s"], nowSec);
-    } else if (effectiveConfig.seconds <= TIMEFRAMES["1h"].seconds) {
-      candles = this.aggregateFromBase(effectiveConfig, TIMEFRAMES["1m"], nowSec);
-    } else if (effectiveConfig.seconds <= TIMEFRAMES["1D"].seconds) {
-      candles = this.aggregateFromBase(effectiveConfig, TIMEFRAMES["1h"], nowSec);
     } else {
-      candles = this.getClosedHistory(effectiveConfig, effectiveConfig.historical, nowSec);
+      candles = this.aggregateFromBase(effectiveConfig, TIMEFRAMES["1m"], nowSec);
     }
 
     const lastClose = candles[candles.length - 1]?.close;
