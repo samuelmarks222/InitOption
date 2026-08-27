@@ -3544,9 +3544,24 @@ renderOverlayIndicators(getIndicatorHistory());
       },
     });
     marketFeedRef.current.connect();
-    { const e = persistedFeeds.get(cacheKey); if (e) e.feed = marketFeedRef.current; }
+    const handleTabVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        const nowSec = Date.now() / 1000;
+        const currentPrice = liveRef.current?.close ?? engineBasePrice;
+        if (aggregatorRef.current) {
+          aggregatorRef.current.onTick({ timestamp: nowSec, price: currentPrice });
+        }
+        if (mainSeriesRef.current) {
+          mainSeriesRef.current.setData(getMainSeriesData(chartTypeRef.current, historyRef.current));
+        }
+        scrollChartToLiveEdge(historyRef.current.length);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleTabVisibilityChange);
 
     return () => {
+      document.removeEventListener("visibilitychange", handleTabVisibilityChange);
       mainUpdateSchedulerRef.current?.cleanup();
       stopLiveInterpolation();
       liveTargetRef.current = null;

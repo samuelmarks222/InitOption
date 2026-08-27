@@ -467,24 +467,10 @@ export const buildDeterministicCandle = ({
   const sampledLow = Math.min(...prices, ...interiorProbePrices);
   const upperBody = Math.max(rawOpen, rawClose);
   const lowerBody = Math.min(rawOpen, rawClose);
-  const bodySize = Math.max(referencePrice * 0.00005, Math.abs(rawClose - rawOpen));
-  const pip = referencePrice * 0.00008;
 
-  // Natural deterministic wick proportions for standard financial candlesticks
-  const hashU = Math.abs(signedHash(symbol, `wickU:${startTimeSec}`));
-  const hashL = Math.abs(signedHash(symbol, `wickL:${startTimeSec}`));
-
-  const upperWickExt = Math.max(
-    sampledHigh - upperBody,
-    bodySize * (0.12 + hashU * 0.28) + pip * (0.8 + hashU * 1.5),
-  );
-  const lowerWickExt = Math.max(
-    lowerBody - sampledLow,
-    bodySize * (0.12 + hashL * 0.28) + pip * (0.8 + hashL * 1.5),
-  );
-
-  const rawHigh = upperBody + upperWickExt;
-  const rawLow = lowerBody - lowerWickExt;
+  // Wicks form 100% naturally from actual price highs/lows
+  const rawHigh = Math.max(upperBody, sampledHigh);
+  const rawLow = Math.min(lowerBody, sampledLow);
   const profile = resolveProfile(symbol, category);
   const volumeNoise = (noiseAt(symbol, "volume", startTimeSec / Math.max(1, timeframeSeconds)) + 1) / 2;
   const bodyMagnitude = Math.abs(rawClose - rawOpen) / Math.max(rawOpen, 0.000001);
