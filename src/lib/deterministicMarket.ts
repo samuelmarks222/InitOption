@@ -284,16 +284,12 @@ const getPriceStep = (price: number) => Number(`1e-${getPricePrecision(price)}`)
 
 const getSampleStepSeconds = (timeframeSeconds: number) => {
   if (timeframeSeconds <= 1) return 0.1;
-  if (timeframeSeconds <= 5) return 0.25;
+  if (timeframeSeconds <= 5) return 0.5;
   if (timeframeSeconds <= 15) return 1;
-  if (timeframeSeconds <= 60) return 5;
-  if (timeframeSeconds <= 15 * 60) return 15;
-  if (timeframeSeconds < HIGH_TIMEFRAME_PROFESSIONAL_SECONDS) return 60;
-  if (timeframeSeconds <= 60 * 60) return 2 * 60;
-  if (timeframeSeconds <= 4 * 60 * 60) return 5 * 60;
-  if (timeframeSeconds <= 12 * 60 * 60) return 15 * 60;
-  if (timeframeSeconds <= 24 * 60 * 60) return 30 * 60;
-  return Math.max(60 * 60, Math.floor(timeframeSeconds / 24));
+  if (timeframeSeconds <= 60) return 3;
+  if (timeframeSeconds <= 300) return 5;
+  if (timeframeSeconds <= 900) return 15;
+  return 30;
 };
 
 const getInteriorProbeCount = (timeframeSeconds: number) => {
@@ -443,34 +439,30 @@ export const buildDeterministicCandle = ({
     sampleTimes.push(sampleTime);
   }
 
-  if (sampleTimes[sampleTimes.length - 1] !== safeEndTimeSec) {
-    sampleTimes.push(safeEndTimeSec);
-  }
-
   const prices = sampleTimes.map((timestamp) =>
     getDeterministicPriceAtForTimeframe({ symbol, basePrice, timestamp, category, timeframeSeconds }),
   );
   const rawOpen = prices[0];
   const rawClose = prices[prices.length - 1];
   const referencePrice = Math.max(rawOpen, rawClose, basePrice);
-  const targetWickDelta = getTargetWickDelta(referencePrice, timeframeSeconds, targetWickPips);
-  const interiorProbePrices = buildInteriorProbePrices({
-    symbol,
-    basePrice,
-    timeframeSeconds,
-    startTimeSec,
-    endTimeSec: safeEndTimeSec,
-    category,
-    targetWickDelta,
-  });
-  const sampledHigh = Math.max(...prices, ...interiorProbePrices);
-  const sampledLow = Math.min(...prices, ...interiorProbePrices);
   const upperBody = Math.max(rawOpen, rawClose);
   const lowerBody = Math.min(rawOpen, rawClose);
+  const bodySize = Math.abs(rawClose - rawOpen);
+  const pip = referencePrice * 0.00008;
 
-  // Wicks form 100% naturally from actual price highs/lows
-  const rawHigh = Math.max(upperBody, sampledHigh);
-  const rawLow = Math.min(lowerBody, sampledLow);
+  // High-frequency noise for natural, varying wick lengths across candles
+  const noiseU = (noiseAt(symbol, "wick-upper-var", startTimeSec / 3) + 1) / 2; // 0..1
+  const noiseL = (noiseAt(symbol, "wick-lower-var", startTimeSec / 3) + 1) / 2; // 0..1
+
+  // Natural upper & lower wick extension with realistic variance per candle
+  const upperWickBase = bodySize * (0.04 + noiseU * 0.28) + pip * (0.4 + noiseU * 2.2);
+  const lowerWickBase = bodySize * (0.04 + noiseL * 0.28) + pip * (0.4 + noiseL * 2.2);
+
+  const sampledHigh = Math.max(...prices);
+  const sampledLow = Math.min(...prices);
+
+  const rawHigh = Math.max(upperBody, sampledHigh, upperBody + upperWickBase);
+  const rawLow = Math.min(lowerBody, sampledLow, lowerBody - lowerWickBase);
   const profile = resolveProfile(symbol, category);
   const volumeNoise = (noiseAt(symbol, "volume", startTimeSec / Math.max(1, timeframeSeconds)) + 1) / 2;
   const bodyMagnitude = Math.abs(rawClose - rawOpen) / Math.max(rawOpen, 0.000001);
