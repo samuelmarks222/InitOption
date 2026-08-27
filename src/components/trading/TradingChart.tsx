@@ -620,7 +620,7 @@ const getHistoryBackfillIncrement = (containerWidth: number, timeframe: Supporte
   return Math.max(trendContextBars, Math.round(historicalBaseline * 0.55));
 };
 
-const getChartRightOffset = (visibleBars: number) => Math.max(6, Math.min(24, Math.round(visibleBars * 0.06)));
+const getChartRightOffset = (visibleBars: number) => Math.max(12, Math.min(28, Math.round(visibleBars * 0.14)));
 
 /**
  * Compute the correct barSpacing so candles fill the chart width like Quotex.
