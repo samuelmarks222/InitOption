@@ -892,28 +892,29 @@ const TradingPanel = ({
       <aside className={`font-copy w-full lg:w-[240px] h-full min-h-[190px] shrink-0 flex flex-col border-l border-[#171d2d] bg-[#242a3c] text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none ${showTimeSwitcher ? "overflow-visible lg:overflow-visible" : "overflow-hidden"} ${mobileDocked ? "rounded-t-[16px]" : ""}`}>
 
        <div className="px-3 pb-2 pt-2.5">
-         <div className="mb-2 rounded-md border border-[#2a3247] bg-[#1a2233] px-2.5 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-           <div className="flex items-center justify-between gap-3">
-             <div className="flex min-w-0 items-center gap-2">
-               <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#1ce57d] shadow-[0_0_10px_rgba(28,229,125,0.75)]" />
-               <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-                 <span className="truncate text-[11px] font-black uppercase tracking-[0.14em] text-[#f1f5ff]">{asset.symbol}</span>
-                 <span className="shrink-0 text-[8px] uppercase tracking-[0.12em] text-[#8fa1c7]">({asset.category ?? "OTC"})</span>
-               </div>
+         <div className="mb-2 flex items-center justify-between gap-2 rounded-md border border-[#2a3247] bg-[#1a2233] px-2.5 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+           <div className="flex min-w-0 items-center gap-2">
+             <div className="flex -space-x-1">
+               <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#1b2333] bg-[#e6c565] text-[8px] font-black text-[#101828]">A</span>
+               <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#1b2333] bg-[#6d79ff] text-[8px] font-black text-white">N</span>
              </div>
-             <span className="shrink-0 rounded-full border border-[#1d4737] bg-[#112c24] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[#7ef0b5]">31%</span>
+             <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.12em] text-[#f3f7ff]">
+               <span>{asset.symbol}</span>
+               <span className="text-[8px] tracking-[0.14em] text-[#8fa1c7]">(OTC)</span>
+             </div>
            </div>
+           <span className="rounded-full border border-[#1d4737] bg-[#0f2d25] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-[#7df0b6]">31%</span>
          </div>
 
-         <div className="flex items-center justify-between rounded-t-lg border border-[#2a3247] border-b-0 bg-[#1b2333] px-3 py-2.5">
-           <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#8ea2c7]">Pending trade</span>
+         <div className="flex items-center justify-between rounded-md border border-[#2a3247] bg-[#1a2131] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+           <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#8ea2c7]">Pending trade</span>
            <button
              type="button"
              onClick={handlePendingTradeToggle}
              aria-pressed={pendingTradeEnabled}
              className="flex shrink-0 items-center gap-2 rounded-full border border-[#465678] bg-[#101926] px-2 py-1"
            >
-             <span className={`text-[9px] font-bold uppercase tracking-[0.08em] ${pendingTradeEnabled ? "text-[#2c9dff]" : "text-[#8fa0bc]"}`}>
+             <span className={`text-[8px] font-bold uppercase tracking-[0.1em] ${pendingTradeEnabled ? "text-[#2c9dff]" : "text-[#8fa0bc]"}`}>
                {pendingTradeEnabled ? "ON" : "OFF"}
              </span>
              <div className={`relative h-[14px] w-[28px] rounded-full border transition-all ${pendingTradeEnabled ? "border-[#2c9dff]/80 bg-[#1d2d49]" : "border-white/10 bg-transparent"}`}>
