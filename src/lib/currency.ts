@@ -1,4 +1,20 @@
-export type SupportedCurrency = "USD" | "KES" | "EUR" | "GBP" | "NGN" | "ZAR" | "AED" | "INR";
+export type SupportedCurrency =
+  | "USD"
+  | "KES"
+  | "EUR"
+  | "GBP"
+  | "NGN"
+  | "ZAR"
+  | "AED"
+  | "INR"
+  | "BRL"
+  | "IDR"
+  | "MYR"
+  | "JPY"
+  | "AUD"
+  | "CAD"
+  | "CHF"
+  | "CNY";
 
 export interface CurrencyOption {
   code: SupportedCurrency;
@@ -19,6 +35,14 @@ export const CURRENCY_OPTIONS: CurrencyOption[] = [
   { code: "ZAR", label: "South African Rand", countryCode: "ZA", locale: "en-ZA", rateFromUsd: 18.3 },
   { code: "AED", label: "UAE Dirham", countryCode: "AE", locale: "en-AE", rateFromUsd: 3.67 },
   { code: "INR", label: "Indian Rupee", countryCode: "IN", locale: "en-IN", rateFromUsd: 83.4 },
+  { code: "BRL", label: "Brazilian Real", countryCode: "BR", locale: "pt-BR", rateFromUsd: 5.4 },
+  { code: "IDR", label: "Indonesian Rupiah", countryCode: "ID", locale: "id-ID", rateFromUsd: 16340 },
+  { code: "MYR", label: "Malaysian Ringgit", countryCode: "MY", locale: "ms-MY", rateFromUsd: 4.7 },
+  { code: "JPY", label: "Japanese Yen", countryCode: "JP", locale: "ja-JP", rateFromUsd: 157.5 },
+  { code: "AUD", label: "Australian Dollar", countryCode: "AU", locale: "en-AU", rateFromUsd: 1.52 },
+  { code: "CAD", label: "Canadian Dollar", countryCode: "CA", locale: "en-CA", rateFromUsd: 1.36 },
+  { code: "CHF", label: "Swiss Franc", countryCode: "CH", locale: "de-CH", rateFromUsd: 0.9 },
+  { code: "CNY", label: "Chinese Yuan", countryCode: "CN", locale: "zh-CN", rateFromUsd: 7.24 },
 ];
 
 const CURRENCY_MAP = Object.fromEntries(CURRENCY_OPTIONS.map((option) => [option.code, option])) as Record<

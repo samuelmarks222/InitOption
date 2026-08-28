@@ -1,7 +1,7 @@
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { SupportedCurrency, getCurrencyOption } from "@/lib/currency";
+import { SupportedCurrency, convertCurrencyToUsd, convertUsdToCurrency, getCurrencyOption, getUsdRate } from "@/lib/currency";
 import { ChevronDown, Loader2, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CountryFlag from "@/components/ui/CountryFlag";
 
 interface AccountCurrencyModalProps {
@@ -9,145 +9,190 @@ interface AccountCurrencyModalProps {
   onClose: () => void;
 }
 
+const EXCHANGE_FEE_PERCENT = 2.5;
+const MINIMUM_EXCHANGE_FEE_USD = 1.38;
+
 export const AccountCurrencyModal = ({ isOpen, onClose }: AccountCurrencyModalProps) => {
-  const { currency, options, setCurrency, isUpdating } = useCurrency();
-  const [selectedCurrency, setSelectedCurrency] = useState<SupportedCurrency>(currency);
-  const [showOptions, setShowOptions] = useState(false);
+  const { currency, options, setCurrency, isUpdating, formatMoney } = useCurrency();
+  const [sourceCurrency, setSourceCurrency] = useState<SupportedCurrency>(currency);
+  const [targetCurrency, setTargetCurrency] = useState<SupportedCurrency>(currency === "USD" ? "GBP" : "USD");
+  const [amount, setAmount] = useState<string>("1.38");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
-    setSelectedCurrency(currency);
-    setShowOptions(false);
+    setSourceCurrency(currency);
+    setTargetCurrency(currency === "USD" ? "GBP" : "USD");
+    setAmount("1.38");
     setError(null);
-  }, [isOpen, currency]);
+  }, [currency, isOpen]);
 
-  if (!isOpen) return null;
+  const sourceOption = useMemo(() => getCurrencyOption(sourceCurrency), [sourceCurrency]);
+  const targetOption = useMemo(() => getCurrencyOption(targetCurrency), [targetCurrency]);
 
-  const currentOption = getCurrencyOption(currency);
-  const nextOption = getCurrencyOption(selectedCurrency);
+  const numericAmount = Number(amount) || 0;
+  const sourceAmountUsd = sourceCurrency === "USD" ? numericAmount : convertCurrencyToUsd(numericAmount, sourceCurrency);
+  const feeUsd = Math.max(MINIMUM_EXCHANGE_FEE_USD, sourceAmountUsd * (EXCHANGE_FEE_PERCENT / 100));
+  const finalUsdAmount = Math.max(0, sourceAmountUsd - feeUsd);
+  const targetReceive = sourceCurrency === targetCurrency ? numericAmount : convertUsdToCurrency(finalUsdAmount, targetCurrency);
+  const exchangeRate = (getUsdRate(targetCurrency) / getUsdRate(sourceCurrency)) || 1;
 
   const handleConfirm = async () => {
-    if (selectedCurrency === currency) {
-      onClose();
+    if (sourceCurrency === targetCurrency) {
+      setError("Choose a different target currency to continue.");
       return;
     }
 
     setError(null);
 
     try {
-      await setCurrency(selectedCurrency);
+      await setCurrency(targetCurrency);
       onClose();
     } catch {
       setError("We could not update your account currency right now. Please try again.");
     }
   };
 
-  const CurrencyCard = ({
-    option,
-    readOnly = false,
-    onClick,
+  if (!isOpen) return null;
+
+  const renderCurrencySelect = ({
+    value,
+    onChange,
+    label,
+    disabled = false,
   }: {
-    option: ReturnType<typeof getCurrencyOption>;
-    readOnly?: boolean;
-    onClick?: () => void;
-  }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={readOnly}
-      className={`flex h-[64px] w-full items-center justify-between rounded-[10px] border px-4 text-left transition-colors ${
-        readOnly
-          ? "cursor-default border-[#47546c] bg-[#1d273c] text-white"
-          : "border-[#4b5b77] bg-[#233047] text-white hover:border-[#657ba1]"
-      }`}
-    >
-      <div className="flex items-center gap-3">
-        <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white/10 ring-1 ring-white/10">
-          <CountryFlag code={option.countryCode} size={18} />
-        </span>
-        <div className="flex flex-col">
-          <span className="text-[13px] font-bold tracking-wide">{option.code}</span>
-          <span className="text-[11px] text-[#95a3bc]">{option.label}</span>
+    value: SupportedCurrency;
+    onChange: (next: SupportedCurrency) => void;
+    label: string;
+    disabled?: boolean;
+  }) => {
+    const option = getCurrencyOption(value);
+
+    return (
+      <div className="relative flex-1">
+        <label className="mb-2 block text-[12px] font-medium text-[#9bb0d0]">{label}</label>
+        <div className="relative overflow-hidden rounded-[10px] border border-[#4c5d7b] bg-[#1f2a3d]">
+          <select
+            value={value}
+            onChange={(event) => onChange(event.target.value as SupportedCurrency)}
+            disabled={disabled}
+            className="h-[50px] w-full appearance-none bg-transparent pl-11 pr-10 text-[18px] font-bold text-white outline-none"
+          >
+            {options.map((currencyOption) => (
+              <option key={currencyOption.code} value={currencyOption.code}>
+                {currencyOption.code}
+              </option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5">
+              <CountryFlag code={option.countryCode} size={18} />
+            </span>
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+            <ChevronDown className="h-4 w-4 text-[#b5c5df]" />
+          </div>
         </div>
       </div>
-      {!readOnly && <ChevronDown className={`h-4 w-4 text-[#8ea2c8] transition-transform ${showOptions ? "rotate-180" : ""}`} />}
-    </button>
-  );
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-[180] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
       <div
-        className="relative w-full max-w-[760px] rounded-[20px] border px-6 py-7 shadow-[0_32px_100px_rgba(0,0,0,0.52)]"
-        style={{ background: "linear-gradient(180deg, #273048 0%, #222c43 100%)", borderColor: "rgba(132, 151, 181, 0.22)" }}
+        className="relative w-full max-w-[520px] rounded-[16px] border border-[#46556f] bg-[#1f2a3d] px-5 py-4 shadow-[0_28px_90px_rgba(0,0,0,0.5)]"
+        style={{ boxShadow: "0 28px 80px rgba(0,0,0,0.5)" }}
       >
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full text-[#7485a3] transition-colors hover:bg-white/5 hover:text-white"
-          aria-label="Close currency modal"
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-[#9aaac3] transition-colors hover:bg-white/5 hover:text-white"
+          aria-label="Close currency exchange modal"
         >
-          <X className="h-6 w-6" />
+          <X className="h-5 w-5" />
         </button>
 
-        <h2 className="pr-12 text-[24px] font-semibold text-white">Changing account currency</h2>
+        <h2 className="text-[20px] font-bold text-white">Exchange Form</h2>
 
-        <div className="mt-8 grid gap-5 md:grid-cols-2">
-          <div>
-            <label className="mb-3 block text-[14px] font-medium text-[#96a6c2]">Current currency</label>
-            <CurrencyCard option={currentOption} readOnly />
+        <div className="mt-5 flex gap-3">
+          {renderCurrencySelect({
+            value: sourceCurrency,
+            onChange: setSourceCurrency,
+            label: "My Currency:",
+          })}
+
+          <div className="flex w-12 items-center justify-center pt-7 text-[#cbd8ef]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#28344d] text-xl font-bold">→</div>
           </div>
 
-          <div className="relative">
-            <label className="mb-3 block text-[14px] font-medium text-[#96a6c2]">New currency</label>
-            <CurrencyCard option={nextOption} onClick={() => setShowOptions((value) => !value)} />
+          {renderCurrencySelect({
+            value: targetCurrency,
+            onChange: setTargetCurrency,
+            label: "New Currency:",
+          })}
+        </div>
 
-            {showOptions && (
-              <>
-                <div className="fixed inset-0 z-[5] bg-black/20 backdrop-blur-[1px]" onClick={() => setShowOptions(false)} />
-                <div className="absolute left-0 right-0 top-[84px] z-10 max-h-[240px] overflow-y-auto rounded-[14px] border border-[#4b5b77] bg-[#223049] shadow-[0_18px_48px_rgba(0,0,0,0.38)]">
-                  {options.map((option) => (
-                    <button
-                      key={option.code}
-                      type="button"
-                      onClick={() => {
-                        setSelectedCurrency(option.code);
-                        setShowOptions(false);
-                      }}
-                      className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
-                        selectedCurrency === option.code ? "bg-white/10 text-white" : "text-[#dfe7f7] hover:bg-white/5"
-                      }`}
-                    >
-                      <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-white/10 ring-1 ring-white/10">
-                        <CountryFlag code={option.countryCode} size={16} />
-                      </span>
-                      <span className="min-w-[44px] text-[13px] font-bold">{option.code}</span>
-                      <span className="text-[12px] text-[#9eb0cf]">{option.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-[8px] px-1">
+          <div className="text-[12px] font-medium text-[#9bb0d0]">You are exchanging:</div>
+          <div className="text-[12px] font-medium text-[#9bb0d0]">You will receive:</div>
+        </div>
+
+        <div className="mt-2 flex items-center gap-3">
+          <div className="flex flex-1 items-center justify-between rounded-[10px] border border-[#46556f] bg-[#1b2436] px-3 py-3">
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              className="w-full bg-transparent text-[20px] font-bold text-white outline-none placeholder:text-[#667895]"
+            />
+            <span className="ml-2 flex items-center gap-2 text-[14px] font-bold text-white">
+              <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5">
+                <CountryFlag code={sourceOption.countryCode} size={14} />
+              </span>
+              <span>{sourceCurrency}</span>
+            </span>
+          </div>
+
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2a354d] text-xl font-bold text-[#dfe9ff]">⇄</div>
+
+          <div className="flex flex-1 items-center justify-between rounded-[10px] border border-[#46556f] bg-[#1b2436] px-3 py-3">
+            <div className="text-[20px] font-bold text-white">{targetReceive.toFixed(2)}</div>
+            <span className="ml-2 flex items-center gap-2 text-[14px] font-bold text-white">
+              <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5">
+                <CountryFlag code={targetOption.countryCode} size={14} />
+              </span>
+              <span>{targetCurrency}</span>
+            </span>
           </div>
         </div>
 
-        {error && <p className="mt-4 text-[13px] text-[#ff9ca8]">{error}</p>}
+        <div className="mt-4 flex justify-center text-[12px] font-medium text-[#d7e0f4]">
+          Exchange Fee: {EXCHANGE_FEE_PERCENT.toFixed(1)}% • {formatMoney(feeUsd, { maximumFractionDigits: 2 })} USD
+        </div>
 
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
+        <div className="mt-1 text-center text-[12px] font-medium text-[#b7c8e5]">
+          1 {sourceCurrency} = {exchangeRate.toFixed(4)} {targetCurrency}
+        </div>
+
+        {error && <p className="mt-3 text-center text-[12px] text-[#ff9ca8]">{error}</p>}
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <button
             type="button"
             onClick={onClose}
-            className="h-[58px] rounded-[10px] bg-[#1b2436] text-[17px] font-medium text-[#edf3ff] transition-colors hover:bg-[#202a40]"
+            className="h-[44px] rounded-[10px] border border-[#4a5c7a] bg-[#1c2638] text-[16px] font-semibold text-white transition-colors hover:bg-[#202c41]"
           >
-            Cancel
+            No, go back
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={isUpdating}
-            className="flex h-[58px] items-center justify-center rounded-[10px] bg-[#0d7b56] text-[17px] font-medium text-white transition-colors hover:bg-[#0f8a61] disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={isUpdating || sourceCurrency === targetCurrency || numericAmount <= 0}
+            className="h-[44px] rounded-[10px] bg-[#2fcc71] text-[16px] font-bold text-white transition-colors hover:bg-[#2bbd68] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isUpdating ? <Loader2 className="h-5 w-5 animate-spin" /> : "Confirm"}
+            {isUpdating ? <Loader2 className="mx-auto h-5 w-5 animate-spin" /> : "Yes, proceed"}
           </button>
         </div>
       </div>
