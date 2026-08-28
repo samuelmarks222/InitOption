@@ -157,5 +157,5 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
     };
   }, [chart, series, timeframeSeconds]);
 
-  return <div ref={containerRef} className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 86 }} />;
+  return <div ref={containerRef} className="absolute inset-0 z-[10] overflow-hidden pointer-events-none" />;
 };
