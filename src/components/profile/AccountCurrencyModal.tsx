@@ -104,8 +104,8 @@ export const AccountCurrencyModal = ({ isOpen, onClose }: AccountCurrencyModalPr
 
             {showOptions && (
               <>
-                <div className="fixed inset-0" onClick={() => setShowOptions(false)} />
-                <div className="absolute left-0 right-0 top-[84px] z-10 overflow-hidden rounded-[12px] border border-[#4b5b77] bg-[#223049] shadow-2xl">
+                <div className="fixed inset-0 z-[5] bg-black/20 backdrop-blur-[1px]" onClick={() => setShowOptions(false)} />
+                <div className="absolute left-0 right-0 top-[84px] z-10 max-h-[240px] overflow-y-auto rounded-[14px] border border-[#4b5b77] bg-[#223049] shadow-[0_18px_48px_rgba(0,0,0,0.38)]">
                   {options.map((option) => (
                     <button
                       key={option.code}
