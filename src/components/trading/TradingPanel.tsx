@@ -160,7 +160,6 @@ const TIME_PRESETS = [
 ];
 
 const MAX_MANUAL_INVESTMENT = 3000;
-const MIN_MANUAL_EXPIRY_SECONDS = 60;
 const MAX_MANUAL_EXPIRY_SECONDS = 24 * 60 * 60;
 const PENDING_TRADE_DELAY_MS = 3000;
 const PENDING_TRADE_MODE_KEY = "trade_pending_mode_enabled";
@@ -173,150 +172,7 @@ const clampInvestmentValue = (value: number, mode: InvestmentMode) => {
   return Math.max(1, Math.min(MAX_MANUAL_INVESTMENT, Math.round(value * 100) / 100));
 };
 
-type CustomDurationUnit = "seconds" | "minutes" | "hours";
-
-const deriveCustomDurationInput = (seconds: number): { amount: string; unit: CustomDurationUnit } => {
-  if (seconds >= 3600 && seconds % 3600 === 0) {
-    return { amount: String(seconds / 3600), unit: "hours" };
-  }
-
-  if (seconds >= 60 && seconds % 60 === 0) {
-    return { amount: String(seconds / 60), unit: "minutes" };
-  }
-
-  return { amount: String(seconds), unit: "seconds" };
-};
-
-const customDurationUnitToSeconds = (amount: number, unit: CustomDurationUnit) => {
-  if (unit === "hours") return amount * 3600;
-  if (unit === "minutes") return amount * 60;
-  return amount;
-};
-
 // ─── Withdrawal Modal and more was extracted to AccountModals.tsx ───
-
-// ─── Time Switcher ─────────────────────────────────────────────────────────────
-const TimeSwitcher = ({
-  value,
-  onChange,
-  onClose,
-  triggerRef,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  onClose: () => void;
-  triggerRef: React.RefObject<HTMLDivElement | null>;
-}) => {
-  const derived = deriveCustomDurationInput(value);
-  const [customAmount, setCustomAmount] = useState(derived.amount);
-  const [customUnit, setCustomUnit] = useState<CustomDurationUnit>(derived.unit);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ top: 0, right: 0 });
-
-  useEffect(() => {
-    if (!triggerRef.current || !cardRef.current) return;
-    const triggerRect = triggerRef.current.getBoundingClientRect();
-    const isMobile = window.innerWidth < 1024;
-    if (isMobile) {
-      setPos({
-        top: Math.max(8, window.innerHeight - 380),
-        right: Math.max(8, (window.innerWidth - 340) / 2),
-      });
-    } else {
-      setPos({
-        top: triggerRect.top,
-        right: window.innerWidth - triggerRect.left + 8,
-      });
-    }
-  }, [triggerRef]);
-
-  useEffect(() => {
-    const nextDerived = deriveCustomDurationInput(value);
-    setCustomAmount(nextDerived.amount);
-    setCustomUnit(nextDerived.unit);
-  }, [value]);
-
-  const applyCustomDuration = () => {
-    const parsedAmount = Math.max(1, Number(customAmount) || 0);
-    const nextSeconds = Math.max(
-      MIN_MANUAL_EXPIRY_SECONDS,
-      Math.min(
-        MAX_MANUAL_EXPIRY_SECONDS,
-        Math.round(customDurationUnitToSeconds(parsedAmount, customUnit)),
-      ),
-    );
-
-    onChange(nextSeconds);
-    onClose();
-  };
-
-  return (
-    <>
-      <div className="fixed inset-0 z-30" onClick={onClose} />
-      <div
-        ref={cardRef}
-        style={{ position: "fixed", top: pos.top, right: pos.right, zIndex: 100 }}
-        className="w-[200px] overflow-hidden rounded-lg border border-white/10 shadow-lg"
-      >
-        <div className="flex items-center justify-between bg-[#0fa053] px-3 py-1.5">
-          <span className="text-[11px] font-semibold text-white">Expiry Time</span>
-          <button type="button" onClick={onClose} className="flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30">
-            <X className="h-3 w-3" strokeWidth={2.5} />
-          </button>
-        </div>
-        <div style={{ background: "var(--trading-panel-bg, #1e2330)" }} className="p-2.5">
-          <div className="grid grid-cols-2 gap-1.5">
-            {TIME_PRESETS.map((preset) => {
-              const isSelected = value === preset.val;
-              return (
-                <button
-                  key={preset.val}
-                  type="button"
-                  onClick={() => { onChange(preset.val); onClose(); }}
-                  className={`rounded-md px-2 py-1.5 text-center text-[11px] transition-colors ${
-                    isSelected
-                      ? "bg-[#0fa053]/20 text-white"
-                      : "text-white/60 hover:bg-white/8 hover:text-white"
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-3 border-t border-white/8 pt-2.5">
-            <div className="flex items-center gap-1.5">
-              <input
-                type="number"
-                min={1}
-                step={1}
-                value={customAmount}
-                onChange={(e) => setCustomAmount(e.target.value)}
-                className="hide-number-spin h-7 w-14 rounded border border-white/10 bg-transparent px-2 text-[11px] text-white outline-none"
-              />
-              <select
-                value={customUnit}
-                onChange={(e) => setCustomUnit(e.target.value as CustomDurationUnit)}
-                className="h-7 flex-1 rounded border border-white/10 bg-transparent px-1 text-[11px] text-white outline-none"
-              >
-                <option value="seconds">Sec</option>
-                <option value="minutes">Min</option>
-                <option value="hours">Hr</option>
-              </select>
-              <button
-                type="button"
-                onClick={applyCustomDuration}
-                className="h-7 rounded bg-[#0fa053] px-2.5 text-[10px] font-medium text-white hover:opacity-90"
-              >
-                Go
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
 
 const INVESTMENT_PRESETS = [1, 5, 10, 25, 50, 100, 200, 500];
 
@@ -1128,7 +984,7 @@ onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}>
                       <Plus className="w-3 h-3" />
                     </span>
                   </div>
-                  <div className="mt-0.5 w-full text-center"><span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">Switch Time</span></div>
+                  <div className="mt-0.5 w-full text-center"><span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">Time</span></div>
                 </div>
               </div>
 
@@ -1183,7 +1039,7 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
                       <Plus className="w-3 h-3" />
                     </span>
                   </div>
-                  <div className="mt-0.5 w-full text-center"><span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">{t("tradingPanel.switchTime")}</span></div>
+                  <div className="mt-0.5 w-full text-center"><span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">Amount</span></div>
                 </div>
                 {showInvestmentSwitcher && (
                   <AmountPopover
