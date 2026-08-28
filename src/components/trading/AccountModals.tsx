@@ -2388,7 +2388,7 @@ export const AccountDropdown = ({
             </div>
           </div>
 
-          <div className="flex flex-col justify-between border-t border-white/10 pt-3 lg:w-[130px] lg:shrink-0 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
+          <div className="hidden lg:flex flex-col justify-between border-t border-white/10 pt-3 lg:w-[130px] lg:shrink-0 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
             <div className="space-y-3.5 text-[13px] font-bold text-white/80">
               <button
                 type="button"
