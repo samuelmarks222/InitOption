@@ -2265,9 +2265,7 @@ export const AccountDropdown = ({
         style={{ border: "1px solid #252e42" }}
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
-          {/* Left Column: Cards & Account Options */}
           <div className="flex-1 space-y-3 min-w-0">
-            {/* Top Header Card — matches Quotex Reference Image */}
             <div className="rounded-[8px] bg-[#1d2536] p-3 border border-white/5 space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 rounded-[4px] bg-[#252e42] px-2.5 py-1 text-[11px] font-black text-white">
@@ -2305,9 +2303,7 @@ export const AccountDropdown = ({
               </div>
             </div>
 
-            {/* Account Options */}
             <div className="space-y-2.5">
-              {/* Live Account */}
               <div
                 onClick={() => {
                   onSwitch("live");
@@ -2342,7 +2338,6 @@ export const AccountDropdown = ({
                 </div>
               </div>
 
-              {/* Demo Account */}
               <div
                 onClick={() => {
                   onSwitch("demo");
@@ -2393,7 +2388,6 @@ export const AccountDropdown = ({
             </div>
           </div>
 
-          {/* Right Column: Quick Actions Navigation Links — matches Quotex Reference Image */}
           <div className="flex flex-col justify-between border-t border-white/10 pt-3 lg:w-[130px] lg:shrink-0 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
             <div className="space-y-3.5 text-[13px] font-bold text-white/80">
               <button

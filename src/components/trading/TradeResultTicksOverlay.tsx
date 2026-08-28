@@ -218,5 +218,5 @@ export const TradeResultTicksOverlay = ({
     };
   }, [chart, series]);
 
-  return <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 z-[91]" />;
+  return <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 z-[10]" />;
 };

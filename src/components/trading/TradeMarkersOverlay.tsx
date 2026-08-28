@@ -475,7 +475,7 @@ export const TradeMarkersOverlay = ({
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none absolute inset-0 z-[90]"
+      className="pointer-events-none absolute inset-0 z-[10]"
     />
   );
 };

@@ -241,7 +241,7 @@ const LivePriceAxisOverlay = ({
   const accentColor = rising ? "#10d66a" : "#ff6b5d";
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[84]" aria-hidden="true">
+    <div className="pointer-events-none absolute inset-0 z-[10]" aria-hidden="true">
       <div
         className="absolute left-0 right-[74px] h-px bg-[#e8edf7]/85 shadow-[0_0_8px_rgba(232,237,247,0.18)]"
         style={{ top: clampedY }}
@@ -959,7 +959,7 @@ const TradeCloneOverlay = ({
   if (popupItems.length === 0) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[92] overflow-visible">
+    <div className="pointer-events-none absolute inset-0 z-[10] overflow-visible">
       {popupItems.map((item, index) =>
         item.type === "order" ? (
           <OrderPlacedCloneCard key={item.announcement.id} announcement={item.announcement} top={82 + index * 106} />
@@ -4391,7 +4391,7 @@ renderOverlayIndicators(getIndicatorHistory());
       )}
 
       {styleEditorOpen && !mobileHistoryOpen && (
-        <div className="absolute inset-0 z-[70] hidden sm:block pointer-events-none">
+        <div className="absolute inset-0 z-[10] hidden sm:block pointer-events-none">
           <button
             type="button"
             aria-label={t("tradingChart.closeStyleEditor")}

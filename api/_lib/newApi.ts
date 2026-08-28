@@ -972,6 +972,7 @@ const ALLOWED_RPC_FUNCTIONS = new Set([
   // Tournaments
   "join_tournament",
   "leave_tournament",
+  "admin_update_tournament_status",
 ]);
 
 export async function handleRpc(request: ApiRequest, response: ApiResponse): Promise<void> {
