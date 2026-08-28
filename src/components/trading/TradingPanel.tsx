@@ -903,7 +903,7 @@ const TradingPanel = ({
                <span className="text-[10px] text-[#8f9bba]">(OTC)</span>
              </div>
            </div>
-           <div className="text-[14px] font-semibold text-[#26a69a]">31%</div>
+           <div className="text-[14px] font-semibold text-[#0fa055]">31%</div>
          </div>
 
          <div className="flex items-center justify-between py-3 text-[12px] font-medium text-[#8f9bba]">
@@ -914,7 +914,7 @@ const TradingPanel = ({
              aria-pressed={pendingTradeEnabled}
              className="relative inline-block h-[20px] w-[36px]"
            >
-             <span className={`absolute inset-0 rounded-full transition-colors ${pendingTradeEnabled ? "bg-[#26a69a]" : "bg-[#2a2f3f]"}`} />
+             <span className={`absolute inset-0 rounded-full transition-colors ${pendingTradeEnabled ? "bg-[#0fa055]" : "bg-[#2a2f3f]"}`} />
              <span className={`absolute bottom-[2px] left-[2px] h-[16px] w-[16px] rounded-full bg-white transition-transform ${pendingTradeEnabled ? "translate-x-[16px]" : ""}`} />
            </button>
          </div>
@@ -926,7 +926,7 @@ const TradingPanel = ({
            <button
              type="button"
              onClick={() => setShowTimeSwitcher((value) => !value)}
-             className="text-[10px] font-semibold tracking-[0.12em] text-[#29b6f6]"
+             className="text-[10px] font-semibold tracking-[0.12em] text-[#5aa8ff]"
            >
              SWITCH TIME
            </button>
@@ -960,7 +960,7 @@ const TradingPanel = ({
            <button
              type="button"
              onClick={() => setShowInvestmentSwitcher((v) => !v)}
-             className="text-[10px] font-semibold tracking-[0.12em] text-[#29b6f6]"
+             className="text-[10px] font-semibold tracking-[0.12em] text-[#5aa8ff]"
            >
              SWITCH
            </button>
@@ -1005,7 +1005,7 @@ const TradingPanel = ({
            type="button"
            onClick={() => placeTrade("higher")}
            disabled={asset.available === false}
-           className={`flex w-full items-center justify-between rounded-lg border border-transparent bg-[#26a69a] px-4 py-3 text-[15px] font-bold text-white ${higherButtonFocused ? "scale-[1.01]" : ""} ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
+           className={`flex w-full items-center justify-between rounded-lg border border-transparent bg-[#0fa055] px-4 py-3 text-[15px] font-bold text-white ${higherButtonFocused ? "scale-[1.01]" : ""} ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
          >
            <span>Up</span>
            <span className="rounded-[4px] bg-black/10 px-2 py-0.5 text-[13px]">↑</span>
@@ -1016,7 +1016,7 @@ const TradingPanel = ({
            type="button"
            onClick={() => placeTrade("lower")}
            disabled={asset.available === false}
-           className={`flex w-full items-center justify-between rounded-lg border border-transparent bg-[#ef5350] px-4 py-3 text-[15px] font-bold text-white ${lowerButtonFocused ? "scale-[1.01]" : ""} ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
+           className={`flex w-full items-center justify-between rounded-lg border border-transparent bg-[#e85b4e] px-4 py-3 text-[15px] font-bold text-white ${lowerButtonFocused ? "scale-[1.01]" : ""} ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
          >
            <span>Down</span>
            <span className="rounded-[4px] bg-black/10 px-2 py-0.5 text-[13px]">↓</span>
