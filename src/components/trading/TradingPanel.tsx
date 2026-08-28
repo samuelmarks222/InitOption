@@ -892,11 +892,17 @@ const TradingPanel = ({
       <aside className={`font-copy w-full lg:w-[240px] h-full min-h-[190px] shrink-0 flex flex-col border-l border-[#171d2d] bg-[#242a3c] text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none ${showTimeSwitcher ? "overflow-visible lg:overflow-visible" : "overflow-hidden"} ${mobileDocked ? "rounded-t-[16px]" : ""}`}>
 
        <div className="px-3 pb-2 pt-2.5">
-         <div className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.12em] text-[#d7e1ff]">
-           <span className="h-2.5 w-2.5 rounded-full bg-[#1ce57d] shadow-[0_0_10px_rgba(28,229,125,0.75)]" />
-           <span>{asset.symbol}</span>
-           <span className="text-[#4bdc98]">({asset.category ?? "OTC"})</span>
-           <span className="text-[#7fe4b7]">31%</span>
+         <div className="mb-2 rounded-md border border-[#2a3247] bg-[#1a2233] px-2.5 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+           <div className="flex items-center justify-between gap-3">
+             <div className="flex min-w-0 items-center gap-2">
+               <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#1ce57d] shadow-[0_0_10px_rgba(28,229,125,0.75)]" />
+               <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+                 <span className="truncate text-[11px] font-black uppercase tracking-[0.14em] text-[#f1f5ff]">{asset.symbol}</span>
+                 <span className="shrink-0 text-[8px] uppercase tracking-[0.12em] text-[#8fa1c7]">({asset.category ?? "OTC"})</span>
+               </div>
+             </div>
+             <span className="shrink-0 rounded-full border border-[#1d4737] bg-[#112c24] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[#7ef0b5]">31%</span>
+           </div>
          </div>
 
          <div className="flex items-center justify-between rounded-t-lg border border-[#2a3247] border-b-0 bg-[#1b2333] px-3 py-2.5">
