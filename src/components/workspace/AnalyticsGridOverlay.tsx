@@ -1188,7 +1188,7 @@ const MyAccountPanel = () => {
             className="mt-1 inline-flex items-center gap-2 rounded-[6px] border border-white/10 bg-[#2a3345] px-2.5 py-1.5 text-left text-[11px] font-black uppercase text-white transition-colors hover:bg-[#313d56]"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2d3446] text-[11px] font-black text-white">$</span>
-            <span>{currency}</span>
+            <span>Change</span>
           </button>
         </div>
         <ProfileMetric label="Available for withdrawal" value={visible ? formatMoney(withdrawableBalance) : "****"} />
