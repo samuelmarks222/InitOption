@@ -143,15 +143,6 @@ const TradingHeader = ({
     </button>
   );
 
-  const renderWithdrawalButton = () => (
-    <button
-      onClick={onOpenWithdrawal}
-      className="flex h-10 items-center shrink-0 rounded-[8px] bg-[#4a5366] px-3 sm:px-5 text-[14px] font-black text-white hover:bg-[#576278] active:scale-95 transition-colors"
-    >
-      Withdrawal
-    </button>
-  );
-
   return (
     <header className="relative flex h-[62px] shrink-0 items-center justify-between px-4 bg-[var(--trading-header-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white z-30 select-none">
 
@@ -160,7 +151,6 @@ const TradingHeader = ({
         <div className="flex items-center gap-2 shrink-0">
           {renderAccountPill()}
           {renderDepositButton()}
-          {renderWithdrawalButton()}
           {isAdmin && (
             <button
               onClick={() => navigate("/admin")}

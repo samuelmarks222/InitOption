@@ -2259,9 +2259,9 @@ export const AccountDropdown = ({
         onClose={() => setShowDemoBalanceModal(false)}
         onSave={onUpdateDemoBalance}
       />
-      <div className="fixed inset-0 z-[110]" onClick={onClose} />
+      <div className="fixed inset-0 z-[110] hidden lg:block" onClick={onClose} />
       <div
-        className="fixed left-3 right-3 top-[58px] z-[120] mx-auto w-auto max-w-[340px] overflow-hidden rounded-[12px] bg-[#161c28] p-3.5 text-left shadow-[0_20px_60px_rgba(0,0,0,0.55)] lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-2 lg:w-[480px] lg:max-w-[480px]"
+        className="fixed left-1/2 top-[58px] z-[120] w-[calc(100vw-1.5rem)] max-w-[320px] -translate-x-1/2 overflow-hidden rounded-[12px] bg-[#161c28] p-3.5 text-left shadow-[0_20px_60px_rgba(0,0,0,0.55)] lg:absolute lg:left-auto lg:right-0 lg:top-full lg:mt-2 lg:w-[480px] lg:max-w-[480px] lg:-translate-x-0"
         style={{ border: "1px solid #252e42" }}
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
