@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { AccountCurrencyModal } from "@/components/profile/AccountCurrencyModal";
 import {
   AlertCircle,
   ArrowRight,
@@ -856,8 +857,9 @@ const mergeProfileDetails = (profile: any, user: { id: string; email: string | n
 
 const MyAccountPanel = () => {
   const { profile, user, emailVerified, updateProfile, changePassword, deleteAccount, sendEmailVerificationCode } = useAuth();
-  const { currency, options: currencyOptions, setCurrency, formatMoney } = useCurrency();
+  const { currency, setCurrency, formatMoney } = useCurrency();
   const { preferences: tradingPreferences, updatePreferences: updateTradingPreferences } = useTradingPreferences();
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const frontInputRef = useRef<HTMLInputElement | null>(null);
   const backInputRef = useRef<HTMLInputElement | null>(null);
@@ -1180,22 +1182,20 @@ const MyAccountPanel = () => {
       <div className="mb-5 hidden sm:flex flex-wrap items-center justify-end gap-6 border-b border-white/10 pb-4 text-right">
         <div>
           <p className="text-[12px] font-bold text-[#9ba5b9]">My current currency</p>
-          <div className="mt-1 flex items-center justify-end gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2d3446] text-[12px] font-black text-white">$</span>
-            <select
-              value={currency}
-              onChange={(event) => void handleCurrencyChange(event.target.value as SupportedCurrency)}
-              className="rounded-[4px] bg-[#167fdd] px-2 py-1 text-[11px] font-black uppercase text-white outline-none"
-            >
-              {currencyOptions.map((option) => (
-                <option key={option.code} value={option.code} className="bg-[#202633] text-white">{option.code}</option>
-              ))}
-            </select>
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowCurrencyModal(true)}
+            className="mt-1 inline-flex items-center gap-2 rounded-[6px] border border-white/10 bg-[#2a3345] px-2.5 py-1.5 text-left text-[11px] font-black uppercase text-white transition-colors hover:bg-[#313d56]"
+          >
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2d3446] text-[11px] font-black text-white">$</span>
+            <span>{currency}</span>
+          </button>
         </div>
         <ProfileMetric label="Available for withdrawal" value={visible ? formatMoney(withdrawableBalance) : "****"} />
         <ProfileMetric label="In the account" value={visible ? formatMoney(liveBalance) : "****"} />
       </div>
+
+      <AccountCurrencyModal isOpen={showCurrencyModal} onClose={() => setShowCurrencyModal(false)} />
 
       <div className="grid gap-7 xl:grid-cols-[minmax(360px,0.95fr)_minmax(320px,0.92fr)_minmax(320px,0.92fr)]">
         <div className="border-white/10 xl:border-r xl:pr-7" data-verify-tour="status">

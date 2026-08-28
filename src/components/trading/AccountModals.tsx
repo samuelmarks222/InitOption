@@ -2285,21 +2285,19 @@ export const AccountDropdown = ({
               <div>
                 <p className="truncate text-[13px] font-extrabold text-white">{profileEmail}</p>
                 <p className="mt-0.5 text-[11.5px] font-bold text-white/50">ID: {visible ? accountId : "********"}</p>
-                <div className="mt-2 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowCurrencyModal(true);
+                  }}
+                  className="mt-2 flex w-full items-center justify-between rounded-[6px] border border-white/8 bg-[#1d2536] px-2 py-1.5 text-left transition-colors hover:bg-[#222d40]"
+                >
                   <span className="text-[12px] font-bold text-white/70">
                     Currency: <strong className="text-white">{currency}</strong>
                   </span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowCurrencyModal(true);
-                    }}
-                    className="rounded-[4px] bg-[#0084FF] px-2 py-0.5 text-[10px] font-black uppercase text-white hover:bg-[#0070df] transition-colors"
-                  >
-                    CHANGE
-                  </button>
-                </div>
+                  <ChevronDown className="h-3.5 w-3.5 text-white/60" />
+                </button>
               </div>
             </div>
 
