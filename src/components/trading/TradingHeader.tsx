@@ -203,7 +203,7 @@ const TradingHeader = ({
           </button>
         </div>
 
-        {/* Right: Admin + Bell + Account + Deposit + Withdrawal */}
+        {/* Right: Admin + Bell + Account + Deposit */}
         <div className="flex items-center gap-2.5 shrink-0">
           {isAdmin && (
             <button
@@ -226,9 +226,6 @@ const TradingHeader = ({
 
           {/* Deposit Button */}
           {renderDepositButton()}
-
-          {/* Withdrawal Button */}
-          {renderWithdrawalButton()}
         </div>
       </div>
     </header>
