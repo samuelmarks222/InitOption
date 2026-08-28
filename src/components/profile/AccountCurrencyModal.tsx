@@ -22,6 +22,19 @@ export const AccountCurrencyModal = ({ isOpen, onClose }: AccountCurrencyModalPr
     setError(null);
   }, [currency, isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleCurrencyChanged = (event: Event) => {
+      const nextCurrency = (event as CustomEvent<{ currency?: SupportedCurrency }>).detail?.currency;
+      if (nextCurrency && nextCurrency !== currency) {
+        setSelectedCurrency(nextCurrency);
+      }
+    };
+
+    window.addEventListener("preferred_currency_changed", handleCurrencyChanged);
+    return () => window.removeEventListener("preferred_currency_changed", handleCurrencyChanged);
+  }, [currency, isOpen]);
+
   if (!isOpen) return null;
 
   const currentOption = getCurrencyOption(currency);

@@ -65,6 +65,9 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   const setCurrency = async (nextCurrency: SupportedCurrency) => {
     setCurrencyState(nextCurrency);
     localStorage.setItem(STORAGE_KEY, nextCurrency);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("preferred_currency_changed", { detail: { currency: nextCurrency } }));
+    }
 
     if (!profile?.id) {
       return;
