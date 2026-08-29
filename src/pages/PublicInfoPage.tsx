@@ -56,8 +56,8 @@ const FaqBlock = ({
   items: PublicFaqItem[];
   platformName: string;
 }) => (
-  <section className="rounded-[28px] border border-violet-100 bg-white p-6 shadow-[0_24px_60px_rgba(76,53,146,0.08)] sm:p-8">
-    <h2 className="font-display text-2xl font-bold text-[#20173d]">Questions and answers</h2>
+  <section className="rounded-[28px] border border-gray-200 bg-white p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:p-8">
+    <h2 className="font-display text-2xl font-bold text-[#06383c]">Questions and answers</h2>
 
     <div className="mt-6 space-y-4">
       {items.map((item) => (
@@ -77,8 +77,8 @@ const RelatedLinksBlock = ({
 }: {
   links: PublicPageLinkItem[];
 }) => (
-  <section className="rounded-[28px] border border-violet-100 bg-white p-6 shadow-[0_24px_60px_rgba(76,53,146,0.08)] sm:p-8">
-    <h2 className="font-display text-2xl font-bold text-[#20173d]">Keep exploring</h2>
+  <section className="rounded-[28px] border border-gray-200 bg-white p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)] sm:p-8">
+    <h2 className="font-display text-2xl font-bold text-[#06383c]">Keep exploring</h2>
     <p className="mt-4 max-w-3xl font-copy text-sm leading-7 text-gray-600 sm:text-base">
       Use these public links to move deeper into the platform, support, and policy pages without losing context.
     </p>

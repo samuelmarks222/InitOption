@@ -155,7 +155,7 @@ const Footer = ({ content }: FooterProps) => {
       className="relative overflow-hidden border-t border-[#12cc9a]/30 bg-[#1f4c63] text-white"
       style={{
         backgroundImage:
-          "linear-gradient(115deg, rgba(31, 76, 99, 0.97), rgba(20, 55, 73, 0.98)), repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 48px), repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 48px)",
+          "linear-gradient(115deg, rgba(31, 76, 99, 0.97), rgba(20, 55, 73, 0.98)), repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, transparent 1px 48px), repeating-linear-inset(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 48px)",
       }}
     >
       <div
