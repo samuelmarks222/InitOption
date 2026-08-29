@@ -140,6 +140,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         const cryptoCurrency = asString(body.cryptoCurrency ?? null);
         const cryptoNetwork = asString(body.cryptoNetwork ?? null);
         const cryptoMemo = asString(body.cryptoMemo ?? null);
+        const forfeitBonus = body.forfeitBonus === true;
 
         if (!Number.isFinite(amount) || Number(amount) <= 0) {
           sendJson(response, 400, { error: "amount must be a positive number." });
@@ -198,18 +199,23 @@ export default async function handler(request: ApiRequest, response: ApiResponse
         const availableBalance = Math.max(0, balance - reservedBalance);
 
         const turnover = await getTurnoverSnapshot(userId);
-        const isBonusLocked = turnover.bonusTotal > 0 && !turnover.isComplete;
-        const withdrawableBalance = Math.max(0, availableBalance - (isBonusLocked ? turnover.bonusTotal : 0));
+        const needsBonusForfeit = turnover.bonusTotal > 0 && !turnover.isComplete;
+        const forfeitedBonusAmount = needsBonusForfeit && forfeitBonus ? turnover.bonusTotal : 0;
+        const withdrawableBalance = Math.max(0, availableBalance - forfeitedBonusAmount);
+
+        if (needsBonusForfeit && !forfeitBonus) {
+          sendJson(response, 400, {
+            error: `Bonus turnover requirement not met. Required volume: $${formatUsd(turnover.requiredTurnover)}, completed: $${formatUsd(turnover.completedTurnover)}.`,
+          });
+          return;
+        }
 
         if (amount > withdrawableBalance) {
-          if (isBonusLocked) {
-            sendJson(response, 400, {
-              error: `Your requested amount ($${formatUsd(amount)}) exceeds your withdrawable balance of $${formatUsd(withdrawableBalance)}. Your $${formatUsd(turnover.bonusTotal)} bonus is locked until trading requirements are met ($${formatUsd(turnover.remainingTurnover)} volume remaining).`,
-            });
-            return;
-          }
+          const balanceLabel = forfeitedBonusAmount > 0
+            ? `Your withdrawable balance after removing the active bonus is $${formatUsd(withdrawableBalance)}.`
+            : `Your available balance is $${formatUsd(availableBalance)}.`;
           sendJson(response, 400, {
-            error: `Insufficient withdrawable balance. Maximum withdrawable: $${formatUsd(withdrawableBalance)}.`,
+            error: `Insufficient available balance. ${balanceLabel}`,
           });
           return;
         }

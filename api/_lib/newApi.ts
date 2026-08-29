@@ -978,7 +978,7 @@ const ALLOWED_RPC_FUNCTIONS = new Set([
 export async function handleRpc(request: ApiRequest, response: ApiResponse): Promise<void> {
   try {
     // Authenticate the request — returns the canonical user UUID or null
-    const canonicalUserId = await authenticateRequest(request);
+    const canonicalUserId = await authenticateRequest(request.headers);
     if (!canonicalUserId) {
       sendJson(response, 401, { error: "Unauthorized" });
       return;

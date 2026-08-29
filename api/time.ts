@@ -1,4 +1,4 @@
-import type { ApiRequest, ApiResponse } from '../_lib/newApi';
+import type { ApiRequest, ApiResponse } from '../_lib/newApi.js';
 
 export default async function handler(request: ApiRequest, response: ApiResponse) {
   const timestamp = Math.floor(Date.now() / 1000);
