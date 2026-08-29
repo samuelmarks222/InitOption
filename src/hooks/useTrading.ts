@@ -24,6 +24,7 @@ import {
   setStoredTradeMarkerSnapshot,
 } from "@/lib/tradeMarkerCache";
 import { playTradeOpenSound, playTradeResultSound } from "@/lib/tradeSounds";
+import { getSynchronizedUnixTime, getSynchronizedUnixTimeMs } from "@/lib/serverTimeSync";
 
 export type TradeDirection = "higher" | "lower";
 export type TradeHistoryEntry = Tables<"trades">;
@@ -195,7 +196,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
 
       if (openData) {
         const restoredActiveTrades: ActiveTrade[] = openData.map((trade) => {
-          const elapsed = (Date.now() - new Date(trade.opened_at).getTime()) / 1000;
+          const elapsed = (getSynchronizedUnixTimeMs() - new Date(trade.opened_at).getTime()) / 1000;
           const timeLeft = Math.max(0, trade.expiry_seconds - elapsed);
           const storedMarkerTime = getStoredTradeMarkerTime(trade.id);
           const storedMarkerLogical = getStoredTradeMarkerLogical(trade.id);
@@ -484,7 +485,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         const canResolveTrades = currentPriceRef.current > 0;
 
         prev.forEach((trade) => {
-          const elapsed = (Date.now() - new Date(trade.opened_at).getTime()) / 1000;
+          const elapsed = (getSynchronizedUnixTimeMs() - new Date(trade.opened_at).getTime()) / 1000;
           const timeLeft = Math.max(0, trade.expiry_seconds - elapsed);
 
           if (timeLeft <= 0) {

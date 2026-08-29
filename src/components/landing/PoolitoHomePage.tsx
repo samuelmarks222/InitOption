@@ -1,2651 +1,892 @@
-import {
-  useEffect,
-  useState,
-} from "react";
-import {
-  ArrowRight,
-  BadgeCheck,
-  BarChart3,
-  Bitcoin,
-  CheckCircle2,
-  CircleDollarSign,
-  Gem,
-  Globe2,
-  Headphones,
-  LineChart,
-  LogIn,
-  Play,
-  ShieldCheck,
-  Smartphone,
-  Star,
-  Users,
-  UserPlus,
-  WalletCards,
-} from "lucide-react";
+﻿import { ArrowRight, BadgeCheck, Bitcoin, Headphones, ShieldCheck, WalletCards } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/landing/Footer";
 import { SiteLogo } from "@/components/branding/SiteLogo";
-import AssetSymbolMark from "@/components/trading/AssetSymbolMark";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 
-const HOME_ASSETS = {
-  hero: "/landing/poolito-initoption/hero-laptop-desk.jpg",
-  aboutImac: "/landing/poolito-initoption/about-imac-mockup.jpg",
-  aboutPhone: "/landing/poolito-initoption/about-phone-view.jpg",
-  imac: "/landing/poolito-initoption/imac-platform.png",
-  imacAlt: "/landing/poolito-initoption/imac-platform-alt.png",
-  abstract: "/landing/poolito-initoption/abstract-trading-bg.jpg",
-};
-
-const navLinks = [
-  { label: "Home", to: "/" },
-  { label: "About Us", to: "/about" },
-  { label: "Trading", to: "/trade" },
-  { label: "Tournaments", to: "/tournaments" },
-  { label: "Blog", to: "/blog" },
-  { label: "Contact Us", to: "/contact" },
+const assetCards = [
+  { symbol: "BTC", name: "Bitcoin", price: "$16,048.40", change: "-12%", positive: false },
+  { symbol: "ETH", name: "Ethereum", price: "$1,122.44", change: "-15%", positive: false },
+  { symbol: "Tether", name: "Tether", price: "$1.00", change: "0.009%", positive: true },
 ];
 
-const assetTags = [
-  { label: "Currencies", icon: CircleDollarSign },
-  { label: "Indices", icon: BarChart3 },
-  { label: "Crypto", icon: Bitcoin },
-  { label: "Stocks", icon: LineChart },
-  { label: "Commodities", icon: Gem },
-];
-
-const howItWorksSteps = [
+const trustCards = [
   {
-    step: "Step 1",
-    title: "Create Account",
-    text: "Sign up in seconds. No credit card required.",
-    icon: Users,
+    title: "Buy Cryptocurrency with cash",
+    text: "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
+    cta: "Read More",
+    icon: "cash",
   },
   {
-    step: "Step 2",
-    title: "Choose Asset",
-    text: "Pick from currencies, indices, crypto, stocks, or commodities.",
-    icon: BarChart3,
-  },
-  {
-    step: "Step 3",
-    title: "Trade & Withdraw",
-    text: "One-click trading. Fast withdrawals when you win.",
-    icon: CircleDollarSign,
+    title: "Cryptocurrency Consultancy",
+    text: "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.",
+    cta: "Read More",
+    icon: "consult",
   },
 ];
 
-type FeatureIconType = "candles" | "bolt" | "shield" | "profit";
-
-const FeatureDrawnIcon = ({ type }: { type: FeatureIconType }) => {
-  if (type === "candles") {
-    return (
-      <svg viewBox="0 0 72 72" aria-hidden="true">
-        <path d="M10 56H62" />
-        <path d="M17 50V23" className="poolito-icon-muted-line" />
-        <path d="M17 38H25V50H17Z" className="poolito-icon-green" />
-        <path d="M31 52V18" className="poolito-icon-muted-line" />
-        <path d="M31 25H39V42H31Z" className="poolito-icon-red" />
-        <path d="M45 50V20" className="poolito-icon-muted-line" />
-        <path d="M45 30H53V48H45Z" className="poolito-icon-green" />
-        <path d="M15 47C26 39 34 38 42 29C48 23 54 22 60 17" className="poolito-icon-trend" />
-      </svg>
-    );
-  }
-
-  if (type === "bolt") {
-    return (
-      <svg viewBox="0 0 72 72" aria-hidden="true">
-        <path d="M40 8L18 40H34L29 64L54 28H37L40 8Z" />
-        <path d="M14 17H25" className="poolito-icon-muted-line" />
-        <path d="M9 30H21" className="poolito-icon-muted-line" />
-        <path d="M50 52H62" className="poolito-icon-muted-line" />
-      </svg>
-    );
-  }
-
-  if (type === "shield") {
-    return (
-      <svg viewBox="0 0 72 72" aria-hidden="true">
-        <path d="M36 8L58 17V33C58 47 49 58 36 64C23 58 14 47 14 33V17L36 8Z" />
-        <path d="M27 34L34 41L47 27" className="poolito-icon-green" />
-        <circle cx="36" cy="28" r="6" className="poolito-icon-muted-line" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 72 72" aria-hidden="true">
-      <circle cx="28" cy="42" r="18" />
-      <path d="M22 47L34 35" className="poolito-icon-muted-line" />
-      <path d="M23 34H23.5" className="poolito-icon-muted-line" />
-      <path d="M33 48H33.5" className="poolito-icon-muted-line" />
-      <path d="M42 25H58V41" className="poolito-icon-green" />
-      <path d="M42 41L58 25" className="poolito-icon-green" />
-    </svg>
-  );
-};
-
-const services: Array<{
-  eyebrow: string;
-  title: string;
-  text: string;
-  benefit: string;
-  icon: FeatureIconType;
-}> = [
-  {
-    eyebrow: "FEATURE 01",
-    title: "Real-Time Charts",
-    text: "Professional candlestick charts with 30+ indicators.",
-    benefit: "Analyse markets like a pro with RSI, MACD, Bollinger Bands, and more.",
-    icon: "candles",
-  },
-  {
-    eyebrow: "FEATURE 02",
-    title: "Fast Withdrawals",
-    text: "Get your profits when you need them. No delays.",
-    benefit: "Withdraw via M-PESA or crypto - often within minutes.",
-    icon: "bolt",
-  },
-  {
-    eyebrow: "FEATURE 03",
-    title: "Free Demo Account",
-    text: "Practice with $10,000 virtual funds. No risk.",
-    benefit: "Unlimited time, reset anytime - learn without pressure.",
-    icon: "shield",
-  },
-  {
-    eyebrow: "FEATURE 04",
-    title: "High Profits",
-    text: "Earn up to 95% on winning trades.",
-    benefit: "Maximise your returns with competitive payouts.",
-    icon: "profit",
-  },
+const processSteps = [
+  { label: "Wallet Address" },
+  { label: "Bitcoin" },
+  { label: "How much worth in $" },
+  { label: "Email Address" },
+  { label: "Get Started" },
 ];
 
-const marketGroups = [
-  {
-    label: "Currencies",
-    category: "OTC",
-    cards: [
-      {
-        symbol: "EUR/USD",
-        name: "Euro / US Dollar",
-        status: "Closed",
-        payout: "74%",
-        duration: "45m",
-        direction: "Up",
-      },
-      {
-        symbol: "GBP/USD",
-        name: "British Pound / US Dollar",
-        status: "Open",
-        payout: "89%",
-        duration: "45m",
-        direction: "Up",
-      },
-      {
-        symbol: "USD/JPY",
-        name: "US Dollar / Japanese Yen",
-        status: "Closed",
-        payout: "84%",
-        duration: "90m",
-        direction: "Up",
-      },
-      {
-        symbol: "AUD/CAD",
-        name: "Australian Dollar / Canadian Dollar",
-        status: "Open",
-        payout: "79%",
-        duration: "60m",
-        direction: "Down",
-      },
-    ],
-  },
-  {
-    label: "Crypto",
-    category: "CRYPTO",
-    cards: [
-      {
-        symbol: "BTC",
-        name: "Bitcoin",
-        status: "Open",
-        payout: "79%",
-        duration: "60m",
-        direction: "Down",
-      },
-      {
-        symbol: "ETH",
-        name: "Ethereum",
-        status: "Open",
-        payout: "86%",
-        duration: "30m",
-        direction: "Up",
-      },
-      {
-        symbol: "SOL",
-        name: "Solana",
-        status: "Closed",
-        payout: "82%",
-        duration: "45m",
-        direction: "Up",
-      },
-      {
-        symbol: "XRP",
-        name: "Ripple",
-        status: "Open",
-        payout: "76%",
-        duration: "15m",
-        direction: "Down",
-      },
-    ],
-  },
-  {
-    label: "Stocks",
-    category: "STOCKS",
-    cards: [
-      {
-        symbol: "AAPL",
-        name: "Apple Inc.",
-        status: "Open",
-        payout: "81%",
-        duration: "60m",
-        direction: "Up",
-      },
-      {
-        symbol: "TSLA",
-        name: "Tesla Inc.",
-        status: "Closed",
-        payout: "78%",
-        duration: "45m",
-        direction: "Down",
-      },
-      {
-        symbol: "MSFT",
-        name: "Microsoft Corp.",
-        status: "Open",
-        payout: "88%",
-        duration: "90m",
-        direction: "Up",
-      },
-      {
-        symbol: "AMZN",
-        name: "Amazon.com Inc.",
-        status: "Open",
-        payout: "83%",
-        duration: "30m",
-        direction: "Up",
-      },
-    ],
-  },
-  {
-    label: "Commodities",
-    category: "COMMODITIES",
-    cards: [
-      {
-        symbol: "XAU/USD",
-        name: "Gold",
-        status: "Open",
-        payout: "90%",
-        duration: "45m",
-        direction: "Up",
-      },
-      {
-        symbol: "WTICO/USD",
-        name: "WTI Crude Oil",
-        status: "Closed",
-        payout: "73%",
-        duration: "60m",
-        direction: "Down",
-      },
-      {
-        symbol: "XAG/USD",
-        name: "Silver",
-        status: "Open",
-        payout: "85%",
-        duration: "30m",
-        direction: "Up",
-      },
-      {
-        symbol: "NATGAS/USD",
-        name: "Natural Gas",
-        status: "Open",
-        payout: "77%",
-        duration: "90m",
-        direction: "Down",
-      },
-    ],
-  },
+const featureCards = [
+  { title: "Competitive Pricing", text: "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.", icon: "pricing" },
+  { title: "Support", text: "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.", icon: "support" },
+  { title: "Fast and Easy KYC", text: "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.", icon: "kyc" },
+  { title: "Security", text: "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley.", icon: "security" },
+  { title: "Fast Transaction", text: "Every minute counts when buying or selling in cryptocurrencies. Complete your transactions as quickly as possible.", icon: "transaction" },
+  { title: "Call Us", text: "", icon: "call" },
 ];
 
-const trustLogos = [
-  { label: "Markets", icon: BarChart3 },
-  { label: "Signals", icon: LineChart },
-  { label: "Wallet", icon: WalletCards },
-  { label: "Security", icon: ShieldCheck },
-  { label: "Support", icon: Headphones },
-  { label: "Demo", icon: Play },
-];
-
-const testimonials = [
+const blogPosts = [
   {
-    quote: "The demo account helped me test strategies before placing live trades.",
-    name: "Maya K.",
-    role: "Currency trader",
-    initials: "MK",
-    rating: "5.0",
+    title: "Five Things To Avoid in Cryptocurrency.",
+    date: "14 Jan 2022",
+    meta: "By Nore ... 12 May 2022",
+    imageClass: "blog-image-one",
   },
   {
-    quote: "Charts load quickly, the platform is clean, and withdrawals have been smooth.",
-    name: "Daniel R.",
-    role: "Crypto trader",
-    initials: "DR",
-    rating: "5.0",
-  },
-  {
-    quote: "I can move from phone to desktop without losing track of my open positions.",
-    name: "Sofia N.",
-    role: "Multi-asset trader",
-    initials: "SN",
-    rating: "4.9",
+    title: "Directly support individuals Crypto",
+    date: "By Nore ... 12 May 2022",
+    imageClass: "blog-image-two",
+    large: true,
   },
 ];
 
 const PoolitoHomePage = () => {
   const { platformName } = useSiteBranding();
-  const marketSlides = [...marketGroups, marketGroups[0]!];
-  const [marketSlideIndex, setMarketSlideIndex] = useState(0);
-  const [isMarketJumping, setIsMarketJumping] = useState(false);
-  const activeMarketIndex = marketSlideIndex % marketGroups.length;
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setMarketSlideIndex((currentIndex) => currentIndex + 1);
-    }, 4200);
-
-    return () => window.clearInterval(intervalId);
-  }, []);
-
-  useEffect(() => {
-    if (!isMarketJumping) return undefined;
-
-    const timeoutId = window.setTimeout(() => {
-      setIsMarketJumping(false);
-    }, 40);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [isMarketJumping]);
-
-  const handleMarketSelect = (index: number) => {
-    setIsMarketJumping(false);
-    setMarketSlideIndex(index);
-  };
-
-  const handleMarketTransitionEnd = () => {
-    if (marketSlideIndex < marketGroups.length) return;
-
-    setIsMarketJumping(true);
-    setMarketSlideIndex(0);
-  };
 
   return (
-    <div className="poolito-home min-h-screen overflow-x-hidden bg-white text-[#06383c]">
-      <header className="poolito-header">
-        <nav className="poolito-nav" aria-label="Primary navigation">
-          <div className="poolito-logo-panel">
-            <SiteLogo
-              to="/"
-              showText={false}
-              className="poolito-logo"
-              imageClassName="h-11 max-w-[210px]"
-              markClassName="h-12 w-12 rounded-full bg-white/15 text-white shadow-none"
-              nameClassName="text-3xl font-black normal-case tracking-[0] text-white"
-            />
-          </div>
-          <div className="poolito-nav-body">
-            <div className="poolito-nav-links">
-              {navLinks.map((item) => (
-                <Link key={item.label} to={item.to}>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-            <div className="poolito-nav-actions">
-              <Link to="/login" className="poolito-auth-link">
-                <LogIn size={18} />
-                Sign In
-              </Link>
-              <Link to="/register" className="poolito-auth-link poolito-auth-link-primary">
-                <UserPlus size={18} />
-                Sign Up
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
-
-      <main>
-        <section className="poolito-hero" aria-labelledby="poolito-hero-title">
-          <div className="poolito-hero-pattern" aria-hidden="true" />
-          <div className="poolito-hero-copy">
-            <div className="poolito-frame">
-              <span className="poolito-kicker">
-                <BadgeCheck size={18} />
-                100% platform access
-              </span>
-              <h1 id="poolito-hero-title">
-                The Right Place for Online <span style={{ color: "#12cc9a" }}>Trading</span> – Simple, Fast, Secure.
-              </h1>
-              <p className="poolito-hero-subheadline">
-                Trade 100+ assets with real-time charts, a free demo, and fast withdrawals. All from one clean platform.
-              </p>
-              <div className="poolito-cta-row">
-                <Link to="/register" className="poolito-cta">
-                  Start Trading Now
-                  <span>
-                    <ArrowRight size={17} />
-                  </span>
-                </Link>
-                <Link to="/trade" className="poolito-cta poolito-cta-secondary">
-                  Free Demo
-                  <span>
-                    <Play size={16} fill="currentColor" />
-                  </span>
-                </Link>
-              </div>
-            </div>
-          </div>
-          <div className="poolito-hero-image" aria-label={`${platformName} trading platform preview`}>
-            <img src={HOME_ASSETS.hero} alt={`${platformName} laptop trading platform`} />
-          </div>
-          <div className="poolito-slash-one" aria-hidden="true" />
-          <div className="poolito-slash-two" aria-hidden="true" />
-        </section>
-
-        <section className="poolito-asset-band" aria-label={`${platformName} tradable asset classes`}>
-          <div className="poolito-container poolito-asset-band-inner">
-            <div className="poolito-asset-band-title">
-              <div className="poolito-asset-title-icon" aria-hidden="true">
-                <Globe2 size={34} />
-              </div>
-              <div>
-                <span>Trade</span>
-                <strong>Global Assets</strong>
-              </div>
-            </div>
-            <div className="poolito-band-tags">
-              {assetTags.map((tag) => {
-                const Icon = tag.icon;
-
-                return (
-                  <span key={tag.label}>
-                    <Icon size={18} />
-                    {tag.label}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section className="poolito-about" aria-labelledby="poolito-about-title">
-          <div className="poolito-container poolito-about-grid">
-            <div className="poolito-about-media">
-              <div className="poolito-about-img poolito-about-img-main">
-                <img src={HOME_ASSETS.aboutImac} alt={`${platformName} iMac trading terminal`} />
-              </div>
-              <div className="poolito-about-img poolito-about-img-float">
-                <img src={HOME_ASSETS.aboutPhone} alt={`${platformName} mobile trading screens`} />
-              </div>
-              <div className="poolito-round-badge" aria-hidden="true">
-                <BarChart3 size={36} />
-              </div>
-            </div>
-
-            <div className="poolito-about-copy">
-              <span className="poolito-section-label">About Trading</span>
-              <h2 id="poolito-about-title">
-                Your Gateway to Global Markets
-              </h2>
-              <p>
-                When you work with {platformName}, market access becomes easier because your chart,
-                wallet, demo mode, and live workspace stay in one clear platform.
-              </p>
-
-              <div className="poolito-feature-pair">
-                <article>
-                  <LineChart size={48} />
-                  <h3>Market Trading</h3>
-                  <p>Analyze live movement across currencies, crypto, commodities, and more.</p>
-                </article>
-                <article>
-                  <Smartphone size={48} />
-                  <h3>Mobile Trading</h3>
-                  <p>Use a responsive terminal built for clear chart visibility on every device.</p>
-                </article>
-              </div>
-
-              <div className="poolito-founder-row">
-                <Link to="/about" className="poolito-read-more">
-                  Read More
-                  <span>
-                    <ArrowRight size={18} />
-                  </span>
-                </Link>
-                <div className="poolito-founder">
-                  <span>
-                    <Headphones size={22} />
-                  </span>
-                  <div>
-                    <strong>{platformName}</strong>
-                    <small>Support desk</small>
-                  </div>
-                </div>
-              </div>
-
-              <div className="poolito-note">
-                <CheckCircle2 size={22} />
-                Give your trading account a cleaner place to grow.
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="poolito-how" aria-labelledby="poolito-how-title">
-          <div className="poolito-container">
-            <div className="poolito-section-heading poolito-how-heading">
-              <span>Simple Start</span>
-              <h2 id="poolito-how-title">How It Works (3 Steps)</h2>
-            </div>
-
-            <div className="poolito-how-grid">
-              {howItWorksSteps.map((item) => (
-                <article className="poolito-how-card" key={item.step}>
-                  <div className="poolito-how-icon">
-                    <item.icon size={38} />
-                  </div>
-                  <span>{item.step}</span>
-                  <h3>{item.title}</h3>
-                  <p>{item.text}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="poolito-services" aria-labelledby="poolito-services-title">
-          <div className="poolito-service-pattern" aria-hidden="true" />
-          <div className="poolito-container">
-            <div className="poolito-section-heading">
-              <span>Platform Features</span>
-              <h2 id="poolito-services-title">Features Built For Traders</h2>
-              <p>Everything you need to trade with confidence - all in one place.</p>
-            </div>
-
-            <div className="poolito-service-grid">
-              {services.map((service) => (
-                <article className="poolito-service-card" key={service.title}>
-                  <div className="poolito-feature-icon">
-                    <FeatureDrawnIcon type={service.icon} />
-                  </div>
-                  <div className="poolito-service-body">
-                    <span>{service.eyebrow}</span>
-                    <h3>{service.title}</h3>
-                    <p>{service.text}</p>
-                    <p className="poolito-feature-benefit">{service.benefit}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="poolito-markets" aria-labelledby="poolito-markets-title">
-          <div className="poolito-container">
-            <div className="poolito-section-heading poolito-markets-heading">
-              <span>Markets</span>
-              <h2 id="poolito-markets-title">Market Spreads and Swaps</h2>
-              <p>
-                {platformName} combines chart action, entry logic, timer control, and higher or lower
-                execution in one focused trading surface.
-              </p>
-            </div>
-
-            <div className="poolito-market-tabs" role="tablist" aria-label="Market categories">
-              {marketGroups.map((group, index) => (
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeMarketIndex === index}
-                  className={`poolito-market-tab ${activeMarketIndex === index ? "is-active" : ""}`}
-                  key={group.label}
-                  onClick={() => handleMarketSelect(index)}
-                >
-                  {group.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="poolito-market-stage">
-              <div
-                className={`poolito-market-track ${isMarketJumping ? "is-jumping" : ""}`}
-                style={{ transform: `translateX(-${marketSlideIndex * 100}%)` }}
-                onTransitionEnd={handleMarketTransitionEnd}
-                aria-live="polite"
-              >
-                {marketSlides.map((group, slideIndex) => (
-                  <div
-                    className="poolito-market-slide"
-                    key={`${group.label}-${slideIndex}`}
-                    aria-hidden={activeMarketIndex !== slideIndex % marketGroups.length}
-                  >
-                    <div className="poolito-market-grid">
-                      {group.cards.map((market) => {
-                        const isDown = market.direction === "Down";
-
-                        return (
-                          <article className="poolito-market-card" key={market.symbol}>
-                            <div className="poolito-market-card-head">
-                              <div className="poolito-market-mark-wrap">
-                                <AssetSymbolMark
-                                  symbol={market.symbol}
-                                  name={market.name}
-                                  category={group.category}
-                                  size={48}
-                                  className="poolito-market-mark"
-                                />
-                              </div>
-                              <div>
-                                <h3>{market.symbol}</h3>
-                                <p>{market.name}</p>
-                              </div>
-                              <span className={`poolito-market-status ${market.status.toLowerCase()}`}>
-                                {market.status}
-                              </span>
-                            </div>
-
-                            <dl className="poolito-market-metrics">
-                              <div>
-                                <dt>Payout</dt>
-                                <dd>{market.payout}</dd>
-                              </div>
-                              <div>
-                                <dt>Duration</dt>
-                                <dd>{market.duration}</dd>
-                              </div>
-                              <div>
-                                <dt>Direction</dt>
-                                <dd className={isDown ? "is-down" : "is-up"}>{market.direction}</dd>
-                              </div>
-                            </dl>
-
-                            <div className="poolito-market-bottom">
-                              <strong>{market.payout}</strong>
-                              <span>Binary</span>
-                            </div>
-
-                            <Link to="/trade" className="poolito-market-trade">
-                              Trade
-                            </Link>
-                          </article>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="poolito-market-dots" aria-label="Market carousel pages">
-              {marketGroups.map((group, index) => (
-                <button
-                  type="button"
-                  className={activeMarketIndex === index ? "is-active" : ""}
-                  aria-label={`Show ${group.label} markets`}
-                  key={group.label}
-                  onClick={() => handleMarketSelect(index)}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="poolito-trust" aria-labelledby="poolito-trust-title">
-          <div className="poolito-container">
-            <div className="poolito-video-panel">
-              <img src={HOME_ASSETS.imacAlt} alt={`${platformName} desktop terminal preview`} />
-              <div>
-                <Link to="/register" aria-label="Start trading">
-                  <Play size={28} fill="currentColor" />
-                </Link>
-                <h2 id="poolito-trust-title">Most Trusted Trading Platform</h2>
-                <Link to="/register" className="poolito-small-cta">
-                  Start Demo
-                  <ArrowRight size={15} />
-                </Link>
-              </div>
-            </div>
-
-            <div className="poolito-logo-strip" aria-label={`${platformName} platform features`}>
-              {trustLogos.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <span key={item.label}>
-                    <span className="poolito-logo-strip-icon">
-                      <Icon size={24} />
-                    </span>
-                    <strong>{item.label}</strong>
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section className="poolito-testimonials" aria-labelledby="poolito-testimonials-title">
-          <div className="poolito-container">
-            <div className="poolito-section-heading">
-              <span>Trader Feedback</span>
-              <h2 id="poolito-testimonials-title">What Traders Say</h2>
-            </div>
-
-            <div className="poolito-testimonial-grid">
-              {testimonials.map((item) => (
-                <article className="poolito-testimonial-card" key={item.name}>
-                  <div className="poolito-rating" aria-label={`${item.rating} out of 5 rating`}>
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Star key={index} size={16} fill="currentColor" />
-                    ))}
-                    <strong>{item.rating}</strong>
-                  </div>
-                  <p>{item.quote}</p>
-                  <div className="poolito-testimonial-author">
-                    <span>{item.initials}</span>
-                    <div>
-                      <strong>{item.name}</strong>
-                      <small>{item.role}</small>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="poolito-final-cta" aria-labelledby="poolito-final-cta-title">
-          <div className="poolito-container poolito-final-cta-inner">
-            <div>
-              <span className="poolito-section-label">Start Today</span>
-              <h2 id="poolito-final-cta-title">Ready to Start Your Trading Journey?</h2>
-              <p>
-                Join thousands of traders already using Init Option. Start with a free demo or go live instantly.
-              </p>
-            </div>
-            <div className="poolito-final-cta-actions">
-              <Link to="/register" className="poolito-cta">
-                Create Free Account
-                <span>
-                  <ArrowRight size={17} />
-                </span>
-              </Link>
-              <Link to="/trade" className="poolito-cta poolito-cta-secondary">
-                Open Demo
-                <span>
-                  <Play size={16} fill="currentColor" />
-                </span>
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <Footer />
-
+    <div className="cryptozone-page">
       <style>{`
-        .poolito-home {
-          --poolito-green: #12cc9a;
-          --poolito-green-bright: #12cc9a;
-          --poolito-dark: #1f4c63;
-          --poolito-deep: #1f4c63;
-          --poolito-muted: #6d7181;
-          --poolito-line: rgba(31, 76, 99, 0.11);
-          font-family: Arial, system-ui, sans-serif;
+        .cryptozone-page {
+          min-height: 100vh;
+          background: linear-gradient(180deg, #f1edf9 0%, #f3f0fb 100%);
+          color: #1f1832;
+          font-family: "Segoe UI", Arial, sans-serif;
         }
 
-        .poolito-container {
-          width: min(100% - 48px, 1300px);
+        .cryptozone-header {
+          position: sticky;
+          top: 0;
+          z-index: 30;
+          background: linear-gradient(90deg, #261d49 0%, #2a1f52 100%);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .cryptozone-nav {
+          max-width: 1280px;
           margin: 0 auto;
-        }
-
-        .poolito-header {
-          position: relative;
-          z-index: 20;
-          background: #fff;
-          box-shadow: 0 1px 0 rgba(31, 76, 99, 0.08);
-        }
-
-        .poolito-topbar {
-          background: var(--poolito-dark);
-          color: #fff;
-          font-size: 13px;
-          font-weight: 800;
-        }
-
-        .poolito-topbar-inner,
-        .poolito-topbar-left,
-        .poolito-topbar-social {
           display: flex;
           align-items: center;
-        }
-
-        .poolito-topbar-inner {
-          min-height: 42px;
           justify-content: space-between;
-          gap: 22px;
-        }
-
-        .poolito-topbar-left {
           gap: 24px;
+          padding: 18px 28px;
         }
 
-        .poolito-topbar-left a,
-        .poolito-topbar-left span,
-        .poolito-topbar-social {
-          color: rgba(255, 255, 255, 0.93);
+        .cryptozone-brand {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
+        }
+
+        .cryptozone-badge {
+          width: 30px;
+          height: 30px;
+          border-radius: 10px;
+          background: linear-gradient(135deg, #8d74ff 0%, #6a3af2 40%, #2d1b5f 100%);
+          position: relative;
+          box-shadow: 0 14px 28px rgba(107, 81, 227, 0.45);
+        }
+
+        .cryptozone-badge::before,
+        .cryptozone-badge::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border-radius: 10px;
+          transform: rotate(45deg);
+        }
+
+        .cryptozone-badge::before {
+          background: rgba(255,255,255,0.25);
+          inset: 5px;
+        }
+
+        .cryptozone-brand-name {
+          color: #ffffff;
+          font-size: 2rem;
+          font-weight: 800;
+          letter-spacing: -0.04em;
+        }
+
+        .cryptozone-brand-name span {
+          color: #cabdff;
+        }
+
+        .cryptozone-nav-links {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 30px;
+          flex: 1;
+          font-size: 0.8rem;
+          letter-spacing: 0.02em;
+        }
+
+        .cryptozone-nav-links a {
+          color: rgba(255,255,255,0.8);
           text-decoration: none;
-          gap: 8px;
+          font-weight: 600;
+          transition: color 0.2s ease;
         }
 
-        .poolito-topbar-left svg,
-        .poolito-topbar-social svg {
-          color: var(--poolito-green-bright);
+        .cryptozone-nav-links a:hover {
+          color: #ffffff;
         }
 
-        .poolito-topbar-social {
+        .cryptozone-nav-actions {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .cryptozone-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border: none;
+          border-radius: 12px;
+          font-weight: 700;
+          text-decoration: none;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          cursor: pointer;
+        }
+
+        .cryptozone-btn:hover {
+          transform: translateY(-1px);
+        }
+
+        .cryptozone-btn-login {
+          background: transparent;
+          color: #ffffff;
+          padding: 12px 22px;
+        }
+
+        .cryptozone-btn-primary {
+          background: linear-gradient(135deg, #6247eb 0%, #8c6dff 100%);
+          color: #ffffff;
+          padding: 12px 22px;
+          box-shadow: 0 18px 36px rgba(120, 92, 240, 0.35);
+        }
+
+        .cryptozone-main {
+          max-width: 1280px;
+          margin: 0 auto;
+          padding: 0 26px 80px;
+        }
+
+        .cryptozone-hero {
+          position: relative;
+          padding-top: 44px;
+          text-align: center;
+        }
+
+        .cryptozone-hero-inner {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding-top: 18px;
+        }
+
+        .cryptozone-coin {
+          width: 92px;
+          height: 92px;
+          border-radius: 999px;
+          display: grid;
+          place-items: center;
+          color: #5f3fe4;
+          background: linear-gradient(135deg, rgba(128, 94, 255, 0.18), rgba(154, 112, 255, 0.28));
+          border: 2px solid rgba(115, 87, 255, 0.35);
+          margin-bottom: 26px;
+          box-shadow: inset 0 0 0 8px rgba(255,255,255,0.12);
+        }
+
+        .cryptozone-coin svg {
+          width: 40px;
+          height: 40px;
+        }
+
+        .cryptozone-hero h1 {
+          max-width: 760px;
+          margin: 0;
+          font-size: clamp(2.3rem, 4vw, 3.7rem);
+          line-height: 1.08;
+          font-weight: 800;
+          letter-spacing: -0.06em;
+          color: #1d113a;
+        }
+
+        .cryptozone-hero h1 .accent {
+          color: #5d47d8;
+        }
+
+        .cryptozone-hero p {
+          margin: 18px auto 0;
+          max-width: 630px;
+          color: rgba(39, 33, 61, 0.7);
+          font-size: 1rem;
+        }
+
+        .cryptozone-hero-actions {
+          display: flex;
+          justify-content: center;
+          margin-top: 28px;
+        }
+
+        .cryptozone-primary-cta {
+          background: linear-gradient(135deg, #6447eb 0%, #6d53dd 100%);
+          color: #fff;
+          padding: 16px 26px;
+          border-radius: 12px;
+          box-shadow: 0 18px 32px rgba(96, 78, 214, 0.28);
+          text-decoration: none;
+          font-weight: 700;
+          display: inline-flex;
+          align-items: center;
           gap: 10px;
         }
 
-        .poolito-topbar-social a {
-          width: 28px;
-          height: 28px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #fff;
-          background: var(--poolito-green);
-          text-decoration: none;
+        .cryptozone-tickers {
+          margin-top: 22px;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 20px;
+          max-width: 900px;
+          margin-left: auto;
+          margin-right: auto;
         }
 
-        .poolito-topbar-social a svg {
-          color: #fff;
+        .cryptozone-ticker {
+          background: rgba(255,255,255,0.72);
+          border: 1px solid rgba(101, 83, 190, 0.12);
+          border-radius: 18px;
+          padding: 18px 20px;
+          box-shadow: 0 18px 28px rgba(106, 93, 171, 0.08);
+          text-align: left;
         }
 
-        .poolito-nav {
-          min-height: 82px;
-          display: flex;
-          background: #fff;
-        }
-
-        .poolito-logo-panel {
-          width: min(31vw, 420px);
-          min-width: 310px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0 54px 0 36px;
-          background: var(--poolito-green);
-          clip-path: polygon(0 0, 84% 0, 100% 100%, 0 100%);
-        }
-
-        .poolito-logo {
-          max-width: 100%;
-        }
-
-        .poolito-nav-body {
-          flex: 1;
+        .cryptozone-ticker-head {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 24px;
-          min-width: 0;
-          padding: 0 max(24px, calc((100vw - 1300px) / 2)) 0 8px;
+          margin-bottom: 12px;
         }
 
-        .poolito-nav-links,
-        .poolito-nav-actions {
+        .cryptozone-symbol {
           display: flex;
           align-items: center;
-        }
-
-        .poolito-nav-links {
-          gap: clamp(18px, 2.4vw, 38px);
-          padding-left: 20px;
-        }
-
-        .poolito-nav-links a {
-          color: var(--poolito-dark);
-          font-size: 13px;
-          font-weight: 900;
-          text-decoration: none;
-        }
-
-        .poolito-nav-links a:hover {
-          color: var(--poolito-green);
-        }
-
-        .poolito-nav-actions {
-          flex-shrink: 0;
           gap: 12px;
+          font-weight: 700;
+          color: #201740;
         }
 
-        .poolito-auth-link {
-          min-height: 46px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 9px;
-          padding: 0 20px;
-          border-radius: 999px;
-          color: var(--poolito-dark);
-          border: 2px solid rgba(31, 76, 99, 0.14);
-          background: #fff;
-          font-size: 13px;
-          font-weight: 950;
-          text-decoration: none;
-          white-space: nowrap;
-        }
-
-        .poolito-auth-link:hover {
-          color: var(--poolito-green);
-          border-color: rgba(18, 204, 154, 0.36);
-        }
-
-        .poolito-auth-link-primary {
-          color: #fff;
-          border-color: var(--poolito-green);
-          background: var(--poolito-green);
-        }
-
-        .poolito-auth-link-primary:hover {
-          color: #fff;
-          border-color: var(--poolito-dark);
-          background: var(--poolito-dark);
-        }
-
-        .poolito-hero {
-          position: relative;
-          min-height: 690px;
-          overflow: hidden;
+        .cryptozone-symbol-mark {
+          width: 28px;
+          height: 28px;
+          border-radius: 8px;
           display: grid;
-          grid-template-columns: minmax(0, 55%) minmax(0, 45%);
-          background: var(--poolito-deep);
-        }
-
-        .poolito-hero-pattern,
-        .poolito-service-pattern {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background-image: radial-gradient(rgba(255,255,255,0.13) 1.4px, transparent 1.4px);
-          background-size: 18px 18px;
-          mask-image: linear-gradient(90deg, rgba(0,0,0,0.8), transparent 58%);
-          opacity: 0.5;
-        }
-
-        .poolito-hero-copy {
-          position: relative;
-          z-index: 2;
-          display: flex;
-          align-items: center;
-          padding-left: max(82px, calc((100vw - 1440px) / 2));
-          padding-right: 40px;
-        }
-
-        .poolito-frame {
-          position: relative;
-          width: min(100%, 640px);
-          padding: 46px 44px 44px;
-          border-left: 8px solid var(--poolito-green);
-        }
-
-        .poolito-frame::before,
-        .poolito-frame::after {
-          content: "";
-          position: absolute;
-          background: var(--poolito-green);
-        }
-
-        .poolito-frame::before {
-          left: 0;
-          top: 0;
-          width: 61%;
-          height: 8px;
-        }
-
-        .poolito-frame::after {
-          left: 0;
-          bottom: 0;
-          width: 86%;
-          height: 8px;
-          box-shadow: 26px 0 0 -8px var(--poolito-green);
-        }
-
-        .poolito-kicker {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 18px;
-          color: var(--poolito-green-bright);
-          font-size: 15px;
-          font-weight: 900;
-          text-transform: uppercase;
-        }
-
-        .poolito-frame h1 {
-          margin: 0;
-          color: #fff;
-          font-size: clamp(40px, 3.2vw, 50px);
-          line-height: 1.06;
-          font-weight: 950;
-          letter-spacing: 0;
-          text-transform: uppercase;
-        }
-
-        .poolito-frame h1 span {
-          color: var(--poolito-green-bright);
-        }
-
-        .poolito-hero-subheadline {
-          max-width: 560px;
-          margin: 18px 0 0;
-          color: rgba(255, 255, 255, 0.82);
-          font-size: 15px;
-          line-height: 1.52;
+          place-items: center;
+          background: linear-gradient(135deg, #efeafd, #dcd3ff);
+          color: #5b4fd3;
+          font-size: 0.75rem;
           font-weight: 800;
         }
 
-        .poolito-cta-row {
+        .cryptozone-change {
+          color: #ff5c72;
+          font-size: 0.8rem;
+          font-weight: 700;
+        }
+
+        .cryptozone-change.positive {
+          color: #2ebd88;
+        }
+
+        .cryptozone-price {
+          font-size: 1.65rem;
+          font-weight: 800;
+          color: #1c153a;
+          letter-spacing: -0.05em;
+        }
+
+        .cryptozone-meta {
           display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 14px;
-          margin-top: 24px;
+          justify-content: space-between;
+          margin-top: 10px;
+          color: rgba(32, 27, 50, 0.72);
+          font-size: 0.75rem;
+          font-weight: 600;
         }
 
-        .poolito-cta,
-        .poolito-read-more,
-        .poolito-small-cta {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          text-decoration: none;
-          color: #fff;
-          background: var(--poolito-green);
-          font-weight: 900;
+        .cryptozone-trust {
+          padding-top: 85px;
+          text-align: center;
         }
 
-        .poolito-cta {
-          gap: 13px;
-          min-height: 54px;
-          padding: 0 9px 0 26px;
-          border-radius: 999px;
-          font-size: 14px;
-          text-transform: uppercase;
+        .cryptozone-section-title {
+          margin: 0;
+          font-size: clamp(2rem, 3vw, 2.6rem);
+          line-height: 1.12;
+          letter-spacing: -0.05em;
+          color: #1d113a;
         }
 
-        .poolito-cta-secondary {
-          background: rgba(255, 255, 255, 0.1);
-          box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.22);
+        .cryptozone-trust-sub {
+          margin: 10px auto 0;
+          max-width: 620px;
+          color: rgba(32, 27, 50, 0.7);
+          font-size: 0.95rem;
         }
 
-        .poolito-cta span,
-        .poolito-read-more span {
-          width: 42px;
-          height: 42px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          background: var(--poolito-dark);
-        }
-
-        .poolito-hero-image {
-          position: relative;
-          z-index: 1;
-          min-height: 690px;
-          clip-path: polygon(16% 0, 100% 0, 100% 100%, 0 100%);
-        }
-
-        .poolito-hero-image::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background:
-            linear-gradient(90deg, rgba(4, 44, 43, 0.62) 0%, rgba(7, 96, 57, 0.34) 48%, rgba(18, 204, 154, 0.2) 100%),
-            rgba(6, 103, 55, 0.16);
-        }
-
-        .poolito-hero-image img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          object-position: center right;
-          display: block;
-          filter: saturate(0.9) contrast(0.92) brightness(0.88);
-        }
-
-        .poolito-slash-one,
-        .poolito-slash-two {
-          position: absolute;
-          z-index: 3;
-          top: 80px;
-          bottom: 0;
-          width: 34px;
-          background: var(--poolito-green-bright);
-          transform: skewX(-20deg);
-        }
-
-        .poolito-slash-one {
-          left: 51%;
-        }
-
-        .poolito-slash-two {
-          left: calc(51% + 52px);
-          opacity: 0.82;
-        }
-
-        .poolito-asset-band {
-          position: relative;
-          min-height: 150px;
-          display: flex;
-          align-items: center;
-          color: #fff;
-          background: linear-gradient(90deg, var(--poolito-green) 0 30%, var(--poolito-deep) 30% 100%);
-        }
-
-        .poolito-asset-band::before {
-          content: "";
-          position: absolute;
-          left: 30%;
-          top: 0;
-          bottom: 0;
-          width: 96px;
-          background: var(--poolito-green);
-          clip-path: polygon(0 0, 45% 0, 100% 100%, 0 100%);
-        }
-
-        .poolito-asset-band-inner {
-          position: relative;
-          z-index: 1;
+        .cryptozone-trust-grid {
+          margin-top: 34px;
           display: grid;
-          grid-template-columns: minmax(220px, 0.8fr) minmax(0, 2.2fr);
-          gap: 36px;
-          align-items: center;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 26px;
         }
 
-        .poolito-asset-band-title {
+        .cryptozone-trust-card {
+          background: linear-gradient(180deg, #2b2254 0%, #2a1f4a 100%);
+          border-radius: 22px;
+          padding: 26px 22px;
+          text-align: left;
+          color: #fff;
+          min-height: 220px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          box-shadow: 0 28px 44px rgba(56, 36, 96, 0.18);
+        }
+
+        .cryptozone-trust-card-head {
           display: flex;
           align-items: center;
           gap: 16px;
         }
 
-        .poolito-asset-title-icon {
-          width: 58px;
-          height: 58px;
-          flex: 0 0 auto;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.24);
-          background: rgba(31, 76, 99, 0.2);
-          box-shadow:
-            inset 0 0 0 8px rgba(255, 255, 255, 0.06),
-            0 14px 26px rgba(0, 0, 0, 0.16);
-        }
-
-        .poolito-asset-title-icon svg {
-          stroke-width: 2.5;
-        }
-
-        .poolito-asset-band-title span,
-        .poolito-asset-band-title strong {
-          display: block;
-          text-transform: uppercase;
-        }
-
-        .poolito-asset-band-title span {
-          color: rgba(255, 255, 255, 0.72);
-          font-size: 13px;
-          font-weight: 950;
-        }
-
-        .poolito-asset-band-title strong {
-          margin-top: 4px;
-          max-width: 250px;
-          color: #fff;
-          font-size: 32px;
-          line-height: 1.06;
-          font-weight: 950;
-        }
-
-        .poolito-band-tags {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: flex-end;
-          gap: 14px;
-        }
-
-        .poolito-band-tags span {
-          min-height: 52px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          padding: 0 22px;
-          border-radius: 999px;
-          color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          background: rgba(255, 255, 255, 0.08);
-          box-shadow: 0 16px 30px rgba(0, 0, 0, 0.16);
-          font-size: 15px;
-          font-weight: 950;
-        }
-
-        .poolito-band-tags span svg {
-          flex: 0 0 auto;
-          color: var(--poolito-green-bright);
-          stroke-width: 2.6;
-        }
-
-        .poolito-about {
-          position: relative;
-          overflow: hidden;
-          padding: 88px 0 98px;
-          background:
-            linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.96)),
-            radial-gradient(circle at 88% 12%, rgba(6,56,60,0.08), transparent 28%),
-            #fff;
-        }
-
-        .poolito-about::before,
-        .poolito-services::after {
-          content: "";
-          position: absolute;
-          pointer-events: none;
-          opacity: 0.42;
-          background-image:
-            linear-gradient(45deg, rgba(6,56,60,0.06) 25%, transparent 25%),
-            linear-gradient(-45deg, rgba(6,56,60,0.06) 25%, transparent 25%);
-          background-size: 42px 42px;
-        }
-
-        .poolito-about::before {
-          right: -80px;
-          top: -40px;
-          width: 360px;
-          height: 360px;
-        }
-
-        .poolito-about-grid {
-          position: relative;
+        .cryptozone-trust-icon {
+          width: 52px;
+          height: 52px;
+          border-radius: 14px;
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.18);
           display: grid;
-          grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-          gap: 86px;
-          align-items: center;
+          place-items: center;
+          color: #d6cdfd;
         }
 
-        .poolito-about-media {
-          position: relative;
-          min-height: 600px;
+        .cryptozone-trust-card h3 {
+          margin: 0;
+          font-size: 1.15rem;
+          line-height: 1.5;
         }
 
-        .poolito-about-media::after {
-          content: "";
-          position: absolute;
-          top: 72px;
-          right: 0;
-          width: 118px;
-          height: 10px;
-          background: var(--poolito-green);
-          z-index: 0;
+        .cryptozone-trust-card p {
+          margin: 18px 0 0;
+          color: rgba(255,255,255,0.76);
+          line-height: 1.7;
+          font-size: 0.97rem;
         }
 
-        .poolito-about-img {
-          position: absolute;
-          overflow: hidden;
-          background: #fff;
-          box-shadow:
-            0 22px 48px rgba(31, 76, 99, 0.16),
-            0 0 0 1px rgba(18, 204, 154, 0.08);
-          z-index: 1;
-        }
-
-        .poolito-about-img img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          display: block;
-        }
-
-        .poolito-about-img-main {
-          left: 0;
-          top: 0;
-          width: 76%;
-          height: 520px;
-          border-left: 14px solid var(--poolito-green);
-          border-bottom: 14px solid var(--poolito-green);
-        }
-
-        .poolito-about-img-main img {
-          object-fit: cover;
-          object-position: 50% 50%;
-          transform: translate(-2%, -8%) scale(1.46);
-        }
-
-        .poolito-about-img-float {
-          right: 0;
-          top: 72px;
-          width: 50%;
-          height: 500px;
-          border: 10px solid var(--poolito-green);
-          box-shadow:
-            0 18px 34px rgba(31, 76, 99, 0.16),
-            inset 0 0 0 8px rgba(255, 255, 255, 0.92);
-          z-index: 2;
-        }
-
-        .poolito-about-img-float::before {
-          content: "";
-          position: absolute;
-          inset: 10px;
-          border: 1px solid rgba(18, 204, 154, 0.16);
-          pointer-events: none;
-          z-index: 2;
-        }
-
-        .poolito-about-img-float::after {
-          content: "";
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          width: 76px;
-          height: 7px;
-          background: var(--poolito-green);
-          pointer-events: none;
-          z-index: 3;
-        }
-
-        .poolito-about-img-float img {
-          object-fit: contain;
-          object-position: 50% 50%;
-          background: #fff;
-          padding: 18px;
-          transform: translateY(1%) scale(1.12);
-        }
-
-        .poolito-round-badge {
-          position: absolute;
-          left: 46%;
-          top: 43%;
-          width: 136px;
-          height: 136px;
+        .cryptozone-trust-card a {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 50%;
+          width: fit-content;
+          margin-top: 24px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.14);
           color: #fff;
-          background: var(--poolito-green);
-          border: 10px solid rgba(255, 255, 255, 0.22);
-          overflow: hidden;
-          transform: translate(-50%, -50%);
-          box-shadow: 0 18px 36px rgba(18, 204, 154, 0.26);
-          z-index: 3;
-        }
-
-        .poolito-round-badge::before {
-          content: "";
-          position: absolute;
-          inset: 9px;
-          border-radius: 50%;
-          background: repeating-conic-gradient(
-            from 0deg,
-            rgba(255, 255, 255, 0.78) 0deg 4deg,
-            transparent 4deg 9deg
-          );
-          -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
-          mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
-          opacity: 0.82;
-          transform-origin: center;
-          animation: poolito-badge-ring-spin 7s linear infinite;
-        }
-
-        .poolito-round-badge svg {
-          position: relative;
-          z-index: 1;
-        }
-
-        @keyframes poolito-badge-ring-spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        .poolito-section-label,
-        .poolito-section-heading span {
-          display: inline-flex;
-          align-items: center;
-          gap: 14px;
-          color: var(--poolito-green);
-          font-size: 16px;
-          font-weight: 950;
-          text-transform: uppercase;
-        }
-
-        .poolito-section-label::before,
-        .poolito-section-heading span::before,
-        .poolito-section-heading span::after {
-          content: "";
-          width: 72px;
-          height: 5px;
-          background: var(--poolito-green);
-        }
-
-        .poolito-about-copy h2,
-        .poolito-section-heading h2 {
-          margin: 16px 0 0;
-          color: var(--poolito-dark);
-          font-size: clamp(42px, 4.2vw, 64px);
-          line-height: 1.13;
-          font-weight: 950;
-          letter-spacing: 0;
-        }
-
-        .poolito-about-copy h2 {
-          max-width: 700px;
-        }
-
-        .poolito-about-copy h2::first-line {
-          color: var(--poolito-dark);
-        }
-
-        .poolito-about-copy > p {
-          max-width: 690px;
-          margin: 28px 0 0;
-          color: #606171;
-          font-size: 17px;
-          font-weight: 800;
-          line-height: 1.72;
-        }
-
-        .poolito-feature-pair {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 42px;
-          margin-top: 34px;
-        }
-
-        .poolito-feature-pair article svg {
-          color: var(--poolito-green);
-        }
-
-        .poolito-feature-pair h3 {
-          margin: 14px 0 0;
-          color: var(--poolito-dark);
-          font-size: 22px;
-          font-weight: 950;
-        }
-
-        .poolito-feature-pair p {
-          margin: 10px 0 0;
-          color: #6f7280;
-          font-size: 16px;
+          border-radius: 12px;
+          padding: 11px 18px;
+          text-decoration: none;
           font-weight: 700;
-          line-height: 1.55;
+          letter-spacing: 0.01em;
         }
 
-        .poolito-founder-row {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 28px;
-          margin-top: 34px;
+        .cryptozone-process {
+          padding-top: 92px;
         }
 
-        .poolito-read-more {
-          min-height: 70px;
-          gap: 20px;
-          padding: 0 9px 0 32px;
-          border-radius: 999px;
-          font-size: 18px;
-        }
-
-        .poolito-read-more span {
-          width: 54px;
-          height: 54px;
-        }
-
-        .poolito-founder {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-        }
-
-        .poolito-founder > span {
-          width: 66px;
-          height: 66px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: var(--poolito-green);
-          border: 3px dashed var(--poolito-green);
-        }
-
-        .poolito-founder strong,
-        .poolito-founder small {
-          display: block;
-        }
-
-        .poolito-founder strong {
-          color: var(--poolito-dark);
-          font-size: 24px;
-          font-weight: 950;
-        }
-
-        .poolito-founder small {
-          color: var(--poolito-green);
-          font-size: 15px;
-          font-weight: 900;
-        }
-
-        .poolito-note {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-top: 30px;
-          color: var(--poolito-green);
-          font-size: 18px;
-          font-weight: 950;
-        }
-
-        .poolito-how {
-          position: relative;
-          overflow: hidden;
-          padding: 96px 0 102px;
-          color: #fff;
-          background:
-            linear-gradient(90deg, rgba(31, 76, 99, 0.95), rgba(31, 76, 99, 0.9)),
-            url("${HOME_ASSETS.abstract}") center/cover;
-        }
-
-        .poolito-how::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background-image: radial-gradient(rgba(255,255,255,0.12) 1.5px, transparent 1.5px);
-          background-size: 18px 18px;
-          opacity: 0.28;
-        }
-
-        .poolito-how .poolito-container {
-          position: relative;
-          z-index: 1;
-        }
-
-        .poolito-how-heading h2 {
-          color: #fff;
-        }
-
-        .poolito-how-grid {
+        .cryptozone-process-steps {
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 28px;
-        }
-
-        .poolito-how-card {
-          position: relative;
-          min-height: 260px;
-          padding: 34px 30px 32px;
-          overflow: hidden;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-left: 7px solid var(--poolito-green);
-          border-radius: 8px;
-          background: rgba(255, 255, 255, 0.07);
-          box-shadow: 0 18px 42px rgba(0, 0, 0, 0.18);
-        }
-
-        .poolito-how-card::after {
-          content: "";
-          position: absolute;
-          right: -48px;
-          top: -48px;
-          width: 132px;
-          height: 132px;
-          border-radius: 50%;
-          background: rgba(18, 204, 154, 0.22);
-        }
-
-        .poolito-how-icon {
-          width: 74px;
-          height: 74px;
-          display: inline-flex;
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+          gap: 12px;
+          margin-top: 26px;
           align-items: center;
-          justify-content: center;
-          border-radius: 50%;
+        }
+
+        .cryptozone-process-chip {
+          background: rgba(255,255,255,0.7);
+          border: 1px solid rgba(86, 75, 165, 0.12);
+          border-radius: 12px;
+          padding: 12px 10px;
+          font-size: 0.72rem;
+          color: rgba(35, 27, 57, 0.7);
+          text-align: center;
+          font-weight: 700;
+        }
+
+        .cryptozone-process-chip.primary {
+          background: linear-gradient(135deg, #6547eb 0%, #8a6ff2 100%);
           color: #fff;
-          background: var(--poolito-green);
+          border-color: transparent;
+          box-shadow: 0 18px 30px rgba(102, 75, 218, 0.25);
         }
 
-        .poolito-how-card > span {
-          display: block;
-          margin-top: 28px;
-          color: var(--poolito-green-bright);
-          font-size: 15px;
-          font-weight: 950;
-          text-transform: uppercase;
-        }
-
-        .poolito-how-card h3 {
-          margin: 10px 0 0;
-          color: #fff;
-          font-size: 28px;
-          line-height: 1.18;
-          font-weight: 950;
-        }
-
-        .poolito-how-card p {
-          margin: 16px 0 0;
-          color: rgba(255, 255, 255, 0.76);
-          font-size: 17px;
-          line-height: 1.62;
-          font-weight: 800;
-        }
-
-        .poolito-services {
-          position: relative;
-          overflow: hidden;
-          padding: 108px 0 126px;
-          background: #fff;
-        }
-
-        .poolito-services::after {
-          right: -50px;
-          top: 70px;
-          width: 320px;
-          height: 320px;
-        }
-
-        .poolito-service-pattern {
-          inset: auto 0 0 auto;
-          width: 35%;
-          height: 56%;
-          background-image: radial-gradient(rgba(6,56,60,0.12) 2px, transparent 2px);
-          background-size: 17px 17px;
-          mask-image: linear-gradient(180deg, transparent, #000);
-        }
-
-        .poolito-section-heading {
-          position: relative;
-          z-index: 1;
-          margin-bottom: 58px;
+        .cryptozone-solution {
+          margin-top: 54px;
           text-align: center;
         }
 
-        .poolito-section-heading span {
-          justify-content: center;
+        .cryptozone-solution h2 {
+          margin: 0;
+          font-size: clamp(2rem, 3vw, 3.2rem);
+          line-height: 1.08;
+          letter-spacing: -0.06em;
+          color: #1d113a;
         }
 
-        .poolito-section-heading > p {
-          max-width: 700px;
-          margin: 18px auto 0;
-          color: #657284;
-          font-size: 17px;
-          line-height: 1.62;
-          font-weight: 700;
+        .cryptozone-solution h2 .purple {
+          color: #6649de;
         }
 
-        .poolito-service-grid {
-          position: relative;
-          z-index: 1;
+        .cryptozone-features {
+          margin-top: 36px;
           display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 30px;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 18px;
         }
 
-        .poolito-service-card {
-          min-height: 390px;
+        .cryptozone-feature {
+          background: rgba(255,255,255,0.7);
+          border: 1px solid rgba(87, 72, 171, 0.12);
+          border-radius: 18px;
+          padding: 26px 22px;
+          min-height: 220px;
+          box-shadow: 0 18px 26px rgba(105, 89, 169, 0.06);
+        }
+
+        .cryptozone-feature:nth-child(5) {
+          grid-column: 2 / 3;
+        }
+
+        .cryptozone-feature-icon {
+          width: 76px;
+          height: 76px;
+          border-radius: 24px;
+          background: linear-gradient(135deg, rgba(104, 82, 218, 0.18), rgba(146, 115, 255, 0.14));
+          color: #6247eb;
+          display: grid;
+          place-items: center;
+          border: 1px solid rgba(100, 71, 235, 0.2);
+          margin-bottom: 18px;
+        }
+
+        .cryptozone-feature h3 {
+          margin: 0;
+          font-size: 1.15rem;
+          color: #1d113a;
+        }
+
+        .cryptozone-feature p {
+          margin: 12px 0 0;
+          color: rgba(32, 27, 50, 0.7);
+          line-height: 1.8;
+          font-size: 0.94rem;
+        }
+
+        .cryptozone-feature.call {
+          background: linear-gradient(135deg, #2a204d 0%, #1d1738 100%);
+          color: #fff;
           display: flex;
-          flex-direction: column;
-          gap: 26px;
-          overflow: hidden;
-          padding: 32px 30px;
-          border: 1px solid rgba(31, 76, 99, 0.1);
-          border-radius: 8px;
-          background: #fff;
-          box-shadow: 0 14px 34px rgba(31, 76, 99, 0.11);
-        }
-
-        .poolito-feature-icon {
-          width: 92px;
-          height: 92px;
-          display: inline-flex;
           align-items: center;
           justify-content: center;
-          border-radius: 8px;
-          color: var(--poolito-dark);
-          border: 1px solid rgba(18, 204, 154, 0.18);
-          background: linear-gradient(135deg, rgba(18, 204, 154, 0.1), rgba(31, 76, 99, 0.04));
+          min-height: 220px;
         }
 
-        .poolito-feature-icon svg {
-          width: 62px;
-          height: 62px;
+        .cryptozone-feature.call .cryptozone-feature-icon {
+          background: rgba(255,255,255,0.08);
+          border-color: rgba(255,255,255,0.18);
+          color: #f4f0ff;
         }
 
-        .poolito-feature-icon path,
-        .poolito-feature-icon circle {
-          fill: none;
-          stroke: currentColor;
-          stroke-width: 4;
-          stroke-linecap: round;
-          stroke-linejoin: round;
+        .cryptozone-feature.call h3,
+        .cryptozone-feature.call p {
+          color: #fff;
         }
 
-        .poolito-feature-icon .poolito-icon-green {
-          stroke: var(--poolito-green);
+        .cryptozone-news {
+          padding-top: 96px;
         }
 
-        .poolito-feature-icon .poolito-icon-red {
-          stroke: #e21b52;
-        }
-
-        .poolito-feature-icon .poolito-icon-muted-line {
-          stroke: rgba(31, 76, 99, 0.42);
-        }
-
-        .poolito-feature-icon .poolito-icon-trend {
-          stroke: var(--poolito-green-bright);
-          stroke-width: 3.5;
-        }
-
-        .poolito-service-body {
+        .cryptozone-news-head {
           display: flex;
-          flex: 1;
-          flex-direction: column;
-        }
-
-        .poolito-service-body span {
-          color: var(--poolito-green);
-          font-size: 15px;
-          font-weight: 950;
-          text-transform: uppercase;
-        }
-
-        .poolito-service-body h3 {
-          margin: 11px 0 0;
-          color: var(--poolito-dark);
-          font-size: 24px;
-          font-weight: 950;
-          text-transform: uppercase;
-        }
-
-        .poolito-service-body p {
-          margin: 22px 0 0;
-          padding-top: 24px;
-          border-top: 2px dashed rgba(31, 76, 99, 0.18);
-          color: #717481;
-          font-size: 17px;
-          line-height: 1.62;
-          font-weight: 700;
-        }
-
-        .poolito-service-body .poolito-feature-benefit {
-          margin-top: 16px;
-          padding-top: 0;
-          border-top: 0;
-          color: var(--poolito-green);
-          font-size: 15px;
-          line-height: 1.58;
-          font-weight: 900;
-        }
-
-        .poolito-markets {
-          position: relative;
-          overflow: hidden;
-          padding: 104px 0 116px;
-          background: #f6faf8;
-        }
-
-        .poolito-markets::before {
-          content: "";
-          position: absolute;
-          inset: 48px 0 auto auto;
-          width: 34%;
-          height: 58%;
-          pointer-events: none;
-          background-image: radial-gradient(rgba(31, 76, 99, 0.1) 2px, transparent 2px);
-          background-size: 18px 18px;
-          opacity: 0.34;
-        }
-
-        .poolito-markets-heading {
+          justify-content: space-between;
+          align-items: end;
+          gap: 20px;
           margin-bottom: 26px;
         }
 
-        .poolito-markets-heading p {
-          max-width: 760px;
-          margin: 18px auto 0;
-          color: #657284;
-          font-size: 17px;
-          line-height: 1.62;
-          font-weight: 700;
-        }
-
-        .poolito-market-tabs {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 10px;
-          margin-bottom: 34px;
-        }
-
-        .poolito-market-tab {
-          min-height: 38px;
-          padding: 0 22px;
-          border: 1px solid rgba(31, 76, 99, 0.12);
-          border-radius: 999px;
-          color: #607084;
-          background: #fff;
-          box-shadow: 0 10px 24px rgba(31, 76, 99, 0.05);
-          font-size: 13px;
-          font-weight: 950;
-          cursor: pointer;
-        }
-
-        .poolito-market-tab.is-active {
-          color: #fff;
-          border-color: var(--poolito-green);
-          background: var(--poolito-green);
-          box-shadow: 0 16px 28px rgba(18, 204, 154, 0.24);
-        }
-
-        .poolito-market-stage {
-          position: relative;
-          z-index: 1;
-          overflow: hidden;
-        }
-
-        .poolito-market-track {
-          display: flex;
-          transition: transform 640ms cubic-bezier(0.76, 0, 0.24, 1);
-          will-change: transform;
-        }
-
-        .poolito-market-track.is-jumping {
-          transition: none;
-        }
-
-        .poolito-market-slide {
-          min-width: 100%;
-          flex: 0 0 100%;
-        }
-
-        .poolito-market-grid {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 28px;
-        }
-
-        .poolito-market-card {
-          min-height: 360px;
-          padding: 24px 22px 22px;
-          border: 1px solid rgba(31, 76, 99, 0.08);
-          border-radius: 8px;
-          background: #fff;
-          box-shadow: 0 18px 40px rgba(31, 76, 99, 0.1);
-        }
-
-        .poolito-market-card-head {
-          display: grid;
-          grid-template-columns: 70px minmax(0, 1fr) auto;
-          gap: 12px;
-          align-items: center;
-        }
-
-        .poolito-market-mark-wrap {
-          width: 70px;
-          min-width: 70px;
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-        }
-
-        .poolito-market-mark {
-          filter: drop-shadow(0 8px 16px rgba(31, 76, 99, 0.18));
-        }
-
-        .poolito-market-card h3 {
-          margin: 0;
-          color: var(--poolito-dark);
-          font-size: 17px;
-          font-weight: 950;
-          letter-spacing: 1.5px;
-        }
-
-        .poolito-market-card p {
-          margin: 4px 0 0;
-          color: #728092;
-          font-size: 12px;
+        .cryptozone-news-head span {
+          display: inline-block;
+          font-size: 0.7rem;
+          letter-spacing: 0.12em;
+          color: #5f4fd2;
           font-weight: 800;
-          line-height: 1.35;
-        }
-
-        .poolito-market-status {
-          min-height: 27px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0 12px;
-          border-radius: 999px;
-          color: #647181;
-          background: #edf2f4;
-          font-size: 11px;
-          font-weight: 950;
           text-transform: uppercase;
         }
 
-        .poolito-market-status.open {
-          color: var(--poolito-green);
-          background: rgba(24, 185, 88, 0.15);
-        }
-
-        .poolito-market-metrics {
-          display: grid;
-          gap: 12px;
-          margin: 24px 0 0;
-        }
-
-        .poolito-market-metrics div {
-          min-height: 54px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 14px;
-          padding: 0 16px;
-          border-radius: 8px;
-          background: #f4f7f8;
-        }
-
-        .poolito-market-metrics dt,
-        .poolito-market-metrics dd {
+        .cryptozone-news-head h2 {
           margin: 0;
+          font-size: clamp(2rem, 3vw, 2.8rem);
+          letter-spacing: -0.05em;
+          color: #1d113a;
         }
 
-        .poolito-market-metrics dt {
-          color: #6c7b8d;
-          font-size: 12px;
-          font-weight: 850;
-          text-transform: uppercase;
-        }
-
-        .poolito-market-metrics dd {
-          color: #162536;
-          font-size: 14px;
-          font-weight: 950;
-        }
-
-        .poolito-market-metrics dd.is-up {
-          color: var(--poolito-green);
-        }
-
-        .poolito-market-metrics dd.is-down {
-          color: #e21b52;
-        }
-
-        .poolito-market-bottom {
-          min-height: 54px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 14px;
-          margin-top: 18px;
-          padding: 0 16px;
-          border-radius: 8px;
-          background: linear-gradient(90deg, #f0f2f4, #fff);
-        }
-
-        .poolito-market-bottom strong {
-          color: #162536;
-          font-size: 15px;
-          font-weight: 950;
-        }
-
-        .poolito-market-bottom span {
-          color: #718095;
-          font-size: 12px;
-          font-weight: 950;
-          letter-spacing: 3px;
-          text-transform: uppercase;
-        }
-
-        .poolito-market-trade {
-          min-height: 48px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-top: 12px;
-          border-radius: 8px;
-          color: #fff;
-          background: var(--poolito-green);
-          text-decoration: none;
-          font-size: 13px;
-          font-weight: 950;
-          letter-spacing: 0.6px;
-          text-transform: uppercase;
-        }
-
-        .poolito-market-trade:hover {
-          background: var(--poolito-dark);
-        }
-
-        .poolito-market-dots {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 9px;
-          margin-top: 28px;
-        }
-
-        .poolito-market-dots button {
-          width: 10px;
-          height: 10px;
-          padding: 0;
-          border: 0;
-          border-radius: 999px;
-          background: #cbd5d8;
-          cursor: pointer;
-        }
-
-        .poolito-market-dots button.is-active {
-          width: 28px;
-          background: var(--poolito-green);
-        }
-
-        .poolito-trust {
-          padding: 0 0 104px;
-          background: var(--poolito-deep);
-        }
-
-        .poolito-video-panel {
-          position: relative;
-          min-height: 380px;
-          transform: translateY(-64px);
-          overflow: hidden;
-          border: 8px solid var(--poolito-green);
-          background: var(--poolito-dark);
-          box-shadow: 0 24px 58px rgba(0, 0, 0, 0.22);
-        }
-
-        .poolito-video-panel img {
-          width: 100%;
-          height: 100%;
-          position: absolute;
-          inset: 0;
-          object-fit: cover;
-          opacity: 0.42;
-        }
-
-        .poolito-video-panel > div {
-          position: relative;
-          z-index: 1;
-          min-height: 380px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          padding: 40px 24px;
-          color: #fff;
-          background: rgba(18, 204, 154, 0.26);
-        }
-
-        .poolito-video-panel a:first-child {
-          width: 74px;
-          height: 74px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #fff;
-          background: var(--poolito-green);
-          text-decoration: none;
-        }
-
-        .poolito-video-panel h2 {
-          margin: 24px 0 0;
-          color: #fff;
-          font-size: clamp(30px, 4vw, 52px);
-          line-height: 1.14;
-          font-weight: 950;
-        }
-
-        .poolito-small-cta {
-          gap: 8px;
-          min-height: 42px;
-          margin-top: 24px;
-          padding: 0 20px;
-          border-radius: 999px;
-          font-size: 13px;
-        }
-
-        .poolito-logo-strip {
+        .cryptozone-news-grid {
           display: grid;
-          grid-template-columns: repeat(6, minmax(0, 1fr));
-          gap: 1px;
-          margin-top: -28px;
-          background: rgba(255, 255, 255, 0.1);
+          grid-template-columns: 1.3fr 1fr;
+          gap: 26px;
         }
 
-        .poolito-logo-strip > span {
-          min-height: 94px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 13px;
-          padding: 0 18px;
-          color: rgba(255, 255, 255, 0.78);
-          background: rgba(255, 255, 255, 0.05);
-          font-size: 18px;
-          font-weight: 950;
+        .cryptozone-news-card {
+          background: rgba(255,255,255,0.72);
+          border: 1px solid rgba(91, 78, 177, 0.12);
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 18px 28px rgba(94, 76, 175, 0.08);
         }
 
-        .poolito-logo-strip-icon {
-          width: 42px;
-          height: 42px;
-          flex: 0 0 auto;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 8px;
-          color: var(--poolito-green-bright);
-          border: 1px solid rgba(24, 185, 88, 0.28);
-          background: rgba(18, 204, 154, 0.13);
-          box-shadow:
-            inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-            0 10px 20px rgba(0, 0, 0, 0.14);
+        .cryptozone-news-card.large {
+          background: linear-gradient(135deg, rgba(134, 93, 255, 0.18), rgba(56, 42, 103, 0.04));
         }
 
-        .poolito-logo-strip-icon svg {
-          stroke-width: 2.4;
-        }
-
-        .poolito-logo-strip strong {
-          color: rgba(255, 255, 255, 0.82);
-          font-size: 17px;
-          font-weight: 950;
-        }
-
-        .poolito-testimonials {
+        .cryptozone-news-media {
+          height: 220px;
           position: relative;
           overflow: hidden;
-          padding: 104px 0 112px;
-          background: #fff;
+          background: linear-gradient(135deg, #a483ff 0%, #d9d1ff 45%, #d8dea9 100%);
         }
 
-        .poolito-testimonials::before {
+        .cryptozone-news-media.blog-image-one {
+          background: linear-gradient(135deg, rgba(170,125,255,0.42), rgba(45,25,86,0.2)), radial-gradient(circle at 40% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0.15) 20%, transparent 35%);
+        }
+
+        .cryptozone-news-media.blog-image-two {
+          background: linear-gradient(135deg, rgba(111,78,228,0.78), rgba(32,25,58,0.88));
+        }
+
+        .cryptozone-news-media.blog-image-two::before,
+        .cryptozone-news-media.blog-image-two::after {
           content: "";
           position: absolute;
-          inset: 0 0 auto auto;
-          width: 34%;
-          height: 60%;
-          pointer-events: none;
-          background-image: radial-gradient(rgba(6,56,60,0.1) 2px, transparent 2px);
-          background-size: 18px 18px;
-          opacity: 0.45;
-        }
-
-        .poolito-testimonial-grid {
-          position: relative;
-          z-index: 1;
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 28px;
-        }
-
-        .poolito-testimonial-card {
-          min-height: 310px;
-          display: flex;
-          flex-direction: column;
-          padding: 32px 30px;
-          border-radius: 8px;
-          border: 1px solid rgba(31, 76, 99, 0.1);
-          background: #fff;
-          box-shadow: 0 16px 36px rgba(31, 76, 99, 0.1);
-        }
-
-        .poolito-rating {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          color: #f2a600;
-        }
-
-        .poolito-rating strong {
-          margin-left: 8px;
-          color: var(--poolito-dark);
-          font-size: 14px;
-          font-weight: 950;
-        }
-
-        .poolito-testimonial-card p {
-          margin: 28px 0 0;
-          color: #5f6472;
-          font-size: 18px;
-          line-height: 1.62;
-          font-weight: 800;
-        }
-
-        .poolito-testimonial-author {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          margin-top: auto;
-          padding-top: 28px;
-        }
-
-        .poolito-testimonial-author > span {
-          width: 58px;
-          height: 58px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
+          inset: auto;
           border-radius: 50%;
+          border: 14px solid rgba(255,255,255,0.18);
+        }
+
+        .cryptozone-news-media.blog-image-two::before {
+          width: 175px;
+          height: 175px;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+        }
+
+        .cryptozone-news-media.blog-image-two::after {
+          width: 100px;
+          height: 100px;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          border-color: rgba(255,255,255,0.12);
+        }
+
+        .cryptozone-news-body {
+          padding: 18px 20px 20px;
+        }
+
+        .cryptozone-news-date {
+          display: inline-block;
+          font-size: 0.72rem;
+          color: rgba(31, 24, 50, 0.72);
+          font-weight: 700;
+          margin-bottom: 10px;
+        }
+
+        .cryptozone-news-body h3 {
+          margin: 0;
+          font-size: 1.4rem;
+          line-height: 1.3;
+          color: #1e1636;
+          letter-spacing: -0.04em;
+        }
+
+        .cryptozone-news-body p {
+          margin: 10px 0 0;
+          color: rgba(31, 24, 50, 0.68);
+          line-height: 1.7;
+          font-size: 0.9rem;
+        }
+
+        .cryptozone-footer {
+          background: linear-gradient(180deg, #241d43 0%, #1b1637 100%);
           color: #fff;
-          background: var(--poolito-green);
-          font-weight: 950;
+          margin-top: 46px;
+          padding: 38px 0 22px;
         }
 
-        .poolito-testimonial-author strong,
-        .poolito-testimonial-author small {
-          display: block;
+        .cryptozone-footer-inner {
+          max-width: 1280px;
+          margin: 0 auto;
+          padding: 0 26px;
         }
 
-        .poolito-testimonial-author strong {
-          color: var(--poolito-dark);
-          font-size: 18px;
-          font-weight: 950;
-        }
-
-        .poolito-testimonial-author small {
-          color: var(--poolito-green);
-          font-size: 13px;
-          font-weight: 900;
-        }
-
-        .poolito-final-cta {
-          position: relative;
-          overflow: hidden;
-          padding: 96px 0;
-          background:
-            linear-gradient(90deg, rgba(31, 76, 99, 0.94), rgba(18, 204, 154, 0.9)),
-            url("${HOME_ASSETS.abstract}") center/cover;
-        }
-
-        .poolito-final-cta-inner {
-          display: grid;
-          grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.75fr);
-          gap: 48px;
-          align-items: center;
-        }
-
-        .poolito-final-cta .poolito-section-label {
-          color: #fff;
-        }
-
-        .poolito-final-cta .poolito-section-label::before {
-          background: #fff;
-        }
-
-        .poolito-final-cta h2 {
-          max-width: 760px;
-          margin: 18px 0 0;
-          color: #fff;
-          font-size: clamp(40px, 4vw, 60px);
-          line-height: 1.12;
-          font-weight: 950;
-          letter-spacing: 0;
-        }
-
-        .poolito-final-cta p {
-          max-width: 650px;
-          margin: 22px 0 0;
-          color: rgba(255, 255, 255, 0.78);
-          font-size: 18px;
-          line-height: 1.64;
-          font-weight: 800;
-        }
-
-        .poolito-final-cta-actions {
+        .cryptozone-footer-row {
           display: flex;
-          flex-wrap: wrap;
-          justify-content: flex-end;
-          gap: 14px;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+          padding-top: 18px;
+          color: rgba(255,255,255,0.72);
+          font-size: 0.82rem;
         }
 
-        .poolito-final-cta .poolito-cta-secondary {
-          background: rgba(255, 255, 255, 0.12);
-          box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.28);
-        }
-
-        @media (max-width: 1180px) {
-          .poolito-nav {
+        @media (max-width: 980px) {
+          .cryptozone-nav {
             flex-wrap: wrap;
           }
 
-          .poolito-logo-panel {
+          .cryptozone-nav-links {
+            order: 3;
             width: 100%;
-            min-width: 0;
-            min-height: 78px;
-            clip-path: none;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px 20px;
+            padding-top: 4px;
           }
 
-          .poolito-nav-body {
-            width: 100%;
-            padding: 0 24px;
-          }
-
-          .poolito-nav-links {
-            padding-left: 0;
-            gap: 20px;
-          }
-
-          .poolito-nav-actions {
-            flex-shrink: 1;
-          }
-
-          .poolito-hero {
+          .cryptozone-tickers,
+          .cryptozone-trust-grid,
+          .cryptozone-features,
+          .cryptozone-news-grid {
             grid-template-columns: 1fr;
           }
 
-          .poolito-hero-copy {
-            min-height: 560px;
-            padding: 72px 32px;
-          }
-
-          .poolito-hero-image {
-            min-height: 430px;
-            clip-path: none;
-          }
-
-          .poolito-slash-one,
-          .poolito-slash-two {
-            display: none;
-          }
-
-          .poolito-asset-band-inner,
-          .poolito-about-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .poolito-band-tags {
-            justify-content: flex-start;
-          }
-
-          .poolito-about-grid {
-            gap: 52px;
-          }
-
-          .poolito-how-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .poolito-service-grid {
+          .cryptozone-process-steps {
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
 
-          .poolito-market-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .poolito-testimonial-grid,
-          .poolito-final-cta-inner {
-            grid-template-columns: 1fr;
-          }
-
-          .poolito-final-cta-actions {
-            justify-content: flex-start;
+          .cryptozone-feature:nth-child(5) {
+            grid-column: auto;
           }
         }
 
-        @media (max-width: 820px) {
-          .poolito-container {
-            width: min(100% - 32px, 1300px);
+        @media (max-width: 640px) {
+          .cryptozone-nav {
+            padding: 16px 18px;
           }
 
-          .poolito-topbar-inner,
-          .poolito-topbar-left,
-          .poolito-topbar-social {
-            flex-wrap: wrap;
-            justify-content: center;
+          .cryptozone-brand-name {
+            font-size: 1.55rem;
           }
 
-          .poolito-topbar-inner {
-            padding: 10px 0;
+          .cryptozone-nav-actions {
+            margin-left: auto;
           }
 
-          .poolito-nav-body,
-          .poolito-nav-links {
-            flex-wrap: wrap;
-            justify-content: center;
+          .cryptozone-btn-login,
+          .cryptozone-btn-primary {
+            padding: 10px 14px;
+            font-size: 0.8rem;
           }
 
-          .poolito-nav-body {
-            padding: 18px 18px 0;
+          .cryptozone-main {
+            padding: 0 16px 60px;
           }
 
-          .poolito-nav-actions {
-            width: 100%;
-            justify-content: center;
+          .cryptozone-hero {
+            padding-top: 28px;
           }
 
-          .poolito-hero-copy {
-            min-height: 0;
-            padding: 48px 20px;
+          .cryptozone-hero h1 {
+            font-size: 2.3rem;
           }
 
-          .poolito-frame {
-            padding: 40px 28px;
-            border-width: 6px;
-          }
-
-          .poolito-frame::before,
-          .poolito-frame::after {
-            height: 6px;
-          }
-
-          .poolito-frame h1 {
-            font-size: clamp(34px, 11vw, 50px);
-          }
-
-          .poolito-asset-band {
-            padding: 28px 0;
-            background: var(--poolito-deep);
-          }
-
-          .poolito-asset-band::before {
-            display: none;
-          }
-
-          .poolito-asset-band-title strong {
-            font-size: 24px;
-          }
-
-          .poolito-band-tags span {
-            min-height: 42px;
-            padding: 0 16px;
-            font-size: 13px;
-          }
-
-          .poolito-about {
-            padding: 74px 0 82px;
-          }
-
-          .poolito-about-media {
-            min-height: 500px;
-          }
-
-          .poolito-about-media::after {
-            top: 48px;
-            width: 92px;
-            height: 8px;
-          }
-
-          .poolito-about-img-main {
-            width: 78%;
-            height: 410px;
-          }
-
-          .poolito-about-img-float {
-            top: 62px;
-            width: 50%;
-            height: 382px;
-            border-width: 8px;
-          }
-
-          .poolito-round-badge {
-            width: 98px;
-            height: 98px;
-            border-width: 8px;
-          }
-
-          .poolito-feature-pair,
-          .poolito-testimonial-grid,
-          .poolito-market-grid,
-          .poolito-service-grid,
-          .poolito-logo-strip {
+          .cryptozone-tickers,
+          .cryptozone-process-steps {
             grid-template-columns: 1fr;
           }
 
-          .poolito-logo-strip > span {
-            min-height: 96px;
+          .cryptozone-trust-grid,
+          .cryptozone-features {
+            gap: 16px;
           }
 
-          .poolito-logo-strip-icon {
-            width: 40px;
-            height: 40px;
-          }
-
-          .poolito-markets {
-            padding: 78px 0 86px;
-          }
-
-          .poolito-markets-heading p {
-            font-size: 15px;
-          }
-
-          .poolito-market-card {
-            min-height: 0;
-          }
-
-          .poolito-section-label::before {
-            width: 44px;
-          }
-
-          .poolito-section-heading span::before,
-          .poolito-section-heading span::after {
-            width: 48px;
-          }
-        }
-
-        @media (max-width: 520px) {
-          .poolito-topbar-left {
-            gap: 10px;
-          }
-
-          .poolito-nav-links {
-            gap: 14px;
-          }
-
-          .poolito-nav-links a {
-            font-size: 12px;
-          }
-
-          .poolito-logo-panel {
-            padding: 0 18px;
-          }
-
-          .poolito-frame {
-            padding: 34px 20px;
-          }
-
-          .poolito-band-tags {
-            gap: 8px;
-          }
-
-          .poolito-market-tab {
-            min-height: 36px;
-            padding: 0 14px;
-            font-size: 12px;
-          }
-
-          .poolito-market-card {
-            padding: 20px 18px 18px;
-          }
-
-          .poolito-market-card-head {
-            grid-template-columns: 64px minmax(0, 1fr);
-          }
-
-          .poolito-market-mark-wrap {
-            width: 64px;
-            min-width: 64px;
-          }
-
-          .poolito-market-status {
-            grid-column: 1 / -1;
-            justify-self: flex-start;
-          }
-
-          .poolito-market-bottom span {
-            letter-spacing: 2px;
-          }
-
-          .poolito-about-img-main {
-            left: 0;
-            width: 84%;
-            height: 320px;
-          }
-
-          .poolito-about-img-float {
-            top: 88px;
-            width: 58%;
-            height: 278px;
-          }
-
-          .poolito-about-copy h2,
-          .poolito-section-heading h2 {
-            font-size: 30px;
-          }
-
-          .poolito-frame h1 {
-            font-size: clamp(24px, 9vw, 34px);
-          }
-
-          .poolito-founder-row {
-            align-items: flex-start;
+          .cryptozone-news-head {
+            display: block;
           }
         }
       `}</style>
+
+      <header className="cryptozone-header">
+        <nav className="cryptozone-nav" aria-label="Primary navigation">
+          <div className="cryptozone-brand">
+            <div className="cryptozone-badge" aria-hidden="true" />
+            <div className="cryptozone-brand-name">Crypto<span>Zone</span></div>
+          </div>
+
+          <div className="cryptozone-nav-links">
+            <Link to="/">Home</Link>
+            <Link to="/about">About Us</Link>
+            <Link to="/trade">Trading</Link>
+            <Link to="/blog">Blog</Link>
+            <Link to="/contact">Contact Us</Link>
+          </div>
+
+          <div className="cryptozone-nav-actions">
+            <Link to="/login" className="cryptozone-btn cryptozone-btn-login">Login</Link>
+            <Link to="/register" className="cryptozone-btn cryptozone-btn-primary">Register</Link>
+          </div>
+        </nav>
+      </header>
+
+      <main className="cryptozone-main">
+        <section className="cryptozone-hero" aria-labelledby="hero-heading">
+          <div className="cryptozone-hero-inner">
+            <div className="cryptozone-coin" aria-hidden="true">
+              <Bitcoin size={38} strokeWidth={2.25} />
+            </div>
+            <h1 id="hero-heading">Your <span className="accent">Global</span> OTC desk for Cryptocurrencies</h1>
+            <p>Transfer USD, EUR or Crypto and start trading today.</p>
+            <div className="cryptozone-hero-actions">
+              <Link to="/register" className="cryptozone-primary-cta">
+                Get Started
+                <ArrowRight size={18} />
+              </Link>
+            </div>
+          </div>
+
+          <div className="cryptozone-tickers">
+            {assetCards.map((card) => (
+              <article key={card.symbol} className="cryptozone-ticker">
+                <div className="cryptozone-ticker-head">
+                  <div className="cryptozone-symbol">
+                    <div className="cryptozone-symbol-mark">{card.symbol.slice(0, 1)}</div>
+                    <div>
+                      <div>{card.name}</div>
+                    </div>
+                  </div>
+                  <div className={`cryptozone-change ${card.positive ? "positive" : ""}`}>{card.change}</div>
+                </div>
+                <div className="cryptozone-price">{card.price}</div>
+                <div className="cryptozone-meta">
+                  <span>Latest price</span>
+                  <span>24h change</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="cryptozone-trust" aria-labelledby="trust-heading">
+          <h2 id="trust-heading" className="cryptozone-section-title">Why Trust Us?</h2>
+          <p className="cryptozone-trust-sub">Trust comes from experience. Many of the pleased customers may function as a guide for you.</p>
+
+          <div className="cryptozone-trust-grid">
+            {trustCards.map((card) => (
+              <article key={card.title} className="cryptozone-trust-card">
+                <div>
+                  <div className="cryptozone-trust-card-head">
+                    <div className="cryptozone-trust-icon">
+                      {card.icon === "cash" ? <WalletCards size={24} /> : <BadgeCheck size={24} />}
+                    </div>
+                    <h3>{card.title}</h3>
+                  </div>
+                  <p>{card.text}</p>
+                </div>
+                <a href="/about">{card.cta}</a>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="cryptozone-process" aria-labelledby="process-heading">
+          <div className="cryptozone-process-steps">
+            {processSteps.map((step, index) => (
+              <div key={step.label} className={`cryptozone-process-chip ${index === 4 ? "primary" : ""}`}>
+                {step.label}
+              </div>
+            ))}
+          </div>
+
+          <div className="cryptozone-solution">
+            <h2 id="process-heading">One-stop solution to <span className="purple">buy and sell</span> cryptocurrency with Cash</h2>
+          </div>
+
+          <div className="cryptozone-features">
+            {featureCards.map((card, index) => (
+              <article key={`${card.title}-${index}`} className={`cryptozone-feature ${card.icon === "call" ? "call" : ""}`}>
+                <div className="cryptozone-feature-icon">
+                  {card.icon === "pricing" && <BadgeCheck size={28} />}
+                  {card.icon === "support" && <Headphones size={28} />}
+                  {card.icon === "kyc" && <ShieldCheck size={28} />}
+                  {card.icon === "security" && <ShieldCheck size={28} />}
+                  {card.icon === "transaction" && <WalletCards size={28} />}
+                  {card.icon === "call" && <Headphones size={28} />}
+                </div>
+                <h3>{card.title}</h3>
+                {card.text ? <p>{card.text}</p> : null}
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="cryptozone-news" aria-labelledby="news-heading">
+          <div className="cryptozone-news-head">
+            <span>From our blog</span>
+            <h2 id="news-heading">Recent News &amp; Updates</h2>
+          </div>
+
+          <div className="cryptozone-news-grid">
+            {blogPosts.map((post) => (
+              <article key={post.title} className={`cryptozone-news-card ${post.large ? "large" : ""}`}>
+                <div className={`cryptozone-news-media ${post.imageClass}`} aria-hidden="true" />
+                <div className="cryptozone-news-body">
+                  <span className="cryptozone-news-date">{post.date}</span>
+                  <h3>{post.title}</h3>
+                  {post.meta ? <p>{post.meta}</p> : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <footer className="cryptozone-footer">
+        <div className="cryptozone-footer-inner">
+          <div className="cryptozone-footer-row">Copyright © 2025 {platformName}. All rights reserved.</div>
+        </div>
+      </footer>
     </div>
   );
 };

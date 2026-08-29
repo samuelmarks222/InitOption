@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { X, Plus, Minus } from "lucide-react";
 
 interface Props {
   value: number;
@@ -10,79 +10,50 @@ interface Props {
 
 const pad = (n: number) => String(Math.max(0, Math.floor(n))).padStart(2, "0");
 
-const formatPreset = (seconds: number) => {
-  const totalSeconds = Math.max(0, Math.floor(seconds));
-
-  if (totalSeconds >= 3600) {
-    const hours = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
-    return `${hours}h ${mins}m`;
-  }
-
-  if (totalSeconds >= 60) {
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    return `${mins}m ${secs}s`;
-  }
-
-  return `${totalSeconds}s`;
-};
-
 const TIME_PRESETS = [
-  { label: "00:05", val: 5 },
-  { label: "00:10", val: 10 },
-  { label: "00:15", val: 15 },
-  { label: "00:30", val: 30 },
-  { label: "01:00", val: 60 },
-  { label: "02:00", val: 120 },
-  { label: "05:00", val: 300 },
-  { label: "10:00", val: 600 },
-  { label: "15:00", val: 900 },
-  { label: "30:00", val: 1800 },
-  { label: "01:00:00", val: 3600 },
-  { label: "02:00:00", val: 7200 },
+  { label: "S3",  val: 3 },
+  { label: "S15", val: 15 },
+  { label: "S30", val: 30 },
+  { label: "M1",  val: 60 },
+  { label: "M3",  val: 180 },
+  { label: "M5",  val: 300 },
+  { label: "M30", val: 1800 },
+  { label: "H1",  val: 3600 },
+  { label: "H4",  val: 14400 },
 ];
 
 const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
-  const totalSeconds = Math.max(0, Math.floor(value));
-  const hh = Math.floor(totalSeconds / 3600);
-  const mm = Math.floor((totalSeconds % 3600) / 60);
-  const ss = totalSeconds % 60;
+  const hrs = Math.floor(value / 3600);
+  const mins = Math.floor((value % 3600) / 60);
+  const secs = value % 60;
 
   useEffect(() => {
     if (!triggerRef.current || !cardRef.current) return;
     const tr = triggerRef.current.getBoundingClientRect();
-    const cardW = 234;
-    const cardH = 260;
-    const gap = 12;
+    const cardW = 274;
     const isMobile = window.innerWidth < 1024;
-
     if (isMobile) {
-      const left = Math.min(Math.max(12, (window.innerWidth - cardW) / 2), window.innerWidth - cardW - 12);
       setPos({
-        top: Math.min(Math.max(12, window.innerHeight - cardH - 18), window.innerHeight - cardH - 12),
-        left,
+        top: Math.max(8, window.innerHeight - 420),
+        left: Math.max(8, (window.innerWidth - cardW) / 2),
       });
-      return;
+    } else {
+      setPos({
+        top: tr.top,
+        left: tr.left - cardW - 8,
+      });
     }
-
-    const desiredLeft = Math.min(
-      Math.max(8, tr.left + (tr.width - cardW) / 2),
-      window.innerWidth - cardW - 12,
-    );
-
-    const desiredTop = Math.min(
-      Math.max(12, tr.bottom + gap),
-      window.innerHeight - cardH - 12,
-    );
-
-    setPos({
-      top: desiredTop,
-      left: desiredLeft,
-    });
   }, [triggerRef]);
+
+  const setComponent = (comp: "h" | "m" | "s", delta: number) => {
+    let h = hrs, m = mins, s = secs;
+    if (comp === "h") h = Math.max(0, Math.min(99, h + delta));
+    if (comp === "m") m = Math.max(0, Math.min(59, m + delta));
+    if (comp === "s") s = Math.max(0, Math.min(59, s + delta));
+    onChange(h * 3600 + m * 60 + s);
+  };
 
   return (
     <>
@@ -90,57 +61,93 @@ const TimePopover = ({ value, onChange, onClose, triggerRef }: Props) => {
       <div
         ref={cardRef}
         style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 100 }}
-        className="w-[234px] overflow-hidden rounded-xl border border-[#262d41] bg-[#1a2030] shadow-[0_16px_30px_rgba(0,0,0,0.38)]"
+        className="w-[274px] overflow-hidden rounded-xl border border-[#262b40] shadow-2xl"
       >
-        <div className="flex items-center justify-between border-b border-white/8 bg-[#171d2b] px-3 py-2">
-          <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#dfe7ff]">
-            <span className="h-2 w-2 rounded-full bg-[#4f86ff] shadow-[0_0_10px_rgba(79,134,255,0.9)]" />
-            Time
-          </span>
+        <div className="flex items-center justify-between bg-[#151923] px-3 py-2">
+          <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-white uppercase">Time</span>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-4 w-4 items-center justify-center rounded-full bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white"
+            className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white"
           >
             <X className="h-3 w-3" strokeWidth={2.5} />
           </button>
         </div>
 
-        <div className="space-y-3 bg-[#1b2335] p-2.5">
-          <div className="flex items-center justify-between gap-2 rounded-md border border-[#2d3550] bg-[#0f1625] px-2 py-2">
-            <span className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Current</span>
-            <span className="text-[14px] font-semibold text-white">{`${pad(hh)}:${pad(mm)}:${pad(ss)}`}</span>
+        <div style={{ background: "#1c2030" }} className="p-3.5 flex flex-col gap-4">
+          {/* H:M:S columns */}
+          <div className="grid grid-cols-5 items-center justify-items-center px-1">
+            <div className="w-full flex flex-col gap-1.5">
+              <button
+                type="button"
+                onClick={() => setComponent("h", 1)}
+                className="flex h-7 w-full items-center justify-center rounded border border-[#2d3550] bg-[#23293f] text-gray-400 hover:bg-[#2c344e] active:scale-95 transition"
+              >
+                <Plus className="h-2.5 w-2.5" strokeWidth={2.5} />
+              </button>
+              <div className="w-full py-1 text-center text-[19px] font-semibold tracking-wide text-white">{pad(hrs)}</div>
+              <button
+                type="button"
+                onClick={() => setComponent("h", -1)}
+                className="flex h-7 w-full items-center justify-center rounded border border-[#2d3550] bg-[#23293f] text-gray-400 hover:bg-[#2c344e] active:scale-95 transition"
+              >
+                <Minus className="h-2.5 w-2.5" strokeWidth={2.5} />
+              </button>
+            </div>
+
+            <span className="self-center mb-1 text-[17px] font-bold text-gray-400">:</span>
+
+            <div className="w-full flex flex-col gap-1.5">
+              <button
+                type="button"
+                onClick={() => setComponent("m", 1)}
+                className="flex h-7 w-full items-center justify-center rounded border border-[#2d3550] bg-[#23293f] text-gray-400 hover:bg-[#2c344e] active:scale-95 transition"
+              >
+                <Plus className="h-2.5 w-2.5" strokeWidth={2.5} />
+              </button>
+              <div className="w-full py-1 text-center text-[19px] font-semibold tracking-wide text-white">{pad(mins)}</div>
+              <button
+                type="button"
+                onClick={() => setComponent("m", -1)}
+                className="flex h-7 w-full items-center justify-center rounded border border-[#2d3550] bg-[#23293f] text-gray-400 hover:bg-[#2c344e] active:scale-95 transition"
+              >
+                <Minus className="h-2.5 w-2.5" strokeWidth={2.5} />
+              </button>
+            </div>
+
+            <span className="self-center mb-1 text-[17px] font-bold text-gray-400">:</span>
+
+            <div className="w-full flex flex-col gap-1.5">
+              <button
+                type="button"
+                onClick={() => setComponent("s", 1)}
+                className="flex h-7 w-full items-center justify-center rounded border border-[#2d3550] bg-[#23293f] text-gray-400 hover:bg-[#2c344e] active:scale-95 transition"
+              >
+                <Plus className="h-2.5 w-2.5" strokeWidth={2.5} />
+              </button>
+              <div className="w-full py-1 text-center text-[19px] font-semibold tracking-wide text-white">{pad(secs)}</div>
+              <button
+                type="button"
+                onClick={() => setComponent("s", -1)}
+                className="flex h-7 w-full items-center justify-center rounded border border-[#2d3550] bg-[#23293f] text-gray-400 hover:bg-[#2c344e] active:scale-95 transition"
+              >
+                <Minus className="h-2.5 w-2.5" strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            {TIME_PRESETS.map((item) => {
-              const isSelected = totalSeconds === item.val;
-              return (
-                <button
-                  key={item.val}
-                  type="button"
-                  onClick={() => {
-                    onChange(item.val);
-                    onClose();
-                  }}
-                  className={`h-9 rounded-md border text-[11px] font-semibold tracking-[0.08em] transition ${
-                    isSelected
-                      ? "border-[#4f86ff] bg-[#1b2c46] text-[#dfe7ff]"
-                      : "border-[#2a344f] bg-[#121b2d] text-[#7fa3e7] hover:border-[#3c4f7b]"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="rounded-md border border-[#2a344f] bg-[#0f1625] p-2 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8facd8]">
-            Switch Time
-          </div>
-
-          <div className="rounded-md border border-[#2a344f] bg-[#0f1625] p-2 text-[10px] text-slate-400">
-            {formatPreset(value)} selected
+          {/* Preset grid */}
+          <div className="bg-[#151926] rounded-lg p-2.5 border border-[#22283d] grid grid-cols-3 gap-2">
+            {TIME_PRESETS.map((p) => (
+              <button
+                key={p.val}
+                type="button"
+                onClick={() => { onChange(p.val); onClose(); }}
+                className="h-9 rounded-md border border-[#262c43] bg-transparent hover:bg-[#1f253a] text-[13px] font-medium text-[#4c84ff] tracking-wide transition"
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>

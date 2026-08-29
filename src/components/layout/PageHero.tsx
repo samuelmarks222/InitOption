@@ -40,7 +40,7 @@ const PageHero = ({ eyebrow, title, description, cta }: PageHeroProps) => (
         position: relative;
         overflow: hidden;
         padding: 166px 24px 64px;
-        background: linear-gradient(135deg, rgba(255,255,255,0.84), rgba(239,244,253,0.94)), #eef3fb;
+        background: linear-gradient(135deg, rgba(247,244,255,0.96), rgba(240,236,255,0.9)), #f4f0ff;
       }
 
       .ph-stage::before {
@@ -89,7 +89,7 @@ const PageHero = ({ eyebrow, title, description, cta }: PageHeroProps) => (
         align-items: center;
         gap: 8px;
         border-radius: 999px;
-        background: linear-gradient(135deg, #7a3df0, #ff970f);
+        background: linear-gradient(135deg, #6447eb, #8b5cf6);
         padding: 6px 16px;
         font-size: 11px;
         font-weight: 800;
@@ -103,7 +103,7 @@ const PageHero = ({ eyebrow, title, description, cta }: PageHeroProps) => (
         font-size: 44px;
         font-weight: 900;
         line-height: 1.08;
-        color: #2b215c;
+        color: #20173d;
         max-width: 850px;
         font-family: Arial, system-ui, sans-serif;
       }
@@ -134,8 +134,8 @@ const PageHero = ({ eyebrow, title, description, cta }: PageHeroProps) => (
         font-weight: 800;
         text-decoration: none;
         color: #ffffff;
-        background: #7a3df0;
-        box-shadow: 0 13px 28px rgba(122,61,240,0.28);
+        background: linear-gradient(135deg, #6447eb, #7d5cf2);
+        box-shadow: 0 13px 28px rgba(102, 73, 204, 0.28);
         transition: transform 180ms ease, box-shadow 180ms ease;
       }
 

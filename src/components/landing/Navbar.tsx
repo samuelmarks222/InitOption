@@ -118,13 +118,13 @@ const Navbar = () => {
           inset: 0 0 auto;
           z-index: 50;
           font-family: Arial, system-ui, sans-serif;
-          --io-dark: #1f4c63;
-          --io-green: #12cc9a;
-          --io-green-bright: #12cc9a;
+            --io-dark: #251d47;
+            --io-green: #7a5ef5;
+            --io-green-bright: #8d73ff;
         }
 
         .io-topbar {
-          background: var(--io-dark);
+          background: linear-gradient(90deg, #20173d 0%, #2a1f52 100%);
           color: #ffffff;
           font-size: 13px;
           font-weight: 800;

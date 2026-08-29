@@ -160,6 +160,7 @@ const TIME_PRESETS = [
 ];
 
 const MAX_MANUAL_INVESTMENT = 3000;
+const MIN_MANUAL_EXPIRY_SECONDS = 60;
 const MAX_MANUAL_EXPIRY_SECONDS = 24 * 60 * 60;
 const PENDING_TRADE_DELAY_MS = 3000;
 const PENDING_TRADE_MODE_KEY = "trade_pending_mode_enabled";
@@ -172,7 +173,150 @@ const clampInvestmentValue = (value: number, mode: InvestmentMode) => {
   return Math.max(1, Math.min(MAX_MANUAL_INVESTMENT, Math.round(value * 100) / 100));
 };
 
+type CustomDurationUnit = "seconds" | "minutes" | "hours";
+
+const deriveCustomDurationInput = (seconds: number): { amount: string; unit: CustomDurationUnit } => {
+  if (seconds >= 3600 && seconds % 3600 === 0) {
+    return { amount: String(seconds / 3600), unit: "hours" };
+  }
+
+  if (seconds >= 60 && seconds % 60 === 0) {
+    return { amount: String(seconds / 60), unit: "minutes" };
+  }
+
+  return { amount: String(seconds), unit: "seconds" };
+};
+
+const customDurationUnitToSeconds = (amount: number, unit: CustomDurationUnit) => {
+  if (unit === "hours") return amount * 3600;
+  if (unit === "minutes") return amount * 60;
+  return amount;
+};
+
 // ─── Withdrawal Modal and more was extracted to AccountModals.tsx ───
+
+// ─── Time Switcher ─────────────────────────────────────────────────────────────
+const TimeSwitcher = ({
+  value,
+  onChange,
+  onClose,
+  triggerRef,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  onClose: () => void;
+  triggerRef: React.RefObject<HTMLDivElement | null>;
+}) => {
+  const derived = deriveCustomDurationInput(value);
+  const [customAmount, setCustomAmount] = useState(derived.amount);
+  const [customUnit, setCustomUnit] = useState<CustomDurationUnit>(derived.unit);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, right: 0 });
+
+  useEffect(() => {
+    if (!triggerRef.current || !cardRef.current) return;
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) {
+      setPos({
+        top: Math.max(8, window.innerHeight - 380),
+        right: Math.max(8, (window.innerWidth - 340) / 2),
+      });
+    } else {
+      setPos({
+        top: triggerRect.top,
+        right: window.innerWidth - triggerRect.left + 8,
+      });
+    }
+  }, [triggerRef]);
+
+  useEffect(() => {
+    const nextDerived = deriveCustomDurationInput(value);
+    setCustomAmount(nextDerived.amount);
+    setCustomUnit(nextDerived.unit);
+  }, [value]);
+
+  const applyCustomDuration = () => {
+    const parsedAmount = Math.max(1, Number(customAmount) || 0);
+    const nextSeconds = Math.max(
+      MIN_MANUAL_EXPIRY_SECONDS,
+      Math.min(
+        MAX_MANUAL_EXPIRY_SECONDS,
+        Math.round(customDurationUnitToSeconds(parsedAmount, customUnit)),
+      ),
+    );
+
+    onChange(nextSeconds);
+    onClose();
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 z-30" onClick={onClose} />
+      <div
+        ref={cardRef}
+        style={{ position: "fixed", top: pos.top, right: pos.right, zIndex: 100 }}
+        className="w-[200px] overflow-hidden rounded-lg border border-white/10 shadow-lg"
+      >
+        <div className="flex items-center justify-between bg-[#0fa053] px-3 py-1.5">
+          <span className="text-[11px] font-semibold text-white">Expiry Time</span>
+          <button type="button" onClick={onClose} className="flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30">
+            <X className="h-3 w-3" strokeWidth={2.5} />
+          </button>
+        </div>
+        <div style={{ background: "var(--trading-panel-bg, #1e2330)" }} className="p-2.5">
+          <div className="grid grid-cols-2 gap-1.5">
+            {TIME_PRESETS.map((preset) => {
+              const isSelected = value === preset.val;
+              return (
+                <button
+                  key={preset.val}
+                  type="button"
+                  onClick={() => { onChange(preset.val); onClose(); }}
+                  className={`rounded-md px-2 py-1.5 text-center text-[11px] transition-colors ${
+                    isSelected
+                      ? "bg-[#0fa053]/20 text-white"
+                      : "text-white/60 hover:bg-white/8 hover:text-white"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-3 border-t border-white/8 pt-2.5">
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={customAmount}
+                onChange={(e) => setCustomAmount(e.target.value)}
+                className="hide-number-spin h-7 w-14 rounded border border-white/10 bg-transparent px-2 text-[11px] text-white outline-none"
+              />
+              <select
+                value={customUnit}
+                onChange={(e) => setCustomUnit(e.target.value as CustomDurationUnit)}
+                className="h-7 flex-1 rounded border border-white/10 bg-transparent px-1 text-[11px] text-white outline-none"
+              >
+                <option value="seconds">Sec</option>
+                <option value="minutes">Min</option>
+                <option value="hours">Hr</option>
+              </select>
+              <button
+                type="button"
+                onClick={applyCustomDuration}
+                className="h-7 rounded bg-[#0fa053] px-2.5 text-[10px] font-medium text-white hover:opacity-90"
+              >
+                Go
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
 
 const INVESTMENT_PRESETS = [1, 5, 10, 25, 50, 100, 200, 500];
 
@@ -889,139 +1033,222 @@ const TradingPanel = ({
 
   return (
     <>
-      <aside className={`font-copy w-full lg:w-[240px] h-full min-h-[190px] shrink-0 flex flex-col border-l border-[#171d2d] bg-[#242a3c] text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none ${showTimeSwitcher ? "overflow-visible lg:overflow-visible" : "overflow-hidden"} ${mobileDocked ? "rounded-t-[16px]" : ""}`}>
+      <aside className={`font-copy w-full lg:w-[210px] h-full min-h-[190px] shrink-0 flex flex-col border-l border-[#171d2d] bg-[#242a3c] text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none ${showTimeSwitcher ? "overflow-visible lg:overflow-hidden" : "overflow-hidden"} ${mobileDocked ? "rounded-t-[16px]" : ""}`}>
 
-       <div className="px-3 py-2.5">
-         <div className="flex items-center justify-between border-b border-[#2a2f3f] pb-3">
-           <div className="flex items-center gap-2">
-             <div className="flex items-center">
-               <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#d9b14b] text-[9px] font-bold text-[#111827]">A</span>
-               <span className="-ml-1 flex h-[18px] w-[18px] items-center justify-center rounded-full border border-[#1a1e29] bg-[#5665d5] text-[9px] font-bold text-white">N</span>
-             </div>
-             <div className="flex items-center gap-1 text-[14px] font-semibold text-white">
-               <span>{asset.symbol}</span>
-               <span className="text-[10px] text-[#8f9bba]">(OTC)</span>
-             </div>
-           </div>
-           <div className="text-[14px] font-semibold text-[#0fa055]">31%</div>
-         </div>
+        {/* ── Asset Header & Pending Toggle (Single Row) ──────────────── */}
+        <div className="flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-4 lg:pt-4 lg:pb-2">
+          <button 
+            onClick={() => onOpenAssetSelector?.()}
+            className="flex min-w-0 items-center gap-2 rounded-[4px] p-1 -ml-1 transition-colors hover:bg-white/5"
+          >
+            <SymbolFlags symbol={asset.symbol} />
+            <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-black tracking-[0.01em] text-white sm:text-[12px] lg:text-[13px]">
+              <span className="max-w-[112px] truncate">{asset.symbol}</span>
+              <span className={`shrink-0 text-[#8f98ac] ${asset.available === false ? "text-red-400" : ""}`}>{asset.available === false ? "N/A" : `${asset.maxProfit ?? 79}%`}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400 lg:hidden" strokeWidth={3} />
+            </div>
+          </button>
 
-         <div className="flex items-center justify-between py-3 text-[12px] font-medium text-[#8f9bba]">
-           <span className="tracking-[0.12em]">PENDING TRADE</span>
-           <button
-             type="button"
-             onClick={handlePendingTradeToggle}
-             aria-pressed={pendingTradeEnabled}
-             className="relative inline-block h-[20px] w-[36px]"
-           >
-             <span className={`absolute inset-0 rounded-full transition-colors ${pendingTradeEnabled ? "bg-[#0fa055]" : "bg-[#2a2f3f]"}`} />
-             <span className={`absolute bottom-[2px] left-[2px] h-[16px] w-[16px] rounded-full bg-white transition-transform ${pendingTradeEnabled ? "translate-x-[16px]" : ""}`} />
-           </button>
-         </div>
-       </div>
+          <button
+            type="button"
+            onClick={handlePendingTradeToggle}
+            aria-pressed={pendingTradeEnabled}
+            className="flex shrink-0 items-center gap-1.5 rounded-full px-1 py-0.5 transition-colors hover:bg-white/5 lg:hidden"
+          >
+            <span className={`text-[9px] font-black tracking-[0.06em] uppercase ${pendingTradeEnabled ? "text-[#0fa053]" : "text-[#7f8b99]"}`}>
+              PENDING TRADE
+            </span>
+            <div
+              className={`relative h-[14px] w-[28px] rounded-full border transition-all ${pendingTradeEnabled ? "bg-[#0fa053] border-[#0fa053]/50" : "bg-transparent border-white/15"}`}
+            >
+              <div className={`absolute top-[2px] h-[8px] w-[8px] rounded-full transition-all ${pendingTradeEnabled ? "left-[16px] bg-white shadow-sm" : "left-[2px] bg-gray-500"}`} />
+            </div>
+          </button>
+        </div>
 
-       <div className="border-t border-[#2a2f3f] px-4 py-3">
-         <div className="mb-2 flex items-center justify-between text-[12px] text-[#8f9bba]">
-           <span>Time</span>
-           <button
-             type="button"
-             onClick={() => setShowTimeSwitcher((value) => !value)}
-             className="text-[10px] font-semibold tracking-[0.12em] text-[#5aa8ff]"
-           >
-             SWITCH TIME
-           </button>
-         </div>
+        <button
+          type="button"
+          onClick={handlePendingTradeToggle}
+          aria-pressed={pendingTradeEnabled}
+          className="hidden items-center justify-between px-4 pb-3 text-left transition-colors hover:bg-white/[0.02] lg:flex"
+        >
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-[#0fa053]" strokeWidth={2.4} />
+            <span className={`text-[10px] font-black uppercase tracking-[0.02em] ${pendingTradeEnabled ? "text-[#1c9cff]" : "text-[#8fb0cf]"}`}>
+              Pending trade
+            </span>
+          </div>
 
-         <div ref={timeTriggerRef} className="flex items-center justify-between rounded-lg border border-[#2a2f3f] bg-[#12141c] px-3 py-2">
-           <button
-             type="button"
-             onClick={() => setExpirySeconds((value) => Math.max(5, value - 5))}
-             className="flex h-[28px] w-[28px] items-center justify-center rounded-md bg-[#2a2f3f] text-[16px] text-white"
-           >
-             −
-           </button>
-           <div className="text-[15px] font-semibold text-white">{formatTradeClock(expirySeconds)}</div>
-           <button
-             type="button"
-             onClick={() => setExpirySeconds((value) => value + 5)}
-             className="flex h-[28px] w-[28px] items-center justify-center rounded-md bg-[#2a2f3f] text-[16px] text-white"
-           >
-             +
-           </button>
-         </div>
-         {showTimeSwitcher && (
-           <TimePopover value={expirySeconds} onChange={setExpirySeconds} onClose={() => setShowTimeSwitcher(false)} triggerRef={timeTriggerRef} />
-         )}
-       </div>
+          <div
+            className={`relative h-[16px] w-[28px] rounded-full border transition-all ${pendingTradeEnabled ? "border-[#1c9cff]/80 bg-[#253044]" : "border-[#1c9cff]/80 bg-transparent"}`}
+          >
+            <div
+              className={`absolute top-[2px] h-[10px] w-[10px] rounded-full transition-all ${pendingTradeEnabled ? "left-[14px] bg-[#1c9cff] shadow-[0_0_10px_rgba(28,156,255,0.45)]" : "left-[2px] bg-[#1c9cff]"}`}
+            />
+          </div>
+        </button>
 
-       <div className="border-t border-[#2a2f3f] px-4 py-3">
-         <div className="mb-2 flex items-center justify-between text-[12px] text-[#8f9bba]">
-           <span>Investment</span>
-           <button
-             type="button"
-             onClick={() => setShowInvestmentSwitcher((v) => !v)}
-             className="text-[10px] font-semibold tracking-[0.12em] text-[#5aa8ff]"
-           >
-             SWITCH
-           </button>
-         </div>
+        {/* ── Compact mobile layout with desktop controls restored ── */}
+        <div className="px-2.5 pb-2 lg:px-4 lg:pb-2.5">
+          <div className="relative z-10 lg:pb-0">
+            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-1 lg:gap-3">
+              <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowTimeSwitcher((value) => !value)}
+                    className="relative flex h-[44px] w-full items-center justify-between rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-blue-500/50 lg:hidden"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3.5 w-3.5 text-[#596278]" strokeWidth={1.8} />
+                      <span className="text-[15px] font-bold tracking-[0.01em] tabular-nums text-white min-[360px]:text-[16px]" style={{ fontFamily: "Arial, sans-serif" }}>
+                        {formatTradeClock(expirySeconds)}
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-medium uppercase tracking-[0.06em] text-[#8fb0cf]">
+                      {t("tradingPanel.timeLabelShort")}
+                    </span>
+                  </button>
 
-         <div ref={investTriggerRef} className="flex items-center justify-between rounded-lg border border-[#2a2f3f] bg-[#12141c] px-3 py-2">
-           <button
-             type="button"
-             onClick={() => handleInvestmentInput(String(Math.max(1, Number(investment) - 5)))}
-             className="flex h-[28px] w-[28px] items-center justify-center rounded-md bg-[#2a2f3f] text-[16px] text-white"
-           >
-             −
-           </button>
-           <div className="text-[15px] font-semibold text-white">{getCurrencySymbol(currency)} {Number(investment).toFixed(0)}</div>
-           <button
-             type="button"
-             onClick={() => handleInvestmentInput(String(Number(investment) + 5))}
-             className="flex h-[28px] w-[28px] items-center justify-center rounded-md bg-[#2a2f3f] text-[16px] text-white"
-           >
-             +
-           </button>
-         </div>
-         {showInvestmentSwitcher && (
-           <AmountPopover
-             value={investment}
-             onChange={(v) => handleInvestmentInput(String(v))}
-             onClose={() => setShowInvestmentSwitcher(false)}
-             max={MAX_MANUAL_INVESTMENT}
-             triggerRef={investTriggerRef}
-           />
-         )}
-       </div>
+                <div
+                  ref={timeTriggerRef}
+                  onClick={() => setShowTimeSwitcher((value) => !value)}
+                  className="relative hidden lg:flex flex-col group cursor-pointer"
+                >
+                  <div className="absolute -top-2 left-3 z-10 bg-[#242a3c] px-1 text-[10px] font-semibold text-[#777f92]">{t("tradingPanel.timeLabelShort")}</div>
+                  <div className="flex h-[47px] cursor-pointer items-center justify-between rounded-[4px] border border-[#687086] bg-[#2a3040] px-2 transition hover:border-blue-500/50">
+<span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
+onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}>
+                      <Minus className="w-3 h-3" />
+                    </span>
+                    <span className="text-[16px] font-semibold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>
+                      {formatTradeClock(expirySeconds)}
+                    </span>
+<span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
+onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}>
+                      <Plus className="w-3 h-3" />
+                    </span>
+                  </div>
+                  <div className="mt-0.5 w-full text-center"><span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">Switch Time</span></div>
+                </div>
+              </div>
 
-       <div className="flex items-center justify-between border-t border-dashed border-[#4a5267] px-4 py-3 text-[13px] text-[#8f9bba]">
-         <span>{t("tradingPanel.yourPayout")}</span>
-         <span className="font-semibold text-white">{asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}</span>
-       </div>
+              <div className="relative">
+                <div className="relative flex h-[44px] w-full items-center justify-between rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-bold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>
+                      {getCurrencySymbol(currency)}
+                    </span>
+                    <input
+                      type="number"
+                      value={investment}
+                      min={1}
+                      max={MAX_MANUAL_INVESTMENT}
+                      step={0.01}
+                      inputMode="decimal"
+                      onChange={(event) => handleInvestmentInput(event.target.value)}
+                      className="hide-number-spin min-w-0 w-full bg-transparent text-[15px] font-bold tracking-[0.01em] text-white outline-none min-[360px]:text-[16px]"
+                      style={{ fontFamily: "Arial, sans-serif" }}
+                    />
+                  </div>
+<span className="text-[9px] font-medium uppercase tracking-[0.06em] text-[#8fb0cf]">
+                      {t("tradingPanel.amountLabel")}
+                    </span>
+                </div>
 
-       <div className="flex flex-col gap-2.5 px-4 pb-4">
-         <button
-           ref={higherButtonRef}
-           type="button"
-           onClick={() => placeTrade("higher")}
-           disabled={asset.available === false}
-           className={`flex w-full items-center justify-between rounded-lg border border-transparent bg-[#0fa055] px-4 py-3 text-[15px] font-bold text-white ${higherButtonFocused ? "scale-[1.01]" : ""} ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
-         >
-           <span>Up</span>
-           <span className="rounded-[4px] bg-black/10 px-2 py-0.5 text-[13px]">↑</span>
-         </button>
+                <div
+                  ref={investTriggerRef}
+                  onClick={() => setShowInvestmentSwitcher((v) => !v)}
+                  className="relative hidden lg:flex flex-col group cursor-pointer"
+                >
+                  <div className="absolute -top-2 left-3 z-10 bg-[#242a3c] px-1 text-[10px] font-semibold text-[#777f92]">{t("tradingPanel.investmentLabel")}</div>
+                  <div className="flex h-[47px] cursor-pointer items-center justify-between rounded-[4px] border border-[#687086] bg-[#2a3040] px-2 transition hover:border-blue-500/50">
+<span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
+onClick={(e) => { e.stopPropagation(); adjustInvestment(-1); }}>
+                      <Minus className="w-3 h-3" />
+                    </span>
+                    <input
+                      type="number"
+                      value={investment}
+                      min={1}
+                      max={MAX_MANUAL_INVESTMENT}
+                      step={0.01}
+                      inputMode="decimal"
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(event) => handleInvestmentInput(event.target.value)}
+                      className="hide-number-spin min-w-0 w-[70px] bg-transparent text-center text-[16px] font-semibold tracking-[0.01em] text-white outline-none"
+                      style={{ fontFamily: "Arial, sans-serif" }}
+                    />
+<span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
+onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
+                      <Plus className="w-3 h-3" />
+                    </span>
+                  </div>
+                  <div className="mt-0.5 w-full text-center"><span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">{t("tradingPanel.switchTime")}</span></div>
+                </div>
+                {showInvestmentSwitcher && (
+                  <AmountPopover
+                    value={investment}
+                    onChange={(v) => handleInvestmentInput(String(v))}
+                    onClose={() => setShowInvestmentSwitcher(false)}
+                    max={MAX_MANUAL_INVESTMENT}
+                    triggerRef={investTriggerRef}
+                  />
+                )}
+              </div>
+            </div>
 
-         <button
-           ref={lowerButtonRef}
-           type="button"
-           onClick={() => placeTrade("lower")}
-           disabled={asset.available === false}
-           className={`flex w-full items-center justify-between rounded-lg border border-transparent bg-[#e85b4e] px-4 py-3 text-[15px] font-bold text-white ${lowerButtonFocused ? "scale-[1.01]" : ""} ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
-         >
-           <span>Down</span>
-           <span className="rounded-[4px] bg-black/10 px-2 py-0.5 text-[13px]">↓</span>
-         </button>
-       </div>
+            {showTimeSwitcher && (
+              <TimePopover value={expirySeconds} onChange={setExpirySeconds} onClose={() => setShowTimeSwitcher(false)} triggerRef={timeTriggerRef} />
+            )}
+          </div>
+        </div>
+
+        {/* ── Payout ───────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between border-t border-dashed border-[#4a5267] px-2.5 pb-2 pt-2 text-xs text-gray-400 lg:mx-4 lg:px-0 lg:pb-3">
+          <span className="font-semibold">{t("tradingPanel.yourPayout")}</span>
+          <span className="text-[13px] font-black tracking-wide text-white">{asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}</span>
+        </div>
+
+        {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
+        <div className="grid grid-cols-2 gap-2 px-2.5 pb-3 lg:mx-4 lg:grid-cols-1 lg:gap-2.5 lg:px-0 lg:pb-2">
+          <button
+            ref={higherButtonRef}
+            type="button"
+            onClick={() => placeTrade("higher")}
+            disabled={asset.available === false}
+            className={`flex h-[44px] items-center justify-between rounded-[4px] px-3 text-[12px] font-bold text-white transition-all active:scale-[0.99] focus:outline-none lg:px-4 lg:text-[13px] ${
+              higherButtonFocused ? "scale-[1.02]" : ""
+            } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
+            style={{
+              background: asset.available === false ? "var(--trading-muted-color, #3a4055)" : "var(--trading-up-color, var(--trading-success-color))",
+              color: "var(--trading-success-contrast-color)",
+              boxShadow: higherButtonFocused ? "var(--trading-success-focus-shadow)" : "0 4px 16px rgba(16,160,85,0.30)",
+            }}>
+            <span>Up</span>
+            <span className="flex w-[20px] h-[20px] items-center justify-center rounded-full bg-white/20 text-[10px] lg:w-[22px] lg:h-[22px]">
+              <ArrowUp className="w-3 h-3" strokeWidth={3} />
+            </span>
+          </button>
+
+          <button
+            ref={lowerButtonRef}
+            type="button"
+            onClick={() => placeTrade("lower")}
+            disabled={asset.available === false}
+            className={`flex h-[44px] items-center justify-between rounded-[4px] px-3 text-[12px] font-bold text-white transition-all active:scale-[0.99] focus:outline-none lg:px-4 lg:text-[13px] ${
+              lowerButtonFocused ? "scale-[1.02]" : ""
+            } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
+            style={{
+              background: asset.available === false ? "var(--trading-muted-color, #3a4055)" : "var(--trading-down-color, var(--trading-danger-color))",
+              color: "var(--trading-danger-contrast-color)",
+              boxShadow: lowerButtonFocused ? "var(--trading-danger-focus-shadow)" : "0 4px 16px rgba(220,60,60,0.30)",
+            }}>
+            <span>{t("tradingPanel.down")}</span>
+            <span className="flex w-[20px] h-[20px] items-center justify-center rounded-full bg-white/20 text-[10px] lg:w-[22px] lg:h-[22px]">
+              <ArrowDown className="w-3 h-3" strokeWidth={3} />
+            </span>
+          </button>
+        </div>
 
         {/* ── Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) ── */}
         <div
