@@ -3,10 +3,89 @@ import { useTranslation } from "react-i18next";
 import {
   PieChart, Clock, MessageSquare, Trophy, Gift, Tv,
   BookOpen, MoreHorizontal, X, ChevronDown, Globe, Award,
-  Zap, Play, Circle, TrendingUp, BarChart2, Activity,
+  Zap, Play, Circle, TrendingUp, Activity,
   Ticket, Check, Info, DollarSign, Database
 } from "lucide-react";
 import { ProfileSupport } from "@/components/profile/ProfileSupport";
+
+const SidebarGlyph = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    {children}
+  </svg>
+);
+
+const PortfolioNavIcon = ({ className }: { className?: string }) => (
+  <SidebarGlyph className={className}>
+    <path d="M4 18.5V8.5a2 2 0 0 1 2-2h3.5l1.2 2h6.3a2 2 0 0 1 2 2v8.5" />
+    <path d="M4 10.5h16" />
+    <path d="M8 15.5h8" />
+  </SidebarGlyph>
+);
+
+const HistoryNavIcon = ({ className }: { className?: string }) => (
+  <SidebarGlyph className={className}>
+    <path d="M12 6v6l4 2" />
+    <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+    <path d="M12 3a9 9 0 0 1 9 9" />
+  </SidebarGlyph>
+);
+
+const ChatNavIcon = ({ className }: { className?: string }) => (
+  <SidebarGlyph className={className}>
+    <path d="M6 18.5 3.5 20V7.5A2.5 2.5 0 0 1 6 5h12a2.5 2.5 0 0 1 2.5 2.5v7A2.5 2.5 0 0 1 18 17H8l-2 1.5Z" />
+    <path d="M8.5 9.5h7M8.5 12.5h5" />
+  </SidebarGlyph>
+);
+
+const LeaderboardNavIcon = ({ className }: { className?: string }) => (
+  <SidebarGlyph className={className}>
+    <path d="M7 18V9.5" />
+    <path d="M12 18V6.5" />
+    <path d="M17 18v-11" />
+    <path d="M4 18h16" />
+    <path d="M8 7.5 12 3l4 4.5" />
+  </SidebarGlyph>
+);
+
+const PromoNavIcon = ({ className }: { className?: string }) => (
+  <SidebarGlyph className={className}>
+    <path d="M4.5 8.5A2.5 2.5 0 0 1 7 6h10a2.5 2.5 0 0 1 2.5 2.5v7A2.5 2.5 0 0 1 17 18H7a2.5 2.5 0 0 1-2.5-2.5v-7Z" />
+    <path d="M8 10.5h8M8 13.5h5" />
+    <path d="M14 6V4.5M10 6V4.5" />
+  </SidebarGlyph>
+);
+
+const WebinarNavIcon = ({ className }: { className?: string }) => (
+  <SidebarGlyph className={className}>
+    <rect x="3.5" y="6.5" width="17" height="11" rx="2.5" />
+    <path d="m10.5 10 5 2-5 2v-4Z" />
+  </SidebarGlyph>
+);
+
+const MarketNavIcon = ({ className }: { className?: string }) => (
+  <SidebarGlyph className={className}>
+    <path d="M5 16.5h14" />
+    <path d="M7 14.5V9.5" />
+    <path d="M12 14.5V6.5" />
+    <path d="M17 14.5v-4" />
+    <path d="M4 18.5h16" />
+  </SidebarGlyph>
+);
+
+const TutorialNavIcon = ({ className }: { className?: string }) => (
+  <SidebarGlyph className={className}>
+    <path d="M4.5 6.5A2.5 2.5 0 0 1 7 4h10a2.5 2.5 0 0 1 2.5 2.5v11A2.5 2.5 0 0 1 17 18H7a2.5 2.5 0 0 1-2.5-2.5v-11Z" />
+    <path d="M8 8.5h8M8 12h8M8 15.5h5" />
+  </SidebarGlyph>
+);
+
+const MoreNavIcon = ({ className }: { className?: string }) => (
+  <SidebarGlyph className={className}>
+    <circle cx="6" cy="12" r="1.2" fill="currentColor" stroke="none" />
+    <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
+    <circle cx="18" cy="12" r="1.2" fill="currentColor" stroke="none" />
+  </SidebarGlyph>
+);
 
 type SidebarPanel =
   | "portfolio" | "history" | "chat" | "leaders"
@@ -472,15 +551,15 @@ const TradingSidebar = ({ onOpenHistory, onOpenAssetInfo, onOpenPromo }: Trading
   const { t } = useTranslation();
 
   const NAV_ITEMS = [
-    { icon: PieChart,      label: t("sidebar.navLabels.totalPortfolio"),   action: "portfolio"  as SidebarPanel },
-    { icon: Clock,         label: t("sidebar.navLabels.tradingHistory"),   action: "history"    as SidebarPanel },
-    { icon: MessageSquare, label: t("sidebar.navLabels.chat"),             action: "chat"       as SidebarPanel },
-    { icon: Trophy,        label: t("sidebar.navLabels.leaderBoard"),      action: "leaders"    as SidebarPanel },
-    { icon: Gift,          label: t("sidebar.navLabels.promo"),            action: "promo"      as SidebarPanel, badge: "1" },
-    { icon: Tv,            label: t("sidebar.navLabels.webinars"),         action: "webinars"   as SidebarPanel },
-    { icon: BarChart2,     label: t("sidebar.navLabels.marketAnalysis"),   action: "analysis"   as SidebarPanel },
-    { icon: BookOpen,      label: t("sidebar.navLabels.tutorials"),        action: "tutorials"  as SidebarPanel },
-    { icon: MoreHorizontal,label: t("sidebar.navLabels.more"),             action: "more"       as SidebarPanel },
+    { icon: PortfolioNavIcon, label: t("sidebar.navLabels.totalPortfolio"), action: "portfolio" as SidebarPanel },
+    { icon: HistoryNavIcon, label: t("sidebar.navLabels.tradingHistory"), action: "history" as SidebarPanel },
+    { icon: ChatNavIcon, label: t("sidebar.navLabels.chat"), action: "chat" as SidebarPanel },
+    { icon: LeaderboardNavIcon, label: t("sidebar.navLabels.leaderBoard"), action: "leaders" as SidebarPanel },
+    { icon: PromoNavIcon, label: t("sidebar.navLabels.promo"), action: "promo" as SidebarPanel, badge: "1" },
+    { icon: WebinarNavIcon, label: t("sidebar.navLabels.webinars"), action: "webinars" as SidebarPanel },
+    { icon: MarketNavIcon, label: t("sidebar.navLabels.marketAnalysis"), action: "analysis" as SidebarPanel },
+    { icon: TutorialNavIcon, label: t("sidebar.navLabels.tutorials"), action: "tutorials" as SidebarPanel },
+    { icon: MoreNavIcon, label: t("sidebar.navLabels.more"), action: "more" as SidebarPanel },
   ];
 
   const PANEL_TITLES: Record<NonNullable<SidebarPanel>, string> = {
