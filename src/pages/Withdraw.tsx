@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -250,7 +250,7 @@ const Withdraw = () => {
       />
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Desktop sidebar — hidden on mobile */}
+        {/* Desktop sidebar â€” hidden on mobile */}
         <div className="hidden shrink-0 transition-[width] duration-300 ease-out lg:block">
           <NavigationSidebar
             activeWorkspace={activeWorkspace}
@@ -262,7 +262,7 @@ const Withdraw = () => {
 
         <div className="flex-1 overflow-y-auto min-h-0 bg-[#1c2230]">
 
-          {/* ─── Desktop tab bar (hidden on mobile) ─── */}
+          {/* â”€â”€â”€ Desktop tab bar (hidden on mobile) â”€â”€â”€ */}
           <div className="hidden lg:block border-b border-[#263043] bg-[#1a2130] px-6">
             <div className="flex items-center gap-0 text-[13px] font-bold text-[#8d99ae]">
               {["Withdrawal","Payments","Trades","My Account","Market","Tournaments","Analytics"].map((tab) => (
@@ -271,7 +271,7 @@ const Withdraw = () => {
             </div>
           </div>
 
-          {/* ─── Mobile collapsible Withdrawal header ─── */}
+          {/* â”€â”€â”€ Mobile collapsible Withdrawal header â”€â”€â”€ */}
           <div className="lg:hidden mx-4 mt-4 mb-2">
             <button
               type="button"
@@ -283,7 +283,7 @@ const Withdraw = () => {
             </button>
           </div>
 
-          {/* ─── Main content ─── */}
+          {/* â”€â”€â”€ Main content â”€â”€â”€ */}
           <div className="p-4 lg:p-6 space-y-6">
 
             {/* Bonus Trading Requirement & Progress Card */}
@@ -291,7 +291,7 @@ const Withdraw = () => {
               <div className="rounded-xl border border-[#2a364f] bg-[#181e2b] p-4 lg:p-5 space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-base">🎁</span>
+                    <span className="text-base">ðŸŽ</span>
                     <h3 className="text-sm font-bold text-white">Bonus Trading Requirement</h3>
                   </div>
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
@@ -299,7 +299,7 @@ const Withdraw = () => {
                       ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
                       : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
                   }`}>
-                    {isBonusLocked ? "🔒 Locked" : "🔓 Available for Withdrawal"}
+                    {isBonusLocked ? "ðŸ”’ Locked" : "ðŸ”“ Available for Withdrawal"}
                   </span>
                 </div>
 
@@ -337,14 +337,14 @@ const Withdraw = () => {
                   </div>
                   {isBonusLocked && (
                     <p className="text-[11px] text-amber-300/80 italic">
-                      ℹ️ Complete ${remainingTurnover.toFixed(2)} more in trades to unlock your bonus for full withdrawal.
+                      â„¹ï¸ Complete ${remainingTurnover.toFixed(2)} more in trades to unlock your bonus for full withdrawal.
                     </p>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Mobile Account section — always visible on mobile */}
+            {/* Mobile Account section â€” always visible on mobile */}
             <div className="lg:hidden space-y-1 px-1">
               <h3 className="text-[14px] font-black text-white">Account:</h3>
               <div className="border-b border-white/10 pb-4 space-y-3 pt-2">
@@ -355,7 +355,7 @@ const Withdraw = () => {
                 {isBonusLocked && (
                   <div>
                     <p className="text-[12px] font-bold text-amber-400">Locked bonus:</p>
-                    <p className="mt-0.5 text-[18px] font-black text-amber-400">-${lockedBonusAmount.toFixed(2)} $ 🔒</p>
+                    <p className="mt-0.5 text-[18px] font-black text-amber-400">-${lockedBonusAmount.toFixed(2)} $ ðŸ”’</p>
                   </div>
                 )}
                 <div>
@@ -365,7 +365,7 @@ const Withdraw = () => {
               </div>
             </div>
 
-            {/* ─── FORM ─── */}
+            {/* â”€â”€â”€ FORM â”€â”€â”€ */}
             <form onSubmit={handleConfirmWithdrawal} className="grid gap-10 lg:grid-cols-[160px_minmax(0,380px)_1fr]">
 
               {/* Desktop Account column */}
@@ -379,7 +379,7 @@ const Withdraw = () => {
                   {isBonusLocked && (
                     <div>
                       <p className="text-[11px] font-bold text-amber-400">Locked bonus:</p>
-                      <p className="mt-1 text-base font-extrabold text-amber-400">-${lockedBonusAmount.toFixed(2)} $ 🔒</p>
+                      <p className="mt-1 text-base font-extrabold text-amber-400">-${lockedBonusAmount.toFixed(2)} $ ðŸ”’</p>
                     </div>
                   )}
                   <div>
@@ -432,11 +432,11 @@ const Withdraw = () => {
                 </button>
               </div>
 
-              {/* FAQ column — desktop only */}
+{/* FAQ column â€” desktop only */}
               <div className="hidden lg:block space-y-4 pt-1">
                 <div className="flex items-center justify-between">
                   <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8d99ae]">FAQ:</h3>
-                  <span className="flex items-center gap-1 cursor-pointer text-[11px] font-bold text-[#0084FF] hover:underline">Check out full FAQ <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white">&gt;</span></span>
+<Link to="/faq" className="flex items-center gap-1 text-[11px] font-bold text-[#0084FF] hover:underline">Check out full FAQ <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white"></span></Link>
                 </div>
                 <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2 text-xs">
                   {[FAQ_COL_1, FAQ_COL_2].map((col, ci) => (
@@ -456,11 +456,11 @@ const Withdraw = () => {
               </div>
             </form>
 
-            {/* FAQ — mobile only, below form */}
+{/* FAQ â€” mobile only, below form */}
             <div className="lg:hidden space-y-3 border-t border-[#252e40] pt-5">
               <div className="flex items-center justify-between">
                 <h3 className="text-[12px] font-black text-white/60 uppercase tracking-widest">FAQ:</h3>
-                <span className="flex items-center gap-1 cursor-pointer text-[11px] font-bold text-[#0084FF] hover:underline">Check out full FAQ <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white">&gt;</span></span>
+                <Link to="/faq" className="flex items-center gap-1 text-[11px] font-bold text-[#0084FF] hover:underline">Check out full FAQ <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white"></span></Link>
               </div>
               <div className="space-y-3 text-xs">
                 {[...FAQ_COL_1, ...FAQ_COL_2].map((item) => (
@@ -475,11 +475,11 @@ const Withdraw = () => {
               </div>
             </div>
 
-            {/* Latest withdrawal requests */}
-            <div className="space-y-4 border-t border-dashed border-[#2d374d] pt-6">
+{/* Latest withdrawal requests */}
+            <div id="withdrawal-history" className="space-y-4 border-t border-dashed border-[#2d374d] pt-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold text-gray-300">Some of your latest requests:</h3>
-                <span className="flex items-center gap-1 cursor-pointer text-[11px] font-bold text-[#0084FF] hover:underline">All financial history <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white">&gt;</span></span>
+                <Link to="#withdrawal-history" className="flex items-center gap-1 text-[11px] font-bold text-[#0084FF] hover:underline">All financial history <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0084FF] text-[9px] text-white"></span></Link>
               </div>
               <div className="space-y-0 text-xs font-bold overflow-x-auto">
                 {userWithdrawals.length === 0 ? (
@@ -517,3 +517,5 @@ const Withdraw = () => {
 };
 
 export default Withdraw;
+
+
