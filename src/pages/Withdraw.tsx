@@ -26,18 +26,54 @@ export interface EligibleWithdrawalMethod {
 }
 
 const FAQ_COL_1 = [
-  { id: 1, question: "How to withdraw money from the account?", answer: "Specify the amount, choose one of your deposit methods, enter the destination details, and click Confirm." },
-  { id: 2, question: "How long does it take to withdraw funds?", answer: "Withdrawal requests are processed promptly. Automated M-Pesa and crypto payouts complete in 15-60 minutes." },
-  { id: 3, question: "What is the minimum withdrawal amount?", answer: "The minimum withdrawal amount is $10.00." },
-  { id: 4, question: "Is there any fee for depositing or withdrawing funds from the account?", answer: "No, our platform charges zero commission or fees for deposits and withdrawals." },
-  { id: 5, question: "Do I need to provide any documents to make a withdrawal?", answer: "Standard withdrawals do not require extra documents unless identity verification is requested." },
+  {
+    id: 1,
+    question: "How to withdraw money from my account?",
+    answer: "To withdraw funds, navigate to the Withdraw section, select your preferred payout method (M-Pesa, bank transfer, or crypto), specify the amount you wish to withdraw, enter the required destination details (such as phone number for M-Pesa or wallet address for crypto), and confirm the transaction. Ensure all provided details are correct before submitting."
+  },
+  {
+    id: 2,
+    question: "How long does it take to process a withdrawal?",
+    answer: "Withdrawal requests are reviewed promptly. Automated M-Pesa and crypto payouts typically complete within 15-60 minutes after approval. Bank transfers and other methods may take 1-3 business days depending on the financial institution. You will receive a notification once your withdrawal has been processed."
+  },
+  {
+    id: 2,
+    question: "What is the minimum withdrawal amount?",
+    answer: "The minimum withdrawal amount is $10.00 (or equivalent in your local currency). Ensure your requested amount meets this minimum threshold before submitting."
+  },
+  {
+    id: 3,
+    question: "Are there any fees for withdrawals?",
+    answer: "No, our platform charges zero commission or fees for deposits and withdrawals. However, third-party payment providers (such as banks or crypto networks) may impose their own network fees, which are beyond our control."
+  },
+  {
+    id: 4,
+    question: "Do I need to provide documents for a withdrawal?",
+    answer: "Standard withdrawals typically do not require extra documents. However, if identity verification is requested (for larger amounts or compliance requirements), you will be notified via in-app message. Have your government-issued ID and proof of address ready to expedite the process."
+  },
 ];
 
 const FAQ_COL_2 = [
-  { id: 6, question: "What is account verification?", answer: "Account verification ensures security and confirms identity before large payouts." },
-  { id: 7, question: "How to understand that I need to go through account verification?", answer: "You will receive an in-app notice if identity verification documents are required." },
-  { id: 8, question: "How long does the verification process take?", answer: "Verification is completed within 1 to 2 hours of document submission." },
-  { id: 9, question: "How do I know that I successfully passed verification?", answer: "A green Verified badge will appear on your profile once completed." },
+  {
+    id: 5,
+    question: "What is account verification and why is it required?",
+    answer: "Account verification is a security measure that confirms your identity before processing large payouts. This helps protect your funds from unauthorized access and ensures compliance with financial regulations. Verification may be triggered for withdrawals above certain thresholds or as part of our standard security protocol."
+  },
+  {
+    id: 6,
+    question: "How will I know if I need to complete account verification?",
+    answer: "You will receive an in-app notice or email notification if identity verification documents are required for your withdrawal. The notification will specify which documents are needed and provide instructions on how to submit them securely."
+  },
+  {
+    id: 7,
+    question: "What is the typical verification processing time?",
+    answer: "Verification is typically completed within 1-2 hours of document submission during business hours. Submissions outside business hours may be processed the next business day. You will receive a confirmation email once verification is complete."
+  },
+  {
+    id: 8,
+    question: "How will I know if my verification was successful?",
+    answer: "Once your verification is approved, a green 'Verified' badge will appear on your profile page. You will also receive a confirmation email, and you'll be able to submit withdrawal requests without additional verification requirements for a specified period."
+  },
 ];
 
 const STATUS_COLORS: Record<string, string> = { pending: "bg-yellow-500", completed: "bg-green-500", approved: "bg-green-500", failed: "bg-red-500", rejected: "bg-red-500", waiting: "bg-slate-400" };
