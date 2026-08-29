@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BadgeCheck, BarChart3, CircleDollarSign } from "lucide-react";
+import { ArrowRight, BadgeCheck, BarChart3, Bitcoin, CircleDollarSign } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import { SiteLogo } from "@/components/branding/SiteLogo";
