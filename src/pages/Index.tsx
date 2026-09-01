@@ -9,7 +9,7 @@ const Index = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <AuthLoadingScreen message="Opening Init Option..." />;
+    return <AuthLoadingScreen />
   }
 
   if (user) {
