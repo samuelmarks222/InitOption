@@ -55,6 +55,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const MAX_SESSION_RETRIES = 3;
 const SESSION_RETRY_DELAY_MS = 2000;
+const AUTH_LOADING_TIMEOUT_MS = 1000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -299,7 +300,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isLoaded, firebaseUser]);
 
-  // Initialise the auth-state listener once, and finish any Google sign-in
+// Initialise the auth-state listener once, and finish any Google sign-in
   // redirect that is returning to the app.
   useEffect(() => {
     if (!appwriteAccount) {
@@ -311,9 +312,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setFirebaseUser(user);
       setIsLoaded(true);
     });
-
+    
+    // Timeout to ensure loading doesn't exceed 1 second
+    const timeoutId = setTimeout(() => {
+      setIsLoaded(true);
+      setLoading(false);
+    }, AUTH_LOADING_TIMEOUT_MS);
+    
     void resolveGoogleRedirectResult()
       .then(({ user: redirectUser, error: redirectError }) => {
+        clearTimeout(timeoutId);
         if (redirectError) {
           console.error("[auth] Failed to complete Google redirect sign-in", redirectError);
         }
@@ -324,9 +332,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       })
       .catch((e) => {
         console.error("[auth] Unexpected error resolving Google redirect", e);
+        clearTimeout(timeoutId);
       });
-
-    return () => unsub?.();
+    
+    return () => {
+      unsub?.();
+      clearTimeout(timeoutId);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
