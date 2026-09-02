@@ -169,7 +169,7 @@ const THEME = {
 const DEFAULT_VISIBLE_BARS = 80;
 const MAX_CANDLES_IN_MEMORY = 7200;
 const DEFAULT_CHART_TYPE: ChartType = "candles";
-const LIVE_CANDLE_SMOOTH_TAU_MS = 60;
+const LIVE_CANDLE_DAMPING = 0.1;
 const LIVE_CANDLE_SETTLE_EPSILON = 1e-9;
 const SYNCED_PRICE_SCALE_MIN_WIDTH = 58;
 type ChartSeriesApi = ISeriesApi<SeriesType>;
@@ -2221,18 +2221,15 @@ const TradingChart = ({
         return;
       }
 
-      const now = performance.now();
-      const dt = Math.max(0, Math.min(100, now - liveInterpLastFrameRef.current));
-      liveInterpLastFrameRef.current = now;
-
-      const k = 1 - Math.exp(-dt / LIVE_CANDLE_SMOOTH_TAU_MS);
       const epsilon = Math.max(LIVE_CANDLE_SETTLE_EPSILON, Math.abs(currentTarget.close) * 1e-7);
-      let close = currentDisplayed.close + (currentTarget.close - currentDisplayed.close) * k;
+      let close =
+        currentDisplayed.close +
+        (currentTarget.close - currentDisplayed.close) * LIVE_CANDLE_DAMPING;
       if (Math.abs(currentTarget.close - close) < epsilon) close = currentTarget.close;
 
       const open = currentTarget.open;
-      const high = Math.max(currentDisplayed.high, currentTarget.high, open, close);
-      const low = Math.min(currentDisplayed.low, currentTarget.low, open, close);
+      const high = Math.max(open, currentTarget.high, close);
+      const low = Math.min(open, currentTarget.low, close);
 
       const next: OHLCCandle = {
         time: currentTarget.time,
@@ -2265,6 +2262,29 @@ const TradingChart = ({
 
     liveInterpRafRef.current = requestAnimationFrame(step);
   }, [stopLiveInterpolation]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== "visible") {
+        stopLiveInterpolation();
+        return;
+      }
+
+      const target = liveTargetRef.current;
+      if (!target || !mainSeriesRef.current) return;
+
+      // Reconcile directly with the latest market state instead of replaying
+      // throttled animation frames accumulated while the tab was hidden.
+      liveDisplayRef.current = { ...target };
+      mainUpdateSchedulerRef.current?.update(
+        buildMainSeriesUpdatePayload(chartTypeRef.current, target, historyRef.current),
+      );
+      beginLiveInterpolation();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [beginLiveInterpolation, stopLiveInterpolation]);
 
   const separateIndicators = activeIndicators.filter(i => {
     const conf = INDICATOR_REGISTRY.find(c => c.id === i.configId);
