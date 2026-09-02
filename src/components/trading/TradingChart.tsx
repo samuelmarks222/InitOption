@@ -169,8 +169,9 @@ const THEME = {
 const DEFAULT_VISIBLE_BARS = 80;
 const MAX_CANDLES_IN_MEMORY = 7200;
 const DEFAULT_CHART_TYPE: ChartType = "candles";
-const LIVE_CANDLE_DAMPING = 0.1;
 const LIVE_CANDLE_SETTLE_EPSILON = 1e-9;
+const LIVE_TICK_MIN_INTERVAL_MS = 50;
+const LIVE_TICK_MAX_INTERVAL_MS = 1000;
 const SYNCED_PRICE_SCALE_MIN_WIDTH = 58;
 type ChartSeriesApi = ISeriesApi<SeriesType>;
 type OverlayIndicatorPoint = LineData<Time> | HistogramData<Time>;
@@ -2184,6 +2185,12 @@ const TradingChart = ({
   const liveDisplayRef = useRef<OHLCCandle | null>(null);
   const liveInterpRafRef = useRef<number | null>(null);
   const liveInterpLastFrameRef = useRef(0);
+  const previousTickPriceRef = useRef<number | null>(null);
+  const currentTickPriceRef = useRef<number | null>(null);
+  const previousTickTimestampRef = useRef<number | null>(null);
+  const currentTickTimestampRef = useRef<number | null>(null);
+  const tickTransitionStartedRef = useRef(0);
+  const tickTransitionDurationRef = useRef(100);
   const liveStartPriceRef = useRef(0);
   const timeframeSecondsRef = useRef<number>(60);
   const loadedHistoryCountRef = useRef(0);
@@ -2221,10 +2228,18 @@ const TradingChart = ({
         return;
       }
 
+      const previousTickPrice = previousTickPriceRef.current ?? currentDisplayed.close;
+      const currentTickPrice = currentTickPriceRef.current ?? currentTarget.close;
+      const progress = Math.min(
+        1,
+        Math.max(
+          0,
+          (performance.now() - tickTransitionStartedRef.current) /
+            Math.max(LIVE_TICK_MIN_INTERVAL_MS, tickTransitionDurationRef.current),
+        ),
+      );
       const epsilon = Math.max(LIVE_CANDLE_SETTLE_EPSILON, Math.abs(currentTarget.close) * 1e-7);
-      let close =
-        currentDisplayed.close +
-        (currentTarget.close - currentDisplayed.close) * LIVE_CANDLE_DAMPING;
+      let close = previousTickPrice + (currentTickPrice - previousTickPrice) * progress;
       if (Math.abs(currentTarget.close - close) < epsilon) close = currentTarget.close;
 
       const open = currentTarget.open;
@@ -2247,10 +2262,7 @@ const TradingChart = ({
         );
       }
 
-      const settled =
-        close === currentTarget.close &&
-        high === currentTarget.high &&
-        low === currentTarget.low;
+      const settled = progress >= 1 && close === currentTarget.close;
       if (settled) {
         liveInterpRafRef.current = null;
         liveInterpLastFrameRef.current = 0;
@@ -2276,6 +2288,11 @@ const TradingChart = ({
       // Reconcile directly with the latest market state instead of replaying
       // throttled animation frames accumulated while the tab was hidden.
       liveDisplayRef.current = { ...target };
+      previousTickPriceRef.current = target.close;
+      currentTickPriceRef.current = target.close;
+      previousTickTimestampRef.current = currentTickTimestampRef.current;
+      currentTickTimestampRef.current = target.time;
+      tickTransitionStartedRef.current = performance.now();
       mainUpdateSchedulerRef.current?.update(
         buildMainSeriesUpdatePayload(chartTypeRef.current, target, historyRef.current),
       );
@@ -3251,13 +3268,30 @@ const TradingChart = ({
   const applyLiveCandleUpdate = useCallback(
     (candle: OHLCCandle, sourceTimestamp?: number) => {
       if (!mainSeriesRef.current) return;
+      const tickTimestamp =
+        typeof sourceTimestamp === "number" && Number.isFinite(sourceTimestamp) ? sourceTimestamp : candle.time;
+      const previousPrice = currentTickPriceRef.current ?? candle.close;
+      const previousTimestamp = currentTickTimestampRef.current;
+      const intervalMs =
+        previousTimestamp !== null
+          ? (tickTimestamp - previousTimestamp) * 1000
+          : tickTransitionDurationRef.current;
+
+      previousTickPriceRef.current = previousPrice;
+      currentTickPriceRef.current = candle.close;
+      previousTickTimestampRef.current = previousTimestamp;
+      currentTickTimestampRef.current = tickTimestamp;
+      tickTransitionStartedRef.current = performance.now();
+      tickTransitionDurationRef.current = Math.min(
+        LIVE_TICK_MAX_INTERVAL_MS,
+        Math.max(LIVE_TICK_MIN_INTERVAL_MS, Number.isFinite(intervalMs) ? intervalMs : 100),
+      );
       liveRef.current = candle;
       setCurrentPrice(candle.close);
       const startPrice = liveStartPriceRef.current || candle.open;
       setPriceChange(((candle.close - startPrice) / Math.max(startPrice, 0.000001)) * 100);
       const tfSeconds = timeframeSecondsRef.current || 60;
-      const effectiveMarkerTime =
-        typeof sourceTimestamp === "number" && Number.isFinite(sourceTimestamp) ? sourceTimestamp : candle.time;
+      const effectiveMarkerTime = tickTimestamp;
       const intrabarFraction = tfSeconds > 0 ? (effectiveMarkerTime - candle.time) / tfSeconds : 0;
       const markerLogical = historyRef.current.length + getIntrabarLogicalOffset(intrabarFraction);
       setLivePriceBeacon({
