@@ -156,9 +156,9 @@ const TradingHeader = ({
     <header className="relative flex h-[62px] shrink-0 items-center justify-between px-4 bg-[var(--trading-header-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white z-30 select-none">
 
       {/* ── MOBILE layout (hidden on lg+) ── */}
-      <div className="flex lg:hidden flex-1 items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-2 shrink-0">
-          {renderAccountPill()}
+      <div className="flex lg:hidden w-full items-center gap-2 overflow-x-auto no-scrollbar">
+        {renderAccountPill()}
+        <div className="ml-auto flex items-center gap-2 shrink-0">
           {renderDepositButton()}
           {isAdmin && (
             <button
@@ -213,7 +213,7 @@ const TradingHeader = ({
         </div>
 
         {/* Right: Admin + Bell + Account + Deposit */}
-        <div className="ml-auto flex items-center justify-end gap-2.5 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           {isAdmin && (
             <button
               onClick={() => navigate("/admin")}
