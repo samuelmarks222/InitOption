@@ -11,6 +11,7 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 export type WorkspaceModule = "support" | "account" | "analytics" | "tournaments" | "leaderboard" | "referrals" | "more" | "settings" | "help" | "guides" | "signals" | "generalchat" | null;
 
@@ -24,11 +25,11 @@ interface NavigationSidebarProps {
 type PrimaryNavKey = "trading";
 
 const getNavItemClassName = (collapsed: boolean) =>
-  `group relative flex w-full flex-col items-center justify-center rounded-[4px] transition-colors ${
-    collapsed ? "h-[48px] gap-0" : "h-[62px] gap-1"
+  `group relative flex w-full flex-col items-center justify-center rounded-[10px] transition-all duration-200 ${
+    collapsed ? "h-[48px] gap-0" : "h-[74px] gap-1.5"
   }`;
 const navIconClassName = "h-[22px] w-[22px] transition-transform duration-200 group-hover:-translate-y-0.5";
-const navLabelClassName = "max-w-[62px] text-center text-[10px] font-black uppercase leading-[1.05]";
+const navLabelClassName = "max-w-[62px] text-center text-[9px] font-black uppercase leading-[1.15] tracking-[0.12em]";
 
 export const NavigationSidebar = ({
   activeWorkspace,
@@ -36,6 +37,9 @@ export const NavigationSidebar = ({
   collapsed = false,
   onToggleCollapsed,
 }: NavigationSidebarProps) => {
+  const { unreadCount } = useNotifications();
+  const notificationBadge = unreadCount > 0 ? (unreadCount > 99 ? "99+" : String(unreadCount)) : undefined;
+
   const PRIMARY_ITEMS = [
     { key: "trading", label: "Trade", icon: Image, workspace: null },
   ] as const;
@@ -43,8 +47,8 @@ export const NavigationSidebar = ({
   const SECONDARY_ITEMS = [
     { id: "support", label: "Support", icon: HelpCircle },
     { id: "account", label: "Account", icon: User },
-    { id: "tournaments", label: "Tourna- ments", icon: Trophy, badge: "4" },
-    { id: "leaderboard", label: "Market", icon: BarChart3, badge: "5" },
+    { id: "tournaments", label: "Tournaments", icon: Trophy, badge: notificationBadge },
+    { id: "leaderboard", label: "Social Trading", icon: BarChart3, badge: notificationBadge },
     { id: "more", label: "More", icon: Grid },
   ] as const;
 
@@ -102,15 +106,21 @@ export const NavigationSidebar = ({
                 title={collapsed ? item.label : undefined}
                 className={`${getNavItemClassName(collapsed)} ${
                   isActive
-                    ? "bg-[#0f83e6] text-white shadow-[0_6px_14px_rgba(15,131,230,0.22)]"
+                    ? "bg-[#0f83e6] text-white shadow-[0_8px_18px_rgba(15,131,230,0.24)]"
                     : "text-white hover:bg-white/[0.045]"
                 }`}
               >
-                <Icon
-                  className={`${navIconClassName} ${isActive ? "text-white" : "text-current"}`}
-                  strokeWidth={2.35}
-                />
-                <span className={`${collapsed ? "sr-only" : navLabelClassName} ${isActive ? "font-bold text-white" : ""}`}>
+                <span className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border ${
+                  isActive
+                    ? "border-transparent bg-white/12 text-white"
+                    : "border-[#2a3652] bg-[#111a2d] text-[#dfeafc]"
+                }`}>
+                  <Icon
+                    className={`${navIconClassName} ${isActive ? "text-white" : "text-current"}`}
+                    strokeWidth={2.35}
+                  />
+                </span>
+                <span className={`${collapsed ? "sr-only" : navLabelClassName} ${isActive ? "font-bold text-white" : "text-white/80"}`}>
                   {item.label}
                 </span>
               </button>
@@ -132,17 +142,23 @@ export const NavigationSidebar = ({
                 title={collapsed ? item.label : undefined}
                 className={`${getNavItemClassName(collapsed)} ${
                   isActive
-                    ? "bg-white/[0.06] text-white"
+                    ? "bg-white/[0.06] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
                     : "text-white hover:bg-white/[0.04]"
                 }`}
               >
                 {"badge" in item && item.badge && (
-                  <span className="absolute right-2 top-2 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#1c9cff] px-1 text-[10px] font-black text-white">
+                  <span className="absolute right-2 top-2 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#1c9cff] px-1 text-[10px] font-black text-white shadow-[0_0_0_2px_rgba(13,17,31,0.85)]">
                     {item.badge}
                   </span>
                 )}
-                <Icon className={navIconClassName} strokeWidth={2.35} />
-                <span className={collapsed ? "sr-only" : navLabelClassName}>{item.label}</span>
+                <span className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border ${
+                  isActive
+                    ? "border-[#5ca4ff] bg-[#1c3f6a] text-white"
+                    : "border-[#2a3652] bg-[#111a2d] text-[#dfeafc]"
+                }`}>
+                  <Icon className={navIconClassName} strokeWidth={2.35} />
+                </span>
+                <span className={collapsed ? "sr-only" : `${navLabelClassName} text-white/80`}>{item.label}</span>
               </button>
             );
           })}
@@ -161,16 +177,24 @@ export const NavigationSidebar = ({
                   aria-label={item.label}
                   aria-pressed={isActive}
                   title={collapsed ? item.label : undefined}
-                  className={`${getNavItemClassName(collapsed)} ${
+                className={`${getNavItemClassName(collapsed)} ${
                     isActive
-                      ? "bg-[#12b76a] text-white"
+                      ? "bg-[#12b76a] text-white shadow-[0_8px_18px_rgba(18,183,106,0.24)]"
                       : item.id === "help"
                         ? "bg-[#12b76a] text-white hover:bg-[#18c976]"
                         : "text-white hover:bg-white/[0.045]"
                   }`}
                 >
-                  <Icon className={navIconClassName} strokeWidth={2.35} />
-                  <span className={collapsed ? "sr-only" : navLabelClassName}>{item.label}</span>
+                  <span className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border ${
+                    isActive || item.id === "help"
+                      ? "border-transparent bg-white/12 text-white"
+                      : "border-[#2a3652] bg-[#111a2d] text-[#dfeafc]"
+                  }`}>
+                    <Icon className={navIconClassName} strokeWidth={2.35} />
+                  </span>
+                  <span className={collapsed ? "sr-only" : `${navLabelClassName} ${isActive || item.id === "help" ? "text-white" : "text-white/80"}`}>
+                    {item.label}
+                  </span>
                 </button>
               );
             })}
