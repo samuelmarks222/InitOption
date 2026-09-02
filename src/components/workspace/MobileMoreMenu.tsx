@@ -84,7 +84,7 @@ export const MobileMoreMenu = ({ onClose, onOpenOverlay, onOpenDeposit }: Mobile
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3">
+      <div className="flex-1 overflow-y-auto px-4 py-3 flex justify-between">
         {/* Icon rows: Market / Analytics / TOP / Signals */}
         <div className="space-y-2">
           {iconSections.map((section) => {
