@@ -213,7 +213,7 @@ const TradingHeader = ({
         </div>
 
         {/* Right: Admin + Bell + Account + Deposit */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="ml-auto flex items-center justify-end gap-2.5 shrink-0">
           {isAdmin && (
             <button
               onClick={() => navigate("/admin")}
