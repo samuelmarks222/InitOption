@@ -8,16 +8,16 @@ import PoolitoHomePage from "@/components/landing/PoolitoHomePage";
 const Index = () => {
   const { user, loading } = useAuth();
 
+  if (shouldStartAtLoginOnMobile()) {
+    return <Navigate to="/login" replace />;
+  }
+
   if (loading) {
     return <AuthLoadingScreen />
   }
 
   if (user) {
     return <Navigate to={getAuthRestorePath()} replace />;
-  }
-
-  if (shouldStartAtLoginOnMobile()) {
-    return <Navigate to="/login" replace />;
   }
 
   return <PoolitoHomePage />;
