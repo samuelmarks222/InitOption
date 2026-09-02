@@ -20,7 +20,7 @@ interface MobileMoreMenuProps {
 }
 
 const iconSections = [
-  { id: "leaderboard", icon: BarChart2, label: "Market", action: "leaderboard", badge: "6" },
+  { id: "leaderboard", icon: BarChart2, label: "Leaderboard", action: "leaderboard", badge: "6" },
   { id: "analytics",  icon: BarChart3, label: "Analytics", action: "analytics",  badge: null },
   { id: "leaderboard2", icon: Trophy,  label: "TOP",      action: "leaderboard", badge: null },
   { id: "signals",   icon: RadioTower, label: "Signals",  action: "signals",     badge: null },

@@ -49,7 +49,7 @@ import type { AnalyticsSignalAsset } from "./analytics/AnalyticsSignals";
 type AnalyticsRange = "3 days" | "Week" | "Month" | "Year" | "All";
 type AnalyticsAccountScope = "live" | "demo";
 type AccountTab = "personal" | "deposit" | "balance_history" | "trading_history" | "settings";
-export type AnalyticsAccountTab = "Withdrawal" | "Payments" | "Trades" | "My account" | "Market" | "Tournaments" | "Analytics";
+export type AnalyticsAccountTab = "Withdrawal" | "Payments" | "Trades" | "My account" | "Leaderboard" | "Tournaments" | "Analytics";
 
 interface AnalyticsGridOverlayProps {
   onClose?: () => void;
@@ -63,7 +63,7 @@ const ACCOUNT_SCOPE_OPTIONS: Array<{ value: AnalyticsAccountScope; label: string
   { value: "live", label: "Live Account" },
   { value: "demo", label: "Demo Account" },
 ];
-const ACCOUNT_TABS: AnalyticsAccountTab[] = ["Withdrawal", "Payments", "Trades", "My account", "Market", "Tournaments", "Analytics"];
+const ACCOUNT_TABS: AnalyticsAccountTab[] = ["Withdrawal", "Payments", "Trades", "My account", "Leaderboard", "Tournaments", "Analytics"];
 const PIE_COLORS = ["#08c66b", "#1d96f2", "#ff5b58", "#bb0039", "#ff950f"];
 const PAGE_SIZE = 10;
 const LANGUAGE_OPTIONS: Array<{ label: string; code: TradingLanguage }> = [
