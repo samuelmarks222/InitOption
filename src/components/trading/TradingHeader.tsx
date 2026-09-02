@@ -139,7 +139,7 @@ const TradingHeader = ({
       onClick={onOpenDeposit}
       className="flex h-10 items-center gap-1.5 shrink-0 rounded-[8px] bg-[#00c853] px-3 sm:px-5 text-[14px] font-black text-white shadow-md shadow-[#00c853]/20 hover:bg-[#00b248] active:scale-95 transition-all"
     >
-      <Plus size={16} strokeWidth={3} /> Deposit
+      Deposit
     </button>
   );
 
