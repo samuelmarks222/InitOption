@@ -1,10 +1,10 @@
 import {
   BarChart3,
+  CandlestickChart,
   CircleHelp,
   Grid,
   Handshake,
   Headset,
-  Image,
   Menu,
   Settings,
   Trophy,
@@ -42,7 +42,7 @@ export const NavigationSidebar = ({
   const notificationBadge = unreadCount > 0 ? (unreadCount > 99 ? "99+" : String(unreadCount)) : undefined;
 
   const PRIMARY_ITEMS = [
-    { key: "trading", label: "Trade", icon: Image, workspace: null },
+    { key: "trading", label: "Trade", icon: CandlestickChart, workspace: null },
   ] as const;
 
   const SECONDARY_ITEMS = [
@@ -107,13 +107,13 @@ export const NavigationSidebar = ({
                 title={collapsed ? item.label : undefined}
                 className={`${getNavItemClassName(collapsed)} ${
                   isActive
-                    ? "bg-[#0f83e6] text-white shadow-[0_8px_18px_rgba(15,131,230,0.24)]"
+                    ? "bg-[#596273] text-white shadow-[0_8px_18px_rgba(89,98,115,0.24)]"
                     : "text-white hover:bg-white/[0.045]"
                 }`}
               >
                 <span className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border ${
                   isActive
-                    ? "border-transparent bg-white/12 text-white"
+                    ? "border-[#8c98ad] bg-[#727d90] text-white"
                     : "border-[#2a3652] bg-[#111a2d] text-[#dfeafc]"
                 }`}>
                   <Icon

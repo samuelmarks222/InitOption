@@ -101,7 +101,7 @@ const TradingHeader = ({
       <button
         id="tour-account-switch"
         onClick={() => setShowAccountDrop((v) => !v)}
-        className="flex h-10 items-center gap-2.5 rounded-[8px] border border-[#353f54] bg-[#1c2230] px-3.5 hover:bg-[#232c3d] hover:border-[#465470] transition-colors"
+        className="flex h-10 items-center gap-2.5 rounded-[8px] border border-[#353f54] bg-[#1c2230] px-3.5 hover:bg-[#596273] hover:border-[#727d90] transition-colors"
       >
         <AccountPillIcon size={18} className={accountType === "demo" ? "text-white shrink-0" : "text-[#0fa055] shrink-0"} />
         <div className="text-left leading-none">
