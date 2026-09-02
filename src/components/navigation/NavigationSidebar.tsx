@@ -1,8 +1,9 @@
 import {
   BarChart3,
-  Gift,
+  CircleHelp,
   Grid,
-  HelpCircle,
+  Handshake,
+  Headset,
   Image,
   Menu,
   Settings,
@@ -45,7 +46,7 @@ export const NavigationSidebar = ({
   ] as const;
 
   const SECONDARY_ITEMS = [
-    { id: "support", label: "Support", icon: HelpCircle },
+    { id: "support", label: "Support", icon: Headset },
     { id: "account", label: "Account", icon: User },
     { id: "tournaments", label: "Tournaments", icon: Trophy, badge: notificationBadge },
     { id: "leaderboard", label: "Social Trading", icon: BarChart3, badge: notificationBadge },
@@ -53,8 +54,8 @@ export const NavigationSidebar = ({
   ] as const;
 
   const UTILITY_ITEMS = [
-    { id: "referrals", label: "Join us", icon: Gift },
-    { id: "help", label: "Help", icon: HelpCircle },
+    { id: "referrals", label: "Join us", icon: Handshake },
+    { id: "help", label: "Help", icon: CircleHelp },
     { id: "settings", label: "Settings", icon: Settings },
   ] as const;
 
@@ -158,7 +159,7 @@ export const NavigationSidebar = ({
                 }`}>
                   <Icon className={navIconClassName} strokeWidth={2.35} />
                 </span>
-                <span className={collapsed ? "sr-only" : `${navLabelClassName} text-white/80`}>{item.label}</span>
+                <span className={collapsed ? "sr-only" : `${navLabelClassName} ${item.id === "tournaments" ? "max-w-[74px] text-[8px]" : ""} text-white/80`}>{item.label}</span>
               </button>
             );
           })}
@@ -179,9 +180,9 @@ export const NavigationSidebar = ({
                   title={collapsed ? item.label : undefined}
                 className={`${getNavItemClassName(collapsed)} ${
                     isActive
-                      ? "bg-[#12b76a] text-white shadow-[0_8px_18px_rgba(18,183,106,0.24)]"
+                      ? "bg-[#596273] text-white shadow-[0_8px_18px_rgba(89,98,115,0.24)]"
                       : item.id === "help"
-                        ? "bg-[#12b76a] text-white hover:bg-[#18c976]"
+                        ? "bg-[#596273] text-white hover:bg-[#687386]"
                         : "text-white hover:bg-white/[0.045]"
                   }`}
                 >
@@ -192,7 +193,7 @@ export const NavigationSidebar = ({
                   }`}>
                     <Icon className={navIconClassName} strokeWidth={2.35} />
                   </span>
-                  <span className={collapsed ? "sr-only" : `${navLabelClassName} ${isActive || item.id === "help" ? "text-white" : "text-white/80"}`}>
+                  <span className={collapsed ? "sr-only" : `${navLabelClassName} ${item.id === "referrals" ? "max-w-[74px] text-[8px]" : ""} ${isActive || item.id === "help" ? "text-white" : "text-white/80"}`}>
                     {item.label}
                   </span>
                 </button>
