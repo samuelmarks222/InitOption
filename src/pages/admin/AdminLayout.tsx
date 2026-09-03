@@ -12,10 +12,10 @@ import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { getRoleLabel, roleAllowsAdminPath } from "@/lib/adminRoles";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 
-const ACCENT = "#1689e8";
-const BG_CANVAS = "#0b1018";
-const BG_SIDEBAR = "#0d131f";
-const BORDER = "#1b2333";
+const ACCENT = "#2f9bff";
+const BG_CANVAS = "#171b1e";
+const BG_SIDEBAR = "#202528";
+const BORDER = "#30383d";
 
 interface NavCategory {
   items: { href: string; icon: React.ReactNode; label: string; badge?: string }[];
@@ -117,17 +117,17 @@ const AdminLayout = () => {
   if (!roleAllowsAdminPath(primaryRole, location.pathname)) return <Navigate to="/admin" replace />;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0b1018] text-[#f1f5f9] font-sans antialiased">
+    <div className="flex h-screen overflow-hidden bg-[#171b1e] text-[#f1f5f9] font-sans antialiased">
       {/* Top Header */}
       <AdminHeader />
 
-      <div className="flex flex-1 pt-14 overflow-hidden">
+      <div className="flex flex-1 pt-16 overflow-hidden">
         {/* Sidebar */}
         <aside
-          className="w-60 shrink-0 border-r flex flex-col justify-between overflow-y-auto no-scrollbar shadow-2xl z-20"
+          className="w-[230px] shrink-0 border-r flex flex-col justify-between overflow-y-auto no-scrollbar shadow-2xl z-20"
           style={{ background: BG_SIDEBAR, borderColor: BORDER }}
         >
-          <div className="py-4 px-3 space-y-4">
+          <div className="py-5 px-3 space-y-5">
             {visibleCategories.map((cat) => {
               const expanded = expandedCats[cat.name] ?? true;
               return (
@@ -147,17 +147,17 @@ const AdminLayout = () => {
                           <Link
                             key={item.label}
                             to={item.href}
-                            className={`group relative flex items-center justify-between rounded-lg px-3 py-2 text-xs font-bold transition-all ${
+                            className={`group relative flex items-center justify-between rounded-[7px] px-3 py-2.5 text-xs font-bold transition-all ${
                               active
-                                ? "bg-[#1689e8]/15 text-[#1689e8] shadow-sm"
-                                : "text-gray-400 hover:bg-white/[0.04] hover:text-white"
+                                ? "bg-[#2f9bff]/15 text-[#72bdff] shadow-sm"
+                                : "text-gray-400 hover:bg-white/[0.06] hover:text-white"
                             }`}
                           >
                             {active && (
                               <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-[#1689e8] shadow-[0_0_8px_#1689e8]" />
                             )}
                             <div className="flex items-center gap-3 truncate">
-                              <span className={active ? "text-[#1689e8]" : "text-gray-400 group-hover:text-gray-300"}>
+                              <span className={active ? "text-[#72bdff]" : "text-gray-400 group-hover:text-gray-300"}>
                                 {item.icon}
                               </span>
                               <span className="truncate">{item.label}</span>

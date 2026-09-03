@@ -18,8 +18,8 @@ import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { getRoleLabel } from "@/lib/adminRoles";
 
-const BG_HEADER = "#0d131f";
-const BORDER = "#1b2333";
+const BG_HEADER = "#202528";
+const BORDER = "#30383d";
 
 interface Notification {
   description: string;
@@ -104,7 +104,7 @@ export function AdminHeader() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 h-14 border-b px-4 md:px-6 flex items-center justify-between shadow-lg backdrop-blur-md"
+      className="fixed top-0 left-0 right-0 z-50 h-16 border-b px-4 md:px-7 flex items-center justify-between shadow-lg backdrop-blur-md"
       style={{ background: BG_HEADER, borderColor: BORDER }}
     >
       {/* Left: Brand + Page Title */}
@@ -114,7 +114,7 @@ export function AdminHeader() {
           <span className="text-sm font-black uppercase tracking-wider text-white hidden sm:inline">
             {platformName || "InitOption"}
           </span>
-          <span className="rounded bg-[#1689e8]/20 px-1.5 py-0.5 text-[9px] font-black text-[#1689e8] tracking-widest uppercase">
+          <span className="rounded-md bg-[#2f9bff]/15 px-2 py-1 text-[9px] font-black text-[#72bdff] tracking-widest uppercase">
             ADMIN
           </span>
         </Link>
@@ -150,7 +150,7 @@ export function AdminHeader() {
         <div className="relative">
           <button
             onClick={() => { setNotificationsOpen(!notificationsOpen); setProfileOpen(false); }}
-            className="relative rounded-xl border border-white/10 bg-[#131a27] p-2 text-gray-300 transition-colors hover:border-[#1689e8] hover:text-white"
+            className="relative rounded-xl border border-white/10 bg-[#2a3040] p-2 text-gray-300 transition-colors hover:border-[#72bdff] hover:text-white"
           >
             <Bell className="h-4 w-4" />
             {unreadCount > 0 && (
@@ -188,7 +188,7 @@ export function AdminHeader() {
         <div className="relative">
           <button
             onClick={() => { setProfileOpen(!profileOpen); setNotificationsOpen(false); }}
-            className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#131a27] p-1.5 transition-all hover:border-[#1689e8]"
+            className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#2a3040] p-1.5 transition-all hover:border-[#72bdff]"
           >
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#1689e8] to-indigo-600 text-xs font-black text-white shadow-sm">
               {profile?.display_name?.charAt(0).toUpperCase() || "A"}

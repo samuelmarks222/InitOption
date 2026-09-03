@@ -166,13 +166,13 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Top Banner Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-gradient-to-r from-[#0d131f] via-[#131a27] to-[#162032] p-6 shadow-2xl">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#30383d] bg-[#212629] p-5 shadow-xl">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight text-white">Executive Control Console</h1>
-            <span className="rounded-full bg-[#1689e8]/20 px-2.5 py-0.5 text-xs font-black uppercase text-[#1689e8] tracking-widest border border-[#1689e8]/30">
+            <span className="rounded-md bg-[#2f9bff]/15 px-2.5 py-0.5 text-xs font-black uppercase text-[#72bdff] tracking-widest border border-[#2f9bff]/30">
               REALTIME
             </span>
           </div>
@@ -184,7 +184,7 @@ const Dashboard = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => void fetchAllData()}
-            className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b1018] px-4 py-2.5 text-xs font-black text-gray-300 transition hover:border-[#1689e8] hover:text-white"
+            className="flex items-center gap-2 rounded-lg border border-[#3a444a] bg-[#2a3040] px-4 py-2.5 text-xs font-black text-gray-300 transition hover:border-[#72bdff] hover:text-white"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-[#1689e8]" : ""}`} />
             Refresh Feed
@@ -192,7 +192,7 @@ const Dashboard = () => {
 
           <Link
             to="/admin/finance?tab=withdrawals"
-            className="flex items-center gap-2 rounded-xl bg-[#1689e8] px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-[#1689e8]/25 transition hover:bg-[#0f7cd5] active:scale-95"
+            className="flex items-center gap-2 rounded-lg bg-[#2f9bff] px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-[#2f9bff]/25 transition hover:bg-[#198bea] active:scale-95"
           >
             <ArrowUpCircle className="h-4 w-4" />
             Review Queue
@@ -203,7 +203,7 @@ const Dashboard = () => {
       {/* KPI Cards Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Card 1: Total Users */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#131a27] p-5 shadow-xl transition hover:border-[#1689e8]/50">
+        <div className="relative overflow-hidden rounded-xl border border-[#30383d] bg-[#212629] p-5 shadow-xl transition hover:border-[#2f9bff]/50">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase tracking-wider text-gray-400">TOTAL TRADERS</span>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1689e8]/15 text-[#1689e8]">
@@ -220,7 +220,7 @@ const Dashboard = () => {
         </div>
 
         {/* Card 2: Total Deposits */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#131a27] p-5 shadow-xl transition hover:border-[#00c878]/50">
+        <div className="relative overflow-hidden rounded-xl border border-[#30383d] bg-[#212629] p-5 shadow-xl transition hover:border-[#00c878]/50">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase tracking-wider text-gray-400">TOTAL DEPOSITS</span>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#00c878]/15 text-[#00c878]">
@@ -234,7 +234,7 @@ const Dashboard = () => {
         </div>
 
         {/* Card 3: Total Withdrawals */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#131a27] p-5 shadow-xl transition hover:border-amber-500/50">
+        <div className="relative overflow-hidden rounded-xl border border-[#30383d] bg-[#212629] p-5 shadow-xl transition hover:border-amber-500/50">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase tracking-wider text-gray-400">TOTAL WITHDRAWALS</span>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
@@ -250,7 +250,7 @@ const Dashboard = () => {
         </div>
 
         {/* Card 4: Platform Net P&L */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#131a27] p-5 shadow-xl transition hover:border-[#1689e8]/50">
+        <div className="relative overflow-hidden rounded-xl border border-[#30383d] bg-[#212629] p-5 shadow-xl transition hover:border-[#2f9bff]/50">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase tracking-wider text-gray-400">NET PLATFORM EARNINGS</span>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/15 text-purple-400">
@@ -271,7 +271,7 @@ const Dashboard = () => {
       {/* Analytics Charts Row */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Net Earnings Trend Chart */}
-        <div className="rounded-2xl border border-white/10 bg-[#131a27] p-5 shadow-xl">
+        <div className="rounded-xl border border-[#30383d] bg-[#212629] p-5 shadow-xl">
           <div className="flex items-center justify-between border-b border-white/10 pb-4">
             <div>
               <h3 className="text-sm font-black uppercase tracking-wider text-white">Platform Net P&L (7-Day)</h3>
@@ -304,7 +304,7 @@ const Dashboard = () => {
         </div>
 
         {/* Trading Volume Bar Chart */}
-        <div className="rounded-2xl border border-white/10 bg-[#131a27] p-5 shadow-xl">
+        <div className="rounded-xl border border-[#30383d] bg-[#212629] p-5 shadow-xl">
           <div className="flex items-center justify-between border-b border-white/10 pb-4">
             <div>
               <h3 className="text-sm font-black uppercase tracking-wider text-white">Trading Turnover Volume (7-Day)</h3>
@@ -334,7 +334,7 @@ const Dashboard = () => {
       {/* Bottom Section: Live Recent Trades & Pending Withdrawals */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent Trades Table (2 cols) */}
-        <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-[#131a27] p-5 shadow-xl">
+        <div className="lg:col-span-2 rounded-xl border border-[#30383d] bg-[#212629] p-5 shadow-xl">
           <div className="flex items-center justify-between border-b border-white/10 pb-4">
             <div className="flex items-center gap-2">
               <Activity className="h-4 w-4 text-[#1689e8]" />
@@ -388,7 +388,7 @@ const Dashboard = () => {
         </div>
 
         {/* Pending Withdrawals Quick Action Panel (1 col) */}
-        <div className="rounded-2xl border border-white/10 bg-[#131a27] p-5 shadow-xl flex flex-col justify-between">
+        <div className="rounded-xl border border-[#30383d] bg-[#212629] p-5 shadow-xl flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div className="flex items-center gap-2">
