@@ -308,7 +308,7 @@ const { data: messages, error: messagesError } = await api
     setLoadingSupport(false);
   };
 
-  const loadTickets = async () => {
+const loadTickets = async () => {
     if (!user?.id) {
       setTickets([]);
       setLoadingTickets(false);
@@ -316,11 +316,13 @@ const { data: messages, error: messagesError } = await api
     }
 
     setLoadingTickets(true);
-const { data, error } = await api
-  .from("support_tickets")
-  .select("*")
-  .eq("user_id", user.id)
-  .order("created_at", { ascending: false });
+    // Load all tickets - RLS policy handles security at database level:
+    // - Admins see all tickets (public.is_staff check in policy)
+    // - Regular users see only their own tickets (auth.uid() = user_id)
+    const { data, error } = await api
+      .from("support_tickets")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) {
       setTicketError(error.message);
