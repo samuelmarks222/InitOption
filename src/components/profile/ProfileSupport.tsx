@@ -309,7 +309,7 @@ const { data: messages, error: messagesError } = await api
   };
 
   const loadTickets = async () => {
-    if (!user?.id || isCompact || isCommunity || isDesk) {
+    if (!user?.id) {
       setTickets([]);
       setLoadingTickets(false);
       return;
@@ -341,9 +341,7 @@ const { data, error } = await api
     if (!isCommunity) {
       void loadSupportDesk();
     }
-    if (!isCompact && !isCommunity && !isDesk) {
-      void loadTickets();
-    }
+    void loadTickets();
   }, [user?.id, mode, isCompact, isCommunity, isDesk]);
 
   useEffect(() => {
