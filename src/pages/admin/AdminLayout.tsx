@@ -117,7 +117,7 @@ const AdminLayout = () => {
   if (!roleAllowsAdminPath(primaryRole, location.pathname)) return <Navigate to="/admin" replace />;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#171b1e] text-[#f1f5f9] font-sans antialiased">
+    <div className="admin-theme-dark flex h-screen overflow-hidden bg-[#171b1e] text-[#f1f5f9] font-sans antialiased">
       {/* Top Header */}
       <AdminHeader />
 
@@ -200,7 +200,7 @@ const AdminLayout = () => {
         </aside>
 
         {/* Main Content Workspace Area */}
-        <main className="flex-1 overflow-y-auto bg-[#0b1018] p-4 md:p-6 no-scrollbar">
+        <main className="admin-workspace flex-1 overflow-y-auto bg-[#171b1e] p-4 md:p-6 no-scrollbar">
           <div className="mx-auto max-w-7xl">
             <Outlet />
           </div>

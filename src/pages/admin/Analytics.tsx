@@ -207,11 +207,16 @@ const Analytics = () => {
   const advancedMetrics = useMemo(() => {
     const totalTrades = filteredTrades.length;
     const userLossRate = totalTrades > 0 ? (filteredTrades.filter((trade) => trade.status === "lost").length / totalTrades) * 100 : 0;
+    const winRate = totalTrades > 0 ? (filteredTrades.filter((trade) => trade.status === "won").length / totalTrades) * 100 : 0;
+    const grossWins = filteredTrades.filter((trade) => trade.status === "won").reduce((sum, trade) => sum + Math.abs(Number(trade.profit ?? 0)), 0);
+    const grossLosses = filteredTrades.filter((trade) => trade.status === "lost").reduce((sum, trade) => sum + Math.abs(Number(trade.profit ?? 0)), 0);
     const averageTradeAmount = totalTrades > 0 ? sumTradeVolume(filteredTrades) / totalTrades : 0;
     const dailyVolatility = stdDev(dailyProfitData.map((entry) => entry.profit));
 
     return {
       userLossRate,
+      winRate,
+      profitFactor: grossLosses > 0 ? grossWins / grossLosses : grossWins > 0 ? Infinity : 0,
       averageTradeAmount,
       dailyVolatility,
     };
@@ -291,7 +296,7 @@ const Analytics = () => {
 
       {/* Advanced Metrics — secondary strip */}
       <div className="overflow-hidden rounded-lg border bg-[#0D1420]" style={{ borderColor: BORDER }}>
-        <div className="grid grid-cols-3 divide-x divide-[#202B3A]">
+        <div className="grid grid-cols-2 divide-x divide-y divide-[#202B3A] sm:grid-cols-5 sm:divide-y-0">
           <div className="p-3.5">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">User Loss Rate</p>
             <p className="mt-0.5 text-xl font-black font-mono text-white">{loading ? "..." : `${advancedMetrics.userLossRate.toFixed(1)}%`}</p>
@@ -306,6 +311,18 @@ const Analytics = () => {
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Daily P&L Volatility</p>
             <p className="mt-0.5 text-xl font-black font-mono text-white">{loading ? "..." : `±${formatMoney(advancedMetrics.dailyVolatility)}`}</p>
             <p className="mt-0.5 text-[10px] text-[#5E6B7D]">Std dev of daily platform profit</p>
+          </div>
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Trader Win Rate</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-white">{loading ? "..." : `${advancedMetrics.winRate.toFixed(1)}%`}</p>
+            <p className="mt-0.5 text-[10px] text-[#5E6B7D]">Settled trades won</p>
+          </div>
+          <div className="p-3.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Profit Factor</p>
+            <p className="mt-0.5 text-xl font-black font-mono text-white">
+              {loading ? "..." : Number.isFinite(advancedMetrics.profitFactor) ? advancedMetrics.profitFactor.toFixed(2) : "∞"}
+            </p>
+            <p className="mt-0.5 text-[10px] text-[#5E6B7D]">Gross wins / gross losses</p>
           </div>
         </div>
       </div>
@@ -457,6 +474,5 @@ const EmptyPanel = ({ message, compact = false }: { message: string; compact?: b
 );
 
 export default Analytics;
-
 
 

@@ -57,7 +57,7 @@ function Dropdown({ children, isOpen, onClose }: { children: React.ReactNode; is
   return (
     <div ref={ref} className="fixed inset-0 z-50" onClick={onClose}>
       <div
-        className="absolute right-4 top-14 w-80 rounded-xl border border-white/10 bg-[#131a27] p-3.5 text-xs text-white shadow-2xl backdrop-blur-xl animate-in fade-in-0 zoom-in-95 duration-150"
+        className="absolute right-4 top-16 w-80 rounded-xl border border-[#30383d] bg-[#252b2f] p-3.5 text-xs text-white shadow-2xl backdrop-blur-xl animate-in fade-in-0 zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {children}
@@ -134,7 +134,7 @@ export function AdminHeader() {
             placeholder="Search users, transactions, trades..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-8 rounded-xl border border-white/10 bg-[#0b1018] pl-9 pr-3 text-xs text-white placeholder-gray-500 outline-none transition focus:border-[#1689e8]"
+            className="w-full h-8 rounded-xl border border-[#3a444a] bg-[#2a3040] pl-9 pr-3 text-xs text-white placeholder-gray-500 outline-none transition focus:border-[#72bdff]"
           />
         </form>
 
@@ -171,7 +171,7 @@ export function AdminHeader() {
                   key={n.id}
                   to={n.link || "#"}
                   onClick={() => setNotificationsOpen(false)}
-                  className="block rounded-lg border border-white/5 bg-[#0b1018]/80 p-2.5 text-xs transition-colors hover:border-[#1689e8]/40"
+                  className="block rounded-lg border border-white/5 bg-[#202528]/80 p-2.5 text-xs transition-colors hover:border-[#72bdff]/40"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-white">{n.title}</span>
