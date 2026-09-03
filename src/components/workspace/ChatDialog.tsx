@@ -39,13 +39,22 @@ function getStatusIcon(status: ChatMessage["status"], isRead: boolean) {
     return <span className="w-4 h-4 opacity-40">⏳</span>;
   }
   if (status === "sent") {
-    return <Check className="w-4 h-4 opacity-50" strokeWidth={2.5} />;
+    return <Check className="w-4 h-4" strokeWidth={2} color="#10b981" />;
   }
   if (status === "delivered") {
-    return <CheckCheck className="w-4 h-4 opacity-50" strokeWidth={2.5} />;
+    return (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth={2}>
+        <polyline points="9 11 12 14 15 11" />
+      </svg>
+    );
   }
   if (status === "read") {
-    return <CheckCheck className="w-4 h-4 text-[#a8f0d6]" strokeWidth={2.5} />;
+    return (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth={2}>
+        <polyline points="9 11 12 14 15 11" />
+        <circle cx="12" cy="10" r="3" />
+      </svg>
+    );
   }
   return null;
 }
@@ -196,7 +205,7 @@ export const ChatDialog = ({ trader, onClose }: ChatDialogProps) => {
                   {dateKey}
                 </span>
               </div>
-{dayMessages.map((msg, idx) => {
+dayMessages.map((msg, idx) => {
                 const isMe = msg.sender === "me";
                 const showTail = idx === dayMessages.length - 1 || dayMessages[idx + 1].sender !== msg.sender;
                 const prevMsg = idx > 0 ? dayMessages[idx - 1] : null;
@@ -208,38 +217,45 @@ export const ChatDialog = ({ trader, onClose }: ChatDialogProps) => {
                     className={`flex ${isMe ? "justify-end" : "justify-start"} ${showTail ? "pb-1" : "pb-0"}`}
                   >
                     <div
-                      className={`max-w-[75%] relative ${
+                      className={`max-w-[75%] relative inline-block ${
                         isMe
-                          ? "rounded-2xl rounded-br-none bg-[#10b981] text-white shadow-sm"
-                          : "rounded-2xl rounded-bl-none bg-[#e5e7eb] text-[#1f2937] shadow-sm"
+                          ? "rounded-2xl bg-[#10b981] text-white"
+                          : "rounded-2xl bg-[#e5e7eb] text-[#1f2937]"}
                       }`}
                     >
-                      <p className="text-[13px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                      <p className="text-[13px] leading-relaxed whitespace-pre-wrap p-3">{msg.text}</p>
                       {showTime && (
                         <div
-                          className={`mt-1.5 flex items-center gap-1.5 ${
-                            isMe ? "justify-end" : "justify-start"
-                          }`}
+                          className={`mt-1.5 text-[10px] opacity-50 ${isMe ? "justify-end" : "justify-start"} w-full`}
                         >
-                          <span className="text-[10px] opacity-50">{svcFormatTime(msg.timestamp)}</span>
-                          {isMe && (
-                            <span className="flex items-center" aria-label={msg.status === "read" ? "Read" : msg.status === "delivered" ? "Delivered" : msg.status === "sent" ? "Sent" : "Sending"}>
-                              {getStatusIcon(msg.status, msg.status === "read")}
-                            </span>
-                          )}
+                          <span>{svcFormatTime(msg.timestamp)}</span>
                         </div>
                       )}
+                      {showTail && !isMe && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="absolute right-0 top-1/2 -mt-1 w-4 h-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      )}
+                      {showTail && isMe && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="absolute left-0 top-1/2 -mt-1 w-4 h-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                      )}
                     </div>
-                    {showTail && !isMe && (
-                      <div className="w-8 flex items-end justify-start -ml-2">
-                        <div className="w-2 h-2 rounded-full bg-[#e5e7eb] ml-1" />
-                      </div>
-                    )}
-                    {showTail && isMe && (
-                      <div className="w-8 flex items-end justify-end -mr-2">
-                        <div className="w-2 h-2 rounded-full bg-[#10b981] mr-1" />
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -247,13 +263,15 @@ export const ChatDialog = ({ trader, onClose }: ChatDialogProps) => {
           ))}
 
           {isTyping && (
-            <div className="flex justify-start">
-              <div className="rounded-xl rounded-bl-none bg-[#e5e7eb] px-4 py-2.5">
-                <div className="flex items-center gap-1">
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#6b7280]" />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#6b7280]" style={{ animationDelay: "0.15s" }} />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#6b7280]" style={{ animationDelay: "0.3s" }} />
-                  <span className="ml-1 text-[11px] text-[#6b7280]">Support is typing...</span>
+            <div className="flex justify-start pt-2">
+              <div className="flex items-start gap-2">
+                <div className="rounded-2xl bg-[#e5e7eb] px-3 py-2.5 text-[11px] text-[#6b7280]">
+                  <span className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-[#6b7280] animate-bounce" />
+                    <span className="h-2 w-2 rounded-full bg-[#6b7280]" style={{ animationDelay: "0.15s" }} />
+                    <span className="h-2 w-2 rounded-full bg-[#6b7280]" style={{ animationDelay: "0.3s" }} />
+                    <span>Support is typing...</span>
+                  </span>
                 </div>
               </div>
             </div>
