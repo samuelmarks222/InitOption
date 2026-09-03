@@ -72,6 +72,7 @@ export const ChatDialog = ({ trader, onClose }: ChatDialogProps) => {
   const [showEmoji, setShowEmoji] = useState(false);
   const [showAttach, setShowAttach] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -195,7 +196,7 @@ export const ChatDialog = ({ trader, onClose }: ChatDialogProps) => {
                   {dateKey}
                 </span>
               </div>
-              {dayMessages.map((msg, idx) => {
+{dayMessages.map((msg, idx) => {
                 const isMe = msg.sender === "me";
                 const showTail = idx === dayMessages.length - 1 || dayMessages[idx + 1].sender !== msg.sender;
                 const prevMsg = idx > 0 ? dayMessages[idx - 1] : null;
@@ -209,8 +210,8 @@ export const ChatDialog = ({ trader, onClose }: ChatDialogProps) => {
                     <div
                       className={`max-w-[75%] relative ${
                         isMe
-                          ? "rounded-2xl rounded-br-none bg-[#26a69a] text-white"
-                          : "rounded-2xl rounded-bl-none bg-[#24293d] text-[#e0e3eb]"
+                          ? "rounded-2xl rounded-br-none bg-[#10b981] text-white shadow-sm"
+                          : "rounded-2xl rounded-bl-none bg-[#e5e7eb] text-[#1f2937] shadow-sm"
                       }`}
                     >
                       <p className="text-[13px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
@@ -231,12 +232,12 @@ export const ChatDialog = ({ trader, onClose }: ChatDialogProps) => {
                     </div>
                     {showTail && !isMe && (
                       <div className="w-8 flex items-end justify-start -ml-2">
-                        <div className="w-2 h-2 rounded-full bg-[#24293d] ml-1" />
+                        <div className="w-2 h-2 rounded-full bg-[#e5e7eb] ml-1" />
                       </div>
                     )}
                     {showTail && isMe && (
                       <div className="w-8 flex items-end justify-end -mr-2">
-                        <div className="w-2 h-2 rounded-full bg-[#26a69a] mr-1" />
+                        <div className="w-2 h-2 rounded-full bg-[#10b981] mr-1" />
                       </div>
                     )}
                   </div>
@@ -245,14 +246,14 @@ export const ChatDialog = ({ trader, onClose }: ChatDialogProps) => {
             </div>
           ))}
 
-          {chatState === "typing" && (
+          {isTyping && (
             <div className="flex justify-start">
-              <div className="rounded-2xl rounded-bl-none bg-[#24293d] px-4 py-2.5">
+              <div className="rounded-xl rounded-bl-none bg-[#e5e7eb] px-4 py-2.5">
                 <div className="flex items-center gap-1">
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#787b86]" />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#787b86]" style={{ animationDelay: "0.15s" }} />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#787b86]" style={{ animationDelay: "0.3s" }} />
-                  <span className="ml-1 text-[11px] text-[#787b86]">{typingText}</span>
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#6b7280]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#6b7280]" style={{ animationDelay: "0.15s" }} />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[#6b7280]" style={{ animationDelay: "0.3s" }} />
+                  <span className="ml-1 text-[11px] text-[#6b7280]">Support is typing...</span>
                 </div>
               </div>
             </div>
@@ -283,7 +284,7 @@ export const ChatDialog = ({ trader, onClose }: ChatDialogProps) => {
                 onCompositionEnd={(e) => { setIsComposing(false); handleInputChange(e as any); }}
                 placeholder="Type a message..."
                 rows={1}
-                className="w-full rounded-2xl border border-[#2a3045] bg-[#24293d] px-4 py-2.5 text-[13px] text-white outline-none placeholder:text-[#787b86] focus:border-[#26a69a]/50 resize-none max-h-[120px]"
+                className="w-full rounded-xl border border-transparent bg-[#e5e7eb] px-4 py-2.5 text-[13px] text-[#1f2937] outline-none placeholder:text-[#6b7280] focus:border-[#10b981]/50 resize-none max-h-[120px]"
                 style={{ minHeight: "44px" }}
               />
               {showEmoji && (
@@ -308,7 +309,7 @@ export const ChatDialog = ({ trader, onClose }: ChatDialogProps) => {
               type="button"
               onClick={handleSend}
               disabled={!inputText.trim() || isComposing}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#26a69a] text-white transition-all hover:bg-[#1f8f84] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.95]"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#10b981] text-white transition-all hover:bg-[#059669] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.95]"
               aria-label="Send message"
             >
               <Send className="h-5 w-5" strokeWidth={2.5} />

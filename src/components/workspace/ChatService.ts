@@ -522,7 +522,7 @@ export function useChatService(trader: TraderData, userName: string = "You") {
       text: trimmed,
       sender: "me",
       timestamp: Date.now(),
-      status: "sending",
+      status: "sent",
       isOptimistic: true,
     };
 
@@ -531,26 +531,7 @@ export function useChatService(trader: TraderData, userName: string = "You") {
       messages: [...prev.messages, optimisticMsg],
     }));
 
-    const sentTimer = setTimeout(() => {
-      setState((prev) => ({
-        ...prev,
-        messages: prev.messages.map((m) =>
-          m.id === optimisticId ? { ...m, status: "sent" as MessageStatus } : m
-        ),
-      }));
-
-      const deliveredTimer = setTimeout(() => {
-        setState((prev) => ({
-          ...prev,
-          messages: prev.messages.map((m) =>
-            m.id === optimisticId ? { ...m, status: "delivered" as MessageStatus } : m
-          ),
-        }));
-      }, getRandomDelay({ min: 200, max: 800 }));
-      pendingTimersRef.current.set(`delivered-${optimisticId}`, deliveredTimer);
-    }, getRandomDelay({ min: 100, max: 500 }));
-    pendingTimersRef.current.set(`sent-${optimisticId}`, sentTimer);
-
+    // WhatsApp-like: immediately mark as read for instant experience
     setTimeout(() => {
       setState((prev) => ({
         ...prev,
@@ -558,7 +539,7 @@ export function useChatService(trader: TraderData, userName: string = "You") {
           m.id === optimisticId ? { ...m, status: "read" as MessageStatus } : m
         ),
       }));
-    }, getRandomDelay(READ_DELAY));
+    }, 200);
 
     triggerTraderReply(trimmed);
   }, [triggerTraderReply]);
