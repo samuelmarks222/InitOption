@@ -485,12 +485,22 @@ useEffect(() => {
     if (!user?.id) return;
 
     setSubmittingTicket(true);
-    const { error } = await api.from("support_tickets").insert({
-      category: ticketForm.category,
-      message: ticketForm.message.trim(),
-      priority: ticketForm.priority,
-      subject: ticketForm.subject.trim(),
-      user_id: user.id,
+    const fileData = compactSelectedFiles ? Array.from(compactSelectedFiles) : [];
+    const formData = new FormData();
+    formData.append("category", ticketForm.category);
+    formData.append("message", ticketForm.message.trim());
+    formData.append("priority", ticketForm.priority);
+    formData.append("subject", ticketForm.subject.trim());
+    formData.append("user_id", user.id);
+    
+    fileData.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    const { error } = await api.from("support_tickets").insert formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
     setSubmittingTicket(false);
 
@@ -513,6 +523,7 @@ useEffect(() => {
       message: "",
       priority: "normal",
     });
+    setCompactSelectedFiles(null);
     await loadTickets();
   };
 
@@ -575,6 +586,7 @@ useEffect(() => {
   };
 
   const compactInputValue = compactTab === "support" ? supportInput : groupInput;
+  const [compactSelectedFiles, setCompactSelectedFiles] = useState<FileList | null>(null);
   const isCompactSending = compactTab === "support" ? sendingSupport : sendingGroup;
 
   if (isCompact) {

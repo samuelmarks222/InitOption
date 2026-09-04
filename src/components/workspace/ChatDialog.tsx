@@ -10,6 +10,7 @@ import {
   Smile,
   ChevronDown,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { TraderData } from "./WorkspaceLeaderboard";
 import type { ChatMessage } from "./ChatMessages";
 import { useChatService } from "./ChatService";
@@ -82,6 +83,7 @@ export const ChatDialog = ({ trader, onClose }: ChatDialogProps) => {
   const [showAttach, setShowAttach] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -291,6 +293,14 @@ dayMessages.map((msg, idx) => {
             >
               <Smile className="h-5 w-5" />
             </button>
+            <button
+              type="button"
+              onClick={() => setShowAttach(!showAttach)}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#787b86] transition-colors hover:bg-white/[0.06] hover:text-white"
+              aria-label="Attach"
+            >
+              <Paperclip className="h-5 w-5" />
+            </button>
 
             <div className="flex-1 relative">
               <textarea
@@ -318,6 +328,70 @@ dayMessages.map((msg, idx) => {
                         {emoji}
                       </button>
                     ))}
+                  </div>
+                </div>
+              )}
+              {showAttach && (
+                <div className="absolute bottom-full left-0 right-0 mb-2 p-3 bg-[#24293d] rounded-xl border border-[#2a3045] shadow-lg">
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*,video/*,application/pdf,.doc,.docx,.txt"
+                      className="hidden"
+                      ref={ref => { setSelectedFiles(ref?.files as FileList | null) }}
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedFiles(null)}
+                        className="text-sm text-[#6b7280] hover:cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowAttach(!showAttach)}
+                          className="ml-2 text-sm text-[#6b7280] hover:cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      {selectedFiles && selectedFiles.length > 0 && (
+                        <div className="mt-2 space-y-1 max-w-full">
+                          {Array.from(selectedFiles).map((file, idx) => {
+                            const isImage = file.type.startsWith("image/");
+                            const isPdf = file.type === "application/pdf";
+                            const isDoc = file.name.endsWith(".doc") || file.name.endsWith(".docx");
+                            const isText = file.name.endsWith(".txt");
+                            
+                            return (
+                              <div key={idx} className="flex items-center gap-2 p-2 rounded bg-[#1e293b]">
+                                <div className={isImage ? "w-8 h-8 rounded-md bg-[#2563eb] text-white flex items-center justify-center text-sm" : isPdf ? "w-8 h-8 rounded-md bg-[#7f8c8d] text-white flex items-center justify-center text-sm [data-icon='pdf']" : isDoc ? "w-8 h-8 rounded-md bg-[#7f8c8d] text-white flex items-center justify-center text-sm [data-icon='doc']" : isText ? "w-8 h-8 rounded-md bg-[#7f8c8d] text-white flex items-center justify-center text-sm [data-icon='txt']" : "w-8 h-8 rounded-md bg-[#7f8c8d] text-white flex items-center justify-center text-sm"}>
+                                  {isImage ? file.name.substring(0, 10) : isPdf ? "PDF" : isDoc ? "DOC" : isText ? "TXT" : "File"}
+                                </div>
+                                <span className="truncate max-w-[150px]">{file.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedFiles((prev) => {
+                                    const newFiles = Array.from(prev ?? []).filter((f, i) => i !== idx);
+                                    return newFiles.length ? newFiles : null;
+                                  })}
+                                  className="text-xs text-[#6b7280] hover:cursor-pointer">
+                                    Remove
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => document.querySelector('input[type="file"]').click()}
+                        className="w-full py-2 px-3 text-sm text-[#787b86] rounded-md border border-[#2a3045] hover:bg-[#1e293b] transition-colors"
+                        >
+                          Browse Files
+                        </button>
+                    </div>
                   </div>
                 </div>
               )}
