@@ -55,6 +55,7 @@ export const NavigationSidebar = ({
 
   const UTILITY_ITEMS = [
     { id: "referrals", label: "Join us", icon: Handshake },
+    { id: "blog", label: "Blog", icon: UserRound },
     { id: "help", label: "Help", icon: CircleHelp },
     { id: "settings", label: "Settings", icon: Settings },
   ] as const;
