@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useRef, useState, type ReactNode, useContext } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  ChevronDown, Plus, Minus, ArrowUp, ArrowDown,
+  ChevronDown, ChevronUp, Plus, Minus, ArrowUp, ArrowDown,
   Clock, Briefcase,
   X, Check, TrendingUp, TrendingDown
 } from "lucide-react";
@@ -25,8 +25,6 @@ import {
   TRADE_DESK_DIRECTION_SUBMIT_EVENT,
   type TradeDeskDirectionFocusDetail,
 } from "./tradeDeskEvents";
-import TimePopover from "./TimePopover";
-import AmountPopover from "./AmountPopover";
 import { useTradingDesk } from "./TradingDeskContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -515,8 +513,6 @@ const TradingPanel = ({
   const pendingTradeGroups = buildTradeGroups(queuedPendingTrades);
   const tradeListRef = useRef<HTMLDivElement | null>(null);
   const selectedAssetTradeRef = useRef<HTMLDivElement | null>(null);
-  const timeTriggerRef = useRef<HTMLDivElement | null>(null);
-  const investTriggerRef = useRef<HTMLDivElement | null>(null);
   const queuedPendingTimeoutRef = useRef<number | null>(null);
   const queuedPendingTradeIdRef = useRef<string | null>(null);
   const directionFocusTimeoutRef = useRef<number | null>(null);
@@ -797,7 +793,7 @@ const TradingPanel = ({
 
   return (
     <>
-      <aside className={`font-copy w-full lg:w-[210px] h-full min-h-[190px] shrink-0 flex flex-col border-l border-[#171d2d] bg-[#2a3040] text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none ${showTimeSwitcher ? "overflow-visible lg:overflow-hidden" : "overflow-hidden"} ${mobileDocked ? "rounded-t-[16px]" : ""}`}>
+      <aside className={`font-copy w-full lg:w-[210px] h-full min-h-[190px] shrink-0 flex flex-col border-l border-[#171d2d] bg-[#2a3040] text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none overflow-hidden ${mobileDocked ? "rounded-t-[16px]" : ""}`}>
 
         {/* ── Asset Header & Pending Toggle (Single Row) ──────────────── */}
         <div className="flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-4 lg:pt-4 lg:pb-2">
@@ -857,11 +853,8 @@ const TradingPanel = ({
           <div className="relative z-10 lg:pb-0">
             <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-1 lg:gap-3">
               <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowTimeSwitcher((value) => !value)}
-                    className="relative flex h-[44px] w-full items-center justify-between rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-blue-500/50 lg:hidden"
-                  >
+                  {/* Mobile timer */}
+                  <div className="relative flex h-[44px] w-full items-center justify-between rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden">
                     <div className="flex items-center gap-2">
                       <Clock className="h-3.5 w-3.5 text-[#596278]" strokeWidth={1.8} />
                       <span className="text-[15px] font-bold tracking-[0.01em] tabular-nums text-white min-[360px]:text-[16px]" style={{ fontFamily: "Arial, sans-serif" }}>
@@ -871,32 +864,61 @@ const TradingPanel = ({
                     <span className="text-[9px] font-medium uppercase tracking-[0.06em] text-[#8fb0cf]">
                       {t("tradingPanel.timeLabelShort")}
                     </span>
-                  </button>
+                  </div>
 
-                <div
-                  ref={timeTriggerRef}
-                  onClick={() => setShowTimeSwitcher((value) => !value)}
-                  className="relative hidden lg:flex flex-col group cursor-pointer"
-                >
+                {/* Desktop timer */}
+                <div className="relative hidden lg:block">
                   <div className="absolute -top-2 left-3 z-10 bg-[#242a3c] px-1 text-[10px] font-semibold text-[#777f92]">{t("tradingPanel.timeLabelShort")}</div>
-                  <div className="flex h-[47px] cursor-pointer items-center justify-between rounded-[4px] border border-[#687086] bg-[#2a3040] px-2 transition hover:border-blue-500/50">
-<span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
-onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}>
+                  <div
+                    onClick={() => setShowTimeSwitcher((v) => !v)}
+                    className="flex h-[47px] cursor-pointer items-center justify-between rounded-[4px] border border-[#687086] bg-[#2a3040] px-2 transition hover:border-blue-500/50"
+                  >
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
+                    onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}>
                       <Minus className="w-3 h-3" />
                     </span>
                     <span className="text-[16px] font-semibold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>
                       {formatTradeClock(expirySeconds)}
                     </span>
-<span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
-onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
+                    onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}>
                       <Plus className="w-3 h-3" />
                     </span>
                   </div>
-                  <div className="mt-0.5 w-full text-center"><span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">Switch Time</span></div>
+                  <div className="mt-0.5 flex items-center justify-center gap-1">
+                    {showTimeSwitcher ? <ChevronUp className="h-2.5 w-2.5 text-[#1c9cff]" /> : <ChevronDown className="h-2.5 w-2.5 text-[#1c9cff]" />}
+                    <span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">Switch Time</span>
+                  </div>
+
+                  {/* Inline dropdown */}
+                  {showTimeSwitcher && (
+                    <div className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-lg border border-white/10 bg-[#1a1f2e] shadow-xl">
+                      <div className="grid grid-cols-3 gap-1 p-2">
+                        {TIME_PRESETS.map((preset) => {
+                          const isSelected = expirySeconds === preset.val;
+                          return (
+                            <button
+                              key={preset.val}
+                              type="button"
+                              onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); }}
+                              className={`h-8 rounded-md text-[11px] font-bold transition-all active:scale-95 ${
+                                isSelected
+                                  ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                  : "bg-white/5 text-white/50 border border-white/6 hover:bg-white/10 hover:text-white"
+                              }`}
+                            >
+                              {preset.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="relative">
+                {/* Mobile amount */}
                 <div className="relative flex h-[44px] w-full items-center justify-between rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden">
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-bold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>
@@ -914,20 +936,20 @@ onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}>
                       style={{ fontFamily: "Arial, sans-serif" }}
                     />
                   </div>
-<span className="text-[9px] font-medium uppercase tracking-[0.06em] text-[#8fb0cf]">
-                      {t("tradingPanel.amountLabel")}
-                    </span>
+                  <span className="text-[9px] font-medium uppercase tracking-[0.06em] text-[#8fb0cf]">
+                    {t("tradingPanel.amountLabel")}
+                  </span>
                 </div>
 
-                <div
-                  ref={investTriggerRef}
-                  onClick={() => setShowInvestmentSwitcher((v) => !v)}
-                  className="relative hidden lg:flex flex-col group cursor-pointer"
-                >
+                {/* Desktop amount */}
+                <div className="relative hidden lg:block">
                   <div className="absolute -top-2 left-3 z-10 bg-[#242a3c] px-1 text-[10px] font-semibold text-[#777f92]">{t("tradingPanel.investmentLabel")}</div>
-                  <div className="flex h-[47px] cursor-pointer items-center justify-between rounded-[4px] border border-[#687086] bg-[#2a3040] px-2 transition hover:border-blue-500/50">
-<span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
-onClick={(e) => { e.stopPropagation(); adjustInvestment(-1); }}>
+                  <div
+                    onClick={() => setShowInvestmentSwitcher((v) => !v)}
+                    className="flex h-[47px] cursor-pointer items-center justify-between rounded-[4px] border border-[#687086] bg-[#2a3040] px-2 transition hover:border-blue-500/50"
+                  >
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
+                    onClick={(e) => { e.stopPropagation(); adjustInvestment(-1); }}>
                       <Minus className="w-3 h-3" />
                     </span>
                     <input
@@ -942,28 +964,47 @@ onClick={(e) => { e.stopPropagation(); adjustInvestment(-1); }}>
                       className="hide-number-spin min-w-0 w-[70px] bg-transparent text-center text-[16px] font-semibold tracking-[0.01em] text-white outline-none"
                       style={{ fontFamily: "Arial, sans-serif" }}
                     />
-<span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
-onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
+                    onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}>
                       <Plus className="w-3 h-3" />
                     </span>
                   </div>
-                  <div className="mt-0.5 w-full text-center"><span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">{t("tradingPanel.switchTime")}</span></div>
+                  <div className="mt-0.5 flex items-center justify-center gap-1">
+                    {showInvestmentSwitcher ? <ChevronUp className="h-2.5 w-2.5 text-[#1c9cff]" /> : <ChevronDown className="h-2.5 w-2.5 text-[#1c9cff]" />}
+                    <span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">{t("tradingPanel.switchTime")}</span>
+                  </div>
+
+                  {/* Inline dropdown */}
+                  {showInvestmentSwitcher && (
+                    <div className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-lg border border-white/10 bg-[#1a1f2e] shadow-xl">
+                      <div className="grid grid-cols-3 gap-1 p-2">
+                        {[1, 5, 10, 25, 50, 100, 250, 500, 1000].map((amt) => {
+                          const isSelected = investment === amt;
+                          const isDisabled = amt > MAX_MANUAL_INVESTMENT;
+                          return (
+                            <button
+                              key={amt}
+                              type="button"
+                              onClick={() => { if (!isDisabled) { setInvestment(amt); setShowInvestmentSwitcher(false); } }}
+                              disabled={isDisabled}
+                              className={`h-8 rounded-md text-[11px] font-bold transition-all active:scale-95 ${
+                                isSelected
+                                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                  : isDisabled
+                                    ? "bg-white/3 text-white/20 border border-white/4 cursor-not-allowed"
+                                    : "bg-white/5 text-white/50 border border-white/6 hover:bg-white/10 hover:text-white"
+                              }`}
+                            >
+                              ${amt.toLocaleString()}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                {showInvestmentSwitcher && (
-                  <AmountPopover
-                    value={investment}
-                    onChange={(v) => handleInvestmentInput(String(v))}
-                    onClose={() => setShowInvestmentSwitcher(false)}
-                    max={MAX_MANUAL_INVESTMENT}
-                    triggerRef={investTriggerRef}
-                  />
-                )}
               </div>
             </div>
-
-            {showTimeSwitcher && (
-              <TimePopover value={expirySeconds} onChange={setExpirySeconds} onClose={() => setShowTimeSwitcher(false)} triggerRef={timeTriggerRef} />
-            )}
           </div>
         </div>
 
