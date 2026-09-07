@@ -1,5 +1,6 @@
 import { cloudinaryClient } from "@/integrations/cloudinary/client";
 import { DEFAULT_PLATFORM_SETTINGS } from "./platformMetadataShared";
+import { supabase } from "./supabase";
 import {
   createBlogSummary,
   sanitizeBlogHtml,
@@ -44,7 +45,6 @@ export interface AdminBlogData {
   categories: BlogCategoryDefinition[];
 }
 
-const db = supabase as any;
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 const VALID_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const SETTINGS_SELECT = "id,platform_name,website_content";
@@ -82,7 +82,7 @@ const loadWebsiteContentState = async (): Promise<{
   platformName: string;
   websiteContent: WebsiteContent;
 }> => {
-  const { data, error } = await db.from("platform_settings").select(SETTINGS_SELECT).limit(1).maybeSingle();
+  const { data, error } = await supabase.from("platform_settings").select(SETTINGS_SELECT).limit(1).maybeSingle();
 
   if (error) {
     throw error;
@@ -108,7 +108,7 @@ const persistWebsiteContentState = async (
   };
 
   if (rowId) {
-    const { error } = await db
+    const { error } = await supabase
       .from("platform_settings")
       .update({ ...payload, updated_at: new Date().toISOString() })
       .eq("id", rowId);
@@ -126,7 +126,7 @@ const persistWebsiteContentState = async (
     ...payload,
   };
 
-  const { error } = await db.from("platform_settings").insert(insertPayload);
+  const { error } = await supabase.from("platform_settings").insert(insertPayload);
 
   if (error) {
     throw error;
