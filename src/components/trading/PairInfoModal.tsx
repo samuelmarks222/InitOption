@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, X } from "lucide-react";
 import AssetSymbolMark from "./AssetSymbolMark";
 import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
@@ -34,6 +34,14 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
   const { formatMoney } = useCurrency();
   const [selectedTimeframe, setSelectedTimeframe] = useState<"5m" | "60m" | "1d">("5m");
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const asset = getAsset(symbol);
   const currentPrice = asset?.price ?? 1.08523;
   const payout = Math.round(asset?.maxProfit ?? 74);
@@ -53,14 +61,16 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
   const chartWidth = 400;
   const chartHeight = 150;
 
-  const rawValues: number[] = [];
-  let val = currentPrice;
-  for (let i = 0; i < pointsCount; i++) {
-    const progress = i / pointsCount;
-    const wave = Math.sin(progress * Math.PI * 4 + seed) * 0.0015;
-    const noise = (Math.sin(i * 13.7 + seed) * 0.0008);
-    rawValues.push(val + wave + noise);
-  }
+  const rawValues = useMemo(() => {
+    const timeframeMultiplier = selectedTimeframe === "5m" ? 1 : selectedTimeframe === "60m" ? 2.2 : 4;
+    return Array.from({ length: pointsCount }, (_, i) => {
+      const progress = i / (pointsCount - 1);
+      const trend = Math.sin(progress * Math.PI * (selectedTimeframe === "1d" ? 1.8 : 2.6) + seed) * 0.0014;
+      const wave = Math.sin(i * 1.7 + seed * 0.3) * 0.0007 * timeframeMultiplier;
+      const drift = (progress - 0.35) * 0.0006 * timeframeMultiplier;
+      return currentPrice + trend * timeframeMultiplier + wave + drift;
+    });
+  }, [currentPrice, seed, selectedTimeframe]);
 
   const minV = Math.min(...rawValues);
   const maxV = Math.max(...rawValues);
@@ -84,40 +94,40 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
   });
 
   return (
-    <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm select-none" onClick={onClose}>
-      <div className="relative w-full max-w-[760px] overflow-hidden rounded-[12px] border border-[#2d384c] bg-[#1a2130] p-6 text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[600] flex items-center justify-center bg-[#111827]/80 p-3 backdrop-blur-[3px] select-none" onClick={onClose}>
+      <div className="relative max-h-[calc(100vh-24px)] w-full max-w-[800px] overflow-y-auto rounded-[8px] border border-[#30394d] bg-[#293143] p-4 text-white shadow-2xl sm:p-6" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-gray-300 transition-colors hover:bg-white hover:text-black"
+          className="absolute right-[-1px] top-[-1px] z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#293143] shadow-md transition-colors hover:bg-[#dbe4f0]"
         >
           <X className="h-4 w-4" />
         </button>
 
-        <div className="flex items-center justify-between pr-10">
+        <div className="flex flex-wrap items-center justify-between gap-3 pr-8">
           <div className="flex items-center gap-2.5">
             <AssetSymbolMark symbol={symbol} size={24} />
-            <h2 className="text-base font-extrabold text-white uppercase tracking-wide">{symbol}</h2>
-            <span className="text-base font-extrabold text-[#FFB800]">{payout}%</span>
+            <h2 className="text-sm font-extrabold text-white uppercase tracking-wide">{symbol}</h2>
+            <span className="text-sm font-extrabold text-[#ff9d1c]">{payout}%</span>
           </div>
 
           <div className="flex items-center gap-1.5 text-xs font-bold">
-            <span className="text-emerald-400">Open Now</span>
-            <span className="text-gray-400">/ Closes today at 02:59</span>
+            <span className="text-xs font-bold text-white">Open Now</span>
+            <span className="text-xs text-[#8993a8]">/ Closes today at 02:59</span>
           </div>
         </div>
 
         <div className="my-4 border-b border-dashed border-[#2b3548]" />
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex items-center gap-8">
             <div>
-              <p className="text-[11px] font-bold text-gray-400">Price Now</p>
-              <p className="mt-0.5 text-lg font-black text-white">{currentPrice.toFixed(5)}</p>
+              <p className="text-[11px] font-medium text-[#9ba6bb]">Price Now</p>
+              <p className="mt-0.5 text-base font-black text-white">{currentPrice.toFixed(5)}</p>
             </div>
 
             <div>
-              <p className="text-[11px] font-bold text-gray-400">Session Change</p>
+              <p className="text-[11px] font-medium text-[#9ba6bb]">Session Change</p>
               <p className={`mt-0.5 text-sm font-black ${Number(sessionChange) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                 {Number(sessionChange) >= 0 ? `+${sessionChange}%` : `${sessionChange}%`}
               </p>
@@ -130,61 +140,61 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
               onTradeNow?.(symbol);
               onClose();
             }}
-            className="flex items-center gap-2 rounded-lg bg-[#0084FF] px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-[#0084FF]/25 hover:bg-[#0070df] transition-all"
+            className="flex items-center gap-2 rounded-[4px] bg-[#087bd8] px-5 py-3 text-sm font-bold text-white shadow-md shadow-[#0084FF]/25 transition-all hover:bg-[#1190f0]"
           >
             Trade Now <ArrowRight className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="mt-5 space-y-1.5">
+        <div className="mt-4 rounded-[7px] bg-[#353d50] px-3 py-3">
           <div className="flex items-center justify-between text-xs font-bold">
-            <span className="text-gray-300">
-              Buy <span className="text-[11px] font-medium text-gray-400">Traders' Sentiment</span>
-            </span>
-            <div className="flex items-center gap-3">
-              <span className="text-red-400">{sellSentiment}%</span>
-              <span className="text-emerald-400">{buySentiment}%</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-base text-white">Buy</span>
+              <span className="text-[11px] font-medium text-[#8993a8]">Traders' Sentiment</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-[#e9544f]">{sellSentiment}%</span>
+              <span className="text-[#10c878]">{buySentiment}%</span>
             </div>
           </div>
-
-          <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-[#242d3f]">
+          <div className="mt-2 flex h-[4px] w-full overflow-hidden rounded-full bg-[#242d3f]">
             <div className="h-full bg-[#e03e3e] transition-all duration-300" style={{ width: `${sellSentiment}%` }} />
             <div className="h-full bg-[#0fa055] transition-all duration-300" style={{ width: `${buySentiment}%` }} />
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-4 gap-4 rounded-lg bg-[#141a26] p-3 text-xs font-bold">
+        <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-xs font-bold sm:grid-cols-4">
           <div>
-            <p className="text-[11px] font-medium text-gray-400">Minimum investment</p>
+            <p className="text-[11px] font-medium text-[#9ba6bb]">Minimum investment</p>
             <p className="mt-0.5 font-black text-white">$1</p>
           </div>
 
           <div>
-            <p className="text-[11px] font-medium text-gray-400">Profit - 1 min</p>
+            <p className="text-[11px] font-medium text-[#9ba6bb]">Profit - 1 min</p>
             <p className="mt-0.5 font-black text-emerald-400">{payout}%</p>
           </div>
 
           <div>
-            <p className="text-[11px] font-medium text-gray-400">Profit - 5+ min</p>
+            <p className="text-[11px] font-medium text-[#9ba6bb]">Profit - 5+ min</p>
             <p className="mt-0.5 font-black text-emerald-400">{payout + 1}%</p>
           </div>
 
           <div>
-            <p className="text-[11px] font-medium text-gray-400">Expiry time</p>
+            <p className="text-[11px] font-medium text-[#9ba6bb]">Expiry time</p>
             <p className="mt-0.5 font-black text-white">1 min - 4 hour</p>
           </div>
         </div>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_260px]">
-          <div className="flex flex-col space-y-3 rounded-lg bg-[#141a26] p-4 border border-[#232d3f]">
-            <div className="flex items-center gap-4 text-xs font-bold border-b border-[#232d3f] pb-3">
+        <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_300px]">
+          <div className="flex min-w-0 flex-col space-y-3 rounded-lg bg-[#353d50] p-0">
+            <div className="flex items-stretch gap-0 border-b border-[#444d61] text-xs font-bold">
               <button
                 type="button"
                 onClick={() => setSelectedTimeframe("5m")}
-                className={`flex items-center gap-1.5 transition-colors ${selectedTimeframe === "5m" ? "text-white font-extrabold" : "text-gray-400 hover:text-white"}`}
+                className={`flex flex-1 flex-col items-start gap-1 px-4 py-3 text-left transition-colors ${selectedTimeframe === "5m" ? "bg-[#3d465a] text-white" : "text-[#a0aabd] hover:text-white"}`}
               >
                 <span>5 min change</span>
-                <span className={Number(change5m) >= 0 ? "text-emerald-400" : "text-red-400"}>
+                <span className="text-[#10c878]">
                   {Number(change5m) >= 0 ? `+${change5m}%` : `${change5m}%`}
                 </span>
               </button>
@@ -192,10 +202,10 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
               <button
                 type="button"
                 onClick={() => setSelectedTimeframe("60m")}
-                className={`flex items-center gap-1.5 transition-colors ${selectedTimeframe === "60m" ? "text-white font-extrabold" : "text-gray-400 hover:text-white"}`}
+                className={`flex flex-1 flex-col items-start gap-1 px-4 py-3 text-left transition-colors ${selectedTimeframe === "60m" ? "bg-[#3d465a] text-white" : "text-[#a0aabd] hover:text-white"}`}
               >
                 <span>60 min change</span>
-                <span className={Number(change60m) >= 0 ? "text-emerald-400" : "text-red-400"}>
+                <span className="text-[#10c878]">
                   {Number(change60m) >= 0 ? `+${change60m}%` : `${change60m}%`}
                 </span>
               </button>
@@ -203,16 +213,16 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
               <button
                 type="button"
                 onClick={() => setSelectedTimeframe("1d")}
-                className={`flex items-center gap-1.5 transition-colors ${selectedTimeframe === "1d" ? "text-white font-extrabold" : "text-gray-400 hover:text-white"}`}
+                className={`flex flex-1 flex-col items-start gap-1 px-4 py-3 text-left transition-colors ${selectedTimeframe === "1d" ? "bg-[#3d465a] text-white" : "text-[#a0aabd] hover:text-white"}`}
               >
                 <span>1 day change</span>
-                <span className={Number(change1d) >= 0 ? "text-emerald-400" : "text-red-400"}>
+                <span className="text-[#10c878]">
                   {Number(change1d) >= 0 ? `+${change1d}%` : `${change1d}%`}
                 </span>
               </button>
             </div>
 
-            <div className="relative h-[140px] w-full overflow-hidden">
+            <div className="relative h-[190px] w-full overflow-hidden px-0">
               <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="h-full w-full">
                 <defs>
                   <linearGradient id="pairInfoGrad" x1="0" y1="0" x2="0" y2="1">
@@ -233,7 +243,7 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
               </svg>
             </div>
 
-            <div className="flex items-center justify-between border-t border-[#232d3f] pt-3 text-[11px] font-bold text-gray-400">
+            <div className="flex items-center justify-between border-t border-[#444d61] px-4 py-3 text-[11px] font-bold text-[#a0aabd]">
               <div>
                 1 month change{" "}
                 <span className={Number(change1m) >= 0 ? "text-emerald-400" : "text-red-400"}>
@@ -255,8 +265,8 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
             </div>
           </div>
 
-          <div className="flex flex-col space-y-2 rounded-lg bg-[#141a26] p-4 border border-[#232d3f]">
-            <h4 className="text-xs font-bold text-gray-300">Trading Schedule</h4>
+          <div className="flex flex-col space-y-2 rounded-lg bg-[#353d50] p-4">
+            <h4 className="text-sm font-bold text-white">Trading Schedule</h4>
 
             <div className="overflow-x-auto text-[11px]">
               <table className="w-full text-left border-collapse">
