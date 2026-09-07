@@ -159,10 +159,12 @@ const TIME_PRESETS = [
   { label: "01:00:00", val: 3600 },
   { label: "02:00:00", val: 7200 },
   { label: "04:00:00", val: 14400 },
+  { label: "08:00:00", val: 28800 },
+  { label: "12:00:00", val: 43200 },
+  { label: "24:00:00", val: 86400 },
 ];
 
 const MAX_MANUAL_INVESTMENT = 3000;
-const MIN_MANUAL_EXPIRY_SECONDS = 60;
 const MAX_MANUAL_EXPIRY_SECONDS = 24 * 60 * 60;
 const PENDING_TRADE_DELAY_MS = 3000;
 const PENDING_TRADE_MODE_KEY = "trade_pending_mode_enabled";
@@ -243,13 +245,14 @@ const TimeSwitcherDropdown = ({
     {showCustomTime && (
       <div className="mt-1.5 border-t border-white/10 pt-2">
         <div className="flex items-center gap-1.5">
-          <input type="number" min={0} max={999} placeholder="MIN" value={customTimeMinutes} onChange={(e) => setCustomTimeMinutes(e.target.value)} className="h-8 w-full rounded border border-white/15 bg-[#2a2f3a] px-1 text-center text-[11px] font-bold text-white outline-none" />
+          <input type="number" min={0} max={1440} placeholder="MIN" value={customTimeMinutes} onChange={(e) => setCustomTimeMinutes(e.target.value)} className="h-8 w-full rounded border border-white/15 bg-[#2a2f3a] px-1 text-center text-[11px] font-bold text-white outline-none" />
           <span className="text-white/40">:</span>
           <input type="number" min={0} max={59} placeholder="SEC" value={customTimeSeconds} onChange={(e) => setCustomTimeSeconds(e.target.value)} className="h-8 w-full rounded border border-white/15 bg-[#2a2f3a] px-1 text-center text-[11px] font-bold text-white outline-none" />
           <button type="button" onClick={() => {
             const mins = Math.max(0, parseInt(customTimeMinutes) || 0);
             const secs = Math.max(0, Math.min(59, parseInt(customTimeSeconds) || 0));
-            setExpirySeconds(Math.max(1, mins * 60 + secs));
+            const totalSeconds = Math.min(MAX_MANUAL_EXPIRY_SECONDS, Math.max(1, mins * 60 + secs));
+            setExpirySeconds(totalSeconds);
             setShowTimeSwitcher(false);
             setShowCustomTime(false);
             setCustomTimeMinutes("");
