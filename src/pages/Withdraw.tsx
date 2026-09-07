@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
 import { ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { requestMobileMoneyWithdrawal } from "@/lib/mobileMoney";
@@ -517,5 +517,4 @@ const Withdraw = () => {
 };
 
 export default Withdraw;
-
 
