@@ -205,7 +205,9 @@ const TimeSwitcherDropdown = ({
             key={preset.val}
             type="button"
             onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); setShowCustomTime(false); }}
-            className={`h-9 rounded-[3px] text-[11px] font-bold transition active:scale-95 ${
+            className={`h-9 min-w-0 whitespace-nowrap rounded-[3px] px-0 font-bold leading-none transition active:scale-95 ${
+              preset.label.length > 5 ? "text-[8px] tracking-[-0.04em]" : "text-[10px]"
+            } ${
               selected ? "border border-white/60 bg-[#596074] text-white" : "bg-[#4b5263] text-white hover:bg-[#596074]"
             }`}
           >
@@ -216,7 +218,7 @@ const TimeSwitcherDropdown = ({
       <button
         type="button"
         onClick={() => setShowCustomTime((value) => !value)}
-        className={`h-9 rounded-[3px] text-[17px] font-bold transition active:scale-95 ${
+        className={`h-9 min-w-0 rounded-[3px] text-[17px] font-bold leading-none transition active:scale-95 ${
           showCustomTime ? "border border-white/60 bg-[#596074] text-white" : "bg-[#4b5263] text-white hover:bg-[#596074]"
         }`}
       >

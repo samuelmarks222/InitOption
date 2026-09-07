@@ -79,6 +79,10 @@ export const requestMobileMoneyDeposit = async ({
     phoneNumber: normalizedPhoneNumber,
   });
 
+  if (!response.request_id || !response.status) {
+    throw new Error("M-PESA deposit was not accepted by the payment provider. Please try again.");
+  }
+
   return {
     ...response,
     masked_phone_number: response.masked_phone_number || maskKenyanPhoneNumber(normalizedPhoneNumber),

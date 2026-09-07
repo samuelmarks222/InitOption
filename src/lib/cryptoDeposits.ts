@@ -283,6 +283,10 @@ export const createPlisioHostedCheckoutDeposit = async ({
     (responseBody?.instruction ?? {}) as Partial<CryptoDepositInstructionPayload>,
   );
 
+  if (!payload.instruction_id || !payload.hosted_checkout_url) {
+    throw new Error("Crypto checkout was not created by the payment provider. Please try again.");
+  }
+
   if (payload.instruction_id && payload.hosted_checkout_url) {
     saveCryptoDepositCheckoutCache({
       hosted_checkout_url: payload.hosted_checkout_url,
@@ -377,6 +381,10 @@ export const createCryptoDepositInstruction = async ({
   }
 
   const payload = buildPayloadFromPartial((responseBody?.instruction ?? {}) as Partial<CryptoDepositInstructionPayload>);
+
+  if (!payload.instruction_id || (!payload.address && !payload.hosted_checkout_url)) {
+    throw new Error("Crypto payment setup returned an incomplete payment instruction. Please try again.");
+  }
 
   if (payload.instruction_id && payload.address) {
     clearCryptoDepositCheckoutCache(payload.instruction_id);
