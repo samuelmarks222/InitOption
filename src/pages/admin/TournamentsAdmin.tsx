@@ -468,12 +468,12 @@ const TournamentsAdmin = () => {
             </div>
 
             <div className="col-span-1 lg:col-span-1 border-t pt-3" style={{ borderColor: BORDER }}>
-              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Starts (Local)</label>
-              <input type="text" value={newTour.start_date} onChange={e => setNewTour({...newTour, start_date: e.target.value})} placeholder="2026-06-19T09:00" className="w-full h-8 rounded-lg border bg-[#080D16] px-2 text-xs font-mono text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Start Date & Time</label>
+              <input type="datetime-local" value={newTour.start_date} onChange={e => setNewTour({...newTour, start_date: e.target.value})} className="w-full h-8 rounded-lg border bg-[#080D16] px-2 text-xs text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
             </div>
             <div className="col-span-1 lg:col-span-1 border-t pt-3" style={{ borderColor: BORDER }}>
-              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">Ends (Local)</label>
-              <input type="text" value={newTour.end_date} onChange={e => setNewTour({...newTour, end_date: e.target.value})} placeholder="2026-06-19T21:00" className="w-full h-8 rounded-lg border bg-[#080D16] px-2 text-xs font-mono text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
+              <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#5E6B7D]">End Date & Time</label>
+              <input type="datetime-local" value={newTour.end_date} onChange={e => setNewTour({...newTour, end_date: e.target.value})} className="w-full h-8 rounded-lg border bg-[#080D16] px-2 text-xs text-white outline-none focus:border-[#00C98D]" style={{ borderColor: BORDER }} />
             </div>
 
             <div className="col-span-1 lg:col-span-1 flex items-end">
@@ -613,13 +613,13 @@ const TournamentsAdmin = () => {
                   <td className="px-4 py-2.5 text-[10px] font-mono text-[#8D9AAF]">
                     {editingRowId === t.id ? (
                       <div className="space-y-1">
-                        <input type="text" value={editDrafts[t.id]?.start_date?.slice(0, 16) ?? t.start_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], start_date: e.target.value } }))} className="w-full h-6 rounded border bg-[#080D16] px-1 text-[10px] text-white outline-none" style={{ borderColor: BORDER }} />
-                        <input type="text" value={editDrafts[t.id]?.end_date?.slice(0, 16) ?? t.end_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], end_date: e.target.value } }))} className="w-full h-6 rounded border bg-[#080D16] px-1 text-[10px] text-white outline-none" style={{ borderColor: BORDER }} />
+                        <input type="datetime-local" value={editDrafts[t.id]?.start_date?.slice(0, 16) ?? t.start_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], start_date: e.target.value } }))} className="w-full h-6 rounded border bg-[#080D16] px-1 text-[10px] text-white outline-none" style={{ borderColor: BORDER }} />
+                        <input type="datetime-local" value={editDrafts[t.id]?.end_date?.slice(0, 16) ?? t.end_date.slice(0, 16)} onChange={(e) => setEditDrafts((d) => ({ ...d, [t.id]: { ...d[t.id], end_date: e.target.value } }))} className="w-full h-6 rounded border bg-[#080D16] px-1 text-[10px] text-white outline-none" style={{ borderColor: BORDER }} />
                       </div>
                     ) : (
                       <>
-                        <div>S: {new Date(t.start_date).toLocaleString("en-GB", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</div>
-                        <div>E: {new Date(t.end_date).toLocaleString("en-GB", { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" })}</div>
+                        <div>S: {new Date(t.start_date).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
+                        <div>E: {new Date(t.end_date).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
                       </>
                     )}
                   </td>

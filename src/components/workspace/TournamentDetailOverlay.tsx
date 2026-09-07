@@ -247,8 +247,15 @@ export const TournamentDetailOverlay = ({
       setLoading(false);
     };
     void fetchDetails();
+
+    // Poll tournament data every 15 seconds for status changes
+    const pollTimer = window.setInterval(() => {
+      void fetchDetails();
+    }, 15_000);
+
     return () => {
       cancelled = true;
+      window.clearInterval(pollTimer);
     };
   }, [tournamentId]);
 
