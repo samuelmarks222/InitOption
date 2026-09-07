@@ -198,16 +198,31 @@ const TimeSwitcherDropdown = ({
 }) => (
   <div className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-[4px] border border-white/10 bg-[#3a3f4a] p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
     <div className="grid grid-cols-4 gap-1">
-      {TIME_PRESETS.map((preset) => {
+      {TIME_PRESETS.slice(0, 8).map((preset) => {
         const selected = expirySeconds === preset.val;
         return (
           <button
             key={preset.val}
             type="button"
             onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); setShowCustomTime(false); }}
-            className={`h-9 min-w-0 whitespace-nowrap rounded-[3px] px-0 font-bold leading-none transition active:scale-95 ${
-              preset.label.length > 5 ? "text-[8px] tracking-[-0.04em]" : "text-[10px]"
-            } ${
+            className={`h-9 min-w-0 whitespace-nowrap rounded-[3px] px-0 text-[11px] font-bold leading-none transition active:scale-95 ${
+              selected ? "border border-white/60 bg-[#596074] text-white" : "bg-[#4b5263] text-white hover:bg-[#596074]"
+            }`}
+          >
+            {preset.label}
+          </button>
+        );
+      })}
+    </div>
+    <div className="mt-1 grid grid-cols-2 gap-1">
+      {TIME_PRESETS.slice(8).map((preset) => {
+        const selected = expirySeconds === preset.val;
+        return (
+          <button
+            key={preset.val}
+            type="button"
+            onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); setShowCustomTime(false); }}
+            className={`h-9 min-w-0 whitespace-nowrap rounded-[3px] px-0 text-[10px] font-bold leading-none transition active:scale-95 ${
               selected ? "border border-white/60 bg-[#596074] text-white" : "bg-[#4b5263] text-white hover:bg-[#596074]"
             }`}
           >
@@ -218,7 +233,7 @@ const TimeSwitcherDropdown = ({
       <button
         type="button"
         onClick={() => setShowCustomTime((value) => !value)}
-        className={`h-9 min-w-0 rounded-[3px] text-[17px] font-bold leading-none transition active:scale-95 ${
+        className={`h-9 min-w-0 rounded-[3px] text-[18px] font-bold leading-none transition active:scale-95 ${
           showCustomTime ? "border border-white/60 bg-[#596074] text-white" : "bg-[#4b5263] text-white hover:bg-[#596074]"
         }`}
       >
@@ -619,17 +634,14 @@ const TradingPanel = ({
   };
 
   const adjustExpiry = (delta: number) => {
-    const idx = TIME_PRESETS.findIndex((preset) => preset.val === expirySeconds);
-    const resolvedIdx =
-      idx >= 0
-        ? idx
-        : TIME_PRESETS.reduce((closestIndex, preset, presetIndex) => {
-            const currentDistance = Math.abs(TIME_PRESETS[closestIndex].val - expirySeconds);
-            const nextDistance = Math.abs(preset.val - expirySeconds);
-            return nextDistance < currentDistance ? presetIndex : closestIndex;
-          }, 0);
-    const nextIdx = Math.max(0, Math.min(TIME_PRESETS.length - 1, resolvedIdx + delta));
-    setExpirySeconds(TIME_PRESETS[nextIdx].val);
+    const nextIdx = delta > 0
+      ? TIME_PRESETS.findIndex((preset) => preset.val > expirySeconds)
+      : TIME_PRESETS.reduce((lastIndex, preset, presetIndex) => (
+        preset.val < expirySeconds ? presetIndex : lastIndex
+      ), -1);
+    const fallbackIdx = delta > 0 ? TIME_PRESETS.length - 1 : 0;
+    const resolvedIdx = nextIdx === -1 ? fallbackIdx : nextIdx;
+    setExpirySeconds(TIME_PRESETS[resolvedIdx].val);
   };
 
   const handleInvestmentInput = (rawValue: string) => {
@@ -940,7 +952,7 @@ const TradingPanel = ({
                   >
                     <div className="flex items-center gap-2">
                       <Clock className="h-3.5 w-3.5 text-[#596278]" strokeWidth={1.8} />
-                      <span className="text-[15px] font-bold tracking-[0.01em] tabular-nums text-white min-[360px]:text-[16px]" style={{ fontFamily: "Arial, sans-serif" }}>
+                      <span className="text-[17px] font-bold tracking-[0.01em] tabular-nums text-white min-[360px]:text-[18px]" style={{ fontFamily: "Arial, sans-serif" }}>
                         {formatTradeClock(expirySeconds)}
                       </span>
                     </div>
@@ -975,7 +987,7 @@ const TradingPanel = ({
                     onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}>
                       <Minus className="w-3 h-3" />
                     </span>
-                    <span className="text-[16px] font-semibold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>
+                    <span className="text-[18px] font-semibold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>
                       {formatTradeClock(expirySeconds)}
                     </span>
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
