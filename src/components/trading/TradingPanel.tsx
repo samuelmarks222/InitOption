@@ -471,6 +471,9 @@ const TradingPanel = ({
   const [investmentMode] = useState<InvestmentMode>("amount");
   const [showTimeSwitcher, setShowTimeSwitcher] = useState(false);
   const [showInvestmentSwitcher, setShowInvestmentSwitcher] = useState(false);
+  const [showCustomTime, setShowCustomTime] = useState(false);
+  const [customTimeMinutes, setCustomTimeMinutes] = useState("");
+  const [customTimeSeconds, setCustomTimeSeconds] = useState("");
 
   // Sync with context when signal mode is active
   useEffect(() => {
@@ -892,7 +895,7 @@ const TradingPanel = ({
 
                   {/* Inline dropdown */}
                   {showTimeSwitcher && (
-                    <div className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-lg border border-white/10 bg-[#1a1f2e] shadow-xl">
+                    <div className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-lg border border-white/10 bg-[#3a3f4a] shadow-xl" style={{ fontFamily: "Arial, sans-serif" }}>
                       <div className="grid grid-cols-3 gap-1 p-2">
                         {TIME_PRESETS.map((preset) => {
                           const isSelected = expirySeconds === preset.val;
@@ -900,18 +903,91 @@ const TradingPanel = ({
                             <button
                               key={preset.val}
                               type="button"
-                              onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); }}
-                              className={`h-8 rounded-md text-[11px] font-bold transition-all active:scale-95 ${
-                                isSelected
-                                  ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                                  : "bg-white/5 text-white/50 border border-white/6 hover:bg-white/10 hover:text-white"
-                              }`}
+                              onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); setShowCustomTime(false); }}
+                              className="h-8 rounded-md text-[12px] font-bold transition-all active:scale-95"
+                              style={{
+                                fontFamily: "Arial, sans-serif",
+                                color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.8)",
+                                background: isSelected ? "rgba(255,255,255,0.15)" : "transparent",
+                                border: isSelected ? "1px solid rgba(255,255,255,0.25)" : "1px solid transparent",
+                                fontWeight: "bold",
+                              }}
                             >
                               {preset.label}
                             </button>
                           );
                         })}
+                        {/* Custom time '+' button */}
+                        <button
+                          type="button"
+                          onClick={() => setShowCustomTime((v) => !v)}
+                          className="h-8 rounded-md text-[14px] font-bold transition-all active:scale-95 flex items-center justify-center"
+                          style={{
+                            fontFamily: "Arial, sans-serif",
+                            color: showCustomTime ? "#FFFFFF" : "rgba(255,255,255,0.8)",
+                            background: showCustomTime ? "rgba(255,255,255,0.15)" : "transparent",
+                            border: showCustomTime ? "1px solid rgba(255,255,255,0.25)" : "1px solid transparent",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          +
+                        </button>
                       </div>
+
+                      {/* Custom time input */}
+                      {showCustomTime && (
+                        <div className="border-t border-white/10 p-2.5">
+                          <div className="mb-2 text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Arial, sans-serif" }}>
+                            Custom Time
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1">
+                              <input
+                                type="number"
+                                min={0}
+                                max={999}
+                                placeholder="0"
+                                value={customTimeMinutes}
+                                onChange={(e) => setCustomTimeMinutes(e.target.value)}
+                                className="h-8 w-full rounded border border-white/15 bg-[#2a2f3a] px-2 text-center text-[13px] font-bold text-white outline-none focus:border-white/30"
+                                style={{ fontFamily: "Arial, sans-serif" }}
+                              />
+                              <div className="mt-0.5 text-center text-[9px] font-bold" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "Arial, sans-serif" }}>MIN</div>
+                            </div>
+                            <span className="text-[16px] font-bold" style={{ color: "rgba(255,255,255,0.4)" }}>:</span>
+                            <div className="flex-1">
+                              <input
+                                type="number"
+                                min={0}
+                                max={59}
+                                placeholder="0"
+                                value={customTimeSeconds}
+                                onChange={(e) => setCustomTimeSeconds(e.target.value)}
+                                className="h-8 w-full rounded border border-white/15 bg-[#2a2f3a] px-2 text-center text-[13px] font-bold text-white outline-none focus:border-white/30"
+                                style={{ fontFamily: "Arial, sans-serif" }}
+                              />
+                              <div className="mt-0.5 text-center text-[9px] font-bold" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "Arial, sans-serif" }}>SEC</div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const mins = Math.max(0, parseInt(customTimeMinutes) || 0);
+                                const secs = Math.max(0, Math.min(59, parseInt(customTimeSeconds) || 0));
+                                const total = Math.max(1, mins * 60 + secs);
+                                setExpirySeconds(total);
+                                setShowTimeSwitcher(false);
+                                setShowCustomTime(false);
+                                setCustomTimeMinutes("");
+                                setCustomTimeSeconds("");
+                              }}
+                              className="h-8 rounded bg-white/15 px-3 text-[11px] font-bold text-white hover:bg-white/25 transition-all active:scale-95"
+                              style={{ fontFamily: "Arial, sans-serif" }}
+                            >
+                              Set
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
