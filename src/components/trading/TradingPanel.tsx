@@ -146,15 +146,19 @@ const buildTradeGroups = <T extends { closed_at?: string; opened_at?: string }>(
 
 // Preset durations in seconds (used by adjustExpiry and TimePopover)
 const TIME_PRESETS = [
-  { label: "5s",   val: 5      },
-  { label: "15s",  val: 15     },
-  { label: "30s",  val: 30     },
-  { label: "1m",   val: 60     },
-  { label: "3m",   val: 180    },
-  { label: "5m",   val: 300    },
-  { label: "15m",  val: 900    },
-  { label: "30m",  val: 1800   },
-  { label: "1h",   val: 3600   },
+  { label: "00:05", val: 5 },
+  { label: "00:10", val: 10 },
+  { label: "00:15", val: 15 },
+  { label: "00:30", val: 30 },
+  { label: "01:00", val: 60 },
+  { label: "02:00", val: 120 },
+  { label: "05:00", val: 300 },
+  { label: "10:00", val: 600 },
+  { label: "15:00", val: 900 },
+  { label: "30:00", val: 1800 },
+  { label: "01:00:00", val: 3600 },
+  { label: "02:00:00", val: 7200 },
+  { label: "04:00:00", val: 14400 },
 ];
 
 const MAX_MANUAL_INVESTMENT = 3000;
@@ -170,6 +174,77 @@ const clampInvestmentValue = (value: number, mode: InvestmentMode) => {
 
   return Math.max(1, Math.min(MAX_MANUAL_INVESTMENT, Math.round(value * 100) / 100));
 };
+
+const TimeSwitcherDropdown = ({
+  expirySeconds,
+  setExpirySeconds,
+  showCustomTime,
+  setShowCustomTime,
+  setShowTimeSwitcher,
+  customTimeMinutes,
+  customTimeSeconds,
+  setCustomTimeMinutes,
+  setCustomTimeSeconds,
+}: {
+  expirySeconds: number;
+  setExpirySeconds: (value: number) => void;
+  showCustomTime: boolean;
+  setShowCustomTime: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowTimeSwitcher: React.Dispatch<React.SetStateAction<boolean>>;
+  customTimeMinutes: string;
+  customTimeSeconds: string;
+  setCustomTimeMinutes: React.Dispatch<React.SetStateAction<string>>;
+  setCustomTimeSeconds: React.Dispatch<React.SetStateAction<string>>;
+}) => (
+  <div className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-[4px] border border-white/10 bg-[#3a3f4a] p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
+    <div className="grid grid-cols-4 gap-1">
+      {TIME_PRESETS.map((preset) => {
+        const selected = expirySeconds === preset.val;
+        return (
+          <button
+            key={preset.val}
+            type="button"
+            onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); setShowCustomTime(false); }}
+            className={`h-9 rounded-[3px] text-[11px] font-bold transition active:scale-95 ${
+              selected ? "border border-white/60 bg-[#596074] text-white" : "bg-[#4b5263] text-white hover:bg-[#596074]"
+            }`}
+          >
+            {preset.label}
+          </button>
+        );
+      })}
+      <button
+        type="button"
+        onClick={() => setShowCustomTime((value) => !value)}
+        className={`h-9 rounded-[3px] text-[17px] font-bold transition active:scale-95 ${
+          showCustomTime ? "border border-white/60 bg-[#596074] text-white" : "bg-[#4b5263] text-white hover:bg-[#596074]"
+        }`}
+      >
+        +
+      </button>
+    </div>
+    {showCustomTime && (
+      <div className="mt-1.5 border-t border-white/10 pt-2">
+        <div className="flex items-center gap-1.5">
+          <input type="number" min={0} max={999} placeholder="MIN" value={customTimeMinutes} onChange={(e) => setCustomTimeMinutes(e.target.value)} className="h-8 w-full rounded border border-white/15 bg-[#2a2f3a] px-1 text-center text-[11px] font-bold text-white outline-none" />
+          <span className="text-white/40">:</span>
+          <input type="number" min={0} max={59} placeholder="SEC" value={customTimeSeconds} onChange={(e) => setCustomTimeSeconds(e.target.value)} className="h-8 w-full rounded border border-white/15 bg-[#2a2f3a] px-1 text-center text-[11px] font-bold text-white outline-none" />
+          <button type="button" onClick={() => {
+            const mins = Math.max(0, parseInt(customTimeMinutes) || 0);
+            const secs = Math.max(0, Math.min(59, parseInt(customTimeSeconds) || 0));
+            setExpirySeconds(Math.max(1, mins * 60 + secs));
+            setShowTimeSwitcher(false);
+            setShowCustomTime(false);
+            setCustomTimeMinutes("");
+            setCustomTimeSeconds("");
+          }} className="h-8 rounded bg-white/15 px-2 text-[10px] font-bold text-white hover:bg-white/25">
+            Set
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+);
 
 // ─── Withdrawal Modal and more was extracted to AccountModals.tsx ───
 
@@ -857,7 +932,10 @@ const TradingPanel = ({
             <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-1 lg:gap-3">
               <div className="relative">
                   {/* Mobile timer */}
-                  <div className="relative flex h-[44px] w-full items-center justify-between rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden">
+                  <div
+                    onClick={() => setShowTimeSwitcher((value) => !value)}
+                    className="relative flex h-[44px] w-full cursor-pointer items-center justify-between rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden"
+                  >
                     <div className="flex items-center gap-2">
                       <Clock className="h-3.5 w-3.5 text-[#596278]" strokeWidth={1.8} />
                       <span className="text-[15px] font-bold tracking-[0.01em] tabular-nums text-white min-[360px]:text-[16px]" style={{ fontFamily: "Arial, sans-serif" }}>
@@ -868,6 +946,21 @@ const TradingPanel = ({
                       {t("tradingPanel.timeLabelShort")}
                     </span>
                   </div>
+                  {showTimeSwitcher && (
+                    <div className="relative lg:hidden">
+                      <TimeSwitcherDropdown
+                        expirySeconds={expirySeconds}
+                        setExpirySeconds={setExpirySeconds}
+                        showCustomTime={showCustomTime}
+                        setShowCustomTime={setShowCustomTime}
+                        setShowTimeSwitcher={setShowTimeSwitcher}
+                        customTimeMinutes={customTimeMinutes}
+                        customTimeSeconds={customTimeSeconds}
+                        setCustomTimeMinutes={setCustomTimeMinutes}
+                        setCustomTimeSeconds={setCustomTimeSeconds}
+                      />
+                    </div>
+                  )}
 
                 {/* Desktop timer */}
                 <div className="relative hidden lg:block">
@@ -895,100 +988,17 @@ const TradingPanel = ({
 
                   {/* Inline dropdown */}
                   {showTimeSwitcher && (
-                    <div className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-lg border border-white/10 bg-[#3a3f4a] shadow-xl" style={{ fontFamily: "Arial, sans-serif" }}>
-                      <div className="grid grid-cols-3 gap-1 p-2">
-                        {TIME_PRESETS.map((preset) => {
-                          const isSelected = expirySeconds === preset.val;
-                          return (
-                            <button
-                              key={preset.val}
-                              type="button"
-                              onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); setShowCustomTime(false); }}
-                              className="h-8 rounded-md text-[12px] font-bold transition-all active:scale-95"
-                              style={{
-                                fontFamily: "Arial, sans-serif",
-                                color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.8)",
-                                background: isSelected ? "rgba(255,255,255,0.15)" : "transparent",
-                                border: isSelected ? "1px solid rgba(255,255,255,0.25)" : "1px solid transparent",
-                                fontWeight: "bold",
-                              }}
-                            >
-                              {preset.label}
-                            </button>
-                          );
-                        })}
-                        {/* Custom time '+' button */}
-                        <button
-                          type="button"
-                          onClick={() => setShowCustomTime((v) => !v)}
-                          className="h-8 rounded-md text-[14px] font-bold transition-all active:scale-95 flex items-center justify-center"
-                          style={{
-                            fontFamily: "Arial, sans-serif",
-                            color: showCustomTime ? "#FFFFFF" : "rgba(255,255,255,0.8)",
-                            background: showCustomTime ? "rgba(255,255,255,0.15)" : "transparent",
-                            border: showCustomTime ? "1px solid rgba(255,255,255,0.25)" : "1px solid transparent",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          +
-                        </button>
-                      </div>
-
-                      {/* Custom time input */}
-                      {showCustomTime && (
-                        <div className="border-t border-white/10 p-2.5">
-                          <div className="mb-2 text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)", fontFamily: "Arial, sans-serif" }}>
-                            Custom Time
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1">
-                              <input
-                                type="number"
-                                min={0}
-                                max={999}
-                                placeholder="0"
-                                value={customTimeMinutes}
-                                onChange={(e) => setCustomTimeMinutes(e.target.value)}
-                                className="h-8 w-full rounded border border-white/15 bg-[#2a2f3a] px-2 text-center text-[13px] font-bold text-white outline-none focus:border-white/30"
-                                style={{ fontFamily: "Arial, sans-serif" }}
-                              />
-                              <div className="mt-0.5 text-center text-[9px] font-bold" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "Arial, sans-serif" }}>MIN</div>
-                            </div>
-                            <span className="text-[16px] font-bold" style={{ color: "rgba(255,255,255,0.4)" }}>:</span>
-                            <div className="flex-1">
-                              <input
-                                type="number"
-                                min={0}
-                                max={59}
-                                placeholder="0"
-                                value={customTimeSeconds}
-                                onChange={(e) => setCustomTimeSeconds(e.target.value)}
-                                className="h-8 w-full rounded border border-white/15 bg-[#2a2f3a] px-2 text-center text-[13px] font-bold text-white outline-none focus:border-white/30"
-                                style={{ fontFamily: "Arial, sans-serif" }}
-                              />
-                              <div className="mt-0.5 text-center text-[9px] font-bold" style={{ color: "rgba(255,255,255,0.4)", fontFamily: "Arial, sans-serif" }}>SEC</div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const mins = Math.max(0, parseInt(customTimeMinutes) || 0);
-                                const secs = Math.max(0, Math.min(59, parseInt(customTimeSeconds) || 0));
-                                const total = Math.max(1, mins * 60 + secs);
-                                setExpirySeconds(total);
-                                setShowTimeSwitcher(false);
-                                setShowCustomTime(false);
-                                setCustomTimeMinutes("");
-                                setCustomTimeSeconds("");
-                              }}
-                              className="h-8 rounded bg-white/15 px-3 text-[11px] font-bold text-white hover:bg-white/25 transition-all active:scale-95"
-                              style={{ fontFamily: "Arial, sans-serif" }}
-                            >
-                              Set
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <TimeSwitcherDropdown
+                      expirySeconds={expirySeconds}
+                      setExpirySeconds={setExpirySeconds}
+                      showCustomTime={showCustomTime}
+                      setShowCustomTime={setShowCustomTime}
+                      setShowTimeSwitcher={setShowTimeSwitcher}
+                      customTimeMinutes={customTimeMinutes}
+                      customTimeSeconds={customTimeSeconds}
+                      setCustomTimeMinutes={setCustomTimeMinutes}
+                      setCustomTimeSeconds={setCustomTimeSeconds}
+                    />
                   )}
                 </div>
               </div>
@@ -1268,4 +1278,3 @@ const TradingPanel = ({
 };
 
 export default TradingPanel;
-
