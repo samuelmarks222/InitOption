@@ -497,11 +497,7 @@ useEffect(() => {
       formData.append("files", file);
     });
 
-    const { error } = await api.from("support_tickets").insert formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const { error } = await api.from("support_tickets").insert(formData as any);
     setSubmittingTicket(false);
 
     if (error) {
