@@ -9,6 +9,7 @@ import {
   Settings,
   Trophy,
   User,
+  UserRound,
   Users,
   Zap,
 } from "lucide-react";
