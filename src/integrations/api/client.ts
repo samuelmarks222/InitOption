@@ -19,8 +19,8 @@ type ApiResult<T = Row | Row[] | null> =
 
 const API_BASE = "/api";
 
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const token = await getAppwriteIdToken();
+async function getAuthHeaders(forceRefresh = false): Promise<Record<string, string>> {
+  const token = await getAppwriteIdToken(forceRefresh);
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -35,14 +35,20 @@ async function request(
 ): Promise<{ ok: boolean; payload: unknown }> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        ...(await getAuthHeaders()),
-      },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    const send = async (forceRefresh: boolean) =>
+      fetch(`${API_BASE}${path}`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          ...(await getAuthHeaders(forceRefresh)),
+        },
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+
+    res = await send(false);
+    if (res.status === 401) {
+      res = await send(true);
+    }
   } catch (error) {
     return { ok: false, payload: toError(error) };
   }
