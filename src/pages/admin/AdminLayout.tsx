@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
 import {
-  Activity, ArrowDownCircle, ArrowUpCircle, BarChart3, Bell, BookOpen,
+  Activity, ArrowUpCircle, BarChart3, Bell, BookOpen,
   CandlestickChart, ChevronDown, ChevronRight, Clock, CreditCard, DollarSign,
   FileText, LayoutDashboard, LogOut, Receipt, Settings, ShieldCheck,
   TrendingUp, Trophy, Users, Wallet, Sliders, Shield, Sparkles, MessageSquare,
@@ -48,8 +48,7 @@ const NAV_CATEGORIES: NavCategory[] = [
   {
     name: "FINANCE & PAYMENTS",
     items: [
-      { label: "Deposits Queue", href: "/admin/finance?tab=deposits", icon: <ArrowDownCircle size={16} /> },
-      { label: "Withdrawals Queue", href: "/admin/finance?tab=withdrawals", icon: <ArrowUpCircle size={16} /> },
+      { label: "Withdrawals Queue", href: "/admin/finance", icon: <ArrowUpCircle size={16} /> },
       { label: "Ledger Transactions", href: "/admin/finance?tab=transactions", icon: <Receipt size={16} /> },
       { label: "Funds Manager", href: "/admin/funds", icon: <DollarSign size={16} /> },
       { label: "Crypto Payments", href: "/admin/crypto-payments", icon: <CreditCard size={16} /> },

@@ -1,32 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowDownToLine, ArrowUpFromLine, CheckCircle, Clock3, Filter, RefreshCw, Search, XCircle, DollarSign,
-  ShieldCheck, AlertCircle, ArrowDownCircle, ArrowUpCircle, Check, X,
+  ArrowUpFromLine, RefreshCw, Search, DollarSign,
+  ArrowUpCircle, Check, X,
 } from "lucide-react";
-import { realtime } from "@/integrations/pusher/realtime";
 import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "@/hooks/use-toast";
-import { adminUpdateDepositStatus, DepositDecision } from "@/lib/deposits";
 import {
   adminUpdateWithdrawalStatus, MobileMoneyWithdrawalDecision, reviewMobileMoneyWithdrawal, WithdrawalDecision,
 } from "@/lib/withdrawals";
-import { getAppwriteIdToken } from "@/integrations/appwrite/authService";
 
-type FinanceTab = "deposits" | "withdrawals" | "history";
-type DepositRequest = Tables<"deposit_requests">;
-type PlatformSettingsLookup = Pick<Tables<"platform_settings">, "id" | "mpesa_withdrawal_approval_threshold_kes">;
 type WithdrawalRequest = Tables<"withdrawal_requests">;
 type ProfileLookup = Pick<Tables<"profiles">, "id" | "username" | "display_name">;
-type CryptoMethodLookup = Pick<Tables<"crypto_payment_methods">, "attribution_mode" | "id" | "network" | "symbol">;
-
-type DepositWithUser = DepositRequest & {
-  automationMode: string | null;
-  cryptoLabel: string | null;
-  providerLabel: string | null;
-  userHandle: string;
-  userName: string;
-};
+type PlatformSettingsLookup = Pick<Tables<"platform_settings">, "id" | "mpesa_withdrawal_approval_threshold_kes">;
 
 type WithdrawalWithUser = WithdrawalRequest & {
   payoutPhone: string | null;
@@ -62,47 +48,27 @@ const getUserHandle = (profile: ProfileLookup | undefined, userId: string) =>
   profile?.username || userId.slice(0, 8).toUpperCase();
 
 const Finance = () => {
-  const [activeTab, setActiveTab] = useState<FinanceTab>("deposits");
   const [searchTerm, setSearchTerm] = useState("");
-  const [deposits, setDeposits] = useState<DepositWithUser[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [mpesaApprovalThresholdKes, setMpesaApprovalThresholdKes] = useState(10000);
   const [platformSettingsId, setPlatformSettingsId] = useState<string | null>(null);
-  const [processingDepositId, setProcessingDepositId] = useState<string | null>(null);
   const [processingWithdrawalId, setProcessingWithdrawalId] = useState<string | null>(null);
   const [savingThreshold, setSavingThreshold] = useState(false);
 
   const loadFinanceData = async () => {
     setLoading(true);
-    const [depositsRes, withdrawalsRes, cryptoMethodsRes, platformSettingsRes] = await Promise.all([
-      api.from("deposit_requests").select("*").order("created_at", { ascending: false }).limit(FINANCE_REQUEST_LIMIT),
+    const [withdrawalsRes, platformSettingsRes] = await Promise.all([
       api.from("withdrawal_requests").select("*").order("created_at", { ascending: false }).limit(FINANCE_REQUEST_LIMIT),
-      api.from("crypto_payment_methods").select("id, attribution_mode, symbol, network"),
       api.from("platform_settings").select("id, mpesa_withdrawal_approval_threshold_kes").limit(1).maybeSingle(),
     ]);
 
     const userIds = Array.from(new Set([
-      ...(depositsRes.data ?? []).map((r) => r.user_id),
       ...(withdrawalsRes.data ?? []).map((r) => r.user_id),
     ]));
 
     const profilesRes = userIds.length > 0 ? await api.from("profiles").select("id, username, display_name").in("id", userIds) : { data: [] };
     const profilesById = new Map<string, ProfileLookup>((profilesRes.data ?? []).map((p) => [p.id, p]));
-    const cryptoMethodsById = new Map<string, CryptoMethodLookup>((cryptoMethodsRes.data ?? []).map((m) => [m.id, m]));
-
-    const nextDeposits = (depositsRes.data ?? []).map((req) => {
-      const profile = profilesById.get(req.user_id);
-      const cryptoMethod = req.payment_method_id ? cryptoMethodsById.get(req.payment_method_id) : undefined;
-      return {
-        automationMode: cryptoMethod?.attribution_mode ?? null,
-        cryptoLabel: cryptoMethod ? `${cryptoMethod.symbol} (${cryptoMethod.network})` : null,
-        providerLabel: req.provider_name ? `${req.provider_name}${req.provider_status ? ` - ${req.provider_status}` : ""}` : null,
-        ...req,
-        userHandle: getUserHandle(profile, req.user_id),
-        userName: getUserName(profile, req.user_id),
-      };
-    });
 
     const nextWithdrawals = (withdrawalsRes.data ?? []).map((req) => {
       const profile = profilesById.get(req.user_id);
@@ -117,7 +83,6 @@ const Finance = () => {
       };
     });
 
-    setDeposits(nextDeposits);
     setWithdrawals(nextWithdrawals);
 
     const settingsData = platformSettingsRes.data as PlatformSettingsLookup | null;
@@ -153,19 +118,6 @@ const Finance = () => {
     }
   };
 
-  const handleDepositDecision = async (depositId: string, decision: DepositDecision) => {
-    setProcessingDepositId(depositId);
-    try {
-      await adminUpdateDepositStatus({ decision, depositId });
-      toast({ title: `Deposit ${decision}`, description: `Deposit request status updated.` });
-      await loadFinanceData();
-    } catch (err) {
-      toast({ title: "Deposit update failed", description: err instanceof Error ? err.message : "Error", variant: "destructive" });
-    } finally {
-      setProcessingDepositId(null);
-    }
-  };
-
   const handleWithdrawalDecision = async (withdrawalId: string, decision: WithdrawalDecision) => {
     setProcessingWithdrawalId(withdrawalId);
     try {
@@ -178,14 +130,6 @@ const Finance = () => {
       setProcessingWithdrawalId(null);
     }
   };
-
-  const filteredDeposits = useMemo(() => {
-    return deposits.filter((d) =>
-      d.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      d.userHandle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      d.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [deposits, searchTerm]);
 
   const filteredWithdrawals = useMemo(() => {
     return withdrawals.filter((w) =>
@@ -202,10 +146,10 @@ const Finance = () => {
         <div>
           <div className="flex items-center gap-2.5">
             <DollarSign className="h-6 w-6 text-[#1689e8]" />
-            <h1 className="text-xl font-black text-white uppercase tracking-wider">Financial Operations Console</h1>
+            <h1 className="text-xl font-black text-white uppercase tracking-wider">Withdrawal Operations</h1>
           </div>
           <p className="mt-1 text-xs font-bold text-gray-400">
-            Review live deposit notifications, approve or reject M-PESA & Crypto withdrawals, and manage threshold limits.
+            Approve or reject M-PESA & Crypto withdrawals, and manage threshold limits. Deposits are processed automatically.
           </p>
         </div>
 
@@ -219,7 +163,7 @@ const Finance = () => {
         </button>
       </div>
 
-      {/* Threshold & Automation Config Bar */}
+      {/* Threshold Config Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#131a27] p-4 shadow-xl">
         <div className="flex items-center gap-3">
           <span className="text-xs font-black uppercase text-gray-300">M-PESA Auto-Approve Threshold (KES):</span>
@@ -238,25 +182,9 @@ const Finance = () => {
           </button>
         </div>
 
-        {/* Tab Controls */}
-        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0b1018] p-1">
-          <button
-            onClick={() => setActiveTab("deposits")}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-black transition ${
-              activeTab === "deposits" ? "bg-[#1689e8] text-white shadow-md" : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <ArrowDownCircle className="h-4 w-4" /> Deposits ({deposits.length})
-          </button>
-
-          <button
-            onClick={() => setActiveTab("withdrawals")}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-black transition ${
-              activeTab === "withdrawals" ? "bg-[#1689e8] text-white shadow-md" : "text-gray-400 hover:text-white"
-            }`}
-          >
-            <ArrowUpCircle className="h-4 w-4" /> Withdrawals ({withdrawals.length})
-          </button>
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+          <ArrowUpCircle className="h-4 w-4 text-amber-400" />
+          <span className="font-bold">{withdrawals.length} withdrawal requests</span>
         </div>
       </div>
 
@@ -272,78 +200,11 @@ const Finance = () => {
         />
       </div>
 
-      {/* Main Request Queue Table */}
+      {/* Withdrawal Queue Table */}
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#131a27] shadow-xl">
         {loading ? (
           <div className="flex h-64 items-center justify-center text-xs font-bold text-gray-400">
-            <RefreshCw className="mr-2 h-5 w-5 animate-spin text-[#1689e8]" /> Loading financial records...
-          </div>
-        ) : activeTab === "deposits" ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-white/10 bg-[#0b1018]/80 text-[11px] font-black uppercase tracking-wider text-gray-400">
-                  <th className="py-3.5 px-4">User</th>
-                  <th className="py-3.5 px-4">Amount</th>
-                  <th className="py-3.5 px-4">Method</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4">Submitted</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 font-semibold">
-                {filteredDeposits.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-12 text-center text-gray-400">No deposit records found.</td>
-                  </tr>
-                ) : (
-                  filteredDeposits.map((d) => {
-                    const badge = STATUS_BADGES[d.status.toLowerCase()] ?? STATUS_BADGES.pending;
-                    return (
-                      <tr key={d.id} className="hover:bg-white/[0.02] transition">
-                        <td className="py-3.5 px-4">
-                          <div className="font-extrabold text-white">{d.userName}</div>
-                          <div className="text-[10px] text-gray-400">@{d.userHandle}</div>
-                        </td>
-                        <td className="py-3.5 px-4 font-black text-[#00c878]">
-                          ${Number(d.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="py-3.5 px-4 text-gray-300">
-                          {d.payment_method?.toUpperCase() || "M-PESA"}
-                          {d.cryptoLabel && <span className="block text-[10px] text-gray-500">{d.cryptoLabel}</span>}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase ${badge.bg} ${badge.text}`}>
-                            {badge.label}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-gray-400">{formatDateTime(d.created_at)}</td>
-                        <td className="py-3.5 px-4 text-right space-x-2">
-                          {d.status === "pending" && (
-                            <>
-                              <button
-                                onClick={() => void handleDepositDecision(d.id, "completed")}
-                                disabled={processingDepositId === d.id}
-                                className="rounded-lg bg-[#00c878] px-3 py-1 text-xs font-black text-white hover:bg-[#00b26b] transition disabled:opacity-50"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => void handleDepositDecision(d.id, "rejected")}
-                                disabled={processingDepositId === d.id}
-                                className="rounded-lg bg-[#ff4a5a] px-3 py-1 text-xs font-black text-white hover:bg-[#e03b4b] transition disabled:opacity-50"
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+            <RefreshCw className="mr-2 h-5 w-5 animate-spin text-[#1689e8]" /> Loading withdrawal records...
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -403,6 +264,9 @@ const Finance = () => {
                                 Reject
                               </button>
                             </>
+                          )}
+                          {w.status === "approved" && w.method === "mpesa" && (
+                            <span className="text-[10px] font-bold text-amber-400">Awaiting M-PESA Processing</span>
                           )}
                         </td>
                       </tr>
