@@ -278,8 +278,17 @@ const getMethodIcon = (method: DepositMethodOption) => {
 };
 
 const getPreviewBadge = (label: string) => {
-  const upperLabel = label.toUpperCase();
+  const upperLabel = label.toUpperCase().replace(/[-\s]/g, "");
   const hasCryptoIcon = CRYPTO_ICON[upperLabel];
+
+  if (upperLabel === "MPESA" || upperLabel === "AIRTEL") {
+    const logo = upperLabel === "MPESA" ? "/images/mpesa-logo.png" : "/images/airtel-logo.png";
+    return (
+      <span className="flex h-7 min-w-[44px] items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white px-1.5 shadow-sm">
+        <img src={logo} alt={upperLabel === "MPESA" ? "M-PESA" : "Airtel Money"} className="max-h-5 w-auto max-w-[38px] object-contain" />
+      </span>
+    );
+  }
 
   if (hasCryptoIcon) {
     return (
@@ -336,7 +345,7 @@ const DepositCategoryCard = ({
     <button
       type="button"
       onClick={onClick}
-      className={`h-[92px] rounded-[6px] border px-5 py-4 text-left transition ${
+      className={`h-[104px] overflow-hidden rounded-[6px] border px-5 py-4 text-left transition ${
         active
           ? "border-[#15b963] bg-[#13b65d] text-white shadow-[0_12px_28px_rgba(19,182,93,0.22)]"
           : "border-white/12 bg-[#343a4c] text-white hover:border-white/22 hover:bg-[#3a4054]"
@@ -349,14 +358,14 @@ const DepositCategoryCard = ({
           <div className={`mt-2 text-[14px] font-bold ${active ? "text-white/45" : "text-white/35"}`}>{count} methods</div>
         </div>
       </div>
-      <div className="mt-3 flex items-center gap-2 pl-8">
+      <div className="mt-3 flex min-w-0 items-center gap-2 overflow-hidden pl-8">
         {preview.slice(0, 4).map((entry) => (
-          <span key={entry} className="scale-75 origin-left">
+          <span key={entry} className="shrink-0">
             {getPreviewBadge(entry)}
           </span>
         ))}
         {count > preview.length && (
-          <span className="rounded-[5px] bg-white/15 px-2 py-1 text-[10px] font-black text-white">+{count - preview.length}</span>
+          <span className="shrink-0 rounded-[5px] bg-white/15 px-2 py-1 text-[10px] font-black text-white">+{count - preview.length}</span>
         )}
       </div>
     </button>
