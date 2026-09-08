@@ -14,7 +14,7 @@ const OUT = "neon/adapted_schema.sql";
 const REPLACEMENTS = [
   { from: "auth.uid()", to: "current_setting('app.current_user_id', true)::uuid" },
   { from: "auth.users", to: "public.users" },
-  { from: "auth.role()", to: "current_setting('role')::text" },
+  { from: "auth.role()", to: "current_user" },
   { from: "auth.jwt()", to: "current_setting('app.clerk_user_metadata', true)::jsonb" },
 ];
 
@@ -106,6 +106,12 @@ for (const name of files) {
   for (const { from, to } of REPLACEMENTS) {
     transformed = transformed.split(from).join(to);
   }
+  // role checks must test membership (neondb_owner is granted both roles), not equality
+  transformed = transformed
+    .replace(/current_user\s*<>\s*'service_role'/g, "not pg_has_role(current_user, 'service_role', 'member')")
+    .replace(/current_user\s*=\s*'service_role'/g, "pg_has_role(current_user, 'service_role', 'member')")
+    .replace(/current_user\s*=\s*'authenticated'/g, "pg_has_role(current_user, 'authenticated', 'member')")
+    .replace(/current_user\s*<>\s*'authenticated'/g, "not pg_has_role(current_user, 'authenticated', 'member')");
   // These two migrations are entirely / partially storage-related -> drop storage, keep the rest.
   if (name.includes("branding_bucket")) {
     transformed = stripStorageSections(transformed);

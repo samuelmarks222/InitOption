@@ -979,7 +979,7 @@ USING (true);
 
 CREATE POLICY "Allow authenticated full access to tournaments" 
 ON public.tournaments FOR ALL 
-USING (current_setting('role')::text = 'authenticated');
+USING (pg_has_role(current_user, 'authenticated', 'member'));
 
 
 -- Create tournament_participants table
@@ -8096,7 +8096,7 @@ declare
   v_next_instruction_status text := 'awaiting_payment';
   v_bonus_offer public.deposit_bonus_offers%rowtype;
 begin
-  if current_setting('role')::text <> 'service_role' then
+  if not pg_has_role(current_user, 'service_role', 'member') then
     raise exception 'Only the service role can process crypto deposit detections';
   end if;
 
@@ -8464,7 +8464,7 @@ declare
   v_provider_transaction_ref text := nullif(trim(coalesce(p_provider_transaction_ref, '')), '');
   v_request public.deposit_requests%rowtype;
 begin
-  if current_setting('role')::text <> 'service_role' then
+  if not pg_has_role(current_user, 'service_role', 'member') then
     raise exception 'Only the service role can process mobile money deposit callbacks';
   end if;
 
@@ -8708,7 +8708,7 @@ declare
   v_provider_transaction_ref text := nullif(trim(coalesce(p_provider_transaction_ref, '')), '');
   v_request public.withdrawal_requests%rowtype;
 begin
-  if current_setting('role')::text <> 'service_role' then
+  if not pg_has_role(current_user, 'service_role', 'member') then
     raise exception 'Only the service role can process mobile money withdrawal callbacks';
   end if;
 
@@ -9512,7 +9512,7 @@ declare
   v_now timestamptz := now();
   v_request public.withdrawal_requests%rowtype;
 begin
-  if current_setting('role')::text <> 'service_role' then
+  if not pg_has_role(current_user, 'service_role', 'member') then
     raise exception 'Only the service role can claim mobile money withdrawals';
   end if;
 
@@ -9604,7 +9604,7 @@ declare
   v_next_status text := lower(trim(coalesce(p_next_status, '')));
   v_request public.withdrawal_requests%rowtype;
 begin
-  if current_setting('role')::text <> 'service_role' then
+  if not pg_has_role(current_user, 'service_role', 'member') then
     raise exception 'Only the service role can update mobile money withdrawal dispatch state';
   end if;
 
@@ -9743,7 +9743,7 @@ declare
   v_provider_transaction_ref text := nullif(trim(coalesce(p_provider_transaction_ref, '')), '');
   v_request public.withdrawal_requests%rowtype;
 begin
-  if current_setting('role')::text <> 'service_role' then
+  if not pg_has_role(current_user, 'service_role', 'member') then
     raise exception 'Only the service role can process mobile money withdrawal callbacks';
   end if;
 
