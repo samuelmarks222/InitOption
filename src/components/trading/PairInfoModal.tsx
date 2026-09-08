@@ -30,6 +30,11 @@ const getSmoothPathD = (points: { x: number; y: number }[]) => {
   return d;
 };
 
+const formatPercent = (value: number) => {
+  const safeValue = Number.isFinite(value) ? value : 0;
+  return `${safeValue >= 0 ? "+" : ""}${safeValue.toFixed(2)}%`;
+};
+
 export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProps) => {
   const { getAsset } = useDynamicAssets();
   const { formatMoney } = useCurrency();
@@ -147,8 +152,8 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
 
             <div>
               <p className="text-[11px] font-medium text-[#9ba6bb]">Session Change</p>
-              <p className={`mt-0.5 text-sm font-black ${Number(sessionChange) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                {Number(sessionChange) >= 0 ? `+${sessionChange}%` : `${sessionChange}%`}
+              <p className={`mt-0.5 whitespace-nowrap text-sm font-black ${sessionChange >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {formatPercent(sessionChange)}
               </p>
             </div>
           </div>
@@ -204,39 +209,39 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
           </div>
         </div>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_300px]">
+        <div className="mt-5 grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="flex min-w-0 flex-col space-y-3 rounded-lg bg-[#353d50] p-0">
-            <div className="flex items-stretch gap-0 border-b border-[#444d61] text-xs font-bold">
+            <div className="grid grid-cols-3 border-b border-[#444d61] text-xs font-bold">
               <button
                 type="button"
                 onClick={() => setSelectedTimeframe("5m")}
-                className={`flex flex-1 flex-col items-start gap-1 px-4 py-3 text-left transition-colors ${selectedTimeframe === "5m" ? "bg-[#3d465a] text-white" : "text-[#a0aabd] hover:text-white"}`}
+                className={`min-w-0 px-2 py-3 text-left transition-colors sm:px-4 ${selectedTimeframe === "5m" ? "bg-[#3d465a] text-white" : "text-[#a0aabd] hover:text-white"}`}
               >
-                <span>5 min change</span>
-                <span className="text-[#10c878]">
-                  {Number(change5m) >= 0 ? `+${change5m}%` : `${change5m}%`}
+                <span className="block truncate">5 min change</span>
+                <span className="block truncate text-[#10c878]">
+                  {formatPercent(change5m)}
                 </span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setSelectedTimeframe("60m")}
-                className={`flex flex-1 flex-col items-start gap-1 px-4 py-3 text-left transition-colors ${selectedTimeframe === "60m" ? "bg-[#3d465a] text-white" : "text-[#a0aabd] hover:text-white"}`}
+                className={`min-w-0 px-2 py-3 text-left transition-colors sm:px-4 ${selectedTimeframe === "60m" ? "bg-[#3d465a] text-white" : "text-[#a0aabd] hover:text-white"}`}
               >
-                <span>60 min change</span>
-                <span className="text-[#10c878]">
-                  {Number(change60m) >= 0 ? `+${change60m}%` : `${change60m}%`}
+                <span className="block truncate">60 min change</span>
+                <span className="block truncate text-[#10c878]">
+                  {formatPercent(change60m)}
                 </span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setSelectedTimeframe("1d")}
-                className={`flex flex-1 flex-col items-start gap-1 px-4 py-3 text-left transition-colors ${selectedTimeframe === "1d" ? "bg-[#3d465a] text-white" : "text-[#a0aabd] hover:text-white"}`}
+                className={`min-w-0 px-2 py-3 text-left transition-colors sm:px-4 ${selectedTimeframe === "1d" ? "bg-[#3d465a] text-white" : "text-[#a0aabd] hover:text-white"}`}
               >
-                <span>1 day change</span>
-                <span className="text-[#10c878]">
-                  {Number(change1d) >= 0 ? `+${change1d}%` : `${change1d}%`}
+                <span className="block truncate">1 day change</span>
+                <span className="block truncate text-[#10c878]">
+                  {formatPercent(change1d)}
                 </span>
               </button>
             </div>
@@ -262,23 +267,23 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
               </svg>
             </div>
 
-            <div className="flex items-center justify-between border-t border-[#444d61] px-4 py-3 text-[11px] font-bold text-[#a0aabd]">
-              <div>
+            <div className="grid grid-cols-3 gap-2 border-t border-[#444d61] px-3 py-3 text-[10px] font-bold text-[#a0aabd] sm:px-4 sm:text-[11px]">
+              <div className="min-w-0 truncate">
                 1 month change{" "}
-                <span className={Number(change1m) >= 0 ? "text-emerald-400" : "text-red-400"}>
-                  {Number(change1m) >= 0 ? `+${change1m}%` : `${change1m}%`}
+                <span className={change1m >= 0 ? "text-emerald-400" : "text-red-400"}>
+                  {formatPercent(change1m)}
                 </span>
               </div>
-              <div>
+              <div className="min-w-0 truncate">
                 1 year change{" "}
-                <span className={Number(change1y) >= 0 ? "text-emerald-400" : "text-red-400"}>
-                  {Number(change1y) >= 0 ? `+${change1y}%` : `${change1y}%`}
+                <span className={change1y >= 0 ? "text-emerald-400" : "text-red-400"}>
+                  {formatPercent(change1y)}
                 </span>
               </div>
-              <div>
+              <div className="min-w-0 truncate">
                 YTD change{" "}
-                <span className={Number(changeYtd) >= 0 ? "text-emerald-400" : "text-red-400"}>
-                  {Number(changeYtd) >= 0 ? `+${changeYtd}%` : `${changeYtd}%`}
+                <span className={changeYtd >= 0 ? "text-emerald-400" : "text-red-400"}>
+                  {formatPercent(changeYtd)}
                 </span>
               </div>
             </div>
