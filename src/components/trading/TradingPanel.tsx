@@ -198,7 +198,7 @@ const TimeSwitcherDropdown = ({
   setCustomTimeMinutes: React.Dispatch<React.SetStateAction<string>>;
   setCustomTimeSeconds: React.Dispatch<React.SetStateAction<string>>;
 }) => (
-  <div className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-[4px] border border-white/10 bg-[#3a3f4a] p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
+  <div className="absolute left-0 top-full z-50 mt-1 w-full min-w-[178px] overflow-hidden rounded-[4px] border border-white/10 bg-[#3a3f4a] p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
     <div className="grid grid-cols-4 gap-1">
       {TIME_PRESETS.slice(0, 8).map((preset) => {
         const selected = expirySeconds === preset.val;
@@ -216,8 +216,25 @@ const TimeSwitcherDropdown = ({
         );
       })}
     </div>
+    <div className="mt-1 grid grid-cols-3 gap-1">
+      {TIME_PRESETS.slice(8, 11).map((preset) => {
+        const selected = expirySeconds === preset.val;
+        return (
+          <button
+            key={preset.val}
+            type="button"
+            onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); setShowCustomTime(false); }}
+            className={`h-9 min-w-0 whitespace-nowrap rounded-[3px] px-0 text-[11px] font-bold leading-none transition active:scale-95 ${
+              selected ? "border border-white/60 bg-[#596074] text-white" : "bg-[#4b5263] text-white hover:bg-[#596074]"
+            }`}
+          >
+            {preset.label}
+          </button>
+        );
+      })}
+    </div>
     <div className="mt-1 grid grid-cols-2 gap-1">
-      {TIME_PRESETS.slice(8).map((preset) => {
+      {TIME_PRESETS.slice(11, 13).map((preset) => {
         const selected = expirySeconds === preset.val;
         return (
           <button
@@ -949,19 +966,34 @@ const TradingPanel = ({
             <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-1 lg:gap-3">
               <div className="relative">
                   {/* Mobile timer */}
-                  <div
-                    onClick={() => setShowTimeSwitcher((value) => !value)}
-                    className="relative flex h-[44px] w-full cursor-pointer items-center justify-between rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-3.5 w-3.5 text-[#596278]" strokeWidth={1.8} />
-                      <span className="text-[17px] font-bold tracking-[0.01em] tabular-nums text-white min-[360px]:text-[18px]" style={{ fontFamily: "Arial, sans-serif" }}>
+                  <div className="relative lg:hidden">
+                    <div
+                      onClick={() => setShowTimeSwitcher((value) => !value)}
+                      className="relative flex h-[44px] w-full cursor-pointer items-center justify-between rounded-[4px] border border-[#687086] bg-[#2a3040] px-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+                    >
+                      <span
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 active:scale-95"
+                        onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </span>
+                      <span className="text-[16px] font-semibold tracking-[0.01em] tabular-nums text-white" style={{ fontFamily: "Arial, sans-serif" }}>
                         {formatTradeClock(expirySeconds)}
                       </span>
+                      <span
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 active:scale-95"
+                        onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </span>
+                      <span className="absolute -top-2 left-3 bg-[#242a3c] px-1 text-[10px] font-semibold text-[#777f92]">
+                        {t("tradingPanel.timeLabelShort")}
+                      </span>
                     </div>
-                    <span className="text-[9px] font-medium uppercase tracking-[0.06em] text-[#8fb0cf]">
-                      {t("tradingPanel.timeLabelShort")}
-                    </span>
+                    <div className="mt-0.5 flex items-center justify-center gap-1">
+                      {showTimeSwitcher ? <ChevronUp className="h-2.5 w-2.5 text-[#1c9cff]" /> : <ChevronDown className="h-2.5 w-2.5 text-[#1c9cff]" />}
+                      <span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">Switch Time</span>
+                    </div>
                   </div>
                   {showTimeSwitcher && (
                     <div className="relative lg:hidden">
