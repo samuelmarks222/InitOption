@@ -148,11 +148,24 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       transactionDescription: "Trading deposit",
     });
 
-    const providerRequestId = asString(sasaPayResponse.MerchantRequestID);
-    const checkoutRequestId = asString(sasaPayResponse.CheckoutRequestID);
-    const transactionReference = asString(sasaPayResponse.TransactionReference);
-    const providerResultCode = asString(sasaPayResponse.ResponseCode) || "0";
-    const providerResultDesc = asString(sasaPayResponse.ResponseDescription) || asString(sasaPayResponse.detail);
+    const providerRequestId =
+      asString(sasaPayResponse.MerchantRequestID) ||
+      asString(sasaPayResponse.merchant_request_id);
+    const checkoutRequestId =
+      asString(sasaPayResponse.CheckoutRequestID) ||
+      asString(sasaPayResponse.checkout_request_id);
+    const transactionReference =
+      asString(sasaPayResponse.TransactionReference) ||
+      asString(sasaPayResponse.transaction_reference);
+    const providerResultCode =
+      asString(sasaPayResponse.ResponseCode) ||
+      asString(sasaPayResponse.responseCode) ||
+      asString(sasaPayResponse.response_code) ||
+      "0";
+    const providerResultDesc =
+      asString(sasaPayResponse.ResponseDescription) ||
+      asString(sasaPayResponse.responseDescription) ||
+      asString(sasaPayResponse.detail);
 
     await query(
       `update deposit_requests
@@ -184,7 +197,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       amount_kes: amountKes,
       amount_usd: amountUsd,
       checkout_request_id: checkoutRequestId,
-      customer_message: asString(sasaPayResponse.CustomerMessage),
+      customer_message: asString(sasaPayResponse.CustomerMessage) || asString(sasaPayResponse.customerMessage),
       detail: asString(sasaPayResponse.detail) || providerResultDesc,
       masked_phone_number: maskKenyanPhoneNumber(normalizedPhoneNumber),
       provider_request_id: providerRequestId,

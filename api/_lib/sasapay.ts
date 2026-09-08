@@ -56,6 +56,13 @@ const pickString = (...values: Array<Json | undefined>) => {
   return null;
 };
 
+const pickJsonValue = (payload: JsonObject, ...keys: string[]) => {
+  for (const key of keys) {
+    if (payload[key] !== undefined) return payload[key];
+  }
+  return undefined;
+};
+
 const parseJsonResponse = async (response: Response) => {
   try {
     return (await response.json()) as JsonObject;
@@ -167,24 +174,27 @@ const sendSasaPayRequest = async (path: string, payload: Record<string, unknown>
   });
 
   const data = await parseJsonResponse(response);
+  const responsePayload: JsonObject =
+    data && typeof data.data === "object" && data.data !== null && !Array.isArray(data.data)
+      ? (data.data as JsonObject)
+      : data ?? {};
   const detail = pickString(
-    data?.detail,
-    data?.ResponseDescription,
-    data?.responseDescription,
-    data?.CustomerMessage,
-    data?.customerMessage,
-    data?.error,
-    data?.message,
+    pickJsonValue(responsePayload, "detail", "ResponseDescription", "responseDescription", "CustomerMessage", "customerMessage", "error", "message"),
+    pickJsonValue(data ?? {}, "detail", "ResponseDescription", "responseDescription", "CustomerMessage", "customerMessage", "error", "message"),
   );
-  const status = typeof data?.status === "boolean" ? data.status : null;
-  const responseCode = pickString(data?.ResponseCode, data?.responseCode);
+  const statusValue = pickJsonValue(responsePayload, "status");
+  const status = typeof statusValue === "boolean" ? statusValue : null;
+  const responseCode = pickString(
+    pickJsonValue(responsePayload, "ResponseCode", "responseCode", "response_code"),
+    pickJsonValue(data ?? {}, "ResponseCode", "responseCode", "response_code"),
+  );
 
   const validResponseCodes = ["0", "100"];
   if (!response.ok || status === false || (responseCode && !validResponseCodes.includes(responseCode))) {
     throw new Error(detail || `SasaPay returned HTTP ${response.status}`);
   }
 
-  return data ?? {};
+  return responsePayload ?? {};
 };
 
 export const requestSasaPayStkPush = async ({
@@ -209,7 +219,6 @@ export const requestSasaPayStkPush = async ({
     NetworkCode: MPESA_CHANNEL_CODE,
     PhoneNumber: phoneNumber,
     TransactionDesc: transactionDescription,
-    "Transaction Fee": "0",
   });
 
 export const requestSasaPayB2CPayout = async ({
