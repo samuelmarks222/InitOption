@@ -128,7 +128,24 @@ export const authenticateRequest = async (
   const token = Array.isArray(raw) ? bearerHandler(raw[0] ?? "") : bearerHandler(raw ?? "");
 
   if (!token) return null;
-  if (!appwriteConfigured()) return null;
+  if (!appwriteConfigured()) {
+    // Fallback: try to use the token as a direct UUID (Clerk/Vercel session).
+    // The token may be a Clerk user UUID or JWT that can be parsed.
+    const uuidLike = token.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    if (uuidLike) return uuidLike[0];
+    // Try to extract UUID from a JWT payload
+    try {
+      const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
+      if (payload.sub && typeof payload.sub === "string") {
+        const uuidMatch = payload.sub.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        if (uuidMatch) return uuidMatch[0];
+      }
+      if (payload.user_id && typeof payload.user_id === "string") {
+        return clerkUserIdToUuid(payload.user_id);
+      }
+    } catch { /* not a JWT */ }
+    return null;
+  }
 
   const user = await getVerifiedAppwriteUser(token);
   if (!user) return null;
@@ -147,7 +164,22 @@ export const authenticateWithUid = async (
   const token = Array.isArray(raw) ? bearerHandler(raw[0] ?? "") : bearerHandler(raw ?? "");
 
   if (!token) return null;
-  if (!appwriteConfigured()) return null;
+  if (!appwriteConfigured()) {
+    const uuidLike = token.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    if (uuidLike) return { uid: uuidLike[0], uuid: uuidLike[0] };
+    try {
+      const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString());
+      if (payload.sub && typeof payload.sub === "string") {
+        const uuidMatch = payload.sub.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        if (uuidMatch) return { uid: uuidMatch[0], uuid: uuidMatch[0] };
+      }
+      if (payload.user_id && typeof payload.user_id === "string") {
+        const uuid = clerkUserIdToUuid(payload.user_id);
+        return { uid: payload.user_id, uuid };
+      }
+    } catch { /* not a JWT */ }
+    return null;
+  }
 
   const user = await getVerifiedAppwriteUser(token);
   if (!user) return null;

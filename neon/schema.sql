@@ -1,12 +1,51 @@
--- Combined Neon (Postgres) schema - generated from supabase/migrations/*.sql
--- NOTE: Supabase-specific constructs (auth.uid(), request.jwt.claims, realtime,
---   storage buckets, supabase Functions) require manual adaptation (see neon/README.md).
+-- Neon-ready schema (generated from supabase/migrations/*.sql)
+-- DO NOT EDIT BY HAND — regenerate via: node neon/build_schema.mjs
+--
+-- Supabase-specific runtime identity (auth.uid) is mapped to a Clerk user id
+-- carried through a PostgreSQL custom GUC set per-request by the API layer:
+--   SET LOCAL app.current_user_id = '<clerk_user_id>';
+--   current_setting('app.current_user_id', true)  -- validates the GUC exists at runtime
+-- Clerk users are mirrored into public.users by /api/webhooks/clerk (user.created/updated/deleted).
+-- public.users is the auth table this schema now references.
+
+-- Supabase exposes roles (authenticated/anon/service_role) at runtime.
+-- CREATE EXTENSION / CREATE ROLE are non-transactional, so apply_schema.mjs runs
+-- them in autocommit before the transactional schema load. They gate policies/grants.
+create extension if not exists pgcrypto;
+create role authenticated;
+create role anon;
+create role service_role;
+-- app.current_user_id session variable carries the Clerk user id per-request:
+--   SET LOCAL app.current_user_id = '<clerk_user_id>';
+
+-- Mirror of the Supabase auth.users table, populated by Clerk webhooks.
+create table if not exists public.users (
+  id uuid primary key,
+  email text,
+  raw_user_meta_data jsonb,
+  email_confirmed_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  last_sign_in_at timestamptz,
+  appwrite_user_id text
+);
+
+-- Appwrite identity binding (see api/_lib/clerkWebhook.ts). Existing databases apply
+-- this via neon/007_appwrite_identity.sql (adds the column + unique partial index);
+-- regenerated schemas get it here.
+create unique index if not exists users_appwrite_user_id_idx
+  on public.users (appwrite_user_id)
+  where appwrite_user_id is not null;
+
+-- Ensure the custom GUC exists for current_setting(..., true) reads.
+select current_setting('app.current_user_id', true);
+
 
 -- ===== MIGRATION: 20260316095743_ab793478-21e7-4dd1-bd88-58eb5d191046.sql =====
 
 -- Create profiles table
 CREATE TABLE public.profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
   username TEXT UNIQUE,
   display_name TEXT,
   avatar_url TEXT,
@@ -21,13 +60,13 @@ CREATE TABLE public.profiles (
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view all profiles" ON public.profiles FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
-CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE TO authenticated USING (current_setting('app.current_user_id', true)::uuid = id);
+CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT TO authenticated WITH CHECK (current_setting('app.current_user_id', true)::uuid = id);
 
 -- Create trades table
 CREATE TABLE public.trades (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   asset_symbol TEXT NOT NULL,
   direction TEXT NOT NULL CHECK (direction IN ('higher', 'lower')),
   amount NUMERIC NOT NULL CHECK (amount > 0),
@@ -43,14 +82,14 @@ CREATE TABLE public.trades (
 
 ALTER TABLE public.trades ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own trades" ON public.trades FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own trades" ON public.trades FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own trades" ON public.trades FOR UPDATE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own trades" ON public.trades FOR SELECT TO authenticated USING (current_setting('app.current_user_id', true)::uuid = user_id);
+CREATE POLICY "Users can insert own trades" ON public.trades FOR INSERT TO authenticated WITH CHECK (current_setting('app.current_user_id', true)::uuid = user_id);
+CREATE POLICY "Users can update own trades" ON public.trades FOR UPDATE TO authenticated USING (current_setting('app.current_user_id', true)::uuid = user_id);
 
 -- Create chat_messages table
 CREATE TABLE public.chat_messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   message TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
@@ -58,11 +97,10 @@ CREATE TABLE public.chat_messages (
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Anyone can view chat messages" ON public.chat_messages FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Users can insert own messages" ON public.chat_messages FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can insert own messages" ON public.chat_messages FOR INSERT TO authenticated WITH CHECK (current_setting('app.current_user_id', true)::uuid = user_id);
 
--- Enable realtime for chat and trades
-ALTER PUBLICATION supabase_realtime ADD TABLE public.chat_messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.trades;
+
+
 
 -- Auto-create profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -83,7 +121,7 @@ END;
 $$;
 
 CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
+  AFTER INSERT ON public.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- User roles table for admin
@@ -91,7 +129,7 @@ CREATE TYPE public.app_role AS ENUM ('admin', 'moderator', 'user');
 
 CREATE TABLE public.user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   role app_role NOT NULL,
   UNIQUE (user_id, role)
 );
@@ -110,8 +148,7 @@ AS $$
   )
 $$;
 
-CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT TO authenticated USING (auth.uid() = user_id);
-
+CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT TO authenticated USING (current_setting('app.current_user_id', true)::uuid = user_id);
 
 -- ===== MIGRATION: 20260320000000_kyc_review_system.sql =====
 alter table public.profiles
@@ -126,9 +163,8 @@ create policy "Admins can update any profile"
 on public.profiles
 for update
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role) or auth.uid() = id)
-with check (public.has_role(auth.uid(), 'admin'::public.app_role) or auth.uid() = id);
-
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role) or current_setting('app.current_user_id', true)::uuid = id)
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role) or current_setting('app.current_user_id', true)::uuid = id);
 
 -- ===== MIGRATION: 20260320000001_notifications_system.sql =====
 alter table public.profiles
@@ -180,7 +216,7 @@ end $$;
 
 create table if not exists public.user_roles (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
+  user_id uuid not null references public.users(id) on delete cascade,
   role public.app_role not null,
   unique (user_id, role)
 );
@@ -192,7 +228,7 @@ create policy "Users can view own roles"
 on public.user_roles
 for select
 to authenticated
-using (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 create or replace function public.has_role(_user_id uuid, _role public.app_role)
 returns boolean
@@ -297,14 +333,14 @@ create table if not exists public.announcements (
   scheduled_at timestamp with time zone,
   expires_at timestamp with time zone,
   status text not null default 'sent' check (status in ('draft', 'scheduled', 'sent')),
-  created_by uuid references auth.users(id) on delete set null,
+  created_by uuid references public.users(id) on delete set null,
   sent_at timestamp with time zone,
   created_at timestamp with time zone not null default now()
 );
 
 create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
+  user_id uuid not null references public.users(id) on delete cascade,
   type text not null check (type in ('announcement', 'welcome_bonus', 'deposit_bonus', 'referral_commission')),
   title text not null,
   message text not null,
@@ -332,75 +368,61 @@ create policy "Admins can view bonus settings"
 on public.bonus_settings
 for select
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Admins can update bonus settings" on public.bonus_settings;
 create policy "Admins can update bonus settings"
 on public.bonus_settings
 for update
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role))
-with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role))
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Admins can insert bonus settings" on public.bonus_settings;
 create policy "Admins can insert bonus settings"
 on public.bonus_settings
 for insert
 to authenticated
-with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Admins can view announcements" on public.announcements;
 create policy "Admins can view announcements"
 on public.announcements
 for select
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Admins can insert announcements" on public.announcements;
 create policy "Admins can insert announcements"
 on public.announcements
 for insert
 to authenticated
-with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Admins can update announcements" on public.announcements;
 create policy "Admins can update announcements"
 on public.announcements
 for update
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role))
-with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role))
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Users can view own notifications" on public.notifications;
 create policy "Users can view own notifications"
 on public.notifications
 for select
 to authenticated
-using (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "Users can update own notifications" on public.notifications;
 create policy "Users can update own notifications"
 on public.notifications
 for update
 to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id)
+with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_publication_rel pr
-    join pg_class c on c.oid = pr.prrelid
-    join pg_namespace n on n.oid = c.relnamespace
-    join pg_publication p on p.oid = pr.prpubid
-    where p.pubname = 'supabase_realtime'
-      and n.nspname = 'public'
-      and c.relname = 'notifications'
-  ) then
-    alter publication supabase_realtime add table public.notifications;
-  end if;
-end $$;
+;
 
 create or replace function public.create_notification_internal(
   p_user_id uuid,
@@ -544,7 +566,7 @@ declare
   v_announcement_id uuid;
   v_status text := case when p_scheduled_at is not null and p_scheduled_at > now() then 'scheduled' else 'sent' end;
 begin
-  if not public.has_role(auth.uid(), 'admin'::public.app_role) then
+  if not public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role) then
     raise exception 'Only admins can create announcements';
   end if;
 
@@ -567,7 +589,7 @@ begin
     p_scheduled_at,
     p_expires_at,
     v_status,
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     case when v_status = 'sent' then now() else null end
   )
   returning id into v_announcement_id;
@@ -590,7 +612,7 @@ declare
   v_count integer := 0;
   v_announcement record;
 begin
-  if not public.has_role(auth.uid(), 'admin'::public.app_role) then
+  if not public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role) then
     raise exception 'Only admins can dispatch scheduled announcements';
   end if;
 
@@ -630,7 +652,7 @@ declare
   v_total_credit numeric := 0;
   v_referrer_username text;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -641,7 +663,7 @@ begin
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid()
+  where id = current_setting('app.current_user_id', true)::uuid
   for update;
 
   if not found then
@@ -683,11 +705,11 @@ begin
       else welcome_bonus_granted_at
     end,
     updated_at = now()
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   if v_deposit_bonus > 0 then
     perform public.create_notification_internal(
-      auth.uid(),
+      current_setting('app.current_user_id', true)::uuid,
       'deposit_bonus',
       'Deposit bonus credited',
       format('Deposit bonus credited: +$%s added to your balance.', trim(to_char(v_deposit_bonus, 'FM999999990.00'))),
@@ -704,7 +726,7 @@ begin
 
   if v_welcome_bonus > 0 then
     perform public.create_notification_internal(
-      auth.uid(),
+      current_setting('app.current_user_id', true)::uuid,
       'welcome_bonus',
       'Welcome bonus unlocked',
       format('Welcome! You''ve received a $%s welcome bonus. Start trading now!', trim(to_char(v_welcome_bonus, 'FM999999990.00'))),
@@ -713,7 +735,7 @@ begin
         'amount', v_welcome_bonus,
         'trigger', 'first_deposit'
       ),
-      concat('welcome_bonus:first_deposit:', auth.uid()::text),
+      concat('welcome_bonus:first_deposit:', current_setting('app.current_user_id', true)::uuid::text),
       null
     );
   end if;
@@ -734,7 +756,7 @@ begin
     select coalesce(username, display_name, 'your referral')
     into v_referrer_username
     from public.profiles
-    where id = auth.uid();
+    where id = current_setting('app.current_user_id', true)::uuid;
 
     perform public.create_notification_internal(
       v_profile.referred_by,
@@ -745,7 +767,7 @@ begin
       jsonb_build_object(
         'amount', v_referral_bonus,
         'base_amount', p_amount,
-        'source_user_id', auth.uid(),
+        'source_user_id', current_setting('app.current_user_id', true)::uuid,
         'source_type', 'deposit'
       ),
       null,
@@ -778,7 +800,7 @@ declare
   v_commission numeric := 0;
   v_referral_name text;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -786,7 +808,7 @@ begin
   into v_trade
   from public.trades
   where id = p_trade_id
-    and user_id = auth.uid();
+    and user_id = current_setting('app.current_user_id', true)::uuid;
 
   if not found then
     raise exception 'Trade not found';
@@ -795,7 +817,7 @@ begin
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   if v_profile.referred_by is null then
     return 0;
@@ -836,7 +858,7 @@ begin
   select coalesce(username, display_name, 'your referral')
   into v_referral_name
   from public.profiles
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   perform public.create_notification_internal(
     v_profile.referred_by,
@@ -847,7 +869,7 @@ begin
     jsonb_build_object(
       'amount', v_commission,
       'source_trade_id', v_trade.id,
-      'source_user_id', auth.uid(),
+      'source_user_id', current_setting('app.current_user_id', true)::uuid,
       'source_type', 'trade_volume',
       'payout_event', p_event
     ),
@@ -922,7 +944,6 @@ begin
 end;
 $$;
 
-
 -- ===== MIGRATION: 20260320000002_tournaments_schema.sql =====
 -- Create ENUM for tournament status (safe check before creating)
 DO $$ BEGIN
@@ -957,7 +978,7 @@ USING (true);
 
 CREATE POLICY "Allow authenticated full access to tournaments" 
 ON public.tournaments FOR ALL 
-USING (auth.role() = 'authenticated');
+USING ('authenticated'::text = 'authenticated');
 
 
 -- Create tournament_participants table
@@ -979,7 +1000,7 @@ USING (true);
 
 CREATE POLICY "Allow users to update own participation" 
 ON public.tournament_participants FOR ALL 
-USING (auth.uid() = user_id);
+USING (current_setting('app.current_user_id', true)::uuid = user_id);
 
 -- Optional: Create trigger to initialize current_balance automatically based on the tournament starting balance
 CREATE OR REPLACE FUNCTION set_initial_tournament_balance()
@@ -995,7 +1016,6 @@ BEFORE INSERT ON public.tournament_participants
 FOR EACH ROW
 EXECUTE FUNCTION set_initial_tournament_balance();
 
-
 -- ===== MIGRATION: 20260320000003_vip_badge_system.sql =====
 alter table public.profiles
   add column if not exists vip_tier text default 'none',
@@ -1009,7 +1029,6 @@ comment on column public.profiles.vip_tier_override is 'Optional admin override 
 comment on column public.profiles.total_deposit is 'Lifetime deposited amount used by the VIP system.';
 comment on column public.profiles.total_trade_volume_30d is 'Rolling 30-day closed trade volume for the VIP system.';
 comment on column public.profiles.trade_count_30d is 'Rolling 30-day closed trade count for the VIP system.';
-
 
 -- ===== MIGRATION: 20260321000000_platform_settings_seo_metadata.sql =====
 alter table if exists public.platform_settings
@@ -1057,7 +1076,6 @@ begin
   end if;
 end
 $$;
-
 
 -- ===== MIGRATION: 20260321000001_zero_live_balance_for_new_users.sql =====
 alter table public.profiles
@@ -1108,7 +1126,6 @@ begin
   return NEW;
 end;
 $$;
-
 
 -- ===== MIGRATION: 20260321000002_zzzz_platform_settings_meta_seo_patch.sql =====
 create extension if not exists pgcrypto;
@@ -1259,7 +1276,6 @@ select
 where not exists (
   select 1 from public.platform_settings
 );
-
 
 -- ===== MIGRATION: 20260321000003_zzz_admin_operational_tables_and_tournament_trade_links.sql =====
 create extension if not exists pgcrypto;
@@ -1429,26 +1445,26 @@ create policy "Admins can view all assets"
 on public.assets_config
 for select
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can insert assets"
 on public.assets_config
 for insert
 to authenticated
-with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can update assets"
 on public.assets_config
 for update
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role))
-with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role))
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can delete assets"
 on public.assets_config
 for delete
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Authenticated users can view active crypto payment methods" on public.crypto_payment_methods;
 drop policy if exists "Admins can view all crypto payment methods" on public.crypto_payment_methods;
@@ -1466,26 +1482,26 @@ create policy "Admins can view all crypto payment methods"
 on public.crypto_payment_methods
 for select
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can insert crypto payment methods"
 on public.crypto_payment_methods
 for insert
 to authenticated
-with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can update crypto payment methods"
 on public.crypto_payment_methods
 for update
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role))
-with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role))
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can delete crypto payment methods"
 on public.crypto_payment_methods
 for delete
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Authenticated users can view redeemable promo codes" on public.promo_codes;
 drop policy if exists "Admins can view all promo codes" on public.promo_codes;
@@ -1507,26 +1523,26 @@ create policy "Admins can view all promo codes"
 on public.promo_codes
 for select
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can insert promo codes"
 on public.promo_codes
 for insert
 to authenticated
-with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can update promo codes"
 on public.promo_codes
 for update
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role))
-with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role))
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can delete promo codes"
 on public.promo_codes
 for delete
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create or replace function public.process_deposit_checkout(
   p_amount numeric,
@@ -1544,7 +1560,7 @@ declare
   v_promo_bonus numeric := 0;
   v_payload jsonb;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -1686,7 +1702,6 @@ where not exists (
   limit 1
 );
 
-
 -- ===== MIGRATION: 20260321000004_zz_platform_settings_website_content.sql =====
 alter table if exists public.platform_settings
   add column if not exists website_content text not null default '';
@@ -1694,7 +1709,6 @@ alter table if exists public.platform_settings
 update public.platform_settings
 set website_content = coalesce(website_content, '')
 where website_content is null;
-
 
 -- ===== MIGRATION: 20260321000005_z_platform_settings_bootstrap_and_branding_bucket.sql =====
 create extension if not exists pgcrypto;
@@ -1872,55 +1886,20 @@ using (true);
 create policy "platform_settings_insert_admin"
 on public.platform_settings
 for insert
-with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "platform_settings_update_admin"
 on public.platform_settings
 for update
-using (public.has_role(auth.uid(), 'admin'::public.app_role))
-with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role))
+with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "platform_settings_delete_admin"
 on public.platform_settings
 for delete
-using (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
-insert into storage.buckets (id, name, public)
-values ('branding', 'branding', true)
-on conflict (id) do update
-set
-  name = excluded.name,
-  public = excluded.public;
-
-drop policy if exists "Allow public read on branding" on storage.objects;
-drop policy if exists "Allow authenticated uploads on branding" on storage.objects;
-drop policy if exists "Allow authenticated updates on branding" on storage.objects;
-drop policy if exists "Allow authenticated deletes on branding" on storage.objects;
-drop policy if exists "branding_select" on storage.objects;
-drop policy if exists "branding_insert" on storage.objects;
-drop policy if exists "branding_update" on storage.objects;
-drop policy if exists "branding_delete" on storage.objects;
-
-create policy "branding_select"
-on storage.objects
-for select
-using (bucket_id = 'branding');
-
-create policy "branding_insert"
-on storage.objects
-for insert
-with check (bucket_id = 'branding' and auth.uid() is not null);
-
-create policy "branding_update"
-on storage.objects
-for update
-using (bucket_id = 'branding' and auth.uid() is not null);
-
-create policy "branding_delete"
-on storage.objects
-for delete
-using (bucket_id = 'branding' and auth.uid() is not null);
-
+-- (removed: Supabase storage bucket + policies -> Cloudinary)
 
 -- ===== MIGRATION: 20260321000006_add_admin_role_enum_values.sql =====
 alter type public.app_role add value if not exists 'support_agent';
@@ -1928,7 +1907,6 @@ alter type public.app_role add value if not exists 'finance_manager';
 alter type public.app_role add value if not exists 'trade_risk_manager';
 alter type public.app_role add value if not exists 'content_marketing_manager';
 alter type public.app_role add value if not exists 'auditor';
-
 
 -- ===== MIGRATION: 20260322000000_a_chat_support_and_admin_roles.sql =====
 create extension if not exists pgcrypto;
@@ -1944,7 +1922,7 @@ where p.id = cm.user_id
 
 create table if not exists public.support_threads (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
+  user_id uuid not null references public.users(id) on delete cascade,
   subject text not null default 'General support',
   category text not null default 'General',
   status text not null default 'open' check (status in ('open', 'pending', 'resolved')),
@@ -1955,7 +1933,7 @@ create table if not exists public.support_threads (
 );
 
 alter table public.support_threads
-  add column if not exists user_id uuid references auth.users(id) on delete cascade,
+  add column if not exists user_id uuid references public.users(id) on delete cascade,
   add column if not exists subject text not null default 'General support',
   add column if not exists category text not null default 'General',
   add column if not exists status text not null default 'open',
@@ -1979,7 +1957,7 @@ end $$;
 create table if not exists public.support_messages (
   id uuid primary key default gen_random_uuid(),
   thread_id uuid not null references public.support_threads(id) on delete cascade,
-  sender_id uuid not null references auth.users(id) on delete cascade,
+  sender_id uuid not null references public.users(id) on delete cascade,
   sender_role text not null default 'user' check (sender_role in ('user', 'staff', 'system')),
   sender_name text not null default 'Support',
   message text not null,
@@ -1988,7 +1966,7 @@ create table if not exists public.support_messages (
 
 alter table public.support_messages
   add column if not exists thread_id uuid references public.support_threads(id) on delete cascade,
-  add column if not exists sender_id uuid references auth.users(id) on delete cascade,
+  add column if not exists sender_id uuid references public.users(id) on delete cascade,
   add column if not exists sender_role text not null default 'user',
   add column if not exists sender_name text not null default 'Support',
   add column if not exists message text,
@@ -2008,7 +1986,7 @@ end $$;
 
 create table if not exists public.support_tickets (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
+  user_id uuid not null references public.users(id) on delete cascade,
   category text not null default 'General',
   subject text not null,
   message text not null,
@@ -2019,7 +1997,7 @@ create table if not exists public.support_tickets (
 );
 
 alter table public.support_tickets
-  add column if not exists user_id uuid references auth.users(id) on delete cascade,
+  add column if not exists user_id uuid references public.users(id) on delete cascade,
   add column if not exists category text not null default 'General',
   add column if not exists subject text,
   add column if not exists message text,
@@ -2123,20 +2101,20 @@ create policy "support_threads_select"
 on public.support_threads
 for select
 to authenticated
-using (auth.uid() = user_id or public.is_staff(auth.uid()));
+using (current_setting('app.current_user_id', true)::uuid = user_id or public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
 create policy "support_threads_insert"
 on public.support_threads
 for insert
 to authenticated
-with check (auth.uid() = user_id or public.is_staff(auth.uid()));
+with check (current_setting('app.current_user_id', true)::uuid = user_id or public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
 create policy "support_threads_update_staff"
 on public.support_threads
 for update
 to authenticated
-using (public.is_staff(auth.uid()))
-with check (public.is_staff(auth.uid()));
+using (public.is_staff(current_setting('app.current_user_id', true)::uuid))
+with check (public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
 drop policy if exists "support_messages_select" on public.support_messages;
 drop policy if exists "support_messages_insert" on public.support_messages;
@@ -2150,7 +2128,7 @@ using (
     select 1
     from public.support_threads st
     where st.id = thread_id
-      and (st.user_id = auth.uid() or public.is_staff(auth.uid()))
+      and (st.user_id = current_setting('app.current_user_id', true)::uuid or public.is_staff(current_setting('app.current_user_id', true)::uuid))
   )
 );
 
@@ -2159,14 +2137,14 @@ on public.support_messages
 for insert
 to authenticated
 with check (
-  auth.uid() = sender_id
+  current_setting('app.current_user_id', true)::uuid = sender_id
   and exists (
     select 1
     from public.support_threads st
     where st.id = thread_id
       and (
-        st.user_id = auth.uid()
-        or public.is_staff(auth.uid())
+        st.user_id = current_setting('app.current_user_id', true)::uuid
+        or public.is_staff(current_setting('app.current_user_id', true)::uuid)
       )
   )
   and (
@@ -2174,9 +2152,9 @@ with check (
       select 1
       from public.support_threads st
       where st.id = thread_id
-        and st.user_id = auth.uid()
+        and st.user_id = current_setting('app.current_user_id', true)::uuid
     ))
-    or (sender_role in ('staff', 'system') and public.is_staff(auth.uid()))
+    or (sender_role in ('staff', 'system') and public.is_staff(current_setting('app.current_user_id', true)::uuid))
   )
 );
 
@@ -2188,27 +2166,27 @@ create policy "support_tickets_select"
 on public.support_tickets
 for select
 to authenticated
-using (auth.uid() = user_id or public.is_staff(auth.uid()));
+using (current_setting('app.current_user_id', true)::uuid = user_id or public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
 create policy "support_tickets_insert"
 on public.support_tickets
 for insert
 to authenticated
-with check (auth.uid() = user_id);
+with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
 create policy "support_tickets_update_staff"
 on public.support_tickets
 for update
 to authenticated
-using (public.is_staff(auth.uid()))
-with check (public.is_staff(auth.uid()));
+using (public.is_staff(current_setting('app.current_user_id', true)::uuid))
+with check (public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
 drop policy if exists "Admins can view all roles" on public.user_roles;
 create policy "Admins can view all roles"
 on public.user_roles
 for select
 to authenticated
-using (public.has_role(auth.uid(), 'admin'::public.app_role));
+using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create or replace function public.assign_staff_role(
   p_user_id uuid,
@@ -2220,11 +2198,11 @@ security definer
 set search_path = public
 as $$
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
-  if not public.has_role(auth.uid(), 'admin'::public.app_role) then
+  if not public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role) then
     raise exception 'Only super admins can assign staff roles';
   end if;
 
@@ -2273,15 +2251,15 @@ security definer
 set search_path = public
 as $$
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
-  if not public.has_role(auth.uid(), 'admin'::public.app_role) then
+  if not public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role) then
     raise exception 'Only super admins can revoke staff roles';
   end if;
 
-  if auth.uid() = p_user_id then
+  if current_setting('app.current_user_id', true)::uuid = p_user_id then
     raise exception 'You cannot revoke your own super admin access from here';
   end if;
 
@@ -2306,39 +2284,7 @@ $$;
 
 grant execute on function public.revoke_staff_role(uuid) to authenticated;
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'support_threads'
-  ) then
-    alter publication supabase_realtime add table public.support_threads;
-  end if;
-
-  if not exists (
-    select 1
-    from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'support_messages'
-  ) then
-    alter publication supabase_realtime add table public.support_messages;
-  end if;
-
-  if not exists (
-    select 1
-    from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'support_tickets'
-  ) then
-    alter publication supabase_realtime add table public.support_tickets;
-  end if;
-end $$;
-
+;
 
 -- ===== MIGRATION: 20260322000001_c_pending_deposit_review.sql =====
 create table if not exists public.deposit_requests (
@@ -2419,21 +2365,21 @@ create policy "Users can view own deposit requests"
 on public.deposit_requests
 for select
 to authenticated
-using (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 create policy "Users can insert own deposit requests"
 on public.deposit_requests
 for insert
 to authenticated
-with check (auth.uid() = user_id and status = 'pending');
+with check (current_setting('app.current_user_id', true)::uuid = user_id and status = 'pending');
 
 create policy "Finance admins can view deposit requests"
 on public.deposit_requests
 for select
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 create policy "Finance admins can update deposit requests"
@@ -2441,12 +2387,12 @@ on public.deposit_requests
 for update
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 )
 with check (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 create or replace function public.credit_deposit_internal(
@@ -2622,7 +2568,7 @@ declare
   v_promo_bonus numeric := 0;
   v_request public.deposit_requests%rowtype;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -2637,7 +2583,7 @@ begin
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   if not found then
     raise exception 'Profile not found';
@@ -2706,7 +2652,7 @@ begin
     v_promo_bonus,
     p_promo_id,
     nullif(trim(coalesce(p_tx_hash, '')), ''),
-    auth.uid()
+    current_setting('app.current_user_id', true)::uuid
   )
   returning *
   into v_request;
@@ -2736,13 +2682,13 @@ declare
   v_next_status text;
   v_credit_payload jsonb := '{}'::jsonb;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
   if not (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
   ) then
     raise exception 'Only finance managers or super admins can update deposit requests';
   end if;
@@ -2793,7 +2739,7 @@ begin
       credited_amount = nullif(v_credit_payload->>'credited_amount', '')::numeric,
       deposit_bonus = coalesce(nullif(v_credit_payload->>'deposit_bonus', '')::numeric, 0),
       processed_at = now(),
-      processed_by = auth.uid(),
+      processed_by = current_setting('app.current_user_id', true)::uuid,
       promo_bonus = coalesce(nullif(v_credit_payload->>'promo_bonus', '')::numeric, promo_bonus),
       referral_commission = coalesce(nullif(v_credit_payload->>'referral_commission', '')::numeric, 0),
       status = v_next_status,
@@ -2805,7 +2751,7 @@ begin
     set
       admin_note = p_admin_note,
       processed_at = now(),
-      processed_by = auth.uid(),
+      processed_by = current_setting('app.current_user_id', true)::uuid,
       status = v_next_status,
       updated_at = now()
     where id = v_request.id;
@@ -2847,19 +2793,7 @@ begin
   end if;
 end $$;
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'deposit_requests'
-  ) then
-    alter publication supabase_realtime add table public.deposit_requests;
-  end if;
-end $$;
-
+;
 
 -- ===== MIGRATION: 20260323000000_auto_crypto_deposit_automation.sql =====
 create table if not exists public.crypto_deposit_address_pool (
@@ -3184,8 +3118,8 @@ on public.crypto_deposit_address_pool
 for select
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 create policy "Admins can insert address pool"
@@ -3193,8 +3127,8 @@ on public.crypto_deposit_address_pool
 for insert
 to authenticated
 with check (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 create policy "Admins can update address pool"
@@ -3202,12 +3136,12 @@ on public.crypto_deposit_address_pool
 for update
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 )
 with check (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 create policy "Admins can delete address pool"
@@ -3215,8 +3149,8 @@ on public.crypto_deposit_address_pool
 for delete
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 drop policy if exists "Users can view own crypto deposit instructions" on public.crypto_deposit_instructions;
@@ -3226,15 +3160,15 @@ create policy "Users can view own crypto deposit instructions"
 on public.crypto_deposit_instructions
 for select
 to authenticated
-using (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 create policy "Finance admins can view crypto deposit instructions"
 on public.crypto_deposit_instructions
 for select
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 drop policy if exists "Finance admins can view crypto deposit events" on public.crypto_deposit_events;
@@ -3244,8 +3178,8 @@ on public.crypto_deposit_events
 for select
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 create or replace function public.create_crypto_deposit_instruction(
@@ -3269,7 +3203,7 @@ declare
   v_memo_value text;
   v_memo_label text;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -3357,7 +3291,7 @@ begin
   )
   values (
     v_request_id,
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     v_method.id,
     'awaiting_payment',
     v_address,
@@ -3374,7 +3308,7 @@ begin
     update public.crypto_deposit_address_pool
     set
       assigned_instruction_id = v_instruction.id,
-      assigned_user_id = auth.uid(),
+      assigned_user_id = current_setting('app.current_user_id', true)::uuid,
       assigned_at = now(),
       status = 'assigned',
       updated_at = now()
@@ -3411,13 +3345,13 @@ declare
   v_next_status text;
   v_credit_payload jsonb := '{}'::jsonb;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
   if not (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
   ) then
     raise exception 'Only finance managers or super admins can update deposit requests';
   end if;
@@ -3468,7 +3402,7 @@ begin
       credited_amount = nullif(v_credit_payload->>'credited_amount', '')::numeric,
       deposit_bonus = coalesce(nullif(v_credit_payload->>'deposit_bonus', '')::numeric, 0),
       processed_at = now(),
-      processed_by = auth.uid(),
+      processed_by = current_setting('app.current_user_id', true)::uuid,
       promo_bonus = coalesce(nullif(v_credit_payload->>'promo_bonus', '')::numeric, promo_bonus),
       referral_commission = coalesce(nullif(v_credit_payload->>'referral_commission', '')::numeric, 0),
       status = v_next_status,
@@ -3499,7 +3433,7 @@ begin
     set
       admin_note = p_admin_note,
       processed_at = now(),
-      processed_by = auth.uid(),
+      processed_by = current_setting('app.current_user_id', true)::uuid,
       status = v_next_status,
       updated_at = now()
     where id = v_request.id;
@@ -3886,19 +3820,7 @@ grant execute on function public.process_crypto_deposit_detection(text, text, uu
 
 revoke execute on function public.process_crypto_deposit_detection(text, text, uuid, text, integer, numeric, text, numeric, text, text, text, jsonb) from public, anon, authenticated;
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'crypto_deposit_instructions'
-  ) then
-    alter publication supabase_realtime add table public.crypto_deposit_instructions;
-  end if;
-end $$;
-
+;
 
 -- ===== MIGRATION: 20260324000000_add_tournament_rebuy_cost.sql =====
 alter table public.tournaments
@@ -3926,7 +3848,6 @@ begin
   end if;
 end
 $$;
-
 
 -- ===== MIGRATION: 20260324000001_repair_tournament_trade_links.sql =====
 alter table public.trades
@@ -3957,7 +3878,6 @@ create index if not exists trades_tournament_participant_id_idx
 
 notify pgrst, 'reload schema';
 
-
 -- ===== MIGRATION: 20260324000002_reuse_open_crypto_deposit_instruction.sql =====
 create or replace function public.create_crypto_deposit_instruction(
   p_amount numeric,
@@ -3980,7 +3900,7 @@ declare
   v_memo_value text;
   v_memo_label text;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -4012,7 +3932,7 @@ begin
   from public.crypto_deposit_instructions i
   join public.deposit_requests r
     on r.id = i.deposit_request_id
-  where i.user_id = auth.uid()
+  where i.user_id = current_setting('app.current_user_id', true)::uuid
     and i.payment_method_id = v_method.id
     and i.instruction_status in ('awaiting_payment', 'payment_detected', 'confirming')
     and r.status = 'pending'
@@ -4102,7 +4022,7 @@ begin
   )
   values (
     v_request_id,
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     v_method.id,
     'awaiting_payment',
     v_address,
@@ -4119,7 +4039,7 @@ begin
     update public.crypto_deposit_address_pool
     set
       assigned_instruction_id = v_instruction.id,
-      assigned_user_id = auth.uid(),
+      assigned_user_id = current_setting('app.current_user_id', true)::uuid,
       assigned_at = now(),
       status = 'assigned',
       updated_at = now()
@@ -4142,7 +4062,6 @@ begin
 end;
 $$;
 
-
 -- ===== MIGRATION: 20260324000003_social_trading_module.sql =====
 create extension if not exists pgcrypto;
 
@@ -4153,13 +4072,13 @@ alter table public.profiles
 
 alter table public.trades
   add column if not exists source_trade_id uuid references public.trades(id) on delete set null,
-  add column if not exists copied_from_user_id uuid references auth.users(id) on delete set null,
+  add column if not exists copied_from_user_id uuid references public.users(id) on delete set null,
   add column if not exists copy_setting_id uuid,
   add column if not exists trade_context text not null default 'manual';
 
 create table if not exists public.follows (
-  follower_id uuid not null references auth.users(id) on delete cascade,
-  followed_id uuid not null references auth.users(id) on delete cascade,
+  follower_id uuid not null references public.users(id) on delete cascade,
+  followed_id uuid not null references public.users(id) on delete cascade,
   created_at timestamptz not null default now(),
   primary key (follower_id, followed_id),
   constraint follows_not_self check (follower_id <> followed_id)
@@ -4167,8 +4086,8 @@ create table if not exists public.follows (
 
 create table if not exists public.copy_settings (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  target_user_id uuid not null references auth.users(id) on delete cascade,
+  user_id uuid not null references public.users(id) on delete cascade,
+  target_user_id uuid not null references public.users(id) on delete cascade,
   enabled boolean not null default true,
   amount_type text not null default 'fixed',
   execution_mode text not null default 'automatic',
@@ -4201,8 +4120,8 @@ end $$;
 
 create table if not exists public.social_feed (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  actor_id uuid not null references auth.users(id) on delete cascade,
+  user_id uuid not null references public.users(id) on delete cascade,
+  actor_id uuid not null references public.users(id) on delete cascade,
   type text not null,
   data jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
@@ -4340,7 +4259,7 @@ security definer
 set search_path = public
 as $$
 declare
-  v_follower_id uuid := auth.uid();
+  v_follower_id uuid := current_setting('app.current_user_id', true)::uuid;
   v_actor public.profiles%rowtype;
   v_target public.profiles%rowtype;
 begin
@@ -4417,7 +4336,7 @@ security definer
 set search_path = public
 as $$
 declare
-  v_follower_id uuid := auth.uid();
+  v_follower_id uuid := current_setting('app.current_user_id', true)::uuid;
 begin
   if v_follower_id is null then
     raise exception 'Authentication required';
@@ -4447,7 +4366,7 @@ security definer
 set search_path = public
 as $$
 declare
-  v_user_id uuid := auth.uid();
+  v_user_id uuid := current_setting('app.current_user_id', true)::uuid;
   v_row public.copy_settings%rowtype;
 begin
   if v_user_id is null then
@@ -4504,7 +4423,7 @@ set search_path = public
 as $$
 begin
   delete from public.copy_settings
-  where user_id = auth.uid()
+  where user_id = current_setting('app.current_user_id', true)::uuid
     and target_user_id = p_target_user_id;
 
   return jsonb_build_object('ok', true);
@@ -4521,7 +4440,7 @@ security definer
 set search_path = public
 as $$
 declare
-  v_user_id uuid := auth.uid();
+  v_user_id uuid := current_setting('app.current_user_id', true)::uuid;
   v_trade public.trades%rowtype;
   v_setting public.copy_settings%rowtype;
   v_target public.profiles%rowtype;
@@ -5035,74 +4954,60 @@ create policy "follows_insert_self"
 on public.follows
 for insert
 to authenticated
-with check (auth.uid() = follower_id);
+with check (current_setting('app.current_user_id', true)::uuid = follower_id);
 
 drop policy if exists "follows_delete_self" on public.follows;
 create policy "follows_delete_self"
 on public.follows
 for delete
 to authenticated
-using (auth.uid() = follower_id or public.is_staff(auth.uid()));
+using (current_setting('app.current_user_id', true)::uuid = follower_id or public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
 drop policy if exists "copy_settings_select_own" on public.copy_settings;
 create policy "copy_settings_select_own"
 on public.copy_settings
 for select
 to authenticated
-using (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "copy_settings_insert_own" on public.copy_settings;
 create policy "copy_settings_insert_own"
 on public.copy_settings
 for insert
 to authenticated
-with check (auth.uid() = user_id);
+with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "copy_settings_update_own" on public.copy_settings;
 create policy "copy_settings_update_own"
 on public.copy_settings
 for update
 to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id)
+with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "copy_settings_delete_own" on public.copy_settings;
 create policy "copy_settings_delete_own"
 on public.copy_settings
 for delete
 to authenticated
-using (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "social_feed_select_own" on public.social_feed;
 create policy "social_feed_select_own"
 on public.social_feed
 for select
 to authenticated
-using (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "social_feed_update_own" on public.social_feed;
 create policy "social_feed_update_own"
 on public.social_feed
 for update
 to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id)
+with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_publication_rel pr
-    join pg_class c on c.oid = pr.prrelid
-    join pg_namespace n on n.oid = c.relnamespace
-    join pg_publication p on p.oid = pr.prpubid
-    where p.pubname = 'supabase_realtime'
-      and n.nspname = 'public'
-      and c.relname = 'social_feed'
-  ) then
-    alter publication supabase_realtime add table public.social_feed;
-  end if;
-end $$;
+;
 
 grant execute on function public.follow_trader(uuid) to authenticated;
 grant execute on function public.unfollow_trader(uuid) to authenticated;
@@ -5111,7 +5016,6 @@ grant execute on function public.delete_copy_setting(uuid) to authenticated;
 grant execute on function public.execute_manual_copy_trade(uuid, uuid) to authenticated;
 grant execute on function public.process_social_trade_open(uuid) to authenticated;
 grant execute on function public.process_social_trade_close(uuid) to authenticated;
-
 
 -- ===== MIGRATION: 20260325000000_admin_manage_announcements.sql =====
 create or replace function public.admin_update_announcement(
@@ -5132,7 +5036,7 @@ declare
   v_existing public.announcements%rowtype;
   v_status text;
 begin
-  if not public.has_role(auth.uid(), 'admin'::public.app_role) then
+  if not public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role) then
     raise exception 'Only admins can update announcements';
   end if;
 
@@ -5210,7 +5114,7 @@ as $$
 declare
   v_deleted_notifications integer := 0;
 begin
-  if not public.has_role(auth.uid(), 'admin'::public.app_role) then
+  if not public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role) then
     raise exception 'Only admins can delete announcements';
   end if;
 
@@ -5250,7 +5154,6 @@ grant execute on function public.admin_update_announcement(
 
 grant execute on function public.admin_delete_announcement(uuid, boolean) to authenticated;
 
-
 -- ===== MIGRATION: 20260325000001_enforce_bonus_turnover_on_withdrawal.sql =====
 create table if not exists public.withdrawal_requests (
   id uuid primary key default gen_random_uuid(),
@@ -5285,7 +5188,7 @@ declare
   v_required_turnover numeric := 0;
   v_turnover_done numeric := 0;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -5308,7 +5211,7 @@ begin
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid()
+  where id = current_setting('app.current_user_id', true)::uuid
   for update;
 
   if not found then
@@ -5332,7 +5235,7 @@ begin
   select exists(
     select 1
     from public.withdrawal_requests wr
-    where wr.user_id = auth.uid()
+    where wr.user_id = current_setting('app.current_user_id', true)::uuid
       and wr.status = 'pending'
   )
   into v_pending_exists;
@@ -5344,7 +5247,7 @@ begin
   select coalesce(sum(coalesce(dr.welcome_bonus, 0) + coalesce(dr.deposit_bonus, 0) + coalesce(dr.promo_bonus, 0)), 0)
   into v_bonus_total
   from public.deposit_requests dr
-  where dr.user_id = auth.uid()
+  where dr.user_id = current_setting('app.current_user_id', true)::uuid
     and dr.status = 'approved';
 
   if v_bonus_total > 0 then
@@ -5353,7 +5256,7 @@ begin
     select coalesce(sum(t.amount), 0)
     into v_turnover_done
     from public.trades t
-    where t.user_id = auth.uid()
+    where t.user_id = current_setting('app.current_user_id', true)::uuid
       and t.status in ('won', 'lost', 'expired')
       and t.tournament_participant_id is null;
 
@@ -5368,7 +5271,7 @@ begin
   set
     balance = balance - p_amount,
     updated_at = now()
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   insert into public.withdrawal_requests (
     amount,
@@ -5380,7 +5283,7 @@ begin
     p_amount,
     trim(p_destination),
     trim(p_method),
-    auth.uid()
+    current_setting('app.current_user_id', true)::uuid
   )
   returning *
   into v_request;
@@ -5396,7 +5299,6 @@ end;
 $$;
 
 grant execute on function public.request_withdrawal(numeric, text, text) to authenticated;
-
 
 -- ===== MIGRATION: 20260325000002_expand_notifications_type_check.sql =====
 alter table if exists public.notifications
@@ -5418,7 +5320,6 @@ alter table if exists public.notifications
       'trade_copied'
     )
   );
-
 
 -- ===== MIGRATION: 20260328000000_advanced_notification_system.sql =====
 alter table if exists public.notifications
@@ -5458,7 +5359,7 @@ alter table if exists public.notifications
 create table if not exists public.notification_email_deliveries (
   id uuid primary key default gen_random_uuid(),
   notification_id uuid not null references public.notifications(id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
+  user_id uuid not null references public.users(id) on delete cascade,
   recipient_email text not null,
   notification_type text not null,
   subject text not null,
@@ -5490,8 +5391,8 @@ on public.notification_email_deliveries
 for select
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 create table if not exists public.tournament_payouts (
@@ -5516,7 +5417,7 @@ create policy "Users can view own tournament payouts"
 on public.tournament_payouts
 for select
 to authenticated
-using (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "Admins can view tournament payouts" on public.tournament_payouts;
 create policy "Admins can view tournament payouts"
@@ -5524,8 +5425,8 @@ on public.tournament_payouts
 for select
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'moderator'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'moderator'::public.app_role)
 );
 
 create table if not exists public.withdrawal_requests (
@@ -5592,21 +5493,21 @@ create policy "Users can view own withdrawal requests"
 on public.withdrawal_requests
 for select
 to authenticated
-using (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 create policy "Users can insert own withdrawal requests"
 on public.withdrawal_requests
 for insert
 to authenticated
-with check (auth.uid() = user_id and status = 'pending');
+with check (current_setting('app.current_user_id', true)::uuid = user_id and status = 'pending');
 
 create policy "Finance admins can view withdrawal requests"
 on public.withdrawal_requests
 for select
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 create policy "Finance admins can update withdrawal requests"
@@ -5614,12 +5515,12 @@ on public.withdrawal_requests
 for update
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 )
 with check (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 drop policy if exists "Allow authenticated full access to tournaments" on public.tournaments;
@@ -5629,12 +5530,12 @@ on public.tournaments
 for all
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'moderator'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'moderator'::public.app_role)
 )
 with check (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'moderator'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'moderator'::public.app_role)
 );
 
 drop policy if exists "Allow users to update own participation" on public.tournament_participants;
@@ -5643,8 +5544,8 @@ create policy "Users can update own tournament participation"
 on public.tournament_participants
 for update
 to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id)
+with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
 create or replace function public.jsonb_boolean_value(
   p_source jsonb,
@@ -5674,7 +5575,7 @@ declare
 begin
   select coalesce(u.raw_user_meta_data->'notificationPreferences', '{}'::jsonb)
   into v_preferences
-  from auth.users u
+  from public.users u
   where u.id = p_user_id;
 
   return jsonb_build_object(
@@ -5770,7 +5671,7 @@ declare
 begin
   select nullif(trim(u.email), '')
   into v_recipient_email
-  from auth.users u
+  from public.users u
   where u.id = p_user_id;
 
   if v_recipient_email is null then
@@ -5937,7 +5838,7 @@ declare
   v_promo_bonus numeric := 0;
   v_request public.deposit_requests%rowtype;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -5952,7 +5853,7 @@ begin
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   if not found then
     raise exception 'Profile not found';
@@ -6021,13 +5922,13 @@ begin
     v_promo_bonus,
     p_promo_id,
     nullif(trim(coalesce(p_tx_hash, '')), ''),
-    auth.uid()
+    current_setting('app.current_user_id', true)::uuid
   )
   returning *
   into v_request;
 
   perform public.create_notification_internal(
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     'deposit_requested',
     'Deposit request received',
     format(
@@ -6048,7 +5949,7 @@ begin
 
   if p_promo_id is not null and v_promo_bonus > 0 then
     perform public.create_notification_internal(
-      auth.uid(),
+      current_setting('app.current_user_id', true)::uuid,
       'promo_code_activated',
       'Promo code activated',
       format(
@@ -6093,13 +5994,13 @@ declare
   v_next_status text;
   v_credit_payload jsonb := '{}'::jsonb;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
   if not (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
   ) then
     raise exception 'Only finance managers or super admins can update deposit requests';
   end if;
@@ -6150,7 +6051,7 @@ begin
       credited_amount = nullif(v_credit_payload->>'credited_amount', '')::numeric,
       deposit_bonus = coalesce(nullif(v_credit_payload->>'deposit_bonus', '')::numeric, 0),
       processed_at = now(),
-      processed_by = auth.uid(),
+      processed_by = current_setting('app.current_user_id', true)::uuid,
       promo_bonus = coalesce(nullif(v_credit_payload->>'promo_bonus', '')::numeric, promo_bonus),
       referral_commission = coalesce(nullif(v_credit_payload->>'referral_commission', '')::numeric, 0),
       status = v_next_status,
@@ -6182,7 +6083,7 @@ begin
     set
       admin_note = p_admin_note,
       processed_at = now(),
-      processed_by = auth.uid(),
+      processed_by = current_setting('app.current_user_id', true)::uuid,
       status = v_next_status,
       updated_at = now()
     where id = v_request.id;
@@ -6235,7 +6136,7 @@ declare
   v_required_turnover numeric := 0;
   v_turnover_done numeric := 0;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -6258,7 +6159,7 @@ begin
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid()
+  where id = current_setting('app.current_user_id', true)::uuid
   for update;
 
   if not found then
@@ -6282,7 +6183,7 @@ begin
   select exists(
     select 1
     from public.withdrawal_requests wr
-    where wr.user_id = auth.uid()
+    where wr.user_id = current_setting('app.current_user_id', true)::uuid
       and wr.status = 'pending'
   )
   into v_pending_exists;
@@ -6294,7 +6195,7 @@ begin
   select coalesce(sum(coalesce(dr.welcome_bonus, 0) + coalesce(dr.deposit_bonus, 0) + coalesce(dr.promo_bonus, 0)), 0)
   into v_bonus_total
   from public.deposit_requests dr
-  where dr.user_id = auth.uid()
+  where dr.user_id = current_setting('app.current_user_id', true)::uuid
     and dr.status = 'approved';
 
   if v_bonus_total > 0 then
@@ -6303,7 +6204,7 @@ begin
     select coalesce(sum(t.amount), 0)
     into v_turnover_done
     from public.trades t
-    where t.user_id = auth.uid()
+    where t.user_id = current_setting('app.current_user_id', true)::uuid
       and t.status in ('won', 'lost', 'expired')
       and t.tournament_participant_id is null;
 
@@ -6318,7 +6219,7 @@ begin
   set
     balance = balance - p_amount,
     updated_at = now()
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   insert into public.withdrawal_requests (
     amount,
@@ -6330,13 +6231,13 @@ begin
     p_amount,
     trim(p_destination),
     trim(p_method),
-    auth.uid()
+    current_setting('app.current_user_id', true)::uuid
   )
   returning *
   into v_request;
 
   perform public.create_notification_internal(
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     'withdrawal_requested',
     'Withdrawal request received',
     format(
@@ -6378,13 +6279,13 @@ declare
   v_request public.withdrawal_requests%rowtype;
   v_next_status text;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
   if not (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
   ) then
     raise exception 'Only finance managers or super admins can update withdrawal requests';
   end if;
@@ -6413,7 +6314,7 @@ begin
   set
     admin_note = p_admin_note,
     processed_at = now(),
-    processed_by = auth.uid(),
+    processed_by = current_setting('app.current_user_id', true)::uuid,
     status = v_next_status,
     updated_at = now()
   where id = v_request.id;
@@ -6483,7 +6384,7 @@ declare
   v_existing_participant public.tournament_participants%rowtype;
   v_participant public.tournament_participants%rowtype;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -6505,7 +6406,7 @@ begin
   into v_existing_participant
   from public.tournament_participants
   where tournament_id = p_tournament_id
-    and user_id = auth.uid()
+    and user_id = current_setting('app.current_user_id', true)::uuid
   limit 1;
 
   if found then
@@ -6520,7 +6421,7 @@ begin
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid()
+  where id = current_setting('app.current_user_id', true)::uuid
   for update;
 
   if not found then
@@ -6536,7 +6437,7 @@ begin
     set
       balance = balance - v_tournament.entry_fee,
       updated_at = now()
-    where id = auth.uid();
+    where id = current_setting('app.current_user_id', true)::uuid;
   end if;
 
   insert into public.tournament_participants (
@@ -6546,14 +6447,14 @@ begin
   )
   values (
     p_tournament_id,
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     coalesce(v_tournament.starting_balance, 0)
   )
   returning *
   into v_participant;
 
   perform public.create_notification_internal(
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     'tournament_joined',
     'Tournament joined',
     format(
@@ -6568,7 +6469,7 @@ begin
       'tournament_id', v_tournament.id,
       'tournament_title', v_tournament.title
     ),
-    concat('tournament_joined:', v_tournament.id::text, ':', auth.uid()::text),
+    concat('tournament_joined:', v_tournament.id::text, ':', current_setting('app.current_user_id', true)::uuid::text),
     null
   );
 
@@ -6746,13 +6647,13 @@ declare
   v_notified integer := 0;
   v_awarded integer := 0;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
   if not (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    or public.has_role(auth.uid(), 'moderator'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    or public.has_role(current_setting('app.current_user_id', true)::uuid, 'moderator'::public.app_role)
   ) then
     raise exception 'Only admins or moderators can update tournaments';
   end if;
@@ -6840,7 +6741,7 @@ declare
   v_message text;
   v_notification_id uuid;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -6848,7 +6749,7 @@ begin
   into v_trade
   from public.trades
   where id = p_trade_id
-    and user_id = auth.uid();
+    and user_id = current_setting('app.current_user_id', true)::uuid;
 
   if not found then
     raise exception 'Trade not found';
@@ -6951,19 +6852,7 @@ grant execute on function public.join_tournament(uuid) to authenticated;
 grant execute on function public.admin_update_tournament_status(uuid, public.tournament_status) to authenticated;
 grant execute on function public.notify_trade_result(uuid) to authenticated;
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'withdrawal_requests'
-  ) then
-    alter publication supabase_realtime add table public.withdrawal_requests;
-  end if;
-end $$;
-
+;
 
 -- ===== MIGRATION: 20260328000001_backfill_admin_announcement_rpcs.sql =====
 create or replace function public.admin_update_announcement(
@@ -6984,7 +6873,7 @@ declare
   v_existing public.announcements%rowtype;
   v_status text;
 begin
-  if not public.has_role(auth.uid(), 'admin'::public.app_role) then
+  if not public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role) then
     raise exception 'Only admins can update announcements';
   end if;
 
@@ -7062,7 +6951,7 @@ as $$
 declare
   v_deleted_notifications integer := 0;
 begin
-  if not public.has_role(auth.uid(), 'admin'::public.app_role) then
+  if not public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role) then
     raise exception 'Only admins can delete announcements';
   end if;
 
@@ -7101,7 +6990,6 @@ grant execute on function public.admin_update_announcement(
 ) to authenticated;
 
 grant execute on function public.admin_delete_announcement(uuid, boolean) to authenticated;
-
 
 -- ===== MIGRATION: 20260328000002_email_verification_flow.sql =====
 alter table if exists public.notifications
@@ -7142,7 +7030,7 @@ alter table if exists public.notifications
 
 create table if not exists public.email_verification_codes (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
+  user_id uuid not null references public.users(id) on delete cascade,
   email text not null,
   code_hash text not null,
   expires_at timestamptz not null,
@@ -7177,7 +7065,7 @@ begin
   into
     v_confirmed_at,
     v_platform_verified_at
-  from auth.users u
+  from public.users u
   where u.id = p_user_id;
 
   return v_confirmed_at is not null or v_platform_verified_at is not null;
@@ -7233,7 +7121,7 @@ begin
   into
     v_recipient_email,
     v_email_verified
-  from auth.users u
+  from public.users u
   where u.id = p_user_id;
 
   if v_recipient_email is null then
@@ -7402,7 +7290,7 @@ declare
   v_recent_code public.email_verification_codes%rowtype;
   v_verification_row public.email_verification_codes%rowtype;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -7412,8 +7300,8 @@ begin
   into
     v_email,
     v_is_verified
-  from auth.users u
-  where u.id = auth.uid();
+  from public.users u
+  where u.id = current_setting('app.current_user_id', true)::uuid;
 
   if v_email is null then
     raise exception 'No email address is available for this account';
@@ -7429,7 +7317,7 @@ begin
   select *
   into v_recent_code
   from public.email_verification_codes
-  where user_id = auth.uid()
+  where user_id = current_setting('app.current_user_id', true)::uuid
     and email = v_email
     and consumed_at is null
     and expires_at > now()
@@ -7451,7 +7339,7 @@ begin
   end if;
 
   delete from public.email_verification_codes
-  where user_id = auth.uid()
+  where user_id = current_setting('app.current_user_id', true)::uuid
     and email = v_email
     and consumed_at is null;
 
@@ -7465,9 +7353,9 @@ begin
     expires_at
   )
   values (
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     v_email,
-    public.email_verification_code_hash(auth.uid(), v_email, v_code),
+    public.email_verification_code_hash(current_setting('app.current_user_id', true)::uuid, v_email, v_code),
     v_expires_at
   )
   returning *
@@ -7483,7 +7371,7 @@ begin
     external_key
   )
   values (
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     'email_verification_code',
     'Verify your email',
     'Use the 6-digit code we sent to confirm your email address.',
@@ -7498,7 +7386,7 @@ begin
 
   perform public.queue_notification_email_internal_v2(
     v_notification_id,
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     'email_verification_code',
     'Verify your email',
     'Use the 6-digit code we sent to confirm your email address.',
@@ -7534,7 +7422,7 @@ declare
   v_match public.email_verification_codes%rowtype;
   v_verified_at timestamptz := now();
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -7548,8 +7436,8 @@ begin
   into
     v_email,
     v_is_verified
-  from auth.users u
-  where u.id = auth.uid();
+  from public.users u
+  where u.id = current_setting('app.current_user_id', true)::uuid;
 
   if v_email is null then
     raise exception 'No email address is available for this account';
@@ -7566,11 +7454,11 @@ begin
   select *
   into v_match
   from public.email_verification_codes
-  where user_id = auth.uid()
+  where user_id = current_setting('app.current_user_id', true)::uuid
     and email = v_email
     and consumed_at is null
     and expires_at > now()
-    and code_hash = public.email_verification_code_hash(auth.uid(), v_email, v_code_input)
+    and code_hash = public.email_verification_code_hash(current_setting('app.current_user_id', true)::uuid, v_email, v_code_input)
   order by created_at desc
   limit 1
   for update;
@@ -7585,17 +7473,17 @@ begin
     updated_at = v_verified_at
   where id = v_match.id;
 
-  update auth.users
+  update public.users
   set
     confirmed_at = coalesce(confirmed_at, v_verified_at),
     email_confirmed_at = coalesce(email_confirmed_at, v_verified_at),
     raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object(
       'platform_email_verified_at', v_verified_at
     )
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   perform public.create_notification_internal(
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     'email_verified',
     'Email verified',
     'Your email address is verified and ready for account alerts.',
@@ -7604,7 +7492,7 @@ begin
       'email', v_email,
       'verified_at', v_verified_at
     ),
-    concat('email_verified:', auth.uid()::text),
+    concat('email_verified:', current_setting('app.current_user_id', true)::uuid::text),
     null
   );
 
@@ -7618,7 +7506,6 @@ $$;
 
 grant execute on function public.send_email_verification_code() to authenticated;
 grant execute on function public.verify_email_with_code(text) to authenticated;
-
 
 -- ===== MIGRATION: 20260328000003_fix_email_verification_hash.sql =====
 create or replace function public.email_verification_code_hash(
@@ -7641,7 +7528,6 @@ as $$
   );
 $$;
 
-
 -- ===== MIGRATION: 20260328000004_platform_only_email_verification.sql =====
 create or replace function public.is_email_verified_internal(p_user_id uuid)
 returns boolean
@@ -7655,7 +7541,7 @@ declare
 begin
   select nullif(trim(u.raw_user_meta_data ->> 'platform_email_verified_at'), '')
   into v_platform_verified_at
-  from auth.users u
+  from public.users u
   where u.id = p_user_id;
 
   return v_platform_verified_at is not null;
@@ -7675,7 +7561,7 @@ declare
   v_match public.email_verification_codes%rowtype;
   v_verified_at timestamptz := now();
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -7689,8 +7575,8 @@ begin
   into
     v_email,
     v_is_verified
-  from auth.users u
-  where u.id = auth.uid();
+  from public.users u
+  where u.id = current_setting('app.current_user_id', true)::uuid;
 
   if v_email is null then
     raise exception 'No email address is available for this account';
@@ -7707,11 +7593,11 @@ begin
   select *
   into v_match
   from public.email_verification_codes
-  where user_id = auth.uid()
+  where user_id = current_setting('app.current_user_id', true)::uuid
     and email = v_email
     and consumed_at is null
     and expires_at > now()
-    and code_hash = public.email_verification_code_hash(auth.uid(), v_email, v_code_input)
+    and code_hash = public.email_verification_code_hash(current_setting('app.current_user_id', true)::uuid, v_email, v_code_input)
   order by created_at desc
   limit 1
   for update;
@@ -7726,15 +7612,15 @@ begin
     updated_at = v_verified_at
   where id = v_match.id;
 
-  update auth.users
+  update public.users
   set
     raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object(
       'platform_email_verified_at', v_verified_at
     )
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   perform public.create_notification_internal(
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     'email_verified',
     'Email verified',
     'Your email address is verified and ready for account alerts.',
@@ -7743,7 +7629,7 @@ begin
       'email', v_email,
       'verified_at', v_verified_at
     ),
-    concat('email_verified:', auth.uid()::text),
+    concat('email_verified:', current_setting('app.current_user_id', true)::uuid::text),
     null
   );
 
@@ -7754,7 +7640,6 @@ begin
   );
 end;
 $$;
-
 
 -- ===== MIGRATION: 20260401000000_admin_deposit_bonus_offers.sql =====
 create extension if not exists pgcrypto;
@@ -7815,8 +7700,8 @@ for select
 to authenticated
 using (
   status = 'active'
-  or public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 drop policy if exists "Admins can manage deposit bonus offers" on public.deposit_bonus_offers;
@@ -7825,12 +7710,12 @@ on public.deposit_bonus_offers
 for all
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 )
 with check (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 drop policy if exists "Users can view own deposit bonus redemptions" on public.deposit_bonus_redemptions;
@@ -7838,7 +7723,7 @@ create policy "Users can view own deposit bonus redemptions"
 on public.deposit_bonus_redemptions
 for select
 to authenticated
-using (auth.uid() = user_id);
+using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "Admins can view deposit bonus redemptions" on public.deposit_bonus_redemptions;
 create policy "Admins can view deposit bonus redemptions"
@@ -7846,8 +7731,8 @@ on public.deposit_bonus_redemptions
 for select
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
 );
 
 insert into public.deposit_bonus_offers (
@@ -7912,14 +7797,14 @@ declare
   v_monthly_locked boolean := false;
   v_active_reservation boolean := false;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   if not found then
     raise exception 'Profile not found';
@@ -7930,7 +7815,7 @@ begin
   select exists (
     select 1
     from public.deposit_bonus_redemptions r
-    where r.user_id = auth.uid()
+    where r.user_id = current_setting('app.current_user_id', true)::uuid
       and r.status = 'reserved'
   )
   into v_active_reservation;
@@ -7939,7 +7824,7 @@ begin
     select exists (
       select 1
       from public.deposit_bonus_redemptions r
-      where r.user_id = auth.uid()
+      where r.user_id = current_setting('app.current_user_id', true)::uuid
         and r.status in ('reserved', 'credited')
         and r.created_at >= date_trunc('month', now())
     )
@@ -7953,7 +7838,7 @@ begin
       exists (
         select 1
         from public.deposit_bonus_redemptions r
-        where r.user_id = auth.uid()
+        where r.user_id = current_setting('app.current_user_id', true)::uuid
           and r.bonus_offer_id = o.id
           and r.status in ('reserved', 'credited')
       ) as already_used
@@ -8009,13 +7894,13 @@ declare
   v_credit_payload jsonb := '{}'::jsonb;
   v_bonus_offer public.deposit_bonus_offers%rowtype;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
   if not (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
   ) then
     raise exception 'Only finance managers or super admins can update deposit requests';
   end if;
@@ -8073,7 +7958,7 @@ begin
       credited_amount = nullif(v_credit_payload->>'credited_amount', '')::numeric,
       deposit_bonus = coalesce(nullif(v_credit_payload->>'deposit_bonus', '')::numeric, 0),
       processed_at = now(),
-      processed_by = auth.uid(),
+      processed_by = current_setting('app.current_user_id', true)::uuid,
       promo_bonus = coalesce(nullif(v_credit_payload->>'promo_bonus', '')::numeric, promo_bonus),
       referral_commission = coalesce(nullif(v_credit_payload->>'referral_commission', '')::numeric, 0),
       status = v_next_status,
@@ -8137,7 +8022,7 @@ begin
     set
       admin_note = p_admin_note,
       processed_at = now(),
-      processed_by = auth.uid(),
+      processed_by = current_setting('app.current_user_id', true)::uuid,
       status = v_next_status,
       updated_at = now()
     where id = v_request.id;
@@ -8210,7 +8095,7 @@ declare
   v_next_instruction_status text := 'awaiting_payment';
   v_bonus_offer public.deposit_bonus_offers%rowtype;
 begin
-  if auth.role() <> 'service_role' then
+  if 'authenticated'::text <> 'service_role' then
     raise exception 'Only the service role can process crypto deposit detections';
   end if;
 
@@ -8491,7 +8376,6 @@ begin
 end;
 $$;
 
-
 -- ===== MIGRATION: 20260401000001_sasapay_mobile_money.sql =====
 alter table public.deposit_requests
   add column if not exists provider_name text,
@@ -8579,7 +8463,7 @@ declare
   v_provider_transaction_ref text := nullif(trim(coalesce(p_provider_transaction_ref, '')), '');
   v_request public.deposit_requests%rowtype;
 begin
-  if auth.role() <> 'service_role' then
+  if 'authenticated'::text <> 'service_role' then
     raise exception 'Only the service role can process mobile money deposit callbacks';
   end if;
 
@@ -8823,7 +8707,7 @@ declare
   v_provider_transaction_ref text := nullif(trim(coalesce(p_provider_transaction_ref, '')), '');
   v_request public.withdrawal_requests%rowtype;
 begin
-  if auth.role() <> 'service_role' then
+  if 'authenticated'::text <> 'service_role' then
     raise exception 'Only the service role can process mobile money withdrawal callbacks';
   end if;
 
@@ -8997,7 +8881,6 @@ grant execute on function public.process_mobile_money_withdrawal_callback(
   jsonb
 ) to service_role;
 
-
 -- ===== MIGRATION: 20260402000000_deposit_bonus_ranges_and_caps.sql =====
 alter table public.deposit_bonus_offers
   add column if not exists minimum_deposit_amount numeric,
@@ -9087,14 +8970,14 @@ declare
   v_profile public.profiles%rowtype;
   v_is_new_user boolean := false;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   if not found then
     raise exception 'Profile not found';
@@ -9109,7 +8992,7 @@ begin
       exists (
         select 1
         from public.deposit_bonus_redemptions r
-        where r.user_id = auth.uid()
+        where r.user_id = current_setting('app.current_user_id', true)::uuid
           and r.bonus_offer_id = o.id
           and r.status in ('reserved', 'credited')
       ) as already_used
@@ -9149,7 +9032,6 @@ begin
   order by o.position asc, o.minimum_deposit_amount asc, o.created_at asc;
 end;
 $$;
-
 
 -- ===== MIGRATION: 20260402000001_mpesa_withdrawal_queue.sql =====
 alter table if exists public.notifications
@@ -9290,7 +9172,7 @@ declare
   v_threshold_kes numeric := 10000;
   v_turnover_done numeric := 0;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -9313,7 +9195,7 @@ begin
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid()
+  where id = current_setting('app.current_user_id', true)::uuid
   for update;
 
   if not found then
@@ -9337,7 +9219,7 @@ begin
   select coalesce(sum(coalesce(dr.welcome_bonus, 0) + coalesce(dr.deposit_bonus, 0) + coalesce(dr.promo_bonus, 0)), 0)
   into v_bonus_total
   from public.deposit_requests dr
-  where dr.user_id = auth.uid()
+  where dr.user_id = current_setting('app.current_user_id', true)::uuid
     and dr.status = 'approved';
 
   if v_bonus_total > 0 then
@@ -9346,7 +9228,7 @@ begin
     select coalesce(sum(t.amount), 0)
     into v_turnover_done
     from public.trades t
-    where t.user_id = auth.uid()
+    where t.user_id = current_setting('app.current_user_id', true)::uuid
       and t.status in ('won', 'lost', 'expired')
       and t.tournament_participant_id is null;
 
@@ -9370,7 +9252,7 @@ begin
   set
     reserved_withdrawal_balance = coalesce(reserved_withdrawal_balance, 0) + p_amount,
     updated_at = now()
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   insert into public.withdrawal_requests (
     amount,
@@ -9404,7 +9286,7 @@ begin
     jsonb_build_array(
       jsonb_build_object(
         'action', 'requested',
-        'actor_id', auth.uid(),
+        'actor_id', current_setting('app.current_user_id', true)::uuid,
         'amount', p_amount,
         'amount_kes', p_amount_kes,
         'created_at', now(),
@@ -9412,7 +9294,7 @@ begin
       )
     ),
     v_phone_number,
-    concat('WITHDRAW_', replace(auth.uid()::text, '-', ''), '_', floor(extract(epoch from clock_timestamp()) * 1000)::bigint),
+    concat('WITHDRAW_', replace(current_setting('app.current_user_id', true)::uuid::text, '-', ''), '_', floor(extract(epoch from clock_timestamp()) * 1000)::bigint),
     'M-PESA Mobile Money',
     now(),
     p_amount_kes,
@@ -9425,13 +9307,13 @@ begin
     nullif(trim(coalesce(p_request_ip, '')), ''),
     nullif(trim(coalesce(p_request_user_agent, '')), ''),
     case when p_amount_kes > v_threshold_kes then 'pending' else 'approved' end,
-    auth.uid()
+    current_setting('app.current_user_id', true)::uuid
   )
   returning *
   into v_request;
 
   perform public.create_notification_internal(
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     'withdrawal_requested',
     'Withdrawal request received',
     format(
@@ -9483,13 +9365,13 @@ declare
   v_request public.withdrawal_requests%rowtype;
   v_status text := lower(trim(coalesce(p_status, '')));
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
   if not (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    or public.has_role(auth.uid(), 'finance_manager'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
   ) then
     raise exception 'Only finance managers or super admins can review mobile money withdrawal requests';
   end if;
@@ -9518,11 +9400,11 @@ begin
     set
       admin_note = p_admin_note,
       approved_at = v_now,
-      approved_by = auth.uid(),
+      approved_by = current_setting('app.current_user_id', true)::uuid,
       audit_log = coalesce(audit_log, '[]'::jsonb) || jsonb_build_array(
         jsonb_build_object(
           'action', 'approved',
-          'actor_id', auth.uid(),
+          'actor_id', current_setting('app.current_user_id', true)::uuid,
           'admin_note', p_admin_note,
           'created_at', v_now
         )
@@ -9565,14 +9447,14 @@ begin
       audit_log = coalesce(audit_log, '[]'::jsonb) || jsonb_build_array(
         jsonb_build_object(
           'action', 'rejected',
-          'actor_id', auth.uid(),
+          'actor_id', current_setting('app.current_user_id', true)::uuid,
           'admin_note', p_admin_note,
           'created_at', v_now
         )
       ),
       failure_reason = coalesce(nullif(trim(coalesce(p_admin_note, '')), ''), 'Rejected by finance team'),
       processed_at = v_now,
-      processed_by = auth.uid(),
+      processed_by = current_setting('app.current_user_id', true)::uuid,
       provider_result_desc = coalesce(nullif(trim(coalesce(p_admin_note, '')), ''), provider_result_desc),
       provider_status = 'rejected',
       rejected_at = v_now,
@@ -9629,7 +9511,7 @@ declare
   v_now timestamptz := now();
   v_request public.withdrawal_requests%rowtype;
 begin
-  if auth.role() <> 'service_role' then
+  if 'authenticated'::text <> 'service_role' then
     raise exception 'Only the service role can claim mobile money withdrawals';
   end if;
 
@@ -9721,7 +9603,7 @@ declare
   v_next_status text := lower(trim(coalesce(p_next_status, '')));
   v_request public.withdrawal_requests%rowtype;
 begin
-  if auth.role() <> 'service_role' then
+  if 'authenticated'::text <> 'service_role' then
     raise exception 'Only the service role can update mobile money withdrawal dispatch state';
   end if;
 
@@ -9860,7 +9742,7 @@ declare
   v_provider_transaction_ref text := nullif(trim(coalesce(p_provider_transaction_ref, '')), '');
   v_request public.withdrawal_requests%rowtype;
 begin
-  if auth.role() <> 'service_role' then
+  if 'authenticated'::text <> 'service_role' then
     raise exception 'Only the service role can process mobile money withdrawal callbacks';
   end if;
 
@@ -10082,7 +9964,6 @@ grant execute on function public.process_mobile_money_withdrawal_callback(
   jsonb
 ) to service_role;
 
-
 -- ===== MIGRATION: 20260402000002_unlock_deposit_bonus_rules.sql =====
 drop function if exists public.get_available_deposit_bonus_offers();
 
@@ -10111,14 +9992,14 @@ declare
   v_profile public.profiles%rowtype;
   v_is_new_user boolean := false;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   if not found then
     raise exception 'Profile not found';
@@ -10133,7 +10014,7 @@ begin
       exists (
         select 1
         from public.deposit_bonus_redemptions r
-        where r.user_id = auth.uid()
+        where r.user_id = current_setting('app.current_user_id', true)::uuid
           and r.bonus_offer_id = o.id
           and r.status in ('reserved', 'credited')
       ) as already_used
@@ -10164,7 +10045,6 @@ begin
   order by o.position asc, o.deposit_amount asc, o.created_at asc;
 end;
 $$;
-
 
 -- ===== MIGRATION: 20260501_trade_balance_audit_logs.sql =====
 create table if not exists public.trade_balance_audit_logs (
@@ -10202,15 +10082,14 @@ create policy "trade_balance_audit_logs_select_own_or_staff"
 on public.trade_balance_audit_logs
 for select
 to authenticated
-using (auth.uid() = user_id or public.is_staff(auth.uid()));
+using (current_setting('app.current_user_id', true)::uuid = user_id or public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
 drop policy if exists "trade_balance_audit_logs_insert_own" on public.trade_balance_audit_logs;
 create policy "trade_balance_audit_logs_insert_own"
 on public.trade_balance_audit_logs
 for insert
 to authenticated
-with check (auth.uid() = user_id);
-
+with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
 -- ===== MIGRATION: 20260512_enforce_demo_seed_not_live_balance.sql =====
 alter table public.profiles
@@ -10260,11 +10139,10 @@ begin
 end;
 $$;
 
-
 -- ===== MIGRATION: 20260515000000_customer_reviews.sql =====
 create table if not exists public.customer_reviews (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete set null,
+  user_id uuid references public.users(id) on delete set null,
   reviewer_name text not null default 'Init Option trader',
   reviewer_uid text,
   avatar_url text,
@@ -10288,9 +10166,9 @@ for select
 to anon, authenticated
 using (
   status = 'approved'
-  or auth.uid() = user_id
-  or public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'content_marketing_manager'::public.app_role)
+  or current_setting('app.current_user_id', true)::uuid = user_id
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
 );
 
 create policy "Users can create reviews"
@@ -10299,7 +10177,7 @@ for insert
 to anon, authenticated
 with check (
   status = 'approved'
-  and (user_id is null or auth.uid() = user_id)
+  and (user_id is null or current_setting('app.current_user_id', true)::uuid = user_id)
 );
 
 create policy "Admins can manage customer reviews"
@@ -10307,12 +10185,12 @@ on public.customer_reviews
 for all
 to authenticated
 using (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'content_marketing_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
 )
 with check (
-  public.has_role(auth.uid(), 'admin'::public.app_role)
-  or public.has_role(auth.uid(), 'content_marketing_manager'::public.app_role)
+  public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+  or public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
 );
 
 create or replace function public.set_customer_reviews_updated_at()
@@ -10330,7 +10208,6 @@ create trigger set_customer_reviews_updated_at
 before update on public.customer_reviews
 for each row
 execute function public.set_customer_reviews_updated_at();
-
 
 -- ===== MIGRATION: 20260515000001_email_confirmation_link_flow.sql =====
 create or replace function public.is_email_verified_internal(p_user_id uuid)
@@ -10350,20 +10227,18 @@ begin
   into
     v_confirmed_at,
     v_platform_verified_at
-  from auth.users u
+  from public.users u
   where u.id = p_user_id;
 
   return v_confirmed_at is not null or v_platform_verified_at is not null;
 end;
 $$;
 
-
 -- ===== MIGRATION: 20260515000002_profile_country_flags.sql =====
 alter table public.profiles
   add column if not exists nationality text,
   add column if not exists phone_country text,
   add column if not exists phone_country_code text;
-
 
 -- ===== MIGRATION: 20260516_set_bonus_turnover_10x_for_withdrawals.sql =====
 -- Keep withdrawal eligibility aligned with the platform bonus terms.
@@ -10389,7 +10264,7 @@ declare
   v_required_turnover numeric := 0;
   v_turnover_done numeric := 0;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -10412,7 +10287,7 @@ begin
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid()
+  where id = current_setting('app.current_user_id', true)::uuid
   for update;
 
   if not found then
@@ -10436,7 +10311,7 @@ begin
   select exists(
     select 1
     from public.withdrawal_requests wr
-    where wr.user_id = auth.uid()
+    where wr.user_id = current_setting('app.current_user_id', true)::uuid
       and wr.status = 'pending'
   )
   into v_pending_exists;
@@ -10448,7 +10323,7 @@ begin
   select coalesce(sum(coalesce(dr.welcome_bonus, 0) + coalesce(dr.deposit_bonus, 0) + coalesce(dr.promo_bonus, 0)), 0)
   into v_bonus_total
   from public.deposit_requests dr
-  where dr.user_id = auth.uid()
+  where dr.user_id = current_setting('app.current_user_id', true)::uuid
     and dr.status = 'approved';
 
   if v_bonus_total > 0 then
@@ -10457,7 +10332,7 @@ begin
     select coalesce(sum(t.amount), 0)
     into v_turnover_done
     from public.trades t
-    where t.user_id = auth.uid()
+    where t.user_id = current_setting('app.current_user_id', true)::uuid
       and t.status in ('won', 'lost', 'expired')
       and t.tournament_participant_id is null;
 
@@ -10472,7 +10347,7 @@ begin
   set
     balance = balance - p_amount,
     updated_at = now()
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   insert into public.withdrawal_requests (
     amount,
@@ -10484,13 +10359,13 @@ begin
     p_amount,
     trim(p_destination),
     trim(p_method),
-    auth.uid()
+    current_setting('app.current_user_id', true)::uuid
   )
   returning *
   into v_request;
 
   perform public.create_notification_internal(
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     'withdrawal_requested',
     'Withdrawal request received',
     format(
@@ -10544,7 +10419,7 @@ declare
   v_threshold_kes numeric := 10000;
   v_turnover_done numeric := 0;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -10567,7 +10442,7 @@ begin
   select *
   into v_profile
   from public.profiles
-  where id = auth.uid()
+  where id = current_setting('app.current_user_id', true)::uuid
   for update;
 
   if not found then
@@ -10577,7 +10452,7 @@ begin
   if exists (
     select 1
     from public.withdrawal_requests wr
-    where wr.user_id = auth.uid()
+    where wr.user_id = current_setting('app.current_user_id', true)::uuid
       and wr.status = 'pending'
   ) then
     raise exception 'You already have a pending withdrawal request';
@@ -10600,7 +10475,7 @@ begin
   select coalesce(sum(coalesce(dr.welcome_bonus, 0) + coalesce(dr.deposit_bonus, 0) + coalesce(dr.promo_bonus, 0)), 0)
   into v_bonus_total
   from public.deposit_requests dr
-  where dr.user_id = auth.uid()
+  where dr.user_id = current_setting('app.current_user_id', true)::uuid
     and dr.status = 'approved';
 
   if v_bonus_total > 0 then
@@ -10609,7 +10484,7 @@ begin
     select coalesce(sum(t.amount), 0)
     into v_turnover_done
     from public.trades t
-    where t.user_id = auth.uid()
+    where t.user_id = current_setting('app.current_user_id', true)::uuid
       and t.status in ('won', 'lost', 'expired')
       and t.tournament_participant_id is null;
 
@@ -10633,7 +10508,7 @@ begin
   set
     reserved_withdrawal_balance = coalesce(reserved_withdrawal_balance, 0) + p_amount,
     updated_at = now()
-  where id = auth.uid();
+  where id = current_setting('app.current_user_id', true)::uuid;
 
   insert into public.withdrawal_requests (
     amount,
@@ -10667,7 +10542,7 @@ begin
     jsonb_build_array(
       jsonb_build_object(
         'action', 'requested',
-        'actor_id', auth.uid(),
+        'actor_id', current_setting('app.current_user_id', true)::uuid,
         'amount', p_amount,
         'amount_kes', p_amount_kes,
         'created_at', now(),
@@ -10676,7 +10551,7 @@ begin
       )
     ),
     v_phone_number,
-    concat('WITHDRAW_', replace(auth.uid()::text, '-', ''), '_', floor(extract(epoch from clock_timestamp()) * 1000)::bigint),
+    concat('WITHDRAW_', replace(current_setting('app.current_user_id', true)::uuid::text, '-', ''), '_', floor(extract(epoch from clock_timestamp()) * 1000)::bigint),
     'M-PESA Mobile Money',
     now(),
     p_amount_kes,
@@ -10689,13 +10564,13 @@ begin
     nullif(trim(coalesce(p_request_ip, '')), ''),
     nullif(trim(coalesce(p_request_user_agent, '')), ''),
     case when p_amount_kes > v_threshold_kes then 'pending' else 'approved' end,
-    auth.uid()
+    current_setting('app.current_user_id', true)::uuid
   )
   returning *
   into v_request;
 
   perform public.create_notification_internal(
-    auth.uid(),
+    current_setting('app.current_user_id', true)::uuid,
     'withdrawal_requested',
     'Withdrawal request received',
     format(
@@ -10741,7 +10616,6 @@ grant execute on function public.request_mobile_money_withdrawal(
   text
 ) to authenticated;
 
-
 -- ===== MIGRATION: 20260523000000_lighten_auth_and_notification_bloat.sql =====
 -- Keep auth and notification paths light while Supabase is under pressure.
 -- Intentionally avoids index creation and cleanup deletes because overloaded
@@ -10767,7 +10641,7 @@ begin
     v_confirmed_at,
     v_email_confirmed_at,
     v_platform_verified_at
-  from auth.users u
+  from public.users u
   where u.id = p_user_id;
 
   return v_platform_verified_at is not null
@@ -10787,7 +10661,7 @@ as $$
 declare
   v_trade public.trades%rowtype;
 begin
-  if auth.uid() is null then
+  if current_setting('app.current_user_id', true)::uuid is null then
     raise exception 'Authentication required';
   end if;
 
@@ -10795,7 +10669,7 @@ begin
   into v_trade
   from public.trades
   where id = p_trade_id
-    and user_id = auth.uid();
+    and user_id = current_setting('app.current_user_id', true)::uuid;
 
   if not found then
     raise exception 'Trade not found';
@@ -10810,7 +10684,6 @@ end;
 $$;
 
 grant execute on function public.notify_trade_result(uuid) to authenticated;
-
 
 -- ===== MIGRATION: 20260523000001_performance_hot_path_indexes.sql =====
 -- Hot-path indexes for auth-adjacent profile reads, trade history, and admin dashboards.
@@ -10872,7 +10745,6 @@ analyze public.notifications;
 analyze public.announcements;
 analyze public.tournament_participants;
 
-
 -- ===== MIGRATION: 20260601000000_referral_code_collision_handling.sql =====
 create or replace function public.generate_referral_code()
 returns text
@@ -10931,7 +10803,6 @@ $$;
 update public.profiles
 set referral_code = coalesce(referral_code, public.generate_referral_code())
 where referral_code is null;
-
 
 -- ===== MIGRATION: 20260601000001_referral_welcome_bonus.sql =====
 alter table public.bonus_settings
@@ -11116,7 +10987,6 @@ begin
 end;
 $$;
 
-
 -- ===== MIGRATION: 20260601000002_withdrawal_cancellation.sql =====
 alter table public.withdrawal_requests
   add column if not exists cancelled_at timestamptz;
@@ -11149,7 +11019,7 @@ declare
   v_user_id uuid;
   v_audit_entry jsonb;
 begin
-  v_user_id := auth.uid();
+  v_user_id := current_setting('app.current_user_id', true)::uuid;
   if v_user_id is null then
     raise exception 'Authentication required';
   end if;
@@ -11225,7 +11095,6 @@ $$;
 
 grant execute on function public.cancel_withdrawal(uuid) to authenticated;
 
-
 -- ===== MIGRATION: 20260604_guides_content_management.sql =====
 -- Guides content management system
 -- Allows admins to manage trading guides, tutorials with images and videos
@@ -11238,7 +11107,7 @@ CREATE TABLE IF NOT EXISTS guides (
   category TEXT NOT NULL DEFAULT 'Platform',
   is_published BOOLEAN DEFAULT FALSE,
   order_index INTEGER DEFAULT 0,
-  created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
+  created_by UUID NOT NULL REFERENCES public.users(id) ON DELETE RESTRICT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   deleted_at TIMESTAMP WITH TIME ZONE
@@ -11267,7 +11136,7 @@ CREATE TABLE IF NOT EXISTS guide_media (
   storage_bucket TEXT DEFAULT 'guide-media',
   storage_path TEXT,
   youtube_url TEXT,
-  created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
+  created_by UUID NOT NULL REFERENCES public.users(id) ON DELETE RESTRICT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -11290,39 +11159,39 @@ CREATE POLICY "Allow reading published guides"
   ON guides FOR SELECT
   USING (
     is_published = true
-    OR COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager')
+    OR COALESCE((current_setting('app.clerk_user_metadata', true)::jsonb -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager')
   );
 
 CREATE POLICY "Allow staff to manage guides"
   ON guides FOR ALL
-  USING (COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'))
-  WITH CHECK (COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'));
+  USING (COALESCE((current_setting('app.clerk_user_metadata', true)::jsonb -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'))
+  WITH CHECK (COALESCE((current_setting('app.clerk_user_metadata', true)::jsonb -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'));
 
 -- Policies for guide content
 CREATE POLICY "Allow reading published guide content"
   ON guide_content FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM guides WHERE id = guide_id AND is_published = true)
-    OR COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager')
+    OR COALESCE((current_setting('app.clerk_user_metadata', true)::jsonb -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager')
   );
 
 CREATE POLICY "Allow staff to manage guide content"
   ON guide_content FOR ALL
-  USING (COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'))
-  WITH CHECK (COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'));
+  USING (COALESCE((current_setting('app.clerk_user_metadata', true)::jsonb -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'))
+  WITH CHECK (COALESCE((current_setting('app.clerk_user_metadata', true)::jsonb -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'));
 
 -- Policies for guide media
 CREATE POLICY "Allow reading media from published guides"
   ON guide_media FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM guides WHERE id = guide_id AND is_published = true)
-    OR COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager')
+    OR COALESCE((current_setting('app.clerk_user_metadata', true)::jsonb -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager')
   );
 
 CREATE POLICY "Allow staff to manage guide media"
   ON guide_media FOR ALL
-  USING (COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'))
-  WITH CHECK (COALESCE((auth.jwt() -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'));
+  USING (COALESCE((current_setting('app.clerk_user_metadata', true)::jsonb -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'))
+  WITH CHECK (COALESCE((current_setting('app.clerk_user_metadata', true)::jsonb -> 'user_metadata' ->> 'role'), '') IN ('admin', 'content-manager'));
 
 -- Trigger to update updated_at
 CREATE OR REPLACE FUNCTION update_guide_timestamp()
@@ -11342,7 +11211,6 @@ FOR EACH ROW EXECUTE FUNCTION update_guide_timestamp();
 CREATE TRIGGER update_guide_media_timestamp BEFORE UPDATE ON guide_media
 FOR EACH ROW EXECUTE FUNCTION update_guide_timestamp();
 
-
 -- ===== MIGRATION: 20260613_context_logo_fields.sql =====
 alter table if exists public.platform_settings
   add column if not exists logo_url_footer text not null default '',
@@ -11360,12 +11228,11 @@ set
   logo_url_landing_header = coalesce(logo_url_landing_header, ''),
   updated_at = now();
 
-
 -- ===== MIGRATION: 20260615000000_add_copy_settings_stop_loss_expiry.sql =====
 create table if not exists public.copy_settings (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  target_user_id uuid not null references auth.users(id) on delete cascade,
+  user_id uuid not null references public.users(id) on delete cascade,
+  target_user_id uuid not null references public.users(id) on delete cascade,
   enabled boolean not null default true,
   amount_type text not null default 'fixed',
   execution_mode text not null default 'automatic',
@@ -11418,7 +11285,7 @@ security definer
 set search_path = public
 as $$
 declare
-  v_user_id uuid := auth.uid();
+  v_user_id uuid := current_setting('app.current_user_id', true)::uuid;
   v_row public.copy_settings%rowtype;
 begin
   if v_user_id is null then
@@ -11464,7 +11331,6 @@ exception when undefined_function then null;
 end $$;
 grant execute on function public.upsert_copy_setting(uuid, boolean, text, numeric, numeric, numeric, numeric, text, numeric, timestamptz) to authenticated;
 
-
 -- ===== MIGRATION: 20260615000001_add_tournament_winners.sql =====
 alter table public.tournaments
   add column if not exists number_of_winners integer default 1;
@@ -11488,47 +11354,11 @@ begin
 end
 $$;
 
-
--- ===== MIGRATION: 20260618000000_guide_media_storage_bucket.sql =====
--- Create guide-media storage bucket for guide images and media files
-
-insert into storage.buckets (id, name, public)
-values ('guide-media', 'guide-media', true)
-on conflict (id) do update
-set
-  name = excluded.name,
-  public = excluded.public;
-
-drop policy if exists "guide_media_select" on storage.objects;
-drop policy if exists "guide_media_insert" on storage.objects;
-drop policy if exists "guide_media_update" on storage.objects;
-drop policy if exists "guide_media_delete" on storage.objects;
-
-create policy "guide_media_select"
-on storage.objects
-for select
-using (bucket_id = 'guide-media');
-
-create policy "guide_media_insert"
-on storage.objects
-for insert
-with check (bucket_id = 'guide-media' and auth.uid() is not null);
-
-create policy "guide_media_update"
-on storage.objects
-for update
-using (bucket_id = 'guide-media' and auth.uid() is not null);
-
-create policy "guide_media_delete"
-on storage.objects
-for delete
-using (bucket_id = 'guide-media' and auth.uid() is not null);
-
+-- ===== (removed) 20260618000000_guide_media_storage_bucket.sql: storage buckets -> Cloudinary =====
 
 -- ===== MIGRATION: 20260618000001_landing_page_logo.sql =====
 alter table public.platform_settings
   add column if not exists landing_logo_url text not null default '';
-
 
 -- ===== MIGRATION: 20260618000002_promo_materials.sql =====
 -- Create promo_materials table for managing promotional banner materials
@@ -11549,28 +11379,28 @@ create policy "Admin can view promo materials"
   on public.promo_materials
   for select
   using (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   );
 
 create policy "Admin can insert promo materials"
   on public.promo_materials
   for insert
   with check (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   );
 
 create policy "Admin can update promo materials"
   on public.promo_materials
   for update
   using (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   );
 
 create policy "Admin can delete promo materials"
   on public.promo_materials
   for delete
   using (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   );
 
 -- Allow non-authenticated users to read promo materials for marketing purposes
@@ -11582,7 +11412,6 @@ create policy "Anyone can view promo materials"
 -- Create index on created_at for sorting
 create index if not exists idx_promo_materials_created_at 
   on public.promo_materials(created_at desc);
-
 
 -- ===== MIGRATION: 20260618000003_simplify_logo_columns.sql =====
 -- Simplify logo system to a single logo_url column.
@@ -11596,7 +11425,6 @@ alter table public.platform_settings
   drop column if exists logo_url_dashboard_light,
   drop column if exists logo_url_dashboard_dark,
   drop column if exists logo_url_landing_header;
-
 
 -- ===== MIGRATION: 20260626_referral_commissions_table.sql =====
 create table if not exists public.referral_commissions (
@@ -11619,14 +11447,14 @@ alter table public.referral_commissions enable row level security;
 
 create policy "Users can view their own referral commissions"
   on public.referral_commissions for select
-  using (auth.uid() = referrer_id);
+  using (current_setting('app.current_user_id', true)::uuid = referrer_id);
 
 create policy "Admins can view all referral commissions"
   on public.referral_commissions for select
   using (
     exists (
       select 1 from public.user_roles
-      where user_id = auth.uid() and role = 'admin'::public.app_role
+      where user_id = current_setting('app.current_user_id', true)::uuid and role = 'admin'::public.app_role
     )
   );
 
@@ -11825,7 +11653,6 @@ begin
 end;
 $$;
 
-
 -- ===== MIGRATION: 20260627000000_tournament_enhancements.sql =====
 -- 1. Add prize_distribution column for configurable payout splits
 alter table public.tournaments
@@ -12019,7 +11846,6 @@ begin
   return v_awarded;
 end;
 $$;
-
 
 -- ===== MIGRATION: 20260627000001_welcome_bonus_min_deposit_30.sql =====
 create or replace function public.credit_deposit_internal(
@@ -12217,11 +12043,10 @@ begin
 end;
 $$;
 
-
 -- ===== MIGRATION: 20260805_guides_content_secure_rls.sql =====
 -- Fix insecure RLS on guides content tables.
 -- The original migration (20260604_guides_content_management.sql) referenced
--- auth.jwt() -> 'user_metadata' ->> 'role', which is end-user-editable and
+-- current_setting('app.clerk_user_metadata', true)::jsonb -> 'user_metadata' ->> 'role', which is end-user-editable and
 -- therefore MUST NOT be trusted in a security context. Replace those checks with
 -- the server-authoritative user_roles table (admin + content_marketing_manager),
 -- matching the convention used by promo_materials, customer_reviews, etc.
@@ -12238,19 +12063,19 @@ CREATE POLICY "Allow reading published guides"
   ON guides FOR SELECT
   USING (
     is_published = true
-    OR public.has_role(auth.uid(), 'admin'::public.app_role)
-    OR public.has_role(auth.uid(), 'content_marketing_manager'::public.app_role)
+    OR public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    OR public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
   );
 
 CREATE POLICY "Allow staff to manage guides"
   ON guides FOR ALL
   USING (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    OR public.has_role(auth.uid(), 'content_marketing_manager'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    OR public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
   )
   WITH CHECK (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    OR public.has_role(auth.uid(), 'content_marketing_manager'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    OR public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
   );
 
 -- ── guide_content ──
@@ -12261,19 +12086,19 @@ CREATE POLICY "Allow reading published guide content"
   ON guide_content FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM guides WHERE id = guide_content.guide_id AND is_published = true)
-    OR public.has_role(auth.uid(), 'admin'::public.app_role)
-    OR public.has_role(auth.uid(), 'content_marketing_manager'::public.app_role)
+    OR public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    OR public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
   );
 
 CREATE POLICY "Allow staff to manage guide content"
   ON guide_content FOR ALL
   USING (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    OR public.has_role(auth.uid(), 'content_marketing_manager'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    OR public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
   )
   WITH CHECK (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    OR public.has_role(auth.uid(), 'content_marketing_manager'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    OR public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
   );
 
 -- ── guide_media ──
@@ -12284,460 +12109,40 @@ CREATE POLICY "Allow reading media from published guides"
   ON guide_media FOR SELECT
   USING (
     EXISTS (SELECT 1 FROM guides WHERE id = guide_media.guide_id AND is_published = true)
-    OR public.has_role(auth.uid(), 'admin'::public.app_role)
-    OR public.has_role(auth.uid(), 'content_marketing_manager'::public.app_role)
+    OR public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    OR public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
   );
 
 CREATE POLICY "Allow staff to manage guide media"
   ON guide_media FOR ALL
   USING (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    OR public.has_role(auth.uid(), 'content_marketing_manager'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    OR public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
   )
   WITH CHECK (
-    public.has_role(auth.uid(), 'admin'::public.app_role)
-    OR public.has_role(auth.uid(), 'content_marketing_manager'::public.app_role)
+    public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
+    OR public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
   );
 
+-- ===== MIGRATION: 20260818000000_deposit_bonus_per_payment_method.sql =====
+-- Deposit bonus per payment method (M-PESA / Cryptocurrency)
+-- Adds independent admin toggles so the bonus can be enabled for one method
+-- while disabled for the other. Falls back to deposit_bonus_enabled when NULL.
+alter table public.bonus_settings
+  add column if not exists deposit_bonus_mpesa_enabled boolean,
+  add column if not exists deposit_bonus_crypto_enabled boolean;
 
+-- Backfill existing installs: preserve the current global toggle as the default
+-- for both methods so behavior is unchanged until admins opt into per-method control.
+update public.bonus_settings
+   set deposit_bonus_mpesa_enabled = deposit_bonus_enabled,
+       deposit_bonus_crypto_enabled = deposit_bonus_enabled
+ where deposit_bonus_mpesa_enabled is null
+    or deposit_bonus_crypto_enabled is null;
 
--- ===== MIGRATION: 20260824000000_011_copy_trading_system.sql =====
-
--- Migration: 011_copy_trading_system.sql
--- Complete Copy / Social Trading Engine for InitOption
-
--- 1. Extend profiles with copy trading fields
-ALTER TABLE public.profiles
-  ADD COLUMN IF NOT EXISTS is_copy_trading_enabled BOOLEAN DEFAULT true,
-  ADD COLUMN IF NOT EXISTS is_visible BOOLEAN DEFAULT true,
-  ADD COLUMN IF NOT EXISTS trader_bio TEXT,
-  ADD COLUMN IF NOT EXISTS country TEXT,
-  ADD COLUMN IF NOT EXISTS risk_level TEXT DEFAULT 'Medium';
-
--- 2. Extend existing copy_settings table with new specification columns
-ALTER TABLE public.copy_trading_settings RENAME TO copy_trading_settings_old;
-DROP TABLE IF EXISTS public.copy_trading_settings;
-
-ALTER TABLE public.copy_settings
-  ADD COLUMN IF NOT EXISTS copy_percentage NUMERIC DEFAULT 20,
-  ADD COLUMN IF NOT EXISTS minimum_trade_amount NUMERIC DEFAULT 1,
-  ADD COLUMN IF NOT EXISTS maximum_trade_amount NUMERIC DEFAULT 50,
-  ADD COLUMN IF NOT EXISTS stop_balance NUMERIC DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS auto_copy BOOLEAN DEFAULT true,
-  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active',
-  ADD COLUMN IF NOT EXISTS stopped_at TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS stop_reason TEXT;
-
--- Create an alias / view or ensure table name copy_trading_settings exists for full spec compatibility
-CREATE TABLE IF NOT EXISTS public.copy_trading_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  follower_user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  master_user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'paused', 'stopped', 'removed')),
-  copy_percentage NUMERIC NOT NULL DEFAULT 20 CHECK (copy_percentage > 0 AND copy_percentage <= 100),
-  minimum_trade_amount NUMERIC NOT NULL DEFAULT 1 CHECK (minimum_trade_amount > 0),
-  maximum_trade_amount NUMERIC NOT NULL DEFAULT 50 CHECK (maximum_trade_amount >= minimum_trade_amount),
-  stop_balance NUMERIC NOT NULL DEFAULT 0 CHECK (stop_balance >= 0),
-  auto_copy BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  stopped_at TIMESTAMPTZ,
-  stop_reason TEXT,
-  CONSTRAINT copy_trading_settings_no_self_copy CHECK (follower_user_id <> master_user_id),
-  CONSTRAINT copy_trading_settings_unique_pair UNIQUE (follower_user_id, master_user_id)
-);
-
-CREATE INDEX IF NOT EXISTS copy_trading_settings_follower_idx ON public.copy_trading_settings(follower_user_id, status);
-CREATE INDEX IF NOT EXISTS copy_trading_settings_master_idx ON public.copy_trading_settings(master_user_id, status);
-
--- 3. Table copied_trades linking master trade and follower trade
-CREATE TABLE IF NOT EXISTS public.copied_trades (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  master_trade_id UUID NOT NULL REFERENCES public.trades(id) ON DELETE CASCADE,
-  copied_trade_id UUID REFERENCES public.trades(id) ON DELETE SET NULL,
-  master_user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  follower_user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  original_amount NUMERIC NOT NULL,
-  copy_percentage NUMERIC NOT NULL DEFAULT 100,
-  calculated_amount NUMERIC NOT NULL,
-  actual_amount NUMERIC NOT NULL DEFAULT 0,
-  minimum_amount NUMERIC DEFAULT 1,
-  maximum_amount NUMERIC DEFAULT 50,
-  status TEXT NOT NULL DEFAULT 'created' CHECK (status IN ('created', 'executed', 'skipped', 'failed')),
-  skip_reason TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  CONSTRAINT copied_trades_master_follower_unique UNIQUE (master_trade_id, follower_user_id)
-);
-
-CREATE INDEX IF NOT EXISTS copied_trades_master_idx ON public.copied_trades(master_trade_id);
-CREATE INDEX IF NOT EXISTS copied_trades_follower_idx ON public.copied_trades(follower_user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS copied_trades_status_idx ON public.copied_trades(status, created_at DESC);
-
--- 4. Enable RLS and Grant Permissions
-ALTER TABLE public.copy_trading_settings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.copied_trades ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Users can view own copy trading settings" ON public.copy_trading_settings;
-CREATE POLICY "Users can view own copy trading settings" ON public.copy_trading_settings
-  FOR SELECT TO authenticated USING (follower_user_id = auth.uid() OR master_user_id = auth.uid());
-
-DROP POLICY IF EXISTS "Users can manage own copy trading settings" ON public.copy_trading_settings;
-CREATE POLICY "Users can manage own copy trading settings" ON public.copy_trading_settings
-  FOR ALL TO authenticated USING (follower_user_id = auth.uid());
-
-DROP POLICY IF EXISTS "Users can view own copied trades" ON public.copied_trades;
-CREATE POLICY "Users can view own copied trades" ON public.copied_trades
-  FOR SELECT TO authenticated USING (follower_user_id = auth.uid() OR master_user_id = auth.uid());
-
--- 5. Helper procedure to trigger notifications
-CREATE OR REPLACE FUNCTION public.create_copy_trading_notification(
-  p_user_id UUID,
-  p_title TEXT,
-  p_message TEXT,
-  p_type TEXT DEFAULT 'copy_trade'
-)
-RETURNS VOID
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  INSERT INTO public.notifications (user_id, type, title, message, link, is_read, created_at)
-  VALUES (p_user_id, p_type, p_title, p_message, '/social/my-copies', false, now());
-EXCEPTION WHEN OTHERS THEN
-  -- Do not block on notification error
-  NULL;
-END;
-$$;
-
--- 6. Server-side Core Copy Trading Engine
-CREATE OR REPLACE FUNCTION public.process_master_copy_trades(
-  p_master_trade_id UUID
-)
-RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_master_trade public.trades%ROWTYPE;
-  v_master_profile public.profiles%ROWTYPE;
-  v_setting RECORD;
-  v_follower_profile public.profiles%ROWTYPE;
-  v_calc_amount NUMERIC;
-  v_actual_amount NUMERIC;
-  v_percentage NUMERIC;
-  v_min_amount NUMERIC;
-  v_max_amount NUMERIC;
-  v_stop_bal NUMERIC;
-  v_follower_trade_id UUID;
-  v_executed_count INT := 0;
-  v_skipped_count INT := 0;
-  v_failed_count INT := 0;
-  v_master_name TEXT;
-BEGIN
-  -- 1. Fetch master trade
-  SELECT * INTO v_master_trade FROM public.trades WHERE id = p_master_trade_id;
-  IF NOT FOUND THEN
-    RETURN jsonb_build_object('ok', false, 'error', 'Master trade not found');
-  END IF;
-
-  -- Tournament trades are ignored for copy trading
-  IF v_master_trade.tournament_participant_id IS NOT NULL THEN
-    RETURN jsonb_build_object('ok', true, 'copied', 0, 'reason', 'tournament_trade_ignored');
-  END IF;
-
-  -- 2. Fetch master profile
-  SELECT * INTO v_master_profile FROM public.profiles WHERE id = v_master_trade.user_id;
-  IF NOT FOUND OR COALESCE(v_master_profile.is_copy_trading_enabled, true) = false OR COALESCE(v_master_profile.is_visible, true) = false THEN
-    RETURN jsonb_build_object('ok', true, 'copied', 0, 'reason', 'master_copy_disabled');
-  END IF;
-
-  v_master_name := COALESCE(v_master_profile.display_name, v_master_profile.username, 'Master Trader');
-
-  -- 3. Find active followers from both copy_trading_settings and copy_settings
-  FOR v_setting IN
-    SELECT 
-      s.id AS setting_id,
-      s.follower_user_id,
-      s.master_user_id,
-      COALESCE(s.copy_percentage, 20) AS copy_percentage,
-      COALESCE(s.minimum_trade_amount, 1) AS minimum_trade_amount,
-      COALESCE(s.maximum_trade_amount, 50) AS maximum_trade_amount,
-      COALESCE(s.stop_balance, 0) AS stop_balance,
-      COALESCE(s.auto_copy, true) AS auto_copy,
-      COALESCE(s.status, 'active') AS status
-    FROM (
-      SELECT 
-        id, 
-        follower_user_id, 
-        master_user_id, 
-        copy_percentage, 
-        minimum_trade_amount, 
-        maximum_trade_amount, 
-        stop_balance, 
-        auto_copy, 
-        status
-      FROM public.copy_trading_settings
-      WHERE master_user_id = v_master_trade.user_id AND status = 'active' AND auto_copy = true
-      
-      UNION ALL
-      
-      SELECT 
-        cs.id, 
-        cs.user_id AS follower_user_id, 
-        cs.target_user_id AS master_user_id, 
-        COALESCE(cs.copy_percentage, (cs.ratio * 100), 20) AS copy_percentage, 
-        COALESCE(cs.minimum_trade_amount, 1) AS minimum_trade_amount, 
-        COALESCE(cs.max_per_trade, cs.maximum_trade_amount, 50) AS maximum_trade_amount, 
-        COALESCE(cs.stop_balance, 0) AS stop_balance, 
-        (cs.execution_mode = 'automatic') AS auto_copy, 
-        CASE WHEN cs.enabled THEN 'active' ELSE 'paused' END AS status
-      FROM public.copy_settings cs
-      WHERE cs.target_user_id = v_master_trade.user_id AND cs.enabled = true AND cs.execution_mode = 'automatic'
-        AND NOT EXISTS (
-          SELECT 1 FROM public.copy_trading_settings cts 
-          WHERE cts.follower_user_id = cs.user_id AND cts.master_user_id = cs.target_user_id
-        )
-    ) s
-  LOOP
-    BEGIN
-      -- Idempotency check: don't create duplicate copy trade for same master trade & follower
-      IF EXISTS (
-        SELECT 1 FROM public.copied_trades 
-        WHERE master_trade_id = v_master_trade.id AND follower_user_id = v_setting.follower_user_id
-      ) THEN
-        CONTINUE;
-      END IF;
-
-      -- Prevent self-copying
-      IF v_setting.follower_user_id = v_master_trade.user_id THEN
-        CONTINUE;
-      END IF;
-
-      -- Fetch follower profile with lock
-      SELECT * INTO v_follower_profile 
-      FROM public.profiles 
-      WHERE id = v_setting.follower_user_id 
-      FOR UPDATE;
-
-      IF NOT FOUND THEN
-        INSERT INTO public.copied_trades (
-          master_trade_id, master_user_id, follower_user_id, original_amount,
-          copy_percentage, calculated_amount, actual_amount, status, skip_reason
-        ) VALUES (
-          v_master_trade.id, v_master_trade.user_id, v_setting.follower_user_id, v_master_trade.amount,
-          v_setting.copy_percentage, 0, 0, 'failed', 'trader_not_available'
-        );
-        v_failed_count := v_failed_count + 1;
-        CONTINUE;
-      END IF;
-
-      -- Calculate copy amount
-      v_percentage := GREATEST(0.01, LEAST(100.0, v_setting.copy_percentage));
-      v_calc_amount := ROUND((v_master_trade.amount * (v_percentage / 100.0))::numeric, 2);
-      v_min_amount := GREATEST(0.01, v_setting.minimum_trade_amount);
-      v_max_amount := GREATEST(v_min_amount, v_setting.maximum_trade_amount);
-      v_stop_bal := GREATEST(0, v_setting.stop_balance);
-
-      -- Bounds enforcement: below minimum -> SKIP
-      IF v_calc_amount < v_min_amount THEN
-        INSERT INTO public.copied_trades (
-          master_trade_id, master_user_id, follower_user_id, original_amount,
-          copy_percentage, calculated_amount, actual_amount, minimum_amount, maximum_amount, status, skip_reason
-        ) VALUES (
-          v_master_trade.id, v_master_trade.user_id, v_setting.follower_user_id, v_master_trade.amount,
-          v_percentage, v_calc_amount, 0, v_min_amount, v_max_amount, 'skipped', 'below_minimum'
-        );
-        
-        PERFORM public.create_copy_trading_notification(
-          v_setting.follower_user_id,
-          'Copy Trade Skipped',
-          format('A trade from %s was skipped because the calculated amount ($%s) is below your minimum threshold ($%s).', v_master_name, v_calc_amount, v_min_amount)
-        );
-        v_skipped_count := v_skipped_count + 1;
-        CONTINUE;
-      END IF;
-
-      -- Clamp to maximum amount
-      v_actual_amount := LEAST(v_calc_amount, v_max_amount);
-
-      -- Check Stop Balance condition
-      IF v_stop_bal > 0 AND (v_follower_profile.balance <= v_stop_bal OR (v_follower_profile.balance - v_actual_amount) < v_stop_bal) THEN
-        -- Stop copying automatically
-        UPDATE public.copy_trading_settings 
-        SET status = 'stopped', stopped_at = now(), stop_reason = 'stop_balance_reached', updated_at = now()
-        WHERE follower_user_id = v_setting.follower_user_id AND master_user_id = v_master_trade.user_id;
-
-        UPDATE public.copy_settings
-        SET enabled = false, updated_at = now()
-        WHERE user_id = v_setting.follower_user_id AND target_user_id = v_master_trade.user_id;
-
-        INSERT INTO public.copied_trades (
-          master_trade_id, master_user_id, follower_user_id, original_amount,
-          copy_percentage, calculated_amount, actual_amount, minimum_amount, maximum_amount, status, skip_reason
-        ) VALUES (
-          v_master_trade.id, v_master_trade.user_id, v_setting.follower_user_id, v_master_trade.amount,
-          v_percentage, v_calc_amount, v_actual_amount, v_min_amount, v_max_amount, 'skipped', 'stop_balance_reached'
-        );
-
-        PERFORM public.create_copy_trading_notification(
-          v_setting.follower_user_id,
-          'Copy Trading Stopped',
-          format('Copy trading from %s has been stopped because your account balance reached your stop balance of $%s.', v_master_name, v_stop_bal)
-        );
-        v_skipped_count := v_skipped_count + 1;
-        CONTINUE;
-      END IF;
-
-      -- Check Available Balance
-      IF v_follower_profile.balance < v_actual_amount THEN
-        INSERT INTO public.copied_trades (
-          master_trade_id, master_user_id, follower_user_id, original_amount,
-          copy_percentage, calculated_amount, actual_amount, minimum_amount, maximum_amount, status, skip_reason
-        ) VALUES (
-          v_master_trade.id, v_master_trade.user_id, v_setting.follower_user_id, v_master_trade.amount,
-          v_percentage, v_calc_amount, v_actual_amount, v_min_amount, v_max_amount, 'skipped', 'insufficient_balance'
-        );
-
-        PERFORM public.create_copy_trading_notification(
-          v_setting.follower_user_id,
-          'Copy Trade Skipped',
-          format('A trade from %s was skipped due to insufficient account balance.', v_master_name)
-        );
-        v_skipped_count := v_skipped_count + 1;
-        CONTINUE;
-      END IF;
-
-      -- CREATE FOLLOWER TRADE
-      v_follower_trade_id := gen_random_uuid();
-
-      INSERT INTO public.trades (
-        id,
-        user_id,
-        asset_symbol,
-        direction,
-        amount,
-        entry_price,
-        expiry_seconds,
-        payout_rate,
-        status,
-        opened_at,
-        copy_setting_id
-      ) VALUES (
-        v_follower_trade_id,
-        v_setting.follower_user_id,
-        v_master_trade.asset_symbol,
-        v_master_trade.direction,
-        v_actual_amount,
-        v_master_trade.entry_price,
-        v_master_trade.expiry_seconds,
-        v_master_trade.payout_rate,
-        'open',
-        v_master_trade.opened_at,
-        v_setting.setting_id
-      );
-
-      -- DEBIT FOLLOWER BALANCE
-      UPDATE public.profiles
-      SET balance = balance - v_actual_amount,
-          total_trades = total_trades + 1,
-          updated_at = now()
-      WHERE id = v_setting.follower_user_id;
-
-      -- AUDIT LOG
-      INSERT INTO public.trade_balance_audit_logs (
-        user_id, trade_id, event_type, account_scope, asset_symbol, direction, status, amount, payout_rate, change_amount,
-        balance_before, balance_after, available_balance_before, available_balance_after, context
-      ) VALUES (
-        v_setting.follower_user_id, v_follower_trade_id, 'trade_open', 'live', v_master_trade.asset_symbol,
-        v_master_trade.direction, 'open', v_actual_amount, v_master_trade.payout_rate, -v_actual_amount,
-        v_follower_profile.balance, v_follower_profile.balance - v_actual_amount,
-        v_follower_profile.balance, v_follower_profile.balance - v_actual_amount,
-        jsonb_build_object('copied_from_trade_id', v_master_trade.id, 'master_user_id', v_master_trade.user_id)
-      );
-
-      -- RECORD IN copied_trades
-      INSERT INTO public.copied_trades (
-        master_trade_id, copied_trade_id, master_user_id, follower_user_id, original_amount,
-        copy_percentage, calculated_amount, actual_amount, minimum_amount, maximum_amount, status
-      ) VALUES (
-        v_master_trade.id, v_follower_trade_id, v_master_trade.user_id, v_setting.follower_user_id,
-        v_master_trade.amount, v_percentage, v_calc_amount, v_actual_amount, v_min_amount, v_max_amount, 'executed'
-      );
-
-      -- NOTIFY FOLLOWER
-      PERFORM public.create_copy_trading_notification(
-        v_setting.follower_user_id,
-        'Copied Trade Executed',
-        format('%s opened a %s trade on %s. A $%s trade was copied to your account.', v_master_name, UPPER(v_master_trade.direction), v_master_trade.asset_symbol, v_actual_amount)
-      );
-
-      v_executed_count := v_executed_count + 1;
-
-    EXCEPTION WHEN OTHERS THEN
-      -- Log failure for individual follower without crashing whole loop
-      INSERT INTO public.copied_trades (
-        master_trade_id, master_user_id, follower_user_id, original_amount,
-        copy_percentage, calculated_amount, actual_amount, status, skip_reason
-      ) VALUES (
-        v_master_trade.id, v_master_trade.user_id, v_setting.follower_user_id, v_master_trade.amount,
-        COALESCE(v_percentage, 20), COALESCE(v_calc_amount, 0), 0, 'failed', SQLERRM
-      );
-      v_failed_count := v_failed_count + 1;
-    END;
-  END LOOP;
-
-  RETURN jsonb_build_object(
-    'ok', true,
-    'executed', v_executed_count,
-    'skipped', v_skipped_count,
-    'failed', v_failed_count
-  );
-END;
-$$;
-
--- 7. Admin Social Trading Stats Function
-CREATE OR REPLACE FUNCTION public.get_admin_social_stats()
-RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_total_traders INT;
-  v_active_relationships INT;
-  v_total_followers INT;
-  v_copied_today INT;
-  v_volume NUMERIC;
-  v_profit_loss NUMERIC;
-BEGIN
-  SELECT COUNT(DISTINCT user_id) INTO v_total_traders FROM public.trades WHERE status != 'open';
-  
-  SELECT COUNT(*) INTO v_active_relationships 
-  FROM public.copy_trading_settings WHERE status = 'active'
-  + (SELECT COUNT(*) FROM public.copy_settings WHERE enabled = true);
-
-  SELECT COUNT(*) INTO v_total_followers FROM public.follows;
-
-  SELECT COUNT(*) INTO v_copied_today 
-  FROM public.copied_trades WHERE created_at >= CURRENT_DATE;
-
-  SELECT COALESCE(SUM(actual_amount), 0) INTO v_volume 
-  FROM public.copied_trades WHERE status = 'executed';
-
-  SELECT COALESCE(SUM(t.profit - ct.actual_amount), 0) INTO v_profit_loss
-  FROM public.copied_trades ct
-  JOIN public.trades t ON t.id = ct.copied_trade_id
-  WHERE ct.status = 'executed' AND t.status IN ('won', 'lost');
-
-  RETURN jsonb_build_object(
-    'total_traders', COALESCE(v_total_traders, 0),
-    'active_relationships', COALESCE(v_active_relationships, 0),
-    'total_followers', COALESCE(v_total_followers, 0),
-    'copied_today', COALESCE(v_copied_today, 0),
-    'volume', COALESCE(v_volume, 0),
-    'profit_loss', COALESCE(v_profit_loss, 0)
-  );
-END;
-$$;
+-- ===== MIGRATION: 20260819000000_add_preferred_currency.sql =====
+-- Preferred/local display currency for each user's account.
+-- Used to display balances, deposits, withdrawals, trades, payouts and
+-- transaction history in the user's chosen currency. Falls back to USD.
+alter table public.profiles
+  add column if not exists preferred_currency text default 'USD';
