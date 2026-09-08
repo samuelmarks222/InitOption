@@ -14,7 +14,7 @@ const OUT = "neon/adapted_schema.sql";
 const REPLACEMENTS = [
   { from: "auth.uid()", to: "current_setting('app.current_user_id', true)::uuid" },
   { from: "auth.users", to: "public.users" },
-  { from: "auth.role()", to: "'authenticated'::text" },
+  { from: "auth.role()", to: "current_setting('role')::text" },
   { from: "auth.jwt()", to: "current_setting('app.clerk_user_metadata', true)::jsonb" },
 ];
 
