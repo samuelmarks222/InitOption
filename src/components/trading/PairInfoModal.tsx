@@ -3,6 +3,7 @@ import { ArrowRight, X } from "lucide-react";
 import AssetSymbolMark from "./AssetSymbolMark";
 import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { OTCPriceEngine, TIMEFRAMES, type OHLCCandle, type TimeframeConfig } from "./engine/priceEngine";
 
 interface PairInfoModalProps {
   symbol: string;
@@ -33,6 +34,7 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
   const { getAsset } = useDynamicAssets();
   const { formatMoney } = useCurrency();
   const [selectedTimeframe, setSelectedTimeframe] = useState<"5m" | "60m" | "1d">("5m");
+  const [nowSec, setNowSec] = useState(() => Date.now() / 1000);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -43,34 +45,49 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
   }, [onClose]);
 
   const asset = getAsset(symbol);
-  const currentPrice = asset?.price ?? 1.08523;
+  const basePrice = asset?.price ?? 1.08523;
+  const engine = useMemo(
+    () => new OTCPriceEngine(symbol, basePrice, asset?.type),
+    [asset?.type, basePrice, symbol],
+  );
   const payout = Math.round(asset?.maxProfit ?? 74);
 
   const seed = symbol.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const buySentiment = 60 + (seed % 35);
+  const chartConfig: TimeframeConfig = selectedTimeframe === "5m"
+    ? TIMEFRAMES["5m"]
+    : selectedTimeframe === "60m"
+      ? TIMEFRAMES["1h"]
+      : { ...TIMEFRAMES["2h"], label: "1d", historical: 72 };
+  const candles = useMemo(
+    () => engine.generateHistory(chartConfig, nowSec, chartConfig.historical),
+    [chartConfig, engine, nowSec],
+  );
+  const currentPrice = candles[candles.length - 1]?.close ?? basePrice;
+  const firstPrice = candles[0]?.open ?? currentPrice;
+  const changeFor = (periodCandles: number) => {
+    const start = candles[Math.max(0, candles.length - periodCandles)]?.open ?? firstPrice;
+    return ((currentPrice - start) / start) * 100;
+  };
+  const sessionChange = asset?.change24h ?? changeFor(12);
+  const buySentiment = Math.max(5, Math.min(95, Math.round(50 + sessionChange * 3)));
   const sellSentiment = 100 - buySentiment;
-  const sessionChange = ((seed % 17) / 100 - 0.08).toFixed(2);
-  const change5m = ((seed % 11) / 100 - 0.03).toFixed(2);
-  const change60m = ((seed % 23) / 100 - 0.10).toFixed(2);
-  const change1d = ((seed % 31) / 100 - 0.15).toFixed(2);
-  const change1m = ((seed % 19) / 100 - 0.09).toFixed(2);
-  const change1y = ((seed % 41) / 100 - 0.20).toFixed(2);
-  const changeYtd = ((seed % 29) / 100 - 0.05).toFixed(2);
+  const change5m = changeFor(1);
+  const change60m = changeFor(12);
+  const change1d = changeFor(72);
+  const change1m = asset?.change24h ?? changeFor(72);
+  const change1y = asset?.change24h ?? changeFor(72);
+  const changeYtd = asset?.change24h ?? changeFor(72);
 
   const pointsCount = 40;
   const chartWidth = 400;
   const chartHeight = 150;
 
-  const rawValues = useMemo(() => {
-    const timeframeMultiplier = selectedTimeframe === "5m" ? 1 : selectedTimeframe === "60m" ? 2.2 : 4;
-    return Array.from({ length: pointsCount }, (_, i) => {
-      const progress = i / (pointsCount - 1);
-      const trend = Math.sin(progress * Math.PI * (selectedTimeframe === "1d" ? 1.8 : 2.6) + seed) * 0.0014;
-      const wave = Math.sin(i * 1.7 + seed * 0.3) * 0.0007 * timeframeMultiplier;
-      const drift = (progress - 0.35) * 0.0006 * timeframeMultiplier;
-      return currentPrice + trend * timeframeMultiplier + wave + drift;
-    });
-  }, [currentPrice, seed, selectedTimeframe]);
+  useEffect(() => {
+    const interval = window.setInterval(() => setNowSec(Date.now() / 1000), 1000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const rawValues = candles.slice(-pointsCount).map((candle: OHLCCandle) => candle.close);
 
   const minV = Math.min(...rawValues);
   const maxV = Math.max(...rawValues);
@@ -82,7 +99,9 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
   }));
 
   const smoothPathD = getSmoothPathD(points);
-  const areaPathD = `${smoothPathD} L ${points[points.length - 1].x} ${chartHeight} L ${points[0].x} ${chartHeight} Z`;
+  const areaPathD = points.length > 1
+    ? `${smoothPathD} L ${points[points.length - 1].x} ${chartHeight} L ${points[0].x} ${chartHeight} Z`
+    : "";
 
   const today = new Date();
   const scheduleRows = Array.from({ length: 7 }).map((_, i) => {
@@ -166,7 +185,7 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
         <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-xs font-bold sm:grid-cols-4">
           <div>
             <p className="text-[11px] font-medium text-[#9ba6bb]">Minimum investment</p>
-            <p className="mt-0.5 font-black text-white">$1</p>
+            <p className="mt-0.5 font-black text-white">{formatMoney(1)}</p>
           </div>
 
           <div>
