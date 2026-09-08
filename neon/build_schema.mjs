@@ -68,6 +68,7 @@ create extension if not exists pgcrypto;
 create role authenticated;
 create role anon;
 create role service_role;
+grant service_role to neondb_owner;
 -- app.current_user_id session variable carries the Clerk user id per-request:
 --   SET LOCAL app.current_user_id = '<clerk_user_id>';
 `;

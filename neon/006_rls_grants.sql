@@ -10,6 +10,7 @@
 
 -- (a) membership needed by the Node owner connection for `SET ROLE authenticated`
 grant authenticated to neondb_owner;
+grant service_role to neondb_owner;
 
 grant select, insert, update, delete on public.announcements to authenticated;
 grant select, insert, update, delete on public.assets_config to authenticated;
