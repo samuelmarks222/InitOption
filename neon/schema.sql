@@ -8485,29 +8485,29 @@ begin
     raise exception 'Deposit request not found';
   end if;
 
-  update public.deposit_requests
-  set
-    provider_amount = coalesce(p_provider_amount, provider_amount),
-    provider_callback_received_at = v_now,
-    provider_channel = coalesce(v_provider_channel, provider_channel),
-    provider_checkout_id = coalesce(v_provider_checkout_id, provider_checkout_id),
-    provider_currency = coalesce(v_provider_currency, provider_currency),
-    provider_name = coalesce(v_provider_name, provider_name),
-    provider_payload = coalesce(p_provider_payload, provider_payload, '{}'::jsonb),
-    provider_phone_number = coalesce(v_provider_phone, provider_phone_number),
-    provider_request_id = coalesce(v_provider_request_id, provider_request_id),
-    provider_result_code = coalesce(v_provider_result_code, provider_result_code),
-    provider_result_desc = coalesce(v_provider_result_desc, provider_result_desc),
-    provider_status = case
-      when v_provider_result_code is null then provider_status
-      when v_provider_result_code = '0' then 'completed'
-      else 'failed'
-    end,
-    provider_transaction_ref = coalesce(v_provider_transaction_ref, provider_transaction_ref),
-    updated_at = v_now
-  where id = v_request.id
-  returning *
-  into v_request;
+   update public.deposit_requests
+   set
+     provider_amount = coalesce(p_provider_amount, provider_amount),
+     provider_callback_received_at = v_now,
+     provider_channel = coalesce(v_provider_channel, provider_channel),
+     provider_checkout_id = coalesce(v_provider_checkout_id, provider_checkout_id),
+     provider_currency = coalesce(v_provider_currency, provider_currency),
+     provider_name = coalesce(v_provider_name, provider_name),
+     provider_payload = coalesce(p_provider_payload, provider_payload, '{}'::jsonb),
+     provider_phone_number = coalesce(v_provider_phone, provider_phone_number),
+     provider_request_id = coalesce(v_provider_request_id, provider_request_id),
+     provider_result_code = coalesce(v_provider_result_code, provider_result_code),
+     provider_result_desc = coalesce(v_provider_result_desc, provider_result_desc),
+     provider_status = case
+       when v_provider_result_code is null then provider_status
+       when v_provider_result_code in ('0', '100') then 'pending'
+       else 'failed'
+     end,
+     provider_transaction_ref = coalesce(v_provider_transaction_ref, provider_transaction_ref),
+     updated_at = v_now
+   where id = v_request.id
+   returning *
+   into v_request;
 
   if v_request.status <> 'pending' then
     return jsonb_build_object(
@@ -8517,7 +8517,7 @@ begin
     );
   end if;
 
-  if v_provider_result_code is distinct from '0' then
+  if v_provider_result_code is distinct from '0' and v_provider_result_code is distinct from '100' and v_provider_result_code is distinct from '100' then
     update public.deposit_requests
     set
       admin_note = coalesce(v_provider_result_desc, 'Mobile money deposit failed'),
@@ -8744,7 +8744,7 @@ begin
     provider_result_desc = coalesce(v_provider_result_desc, provider_result_desc),
     provider_status = case
       when v_provider_result_code is null then provider_status
-      when v_provider_result_code = '0' then 'completed'
+      when v_provider_result_code in ('0', '100') then 'pending'
       else 'failed'
     end,
     provider_transaction_ref = coalesce(v_provider_transaction_ref, provider_transaction_ref),
@@ -9782,7 +9782,7 @@ begin
     provider_result_desc = coalesce(v_provider_result_desc, provider_result_desc),
     provider_status = case
       when v_provider_result_code is null then provider_status
-      when v_provider_result_code = '0' then 'completed'
+      when v_provider_result_code in ('0', '100') then 'pending'
       else 'failed'
     end,
     provider_transaction_ref = coalesce(v_provider_transaction_ref, provider_transaction_ref),

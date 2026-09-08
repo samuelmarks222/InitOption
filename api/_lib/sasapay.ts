@@ -121,7 +121,7 @@ export const getSasaPayAccessToken = async () => {
           Authorization: `Basic ${credentials}`,
           "Content-Type": "application/json",
         },
-        body: "{}",
+        body: JSON.stringify({ grant_type: "client_credentials" }),
       } satisfies RequestInit,
     },
   ];
@@ -179,7 +179,8 @@ const sendSasaPayRequest = async (path: string, payload: Record<string, unknown>
   const status = typeof data?.status === "boolean" ? data.status : null;
   const responseCode = pickString(data?.ResponseCode, data?.responseCode);
 
-  if (!response.ok || status === false || (responseCode && responseCode !== "0")) {
+  const validResponseCodes = ["0", "100"];
+  if (!response.ok || status === false || (responseCode && !validResponseCodes.includes(responseCode))) {
     throw new Error(detail || `SasaPay returned HTTP ${response.status}`);
   }
 

@@ -8500,7 +8500,7 @@ begin
     provider_result_desc = coalesce(v_provider_result_desc, provider_result_desc),
     provider_status = case
       when v_provider_result_code is null then provider_status
-      when v_provider_result_code = '0' then 'completed'
+      when v_provider_result_code in ('0', '100') then 'pending'
       else 'failed'
     end,
     provider_transaction_ref = coalesce(v_provider_transaction_ref, provider_transaction_ref),
@@ -8517,7 +8517,7 @@ begin
     );
   end if;
 
-  if v_provider_result_code is distinct from '0' then
+  if v_provider_result_code is distinct from '0' and v_provider_result_code is distinct from '100' then
     update public.deposit_requests
     set
       admin_note = coalesce(v_provider_result_desc, 'Mobile money deposit failed'),
@@ -8744,7 +8744,7 @@ begin
     provider_result_desc = coalesce(v_provider_result_desc, provider_result_desc),
     provider_status = case
       when v_provider_result_code is null then provider_status
-      when v_provider_result_code = '0' then 'completed'
+      when v_provider_result_code in ('0', '100') then 'pending'
       else 'failed'
     end,
     provider_transaction_ref = coalesce(v_provider_transaction_ref, provider_transaction_ref),
@@ -9782,7 +9782,7 @@ begin
     provider_result_desc = coalesce(v_provider_result_desc, provider_result_desc),
     provider_status = case
       when v_provider_result_code is null then provider_status
-      when v_provider_result_code = '0' then 'completed'
+      when v_provider_result_code in ('0', '100') then 'pending'
       else 'failed'
     end,
     provider_transaction_ref = coalesce(v_provider_transaction_ref, provider_transaction_ref),
