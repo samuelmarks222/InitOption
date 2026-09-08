@@ -131,6 +131,15 @@ export const getSasaPayAccessToken = async () => {
         body: JSON.stringify({ grant_type: "client_credentials" }),
       } satisfies RequestInit,
     },
+    {
+      url: `${getSasaPayBaseUrl()}/api/v1/auth/token/?grant_type=client_credentials`,
+      init: {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${credentials}`,
+        },
+      } satisfies RequestInit,
+    },
   ];
 
   let lastError = "Unknown authentication error";

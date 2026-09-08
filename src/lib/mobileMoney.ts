@@ -34,7 +34,7 @@ const getAccessToken = (forceRefresh = false) => getAppwriteIdToken(forceRefresh
 const postAuthenticatedJson = async <T>(path: string, body: Record<string, unknown>) => {
   const accessToken = await getAccessToken();
 
-  const response = await fetch(path, {
+  let response = await fetch(path, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -42,6 +42,20 @@ const postAuthenticatedJson = async <T>(path: string, body: Record<string, unkno
     },
     body: JSON.stringify(body),
   });
+
+  if (response.status === 401) {
+    const refreshedToken = await getAccessToken(true);
+    if (refreshedToken) {
+      response = await fetch(path, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${refreshedToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+    }
+  }
 
   let payload: { error?: string } & Partial<T> = {};
 

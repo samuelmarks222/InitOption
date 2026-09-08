@@ -62,6 +62,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   let depositRequestId: string | null = null;
   let normalizedPhoneNumber: string | null = null;
   let amountKes = 0;
+  let failedStage = "validation";
 
   try {
     const body = (await readJsonRequestBody(request)) as JsonObject & RequestPayload;
@@ -95,12 +96,14 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
     const userId = clerkUserIdToUuid(clerkUserId);
 
+    failedStage = "bonus_validation";
     const { bonusAmount, selectedOffer } = await resolveSelectedBonusOffer({
       amount: amountUsd,
       bonusOfferId,
       userId,
     });
 
+    failedStage = "deposit_request";
     const requestRows = await userRpc("request_deposit_review", clerkUserId, {
       p_amount: amountUsd,
       p_method: MPESA_METHOD_LABEL,
@@ -140,6 +143,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       );
     }
 
+    failedStage = "provider_request";
     const sasaPayResponse = await requestSasaPayStkPush({
       accountReference: depositRequestId,
       amountKes,
@@ -167,6 +171,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       asString(sasaPayResponse.responseDescription) ||
       asString(sasaPayResponse.detail);
 
+    failedStage = "deposit_update";
     await query(
       `update deposit_requests
           set provider_amount = $1, provider_channel = $2, provider_checkout_id = $3, provider_currency = $4,
@@ -226,6 +231,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     console.error("Mobile money deposit initiation failed", error);
     sendJson(response, 500, {
       error: error instanceof Error ? error.message : "Failed to initiate mobile money deposit",
+      stage: failedStage,
     });
   }
 }
