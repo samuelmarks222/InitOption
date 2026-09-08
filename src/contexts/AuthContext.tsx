@@ -201,7 +201,14 @@ const apiFetch = async (path: string, opts: RequestInit = {}): Promise<unknown> 
   }
   headers.set("Content-Type", "application/json");
 
-  const res = await fetch(`/api${path}`, { ...opts, headers });
+  let res = await fetch(`/api${path}`, { ...opts, headers });
+  if (res.status === 401) {
+    const refreshedToken = await getIdToken(true);
+    if (refreshedToken) {
+      headers.set("Authorization", `Bearer ${refreshedToken}`);
+      res = await fetch(`/api${path}`, { ...opts, headers });
+    }
+  }
   const payload = await res.json().catch(() => ({}));
 
   if (!res.ok) {

@@ -29,7 +29,7 @@ export interface MobileMoneyWithdrawalPayload {
 
 import { getAppwriteIdToken } from "@/integrations/appwrite/authService";
 
-const getAccessToken = () => getAppwriteIdToken();
+const getAccessToken = (forceRefresh = false) => getAppwriteIdToken(forceRefresh);
 
 const postAuthenticatedJson = async <T>(path: string, body: Record<string, unknown>) => {
   const accessToken = await getAccessToken();

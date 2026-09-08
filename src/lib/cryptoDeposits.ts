@@ -505,7 +505,7 @@ export const getLatestOpenCryptoDepositInstruction = async ({
   userId: string;
 }): Promise<CryptoDepositInstructionWithMethod | null> => {
   let query = api.from("crypto_deposit_instructions")
-    .select("*, payment_method:crypto_payment_methods(*)")
+    .select("*")
     .eq("user_id", userId)
     .in("instruction_status", ["awaiting_payment", "payment_detected", "confirming"])
     .order("created_at", { ascending: false })
@@ -518,49 +518,28 @@ export const getLatestOpenCryptoDepositInstruction = async ({
   const response = await query.maybeSingle();
 
   if (response.error) {
-    // Embedded relations are convenient but can fail independently when a
-    // deployment has an older or incomplete foreign-key schema. Restore the
-    // instruction itself, then load its payment method separately.
-    let fallbackQuery = api
-      .from("crypto_deposit_instructions")
-      .select("*")
-      .eq("user_id", userId)
-      .in("instruction_status", ["awaiting_payment", "payment_detected", "confirming"])
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    if (paymentMethodId) {
-      fallbackQuery = fallbackQuery.eq("payment_method_id", paymentMethodId);
-    }
-
-    const fallback = await fallbackQuery.maybeSingle();
-
-    if (fallback.error) {
-      throw withAutoCryptoMigrationHint(response.error);
-    }
-
-    const instruction = fallback.data as CryptoDepositInstructionWithMethod | null;
-    if (!instruction?.payment_method_id) {
-      return instruction;
-    }
-
-    const methodResponse = await api
-      .from("crypto_payment_methods")
-      .select("*")
-      .eq("id", instruction.payment_method_id)
-      .maybeSingle();
-
-    if (methodResponse.error) {
-      throw withAutoCryptoMigrationHint(methodResponse.error);
-    }
-
-    return {
-      ...instruction,
-      payment_method: methodResponse.data ?? null,
-    };
+    throw withAutoCryptoMigrationHint(response.error);
   }
 
-  return (response.data ?? null) as CryptoDepositInstructionWithMethod | null;
+  const instruction = response.data as CryptoDepositInstructionRecord | null;
+  if (!instruction?.payment_method_id) {
+    return instruction ? { ...instruction, payment_method: null } : null;
+  }
+
+  const methodResponse = await api
+    .from("crypto_payment_methods")
+    .select("*")
+    .eq("id", instruction.payment_method_id)
+    .maybeSingle();
+
+  if (methodResponse.error) {
+    throw withAutoCryptoMigrationHint(methodResponse.error);
+  }
+
+  return {
+    ...instruction,
+    payment_method: methodResponse.data ?? null,
+  };
 };
 
 // -------------------------------------------------------------------

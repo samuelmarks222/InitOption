@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { VipTierConfig, calculateVipTier } from "@/lib/vip";
+import { getAppwriteIdToken } from "@/integrations/appwrite/authService";
 
 interface UserProfile {
   id?: string;
@@ -45,7 +46,17 @@ export const VipProvider = ({ children, initialUser }: VipProviderProps) => {
 
   const fetchUserProfile = async (): Promise<UserProfile | null> => {
     try {
-      const response = await fetch("/api/user/profile");
+      const send = async (forceRefresh: boolean) => {
+        const token = await getAppwriteIdToken(forceRefresh);
+        return fetch("/api/user/profile", {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+      };
+
+      let response = await send(false);
+      if (response.status === 401) {
+        response = await send(true);
+      }
       if (!response.ok) {
         if (response.status === 401) {
           return null;
