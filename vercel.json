@@ -17,11 +17,11 @@
     },
     {
       "path": "/api/cron/dispatch-announcements",
-      "schedule": "* * * * *"
+      "schedule": "0 7 * * *"
     },
     {
       "path": "/api/cron/process-emails",
-      "schedule": "* * * * *"
+      "schedule": "0 8 * * *"
     }
   ],
   "headers": [
