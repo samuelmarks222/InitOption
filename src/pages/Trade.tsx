@@ -1455,14 +1455,14 @@ const Trade = () => {
           onOpenSettings={() => handleOpenProfile("settings")} onOpenHistory={() => {}}
           highlightDepositButton={Boolean(depositGuideReason)} />
           {depositGuideReason && accountType === "live" && (
-            <div className="mx-4 mt-3 flex items-center justify-between gap-3 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3">
-              <div className="text-sm">
-                <p className="font-bold text-amber-300">{depositGuideReason === "deposit_required" ? "No funds available" : "Insufficient balance"}</p>
-                <p className="text-white/70">{depositGuideReason === "deposit_required" ? "Deposit to start trading live." : "Your live balance is too low for this trade. Please deposit."}</p>
-              </div>
-              <div className="flex gap-2 shrink-0">
-                <button onClick={() => setDepositGuideReason(null)} className="h-9 rounded-lg border border-white/10 bg-white/5 px-4 text-sm font-bold text-white">Dismiss</button>
-                <button onClick={openDepositPage} className="h-9 rounded-lg bg-[#20be7a] px-5 text-sm font-bold text-white">Deposit</button>
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4">
+              <div className="w-full max-w-[360px] rounded-2xl border border-white/10 bg-[#121927] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+                <h3 className="text-[18px] font-bold text-white">{depositGuideReason === "deposit_required" ? "No funds available" : "Insufficient balance"}</h3>
+                <p className="mt-2 text-sm leading-5 text-white/60">{depositGuideReason === "deposit_required" ? "Your live account has no funds. Deposit to start trading live, or switch to Demo." : "Your live balance is too low for this trade. Please deposit to continue."}</p>
+                <div className="mt-6 flex gap-3">
+                  <button onClick={() => setDepositGuideReason(null)} className="flex-1 h-10 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-white">Maybe later</button>
+                  <button onClick={openDepositPage} className="flex-1 h-10 rounded-xl bg-[#0fa053] text-sm font-bold text-white shadow-[0_8px_24px_rgba(15,160,83,0.3)]">Deposit</button>
+                </div>
               </div>
             </div>
           )}
