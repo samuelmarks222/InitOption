@@ -72,6 +72,7 @@
     { "source": "/api/cloudinary/public-url", "destination": "/api/system?route=cloudinary-public-url" },
     { "source": "/api/cloudinary/exists", "destination": "/api/system?route=cloudinary-exists" },
     { "source": "/api/pusher/auth", "destination": "/api/system?route=pusher-auth" },
+    { "source": "/api/cron", "destination": "/api/system?resource=cron" },
     { "source": "/api/crypto/deposit-callback", "destination": "/api/crypto/create-payment?__callback=1" },
     { "source": "/api/crypto/plisio-methods", "destination": "/api/crypto/create-payment?route=plisio-methods" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
