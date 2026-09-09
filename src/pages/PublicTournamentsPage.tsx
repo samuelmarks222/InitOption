@@ -77,8 +77,8 @@ function generateLeaderboard() {
   const rng = seededRandom(42);
   const traders: { id: string; name: string; country: string; profit: number; trades: number; wins: number }[] = [];
   for (let i = 0; i < TOTAL_LEADERBOARD; i++) {
-    const fn = FIRST_NAMES[i % FIRST_NAMES.length];
-    const ln = LAST_NAMES[Math.floor(i / FIRST_NAMES.length) % LAST_NAMES.length];
+    const fn = FIRST_NAMES[Math.floor(rng() * FIRST_NAMES.length)];
+    const ln = LAST_NAMES[Math.floor(rng() * LAST_NAMES.length)];
     const profit = Number(((rng() - 0.12) * 35000).toFixed(2));
     const trades = Math.floor(rng() * 500 + 5);
     const wins = Math.floor(trades * (0.38 + rng() * 0.52));

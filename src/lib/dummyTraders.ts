@@ -62,8 +62,8 @@ export function getDummyTraders(count: number, excludeUserIds: string[] = [], se
   let idx = 0;
 
   while (result.length < count) {
-    const firstName = FIRST_NAMES[idx % FIRST_NAMES.length];
-    const lastName = LAST_NAMES[Math.floor(idx / FIRST_NAMES.length) % LAST_NAMES.length];
+    const firstName = FIRST_NAMES[Math.floor(rng() * FIRST_NAMES.length)];
+    const lastName = LAST_NAMES[Math.floor(rng() * LAST_NAMES.length)];
     const name = `${firstName} ${lastName}`;
     const country = COUNTRIES[Math.floor(rng() * COUNTRIES.length)];
     const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=dummy-${seedNum}-${idx}`;
