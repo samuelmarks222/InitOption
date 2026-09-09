@@ -35,6 +35,7 @@ const getUnixTime = (value: unknown) => {
 };
 
 export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, liveTime, liveLogical }: Props) => {
+  return null;
   const containerRef = useRef<HTMLDivElement>(null);
   const liveRef = useRef({ livePrice, liveTime, liveLogical });
 
