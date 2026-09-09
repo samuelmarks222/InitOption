@@ -130,11 +130,10 @@ export const LiveChartBeacon = ({ chart, series, timeframeSeconds, livePrice, li
 
       const pulseMix = (Math.sin(performance.now() / 210) + 1) / 2;
       const pulseScale = 0.8 + pulseMix * 1.0;
-      const clampedY = Math.min(Math.max(8, y), Math.max(8, host.clientHeight - 8));
 
       marker.style.opacity = "1";
       marker.style.left = `${x}px`;
-      marker.style.top = `${clampedY}px`;
+      marker.style.top = `${y}px`;
 
       pulse.style.opacity = `${0.48 * (1 - pulseMix)}`;
       pulse.style.transform = `translate(-50%, -50%) scale(${pulseScale})`;
