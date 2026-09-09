@@ -215,13 +215,13 @@ export const simulateDeterministicTickPrice = ({
   const shock =
     safeBasePrice *
     stepRatio *
-    (fastNoise * 0.9 + slowNoise * 0.42 + waveOne * 0.38 + waveTwo * 0.2 + microPulse * 0.58);
+    (fastNoise * 0.45 + slowNoise * 0.22 + waveOne * 0.18 + waveTwo * 0.1 + microPulse * 0.25);
   const intrabarShock =
     safeBasePrice *
     stepRatio *
-    0.78 *
-    (intrabarSwing * 0.66 + intrabarNoise * 0.4);
-  const nextVelocity = velocity * 0.5 + shock * 0.72 + intrabarShock;
+    0.35 *
+    (intrabarSwing * 0.33 + intrabarNoise * 0.2);
+  const nextVelocity = velocity * 0.72 + shock * 0.45 + intrabarShock;
   const meanReversionStrength = clamp(0.035 + marketTimeframeSeconds / 1600, 0.035, 0.11);
   const meanReversion = (safeAnchorPrice - referencePrice) * meanReversionStrength;
   const anchorDistanceRatio =
