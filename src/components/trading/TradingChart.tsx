@@ -2214,66 +2214,20 @@ const TradingChart = ({
 
   const beginLiveInterpolation = useCallback(() => {
     const target = liveTargetRef.current;
-    const displayed = liveDisplayRef.current;
-    if (!target || !displayed || !mainSeriesRef.current) return;
-    if (liveInterpRafRef.current !== null) return;
-
-    liveInterpLastFrameRef.current = performance.now();
-
-    const step = () => {
-      const currentTarget = liveTargetRef.current;
-      const currentDisplayed = liveDisplayRef.current;
-      if (!currentTarget || !currentDisplayed || !mainSeriesRef.current) {
-        stopLiveInterpolation();
-        return;
-      }
-
-      const previousTickPrice = previousTickPriceRef.current ?? currentDisplayed.close;
-      const currentTickPrice = currentTickPriceRef.current ?? currentTarget.close;
-      const progress = Math.min(
-        1,
-        Math.max(
-          0,
-          (performance.now() - tickTransitionStartedRef.current) /
-            Math.max(LIVE_TICK_MIN_INTERVAL_MS, tickTransitionDurationRef.current),
-        ),
+    if (!target || !mainSeriesRef.current) return;
+    // Cancel any pending interpolation and immediately render authoritative price
+    // No lerp: REAL TICK -> AUTHORITATIVE PRICE -> UPDATE OHLC -> RENDER
+    if (liveInterpRafRef.current !== null) {
+      cancelAnimationFrame(liveInterpRafRef.current);
+      liveInterpRafRef.current = null;
+    }
+    liveDisplayRef.current = { ...target };
+    if (mainUpdateSchedulerRef.current) {
+      mainUpdateSchedulerRef.current.update(
+        buildMainSeriesUpdatePayload(chartTypeRef.current, target, historyRef.current),
       );
-      const epsilon = Math.max(LIVE_CANDLE_SETTLE_EPSILON, Math.abs(currentTarget.close) * 1e-7);
-      let close = previousTickPrice + (currentTickPrice - previousTickPrice) * progress;
-      if (Math.abs(currentTarget.close - close) < epsilon) close = currentTarget.close;
-
-      const open = currentTarget.open;
-      const high = Math.max(open, currentTarget.high, close);
-      const low = Math.min(open, currentTarget.low, close);
-
-      const next: OHLCCandle = {
-        time: currentTarget.time,
-        open,
-        high,
-        low,
-        close,
-        volume: currentTarget.volume,
-      };
-      liveDisplayRef.current = next;
-
-      if (mainUpdateSchedulerRef.current) {
-        mainUpdateSchedulerRef.current.update(
-          buildMainSeriesUpdatePayload(chartTypeRef.current, next, historyRef.current),
-        );
-      }
-
-      const settled = progress >= 1 && close === currentTarget.close;
-      if (settled) {
-        liveInterpRafRef.current = null;
-        liveInterpLastFrameRef.current = 0;
-        return;
-      }
-
-      liveInterpRafRef.current = requestAnimationFrame(step);
-    };
-
-    liveInterpRafRef.current = requestAnimationFrame(step);
-  }, [stopLiveInterpolation]);
+    }
+  }, []);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
