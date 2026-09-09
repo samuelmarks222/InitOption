@@ -468,7 +468,27 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       }
     }
 
-    const requestPayload = (requestData ?? {}) as {
+    // After creating the withdrawal request, send verification code
+    if (requestData) {
+      const requestPayload = requestData as {
+        request_id?: string | null;
+        status?: string | null;
+      };
+      const requestId = asString(requestPayload.request_id);
+
+      if (requestId) {
+        // Send verification code
+        try {
+          await rpc("send_withdrawal_verification_code", {
+            p_withdrawal_request_id: requestId,
+          });
+        } catch (verificationError) {
+          console.error("Failed to send withdrawal verification code", verificationError);
+          // Don't fail the request, just log the error
+        }
+      }
+
+      const requestPayload = requestData as {
       amount?: number | null;
       amount_kes?: number | null;
       approval_required?: boolean;

@@ -297,6 +297,15 @@ export default async function handler(request: ApiRequest, response: ApiResponse
           request_id: requestId,
           status: "pending",
         });
+
+        // Send withdrawal verification code
+        try {
+          await rpc("send_withdrawal_verification_code", {
+            p_withdrawal_request_id: requestId,
+          });
+        } catch (verificationError) {
+          console.error("Failed to send withdrawal verification code", verificationError);
+        }
         return;
       }
 
