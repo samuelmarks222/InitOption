@@ -1454,6 +1454,18 @@ const Trade = () => {
           onResetDemoBalance={() => handleDemoBalanceUpdate(DEFAULT_DEMO_BALANCE)}
           onOpenSettings={() => handleOpenProfile("settings")} onOpenHistory={() => {}}
           highlightDepositButton={Boolean(depositGuideReason)} />
+          {depositGuideReason && accountType === "live" && (
+            <div className="mx-4 mt-3 flex items-center justify-between gap-3 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3">
+              <div className="text-sm">
+                <p className="font-bold text-amber-300">{depositGuideReason === "deposit_required" ? "No funds available" : "Insufficient balance"}</p>
+                <p className="text-white/70">{depositGuideReason === "deposit_required" ? "Deposit to start trading live." : "Your live balance is too low for this trade. Please deposit."}</p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button onClick={() => setDepositGuideReason(null)} className="h-9 rounded-lg border border-white/10 bg-white/5 px-4 text-sm font-bold text-white">Dismiss</button>
+                <button onClick={openDepositPage} className="h-9 rounded-lg bg-[#20be7a] px-5 text-sm font-bold text-white">Deposit</button>
+              </div>
+            </div>
+          )}
 
           <div className="flex-1 flex w-full overflow-hidden min-h-0" style={{ background: "var(--trading-workspace-bg)" }}>
             {/* Left sidebar — hidden on mobile (< 1024px) */}
