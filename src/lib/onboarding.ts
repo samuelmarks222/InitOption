@@ -22,6 +22,26 @@ export const getDemoBalanceStorageKey = (userId: string) => `demo_balance:${user
 export const getNewUserPromptStorageKey = (userId: string) => `new_user_prompt_seen:${userId}`;
 export const getNewUserAccountChoiceStorageKey = (userId: string) => `new_user_account_choice_seen:${userId}`;
 
+export const ensureDemoBalanceInitialized = (userId: string) => {
+  if (typeof window === "undefined") return DEFAULT_DEMO_BALANCE;
+  try {
+    const key = getDemoBalanceStorageKey(userId);
+    const raw = window.localStorage.getItem(key);
+    if (raw === null) {
+      window.localStorage.setItem(key, String(DEFAULT_DEMO_BALANCE));
+      return DEFAULT_DEMO_BALANCE;
+    }
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      window.localStorage.setItem(key, String(DEFAULT_DEMO_BALANCE));
+      return DEFAULT_DEMO_BALANCE;
+    }
+    return parsed;
+  } catch {
+    return DEFAULT_DEMO_BALANCE;
+  }
+};
+
 export const readDemoBalanceStorage = (userId: string) => {
   if (typeof window === "undefined") return DEFAULT_DEMO_BALANCE;
 

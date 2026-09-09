@@ -17,6 +17,7 @@ import {
 } from "@/integrations/appwrite/authService";
 import { clearAuthRestorePath } from "@/lib/authRedirect";
 import { shouldNormalizeSeededLiveBalance } from "@/lib/live-balance";
+import { ensureDemoBalanceInitialized } from "@/lib/onboarding";
 import type { AuthProfile, ProfileUpdateInput } from "@/types/profile";
 
 interface AuthContextType {
@@ -410,6 +411,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (activeProfileUserIdRef.current !== userId) {
         return;
       }
+
+      // Ensure demo balance exists for every login (new users get $10,000 demo automatically)
+      try { ensureDemoBalanceInitialized(userId); } catch {}
 
       setProfile(mergedProfile);
 
