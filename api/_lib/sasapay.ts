@@ -23,6 +23,10 @@ const getSasaPayBaseUrl = () => {
   }
 
   const environment = (process.env.SASAPAY_ENVIRONMENT?.trim() || "sandbox").toLowerCase();
+  // SasaPay docs: sandbox = https://sandbox.sasapay.app, production = https://api.sasapay.app (not https://production.sasapay.app)
+  if (environment === "production" || environment === "live" || environment === "prod") {
+    return "https://api.sasapay.app";
+  }
   return `https://${environment}.sasapay.app`;
 };
 
@@ -158,12 +162,14 @@ export const getSasaPayAccessToken = async () => {
     }
 
     lastError =
-      pickString(payload?.detail, payload?.error, payload?.message) || `HTTP ${response.status}`;
+      pickString(payload?.detail, payload?.error, payload?.message, payload?.msg) || `HTTP ${response.status}`;
+    // Log full context for debugging (without leaking credentials)
+    console.error(`SasaPay auth attempt failed: url=${attempt.url.split('?')[0]} status=${response.status} error=${lastError} payload=${JSON.stringify(payload)?.slice(0,500)}`);
     accessToken = null;
   }
 
   if (!accessToken) {
-    throw new Error(`SasaPay authentication failed: ${lastError}`);
+    throw new Error(`SasaPay authentication failed: ${lastError} (baseUrl=${getSasaPayBaseUrl()} env=${process.env.SASAPAY_ENVIRONMENT || 'sandbox'})`);
   }
 
   cachedAccessToken = accessToken;
