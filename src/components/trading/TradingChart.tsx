@@ -2240,7 +2240,10 @@ const TradingChart = ({
     }
     // Visual interpolation only between consecutive real ticks (no artificial prices)
     // If no tick arrives, price remains unchanged (no extrapolation)
-    const duration = 280;
+    const duration = Math.min(
+      320,
+      Math.max(120, (tickTransitionDurationRef.current || 240) * 0.8),
+    );
     const startTime = performance.now();
     tickTransitionStartedRef.current = startTime;
 
