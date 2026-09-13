@@ -2214,71 +2214,14 @@ const TradingChart = ({
 
   const beginLiveInterpolation = useCallback(() => {
     const target = liveTargetRef.current;
-    const displayed = liveDisplayRef.current;
-    if (!target || !displayed || !mainSeriesRef.current) {
-      // No prior display, render immediately
-      if (!target || !mainSeriesRef.current) return;
-      liveDisplayRef.current = { ...target };
-      mainUpdateSchedulerRef.current?.update(
-        buildMainSeriesUpdatePayload(chartTypeRef.current, target, historyRef.current),
-      );
-      return;
-    }
-    // Cancel previous transition and prioritize newest authoritative tick
-    if (liveInterpRafRef.current !== null) {
-      cancelAnimationFrame(liveInterpRafRef.current);
-      liveInterpRafRef.current = null;
-    }
-    const startPrice = displayed.close;
-    const endPrice = target.close;
-    if (startPrice === endPrice) {
-      liveDisplayRef.current = { ...target };
-      mainUpdateSchedulerRef.current?.update(
-        buildMainSeriesUpdatePayload(chartTypeRef.current, target, historyRef.current),
-      );
-      return;
-    }
-    // Visual interpolation only between consecutive real ticks (no artificial prices)
-    // If no tick arrives, price remains unchanged (no extrapolation)
-    // Use fixed duration for consistent, smooth feel like professional platforms
-    const duration = 300; // Fixed 300ms for smooth, professional feel
-    const startTime = performance.now();
-    tickTransitionStartedRef.current = startTime;
-
-    const step = () => {
-      const currentTarget = liveTargetRef.current;
-      if (!currentTarget || !mainSeriesRef.current) {
-        stopLiveInterpolation();
-        return;
-      }
-      const elapsed = performance.now() - startTime;
-      const progress = Math.min(1, elapsed / duration);
-      // Ease-out cubic for natural, professional feel (not linear)
-      const easedProgress = 1 - Math.pow(1 - progress, 3);
-      // If a newer tick overrode target, this frame will be cancelled by next beginLiveInterpolation
-      const close = startPrice + (endPrice - startPrice) * easedProgress;
-      const high = Math.max(currentTarget.open, currentTarget.high, close);
-      const low = Math.min(currentTarget.open, currentTarget.low, close);
-      const next: OHLCCandle = {
-        time: currentTarget.time,
-        open: currentTarget.open,
-        high,
-        low,
-        close,
-        volume: currentTarget.volume,
-      };
-      liveDisplayRef.current = next;
-      mainUpdateSchedulerRef.current?.update(
-        buildMainSeriesUpdatePayload(chartTypeRef.current, next, historyRef.current),
-      );
-      if (progress >= 1) {
-        liveInterpRafRef.current = null;
-        return;
-      }
-      liveInterpRafRef.current = requestAnimationFrame(step);
-    };
-    liveInterpRafRef.current = requestAnimationFrame(step);
-  }, [stopLiveInterpolation]);
+    if (!target || !mainSeriesRef.current) return;
+    // No interpolation - render authoritative tick immediately like professional platforms
+    // This eliminates jitter/stutter from custom rAF loops
+    liveDisplayRef.current = { ...target };
+    mainUpdateSchedulerRef.current?.update(
+      buildMainSeriesUpdatePayload(chartTypeRef.current, target, historyRef.current),
+    );
+  }, []);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
