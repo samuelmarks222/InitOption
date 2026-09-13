@@ -1771,7 +1771,7 @@ const OscillatorPane = ({
       grid: { vertLines: { color: THEME.grid }, horzLines: { color: THEME.grid } },
       handleScroll: { mouseWheel: false, pressedMouseMove: false, horzTouchDrag: false, vertTouchDrag: false },
       handleScale: { mouseWheel: false, pinch: false, axisPressedMouseMove: false, axisDoubleClickReset: false },
-      animation: { enabled: false },
+      animation: { enabled: true },
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: { visible: false, labelVisible: false },
@@ -2895,7 +2895,7 @@ const TradingChart = ({
           vertLines: { color: chartGridColor },
           horzLines: { color: chartGridColor }
         },
-        animation: { enabled: false },
+animation: { enabled: true },
         handleScroll: {
           mouseWheel: false,
           pressedMouseMove: true,
