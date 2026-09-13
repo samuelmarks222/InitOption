@@ -2240,10 +2240,8 @@ const TradingChart = ({
     }
     // Visual interpolation only between consecutive real ticks (no artificial prices)
     // If no tick arrives, price remains unchanged (no extrapolation)
-    const duration = Math.min(
-      320,
-      Math.max(120, (tickTransitionDurationRef.current || 240) * 0.8),
-    );
+    // Use fixed duration for consistent, smooth feel like professional platforms
+    const duration = 300; // Fixed 300ms for smooth, professional feel
     const startTime = performance.now();
     tickTransitionStartedRef.current = startTime;
 
@@ -2255,8 +2253,10 @@ const TradingChart = ({
       }
       const elapsed = performance.now() - startTime;
       const progress = Math.min(1, elapsed / duration);
+      // Ease-out cubic for natural, professional feel (not linear)
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
       // If a newer tick overrode target, this frame will be cancelled by next beginLiveInterpolation
-      const close = startPrice + (endPrice - startPrice) * progress;
+      const close = startPrice + (endPrice - startPrice) * easedProgress;
       const high = Math.max(currentTarget.open, currentTarget.high, close);
       const low = Math.min(currentTarget.open, currentTarget.low, close);
       const next: OHLCCandle = {
