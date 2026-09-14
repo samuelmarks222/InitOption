@@ -1440,7 +1440,7 @@
 
 /* ─── Navbar overrides inside poolito-page ─── */
 .poolito-page .io-topbar {
-  background: #06383c !important;
+  background: #212634 !important;
 }
 
 .poolito-page .io-social-dot {
@@ -1453,8 +1453,8 @@
 }
 
 .poolito-page .io-navbar {
-  background: rgba(255, 255, 255, 0.94) !important;
-  border-bottom-color: rgba(6, 56, 60, 0.11) !important;
+  background: #212634 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 .poolito-page .io-nav-link {
