@@ -1486,24 +1486,19 @@
 
 /* ─── PageHero overrides inside poolito-page ─── */
 .poolito-page .ph-stage {
-  background: linear-gradient(135deg, rgba(255,255,255,0.84), rgba(239,244,253,0.94)), #eef3fb !important;
+  background: #212634 !important;
 }
 
 .poolito-page .ph-stage::before {
-  background:
-    linear-gradient(135deg, transparent 0 17%, rgba(255,255,255,0.62) 17% 31%, transparent 31% 100%),
-    linear-gradient(45deg, transparent 0 68%, rgba(6,56,60,0.05) 68% 84%, transparent 84% 100%),
-    linear-gradient(120deg, transparent 0 50%, rgba(16,155,66,0.05) 50% 69%, transparent 69% 100%) !important;
+  background: transparent !important;
 }
 
 .poolito-page .ph-stage::after {
-  background-image:
-    linear-gradient(rgba(6,56,60,0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(6,56,60,0.035) 1px, transparent 1px) !important;
+  background-image: none !important;
 }
 
 .poolito-page .ph-bg-arc {
-  background: radial-gradient(circle, rgba(16,155,66,0.09), transparent 66%) !important;
+  background: transparent !important;
 }
 
 .poolito-page .ph-eyebrow {
@@ -1511,7 +1506,7 @@
 }
 
 .poolito-page .ph-title {
-  color: #06383c !important;
+  color: #ffffff !important;
 }
 
 .poolito-page .ph-btn-primary {
