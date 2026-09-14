@@ -170,8 +170,8 @@ const DEFAULT_VISIBLE_BARS = 80;
 const MAX_CANDLES_IN_MEMORY = 7200;
 const DEFAULT_CHART_TYPE: ChartType = "candles";
 const LIVE_CANDLE_SETTLE_EPSILON = 1e-9;
-const LIVE_TICK_MIN_INTERVAL_MS = 50;
-const LIVE_TICK_MAX_INTERVAL_MS = 1000;
+const LIVE_PRICE_DAMPING_MS = 85;
+const LIVE_PRICE_MAX_FRAME_DELTA_MS = 48;
 const SYNCED_PRICE_SCALE_MIN_WIDTH = 58;
 type ChartSeriesApi = ISeriesApi<SeriesType>;
 type OverlayIndicatorPoint = LineData<Time> | HistogramData<Time>;
@@ -826,6 +826,18 @@ const getPricePrecision = (price: number) => {
   if (price > 1) return 5;
   return 6;
 };
+
+const getDisplayPriceSnapEpsilon = (price: number) => {
+  const precision = getPricePrecision(Math.max(Math.abs(price), 0.000001));
+  return Math.pow(10, -precision) * 0.05;
+};
+
+const buildLiveDisplayCandle = (authoritativeCandle: OHLCCandle, displayPrice: number): OHLCCandle => ({
+  ...authoritativeCandle,
+  high: authoritativeCandle.high,
+  low: authoritativeCandle.low,
+  close: displayPrice,
+});
 
 const formatCloneMoney = (amount: number) => {
   const safeAmount = Number.isFinite(amount) ? Math.max(0, amount) : 0;
@@ -2185,12 +2197,8 @@ const TradingChart = ({
   const liveDisplayRef = useRef<OHLCCandle | null>(null);
   const liveInterpRafRef = useRef<number | null>(null);
   const liveInterpLastFrameRef = useRef(0);
-  const previousTickPriceRef = useRef<number | null>(null);
-  const currentTickPriceRef = useRef<number | null>(null);
-  const previousTickTimestampRef = useRef<number | null>(null);
-  const currentTickTimestampRef = useRef<number | null>(null);
-  const tickTransitionStartedRef = useRef(0);
-  const tickTransitionDurationRef = useRef(100);
+  const authoritativeTickPriceRef = useRef(asset.price);
+  const displayPriceRef = useRef(asset.price);
   const liveStartPriceRef = useRef(0);
   const timeframeSecondsRef = useRef<number>(60);
   const loadedHistoryCountRef = useRef(0);
@@ -2212,70 +2220,64 @@ const TradingChart = ({
     liveInterpLastFrameRef.current = 0;
   }, []);
 
+  const publishLiveDisplayCandle = useCallback((authoritativeCandle: OHLCCandle, displayPrice: number) => {
+    const visualCandle = buildLiveDisplayCandle(authoritativeCandle, displayPrice);
+    liveDisplayRef.current = visualCandle;
+    displayPriceRef.current = displayPrice;
+    mainUpdateSchedulerRef.current?.update(
+      buildMainSeriesUpdatePayload(chartTypeRef.current, visualCandle, historyRef.current),
+    );
+    setLivePriceBeacon((current) => ({
+      price: getLiveBeaconPrice(chartTypeRef.current, visualCandle, historyRef.current),
+      time: visualCandle.time,
+      logical: current?.logical ?? historyRef.current.length,
+    }));
+  }, []);
+
   const beginLiveInterpolation = useCallback(() => {
     const target = liveTargetRef.current;
-    const displayed = liveDisplayRef.current;
-    if (!target || !displayed || !mainSeriesRef.current) {
-      // No prior display, render immediately
-      if (!target || !mainSeriesRef.current) return;
-      liveDisplayRef.current = { ...target };
-      mainUpdateSchedulerRef.current?.update(
-        buildMainSeriesUpdatePayload(chartTypeRef.current, target, historyRef.current),
-      );
+    if (!target || !mainSeriesRef.current) {
       return;
     }
-    // Cancel previous transition and prioritize newest authoritative tick
-    if (liveInterpRafRef.current !== null) {
-      cancelAnimationFrame(liveInterpRafRef.current);
-      liveInterpRafRef.current = null;
-    }
-    const startPrice = displayed.close;
-    const endPrice = target.close;
-    if (startPrice === endPrice) {
-      liveDisplayRef.current = { ...target };
-      mainUpdateSchedulerRef.current?.update(
-        buildMainSeriesUpdatePayload(chartTypeRef.current, target, historyRef.current),
-      );
-      return;
-    }
-    // Visual interpolation only between consecutive real ticks (no artificial prices)
-    // If no tick arrives, price remains unchanged (no extrapolation)
-    const duration = 280;
-    const startTime = performance.now();
-    tickTransitionStartedRef.current = startTime;
 
-    const step = () => {
+    if (liveInterpRafRef.current !== null) {
+      return;
+    }
+
+    liveInterpLastFrameRef.current = performance.now();
+
+    const step = (frameTime: number) => {
       const currentTarget = liveTargetRef.current;
       if (!currentTarget || !mainSeriesRef.current) {
         stopLiveInterpolation();
         return;
       }
-      const elapsed = performance.now() - startTime;
-      const progress = Math.min(1, elapsed / duration);
-      // If a newer tick overrode target, this frame will be cancelled by next beginLiveInterpolation
-      const close = startPrice + (endPrice - startPrice) * progress;
-      const high = Math.max(currentTarget.open, currentTarget.high, close);
-      const low = Math.min(currentTarget.open, currentTarget.low, close);
-      const next: OHLCCandle = {
-        time: currentTarget.time,
-        open: currentTarget.open,
-        high,
-        low,
-        close,
-        volume: currentTarget.volume,
-      };
-      liveDisplayRef.current = next;
-      mainUpdateSchedulerRef.current?.update(
-        buildMainSeriesUpdatePayload(chartTypeRef.current, next, historyRef.current),
-      );
-      if (progress >= 1) {
+
+      const previousFrameTime = liveInterpLastFrameRef.current || frameTime;
+      const deltaMs = Math.max(0, Math.min(LIVE_PRICE_MAX_FRAME_DELTA_MS, frameTime - previousFrameTime));
+      liveInterpLastFrameRef.current = frameTime;
+
+      const currentDisplayPrice = Number.isFinite(displayPriceRef.current)
+        ? displayPriceRef.current
+        : currentTarget.close;
+      const priceDelta = currentTarget.close - currentDisplayPrice;
+      const snapEpsilon = getDisplayPriceSnapEpsilon(currentTarget.close);
+
+      if (Math.abs(priceDelta) <= snapEpsilon) {
+        publishLiveDisplayCandle(currentTarget, currentTarget.close);
         liveInterpRafRef.current = null;
+        liveInterpLastFrameRef.current = 0;
         return;
       }
+
+      const damping = 1 - Math.exp(-deltaMs / LIVE_PRICE_DAMPING_MS);
+      const nextDisplayPrice = currentDisplayPrice + priceDelta * damping;
+      publishLiveDisplayCandle(currentTarget, nextDisplayPrice);
       liveInterpRafRef.current = requestAnimationFrame(step);
     };
+
     liveInterpRafRef.current = requestAnimationFrame(step);
-  }, [stopLiveInterpolation]);
+  }, [publishLiveDisplayCandle, stopLiveInterpolation]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -2289,21 +2291,13 @@ const TradingChart = ({
 
       // Reconcile directly with the latest market state instead of replaying
       // throttled animation frames accumulated while the tab was hidden.
-      liveDisplayRef.current = { ...target };
-      previousTickPriceRef.current = target.close;
-      currentTickPriceRef.current = target.close;
-      previousTickTimestampRef.current = currentTickTimestampRef.current;
-      currentTickTimestampRef.current = target.time;
-      tickTransitionStartedRef.current = performance.now();
-      mainUpdateSchedulerRef.current?.update(
-        buildMainSeriesUpdatePayload(chartTypeRef.current, target, historyRef.current),
-      );
+      publishLiveDisplayCandle(target, target.close);
       beginLiveInterpolation();
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [beginLiveInterpolation, stopLiveInterpolation]);
+  }, [beginLiveInterpolation, publishLiveDisplayCandle, stopLiveInterpolation]);
 
   const separateIndicators = activeIndicators.filter(i => {
     const conf = INDICATOR_REGISTRY.find(c => c.id === i.configId);
@@ -3057,7 +3051,6 @@ const TradingChart = ({
         mainSeriesKindRef.current = null;
         stopLiveInterpolation();
         liveTargetRef.current = null;
-        liveDisplayRef.current = null;
       }
 
       if (!mainSeriesRef.current) {
@@ -3092,19 +3085,21 @@ const TradingChart = ({
     if (historyRef.current.length > 0 && mainSeriesRef.current && historyAssetRef.current === asset.symbol) {
       mainSeriesRef.current.setData(getMainSeriesData(chartType, historyRef.current));
       if (liveRef.current) {
+        const visualLiveCandle =
+          liveDisplayRef.current?.time === liveRef.current.time ? liveDisplayRef.current : liveRef.current;
         const tf = TIMEFRAMES[selectedTf] || { seconds: 60 };
         if (mainUpdateSchedulerRef.current) {
           mainUpdateSchedulerRef.current.update(
-            buildMainSeriesUpdatePayload(chartType, liveRef.current, historyRef.current),
+            buildMainSeriesUpdatePayload(chartType, visualLiveCandle, historyRef.current),
           );
         } else {
           try {
-            mainSeriesRef.current.update(buildMainSeriesUpdatePayload(chartType, liveRef.current, historyRef.current));
+            mainSeriesRef.current.update(buildMainSeriesUpdatePayload(chartType, visualLiveCandle, historyRef.current));
           } catch (_) {}
         }
         setLivePriceBeacon((current) => ({
-          price: getLiveBeaconPrice(chartType, liveRef.current, historyRef.current),
-          time: liveRef.current.time,
+          price: getLiveBeaconPrice(chartType, visualLiveCandle, historyRef.current),
+          time: visualLiveCandle.time,
           logical: current?.logical ?? historyRef.current.length,
         }));
       }
@@ -3255,7 +3250,8 @@ const TradingChart = ({
       historyRef.current = [...historyRef.current, closed].slice(-MAX_CANDLES_IN_MEMORY);
       stopLiveInterpolation();
       liveTargetRef.current = null;
-      liveDisplayRef.current = null;
+      liveDisplayRef.current = { ...closed };
+      displayPriceRef.current = closed.close;
       if (mainUpdateSchedulerRef.current) {
         mainUpdateSchedulerRef.current.update(
           buildMainSeriesUpdatePayload(chartTypeRef.current, closed, historyRef.current),
@@ -3272,22 +3268,7 @@ const TradingChart = ({
       if (!mainSeriesRef.current) return;
       const tickTimestamp =
         typeof sourceTimestamp === "number" && Number.isFinite(sourceTimestamp) ? sourceTimestamp : candle.time;
-      const previousPrice = currentTickPriceRef.current ?? candle.close;
-      const previousTimestamp = currentTickTimestampRef.current;
-      const intervalMs =
-        previousTimestamp !== null
-          ? (tickTimestamp - previousTimestamp) * 1000
-          : tickTransitionDurationRef.current;
-
-      previousTickPriceRef.current = previousPrice;
-      currentTickPriceRef.current = candle.close;
-      previousTickTimestampRef.current = previousTimestamp;
-      currentTickTimestampRef.current = tickTimestamp;
-      tickTransitionStartedRef.current = performance.now();
-      tickTransitionDurationRef.current = Math.min(
-        LIVE_TICK_MAX_INTERVAL_MS,
-        Math.max(LIVE_TICK_MIN_INTERVAL_MS, Number.isFinite(intervalMs) ? intervalMs : 100),
-      );
+      authoritativeTickPriceRef.current = candle.close;
       liveRef.current = candle;
       setCurrentPrice(candle.close);
       const startPrice = liveStartPriceRef.current || candle.open;
@@ -3296,20 +3277,24 @@ const TradingChart = ({
       const effectiveMarkerTime = tickTimestamp;
       const intrabarFraction = tfSeconds > 0 ? (effectiveMarkerTime - candle.time) / tfSeconds : 0;
       const markerLogical = historyRef.current.length + getIntrabarLogicalOffset(intrabarFraction);
-      setLivePriceBeacon({
-        price: getLiveBeaconPrice(chartTypeRef.current, candle, historyRef.current),
+      setLivePriceBeacon((current) => ({
+        price: current?.price ?? getLiveBeaconPrice(chartTypeRef.current, candle, historyRef.current),
         time: candle.time,
         logical: markerLogical,
-      });
+      }));
       onPriceUpdateRef.current?.(candle.close, effectiveMarkerTime, tfSeconds, markerLogical);
 
-      if (!liveDisplayRef.current || liveDisplayRef.current.time !== candle.time) {
-        liveDisplayRef.current = { ...candle };
+      const previousDisplay = liveDisplayRef.current;
+      if (!previousDisplay) {
+        publishLiveDisplayCandle(candle, candle.close);
+      } else if (previousDisplay.time !== candle.time) {
+        const seedPrice = Number.isFinite(displayPriceRef.current) ? displayPriceRef.current : candle.open;
+        publishLiveDisplayCandle(candle, seedPrice);
       }
-      liveTargetRef.current = candle;
+      liveTargetRef.current = { ...candle };
       beginLiveInterpolation();
     },
-    [beginLiveInterpolation],
+    [beginLiveInterpolation, publishLiveDisplayCandle],
   );
 
   const reloadHistoricalCandles = useCallback(
@@ -3331,16 +3316,17 @@ const TradingChart = ({
       historyRef.current = nextHistory;
       historyAssetRef.current = asset.symbol;
       mainSeries.setData(getMainSeriesData(chartTypeRef.current, historyRef.current));
-      liveDisplayRef.current = liveRef.current ? { ...liveRef.current } : null;
 
       if (liveRef.current) {
+        const visualLiveCandle =
+          liveDisplayRef.current?.time === liveRef.current.time ? liveDisplayRef.current : liveRef.current;
         try {
           if (mainUpdateSchedulerRef.current) {
             mainUpdateSchedulerRef.current.update(
-              buildMainSeriesUpdatePayload(chartTypeRef.current, liveRef.current, historyRef.current),
+              buildMainSeriesUpdatePayload(chartTypeRef.current, visualLiveCandle, historyRef.current),
             );
           } else {
-            mainSeries.update(buildMainSeriesUpdatePayload(chartTypeRef.current, liveRef.current, historyRef.current));
+            mainSeries.update(buildMainSeriesUpdatePayload(chartTypeRef.current, visualLiveCandle, historyRef.current));
           }
         } catch (_) {
           // Ignore transient redraw issues while the chart prepends older candles.
@@ -3369,6 +3355,8 @@ const TradingChart = ({
     stopLiveInterpolation();
     liveTargetRef.current = null;
     liveDisplayRef.current = null;
+    authoritativeTickPriceRef.current = asset.price;
+    displayPriceRef.current = asset.price;
     timeframeSecondsRef.current = tf.seconds;
     const websocketUrl = import.meta.env.VITE_MARKET_DATA_WS_URL;
     const step = tf.seconds;
@@ -3407,6 +3395,9 @@ const TradingChart = ({
 
       const startPrice = liveRef.current?.close ?? engineBasePrice;
       liveStartPriceRef.current = startPrice;
+      authoritativeTickPriceRef.current = liveRef.current?.close ?? startPrice;
+      displayPriceRef.current = liveRef.current?.close ?? startPrice;
+      liveDisplayRef.current = liveRef.current ? { ...liveRef.current } : null;
 
       mainSeriesRef.current?.setData(getMainSeriesData(chartTypeRef.current, historyRef.current));
 
@@ -3529,6 +3520,9 @@ renderOverlayIndicators(getIndicatorHistory());
     liveRef.current = seedCandle;
     const startPrice = seedCandle.open;
     liveStartPriceRef.current = startPrice;
+    authoritativeTickPriceRef.current = seedCandle.close;
+    displayPriceRef.current = seedCandle.close;
+    liveDisplayRef.current = { ...seedCandle };
 
     setCurrentPrice(seedCandle.close);
     setPriceChange(((seedCandle.close - seedCandle.open) / Math.max(seedCandle.open, 0.000001)) * 100);

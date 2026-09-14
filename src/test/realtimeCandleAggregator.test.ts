@@ -127,4 +127,36 @@ describe("CandleAggregator", () => {
 
     aggregator.destroy();
   });
+
+  it("keeps high-timeframe highs and lows equal to authoritative tick extremes", async () => {
+    const updates: OHLCCandle[] = [];
+    const baseTime = Math.floor(Date.now() / 1000 / 1800) * 1800;
+    const aggregator = new CandleAggregator(
+      1800,
+      () => undefined,
+      (candle) => updates.push(candle),
+    );
+
+    aggregator.onTick({ timestamp: baseTime + 1, price: 100 });
+    aggregator.onTick({ timestamp: baseTime + 2, price: 108 });
+    aggregator.onTick({ timestamp: baseTime + 3, price: 94 });
+    aggregator.onTick({ timestamp: baseTime + 4, price: 101 });
+    await wait(25);
+
+    expect(aggregator.getCurrentCandle()).toMatchObject({
+      time: baseTime,
+      open: 100,
+      high: 108,
+      low: 94,
+      close: 101,
+      volume: 4,
+    });
+    expect(updates.at(-1)).toMatchObject({
+      high: 108,
+      low: 94,
+      close: 101,
+    });
+
+    aggregator.destroy();
+  });
 });
