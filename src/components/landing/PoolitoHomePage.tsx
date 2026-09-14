@@ -873,9 +873,10 @@ const PoolitoHomePage = () => {
           --poolito-green: #12cc9a;
           --poolito-green-bright: #12cc9a;
           --poolito-dark: #1f4c63;
-          --poolito-deep: #1f4c63;
+          --poolito-deep: #0c2437;
           --poolito-muted: #6d7181;
           --poolito-line: rgba(31, 76, 99, 0.11);
+          background: #071d2d;
           font-family: Arial, system-ui, sans-serif;
         }
 
@@ -1065,7 +1066,7 @@ const PoolitoHomePage = () => {
           z-index: 2;
           display: flex;
           align-items: center;
-          padding-left: max(82px, calc((100vw - 1440px) / 2));
+          padding-left: clamp(32px, 5vw, 88px);
           padding-right: 40px;
         }
 
@@ -1112,10 +1113,10 @@ const PoolitoHomePage = () => {
         .poolito-frame h1 {
           margin: 0;
           color: #fff;
-          font-size: clamp(40px, 3.2vw, 50px);
-          line-height: 1.06;
+          font-size: clamp(44px, 3.9vw, 68px);
+          line-height: 0.96;
           font-weight: 950;
-          letter-spacing: 0;
+          letter-spacing: -0.06em;
           text-transform: uppercase;
         }
 
@@ -1333,9 +1334,9 @@ const PoolitoHomePage = () => {
           overflow: hidden;
           padding: 88px 0 98px;
           background:
-            linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.96)),
+            linear-gradient(135deg, rgba(248,250,252,0.98), rgba(242,248,247,0.98)),
             radial-gradient(circle at 88% 12%, rgba(6,56,60,0.08), transparent 28%),
-            #fff;
+            #f3f7f8;
         }
 
         .poolito-about::before,
