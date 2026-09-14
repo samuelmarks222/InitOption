@@ -276,7 +276,19 @@ const PlatformSettings = () => {
     setSaving(true);
     toast({ title: "Uploading image..." });
 
-    const uploadResult = await cloudinaryClient.upload(file, "branding");
+    let uploadResult;
+    try {
+      uploadResult = await cloudinaryClient.upload(file, "branding");
+    } catch (uploadError) {
+      console.error("Cloudinary upload failed:", uploadError);
+      toast({
+        title: "Upload failed",
+        description: uploadError instanceof Error ? uploadError.message : "Failed to upload image to Cloudinary. Check credentials.",
+        variant: "destructive",
+      });
+      setSaving(false);
+      return;
+    }
 
     const publicUrl = uploadResult.url;
 
