@@ -38,10 +38,12 @@ const HOME_ASSETS = {
 };
 
 const navLinks = [
-  { label: "Demo account", to: "/trade" },
-  { label: "About us", to: "/about" },
-  { label: "FAQ", to: "/faq" },
+  { label: "Home", to: "/" },
+  { label: "About Us", to: "/about" },
+  { label: "Trading", to: "/trade" },
+  { label: "Tournaments", to: "/tournaments" },
   { label: "Blog", to: "/blog" },
+  { label: "Contact Us", to: "/contact" },
 ];
 
 const assetTags = [
@@ -55,20 +57,20 @@ const assetTags = [
 const howItWorksSteps = [
   {
     step: "Step 1",
-    title: "Create account",
-    text: "Register in minutes and pick the account type that fits your goals.",
+    title: "Create Account",
+    text: "Sign up in seconds. No credit card required.",
     icon: Users,
   },
   {
     step: "Step 2",
-    title: "Select an asset",
-    text: "Choose from forex, crypto, indices, and commodities with real-time data.",
+    title: "Choose Asset",
+    text: "Pick from currencies, indices, crypto, stocks, or commodities.",
     icon: BarChart3,
   },
   {
     step: "Step 3",
-    title: "Trade and withdraw",
-    text: "Place a trade, monitor the prediction, and withdraw fast when you win.",
+    title: "Trade & Withdraw",
+    text: "One-click trading. Fast withdrawals when you win.",
     icon: CircleDollarSign,
   },
 ];
@@ -132,46 +134,32 @@ const services: Array<{
   icon: FeatureIconType;
 }> = [
   {
-    eyebrow: "USER-FRIENDLY INTERFACE",
-    title: "User-friendly interface",
-    text: "A clean, intuitive layout built for easier navigation and faster decisions.",
-    benefit: "Designed to help you focus on the market without clutter or confusion.",
+    eyebrow: "FEATURE 01",
+    title: "Real-Time Charts",
+    text: "Professional candlestick charts with 30+ indicators.",
+    benefit: "Analyse markets like a pro with RSI, MACD, Bollinger Bands, and more.",
     icon: "candles",
   },
   {
-    eyebrow: "INTEGRATED SIGNALS",
-    title: "Integrated signals",
-    text: "Smart tools and updates help you spot opportunities before the market moves.",
-    benefit: "Follow relevant market momentum with clear signals and streamlined access.",
+    eyebrow: "FEATURE 02",
+    title: "Fast Withdrawals",
+    text: "Get your profits when you need them. No delays.",
+    benefit: "Withdraw via M-PESA or crypto - often within minutes.",
     icon: "bolt",
   },
   {
-    eyebrow: "TRADING INDICATORS",
-    title: "Trading indicators",
-    text: "Track the strongest patterns with real-time technical indicators and chart data.",
-    benefit: "Use clear market insight to understand trend direction and timing.",
+    eyebrow: "FEATURE 03",
+    title: "Free Demo Account",
+    text: "Practice with $10,000 virtual funds. No risk.",
+    benefit: "Unlimited time, reset anytime - learn without pressure.",
     icon: "shield",
   },
   {
-    eyebrow: "SUPPORT 24/7",
-    title: "Support 24/7",
-    text: "Get help anytime with a support team ready to assist your next move.",
-    benefit: "Reliable assistance when you need guidance before, during, or after a trade.",
+    eyebrow: "FEATURE 04",
+    title: "High Profits",
+    text: "Earn up to 95% on winning trades.",
+    benefit: "Maximise your returns with competitive payouts.",
     icon: "profit",
-  },
-  {
-    eyebrow: "BONUS PROGRAMS",
-    title: "Bonus programs",
-    text: "Enjoy regular rewards and platform incentives that strengthen your trading setup.",
-    benefit: "Boost your capital with structured promotions and welcome opportunities.",
-    icon: "candles",
-  },
-  {
-    eyebrow: "DEPOSITS AND WITHDRAWALS",
-    title: "Deposits and withdrawals",
-    text: "Move money in and out smoothly using fast, secure payment options.",
-    benefit: "A simple funding experience from your first deposit to your final payout.",
-    icon: "bolt",
   },
 ];
 
@@ -341,46 +329,25 @@ const trustLogos = [
 
 const testimonials = [
   {
-    quote: "As a beginner, I really appreciated the demo account to test strategies before placing my first trade.",
-    name: "Rahima",
-    role: "Web 3 Creator",
-    initials: "R",
+    quote: "The demo account helped me test strategies before placing live trades.",
+    name: "Maya K.",
+    role: "Currency trader",
+    initials: "MK",
     rating: "5.0",
   },
   {
-    quote: "The interface is simple, the signals are useful, and the withdrawals have been smooth and reliable.",
-    name: "Tersewa",
-    role: "Graphics designer",
-    initials: "T",
+    quote: "Charts load quickly, the platform is clean, and withdrawals have been smooth.",
+    name: "Daniel R.",
+    role: "Crypto trader",
+    initials: "DR",
     rating: "5.0",
   },
   {
-    quote: "I like how the platform balances speed, chart visibility, and secure account handling in one place.",
-    name: "Abhi",
-    role: "Graphic designer",
-    initials: "A",
-    rating: "5.0",
-  },
-  {
-    quote: "The trading experience feels clean and focused, which helped me make more confident decisions.",
-    name: "Sonal",
-    role: "Finance student",
-    initials: "S",
-    rating: "5.0",
-  },
-  {
-    quote: "I can track opportunities quickly on mobile and still keep my portfolio organized during the day.",
-    name: "Med Imran",
-    role: "UI/UX Designer",
-    initials: "M",
-    rating: "5.0",
-  },
-  {
-    quote: "The account setup and trading tools are straightforward, making the whole experience stress-free.",
-    name: "Shree Ganesh",
-    role: "Growth analyst",
-    initials: "SG",
-    rating: "5.0",
+    quote: "I can move from phone to desktop without losing track of my open positions.",
+    name: "Sofia N.",
+    role: "Multi-asset trader",
+    initials: "SN",
+    rating: "4.9",
   },
 ];
 
@@ -446,11 +413,11 @@ const PoolitoHomePage = () => {
             <div className="poolito-nav-actions">
               <Link to="/login" className="poolito-auth-link">
                 <LogIn size={18} />
-                Log in
+                Sign In
               </Link>
               <Link to="/register" className="poolito-auth-link poolito-auth-link-primary">
                 <UserPlus size={18} />
-                Sign up
+                Sign Up
               </Link>
             </div>
           </div>
@@ -467,21 +434,20 @@ const PoolitoHomePage = () => {
                 100% platform access
               </span>
               <h1 id="poolito-hero-title">
-                Innovative platform for
-                <span style={{ color: "#12cc9a" }}> smart investments</span>
+                The Right Place for Online <span style={{ color: "#12cc9a" }}>Trading</span> – Simple, Fast, Secure.
               </h1>
               <p className="poolito-hero-subheadline">
-                Sign up and get $10,000 USD to your demo account to learn how to trade.
+                Trade 100+ assets with real-time charts, a free demo, and fast withdrawals. All from one clean platform.
               </p>
               <div className="poolito-cta-row">
                 <Link to="/register" className="poolito-cta">
-                  Create a free account
+                  Start Trading Now
                   <span>
                     <ArrowRight size={17} />
                   </span>
                 </Link>
                 <Link to="/trade" className="poolito-cta poolito-cta-secondary">
-                  Learn how trading works
+                  Free Demo
                   <span>
                     <Play size={16} fill="currentColor" />
                   </span>
@@ -588,8 +554,8 @@ const PoolitoHomePage = () => {
         <section className="poolito-how" aria-labelledby="poolito-how-title">
           <div className="poolito-container">
             <div className="poolito-section-heading poolito-how-heading">
-              <span>Better decisions</span>
-              <h2 id="poolito-how-title">Grow your capital by making the right trading predictions</h2>
+              <span>Simple Start</span>
+              <h2 id="poolito-how-title">How It Works (3 Steps)</h2>
             </div>
 
             <div className="poolito-how-grid">
@@ -611,9 +577,9 @@ const PoolitoHomePage = () => {
           <div className="poolito-service-pattern" aria-hidden="true" />
           <div className="poolito-container">
             <div className="poolito-section-heading">
-              <span>Platform features</span>
-              <h2 id="poolito-services-title">Features of the platform</h2>
-              <p>We regularly improve our platform to make trading more comfortable and safe.</p>
+              <span>Platform Features</span>
+              <h2 id="poolito-services-title">Features Built For Traders</h2>
+              <p>Everything you need to trade with confidence - all in one place.</p>
             </div>
 
             <div className="poolito-service-grid">
@@ -752,9 +718,9 @@ const PoolitoHomePage = () => {
                 <Link to="/register" aria-label="Start trading">
                   <Play size={28} fill="currentColor" />
                 </Link>
-                <h2 id="poolito-trust-title">Mobile app is always at your fingertips</h2>
+                <h2 id="poolito-trust-title">Most Trusted Trading Platform</h2>
                 <Link to="/register" className="poolito-small-cta">
-                  Start demo
+                  Start Demo
                   <ArrowRight size={15} />
                 </Link>
               </div>
@@ -780,8 +746,8 @@ const PoolitoHomePage = () => {
         <section className="poolito-testimonials" aria-labelledby="poolito-testimonials-title">
           <div className="poolito-container">
             <div className="poolito-section-heading">
-              <span>Reviews from traders</span>
-              <h2 id="poolito-testimonials-title">What people say about us</h2>
+              <span>Trader Feedback</span>
+              <h2 id="poolito-testimonials-title">What Traders Say</h2>
             </div>
 
             <div className="poolito-testimonial-grid">
@@ -807,58 +773,26 @@ const PoolitoHomePage = () => {
           </div>
         </section>
 
-        <section className="poolito-faq" aria-labelledby="poolito-faq-title">
-          <div className="poolito-container">
-            <div className="poolito-section-heading poolito-faq-heading">
-              <span>Help center</span>
-              <h2 id="poolito-faq-title">Frequently asked questions</h2>
-            </div>
-
-            <div className="poolito-faq-list">
-              {[
-                "How do I learn how to trade?",
-                "How long does it take to withdraw funds?",
-                "What is trading platform and what is it for?",
-                "Can I trade using a phone / mobile device?",
-                "What is the minimum deposit amount?",
-                "Can I create an account with my email?",
-              ].map((question, index) => (
-                <details key={question} className="poolito-faq-item" open={index === 0}>
-                  <summary>{question}</summary>
-                  <div className="poolito-faq-answer">
-                    {index === 0 && "Create a free account, explore the demo balance, and learn the platform with guided tools and market charts before going live."}
-                    {index === 1 && "Withdrawals are usually processed within a short timeframe, depending on the payment method and verification status."}
-                    {index === 2 && "The trading platform gives you access to live market data, trade entry tools, indicators, and execution controls in one place."}
-                    {index === 3 && "Yes. The platform is designed to work on mobile devices and desktop so you can trade anytime, anywhere."}
-                    {index === 4 && "The minimum deposit depends on your chosen payment method and account setup, but the platform keeps the process simple and clear."}
-                    {index === 5 && "Yes. You can register with your email and complete the verification steps required to start trading safely."}
-                  </div>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <section className="poolito-final-cta" aria-labelledby="poolito-final-cta-title">
           <div className="poolito-container poolito-final-cta-inner">
             <div>
-              <span className="poolito-section-label">Start today</span>
-              <h2 id="poolito-final-cta-title">Do you have other questions?</h2>
+              <span className="poolito-section-label">Start Today</span>
+              <h2 id="poolito-final-cta-title">Ready to Start Your Trading Journey?</h2>
               <p>
-                Get in touch with the {platformName} support team and we will help you get started with confidence.
+                Join thousands of traders already using Init Option. Start with a free demo or go live instantly.
               </p>
             </div>
             <div className="poolito-final-cta-actions">
               <Link to="/register" className="poolito-cta">
-                Create a free account
+                Create Free Account
                 <span>
                   <ArrowRight size={17} />
                 </span>
               </Link>
-              <Link to="/contact" className="poolito-cta poolito-cta-secondary">
-                Contact us
+              <Link to="/trade" className="poolito-cta poolito-cta-secondary">
+                Open Demo
                 <span>
-                  <ArrowRight size={17} />
+                  <Play size={16} fill="currentColor" />
                 </span>
               </Link>
             </div>
