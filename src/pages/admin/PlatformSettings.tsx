@@ -281,15 +281,15 @@ const PlatformSettings = () => {
     const publicUrl = uploadResult.url;
 
     if (guideMediaKey) {
-      updateGuideMedia(guideMediaKey, publicData.publicUrl);
+      updateGuideMedia(guideMediaKey, publicUrl);
     } else if (target === "chartBackground") {
-      updateTradingDefaults({ chartBackgroundImage: publicData.publicUrl });
+      updateTradingDefaults({ chartBackgroundImage: publicUrl });
     } else {
-      if (target === "logo") updateSetting("logo_url", publicData.publicUrl);
-      if (target === "landing_logo") updateSetting("landing_logo_url", publicData.publicUrl);
-      if (target === "favicon") updateSetting("favicon_url", publicData.publicUrl);
-      if (target === "social") updateSetting("og_image_url", publicData.publicUrl);
-      if (target === "twitter") updateSetting("twitter_image_url", publicData.publicUrl);
+      if (target === "logo") updateSetting("logo_url", publicUrl);
+      if (target === "landing_logo") updateSetting("landing_logo_url", publicUrl);
+      if (target === "favicon") updateSetting("favicon_url", publicUrl);
+      if (target === "social") updateSetting("og_image_url", publicUrl);
+      if (target === "twitter") updateSetting("twitter_image_url", publicUrl);
     }
 
     toast({
