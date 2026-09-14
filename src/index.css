@@ -1458,7 +1458,7 @@
 }
 
 .poolito-page .io-nav-link {
-  color: #06383c !important;
+  color: #ffffff !important;
 }
 
 .poolito-page .io-nav-link:hover,
@@ -1467,8 +1467,8 @@
 }
 
 .poolito-page .io-login-link {
-  color: #06383c !important;
-  border-color: rgba(6, 56, 60, 0.11) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 .poolito-page .io-register-link {
