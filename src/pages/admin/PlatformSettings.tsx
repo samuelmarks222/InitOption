@@ -642,7 +642,6 @@ const PlatformSettings = () => {
             {
               label: "Primary Logo",
               value: settings.logo_url,
-              onChange: (value: string) => updateSetting("logo_url", value),
               ref: logoInputRef,
               uploadTarget: "logo" as const,
               accept: "image/*",
@@ -651,7 +650,6 @@ const PlatformSettings = () => {
             {
               label: "Landing Page Logo",
               value: settings.landing_logo_url,
-              onChange: (value: string) => updateSetting("landing_logo_url", value),
               ref: landingLogoInputRef,
               uploadTarget: "landing_logo" as const,
               accept: "image/*",
@@ -660,7 +658,6 @@ const PlatformSettings = () => {
             {
               label: "Tab Favicon",
               value: settings.favicon_url,
-              onChange: (value: string) => updateSetting("favicon_url", value),
               ref: faviconInputRef,
               uploadTarget: "favicon" as const,
               accept: "image/*,.ico",
@@ -680,13 +677,6 @@ const PlatformSettings = () => {
 
                 <div className="min-w-0 flex-1">
                   <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={field.value}
-                      onChange={(event) => field.onChange(event.target.value)}
-                      placeholder="Paste a public URL or upload an image..."
-                      className={INPUT_CLASS}
-                    />
                     <input
                       ref={field.ref}
                       type="file"
