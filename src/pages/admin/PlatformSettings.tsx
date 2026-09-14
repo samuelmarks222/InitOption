@@ -29,6 +29,8 @@ type UploadTarget =
 
 const MAX_META_DESCRIPTION_LENGTH = 160;
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const MIN_SOCIAL_WIDTH = 600;
+const MIN_SOCIAL_HEIGHT = 315;
 
 const CARD_CLASS = "overflow-hidden rounded-lg border border-[#202B3A] bg-[#0D1420] p-4";
 const INPUT_CLASS =
