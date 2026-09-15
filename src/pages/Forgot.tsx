@@ -56,32 +56,32 @@ const Forgot = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#1f4c63] flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-[#212634] flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-xl shadow-lg border border-white/10 p-8">
           <div className="flex justify-center mb-4">
             <img src={logo} alt="Logo" className="h-10 w-auto" />
           </div>
-          <h2 className="text-xl font-bold text-center text-[#1f4c63]">Password recovery</h2>
+          <h2 className="text-xl font-bold text-center text-[#212634]">Password recovery</h2>
           <p className="mt-2 text-center text-sm text-[#6d7181]">Enter your email and follow the instructions</p>
           {!sent && !verified ? (
             <form onSubmit={handleSend} className="mt-6 space-y-4">
               <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your email" />
-              <Button type="submit" className="w-full bg-[#12cc9a] hover:bg-[#10b589] text-white" disabled={loading}>{loading ? "Sending..." : "Send Verification Code"} <ArrowRight size={16} /></Button>
+              <Button type="submit" className="w-full bg-[#10b86b] hover:bg-[#0ea35e] text-white" disabled={loading}>{loading ? "Sending..." : "Send Verification Code"} <ArrowRight size={16} /></Button>
             </form>
           ) : !verified ? (
             <form onSubmit={handleVerify} className="mt-6 space-y-4">
               <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder="6-digit code" />
-              <Button type="submit" className="w-full bg-[#12cc9a] hover:bg-[#10b589] text-white" disabled={loading}>{loading ? "Verifying..." : "Verify Code"} <ArrowRight size={16} /></Button>
+              <Button type="submit" className="w-full bg-[#10b86b] hover:bg-[#0ea35e] text-white" disabled={loading}>{loading ? "Verifying..." : "Verify Code"} <ArrowRight size={16} /></Button>
             </form>
           ) : (
             <form onSubmit={handleUpdate} className="mt-6 space-y-4">
               <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New password" />
-              <Button type="submit" className="w-full bg-[#12cc9a] hover:bg-[#10b589] text-white" disabled={loading}>{loading ? "Updating..." : "Update Password"} <ArrowRight size={16} /></Button>
+              <Button type="submit" className="w-full bg-[#10b86b] hover:bg-[#0ea35e] text-white" disabled={loading}>{loading ? "Updating..." : "Update Password"} <ArrowRight size={16} /></Button>
             </form>
           )}
           <div className="mt-6 text-center text-sm">
-            <Link to="/login" className="text-[#12cc9a] hover:underline">Back to Sign In</Link>
+            <Link to="/login" className="text-[#10b86b] hover:underline">Back to Sign In</Link>
           </div>
         </div>
       </div>

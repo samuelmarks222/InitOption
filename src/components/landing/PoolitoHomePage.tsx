@@ -434,7 +434,7 @@ const PoolitoHomePage = () => {
                 100% platform access
               </span>
               <h1 id="poolito-hero-title">
-                The Right Place for Online <span style={{ color: "#12cc9a" }}>Trading</span> – Simple, Fast, Secure.
+                The Right Place for Online <span style={{ color: "#10b86b" }}>Trading</span> – Simple, Fast, Secure.
               </h1>
               <p className="poolito-hero-subheadline">
                 Trade 100+ assets with real-time charts, a free demo, and fast withdrawals. All from one clean platform.
@@ -804,9 +804,9 @@ const PoolitoHomePage = () => {
 
       <style>{`
         .poolito-home {
-          --poolito-green: #12cc9a;
-          --poolito-green-bright: #12cc9a;
-          --poolito-dark: #1f4c63;
+          --poolito-green: #10b86b;
+          --poolito-green-bright: #10b86b;
+          --poolito-dark: #212634;
           --poolito-deep: #212634;
           --poolito-muted: #6d7181;
           --poolito-line: rgba(31, 76, 99, 0.11);

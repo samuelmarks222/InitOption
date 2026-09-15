@@ -35,13 +35,13 @@
     --input: 227 25.5% 18.4%;
     --ring: 212 94% 54%;
 
-    --landing-primary: 164 84% 44%;   /* #12cc9a - teal green */
+    --landing-primary: 148 74% 42%;   /* #10b86b - system green */
     --landing-primary-foreground: 0 0% 100%;
-    --landing-secondary: 198 52% 25%; /* #1f4c63 - dark teal blue */
-    --landing-border: 198 30% 35%;    /* #3f6d84 - muted teal */
+    --landing-secondary: 222 18% 19%; /* #212634 - system dark navy */
+    --landing-border: 222 18% 28%;    /* #313a4a - muted system navy */
     --landing-surface: 0 0% 100%;     /* #ffffff - white */
-    --landing-muted: 198 15% 50%;     /* #6e8f9f - muted teal gray */
-    --landing-accent: 164 84% 44%;    /* #12cc9a - teal green */
+    --landing-muted: 220 11% 68%;     /* #a9b2c3 - system gray */
+    --landing-accent: 148 74% 42%;    /* #10b86b - system green */
 
     --radius: 0.375rem;
 
@@ -124,6 +124,18 @@
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+  }
+
+  select option {
+    color: #0f172a;
+    background-color: #ffffff;
+  }
+
+  select option:checked,
+  select option:hover,
+  select option:focus {
+    color: #0f172a;
+    background: rgba(16, 184, 107, 0.12);
   }
 }
 
