@@ -16,6 +16,11 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      buffer: "buffer",
+      crypto: "crypto-browserify",
+      stream: "stream-browserify",
+      util: "util",
+      process: "process/browser",
     },
   },
   define: {
@@ -23,16 +28,6 @@ export default defineConfig(({ mode }) => ({
     "process.env": {},
     "process.version": '"v18.0.0"',
     "process.platform": '"browser"',
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      buffer: "buffer",
-      crypto: "crypto-browserify",
-      stream: "stream-browserify",
-      util: "util",
-      process: "process/browser",
-    },
   },
   build: {
     rollupOptions: {

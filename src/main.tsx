@@ -11,7 +11,7 @@ window.Buffer = window.Buffer || Buffer;
 import "crypto-browserify";
 import "stream-browserify";
 import "util";
-import "process/browser";
+import { process } from "process";
 
 declare global {
   interface Window {
