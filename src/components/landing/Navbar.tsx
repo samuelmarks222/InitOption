@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  Clock3,
   LogIn,
-  Mail,
   Menu,
   UserPlus,
   X,
@@ -22,9 +20,8 @@ const navLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { logoUrl, supportEmail } = useSiteBranding();
+  const { logoUrl } = useSiteBranding();
   const location = useLocation();
-  const contactEmail = supportEmail || "support@initoption.com";
 
   useEffect(() => {
     setMobileOpen(false);
@@ -32,21 +29,6 @@ const Navbar = () => {
 
   return (
     <header className="io-header">
-      <div className="io-topbar">
-        <div className="io-topbar-inner">
-          <div className="io-topbar-left">
-            <a href={`mailto:${contactEmail}`}>
-              <Mail size={14} strokeWidth={2.5} />
-              {contactEmail}
-            </a>
-            <span>
-              <Clock3 size={14} strokeWidth={2.5} />
-              Monday - Saturday 8:00 AM - 5:00 PM
-            </span>
-          </div>
-        </div>
-      </div>
-
       <nav className="io-navbar" aria-label="Primary navigation">
         <div className="io-logo-panel">
           <SiteLogo
