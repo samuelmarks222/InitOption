@@ -457,4 +457,4 @@ export async function updateDisplayName(name: string): Promise<{ error: Appwrite
   }
 }
 
-export { account, appwriteConfigPresent, clerkUserIdToUuid };
+export { account, appwriteConfigPresent };
