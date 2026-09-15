@@ -807,10 +807,10 @@ const PoolitoHomePage = () => {
           --poolito-green: #12cc9a;
           --poolito-green-bright: #12cc9a;
           --poolito-dark: #1f4c63;
-          --poolito-deep: #0c2437;
+          --poolito-deep: #212634;
           --poolito-muted: #6d7181;
           --poolito-line: rgba(31, 76, 99, 0.11);
-          background: #071d2d;
+          background: #212634;
           font-family: Arial, system-ui, sans-serif;
         }
 
@@ -822,7 +822,7 @@ const PoolitoHomePage = () => {
         .poolito-header {
           position: relative;
           z-index: 20;
-          background: #fff;
+          background: #212634;
           box-shadow: 0 1px 0 rgba(31, 76, 99, 0.08);
         }
 
@@ -886,7 +886,7 @@ const PoolitoHomePage = () => {
         .poolito-nav {
           min-height: 82px;
           display: flex;
-          background: #fff;
+          background: #212634;
         }
 
         .poolito-logo-panel {
@@ -981,7 +981,7 @@ const PoolitoHomePage = () => {
           overflow: hidden;
           display: grid;
           grid-template-columns: minmax(0, 55%) minmax(0, 45%);
-          background: var(--poolito-deep);
+          background: #212634;
         }
 
         .poolito-hero-pattern,
