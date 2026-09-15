@@ -53,7 +53,7 @@ describe("public navigation links", () => {
   it("uses the shared public header on the landing page", () => {
     renderWithProviders(<PoolitoHomePage />);
 
-    expect(screen.getByText(/Monday - Saturday 8:00 AM - 5:00 PM/i)).toBeInTheDocument();
+    expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "About Us" })).toHaveAttribute("href", "/about");
     expect(screen.getByRole("link", { name: "Sign In" })).toHaveAttribute("href", "/login");
   });

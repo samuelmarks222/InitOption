@@ -198,7 +198,7 @@ const BlogPage = () => {
           <div className="poolito-blog-hero-inner">
             <div>
               <h1 id="poolito-blog-title">
-                Blog <span>Sidebar</span>
+                Init Option <span>Blog</span>
               </h1>
               <div className="poolito-blog-breadcrumb">
                 <Link to="/">Home</Link>

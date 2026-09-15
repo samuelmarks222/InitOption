@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
+import { clerkUserIdToUuid } from "@/integrations/appwrite/authService";
 import { api } from "@/integrations/api/client";
 import { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
@@ -637,7 +638,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         balanceCommitPromise,
         api.from("trades")
           .insert(buildTradeInsertPayload({
-            userId: user.id,
+            userId: clerkUserIdToUuid(user.id),
             assetSymbol,
             direction,
             amount: normalizedAmount,
