@@ -46,7 +46,6 @@ describe("public navigation links", () => {
     expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "About Us" })).toHaveAttribute("href", "/about");
     expect(screen.getByRole("link", { name: "Trading" })).toHaveAttribute("href", "/trade");
-    expect(screen.getByRole("link", { name: "Tournaments" })).toHaveAttribute("href", "/tournaments");
     expect(screen.getByRole("link", { name: "Blog" })).toHaveAttribute("href", "/blog");
     expect(screen.getByRole("link", { name: "Contact Us" })).toHaveAttribute("href", "/contact");
   });

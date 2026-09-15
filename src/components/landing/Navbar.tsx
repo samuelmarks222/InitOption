@@ -13,7 +13,6 @@ const navLinks = [
   { label: "Home", href: "/" },
   { label: "About Us", href: "/about" },
   { label: "Trading", href: "/trade" },
-  { label: "Tournaments", href: "/tournaments" },
   { label: "Blog", href: "/blog" },
   { label: "Contact Us", href: "/contact" },
 ];
