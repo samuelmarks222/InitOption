@@ -88,7 +88,7 @@ const PageHero = ({ eyebrow, title, description, cta }: PageHeroProps) => (
         line-height: 1.06;
         color: #ffffff;
         max-width: 850px;
-        font-family: Arial, system-ui, sans-serif;
+        font-family: Arial, Helvetica, sans-serif;
       }
 
       .ph-description {

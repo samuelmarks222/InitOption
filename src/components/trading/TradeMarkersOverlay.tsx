@@ -136,8 +136,8 @@ export const TradeMarkersOverlay = ({
 
       // ── Phase 1: build Marker data ──
       const markers: Marker[] = [];
-      const fontBold = `bold ${TEXT_ROW1_H}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
-      const fontNorm = `${TEXT_ROW2_H}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      const fontBold = `bold ${TEXT_ROW1_H}px Arial, Helvetica, sans-serif`;
+      const fontNorm = `${TEXT_ROW2_H}px Arial, Helvetica, sans-serif`;
 
       for (const trade of relevant) {
         const { entry, expiry: expiryTime, timeLeft, progress } = getTradeTimes(trade, nowSec);
@@ -372,7 +372,7 @@ export const TradeMarkersOverlay = ({
 
         // Top badges
         const topY = 36;
-        ctx.font = `bold 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+        ctx.font = `bold 10px Arial, Helvetica, sans-serif`;
 
         if (labelLeft) {
           const tw = ctx.measureText(labelLeft).width;

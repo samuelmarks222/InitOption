@@ -168,7 +168,7 @@ const AnimatedTradingChart = () => {
       context.fillStyle = "#1cd793";
       context.fill();
       context.fillStyle = "#ffffff";
-      context.font = width < 380 ? "700 9px Sora, sans-serif" : "700 11px Sora, sans-serif";
+      context.font = width < 380 ? "700 9px Arial, Helvetica, sans-serif" : "700 11px Arial, Helvetica, sans-serif";
       context.textAlign = "center";
       context.fillText(lastCandle.close.toFixed(5), badgeX + badgeWidth / 2, lastY + 4);
 

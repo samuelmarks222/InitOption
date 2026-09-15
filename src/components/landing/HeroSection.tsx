@@ -173,7 +173,7 @@ const HeroSection = () => {
 
       <style>{`
         .io-hero-page {
-          font-family: Arial, system-ui, sans-serif;
+          font-family: Arial, Helvetica, sans-serif;
           background: #ffffff;
           color: #2b215c;
         }

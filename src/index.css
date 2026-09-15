@@ -103,10 +103,11 @@
 @layer base {
   * {
     @apply border-border;
+    font-family: Arial, Helvetica, sans-serif !important;
   }
 
   html {
-    font-family: Arial, system-ui, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     scroll-behavior: smooth;
     width: 100%;
     max-width: 100%;
@@ -115,9 +116,18 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: Arial, Helvetica, sans-serif;
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+  }
+
+  button,
+  input,
+  textarea,
+  select,
+  option {
+    font-family: Arial, Helvetica, sans-serif !important;
   }
 
   #root {
@@ -404,19 +414,19 @@
   }
 
   .font-display {
-    font-family: Arial, system-ui, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
   }
 
   .font-copy {
-    font-family: Arial, system-ui, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
   }
 
   .font-landing-display {
-    font-family: Arial, system-ui, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
   }
 
   .font-landing-copy {
-    font-family: Arial, system-ui, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
   }
 
   .quotex-glow-home,
@@ -424,16 +434,16 @@
   .quotex-glow-home input,
   .quotex-glow-home textarea,
   .quotex-glow-home select {
-    font-family: Arial, system-ui, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
   }
 
   .quotex-glow-home .font-display,
   .quotex-glow-home .font-heading {
-    font-family: Arial, system-ui, sans-serif !important;
+    font-family: Arial, Helvetica, sans-serif !important;
   }
 
   .quotex-glow-home .font-copy {
-    font-family: Arial, system-ui, sans-serif !important;
+    font-family: Arial, Helvetica, sans-serif !important;
   }
 
   .trading-terminal,
@@ -441,7 +451,7 @@
   .trading-terminal input,
   .trading-terminal textarea,
   .trading-terminal select {
-    font-family: Arial, Helvetica, system-ui, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     font-weight: 400;
     letter-spacing: 0;
     text-rendering: optimizeLegibility;
@@ -450,7 +460,7 @@
   .trading-terminal .font-display,
   .trading-terminal .font-copy,
   .trading-terminal .font-heading {
-    font-family: Arial, Helvetica, system-ui, sans-serif !important;
+    font-family: Arial, Helvetica, sans-serif !important;
   }
 
   .trading-terminal .font-medium {
@@ -1406,7 +1416,7 @@
   --input: 220 13% 91%;
   --ring: 142 71% 34%;
   --radius: 0.75rem;
-  font-family: Arial, system-ui, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   color: #06383c;
   background-color: #ffffff;
 }
@@ -1439,7 +1449,7 @@
 .poolito-page .font-display,
 .poolito-page .font-copy,
 .poolito-page .font-heading {
-  font-family: Arial, system-ui, sans-serif !important;
+  font-family: Arial, Helvetica, sans-serif !important;
 }
 
 .poolito-page,
@@ -1447,7 +1457,7 @@
 .poolito-page input,
 .poolito-page textarea,
 .poolito-page select {
-  font-family: Arial, system-ui, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 /* ─── Navbar overrides inside poolito-page ─── */

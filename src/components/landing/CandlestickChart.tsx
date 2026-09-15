@@ -166,7 +166,7 @@ const CandlestickChart = ({
             textAnchor="middle"
             fontSize="7"
             fill="hsl(var(--landing-primary-foreground))"
-            fontFamily="Inter, sans-serif"
+            fontFamily="Arial, Helvetica, sans-serif"
             fontWeight="600"
           >
             {candles[candles.length - 1].close.toFixed(1)}

@@ -811,7 +811,7 @@ const PoolitoHomePage = () => {
           --poolito-muted: #6d7181;
           --poolito-line: rgba(31, 76, 99, 0.11);
           background: #212634;
-          font-family: Arial, system-ui, sans-serif;
+          font-family: Arial, Helvetica, sans-serif;
         }
 
         .poolito-container {

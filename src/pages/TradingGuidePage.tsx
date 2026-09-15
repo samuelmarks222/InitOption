@@ -1556,7 +1556,7 @@ const TradingGuidePage = () => {
             --poolito-line: rgba(6, 56, 60, 0.16);
             background: #ffffff;
             color: var(--poolito-dark);
-            font-family: Arial, system-ui, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
           }
 
           .poolito-guide-hero {

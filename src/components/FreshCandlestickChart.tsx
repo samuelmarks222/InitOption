@@ -35,7 +35,7 @@ const FreshCandlestickChart: React.FC<Props> = ({ data, height = 400 }) => {
         background: { type: ColorType.Solid, color: "#181A20" },
         textColor: "#D9D9D9",
         fontSize: 14,
-        fontFamily: 'Inter, system-ui, sans-serif',
+        fontFamily: 'Arial, Helvetica, sans-serif',
       },
       grid: {
         vertLines: { color: "#23242b", style: 0, visible: true },
