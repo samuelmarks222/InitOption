@@ -5,6 +5,14 @@ import App from "./App.tsx";
 import "./index.css";
 import i18n from "./i18n/index.ts";
 
+// Polyfill Node.js globals for browser compatibility
+import { Buffer } from "buffer";
+window.Buffer = window.Buffer || Buffer;
+import "crypto-browserify";
+import "stream-browserify";
+import "util";
+import "process/browser";
+
 declare global {
   interface Window {
     __INITOPTION_BOOT_STATUS__?: "preboot" | "imported" | "rendering" | "mounted";
