@@ -169,11 +169,11 @@ describe("simulateDeterministicTickPrice", () => {
 });
 
 describe("getTickIntervalMsForTimeframe", () => {
-  it("uses each timeframe's configured update cadence instead of a shared tick speed", () => {
-    expect(getTickIntervalMsForTimeframe(TIMEFRAMES["1s"])).toBe(40);
-    expect(getTickIntervalMsForTimeframe(TIMEFRAMES["1m"])).toBe(100);
-    expect(getTickIntervalMsForTimeframe(TIMEFRAMES["1h"])).toBe(1500);
-    expect(getTickIntervalMsForTimeframe(TIMEFRAMES["1D"])).toBe(5000);
+  it("keeps the authoritative synthetic tick cadence separate from chart timeframe", () => {
+    expect(getTickIntervalMsForTimeframe(TIMEFRAMES["5s"])).toBe(160);
+    expect(getTickIntervalMsForTimeframe(TIMEFRAMES["1m"])).toBe(160);
+    expect(getTickIntervalMsForTimeframe(TIMEFRAMES["1h"])).toBe(160);
+    expect(getTickIntervalMsForTimeframe(TIMEFRAMES["2h"])).toBe(160);
   });
 });
 
@@ -220,12 +220,12 @@ describe("replayDeterministicTickState", () => {
       ...input,
       timeframe: TIMEFRAMES["1m"],
     });
-    const fourHour = replayDeterministicTickState({
+    const twoHour = replayDeterministicTickState({
       ...input,
-      timeframe: TIMEFRAMES["4h"],
+      timeframe: TIMEFRAMES["2h"],
     });
 
-    expect(fourHour.price).toBe(oneMinute.price);
-    expect(fourHour.candle.close).toBe(oneMinute.candle.close);
+    expect(twoHour.price).toBe(oneMinute.price);
+    expect(twoHour.candle.close).toBe(oneMinute.candle.close);
   });
 });

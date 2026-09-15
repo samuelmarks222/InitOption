@@ -80,10 +80,18 @@ export class CandleAggregator {
       this.currentCandle = this.createFlatCandle(periodStart, openingPrice);
     }
 
-    this.currentCandle.close = tick.price;
-    this.currentCandle.high = Math.max(this.currentCandle.high, tick.price);
-    this.currentCandle.low = Math.min(this.currentCandle.low, tick.price);
-    this.currentCandle.volume += 1;
+    if (this.currentCandle.volume === 0) {
+      this.currentCandle.open = tick.price;
+      this.currentCandle.high = tick.price;
+      this.currentCandle.low = tick.price;
+      this.currentCandle.close = tick.price;
+      this.currentCandle.volume = 1;
+    } else {
+      this.currentCandle.close = tick.price;
+      this.currentCandle.high = Math.max(this.currentCandle.high, tick.price);
+      this.currentCandle.low = Math.min(this.currentCandle.low, tick.price);
+      this.currentCandle.volume += 1;
+    }
     this.lastTradePrice = tick.price;
 
     this.queueVisualUpdate(this.currentCandle, tick.timestamp);

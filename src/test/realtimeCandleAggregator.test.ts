@@ -118,9 +118,9 @@ describe("CandleAggregator", () => {
     expect(closed.map((candle) => candle.close)).toEqual([100, 100, 100]);
     expect(aggregator.getCurrentCandle()).toMatchObject({
       time: currentBucket,
-      open: 100,
+      open: 101,
       high: 101,
-      low: 100,
+      low: 101,
       close: 101,
       volume: 1,
     });

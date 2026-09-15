@@ -144,7 +144,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     }
 
     failedStage = "provider_request";
-    const callbackUrl = buildSasaPayCallbackUrl("/api/mobile-money/deposit-callback");
+    const callbackUrl = buildSasaPayCallbackUrl("/api/mobile-money/deposit-callback", request);
     console.log(`SasaPay STK push: amountKes=${amountKes} phone=${maskKenyanPhoneNumber(normalizedPhoneNumber)} callback=${callbackUrl} baseUrl=${process.env.SASAPAY_BASE_URL || process.env.SASAPAY_ENVIRONMENT || 'sandbox'}`);
     const sasaPayResponse = await requestSasaPayStkPush({
       accountReference: depositRequestId,

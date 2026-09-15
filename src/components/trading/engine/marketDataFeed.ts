@@ -119,15 +119,17 @@ const getPricePrecision = (price: number) => {
 };
 
 const getSyntheticStepRatio = (timeframeSeconds: number) => {
-  if (timeframeSeconds <= 1) return 0.0000055;
-  if (timeframeSeconds <= 5) return 0.0000065;
-  if (timeframeSeconds <= 15) return 0.000008;
-  if (timeframeSeconds <= 30) return 0.0000105;
-  if (timeframeSeconds <= 60) return 0.0000135;
-  return 0.000016;
+  if (timeframeSeconds <= 1) return 0.0000042;
+  if (timeframeSeconds <= 5) return 0.0000048;
+  if (timeframeSeconds <= 15) return 0.0000056;
+  if (timeframeSeconds <= 30) return 0.0000064;
+  if (timeframeSeconds <= 60) return 0.0000072;
+  return 0.0000085;
 };
 
 const LIVE_MARKET_MICROSTRUCTURE_SECONDS = 1;
+const SYNTHETIC_MARKET_TICK_INTERVAL_MS = 160;
+const SYNTHETIC_REPLAY_WINDOW_SECONDS = 140;
 
 const getSharedLivePriceAt = (
   engine: OTCPriceEngine,
@@ -182,51 +184,46 @@ export const simulateDeterministicTickPrice = ({
   const safeAnchorPrice = Number.isFinite(anchorPrice) && anchorPrice > 0 ? anchorPrice : safeBasePrice;
   const referencePrice =
     Number.isFinite(previousPrice) && previousPrice > 0 ? previousPrice : safeAnchorPrice;
-  // The displayed chart timeframe should not change the underlying market path.
-  // We always simulate against a fixed microstructure and let CandleAggregator
-  // build the selected chart timeframe from that shared tick stream.
   const marketTimeframeSeconds = LIVE_MARKET_MICROSTRUCTURE_SECONDS;
   const stepRatio = getSyntheticStepRatio(marketTimeframeSeconds);
-  const fastNoise = noiseAt(symbol, "tick-fast", timestamp / 0.28);
-  const slowNoise = noiseAt(
-    symbol,
-    "tick-slow",
-    timestamp / Math.max(1.5, marketTimeframeSeconds * 0.65),
-  );
+  // The displayed chart timeframe must not change the underlying market path.
+  // This models an authoritative tick stream; CandleAggregator builds every
+  // selected chart timeframe from the same ticks.
+  const fastNoise = noiseAt(symbol, "tick-fast", timestamp / 0.72);
+  const scalpNoise = noiseAt(symbol, "tick-scalp", timestamp / 0.18);
+  const pullbackNoise = noiseAt(symbol, "tick-pullback", timestamp / 7.5);
+  const trendNoise = noiseAt(symbol, "tick-trend", timestamp / 95);
+  const volatilityRegime = 0.52 + ((noiseAt(symbol, "volatility-regime", timestamp / 55) + 1) / 2) * 0.62;
   const waveOne =
-    Math.sin(timestamp * (2.2 + hashUnit(symbol, "wave-one-speed") * 1.2) + hashUnit(symbol, "wave-one-phase") * TAU);
+    Math.sin(timestamp * (0.56 + hashUnit(symbol, "wave-one-speed") * 0.34) + hashUnit(symbol, "wave-one-phase") * TAU);
   const waveTwo =
-    Math.sin(timestamp * (5.6 + hashUnit(symbol, "wave-two-speed") * 2.2) + hashUnit(symbol, "wave-two-phase") * TAU);
+    Math.sin(timestamp * (1.15 + hashUnit(symbol, "wave-two-speed") * 0.62) + hashUnit(symbol, "wave-two-phase") * TAU);
   const microPulse =
-    Math.sin(timestamp * (13 + hashUnit(symbol, "micro-pulse-speed") * 7) + hashUnit(symbol, "micro-pulse-phase") * TAU);
-  const intraBucketFraction = getIntraBucketFraction(timestamp, marketTimeframeSeconds);
-  const intrabarSwing =
-    Math.sin(
-      intraBucketFraction *
-        TAU *
-        3.2 +
-        hashUnit(symbol, "intrabar-phase") * TAU,
-    );
-  const intrabarNoise = noiseAt(
-    symbol,
-    "intrabar-noise",
-    timestamp / Math.max(0.12, marketTimeframeSeconds * 0.16),
-  );
+    Math.sin(timestamp * (3.4 + hashUnit(symbol, "micro-pulse-speed") * 1.8) + hashUnit(symbol, "micro-pulse-phase") * TAU);
+  const impulseCycleSeconds = 38 + hashUnit(symbol, "impulse-cycle") * 34;
+  const impulsePosition = (timestamp / impulseCycleSeconds + hashUnit(symbol, "impulse-phase")) % 1;
+  const impulseWindow = impulsePosition < 0.1 ? Math.sin((impulsePosition / 0.1) * Math.PI) : 0;
+  const impulseDirection = signedHash(symbol, `impulse-direction:${Math.floor(timestamp / impulseCycleSeconds)}`);
   const shock =
     safeBasePrice *
     stepRatio *
-    (fastNoise * 0.45 + slowNoise * 0.22 + waveOne * 0.18 + waveTwo * 0.1 + microPulse * 0.25);
-  const intrabarShock =
-    safeBasePrice *
-    stepRatio *
-    0.35 *
-    (intrabarSwing * 0.33 + intrabarNoise * 0.2);
-  const nextVelocity = velocity * 0.72 + shock * 0.45 + intrabarShock;
-  const meanReversionStrength = clamp(0.035 + marketTimeframeSeconds / 1600, 0.035, 0.11);
+    volatilityRegime *
+    (
+      trendNoise * 0.18 +
+      pullbackNoise * 0.14 +
+      fastNoise * 0.16 +
+      scalpNoise * 0.16 +
+      waveOne * 0.09 +
+      waveTwo * 0.06 +
+      microPulse * 0.1 +
+      impulseWindow * impulseDirection * 0.32
+    );
+  const nextVelocity = velocity * 0.64 + shock;
+  const meanReversionStrength = clamp(0.045 + volatilityRegime * 0.018, 0.045, 0.085);
   const meanReversion = (safeAnchorPrice - referencePrice) * meanReversionStrength;
   const anchorDistanceRatio =
-    Math.abs(safeAnchorPrice - referencePrice) / Math.max(safeBasePrice * stepRatio * 6, 1e-9);
-  const stepCap = safeBasePrice * stepRatio * (1 + Math.min(2.35, anchorDistanceRatio * 0.72));
+    Math.abs(safeAnchorPrice - referencePrice) / Math.max(safeBasePrice * stepRatio * 7, 1e-9);
+  const stepCap = safeBasePrice * stepRatio * (1.05 + volatilityRegime * 0.55 + Math.min(1.4, anchorDistanceRatio * 0.36));
   const rawNextPrice = referencePrice + meanReversion + nextVelocity;
   const boundedDelta = clamp(rawNextPrice - referencePrice, -stepCap, stepCap);
   const boundedPrice = clamp(referencePrice + boundedDelta, safeBasePrice * 0.25, safeBasePrice * 4);
@@ -237,6 +234,11 @@ export const simulateDeterministicTickPrice = ({
     velocity: nextVelocity,
   };
 };
+
+export const getSyntheticMarketTickIntervalMs = () => SYNTHETIC_MARKET_TICK_INTERVAL_MS;
+
+export const getTickIntervalMsForTimeframe = (_timeframe?: TimeframeConfig) =>
+  getSyntheticMarketTickIntervalMs();
 
 export const replayDeterministicTickState = ({
   symbol,
@@ -267,22 +269,26 @@ const toError = (error: unknown) => (error instanceof Error ? error : new Error(
 class DeterministicTickFeed implements MarketDataFeed {
   private readonly subscription: MarketFeedSubscription;
   private readonly callbacks: MarketFeedCallbacks;
-  private readonly engine: OTCPriceEngine;
+  private readonly engine: ContinuousSyntheticPriceEngine;
   private connected = false;
   private nextTickAtMs = 0;
   private timer: TimerHandle | null = null;
+  private sequence = 0;
 
   constructor(subscription: MarketFeedSubscription, callbacks: MarketFeedCallbacks) {
     this.subscription = subscription;
     this.callbacks = callbacks;
-    this.engine = new OTCPriceEngine(subscription.symbol, subscription.basePrice, subscription.assetCategory);
+    this.engine = new ContinuousSyntheticPriceEngine(subscription);
   }
 
   connect() {
     if (this.connected) return;
 
     this.connected = true;
-    this.nextTickAtMs = Date.now();
+    const nowMs = Date.now();
+    this.engine.reconcile(nowMs / 1000);
+    this.nextTickAtMs = nowMs;
+    this.sequence = Math.floor(nowMs / SYNTHETIC_MARKET_TICK_INTERVAL_MS);
     this.callbacks.onStatusChange?.("fallback");
     this.schedulePump(0);
   }
@@ -306,18 +312,20 @@ class DeterministicTickFeed implements MarketDataFeed {
   private pump() {
     if (!this.connected) return;
 
-    const tickIntervalMs = Math.max(25, this.subscription.timeframe.updateIntervalMs);
+    const tickIntervalMs = getSyntheticMarketTickIntervalMs();
     const nowMs = Date.now();
     let guard = 0;
 
-    while (this.nextTickAtMs <= nowMs && guard < 64) {
+    while (this.nextTickAtMs <= nowMs && guard < 48) {
       const timestamp = this.nextTickAtMs / 1000;
-      const price = getSharedLivePriceAt(this.engine, timestamp);
+      const price = this.engine.next(timestamp);
+      this.sequence += 1;
 
       this.callbacks.onTick({
         symbol: this.subscription.symbol,
         price,
         timestamp,
+        sequence: this.sequence,
         source: "simulated",
       });
 
@@ -326,10 +334,86 @@ class DeterministicTickFeed implements MarketDataFeed {
     }
 
     if (nowMs - this.nextTickAtMs > tickIntervalMs * 8) {
+      this.engine.reconcile(nowMs / 1000);
       this.nextTickAtMs = nowMs + tickIntervalMs;
+      this.sequence = Math.floor(nowMs / tickIntervalMs);
     }
 
     this.schedulePump(Math.max(4, this.nextTickAtMs - Date.now()));
+  }
+}
+
+class ContinuousSyntheticPriceEngine {
+  private readonly subscription: MarketFeedSubscription;
+  private price = 1;
+  private velocity = 0;
+  private lastTimestamp = 0;
+
+  constructor(subscription: MarketFeedSubscription) {
+    this.subscription = subscription;
+    this.price = getSharedLivePriceAt(
+      new OTCPriceEngine(subscription.symbol, subscription.basePrice, subscription.assetCategory),
+      Date.now() / 1000,
+    );
+  }
+
+  reconcile(timestamp: number) {
+    const intervalSeconds = getSyntheticMarketTickIntervalMs() / 1000;
+    const replayStart = Math.max(0, timestamp - SYNTHETIC_REPLAY_WINDOW_SECONDS);
+    const seedTimestamp = Math.floor(replayStart / intervalSeconds) * intervalSeconds;
+    const seedEngine = new OTCPriceEngine(
+      this.subscription.symbol,
+      this.subscription.basePrice,
+      this.subscription.assetCategory,
+    );
+
+    this.price = getSharedLivePriceAt(seedEngine, seedTimestamp);
+    this.velocity = 0;
+    this.lastTimestamp = seedTimestamp;
+
+    for (
+      let replayTimestamp = seedTimestamp + intervalSeconds;
+      replayTimestamp <= timestamp;
+      replayTimestamp += intervalSeconds
+    ) {
+      this.next(replayTimestamp);
+    }
+  }
+
+  next(timestamp: number) {
+    if (!Number.isFinite(timestamp) || timestamp <= 0) {
+      return this.price;
+    }
+
+    if (this.lastTimestamp <= 0 || timestamp < this.lastTimestamp) {
+      this.reconcile(timestamp);
+      return this.price;
+    }
+
+    if (timestamp === this.lastTimestamp) {
+      return this.price;
+    }
+
+    const anchorEngine = new OTCPriceEngine(
+      this.subscription.symbol,
+      this.subscription.basePrice,
+      this.subscription.assetCategory,
+    );
+    const anchorPrice = getSharedLivePriceAt(anchorEngine, timestamp);
+    const nextTick = simulateDeterministicTickPrice({
+      symbol: this.subscription.symbol,
+      basePrice: this.subscription.basePrice,
+      timeframeSeconds: LIVE_MARKET_MICROSTRUCTURE_SECONDS,
+      timestamp,
+      previousPrice: this.price,
+      anchorPrice,
+      velocity: this.velocity,
+    });
+
+    this.price = nextTick.price;
+    this.velocity = nextTick.velocity;
+    this.lastTimestamp = timestamp;
+    return this.price;
   }
 }
 

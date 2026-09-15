@@ -77,14 +77,53 @@ const parseJsonResponse = async (response: Response) => {
 
 export const getSasaPayMerchantCode = () => getRequiredEnv("SASAPAY_MERCHANT_CODE");
 
-export const getSasaPayCallbackBaseUrl = () =>
-  process.env.SASAPAY_CALLBACK_BASE_URL?.trim() || process.env.APP_BASE_URL?.trim() || null;
+type CallbackRequestLike = {
+  headers?: Record<string, string | string[] | undefined>;
+};
 
-export const buildSasaPayCallbackUrl = (path: string) => {
-  const baseUrl = getSasaPayCallbackBaseUrl();
+const getHeaderValue = (
+  headers: Record<string, string | string[] | undefined> | undefined,
+  headerName: string,
+) => {
+  if (!headers) return null;
+
+  const lowerName = headerName.toLowerCase();
+  const value = headers[headerName] ?? headers[lowerName] ?? Object.entries(headers).find(([key]) => key.toLowerCase() === lowerName)?.[1];
+
+  if (Array.isArray(value)) {
+    return value[0] ?? null;
+  }
+
+  return typeof value === "string" ? value : null;
+};
+
+export const getSasaPayCallbackBaseUrl = (request?: CallbackRequestLike | null) => {
+  const configured = process.env.SASAPAY_CALLBACK_BASE_URL?.trim() || process.env.APP_BASE_URL?.trim();
+  if (configured) {
+    return configured.replace(/\/+$/, "");
+  }
+
+  if (!request?.headers) {
+    return null;
+  }
+
+  const protocol = getHeaderValue(request.headers, "x-forwarded-proto") || "https";
+  const host = getHeaderValue(request.headers, "x-forwarded-host") || getHeaderValue(request.headers, "host");
+
+  if (!host) {
+    return null;
+  }
+
+  return `${protocol}://${host}`;
+};
+
+export const buildSasaPayCallbackUrl = (path: string, request?: CallbackRequestLike | null) => {
+  const baseUrl = getSasaPayCallbackBaseUrl(request);
 
   if (!baseUrl) {
-    throw new Error("Set SASAPAY_CALLBACK_BASE_URL or APP_BASE_URL before using SasaPay callbacks.");
+    throw new Error(
+      "Set SASAPAY_CALLBACK_BASE_URL or APP_BASE_URL before using SasaPay callbacks, or ensure the incoming request has a valid Host header.",
+    );
   }
 
   const url = new URL(path, baseUrl);

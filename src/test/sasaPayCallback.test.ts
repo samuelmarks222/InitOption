@@ -1,7 +1,38 @@
 import { describe, expect, it } from "vitest";
-import { normalizeCallbackPayload } from "../../api/_lib/sasapay.ts";
+import { buildSasaPayCallbackUrl, normalizeCallbackPayload } from "../../api/_lib/sasapay.ts";
 
 describe("normalizeCallbackPayload", () => {
+  it("builds a callback URL from the incoming request host when no callback base URL is configured", () => {
+    const previousCallbackBaseUrl = process.env.SASAPAY_CALLBACK_BASE_URL;
+    const previousAppBaseUrl = process.env.APP_BASE_URL;
+
+    delete process.env.SASAPAY_CALLBACK_BASE_URL;
+    delete process.env.APP_BASE_URL;
+
+    try {
+      const callbackUrl = buildSasaPayCallbackUrl("/api/mobile-money/deposit-callback", {
+        headers: {
+          host: "initoption.com",
+          "x-forwarded-proto": "https",
+        },
+      });
+
+      expect(callbackUrl).toBe("https://initoption.com/api/mobile-money/deposit-callback");
+    } finally {
+      if (previousCallbackBaseUrl) {
+        process.env.SASAPAY_CALLBACK_BASE_URL = previousCallbackBaseUrl;
+      } else {
+        delete process.env.SASAPAY_CALLBACK_BASE_URL;
+      }
+
+      if (previousAppBaseUrl) {
+        process.env.APP_BASE_URL = previousAppBaseUrl;
+      } else {
+        delete process.env.APP_BASE_URL;
+      }
+    }
+  });
+
   it("maps C2B callback fields from the documented mobile money result payload", () => {
     const payload = normalizeCallbackPayload({
       BillRefNumber: "123e4567-e89b-12d3-a456-426614174000",
