@@ -41,10 +41,115 @@
     <link rel="alternate" hreflang="x-default" href="https://initoption.com/">
     <link rel="manifest" href="/manifest.json">
     <link rel="sitemap" type="application/xml" href="/sitemap.xml">
-    <meta name="platform-metadata-end" content="true" />
+<meta name="platform-metadata-end" content="true" />
+    <script>
+      // Polyfill Buffer globally before any modules load
+      (function() {
+        if (typeof window !== "undefined" && !window.Buffer) {
+          // Create a minimal Buffer polyfill
+          window.Buffer = window.Buffer || (function() {
+            function Buffer(data, encoding) {
+              if (typeof data === "number") {
+                this.length = data;
+                this.buffer = new ArrayBuffer(data);
+                this.view = new DataView(this.buffer);
+              } else if (typeof data === "string") {
+                var bytes = data.length;
+                var buffer = new ArrayBuffer(bytes);
+                var view = new Uint8Array(buffer);
+                for (var i = 0; i < bytes; i++) {
+                  view[i] = data.charCodeAt(i);
+                }
+                this.length = bytes;
+                this.buffer = buffer;
+                this.view = new DataView(buffer);
+              } else if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
+                this.buffer = data.buffer || data;
+                this.view = new DataView(this.buffer);
+                this.length = this.buffer.byteLength;
+              } else {
+                throw new TypeError("First argument must be a string, Buffer, ArrayBuffer, Array, or array-like object.");
+              }
+              this.offset = 0;
+              this.markedOffset = 0;
+            }
+            Buffer.prototype.toString = function(encoding, start, end) {
+              encoding = encoding || "utf8";
+              start = start || 0;
+              end = end || this.length;
+              var bytes = new Uint8Array(this.buffer, start, end - start);
+              if (encoding === "utf8" || encoding === "utf-8") {
+                var text = "";
+                for (var i = start; i < end; ) {
+                  var byte1 = bytes[i++];
+                  if (byte1 < 128) {
+                    text += String.fromCharCode(byte1);
+                  } else if (byte1 < 224) {
+                    text += String.fromCharCode(((byte1 & 31) << 6) | (bytes[i++] & 63));
+                  } else if (byte1 < 240) {
+                    text += String.fromCharCode(((byte1 & 15) << 12) | ((bytes[i++] & 63) << 6) | (bytes[i++] & 63));
+                  } else {
+                    text += String.fromCharCode(((byte1 & 7) << 18) | ((bytes[i++] & 63) << 12) | ((bytes[i++] & 63) << 6) | (bytes[i++] & 63));
+                  }
+                }
+                return text;
+              };
+              Buffer.prototype.toJSON = function() {
+                return { type: "Buffer", data: Array.from(new Uint8Array(this.buffer, this.offset, this.length)) };
+              };
+              Buffer.isBuffer = function(obj) {
+                return obj instanceof Buffer;
+              };
+              Buffer.from = function(data, encoding) {
+                if (typeof data === "string") {
+                  var bytes = new Uint8Array(data.length);
+                  for (var i = 0; i < data.length; i++) {
+                    bytes[i] = data.charCodeAt(i);
+                  }
+                  return new Buffer(bytes.buffer);
+                }
+                if (data instanceof ArrayBuffer) {
+                  return new Buffer(data);
+                }
+                if (ArrayBuffer.isView(data)) {
+                  return new Buffer(data.buffer);
+                }
+                if (Array.isArray(data)) {
+                  return new Buffer(new Uint8Array(data).buffer);
+                }
+                throw new TypeError("First argument must be a string, Buffer, ArrayBuffer, Array, or array-like object.");
+              };
+              Buffer.alloc = function(size) {
+                return new Buffer(size);
+              };
+              Buffer.allocUnsafe = function(size) {
+                return new Buffer(size);
+              };
+              Buffer.concat = function(list, totalLength) {
+                if (!Array.isArray(list)) throw new TypeError("list argument must be an Array of Buffers");
+                if (totalLength === undefined) {
+                  totalLength = 0;
+                  for (var i = 0; i < list.length; i++) {
+                    totalLength += list[i].length;
+                  }
+                }
+                var buffer = new Buffer(totalLength);
+                var pos = 0;
+                for (var i = 0; i < list.length; i++) {
+                  var buf = list[i];
+                  var bytes = new Uint8Array(buf.buffer, buf.offset || 0, buf.length);
+                  new Uint8Array(buffer.buffer).set(bytes, pos);
+                  pos += buf.length;
+                }
+                return buffer;
+              };
+              return Buffer;
+            })();
+          }
+        })();
+      }
+    </script>
   </head>
-
-  <body>
     <div id="root"></div>
     <script>
       (() => {
