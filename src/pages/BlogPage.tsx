@@ -20,7 +20,13 @@ import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { useDynamicRouteSeo } from "@/hooks/useDynamicRouteSeo";
 import { fetchBlogPostsPage } from "@/lib/blogApi";
-import type { BlogCategoryDefinition, BlogPostSummary, PaginatedBlogPostsResponse } from "@/lib/blogPosts";
+import {
+  getPublishedBlogPostSummaries,
+  paginateBlogPosts,
+  type BlogCategoryDefinition,
+  type BlogPostSummary,
+  type PaginatedBlogPostsResponse,
+} from "@/lib/blogPosts";
 
 const PAGE_SIZE = 4;
 const BLOG_HERO_IMAGE = "/landing/poolito-initoption/hero-laptop-desk.jpg";
@@ -42,7 +48,9 @@ const BlogPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [payload, setPayload] = useState<PaginatedBlogPostsResponse | null>(null);
+  const [payload, setPayload] = useState<PaginatedBlogPostsResponse | null>(() =>
+    paginateBlogPosts(getPublishedBlogPostSummaries(), 1, PAGE_SIZE),
+  );
   const page = Math.max(1, Number.parseInt(searchParams.get("page") ?? "1", 10) || 1);
   const query = (searchParams.get("q") ?? "").trim();
   const categorySlug = (searchParams.get("category") ?? "").trim().toLowerCase();
@@ -76,7 +84,12 @@ const BlogPage = () => {
         }
       } catch (requestError) {
         if (!cancelled) {
-          setError(requestError instanceof Error ? requestError.message : "The blog could not be loaded.");
+          const fallbackPayload = paginateBlogPosts(getPublishedBlogPostSummaries(), 1, PAGE_SIZE);
+          setPayload(fallbackPayload);
+          setError(null);
+          if (requestError instanceof Error) {
+            console.warn("Using starter blog content fallback:", requestError.message);
+          }
         }
       } finally {
         if (!cancelled) {
@@ -415,13 +428,16 @@ const BlogPage = () => {
 
       <style>{`
         .poolito-blog-page {
-          --poolito-dark: #06383c;
-          --poolito-deep: #032f32;
-          --poolito-green: #109b42;
-          --poolito-muted: #62667f;
-          --poolito-line: rgba(6, 56, 60, 0.16);
-          background: #ffffff;
-          color: var(--poolito-dark);
+          --poolito-dark: #0d1a2d;
+          --poolito-deep: #111c2b;
+          --poolito-panel: rgba(14, 25, 39, 0.96);
+          --poolito-panel-alt: rgba(17, 28, 43, 0.92);
+          --poolito-green: #1fd08d;
+          --poolito-green-soft: rgba(31, 208, 141, 0.14);
+          --poolito-muted: #9fb0c2;
+          --poolito-line: rgba(146, 171, 194, 0.15);
+          background: #07131f;
+          color: #edf7ff;
           font-family: Arial, Helvetica, sans-serif;
         }
 
@@ -431,7 +447,7 @@ const BlogPage = () => {
           min-height: 370px;
           padding: 170px 0 76px;
           background:
-            linear-gradient(90deg, rgba(3, 47, 50, 0.97) 0%, rgba(3, 47, 50, 0.9) 47%, rgba(3, 47, 50, 0.66) 100%),
+            linear-gradient(90deg, rgba(21, 33, 47, 0.98) 0%, rgba(21, 33, 47, 0.92) 49%, rgba(21, 33, 47, 0.68) 100%),
             url("${BLOG_HERO_IMAGE}") center right / cover no-repeat;
         }
 
@@ -510,10 +526,10 @@ const BlogPage = () => {
         }
 
         .poolito-blog-main {
-          padding: 86px 0 104px;
+          padding: 52px 0 104px;
           background:
-            radial-gradient(circle at 93% 15%, rgba(16, 155, 66, 0.08), transparent 24%),
-            #ffffff;
+            radial-gradient(circle at 93% 15%, rgba(31, 208, 141, 0.08), transparent 24%),
+            #091722;
         }
 
         .poolito-blog-shell {
@@ -524,25 +540,30 @@ const BlogPage = () => {
         .poolito-blog-grid {
           display: grid;
           grid-template-columns: minmax(0, 1fr) 330px;
-          gap: 48px;
+          gap: 44px;
           align-items: start;
         }
 
         .poolito-blog-feed {
           display: grid;
-          gap: 62px;
+          gap: 30px;
         }
 
         .poolito-blog-card {
           min-width: 0;
+          padding: 18px 18px 0;
+          border: 1px solid var(--poolito-line);
+          border-radius: 18px;
+          background: rgba(15, 25, 38, 0.92);
+          box-shadow: 0 16px 34px rgba(0, 0, 0, 0.18);
         }
 
         .poolito-blog-image {
           display: block;
           overflow: hidden;
-          border-radius: 18px;
-          background: #f1f5f3;
-          box-shadow: 0 18px 38px rgba(6, 56, 60, 0.12);
+          border-radius: 14px;
+          background: #101b2a;
+          box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
         }
 
         .poolito-blog-image img {
@@ -558,14 +579,14 @@ const BlogPage = () => {
         }
 
         .poolito-blog-meta {
-          margin-top: 24px;
+          margin-top: 20px;
           display: flex;
           flex-wrap: wrap;
           align-items: center;
           gap: 18px;
-          color: var(--poolito-dark);
-          font-size: 14px;
-          font-weight: 950;
+          color: var(--poolito-muted);
+          font-size: 12px;
+          font-weight: 900;
           text-transform: uppercase;
         }
 
@@ -582,29 +603,29 @@ const BlogPage = () => {
 
         .poolito-blog-card h2 {
           margin: 14px 0 0;
-          font-size: clamp(32px, 3vw, 44px);
+          font-size: clamp(30px, 2.4vw, 42px);
           line-height: 1.12;
           font-weight: 950;
-          letter-spacing: 0;
+          letter-spacing: -0.02em;
         }
 
         .poolito-blog-card h2 a {
-          color: var(--poolito-dark);
+          color: #edf7ff;
           text-decoration: none;
         }
 
         .poolito-blog-card p {
           max-width: 930px;
-          margin: 22px 0 0;
+          margin: 18px 0 0;
           color: var(--poolito-muted);
-          font-size: 16px;
-          line-height: 1.74;
-          font-weight: 700;
+          font-size: 15px;
+          line-height: 1.72;
+          font-weight: 600;
         }
 
         .poolito-blog-card-actions {
-          margin-top: 38px;
-          padding-top: 26px;
+          margin-top: 24px;
+          padding: 18px 0 20px;
           border-top: 1px solid var(--poolito-line);
           display: flex;
           align-items: center;
@@ -620,9 +641,9 @@ const BlogPage = () => {
           border: 0;
           padding: 0;
           background: transparent;
-          color: var(--poolito-dark);
-          font-size: 14px;
-          font-weight: 950;
+          color: #edf7ff;
+          font-size: 12px;
+          font-weight: 900;
           text-transform: uppercase;
           text-decoration: none;
           cursor: pointer;
@@ -634,22 +655,31 @@ const BlogPage = () => {
 
         .poolito-blog-sidebar {
           display: grid;
-          gap: 34px;
+          gap: 24px;
           align-self: stretch;
+        }
+
+        .poolito-blog-author,
+        .poolito-blog-widget {
+          padding: 18px 18px 20px;
+          border: 1px solid var(--poolito-line);
+          border-radius: 16px;
+          background: rgba(15, 25, 38, 0.92);
+          box-shadow: 0 16px 28px rgba(0, 0, 0, 0.12);
         }
 
         .poolito-blog-author img {
           width: 100%;
           aspect-ratio: 1.25 / 1;
           object-fit: cover;
-          border-radius: 0 64px 0 0;
+          border-radius: 0 52px 0 0;
           filter: grayscale(0.2);
         }
 
         .poolito-blog-author h3,
         .poolito-blog-widget h3 {
-          margin: 22px 0 0;
-          color: var(--poolito-dark);
+          margin: 18px 0 0;
+          color: #edf7ff;
           font-size: 26px;
           line-height: 1.2;
           font-weight: 950;
@@ -675,27 +705,32 @@ const BlogPage = () => {
           color: var(--poolito-muted);
           font-size: 15px;
           line-height: 1.7;
-          font-weight: 700;
+          font-weight: 600;
         }
 
         .poolito-blog-category-list {
-          margin-top: 22px;
+          margin-top: 18px;
           display: grid;
         }
 
         .poolito-blog-category-list button {
-          min-height: 52px;
+          min-height: 46px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 16px;
           border: 0;
-          border-bottom: 1px dashed rgba(6, 56, 60, 0.24);
+          border-bottom: 1px dashed rgba(146, 171, 194, 0.2);
           background: transparent;
           color: var(--poolito-muted);
-          font-size: 15px;
-          font-weight: 750;
+          font-size: 14px;
+          font-weight: 700;
           cursor: pointer;
+        }
+
+        .poolito-blog-category-list button.is-active,
+        .poolito-blog-category-list button:hover {
+          color: var(--poolito-green);
         }
 
         .poolito-blog-category-list span,
@@ -712,7 +747,7 @@ const BlogPage = () => {
         }
 
         .poolito-blog-recent-list {
-          margin-top: 22px;
+          margin-top: 18px;
           display: grid;
           gap: 18px;
         }
@@ -720,16 +755,16 @@ const BlogPage = () => {
         .poolito-blog-recent-list a {
           display: grid;
           grid-template-columns: 92px minmax(0, 1fr);
-          gap: 14px;
+          gap: 12px;
           align-items: center;
-          color: var(--poolito-dark);
+          color: #edf7ff;
           text-decoration: none;
         }
 
         .poolito-blog-recent-list img {
           width: 92px;
           height: 84px;
-          border-radius: 6px;
+          border-radius: 8px;
           object-fit: cover;
         }
 
@@ -738,40 +773,41 @@ const BlogPage = () => {
           align-items: center;
           gap: 6px;
           color: var(--poolito-green);
-          font-size: 12px;
-          font-weight: 950;
+          font-size: 11px;
+          font-weight: 900;
           text-transform: uppercase;
         }
 
         .poolito-blog-recent-list strong {
           display: block;
           margin-top: 6px;
-          font-size: 16px;
+          font-size: 15px;
           line-height: 1.34;
-          font-weight: 950;
+          font-weight: 900;
+          color: #edf7ff;
         }
 
         .poolito-blog-tags {
-          margin-top: 22px;
+          margin-top: 18px;
           display: flex;
           flex-wrap: wrap;
           gap: 8px;
         }
 
         .poolito-blog-tags button {
-          min-height: 36px;
-          border: 1px solid rgba(6, 56, 60, 0.14);
-          border-radius: 4px;
-          background: #eef2f3;
+          min-height: 34px;
+          border: 1px solid rgba(146, 171, 194, 0.2);
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.02);
           padding: 0 12px;
           color: var(--poolito-muted);
-          font-size: 14px;
-          font-weight: 850;
+          font-size: 12px;
+          font-weight: 800;
           cursor: pointer;
         }
 
         .poolito-blog-follow-grid {
-          margin-top: 22px;
+          margin-top: 18px;
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 10px;
