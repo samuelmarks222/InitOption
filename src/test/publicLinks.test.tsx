@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import PoolitoHomePage from "@/components/landing/PoolitoHomePage";
 import MarketTicker from "@/components/landing/MarketTicker";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
@@ -39,14 +40,23 @@ const renderWithProviders = (ui: ReactNode) => {
 };
 
 describe("public navigation links", () => {
-  it("routes navbar links back to working homepage sections and pages", () => {
+  it("routes navbar links back to working public pages", () => {
     renderWithProviders(<Navbar />);
 
-    expect(screen.getByRole("link", { name: "Markets" })).toHaveAttribute("href", "/#markets");
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "About Us" })).toHaveAttribute("href", "/about");
-    expect(screen.getByRole("link", { name: "Reviews" })).toHaveAttribute("href", "/reviews");
-    expect(screen.getByRole("link", { name: "FAQ" })).toHaveAttribute("href", "/#faq");
+    expect(screen.getByRole("link", { name: "Trading" })).toHaveAttribute("href", "/trade");
+    expect(screen.getByRole("link", { name: "Tournaments" })).toHaveAttribute("href", "/tournaments");
     expect(screen.getByRole("link", { name: "Blog" })).toHaveAttribute("href", "/blog");
+    expect(screen.getByRole("link", { name: "Contact Us" })).toHaveAttribute("href", "/contact");
+  });
+
+  it("uses the shared public header on the landing page", () => {
+    renderWithProviders(<PoolitoHomePage />);
+
+    expect(screen.getByText(/Monday - Saturday 8:00 AM - 5:00 PM/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "About Us" })).toHaveAttribute("href", "/about");
+    expect(screen.getByRole("link", { name: "Sign In" })).toHaveAttribute("href", "/login");
   });
 
   it("keeps footer links on live internal destinations", () => {

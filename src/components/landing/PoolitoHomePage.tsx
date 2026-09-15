@@ -13,18 +13,16 @@ import {
   Globe2,
   Headphones,
   LineChart,
-  LogIn,
   Play,
   ShieldCheck,
   Smartphone,
   Star,
   Users,
-  UserPlus,
   WalletCards,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/landing/Footer";
-import { SiteLogo } from "@/components/branding/SiteLogo";
+import Navbar from "@/components/landing/Navbar";
 import AssetSymbolMark from "@/components/trading/AssetSymbolMark";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 
@@ -36,15 +34,6 @@ const HOME_ASSETS = {
   imacAlt: "/landing/poolito-initoption/imac-platform-alt.png",
   abstract: "/landing/poolito-initoption/abstract-trading-bg.jpg",
 };
-
-const navLinks = [
-  { label: "Home", to: "/" },
-  { label: "About Us", to: "/about" },
-  { label: "Trading", to: "/trade" },
-  { label: "Tournaments", to: "/tournaments" },
-  { label: "Blog", to: "/blog" },
-  { label: "Contact Us", to: "/contact" },
-];
 
 const assetTags = [
   { label: "Currencies", icon: CircleDollarSign },
@@ -390,39 +379,7 @@ const PoolitoHomePage = () => {
 
   return (
     <div className="poolito-home min-h-screen overflow-x-hidden bg-white text-[#06383c]">
-      <header className="poolito-header">
-        <nav className="poolito-nav" aria-label="Primary navigation">
-          <div className="poolito-logo-panel">
-            <SiteLogo
-              to="/"
-              showText={true}
-              className="poolito-logo"
-              imageClassName="h-11 max-w-[210px]"
-              markClassName="h-10 w-10 rounded-full border border-white/25 bg-white/10 text-white shadow-none"
-              nameClassName="text-[22px] font-black normal-case tracking-[0] text-white"
-            />
-          </div>
-          <div className="poolito-nav-body">
-            <div className="poolito-nav-links">
-              {navLinks.map((item) => (
-                <Link key={item.label} to={item.to}>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-            <div className="poolito-nav-actions">
-              <Link to="/login" className="poolito-auth-link">
-                <LogIn size={18} />
-                Sign In
-              </Link>
-              <Link to="/register" className="poolito-auth-link poolito-auth-link-primary">
-                <UserPlus size={18} />
-                Sign Up
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Navbar />
 
       <main>
         <section className="poolito-hero" aria-labelledby="poolito-hero-title">
