@@ -395,11 +395,11 @@ const PoolitoHomePage = () => {
           <div className="poolito-logo-panel">
             <SiteLogo
               to="/"
-              showText={false}
+              showText={true}
               className="poolito-logo"
               imageClassName="h-11 max-w-[210px]"
-              markClassName="h-12 w-12 rounded-full bg-white/15 text-white shadow-none"
-              nameClassName="text-3xl font-black normal-case tracking-[0] text-white"
+              markClassName="h-10 w-10 rounded-full border border-white/25 bg-white/10 text-white shadow-none"
+              nameClassName="text-[22px] font-black normal-case tracking-[0] text-white"
             />
           </div>
           <div className="poolito-nav-body">
@@ -824,6 +824,7 @@ const PoolitoHomePage = () => {
           z-index: 20;
           background: #212634;
           box-shadow: 0 1px 0 rgba(31, 76, 99, 0.08);
+          font-family: Arial, Helvetica, sans-serif;
         }
 
         .poolito-topbar {
@@ -890,14 +891,14 @@ const PoolitoHomePage = () => {
         }
 
         .poolito-logo-panel {
-          width: min(31vw, 420px);
-          min-width: 310px;
+          width: auto;
+          min-width: 0;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 0 54px 0 36px;
-          background: var(--poolito-green);
-          clip-path: polygon(0 0, 84% 0, 100% 100%, 0 100%);
+          padding: 0 14px 0 0;
+          background: transparent;
+          clip-path: none;
         }
 
         .poolito-logo {
@@ -926,14 +927,15 @@ const PoolitoHomePage = () => {
         }
 
         .poolito-nav-links a {
-          color: var(--poolito-dark);
+          color: #ffffff;
           font-size: 13px;
           font-weight: 900;
           text-decoration: none;
+          font-family: Arial, Helvetica, sans-serif;
         }
 
         .poolito-nav-links a:hover {
-          color: var(--poolito-green);
+          color: rgba(255, 255, 255, 0.72);
         }
 
         .poolito-nav-actions {
@@ -949,30 +951,30 @@ const PoolitoHomePage = () => {
           gap: 9px;
           padding: 0 20px;
           border-radius: 999px;
-          color: var(--poolito-dark);
-          border: 2px solid rgba(31, 76, 99, 0.14);
+          color: #212634;
+          border: none;
           background: #fff;
           font-size: 13px;
           font-weight: 950;
           text-decoration: none;
           white-space: nowrap;
+          font-family: Arial, Helvetica, sans-serif;
         }
 
         .poolito-auth-link:hover {
-          color: var(--poolito-green);
-          border-color: rgba(18, 204, 154, 0.36);
+          color: #212634;
+          background: rgba(255, 255, 255, 0.82);
         }
 
         .poolito-auth-link-primary {
-          color: #fff;
-          border-color: var(--poolito-green);
-          background: var(--poolito-green);
+          color: #212634;
+          border: none;
+          background: #fff;
         }
 
         .poolito-auth-link-primary:hover {
-          color: #fff;
-          border-color: var(--poolito-dark);
-          background: var(--poolito-dark);
+          color: #212634;
+          background: rgba(255, 255, 255, 0.82);
         }
 
         .poolito-hero {
