@@ -156,7 +156,8 @@
         const BOOT_STATUS_KEY = "__INITOPTION_BOOT_STATUS__";
         const RECOVERY_ATTEMPT_KEY = "initoption:boot-recovery-attempts:v1";
         const MAX_RECOVERY_ATTEMPTS = 1;
-        const BOOT_TIMEOUT_MS = 7000;
+        // Allow slower first loads to finish before presenting recovery mode.
+        const BOOT_TIMEOUT_MS = 20000;
         const BOOT_ERROR_PATTERNS = [
           /Failed to fetch dynamically imported module/i,
           /Importing a module script failed/i,

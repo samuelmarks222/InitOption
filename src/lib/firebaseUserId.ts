@@ -9,6 +9,7 @@
  * get a deterministic uuid derived from their firebase uid.
  */
 import { createHash } from "crypto";
+import { Buffer } from "buffer";
 
 const UUID_V5_NAMESPACE = Buffer.from("8f2d1a0e-6b3c-4d4e-9a9a-1a2b3c4d5e6f", "hex");
 

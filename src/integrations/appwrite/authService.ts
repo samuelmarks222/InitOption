@@ -4,6 +4,7 @@
 // changes. Appwrite is the active auth provider; Firebase files remain in the
 // repo as a backup until the full migration is verified.
 import crypto from "node:crypto";
+import { Buffer } from "buffer";
 import { ID, OAuthProvider } from "appwrite";
 import { account, appwriteConfigPresent, type AppwriteUser } from "./config";
 
