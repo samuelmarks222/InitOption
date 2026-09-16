@@ -16,10 +16,12 @@ import { process } from "process";
 declare global {
   interface Window {
     __INITOPTION_BOOT_STATUS__?: "preboot" | "imported" | "rendering" | "mounted";
+    process?: typeof process;
   }
 }
 
 if (typeof window !== "undefined") {
+  window.process = window.process || process;
   window.__INITOPTION_BOOT_STATUS__ = "imported";
 }
 
@@ -48,4 +50,3 @@ if (typeof window !== "undefined") {
     }
   });
 }
-

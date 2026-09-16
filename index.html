@@ -93,7 +93,8 @@
                   }
                 }
                 return text;
-              };
+              }
+            };
               Buffer.prototype.toJSON = function() {
                 return { type: "Buffer", data: Array.from(new Uint8Array(this.buffer, this.offset, this.length)) };
               };
@@ -147,7 +148,6 @@
             })();
           }
         })();
-      }
     </script>
   </head>
     <div id="root"></div>
