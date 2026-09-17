@@ -7,15 +7,15 @@ const MAX_OFFSET_AGE_MS = 60000;
 export const getServerTimeOffset = () => serverTimeOffsetMs;
 
 export const getSynchronizedTime = (): number => {
-  return performance.now() + serverTimeOffsetMs;
+  return Date.now() + serverTimeOffsetMs;
 };
 
 export const getSynchronizedUnixTime = (): number => {
-  return Math.floor((performance.now() + serverTimeOffsetMs) / 1000);
+  return Math.floor(getSynchronizedTime() / 1000);
 };
 
 export const getSynchronizedUnixTimeMs = (): number => {
-  return Math.floor(performance.now() + serverTimeOffsetMs);
+  return Math.floor(getSynchronizedTime());
 };
 
 async function fetchServerTime(): Promise<number> {
@@ -28,9 +28,9 @@ async function fetchServerTime(): Promise<number> {
     const roundTrip = end - start;
     const serverTimeMs = data.timestamp * 1000;
     const estimatedServerTimeAtEnd = serverTimeMs + roundTrip / 2;
-    return estimatedServerTimeAtEnd - end;
+    return estimatedServerTimeAtEnd - Date.now();
   } catch {
-    return Date.now() - start;
+    return 0;
   }
 }
 
