@@ -265,152 +265,176 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     const status: "won" | "lost" = won ? "won" : "lost";
     const settledAt = new Date().toISOString();
 
-    await api.from("trades")
-      .update({
-        exit_price: exitPrice,
-        status,
-        profit,
-        closed_at: settledAt,
-      })
-      .eq("id", trade.id);
+    const MAX_SETTLE_RETRIES = 3;
+    let lastSettleError: unknown = null;
 
-    clearStoredTradeMarkerTime(trade.id);
-
-    try {
-      await api.rpc("process_trade_referral_commission", {
-        p_trade_id: trade.id,
-        p_event: "trade_close",
-      });
-    } catch {
-      // Ignore referral commission failures so trade resolution never blocks.
-    }
-
-    try {
-      await api.rpc("process_social_trade_close", {
-        p_trade_id: trade.id,
-      });
-    } catch {
-      // Ignore social trade feed failures so settlement never blocks.
-    }
-
-    const participantId = trade.tournament_participant_id;
-    if (participantId) {
-      const { data: participant } = await api.from("tournament_participants")
-        .select("current_balance")
-        .eq("id", participantId)
-        .single();
-
-      if (participant) {
-        const tournamentBalanceBefore = Number(participant.current_balance ?? 0);
-        const newTournamentBalance = tournamentBalanceBefore + profit;
-
-        await api.from("tournament_participants")
+    for (let attempt = 0; attempt < MAX_SETTLE_RETRIES; attempt++) {
+      try {
+        await api.from("trades")
           .update({
-            current_balance: newTournamentBalance,
-            updated_at: settledAt,
+            exit_price: exitPrice,
+            status,
+            profit,
+            closed_at: settledAt,
           })
-        .eq("id", participantId);
+          .eq("id", trade.id);
 
-        if (user?.id) {
+        clearStoredTradeMarkerTime(trade.id);
+
+        try {
+          await api.rpc("process_trade_referral_commission", {
+            p_trade_id: trade.id,
+            p_event: "trade_close",
+          });
+        } catch {
+          // Ignore referral commission failures so trade resolution never blocks.
+        }
+
+        try {
+          await api.rpc("process_social_trade_close", {
+            p_trade_id: trade.id,
+          });
+        } catch {
+          // Ignore social trade feed failures so settlement never blocks.
+        }
+
+        const participantId = trade.tournament_participant_id;
+        if (participantId) {
+          const { data: participant } = await api.from("tournament_participants")
+            .select("current_balance")
+            .eq("id", participantId)
+            .single();
+
+          if (participant) {
+            const tournamentBalanceBefore = Number(participant.current_balance ?? 0);
+            const newTournamentBalance = tournamentBalanceBefore + profit;
+
+            await api.from("tournament_participants")
+              .update({
+                current_balance: newTournamentBalance,
+                updated_at: settledAt,
+              })
+            .eq("id", participantId);
+
+            if (user?.id) {
+              void insertTradeBalanceAudit({
+                user_id: profile.id,
+                trade_id: trade.id,
+                event_type: "trade_close",
+                account_scope: "tournament",
+                asset_symbol: trade.asset_symbol,
+                direction: trade.direction,
+                status,
+                amount: trade.amount,
+                payout_rate: trade.payout_rate,
+                profit,
+                change_amount: profit,
+                balance_before: tournamentBalanceBefore,
+                balance_after: newTournamentBalance,
+                available_balance_before: tournamentBalanceBefore,
+                available_balance_after: newTournamentBalance,
+                reserved_withdrawal_balance: 0,
+                context: {
+                  entry_price: trade.entry_price,
+                  exit_price: exitPrice,
+                  expiry_seconds: trade.expiry_seconds,
+                  opened_at: trade.opened_at,
+                  settled_at: settledAt,
+                  tournament_participant_id: participantId,
+                },
+              });
+            }
+          }
+        } else if (user && profile) {
+          const fundedLiveAccount = hasFundedLiveAccount(profile);
+          const creditedAmount = profit;
+          const { data: liveProfileSnapshot } = await api.from("profiles")
+            .select("balance, reserved_withdrawal_balance, total_trades, total_wins, total_profit")
+            .eq("id", profile.id)
+            .single();
+
+          const currentStoredLiveBalance = getStoredLiveBalance(liveProfileSnapshot ?? profile);
+          const reservedWithdrawalBalance = getReservedWithdrawalBalance(liveProfileSnapshot ?? profile);
+          const availableLiveBalanceBefore = getEffectiveLiveBalance(liveProfileSnapshot ?? profile);
+          const nextStoredLiveBalance = fundedLiveAccount
+            ? getStoredLiveBalanceAfterSettlementCredit(liveProfileSnapshot ?? profile, creditedAmount)
+            : currentStoredLiveBalance;
+          const nextAvailableLiveBalance = Math.max(0, nextStoredLiveBalance - reservedWithdrawalBalance);
+          const totalTrades = Number(liveProfileSnapshot?.total_trades ?? profile.total_trades ?? 0);
+          const totalWins = Number(liveProfileSnapshot?.total_wins ?? profile.total_wins ?? 0);
+          const totalProfit = Number(liveProfileSnapshot?.total_profit ?? profile.total_profit ?? 0);
+
+          const { error: balanceError } = await api.from("profiles")
+            .update({
+              balance: nextStoredLiveBalance,
+              total_trades: totalTrades + (fundedLiveAccount ? 1 : 0),
+              total_wins: totalWins + (fundedLiveAccount && won ? 1 : 0),
+              total_profit: totalProfit + (fundedLiveAccount ? netProfit : 0),
+              updated_at: settledAt,
+            })
+            .eq("id", profile.id);
+
+          if (balanceError) {
+            throw new Error(`Balance update failed: ${balanceError.message}`);
+          }
+
           void insertTradeBalanceAudit({
             user_id: profile.id,
             trade_id: trade.id,
             event_type: "trade_close",
-            account_scope: "tournament",
+            account_scope: "live",
             asset_symbol: trade.asset_symbol,
             direction: trade.direction,
             status,
             amount: trade.amount,
             payout_rate: trade.payout_rate,
             profit,
-            change_amount: profit,
-            balance_before: tournamentBalanceBefore,
-            balance_after: newTournamentBalance,
-            available_balance_before: tournamentBalanceBefore,
-            available_balance_after: newTournamentBalance,
-            reserved_withdrawal_balance: 0,
+            change_amount: creditedAmount,
+            balance_before: currentStoredLiveBalance,
+            balance_after: nextStoredLiveBalance,
+            available_balance_before: availableLiveBalanceBefore,
+            available_balance_after: nextAvailableLiveBalance,
+            reserved_withdrawal_balance: reservedWithdrawalBalance,
             context: {
               entry_price: trade.entry_price,
               exit_price: exitPrice,
               expiry_seconds: trade.expiry_seconds,
               opened_at: trade.opened_at,
               settled_at: settledAt,
-              tournament_participant_id: participantId,
             },
           });
+
+          void refreshProfile();
+          void refreshVip();
+        }
+
+        if (user) {
+          const { data } = await api.from("trades")
+            .select("*")
+            .eq("user_id", profile.id)
+            .neq("status", "open")
+            .gte("closed_at", getTradeHistoryCutoffIso())
+            .order("closed_at", { ascending: false })
+            .limit(50);
+
+          if (data) {
+            setTradeHistory(filterRetainedTradeHistory(data));
+          }
+        }
+
+        lastSettleError = null;
+        break;
+      } catch (error) {
+        lastSettleError = error;
+        console.error(`Settlement attempt ${attempt + 1}/${MAX_SETTLE_RETRIES} failed for trade ${trade.id}:`, error);
+        if (attempt < MAX_SETTLE_RETRIES - 1) {
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
         }
       }
-    } else if (user && profile) {
-      const fundedLiveAccount = hasFundedLiveAccount(profile);
-      const creditedAmount = profit;
-      const { data: liveProfileSnapshot } = await api.from("profiles")
-        .select("balance, reserved_withdrawal_balance, total_trades, total_wins, total_profit")
-        .eq("id", profile.id)
-        .single();
-
-      const currentStoredLiveBalance = getStoredLiveBalance(liveProfileSnapshot ?? profile);
-      const reservedWithdrawalBalance = getReservedWithdrawalBalance(liveProfileSnapshot ?? profile);
-      const availableLiveBalanceBefore = getEffectiveLiveBalance(liveProfileSnapshot ?? profile);
-      const nextStoredLiveBalance = fundedLiveAccount
-        ? getStoredLiveBalanceAfterSettlementCredit(liveProfileSnapshot ?? profile, creditedAmount)
-        : currentStoredLiveBalance;
-      const nextAvailableLiveBalance = Math.max(0, nextStoredLiveBalance - reservedWithdrawalBalance);
-      const totalTrades = Number(liveProfileSnapshot?.total_trades ?? profile.total_trades ?? 0);
-      const totalWins = Number(liveProfileSnapshot?.total_wins ?? profile.total_wins ?? 0);
-      const totalProfit = Number(liveProfileSnapshot?.total_profit ?? profile.total_profit ?? 0);
-
-      await api.from("profiles")
-        .update({
-          balance: nextStoredLiveBalance,
-          total_trades: totalTrades + (fundedLiveAccount ? 1 : 0),
-          total_wins: totalWins + (fundedLiveAccount && won ? 1 : 0),
-          total_profit: totalProfit + (fundedLiveAccount ? netProfit : 0),
-          updated_at: settledAt,
-        })
-        .eq("id", profile.id);
-
-      void insertTradeBalanceAudit({
-        user_id: profile.id,
-        trade_id: trade.id,
-        event_type: "trade_close",
-        account_scope: "live",
-        asset_symbol: trade.asset_symbol,
-        direction: trade.direction,
-        status,
-        amount: trade.amount,
-        payout_rate: trade.payout_rate,
-        profit,
-        change_amount: creditedAmount,
-        balance_before: currentStoredLiveBalance,
-        balance_after: nextStoredLiveBalance,
-        available_balance_before: availableLiveBalanceBefore,
-        available_balance_after: nextAvailableLiveBalance,
-        reserved_withdrawal_balance: reservedWithdrawalBalance,
-        context: {
-          entry_price: trade.entry_price,
-          exit_price: exitPrice,
-          expiry_seconds: trade.expiry_seconds,
-          opened_at: trade.opened_at,
-          settled_at: settledAt,
-        },
-      });
-
-      void refreshProfile();
-      void refreshVip();
     }
 
-    if (user) {
-      const { data } = await api.from("trades")
-        .select("*")
-        .eq("user_id", profile.id)
-        .neq("status", "open")
-        .gte("closed_at", getTradeHistoryCutoffIso())
-        .order("closed_at", { ascending: false })
-        .limit(50);
-
-      if (data) {
-        setTradeHistory(filterRetainedTradeHistory(data));
-      }
+    if (lastSettleError) {
+      console.error(`Settlement FAILED after ${MAX_SETTLE_RETRIES} attempts for trade ${trade.id}`, lastSettleError);
     }
   }, [profile, refreshProfile, refreshVip, user]);
 
