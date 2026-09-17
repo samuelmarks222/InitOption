@@ -166,7 +166,8 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     setPendingSettlements((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
-  const userId = user?.id ?? null;
+  // Use the canonical database profile id for trade ownership.
+  const userId = profile?.id ?? (user?.id ? clerkUserIdToUuid(user.id) : null);
 
   useEffect(() => {
     setActiveTrades([]);
@@ -312,7 +313,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
 
         if (user?.id) {
           void insertTradeBalanceAudit({
-            user_id: user.id,
+            user_id: profile.id,
             trade_id: trade.id,
             event_type: "trade_close",
             account_scope: "tournament",
@@ -344,7 +345,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       const creditedAmount = profit;
       const { data: liveProfileSnapshot } = await api.from("profiles")
         .select("balance, reserved_withdrawal_balance, total_trades, total_wins, total_profit")
-        .eq("id", user.id)
+        .eq("id", profile.id)
         .single();
 
       const currentStoredLiveBalance = getStoredLiveBalance(liveProfileSnapshot ?? profile);
@@ -366,10 +367,10 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
           total_profit: totalProfit + (fundedLiveAccount ? netProfit : 0),
           updated_at: settledAt,
         })
-        .eq("id", user.id);
+        .eq("id", profile.id);
 
       void insertTradeBalanceAudit({
-        user_id: user.id,
+        user_id: profile.id,
         trade_id: trade.id,
         event_type: "trade_close",
         account_scope: "live",
@@ -401,7 +402,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
     if (user) {
       const { data } = await api.from("trades")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", profile.id)
         .neq("status", "open")
         .gte("closed_at", getTradeHistoryCutoffIso())
         .order("closed_at", { ascending: false })
@@ -631,14 +632,14 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
             balance: getStoredLiveBalanceAfterPendingTrade(profile, normalizedAmount, pendingLiveBalance),
             updated_at: new Date().toISOString(),
           })
-          .eq("id", user.id);
+          .eq("id", profile.id);
       }
 
       const [balanceCommitResult, tradeInsertResult] = await Promise.all([
         balanceCommitPromise,
         api.from("trades")
           .insert(buildTradeInsertPayload({
-            userId: clerkUserIdToUuid(user.id),
+            userId: profile.id,
             assetSymbol,
             direction,
             amount: normalizedAmount,
@@ -688,7 +689,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
                 balance: rollbackLiveBalance,
                 updated_at: rollbackTimestamp,
               })
-              .eq("id", user.id);
+              .eq("id", profile.id);
 
             balanceRestored = !rollbackError;
             if (balanceRestored) {
@@ -713,7 +714,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         const tournamentBalanceAfter = Math.max(0, tournamentBalanceBefore - normalizedAmount);
 
         void insertTradeBalanceAudit({
-          user_id: user.id,
+          user_id: profile.id,
           trade_id: insertedTrade.id,
           event_type: "trade_open",
           account_scope: "tournament",
@@ -750,7 +751,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         const availableLiveBalanceAfter = Math.max(0, storedLiveBalanceAfter - reservedWithdrawalBalance);
 
         void insertTradeBalanceAudit({
-          user_id: user.id,
+          user_id: profile.id,
           trade_id: insertedTrade.id,
           event_type: "trade_open",
           account_scope: "live",
