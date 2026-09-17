@@ -1838,9 +1838,9 @@ const OscillatorPane = ({
       return () => {
         mainTs.unsubscribeVisibleLogicalRangeChange(syncToPane);
         obs.disconnect();
-        chart.remove();
         chartRef.current = null;
         timeAnchorSeriesRef.current = null;
+        chart.remove();
       };
     }
 
@@ -1851,9 +1851,9 @@ const OscillatorPane = ({
     obs.observe(containerRef.current);
     return () => {
       obs.disconnect();
-      chart.remove();
       chartRef.current = null;
       timeAnchorSeriesRef.current = null;
+      chart.remove();
     };
   }, [syncMainChart]);
 
@@ -3020,6 +3020,7 @@ const TradingChart = ({
     return () => {
       chartContainer.removeEventListener("wheel", handleChartWheel, true);
       obs.disconnect();
+      chartRef.current = null;
       chart.remove();
     };
   }, []);

@@ -149,23 +149,23 @@ export const OscillatorPane = ({ indicator, data, errorMessage, renderKey, syncM
     }
 
     const resizeObserver = new ResizeObserver(() => {
-      if (!containerRef.current) {
+      if (!containerRef.current || !chartRef.current) {
         return;
       }
 
-      chart.applyOptions({ width: containerRef.current.clientWidth });
+      chartRef.current.applyOptions({ width: containerRef.current.clientWidth });
     });
 
     resizeObserver.observe(containerRef.current);
 
     return () => {
       resizeObserver.disconnect();
-      chart.remove();
       chartRef.current = null;
       seriesRef.current = {};
       overboughtLineRef.current = null;
       oversoldLineRef.current = null;
       baselineLineRef.current = null;
+      chart.remove();
     };
   }, [indicator.key]);
 

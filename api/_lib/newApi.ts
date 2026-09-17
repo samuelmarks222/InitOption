@@ -1,4 +1,4 @@
-﻿import type { IncomingMessage, ServerResponse } from "node:http";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { v2 as cloudinary } from "cloudinary";
 import { transaction, query, queryOne, userRpc, testDbConnection } from "./db.js";
 export { testDbConnection } from "./db.js";
@@ -543,18 +543,13 @@ const normalizeRows = (result: PgResult): Row[] => {
 };
 
 const runScoped = async (mappedId: string, fn: (client: PgClientLike) => Promise<PgResult>) =>
-  transaction(async (client) => {
-    try {
-      await client.query("SET LOCAL ROLE authenticated");
-    } catch (e) {
-      console.warn("SET LOCAL ROLE authenticated failed (role may not exist):", e instanceof Error ? e.message : e);
-    }
-    try {
-      await client.query("SELECT set_config('app.current_user_id', $1, true)", [mappedId]);
-    } catch (e) {
-      console.error("set_config app.current_user_id failed:", e instanceof Error ? e.message : e);
-      throw e;
-    }
+  transaction(async (client) => {
+    try {
+      await client.query("SELECT set_config('app.current_user_id', $1, true)", [mappedId]);
+    } catch (e) {
+      console.error("set_config app.current_user_id failed:", e instanceof Error ? e.message : e);
+      throw e;
+    }
     let result;
     try {
       result = await fn(client);
@@ -977,7 +972,7 @@ const ALLOWED_RPC_FUNCTIONS = new Set([
 
 export async function handleRpc(request: ApiRequest, response: ApiResponse): Promise<void> {
   try {
-    // Authenticate the request — returns the canonical user UUID or null
+    // Authenticate the request � returns the canonical user UUID or null
     const canonicalUserId = await authenticateRequest(request.headers);
     if (!canonicalUserId) {
       sendJson(response, 401, { error: "Unauthorized" });
