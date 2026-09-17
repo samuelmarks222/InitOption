@@ -900,7 +900,7 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
     };
 
     if (method === "POST") {
-      const entries = Object.entries(body.values ?? {}).map(([k, v]) => [k, remapClerkIds(v, mappedId, appwriteUid, clerkUserId)] as const);
+      const entries = Object.entries(body.values ?? {}).map(([k, v]) => [k, table === "trades" && k === "user_id" ? mappedId : remapClerkIds(v, mappedId, appwriteUid, clerkUserId)] as const);
       if (!entries.every(([k]) => IS_IDENTIFIER.test(k))) {
         sendJson(response, 400, { error: "Invalid column name" });
         return;
