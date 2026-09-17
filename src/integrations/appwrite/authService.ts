@@ -3,7 +3,7 @@
 // app's AuthContext and api client can be pointed at Appwrite with minimal
 // changes. Appwrite is the active auth provider; Firebase files remain in the
 // repo as a backup until the full migration is verified.
-import crypto from "node:crypto";
+import { createHash } from "crypto";
 import { Buffer } from "buffer";
 import { ID, OAuthProvider } from "appwrite";
 import { account, appwriteConfigPresent, type AppwriteUser } from "./config";
@@ -32,8 +32,7 @@ const UUID_V5_NAMESPACE = Buffer.from("8f2d1a0e-6b3c-4d4e-9a9a-1a2b3c4d5e6f", "h
 export const clerkUserIdToUuid = (uid: string): string => {
   if (UUID_PATTERN.test(uid)) return uid.toLowerCase();
 
-  const hash = crypto
-    .createHash("sha1")
+  const hash = createHash("sha1")
     .update(Buffer.concat([UUID_V5_NAMESPACE, Buffer.from(uid, "utf8")]))
     .digest();
 
