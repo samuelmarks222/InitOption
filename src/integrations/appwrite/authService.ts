@@ -3,10 +3,9 @@
 // app's AuthContext and api client can be pointed at Appwrite with minimal
 // changes. Appwrite is the active auth provider; Firebase files remain in the
 // repo as a backup until the full migration is verified.
-import { createHash } from "crypto";
-import { Buffer } from "buffer";
 import { ID, OAuthProvider } from "appwrite";
 import { account, appwriteConfigPresent, type AppwriteUser } from "./config";
+import { stableUuidFromString } from "@/lib/stableUuid";
 
 export type AppwriteAuthError = { message: string; code: string };
 
@@ -24,30 +23,13 @@ export interface AuthUserLike {
 
 const UUID_PATTERN = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
-const UUID_V5_NAMESPACE = Buffer.from("8f2d1a0e-6b3c-4d4e-9a9a-1a2b3c4d5e6f", "hex");
-
 // Maps ANY auth-provider uid to a stable uuid. Pass-through when the input already
 // is a UUID (the canonical ids returned by authenticateRequest), so callers that do
 // clerkUserIdToUuid(authenticateRequest(...)) behave correctly under Appwrite too.
 export const clerkUserIdToUuid = (uid: string): string => {
   if (UUID_PATTERN.test(uid)) return uid.toLowerCase();
 
-  const hash = createHash("sha1")
-    .update(Buffer.concat([UUID_V5_NAMESPACE, Buffer.from(uid, "utf8")]))
-    .digest();
-
-  const b = hash.subarray(0, 16);
-  b[6] = (b[6] & 0x0f) | 0x50;
-  b[8] = (b[8] & 0x3f) | 0x80;
-
-  const hex = b.toString("hex");
-  return [
-    hex.slice(0, 8),
-    hex.slice(8, 12),
-    hex.slice(12, 16),
-    hex.slice(16, 20),
-    hex.slice(20, 32),
-  ].join("-");
+  return stableUuidFromString(uid);
 };
 
 const isBrowser = () => typeof window !== "undefined";
