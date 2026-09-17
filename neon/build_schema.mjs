@@ -112,6 +112,13 @@ for (const name of files) {
     .replace(/current_user\s*=\s*'service_role'/g, "pg_has_role(current_user, 'service_role', 'member')")
     .replace(/current_user\s*=\s*'authenticated'/g, "pg_has_role(current_user, 'authenticated', 'member')")
     .replace(/current_user\s*<>\s*'authenticated'/g, "not pg_has_role(current_user, 'authenticated', 'member')");
+  // Strip "TO <role>" from RLS policies so they apply to ALL roles.
+  // The app.current_user_id GUC check provides per-user isolation; the TO clause
+  // causes silent failures when SET LOCAL ROLE cannot switch (Neon pooler edge cases).
+  transformed = transformed.replace(
+    /\bCREATE POLICY\b[^;]*\bTO\s+(?:authenticated|anon|service_role)\b/gi,
+    (m) => m.replace(/\s+TO\s+(?:authenticated|anon|service_role)\b/gi, ""),
+  );
   // These two migrations are entirely / partially storage-related -> drop storage, keep the rest.
   if (name.includes("branding_bucket")) {
     transformed = stripStorageSections(transformed);

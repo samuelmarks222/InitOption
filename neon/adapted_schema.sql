@@ -60,9 +60,9 @@ CREATE TABLE public.profiles (
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view all profiles" ON public.profiles FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE TO authenticated USING (current_setting('app.current_user_id', true)::uuid = id);
-CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT TO authenticated WITH CHECK (current_setting('app.current_user_id', true)::uuid = id);
+CREATE POLICY "Users can view all profiles" ON public.profiles FOR SELECT USING (true);
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (current_setting('app.current_user_id', true)::uuid = id);
+CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (current_setting('app.current_user_id', true)::uuid = id);
 
 -- Create trades table
 CREATE TABLE public.trades (
@@ -83,9 +83,9 @@ CREATE TABLE public.trades (
 
 ALTER TABLE public.trades ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own trades" ON public.trades FOR SELECT TO authenticated USING (current_setting('app.current_user_id', true)::uuid = user_id);
-CREATE POLICY "Users can insert own trades" ON public.trades FOR INSERT TO authenticated WITH CHECK (current_setting('app.current_user_id', true)::uuid = user_id);
-CREATE POLICY "Users can update own trades" ON public.trades FOR UPDATE TO authenticated USING (current_setting('app.current_user_id', true)::uuid = user_id);
+CREATE POLICY "Users can view own trades" ON public.trades FOR SELECT USING (current_setting('app.current_user_id', true)::uuid = user_id);
+CREATE POLICY "Users can insert own trades" ON public.trades FOR INSERT WITH CHECK (current_setting('app.current_user_id', true)::uuid = user_id);
+CREATE POLICY "Users can update own trades" ON public.trades FOR UPDATE USING (current_setting('app.current_user_id', true)::uuid = user_id);
 
 -- Create chat_messages table
 CREATE TABLE public.chat_messages (
@@ -97,8 +97,8 @@ CREATE TABLE public.chat_messages (
 
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can view chat messages" ON public.chat_messages FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Users can insert own messages" ON public.chat_messages FOR INSERT TO authenticated WITH CHECK (current_setting('app.current_user_id', true)::uuid = user_id);
+CREATE POLICY "Anyone can view chat messages" ON public.chat_messages FOR SELECT USING (true);
+CREATE POLICY "Users can insert own messages" ON public.chat_messages FOR INSERT WITH CHECK (current_setting('app.current_user_id', true)::uuid = user_id);
 
 
 
@@ -149,7 +149,7 @@ AS $$
   )
 $$;
 
-CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT TO authenticated USING (current_setting('app.current_user_id', true)::uuid = user_id);
+CREATE POLICY "Users can view own roles" ON public.user_roles FOR SELECT USING (current_setting('app.current_user_id', true)::uuid = user_id);
 
 -- ===== MIGRATION: 20260320000000_kyc_review_system.sql =====
 alter table public.profiles
@@ -163,7 +163,6 @@ drop policy if exists "Admins can update any profile" on public.profiles;
 create policy "Admins can update any profile"
 on public.profiles
 for update
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role) or current_setting('app.current_user_id', true)::uuid = id)
 with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role) or current_setting('app.current_user_id', true)::uuid = id);
 
@@ -228,7 +227,6 @@ drop policy if exists "Users can view own roles" on public.user_roles;
 create policy "Users can view own roles"
 on public.user_roles
 for select
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 create or replace function public.has_role(_user_id uuid, _role public.app_role)
@@ -368,14 +366,12 @@ drop policy if exists "Admins can view bonus settings" on public.bonus_settings;
 create policy "Admins can view bonus settings"
 on public.bonus_settings
 for select
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Admins can update bonus settings" on public.bonus_settings;
 create policy "Admins can update bonus settings"
 on public.bonus_settings
 for update
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role))
 with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
@@ -383,28 +379,24 @@ drop policy if exists "Admins can insert bonus settings" on public.bonus_setting
 create policy "Admins can insert bonus settings"
 on public.bonus_settings
 for insert
-to authenticated
 with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Admins can view announcements" on public.announcements;
 create policy "Admins can view announcements"
 on public.announcements
 for select
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Admins can insert announcements" on public.announcements;
 create policy "Admins can insert announcements"
 on public.announcements
 for insert
-to authenticated
 with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Admins can update announcements" on public.announcements;
 create policy "Admins can update announcements"
 on public.announcements
 for update
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role))
 with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
@@ -412,14 +404,12 @@ drop policy if exists "Users can view own notifications" on public.notifications
 create policy "Users can view own notifications"
 on public.notifications
 for select
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "Users can update own notifications" on public.notifications;
 create policy "Users can update own notifications"
 on public.notifications
 for update
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id)
 with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
@@ -1439,32 +1429,27 @@ drop policy if exists "Admins can delete assets" on public.assets_config;
 create policy "Authenticated users can view active assets"
 on public.assets_config
 for select
-to authenticated
 using (status = 'active');
 
 create policy "Admins can view all assets"
 on public.assets_config
 for select
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can insert assets"
 on public.assets_config
 for insert
-to authenticated
 with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can update assets"
 on public.assets_config
 for update
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role))
 with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can delete assets"
 on public.assets_config
 for delete
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Authenticated users can view active crypto payment methods" on public.crypto_payment_methods;
@@ -1476,32 +1461,27 @@ drop policy if exists "Admins can delete crypto payment methods" on public.crypt
 create policy "Authenticated users can view active crypto payment methods"
 on public.crypto_payment_methods
 for select
-to authenticated
 using (status = 'active');
 
 create policy "Admins can view all crypto payment methods"
 on public.crypto_payment_methods
 for select
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can insert crypto payment methods"
 on public.crypto_payment_methods
 for insert
-to authenticated
 with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can update crypto payment methods"
 on public.crypto_payment_methods
 for update
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role))
 with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can delete crypto payment methods"
 on public.crypto_payment_methods
 for delete
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 drop policy if exists "Authenticated users can view redeemable promo codes" on public.promo_codes;
@@ -1513,7 +1493,6 @@ drop policy if exists "Admins can delete promo codes" on public.promo_codes;
 create policy "Authenticated users can view redeemable promo codes"
 on public.promo_codes
 for select
-to authenticated
 using (
   status = 'active'
   and expiry_date > now()
@@ -1523,26 +1502,22 @@ using (
 create policy "Admins can view all promo codes"
 on public.promo_codes
 for select
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can insert promo codes"
 on public.promo_codes
 for insert
-to authenticated
 with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can update promo codes"
 on public.promo_codes
 for update
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role))
 with check (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create policy "Admins can delete promo codes"
 on public.promo_codes
 for delete
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create or replace function public.process_deposit_checkout(
@@ -2101,19 +2076,16 @@ drop policy if exists "support_threads_update_staff" on public.support_threads;
 create policy "support_threads_select"
 on public.support_threads
 for select
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id or public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
 create policy "support_threads_insert"
 on public.support_threads
 for insert
-to authenticated
 with check (current_setting('app.current_user_id', true)::uuid = user_id or public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
 create policy "support_threads_update_staff"
 on public.support_threads
 for update
-to authenticated
 using (public.is_staff(current_setting('app.current_user_id', true)::uuid))
 with check (public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
@@ -2123,7 +2095,6 @@ drop policy if exists "support_messages_insert" on public.support_messages;
 create policy "support_messages_select"
 on public.support_messages
 for select
-to authenticated
 using (
   exists (
     select 1
@@ -2136,7 +2107,6 @@ using (
 create policy "support_messages_insert"
 on public.support_messages
 for insert
-to authenticated
 with check (
   current_setting('app.current_user_id', true)::uuid = sender_id
   and exists (
@@ -2166,19 +2136,16 @@ drop policy if exists "support_tickets_update_staff" on public.support_tickets;
 create policy "support_tickets_select"
 on public.support_tickets
 for select
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id or public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
 create policy "support_tickets_insert"
 on public.support_tickets
 for insert
-to authenticated
 with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
 create policy "support_tickets_update_staff"
 on public.support_tickets
 for update
-to authenticated
 using (public.is_staff(current_setting('app.current_user_id', true)::uuid))
 with check (public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
@@ -2186,7 +2153,6 @@ drop policy if exists "Admins can view all roles" on public.user_roles;
 create policy "Admins can view all roles"
 on public.user_roles
 for select
-to authenticated
 using (public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role));
 
 create or replace function public.assign_staff_role(
@@ -2365,19 +2331,16 @@ drop policy if exists "Finance admins can update deposit requests" on public.dep
 create policy "Users can view own deposit requests"
 on public.deposit_requests
 for select
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 create policy "Users can insert own deposit requests"
 on public.deposit_requests
 for insert
-to authenticated
 with check (current_setting('app.current_user_id', true)::uuid = user_id and status = 'pending');
 
 create policy "Finance admins can view deposit requests"
 on public.deposit_requests
 for select
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -2386,7 +2349,6 @@ using (
 create policy "Finance admins can update deposit requests"
 on public.deposit_requests
 for update
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -3117,7 +3079,6 @@ drop policy if exists "Admins can delete address pool" on public.crypto_deposit_
 create policy "Admins can view address pool"
 on public.crypto_deposit_address_pool
 for select
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -3126,7 +3087,6 @@ using (
 create policy "Admins can insert address pool"
 on public.crypto_deposit_address_pool
 for insert
-to authenticated
 with check (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -3135,7 +3095,6 @@ with check (
 create policy "Admins can update address pool"
 on public.crypto_deposit_address_pool
 for update
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -3148,7 +3107,6 @@ with check (
 create policy "Admins can delete address pool"
 on public.crypto_deposit_address_pool
 for delete
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -3160,13 +3118,11 @@ drop policy if exists "Finance admins can view crypto deposit instructions" on p
 create policy "Users can view own crypto deposit instructions"
 on public.crypto_deposit_instructions
 for select
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 create policy "Finance admins can view crypto deposit instructions"
 on public.crypto_deposit_instructions
 for select
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -3177,7 +3133,6 @@ drop policy if exists "Finance admins can view crypto deposit events" on public.
 create policy "Finance admins can view crypto deposit events"
 on public.crypto_deposit_events
 for select
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -4947,42 +4902,36 @@ drop policy if exists "follows_select_all" on public.follows;
 create policy "follows_select_all"
 on public.follows
 for select
-to authenticated
 using (true);
 
 drop policy if exists "follows_insert_self" on public.follows;
 create policy "follows_insert_self"
 on public.follows
 for insert
-to authenticated
 with check (current_setting('app.current_user_id', true)::uuid = follower_id);
 
 drop policy if exists "follows_delete_self" on public.follows;
 create policy "follows_delete_self"
 on public.follows
 for delete
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = follower_id or public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
 drop policy if exists "copy_settings_select_own" on public.copy_settings;
 create policy "copy_settings_select_own"
 on public.copy_settings
 for select
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "copy_settings_insert_own" on public.copy_settings;
 create policy "copy_settings_insert_own"
 on public.copy_settings
 for insert
-to authenticated
 with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "copy_settings_update_own" on public.copy_settings;
 create policy "copy_settings_update_own"
 on public.copy_settings
 for update
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id)
 with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
@@ -4990,21 +4939,18 @@ drop policy if exists "copy_settings_delete_own" on public.copy_settings;
 create policy "copy_settings_delete_own"
 on public.copy_settings
 for delete
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "social_feed_select_own" on public.social_feed;
 create policy "social_feed_select_own"
 on public.social_feed
 for select
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "social_feed_update_own" on public.social_feed;
 create policy "social_feed_update_own"
 on public.social_feed
 for update
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id)
 with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
@@ -5390,7 +5336,6 @@ drop policy if exists "Admins can view notification email deliveries" on public.
 create policy "Admins can view notification email deliveries"
 on public.notification_email_deliveries
 for select
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -5417,14 +5362,12 @@ drop policy if exists "Users can view own tournament payouts" on public.tourname
 create policy "Users can view own tournament payouts"
 on public.tournament_payouts
 for select
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "Admins can view tournament payouts" on public.tournament_payouts;
 create policy "Admins can view tournament payouts"
 on public.tournament_payouts
 for select
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'moderator'::public.app_role)
@@ -5493,19 +5436,16 @@ drop policy if exists "Finance admins can update withdrawal requests" on public.
 create policy "Users can view own withdrawal requests"
 on public.withdrawal_requests
 for select
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 create policy "Users can insert own withdrawal requests"
 on public.withdrawal_requests
 for insert
-to authenticated
 with check (current_setting('app.current_user_id', true)::uuid = user_id and status = 'pending');
 
 create policy "Finance admins can view withdrawal requests"
 on public.withdrawal_requests
 for select
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -5514,7 +5454,6 @@ using (
 create policy "Finance admins can update withdrawal requests"
 on public.withdrawal_requests
 for update
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -5529,7 +5468,6 @@ drop policy if exists "Admins can manage tournaments" on public.tournaments;
 create policy "Admins can manage tournaments"
 on public.tournaments
 for all
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'moderator'::public.app_role)
@@ -5544,7 +5482,6 @@ drop policy if exists "Users can update own tournament participation" on public.
 create policy "Users can update own tournament participation"
 on public.tournament_participants
 for update
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id)
 with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
@@ -7698,7 +7635,6 @@ drop policy if exists "Authenticated users can view active deposit bonus offers"
 create policy "Authenticated users can view active deposit bonus offers"
 on public.deposit_bonus_offers
 for select
-to authenticated
 using (
   status = 'active'
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
@@ -7709,7 +7645,6 @@ drop policy if exists "Admins can manage deposit bonus offers" on public.deposit
 create policy "Admins can manage deposit bonus offers"
 on public.deposit_bonus_offers
 for all
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -7723,14 +7658,12 @@ drop policy if exists "Users can view own deposit bonus redemptions" on public.d
 create policy "Users can view own deposit bonus redemptions"
 on public.deposit_bonus_redemptions
 for select
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id);
 
 drop policy if exists "Admins can view deposit bonus redemptions" on public.deposit_bonus_redemptions;
 create policy "Admins can view deposit bonus redemptions"
 on public.deposit_bonus_redemptions
 for select
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'finance_manager'::public.app_role)
@@ -10083,14 +10016,12 @@ drop policy if exists "trade_balance_audit_logs_select_own_or_staff" on public.t
 create policy "trade_balance_audit_logs_select_own_or_staff"
 on public.trade_balance_audit_logs
 for select
-to authenticated
 using (current_setting('app.current_user_id', true)::uuid = user_id or public.is_staff(current_setting('app.current_user_id', true)::uuid));
 
 drop policy if exists "trade_balance_audit_logs_insert_own" on public.trade_balance_audit_logs;
 create policy "trade_balance_audit_logs_insert_own"
 on public.trade_balance_audit_logs
 for insert
-to authenticated
 with check (current_setting('app.current_user_id', true)::uuid = user_id);
 
 -- ===== MIGRATION: 20260512_enforce_demo_seed_not_live_balance.sql =====
@@ -10164,8 +10095,7 @@ drop policy if exists "Admins can manage customer reviews" on public.customer_re
 
 create policy "Anyone can read approved reviews"
 on public.customer_reviews
-for select
-to anon, authenticated
+for select, authenticated
 using (
   status = 'approved'
   or current_setting('app.current_user_id', true)::uuid = user_id
@@ -10175,8 +10105,7 @@ using (
 
 create policy "Users can create reviews"
 on public.customer_reviews
-for insert
-to anon, authenticated
+for insert, authenticated
 with check (
   status = 'approved'
   and (user_id is null or current_setting('app.current_user_id', true)::uuid = user_id)
@@ -10185,7 +10114,6 @@ with check (
 create policy "Admins can manage customer reviews"
 on public.customer_reviews
 for all
-to authenticated
 using (
   public.has_role(current_setting('app.current_user_id', true)::uuid, 'admin'::public.app_role)
   or public.has_role(current_setting('app.current_user_id', true)::uuid, 'content_marketing_manager'::public.app_role)
