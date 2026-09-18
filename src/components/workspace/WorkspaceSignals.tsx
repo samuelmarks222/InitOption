@@ -183,14 +183,14 @@ export const WorkspaceSignals = ({ onClose, activeAsset, onOpenDeposit }: Worksp
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
         <h2 className="text-[15px] font-bold text-white tracking-wide">Signals</h2>
         <div className="flex items-center gap-3">
-          <button className="text-[#5e6370] hover:text-white transition-colors">
+          <button className="text-[#a0a5b1] hover:text-white transition-colors">
             <HelpCircle className="w-[18px] h-[18px]" />
           </button>
-          <button className="text-[#5e6370] hover:text-white transition-colors">
+          <button className="text-[#a0a5b1] hover:text-white transition-colors">
             <Settings className="w-[18px] h-[18px]" />
           </button>
           {onClose && (
-            <button onClick={onClose} className="text-[#5e6370] hover:text-white transition-colors">
+            <button onClick={onClose} className="text-[#a0a5b1] hover:text-white transition-colors">
               <X className="w-[18px] h-[18px]" />
             </button>
           )}
@@ -204,7 +204,7 @@ export const WorkspaceSignals = ({ onClose, activeAsset, onOpenDeposit }: Worksp
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`flex-1 py-2.5 text-center text-[13px] font-semibold relative transition-colors capitalize ${
-              activeTab === tab ? "text-white" : "text-[#5e6370] hover:text-white"
+              activeTab === tab ? "text-white" : "text-[#a0a5b1] hover:text-white"
             }`}
           >
             {tab}
@@ -218,7 +218,7 @@ export const WorkspaceSignals = ({ onClose, activeAsset, onOpenDeposit }: Worksp
       {/* Signal List */}
       <div className="flex-1 overflow-y-auto">
         {filteredSignals.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center text-[#5e6370]">
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center text-[#a0a5b1]">
             <p className="text-[13px] font-medium">No signals</p>
           </div>
         ) : (
@@ -282,7 +282,7 @@ export const WorkspaceSignals = ({ onClose, activeAsset, onOpenDeposit }: Worksp
                       disabled={isCopying || isExpired}
                       className={`rounded-md px-3 py-1 text-[12px] font-bold transition-all text-white ${
                         isExpired
-                          ? "bg-white/5 text-[#5e6370] cursor-not-allowed"
+                          ? "bg-white/5 text-[#a0a5b1] cursor-not-allowed"
                           : isCopied
                             ? "bg-[#00C076]"
                             : "bg-[#00C076] hover:bg-[#00a860]"
@@ -294,10 +294,10 @@ export const WorkspaceSignals = ({ onClose, activeAsset, onOpenDeposit }: Worksp
 
                   {/* Row 3: Copied count | Time ago */}
                   <div className="flex items-center justify-between mt-1">
-                    <span className="text-[11px] text-[#5e6370]">
+                    <span className="text-[11px] text-[#a0a5b1]">
                       Copied: {signal.copied} times
                     </span>
-                    <span className="text-[11px] text-[#5e6370]">
+                    <span className="text-[11px] text-[#a0a5b1]">
                       {formatTimeAgo(signal.timestamp)}
                     </span>
                   </div>
@@ -318,7 +318,7 @@ export const WorkspaceSignals = ({ onClose, activeAsset, onOpenDeposit }: Worksp
               </div>
             </div>
             <h3 className="text-center text-[16px] font-bold text-white mb-2">Insufficient Funds</h3>
-            <p className="text-center text-[12px] text-[#5e6370] mb-5 leading-relaxed">
+            <p className="text-center text-[12px] text-[#a0a5b1] mb-5 leading-relaxed">
               You need funds to copy this signal. Top up your account to start trading.
             </p>
             <button
@@ -332,7 +332,7 @@ export const WorkspaceSignals = ({ onClose, activeAsset, onOpenDeposit }: Worksp
             </button>
             <button
               onClick={() => setShowInsufficientFunds(false)}
-              className="w-full py-2 mt-2 rounded-xl text-[#5e6370] text-[12px] font-medium hover:text-white transition-colors"
+              className="w-full py-2 mt-2 rounded-xl text-[#a0a5b1] text-[12px] font-medium hover:text-white transition-colors"
             >
               Cancel
             </button>
