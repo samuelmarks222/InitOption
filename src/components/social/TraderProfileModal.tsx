@@ -588,7 +588,7 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
 };
 
 const StatRow = ({ label, value, accent = "text-[#f3f7ff]" }: { label: string; value: string; accent?: string }) => (
-  <div className="flex items-center justify-between rounded-lg border-l-2 border-[#8fb3ea] bg-white/[0.03] px-3 py-2.5">
+  <div className="flex items-center justify-between rounded-lg border-l-2 border-[#8fb3ea] px-3 py-2.5">
     <span className="text-[12px] text-[#a9b5d0]">{label}</span>
     <span className={`text-[13px] font-bold ${accent}`}>{value}</span>
   </div>
