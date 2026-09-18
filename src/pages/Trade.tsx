@@ -304,7 +304,7 @@ const MobileModuleOverlay = ({
       {mobileOverlay === "analytics_detail" && (
         <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} onClose={() => setMobileOverlay("more")} onNavigate={onAnalyticsNavigate} />
       )}
-      {mobileOverlay === "signals" && <WorkspaceSignals onClose={() => setMobileOverlay(null)} />}
+      {mobileOverlay === "signals" && <WorkspaceSignals onClose={() => setMobileOverlay(null)} onOpenDeposit={onOpenDeposit} />}
       {mobileOverlay === "help" && <HelpCenterOverlay onClose={() => setMobileOverlay(null)} />}
       {mobileOverlay === "balance_history" && (
         <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab="Payments" onClose={() => setMobileOverlay(null)} onNavigate={onAnalyticsNavigate} />
@@ -1485,6 +1485,7 @@ const Trade = () => {
                 onOpenTournament={setSelectedTournament}
                 onEnterTournament={handleEnterTournament}
                 onSelectWorkspace={setActiveWorkspace}
+                onOpenDeposit={openDepositPage}
                 directoryRefreshKey={directoryRefreshKey}
               />
             )}
