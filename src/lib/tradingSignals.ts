@@ -1,6 +1,7 @@
 import { getAssetBasePrice, normalizeAssetSymbol } from "@/lib/assets";
 import { calculateBollingerBands, calculateEma, calculateMacd, calculateRsi } from "@/components/trading/indicators/calculations";
 import { OTCPriceEngine, TIMEFRAMES, type OHLCCandle } from "@/components/trading/engine/priceEngine";
+import { Stochastic, ADX, ATR } from "technicalindicators";
 
 export type SignalDirection = "higher" | "lower" | "neutral";
 export type SignalTimeframe = "1m" | "5m" | "15m";
@@ -41,6 +42,13 @@ export interface TradingSignalSnapshot {
   rsi: number | null;
   macdBias: number | null;
   trendBias: number | null;
+  stochasticK: number | null;
+  stochasticD: number | null;
+  adx: number | null;
+  atr: number | null;
+  volatilityLabel: string;
+  mtfConfirmation: SignalDirection | null;
+  mtfConfidence: number;
   reasons: string[];
   verifiedHistory: VerifiedSignal[];
   verifiedAccuracy: number | null;
@@ -128,6 +136,10 @@ const scoreCandles = (candles: OHLCCandle[]) => {
       rsi: null,
       macdBias: null,
       trendBias: null,
+      stochasticK: null,
+      stochasticD: null,
+      adx: null,
+      atr: null,
       reasons: ["Waiting for enough candles to build a reliable signal."],
     };
   }
@@ -150,9 +162,50 @@ const scoreCandles = (candles: OHLCCandle[]) => {
   const upperBand = lastValue(bollinger.upper)?.value;
   const lowerBand = lastValue(bollinger.lower)?.value;
   const middleBand = lastValue(bollinger.middle)?.value;
+
+  // --- Stochastic Oscillator (14,3,3) ---
+  let stochasticK: number | null = null;
+  let stochasticD: number | null = null;
+  try {
+    const stochInput = candles.slice(-20).map((c) => ({ high: c.high, low: c.low, close: c.close }));
+    if (stochInput.length >= 17) {
+      const stochResult = Stochastic.calculate({ high: stochInput.map(c => c.high), low: stochInput.map(c => c.low), close: stochInput.map(c => c.close), period: 14, signalPeriod: 3 });
+      if (stochResult.length > 0) {
+        const lastStoch = lastValue(stochResult);
+        stochasticK = lastStoch?.k ?? null;
+        stochasticD = lastStoch?.d ?? null;
+      }
+    }
+  } catch { /* Stochastic needs enough data */ }
+
+  // --- ADX (14-period) ---
+  let adx: number | null = null;
+  try {
+    const adxInput = candles.slice(-30).map((c) => ({ high: c.high, low: c.low, close: c.close }));
+    if (adxInput.length >= 28) {
+      const adxResult = ADX.calculate({ high: adxInput.map(c => c.high), low: adxInput.map(c => c.low), close: adxInput.map(c => c.close), period: 14 });
+      if (adxResult.length > 0) {
+        adx = lastValue(adxResult)?.adx ?? null;
+      }
+    }
+  } catch { /* ADX needs enough data */ }
+
+  // --- ATR (14-period) for volatility ---
+  let atr: number | null = null;
+  try {
+    const atrInput = candles.slice(-20).map((c) => ({ high: c.high, low: c.low, close: c.close }));
+    if (atrInput.length >= 15) {
+      const atrResult = ATR.calculate({ high: atrInput.map(c => c.high), low: atrInput.map(c => c.low), close: atrInput.map(c => c.close), period: 14 });
+      if (atrResult.length > 0) {
+        atr = lastValue(atrResult);
+      }
+    }
+  } catch { /* ATR needs enough data */ }
+
   let score = 0;
   const reasons: string[] = [];
 
+  // --- EMA Trend & Slope (max +/-36) ---
   if (Number.isFinite(fastNow) && Number.isFinite(slowNow)) {
     const trendSpread = ((fastNow - slowNow) / currentPrice) * 10000;
     const trendScore = clamp(trendSpread * 6, -24, 24);
@@ -171,6 +224,7 @@ const scoreCandles = (candles: OHLCCandle[]) => {
     }
   }
 
+  // --- RSI (max +/-24) ---
   if (Number.isFinite(rsiNow)) {
     if (rsiNow <= 32) {
       score += 24;
@@ -189,6 +243,7 @@ const scoreCandles = (candles: OHLCCandle[]) => {
     }
   }
 
+  // --- MACD (max +/-26) ---
   if (Number.isFinite(macdNow) && Number.isFinite(macdSignal) && Number.isFinite(macdHistogram)) {
     const macdScore = macdNow >= macdSignal ? 18 : -18;
     const histogramScore = macdHistogram >= 0 ? 8 : -8;
@@ -196,6 +251,7 @@ const scoreCandles = (candles: OHLCCandle[]) => {
     reasons.push(macdScore >= 0 ? "MACD is above its signal line." : "MACD is below its signal line.");
   }
 
+  // --- Bollinger Bands (max +/-18) ---
   if (Number.isFinite(upperBand) && Number.isFinite(lowerBand) && Number.isFinite(middleBand)) {
     const bandRange = Math.max(upperBand - lowerBand, currentPrice * 0.00001);
     const position = (currentPrice - lowerBand) / bandRange;
@@ -215,6 +271,44 @@ const scoreCandles = (candles: OHLCCandle[]) => {
     }
   }
 
+  // --- Stochastic Oscillator (max +/-18) ---
+  if (Number.isFinite(stochasticK) && Number.isFinite(stochasticD)) {
+    if (stochasticK <= 20) {
+      score += 18;
+      reasons.push("Stochastic is oversold with a potential bullish crossover.");
+    } else if (stochasticK >= 80) {
+      score -= 18;
+      reasons.push("Stochastic is overbought with a potential bearish crossover.");
+    } else if (stochasticK > stochasticD) {
+      score += 8;
+      reasons.push("Stochastic K is above D, showing bullish momentum.");
+    } else {
+      score -= 8;
+      reasons.push("Stochastic K is below D, showing bearish momentum.");
+    }
+  }
+
+  // --- ADX trend strength filter (max +/-10) ---
+  if (Number.isFinite(adx)) {
+    if (adx < 18) {
+      // Weak trend — reduce confidence, neutral signal
+      const penalty = Math.min(10, Math.round((18 - adx) * 0.8));
+      score = Math.round(score * (1 - penalty / 100));
+      reasons.push(`ADX at ${adx.toFixed(1)} shows a weak trend — signals may be less reliable.`);
+    } else if (adx >= 30) {
+      // Strong trend — amplify the existing direction
+      const boost = Math.min(10, Math.round((adx - 30) * 0.5));
+      score = score >= 0 ? score + boost : score - boost;
+      reasons.push(`ADX at ${adx.toFixed(1)} confirms a strong trending market.`);
+    } else {
+      reasons.push(`ADX at ${adx.toFixed(1)} shows moderate trend strength.`);
+    }
+  }
+
+  // --- ATR volatility context ---
+  // ATR is informational, not scored directly but used for volatility label
+
+  // --- Recent candle sentiment (max +/-8) ---
   const bullishCloses = candles.slice(-5).filter((candle) => candle.close >= candle.open).length;
   if (bullishCloses >= 4) {
     score += 8;
@@ -224,12 +318,62 @@ const scoreCandles = (candles: OHLCCandle[]) => {
     reasons.push("Recent candles are mostly bearish.");
   }
 
+  // --- Price action near support/resistance (max +/-6) ---
+  const rangeSize = resistance - support;
+  if (rangeSize > 0) {
+    const pricePosition = (currentPrice - support) / rangeSize;
+    if (pricePosition <= 0.15) {
+      score += 6;
+      reasons.push("Price is near support — potential bounce zone.");
+    } else if (pricePosition >= 0.85) {
+      score -= 6;
+      reasons.push("Price is near resistance — potential reversal zone.");
+    }
+  }
+
   const normalizedScore = Math.round(clamp(score, -100, 100));
   const action = getDirectionalSignal(normalizedScore);
-  const confidence =
-    action === "neutral"
-      ? Math.round(50 + Math.min(8, Math.abs(normalizedScore) * 0.2))
-      : Math.round(clamp(52 + Math.abs(normalizedScore) * 0.42, 56, 92));
+
+  // --- Improved confidence calculation ---
+  // Base confidence from score magnitude, adjusted by indicator agreement
+  const absScore = Math.abs(normalizedScore);
+  let confidence: number;
+
+  if (action === "neutral") {
+    confidence = Math.round(50 + Math.min(8, absScore * 0.2));
+  } else {
+    // Count how many indicators agree with the signal direction
+    let agreementCount = 0;
+    let totalIndicators = 0;
+
+    if (Number.isFinite(fastNow) && Number.isFinite(slowNow)) {
+      totalIndicators++;
+      if ((fastNow > slowNow) === (action === "higher")) agreementCount++;
+    }
+    if (Number.isFinite(rsiNow)) {
+      totalIndicators++;
+      if (action === "higher" ? rsiNow < 55 : rsiNow > 45) agreementCount++;
+      else if (action === "higher" ? rsiNow <= 32 : rsiNow >= 68) agreementCount++; // oversold/overbought reversal
+    }
+    if (Number.isFinite(macdNow) && Number.isFinite(macdSignal)) {
+      totalIndicators++;
+      if ((macdNow >= macdSignal) === (action === "higher")) agreementCount++;
+    }
+    if (Number.isFinite(stochasticK) && Number.isFinite(stochasticD)) {
+      totalIndicators++;
+      if ((stochasticK > stochasticD) === (action === "higher")) agreementCount++;
+      else if (action === "higher" ? stochasticK <= 20 : stochasticK >= 80) agreementCount++;
+    }
+    if (Number.isFinite(adx) && adx >= 20) {
+      totalIndicators++;
+      agreementCount++; // strong trend always supports the direction
+    }
+
+    const agreementRatio = totalIndicators > 0 ? agreementCount / totalIndicators : 0.5;
+    const baseConfidence = 52 + absScore * 0.38;
+    const agreementBonus = agreementRatio * 12;
+    confidence = Math.round(clamp(baseConfidence + agreementBonus, 56, 95));
+  }
 
   return {
     action,
@@ -243,7 +387,11 @@ const scoreCandles = (candles: OHLCCandle[]) => {
       Number.isFinite(fastNow) && Number.isFinite(slowNow)
         ? ((fastNow - slowNow) / currentPrice) * 10000
         : null,
-    reasons: reasons.slice(0, 5),
+    stochasticK: Number.isFinite(stochasticK) ? stochasticK : null,
+    stochasticD: Number.isFinite(stochasticD) ? stochasticD : null,
+    adx: Number.isFinite(adx) ? adx : null,
+    atr: Number.isFinite(atr) ? atr : null,
+    reasons: reasons.slice(0, 6),
   };
 };
 
@@ -285,6 +433,58 @@ const buildVerifiedHistory = (candles: OHLCCandle[], timeframe: SignalTimeframe)
   return history.slice(-14).reverse();
 };
 
+/**
+ * Multi-timeframe confirmation: checks if adjacent timeframes agree on direction.
+ * Higher TF confirmation boosts confidence; disagreement reduces it.
+ */
+const buildMtfConfirmation = (
+  assetInput: SignalAssetInput | undefined,
+  primaryTimeframe: SignalTimeframe,
+  nowSec: number,
+): { direction: SignalDirection | null; confidence: number } => {
+  const tfOrder: SignalTimeframe[] = ["1m", "5m", "15m"];
+  const idx = tfOrder.indexOf(primaryTimeframe);
+  const adjacentTFs = tfOrder.filter((_, i) => i !== idx);
+
+  let agreeCount = 0;
+  let totalAdjacent = 0;
+  let detectedDirection: SignalDirection | null = null;
+
+  for (const tf of adjacentTFs) {
+    const { candles } = buildSignalCandles(assetInput, tf, nowSec);
+    const scored = scoreCandles(candles);
+    if (scored.action === "neutral") continue;
+
+    totalAdjacent++;
+    if (detectedDirection === null) {
+      detectedDirection = scored.action;
+    }
+    if (scored.action === detectedDirection) {
+      agreeCount++;
+    }
+  }
+
+  if (totalAdjacent === 0) return { direction: null, confidence: 0 };
+
+  const ratio = agreeCount / totalAdjacent;
+  const confirmed = ratio >= 0.5;
+  const confidence = Math.round(ratio * 100);
+
+  return {
+    direction: confirmed ? detectedDirection : null,
+    confidence,
+  };
+};
+
+const getVolatilityLabel = (atr: number | null, currentPrice: number): string => {
+  if (!atr || !currentPrice || !Number.isFinite(atr) || !Number.isFinite(currentPrice)) return "Normal";
+  const atrPercent = (atr / currentPrice) * 100;
+  if (atrPercent > 1.5) return "High";
+  if (atrPercent > 0.8) return "Normal";
+  if (atrPercent > 0.3) return "Low";
+  return "Very Low";
+};
+
 export const buildTradingSignalSnapshot = (
   assetInput: SignalAssetInput | undefined,
   timeframe: SignalTimeframe,
@@ -299,7 +499,26 @@ export const buildTradingSignalSnapshot = (
   const verificationCount = verifiedWins + verifiedLosses;
   const verifiedAccuracy = verificationCount > 0 ? Math.round((verifiedWins / verificationCount) * 100) : null;
   const currentPrice = latestCandle?.close ?? asset.currentPrice ?? asset.basePrice;
-  const absoluteScore = Math.abs(scored.score);
+
+  // Multi-timeframe confirmation
+  const mtf = buildMtfConfirmation(assetInput, timeframe, nowSec);
+
+  // Apply MTF boost/penalty to final score
+  let finalScore = scored.score;
+  let finalConfidence = scored.confidence;
+
+  if (mtf.direction !== null && mtf.direction === scored.action) {
+    // Agreement: boost confidence
+    finalConfidence = Math.round(clamp(finalConfidence + mtf.confidence * 0.08, 56, 96));
+    finalScore = Math.round(clamp(finalScore + Math.sign(finalScore) * 4, -100, 100));
+  } else if (mtf.direction !== null && mtf.direction !== scored.action) {
+    // Disagreement: reduce confidence
+    finalConfidence = Math.round(clamp(finalConfidence - mtf.confidence * 0.06, 50, 95));
+    finalScore = Math.round(clamp(finalScore * 0.85, -100, 100));
+  }
+
+  const absoluteScore = Math.abs(finalScore);
+  const action = getDirectionalSignal(finalScore);
 
   return {
     symbol: asset.symbol,
@@ -307,11 +526,11 @@ export const buildTradingSignalSnapshot = (
     timeframe,
     generatedAt: nowSec,
     currentPrice,
-    action: scored.action,
-    confidence: scored.confidence,
-    score: scored.score,
+    action,
+    confidence: finalConfidence,
+    score: finalScore,
     strengthLabel:
-      scored.action === "neutral"
+      action === "neutral"
         ? "No trade"
         : absoluteScore >= 70
           ? "Strong"
@@ -324,6 +543,13 @@ export const buildTradingSignalSnapshot = (
     rsi: scored.rsi,
     macdBias: scored.macdBias,
     trendBias: scored.trendBias,
+    stochasticK: scored.stochasticK,
+    stochasticD: scored.stochasticD,
+    adx: scored.adx,
+    atr: scored.atr,
+    volatilityLabel: getVolatilityLabel(scored.atr, currentPrice),
+    mtfConfirmation: mtf.direction,
+    mtfConfidence: mtf.confidence,
     reasons: scored.reasons,
     verifiedHistory,
     verifiedAccuracy,

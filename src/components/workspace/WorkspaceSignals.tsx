@@ -12,6 +12,9 @@ import {
   Zap,
   TrendingUp,
   TrendingDown,
+  Shield,
+  Activity,
+  BarChart3,
 } from "lucide-react";
 import { type AssetOption } from "../trading/AssetSelector";
 import { useTradingDesk } from "../trading/TradingDeskContext";
@@ -37,7 +40,6 @@ interface WorkspaceSignalsProps {
   activeAsset?: AssetOption | null;
 }
 
-// Tracked assets for signals
 const SIGNAL_ASSETS: SignalAssetInput[] = [
   { symbol: "USD/PHP OTC", name: "USD/PHP OTC", category: "OTC" },
   { symbol: "EUR/USD", name: "EUR/USD", category: "Forex" },
@@ -50,7 +52,7 @@ const SIGNAL_ASSETS: SignalAssetInput[] = [
 ];
 
 const TIMEFRAMES: SignalTimeframe[] = ["1m", "5m", "15m"];
-const REFRESH_INTERVAL = 5000; // 5 seconds
+const REFRESH_INTERVAL = 5000;
 
 function formatTime(seconds: number): string {
   if (seconds <= 0) return "00:00";
@@ -79,6 +81,61 @@ function formatSignalTime(ts: number) {
   return new Date(ts * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+function StrengthMeter({ score, confidence }: { score: number; confidence: number }) {
+  const absScore = Math.abs(score);
+  const fill = Math.min(absScore, 100);
+  const color = absScore >= 70 ? "#00C076" : absScore >= 46 ? "#f59e0b" : "#ef5350";
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-16 h-1.5 rounded-full overflow-hidden bg-white/10">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${fill}%`, background: color }}
+        />
+      </div>
+      <span className="text-[10px] font-bold" style={{ color }}>
+        {absScore >= 70 ? "STRONG" : absScore >= 46 ? "MOD" : "WEAK"}
+      </span>
+    </div>
+  );
+}
+
+function MtfBadge({ direction, confidence }: { direction: SignalDirection | null; confidence: number }) {
+  if (!direction) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold bg-white/5 text-[#787b86]">
+        <Shield className="h-2.5 w-2.5" />
+        MTF: --
+      </span>
+    );
+  }
+
+  return (
+    <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold ${
+      direction === "higher" ? "bg-[#00C076]/15 text-[#00C076]" : "bg-red-500/15 text-red-400"
+    }`}>
+      <Shield className="h-2.5 w-2.5" />
+      MTF {confidence}%
+    </span>
+  );
+}
+
+function VolatilityBadge({ label }: { label: string }) {
+  const colors: Record<string, string> = {
+    "High": "bg-red-500/15 text-red-400",
+    "Normal": "bg-white/5 text-[#787b86]",
+    "Low": "bg-[#00C076]/15 text-[#00C076]",
+    "Very Low": "bg-blue-500/15 text-blue-400",
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold ${colors[label] || colors["Normal"]}`}>
+      <Activity className="h-2.5 w-2.5" />
+      Vol: {label}
+    </span>
+  );
+}
+
 export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps) => {
   const [activeTab, setActiveTab] = useState<"updates" | "all" | "history">("updates");
   const [timeframe, setTimeframe] = useState<SignalTimeframe>("1m");
@@ -97,13 +154,11 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
     setCurrentAsset,
   } = useTradingDesk();
 
-  // Refresh time every 5 seconds
   useEffect(() => {
     const timer = setInterval(() => setNowSec(Date.now() / 1000), REFRESH_INTERVAL);
     return () => clearInterval(timer);
   }, []);
 
-  // Build signals for all tracked assets
   const rebuildSignals = useCallback(() => {
     const newSignals: LiveSignal[] = [];
     for (const asset of SIGNAL_ASSETS) {
@@ -124,17 +179,9 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
     setSignals(newSignals);
   }, [nowSec]);
 
-  // Initial build and rebuild on timeframe/nowSec change
   useEffect(() => {
     rebuildSignals();
   }, [nowSec, timeframe, rebuildSignals]);
-
-  const formatTime = (seconds: number): string => {
-    if (seconds <= 0) return "00:00";
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-  };
 
   const handleCopySignal = useCallback(async (signal: LiveSignal) => {
     setCopyingSignalId(signal.id);
@@ -146,9 +193,8 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
         signal.timeframe === "1m" ? 180 : signal.timeframe === "5m" ? 900 : 2700
       );
 
-      // Use current asset price for entry
       const entryPrice = signal.currentPrice;
-      const amount = 1000; // Default $10, can be customized
+      const amount = 1000;
 
       setInvestment(amount);
 
@@ -184,7 +230,6 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
     }
   }, [setSignalMode, setDirection, setExpirySeconds, setInvestment, executeTrade, toast]);
 
-  // Filter signals based on active tab and selected asset
   const filteredSignals = useMemo(() => {
     let filtered = signals.filter((s) => s.action !== "neutral");
 
@@ -194,7 +239,6 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
       filtered = filtered.filter((s) => s.symbol === selectedAsset.symbol);
     }
 
-    // Sort: active first, then by confidence
     return filtered.sort((a, b) => {
       const aActive = a.expiresAt > nowSec;
       const bActive = b.expiresAt > nowSec;
@@ -208,6 +252,13 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
     if (timeframe === "5m") return 900;
     return 2700;
   }, [timeframe]);
+
+  // Summary stats
+  const activeSignalCount = signals.filter((s) => s.expiresAt > nowSec).length;
+  const avgConfidence = signals.length > 0
+    ? Math.round(signals.reduce((sum, s) => sum + s.confidence, 0) / signals.length)
+    : 0;
+  const strongCount = signals.filter((s) => s.strengthLabel === "Strong" && s.expiresAt > nowSec).length;
 
   return (
     <div className="flex h-full flex-col" style={{ background: "var(--trading-workspace-bg)" }}>
@@ -246,6 +297,16 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
             <Settings className="h-5 w-5 cursor-pointer hover:text-white transition-colors" />
           </div>
         </div>
+      </div>
+
+      {/* Summary Bar */}
+      <div className="flex items-center justify-between px-4 py-2 border-b text-[10px]" style={{ borderBottomColor: "var(--trading-border-color)", background: "rgba(0,192,118,0.03)" }}>
+        <div className="flex items-center gap-4">
+          <span className="text-[#787b86]">Active: <span className="font-bold text-white">{activeSignalCount}</span></span>
+          <span className="text-[#787b86]">Strong: <span className="font-bold text-[#00C076]">{strongCount}</span></span>
+          <span className="text-[#787b86]">Avg Conf: <span className="font-bold text-white">{avgConfidence}%</span></span>
+        </div>
+        <span className="text-[#787b86]">Updated: <span className="font-bold text-white">{formatTimeAgo(Math.floor(Date.now() / 1000 - nowSec))}</span></span>
       </div>
 
       {/* Asset Filter */}
@@ -333,6 +394,7 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
             const progress = Math.min(((totalDuration - remaining) / totalDuration) * 100, 100);
             const isCopying = copyingSignalId === signal.id;
             const isExpired = remaining <= 0;
+            const isVerified = signal.verifiedAccuracy !== null && signal.verifiedAccuracy >= 60;
 
             return (
               <div
@@ -340,15 +402,24 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
                 className={`p-4 transition-colors hover:bg-white/[0.02] ${isExpired ? "opacity-50" : ""}`}
                 style={{ background: "var(--trading-workspace-bg)" }}
               >
-                {/* Top Row */}
-                <div className="flex items-center justify-between gap-3 mb-1.5">
+                {/* Top Row: Symbol + Direction + Strength Meter + Timer */}
+                <div className="flex items-center justify-between gap-3 mb-2">
                   <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${isUp ? "bg-[#00C076]/15 text-[#00C076]" : "bg-red-500/15 text-red-400}"}`}>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${isUp ? "bg-[#00C076]/15 text-[#00C076]" : "bg-red-500/15 text-red-400"}`}>
                       {isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                       <span className="font-mono">{signal.symbol}</span>
                     </span>
-                    <span className={`text-[10px] font-medium ${isUp ? "text-[#00C076]" : "text-red-400}"}`}>
+                    <span className={`text-[10px] font-medium ${isUp ? "text-[#00C076]" : "text-red-400"}`}>
                       {signal.timeframe}
+                    </span>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                      signal.strengthLabel === "Strong"
+                        ? "bg-[#00C076]/15 text-[#00C076]"
+                        : signal.strengthLabel === "Moderate"
+                          ? "bg-yellow-500/15 text-yellow-400"
+                          : "bg-white/5 text-[#787b86]"
+                    }`}>
+                      {signal.strengthLabel.toUpperCase()}
                     </span>
                   </div>
 
@@ -383,7 +454,7 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
                   </div>
                 </div>
 
-                {/* Middle Row */}
+                {/* Middle Row: Strength Meter + Badges + Copy Button */}
                 <div className="flex items-center justify-between my-2">
                   <div className="flex items-center gap-3 text-[12px]">
                     <span className="text-[#9ba1b0] font-semibold">
@@ -391,40 +462,57 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
                     </span>
                     <span className="text-[#787b86] font-mono">S:{signal.support.toFixed(2)} R:{signal.resistance.toFixed(2)}</span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleCopySignal(signal)}
-                    disabled={isCopying || isExpired}
-                    className={`bg-[#1e6b4e] hover:bg-[#26a69a] text-white font-medium text-[12px] py-1.5 px-3.5 rounded-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
-                      isCopying ? "opacity-70" : isExpired ? "opacity-30 bg-gray-700 cursor-not-allowed" : ""
-                    }`}
-                    style={{ border: "1px solid rgba(38,166,154,0.3)" }}
-                  >
-                    {isCopying ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Executing...
-                      </>
-                    ) : isExpired ? (
-                      "Expired"
-                    ) : (
-                      "Copy Signal"
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <StrengthMeter score={signal.score} confidence={signal.confidence} />
+                    <MtfBadge direction={signal.mtfConfirmation} confidence={signal.mtfConfidence} />
+                    <VolatilityBadge label={signal.volatilityLabel} />
+                    <button
+                      type="button"
+                      onClick={() => handleCopySignal(signal)}
+                      disabled={isCopying || isExpired}
+                      className={`bg-[#1e6b4e] hover:bg-[#26a69a] text-white font-medium text-[12px] py-1.5 px-3.5 rounded-md transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+                        isCopying ? "opacity-70" : isExpired ? "opacity-30 bg-gray-700 cursor-not-allowed" : ""
+                      }`}
+                      style={{ border: "1px solid rgba(38,166,154,0.3)" }}
+                    >
+                      {isCopying ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Executing...
+                        </>
+                      ) : isExpired ? (
+                        "Expired"
+                      ) : (
+                        "Copy Signal"
+                      )}
+                    </button>
+                  </div>
                 </div>
 
-                {/* Bottom Row - Details */}
+                {/* Bottom Row: Indicator Details */}
                 <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#787b86]">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <span>Confidence: <span className="font-bold text-white">{signal.confidence}%</span></span>
                     <span>Score: <span className={`font-bold ${signal.score > 0 ? "text-[#00C076]" : "text-red-400"}`}>{signal.score > 0 ? "+" : ""}{signal.score}</span></span>
+                    {signal.verifiedAccuracy !== null && (
+                      <span className={`font-bold ${signal.verifiedAccuracy >= 60 ? "text-[#00C076]" : signal.verifiedAccuracy >= 50 ? "text-yellow-400" : "text-red-400"}`}>
+                        <BarChart3 className="h-3 w-3 inline mr-0.5" />
+                        {signal.verifiedAccuracy}% hit rate
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <span>RSI: <span className="font-bold">{signal.rsi === null ? "--" : signal.rsi.toFixed(1)}</span></span>
                     <span>MACD: <span className="font-bold">{formatSignedNumber(signal.macdBias)}</span></span>
+                    {signal.stochasticK !== null && (
+                      <span>Stoch: <span className="font-bold">{signal.stochasticK.toFixed(1)}</span></span>
+                    )}
+                    {signal.adx !== null && (
+                      <span>ADX: <span className="font-bold">{signal.adx.toFixed(1)}</span></span>
+                    )}
                     <span className="flex items-center gap-1">
                       {signal.action === "higher" ? (
                         <TrendingUp className="h-3 w-3 text-[#00C076]" />
@@ -441,6 +529,17 @@ export const WorkspaceSignals = ({ onClose, activeAsset }: WorkspaceSignalsProps
                     <span>Generated: <span className="font-bold">{formatSignalTime(signal.generatedAt)}</span></span>
                   </div>
                 </div>
+
+                {/* Reason Tags */}
+                {signal.reasons.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {signal.reasons.map((reason, i) => (
+                      <span key={i} className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 text-[9px] text-[#787b86]">
+                        {reason}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })

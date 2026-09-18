@@ -102,7 +102,7 @@ export const AnalyticsSignals = ({ asset }: AnalyticsSignalsProps) => {
           <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#7e8ba8]">Live technical model</p>
           <h3 className="mt-1 text-[22px] font-black text-white">{snapshot.symbol} Signals</h3>
           <p className="mt-1 text-[13px] text-[#9fb0cf]">
-            Signals are calculated from EMA, RSI, MACD, Bollinger position, and recent candle behavior.
+            Signals are calculated from EMA, RSI, MACD, Bollinger, Stochastic, ADX, ATR, multi-timeframe confirmation, and recent candle behavior.
           </p>
         </div>
 
@@ -159,6 +159,29 @@ export const AnalyticsSignals = ({ asset }: AnalyticsSignalsProps) => {
             <SignalMetric label="Signal strength" value={`${snapshot.confidence}%`} accentClass={actionCopy.color} />
             <SignalMetric label="Support" value={snapshot.support.toFixed(pricePrecision)} />
             <SignalMetric label="Resistance" value={snapshot.resistance.toFixed(pricePrecision)} />
+          </div>
+
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
+            <SignalMetric
+              label="Stochastic K"
+              value={snapshot.stochasticK === null ? "--" : snapshot.stochasticK.toFixed(1)}
+              accentClass={snapshot.stochasticK !== null && snapshot.stochasticK <= 20 ? "text-[#00C076]" : snapshot.stochasticK !== null && snapshot.stochasticK >= 80 ? "text-red-400" : ""}
+            />
+            <SignalMetric
+              label="ADX"
+              value={snapshot.adx === null ? "--" : snapshot.adx.toFixed(1)}
+              accentClass={snapshot.adx !== null && snapshot.adx >= 30 ? "text-[#00C076]" : ""}
+            />
+            <SignalMetric
+              label="Volatility"
+              value={snapshot.volatilityLabel}
+              accentClass={snapshot.volatilityLabel === "High" ? "text-red-400" : snapshot.volatilityLabel === "Low" ? "text-[#00C076]" : ""}
+            />
+            <SignalMetric
+              label="MTF Confirm"
+              value={snapshot.mtfConfirmation ? `${snapshot.mtfConfidence}%` : "None"}
+              accentClass={snapshot.mtfConfirmation ? "text-[#00C076]" : ""}
+            />
           </div>
 
           <div className="mt-5">
