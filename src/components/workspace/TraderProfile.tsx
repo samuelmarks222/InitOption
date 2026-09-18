@@ -1,27 +1,16 @@
 import { useState, useRef } from "react";
 import {
-  Bell, BellOff, Flame, Medal, Shield, Star, Trophy, TrendingUp, X, Zap,
+  Bell, BellOff, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { TraderData } from "./WorkspaceLeaderboard";
-
-const ACHIEVEMENTS = [
-  { icon: Trophy, label: "Top Trader", color: "text-yellow-400", bg: "bg-yellow-400/12" },
-  { icon: TrendingUp, label: "High Win Rate", color: "text-[#00e676]", bg: "bg-[#00e676]/12" },
-  { icon: Star, label: "Consistent Performer", color: "text-[#2196f3]", bg: "bg-[#2196f3]/12" },
-  { icon: Medal, label: "Weekly Champion", color: "text-amber-600", bg: "bg-amber-600/12" },
-  { icon: Trophy, label: "Monthly Champion", color: "text-yellow-400", bg: "bg-yellow-400/12" },
-  { icon: Zap, label: "100 Winning Trades", color: "text-purple-400", bg: "bg-purple-400/12" },
-  { icon: Flame, label: "1,000 Completed Trades", color: "text-orange-400", bg: "bg-orange-400/12" },
-  { icon: Shield, label: "Elite Trader", color: "text-cyan-400", bg: "bg-cyan-400/12" },
-];
 
 const formatMoney = (value: number) => {
   const sign = value >= 0 ? "+" : "";
   return `${sign}$${Math.abs(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-type TabId = "trading" | "social" | "achievements";
+type TabId = "trading" | "social";
 
 export interface CopySettings {
   amount: number;
@@ -80,7 +69,6 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
   const tabs: { id: TabId; label: string }[] = [
     { id: "trading", label: "Trading Statistics" },
     { id: "social", label: "Social Statistics" },
-    { id: "achievements", label: "Achievements" },
   ];
 
   return (
@@ -92,29 +80,35 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
       >
         {/* Modal */}
         <div
-          className="relative w-full max-w-[580px] rounded-xl border border-[#2a3045] bg-[#1c2030] shadow-2xl"
+          className="relative w-full max-w-[580px] rounded-xl border shadow-2xl"
+          style={{
+            borderColor: "var(--trading-border-color)",
+            background: "var(--trading-panel-bg)",
+            color: "var(--trading-text-color)",
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close X */}
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-md border border-[#2a3045] bg-[#24293d] text-[#787b86] transition-colors hover:text-white"
+            className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-md border text-[var(--trading-muted-color)] transition-colors hover:text-[var(--trading-text-color)]"
+            style={{ borderColor: "var(--trading-control-border)", background: "var(--trading-control-bg)" }}
           >
             <X className="h-3.5 w-3.5" />
           </button>
 
           {/* Title */}
           <div className="px-6 pt-5 pb-3">
-            <h2 className="text-[15px] font-medium text-[#d1d4dc]">
-              Real trading profile ID: <span className="text-white">{trader.id}</span>
+            <h2 className="text-[15px] font-medium text-[var(--trading-muted-color)]">
+              Real trading profile ID: <span className="text-[var(--trading-text-color)]">{trader.id}</span>
             </h2>
           </div>
 
           {/* Profile Summary */}
           <div className="flex items-center gap-5 px-6 pb-5">
             {/* Large avatar with green ring */}
-            <div className="flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-full border-[3px] border-[#26a69a]">
+            <div className="flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-full border-[3px] border-[var(--trading-accent-color)]">
               <img
                 src={trader.flagUrl}
                 alt=""
@@ -165,7 +159,7 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
             <button
               type="button"
               onClick={() => setShowCopyModal(true)}
-              className="flex-1 rounded-md border border-[#26a69a]/40 bg-transparent px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#26a69a]/10"
+              className="flex-1 rounded-md border border-[var(--trading-accent-color)] bg-transparent px-3 py-2 text-[13px] font-semibold text-[var(--trading-text-color)] transition-colors hover:bg-[var(--trading-control-hover-bg)]"
             >
               Copy
             </button>
@@ -182,8 +176,8 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
               }}
               className={`flex-1 rounded-md border px-3 py-2 text-[13px] font-semibold text-white transition-all ${
                 isWatched
-                  ? "border-[#26a69a]/40 bg-[#26a69a]/10 text-[#26a69a]"
-                  : "border-[#2a3045] bg-[#24293d] hover:bg-[#2a3045]"
+                  ? "border-[var(--trading-accent-color)] bg-[var(--trading-accent-soft-color)] text-[var(--trading-accent-color)]"
+                  : "border-[var(--trading-control-border)] bg-[var(--trading-control-bg)] hover:bg-[var(--trading-control-hover-bg)]"
               }`}
             >
               <span className="flex items-center justify-center gap-1.5">
@@ -194,7 +188,7 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
           </div>
 
           {/* Tabs + Content */}
-          <div className="flex gap-5 border-t border-[#2a3045] px-6 py-4">
+          <div className="flex gap-5 border-t px-6 py-4" style={{ borderColor: "var(--trading-border-color)" }}>
             {/* Tab sidebar */}
             <div className="flex w-[150px] shrink-0 flex-col gap-2">
               {tabs.map((tab) => (
@@ -204,8 +198,8 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
                   onClick={() => setActiveTab(tab.id)}
                   className={`rounded-md px-3 py-2 text-left text-[13px] transition-colors ${
                     activeTab === tab.id
-                      ? "border border-[#2196f3] bg-[#2196f3]/10 text-white"
-                      : "border border-[#2a3045] text-[#d1d4dc] hover:bg-[#24293d]"
+                      ? "border border-[var(--trading-accent-color)] bg-[var(--trading-accent-soft-color)] text-[var(--trading-text-color)]"
+                      : "border border-[var(--trading-control-border)] text-[var(--trading-muted-color)] hover:bg-[var(--trading-control-hover-bg)]"
                   }`}
                 >
                   {tab.label}
@@ -223,21 +217,6 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
                 <> <DataRow label="Followers" value={trader.followers.toLocaleString()} /> <DataRow label="Success Rate" value={`${trader.successRate}%`} /> <DataRow label="30 Days P/L" value={formatMoney(trader.last30DaysProfit)} /> <DataRow label="Total Trades" value={trader.totalTrades.toLocaleString()} /> <DataRow label="Win Rate" value={`${trader.winRate.toFixed(1)}%`} /> <DataRow label="Experience" value={trader.experience} /> <DataRow label="Member Since" value={trader.memberSince} /></>
               )}
 
-              {activeTab === "achievements" && (
-                <div className="grid grid-cols-2 gap-2">
-                  {ACHIEVEMENTS.map((a) => (
-                    <div
-                      key={a.label}
-                      className="flex items-center gap-2 rounded-lg border border-[#2a3045] bg-[#24293d] p-3 transition-all hover:border-[#2196f3]/30"
-                    >
-                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${a.bg}`}>
-                        <a.icon className={`h-4 w-4 ${a.color}`} />
-                      </div>
-                      <span className="text-[11px] font-semibold text-white/70">{a.label}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -323,8 +302,14 @@ export const TraderProfile = ({ trader, onClose, onCopy, onWatch, onUnwatch, isW
 };
 
 const DataRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-center justify-between rounded border-l-[3px] border-[#1fa2ff] bg-[#24293d] px-3.5 py-2.5">
-    <span className="text-[12px] text-[#9ba1b0]">{label}</span>
-    <span className="text-[13px] font-bold text-white">{value}</span>
+  <div
+    className="flex items-center justify-between rounded border-l-[3px] px-3.5 py-2.5"
+    style={{
+      borderLeftColor: "var(--trading-accent-color)",
+      background: "var(--trading-control-bg)",
+    }}
+  >
+    <span className="text-[12px] text-[var(--trading-muted-color)]">{label}</span>
+    <span className="text-[13px] font-bold text-[var(--trading-text-color)]">{value}</span>
   </div>
 );
