@@ -66,7 +66,7 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
       {/* TRIGGER BUTTON (Top Left Style) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 hover:bg-white/5 rounded p-1.5 transition-colors min-w-[140px]"
+        className="flex items-center gap-3 hover:bg-white/10 active:bg-white/15 rounded p-1.5 transition-all duration-150 min-w-[140px]"
       >
         <div className="flex -space-x-2">
            {flags.map((flag, idx) => (
@@ -156,11 +156,13 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredAssets.map(asset => (
+                    {filteredAssets.map(asset => {
+                      const isSelected = asset.symbol === selectedAsset.symbol;
+                      return (
                       <tr 
                         key={asset.symbol} 
                         onClick={() => handleSelectAsset(asset)} 
-                        className="cursor-pointer hover:bg-white/5 transition-colors group border-b border-white/5"
+                        className={`cursor-pointer transition-colors group border-b border-white/5 ${isSelected ? "bg-trading-green/10 hover:bg-trading-green/15" : "hover:bg-white/5"}`}
                       >
                         <td className="py-1.5 px-2">
                           <div className="flex items-center gap-1.5">
@@ -171,7 +173,8 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
                                   </div>
                                ))}
                              </div>
-                             <span className="font-bold text-white text-[10px]">{asset.symbol}</span>
+                              <span className={`font-bold text-[10px] ${isSelected ? "text-trading-green" : "text-white"}`}>{asset.symbol}</span>
+                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-trading-green" />}
                           </div>
                         </td>
                         <td className="py-1.5 px-1 text-right text-gray-300 font-medium text-[10px]">
@@ -191,7 +194,8 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
                           </div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                     
                     {filteredAssets.length === 0 && (
                       <tr>
