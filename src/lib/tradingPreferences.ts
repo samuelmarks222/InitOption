@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import i18n from "@/i18n";
 
-export type TradingTemplate = "default" | "graphite" | "amber" | "white";
+export type TradingTemplate = "default" | "graphite" | "white";
 
 export const TRADING_TEMPLATE_OPTIONS: Array<{
   id: TradingTemplate;
@@ -29,15 +29,6 @@ export const TRADING_TEMPLATE_OPTIONS: Array<{
     line: "#f1f3f5",
     grid: "#545960",
     text: "#f8fafc",
-  },
-  {
-    id: "amber",
-    label: "Midnight",
-    surface: "#1e2131",
-    panel: "#23283b",
-    line: "#8fa4d2",
-    grid: "#34394a",
-    text: "#f3f7ff",
   },
   {
     id: "white",
@@ -93,13 +84,13 @@ const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
 const TIMEZONE_PATTERN = /^UTC[+-](0\d|1[0-4]):[03]0$/;
 
 const isTradingTemplate = (value: unknown): value is TradingTemplate =>
-  value === "default" || value === "graphite" || value === "amber" || value === "white";
+  value === "default" || value === "graphite" || value === "white";
 
 const normalizeTemplate = (value: unknown): TradingTemplate => {
   if (isTradingTemplate(value)) return value;
   if (value === "fullNight" || value === "dark") return "default";
   if (value === "twilight" || value === "darker") return "graphite";
-  if (value === "dark-orange") return "amber";
+  if (value === "dark-orange" || value === "amber") return "default";
   if (value === "light") return "white";
   return DEFAULT_TRADING_PREFERENCES.template;
 };
@@ -221,7 +212,6 @@ export const getTradingChartSurfaceColor = (preferences: TradingPreferences, _fa
   if (preferences.chartBackgroundImage) return "rgba(0,0,0,0)";
   if (preferences.template === "white") return "#ffffff";
   if (preferences.template === "graphite") return "#101215";
-  if (preferences.template === "amber") return "#1e2131";
   return "#1e2131";
 };
 
@@ -231,7 +221,6 @@ export const getTradingChartTextColor = (preferences: TradingPreferences) =>
 export const getTradingGridColor = (preferences: TradingPreferences) => {
   const alpha = Math.max(0, Math.min(0.12, preferences.gridOpacity * 0.011));
   if (preferences.template === "white") return `rgba(0, 0, 0, ${alpha + 0.02})`;
-  if (preferences.template === "amber") return `rgba(143, 164, 210, ${alpha + 0.01})`;
   if (preferences.template === "graphite") return `rgba(255, 255, 255, ${alpha + 0.02})`;
   return `rgba(143, 164, 210, ${alpha + 0.01})`;
 };
