@@ -146,7 +146,7 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
     toast({ title: "Copy trading enabled", description: `Now copying ${getTraderDisplayName(fullProfile)}` });
   };
 
-  const shortId = fullProfile.id ? fullProfile.id.slice(0, 8).toUpperCase() : "--------";
+  const shortId = fullProfile.id ? fullProfile.id.replace(/-/g, "").slice(0, 8).toUpperCase() : "--------";
 
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
