@@ -178,7 +178,7 @@ export const WorkspaceSignals = ({ onClose, activeAsset, onOpenDeposit }: Worksp
   }, [signals, activeTab, nowSec]);
 
   return (
-    <div className="flex h-full flex-col" style={{ background: "#0f1923" }}>
+    <div className="flex h-full flex-col" style={{ background: "var(--trading-workspace-bg)" }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
         <h2 className="text-[15px] font-bold text-white tracking-wide">Signals</h2>
