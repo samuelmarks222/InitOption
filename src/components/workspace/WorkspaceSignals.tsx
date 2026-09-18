@@ -280,12 +280,12 @@ export const WorkspaceSignals = ({ onClose, activeAsset, onOpenDeposit }: Worksp
                     <button
                       onClick={() => handleCopySignal(signal)}
                       disabled={isCopying || isExpired}
-                      className={`rounded-md px-3 py-1 text-[12px] font-bold transition-all ${
+                      className={`rounded-md px-3 py-1 text-[12px] font-bold transition-all text-white ${
                         isExpired
                           ? "bg-white/5 text-[#5e6370] cursor-not-allowed"
                           : isCopied
-                            ? "bg-[#00C076]/20 text-[#00C076]"
-                            : "bg-[#00C076]/15 text-[#00C076] hover:bg-[#00C076]/25"
+                            ? "bg-[#00C076]"
+                            : "bg-[#00C076] hover:bg-[#00a860]"
                       }`}
                     >
                       {isCopying ? "..." : isCopied ? "Copied" : "Copy signal"}
