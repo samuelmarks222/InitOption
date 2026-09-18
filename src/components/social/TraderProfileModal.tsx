@@ -72,7 +72,10 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
   const [maxAmount, setMaxAmount] = useState("");
   const [savingCopy, setSavingCopy] = useState(false);
 
-  const isSelf = trader.id === currentProfile?.id;
+  const isSelf = trader.id === currentProfile?.id
+    || (currentProfile?.username && trader.username && currentProfile.username === trader.username)
+    || (currentProfile?.display_name && fullProfile.display_name && currentProfile.display_name === fullProfile.display_name)
+    || (currentProfile?.email && (trader as any).email && currentProfile.email === (trader as any).email);
   const following = isFollowing(trader.id);
   const copySetting = getCopySetting(trader.id);
   const winRate = computeTraderWinRate(fullProfile.total_wins, fullProfile.total_trades);
@@ -249,7 +252,13 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
                     {copySetting ? "Manage Copy" : "Copy"}
                   </button>
                   <button
-                    onClick={() => void (following ? unfollowTrader(trader.id) : followTrader(trader.id))}
+                    onClick={() => {
+                      if (isSelf) {
+                        toast({ title: "Cannot follow yourself", description: "You cannot watch your own profile.", variant: "destructive" });
+                        return;
+                      }
+                      void (following ? unfollowTrader(trader.id) : followTrader(trader.id));
+                    }}
                     className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-bold transition-all active:scale-95 ${
                       following
                         ? "border-[#0fa055]/40 bg-[#0fa055]/10 text-[#0fa055]"
