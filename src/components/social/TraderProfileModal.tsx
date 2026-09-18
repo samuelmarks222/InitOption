@@ -153,7 +153,7 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
 
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="relative w-full max-w-[520px] max-h-[90vh] overflow-hidden rounded-2xl border border-white/10 bg-[#23283b] text-white shadow-[0_32px_80px_rgba(0,0,0,0.6)] animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-[520px] max-h-[90vh] overflow-hidden rounded-2xl border border-white/10 bg-[#1c202b] text-white shadow-[0_32px_80px_rgba(0,0,0,0.6)] animate-in fade-in zoom-in-95 duration-200">
 
         {/* Close */}
         <button onClick={onClose} className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-[#a9b5d0] transition-colors hover:bg-white/10 hover:text-white">
@@ -184,16 +184,16 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
                 <div className="relative shrink-0">
                   <div className="w-[72px] h-[72px] rounded-full p-[3px] bg-gradient-to-br from-[#f59e0b] via-[#f97316] to-[#f59e0b]">
                     {fullProfile.avatar_url ? (
-                      <img src={fullProfile.avatar_url} alt="" className="w-full h-full rounded-full object-cover bg-[#23283b]" />
+                      <img src={fullProfile.avatar_url} alt="" className="w-full h-full rounded-full object-cover bg-[#1c202b]" />
                     ) : (
-                      <div className="w-full h-full rounded-full bg-[#2c3148] flex items-center justify-center">
+                      <div className="w-full h-full rounded-full bg-[#1c202b] flex items-center justify-center">
                         <span className="text-2xl font-bold text-[#a9b5d0]">
                           {getTraderDisplayName(fullProfile).charAt(0).toUpperCase()}
                         </span>
                       </div>
                     )}
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-[#23283b] bg-[#00C076]">
+                  <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-[#1c202b] bg-[#00C076]">
                     <span className="h-1.5 w-1.5 rounded-full bg-white/60" />
                   </span>
                 </div>
@@ -308,7 +308,7 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
                         {PERIODS.find((p) => p.key === period)?.label}
                       </button>
                       {showPeriodDropdown && (
-                        <div className="absolute top-full left-0 mt-1 z-10 w-36 rounded-lg border border-white/10 bg-[#23283b] shadow-xl">
+                        <div className="absolute top-full left-0 mt-1 z-10 w-36 rounded-lg border border-white/10 bg-[#1c202b] shadow-xl">
                           {PERIODS.map((p) => (
                             <button
                               key={p.key}
@@ -370,16 +370,16 @@ export const TraderProfileModal = ({ trader, onClose }: TraderProfileModalProps)
               <div className="relative shrink-0">
                 <div className="w-[72px] h-[72px] rounded-full p-[3px] bg-gradient-to-br from-[#f59e0b] via-[#f97316] to-[#f59e0b]">
                   {fullProfile.avatar_url ? (
-                    <img src={fullProfile.avatar_url} alt="" className="w-full h-full rounded-full object-cover bg-[#23283b]" />
+                    <img src={fullProfile.avatar_url} alt="" className="w-full h-full rounded-full object-cover bg-[#1c202b]" />
                   ) : (
-                    <div className="w-full h-full rounded-full bg-[#2c3148] flex items-center justify-center">
+                    <div className="w-full h-full rounded-full bg-[#1c202b] flex items-center justify-center">
                       <span className="text-2xl font-bold text-[#a9b5d0]">
                         {getTraderDisplayName(fullProfile).charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                 </div>
-                <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-[#23283b] bg-[#00C076]">
+                <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border-2 border-[#1c202b] bg-[#00C076]">
                   <span className="h-1.5 w-1.5 rounded-full bg-white/60" />
                 </span>
               </div>
