@@ -352,7 +352,7 @@ export const AnalyticsGridOverlay = ({ onClose, activeAsset, initialTab = "Analy
   );
 
   return (
-    <div className="quotex-glow-home trading-terminal flex h-full w-full flex-col overflow-hidden text-white" style={{ background: "#1b202a" }}>
+    <div className="quotex-glow-home trading-terminal flex h-full w-full flex-col overflow-hidden text-white" style={{ background: "#1b202a", "--trading-panel-bg": "#1c202b", "--trading-panel-soft-bg": "#1c202b", "--trading-chart-divider-bg": "#1c202b", "--trading-menu-bg": "#1c202b" } as React.CSSProperties}>
       <div className="flex-1 overflow-y-auto px-4 py-4 lg:px-5 lg:py-5">
         <div className="mb-6">
           <div className="block xl:hidden">

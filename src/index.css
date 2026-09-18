@@ -7,7 +7,7 @@
     --background: 229 24.1% 15.5%;   /* #1e2131 */
     --foreground: 0 0% 100%;
 
-    --card: 227 25.5% 18.4%;         /* #1c202b */
+    --card: 227 25.5% 18.4%;         /* #23283b */
     --card-foreground: 0 0% 100%;
 
     --popover: 227 25.5% 18.4%;
@@ -16,7 +16,7 @@
     --primary: 212 94% 54%;          /* #1c81f8 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 227 25.5% 18.4%;    /* #1c202b */
+    --secondary: 227 25.5% 18.4%;    /* #23283b */
     --secondary-foreground: 0 0% 100%;
 
     --muted: 222 30% 24%;
@@ -482,10 +482,10 @@
     --trading-header-bg: #1e2131;
     --trading-sidebar-bg: #1e2131;
     --trading-workspace-panel-bg: #1e2131;
-    --trading-panel-bg: #1c202b;
-    --trading-panel-soft-bg: #1c202b;
+    --trading-panel-bg: #23283b;
+    --trading-panel-soft-bg: #2c3148;
     --trading-tabs-bg: #1e2131;
-    --trading-chart-divider-bg: #1c202b;
+    --trading-chart-divider-bg: #23283b;
     --trading-chart-pane-bg: #1e2131;
     --trading-border-color: rgba(143, 164, 210, 0.16);
     --trading-border-strong-color: rgba(143, 164, 210, 0.24);
@@ -503,7 +503,7 @@
     --trading-tool-text: #e8f0ff;
     --trading-tool-active-text: #ffffff;
     --trading-timeframe-text: #9fb5e2;
-    --trading-menu-bg: #1c202b;
+    --trading-menu-bg: #23283b;
     --trading-menu-border: rgba(143, 164, 210, 0.2);
     --trading-accent-color: #8fa4d2;
     --trading-accent-soft-color: rgba(143, 164, 210, 0.18);
@@ -1021,10 +1021,10 @@
     --trading-header-bg: #1e2131;
     --trading-sidebar-bg: #1e2131;
     --trading-workspace-panel-bg: #1e2131;
-    --trading-panel-bg: #1c202b;
-    --trading-panel-soft-bg: #1c202b;
+    --trading-panel-bg: #23283b;
+    --trading-panel-soft-bg: #2c3148;
     --trading-tabs-bg: #1e2131;
-    --trading-chart-divider-bg: #1c202b;
+    --trading-chart-divider-bg: #23283b;
     --trading-chart-pane-bg: #1e2131;
     --trading-border-color: rgba(143, 164, 210, 0.16);
     --trading-border-strong-color: rgba(143, 164, 210, 0.24);
@@ -1042,7 +1042,7 @@
     --trading-tool-text: #e8f0ff;
     --trading-tool-active-text: #ffffff;
     --trading-timeframe-text: #9fb5e2;
-    --trading-menu-bg: #1c202b;
+    --trading-menu-bg: #23283b;
     --trading-menu-border: rgba(143, 164, 210, 0.2);
     --trading-accent-color: #8fa4d2;
     --trading-accent-soft-color: rgba(143, 164, 210, 0.18);
