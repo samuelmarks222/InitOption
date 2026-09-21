@@ -948,7 +948,13 @@ const TradingPanel = ({
 
   return (
     <>
-      <aside className={`font-copy w-full lg:w-[210px] h-full min-h-[190px] shrink-0 flex flex-col border-l border-[#171d2d] bg-[#2a3040] text-white rounded-t-[18px] lg:rounded-none border-t border-white/10 lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none overflow-hidden ${mobileDocked ? "rounded-t-[16px]" : ""}`}>
+      <aside
+        className={`font-copy w-full lg:w-[210px] h-full min-h-[190px] shrink-0 flex flex-col border-l text-[var(--trading-text-color)] rounded-t-[18px] lg:rounded-none border-t lg:border-t-0 shadow-[0_-10px_30px_rgba(0,0,0,0.28)] lg:shadow-none overflow-hidden ${mobileDocked ? "rounded-t-[16px]" : ""}`}
+        style={{
+          background: "var(--trading-panel-bg)",
+          borderColor: "var(--trading-border-color)",
+        }}
+      >
 
         {/* ── Asset Header & Pending Toggle (Single Row) ──────────────── */}
         <div className="flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-4 lg:pt-4 lg:pb-2">
@@ -1015,30 +1021,34 @@ const TradingPanel = ({
               <div className="relative">
                 {/* Mobile: Single card with Timer | Investment */}
                 <div className="relative lg:hidden">
-                  <div className="flex rounded-lg border border-[#2b3149] bg-[#2a3040]">
+                  <div className="grid grid-cols-2 gap-2">
                     {/* Timer half */}
-                    <div className="relative flex-1 px-3 pt-3 pb-2.5">
-                      <span className="absolute -top-2 left-3 z-10 bg-[#2a3040] px-1 text-[9px] font-normal text-[#777f92]">Timer</span>
+                    <div
+                      className="relative rounded-md border px-3 pb-2.5 pt-3"
+                      style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
+                    >
+                      <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-panel-bg)" }}>Timer</span>
                       <div
                         onClick={() => setShowTimeSwitcher((value) => !value)}
                         className="flex h-[32px] cursor-pointer items-center"
                       >
-                        <span className="text-[15px] font-normal tabular-nums text-white" style={{ fontFamily: "Arial, sans-serif" }}>
+                        <span className="text-[15px] font-normal tabular-nums text-[var(--trading-text-color)]" style={{ fontFamily: "Arial, sans-serif" }}>
                           {formatTradeClock(expirySeconds)}
                         </span>
                       </div>
                     </div>
 
-                    {/* Vertical divider */}
-                    <div className="w-px bg-[#2b3149]" />
-
                     {/* Investment half */}
-                    <div className="relative flex-1 px-3 pt-3 pb-2.5">
-                      <span className="absolute -top-2 left-3 z-10 bg-[#2a3040] px-1 text-[9px] font-normal text-[#777f92]">Investment</span>
+                    <div
+                      className="relative rounded-md border px-3 pb-2.5 pt-3"
+                      style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
+                    >
+                      <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-panel-bg)" }}>Investment</span>
                       <div className="flex h-[32px] items-center justify-between">
-                        <div className="flex items-center gap-1">
+                        <div className="flex w-full items-center justify-between gap-1">
                           <span
-                            className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 active:scale-95"
+                            className="flex h-5 w-5 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
+                            style={{ background: "var(--trading-panel-soft-bg)" }}
                             onClick={() => adjustInvestment(-1)}
                           >
                             <Minus className="h-2.5 w-2.5" />
@@ -1051,25 +1061,35 @@ const TradingPanel = ({
                             step={0.01}
                             inputMode="decimal"
                             onChange={(event) => handleInvestmentInput(event.target.value)}
-                            className="hide-number-spin w-[40px] bg-transparent text-center text-[15px] font-normal text-white outline-none"
+                            className="hide-number-spin w-[48px] bg-transparent text-center text-[15px] font-normal text-[var(--trading-text-color)] outline-none"
                             style={{ fontFamily: "Arial, sans-serif" }}
                           />
-                          <span className="text-[11px] font-normal text-[#777f92]">$</span>
+                          <span className="text-[11px] font-normal text-[var(--trading-muted-color)]">$</span>
                           <span
-                            className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 active:scale-95"
+                            className="flex h-5 w-5 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
+                            style={{ background: "var(--trading-panel-soft-bg)" }}
                             onClick={() => adjustInvestment(1)}
                           >
                             <Plus className="h-2.5 w-2.5" />
                           </span>
                         </div>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowInvestmentSwitcher((value) => !value)}
+                        className="mt-1 block w-full text-center text-[9px] font-black uppercase tracking-wider text-[var(--trading-accent-color)]"
+                      >
+                        SWITCH
+                      </button>
                     </div>
                   </div>
 
-                  {/* Payout + SWITCH row */}
-                  <div className="mt-1.5 flex items-center justify-between px-1">
-                    <span className="text-[10px] font-normal text-gray-400">Payout</span>
-                    <span className="text-[10px] font-normal uppercase tracking-wider text-[#0fa053]">SWITCH</span>
+                  {/* Mobile payout row */}
+                  <div className="mt-2 flex items-center justify-between border-t px-1 pt-2 lg:hidden" style={{ borderColor: "var(--trading-border-color)" }}>
+                    <span className="text-[10px] font-normal text-[var(--trading-muted-color)]">Payout</span>
+                    <span className="text-[13px] font-semibold text-[var(--trading-text-color)]">
+                      {asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}
+                    </span>
                   </div>
                 </div>
 
@@ -1196,9 +1216,9 @@ const TradingPanel = ({
         </div>
 
         {/* ── Payout ───────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between border-t border-[#2b3149] px-2.5 pb-2 pt-2 text-xs text-gray-400 lg:mx-4 lg:px-0 lg:pb-3">
+        <div className="hidden items-center justify-between border-t px-2.5 pb-2 pt-2 text-xs lg:mx-4 lg:flex lg:px-0 lg:pb-3" style={{ borderColor: "var(--trading-border-color)", color: "var(--trading-muted-color)" }}>
           <span className="font-normal text-[11px] text-gray-400">Payout</span>
-          <span className="text-[13px] font-normal tracking-wide text-white">{asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}</span>
+          <span className="text-[13px] font-normal tracking-wide text-[var(--trading-text-color)]">{asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}</span>
         </div>
 
         {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
