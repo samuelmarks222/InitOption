@@ -1017,7 +1017,7 @@ const TradingPanel = ({
         {/* ── Compact mobile layout with desktop controls restored ── */}
         <div className="pb-2 lg:px-4 lg:pb-2.5">
           <div className="relative z-10 lg:pb-0 lg:px-0">
-            <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-1 lg:gap-3">
+            <div className="grid w-full grid-cols-1 gap-2 lg:grid-cols-1 lg:gap-3">
               <div className="relative">
                 {/* Mobile: Two separate cards - Timer and Investment (edge-to-edge) */}
                 <div className="relative lg:hidden">
