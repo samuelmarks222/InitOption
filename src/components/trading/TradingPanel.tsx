@@ -180,108 +180,153 @@ const clampInvestmentValue = (value: number, mode: InvestmentMode) => {
 const TimeSwitcherDropdown = ({
   expirySeconds,
   setExpirySeconds,
-  showCustomTime,
-  setShowCustomTime,
   setShowTimeSwitcher,
-  customTimeMinutes,
-  customTimeSeconds,
-  setCustomTimeMinutes,
-  setCustomTimeSeconds,
 }: {
   expirySeconds: number;
   setExpirySeconds: (value: number) => void;
-  showCustomTime: boolean;
-  setShowCustomTime: React.Dispatch<React.SetStateAction<boolean>>;
   setShowTimeSwitcher: React.Dispatch<React.SetStateAction<boolean>>;
-  customTimeMinutes: string;
-  customTimeSeconds: string;
-  setCustomTimeMinutes: React.Dispatch<React.SetStateAction<string>>;
-  setCustomTimeSeconds: React.Dispatch<React.SetStateAction<string>>;
-}) => (
-  <div className="absolute left-0 top-full z-50 mt-1 w-full min-w-[178px] rounded-[4px] border border-white/10 bg-[#3a3f4a] p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
-    <div className="grid grid-cols-2 gap-1 min-[360px]:grid-cols-3 sm:grid-cols-4">
-      {TIME_PRESETS.slice(0, 8).map((preset) => {
-        const selected = expirySeconds === preset.val;
-        return (
+}) => {
+  const [tab, setTab] = useState<"timer" | "time">("timer");
+  const [manualH, setManualH] = useState("");
+  const [manualM, setManualM] = useState("");
+  const [manualS, setManualS] = useState("");
+
+  const TIMER_PRESETS = [
+    { label: "00:05", val: 5 },
+    { label: "00:10", val: 10 },
+    { label: "00:15", val: 15 },
+    { label: "00:30", val: 30 },
+    { label: "01:00", val: 60 },
+    { label: "02:00", val: 120 },
+    { label: "05:00", val: 300 },
+    { label: "10:00", val: 600 },
+    { label: "15:00", val: 900 },
+    { label: "30:00", val: 1800 },
+    { label: "01:00:00", val: 3600 },
+    { label: "02:00:00", val: 7200 },
+  ];
+
+  const applyManualTime = () => {
+    const h = Math.max(0, parseInt(manualH) || 0);
+    const m = Math.max(0, Math.min(59, parseInt(manualM) || 0));
+    const s = Math.max(0, Math.min(59, parseInt(manualS) || 0));
+    const total = Math.min(MAX_MANUAL_EXPIRY_SECONDS, Math.max(1, h * 3600 + m * 60 + s));
+    setExpirySeconds(total);
+    setShowTimeSwitcher(false);
+    setManualH("");
+    setManualM("");
+    setManualS("");
+  };
+
+  return (
+    <div className="absolute left-0 top-full z-50 mt-1 w-full min-w-[220px] rounded-lg border border-white/10 bg-[#2a2f3a] p-2 shadow-[0_12px_28px_rgba(0,0,0,0.45)]">
+      <div className="flex gap-1 rounded-md bg-[#1a1e28] p-0.5">
+        <button
+          type="button"
+          onClick={() => setTab("timer")}
+          className={`flex-1 rounded-md py-1.5 text-[11px] font-bold uppercase tracking-wider transition ${
+            tab === "timer" ? "bg-[#21c978] text-white" : "text-gray-400 hover:text-white"
+          }`}
+        >
+          Timer
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("time")}
+          className={`flex-1 rounded-md py-1.5 text-[11px] font-bold uppercase tracking-wider transition ${
+            tab === "time" ? "bg-[#21c978] text-white" : "text-gray-400 hover:text-white"
+          }`}
+        >
+          Time
+        </button>
+      </div>
+
+      {tab === "timer" ? (
+        <div className="mt-2">
+          <div className="grid grid-cols-3 gap-1.5">
+            {TIMER_PRESETS.map((preset) => {
+              const selected = expirySeconds === preset.val;
+              return (
+                <button
+                  key={preset.val}
+                  type="button"
+                  onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); }}
+                  className={`rounded-md border py-2 text-[12px] font-bold transition active:scale-95 ${
+                    selected
+                      ? "border-[#21c978] bg-[#21c978]/15 text-[#21c978]"
+                      : "border-white/8 bg-[#353b4a] text-white hover:border-white/20"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
           <button
-            key={preset.val}
             type="button"
-            onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); setShowCustomTime(false); }}
-            className={`h-9 min-w-0 whitespace-nowrap rounded-[3px] px-0 text-[11px] font-bold leading-none transition active:scale-95 ${
-              selected ? "border border-white/60 bg-[#596074] text-white" : "bg-[#4b5263] text-white hover:bg-[#596074]"
-            }`}
+            onClick={() => setTab("time")}
+            className="mt-2 w-full rounded-md border border-white/8 bg-[#353b4a] py-2.5 text-[12px] font-bold text-white hover:border-white/20 transition"
           >
-            {preset.label}
-          </button>
-        );
-      })}
-    </div>
-    <div className="mt-1 grid grid-cols-2 gap-1 min-[360px]:grid-cols-3">
-      {TIME_PRESETS.slice(8, 11).map((preset) => {
-        const selected = expirySeconds === preset.val;
-        return (
-          <button
-            key={preset.val}
-            type="button"
-            onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); setShowCustomTime(false); }}
-            className={`h-9 min-w-0 whitespace-nowrap rounded-[3px] px-0 text-[11px] font-bold leading-none transition active:scale-95 ${
-              selected ? "border border-white/60 bg-[#596074] text-white" : "bg-[#4b5263] text-white hover:bg-[#596074]"
-            }`}
-          >
-            {preset.label}
-          </button>
-        );
-      })}
-    </div>
-    <div className="mt-1 grid grid-cols-2 gap-1">
-      {TIME_PRESETS.slice(11, 13).map((preset) => {
-        const selected = expirySeconds === preset.val;
-        return (
-          <button
-            key={preset.val}
-            type="button"
-            onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); setShowCustomTime(false); }}
-            className={`h-9 min-w-0 whitespace-nowrap rounded-[3px] px-0 text-[11px] font-bold leading-none transition active:scale-95 ${
-              selected ? "border border-white/60 bg-[#596074] text-white" : "bg-[#4b5263] text-white hover:bg-[#596074]"
-            }`}
-          >
-            {preset.label}
-          </button>
-        );
-      })}
-      <button
-        type="button"
-        onClick={() => setShowCustomTime((value) => !value)}
-        className={`h-9 min-w-0 rounded-[3px] text-[18px] font-bold leading-none transition active:scale-95 ${
-          showCustomTime ? "border border-white/60 bg-[#596074] text-white" : "bg-[#4b5263] text-white hover:bg-[#596074]"
-        }`}
-      >
-        +
-      </button>
-    </div>
-    {showCustomTime && (
-      <div className="mt-1.5 border-t border-white/10 pt-2">
-        <div className="flex items-center gap-1.5">
-          <input type="number" min={0} max={1440} placeholder="MIN" value={customTimeMinutes} onChange={(e) => setCustomTimeMinutes(e.target.value)} className="h-8 w-full rounded border border-white/15 bg-[#2a2f3a] px-1 text-center text-[11px] font-bold text-white outline-none" />
-          <span className="text-white/40">:</span>
-          <input type="number" min={0} max={59} placeholder="SEC" value={customTimeSeconds} onChange={(e) => setCustomTimeSeconds(e.target.value)} className="h-8 w-full rounded border border-white/15 bg-[#2a2f3a] px-1 text-center text-[11px] font-bold text-white outline-none" />
-          <button type="button" onClick={() => {
-            const mins = Math.max(0, parseInt(customTimeMinutes) || 0);
-            const secs = Math.max(0, Math.min(59, parseInt(customTimeSeconds) || 0));
-            const totalSeconds = Math.min(MAX_MANUAL_EXPIRY_SECONDS, Math.max(1, mins * 60 + secs));
-            setExpirySeconds(totalSeconds);
-            setShowTimeSwitcher(false);
-            setShowCustomTime(false);
-            setCustomTimeMinutes("");
-            setCustomTimeSeconds("");
-          }} className="h-8 rounded bg-white/15 px-2 text-[10px] font-bold text-white hover:bg-white/25">
-            Set
+            Set manually
           </button>
         </div>
-      </div>
-    )}
-  </div>
-);
+      ) : (
+        <div className="mt-2">
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <label className="mb-1 block text-[9px] font-bold uppercase tracking-wider text-gray-500">Hrs</label>
+              <input
+                type="number"
+                min={0}
+                max={24}
+                placeholder="00"
+                value={manualH}
+                onChange={(e) => setManualH(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") applyManualTime(); }}
+                className="h-10 w-full rounded-md border border-white/10 bg-[#353b4a] px-2 text-center text-[14px] font-bold text-white outline-none focus:border-[#21c978]"
+              />
+            </div>
+            <span className="mt-4 text-lg font-bold text-gray-500">:</span>
+            <div className="flex-1">
+              <label className="mb-1 block text-[9px] font-bold uppercase tracking-wider text-gray-500">Min</label>
+              <input
+                type="number"
+                min={0}
+                max={59}
+                placeholder="00"
+                value={manualM}
+                onChange={(e) => setManualM(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") applyManualTime(); }}
+                className="h-10 w-full rounded-md border border-white/10 bg-[#353b4a] px-2 text-center text-[14px] font-bold text-white outline-none focus:border-[#21c978]"
+              />
+            </div>
+            <span className="mt-4 text-lg font-bold text-gray-500">:</span>
+            <div className="flex-1">
+              <label className="mb-1 block text-[9px] font-bold uppercase tracking-wider text-gray-500">Sec</label>
+              <input
+                type="number"
+                min={0}
+                max={59}
+                placeholder="00"
+                value={manualS}
+                onChange={(e) => setManualS(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") applyManualTime(); }}
+                className="h-10 w-full rounded-md border border-white/10 bg-[#353b4a] px-2 text-center text-[14px] font-bold text-white outline-none focus:border-[#21c978]"
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={applyManualTime}
+            className="mt-2 w-full rounded-md bg-[#21c978] py-2.5 text-[12px] font-bold text-white hover:bg-[#1db86d] transition active:scale-[0.98]"
+          >
+            Set Time
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ─── Withdrawal Modal and more was extracted to AccountModals.tsx ───
 
@@ -583,9 +628,6 @@ const TradingPanel = ({
   const [investmentMode] = useState<InvestmentMode>("amount");
   const [showTimeSwitcher, setShowTimeSwitcher] = useState(false);
   const [showInvestmentSwitcher, setShowInvestmentSwitcher] = useState(false);
-  const [showCustomTime, setShowCustomTime] = useState(false);
-  const [customTimeMinutes, setCustomTimeMinutes] = useState("");
-  const [customTimeSeconds, setCustomTimeSeconds] = useState("");
 
   // Sync with context when signal mode is active
   useEffect(() => {
@@ -999,13 +1041,7 @@ const TradingPanel = ({
                       <TimeSwitcherDropdown
                         expirySeconds={expirySeconds}
                         setExpirySeconds={setExpirySeconds}
-                        showCustomTime={showCustomTime}
-                        setShowCustomTime={setShowCustomTime}
                         setShowTimeSwitcher={setShowTimeSwitcher}
-                        customTimeMinutes={customTimeMinutes}
-                        customTimeSeconds={customTimeSeconds}
-                        setCustomTimeMinutes={setCustomTimeMinutes}
-                        setCustomTimeSeconds={setCustomTimeSeconds}
                       />
                   )}
 
@@ -1038,13 +1074,7 @@ const TradingPanel = ({
                     <TimeSwitcherDropdown
                       expirySeconds={expirySeconds}
                       setExpirySeconds={setExpirySeconds}
-                      showCustomTime={showCustomTime}
-                      setShowCustomTime={setShowCustomTime}
                       setShowTimeSwitcher={setShowTimeSwitcher}
-                      customTimeMinutes={customTimeMinutes}
-                      customTimeSeconds={customTimeSeconds}
-                      setCustomTimeMinutes={setCustomTimeMinutes}
-                      setCustomTimeSeconds={setCustomTimeSeconds}
                     />
                   )}
                 </div>
