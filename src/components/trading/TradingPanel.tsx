@@ -1021,26 +1021,26 @@ const TradingPanel = ({
               <div className="relative">
                 {/* Mobile: Two separate cards - Timer and Investment (edge-to-edge) */}
                 <div className="relative lg:hidden">
-                  <div className="flex gap-1.5 px-1">
+                  <div className="flex gap-1 px-1">
                     {/* Timer card */}
-                    <div className="relative flex-1 rounded-lg border px-3 pt-3 pb-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
+                    <div className="relative flex h-[58px] flex-1 rounded-lg border px-2.5 pb-2 pt-2.5" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
                       <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-control-bg)" }}>Timer</span>
                       <div
                         onClick={() => setShowTimeSwitcher((value) => !value)}
-                        className="flex h-[36px] cursor-pointer items-center"
+                        className="flex h-[30px] cursor-pointer items-center"
                       >
-                        <span className="text-[16px] font-normal tabular-nums text-[var(--trading-text-color)]" style={{ fontFamily: "Arial, sans-serif" }}>
+                        <span className="text-[15px] font-normal tabular-nums text-[var(--trading-text-color)]" style={{ fontFamily: "Arial, sans-serif" }}>
                           {formatTradeClock(expirySeconds)}
                         </span>
                       </div>
                     </div>
 
                     {/* Investment card */}
-                    <div className="relative flex-1 rounded-lg border px-3 pt-3 pb-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
+                    <div className="relative flex h-[58px] flex-1 rounded-lg border px-2.5 pb-2 pt-2.5" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
                       <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-control-bg)" }}>Investment</span>
-                      <div className="flex h-[36px] items-center justify-between">
+                      <div className="flex h-[30px] w-full items-center justify-between">
                         <span
-                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
+                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
                           style={{ background: "var(--trading-panel-soft-bg)" }}
                           onClick={() => adjustInvestment(-1)}
                         >
@@ -1055,13 +1055,13 @@ const TradingPanel = ({
                             step={0.01}
                             inputMode="decimal"
                             onChange={(event) => handleInvestmentInput(event.target.value)}
-                            className="hide-number-spin w-[40px] bg-transparent text-center text-[16px] font-normal text-[var(--trading-text-color)] outline-none"
+                            className="hide-number-spin w-[38px] bg-transparent text-center text-[15px] font-normal text-[var(--trading-text-color)] outline-none"
                             style={{ fontFamily: "Arial, sans-serif" }}
                           />
-                          <span className="text-[13px] font-normal text-[var(--trading-muted-color)]">$</span>
+                          <span className="text-[12px] font-normal text-[var(--trading-muted-color)]">$</span>
                         </div>
                         <span
-                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
+                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
                           style={{ background: "var(--trading-panel-soft-bg)" }}
                           onClick={() => adjustInvestment(1)}
                         >
