@@ -957,26 +957,10 @@ const TradingPanel = ({
             className="flex min-w-0 items-center gap-2 rounded-[4px] p-1 -ml-1 transition-colors hover:bg-white/5"
           >
             <SymbolFlags symbol={asset.symbol} />
-            <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-black tracking-[0.01em] text-white sm:text-[12px] lg:text-[13px]">
+            <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-normal tracking-[0.01em] text-white sm:text-[12px] lg:text-[13px]">
               <span className="max-w-[112px] truncate">{asset.symbol}</span>
               <span className={`shrink-0 text-[#8f98ac] ${asset.available === false ? "text-red-400" : ""}`}>{asset.available === false ? "N/A" : `${asset.maxProfit ?? 79}%`}</span>
               <ChevronDown className="w-3.5 h-3.5 text-gray-400 lg:hidden" strokeWidth={3} />
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={handlePendingTradeToggle}
-            aria-pressed={pendingTradeEnabled}
-            className="flex shrink-0 items-center gap-1.5 rounded-full px-1 py-0.5 transition-colors hover:bg-white/5 lg:hidden"
-          >
-            <span className={`text-[9px] font-black tracking-[0.06em] uppercase ${pendingTradeEnabled ? "text-[#0fa053]" : "text-[#7f8b99]"}`}>
-              PENDING TRADE
-            </span>
-            <div
-              className={`relative h-[14px] w-[28px] rounded-full border transition-all ${pendingTradeEnabled ? "bg-[#0fa053] border-[#0fa053]/50" : "bg-transparent border-white/15"}`}
-            >
-              <div className={`absolute top-[2px] h-[8px] w-[8px] rounded-full transition-all ${pendingTradeEnabled ? "left-[16px] bg-white shadow-sm" : "left-[2px] bg-gray-500"}`} />
             </div>
           </button>
         </div>
@@ -1008,51 +992,111 @@ const TradingPanel = ({
           <div className="relative z-10 lg:pb-0">
             <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-1 lg:gap-3">
               <div className="relative">
-                  {/* Mobile timer */}
-                  <div className="relative lg:hidden">
-                    {showTimeSwitcher && createPortal(
-                      <div className="fixed inset-0 z-[9998] lg:hidden" onClick={() => setShowTimeSwitcher(false)}>
-                        <div
-                          className="absolute bottom-[140px] left-2 right-2 z-[9999]"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <TimeSwitcherDropdown
-                            expirySeconds={expirySeconds}
-                            setExpirySeconds={setExpirySeconds}
-                            setShowTimeSwitcher={setShowTimeSwitcher}
-                          />
-                        </div>
-                      </div>,
-                      document.body
-                    )}
-                    <div
-                      onClick={() => setShowTimeSwitcher((value) => !value)}
-                      className="relative flex h-[44px] w-full cursor-pointer items-center justify-between rounded-[4px] border border-[#687086] bg-[#2a3040] px-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
-                    >
-                      <span
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 active:scale-95"
-                        onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}
+                {/* Mobile: Timer + Investment side by side */}
+                <div className="relative flex gap-2 lg:hidden">
+                  {/* Timer card */}
+                  <div className="relative flex-1">
+                    <div className="rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 pt-2.5 pb-2">
+                      <span className="absolute -top-2 left-3 z-10 bg-[#2a3040] px-1 text-[9px] font-normal text-[#777f92]">Timer</span>
+                      <div
+                        onClick={() => setShowTimeSwitcher((value) => !value)}
+                        className="flex h-[36px] cursor-pointer items-center justify-between"
                       >
-                        <Minus className="h-3 w-3" />
-                      </span>
-                      <span className="text-[16px] font-semibold tracking-[0.01em] tabular-nums text-white" style={{ fontFamily: "Arial, sans-serif" }}>
-                        {formatTradeClock(expirySeconds)}
-                      </span>
-                      <span
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 active:scale-95"
-                        onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </span>
-                      <span className="absolute -top-2 left-3 bg-[#242a3c] px-1 text-[10px] font-semibold text-[#777f92]">
-                        {t("tradingPanel.timeLabelShort")}
-                      </span>
-                    </div>
-                    <div className="mt-0.5 flex items-center justify-center gap-1">
-                      {showTimeSwitcher ? <ChevronUp className="h-2.5 w-2.5 text-[#1c9cff]" /> : <ChevronDown className="h-2.5 w-2.5 text-[#1c9cff]" />}
-                      <span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">Switch Time</span>
+                        <span className="text-[14px] font-normal tabular-nums text-white" style={{ fontFamily: "Arial, sans-serif" }}>
+                          {formatTradeClock(expirySeconds)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span
+                            className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 active:scale-95"
+                            onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}
+                          >
+                            <Minus className="h-2.5 w-2.5" />
+                          </span>
+                          <span
+                            className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 active:scale-95"
+                            onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}
+                          >
+                            <Plus className="h-2.5 w-2.5" />
+                          </span>
+                        </span>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Investment card */}
+                  <div className="relative flex-1">
+                    <div className="rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 pt-2.5 pb-2">
+                      <span className="absolute -top-2 left-3 z-10 bg-[#2a3040] px-1 text-[9px] font-normal text-[#777f92]">Investment</span>
+                      <div className="flex h-[36px] items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <span
+                            className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 active:scale-95"
+                            onClick={() => adjustInvestment(-1)}
+                          >
+                            <Minus className="h-2.5 w-2.5" />
+                          </span>
+                          <input
+                            type="number"
+                            value={investment}
+                            min={1}
+                            max={MAX_MANUAL_INVESTMENT}
+                            step={0.01}
+                            inputMode="decimal"
+                            onChange={(event) => handleInvestmentInput(event.target.value)}
+                            className="hide-number-spin w-[50px] bg-transparent text-center text-[14px] font-normal text-white outline-none"
+                            style={{ fontFamily: "Arial, sans-serif" }}
+                          />
+                          <span className="text-[11px] font-normal text-[#777f92]">$</span>
+                          <span
+                            className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 active:scale-95"
+                            onClick={() => adjustInvestment(1)}
+                          >
+                            <Plus className="h-2.5 w-2.5" />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile: PENDING TRADE row */}
+                <div className="mt-1.5 flex items-center justify-end gap-1.5 lg:hidden">
+                  <span className="text-[9px] font-normal uppercase tracking-wider text-[#0fa053]">PENDING TRADE</span>
+                  <button
+                    type="button"
+                    onClick={handlePendingTradeToggle}
+                    aria-pressed={pendingTradeEnabled}
+                    className="relative h-[14px] w-[28px] rounded-full border transition-all"
+                    style={{
+                      borderColor: pendingTradeEnabled ? "#0fa053" : "rgba(255,255,255,0.15)",
+                      backgroundColor: pendingTradeEnabled ? "#0fa053" : "transparent",
+                    }}
+                  >
+                    <div className={`absolute top-[2px] h-[8px] w-[8px] rounded-full transition-all ${pendingTradeEnabled ? "left-[16px] bg-white shadow-sm" : "left-[2px] bg-gray-500"}`} />
+                  </button>
+                </div>
+
+                {/* Mobile: SWITCH row */}
+                <div className="mt-1.5 flex items-center justify-end lg:hidden">
+                  <span className="text-[9px] font-normal uppercase tracking-wider text-[#0fa053]">SWITCH</span>
+                </div>
+
+                {/* Mobile timer dropdown (portal) */}
+                {showTimeSwitcher && createPortal(
+                  <div className="fixed inset-0 z-[9998] lg:hidden" onClick={() => setShowTimeSwitcher(false)}>
+                    <div
+                      className="absolute bottom-[140px] left-2 right-2 z-[9999]"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <TimeSwitcherDropdown
+                        expirySeconds={expirySeconds}
+                        setExpirySeconds={setExpirySeconds}
+                        setShowTimeSwitcher={setShowTimeSwitcher}
+                      />
+                    </div>
+                  </div>,
+                  document.body
+                )}
 
                 {/* Desktop timer */}
                 <div className="relative hidden lg:block">
@@ -1092,29 +1136,6 @@ const TradingPanel = ({
               </div>
 
               <div className="relative">
-                {/* Mobile amount */}
-                <div className="relative flex h-[44px] w-full items-center justify-between rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:hidden">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-bold tracking-[0.01em] text-white" style={{ fontFamily: "Arial, sans-serif" }}>
-                      {getCurrencySymbol(currency)}
-                    </span>
-                    <input
-                      type="number"
-                      value={investment}
-                      min={1}
-                      max={MAX_MANUAL_INVESTMENT}
-                      step={0.01}
-                      inputMode="decimal"
-                      onChange={(event) => handleInvestmentInput(event.target.value)}
-                      className="hide-number-spin min-w-0 w-full bg-transparent text-[15px] font-bold tracking-[0.01em] text-white outline-none min-[360px]:text-[16px]"
-                      style={{ fontFamily: "Arial, sans-serif" }}
-                    />
-                  </div>
-                  <span className="text-[9px] font-medium uppercase tracking-[0.06em] text-[#8fb0cf]">
-                    {t("tradingPanel.amountLabel")}
-                  </span>
-                </div>
-
                 {/* Desktop amount */}
                 <div className="relative hidden lg:block">
                   <div className="absolute -top-2 left-3 z-10 bg-[#242a3c] px-1 text-[10px] font-semibold text-[#777f92]">{t("tradingPanel.investmentLabel")}</div>
@@ -1184,8 +1205,8 @@ const TradingPanel = ({
 
         {/* ── Payout ───────────────────────────────────────────────── */}
         <div className="flex items-center justify-between border-t border-dashed border-[#4a5267] px-2.5 pb-2 pt-2 text-xs text-gray-400 lg:mx-4 lg:px-0 lg:pb-3">
-          <span className="font-semibold">{t("tradingPanel.yourPayout")}</span>
-          <span className="text-[13px] font-black tracking-wide text-white">{asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}</span>
+          <span className="font-normal text-[11px] text-gray-400">{t("tradingPanel.yourPayout")}</span>
+          <span className="text-[12px] font-normal tracking-wide text-white">{asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}</span>
         </div>
 
         {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
@@ -1195,7 +1216,7 @@ const TradingPanel = ({
             type="button"
             onClick={() => placeTrade("higher")}
             disabled={asset.available === false}
-            className={`flex h-[44px] items-center justify-between rounded-[4px] px-3 text-[12px] font-bold text-white transition-all active:scale-[0.99] focus:outline-none lg:px-4 lg:text-[13px] ${
+            className={`flex h-[44px] items-center justify-between rounded-[4px] px-3 text-[12px] font-normal text-white transition-all active:scale-[0.99] focus:outline-none lg:px-4 lg:text-[13px] ${
               higherButtonFocused ? "scale-[1.02]" : ""
             } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
             style={{
@@ -1214,7 +1235,7 @@ const TradingPanel = ({
             type="button"
             onClick={() => placeTrade("lower")}
             disabled={asset.available === false}
-            className={`flex h-[44px] items-center justify-between rounded-[4px] px-3 text-[12px] font-bold text-white transition-all active:scale-[0.99] focus:outline-none lg:px-4 lg:text-[13px] ${
+            className={`flex h-[44px] items-center justify-between rounded-[4px] px-3 text-[12px] font-normal text-white transition-all active:scale-[0.99] focus:outline-none lg:px-4 lg:text-[13px] ${
               lowerButtonFocused ? "scale-[1.02]" : ""
             } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
             style={{
