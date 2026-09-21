@@ -254,7 +254,7 @@ const TimeSwitcherDropdown = ({
                   onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); }}
                   className={`rounded-md border py-2 text-[12px] font-normal transition active:scale-95 ${
                     selected
-                      ? "border-[#21c978] bg-[#21c978]/15 text-[#21c978]"
+                      ? "border-[#21c978] bg-[#21c978] text-white"
                       : "border-white/8 bg-[#353b4a] text-white hover:border-white/20"
                   }`}
                 >
@@ -1011,8 +1011,11 @@ const TradingPanel = ({
                   {/* Mobile timer */}
                   <div className="relative lg:hidden">
                     {showTimeSwitcher && createPortal(
-                      <div className="fixed inset-0 z-[9998] bg-black/30 lg:hidden" onClick={() => setShowTimeSwitcher(false)}>
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" onClick={(e) => e.stopPropagation()}>
+                      <div className="fixed inset-0 z-[9998] lg:hidden" onClick={() => setShowTimeSwitcher(false)}>
+                        <div
+                          className="absolute bottom-[140px] left-2 right-2 z-[9999]"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <TimeSwitcherDropdown
                             expirySeconds={expirySeconds}
                             setExpirySeconds={setExpirySeconds}
