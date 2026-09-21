@@ -198,8 +198,8 @@ const TimeSwitcherDropdown = ({
   setCustomTimeMinutes: React.Dispatch<React.SetStateAction<string>>;
   setCustomTimeSeconds: React.Dispatch<React.SetStateAction<string>>;
 }) => (
-  <div className="absolute left-0 top-full z-50 mt-1 w-full min-w-[178px] overflow-hidden rounded-[4px] border border-white/10 bg-[#3a3f4a] p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
-    <div className="grid grid-cols-4 gap-1">
+  <div className="absolute left-0 top-full z-50 mt-1 w-full min-w-[178px] rounded-[4px] border border-white/10 bg-[#3a3f4a] p-1.5 shadow-[0_12px_28px_rgba(0,0,0,0.35)]">
+    <div className="grid grid-cols-2 gap-1 min-[360px]:grid-cols-3 sm:grid-cols-4">
       {TIME_PRESETS.slice(0, 8).map((preset) => {
         const selected = expirySeconds === preset.val;
         return (
@@ -216,7 +216,7 @@ const TimeSwitcherDropdown = ({
         );
       })}
     </div>
-    <div className="mt-1 grid grid-cols-3 gap-1">
+    <div className="mt-1 grid grid-cols-2 gap-1 min-[360px]:grid-cols-3">
       {TIME_PRESETS.slice(8, 11).map((preset) => {
         const selected = expirySeconds === preset.val;
         return (
@@ -996,7 +996,6 @@ const TradingPanel = ({
                     </div>
                   </div>
                   {showTimeSwitcher && (
-                    <div className="relative lg:hidden">
                       <TimeSwitcherDropdown
                         expirySeconds={expirySeconds}
                         setExpirySeconds={setExpirySeconds}
@@ -1008,7 +1007,6 @@ const TradingPanel = ({
                         setCustomTimeMinutes={setCustomTimeMinutes}
                         setCustomTimeSeconds={setCustomTimeSeconds}
                       />
-                    </div>
                   )}
 
                 {/* Desktop timer */}
