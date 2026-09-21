@@ -963,6 +963,27 @@ const TradingPanel = ({
               <ChevronDown className="w-3.5 h-3.5 text-gray-400 lg:hidden" strokeWidth={3} />
             </div>
           </button>
+
+          {/* Mobile: PENDING TRADE toggle in header */}
+          <button
+            type="button"
+            onClick={handlePendingTradeToggle}
+            aria-pressed={pendingTradeEnabled}
+            className="flex shrink-0 items-center gap-1.5 lg:hidden"
+          >
+            <span className={`text-[9px] font-normal uppercase tracking-wider ${pendingTradeEnabled ? "text-[#0fa053]" : "text-[#7f8b99]"}`}>
+              PENDING TRADE
+            </span>
+            <div
+              className={`relative h-[14px] w-[28px] rounded-full border transition-all`}
+              style={{
+                borderColor: pendingTradeEnabled ? "#0fa053" : "rgba(255,255,255,0.15)",
+                backgroundColor: pendingTradeEnabled ? "#0fa053" : "transparent",
+              }}
+            >
+              <div className={`absolute top-[2px] h-[8px] w-[8px] rounded-full transition-all ${pendingTradeEnabled ? "left-[16px] bg-white shadow-sm" : "left-[2px] bg-gray-500"}`} />
+            </div>
+          </button>
         </div>
 
         <button
@@ -992,42 +1013,29 @@ const TradingPanel = ({
           <div className="relative z-10 lg:pb-0">
             <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-1 lg:gap-3">
               <div className="relative">
-                {/* Mobile: Timer + Investment side by side */}
-                <div className="relative flex gap-2 lg:hidden">
-                  {/* Timer card */}
-                  <div className="relative flex-1">
-                    <div className="rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 pt-2.5 pb-2">
+                {/* Mobile: Single card with Timer | Investment */}
+                <div className="relative lg:hidden">
+                  <div className="flex rounded-lg border border-[#2b3149] bg-[#2a3040]">
+                    {/* Timer half */}
+                    <div className="relative flex-1 px-3 pt-3 pb-2.5">
                       <span className="absolute -top-2 left-3 z-10 bg-[#2a3040] px-1 text-[9px] font-normal text-[#777f92]">Timer</span>
                       <div
                         onClick={() => setShowTimeSwitcher((value) => !value)}
-                        className="flex h-[36px] cursor-pointer items-center justify-between"
+                        className="flex h-[32px] cursor-pointer items-center"
                       >
-                        <span className="text-[14px] font-normal tabular-nums text-white" style={{ fontFamily: "Arial, sans-serif" }}>
+                        <span className="text-[15px] font-normal tabular-nums text-white" style={{ fontFamily: "Arial, sans-serif" }}>
                           {formatTradeClock(expirySeconds)}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span
-                            className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 active:scale-95"
-                            onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}
-                          >
-                            <Minus className="h-2.5 w-2.5" />
-                          </span>
-                          <span
-                            className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 active:scale-95"
-                            onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}
-                          >
-                            <Plus className="h-2.5 w-2.5" />
-                          </span>
                         </span>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Investment card */}
-                  <div className="relative flex-1">
-                    <div className="rounded-lg border border-[#2b3149] bg-[#2a3040] px-2.5 pt-2.5 pb-2">
+                    {/* Vertical divider */}
+                    <div className="w-px bg-[#2b3149]" />
+
+                    {/* Investment half */}
+                    <div className="relative flex-1 px-3 pt-3 pb-2.5">
                       <span className="absolute -top-2 left-3 z-10 bg-[#2a3040] px-1 text-[9px] font-normal text-[#777f92]">Investment</span>
-                      <div className="flex h-[36px] items-center justify-between">
+                      <div className="flex h-[32px] items-center justify-between">
                         <div className="flex items-center gap-1">
                           <span
                             className="flex h-5 w-5 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 active:scale-95"
@@ -1043,7 +1051,7 @@ const TradingPanel = ({
                             step={0.01}
                             inputMode="decimal"
                             onChange={(event) => handleInvestmentInput(event.target.value)}
-                            className="hide-number-spin w-[50px] bg-transparent text-center text-[14px] font-normal text-white outline-none"
+                            className="hide-number-spin w-[40px] bg-transparent text-center text-[15px] font-normal text-white outline-none"
                             style={{ fontFamily: "Arial, sans-serif" }}
                           />
                           <span className="text-[11px] font-normal text-[#777f92]">$</span>
@@ -1057,28 +1065,12 @@ const TradingPanel = ({
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Mobile: PENDING TRADE row */}
-                <div className="mt-1.5 flex items-center justify-end gap-1.5 lg:hidden">
-                  <span className="text-[9px] font-normal uppercase tracking-wider text-[#0fa053]">PENDING TRADE</span>
-                  <button
-                    type="button"
-                    onClick={handlePendingTradeToggle}
-                    aria-pressed={pendingTradeEnabled}
-                    className="relative h-[14px] w-[28px] rounded-full border transition-all"
-                    style={{
-                      borderColor: pendingTradeEnabled ? "#0fa053" : "rgba(255,255,255,0.15)",
-                      backgroundColor: pendingTradeEnabled ? "#0fa053" : "transparent",
-                    }}
-                  >
-                    <div className={`absolute top-[2px] h-[8px] w-[8px] rounded-full transition-all ${pendingTradeEnabled ? "left-[16px] bg-white shadow-sm" : "left-[2px] bg-gray-500"}`} />
-                  </button>
-                </div>
-
-                {/* Mobile: SWITCH row */}
-                <div className="mt-1.5 flex items-center justify-end lg:hidden">
-                  <span className="text-[9px] font-normal uppercase tracking-wider text-[#0fa053]">SWITCH</span>
+                  {/* Payout + SWITCH row */}
+                  <div className="mt-1.5 flex items-center justify-between px-1">
+                    <span className="text-[10px] font-normal text-gray-400">Payout</span>
+                    <span className="text-[10px] font-normal uppercase tracking-wider text-[#0fa053]">SWITCH</span>
+                  </div>
                 </div>
 
                 {/* Mobile timer dropdown (portal) */}
@@ -1204,9 +1196,9 @@ const TradingPanel = ({
         </div>
 
         {/* ── Payout ───────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between border-t border-dashed border-[#4a5267] px-2.5 pb-2 pt-2 text-xs text-gray-400 lg:mx-4 lg:px-0 lg:pb-3">
-          <span className="font-normal text-[11px] text-gray-400">{t("tradingPanel.yourPayout")}</span>
-          <span className="text-[12px] font-normal tracking-wide text-white">{asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}</span>
+        <div className="flex items-center justify-between border-t border-[#2b3149] px-2.5 pb-2 pt-2 text-xs text-gray-400 lg:mx-4 lg:px-0 lg:pb-3">
+          <span className="font-normal text-[11px] text-gray-400">Payout</span>
+          <span className="text-[13px] font-normal tracking-wide text-white">{asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}</span>
         </div>
 
         {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
