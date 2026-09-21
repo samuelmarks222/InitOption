@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   ChevronDown, ChevronUp, Plus, Minus, ArrowUp, ArrowDown,
   Clock, Briefcase,
@@ -219,7 +220,7 @@ const TimeSwitcherDropdown = ({
   };
 
   return (
-    <div className="absolute left-0 bottom-full z-50 mb-1 w-full min-w-[220px] rounded-lg border border-white/10 bg-[#2a2f3a] p-2 shadow-[0_-12px_28px_rgba(0,0,0,0.45)]">
+    <div className="w-[260px] rounded-lg border border-white/10 bg-[#2a2f3a] p-2 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
       <div className="flex gap-1 rounded-md bg-[#1a1e28] p-0.5">
         <button
           type="button"
@@ -1009,12 +1010,17 @@ const TradingPanel = ({
               <div className="relative">
                   {/* Mobile timer */}
                   <div className="relative lg:hidden">
-                    {showTimeSwitcher && (
-                        <TimeSwitcherDropdown
-                          expirySeconds={expirySeconds}
-                          setExpirySeconds={setExpirySeconds}
-                          setShowTimeSwitcher={setShowTimeSwitcher}
-                        />
+                    {showTimeSwitcher && createPortal(
+                      <div className="fixed inset-0 z-[9998] bg-black/30 lg:hidden" onClick={() => setShowTimeSwitcher(false)}>
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" onClick={(e) => e.stopPropagation()}>
+                          <TimeSwitcherDropdown
+                            expirySeconds={expirySeconds}
+                            setExpirySeconds={setExpirySeconds}
+                            setShowTimeSwitcher={setShowTimeSwitcher}
+                          />
+                        </div>
+                      </div>,
+                      document.body
                     )}
                     <div
                       onClick={() => setShowTimeSwitcher((value) => !value)}
@@ -1071,11 +1077,13 @@ const TradingPanel = ({
 
                   {/* Inline dropdown */}
                   {showTimeSwitcher && (
-                    <TimeSwitcherDropdown
-                      expirySeconds={expirySeconds}
-                      setExpirySeconds={setExpirySeconds}
-                      setShowTimeSwitcher={setShowTimeSwitcher}
-                    />
+                    <div className="absolute left-0 bottom-full z-50 mb-1">
+                      <TimeSwitcherDropdown
+                        expirySeconds={expirySeconds}
+                        setExpirySeconds={setExpirySeconds}
+                        setShowTimeSwitcher={setShowTimeSwitcher}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
