@@ -1021,13 +1021,10 @@ const TradingPanel = ({
               <div className="relative">
                 {/* Mobile: Single card with Timer | Investment */}
                 <div className="relative lg:hidden">
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex rounded-lg border" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
                     {/* Timer half */}
-                    <div
-                      className="relative rounded-md border px-3 pb-2.5 pt-3"
-                      style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
-                    >
-                      <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-panel-bg)" }}>Timer</span>
+                    <div className="relative flex-1 px-3 pt-3 pb-2.5">
+                      <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-control-bg)" }}>Timer</span>
                       <div
                         onClick={() => setShowTimeSwitcher((value) => !value)}
                         className="flex h-[32px] cursor-pointer items-center"
@@ -1038,16 +1035,16 @@ const TradingPanel = ({
                       </div>
                     </div>
 
+                    {/* Vertical divider */}
+                    <div className="w-px" style={{ background: "var(--trading-control-border)" }} />
+
                     {/* Investment half */}
-                    <div
-                      className="relative rounded-md border px-3 pb-2.5 pt-3"
-                      style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}
-                    >
-                      <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-panel-bg)" }}>Investment</span>
+                    <div className="relative flex-1 px-3 pt-3 pb-2.5">
+                      <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-control-bg)" }}>Investment</span>
                       <div className="flex h-[32px] items-center justify-between">
                         <div className="flex w-full items-center justify-between gap-1">
                           <span
-                            className="flex h-5 w-5 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
+                            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
                             style={{ background: "var(--trading-panel-soft-bg)" }}
                             onClick={() => adjustInvestment(-1)}
                           >
@@ -1061,12 +1058,12 @@ const TradingPanel = ({
                             step={0.01}
                             inputMode="decimal"
                             onChange={(event) => handleInvestmentInput(event.target.value)}
-                            className="hide-number-spin w-[48px] bg-transparent text-center text-[15px] font-normal text-[var(--trading-text-color)] outline-none"
+                            className="hide-number-spin w-[40px] bg-transparent text-center text-[15px] font-normal text-[var(--trading-text-color)] outline-none"
                             style={{ fontFamily: "Arial, sans-serif" }}
                           />
                           <span className="text-[11px] font-normal text-[var(--trading-muted-color)]">$</span>
                           <span
-                            className="flex h-5 w-5 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
+                            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
                             style={{ background: "var(--trading-panel-soft-bg)" }}
                             onClick={() => adjustInvestment(1)}
                           >
@@ -1074,22 +1071,24 @@ const TradingPanel = ({
                           </span>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowInvestmentSwitcher((value) => !value)}
-                        className="mt-1 block w-full text-center text-[9px] font-black uppercase tracking-wider text-[var(--trading-accent-color)]"
-                      >
-                        SWITCH
-                      </button>
                     </div>
                   </div>
 
-                  {/* Mobile payout row */}
-                  <div className="mt-2 flex items-center justify-between border-t px-1 pt-2 lg:hidden" style={{ borderColor: "var(--trading-border-color)" }}>
+                  {/* SWITCH + Payout row */}
+                  <div className="mt-1.5 flex items-center justify-between px-1">
                     <span className="text-[10px] font-normal text-[var(--trading-muted-color)]">Payout</span>
-                    <span className="text-[13px] font-semibold text-[var(--trading-text-color)]">
-                      {asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowInvestmentSwitcher((value) => !value)}
+                        className="text-[9px] font-normal uppercase tracking-wider text-[var(--trading-accent-color)]"
+                      >
+                        SWITCH
+                      </button>
+                      <span className="text-[13px] font-normal text-[var(--trading-text-color)]">
+                        {asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
