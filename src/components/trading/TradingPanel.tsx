@@ -1021,7 +1021,7 @@ const TradingPanel = ({
               <div className="relative">
                 {/* Mobile: Two separate cards - Timer and Investment */}
                 <div className="relative lg:hidden">
-                  <div className="flex gap-2">
+                  <div className="flex">
                     {/* Timer card */}
                     <div className="relative flex-1 rounded-lg border px-3 pt-3 pb-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
                       <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-control-bg)" }}>Timer</span>
