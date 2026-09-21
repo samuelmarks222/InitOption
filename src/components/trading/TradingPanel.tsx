@@ -219,12 +219,12 @@ const TimeSwitcherDropdown = ({
   };
 
   return (
-    <div className="absolute left-0 top-full z-50 mt-1 w-full min-w-[220px] rounded-lg border border-white/10 bg-[#2a2f3a] p-2 shadow-[0_12px_28px_rgba(0,0,0,0.45)]">
+    <div className="absolute left-0 bottom-full z-50 mb-1 w-full min-w-[220px] rounded-lg border border-white/10 bg-[#2a2f3a] p-2 shadow-[0_-12px_28px_rgba(0,0,0,0.45)]">
       <div className="flex gap-1 rounded-md bg-[#1a1e28] p-0.5">
         <button
           type="button"
           onClick={() => setTab("timer")}
-          className={`flex-1 rounded-md py-1.5 text-[11px] font-bold uppercase tracking-wider transition ${
+          className={`flex-1 rounded-md py-1.5 text-[11px] font-normal uppercase tracking-wider transition ${
             tab === "timer" ? "bg-[#21c978] text-white" : "text-gray-400 hover:text-white"
           }`}
         >
@@ -233,7 +233,7 @@ const TimeSwitcherDropdown = ({
         <button
           type="button"
           onClick={() => setTab("time")}
-          className={`flex-1 rounded-md py-1.5 text-[11px] font-bold uppercase tracking-wider transition ${
+          className={`flex-1 rounded-md py-1.5 text-[11px] font-normal uppercase tracking-wider transition ${
             tab === "time" ? "bg-[#21c978] text-white" : "text-gray-400 hover:text-white"
           }`}
         >
@@ -251,7 +251,7 @@ const TimeSwitcherDropdown = ({
                   key={preset.val}
                   type="button"
                   onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); }}
-                  className={`rounded-md border py-2 text-[12px] font-bold transition active:scale-95 ${
+                  className={`rounded-md border py-2 text-[12px] font-normal transition active:scale-95 ${
                     selected
                       ? "border-[#21c978] bg-[#21c978]/15 text-[#21c978]"
                       : "border-white/8 bg-[#353b4a] text-white hover:border-white/20"
@@ -265,7 +265,7 @@ const TimeSwitcherDropdown = ({
           <button
             type="button"
             onClick={() => setTab("time")}
-            className="mt-2 w-full rounded-md border border-white/8 bg-[#353b4a] py-2.5 text-[12px] font-bold text-white hover:border-white/20 transition"
+            className="mt-2 w-full rounded-md border border-white/8 bg-[#353b4a] py-2.5 text-[12px] font-normal text-white hover:border-white/20 transition"
           >
             Set manually
           </button>
@@ -274,7 +274,7 @@ const TimeSwitcherDropdown = ({
         <div className="mt-2">
           <div className="flex items-center gap-2">
             <div className="flex-1">
-              <label className="mb-1 block text-[9px] font-bold uppercase tracking-wider text-gray-500">Hrs</label>
+              <label className="mb-1 block text-[9px] font-normal uppercase tracking-wider text-gray-500">Hrs</label>
               <input
                 type="number"
                 min={0}
@@ -283,12 +283,12 @@ const TimeSwitcherDropdown = ({
                 value={manualH}
                 onChange={(e) => setManualH(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") applyManualTime(); }}
-                className="h-10 w-full rounded-md border border-white/10 bg-[#353b4a] px-2 text-center text-[14px] font-bold text-white outline-none focus:border-[#21c978]"
+                className="h-10 w-full rounded-md border border-white/10 bg-[#353b4a] px-2 text-center text-[14px] font-normal text-white outline-none focus:border-[#21c978]"
               />
             </div>
-            <span className="mt-4 text-lg font-bold text-gray-500">:</span>
+            <span className="mt-4 text-lg font-normal text-gray-500">:</span>
             <div className="flex-1">
-              <label className="mb-1 block text-[9px] font-bold uppercase tracking-wider text-gray-500">Min</label>
+              <label className="mb-1 block text-[9px] font-normal uppercase tracking-wider text-gray-500">Min</label>
               <input
                 type="number"
                 min={0}
@@ -297,12 +297,12 @@ const TimeSwitcherDropdown = ({
                 value={manualM}
                 onChange={(e) => setManualM(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") applyManualTime(); }}
-                className="h-10 w-full rounded-md border border-white/10 bg-[#353b4a] px-2 text-center text-[14px] font-bold text-white outline-none focus:border-[#21c978]"
+                className="h-10 w-full rounded-md border border-white/10 bg-[#353b4a] px-2 text-center text-[14px] font-normal text-white outline-none focus:border-[#21c978]"
               />
             </div>
-            <span className="mt-4 text-lg font-bold text-gray-500">:</span>
+            <span className="mt-4 text-lg font-normal text-gray-500">:</span>
             <div className="flex-1">
-              <label className="mb-1 block text-[9px] font-bold uppercase tracking-wider text-gray-500">Sec</label>
+              <label className="mb-1 block text-[9px] font-normal uppercase tracking-wider text-gray-500">Sec</label>
               <input
                 type="number"
                 min={0}
@@ -311,14 +311,14 @@ const TimeSwitcherDropdown = ({
                 value={manualS}
                 onChange={(e) => setManualS(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") applyManualTime(); }}
-                className="h-10 w-full rounded-md border border-white/10 bg-[#353b4a] px-2 text-center text-[14px] font-bold text-white outline-none focus:border-[#21c978]"
+                className="h-10 w-full rounded-md border border-white/10 bg-[#353b4a] px-2 text-center text-[14px] font-normal text-white outline-none focus:border-[#21c978]"
               />
             </div>
           </div>
           <button
             type="button"
             onClick={applyManualTime}
-            className="mt-2 w-full rounded-md bg-[#21c978] py-2.5 text-[12px] font-bold text-white hover:bg-[#1db86d] transition active:scale-[0.98]"
+            className="mt-2 w-full rounded-md bg-[#21c978] py-2.5 text-[12px] font-normal text-white hover:bg-[#1db86d] transition active:scale-[0.98]"
           >
             Set Time
           </button>
@@ -1009,6 +1009,13 @@ const TradingPanel = ({
               <div className="relative">
                   {/* Mobile timer */}
                   <div className="relative lg:hidden">
+                    {showTimeSwitcher && (
+                        <TimeSwitcherDropdown
+                          expirySeconds={expirySeconds}
+                          setExpirySeconds={setExpirySeconds}
+                          setShowTimeSwitcher={setShowTimeSwitcher}
+                        />
+                    )}
                     <div
                       onClick={() => setShowTimeSwitcher((value) => !value)}
                       className="relative flex h-[44px] w-full cursor-pointer items-center justify-between rounded-[4px] border border-[#687086] bg-[#2a3040] px-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
@@ -1037,13 +1044,6 @@ const TradingPanel = ({
                       <span className="text-[9px] font-black uppercase tracking-wider text-[#1c9cff]">Switch Time</span>
                     </div>
                   </div>
-                  {showTimeSwitcher && (
-                      <TimeSwitcherDropdown
-                        expirySeconds={expirySeconds}
-                        setExpirySeconds={setExpirySeconds}
-                        setShowTimeSwitcher={setShowTimeSwitcher}
-                      />
-                  )}
 
                 {/* Desktop timer */}
                 <div className="relative hidden lg:block">
