@@ -1020,8 +1020,8 @@ const TradingPanel = ({
             <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 lg:grid-cols-1 lg:gap-3">
               <div className="relative">
                 {/* Mobile: Two separate cards - Timer and Investment (edge-to-edge) */}
-                <div className="relative lg:hidden -mx-2.5 px-2">
-                  <div className="flex gap-1.5">
+                <div className="relative lg:hidden">
+                  <div className="flex gap-1.5 px-1">
                     {/* Timer card */}
                     <div className="relative flex-1 rounded-lg border px-3 pt-3 pb-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
                       <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-control-bg)" }}>Timer</span>
@@ -1072,7 +1072,7 @@ const TradingPanel = ({
                   </div>
 
                   {/* SWITCH below cards, right-aligned */}
-                  <div className="mt-1 flex items-center justify-end px-2">
+                  <div className="mt-1 flex items-center justify-end px-1">
                     <button
                       type="button"
                       onClick={() => setShowInvestmentSwitcher((value) => !value)}
@@ -1083,7 +1083,7 @@ const TradingPanel = ({
                   </div>
 
                   {/* Payout row below */}
-                  <div className="mt-0.5 flex items-center justify-between px-2">
+                  <div className="mt-0.5 flex items-center justify-between px-1">
                     <span className="text-[11px] font-normal text-[var(--trading-muted-color)]">Payout</span>
                     <span className="text-[14px] font-normal text-[var(--trading-text-color)]">
                       {asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}
@@ -1220,7 +1220,7 @@ const TradingPanel = ({
         </div>
 
         {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
-        <div className="grid grid-cols-2 gap-2 px-2 pb-3 lg:mx-4 lg:grid-cols-1 lg:gap-2.5 lg:px-0 lg:pb-2">
+        <div className="grid grid-cols-2 gap-2 px-1.5 pb-3 lg:mx-4 lg:grid-cols-1 lg:gap-2.5 lg:px-0 lg:pb-2">
           <button
             ref={higherButtonRef}
             type="button"
