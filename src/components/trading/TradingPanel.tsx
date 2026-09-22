@@ -248,25 +248,48 @@ const TimeSwitcherDropdown = ({
 
       {tab === "timer" ? (
         <div className="mt-2">
-          <div className={`grid gap-1.5 ${compact ? "grid-cols-4" : "grid-cols-3"}`}>
-            {TIMER_PRESETS.map((preset) => {
-              const selected = expirySeconds === preset.val;
-              return (
-                <button
-                  key={preset.val}
-                  type="button"
-                  onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); }}
-                  className={`rounded-md border py-2 text-[12px] font-normal transition active:scale-95 ${
-                    selected
-                      ? "border-[#21c978] bg-[#21c978] text-white"
-                      : "border-white/8 bg-[#353b4a] text-white hover:border-white/20"
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              );
-            })}
-          </div>
+          {compact ? (
+            <div className="flex flex-wrap gap-1.5">
+              {TIMER_PRESETS.map((preset) => {
+                const selected = expirySeconds === preset.val;
+                return (
+                  <button
+                    key={preset.val}
+                    type="button"
+                    onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); }}
+                    className={`rounded-md border py-2 px-3 text-[12px] font-normal transition active:scale-95 ${
+                      selected
+                        ? "border-[#21c978] bg-[#21c978] text-white"
+                        : "border-white/8 bg-[#353b4a] text-white hover:border-white/20"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-1.5">
+              {TIMER_PRESETS.map((preset) => {
+                const selected = expirySeconds === preset.val;
+                return (
+                  <button
+                    key={preset.val}
+                    type="button"
+                    onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); }}
+                    className={`rounded-md border py-2 text-[12px] font-normal transition active:scale-95 ${
+                      selected
+                        ? "border-[#21c978] bg-[#21c978] text-white"
+                        : "border-white/8 bg-[#353b4a] text-white hover:border-white/20"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {!compact && (
           <button
             type="button"
             onClick={() => setTab("time")}
@@ -274,6 +297,7 @@ const TimeSwitcherDropdown = ({
           >
             Set manually
           </button>
+          )}
         </div>
       ) : (
         <div className="mt-2">
