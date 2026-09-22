@@ -182,10 +182,12 @@ const TimeSwitcherDropdown = ({
   expirySeconds,
   setExpirySeconds,
   setShowTimeSwitcher,
+  compact = false,
 }: {
   expirySeconds: number;
   setExpirySeconds: (value: number) => void;
   setShowTimeSwitcher: React.Dispatch<React.SetStateAction<boolean>>;
+  compact?: boolean;
 }) => {
   const [tab, setTab] = useState<"timer" | "time">("timer");
   const [manualH, setManualH] = useState("");
@@ -220,7 +222,8 @@ const TimeSwitcherDropdown = ({
   };
 
   return (
-    <div className="w-[260px] rounded-lg border border-white/10 bg-[#2a2f3a] p-2 shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+    <div className={`rounded-lg border border-white/10 bg-[#2a2f3a] p-2 shadow-[0_8px_32px_rgba(0,0,0,0.6)] ${compact ? "w-full" : "w-[260px]"}`}>
+      {!compact && (
       <div className="flex gap-1 rounded-md bg-[#1a1e28] p-0.5">
         <button
           type="button"
@@ -241,10 +244,11 @@ const TimeSwitcherDropdown = ({
           Time
         </button>
       </div>
+      )}
 
       {tab === "timer" ? (
         <div className="mt-2">
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className={`grid gap-1.5 ${compact ? "grid-cols-4" : "grid-cols-3"}`}>
             {TIMER_PRESETS.map((preset) => {
               const selected = expirySeconds === preset.val;
               return (
@@ -1148,6 +1152,7 @@ const TradingPanel = ({
                         expirySeconds={expirySeconds}
                         setExpirySeconds={setExpirySeconds}
                         setShowTimeSwitcher={setShowTimeSwitcher}
+                        compact
                       />
                     </div>
                   )}
