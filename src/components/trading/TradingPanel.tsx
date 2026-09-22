@@ -1023,7 +1023,7 @@ const TradingPanel = ({
                 <div className="relative lg:hidden">
                   <div className="flex gap-1 px-1">
                     {/* Timer card */}
-                    <div className="relative flex h-[58px] flex-1 rounded-lg border px-2.5 pb-2 pt-2.5" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
+                    <div className="relative flex h-[58px] flex-1 rounded-lg border py-2.5 px-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
                       <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-control-bg)" }}>Timer</span>
                       <div
                         onClick={() => setShowTimeSwitcher((value) => !value)}
@@ -1036,7 +1036,7 @@ const TradingPanel = ({
                     </div>
 
                     {/* Investment card */}
-                    <div className="relative flex h-[58px] flex-1 rounded-lg border px-2.5 pb-2 pt-2.5" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
+                    <div className="relative flex h-[58px] flex-1 rounded-lg border py-2.5 px-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
                       <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-control-bg)" }}>Investment</span>
                       <div className="flex h-[30px] w-full items-center justify-between">
                         <span
