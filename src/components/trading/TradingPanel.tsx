@@ -1110,28 +1110,26 @@ const TradingPanel = ({
 
                 {/* Desktop timer */}
                 <div className="relative hidden lg:block">
-                  <div className="absolute -top-2 left-3 z-10 bg-[#252938] px-1 text-[10px] font-semibold text-[#777f92]">{t("tradingPanel.timeLabelShort")}</div>
+                  <div className="absolute -top-2 left-3 z-10 px-1 text-[10px] font-semibold text-[#777f92]" style={{ background: "var(--trading-panel-bg)" }}>{t("tradingPanel.timeLabelShort")}</div>
                   <div
                     onClick={() => setShowTimeSwitcher((v) => !v)}
-                    className="flex h-[38px] cursor-pointer items-center justify-between rounded-[5px] border border-[#464c5d] bg-[#282c3b] px-0 transition hover:border-[#5a6278]"
+                    className="flex h-[38px] cursor-pointer items-center justify-between rounded-[5px] border border-[#464c5d] bg-[#282c3b] px-2 transition hover:border-[#5a6278]"
                   >
-                    <button
-                      type="button"
+                    <span
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}
-                      className="flex h-full w-[38px] items-center justify-center border-0 bg-transparent text-[21px] text-[#8d94a5] transition hover:text-white"
                     >
-                      −
-                    </button>
-                    <span className="flex-1 text-center text-[14px] font-medium tracking-[0.01em] text-[#f0f1f5]" style={{ fontFamily: "Arial, sans-serif" }}>
+                      <Minus className="h-3 w-3" />
+                    </span>
+                    <span className="flex-1 text-center text-[14px] font-medium tabular-nums text-[#f0f1f5]" style={{ fontFamily: "Arial, sans-serif" }}>
                       {formatTradeClock(expirySeconds)}
                     </span>
-                    <button
-                      type="button"
+                    <span
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}
-                      className="flex h-full w-[38px] items-center justify-center border-0 bg-transparent text-[21px] text-[#8d94a5] transition hover:text-white"
                     >
-                      +
-                    </button>
+                      <Plus className="h-3 w-3" />
+                    </span>
                   </div>
                   <div className="mt-[3px] flex items-center justify-center">
                     <button
@@ -1159,18 +1157,17 @@ const TradingPanel = ({
               <div className="relative">
                 {/* Desktop amount */}
                 <div className="relative hidden lg:block">
-                  <div className="absolute -top-2 left-3 z-10 bg-[#252938] px-1 text-[10px] font-semibold text-[#777f92]">{t("tradingPanel.investmentLabel")}</div>
+                  <div className="absolute -top-2 left-3 z-10 px-1 text-[10px] font-semibold text-[#777f92]" style={{ background: "var(--trading-panel-bg)" }}>{t("tradingPanel.investmentLabel")}</div>
                   <div
                     onClick={() => setShowInvestmentSwitcher((v) => !v)}
-                    className="flex h-[38px] cursor-pointer items-center justify-between rounded-[5px] border border-[#464c5d] bg-[#282c3b] px-0 transition hover:border-[#5a6278]"
+                    className="flex h-[38px] cursor-pointer items-center justify-between rounded-[5px] border border-[#464c5d] bg-[#282c3b] px-2 transition hover:border-[#5a6278]"
                   >
-                    <button
-                      type="button"
+                    <span
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustInvestment(-1); }}
-                      className="flex h-full w-[38px] items-center justify-center border-0 bg-transparent text-[21px] text-[#8d94a5] transition hover:text-white"
                     >
-                      −
-                    </button>
+                      <Minus className="h-3 w-3" />
+                    </span>
                     <input
                       type="number"
                       value={investment}
@@ -1183,13 +1180,12 @@ const TradingPanel = ({
                       className="hide-number-spin min-w-0 w-[70px] bg-transparent text-center text-[14px] font-medium tracking-[0.01em] text-[#f0f1f5] outline-none"
                       style={{ fontFamily: "Arial, sans-serif" }}
                     />
-                    <button
-                      type="button"
+                    <span
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-[#4a5164] text-gray-300 transition hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}
-                      className="flex h-full w-[38px] items-center justify-center border-0 bg-transparent text-[21px] text-[#8d94a5] transition hover:text-white"
                     >
-                      +
-                    </button>
+                      <Plus className="h-3 w-3" />
+                    </span>
                   </div>
                   <div className="mt-[3px] flex items-center justify-center">
                     <button
