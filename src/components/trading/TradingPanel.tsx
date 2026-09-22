@@ -1023,11 +1023,11 @@ const TradingPanel = ({
                 <div className="relative lg:hidden">
                   <div className="flex gap-1 px-1">
                     {/* Timer card */}
-                    <div className="relative flex h-[58px] flex-1 rounded-lg border py-2.5 px-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
+                    <div className="relative flex h-[35px] flex-1 rounded-lg border py-2.5 px-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
                       <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-control-bg)" }}>Timer</span>
                       <div
                         onClick={() => setShowTimeSwitcher((value) => !value)}
-                        className="flex h-[30px] cursor-pointer items-center"
+                        className="flex h-[15px] cursor-pointer items-center"
                       >
                         <span className="text-[15px] font-normal tabular-nums text-[var(--trading-text-color)]" style={{ fontFamily: "Arial, sans-serif" }}>
                           {formatTradeClock(expirySeconds)}
@@ -1036,9 +1036,9 @@ const TradingPanel = ({
                     </div>
 
                     {/* Investment card */}
-                    <div className="relative flex h-[58px] flex-1 rounded-lg border py-2.5 px-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
+                    <div className="relative flex h-[35px] flex-1 rounded-lg border py-2.5 px-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
                       <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-control-bg)" }}>Investment</span>
-                      <div className="flex h-[30px] w-full items-center justify-between">
+                      <div className="flex h-[15px] w-full items-center justify-between">
                         <span
                           className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
                           style={{ background: "var(--trading-panel-soft-bg)" }}
