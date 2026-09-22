@@ -1143,7 +1143,7 @@ const TradingPanel = ({
 
                   {/* Inline dropdown */}
                   {showTimeSwitcher && (
-                    <div className="absolute left-0 bottom-full z-50 mb-1">
+                    <div className="absolute left-0 top-full z-50 mt-1">
                       <TimeSwitcherDropdown
                         expirySeconds={expirySeconds}
                         setExpirySeconds={setExpirySeconds}
