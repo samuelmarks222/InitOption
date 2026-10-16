@@ -24,6 +24,7 @@ interface AssetSymbolMarkProps {
   size?: number;
   className?: string;
   fallbackLabelLength?: number;
+  forcePairFlags?: boolean;
 }
 
 interface SingleAssetImageProps {
@@ -117,6 +118,7 @@ export const AssetSymbolMark = ({
   size = 22,
   className,
   fallbackLabelLength = 2,
+  forcePairFlags = false,
 }: AssetSymbolMarkProps) => {
   const resolvedCategory = normalizeAssetCategory(category, symbol);
   const resolvedFlags = getAssetFlags(symbol, flags);
@@ -147,7 +149,7 @@ export const AssetSymbolMark = ({
       </span>
     ) : null;
 
-  if (resolvedCategory === "OTC" && resolvedFlags.length >= 2) {
+  if ((resolvedCategory === "OTC" || forcePairFlags) && resolvedFlags.length >= 2) {
     const pairOffset = Math.max(8, Math.round(size * 0.42));
     const pairWidth = size + pairOffset;
 

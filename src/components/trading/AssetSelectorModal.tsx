@@ -132,9 +132,10 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
   };
 
   const displayName = (asset: AssetSelectorAsset) => {
-    if (asset.category === "CURRENCIES") return asset.symbol;
-    const base = asset.name || asset.symbol;
-    return asset.isOTC && !base.includes("(OTC)") ? `${base} (OTC)` : base;
+    const base = asset.category === "CURRENCIES" ? asset.symbol : (asset.name || asset.symbol);
+    return (asset.category === "CURRENCIES" || asset.category === "CRYPTO") && !base.includes("(OTC)")
+      ? `${base} (OTC)`
+      : base;
   };
 
   return (
@@ -268,8 +269,9 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                         stockLogo={asset.stockLogo}
                         commodityIcon={asset.commodityIcon}
                         size={22}
+                        forcePairFlags={asset.category === "CRYPTO" || asset.category === "CURRENCIES"}
                       />
-                      <div className="truncate text-[13.5px] font-medium text-white leading-tight">{displayName(asset)}</div>
+                      <div className="truncate text-[14px] font-bold text-white leading-tight">{displayName(asset)}</div>
                     </div>
 
                     {/* 24h change */}
