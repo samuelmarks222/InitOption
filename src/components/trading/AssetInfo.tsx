@@ -39,8 +39,10 @@ const formatCompactTimer = (seconds: number) => {
   return `${safeSeconds}s`;
 };
 
-// Mini sparkline sampled from the same deterministic market model as the chart
-const TabSparkline = ({ symbol, category, basePrice }: { symbol: string; category?: string | null; basePrice: number }) => {
+// Mini sparkline sampled from the same deterministic market model as the chart.
+// Tints green/red while the asset has a live winning/losing position.
+const TabSparkline = ({ symbol, category, basePrice, tone }: { symbol: string; category?: string | null; basePrice: number; tone?: "up" | "down" | null }) => {
+  const lineColor = tone === "up" ? "#18d87d" : tone === "down" ? "#ff6a72" : "#2ea3f2";
   const coords = useMemo(() => {
     const now = Math.floor(Date.now() / 1000);
     const N = 48;
@@ -72,15 +74,15 @@ const TabSparkline = ({ symbol, category, basePrice }: { symbol: string; categor
     <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="h-full w-full">
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#2ea3f2" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#2ea3f2" stopOpacity="0" />
+          <stop offset="0%" stopColor={lineColor} stopOpacity="0.35" />
+          <stop offset="100%" stopColor={lineColor} stopOpacity="0" />
         </linearGradient>
       </defs>
       <polygon points={`0,28 ${coords} 100,28`} fill={`url(#${gradientId})`} />
       <polyline
         points={coords}
         fill="none"
-        stroke="#2ea3f2"
+        stroke={lineColor}
         strokeWidth="1.5"
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -169,25 +171,32 @@ const AssetInfo = ({
             const progressPercent = getTradeProgressPercent(activeTrade);
             const payout = Math.round(dynamicTab?.maxProfit ?? tab.maxProfit ?? 82);
 
-            // Badge text: +1.77 Ksh (winning) or 0 Ksh (losing)
-            const badgeText = isWinningTrade
-              ? `+${formatCurrencyAmount(Math.abs(totalLiveResult), currency)}`
-              : isLosingTrade
-              ? formatCurrencyAmount(0, currency)
-              : null;
-
             const showOtcSuffix = tab.symbol.includes("/") && !tab.symbol.toUpperCase().includes("OTC");
             const tabLabel = showOtcSuffix ? `${tab.symbol} OTC` : tab.symbol;
+            const liveTone = !hasActiveTrade ? null : isWinningTrade ? "up" : isLosingTrade ? "down" : null;
+            const borderClasses = hasActiveTrade && liveTone
+              ? liveTone === "up"
+                ? "bg-[#2a3040] border-[#18d87d] shadow-md ring-1 ring-[#18d87d]/40"
+                : "bg-[#2a3040] border-[#E03E3E] shadow-md ring-1 ring-[#E03E3E]/45"
+              : isActive
+                ? "bg-[#2a3040] border-[#2ea3f2] shadow-md ring-1 ring-[#2ea3f2]/50"
+                : "bg-[#2a3040] border-[#384259] hover:bg-[#343b4f] hover:border-gray-500/50";
+
+            // Live P/L text: +$19.20 (winning) or -$0.45 (losing, live value)
+            const livePnlText = isWinningTrade
+              ? `+${formatCurrencyAmount(Math.abs(totalLiveResult), currency)}`
+              : isLosingTrade
+              ? `-${formatCurrencyAmount(Math.abs(totalLiveResult), currency)}`
+              : null;
+            const stakeText = activeTrade
+              ? `$${Number(activeTrade.amount).toLocaleString("en-US", { maximumFractionDigits: 2 })}`
+              : null;
 
             return (
               <div
                 key={tab.symbol}
                 onClick={() => (onSelectTab ? onSelectTab(tab.symbol) : onOpenSelector())}
-                className={`group relative flex h-[54px] w-[150px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-md border transition-all ${
-                  isActive
-                    ? "bg-[#2a3040] border-[#2ea3f2] shadow-md ring-1 ring-[#2ea3f2]/50"
-                    : "bg-[#2a3040] border-[#384259] hover:bg-[#343b4f] hover:border-gray-500/50"
-                }`}
+                className={`group relative flex h-[54px] w-[150px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-md border transition-all ${borderClasses}`}
               >
                 {/* Left-edge vertical indicator stripe for active trades */}
                 {hasActiveTrade && (
@@ -222,6 +231,7 @@ const AssetInfo = ({
                     symbol={tab.symbol}
                     category={typeof tab.type === "string" ? tab.type : undefined}
                     basePrice={Number(dynamicTab?.price ?? currentPrice ?? 1)}
+                    tone={liveTone}
                   />
                   {/* Timer badge for active trades */}
                   {activeTrade && (
@@ -229,14 +239,21 @@ const AssetInfo = ({
                       {formatCompactTimer(activeTrade.timeLeft)}
                     </span>
                   )}
-                  {/* Active-trade profit badge */}
-                  {hasActiveTrade && badgeText ? (
-                    <span
-                      className="absolute right-1.5 top-[22px] rounded-[3px] px-1.5 py-0.5 text-[10px] font-bold text-white leading-none"
-                      style={{ background: isWinningTrade ? "#0FA053" : "#E03E3E" }}
-                    >
-                      {badgeText}
-                    </span>
+                  {/* Stake + live P/L stack */}
+                  {hasActiveTrade && (stakeText || livePnlText) ? (
+                    <div className="absolute right-1.5 top-0 flex flex-col items-end gap-0.5 leading-none">
+                      {stakeText ? (
+                        <span className="text-[10px] font-bold text-white">{stakeText}</span>
+                      ) : null}
+                      {livePnlText ? (
+                        <span
+                          className="rounded-[3px] px-1.5 py-0.5 text-[10px] font-bold text-white"
+                          style={{ background: isWinningTrade ? "#0FA053" : "#E03E3E" }}
+                        >
+                          {livePnlText}
+                        </span>
+                      ) : null}
+                    </div>
                   ) : null}
                 </div>
 
