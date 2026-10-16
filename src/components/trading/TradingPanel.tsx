@@ -1000,10 +1000,10 @@ const TradingPanel = ({
             <SymbolFlags symbol={asset.symbol} />
             <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-normal tracking-[0.01em] text-white sm:text-[12px] lg:text-[13px]">
               <span className="max-w-[112px] truncate lg:hidden">{asset.symbol}</span>
-              <span className="hidden max-w-[140px] truncate text-[15px] font-bold text-white lg:inline">
-                {(asset.name || asset.symbol)}{(asset.name || asset.symbol).includes("(OTC)") ? "" : " (OTC)"}
+              <span className="hidden max-w-[150px] truncate text-[15px] font-bold text-white lg:inline">
+                {asset.symbol.includes("(OTC)") ? asset.symbol : `${asset.symbol} (OTC)`}
               </span>
-              <span className={`shrink-0 text-[#8f98ac] lg:text-[13px] ${asset.available === false ? "text-red-400" : ""}`}>{asset.available === false ? "N/A" : `${asset.maxProfit ?? 79}%`}</span>
+              <span className={`shrink-0 font-bold text-[#8f98ac] lg:text-[13px] ${asset.available === false ? "text-red-400" : ""}`}>{asset.available === false ? "N/A" : `${asset.maxProfit ?? 79}%`}</span>
               <ChevronDown className="w-3.5 h-3.5 text-gray-400 lg:hidden" strokeWidth={3} />
             </div>
           </button>
