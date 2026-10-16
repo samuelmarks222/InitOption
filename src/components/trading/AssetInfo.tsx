@@ -185,7 +185,7 @@ const AssetInfo = ({
                 onClick={() => (onSelectTab ? onSelectTab(tab.symbol) : onOpenSelector())}
                 className={`group relative flex h-[54px] w-[150px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-md border transition-all ${
                   isActive
-                    ? "bg-[#2a3040] border-[#18d87d] shadow-md ring-1 ring-[#18d87d]/40"
+                    ? "bg-[#2a3040] border-[#2ea3f2] shadow-md ring-1 ring-[#2ea3f2]/50"
                     : "bg-[#2a3040] border-[#384259] hover:bg-[#343b4f] hover:border-gray-500/50"
                 }`}
               >
