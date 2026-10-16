@@ -744,10 +744,9 @@ const TradingPanel = ({
 
   const adjustInvestment = (delta: number) => {
     const step = 1;
-    const max = Math.max(1, Math.floor(Math.min(balance, MAX_MANUAL_INVESTMENT)));
     setInvestment((value) => {
       const next = Math.round((value + delta * step) * 100) / 100;
-      return Math.max(1, Math.min(max, next));
+      return Math.max(1, Math.min(MAX_MANUAL_INVESTMENT, next));
     });
   };
 
