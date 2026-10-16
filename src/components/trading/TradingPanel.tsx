@@ -12,6 +12,7 @@ import { formatCurrencyAmount, getCurrencySymbol } from "@/lib/currency";
 import { ActiveTrade, OpenTradeHandler, TradeDirection, TradeHistoryEntry, useTrading } from "@/hooks/useTrading";
 import { toast } from "@/hooks/use-toast";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
+import { getMasterAssetBySymbol } from "@/lib/assets";
 import { AccountType } from "./AccountModals";
 import AssetSymbolMark from "./AssetSymbolMark";
 import {
@@ -116,9 +117,9 @@ const useLiveCountdownSeconds = (
   return Math.max(0, expirySeconds - elapsedSeconds);
 };
 
-const formatStake = (amount: number) => `${Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2)} $`;
+const formatStake = (amount: number) => `${Number(amount).toLocaleString("en-US", { maximumFractionDigits: 2 })} $`;
 
-const formatProfit = (amount: number) => `${amount > 0 ? "+" : amount < 0 ? "-" : ""}${Math.abs(amount).toFixed(2)} $`;
+const formatProfit = (amount: number) => `${amount > 0 ? "+" : amount < 0 ? "-" : ""}${Math.abs(amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 
 const formatGroupLabel = (value?: string) => {
   const date = value ? new Date(value) : new Date();
@@ -436,8 +437,8 @@ const SymbolFlags = ({ symbol, size = 20 }: { symbol: string; size?: number }) =
 
 const TradeGroupHeader = ({ label, count }: { label: string; count: number }) => (
   <div className="flex items-center justify-center gap-1.5 px-3 pb-1 pt-4">
-    <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[#9da6bb]">{label}</span>
-    <span className="flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#697289] px-1 text-[10px] font-black text-white">
+    <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[#9da6bb] lg:text-[11px] lg:font-bold">{label}</span>
+    <span className="flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-[#697289] px-1 text-[10px] font-black text-white lg:bg-[#3a4055]">
       {count}
     </span>
   </div>
@@ -466,6 +467,14 @@ const CompactTradeRowShell = ({
   onToggle?: () => void;
   details?: ReactNode;
 }) => {
+  const masterName = getMasterAssetBySymbol(symbol)?.name;
+  const rowName = symbol.includes("/")
+    ? symbol
+    : (() => {
+        const base = masterName || symbol;
+        return base.includes("(OTC)") ? base : `${base} (OTC)`;
+      })();
+
   const rowBody = (
     <div className="px-2 py-2 transition-colors hover:bg-white/[0.025]">
       <div className="flex items-start">
@@ -477,18 +486,18 @@ const CompactTradeRowShell = ({
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <SymbolFlags symbol={symbol} size={20} />
-              <span className="max-w-[82px] truncate text-[11px] font-black uppercase tracking-[0.01em] text-[#e8edf8] sm:text-[12px]">
-                {symbol}
+              <span className="max-w-[82px] truncate text-[11px] font-black uppercase tracking-[0.01em] text-[#e8edf8] sm:text-[12px] lg:max-w-[104px] lg:text-[12px] lg:font-medium lg:normal-case lg:tracking-normal lg:text-white">
+                {rowName}
               </span>
             </div>
 
-            <span className="shrink-0 text-[11px] font-black tabular-nums text-[#eff3ff]">
+            <span className="shrink-0 text-[11px] font-black tabular-nums text-[#eff3ff] lg:text-[12px] lg:font-medium">
               {clockValue}
             </span>
           </div>
 
           <div className="mt-1.5 flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-black" style={{ color: amountColor }}>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-black lg:text-[13px] lg:font-bold" style={{ color: amountColor }}>
               <span
                 className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full"
                 style={{ background: direction === "higher" ? "rgba(24, 216, 125, 0.16)" : "rgba(255, 106, 114, 0.16)" }}
@@ -498,7 +507,7 @@ const CompactTradeRowShell = ({
               {amountLabel}
             </span>
 
-            <span className="shrink-0 text-[11px] font-black sm:text-[12px]" style={{ color: profitColor }}>
+            <span className="shrink-0 text-[11px] font-black sm:text-[12px] lg:text-[13px] lg:font-bold" style={{ color: profitColor }}>
               {profitLabel}
             </span>
           </div>
@@ -606,7 +615,7 @@ const CompactHistoryRow = ({
       symbol={trade.asset_symbol}
       clockValue={shortOrderLabel ? formatDurationShortcut(trade.expiry_seconds ?? 0) : formatTradeClock(trade.expiry_seconds ?? 0)}
       amountLabel={formatStake(trade.amount ?? 0)}
-      amountColor={trade.direction === "higher" ? upColor : downColor}
+      amountColor={upColor}
       profitLabel={formatProfit(result)}
       profitColor={result > 0 ? upColor : downColor}
       direction={trade.direction}
@@ -1209,7 +1218,7 @@ const TradingPanel = ({
                         value={Number.isFinite(investment) ? investment.toLocaleString("en-US", { maximumFractionDigits: 2 }) : investment}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(event) => handleInvestmentInput(event.target.value)}
-                        className="hide-number-spin min-w-0 w-[80px] bg-transparent text-center text-[16px] font-bold tabular-nums tracking-[0.01em] text-white outline-none"
+                        className="hide-number-spin min-w-0 w-[68px] bg-transparent text-center text-[16px] font-bold tabular-nums tracking-[0.01em] text-white outline-none"
                         style={{ fontFamily: "Arial, sans-serif" }}
                       />
                       <span className="text-[16px] font-bold text-white">$</span>
@@ -1269,7 +1278,7 @@ const TradingPanel = ({
         <div className="hidden items-center justify-between px-2.5 pb-2 pt-2 text-xs lg:mx-3 lg:flex lg:px-0 lg:pb-[10px] lg:pt-[10px]" style={{ color: "#8b91a1" }}>
           <span className="shrink-0 font-normal text-[12px]">Payout</span>
           <span className="mx-2 flex-1 border-b border-dotted border-[#454b5c]" />
-          <span className="shrink-0 text-[13px] font-bold tracking-wide text-white">{asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}</span>
+          <span className="shrink-0 text-[13px] font-bold tracking-wide text-white">{asset.available === false ? "N/A" : `${payout.toLocaleString("en-US", { maximumFractionDigits: 2 })} $`}</span>
         </div>
 
         {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
