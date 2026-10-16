@@ -476,9 +476,9 @@ const CompactTradeRowShell = ({
       })();
 
   const rowBody = (
-    <div className="px-2 py-2 transition-colors hover:bg-white/[0.025]">
+    <div className="px-2 py-2 transition-colors hover:bg-white/[0.025] lg:px-3 lg:py-2.5">
       <div className="flex items-start">
-        <span className="mt-[2px] flex h-3 w-3 shrink-0 items-center justify-center text-[#b8c2d8]">
+        <span className="mt-[2px] flex h-3 w-3 shrink-0 items-center justify-center text-[#b8c2d8] lg:text-[#7a8398]">
           <ChevronDown className={`h-2.5 w-2.5 transition-transform ${expanded ? "rotate-180" : ""}`} />
         </span>
 
@@ -486,12 +486,12 @@ const CompactTradeRowShell = ({
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <SymbolFlags symbol={symbol} size={20} />
-              <span className="max-w-[82px] truncate text-[11px] font-black uppercase tracking-[0.01em] text-[#e8edf8] sm:text-[12px] lg:max-w-[104px] lg:text-[12px] lg:font-medium lg:normal-case lg:tracking-normal lg:text-white">
+              <span className="max-w-[82px] truncate text-[11px] font-black uppercase tracking-[0.01em] text-[#e8edf8] sm:text-[12px] lg:max-w-[92px] lg:text-[13px] lg:font-medium lg:normal-case lg:tracking-normal lg:text-white">
                 {rowName}
               </span>
             </div>
 
-            <span className="shrink-0 text-[11px] font-black tabular-nums text-[#eff3ff] lg:text-[12px] lg:font-medium">
+            <span className="shrink-0 text-[11px] font-black tabular-nums text-[#eff3ff] lg:text-[12px] lg:font-medium lg:text-white">
               {clockValue}
             </span>
           </div>
