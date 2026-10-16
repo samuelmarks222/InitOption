@@ -752,14 +752,8 @@ const TradingPanel = ({
   };
 
   const adjustExpiry = (delta: number) => {
-    const nextIdx = delta > 0
-      ? TIME_PRESETS.findIndex((preset) => preset.val > expirySeconds)
-      : TIME_PRESETS.reduce((lastIndex, preset, presetIndex) => (
-        preset.val < expirySeconds ? presetIndex : lastIndex
-      ), -1);
-    const fallbackIdx = delta > 0 ? TIME_PRESETS.length - 1 : 0;
-    const resolvedIdx = nextIdx === -1 ? fallbackIdx : nextIdx;
-    setExpirySeconds(TIME_PRESETS[resolvedIdx].val);
+    const min = TIME_PRESETS[0]?.val ?? 5;
+    setExpirySeconds((value) => Math.max(min, Math.min(MAX_MANUAL_EXPIRY_SECONDS, value + delta)));
   };
 
   const handleInvestmentInput = (rawValue: string) => {
@@ -1175,7 +1169,7 @@ const TradingPanel = ({
                     style={{ background: "var(--trading-panel-bg)" }}
                   >
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-transparent text-gray-300 transition hover:text-white active:scale-95"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 transition hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}
                     >
                       <Minus className="h-3 w-3" />
@@ -1184,7 +1178,7 @@ const TradingPanel = ({
                       {formatTradeClock(expirySeconds)}
                     </span>
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-transparent text-gray-300 transition hover:text-white active:scale-95"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 transition hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}
                     >
                       <Plus className="h-3 w-3" />
@@ -1224,7 +1218,7 @@ const TradingPanel = ({
                     style={{ background: "var(--trading-panel-bg)" }}
                   >
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-transparent text-gray-300 transition hover:text-white active:scale-95"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 transition hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustInvestment(-1); }}
                     >
                       <Minus className="h-3 w-3" />
@@ -1242,7 +1236,7 @@ const TradingPanel = ({
                       <span className="text-[16px] font-bold text-white">$</span>
                     </div>
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-transparent text-gray-300 transition hover:text-white active:scale-95"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 transition hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}
                     >
                       <Plus className="h-3 w-3" />
