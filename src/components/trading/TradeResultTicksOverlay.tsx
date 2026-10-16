@@ -171,12 +171,11 @@ const drawResultPill = (
   const padX = 10;
   const pillW = padX + textW + gap + circleR * 2 + padX;
   const pillH = 24;
-  // Anchor at the expiry point; if it is off-screen, park the pill at the
-  // right edge where the trade actually closed (like the reference).
+  // Pill parks at the right edge; keep it fully inside the canvas.
   let pillX = x - pillW / 2;
-  if (pillX < 4) pillX = x < 0 ? Math.max(4, width - pillW - 12) : 4;
+  if (pillX < 4) pillX = 4;
   else if (pillX + pillW > width - 4) pillX = Math.max(4, width - pillW - 4);
-  const pillY = y - pillH - 12;
+  const pillY = Math.max(4, y - pillH - 12);
 
   // Pill body
   ctx.beginPath();
@@ -270,7 +269,7 @@ export const TradeResultTicksOverlay = ({
       const now = performance.now();
       const activeIds = new Set<string>();
 
-      announcementsRef.current.forEach((announcement) => {
+      announcementsRef.current.forEach((announcement, announcementIndex) => {
         activeIds.add(announcement.id);
         if (!seenAtRef.current[announcement.id]) {
           seenAtRef.current[announcement.id] = now;
@@ -278,7 +277,7 @@ export const TradeResultTicksOverlay = ({
 
         const startedAt = seenAtRef.current[announcement.id];
         const ageMs = now - startedAt;
-        if (ageMs > VISIBLE_MS) return;
+        if (ageMs > VISIBLE_MS && ageMs > PILL_VISIBLE_MS) return;
 
         const price = isFiniteNumber(announcement.exitPrice)
           ? announcement.exitPrice
@@ -295,24 +294,20 @@ export const TradeResultTicksOverlay = ({
 
         if (ageMs > PILL_VISIBLE_MS) return;
 
-        // Park the pill at the expiry point when it is on-screen; otherwise
-        // anchor it to the visible right edge where the trade just closed.
-        let pillX = isFiniteNumber(x) && x >= 0 && x <= width ? x : NaN;
-        if (!isFiniteNumber(pillX)) {
-          try {
-            const range = chart.timeScale().getVisibleLogicalRange();
-            const rx = range ? chart.timeScale().logicalToCoordinate(range.to) : null;
-            pillX =
-              isFiniteNumber(rx) && rx >= 0 && rx <= width ? rx - 8 : Math.max(0, width - 90);
-          } catch {
-            pillX = Math.max(0, width - 90);
-          }
-        }
+        // Result pill always parks at the visible right edge where the trade
+        // just closed (like the reference); stacked when several settle together.
+        let pillX = NaN;
+        try {
+          const range = chart.timeScale().getVisibleLogicalRange();
+          const rx = range ? chart.timeScale().logicalToCoordinate(range.to) : null;
+          if (isFiniteNumber(rx) && rx >= 0 && rx <= width) pillX = rx - 8;
+        } catch {}
+        if (!isFiniteNumber(pillX)) pillX = Math.max(0, width - 90);
         const pillLabel =
           announcement.status === "won"
             ? `+$${formatPillAmount(announcement.profit)}`
             : `-$${formatPillAmount(announcement.amount)}`;
-        drawResultPill(ctx, pillX, y, width, announcement.status, pillLabel, ageMs);
+        drawResultPill(ctx, pillX, y - announcementIndex * 30, width, announcement.status, pillLabel, ageMs);
       });
 
       Object.keys(seenAtRef.current).forEach((id) => {
