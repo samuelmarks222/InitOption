@@ -121,6 +121,23 @@ const formatStake = (amount: number) => `${Number(amount).toLocaleString("en-US"
 
 const formatProfit = (amount: number) => `${amount > 0 ? "+" : amount < 0 ? "-" : ""}${Math.abs(amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 
+// Normalizes any direction value ("higher"/"up"/"buy"/"call"/"long", any case)
+// so buy-type trades always render green and sell-type trades always render red,
+// even when history rows come from the DB with non-canonical values.
+const isUpDirection = (direction?: string | null) => {
+  const normalized = String(direction ?? "").trim().toLowerCase();
+  return (
+    normalized === "higher" ||
+    normalized === "up" ||
+    normalized === "buy" ||
+    normalized === "call" ||
+    normalized === "long" ||
+    normalized === "b" ||
+    normalized === "u" ||
+    normalized === "h"
+  );
+};
+
 const formatGroupLabel = (value?: string) => {
   const date = value ? new Date(value) : new Date();
 
@@ -474,6 +491,7 @@ const CompactTradeRowShell = ({
         const base = masterName || symbol;
         return base.includes("(OTC)") ? base : `${base} (OTC)`;
       })();
+  const isHigher = isUpDirection(direction);
 
   const rowBody = (
     <div className="px-2 py-2 transition-colors hover:bg-white/[0.025] lg:px-3 lg:py-2.5">
@@ -486,12 +504,12 @@ const CompactTradeRowShell = ({
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <SymbolFlags symbol={symbol} size={20} />
-              <span className="max-w-[82px] truncate text-[11px] font-black uppercase tracking-[0.01em] text-[#e8edf8] sm:text-[12px] lg:max-w-[92px] lg:text-[13px] lg:font-medium lg:normal-case lg:tracking-normal lg:text-white">
+              <span className="max-w-[82px] truncate text-[11px] font-black uppercase tracking-[0.01em] text-[#e8edf8] sm:text-[12px] lg:max-w-[92px] lg:text-[13px] lg:font-semibold lg:normal-case lg:tracking-normal lg:text-white">
                 {rowName}
               </span>
             </div>
 
-            <span className="shrink-0 text-[11px] font-black tabular-nums text-[#eff3ff] lg:text-[12px] lg:font-medium lg:text-white">
+            <span className="shrink-0 text-[11px] font-black tabular-nums text-[#eff3ff] lg:text-[12px] lg:font-semibold lg:text-white">
               {clockValue}
             </span>
           </div>
@@ -500,9 +518,9 @@ const CompactTradeRowShell = ({
             <span className="inline-flex items-center gap-1.5 text-[11px] font-black lg:text-[13px] lg:font-bold" style={{ color: amountColor }}>
               <span
                 className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full"
-                style={{ background: direction === "higher" ? "rgba(24, 216, 125, 0.16)" : "rgba(255, 106, 114, 0.16)" }}
+                style={{ background: isHigher ? "rgba(24, 216, 125, 0.16)" : "rgba(255, 106, 114, 0.16)", color: isHigher ? "#0bb36b" : "#e5484d" }}
               >
-                {direction === "higher" ? <ArrowUp className="h-3 w-3" strokeWidth={3} /> : <ArrowDown className="h-3 w-3" strokeWidth={3} />}
+                {isHigher ? <ArrowUp className="h-3 w-3" strokeWidth={3} /> : <ArrowDown className="h-3 w-3" strokeWidth={3} />}
               </span>
               {amountLabel}
             </span>
@@ -553,7 +571,7 @@ const CompactActiveTradeRow = ({
       symbol={trade.asset_symbol}
       clockValue={shortOrderLabel ? formatDurationShortcut(Math.max(0, liveTimeLeft - 0.05)) : formatTradeClock(Math.max(0, liveTimeLeft - 0.05))}
       amountLabel={formatStake(trade.amount)}
-      amountColor={trade.direction === "higher" ? upColor : downColor}
+      amountColor={isUpDirection(trade.direction) ? upColor : downColor}
       profitLabel={formatProfit(trade.amount * trade.payout_rate)}
       profitColor={upColor}
       direction={trade.direction}
@@ -583,7 +601,7 @@ const CompactPendingTradeRow = ({
       symbol={trade.asset_symbol}
       clockValue={shortOrderLabel ? formatDurationShortcut(Math.max(0, pendingTimeLeft)) : formatTradeClock(Math.max(0, pendingTimeLeft))}
       amountLabel={formatStake(trade.amount)}
-      amountColor={trade.direction === "higher" ? upColor : downColor}
+      amountColor={isUpDirection(trade.direction) ? upColor : downColor}
       profitLabel="Queued"
       profitColor="#c7d1e6"
       direction={trade.direction}
