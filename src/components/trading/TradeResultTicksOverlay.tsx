@@ -171,10 +171,12 @@ const drawResultPill = (
   const padX = 10;
   const pillW = padX + textW + gap + circleR * 2 + padX;
   const pillH = 24;
-  // Pill parks at the right edge; keep it fully inside the canvas.
+  // Pill parks at the right edge; keep it fully inside the canvas and clear
+  // of the price axis zone on the far right.
+  const rightLimit = Math.max(8, width - 84);
   let pillX = x - pillW / 2;
   if (pillX < 4) pillX = 4;
-  else if (pillX + pillW > width - 4) pillX = Math.max(4, width - pillW - 4);
+  if (pillX + pillW > rightLimit) pillX = Math.max(4, rightLimit - pillW);
   const pillY = Math.max(4, y - pillH - 12);
 
   // Pill body
