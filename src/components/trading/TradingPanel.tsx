@@ -227,6 +227,8 @@ const TimeSwitcherDropdown = ({
     { label: "02:00:00", val: 7200 },
   ];
 
+  const PRESETS = compact ? [...TIMER_PRESETS, { label: "04:00:00", val: 14400 }] : TIMER_PRESETS;
+
   const applyManualTime = () => {
     const h = Math.max(0, parseInt(manualH) || 0);
     const m = Math.max(0, Math.min(59, parseInt(manualM) || 0));
@@ -265,48 +267,27 @@ const TimeSwitcherDropdown = ({
       )}
 
       {tab === "timer" ? (
-        <div className="mt-2">
-          {compact ? (
-            <div className="flex flex-wrap gap-1.5">
-              {TIMER_PRESETS.map((preset) => {
-                const selected = expirySeconds === preset.val;
-                return (
-                  <button
-                    key={preset.val}
-                    type="button"
-                    onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); }}
-                    className={`rounded-md border py-2 px-3 text-[12px] font-normal transition active:scale-95 ${
-                      selected
-                        ? "border-[#21c978] bg-[#21c978] text-white"
-                        : "border-white/8 bg-[#353b4a] text-white hover:border-white/20"
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-1.5">
-              {TIMER_PRESETS.map((preset) => {
-                const selected = expirySeconds === preset.val;
-                return (
-                  <button
-                    key={preset.val}
-                    type="button"
-                    onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); }}
-                    className={`rounded-md border py-2 text-[12px] font-normal transition active:scale-95 ${
-                      selected
-                        ? "border-[#21c978] bg-[#21c978] text-white"
-                        : "border-white/8 bg-[#353b4a] text-white hover:border-white/20"
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+        <div className={compact ? "" : "mt-2"}>
+          <div className={`grid gap-1.5 ${compact ? "grid-cols-4" : "grid-cols-3"}`}>
+            {PRESETS.map((preset) => {
+              const selected = expirySeconds === preset.val;
+              const wide = compact && preset.val >= 3600;
+              return (
+                <button
+                  key={preset.val}
+                  type="button"
+                  onClick={() => { setExpirySeconds(preset.val); setShowTimeSwitcher(false); }}
+                  className={`rounded-md border py-2 transition active:scale-95 ${wide ? "col-span-2" : ""} ${compact ? "text-[13px] font-medium" : "text-[12px] font-normal"} ${
+                    selected
+                      ? "border-[#21c978] bg-[#21c978] text-white"
+                      : "border-white/8 bg-[#353b4a] text-white hover:border-white/20"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
           {!compact && (
           <button
             type="button"
