@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useState, useMemo, useEffect } from "react";
-import { X, Search, ArrowDown, ArrowUp, ArrowUpDown, Info } from "lucide-react";
+import { X, Search, Star, ArrowDown, ArrowUp } from "lucide-react";
 import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
 import { useTrading } from "@/hooks/useTrading";
 import {
@@ -43,13 +43,14 @@ const TABS: TabType[] = ["CURRENCIES", "CRYPTO", "COMMODITIES", "STOCKS", "INDIC
 
 export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProps) => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<TabType>("CURRENCIES");
+  const [activeTab, setActiveTab] = useState<TabType>("CRYPTO");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("profit1m");
   const [sortAsc, setSortAsc] = useState(false);
   const [liveAssets, setLiveAssets] = useState<AssetSelectorAsset[]>([]);
   const [mounted, setMounted] = useState(false);
   const [pairInfoSymbol, setPairInfoSymbol] = useState<string | null>(null);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const { assets } = useDynamicAssets();
   const { activeTrades } = useTrading();
@@ -121,39 +122,47 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
     return data;
   }, [activeTab, searchQuery, sortKey, sortAsc, liveAssets]);
 
-  const renderSortIcon = (key: SortKey) => {
-    if (sortKey === key) {
-      return sortAsc ? <ArrowUp className="h-3 w-3 text-white" /> : <ArrowDown className="h-3 w-3 text-white" />;
-    }
-    return <ArrowUpDown className="h-3 w-3 text-[#B0B0B0] opacity-0 group-hover:opacity-60" />;
+  const toggleFavorite = (symbol: string) => {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(symbol)) next.delete(symbol);
+      else next.add(symbol);
+      return next;
+    });
+  };
+
+  const displayName = (asset: AssetSelectorAsset) => {
+    if (asset.category === "CURRENCIES") return asset.symbol;
+    const base = asset.name || asset.symbol;
+    return asset.isOTC && !base.includes("(OTC)") ? `${base} (OTC)` : base;
   };
 
   return (
     <div className="absolute inset-0 z-[100]">
       {/* Overlay */}
       <div
-        className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${mounted ? "opacity-100" : "opacity-0"}`}
         onClick={onClose}
       />
 
-      {/* Panel */}
+      {/* Panel — Quotex style floating card */}
       <div
-        className={`absolute left-0 top-0 h-full w-[340px] flex flex-col bg-[#1A1A2A] shadow-2xl transition-transform duration-300 ease-out border-r border-[#2A2A3A] ${
-          mounted ? "translate-x-0" : "-translate-x-full"
+        className={`absolute left-2 top-2 bottom-2 sm:left-4 sm:top-4 sm:bottom-4 flex w-[calc(100vw-16px)] max-w-[560px] flex-col rounded-lg bg-[#14161d] shadow-2xl border border-white/5 transition-all duration-300 ease-out ${
+          mounted ? "translate-x-0 opacity-100" : "-translate-x-8 opacity-0"
         }`}
       >
         {/* Header */}
-        <div className="flex shrink-0 items-center justify-between px-4 py-3 border-b border-[#2A2A3A]">
-          <h2 className="text-[14px] font-bold text-white">Select trade pair</h2>
+        <div className="flex shrink-0 items-center justify-between px-5 pt-4 pb-2">
+          <h2 className="text-[19px] font-bold text-white">Select trade pair</h2>
           <button onClick={onClose} className="flex h-7 w-7 items-center justify-center rounded text-gray-400 hover:text-white transition-colors">
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="shrink-0 overflow-x-auto scrollbar-hide border-b border-[#2A2A3A]">
-          <div className="flex min-w-max items-center px-2">
-            {TABS.map(tab => {
+        <div className="shrink-0 px-5 pb-2">
+          <div className="flex items-center gap-5">
+            {TABS.filter((tab) => tab !== "INDICES").map(tab => {
               const isActive = activeTab === tab;
               const label =
                 tab === "CURRENCIES" ? "Currencies" :
@@ -164,12 +173,11 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                 <button
                   key={tab}
                   onClick={() => { setActiveTab(tab); setSearchQuery(""); }}
-                  className={`relative shrink-0 px-1.5 py-2 text-[9px] font-semibold uppercase tracking-wider transition-colors ${
-                    isActive ? "text-white" : "text-[#B0B0B0] hover:text-white"
+                  className={`rounded px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide transition-colors ${
+                    isActive ? "bg-[#1f6bf3] text-white" : "text-[#8b90a0] hover:text-white"
                   }`}
                 >
                   {label}
-                  {isActive && <span className="absolute bottom-0 left-1.5 right-1.5 h-[2px] rounded-full bg-[#D5006C]" />}
                 </button>
               );
             })}
@@ -177,15 +185,19 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
         </div>
 
         {/* Search Bar */}
-        <div className="shrink-0 px-3 py-2.5">
-          <div className="flex items-center gap-2 rounded-full bg-[#0D0D0D] px-3 py-2">
-            <Search className="h-4 w-4 shrink-0 text-gray-400" />
+        <div className="shrink-0 flex items-center gap-2 px-5 py-3">
+          <div className="flex h-10 w-[58px] shrink-0 items-center justify-center gap-1.5 rounded-md bg-[#23262f] text-[#8b90a0]">
+            <Star className="h-3.5 w-3.5" />
+            <span className="text-[12px] font-semibold">{favorites.size}</span>
+          </div>
+          <div className="flex h-10 flex-1 items-center gap-2 rounded-md bg-[#23262f] px-3">
+            <Search className="h-4 w-4 shrink-0 text-gray-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search"
-              className="w-full bg-transparent text-[12px] text-white outline-none placeholder:text-gray-500"
+              className="w-full bg-transparent text-[13px] text-white outline-none placeholder:text-gray-500"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery("")} className="text-gray-400 hover:text-white">
@@ -196,38 +208,29 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
         </div>
 
         {/* Column Headers */}
-        <div className="shrink-0 border-b border-[#2A2A3A] px-4 pb-2">
-          <div className="grid grid-cols-[minmax(0,1fr),60px,42px,42px] items-center gap-1">
-            <span className="text-[11px] font-semibold text-[#B0B0B0]">Name</span>
-            <button
-              onClick={() => handleSort("change24h")}
-              className="group flex items-center justify-end gap-1 text-[10px] font-semibold text-[#B0B0B0] hover:text-white transition-colors"
-            >
-              24h {renderSortIcon("change24h")}
-            </button>
+        <div className="shrink-0 px-5 pb-1">
+          <div className="grid grid-cols-[28px_minmax(0,1fr)_110px_80px_70px] items-center gap-1 border-b border-white/10 pb-2">
+            <span />
+            <span className="text-[12px] font-normal text-[#8b90a0]">Name</span>
+            <span className="text-right text-[12px] font-normal text-[#8b90a0]">24h changing</span>
             <button
               onClick={() => handleSort("profit1m")}
-              className="group flex items-center justify-end gap-1 text-[10px] font-semibold text-[#B0B0B0] hover:text-white transition-colors"
+              className="flex items-center justify-end gap-1 text-[12px] font-normal text-[#8b90a0] hover:text-white transition-colors"
             >
-              1+ min {renderSortIcon("profit1m")}
+              Profit 1+ min <span className="text-[10px]">▼</span>
             </button>
-            <button
-              onClick={() => handleSort("profit5m")}
-              className="group flex items-center justify-end gap-1 text-[10px] font-semibold text-[#B0B0B0] hover:text-white transition-colors"
-            >
-              5+ min {renderSortIcon("profit5m")}
-            </button>
+            <span className="text-right text-[12px] font-normal text-[#8b90a0]">5+ min</span>
           </div>
         </div>
 
         {/* Asset List */}
-        <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#D5006C #2A2A3A' }}>
+        <div className="asset-scroll flex-1 overflow-y-auto px-2 pb-3" style={{ scrollbarWidth: 'thin', scrollbarColor: '#3a3f4d #14161d' }}>
           <style>{`
             .asset-scroll::-webkit-scrollbar { width: 6px; }
-            .asset-scroll::-webkit-scrollbar-track { background: #2A2A3A; }
-            .asset-scroll::-webkit-scrollbar-thumb { background: #D5006C; border-radius: 3px; }
+            .asset-scroll::-webkit-scrollbar-track { background: transparent; }
+            .asset-scroll::-webkit-scrollbar-thumb { background: #3a3f4d; border-radius: 3px; }
           `}</style>
-          <div className="asset-scroll">
+          <div>
             {filteredData.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center text-[13px] text-gray-500">
                 {activeTab === "INDICES" ? (
@@ -237,17 +240,26 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                 )}
               </div>
             ) : (
-              filteredData.map((asset, i) => {
+              filteredData.map((asset) => {
                 const isPositive = asset.change24h >= 0;
+                const isFav = favorites.has(asset.symbol);
 
                 return (
                   <div
                     key={asset.symbol}
                     onClick={() => onSelect(asset)}
-                    className="grid grid-cols-[minmax(0,1fr),60px,42px,42px] items-center gap-1 px-4 py-2.5 cursor-pointer transition-colors hover:bg-[#2A2A3A]"
+                    className="grid grid-cols-[28px_minmax(0,1fr)_110px_80px_70px] items-center gap-1 rounded px-3 py-[9px] cursor-pointer transition-colors hover:bg-white/[0.04] border-b border-white/[0.04]"
                   >
+                    {/* Star */}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(asset.symbol); }}
+                      className="flex items-center justify-start"
+                    >
+                      <Star className={`h-[17px] w-[17px] transition-colors ${isFav ? "fill-[#f5b301] text-[#f5b301]" : "text-[#6b7183] hover:text-white"}`} strokeWidth={1.5} />
+                    </button>
                     {/* Name column */}
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
                       <AssetSymbolMark
                         symbol={asset.symbol}
                         name={asset.name}
@@ -257,48 +269,31 @@ export const AssetSelectorModal = ({ onClose, onSelect }: AssetSelectorModalProp
                         commodityIcon={asset.commodityIcon}
                         size={22}
                       />
-                      <div className="min-w-0 flex-1">
-                        {asset.category === "CURRENCIES" ? (
-                          <div className="truncate text-[12px] font-bold text-white leading-tight">{asset.symbol}</div>
-                        ) : asset.category === "INDICES" ? (
-                          <div className="truncate text-[12px] font-bold text-white leading-tight">{asset.name} <span className="font-normal text-gray-400">({asset.symbol})</span></div>
-                        ) : (
-                          <div className="truncate text-[12px] font-bold text-white leading-tight">{asset.name}</div>
-                        )}
-                      </div>
+                      <div className="truncate text-[13.5px] font-medium text-white leading-tight">{displayName(asset)}</div>
                     </div>
 
                     {/* 24h change */}
-                    <div className="flex items-center justify-end gap-1">
-                      {isPositive ? (
-                        <ArrowUp className="h-3 w-3 text-[#00C076]" strokeWidth={3} />
-                      ) : (
-                        <ArrowDown className="h-3 w-3 text-[#F6465D]" strokeWidth={3} />
-                      )}
-                      <span className={`text-[13px] font-bold ${isPositive ? "text-[#00C076]" : "text-[#F6465D]"}`}>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <span className={`flex h-[18px] w-[18px] items-center justify-center rounded-full ${isPositive ? "bg-[#0ba360]/20 text-[#0bb36b]" : "bg-[#e5484d]/20 text-[#e5484d]"}`}>
+                        {isPositive ? (
+                          <ArrowUp className="h-3 w-3" strokeWidth={3} />
+                        ) : (
+                          <ArrowDown className="h-3 w-3" strokeWidth={3} />
+                        )}
+                      </span>
+                      <span className={`text-[13px] font-bold ${isPositive ? "text-[#0bb36b]" : "text-[#e5484d]"}`}>
                         {isPositive ? "+" : ""}{asset.change24h.toFixed(2)}%
                       </span>
                     </div>
 
                     {/* Profit 1+ min */}
-                    <div className="flex items-center justify-end gap-1">
-                      <span className="text-[13px] font-bold text-white">{asset.profit1m}%</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPairInfoSymbol(asset.symbol);
-                        }}
-                        title="View pair info"
-                        className="flex h-5 w-5 items-center justify-center rounded-full text-gray-400 opacity-60 hover:bg-white/10 hover:text-white hover:opacity-100 transition-all"
-                      >
-                        <Info className="h-3.5 w-3.5" />
-                      </button>
+                    <div className="flex items-center justify-end">
+                      <span className="text-[13px] font-bold text-[#ff9f2e]">{asset.profit1m}%</span>
                     </div>
 
                     {/* Profit 5+ min */}
                     <div className="flex items-center justify-end">
-                      <span className="text-[13px] font-bold text-white">{asset.profit5m}%</span>
+                      <span className="text-[13px] font-bold text-[#ff9f2e]">{asset.profit5m}%</span>
                     </div>
                   </div>
                 );
