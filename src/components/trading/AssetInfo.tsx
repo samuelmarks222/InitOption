@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Info, Plus, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import type { ActiveTrade } from "@/hooks/useTrading";
 import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrencyAmount } from "@/lib/currency";
 import { getLiveAssetTradeSummary } from "@/lib/liveTradeSummary";
+import { getDeterministicPriceAt } from "@/lib/deterministicMarket";
 import { Asset } from "./data/assets";
-import { AssetSymbolMark } from "./AssetSymbolMark";
-import { PairInfoModal } from "./PairInfoModal";
 
 interface AssetInfoProps {
   asset: Asset & { price: number; change: number };
@@ -40,6 +39,45 @@ const formatCompactTimer = (seconds: number) => {
   return `${safeSeconds}s`;
 };
 
+// Mini sparkline sampled from the same deterministic market model as the chart
+const TabSparkline = ({ symbol, category, basePrice }: { symbol: string; category?: string | null; basePrice: number }) => {
+  const coords = useMemo(() => {
+    const now = Math.floor(Date.now() / 1000);
+    const N = 48;
+    const spanSec = 2 * 60 * 60;
+    const step = spanSec / (N - 1);
+    const safeBase = Number.isFinite(basePrice) && basePrice > 0 ? basePrice : 1;
+    const prices: number[] = [];
+    for (let i = 0; i < N; i++) {
+      try {
+        prices.push(getDeterministicPriceAt({ symbol, basePrice: safeBase, timestamp: now - spanSec + i * step, category }));
+      } catch {
+        prices.push(safeBase);
+      }
+    }
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const range = max - min || 1;
+    return prices
+      .map((p, i) => `${((i / (N - 1)) * 100).toFixed(2)},${(27 - ((p - min) / range) * 26).toFixed(2)}`)
+      .join(" ");
+  }, [symbol, basePrice, category]);
+
+  return (
+    <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="h-full w-full">
+      <polyline
+        points={coords}
+        fill="none"
+        stroke="#2ea3f2"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
+  );
+};
+
 const AssetInfo = ({
   asset,
   onOpenSelector,
@@ -57,7 +95,6 @@ const AssetInfo = ({
   const stripRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-  const [pairInfoSymbol, setPairInfoSymbol] = useState<string | null>(null);
 
   useEffect(() => {
     const element = stripRef.current;
@@ -90,7 +127,7 @@ const AssetInfo = ({
   };
 
   return (
-    <div className="relative flex h-[56px] shrink-0 items-center justify-between overflow-hidden hidden lg:flex px-3 bg-[var(--trading-tabs-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white select-none">
+    <div className="relative flex h-[76px] shrink-0 items-center justify-between overflow-hidden hidden lg:flex px-3 bg-[var(--trading-tabs-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white select-none">
       {/* Scrollable strip */}
       <div
         ref={stripRef}
@@ -127,23 +164,69 @@ const AssetInfo = ({
               ? formatCurrencyAmount(0, currency)
               : null;
 
+            const showOtcSuffix = tab.symbol.includes("/") && !tab.symbol.toUpperCase().includes("OTC");
+            const tabLabel = showOtcSuffix ? `${tab.symbol} OTC` : tab.symbol;
+
             return (
               <div
                 key={tab.symbol}
                 onClick={() => (onSelectTab ? onSelectTab(tab.symbol) : onOpenSelector())}
-                className={`group relative flex h-[42px] min-w-[150px] shrink-0 cursor-pointer items-center gap-2.5 overflow-hidden rounded-lg border px-3 transition-all ${
+                className={`group relative flex h-[64px] w-[150px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-md border transition-all ${
                   isActive
-                    ? "bg-[#2a3040] border-[#4b5773] shadow-md ring-1 ring-white/15"
+                    ? "bg-[#2a3040] border-[#18d87d] shadow-md ring-1 ring-[#18d87d]/40"
                     : "bg-[#2a3040] border-[#384259] hover:bg-[#343b4f] hover:border-gray-500/50"
                 }`}
               >
                 {/* Left-edge vertical indicator stripe for active trades */}
                 {hasActiveTrade && (
                   <span
-                    className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-lg"
+                    className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-md"
                     style={{ background: isWinningTrade ? "#0FA053" : "#E03E3E" }}
                   />
                 )}
+
+                {/* Header row: close | symbol + OTC | payout */}
+                <div className="flex shrink-0 items-center gap-1 px-1.5 pt-1.5">
+                  {onRemoveTab && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onRemoveTab(tab.symbol); }}
+                      className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-gray-500 opacity-70 transition-all hover:bg-white/15 hover:text-white hover:opacity-100"
+                    >
+                      <X className="h-3 w-3" strokeWidth={2.5} />
+                    </button>
+                  )}
+                  <span className="min-w-0 flex-1 truncate text-[12px] font-bold uppercase tracking-wide text-white">
+                    {tabLabel}
+                  </span>
+                  <span className="shrink-0 text-[12px] font-bold" style={{ color: WIN_COLOR }}>
+                    +{payout}%
+                  </span>
+                </div>
+
+                {/* Sparkline */}
+                <div className="relative min-h-0 flex-1 px-1.5 pb-1 pt-0.5">
+                  <TabSparkline
+                    symbol={tab.symbol}
+                    category={typeof tab.type === "string" ? tab.type : undefined}
+                    basePrice={Number(dynamicTab?.price ?? currentPrice ?? 1)}
+                  />
+                  {/* Timer badge for active trades */}
+                  {activeTrade && (
+                    <span className="absolute bottom-1 right-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[9px] font-black text-white">
+                      {formatCompactTimer(activeTrade.timeLeft)}
+                    </span>
+                  )}
+                  {/* Active-trade profit badge */}
+                  {hasActiveTrade && badgeText ? (
+                    <span
+                      className="absolute right-1.5 top-[22px] rounded-[3px] px-1.5 py-0.5 text-[10px] font-bold text-white leading-none"
+                      style={{ background: isWinningTrade ? "#0FA053" : "#E03E3E" }}
+                    >
+                      {badgeText}
+                    </span>
+                  ) : null}
+                </div>
 
                 {/* Active trade progress bar at bottom */}
                 {hasActiveTrade && (
@@ -157,50 +240,6 @@ const AssetInfo = ({
                       }}
                     />
                   </div>
-                )}
-
-                <AssetSymbolMark symbol={tab.symbol} category={tab.type} size={20} />
-
-                <div className="min-w-0 flex-1 leading-none">
-                  <p className="truncate text-[13px] font-black uppercase tracking-wide text-white">{tab.symbol}</p>
-                  {hasActiveTrade && badgeText ? (
-                    <span
-                      className="mt-0.5 inline-block rounded-[3px] px-1.5 py-0.5 text-[11px] font-bold text-white leading-none"
-                      style={{ background: isWinningTrade ? "#0FA053" : "#E03E3E" }}
-                    >
-                      {badgeText}
-                    </span>
-                  ) : (
-                    <p className="mt-0.5 text-[11px] font-black text-[#FFB800]">{payout}%</p>
-                  )}
-                </div>
-
-                {/* Timer badge for active trades */}
-                {activeTrade && (
-                  <span className="shrink-0 rounded bg-black/50 px-1.5 py-0.5 text-[9px] font-black text-white">
-                    {formatCompactTimer(activeTrade.timeLeft)}
-                  </span>
-                )}
-
-                {/* Info button */}
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setPairInfoSymbol(tab.symbol); }}
-                  title="View pair info"
-                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-gray-400 opacity-50 transition-all hover:bg-white/15 hover:text-white hover:opacity-100"
-                >
-                  <Info className="h-3 w-3" />
-                </button>
-
-                {/* Close button */}
-                {onRemoveTab && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); onRemoveTab(tab.symbol); }}
-                    className="ml-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-gray-400 opacity-60 transition-all hover:bg-white/15 hover:text-white hover:opacity-100"
-                  >
-                    <X className="h-3 w-3" strokeWidth={2.5} />
-                  </button>
                 )}
               </div>
             );
@@ -227,15 +266,6 @@ const AssetInfo = ({
         >
           <ChevronRight className="h-3.5 w-3.5" strokeWidth={3} />
         </button>
-      )}
-      {pairInfoSymbol && (
-        <PairInfoModal
-          symbol={pairInfoSymbol}
-          onClose={() => setPairInfoSymbol(null)}
-          onTradeNow={(sym) => {
-            if (onSelectTab) onSelectTab(sym);
-          }}
-        />
       )}
     </div>
   );
