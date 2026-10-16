@@ -10,6 +10,8 @@ type ResultAnnouncement = {
   markerTime?: number | null;
   markerLogical?: number | null;
   expiryTime?: number | null;
+  profit?: number;
+  amount?: number;
 };
 
 interface Props {
@@ -23,6 +25,14 @@ const WIN = "#15c96a";
 const LOSS = "#ff5b50";
 const STROKE_SHADOW = "rgba(2, 6, 18, 0.65)";
 const VISIBLE_MS = 1500;
+const PILL_VISIBLE_MS = 3400;
+const PILL_FADE_START_MS = 2600;
+
+const formatPillAmount = (value: unknown) =>
+  Number(value ?? 0).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
@@ -133,6 +143,80 @@ const drawResultTicks = (
   ctx.restore();
 };
 
+const drawResultPill = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  status: "won" | "lost",
+  label: string,
+  ageMs: number,
+) => {
+  if (ageMs > PILL_VISIBLE_MS) return;
+  const intro = Math.min(1, ageMs / 220);
+  const fade =
+    ageMs > PILL_FADE_START_MS
+      ? Math.max(0, 1 - (ageMs - PILL_FADE_START_MS) / (PILL_VISIBLE_MS - PILL_FADE_START_MS))
+      : 1;
+  const alpha = intro * fade;
+  if (alpha <= 0) return;
+
+  const color = status === "won" ? WIN : LOSS;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = "bold 12px Arial, Helvetica, sans-serif";
+  const textW = ctx.measureText(label).width;
+  const circleR = 9;
+  const gap = 6;
+  const padX = 10;
+  const pillW = padX + textW + gap + circleR * 2 + padX;
+  const pillH = 24;
+  const pillX = Math.min(Math.max(4, x - pillW / 2), Math.max(4, width - pillW - 4));
+  const pillY = y - pillH - 12;
+
+  // Pill body
+  ctx.beginPath();
+  if (typeof ctx.roundRect === "function") ctx.roundRect(pillX, pillY, pillW, pillH, pillH / 2);
+  else ctx.rect(pillX, pillY, pillW, pillH);
+  ctx.fillStyle = "rgba(0, 0, 0, 0.88)";
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
+  ctx.stroke();
+
+  // Label
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label, pillX + padX, pillY + pillH / 2 + 0.5);
+
+  // Status circle with check / cross
+  const cx = pillX + pillW - padX - circleR;
+  const cy = pillY + pillH / 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, circleR, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 1.6;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  if (status === "won") {
+    ctx.moveTo(cx - 3.4, cy + 0.2);
+    ctx.lineTo(cx - 1, cy + 2.6);
+    ctx.lineTo(cx + 3.6, cy - 2.8);
+  } else {
+    ctx.moveTo(cx - 2.6, cy - 2.6);
+    ctx.lineTo(cx + 2.6, cy + 2.6);
+    ctx.moveTo(cx + 2.6, cy - 2.6);
+    ctx.lineTo(cx - 2.6, cy + 2.6);
+  }
+  ctx.stroke();
+
+  ctx.restore();
+};
+
 export const TradeResultTicksOverlay = ({
   chart,
   series,
@@ -202,6 +286,12 @@ export const TradeResultTicksOverlay = ({
         if (!isFiniteNumber(x) || !isFiniteNumber(y)) return;
 
         drawResultTicks(ctx, x, y, announcement.status, ageMs);
+
+        const pillLabel =
+          announcement.status === "won"
+            ? `+$${formatPillAmount(announcement.profit)}`
+            : `-$${formatPillAmount(announcement.amount)}`;
+        drawResultPill(ctx, x, y, width, announcement.status, pillLabel, ageMs);
       });
 
       Object.keys(seenAtRef.current).forEach((id) => {
