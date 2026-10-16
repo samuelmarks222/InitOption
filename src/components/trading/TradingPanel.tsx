@@ -1151,7 +1151,7 @@ const TradingPanel = ({
                   <div className="absolute -top-2 left-3 z-10 px-1 text-[10px] font-semibold text-[#777f92]" style={{ background: "var(--trading-panel-bg)" }}>{t("tradingPanel.timeLabelShort")}</div>
                   <div
                     onClick={() => setShowTimeSwitcher((v) => !v)}
-                    className="flex h-[44px] cursor-pointer items-center justify-between rounded-[5px] border border-[#464c5d] px-2 transition hover:border-[#5a6278]"
+                    className="flex h-[44px] cursor-pointer items-center justify-between rounded-lg border border-[#464c5d] px-2 transition hover:border-[#5a6278]"
                     style={{ background: "var(--trading-panel-bg)" }}
                   >
                     <span
@@ -1200,7 +1200,7 @@ const TradingPanel = ({
                   <div className="absolute -top-2 left-3 z-10 px-1 text-[10px] font-semibold text-[#777f92]" style={{ background: "var(--trading-panel-bg)" }}>{t("tradingPanel.investmentLabel")}</div>
                   <div
                     onClick={() => setShowInvestmentSwitcher((v) => !v)}
-                    className="flex h-[44px] cursor-pointer items-center justify-between rounded-[5px] border border-[#464c5d] px-2 transition hover:border-[#5a6278]"
+                    className="flex h-[44px] cursor-pointer items-center justify-between rounded-lg border border-[#464c5d] px-2 transition hover:border-[#5a6278]"
                     style={{ background: "var(--trading-panel-bg)" }}
                   >
                     <span
@@ -1276,7 +1276,7 @@ const TradingPanel = ({
         <div className="hidden items-center justify-between px-2.5 pb-2 pt-2 text-xs lg:mx-3 lg:flex lg:px-0 lg:pb-[10px] lg:pt-[10px]" style={{ color: "#8b91a1" }}>
           <span className="shrink-0 font-normal text-[12px]">Payout</span>
           <span className="mx-2 flex-1 border-b border-dotted border-[#454b5c]" />
-          <span className="shrink-0 text-[13px] font-bold tracking-wide text-white">{asset.available === false ? "N/A" : `${payout.toLocaleString("en-US", { maximumFractionDigits: 2 })} $`}</span>
+          <span className="shrink-0 text-[13px] font-bold tracking-wide text-white">{asset.available === false ? "N/A" : `${payout.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`}</span>
         </div>
 
         {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
