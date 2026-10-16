@@ -286,16 +286,33 @@ export const TradeResultTicksOverlay = ({
         if (!isFiniteNumber(price)) return;
 
         const y = series.priceToCoordinate(price);
+        if (!isFiniteNumber(y)) return;
         const x = resolveXCoordinate(chart, announcement, tfRef.current);
-        if (!isFiniteNumber(x) || !isFiniteNumber(y)) return;
 
-        drawResultTicks(ctx, x, y, announcement.status, ageMs);
+        if (ageMs <= VISIBLE_MS && isFiniteNumber(x)) {
+          drawResultTicks(ctx, x, y, announcement.status, ageMs);
+        }
 
+        if (ageMs > PILL_VISIBLE_MS) return;
+
+        // Park the pill at the expiry point when it is on-screen; otherwise
+        // anchor it to the visible right edge where the trade just closed.
+        let pillX = isFiniteNumber(x) && x >= 0 && x <= width ? x : NaN;
+        if (!isFiniteNumber(pillX)) {
+          try {
+            const range = chart.timeScale().getVisibleLogicalRange();
+            const rx = range ? chart.timeScale().logicalToCoordinate(range.to) : null;
+            pillX =
+              isFiniteNumber(rx) && rx >= 0 && rx <= width ? rx - 8 : Math.max(0, width - 90);
+          } catch {
+            pillX = Math.max(0, width - 90);
+          }
+        }
         const pillLabel =
           announcement.status === "won"
             ? `+$${formatPillAmount(announcement.profit)}`
             : `-$${formatPillAmount(announcement.amount)}`;
-        drawResultPill(ctx, x, y, width, announcement.status, pillLabel, ageMs);
+        drawResultPill(ctx, pillX, y, width, announcement.status, pillLabel, ageMs);
       });
 
       Object.keys(seenAtRef.current).forEach((id) => {
