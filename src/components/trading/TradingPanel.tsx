@@ -1322,7 +1322,7 @@ const TradingPanel = ({
           
           {/* ── Tabs: History / Pending ───────────────────────────────── */}
           <div
-            className="grid grid-cols-2 border-b border-[#202638] bg-[#252b3d] text-center text-xs font-semibold lg:bg-transparent"
+            className="grid grid-cols-2 border-b border-[#202638] bg-[#252b3d] text-center text-xs font-semibold lg:border-transparent lg:bg-transparent"
           >
             <button
               onClick={() => setActiveTab("trades")}
