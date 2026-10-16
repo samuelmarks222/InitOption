@@ -1144,10 +1144,11 @@ const TradingPanel = ({
                   <div className="absolute -top-2 left-3 z-10 px-1 text-[10px] font-semibold text-[#777f92]" style={{ background: "var(--trading-panel-bg)" }}>{t("tradingPanel.timeLabelShort")}</div>
                   <div
                     onClick={() => setShowTimeSwitcher((v) => !v)}
-                    className="flex h-[44px] cursor-pointer items-center justify-between rounded-[5px] border border-[#464c5d] bg-[#282c3b] px-2 transition hover:border-[#5a6278]"
+                    className="flex h-[44px] cursor-pointer items-center justify-between rounded-[5px] border border-[#464c5d] px-2 transition hover:border-[#5a6278]"
+                    style={{ background: "var(--trading-panel-bg)" }}
                   >
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3b4152] text-gray-300 transition hover:text-white active:scale-95"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-transparent text-gray-300 transition hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}
                     >
                       <Minus className="h-3 w-3" />
@@ -1156,7 +1157,7 @@ const TradingPanel = ({
                       {formatTradeClock(expirySeconds)}
                     </span>
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3b4152] text-gray-300 transition hover:text-white active:scale-95"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-transparent text-gray-300 transition hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}
                     >
                       <Plus className="h-3 w-3" />
@@ -1192,10 +1193,11 @@ const TradingPanel = ({
                   <div className="absolute -top-2 left-3 z-10 px-1 text-[10px] font-semibold text-[#777f92]" style={{ background: "var(--trading-panel-bg)" }}>{t("tradingPanel.investmentLabel")}</div>
                   <div
                     onClick={() => setShowInvestmentSwitcher((v) => !v)}
-                    className="flex h-[44px] cursor-pointer items-center justify-between rounded-[5px] border border-[#464c5d] bg-[#282c3b] px-2 transition hover:border-[#5a6278]"
+                    className="flex h-[44px] cursor-pointer items-center justify-between rounded-[5px] border border-[#464c5d] px-2 transition hover:border-[#5a6278]"
+                    style={{ background: "var(--trading-panel-bg)" }}
                   >
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3b4152] text-gray-300 transition hover:text-white active:scale-95"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-transparent text-gray-300 transition hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustInvestment(-1); }}
                     >
                       <Minus className="h-3 w-3" />
@@ -1213,7 +1215,7 @@ const TradingPanel = ({
                       <span className="text-[16px] font-bold text-white">$</span>
                     </div>
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3b4152] text-gray-300 transition hover:text-white active:scale-95"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-transparent text-gray-300 transition hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}
                     >
                       <Plus className="h-3 w-3" />
@@ -1381,7 +1383,7 @@ const TradingPanel = ({
             ) : (
               tradesTabCount === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center lg:bg-transparent">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full lg:h-16 lg:w-16 lg:bg-[#23262f]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full lg:h-16 lg:w-16 lg:bg-transparent">
                     <Briefcase className="h-5 w-5 text-gray-600 lg:hidden" />
                     <Archive className="hidden h-7 w-7 text-[#5b6272] lg:block" />
                   </div>
