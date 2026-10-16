@@ -681,7 +681,7 @@ const TradingPanel = ({
   // Trading params - use context when in signal mode, otherwise local state
   const [localExpirySeconds, setLocalExpirySeconds] = useState(60);
   const [localInvestment, setLocalInvestment] = useState(1);
-  const [investmentMode] = useState<InvestmentMode>("amount");
+  const [investmentMode, setInvestmentMode] = useState<InvestmentMode>("amount");
   const [showTimeSwitcher, setShowTimeSwitcher] = useState(false);
   const [showInvestmentSwitcher, setShowInvestmentSwitcher] = useState(false);
 
@@ -736,13 +736,19 @@ const TradingPanel = ({
   const liveBalance = getEffectiveLiveBalance(profile);
   const balance = accountType === "live" ? liveBalance : demoBalance;
   const payoutRate = (asset.maxProfit ?? 63) / 100;
-  const effectiveInvestment = Math.max(1, Math.min(MAX_MANUAL_INVESTMENT, +investment.toFixed(2)));
+  const effectiveInvestment = investmentMode === "percent"
+    ? +Math.max(0, Math.min(MAX_MANUAL_INVESTMENT, (balance * investment) / 100)).toFixed(2)
+    : Math.max(1, Math.min(MAX_MANUAL_INVESTMENT, +investment.toFixed(2)));
   const payout = +(effectiveInvestment * (1 + payoutRate)).toFixed(2);
   const investmentUnit = "$";
   const upColor = tradingPreferences.upTrendColor;
   const downColor = tradingPreferences.downTrendColor;
 
   const adjustInvestment = (delta: number) => {
+    if (investmentMode === "percent") {
+      setInvestment((value) => clampInvestmentValue(value + delta, "percent"));
+      return;
+    }
     const step = 1;
     setInvestment((value) => {
       const next = Math.round((value + delta * step) * 100) / 100;
@@ -756,7 +762,7 @@ const TradingPanel = ({
   };
 
   const handleInvestmentInput = (rawValue: string) => {
-    setInvestment(clampInvestmentValue(Number(String(rawValue).replace(/,/g, "")) || 1, "amount"));
+    setInvestment(clampInvestmentValue(Number(String(rawValue).replace(/[,%\s]/g, "")) || 1, investmentMode));
   };
 
   useEffect(() => {
@@ -1109,7 +1115,7 @@ const TradingPanel = ({
                             className="hide-number-spin w-[38px] bg-transparent text-center text-[15px] font-normal text-[var(--trading-text-color)] outline-none"
                             style={{ fontFamily: "Arial, sans-serif" }}
                           />
-                          <span className="text-[12px] font-normal text-[var(--trading-muted-color)]">$</span>
+                          <span className="text-[12px] font-normal text-[var(--trading-muted-color)]">{investmentMode === "percent" ? "%" : "$"}</span>
                         </div>
                         <span
                           className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
@@ -1126,7 +1132,7 @@ const TradingPanel = ({
                   <div className="mt-1 flex items-center justify-end px-1">
                     <button
                       type="button"
-                      onClick={() => setShowInvestmentSwitcher((value) => !value)}
+                      onClick={() => { setInvestmentMode((m) => (m === "percent" ? "amount" : "percent")); setShowInvestmentSwitcher(false); }}
                       className="text-[9px] font-normal uppercase tracking-wider text-[var(--trading-accent-color)]"
                     >
                       SWITCH
@@ -1232,7 +1238,7 @@ const TradingPanel = ({
                         className="hide-number-spin min-w-0 w-[68px] bg-transparent text-center text-[16px] font-bold tabular-nums tracking-[0.01em] text-white outline-none"
                         style={{ fontFamily: "Arial, sans-serif" }}
                       />
-                      <span className="text-[16px] font-bold text-white">$</span>
+                      <span className="text-[16px] font-bold text-white">{investmentMode === "percent" ? "%" : "$"}</span>
                     </div>
                     <span
                       className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 transition hover:text-white active:scale-95"
@@ -1244,7 +1250,7 @@ const TradingPanel = ({
                   <div className="mt-[3px] flex items-center justify-center">
                     <button
                       type="button"
-                      onClick={() => setShowInvestmentSwitcher((v) => !v)}
+                      onClick={() => { setInvestmentMode((m) => (m === "percent" ? "amount" : "percent")); setShowInvestmentSwitcher(false); }}
                       className="border-0 bg-transparent text-[10px] font-bold uppercase tracking-wider text-[#00a0ff] cursor-pointer"
                     >
                       {t("tradingPanel.switchLabel")}
@@ -1255,9 +1261,9 @@ const TradingPanel = ({
                   {showInvestmentSwitcher && (
                     <div className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-lg border border-white/10 bg-[#1a1f2e] shadow-xl">
                       <div className="grid grid-cols-3 gap-1 p-2">
-                        {[1, 5, 10, 25, 50, 100, 250, 500, 1000].map((amt) => {
+                        {(investmentMode === "percent" ? [1, 5, 10, 25, 50, 100] : [1, 5, 10, 25, 50, 100, 250, 500, 1000]).map((amt) => {
                           const isSelected = investment === amt;
-                          const isDisabled = amt > MAX_MANUAL_INVESTMENT;
+                          const isDisabled = investmentMode === "amount" && amt > MAX_MANUAL_INVESTMENT;
                           return (
                             <button
                               key={amt}
@@ -1272,7 +1278,7 @@ const TradingPanel = ({
                                     : "bg-white/5 text-white/50 border border-white/6 hover:bg-white/10 hover:text-white"
                               }`}
                             >
-                              ${amt.toLocaleString()}
+                              {investmentMode === "percent" ? `${amt}%` : `$${amt.toLocaleString()}`}
                             </button>
                           );
                         })}
