@@ -370,64 +370,42 @@ export const TradeMarkersOverlay = ({
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Top badges
+        // Top badges — very dim grey text, no background fill
         const topY = 36;
-        ctx.font = `bold 11px Arial, Helvetica, sans-serif`;
+        ctx.font = `10px Arial, Helvetica, sans-serif`;
 
         if (labelLeft) {
           const tw = ctx.measureText(labelLeft).width;
           const bw = tw + 18;
-          const bh = 20;
           const bx = lineX - bw - 4;
-          const by = topY - 10;
 
-          ctx.fillStyle = "rgba(0, 0, 0, 0.88)";
-          ctx.beginPath();
-          drawRoundedRect(ctx, bx, by, bw, bh, 5);
-          ctx.fill();
-
-          ctx.fillStyle = "#ffffff";
+          ctx.fillStyle = "#6e7686";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText(labelLeft, bx + bw / 2, by + bh / 2);
+          ctx.fillText(labelLeft, bx + bw / 2, topY);
         }
 
         if (labelRight) {
           const tw = ctx.measureText(labelRight).width;
           const bw = tw + 18;
-          const bh = 20;
           const bx = lineX + 4;
-          const by = topY - 10;
 
-          ctx.fillStyle = "rgba(0, 0, 0, 0.88)";
-          ctx.beginPath();
-          drawRoundedRect(ctx, bx, by, bw, bh, 5);
-          ctx.fill();
-
-          ctx.fillStyle = "#ffffff";
+          ctx.fillStyle = "#6e7686";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText(labelRight, bx + bw / 2, by + bh / 2);
+          ctx.fillText(labelRight, bx + bw / 2, topY);
         }
 
         if (clockCountDown !== undefined && clockCountDown > 0) {
           const clockStr = fmtClock(clockCountDown);
-          ctx.font = `bold 11px Arial, Helvetica, sans-serif`;
+          ctx.font = `10px Arial, Helvetica, sans-serif`;
           const tw = ctx.measureText(clockStr).width;
-          const bw = tw + 14;
-          const bh = 18;
-          const bx = lineX - bw / 2;
-          const by = topY + 13;
+          const bx = lineX - tw / 2;
 
-          ctx.fillStyle = "#1e88e5";
-          ctx.beginPath();
-          drawRoundedRect(ctx, bx, by, bw, bh, 4);
-          ctx.fill();
-
-          ctx.fillStyle = "#ffffff";
+          ctx.fillStyle = "#6e7686";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText(clockStr, bx + bw / 2, by + bh / 2);
+          ctx.fillText(clockStr, bx + tw / 2, topY + 24);
         }
 
         ctx.restore();
@@ -439,8 +417,8 @@ export const TradeMarkersOverlay = ({
         const latestExpiry = Math.max(...relevant.map((t) => getTradeTimes(t, nowSec).expiry));
         const activeTimeLeft = Math.max(0, latestExpiry - nowSec);
 
-        drawBoundaryLine(earliestEntry, "Beginning of trade", "", "rgba(255, 255, 255, 0.55)", [4, 4]);
-        drawBoundaryLine(latestExpiry, "", "End of trade", "rgba(255, 255, 255, 0.75)", [4, 4], activeTimeLeft);
+        drawBoundaryLine(earliestEntry, "Beginning of trade", "", "rgba(255, 255, 255, 0.32)", [4, 4]);
+        drawBoundaryLine(latestExpiry, "", "End of trade", "rgba(255, 255, 255, 0.42)", [4, 4], activeTimeLeft);
       } else {
         const cycleStart = Math.floor(nowSec / safeTf) * safeTf;
         const cycleEnd = cycleStart + safeTf;
@@ -451,7 +429,7 @@ export const TradeMarkersOverlay = ({
           purchaseDeadline,
           "Beginning of trade",
           "End of trade",
-          "rgba(255, 255, 255, 0.6)",
+          "rgba(255, 255, 255, 0.35)",
           [4, 4],
           deadlineLeft > 0 ? deadlineLeft : undefined
         );
