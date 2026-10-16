@@ -1315,12 +1315,12 @@ const TradingPanel = ({
 
         {/* ── Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) ── */}
         <div
-          className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:mt-2 lg:flex flex-1'} flex-col overflow-hidden rounded-[4px] border border-[#242b3e] border-t-[#1c9cff] bg-[#252b3d]`}
+          className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:mt-2 lg:flex flex-1'} flex-col overflow-hidden rounded-[4px] border border-[#242b3e] border-t-[#1c9cff] bg-[#252b3d] lg:bg-[var(--trading-panel-bg)]`}
         >
           
           {/* ── Tabs: History / Pending ───────────────────────────────── */}
           <div
-            className="grid grid-cols-2 border-b border-[#202638] bg-[#252b3d] text-center text-xs font-semibold"
+            className="grid grid-cols-2 border-b border-[#202638] bg-[#252b3d] text-center text-xs font-semibold lg:bg-transparent"
           >
             <button
               onClick={() => setActiveTab("trades")}
@@ -1350,7 +1350,7 @@ const TradingPanel = ({
           <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-1.5 py-1.5">
             {activeTab === "pending" ? (
               queuedPendingTrades.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center lg:bg-transparent">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full">
                     <Clock className="h-5 w-5 text-gray-600" />
                   </div>
@@ -1359,7 +1359,7 @@ const TradingPanel = ({
                   </p>
                 </div>
               ) : (
-                <div className="bg-[#2a3040]">
+                <div className="bg-[#2a3040] lg:bg-transparent">
                   {pendingTradeGroups.map((group, groupIndex) => (
                     <section key={`${group.label}-${group.items.length}`} className={groupIndex > 0 ? "border-t border-white/2" : ""}>
                       <TradeGroupHeader label={group.label} count={group.items.length} />
@@ -1380,7 +1380,7 @@ const TradingPanel = ({
               )
             ) : (
               tradesTabCount === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#2a3040] p-4 text-center lg:bg-transparent">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full lg:h-16 lg:w-16 lg:bg-[#23262f]">
                     <Briefcase className="h-5 w-5 text-gray-600 lg:hidden" />
                     <Archive className="hidden h-7 w-7 text-[#5b6272] lg:block" />
@@ -1389,7 +1389,7 @@ const TradingPanel = ({
                   <p className="hidden text-[12px] leading-relaxed text-[#8b90a0] lg:block">You don't have a trade history yet. You can open a trade using the form above.</p>
                 </div>
               ) : (
-                <div className="bg-[#2a3040]">
+                <div className="bg-[#2a3040] lg:bg-transparent">
                   {sortedActiveTrades.length > 0 ? (
                     <section>
                       <TradeGroupHeader label={t("tradingPanel.openTrades")} count={sortedActiveTrades.length} />
