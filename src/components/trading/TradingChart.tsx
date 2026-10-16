@@ -888,18 +888,18 @@ const CloneTrendGlyph = ({ tone }: { tone: "green" | "red" }) => (
 const ClonePopupCard = ({
   children,
   className,
-  top,
+  bottom,
 }: {
   children: React.ReactNode;
   className?: string;
-  top: number;
+  bottom: number;
 }) => (
   <div
     className={cn(
       "absolute left-[32px] rounded-[4px] border border-[#4b5268] bg-[#242a3c] px-[14px] py-[11px] text-white shadow-[0_10px_22px_rgba(0,0,0,0.36)]",
       className,
     )}
-    style={{ top }}
+    style={{ bottom }}
   >
     {children}
   </div>
@@ -912,11 +912,11 @@ const CloneMetric = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-const OrderPlacedCloneCard = ({ announcement, top }: { announcement: ChartOrderAnnouncement; top: number }) => {
+const OrderPlacedCloneCard = ({ announcement, bottom }: { announcement: ChartOrderAnnouncement; bottom: number }) => {
   const isHigher = announcement.direction === "higher";
 
   return (
-    <ClonePopupCard top={top} className="w-[154px]">
+    <ClonePopupCard bottom={bottom} className="w-[154px]">
       <div className="flex items-center gap-[6px] text-[12px] font-black leading-none text-white">
         <span>Trade order placed</span>
         <CloneStatusDot tone="green" />
@@ -933,14 +933,14 @@ const OrderPlacedCloneCard = ({ announcement, top }: { announcement: ChartOrderA
   );
 };
 
-const SettlementCloneCard = ({ announcement, top }: { announcement: ChartSettlementAnnouncement; top: number }) => {
+const SettlementCloneCard = ({ announcement, bottom }: { announcement: ChartSettlementAnnouncement; bottom: number }) => {
   const won = announcement.status === "won";
   const payout = announcement.profit;
   const netProfit = won ? Math.max(0, announcement.profit - announcement.amount) : 0;
   const tone = won ? "green" : "red";
 
   return (
-    <ClonePopupCard top={top} className="w-[170px]">
+    <ClonePopupCard bottom={bottom} className="w-[170px]">
       <div className="flex items-center gap-[6px] text-[13px] font-black leading-none text-white">
         <span>Trade closed</span>
         <CloneStatusDot tone={tone} />
@@ -975,9 +975,9 @@ const TradeCloneOverlay = ({
     <div className="pointer-events-none absolute inset-0 z-[10] overflow-visible">
       {popupItems.map((item, index) =>
         item.type === "order" ? (
-          <OrderPlacedCloneCard key={item.announcement.id} announcement={item.announcement} top={82 + index * 106} />
+          <OrderPlacedCloneCard key={item.announcement.id} announcement={item.announcement} bottom={12 + (popupItems.length - 1 - index) * 106} />
         ) : (
-          <SettlementCloneCard key={item.announcement.id} announcement={item.announcement} top={82 + index * 106} />
+          <SettlementCloneCard key={item.announcement.id} announcement={item.announcement} bottom={12 + (popupItems.length - 1 - index) * 106} />
         ),
       )}
     </div>

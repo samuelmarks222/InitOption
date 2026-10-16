@@ -171,7 +171,11 @@ const drawResultPill = (
   const padX = 10;
   const pillW = padX + textW + gap + circleR * 2 + padX;
   const pillH = 24;
-  const pillX = Math.min(Math.max(4, x - pillW / 2), Math.max(4, width - pillW - 4));
+  // Anchor at the expiry point; if it is off-screen, park the pill at the
+  // right edge where the trade actually closed (like the reference).
+  let pillX = x - pillW / 2;
+  if (pillX < 4) pillX = x < 0 ? Math.max(4, width - pillW - 12) : 4;
+  else if (pillX + pillW > width - 4) pillX = Math.max(4, width - pillW - 4);
   const pillY = y - pillH - 12;
 
   // Pill body
