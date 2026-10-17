@@ -287,11 +287,6 @@ export const TradeResultTicksOverlay = ({
 
         const y = series.priceToCoordinate(price);
         if (!isFiniteNumber(y)) return;
-        const x = resolveXCoordinate(chart, announcement, tfRef.current);
-
-        if (ageMs <= VISIBLE_MS && isFiniteNumber(x)) {
-          drawResultTicks(ctx, x, y, announcement.status, ageMs);
-        }
 
         if (ageMs > PILL_VISIBLE_MS) return;
 
