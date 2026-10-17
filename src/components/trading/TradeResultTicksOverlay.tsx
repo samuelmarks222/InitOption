@@ -52,33 +52,6 @@ const getCoordinateTime = (announcement: ResultAnnouncement, timeframeSeconds: n
   return null;
 };
 
-const resolveEntryXCoordinate = (
-  chart: IChartApi,
-  announcement: ResultAnnouncement,
-  timeframeSeconds: number,
-) => {
-  const safeTf = Math.max(1, Math.floor(timeframeSeconds));
-  const timeScale = chart.timeScale();
-
-  // Entry point = markerLogical directly (no expiry offset)
-  if (isFiniteNumber(announcement.markerLogical)) {
-    try {
-      const x = timeScale.logicalToCoordinate(announcement.markerLogical);
-      if (isFiniteNumber(x)) return x;
-    } catch {}
-  }
-
-  if (isFiniteNumber(announcement.markerTime)) {
-    try {
-      const markerBucket = Math.floor(announcement.markerTime / safeTf) * safeTf;
-      const x = timeScale.timeToCoordinate(markerBucket as Time);
-      if (isFiniteNumber(x)) return x;
-    } catch {}
-  }
-
-  return null;
-};
-
 const resolveXCoordinate = (
   chart: IChartApi,
   announcement: ResultAnnouncement,
@@ -322,19 +295,27 @@ export const TradeResultTicksOverlay = ({
 
         if (ageMs > PILL_VISIBLE_MS) return;
 
-        // Pill sits at the trade ENTRY point (marker time + entry price)
-        const entryX = resolveEntryXCoordinate(chart, announcement, tfRef.current);
+        // Pill sits at the right edge of the visible chart (where the trade just
+        // closed) at the ENTRY price level — like the Quotex reference.
+        let pillX = NaN;
+        try {
+          const range = chart.timeScale().getVisibleLogicalRange();
+          const rx = range ? chart.timeScale().logicalToCoordinate(range.to) : null;
+          if (isFiniteNumber(rx) && rx >= 0 && rx <= width) pillX = rx - 8;
+        } catch {}
+        if (!isFiniteNumber(pillX)) pillX = Math.max(0, width - 90);
+
         const entryY = isFiniteNumber(announcement.entryPrice)
           ? series.priceToCoordinate(announcement.entryPrice)
           : y;
-        if (!isFiniteNumber(entryX) || !isFiniteNumber(entryY)) return;
+        if (!isFiniteNumber(entryY)) return;
 
         // Losses return $0 to the balance (stake is gone); show that, like the ref.
         const pillLabel =
           announcement.status === "won"
             ? `+$${formatPillAmount(announcement.profit)}`
             : `$0`;
-        drawResultPill(ctx, entryX, entryY, width, announcement.status, pillLabel, ageMs);
+        drawResultPill(ctx, pillX, entryY, width, announcement.status, pillLabel, ageMs);
       });
 
       Object.keys(seenAtRef.current).forEach((id) => {
