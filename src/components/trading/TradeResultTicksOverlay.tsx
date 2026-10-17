@@ -172,11 +172,12 @@ const drawResultPill = (
   const padX = 10;
   const pillW = padX + textW + gap + circleR * 2 + padX;
   const pillH = 24;
-  // Pill sits inside the plot area, clear of the price axis
+  // x = desired RIGHT edge of the pill; anchor it there so the pill never
+  // enters the price axis zone, regardless of label width.
   const rightLimit = Math.max(8, width - axisClearance);
-  let pillX = x;
+  let pillX = x - pillW;
+  if (pillX + pillW > rightLimit) pillX = rightLimit - pillW;
   if (pillX < 4) pillX = 4;
-  if (pillX + pillW > rightLimit) pillX = Math.max(4, rightLimit - pillW);
   const pillY = Math.max(4, y - pillH - 12);
 
   // Pill body
@@ -292,10 +293,10 @@ export const TradeResultTicksOverlay = ({
 
         if (ageMs > PILL_VISIBLE_MS) return;
 
-        // Pill sits at the right edge of the PLOT area (clear of the ~84px
-        // price axis) at the ENTRY price level — like Quotex.
+        // Pill's RIGHT edge sits at the plot-area edge (clear of the price
+        // axis), at the ENTRY price level — like Quotex.
         const axisClearance = 84;
-        const pillX = Math.max(0, width - axisClearance - 90);
+        const pillRightX = Math.max(40, width - axisClearance);
 
         const entryY = isFiniteNumber(announcement.entryPrice)
           ? series.priceToCoordinate(announcement.entryPrice)
@@ -307,7 +308,7 @@ export const TradeResultTicksOverlay = ({
           announcement.status === "won"
             ? `+$${formatPillAmount(announcement.profit)}`
             : `$0`;
-        drawResultPill(ctx, pillX, entryY, width, announcement.status, pillLabel, ageMs, axisClearance);
+        drawResultPill(ctx, pillRightX, entryY, width, announcement.status, pillLabel, ageMs, axisClearance);
       });
 
       Object.keys(seenAtRef.current).forEach((id) => {
