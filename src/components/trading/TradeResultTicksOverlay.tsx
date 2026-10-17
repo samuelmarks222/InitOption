@@ -290,15 +290,9 @@ export const TradeResultTicksOverlay = ({
 
         if (ageMs > PILL_VISIBLE_MS) return;
 
-        // Pill sits at the right edge of the visible chart (where the trade just
-        // closed) at the ENTRY price level — like the Quotex reference.
-        let pillX = NaN;
-        try {
-          const range = chart.timeScale().getVisibleLogicalRange();
-          const rx = range ? chart.timeScale().logicalToCoordinate(range.to) : null;
-          if (isFiniteNumber(rx) && rx >= 0 && rx <= width) pillX = rx - 8;
-        } catch {}
-        if (!isFiniteNumber(pillX)) pillX = Math.max(0, width - 90);
+        // Pill sits near the right edge of the chart at the ENTRY price level
+        // — always visible next to the live candle, like Quotex.
+        const pillX = Math.max(0, width - 100);
 
         const entryY = isFiniteNumber(announcement.entryPrice)
           ? series.priceToCoordinate(announcement.entryPrice)
