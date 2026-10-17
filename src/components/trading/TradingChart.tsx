@@ -1306,11 +1306,11 @@ const loadChartStylePreferences = (): ChartStylePreferences => {
     if (!raw) return DEFAULT_CHART_STYLE;
     const parsed = JSON.parse(raw) as Partial<ChartStylePreferences>;
     return {
-      areaLineColor: resolveChartCandleColor(parsed.areaLineColor, ["#f59e0b"], DEFAULT_CHART_STYLE.areaLineColor),
-      areaFillColor: resolveChartCandleColor(parsed.areaFillColor, ["#f59e0b"], DEFAULT_CHART_STYLE.areaFillColor),
-      areaFillEnabled: typeof parsed.areaFillEnabled === "boolean" ? parsed.areaFillEnabled : DEFAULT_CHART_STYLE.areaFillEnabled,
-      areaLineWidth:
-        typeof parsed.areaLineWidth === "number" ? clampAreaWidth(parsed.areaLineWidth) : DEFAULT_CHART_STYLE.areaLineWidth,
+      // Area colors are locked to Quotex blue — ignore any stored override
+      areaLineColor: DEFAULT_CHART_STYLE.areaLineColor,
+      areaFillColor: DEFAULT_CHART_STYLE.areaFillColor,
+      areaFillEnabled: DEFAULT_CHART_STYLE.areaFillEnabled,
+      areaLineWidth: DEFAULT_CHART_STYLE.areaLineWidth,
       candleUpColor: resolveChartCandleColor(
         parsed.candleUpColor,
         [LEGACY_PLATFORM_UP, LEGACY_INIT_UP_COLOR, LEGACY_PROFESSIONAL_UP_COLOR, "#0faf59"],
