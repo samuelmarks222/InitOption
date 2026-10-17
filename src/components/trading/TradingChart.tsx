@@ -168,7 +168,7 @@ const THEME = {
 
 const DEFAULT_VISIBLE_BARS = 80;
 const MAX_CANDLES_IN_MEMORY = 7200;
-const DEFAULT_CHART_TYPE: ChartType = "line";
+const DEFAULT_CHART_TYPE: ChartType = "candles";
 const LIVE_CANDLE_SETTLE_EPSILON = 1e-9;
 const LIVE_PRICE_DAMPING_MS = 85;
 const LIVE_PRICE_MAX_FRAME_DELTA_MS = 48;
