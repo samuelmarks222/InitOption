@@ -578,6 +578,10 @@ const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; forma
   const closeQuote = Number(closeQuoteStr);
   const pointDiff = Math.round((closeQuote - openQuote) * 100000);
 
+  // Quotex-style amount: "1,500 $" (comma separator, space before $)
+  const fmtAmount = (n: number) =>
+    `${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
+
   const durationSec = Math.max(1, (new Date(trade.closeTime).getTime() - new Date(trade.openTime).getTime()) / 1000);
   const formatDurationHHMMSS = (sec: number) => {
     const s = Math.round(sec);
@@ -598,7 +602,7 @@ const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; forma
     }
   };
 
-  const assetDisplayName = trade.asset.includes("(") ? trade.asset : trade.asset;
+  const assetDisplayName = trade.asset;
 
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
@@ -613,7 +617,7 @@ const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; forma
           </button>
         </div>
 
-        <div className="flex items-start gap-8 px-6 pb-4">
+        <div className="flex items-start gap-10 px-6 pb-4">
           <div>
             <p className="text-[12px] font-semibold text-gray-400">Asset:</p>
             <div className="mt-1.5 flex items-center gap-2">
@@ -628,7 +632,7 @@ const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; forma
               <span className={`inline-flex h-[22px] w-[22px] items-center justify-center rounded-full text-[11px] font-black text-white ${isUp ? "bg-[#1a9e58]" : "bg-[#d94444]"}`}>
                 {isUp ? "↑" : "↓"}
               </span>
-              <span className="text-[14px] font-bold text-white">{formatMoney(trade.amount)}</span>
+              <span className="text-[14px] font-bold text-white">{fmtAmount(trade.amount)}</span>
             </div>
           </div>
 
@@ -640,7 +644,7 @@ const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; forma
           <div>
             <p className="text-[12px] font-semibold text-gray-400">Result:</p>
             <p className={`mt-1.5 text-[14px] font-bold ${isWon ? "text-[#1a9e58]" : "text-[#d94444]"}`}>
-              {isWon ? `+${formatMoney(trade.profit)}` : `${formatMoney(0)}`}
+              {isWon ? `+${fmtAmount(trade.profit)}` : fmtAmount(0)}
             </p>
           </div>
         </div>
@@ -650,7 +654,7 @@ const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; forma
           closeQuote={closeQuote}
           isUp={isUp}
           isWon={isWon}
-          stakeText={`${isUp ? "↑" : "↓"} ${formatMoney(trade.amount)}`}
+          stakeText={`${isUp ? "↑" : "↓"} ${fmtAmount(trade.amount)}`}
         />
 
         <div className="flex gap-10 border-t border-[#252d3f] bg-[#151b28] px-6 py-4">
@@ -691,27 +695,34 @@ const MiniTradeChart = ({
 }) => {
   const width = 550;
   const height = 200;
-  const paddingX = 20;
-  const paddingY = 30;
+  const paddingX = 16;
+  const paddingY = 28;
 
-  const pointsCount = 60;
+  // Jagged tick-style path: many small steps with directional trend
+  const pointsCount = 120;
   const rawValues: number[] = [openQuote];
   const diff = closeQuote - openQuote;
-  const volatility = Math.max(Math.abs(diff) * 0.28, Math.abs(openQuote) * 0.00008);
+  const volatility = Math.max(Math.abs(diff) * 0.12, Math.abs(openQuote) * 0.00004);
+
+  let seed = Math.floor(openQuote * 100000) + 1;
+  const rand = () => {
+    seed = (seed * 16807 + 11) % 2147483647;
+    return (seed / 2147483647) * 2 - 1;
+  };
 
   for (let i = 1; i < pointsCount - 1; i++) {
     const progress = i / (pointsCount - 1);
     const trend = openQuote + diff * progress;
-    // Smooth low-frequency wander + small noise — realistic, not wild oscillation
-    const wander = Math.sin(progress * Math.PI * 2.2 + openQuote * 47) * volatility * 0.55;
-    const detail = Math.sin(progress * Math.PI * 8 + closeQuote * 31) * volatility * 0.18;
-    rawValues.push(trend + wander + detail);
+    // Small random tick + occasional larger step — realistic jagged look
+    const tick = rand() * volatility;
+    const step = rand() > 0.85 ? rand() * volatility * 2.5 : 0;
+    rawValues.push(trend + tick + step);
   }
   rawValues.push(closeQuote);
 
-  const minVal = Math.min(...rawValues, openQuote);
-  const maxVal = Math.max(...rawValues, openQuote);
-  const valRange = Math.max(maxVal - minVal, 0.0002);
+  const minVal = Math.min(...rawValues);
+  const maxVal = Math.max(...rawValues);
+  const valRange = Math.max(maxVal - minVal, 0.0001);
 
   const points = rawValues.map((val, idx) => ({
     x: paddingX + (idx / (pointsCount - 1)) * (width - 2 * paddingX),
@@ -719,49 +730,51 @@ const MiniTradeChart = ({
   }));
 
   const entryY = height - paddingY - ((openQuote - minVal) / valRange) * (height - 2 * paddingY);
-  const smoothPathD = getSmoothPathD(points);
+
+  // Straight-line jagged path (no smoothing) — like Quotex tick chart
+  const jaggedPathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
 
   const firstX = points[0].x;
   const lastX = points[points.length - 1].x;
   const bottomY = height;
-  const areaPathD = `${smoothPathD} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
-  const entryMarkerX = points[Math.floor(points.length * 0.16)].x;
+  const areaPathD = `${jaggedPathD} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
+  const entryMarkerX = points[Math.floor(points.length * 0.14)].x;
   const entryMarkerY = entryY;
 
   const pillText = stakeText;
-  const textWidth = Math.max(40, pillText.length * 7 + 16);
+  const textWidth = Math.max(50, pillText.length * 6.5 + 18);
 
   return (
-    <div className="relative h-[200px] w-full bg-[#131924] overflow-hidden select-none">
+    <div className="relative h-[200px] w-full bg-[#111827] overflow-hidden select-none">
       <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full">
         <defs>
           <linearGradient id="modalChartAreaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#2585f1" stopOpacity="0.32" />
+            <stop offset="0%" stopColor="#2585f1" stopOpacity="0.28" />
             <stop offset="100%" stopColor="#2585f1" stopOpacity="0.02" />
           </linearGradient>
         </defs>
 
-        {Array.from({ length: 10 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <line
             key={`vgrid-${i}`}
-            x1={(i * width) / 9}
-            x2={(i * width) / 9}
+            x1={(i * width) / 7}
+            x2={(i * width) / 7}
             y1="0"
             y2={height}
-            stroke="#1e2838"
-            strokeOpacity="0.7"
+            stroke="#1c2536"
+            strokeOpacity="0.8"
             strokeWidth="1"
           />
         ))}
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 4 }).map((_, i) => (
           <line
             key={`hgrid-${i}`}
             x1="0"
             x2={width}
-            y1={(i * height) / 4}
-            y2={(i * height) / 4}
-            stroke="#1e2838"
-            strokeOpacity="0.7"
+            y1={(i * height) / 3}
+            y2={(i * height) / 3}
+            stroke="#1c2536"
+            strokeOpacity="0.8"
             strokeWidth="1"
           />
         ))}
@@ -778,11 +791,11 @@ const MiniTradeChart = ({
           strokeOpacity="0.95"
         />
 
-        <path d={smoothPathD} fill="none" stroke="#2585f1" strokeWidth="2.2" strokeLinecap="round" />
+        <path d={jaggedPathD} fill="none" stroke="#2585f1" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
 
         <g transform={`translate(${entryMarkerX}, ${entryMarkerY})`}>
-          <circle r="4.5" fill="#ffffff" stroke={isUp ? "#1a9e58" : "#d94444"} strokeWidth="2" />
-          <g transform={`translate(${-(textWidth + 14)}, -10)`}>
+          <circle r="4" fill="#ffffff" stroke={isUp ? "#1a9e58" : "#d94444"} strokeWidth="2" />
+          <g transform={`translate(${-(textWidth + 12)}, -10)`}>
             <rect
               width={textWidth}
               height="20"
