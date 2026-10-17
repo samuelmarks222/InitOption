@@ -232,24 +232,17 @@ const drawResultPill = (
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.beginPath();
-  if (status === "won") {
-    // Two white checkmarks (double tick) like the reference
-    // First check (smaller, left)
-    ctx.moveTo(cx - 5.2, cy + 0.2);
-    ctx.lineTo(cx - 3.2, cy + 2.2);
-    ctx.lineTo(cx - 0.2, cy - 2.4);
-    ctx.stroke();
-    // Second check (right)
-    ctx.beginPath();
-    ctx.moveTo(cx - 0.8, cy + 0.2);
-    ctx.lineTo(cx + 1.2, cy + 2.2);
-    ctx.lineTo(cx + 5.2, cy - 2.4);
-  } else {
-    ctx.moveTo(cx - 2.6, cy - 2.6);
-    ctx.lineTo(cx + 2.6, cy + 2.6);
-    ctx.moveTo(cx + 2.6, cy - 2.6);
-    ctx.lineTo(cx - 2.6, cy + 2.6);
-  }
+  // Two white checkmarks (double tick) for both win and loss — only circle color differs
+  // First check (smaller, left)
+  ctx.moveTo(cx - 5.2, cy + 0.2);
+  ctx.lineTo(cx - 3.2, cy + 2.2);
+  ctx.lineTo(cx - 0.2, cy - 2.4);
+  ctx.stroke();
+  // Second check (right)
+  ctx.beginPath();
+  ctx.moveTo(cx - 0.8, cy + 0.2);
+  ctx.lineTo(cx + 1.2, cy + 2.2);
+  ctx.lineTo(cx + 5.2, cy - 2.4);
   ctx.stroke();
 
   ctx.restore();
