@@ -698,11 +698,11 @@ const MiniTradeChart = ({
   const paddingX = 16;
   const paddingY = 28;
 
-  // Jagged tick-style path: many small steps with directional trend
-  const pointsCount = 120;
+  // Quotex-style: smooth directional path with gentle moderate noise (not spiky)
+  const pointsCount = 80;
   const rawValues: number[] = [openQuote];
   const diff = closeQuote - openQuote;
-  const volatility = Math.max(Math.abs(diff) * 0.12, Math.abs(openQuote) * 0.00004);
+  const volatility = Math.max(Math.abs(diff) * 0.18, Math.abs(openQuote) * 0.00003);
 
   let seed = Math.floor(openQuote * 100000) + 1;
   const rand = () => {
@@ -710,13 +710,16 @@ const MiniTradeChart = ({
     return (seed / 2147483647) * 2 - 1;
   };
 
+  // Cumulative random walk constrained to hit open and close — smooth like Quotex
+  let walk = 0;
   for (let i = 1; i < pointsCount - 1; i++) {
     const progress = i / (pointsCount - 1);
     const trend = openQuote + diff * progress;
-    // Small random tick + occasional larger step — realistic jagged look
-    const tick = rand() * volatility;
-    const step = rand() > 0.85 ? rand() * volatility * 2.5 : 0;
-    rawValues.push(trend + tick + step);
+    // Mean-reverting walk: step small, pull back toward trend
+    walk = walk * 0.72 + rand() * volatility * 0.45;
+    // Taper noise near start/end so it connects cleanly
+    const taper = Math.sin(progress * Math.PI);
+    rawValues.push(trend + walk * taper);
   }
   rawValues.push(closeQuote);
 
@@ -791,7 +794,7 @@ const MiniTradeChart = ({
           strokeOpacity="0.95"
         />
 
-        <path d={jaggedPathD} fill="none" stroke="#2585f1" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+        <path d={jaggedPathD} fill="none" stroke="#2585f1" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
 
         <g transform={`translate(${entryMarkerX}, ${entryMarkerY})`}>
           <circle r="4" fill="#ffffff" stroke={isUp ? "#1a9e58" : "#d94444"} strokeWidth="2" />
