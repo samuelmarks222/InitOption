@@ -305,10 +305,11 @@ export const TradeResultTicksOverlay = ({
           if (isFiniteNumber(rx) && rx >= 0 && rx <= width) pillX = rx - 8;
         } catch {}
         if (!isFiniteNumber(pillX)) pillX = Math.max(0, width - 90);
+        // Losses return $0 to the balance (stake is gone); show that, like the ref.
         const pillLabel =
           announcement.status === "won"
             ? `+$${formatPillAmount(announcement.profit)}`
-            : `-$${formatPillAmount(announcement.amount)}`;
+            : `$0`;
         drawResultPill(ctx, pillX, y - announcementIndex * 30, width, announcement.status, pillLabel, ageMs);
       });
 
