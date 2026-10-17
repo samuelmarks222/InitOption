@@ -52,6 +52,33 @@ const getCoordinateTime = (announcement: ResultAnnouncement, timeframeSeconds: n
   return null;
 };
 
+const resolveEntryXCoordinate = (
+  chart: IChartApi,
+  announcement: ResultAnnouncement,
+  timeframeSeconds: number,
+) => {
+  const safeTf = Math.max(1, Math.floor(timeframeSeconds));
+  const timeScale = chart.timeScale();
+
+  // Entry point = markerLogical directly (no expiry offset)
+  if (isFiniteNumber(announcement.markerLogical)) {
+    try {
+      const x = timeScale.logicalToCoordinate(announcement.markerLogical);
+      if (isFiniteNumber(x)) return x;
+    } catch {}
+  }
+
+  if (isFiniteNumber(announcement.markerTime)) {
+    try {
+      const markerBucket = Math.floor(announcement.markerTime / safeTf) * safeTf;
+      const x = timeScale.timeToCoordinate(markerBucket as Time);
+      if (isFiniteNumber(x)) return x;
+    } catch {}
+  }
+
+  return null;
+};
+
 const resolveXCoordinate = (
   chart: IChartApi,
   announcement: ResultAnnouncement,
@@ -171,12 +198,10 @@ const drawResultPill = (
   const padX = 10;
   const pillW = padX + textW + gap + circleR * 2 + padX;
   const pillH = 24;
-  // Pill parks at the right edge; keep it fully inside the canvas and clear
-  // of the price axis zone on the far right.
-  const rightLimit = Math.max(8, width - 84);
+  // Pill sits at the entry point — centered on x, just above y
   let pillX = x - pillW / 2;
   if (pillX < 4) pillX = 4;
-  if (pillX + pillW > rightLimit) pillX = Math.max(4, rightLimit - pillW);
+  if (pillX + pillW > width - 4) pillX = width - 4 - pillW;
   const pillY = Math.max(4, y - pillH - 12);
 
   // Pill body
@@ -208,9 +233,17 @@ const drawResultPill = (
   ctx.lineJoin = "round";
   ctx.beginPath();
   if (status === "won") {
-    ctx.moveTo(cx - 3.4, cy + 0.2);
-    ctx.lineTo(cx - 1, cy + 2.6);
-    ctx.lineTo(cx + 3.6, cy - 2.8);
+    // Two white checkmarks (double tick) like the reference
+    // First check (smaller, left)
+    ctx.moveTo(cx - 5.2, cy + 0.2);
+    ctx.lineTo(cx - 3.2, cy + 2.2);
+    ctx.lineTo(cx - 0.2, cy - 2.4);
+    ctx.stroke();
+    // Second check (right)
+    ctx.beginPath();
+    ctx.moveTo(cx - 0.8, cy + 0.2);
+    ctx.lineTo(cx + 1.2, cy + 2.2);
+    ctx.lineTo(cx + 5.2, cy - 2.4);
   } else {
     ctx.moveTo(cx - 2.6, cy - 2.6);
     ctx.lineTo(cx + 2.6, cy + 2.6);
@@ -296,21 +329,19 @@ export const TradeResultTicksOverlay = ({
 
         if (ageMs > PILL_VISIBLE_MS) return;
 
-        // Result pill always parks at the visible right edge where the trade
-        // just closed (like the reference); stacked when several settle together.
-        let pillX = NaN;
-        try {
-          const range = chart.timeScale().getVisibleLogicalRange();
-          const rx = range ? chart.timeScale().logicalToCoordinate(range.to) : null;
-          if (isFiniteNumber(rx) && rx >= 0 && rx <= width) pillX = rx - 8;
-        } catch {}
-        if (!isFiniteNumber(pillX)) pillX = Math.max(0, width - 90);
+        // Pill sits at the trade ENTRY point (marker time + entry price)
+        const entryX = resolveEntryXCoordinate(chart, announcement, tfRef.current);
+        const entryY = isFiniteNumber(announcement.entryPrice)
+          ? series.priceToCoordinate(announcement.entryPrice)
+          : y;
+        if (!isFiniteNumber(entryX) || !isFiniteNumber(entryY)) return;
+
         // Losses return $0 to the balance (stake is gone); show that, like the ref.
         const pillLabel =
           announcement.status === "won"
             ? `+$${formatPillAmount(announcement.profit)}`
             : `$0`;
-        drawResultPill(ctx, pillX, y - announcementIndex * 30, width, announcement.status, pillLabel, ageMs);
+        drawResultPill(ctx, entryX, entryY, width, announcement.status, pillLabel, ageMs);
       });
 
       Object.keys(seenAtRef.current).forEach((id) => {
