@@ -168,7 +168,7 @@ const THEME = {
 
 const DEFAULT_VISIBLE_BARS = 80;
 const MAX_CANDLES_IN_MEMORY = 7200;
-const DEFAULT_CHART_TYPE: ChartType = "candles";
+const DEFAULT_CHART_TYPE: ChartType = "line";
 const LIVE_CANDLE_SETTLE_EPSILON = 1e-9;
 const LIVE_PRICE_DAMPING_MS = 85;
 const LIVE_PRICE_MAX_FRAME_DELTA_MS = 48;
@@ -1070,10 +1070,10 @@ const SELECTED_TIMEFRAME_STORAGE_KEY = "trade_selected_timeframe_v1";
 const TRANSPARENT_COLOR = "rgba(0,0,0,0)";
 
 const DEFAULT_CHART_STYLE: ChartStylePreferences = {
-  areaLineColor: PROFESSIONAL_UP_COLOR,
-  areaFillColor: PROFESSIONAL_UP_COLOR,
+  areaLineColor: "#2585f1",
+  areaFillColor: "#2585f1",
   areaFillEnabled: true,
-  areaLineWidth: 3,
+  areaLineWidth: 2,
   candleUpColor: PROFESSIONAL_UP_COLOR,
   candleDownColor: PROFESSIONAL_DOWN_COLOR,
   barUpColor: PROFESSIONAL_UP_COLOR,
@@ -1155,16 +1155,7 @@ const isChartDisplayPreset = (value: unknown): value is ChartDisplayPreset =>
 const isSupportedChartTimeframeValue = (value: unknown): value is SupportedChartTimeframe =>
   typeof value === "string" && Object.prototype.hasOwnProperty.call(TIMEFRAMES, value);
 
-const loadSelectedTimeframePreference = (): SupportedChartTimeframe => {
-  if (typeof window === "undefined") return "1m";
-
-  try {
-    const storedValue = window.localStorage.getItem(SELECTED_TIMEFRAME_STORAGE_KEY);
-    return isSupportedChartTimeframeValue(storedValue) ? storedValue : "1m";
-  } catch {
-    return "1m";
-  }
-};
+const loadSelectedTimeframePreference = (): SupportedChartTimeframe => "5s";
 
 const getAreaDisplaySettings = (styles: ChartStylePreferences) => {
   const fillEnabled = styles.areaFillEnabled && styles.displayPreset === "primary";
@@ -2308,7 +2299,7 @@ const TradingChart = ({
     return conf && conf.pane === "overlay";
   });
   const activeAssetTrades = activeTrades.filter((trade) => trade.asset_symbol === asset.symbol);
-  const [selectedTf, setSelectedTf] = useState<SupportedChartTimeframe>(() => loadSelectedTimeframePreference());
+  const [selectedTf, setSelectedTf] = useState<SupportedChartTimeframe>("5s");
   const [currentPrice, setCurrentPrice] = useState(asset.price);
   const [priceChange, setPriceChange] = useState(asset.change || 0);
   const [chartType, setChartType] = useState<ChartType>(DEFAULT_CHART_TYPE);
@@ -2422,14 +2413,6 @@ const TradingChart = ({
     const intervalId = window.setInterval(() => setMarketClockMs(Date.now()), 1000);
     return () => window.clearInterval(intervalId);
   }, []);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(SELECTED_TIMEFRAME_STORAGE_KEY, selectedTf);
-    } catch {
-      // Storage can be unavailable in private or restricted browsing modes.
-    }
-  }, [selectedTf]);
 
   const [syncSeries, setSyncSeries] = useState<ChartSeriesApi | null>(null);
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
