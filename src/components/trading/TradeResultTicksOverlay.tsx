@@ -151,6 +151,7 @@ const drawResultPill = (
   status: "won" | "lost",
   label: string,
   ageMs: number,
+  axisClearance = 84,
 ) => {
   if (ageMs > PILL_VISIBLE_MS) return;
   const intro = Math.min(1, ageMs / 220);
@@ -171,10 +172,11 @@ const drawResultPill = (
   const padX = 10;
   const pillW = padX + textW + gap + circleR * 2 + padX;
   const pillH = 24;
-  // Pill sits at the entry point — centered on x, just above y
-  let pillX = x - pillW / 2;
+  // Pill sits inside the plot area, clear of the price axis
+  const rightLimit = Math.max(8, width - axisClearance);
+  let pillX = x;
   if (pillX < 4) pillX = 4;
-  if (pillX + pillW > width - 4) pillX = width - 4 - pillW;
+  if (pillX + pillW > rightLimit) pillX = Math.max(4, rightLimit - pillW);
   const pillY = Math.max(4, y - pillH - 12);
 
   // Pill body
@@ -290,9 +292,10 @@ export const TradeResultTicksOverlay = ({
 
         if (ageMs > PILL_VISIBLE_MS) return;
 
-        // Pill sits near the right edge of the chart at the ENTRY price level
-        // — always visible next to the live candle, like Quotex.
-        const pillX = Math.max(0, width - 100);
+        // Pill sits at the right edge of the PLOT area (clear of the ~84px
+        // price axis) at the ENTRY price level — like Quotex.
+        const axisClearance = 84;
+        const pillX = Math.max(0, width - axisClearance - 90);
 
         const entryY = isFiniteNumber(announcement.entryPrice)
           ? series.priceToCoordinate(announcement.entryPrice)
@@ -304,7 +307,7 @@ export const TradeResultTicksOverlay = ({
           announcement.status === "won"
             ? `+$${formatPillAmount(announcement.profit)}`
             : `$0`;
-        drawResultPill(ctx, pillX, entryY, width, announcement.status, pillLabel, ageMs);
+        drawResultPill(ctx, pillX, entryY, width, announcement.status, pillLabel, ageMs, axisClearance);
       });
 
       Object.keys(seenAtRef.current).forEach((id) => {
