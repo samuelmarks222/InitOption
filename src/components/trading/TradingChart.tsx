@@ -896,7 +896,7 @@ const ClonePopupCard = ({
 }) => (
   <div
     className={cn(
-      "absolute left-[32px] sm:left-[104px] rounded-[4px] border border-[#4b5268] bg-[#242a3c] px-[14px] py-[11px] text-white shadow-[0_10px_22px_rgba(0,0,0,0.36)]",
+      "absolute left-[32px] sm:left-[104px] rounded-[4px] border border-[#4b5268] bg-[#242a3c] px-[10px] py-[8px] text-white shadow-[0_10px_22px_rgba(0,0,0,0.36)]",
       className,
     )}
     style={{ bottom }}
@@ -906,9 +906,9 @@ const ClonePopupCard = ({
 );
 
 const CloneMetric = ({ label, value }: { label: string; value: string }) => (
-  <div className="min-w-[52px]">
-    <div className="text-[10px] font-medium leading-none text-[#8ea0bd]">{label}</div>
-    <div className="mt-[4px] text-[12px] font-black leading-none text-white">{value}</div>
+  <div className="min-w-[48px]">
+    <div className="text-[9px] font-medium leading-none text-[#8ea0bd]">{label}</div>
+    <div className="mt-[3px] text-[11px] font-black leading-none text-white">{value}</div>
   </div>
 );
 
@@ -917,15 +917,15 @@ const OrderPlacedCloneCard = ({ announcement, bottom }: { announcement: ChartOrd
 
   return (
     <ClonePopupCard bottom={bottom} className="w-[154px]">
-      <div className="flex items-center gap-[6px] text-[12px] font-black leading-none text-white">
+      <div className="flex items-center gap-[6px] text-[11px] font-black leading-none text-white">
         <span>Trade order placed</span>
         <CloneStatusDot tone="green" />
       </div>
-      <div className="mt-[10px] flex items-center gap-[7px] text-[15px] font-black leading-none text-white">
+      <div className="mt-[8px] flex items-center gap-[7px] text-[13px] font-black leading-none text-white">
         <span>{formatCloneAssetSymbol(announcement.assetSymbol)}</span>
         <CloneTrendGlyph tone="green" />
       </div>
-      <div className="mt-[9px] grid grid-cols-2 gap-[12px]">
+      <div className="mt-[8px] grid grid-cols-2 gap-[10px]">
         <CloneMetric label="Forecast" value={isHigher ? "Buy" : "Sell"} />
         <CloneMetric label="Amount" value={formatCloneMoney(announcement.amount)} />
       </div>
@@ -940,16 +940,16 @@ const SettlementCloneCard = ({ announcement, bottom }: { announcement: ChartSett
   const tone = won ? "green" : "red";
 
   return (
-    <ClonePopupCard bottom={bottom} className="w-[170px]">
-      <div className="flex items-center gap-[6px] text-[13px] font-black leading-none text-white">
+    <ClonePopupCard bottom={bottom} className="w-[148px]">
+      <div className="flex items-center gap-[6px] text-[11px] font-black leading-none text-white">
         <span>Trade closed</span>
         <CloneStatusDot tone={tone} />
       </div>
-      <div className="mt-[10px] flex items-center gap-[7px] text-[15px] font-black leading-none text-white">
+      <div className="mt-[8px] flex items-center gap-[7px] text-[13px] font-black leading-none text-white">
         <span>{formatCloneAssetSymbol(announcement.assetSymbol)}</span>
         <CloneTrendGlyph tone={tone} />
       </div>
-      <div className="mt-[9px] grid grid-cols-2 gap-[12px]">
+      <div className="mt-[8px] grid grid-cols-2 gap-[10px]">
         <CloneMetric label="Payout" value={formatCloneMoney(payout)} />
         <CloneMetric label="Profit" value={formatCloneMoney(netProfit)} />
       </div>
@@ -975,9 +975,9 @@ const TradeCloneOverlay = ({
     <div className="pointer-events-none absolute inset-0 z-[10] overflow-visible">
       {popupItems.map((item, index) =>
         item.type === "order" ? (
-          <OrderPlacedCloneCard key={item.announcement.id} announcement={item.announcement} bottom={12 + (popupItems.length - 1 - index) * 106} />
+          <OrderPlacedCloneCard key={item.announcement.id} announcement={item.announcement} bottom={32 + (popupItems.length - 1 - index) * 96} />
         ) : (
-          <SettlementCloneCard key={item.announcement.id} announcement={item.announcement} bottom={12 + (popupItems.length - 1 - index) * 106} />
+          <SettlementCloneCard key={item.announcement.id} announcement={item.announcement} bottom={32 + (popupItems.length - 1 - index) * 96} />
         ),
       )}
     </div>
