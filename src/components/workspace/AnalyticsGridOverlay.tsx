@@ -570,13 +570,13 @@ const getSmoothPathD = (points: { x: number; y: number }[]) => {
 };
 
 const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; formatMoney: (amount: number) => string; onClose: () => void }) => {
-  const isUp = trade.direction === "Buy" || trade.direction === "Higher";
+  const isUp = trade.direction === "Buy" || trade.direction === "Higher" || trade.direction === "buy" || trade.direction === "higher" || trade.direction === "up";
   const isWon = trade.profit > 0;
   const openQuoteStr = estimateOpeningQuote(trade);
   const closeQuoteStr = estimateClosingQuote(trade);
   const openQuote = Number(openQuoteStr);
   const closeQuote = Number(closeQuoteStr);
-  const pointDiff = Math.round(Math.abs(closeQuote - openQuote) * 100000);
+  const pointDiff = Math.round((closeQuote - openQuote) * 100000);
 
   const durationSec = Math.max(1, (new Date(trade.closeTime).getTime() - new Date(trade.openTime).getTime()) / 1000);
   const formatDurationHHMMSS = (sec: number) => {
@@ -585,7 +585,7 @@ const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; forma
     const mins = Math.floor((s % 3600) / 60);
     const secs = s % 60;
     const p = (n: number) => String(n).padStart(2, "0");
-    return hrs > 0 ? `${p(hrs)}:${p(mins)}:${p(secs)}` : `${p(mins)}:${p(secs)}`;
+    return `${p(hrs)}:${p(mins)}:${p(secs)}`;
   };
 
   const formatDateTime = (iso: string) => {
@@ -598,46 +598,49 @@ const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; forma
     }
   };
 
+  const assetDisplayName = trade.asset.includes("(") ? trade.asset : trade.asset;
+
   return (
-    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-[540px] overflow-hidden rounded-[8px] border border-[#2b364a] bg-[#1e2638] text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-[#2b364a] px-6 py-4">
+    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-[550px] overflow-hidden rounded-[10px] border border-[#252d3f] bg-[#181e2c] text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 pt-5 pb-4">
           <div>
-            <h3 className="text-base font-black text-white">Trade ID</h3>
-            <p className="mt-0.5 font-mono text-xs font-semibold text-gray-300">{trade.id}</p>
+            <h3 className="text-[15px] font-bold text-white">Trade ID</h3>
+            <p className="mt-1 text-[13px] font-medium text-gray-300">{trade.id}</p>
           </div>
           <button type="button" onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-white/10 hover:text-white transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 bg-[#1b2130] px-6 py-4 border-b border-[#2b364a]">
+        <div className="flex items-start gap-8 px-6 pb-4">
           <div>
-            <p className="text-[11px] font-bold text-gray-400">Asset:</p>
-            <div className="mt-1 flex items-center gap-1.5">
-              <AssetSymbolMark symbol={trade.asset} size={18} />
-              <span className="text-xs font-black text-white">{trade.asset}</span>
+            <p className="text-[12px] font-semibold text-gray-400">Asset:</p>
+            <div className="mt-1.5 flex items-center gap-2">
+              <AssetSymbolMark symbol={trade.asset} size={20} />
+              <span className="text-[14px] font-bold text-white">{assetDisplayName}</span>
             </div>
           </div>
 
           <div>
-            <p className="text-[11px] font-bold text-gray-400">Type:</p>
-            <div className="mt-1 flex items-center gap-1">
-              <span className={`inline-flex items-center gap-1 rounded-[3px] px-1.5 py-0.5 text-[11px] font-extrabold text-white ${isUp ? "bg-[#0fa055]" : "bg-[#e03e3e]"}`}>
-                {isUp ? "↑" : "↓"} {formatMoney(trade.amount)}
+            <p className="text-[12px] font-semibold text-gray-400">Type:</p>
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <span className={`inline-flex h-[22px] w-[22px] items-center justify-center rounded-full text-[11px] font-black text-white ${isUp ? "bg-[#1a9e58]" : "bg-[#d94444]"}`}>
+                {isUp ? "↑" : "↓"}
               </span>
+              <span className="text-[14px] font-bold text-white">{formatMoney(trade.amount)}</span>
             </div>
           </div>
 
           <div>
-            <p className="text-[11px] font-bold text-gray-400">Duration:</p>
-            <p className="mt-1 text-xs font-black text-white">{formatDurationHHMMSS(durationSec)}</p>
+            <p className="text-[12px] font-semibold text-gray-400">Duration:</p>
+            <p className="mt-1.5 text-[14px] font-bold text-white">{formatDurationHHMMSS(durationSec)}</p>
           </div>
 
           <div>
-            <p className="text-[11px] font-bold text-gray-400">Result:</p>
-            <p className={`mt-1 text-xs font-black ${isWon ? "text-[#18d87d]" : "text-[#ff5d52]"}`}>
-              {isWon ? `+${formatMoney(trade.profit)}` : formatMoney(0)}
+            <p className="text-[12px] font-semibold text-gray-400">Result:</p>
+            <p className={`mt-1.5 text-[14px] font-bold ${isWon ? "text-[#1a9e58]" : "text-[#d94444]"}`}>
+              {isWon ? `+${formatMoney(trade.profit)}` : `${formatMoney(0)}`}
             </p>
           </div>
         </div>
@@ -650,22 +653,22 @@ const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; forma
           stakeText={`${isUp ? "↑" : "↓"} ${formatMoney(trade.amount)}`}
         />
 
-        <div className="grid grid-cols-3 gap-4 border-t border-[#2b364a] bg-[#1a2130] px-6 py-4 text-xs">
+        <div className="flex gap-10 border-t border-[#252d3f] bg-[#151b28] px-6 py-4">
           <div>
-            <p className="text-[11px] font-bold text-gray-400">Opening quote:</p>
-            <p className="mt-0.5 text-sm font-black text-white">{openQuoteStr}</p>
-            <p className="text-[10px] font-medium text-gray-400">{formatDateTime(trade.openTime)}</p>
+            <p className="text-[12px] font-semibold text-gray-400">Opening quote:</p>
+            <p className="mt-0.5 text-[14px] font-bold text-white">{openQuoteStr}</p>
+            <p className="mt-0.5 text-[11px] font-medium text-gray-500">{formatDateTime(trade.openTime)}</p>
           </div>
 
           <div>
-            <p className="text-[11px] font-bold text-gray-400">Closing quote:</p>
-            <p className="mt-0.5 text-sm font-black text-white">{closeQuoteStr}</p>
-            <p className="text-[10px] font-medium text-gray-400">{formatDateTime(trade.closeTime)}</p>
+            <p className="text-[12px] font-semibold text-gray-400">Closing quote:</p>
+            <p className="mt-0.5 text-[14px] font-bold text-white">{closeQuoteStr}</p>
+            <p className="mt-0.5 text-[11px] font-medium text-gray-500">{formatDateTime(trade.closeTime)}</p>
           </div>
 
           <div>
-            <p className="text-[11px] font-bold text-gray-400">Difference:</p>
-            <p className="mt-0.5 text-sm font-black text-white">{pointDiff} points</p>
+            <p className="text-[12px] font-semibold text-gray-400">Difference:</p>
+            <p className="mt-0.5 text-[14px] font-bold text-white">{pointDiff > 0 ? `+${pointDiff}` : pointDiff} points</p>
           </div>
         </div>
       </div>
@@ -686,33 +689,34 @@ const MiniTradeChart = ({
   isWon: boolean;
   stakeText: string;
 }) => {
-  const width = 540;
-  const height = 210;
-  const paddingX = 25;
-  const paddingY = 25;
+  const width = 550;
+  const height = 200;
+  const paddingX = 20;
+  const paddingY = 30;
 
-  const pointsCount = 45;
+  const pointsCount = 60;
   const rawValues: number[] = [openQuote];
-
   const diff = closeQuote - openQuote;
+  const volatility = Math.max(Math.abs(diff) * 0.28, Math.abs(openQuote) * 0.00008);
+
   for (let i = 1; i < pointsCount - 1; i++) {
     const progress = i / (pointsCount - 1);
     const trend = openQuote + diff * progress;
-    const seed = (Math.sin(i * 14.3 + openQuote * 100) * 43758.5453) % 1;
-    const noise = (seed - 0.5) * (Math.abs(diff) * 0.35 + 0.00015);
-    rawValues.push(trend + noise);
+    // Smooth low-frequency wander + small noise — realistic, not wild oscillation
+    const wander = Math.sin(progress * Math.PI * 2.2 + openQuote * 47) * volatility * 0.55;
+    const detail = Math.sin(progress * Math.PI * 8 + closeQuote * 31) * volatility * 0.18;
+    rawValues.push(trend + wander + detail);
   }
   rawValues.push(closeQuote);
 
   const minVal = Math.min(...rawValues, openQuote);
   const maxVal = Math.max(...rawValues, openQuote);
-  const valRange = Math.max(maxVal - minVal, 0.0004);
+  const valRange = Math.max(maxVal - minVal, 0.0002);
 
-  const points = rawValues.map((val, idx) => {
-    const x = paddingX + (idx / (pointsCount - 1)) * (width - 2 * paddingX);
-    const y = height - paddingY - ((val - minVal) / valRange) * (height - 2 * paddingY);
-    return { x, y };
-  });
+  const points = rawValues.map((val, idx) => ({
+    x: paddingX + (idx / (pointsCount - 1)) * (width - 2 * paddingX),
+    y: height - paddingY - ((val - minVal) / valRange) * (height - 2 * paddingY),
+  }));
 
   const entryY = height - paddingY - ((openQuote - minVal) / valRange) * (height - 2 * paddingY);
   const smoothPathD = getSmoothPathD(points);
@@ -720,45 +724,44 @@ const MiniTradeChart = ({
   const firstX = points[0].x;
   const lastX = points[points.length - 1].x;
   const bottomY = height;
-
   const areaPathD = `${smoothPathD} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
-  const entryMarkerX = points[Math.floor(points.length * 0.18)].x;
+  const entryMarkerX = points[Math.floor(points.length * 0.16)].x;
   const entryMarkerY = entryY;
 
   const pillText = stakeText;
-  const textWidth = Math.max(38, pillText.length * 6.5 + 14);
+  const textWidth = Math.max(40, pillText.length * 7 + 16);
 
   return (
-    <div className="relative h-[210px] w-full bg-[#161c28] overflow-hidden select-none">
+    <div className="relative h-[200px] w-full bg-[#131924] overflow-hidden select-none">
       <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full">
         <defs>
           <linearGradient id="modalChartAreaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#2585f1" stopOpacity="0.38" />
+            <stop offset="0%" stopColor="#2585f1" stopOpacity="0.32" />
             <stop offset="100%" stopColor="#2585f1" stopOpacity="0.02" />
           </linearGradient>
         </defs>
 
-        {Array.from({ length: 9 }).map((_, i) => (
+        {Array.from({ length: 10 }).map((_, i) => (
           <line
             key={`vgrid-${i}`}
-            x1={i * 65 + 10}
-            x2={i * 65 + 10}
+            x1={(i * width) / 9}
+            x2={(i * width) / 9}
             y1="0"
             y2={height}
-            stroke="#263147"
-            strokeOpacity="0.5"
+            stroke="#1e2838"
+            strokeOpacity="0.7"
             strokeWidth="1"
           />
         ))}
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 5 }).map((_, i) => (
           <line
             key={`hgrid-${i}`}
             x1="0"
             x2={width}
-            y1={i * 38 + 10}
-            y2={i * 38 + 10}
-            stroke="#263147"
-            strokeOpacity="0.5"
+            y1={(i * height) / 4}
+            y2={(i * height) / 4}
+            stroke="#1e2838"
+            strokeOpacity="0.7"
             strokeWidth="1"
           />
         ))}
@@ -770,31 +773,28 @@ const MiniTradeChart = ({
           x2={width}
           y1={entryY}
           y2={entryY}
-          stroke={isUp ? "#0fa055" : "#e03e3e"}
+          stroke={isUp ? "#1a9e58" : "#d94444"}
           strokeWidth="1.5"
-          strokeOpacity="0.9"
+          strokeOpacity="0.95"
         />
 
-        <path d={smoothPathD} fill="none" stroke="#2585f1" strokeWidth="2.5" strokeLinecap="round" />
+        <path d={smoothPathD} fill="none" stroke="#2585f1" strokeWidth="2.2" strokeLinecap="round" />
 
         <g transform={`translate(${entryMarkerX}, ${entryMarkerY})`}>
-          <line x1="0" y1="0" x2="0" y2="-10" stroke={isUp ? "#0fa055" : "#e03e3e"} strokeWidth="1.5" />
-          <circle r="4" fill="#ffffff" stroke={isUp ? "#0fa055" : "#e03e3e"} strokeWidth="2" />
-          <g transform={`translate(-${textWidth / 2}, -26)`}>
+          <circle r="4.5" fill="#ffffff" stroke={isUp ? "#1a9e58" : "#d94444"} strokeWidth="2" />
+          <g transform={`translate(${-(textWidth + 14)}, -10)`}>
             <rect
               width={textWidth}
-              height="18"
-              rx="9"
-              fill={isUp ? "#0fa055" : "#e03e3e"}
-              stroke="#ffffff"
-              strokeWidth="1"
+              height="20"
+              rx="10"
+              fill={isUp ? "#1a9e58" : "#d94444"}
             />
             <text
               x={textWidth / 2}
-              y="12"
+              y="13.5"
               fill="#ffffff"
-              fontSize="9.5"
-              fontWeight="900"
+              fontSize="10"
+              fontWeight="700"
               textAnchor="middle"
             >
               {pillText}
