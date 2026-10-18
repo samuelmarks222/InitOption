@@ -972,7 +972,7 @@ const TradeCloneOverlay = ({
   if (popupItems.length === 0) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[10] overflow-visible">
+    <div className="pointer-events-none absolute inset-0 z-[10] hidden overflow-visible lg:block">
       {popupItems.map((item, index) =>
         item.type === "order" ? (
           <OrderPlacedCloneCard key={item.announcement.id} announcement={item.announcement} bottom={32 + (popupItems.length - 1 - index) * 96} />
