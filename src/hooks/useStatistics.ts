@@ -28,6 +28,9 @@ export interface Trade {
   profit: number; 
   openTime: string;
   closeTime: string;
+  entryPrice?: number;
+  exitPrice?: number;
+  expirySeconds?: number;
 }
 
 interface AssetPerformanceEntry {
@@ -137,16 +140,25 @@ export const useStatistics = () => {
   
   // Real-time parsed trades from Supabase history
   const trades = useMemo<Trade[]>(() => {
-    return tradeHistory.map(t => ({
-      id: t.id,
-      asset: t.asset_symbol,
-      direction: t.direction === 'higher' ? 'Buy' : 'Sell',
-      amount: t.amount,
-      payout: t.profit > 0 ? t.amount + t.profit : 0,
-      profit: t.profit,
-      openTime: t.opened_at,
-      closeTime: t.closed_at ?? t.opened_at
-    }));
+    return tradeHistory.map(t => {
+      const entryPrice = Number(t.entry_price);
+      const exitPrice = Number(t.exit_price);
+      const expirySeconds = Number(t.expiry_seconds);
+
+      return {
+        id: t.id,
+        asset: t.asset_symbol,
+        direction: t.direction === 'higher' ? 'Buy' : 'Sell',
+        amount: t.amount,
+        payout: t.profit > 0 ? t.amount + t.profit : 0,
+        profit: t.profit,
+        openTime: t.opened_at,
+        closeTime: t.closed_at ?? t.opened_at,
+        entryPrice: Number.isFinite(entryPrice) && entryPrice > 0 ? entryPrice : undefined,
+        exitPrice: Number.isFinite(exitPrice) && exitPrice > 0 ? exitPrice : undefined,
+        expirySeconds: Number.isFinite(expirySeconds) && expirySeconds > 0 ? expirySeconds : undefined,
+      };
+    });
   }, [tradeHistory]);
 
   const depositEntries = useMemo<TransactionSeed[]>(() => {

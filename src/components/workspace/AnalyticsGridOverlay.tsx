@@ -31,9 +31,12 @@ import { requestCryptoWithdrawal } from "@/lib/withdrawals";
 import type { Tables } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { AssetSymbolMark } from "@/components/trading/AssetSymbolMark";
 import { useStatistics, type Trade, type Transaction } from "@/hooks/useStatistics";
 import { useTrading, type ActiveTrade, type TradeHistoryEntry } from "@/hooks/useTrading";
+import {
+  TradeResultDetailModal,
+  type TradeResultPresentationData,
+} from "@/components/trading/TradeResultPresentation";
 import { cloudinaryClient } from "@/integrations/cloudinary/client";
 import { getEffectiveLiveBalance } from "@/lib/live-balance";
 import { readDemoBalanceStorage } from "@/lib/onboarding";
@@ -161,16 +164,25 @@ const formatSelectedDateRange = (range: AnalyticsRange, trades: Trade[]) => {
 
 const getDemoTradeHistoryStorageKey = (userId: string) => `demo_trade_history:${userId}`;
 
-const mapHistoryEntryToTrade = (entry: TradeHistoryEntry): Trade => ({
-  id: entry.id,
-  asset: entry.asset_symbol,
-  direction: entry.direction === "higher" ? "Buy" : "Sell",
-  amount: Number(entry.amount ?? 0),
-  payout: Number(entry.profit ?? 0) > 0 ? Number(entry.amount ?? 0) + Number(entry.profit ?? 0) : 0,
-  profit: Number(entry.profit ?? 0),
-  openTime: entry.opened_at,
-  closeTime: entry.closed_at ?? entry.opened_at,
-});
+const mapHistoryEntryToTrade = (entry: TradeHistoryEntry): Trade => {
+  const entryPrice = Number(entry.entry_price);
+  const exitPrice = Number(entry.exit_price);
+  const expirySeconds = Number(entry.expiry_seconds);
+
+  return {
+    id: entry.id,
+    asset: entry.asset_symbol,
+    direction: entry.direction === "higher" ? "Buy" : "Sell",
+    amount: Number(entry.amount ?? 0),
+    payout: Number(entry.profit ?? 0) > 0 ? Number(entry.amount ?? 0) + Number(entry.profit ?? 0) : 0,
+    profit: Number(entry.profit ?? 0),
+    openTime: entry.opened_at,
+    closeTime: entry.closed_at ?? entry.opened_at,
+    entryPrice: Number.isFinite(entryPrice) && entryPrice > 0 ? entryPrice : undefined,
+    exitPrice: Number.isFinite(exitPrice) && exitPrice > 0 ? exitPrice : undefined,
+    expirySeconds: Number.isFinite(expirySeconds) && expirySeconds > 0 ? expirySeconds : undefined,
+  };
+};
 
 const formatDuration = (seconds: number) => {
   const safeSeconds = Math.max(0, Math.round(seconds));
@@ -198,6 +210,34 @@ const estimateClosingQuote = (trade: Trade) => {
   const directionFactor = trade.direction === "Buy" || trade.direction === "Higher" ? 1 : -1;
   const profitFactor = trade.profit > 0 ? directionFactor : -directionFactor;
   return (opening + profitFactor * Math.max(0.0001, trade.amount / 10000)).toFixed(5);
+};
+
+const formatTradeQuote = (value?: number) =>
+  typeof value === "number" && Number.isFinite(value) ? String(value) : null;
+
+const mapTradeToResultPresentation = (trade: Trade): TradeResultPresentationData => {
+  const openedAt = trade.openTime;
+  const closedAt = trade.closeTime;
+  const derivedExpiry = Math.max(
+    1,
+    Math.round((new Date(closedAt).getTime() - new Date(openedAt).getTime()) / 1000),
+  );
+
+  return {
+    id: trade.id,
+    assetSymbol: trade.asset,
+    direction:
+      trade.direction === "Buy" || trade.direction === "Higher" ? "higher" : "lower",
+    amount: trade.amount,
+    profit: trade.profit,
+    status: trade.profit > 0 ? "won" : "lost",
+    entryPrice: trade.entryPrice ?? Number(estimateOpeningQuote(trade)),
+    exitPrice: trade.exitPrice ?? Number(estimateClosingQuote(trade)),
+    openedAt,
+    closedAt,
+    expirySeconds:
+      trade.expirySeconds && trade.expirySeconds > 0 ? trade.expirySeconds : derivedExpiry,
+  };
 };
 
 const exportTradesCsv = (items: Array<Trade | ActiveTrade>, mode: "history" | "pending") => {
@@ -544,7 +584,10 @@ export const AnalyticsGridOverlay = ({ onClose, activeAsset, initialTab = "Analy
           </>
         )}
 
-        {selectedTrade && <TradeDetailModal trade={selectedTrade} formatMoney={formatMoney} onClose={() => setSelectedTrade(null)} />}
+        <TradeResultDetailModal
+          trade={selectedTrade ? mapTradeToResultPresentation(selectedTrade) : null}
+          onClose={() => setSelectedTrade(null)}
+        />
       </div>
     </div>
   );
@@ -567,259 +610,6 @@ const getSmoothPathD = (points: { x: number; y: number }[]) => {
     d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
   }
   return d;
-};
-
-const TradeDetailModal = ({ trade, formatMoney, onClose }: { trade: Trade; formatMoney: (amount: number) => string; onClose: () => void }) => {
-  const isUp = trade.direction === "Buy" || trade.direction === "Higher" || trade.direction === "buy" || trade.direction === "higher" || trade.direction === "up";
-  const isWon = trade.profit > 0;
-  const openQuoteStr = estimateOpeningQuote(trade);
-  const closeQuoteStr = estimateClosingQuote(trade);
-  const openQuote = Number(openQuoteStr);
-  const closeQuote = Number(closeQuoteStr);
-  const pointDiff = Math.round((closeQuote - openQuote) * 100000);
-
-  // Quotex-style amount: "1,500 $" (comma separator, space before $)
-  const fmtAmount = (n: number) =>
-    `${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
-
-  const durationSec = Math.max(1, (new Date(trade.closeTime).getTime() - new Date(trade.openTime).getTime()) / 1000);
-  const formatDurationHHMMSS = (sec: number) => {
-    const s = Math.round(sec);
-    const hrs = Math.floor(s / 3600);
-    const mins = Math.floor((s % 3600) / 60);
-    const secs = s % 60;
-    const p = (n: number) => String(n).padStart(2, "0");
-    return `${p(hrs)}:${p(mins)}:${p(secs)}`;
-  };
-
-  const formatDateTime = (iso: string) => {
-    try {
-      const d = new Date(iso);
-      const p = (n: number) => String(n).padStart(2, "0");
-      return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-    } catch {
-      return iso;
-    }
-  };
-
-  const assetDisplayName = trade.asset;
-
-  return (
-    <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
-      <div className="w-full max-w-[550px] overflow-hidden rounded-[10px] border border-[#252d3f] bg-[#181e2c] text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 pt-5 pb-4">
-          <div>
-            <h3 className="text-[15px] font-bold text-white">Trade ID</h3>
-            <p className="mt-1 text-[13px] font-medium text-gray-300">{trade.id}</p>
-          </div>
-          <button type="button" onClick={onClose} className="rounded p-1 text-gray-400 hover:bg-white/10 hover:text-white transition-colors">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="flex items-start gap-10 px-6 pb-4">
-          <div>
-            <p className="text-[12px] font-semibold text-gray-400">Asset:</p>
-            <div className="mt-1.5 flex items-center gap-2">
-              <AssetSymbolMark symbol={trade.asset} size={20} />
-              <span className="text-[14px] font-bold text-white">{assetDisplayName}</span>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-[12px] font-semibold text-gray-400">Type:</p>
-            <div className="mt-1.5 flex items-center gap-1.5">
-              <span className={`inline-flex h-[22px] w-[22px] items-center justify-center rounded-full text-[11px] font-black text-white ${isUp ? "bg-[#1a9e58]" : "bg-[#d94444]"}`}>
-                {isUp ? "↑" : "↓"}
-              </span>
-              <span className="text-[14px] font-bold text-white">{fmtAmount(trade.amount)}</span>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-[12px] font-semibold text-gray-400">Duration:</p>
-            <p className="mt-1.5 text-[14px] font-bold text-white">{formatDurationHHMMSS(durationSec)}</p>
-          </div>
-
-          <div>
-            <p className="text-[12px] font-semibold text-gray-400">Result:</p>
-            <p className={`mt-1.5 text-[14px] font-bold ${isWon ? "text-[#1a9e58]" : "text-[#d94444]"}`}>
-              {isWon ? `+${fmtAmount(trade.profit)}` : fmtAmount(0)}
-            </p>
-          </div>
-        </div>
-
-        <MiniTradeChart
-          openQuote={openQuote}
-          closeQuote={closeQuote}
-          isUp={isUp}
-          isWon={isWon}
-          stakeText={`${isUp ? "↑" : "↓"} ${fmtAmount(trade.amount)}`}
-        />
-
-        <div className="flex gap-10 border-t border-[#252d3f] bg-[#151b28] px-6 py-4">
-          <div>
-            <p className="text-[12px] font-semibold text-gray-400">Opening quote:</p>
-            <p className="mt-0.5 text-[14px] font-bold text-white">{openQuoteStr}</p>
-            <p className="mt-0.5 text-[11px] font-medium text-gray-500">{formatDateTime(trade.openTime)}</p>
-          </div>
-
-          <div>
-            <p className="text-[12px] font-semibold text-gray-400">Closing quote:</p>
-            <p className="mt-0.5 text-[14px] font-bold text-white">{closeQuoteStr}</p>
-            <p className="mt-0.5 text-[11px] font-medium text-gray-500">{formatDateTime(trade.closeTime)}</p>
-          </div>
-
-          <div>
-            <p className="text-[12px] font-semibold text-gray-400">Difference:</p>
-            <p className="mt-0.5 text-[14px] font-bold text-white">{pointDiff > 0 ? `+${pointDiff}` : pointDiff} points</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const MiniTradeChart = ({
-  openQuote,
-  closeQuote,
-  isUp,
-  isWon,
-  stakeText,
-}: {
-  openQuote: number;
-  closeQuote: number;
-  isUp: boolean;
-  isWon: boolean;
-  stakeText: string;
-}) => {
-  const width = 550;
-  const height = 200;
-  const paddingX = 16;
-  const paddingY = 28;
-
-  // Quotex-style: smooth directional path with gentle moderate noise (not spiky)
-  const pointsCount = 80;
-  const rawValues: number[] = [openQuote];
-  const diff = closeQuote - openQuote;
-  const volatility = Math.max(Math.abs(diff) * 0.18, Math.abs(openQuote) * 0.00003);
-
-  let seed = Math.floor(openQuote * 100000) + 1;
-  const rand = () => {
-    seed = (seed * 16807 + 11) % 2147483647;
-    return (seed / 2147483647) * 2 - 1;
-  };
-
-  // Cumulative random walk constrained to hit open and close — smooth like Quotex
-  let walk = 0;
-  for (let i = 1; i < pointsCount - 1; i++) {
-    const progress = i / (pointsCount - 1);
-    const trend = openQuote + diff * progress;
-    // Mean-reverting walk: step small, pull back toward trend
-    walk = walk * 0.72 + rand() * volatility * 0.45;
-    // Taper noise near start/end so it connects cleanly
-    const taper = Math.sin(progress * Math.PI);
-    rawValues.push(trend + walk * taper);
-  }
-  rawValues.push(closeQuote);
-
-  const minVal = Math.min(...rawValues);
-  const maxVal = Math.max(...rawValues);
-  const valRange = Math.max(maxVal - minVal, 0.0001);
-
-  const points = rawValues.map((val, idx) => ({
-    x: paddingX + (idx / (pointsCount - 1)) * (width - 2 * paddingX),
-    y: height - paddingY - ((val - minVal) / valRange) * (height - 2 * paddingY),
-  }));
-
-  const entryY = height - paddingY - ((openQuote - minVal) / valRange) * (height - 2 * paddingY);
-
-  // Straight-line jagged path (no smoothing) — like Quotex tick chart
-  const jaggedPathD = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
-
-  const firstX = points[0].x;
-  const lastX = points[points.length - 1].x;
-  const bottomY = height;
-  const areaPathD = `${jaggedPathD} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
-  const entryMarkerX = points[Math.floor(points.length * 0.14)].x;
-  const entryMarkerY = entryY;
-
-  const pillText = stakeText;
-  const textWidth = Math.max(50, pillText.length * 6.5 + 18);
-
-  return (
-    <div className="relative h-[200px] w-full bg-[#111827] overflow-hidden select-none">
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full">
-        <defs>
-          <linearGradient id="modalChartAreaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#2585f1" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="#2585f1" stopOpacity="0.02" />
-          </linearGradient>
-        </defs>
-
-        {Array.from({ length: 8 }).map((_, i) => (
-          <line
-            key={`vgrid-${i}`}
-            x1={(i * width) / 7}
-            x2={(i * width) / 7}
-            y1="0"
-            y2={height}
-            stroke="#1c2536"
-            strokeOpacity="0.8"
-            strokeWidth="1"
-          />
-        ))}
-        {Array.from({ length: 4 }).map((_, i) => (
-          <line
-            key={`hgrid-${i}`}
-            x1="0"
-            x2={width}
-            y1={(i * height) / 3}
-            y2={(i * height) / 3}
-            stroke="#1c2536"
-            strokeOpacity="0.8"
-            strokeWidth="1"
-          />
-        ))}
-
-        <path d={areaPathD} fill="url(#modalChartAreaGrad)" />
-
-        <line
-          x1="0"
-          x2={width}
-          y1={entryY}
-          y2={entryY}
-          stroke={isUp ? "#1a9e58" : "#d94444"}
-          strokeWidth="1.5"
-          strokeOpacity="0.95"
-        />
-
-        <path d={jaggedPathD} fill="none" stroke="#2585f1" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-
-        <g transform={`translate(${entryMarkerX}, ${entryMarkerY})`}>
-          <circle r="4" fill="#ffffff" stroke={isUp ? "#1a9e58" : "#d94444"} strokeWidth="2" />
-          <g transform={`translate(${-(textWidth + 12)}, -10)`}>
-            <rect
-              width={textWidth}
-              height="20"
-              rx="10"
-              fill={isUp ? "#1a9e58" : "#d94444"}
-            />
-            <text
-              x={textWidth / 2}
-              y="13.5"
-              fill="#ffffff"
-              fontSize="10"
-              fontWeight="700"
-              textAnchor="middle"
-            >
-              {pillText}
-            </text>
-          </g>
-        </g>
-      </svg>
-    </div>
-  );
 };
 
 type StoredVerificationCard = {
@@ -2162,8 +1952,8 @@ const TradesTable = ({ trades, formatMoney, onSelectTrade }: { trades: Trade[]; 
             <td className="px-3 py-5">{trade.asset}</td>
             <td className="px-3 py-5"><div> {trade.direction === "Buy" || trade.direction === "Higher" ? "Up" : "Down"}</div><div className="mt-1 max-w-[180px] truncate text-[12px] font-medium text-white/65">{trade.id}</div></td>
             <td className="px-3 py-5"><Image className="h-5 w-5 text-white/80" /></td>
-            <td className="px-3 py-5"><div>{estimateOpeningQuote(trade)}</div><div className="mt-1 text-[12px] font-medium text-white/70">{formatDateTime(trade.openTime)}</div></td>
-            <td className="px-3 py-5"><div>{estimateClosingQuote(trade)}</div><div className="mt-1 text-[12px] font-medium text-white/70">{formatDateTime(trade.closeTime)}</div></td>
+            <td className="px-3 py-5"><div>{formatTradeQuote(trade.entryPrice) ?? estimateOpeningQuote(trade)}</div><div className="mt-1 text-[12px] font-medium text-white/70">{formatDateTime(trade.openTime)}</div></td>
+            <td className="px-3 py-5"><div>{formatTradeQuote(trade.exitPrice) ?? estimateClosingQuote(trade)}</div><div className="mt-1 text-[12px] font-medium text-white/70">{formatDateTime(trade.closeTime)}</div></td>
             <td className="px-3 py-5">217.199.144.34</td>
             <td className={`px-3 py-5 text-right ${trade.direction === "Buy" || trade.direction === "Higher" ? "text-[#00c878]" : "text-[#ff5d52]"}`}>
               {formatMoney(trade.amount)}
