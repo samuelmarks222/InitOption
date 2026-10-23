@@ -130,7 +130,7 @@ const AdminUsers = () => {
     if (!search) return profiles;
 
     return profiles.filter((profile) =>
-      [profile.display_name, profile.username, profile.id]
+      [profile.display_name, profile.username, profile.email, profile.id]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(search)),
     );
@@ -263,7 +263,7 @@ const AdminUsers = () => {
                     type="text"
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
-                    placeholder="Search by name, username, or ID..."
+                    placeholder="Search by name, email, username, or ID..."
                     className="w-full rounded-xl border bg-[var(--admin-canvas)] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-slate-400 focus:border-[var(--admin-green)]"
                     style={{ borderColor: "var(--admin-border)" }}
                   />
@@ -295,6 +295,21 @@ const AdminUsers = () => {
                         </div>
                       </div>
                       <div className="mt-3 text-[11px] text-slate-400">Joined {formatDate(profile.created_at)}</div>
+                        <div className="mt-2 flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              window.location.href = "/admin/funds?user=" + profile.id;
+                              toast({
+                                title: "Funding user",
+                                description: `Use /admin/funds to credit ${getUserName(profile)}'s account`,
+                                variant: "default",
+                              });
+                            }}
+                            className="text-sm text-[var(--admin-green)] hover:text-white transition-colors rounded-full px-2 py-1"
+                          >
+                            Fund
+                          </button>
+                        </div>
                     </button>
                   );
                 })}
