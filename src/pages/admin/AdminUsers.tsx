@@ -19,7 +19,7 @@ import {
   getRoleLabel,
 } from "@/lib/adminRoles";
 
-type ProfileRow = Pick<Tables<"profiles">, "created_at" | "display_name" | "id" | "username">;
+type ProfileRow = Pick<Tables<"profiles">, "created_at" | "display_name" | "id" | "username" | "email">;
 type UserRoleRow = Tables<"user_roles">;
 
 type StaffUser = ProfileRow & {
