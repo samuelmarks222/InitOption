@@ -33,12 +33,6 @@ const getTradeProgressPercent = (trade?: ActiveTrade | null) => {
   return Math.min(100, Math.max(0, (elapsed / trade.expiry_seconds) * 100));
 };
 
-const formatCompactTimer = (seconds: number) => {
-  const safeSeconds = Math.max(1, Math.ceil(seconds));
-  if (safeSeconds >= 60) return `${Math.ceil(safeSeconds / 60)}m`;
-  return `${safeSeconds}s`;
-};
-
 // Mini sparkline sampled from the same deterministic market model as the chart.
 // Tints green/red while the asset has a live winning/losing position.
 const TabSparkline = ({ symbol, category, basePrice, tone }: { symbol: string; category?: string | null; basePrice: number; tone?: "up" | "down" | null }) => {
@@ -225,30 +219,25 @@ const AssetInfo = ({
                   </span>
                 </div>
 
-                {/* Sparkline */}
-                <div className="relative min-h-0 flex-1 px-1.5 pb-1 pt-0.5">
-                  <TabSparkline
-                    symbol={tab.symbol}
-                    category={typeof tab.type === "string" ? tab.type : undefined}
-                    basePrice={Number(dynamicTab?.price ?? currentPrice ?? 1)}
-                    tone={liveTone}
-                  />
-                  {/* Timer badge for active trades */}
-                  {activeTrade && (
-                    <span className="absolute bottom-1 right-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[9px] font-black text-white">
-                      {formatCompactTimer(activeTrade.timeLeft)}
-                    </span>
-                  )}
-                  {/* Stake + live P/L stack */}
+                {/* Sparkline + stake / live P/L overlay */}
+                <div className="relative min-h-0 flex-1">
+                  <div className="pointer-events-none absolute inset-0 px-1.5 pb-1 pt-0.5">
+                    <TabSparkline
+                      symbol={tab.symbol}
+                      category={typeof tab.type === "string" ? tab.type : undefined}
+                      basePrice={Number(dynamicTab?.price ?? currentPrice ?? 1)}
+                      tone={liveTone}
+                    />
+                  </div>
                   {hasActiveTrade && (stakeText || livePnlText) ? (
-                    <div className="absolute right-1.5 top-0 flex flex-col items-end gap-0.5 leading-none">
+                    <div className="relative z-[1] flex items-center justify-between gap-1 px-1.5 pt-0.5 leading-none">
                       {stakeText ? (
-                        <span className="text-[10px] font-bold text-white">{stakeText}</span>
-                      ) : null}
+                        <span className="text-[12px] font-black text-white">{stakeText}</span>
+                      ) : <span />}
                       {livePnlText ? (
                         <span
-                          className="rounded-[3px] px-1.5 py-0.5 text-[10px] font-bold text-white"
-                          style={{ background: isWinningTrade ? "#0FA053" : "#E03E3E" }}
+                          className="text-[12px] font-black"
+                          style={{ color: accent, textShadow: "0 1px 3px rgba(0,0,0,0.85)" }}
                         >
                           {livePnlText}
                         </span>
@@ -259,7 +248,7 @@ const AssetInfo = ({
 
                 {/* Active trade progress bar at bottom */}
                 {hasActiveTrade && (
-                  <div className="absolute inset-x-0 bottom-0 h-[2.5px] overflow-hidden rounded-full bg-black/40">
+                  <div className="absolute inset-x-1.5 bottom-[3px] h-[3px] overflow-hidden rounded-full bg-black/45">
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
