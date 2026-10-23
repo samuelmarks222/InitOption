@@ -1,9 +1,9 @@
-import { useTranslation } from "react-i18next";
+﻿import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import {
   ChevronDown, ChevronUp, Plus, Minus, ArrowUp, ArrowDown,
-  Clock, Briefcase, CircleDot, Archive,
+  Clock, Briefcase, Archive,
   X, Check, TrendingUp, TrendingDown
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,7 +29,7 @@ import {
 } from "./tradeDeskEvents";
 import { useTradingDesk } from "./TradingDeskContext";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface TradingPanelProps {
   asset: { symbol: string; name?: string; price: number; maxProfit?: number; available?: boolean };
   balance?: number;
@@ -62,7 +62,7 @@ interface QueuedPendingTrade {
   opened_at: string;
 }
 
-// ─── Utility ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Utility â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const formatTime = (s: number) => {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
@@ -356,9 +356,9 @@ const TimeSwitcherDropdown = ({
   );
 };
 
-// ─── Withdrawal Modal and more was extracted to AccountModals.tsx ───
+// â”€â”€â”€ Withdrawal Modal and more was extracted to AccountModals.tsx â”€â”€â”€
 
-// ─── Active Trade Row ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Active Trade Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ActiveTradeRow = ({ trade }: { trade: ActiveTrade }) => {
   const pct = Math.max(0, (trade.timeLeft / trade.expiry_seconds) * 100);
   const isUp = trade.direction === "higher";
@@ -375,7 +375,7 @@ const ActiveTradeRow = ({ trade }: { trade: ActiveTrade }) => {
           </div>
           <div>
             <div className="text-[11px] font-semibold text-white">{trade.asset_symbol}</div>
-            <div className="text-[9px] text-gray-500">{isUp ? "▲ UP" : "▼ DOWN"}</div>
+            <div className="text-[9px] text-gray-500">{isUp ? "â–² UP" : "â–¼ DOWN"}</div>
           </div>
         </div>
         <div className="text-right">
@@ -397,7 +397,7 @@ const ActiveTradeRow = ({ trade }: { trade: ActiveTrade }) => {
   );
 };
 
-// ─── History Trade Row ────────────────────────────────────────────────────────
+// â”€â”€â”€ History Trade Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const HistoryRow = ({ trade }: { trade: TradeHistoryEntry }) => {
   const won = trade.status === "won";
   return (
@@ -412,12 +412,12 @@ const HistoryRow = ({ trade }: { trade: TradeHistoryEntry }) => {
           </div>
           <div>
             <div className="text-[11px] font-semibold text-white">{trade.asset_symbol}</div>
-            <div className="text-[9px] text-gray-500">{trade.direction === "higher" ? "▲ UP" : "▼ DOWN"}</div>
+            <div className="text-[9px] text-gray-500">{trade.direction === "higher" ? "â–² UP" : "â–¼ DOWN"}</div>
           </div>
         </div>
         <div className="text-right">
           <div className="text-[12px] font-bold" style={{ color: won ? TRADING_UP_COLOR : TRADING_DOWN_COLOR }}>
-            {won ? "+" : "−"}${Math.abs(trade.profit ?? 0).toFixed(2)}
+            {won ? "+" : "âˆ’"}${Math.abs(trade.profit ?? 0).toFixed(2)}
           </div>
           <div className="text-[9px] text-gray-500">${trade.amount.toFixed(2)}</div>
         </div>
@@ -426,7 +426,7 @@ const HistoryRow = ({ trade }: { trade: TradeHistoryEntry }) => {
   );
 };
 
-// ─── Main TradingPanel ────────────────────────────────────────────────────────
+// â”€â”€â”€ Main TradingPanel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SymbolFlags = ({ symbol, size = 20 }: { symbol: string; size?: number }) => {
   return (
     <AssetSymbolMark symbol={symbol} size={size} />
@@ -496,12 +496,15 @@ const CompactTradeRowShell = ({
           </div>
 
           <div className="mt-1.5 flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-black lg:text-[13px] lg:font-bold" style={{ color: amountColor }}>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-black lg:text-[12px] lg:font-semibold" style={{ color: amountColor }}>
               <span
-                className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full"
-                style={{ background: isHigher ? "rgba(24, 216, 125, 0.16)" : "rgba(255, 106, 114, 0.16)", color: isHigher ? "#0bb36b" : "#e5484d" }}
+                className={`inline-flex h-[18px] w-[18px] items-center justify-center rounded-full lg:h-[17px] lg:w-[17px] ${
+                  isHigher
+                    ? "bg-[rgba(24,216,125,0.16)] text-[#0bb36b] lg:bg-[#12b76a] lg:text-white"
+                    : "bg-[rgba(255,106,114,0.16)] text-[#e5484d] lg:bg-[#ef4444] lg:text-white"
+                }`}
               >
-                {isHigher ? <ArrowUp className="h-3 w-3" strokeWidth={3} /> : <ArrowDown className="h-3 w-3" strokeWidth={3} />}
+                {isHigher ? <ArrowUp className="h-3 w-3 lg:h-[11px] lg:w-[11px]" strokeWidth={3.2} /> : <ArrowDown className="h-3 w-3 lg:h-[11px] lg:w-[11px]" strokeWidth={3.2} />}
               </span>
               {amountLabel}
             </span>
@@ -614,8 +617,8 @@ const CompactHistoryRow = ({
       symbol={trade.asset_symbol}
       clockValue={shortOrderLabel ? formatDurationShortcut(trade.expiry_seconds ?? 0) : formatTradeClock(trade.expiry_seconds ?? 0)}
       amountLabel={formatStake(trade.amount ?? 0)}
-      amountColor={upColor}
-      profitLabel={formatProfit(result)}
+      amountColor="#dbe3f2"
+      profitLabel={result > 0 ? formatProfit(result) : formatProfit(0)}
       profitColor={result > 0 ? upColor : downColor}
       direction={trade.direction}
       expanded={expanded}
@@ -717,6 +720,10 @@ const TradingPanel = ({
   const liveBalance = getEffectiveLiveBalance(profile);
   const balance = accountType === "live" ? liveBalance : demoBalance;
   const payoutRate = (asset.maxProfit ?? 63) / 100;
+  const headerSymbol = asset.symbol
+    .replace(/\s*\(?\bOTC\b\)?\s*/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   const effectiveInvestment = investmentMode === "percent"
     ? +Math.max(0, Math.min(MAX_MANUAL_INVESTMENT, (balance * investment) / 100)).toFixed(2)
     : Math.max(1, Math.min(MAX_MANUAL_INVESTMENT, +investment.toFixed(2)));
@@ -991,7 +998,7 @@ const TradingPanel = ({
         }}
       >
 
-        {/* ── Asset Header & Pending Toggle (Single Row) ──────────────── */}
+        {/* â”€â”€ Asset Header & Pending Toggle (Single Row) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-3 lg:pt-3 lg:pb-1" style={{ background: "var(--trading-panel-bg)" }}>
           <button 
             onClick={() => onOpenAssetSelector?.()}
@@ -1000,10 +1007,10 @@ const TradingPanel = ({
             <SymbolFlags symbol={asset.symbol} />
             <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-normal tracking-[0.01em] text-white sm:text-[12px] lg:text-[13px]">
               <span className="max-w-[112px] truncate lg:hidden">{asset.symbol}</span>
-              <span className="hidden max-w-[150px] truncate text-[15px] font-bold text-white lg:inline">
-                {asset.symbol.includes("(OTC)") ? asset.symbol : `${asset.symbol} (OTC)`}
+              <span className="hidden max-w-[112px] truncate text-[13px] font-semibold text-white lg:inline">
+                {headerSymbol}
               </span>
-              <span className={`shrink-0 font-bold text-[#8f98ac] lg:text-[13px] ${asset.available === false ? "text-red-400" : ""}`}>{asset.available === false ? "N/A" : `${asset.maxProfit ?? 79}%`}</span>
+              <span className={`shrink-0 text-[12px] font-normal text-[#8a93a6] ${asset.available === false ? "text-red-400" : ""}`}>{asset.available === false ? "N/A" : `${asset.maxProfit ?? 79}%`}</span>
               <ChevronDown className="w-3.5 h-3.5 text-gray-400 lg:hidden" strokeWidth={3} />
             </div>
           </button>
@@ -1036,26 +1043,23 @@ const TradingPanel = ({
           aria-pressed={pendingTradeEnabled}
           className="hidden items-center justify-between px-3 pb-2.5 pt-1 text-left transition-colors hover:bg-white/[0.02] lg:flex"
         >
-          <div className="flex items-center gap-1.5">
-            <CircleDot className="h-3.5 w-3.5 text-[#1c9cff]" strokeWidth={2.4} />
-            <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-[#1c9cff]">
-              {t("tradingPanel.pendingTradeLabel")}
-            </span>
-          </div>
+          <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-[#1c9cff]">
+            {t("tradingPanel.pendingTradeLabel")}
+          </span>
 
           <div
-            className={`relative h-[18px] w-[30px] rounded-full transition-all ${pendingTradeEnabled ? "bg-[#1c9cff]" : "bg-[#3a4055]"}`}
+            className={`relative h-[16px] w-[28px] rounded-full transition-all ${pendingTradeEnabled ? "bg-[#1c9cff]" : "bg-[#3a4055]"}`}
           >
             <div
-              className={`absolute top-[2px] h-[14px] w-[14px] rounded-full bg-white shadow transition-all ${pendingTradeEnabled ? "left-[14px]" : "left-[2px]"}`}
+              className={`absolute top-[2px] h-[12px] w-[12px] rounded-full bg-white shadow transition-all ${pendingTradeEnabled ? "left-[14px]" : "left-[2px]"}`}
             />
           </div>
         </button>
 
-        {/* ── Compact mobile layout with desktop controls restored ── */}
+        {/* â”€â”€ Compact mobile layout with desktop controls restored â”€â”€ */}
         <div className="pb-2 lg:px-3 lg:pb-2.5">
           <div className="relative z-10 lg:pb-0 lg:px-0">
-            <div className="grid w-full grid-cols-1 gap-2 lg:grid-cols-1 lg:gap-3">
+            <div className="grid w-full grid-cols-1 gap-2 lg:grid-cols-1 lg:gap-2">
               <div className="relative">
                 {/* Mobile: Two separate cards - Timer and Investment (edge-to-edge) */}
                 <div className="relative lg:hidden">
@@ -1148,33 +1152,32 @@ const TradingPanel = ({
 
                 {/* Desktop timer */}
                 <div className="relative hidden lg:block">
-                  <div className="absolute -top-2 left-3 z-10 px-1 text-[10px] font-semibold text-[#777f92]" style={{ background: "var(--trading-panel-bg)" }}>{t("tradingPanel.timeLabelShort")}</div>
+                  <div className="mb-1 px-1 text-[11px] font-normal text-[#8a93a6]">{t("tradingPanel.timeLabelShort")}</div>
                   <div
                     onClick={() => setShowTimeSwitcher((v) => !v)}
-                    className="flex h-[44px] cursor-pointer items-center justify-between rounded-lg border border-[#464c5d] px-2 transition hover:border-[#5a6278]"
-                    style={{ background: "var(--trading-panel-bg)" }}
+                    className="flex h-[36px] cursor-pointer items-center justify-between rounded-[5px] border border-[#3d4557] bg-[#2a3142] px-1.5 transition hover:border-[#4f586d]"
                   >
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 transition hover:text-white active:scale-95"
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#4a5468] text-[#c3cbdc] transition hover:border-[#5f6a82] hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustExpiry(-1); }}
                     >
                       <Minus className="h-3 w-3" />
                     </span>
-                    <span className="flex-1 text-center text-[16px] font-bold tabular-nums text-white" style={{ fontFamily: "Arial, sans-serif" }}>
+                    <span className="flex-1 text-center text-[15px] font-bold tabular-nums text-white" style={{ fontFamily: "Arial, sans-serif" }}>
                       {formatTradeClock(expirySeconds)}
                     </span>
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 transition hover:text-white active:scale-95"
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#4a5468] text-[#c3cbdc] transition hover:border-[#5f6a82] hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustExpiry(1); }}
                     >
                       <Plus className="h-3 w-3" />
                     </span>
                   </div>
-                  <div className="mt-[3px] flex items-center justify-center">
+                  <div className="mt-1 flex items-center justify-center">
                     <button
                       type="button"
                       onClick={() => setShowTimeSwitcher((v) => !v)}
-                      className="border-0 bg-transparent text-[10px] font-bold uppercase tracking-wider text-[#00a0ff] cursor-pointer"
+                      className="border-0 bg-transparent text-[10px] font-bold uppercase tracking-[0.06em] text-[#2c9bf7] underline decoration-[#2c9bf7]/40 underline-offset-2 cursor-pointer"
                     >
                       {t("tradingPanel.switchTimeLabel")}
                     </button>
@@ -1197,14 +1200,13 @@ const TradingPanel = ({
               <div className="relative">
                 {/* Desktop amount */}
                 <div className="relative hidden lg:block">
-                  <div className="absolute -top-2 left-3 z-10 px-1 text-[10px] font-semibold text-[#777f92]" style={{ background: "var(--trading-panel-bg)" }}>{t("tradingPanel.investmentLabel")}</div>
+                  <div className="mb-1 px-1 text-[11px] font-normal text-[#8a93a6]">{t("tradingPanel.investmentLabel")}</div>
                   <div
                     onClick={() => setShowInvestmentSwitcher((v) => !v)}
-                    className="flex h-[44px] cursor-pointer items-center justify-between rounded-lg border border-[#464c5d] px-2 transition hover:border-[#5a6278]"
-                    style={{ background: "var(--trading-panel-bg)" }}
+                    className="flex h-[36px] cursor-pointer items-center justify-between rounded-[5px] border border-[#3d4557] bg-[#2a3142] px-1.5 transition hover:border-[#4f586d]"
                   >
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 transition hover:text-white active:scale-95"
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#4a5468] text-[#c3cbdc] transition hover:border-[#5f6a82] hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustInvestment(-1); }}
                     >
                       <Minus className="h-3 w-3" />
@@ -1216,23 +1218,23 @@ const TradingPanel = ({
                         value={Number.isFinite(investment) ? investment.toLocaleString("en-US", { maximumFractionDigits: 2 }) : investment}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(event) => handleInvestmentInput(event.target.value)}
-                        className="hide-number-spin min-w-0 w-[68px] bg-transparent text-center text-[16px] font-bold tabular-nums tracking-[0.01em] text-white outline-none"
+                        className="hide-number-spin min-w-0 w-[62px] bg-transparent text-center text-[15px] font-bold tabular-nums tracking-[0.01em] text-white outline-none"
                         style={{ fontFamily: "Arial, sans-serif" }}
                       />
-                      <span className="text-[16px] font-bold text-white">{investmentMode === "percent" ? "%" : "$"}</span>
+                      <span className="text-[13px] font-semibold text-[#dbe3f2]">{investmentMode === "percent" ? "%" : "$"}</span>
                     </div>
                     <span
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3a4055] text-gray-300 transition hover:text-white active:scale-95"
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#4a5468] text-[#c3cbdc] transition hover:border-[#5f6a82] hover:text-white active:scale-95"
                       onClick={(e) => { e.stopPropagation(); adjustInvestment(1); }}
                     >
                       <Plus className="h-3 w-3" />
                     </span>
                   </div>
-                  <div className="mt-[3px] flex items-center justify-center">
+                  <div className="mt-1 flex items-center justify-end pr-1">
                     <button
                       type="button"
                       onClick={() => { setInvestmentMode((m) => (m === "percent" ? "amount" : "percent")); setShowInvestmentSwitcher(false); }}
-                      className="border-0 bg-transparent text-[10px] font-bold uppercase tracking-wider text-[#00a0ff] cursor-pointer"
+                      className="border-0 bg-transparent text-[10px] font-bold uppercase tracking-[0.06em] text-[#2c9bf7] underline decoration-[#2c9bf7]/40 underline-offset-2 cursor-pointer"
                     >
                       {t("tradingPanel.switchLabel")}
                     </button>
@@ -1272,21 +1274,21 @@ const TradingPanel = ({
           </div>
         </div>
 
-        {/* ── Payout ───────────────────────────────────────────────── */}
+        {/* â”€â”€ Payout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="hidden items-center justify-between px-2.5 pb-2 pt-2 text-xs lg:mx-3 lg:flex lg:px-0 lg:pb-[10px] lg:pt-[10px]" style={{ color: "#8b91a1" }}>
           <span className="shrink-0 font-normal text-[12px]">Payout</span>
           <span className="mx-2 flex-1 border-b border-dotted border-[#454b5c]" />
           <span className="shrink-0 text-[13px] font-bold tracking-wide text-white">{asset.available === false ? "N/A" : `${payout.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`}</span>
         </div>
 
-        {/* ── UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) ── */}
+        {/* â”€â”€ UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) â”€â”€ */}
         <div className="grid grid-cols-2 gap-2 px-1.5 pb-3 lg:mx-3 lg:grid-cols-1 lg:gap-2 lg:px-0 lg:pb-2">
           <button
             ref={higherButtonRef}
             type="button"
             onClick={() => placeTrade("higher")}
             disabled={asset.available === false}
-            className={`flex h-[44px] items-center justify-between rounded-[4px] px-3 text-[12px] font-normal text-white transition-all active:scale-[0.99] focus:outline-none lg:h-[48px] lg:rounded-[6px] lg:px-[13px] lg:text-[15px] lg:font-bold ${
+            className={`flex h-[44px] items-center justify-between rounded-[4px] px-3 text-[12px] font-normal text-white transition-all active:scale-[0.99] focus:outline-none lg:h-[46px] lg:rounded-[5px] lg:px-[13px] lg:text-[15px] lg:font-bold ${
               higherButtonFocused ? "scale-[1.02]" : ""
             } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
             style={{
@@ -1306,7 +1308,7 @@ const TradingPanel = ({
             type="button"
             onClick={() => placeTrade("lower")}
             disabled={asset.available === false}
-            className={`flex h-[44px] items-center justify-between rounded-[4px] px-3 text-[12px] font-normal text-white transition-all active:scale-[0.99] focus:outline-none lg:h-[48px] lg:rounded-[6px] lg:px-[13px] lg:text-[15px] lg:font-bold ${
+            className={`flex h-[44px] items-center justify-between rounded-[4px] px-3 text-[12px] font-normal text-white transition-all active:scale-[0.99] focus:outline-none lg:h-[46px] lg:rounded-[5px] lg:px-[13px] lg:text-[15px] lg:font-bold ${
               lowerButtonFocused ? "scale-[1.02]" : ""
             } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
             style={{
@@ -1322,12 +1324,12 @@ const TradingPanel = ({
           </button>
         </div>
 
-        {/* ── Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) ── */}
+        {/* â”€â”€ Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) â”€â”€ */}
         <div
           className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:mt-2 lg:flex flex-1'} flex-col overflow-hidden rounded-[4px] border border-[#242b3e] border-t-[#1c9cff] bg-[#252b3d] lg:bg-[var(--trading-panel-bg)]`}
         >
           
-          {/* ── Tabs: History / Pending ───────────────────────────────── */}
+          {/* â”€â”€ Tabs: History / Pending â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div
             className="grid grid-cols-2 border-b border-[#202638] bg-[#252b3d] text-center text-xs font-semibold lg:border-transparent lg:bg-transparent"
           >
@@ -1336,7 +1338,7 @@ const TradingPanel = ({
               className={`flex items-center justify-center gap-1.5 py-3 text-xs font-black transition-colors lg:py-2.5 ${activeTab === "trades" ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
             >
               <span className="lg:text-[13px] lg:font-bold">{t("tradingPanel.trades")}</span>
-              <span className="rounded-full bg-[#697289] px-1.5 text-[9px] font-black text-white lg:bg-[#3a4055] lg:text-[10px]">{tradesTabCount}</span>
+              <span className="rounded-full bg-[#697289] px-1.5 text-[9px] font-black text-white lg:bg-transparent lg:px-0 lg:text-[11px] lg:font-semibold lg:text-white">{tradesTabCount}</span>
             </button>
 
             <button
@@ -1345,7 +1347,7 @@ const TradingPanel = ({
               className={`flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors lg:py-2.5 ${activeTab === "pending" ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
             >
               <i className="fa-regular fa-clock text-xs"></i>
-              <span className="rounded-full bg-[#697289] px-1.5 text-[9px] font-black text-white/70 lg:bg-[#3a4055] lg:text-[10px]">{queuedPendingTrades.length}</span>
+              <span className="rounded-full bg-[#697289] px-1.5 text-[9px] font-black text-white/70 lg:bg-transparent lg:px-0 lg:text-[11px] lg:font-semibold lg:text-white">{queuedPendingTrades.length}</span>
             </button>
 
             {mobileHistoryOpen && (
@@ -1355,7 +1357,7 @@ const TradingPanel = ({
             )}
           </div>
 
-          {/* ── Trade List ───────────────────────────────────────────── */}
+          {/* â”€â”€ Trade List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div ref={tradeListRef} className="flex-1 overflow-y-auto scrollbar-hide px-1.5 py-1.5">
             {activeTab === "pending" ? (
               queuedPendingTrades.length === 0 ? (
