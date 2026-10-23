@@ -7,7 +7,6 @@ import { formatCurrencyAmount } from "@/lib/currency";
 import { getLiveAssetTradeSummary } from "@/lib/liveTradeSummary";
 import { getDeterministicPriceAt } from "@/lib/deterministicMarket";
 import { Asset } from "./data/assets";
-import AssetSymbolMark from "./AssetSymbolMark";
 
 interface AssetInfoProps {
   asset: Asset & { price: number; change: number };
@@ -201,7 +200,7 @@ const AssetInfo = ({
                   />
                 )}
 
-                {/* Header row: close | logo | symbol + OTC | payout */}
+                {/* Header row: close | symbol + OTC | payout */}
                 <div className="flex shrink-0 items-center gap-1 px-1.5 pt-1.5">
                   {onRemoveTab && (
                     <button
@@ -212,17 +211,10 @@ const AssetInfo = ({
                       <X className="h-3 w-3" strokeWidth={2.5} />
                     </button>
                   )}
-                  <AssetSymbolMark
-                    symbol={tab.symbol}
-                    category={typeof tab.type === "string" ? tab.type : undefined}
-                    size={13}
-                    forcePairFlags
-                    className="shrink-0"
-                  />
-                  <span className="min-w-0 flex-1 truncate text-[12px] font-semibold uppercase tracking-wide text-white">
+                  <span className="min-w-0 flex-1 truncate text-[12px] font-bold uppercase tracking-wide text-white antialiased">
                     {tabLabel}
                   </span>
-                  <span className="shrink-0 text-[12px] font-semibold" style={{ color: WIN_COLOR }}>
+                  <span className="shrink-0 text-[12px] font-bold antialiased" style={{ color: WIN_COLOR }}>
                     +{payout}%
                   </span>
                 </div>
