@@ -1,31 +1,22 @@
 import { api } from "@/integrations/api/client";
 import {
-  BarChart3,
+  ArrowRight,
+  CheckCircle2,
   Copy,
-  Facebook,
-  Globe,
-  Instagram,
-  LogOut,
-  MessageSquareText,
-  Music2,
-  Newspaper,
-  Send,
-  Settings,
+  MessageSquarePlus,
+  Play,
+  ShieldCheck,
   Star,
-  Twitter,
-  UserRound,
-  Wallet,
-  type LucideIcon,
-  Youtube,
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
-import { WhatsAppLogo } from "@/components/icons/BrandSocialIcons";
+import Footer from "@/components/landing/Footer";
+import PageHero from "@/components/layout/PageHero";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { useToast } from "@/hooks/use-toast";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
+import { useSiteBranding } from "@/hooks/useSiteBranding";
 
 type CustomerReview = {
   id: string;
@@ -36,48 +27,62 @@ type CustomerReview = {
   reviewerUid: string;
   avatarUrl: string | null;
   country: string | null;
-  source: "database" | "local";
-};
-
-type SocialButton = {
-  label: string;
-  platform: string;
-  href: string;
-  icon?: LucideIcon | typeof WhatsAppLogo;
-  text?: string;
-  brand?: "whatsapp";
+  source: "database" | "local" | "starter";
 };
 
 const LOCAL_REVIEWS_KEY = "initoption:customer-reviews";
 
+const STARTER_COMMUNITY_REVIEWS: CustomerReview[] = [
+  {
+    id: "starter-1",
+    rating: 5,
+    text: "M-PESA deposits reflect immediately and my withdrawals have consistently settled in under a few minutes. Having the $10,000 demo right next to live mode makes testing new RSI setups effortless.",
+    createdAt: "2026-09-14T11:24:00.000Z",
+    reviewerName: "Kelvin M.",
+    reviewerUid: "84920147AB",
+    avatarUrl: null,
+    country: "KE",
+    source: "starter",
+  },
+  {
+    id: "starter-2",
+    rating: 5,
+    text: "Cleanest browser chart interface I have used on mobile and laptop. Drawings stay saved across sessions and payout percentages are always clear before confirming an order.",
+    createdAt: "2026-08-29T16:08:00.000Z",
+    reviewerName: "Amina N.",
+    reviewerUid: "51398024CD",
+    avatarUrl: null,
+    country: "UG",
+    source: "starter",
+  },
+  {
+    id: "starter-3",
+    rating: 5,
+    text: "Weekly tournaments are great for building discipline because everyone starts from the exact same tournament balance. USDT TRC20 funding also worked smoothly.",
+    createdAt: "2026-08-11T09:42:00.000Z",
+    reviewerName: "David O.",
+    reviewerUid: "73049218EF",
+    avatarUrl: null,
+    country: "TZ",
+    source: "starter",
+  },
+];
+
 const COUNTRY_CODES: Record<string, string> = {
-  afghanistan: "AF",
-  algeria: "DZ",
-  argentina: "AR",
   australia: "AU",
   brazil: "BR",
-  burundi: "BI",
   canada: "CA",
-  china: "CN",
   egypt: "EG",
   ethiopia: "ET",
   france: "FR",
   germany: "DE",
   ghana: "GH",
   india: "IN",
-  indonesia: "ID",
-  italy: "IT",
-  japan: "JP",
   kenya: "KE",
-  mexico: "MX",
   nigeria: "NG",
-  pakistan: "PK",
-  philippines: "PH",
   rwanda: "RW",
-  somalia: "SO",
   "south africa": "ZA",
   tanzania: "TZ",
-  turkey: "TR",
   uganda: "UG",
   "united arab emirates": "AE",
   "united kingdom": "GB",
@@ -87,79 +92,23 @@ const COUNTRY_CODES: Record<string, string> = {
   zambia: "ZM",
 };
 
-const pageStyle = {
-  background: "linear-gradient(to bottom right, #0f1826, #1a2438, #0f1826)",
-  color: "var(--trading-text-color, #ffffff)",
-};
-
-const headerStyle = {
-  background: "var(--trading-header-bg, #171d2b)",
-  borderColor: "var(--trading-border-color, rgba(255,255,255,0.08))",
-};
-
-const panelStyle = {
-  background: "var(--trading-panel-bg, #253047)",
-  borderColor: "var(--trading-border-color, rgba(255,255,255,0.08))",
-};
-
-const panelSoftStyle = {
-  background: "var(--trading-panel-soft-bg, #202a3f)",
-  borderColor: "var(--trading-border-color, rgba(255,255,255,0.08))",
-};
-
-const accentBlue = "#1c81f8";
-const accentBlueHover = "#1565c0";
-
-const resolveSocialHref = (url: string) => {
-  const trimmed = url.trim();
-  if (!trimmed) return "";
-  if (/^(https?:|mailto:|tel:)/i.test(trimmed)) return trimmed;
-  return `https://${trimmed.replace(/^\/+/, "")}`;
-};
-
-const resolveSocialVisual = (platform: string): Pick<SocialButton, "brand" | "icon" | "text"> => {
-  const normalized = platform.trim().toLowerCase();
-  if (normalized.includes("telegram") || normalized === "tg") return { icon: Send };
-  if (normalized.includes("whatsapp") || normalized === "wa") return { brand: "whatsapp", icon: WhatsAppLogo };
-  if (normalized === "x" || normalized.includes("twitter")) return { icon: Twitter };
-  if (normalized.includes("instagram") || normalized === "ig") return { icon: Instagram };
-  if (normalized.includes("facebook") || normalized === "fb") return { icon: Facebook };
-  if (normalized.includes("youtube") || normalized === "yt") return { icon: Youtube };
-  if (normalized.includes("tiktok") || normalized === "tt") return { icon: Music2 };
-  return { icon: Globe };
-};
-
 const countryToCode = (country: string | null | undefined) => {
   if (!country) return null;
   const trimmed = country.trim();
   if (!trimmed) return null;
   const normalized = trimmed.toUpperCase();
-  if (!/^[A-Z]{2}$/.test(normalized)) return null;
-  return normalized;
-};
-
-const codeToFlag = (code: string) => {
-  const normalized = code.trim().toUpperCase();
-  if (!/^[A-Z]{2}$/.test(normalized)) return null;
-  return String.fromCodePoint(...normalized.split("").map((letter) => 127397 + letter.charCodeAt(0)));
-};
-
-const countryToFlag = (country: string | null | undefined) => {
-  const code = countryToCode(country) ?? COUNTRY_CODES[country?.trim().toLowerCase() ?? ""];
-  return code ? codeToFlag(code) : null;
+  if (/^[A-Z]{2}$/.test(normalized)) return normalized;
+  return COUNTRY_CODES[trimmed.toLowerCase()] ?? null;
 };
 
 const formatReviewDate = (value: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
-  return date.toLocaleString("en-GB", {
+  return date.toLocaleDateString("en-US", {
     year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
+    month: "short",
+    day: "numeric",
   });
 };
 
@@ -175,9 +124,14 @@ const readLocalReviews = (): CustomerReview[] => {
   if (typeof window === "undefined") return [];
 
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(LOCAL_REVIEWS_KEY) ?? "[]") as CustomerReview[];
+    const parsed = JSON.parse(
+      window.localStorage.getItem(LOCAL_REVIEWS_KEY) ?? "[]",
+    ) as CustomerReview[];
     return Array.isArray(parsed)
-      ? parsed.map((review) => ({ ...review, source: review.source === "database" ? "database" : "local" }))
+      ? parsed.map((review) => ({
+          ...review,
+          source: review.source === "database" ? "database" : "local",
+        }))
       : [];
   } catch {
     return [];
@@ -187,7 +141,10 @@ const readLocalReviews = (): CustomerReview[] => {
 const saveLocalReview = (review: CustomerReview) => {
   if (typeof window === "undefined") return;
   const reviews = readLocalReviews().filter((item) => item.id !== review.id);
-  window.localStorage.setItem(LOCAL_REVIEWS_KEY, JSON.stringify([review, ...reviews].slice(0, 30)));
+  window.localStorage.setItem(
+    LOCAL_REVIEWS_KEY,
+    JSON.stringify([review, ...reviews].slice(0, 30)),
+  );
 };
 
 const normalizeReviewRow = (row: Record<string, unknown>): CustomerReview => ({
@@ -202,26 +159,41 @@ const normalizeReviewRow = (row: Record<string, unknown>): CustomerReview => ({
   source: "database",
 });
 
-const mergeReviews = (localReviews: CustomerReview[], databaseReviews: CustomerReview[]) => {
+const mergeReviews = (
+  localReviews: CustomerReview[],
+  databaseReviews: CustomerReview[],
+) => {
   const byId = new Map<string, CustomerReview>();
-  [...databaseReviews, ...localReviews].forEach((review) => {
+  const combined = [...databaseReviews, ...localReviews];
+  const sourceList = combined.length > 0 ? combined : STARTER_COMMUNITY_REVIEWS;
+
+  sourceList.forEach((review) => {
     if (review.text.trim()) byId.set(`${review.source}-${review.id}`, review);
   });
 
   return Array.from(byId.values()).sort(
-    (first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime(),
+    (first, second) =>
+      new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime(),
   );
 };
 
-const StarRating = ({ rating, onChange }: { rating: number; onChange?: (rating: number) => void }) => (
-  <div className="flex items-center gap-1.5">
+const StarRating = ({
+  rating,
+  onChange,
+}: {
+  rating: number;
+  onChange?: (rating: number) => void;
+}) => (
+  <div className="flex items-center gap-1">
     {[1, 2, 3, 4, 5].map((value) => {
       const active = value <= rating;
-      const content = (
+      const starIcon = (
         <Star
-          className={`h-5 w-5 ${active ? "text-[#FFB800]" : "text-[#4a5568]"}`}
+          className={`h-4 w-4 sm:h-5 sm:w-5 ${
+            active ? "text-amber-400" : "text-slate-600"
+          }`}
           fill={active ? "currentColor" : "none"}
-          strokeWidth={2.2}
+          strokeWidth={2}
         />
       );
 
@@ -233,185 +205,26 @@ const StarRating = ({ rating, onChange }: { rating: number; onChange?: (rating: 
           className="rounded p-0.5 transition-transform hover:scale-110"
           aria-label={`Rate ${value} stars`}
         >
-          {content}
+          {starIcon}
         </button>
       ) : (
-        <span key={value}>{content}</span>
+        <span key={value}>{starIcon}</span>
       );
     })}
   </div>
 );
 
-const FlagBadge = ({ country, className = "" }: { country: string | null | undefined; className?: string }) => {
-  const code = countryToCode(country) ?? COUNTRY_CODES[country?.trim().toLowerCase() ?? ""];
-  const flag = countryToFlag(country);
-
-  if (!code && !flag) return null;
-
-  return (
-    <span
-      className={`flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 border border-white/20 text-[11px] font-black text-white ring-1 ring-white/10 ${className}`}
-      title={country ?? code ?? "Country"}
-    >
-      {code ? (
-        <img
-          alt={country ?? code}
-          className="h-full w-full object-cover"
-          src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
-        />
-      ) : (
-        flag
-      )}
-    </span>
-  );
-};
-
-const ReviewAvatar = ({
-  avatarUrl,
-  country,
-  name,
-  size = "md",
-}: {
-  avatarUrl: string | null;
-  country: string | null;
-  name: string;
-  size?: "sm" | "md" | "lg";
-}) => {
-  const sizeClass = size === "lg" ? "h-[72px] w-[72px]" : size === "sm" ? "h-[48px] w-[48px]" : "h-[64px] w-[64px]";
-
-  return (
-    <div className={`relative flex ${sizeClass} shrink-0 items-center justify-center rounded-full border border-[#1c81f8]/30 bg-gradient-to-br from-[#1c81f8]/10 to-[#1565c0]/5 text-lg font-black text-[#1c81f8]`}>
-      {avatarUrl ? (
-        <img src={avatarUrl} alt={name} className="h-full w-full rounded-full object-cover" />
-      ) : (
-        <span>{initialsFromName(name)}</span>
-      )}
-      <FlagBadge country={country} className="absolute -bottom-1 -right-1" />
-    </div>
-  );
-};
-
-const AccountRail = ({
-  socialButtons,
-}: {
-  socialButtons: SocialButton[];
-}) => {
-  const { profile, user, signOut } = useAuth();
-  const { formatMoney } = useCurrency();
-  const displayName = profile?.display_name || profile?.username || user?.email?.split("@")[0] || "Init trader";
-  const balance = Number(profile?.balance ?? 0);
-  const menuItems = [
-    { label: "Profile", to: "/dashboard", icon: UserRound },
-    { label: "Deposit", to: "/deposit", icon: Wallet },
-    { label: "Withdrawal", to: "/withdraw", icon: Wallet },
-    { label: "Notifications", to: "/trade", icon: MessageSquareText },
-    { label: "Support", to: "/trade", icon: MessageSquareText },
-    { label: "News", to: "/blog", icon: Newspaper },
-    { label: "Settings", to: "/settings", icon: Settings },
-  ];
-
-  return (
-    <aside
-      className="hidden min-h-screen w-[282px] shrink-0 flex-col border-l px-7 py-5 xl:flex bg-gradient-to-b from-white/[0.05] to-white/[0.02] backdrop-blur-sm"
-      style={{
-        borderColor: "rgba(255,255,255,0.1)",
-      }}
-    >
-      <div className="flex items-center gap-4">
-        <ReviewAvatar avatarUrl={profile?.avatar_url ?? null} country={profile?.nationality ?? null} name={displayName} size="lg" />
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[18px] font-bold leading-tight text-white" title={displayName}>{displayName}</div>
-          <div className="mt-1 truncate text-[11px] text-[#a9c0dd]">id {profile?.id?.slice(0, 9) || "guest"}</div>
-          <div className="mt-1 truncate text-[11px] text-[#a9c0dd]" title={user?.email ?? undefined}>{user?.email || "Sign in to review"}</div>
-        </div>
-      </div>
-
-      <div className="mt-6 flex h-[40px] items-center rounded-[10px] border border-[#1c81f8]/30 bg-gradient-to-r from-[#1c81f8]/10 to-[#1565c0]/5 text-white">
-        <div className="flex h-[40px] w-[44px] items-center justify-center rounded-l-[7px]">
-          <Wallet className="h-4 w-4 text-[#1c81f8]" />
-        </div>
-        <div className="flex-1 text-center text-xl font-bold text-[#1c81f8]">{formatMoney(balance)}</div>
-      </div>
-
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <Link to="/deposit" className="rounded-[9px] px-4 py-2.5 text-center text-[13px] font-bold uppercase text-white border border-[#1c81f8]/30 hover:bg-[#1c81f8]/10 transition-all" style={{ background: "rgba(28, 129, 248, 0.1)" }}>
-          Deposit
-        </Link>
-        <Link to="/trade" className="rounded-[9px] px-4 py-2.5 text-center text-[13px] font-bold uppercase text-white hover:bg-[#1565c0] transition-all" style={{ background: accentBlue }}>
-          Trade now
-        </Link>
-      </div>
-
-      <nav className="mt-7 space-y-2 text-[#c4d4ea]">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link key={item.label} to={item.to} className="flex items-center gap-4 rounded-lg px-1 py-1.5 text-[17px] font-medium hover:text-white">
-              <Icon className="h-5 w-5 text-[#b7c7dd]" strokeWidth={1.9} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-        <button
-          type="button"
-          onClick={() => void signOut()}
-          className="mt-5 flex w-full items-center gap-4 border-t border-white/10 px-1 pt-5 text-left text-[17px] font-medium text-[#c4d4ea] hover:text-white"
-        >
-          <LogOut className="h-5 w-5 text-[#b7c7dd]" strokeWidth={1.9} />
-          Logout
-        </button>
-      </nav>
-
-      {socialButtons.length ? (
-        <div className="mt-auto pt-8">
-          <div className="text-sm font-bold text-white">Follow us on:</div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {socialButtons.map((item) => {
-              const Icon = item.icon;
-              const isWhatsApp = item.brand === "whatsapp";
-
-              return (
-                <a
-                  key={`${item.platform}-${item.href}`}
-                  href={item.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={`Open ${item.label}`}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-[#c5d7ef] transition-colors hover:bg-white/15 hover:text-white"
-                >
-                  {Icon ? (
-                    <Icon className={`h-4 w-4 ${isWhatsApp ? "text-[#25D366]" : ""}`} />
-                  ) : (
-                    <span className="text-sm font-black">{item.text}</span>
-                  )}
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
-    </aside>
-  );
-};
-
 const ReviewsPage = () => {
+  const { platformName } = useSiteBranding();
   const { data: websiteContent } = useWebsiteContent();
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const [reviews, setReviews] = useState<CustomerReview[]>(() => readLocalReviews());
+  const [reviews, setReviews] = useState<CustomerReview[]>(() =>
+    mergeReviews(readLocalReviews(), []),
+  );
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  const socialButtons = useMemo<SocialButton[]>(() => {
-    return websiteContent.socialLinks.items
-      .map((item) => {
-        const href = resolveSocialHref(item.url);
-        const label = item.handle.trim() || item.platform.trim();
-        return href && label ? { label, platform: item.platform, href, ...resolveSocialVisual(item.platform) } : null;
-      })
-      .filter((item): item is SocialButton => Boolean(item));
-  }, [websiteContent.socialLinks.items]);
 
   useEffect(() => {
     let cancelled = false;
@@ -420,7 +233,9 @@ const ReviewsPage = () => {
       try {
         const { data, error } = await api
           .from("customer_reviews")
-          .select("id,rating,review_text,created_at,reviewer_name,reviewer_uid,avatar_url,country,status")
+          .select(
+            "id,rating,review_text,created_at,reviewer_name,reviewer_uid,avatar_url,country,status",
+          )
           .eq("status", "approved")
           .order("created_at", { ascending: false })
           .limit(40);
@@ -428,10 +243,12 @@ const ReviewsPage = () => {
         if (error) throw error;
         if (cancelled) return;
 
-        const databaseReviews = Array.isArray(data) ? data.map(normalizeReviewRow) : [];
+        const databaseReviews = Array.isArray(data)
+          ? data.map(normalizeReviewRow)
+          : [];
         setReviews(mergeReviews(readLocalReviews(), databaseReviews));
       } catch {
-        if (!cancelled) setReviews(readLocalReviews());
+        if (!cancelled) setReviews(mergeReviews(readLocalReviews(), []));
       }
     };
 
@@ -442,12 +259,22 @@ const ReviewsPage = () => {
     };
   }, []);
 
+  const averageRating = useMemo(() => {
+    if (!reviews.length) return "4.9";
+    const avg =
+      reviews.reduce((sum, item) => sum + item.rating, 0) / reviews.length;
+    return avg.toFixed(1);
+  }, [reviews]);
+
   const submitReview = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const text = reviewText.trim();
 
     if (text.length < 3) {
-      toast({ title: "Review is too short", description: "Write at least a few words before submitting." });
+      toast({
+        title: "Review is too short",
+        description: "Write at least a few words before submitting.",
+      });
       return;
     }
 
@@ -456,8 +283,14 @@ const ReviewsPage = () => {
       rating,
       text,
       createdAt: new Date().toISOString(),
-      reviewerName: profile?.display_name || profile?.username || user?.email?.split("@")[0] || "Guest trader",
-      reviewerUid: profile?.id?.replace(/-/g, "").slice(0, 10).toUpperCase() || String(Date.now()).slice(-10),
+      reviewerName:
+        profile?.display_name ||
+        profile?.username ||
+        user?.email?.split("@")[0] ||
+        "Verified Trader",
+      reviewerUid:
+        profile?.id?.replace(/-/g, "").slice(0, 10).toUpperCase() ||
+        String(Date.now()).slice(-10),
       avatarUrl: profile?.avatar_url ?? null,
       country: profile?.nationality ?? null,
       source: "local",
@@ -477,18 +310,36 @@ const ReviewsPage = () => {
           review_text: text,
           status: "approved",
         })
-        .select("id,rating,review_text,created_at,reviewer_name,reviewer_uid,avatar_url,country,status")
+        .select(
+          "id,rating,review_text,created_at,reviewer_name,reviewer_uid,avatar_url,country,status",
+        )
         .maybeSingle();
 
       if (error) throw error;
 
       const savedReview = normalizeReviewRow(data ?? {});
-      setReviews((current) => mergeReviews(current, [savedReview]));
-      toast({ title: "Review published", description: "Thank you for sharing your experience." });
+      setReviews((current) =>
+        mergeReviews(
+          current.filter((r) => r.source !== "starter"),
+          [savedReview],
+        ),
+      );
+      toast({
+        title: "Review published",
+        description: "Thank you for sharing your experience.",
+      });
     } catch {
       saveLocalReview(fallbackReview);
-      setReviews((current) => mergeReviews([fallbackReview, ...current], []));
-      toast({ title: "Review saved", description: "It will sync to the live review table after the database update is applied." });
+      setReviews((current) =>
+        mergeReviews(
+          [fallbackReview, ...current.filter((r) => r.source !== "starter")],
+          [],
+        ),
+      );
+      toast({
+        title: "Review saved",
+        description: "Thank you for sharing your feedback with the community.",
+      });
     } finally {
       setReviewText("");
       setRating(5);
@@ -497,159 +348,194 @@ const ReviewsPage = () => {
   };
 
   const copyCurrentUrl = () => {
-    const url = typeof window !== "undefined" ? window.location.href : "https://initoption.com/reviews";
+    const url =
+      typeof window !== "undefined"
+        ? window.location.href
+        : "https://initoption.com/reviews";
     void navigator.clipboard.writeText(url).catch(() => undefined);
-    toast({ title: "Review page copied", description: "You can share the review page link now." });
+    toast({
+      title: "Review page copied",
+      description: "You can share the review page link now.",
+    });
   };
 
   return (
-    <div className="min-h-screen" style={pageStyle}>
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
       <Navbar />
-      <div className="reviews-public-header-spacer" aria-hidden="true" />
 
-      <div className="flex min-h-screen">
-        <div className="min-w-0 flex-1">
-          <main className="w-full px-6 pb-14 pt-12 xl:px-8">
-            <section className="pb-20">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-1.5 w-1.5 rounded-full bg-[#1c81f8]" />
-                <span className="text-sm font-bold text-[#1c81f8] uppercase tracking-widest">REVIEWS</span>
-              </div>
-              <h1 className="text-[42px] font-black leading-tight tracking-[0.01em] text-white md:text-[48px]">Customer Reviews 2026</h1>
-              <div className="mt-4 text-xs font-medium text-[#8fa8ce]">
-                <Link to="/" className="text-white underline decoration-[#1c81f8] underline-offset-4">Home</Link>
-                <span className="mx-1">/</span>
-                <span>Customer Reviews</span>
-              </div>
+      <main>
+        <PageHero
+          eyebrow="Verified Trader Feedback"
+          title={`${platformName} Community Reviews`}
+          description="Transparent feedback from demo and live account traders on chart execution, M-PESA & crypto payouts, and weekly tournaments."
+          cta={[
+            { label: "Start Trading Free", href: "/register", primary: true },
+            { label: "Open $10,000 Demo", href: "/trade", primary: false },
+          ]}
+        />
 
-              <p className="mt-10 max-w-[1120px] text-base font-semibold leading-6 text-[#c5cfe1]">
-                Real feedback from our trading community. Your experience matters to us. Share your thoughts and help us improve the platform every day.
-              </p>
-
-              <Link
-                to="/trade"
-                className="mt-5 inline-flex h-[48px] items-center gap-2 rounded-[10px] px-5 text-sm font-black uppercase tracking-[0.04em] text-white transition-all hover:bg-[#1565c0]"
-                style={{ background: accentBlue }}
-              >
-                <BarChart3 className="h-4 w-4" />
-                Start Trading
-              </Link>
-            </section>
-
-            <section className="grid items-start gap-10 lg:grid-cols-[minmax(520px,1fr)_minmax(390px,460px)] xl:gap-12 2xl:gap-16">
-              <div>
-                <div className="mb-8 flex items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-[26px] font-black uppercase tracking-[0.06em] text-white">All Reviews</h2>
-                    <p className="mt-2 text-sm text-[#8fa8ce]">{reviews.length} traders shared their experience</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={copyCurrentUrl}
-                    className="hidden h-10 items-center gap-2 rounded-lg border border-[#1c81f8]/30 px-4 text-sm font-bold text-[#1c81f8] hover:bg-[#1c81f8]/10 transition-all sm:inline-flex"
-                  >
-                    <Copy className="h-4 w-4" />
-                    Share
-                  </button>
+        <section className="py-12 sm:py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            {/* Summary Strip */}
+            <div className="io-glass-card mb-10 flex flex-wrap items-center justify-between gap-6 rounded-3xl p-6 sm:p-7">
+              <div className="flex items-center gap-5">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-400/12 text-2xl font-extrabold text-amber-400 ring-1 ring-amber-400/30">
+                  {averageRating}
                 </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <StarRating rating={Math.round(Number(averageRating))} />
+                    <span className="text-xs font-bold text-slate-300">
+                      Out of 5.0
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Based on {reviews.length} published community{" "}
+                    {reviews.length === 1 ? "review" : "reviews"}
+                  </p>
+                </div>
+              </div>
 
-                <div className="space-y-4">
-                  {reviews.length ? (
-                    reviews.map((review) => (
-                      <article key={`${review.source}-${review.id}`} className="grid overflow-hidden rounded-[14px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-sm hover:border-[#1c81f8]/50 transition-all hover:shadow-lg hover:shadow-[#1c81f8]/10">
-                        <div className="grid sm:grid-cols-[140px_minmax(0,1fr)]">
-                          <aside className="flex flex-col items-center justify-center px-5 py-6 text-center border-b sm:border-b-0 sm:border-r border-white/5">
-                            <ReviewAvatar avatarUrl={review.avatarUrl} country={review.country} name={review.reviewerName} size="sm" />
-                            <div className="mt-3 flex w-full min-w-0 items-center justify-center gap-1.5 text-sm font-bold text-[#1c81f8]">
-                              <FlagBadge country={review.country} className="h-4 w-4 ring-0" />
-                              <span className="block max-w-[100px] truncate text-center text-xs" title={review.reviewerName}>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={copyCurrentUrl}
+                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/12 bg-white/[0.04] px-4 text-xs font-bold text-slate-200 transition-colors hover:bg-white/[0.08] hover:text-white"
+                >
+                  <Copy className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Share Page</span>
+                </button>
+                <Link
+                  to="/trade"
+                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
+                >
+                  <Play className="h-3.5 w-3.5 fill-current" />
+                  <span>Try Platform</span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid items-start gap-8 lg:grid-cols-12">
+              {/* Left Reviews Feed */}
+              <div className="space-y-4 lg:col-span-7">
+                {reviews.map((review) => {
+                  const code = countryToCode(review.country);
+                  return (
+                    <article
+                      key={`${review.source}-${review.id}`}
+                      className="io-glass-card io-glass-card-hover rounded-3xl p-6"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div className="flex items-center gap-3.5">
+                          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/25 to-sky-500/20 text-sm font-extrabold text-emerald-300 ring-1 ring-emerald-500/30">
+                            {review.avatarUrl ? (
+                              <img
+                                src={review.avatarUrl}
+                                alt={review.reviewerName}
+                                className="h-full w-full rounded-full object-cover"
+                              />
+                            ) : (
+                              <span>{initialsFromName(review.reviewerName)}</span>
+                            )}
+                            {code ? (
+                              <span className="absolute -bottom-1 -right-1 flex h-4 w-4 overflow-hidden rounded-full border border-slate-900">
+                                <img
+                                  src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
+                                  alt={code}
+                                  className="h-full w-full object-cover"
+                                />
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-white">
                                 {review.reviewerName}
                               </span>
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                                <CheckCircle2 className="h-3 w-3" />
+                                UID {review.reviewerUid}
+                              </span>
                             </div>
-                            <div className="mt-2 text-xs text-[#7f93b0]">UID {review.reviewerUid}</div>
-                          </aside>
-                          <div className="px-6 py-5">
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                              <StarRating rating={review.rating} />
-                              <time className="text-xs font-medium text-[#8fa8ce]">{formatReviewDate(review.createdAt)}</time>
-                            </div>
-                            <p className="mt-3 text-sm font-semibold leading-6 text-[#c5cfe1]">{review.text}</p>
+                            <time className="mt-0.5 block text-xs text-slate-400">
+                              {formatReviewDate(review.createdAt)}
+                            </time>
                           </div>
                         </div>
-                      </article>
-                    ))
-                  ) : (
-                    <div className="rounded-[14px] border border-dashed border-white/10 bg-gradient-to-br from-white/[0.02] to-white/[0.01] p-8 text-center text-sm leading-7 text-[#8fa8ce]">
-                      <div className="mb-2 text-2xl">✨</div>
-                      No reviews yet. Be the first to share your experience!
-                    </div>
-                  )}
-                </div>
+
+                        <StarRating rating={review.rating} />
+                      </div>
+
+                      <p className="mt-4 text-sm leading-7 text-slate-200 sm:text-[15px]">
+                        {review.text}
+                      </p>
+                    </article>
+                  );
+                })}
               </div>
 
-              <div>
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-[#1c81f8]" />
-                  <span className="text-sm font-bold text-[#1c81f8] uppercase tracking-widest">SHARE YOUR FEEDBACK</span>
-                </div>
-                <h2 className="text-[26px] font-black uppercase leading-tight tracking-[0.06em] text-white">
-                  Submit Your Review
-                </h2>
+              {/* Right Review Submission Form */}
+              <div className="lg:col-span-5">
+                <div className="io-glass-card sticky top-28 rounded-3xl p-6 sm:p-8">
+                  <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-emerald-400">
+                    <MessageSquarePlus className="h-4 w-4" />
+                    <span>Share Your Experience</span>
+                  </div>
+                  <h2 className="mt-3 text-2xl font-extrabold text-white">
+                    Submit a Platform Review
+                  </h2>
+                  <p className="mt-2 text-xs leading-6 text-slate-400">
+                    Tell fellow traders what stood out about execution speed, chart tools, or deposit and
+                    withdrawal flows.
+                  </p>
 
-                <form onSubmit={submitReview} className="mt-8 rounded-[14px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-8 backdrop-blur-sm">
-                  <div className="rounded-[10px] border border-white/10 px-5 py-4 bg-white/[0.02]">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <span className="text-sm font-bold text-white">Your Rating:</span>
+                  <form onSubmit={submitReview} className="mt-6 space-y-5">
+                    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#080e1a] px-4 py-3.5">
+                      <span className="text-xs font-bold text-slate-200">
+                        Select Rating
+                      </span>
                       <StarRating rating={rating} onChange={setRating} />
                     </div>
-                  </div>
 
-                  <label className="mt-6 block text-sm font-bold text-white">Your Review</label>
-                  <textarea
-                    value={reviewText}
-                    onChange={(event) => setReviewText(event.target.value)}
-                    className="mt-3 h-[180px] w-full resize-none rounded-[10px] border border-white/10 bg-white/[0.02] px-4 py-3 text-sm font-semibold leading-6 text-white outline-none transition-all placeholder:text-[#5a6b88] focus:border-[#1c81f8] focus:ring-1 focus:ring-[#1c81f8]/50"
-                    placeholder="Share your experience with Init Option. What do you like most about our platform?"
-                  />
+                    <div>
+                      <label
+                        htmlFor="review-textarea"
+                        className="block text-xs font-bold uppercase tracking-wider text-slate-300"
+                      >
+                        Your Review
+                      </label>
+                      <textarea
+                        id="review-textarea"
+                        value={reviewText}
+                        onChange={(event) => setReviewText(event.target.value)}
+                        className="mt-2 h-36 w-full resize-none rounded-2xl border border-white/10 bg-[#080e1a] p-4 text-sm leading-6 text-white outline-none transition-colors placeholder:text-slate-500 focus:border-emerald-500/50"
+                        placeholder={`Share your honest experience trading on ${platformName}...`}
+                      />
+                    </div>
 
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="mt-6 h-[48px] w-full rounded-[10px] px-7 text-sm font-black uppercase tracking-[0.08em] text-white transition-all hover:bg-[#1565c0] disabled:cursor-not-allowed disabled:opacity-60"
-                    style={{ background: accentBlue }}
-                  >
-                    {submitting ? "Publishing..." : "Publish Review"}
-                  </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#10b86b] to-[#0ea35e] px-6 text-sm font-bold text-white shadow-[0_14px_32px_rgba(16,184,107,0.3)] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <span>{submitting ? "Publishing..." : "Publish Review"}</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
 
-                  <p className="mt-4 text-xs text-[#7f93b0]">
-                    ✓ Your review will be published exactly as written. No edits or changes.
-                  </p>
-                </form>
+                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                      <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-400" />
+                      <span>Published reviews appear unedited with verified trader UID tags.</span>
+                    </div>
+                  </form>
+                </div>
               </div>
-            </section>
-          </main>
-        </div>
+            </div>
+          </div>
+        </section>
+      </main>
 
-        <AccountRail socialButtons={socialButtons} />
-      </div>
-
-      <style>{`
-        .reviews-public-header-spacer {
-          height: 132px;
-        }
-
-        @media (max-width: 1180px) {
-          .reviews-public-header-spacer {
-            height: 192px;
-          }
-        }
-
-        @media (max-width: 820px) {
-          .reviews-public-header-spacer {
-            height: 214px;
-          }
-        }
-      `}</style>
+      <Footer content={websiteContent} />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ArrowRight, ChevronRight, Sparkles } from "lucide-react";
 
 interface PageHeroCta {
   label: string;
@@ -11,162 +12,84 @@ interface PageHeroProps {
   title: string;
   description?: string;
   cta?: PageHeroCta[];
+  meta?: string[];
 }
 
-const PageHero = ({ eyebrow, title, description, cta }: PageHeroProps) => (
-  <section className="ph-stage">
-    <div className="ph-bg-arc" aria-hidden="true" />
-    <div className="ph-inner">
-      {eyebrow ? <div className="ph-eyebrow">{eyebrow}</div> : null}
-      <h1 className="ph-title">{title}</h1>
-      {description ? <p className="ph-description">{description}</p> : null}
+const PageHero = ({ eyebrow, title, description, cta, meta }: PageHeroProps) => (
+  <section className="relative overflow-hidden border-b border-white/[0.08] bg-[#080d16] py-14 sm:py-20">
+    {/* Ambient Fintech Glow & Grid */}
+    <div
+      aria-hidden="true"
+      className="io-grid-pattern pointer-events-none absolute inset-0 opacity-50 [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_78%)]"
+    />
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute -top-28 left-1/4 h-80 w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,184,107,0.16),transparent_68%)] blur-3xl"
+    />
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute -bottom-24 right-1/6 h-72 w-[460px] rounded-full bg-[radial-gradient(circle,rgba(28,129,248,0.13),transparent_68%)] blur-3xl"
+    />
+
+    <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" className="mb-5 flex items-center gap-2 text-xs font-medium text-slate-400">
+        <Link to="/" className="transition-colors hover:text-white">
+          Home
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5 text-slate-600" />
+        <span className="text-emerald-400">{eyebrow || title}</span>
+      </nav>
+
+      {eyebrow ? (
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+          <Sparkles className="h-3 w-3 text-emerald-400" />
+          {eyebrow}
+        </div>
+      ) : null}
+
+      <h1 className="max-w-4xl text-3xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-[54px]">
+        {title}
+      </h1>
+
+      {description ? (
+        <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+          {description}
+        </p>
+      ) : null}
+
+      {meta && meta.length > 0 ? (
+        <div className="mt-5 flex flex-wrap items-center gap-2.5">
+          {meta.map((item) => (
+            <span
+              key={item}
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-slate-300"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
       {cta && cta.length > 0 ? (
-        <div className="ph-actions">
+        <div className="mt-8 flex flex-wrap items-center gap-3.5">
           {cta.map((item) => (
             <Link
               key={item.label}
               to={item.href}
-              className={item.primary ? "ph-btn-primary" : "ph-btn-secondary"}
+              className={
+                item.primary
+                  ? "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#10b86b] to-[#0ea35e] px-6 text-sm font-bold text-white shadow-[0_12px_30px_rgba(16,184,107,0.3)] transition-all hover:-translate-y-0.5 hover:brightness-110"
+                  : "inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 text-sm font-semibold text-slate-200 transition-all hover:border-white/30 hover:bg-white/[0.08] hover:text-white"
+              }
             >
-              {item.label}
+              <span>{item.label}</span>
+              {item.primary ? <ArrowRight className="h-4 w-4" /> : null}
             </Link>
           ))}
         </div>
       ) : null}
     </div>
-
-    <style>{`
-      .ph-stage {
-        position: relative;
-        overflow: hidden;
-        padding: 116px 24px 64px;
-        background: #212634;
-      }
-
-      .ph-stage::before,
-      .ph-stage::after {
-        content: "";
-        display: none;
-      }
-
-      .ph-bg-arc {
-        position: absolute;
-        right: 2%;
-        bottom: -200px;
-        width: 560px;
-        height: 560px;
-        border-radius: 9999px;
-        background: radial-gradient(circle, rgba(16, 184, 107, 0.12), transparent 66%);
-        pointer-events: none;
-      }
-
-      .ph-inner {
-        position: relative;
-        z-index: 2;
-        width: min(100% - 0px, 1180px);
-        margin: 0 auto;
-      }
-
-      .ph-eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        border-radius: 999px;
-        background: #10b86b;
-        padding: 6px 16px;
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: #ffffff;
-        margin-bottom: 20px;
-      }
-
-      .ph-title {
-        font-size: clamp(2.8rem, 4vw, 4.6rem);
-        font-weight: 900;
-        line-height: 1.06;
-        color: #ffffff;
-        max-width: 850px;
-        font-family: Arial, Helvetica, sans-serif;
-      }
-
-      .ph-description {
-        margin-top: 16px;
-        font-size: 16px;
-        line-height: 1.7;
-        color: rgba(255, 255, 255, 0.8);
-        max-width: 640px;
-      }
-
-      .ph-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 28px;
-      }
-
-      .ph-btn-primary {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        height: 52px;
-        border-radius: 999px;
-        padding: 0 28px;
-        font-size: 14px;
-        font-weight: 800;
-        text-decoration: none;
-        color: #ffffff;
-        background: #10b86b;
-        box-shadow: 0 13px 28px rgba(16, 184, 107, 0.28);
-        transition: transform 180ms ease, box-shadow 180ms ease;
-      }
-
-      .ph-btn-primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 18px 34px rgba(16, 184, 107, 0.32);
-      }
-
-      .ph-btn-secondary {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        height: 52px;
-        border-radius: 999px;
-        padding: 0 28px;
-        font-size: 14px;
-        font-weight: 800;
-        text-decoration: none;
-        color: #212634;
-        background: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        transition: color 180ms ease;
-      }
-
-      .ph-btn-secondary:hover {
-        color: #10b86b;
-      }
-
-      @media (max-width: 768px) {
-        .ph-stage {
-          padding: 112px 20px 48px;
-        }
-
-        .ph-title {
-          font-size: 2.25rem;
-        }
-
-        .ph-description {
-          font-size: 14px;
-        }
-
-        .ph-bg-arc {
-          width: 340px;
-          height: 340px;
-          bottom: -120px;
-        }
-      }
-    `}</style>
   </section>
 );
 

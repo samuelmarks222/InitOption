@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { SiteLogo } from "@/components/branding/SiteLogo";
+import { ArrowLeft, Compass, Play } from "lucide-react";
+import Navbar from "@/components/landing/Navbar";
+import Footer from "@/components/landing/Footer";
 
 const NotFound = () => {
   const location = useLocation();
@@ -11,39 +12,55 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-[#07111d] px-4 py-8 text-white sm:px-6 lg:px-8">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl flex-col">
-        <SiteLogo to="/" variant="dark" subtitle="Page not found" />
+    <div className="io-public-shell flex min-h-screen flex-col overflow-x-hidden bg-[#080d16] text-slate-100">
+      <Navbar />
 
-        <div className="flex flex-1 items-center justify-center">
-          <div className="w-full rounded-[32px] border border-white/10 bg-[#0d1826]/92 p-8 text-center shadow-[0_30px_90px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:p-12">
-            <div className="text-[12px] font-black uppercase tracking-[0.24em] text-slate-400">404</div>
-            <h1 className="mt-5 text-4xl font-black text-white sm:text-5xl">This route does not exist.</h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-300">
-              The page you tried to open is missing or has moved. Return to the landing page or jump back into the trading workspace.
-            </p>
+      <main className="relative flex flex-1 items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
+        <div
+          aria-hidden="true"
+          className="io-grid-pattern pointer-events-none absolute inset-0 opacity-45 [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,184,107,0.16),transparent_68%)] blur-3xl"
+        />
 
-            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link
-                to="/"
-                className="inline-flex items-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#0ea5e9,#16a34a)] px-6 py-4 text-sm font-black uppercase tracking-[0.16em] text-white"
-              >
-                Return home
-              </Link>
-              <Link
-                to="/trade"
-                className="inline-flex items-center gap-2 rounded-2xl border border-white/12 bg-white/5 px-6 py-4 text-sm font-black uppercase tracking-[0.16em] text-white"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Go to trade
-              </Link>
-            </div>
+        <div className="io-glass-card relative z-10 w-full max-w-2xl rounded-[32px] p-8 text-center sm:p-14">
+          <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/12 text-emerald-400">
+            <Compass className="h-7 w-7" />
+          </div>
+          <div className="mt-5 text-xs font-extrabold uppercase tracking-[0.26em] text-emerald-400">
+            Error 404
+          </div>
+          <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+            Page Not Found
+          </h1>
+          <p className="mx-auto mt-4 max-w-lg text-sm leading-7 text-slate-300 sm:text-base">
+            The route <code className="rounded bg-white/[0.06] px-2 py-0.5 text-emerald-300">{location.pathname}</code> does not exist or may have moved. Return to the homepage or open the trading terminal directly.
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
+            <Link
+              to="/"
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-gradient-to-r from-[#10b86b] to-[#0ea35e] px-7 text-sm font-bold text-white shadow-[0_14px_32px_rgba(16,184,107,0.3)] transition-all hover:-translate-y-0.5 hover:brightness-110"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Return Home</span>
+            </Link>
+            <Link
+              to="/trade"
+              className="inline-flex h-12 items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-7 text-sm font-semibold text-white transition-colors hover:bg-white/[0.1]"
+            >
+              <Play className="h-3.5 w-3.5 fill-current text-emerald-400" />
+              <span>Open Trading Desk</span>
+            </Link>
           </div>
         </div>
-      </div>
+      </main>
+
+      <Footer />
     </div>
   );
 };
 
 export default NotFound;
-

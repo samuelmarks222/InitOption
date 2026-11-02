@@ -44,17 +44,18 @@ const PublicTournamentDetailPage = ({ platformSettings }: PublicTournamentDetail
   });
 
   return (
-    <div className="poolito-page min-h-screen overflow-x-hidden">
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
       <Navbar />
 
       <main>
-        <section className="relative overflow-hidden border-b border-white/8 bg-[#0b1622] pb-14 pt-[224px] sm:pb-20 md:pt-[206px] xl:pt-[154px]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(27,65,94,0.08),transparent_36%),radial-gradient(circle_at_24%_18%,rgba(20,158,98,0.06),transparent_24%)]" />
+        <section className="relative overflow-hidden border-b border-white/[0.07] bg-gradient-to-b from-[#0c1424] via-[#09101d] to-[#080d16] py-12 sm:py-16 lg:py-20">
+          <div className="io-grid-pattern pointer-events-none absolute inset-0 opacity-45 [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
+          <div className="pointer-events-none absolute left-1/2 top-0 h-[360px] w-[680px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,184,107,0.16),transparent_68%)] blur-3xl" />
 
-          <div className="relative px-4 sm:px-6 lg:px-8">
+          <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Link
               to="/tournaments"
-              className="inline-flex items-center gap-2 text-sm font-bold text-slate-300 transition-colors hover:text-white"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-slate-200 transition-colors hover:bg-white/[0.08] hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to tournaments

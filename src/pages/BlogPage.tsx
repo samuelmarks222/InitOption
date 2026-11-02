@@ -3,19 +3,21 @@ import {
   ArrowLeft,
   ArrowRight,
   CalendarDays,
-  ChevronsRight,
-  Facebook,
-  Instagram,
-  Linkedin,
+  Check,
+  Clock,
+  Play,
   Rss,
   Search,
   Share2,
+  Sparkles,
   Tag,
   UserRound,
+  X,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import PageHero from "@/components/layout/PageHero";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { useDynamicRouteSeo } from "@/hooks/useDynamicRouteSeo";
@@ -28,8 +30,7 @@ import {
   type PaginatedBlogPostsResponse,
 } from "@/lib/blogPosts";
 
-const PAGE_SIZE = 4;
-const BLOG_HERO_IMAGE = "/landing/poolito-initoption/hero-laptop-desk.jpg";
+const PAGE_SIZE = 6;
 const BLOG_FALLBACK_IMAGE = "/landing/poolito-initoption/imac-platform-alt.png";
 
 const formatDate = (date: string) =>
@@ -39,21 +40,24 @@ const formatDate = (date: string) =>
     year: "numeric",
   });
 
-const clampExcerpt = (value: string, length = 104) =>
-  value.length > length ? `${value.slice(0, length).trim()}...` : value;
-
 const BlogPage = () => {
   const { platformName } = useSiteBranding();
   const { data: websiteContent } = useWebsiteContent();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [payload, setPayload] = useState<PaginatedBlogPostsResponse | null>(() =>
-    paginateBlogPosts(getPublishedBlogPostSummaries(), 1, PAGE_SIZE),
+    paginateBlogPosts(getPublishedBlogPostSummaries(), 1, 100),
   );
+
   const page = Math.max(1, Number.parseInt(searchParams.get("page") ?? "1", 10) || 1);
   const query = (searchParams.get("q") ?? "").trim();
   const categorySlug = (searchParams.get("category") ?? "").trim().toLowerCase();
+  const [searchInput, setSearchInput] = useState(query);
+
+  useEffect(() => {
+    setSearchInput(query);
+  }, [query]);
 
   useDynamicRouteSeo({
     routeOverride: {
@@ -75,21 +79,15 @@ const BlogPage = () => {
 
     const loadPosts = async () => {
       setLoading(true);
-      setError(null);
 
       try {
         const response = await fetchBlogPostsPage(1, 100);
         if (!cancelled) {
           setPayload(response);
         }
-      } catch (requestError) {
+      } catch {
         if (!cancelled) {
-          const fallbackPayload = paginateBlogPosts(getPublishedBlogPostSummaries(), 1, PAGE_SIZE);
-          setPayload(fallbackPayload);
-          setError(null);
-          if (requestError instanceof Error) {
-            console.warn("Using starter blog content fallback:", requestError.message);
-          }
+          setPayload(paginateBlogPosts(getPublishedBlogPostSummaries(), 1, 100));
         }
       } finally {
         if (!cancelled) {
@@ -118,14 +116,18 @@ const BlogPage = () => {
       });
     });
 
-    return Array.from(categoryMap.values()).sort((left, right) => left.name.localeCompare(right.name));
+    return Array.from(categoryMap.values()).sort((left, right) =>
+      left.name.localeCompare(right.name),
+    );
   }, [allPosts]);
 
   const categoryCounts = useMemo(
     () =>
       categories.map((category) => ({
         ...category,
-        count: allPosts.filter((post) => post.categories.some((item) => item.slug === category.slug)).length,
+        count: allPosts.filter((post) =>
+          post.categories.some((item) => item.slug === category.slug),
+        ).length,
       })),
     [allPosts, categories],
   );
@@ -148,21 +150,18 @@ const BlogPage = () => {
     });
   }, [allPosts, categorySlug, query]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredPosts.length / PAGE_SIZE));
+  const isUnfilteredFirstPage = !query && !categorySlug && page === 1 && filteredPosts.length > 1;
+  const featuredPost = isUnfilteredFirstPage ? filteredPosts[0] : null;
+  const feedSource = featuredPost ? filteredPosts.slice(1) : filteredPosts;
+
+  const totalPages = Math.max(1, Math.ceil(feedSource.length / PAGE_SIZE));
   const normalizedPage = Math.min(page, totalPages);
-  const visiblePosts = filteredPosts.slice((normalizedPage - 1) * PAGE_SIZE, normalizedPage * PAGE_SIZE);
-  const recentPosts = allPosts.slice(0, 3);
-  const followGridPosts = allPosts.slice(0, 6);
+  const visiblePosts = feedSource.slice(
+    (normalizedPage - 1) * PAGE_SIZE,
+    normalizedPage * PAGE_SIZE,
+  );
+  const recentPosts = allPosts.slice(0, 4);
   const activeCategory = categories.find((category) => category.slug === categorySlug) ?? null;
-  const tagNames = [
-    ...new Set([
-      ...categories.slice(0, 7).map((category) => category.name),
-      "Charts",
-      "Risk",
-      "Demo",
-      "Withdrawals",
-    ]),
-  ].slice(0, 10);
 
   useEffect(() => {
     if (page === normalizedPage) return;
@@ -188,235 +187,455 @@ const BlogPage = () => {
 
   const getImage = (post?: BlogPostSummary) => post?.featuredImageUrl || BLOG_FALLBACK_IMAGE;
 
+  const handleShare = async (post: BlogPostSummary) => {
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/blog/${post.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedSlug(post.slug);
+      setTimeout(() => setCopiedSlug(null), 2000);
+    } catch {
+      // Ignore clipboard failures silently
+    }
+  };
+
   return (
-    <div className="poolito-page poolito-blog-page min-h-screen overflow-x-hidden">
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
       <Navbar />
 
       <main>
-        <section className="poolito-blog-hero" aria-labelledby="poolito-blog-title">
-          <div className="poolito-blog-hero-pattern" aria-hidden="true" />
-          <div className="poolito-blog-hero-inner">
-            <div>
-              <h1 id="poolito-blog-title">
-                Init Option <span>Blog</span>
-              </h1>
-              <div className="poolito-blog-breadcrumb">
-                <Link to="/">Home</Link>
-                <span>//</span>
-                <strong>Our Blog</strong>
-              </div>
-            </div>
-            <img src={BLOG_HERO_IMAGE} alt={`${platformName} trading blog preview`} />
-          </div>
-        </section>
+        <PageHero
+          eyebrow="Market Insights & Education"
+          title={`${platformName} Editorial & Trading Blog`}
+          description="Practical articles on chart setups, technical indicators, risk discipline, M-PESA & crypto funding, and weekly tournament preparation."
+        />
 
-        <section className="poolito-blog-main">
-          <div className="poolito-blog-shell">
-            {loading ? (
-              <div className="poolito-blog-message">Loading blog posts...</div>
-            ) : error ? (
-              <div className="poolito-blog-message poolito-blog-message-error">
-                The blog could not be loaded right now. {error}
+        <section className="py-12 sm:py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            {/* Search & Category Filter Bar */}
+            <div className="io-glass-card mb-10 rounded-3xl p-4 sm:p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    updateParams({ q: searchInput, page: "1" });
+                  }}
+                  className="relative flex-1 lg:max-w-md"
+                >
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="search"
+                    value={searchInput}
+                    onChange={(event) => setSearchInput(event.target.value)}
+                    placeholder="Search strategies, RSI, withdrawals, tournaments..."
+                    aria-label="Search blog articles"
+                    className="h-11 w-full rounded-2xl border border-white/12 bg-[#080e1a] pl-11 pr-24 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none"
+                  />
+                  {searchInput ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchInput("");
+                        updateParams({ q: null, page: "1" });
+                      }}
+                      aria-label="Clear search"
+                      className="absolute right-20 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                  <button
+                    type="submit"
+                    className="absolute right-1.5 top-1.5 h-8 rounded-xl bg-emerald-500 px-3.5 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
+                  >
+                    Search
+                  </button>
+                </form>
+
+                {/* Category Filter Pills */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => updateParams({ category: null, page: "1" })}
+                    className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-colors ${
+                      !categorySlug
+                        ? "bg-emerald-500 text-white"
+                        : "border border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/20 hover:text-white"
+                    }`}
+                  >
+                    All ({allPosts.length})
+                  </button>
+                  {categoryCounts.slice(0, 5).map((cat) => (
+                    <button
+                      key={cat.slug}
+                      type="button"
+                      onClick={() => updateParams({ category: cat.slug, page: "1" })}
+                      className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-colors ${
+                        categorySlug === cat.slug
+                          ? "bg-emerald-500 text-white"
+                          : "border border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/20 hover:text-white"
+                      }`}
+                    >
+                      {cat.name} ({cat.count})
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {query || activeCategory ? (
+                <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-3.5 text-xs">
+                  <span className="text-slate-400">Active filters:</span>
+                  {query ? (
+                    <button
+                      type="button"
+                      onClick={() => updateParams({ q: null, page: "1" })}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 font-semibold text-emerald-300 hover:bg-emerald-500/25"
+                    >
+                      <span>Query: &ldquo;{query}&rdquo;</span>
+                      <X className="h-3 w-3" />
+                    </button>
+                  ) : null}
+                  {activeCategory ? (
+                    <button
+                      type="button"
+                      onClick={() => updateParams({ category: null, page: "1" })}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/15 px-3 py-1 font-semibold text-sky-300 hover:bg-sky-500/25"
+                    >
+                      <span>Category: {activeCategory.name}</span>
+                      <X className="h-3 w-3" />
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
+            {loading && !allPosts.length ? (
+              <div className="io-glass-card rounded-3xl p-12 text-center text-sm text-slate-400">
+                Loading editorial articles...
               </div>
             ) : (
-              <div className="poolito-blog-grid">
-                <div className="poolito-blog-feed">
-                  {query || activeCategory ? (
-                    <div className="poolito-blog-filter-row">
-                      {query ? (
-                        <button type="button" onClick={() => updateParams({ q: null, page: "1" })}>
-                          Search: {query}
-                        </button>
-                      ) : null}
-                      {activeCategory ? (
-                        <button type="button" onClick={() => updateParams({ category: null, page: "1" })}>
-                          Category: {activeCategory.name}
-                        </button>
-                      ) : null}
+              <div className="grid gap-8 lg:grid-cols-12">
+                {/* Left Main Feed */}
+                <div className="space-y-8 lg:col-span-8">
+                  {/* Featured Hero Article */}
+                  {featuredPost ? (
+                    <article className="io-glass-card io-glass-card-hover overflow-hidden rounded-3xl">
+                      <div className="grid md:grid-cols-12">
+                        <Link
+                          to={`/blog/${featuredPost.slug}`}
+                          className="relative block min-h-[240px] overflow-hidden bg-[#060a12] md:col-span-6"
+                        >
+                          <img
+                            src={getImage(featuredPost)}
+                            alt={featuredPost.featuredImageAlt || featuredPost.title}
+                            className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                            onError={(event) => {
+                              event.currentTarget.src = BLOG_FALLBACK_IMAGE;
+                            }}
+                          />
+                          <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-lg">
+                            <Sparkles className="h-3 w-3" />
+                            Featured
+                          </span>
+                        </Link>
+
+                        <div className="flex flex-col justify-between p-6 sm:p-7 md:col-span-6">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-400">
+                              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-bold text-emerald-300">
+                                {featuredPost.primaryCategory}
+                              </span>
+                              <span className="inline-flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                {featuredPost.readingTimeMinutes} min read
+                              </span>
+                            </div>
+
+                            <h2 className="mt-3.5 text-2xl font-extrabold leading-snug text-white">
+                              <Link
+                                to={`/blog/${featuredPost.slug}`}
+                                className="transition-colors hover:text-emerald-400"
+                              >
+                                {featuredPost.title}
+                              </Link>
+                            </h2>
+
+                            <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-300">
+                              {featuredPost.excerpt}
+                            </p>
+                          </div>
+
+                          <div className="mt-6 flex items-center justify-between border-t border-white/[0.07] pt-4 text-xs">
+                            <span className="text-slate-400">
+                              {formatDate(featuredPost.publishedAt)} • {featuredPost.authorName}
+                            </span>
+                            <Link
+                              to={`/blog/${featuredPost.slug}`}
+                              className="inline-flex items-center gap-1.5 font-bold text-emerald-400 hover:text-emerald-300"
+                            >
+                              Read Article <ArrowRight className="h-3.5 w-3.5" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  ) : null}
+
+                  {/* Grid of Articles */}
+                  {visiblePosts.length ? (
+                    <div className="grid gap-6 sm:grid-cols-2">
+                      {visiblePosts.map((post) => (
+                        <article
+                          key={post.slug}
+                          className="io-glass-card io-glass-card-hover flex flex-col justify-between overflow-hidden rounded-3xl"
+                        >
+                          <div>
+                            <Link
+                              to={`/blog/${post.slug}`}
+                              className="relative block h-48 overflow-hidden bg-[#060a12]"
+                            >
+                              <img
+                                src={getImage(post)}
+                                alt={post.featuredImageAlt || post.title}
+                                loading="lazy"
+                                className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                                onError={(event) => {
+                                  event.currentTarget.src = BLOG_FALLBACK_IMAGE;
+                                }}
+                              />
+                              <span className="absolute left-3.5 top-3.5 rounded-full border border-white/15 bg-[#080d16]/85 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 backdrop-blur-md">
+                                {post.primaryCategory}
+                              </span>
+                            </Link>
+
+                            <div className="p-6">
+                              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                                <span className="inline-flex items-center gap-1">
+                                  <CalendarDays className="h-3.5 w-3.5 text-emerald-400" />
+                                  {formatDate(post.publishedAt)}
+                                </span>
+                                <span className="inline-flex items-center gap-1">
+                                  <UserRound className="h-3.5 w-3.5 text-slate-500" />
+                                  {post.authorName}
+                                </span>
+                              </div>
+
+                              <h2 className="mt-3 text-lg font-extrabold leading-snug text-white">
+                                <Link
+                                  to={`/blog/${post.slug}`}
+                                  className="transition-colors hover:text-emerald-400"
+                                >
+                                  {post.title}
+                                </Link>
+                              </h2>
+
+                              <p className="mt-2.5 line-clamp-3 text-sm leading-6 text-slate-400">
+                                {post.excerpt}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between border-t border-white/[0.07] px-6 py-4">
+                            <Link
+                              to={`/blog/${post.slug}`}
+                              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300"
+                            >
+                              <span>Read More</span>
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </Link>
+
+                            <button
+                              type="button"
+                              onClick={() => handleShare(post)}
+                              aria-label={`Copy link to ${post.title}`}
+                              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-slate-400 transition-colors hover:bg-white/[0.05] hover:text-white"
+                            >
+                              {copiedSlug === post.slug ? (
+                                <>
+                                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                                  <span className="text-emerald-400">Copied</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Share2 className="h-3.5 w-3.5" />
+                                  <span>Share</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  ) : !featuredPost ? (
+                    <div className="io-glass-card rounded-3xl p-10 text-center">
+                      <p className="text-base font-bold text-white">
+                        No articles matched your current search or category filter.
+                      </p>
+                      <p className="mt-2 text-sm text-slate-400">
+                        Try clearing filters to view our full library of trading guides and updates.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchInput("");
+                          updateParams({ q: null, category: null, page: "1" });
+                        }}
+                        className="mt-5 inline-flex h-10 items-center rounded-xl bg-emerald-500 px-5 text-xs font-bold text-white hover:bg-emerald-600"
+                      >
+                        Reset All Filters
+                      </button>
                     </div>
                   ) : null}
 
-                  {visiblePosts.length ? (
-                    visiblePosts.map((post) => (
-                      <article key={post.slug} className="poolito-blog-card">
-                        <Link to={`/blog/${post.slug}`} className="poolito-blog-image">
+                  {/* Pagination */}
+                  {totalPages > 1 ? (
+                    <nav
+                      aria-label="Blog pagination"
+                      className="flex items-center justify-center gap-2 pt-4"
+                    >
+                      <button
+                        type="button"
+                        disabled={normalizedPage <= 1}
+                        onClick={() => updateParams({ page: String(normalizedPage - 1) })}
+                        aria-label="Previous page"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-slate-300 transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                      </button>
+
+                      {Array.from({ length: totalPages }).map((_, idx) => {
+                        const pageNum = idx + 1;
+                        return (
+                          <button
+                            key={pageNum}
+                            type="button"
+                            onClick={() => updateParams({ page: String(pageNum) })}
+                            className={`h-10 min-w-[40px] rounded-xl px-3 text-xs font-bold transition-colors ${
+                              pageNum === normalizedPage
+                                ? "bg-emerald-500 text-white"
+                                : "border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.08]"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+
+                      <button
+                        type="button"
+                        disabled={normalizedPage >= totalPages}
+                        onClick={() => updateParams({ page: String(normalizedPage + 1) })}
+                        aria-label="Next page"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-slate-300 transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </nav>
+                  ) : null}
+                </div>
+
+                {/* Right Editorial Sidebar */}
+                <aside className="space-y-6 lg:col-span-4">
+                  {/* Categories Card */}
+                  <div className="io-glass-card rounded-3xl p-6">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-emerald-400">
+                      <Tag className="h-4 w-4" />
+                      <span>Categories</span>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      {categoryCounts.map((category) => (
+                        <button
+                          key={category.slug}
+                          type="button"
+                          onClick={() =>
+                            updateParams({
+                              category: categorySlug === category.slug ? null : category.slug,
+                              page: "1",
+                            })
+                          }
+                          className={`flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-semibold transition-colors ${
+                            categorySlug === category.slug
+                              ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30"
+                              : "bg-white/[0.025] text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                          }`}
+                        >
+                          <span>{category.name}</span>
+                          <span className="rounded-md bg-white/[0.07] px-2 py-0.5 text-[11px] text-slate-300">
+                            {category.count}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Latest Insights */}
+                  <div className="io-glass-card rounded-3xl p-6">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-400">
+                        Recent Articles
+                      </span>
+                      <a
+                        href="/blog/rss.xml"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-emerald-400"
+                      >
+                        <Rss className="h-3.5 w-3.5" />
+                        RSS
+                      </a>
+                    </div>
+                    <div className="mt-4 space-y-3.5">
+                      {recentPosts.map((post) => (
+                        <Link
+                          key={post.slug}
+                          to={`/blog/${post.slug}`}
+                          className="group flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 transition-colors hover:border-emerald-500/30 hover:bg-white/[0.04]"
+                        >
                           <img
                             src={getImage(post)}
                             alt={post.featuredImageAlt || post.title}
                             loading="lazy"
+                            className="h-14 w-16 shrink-0 rounded-xl object-cover"
                             onError={(event) => {
                               event.currentTarget.src = BLOG_FALLBACK_IMAGE;
                             }}
                           />
+                          <div className="min-w-0">
+                            <div className="line-clamp-2 text-xs font-bold leading-5 text-white group-hover:text-emerald-400">
+                              {post.title}
+                            </div>
+                            <div className="mt-1 text-[11px] text-slate-500">
+                              {formatDate(post.publishedAt)}
+                            </div>
+                          </div>
                         </Link>
-                        <div className="poolito-blog-meta">
-                          <span>
-                            <UserRound size={15} />
-                            Written by: <strong>{post.authorName}</strong>
-                          </span>
-                          <span>
-                            <CalendarDays size={15} />
-                            {formatDate(post.publishedAt)}
-                          </span>
-                        </div>
-                        <h2>
-                          <Link to={`/blog/${post.slug}`}>{post.title}</Link>
-                        </h2>
-                        <p>{post.excerpt}</p>
-                        <div className="poolito-blog-card-actions">
-                          <Link to={`/blog/${post.slug}`}>
-                            Read More <ChevronsRight size={18} />
-                          </Link>
-                          <button type="button" aria-label={`Share ${post.title}`}>
-                            Share <Share2 size={15} />
-                          </button>
-                        </div>
-                      </article>
-                    ))
-                  ) : (
-                    <div className="poolito-blog-message">No blog posts match the current search or category yet.</div>
-                  )}
-
-                  <div className="poolito-blog-pagination" aria-label="Blog pagination">
-                    <button
-                      type="button"
-                      disabled={normalizedPage <= 1}
-                      onClick={() => updateParams({ page: String(normalizedPage - 1) })}
-                      aria-label="Previous page"
-                    >
-                      <ArrowLeft size={18} />
-                    </button>
-                    <button type="button" className="is-active">{normalizedPage}</button>
-                    {normalizedPage < totalPages ? (
-                      <button type="button" onClick={() => updateParams({ page: String(normalizedPage + 1) })}>
-                        {normalizedPage + 1}
-                      </button>
-                    ) : null}
-                    {totalPages > normalizedPage + 2 ? <span>...</span> : null}
-                    {totalPages > normalizedPage + 1 ? (
-                      <button type="button" onClick={() => updateParams({ page: String(totalPages) })}>
-                        {totalPages}
-                      </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      disabled={normalizedPage >= totalPages}
-                      onClick={() => updateParams({ page: String(normalizedPage + 1) })}
-                      aria-label="Next page"
-                    >
-                      <ArrowRight size={18} />
-                    </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                <aside className="poolito-blog-sidebar">
-                  <section className="poolito-blog-author">
-                    <img
-                      src={getImage(recentPosts[0])}
-                      alt={recentPosts[0]?.featuredImageAlt || `${platformName} author`}
-                      onError={(event) => {
-                        event.currentTarget.src = BLOG_FALLBACK_IMAGE;
-                      }}
-                    />
-                    <h3>{platformName} Desk</h3>
-                    <p>Market notes, platform guidance, trading routines, and product updates for focused traders.</p>
-                  </section>
-
-                  <section className="poolito-blog-widget">
-                    <h3>Category</h3>
-                    <div className="poolito-blog-category-list">
-                      <button
-                        type="button"
-                        className={!activeCategory ? "is-active" : ""}
-                        onClick={() => updateParams({ category: null, page: "1" })}
+                  {/* Practice CTA */}
+                  <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-[#0f2428] to-[#0d1626] p-6">
+                    <h3 className="text-lg font-extrabold text-white">
+                      Apply What You Learn on a Free $10,000 Demo
+                    </h3>
+                    <p className="mt-2 text-xs leading-6 text-slate-300">
+                      Test chart patterns, RSI setups, and position sizing on live market prices with
+                      zero financial risk.
+                    </p>
+                    <div className="mt-5 flex flex-col gap-2.5">
+                      <Link
+                        to="/trade"
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-500 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
                       >
-                        <span><ChevronsRight size={16} /> All Posts</span>
-                        <strong>{allPosts.length.toString().padStart(2, "0")}</strong>
-                      </button>
-                      {categoryCounts.slice(0, 6).map((category) => (
-                        <button
-                          key={category.id}
-                          type="button"
-                          className={activeCategory?.slug === category.slug ? "is-active" : ""}
-                          onClick={() => updateParams({ category: category.slug, page: "1" })}
-                        >
-                          <span><ChevronsRight size={16} /> {category.name}</span>
-                          <strong>{category.count.toString().padStart(2, "0")}</strong>
-                        </button>
-                      ))}
+                        <Play className="h-3.5 w-3.5 fill-current" />
+                        <span>Open Demo Terminal</span>
+                      </Link>
+                      <Link
+                        to="/trading-guide"
+                        className="inline-flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] text-xs font-semibold text-white hover:bg-white/[0.08]"
+                      >
+                        Read Full Trading Guide
+                      </Link>
                     </div>
-                  </section>
-
-                  <section className="poolito-blog-widget">
-                    <h3>Recent Posts</h3>
-                    <div className="poolito-blog-recent-list">
-                      {recentPosts.map((post) => (
-                        <Link key={post.slug} to={`/blog/${post.slug}`}>
-                          <img
-                            src={getImage(post)}
-                            alt={post.featuredImageAlt || post.title}
-                            onError={(event) => {
-                              event.currentTarget.src = BLOG_FALLBACK_IMAGE;
-                            }}
-                          />
-                          <span>
-                            <small><CalendarDays size={13} /> {formatDate(post.publishedAt)}</small>
-                            <strong>{post.title}</strong>
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="poolito-blog-widget">
-                    <h3>Tags</h3>
-                    <div className="poolito-blog-tags">
-                      {tagNames.map((tag) => (
-                        <button key={tag} type="button" onClick={() => updateParams({ q: tag, page: "1" })}>
-                          {tag}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="poolito-blog-widget">
-                    <h3>Follow Us</h3>
-                    <div className="poolito-blog-follow-grid">
-                      {(followGridPosts.length ? followGridPosts : recentPosts).slice(0, 6).map((post, index) => (
-                        <img
-                          key={`${post.slug}-${index}`}
-                          src={getImage(post)}
-                          alt={post.featuredImageAlt || post.title}
-                          onError={(event) => {
-                            event.currentTarget.src = BLOG_FALLBACK_IMAGE;
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <div className="poolito-blog-socials">
-                      <Link to="/blog" aria-label="Facebook"><Facebook size={16} /></Link>
-                      <Link to="/blog" aria-label="LinkedIn"><Linkedin size={16} /></Link>
-                      <Link to="/blog" aria-label="Instagram"><Instagram size={16} /></Link>
-                    </div>
-                  </section>
-
-                  <section className="poolito-blog-search">
-                    <label>
-                      <input
-                        defaultValue={query}
-                        placeholder="Type Here..."
-                        onKeyDown={(event) => {
-                          if (event.key !== "Enter") return;
-                          updateParams({
-                            q: event.currentTarget.value.trim() || null,
-                            page: "1",
-                          });
-                        }}
-                      />
-                      <Search size={21} />
-                    </label>
-                    <Link to="/rss.xml"><Rss size={16} /> RSS Feed</Link>
-                  </section>
+                  </div>
                 </aside>
               </div>
             )}
@@ -425,570 +644,6 @@ const BlogPage = () => {
       </main>
 
       <Footer content={websiteContent} />
-
-      <style>{`
-        .poolito-blog-page {
-          --poolito-dark: #0d1a2d;
-          --poolito-deep: #111c2b;
-          --poolito-panel: rgba(14, 25, 39, 0.96);
-          --poolito-panel-alt: rgba(17, 28, 43, 0.92);
-          --poolito-green: #1fd08d;
-          --poolito-green-soft: rgba(31, 208, 141, 0.14);
-          --poolito-muted: #9fb0c2;
-          --poolito-line: rgba(146, 171, 194, 0.15);
-          background: #07131f;
-          color: #edf7ff;
-          font-family: Arial, Helvetica, sans-serif;
-        }
-
-        .poolito-blog-hero {
-          position: relative;
-          overflow: hidden;
-          min-height: 370px;
-          padding: 170px 0 76px;
-          background:
-            linear-gradient(90deg, rgba(21, 33, 47, 0.98) 0%, rgba(21, 33, 47, 0.92) 49%, rgba(21, 33, 47, 0.68) 100%),
-            url("${BLOG_HERO_IMAGE}") center right / cover no-repeat;
-        }
-
-        .poolito-blog-hero-pattern {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          opacity: 0.22;
-          background-image: radial-gradient(rgba(255, 255, 255, 0.18) 2px, transparent 2px);
-          background-size: 18px 18px;
-          mask-image: linear-gradient(90deg, #000 0%, transparent 58%);
-        }
-
-        .poolito-blog-hero::after {
-          content: "";
-          position: absolute;
-          inset: auto 0 0;
-          height: 4px;
-          background: var(--poolito-green);
-        }
-
-        .poolito-blog-hero-inner {
-          position: relative;
-          z-index: 1;
-          width: min(100% - 48px, 1340px);
-          margin: 0 auto;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 36px;
-        }
-
-        .poolito-blog-hero h1 {
-          margin: 0;
-          color: #ffffff;
-          font-size: clamp(44px, 5vw, 68px);
-          line-height: 1;
-          font-weight: 950;
-          text-transform: uppercase;
-          letter-spacing: 0;
-        }
-
-        .poolito-blog-hero h1 span {
-          color: var(--poolito-green);
-        }
-
-        .poolito-blog-breadcrumb {
-          margin-top: 22px;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          color: #ffffff;
-          font-size: 16px;
-          font-weight: 950;
-          text-transform: uppercase;
-        }
-
-        .poolito-blog-breadcrumb a,
-        .poolito-blog-breadcrumb strong {
-          color: inherit;
-          text-decoration: none;
-        }
-
-        .poolito-blog-breadcrumb span,
-        .poolito-blog-breadcrumb strong {
-          color: var(--poolito-green);
-        }
-
-        .poolito-blog-hero-inner > img {
-          width: min(34vw, 430px);
-          max-height: 250px;
-          object-fit: cover;
-          border-radius: 0 90px 0 0;
-          opacity: 0.82;
-          box-shadow: 0 24px 50px rgba(0, 0, 0, 0.22);
-        }
-
-        .poolito-blog-main {
-          padding: 52px 0 104px;
-          background:
-            radial-gradient(circle at 93% 15%, rgba(31, 208, 141, 0.08), transparent 24%),
-            #091722;
-        }
-
-        .poolito-blog-shell {
-          width: min(100% - 48px, 1340px);
-          margin: 0 auto;
-        }
-
-        .poolito-blog-grid {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 330px;
-          gap: 44px;
-          align-items: start;
-        }
-
-        .poolito-blog-feed {
-          display: grid;
-          gap: 30px;
-        }
-
-        .poolito-blog-card {
-          min-width: 0;
-          padding: 18px 18px 0;
-          border: 1px solid var(--poolito-line);
-          border-radius: 18px;
-          background: rgba(15, 25, 38, 0.92);
-          box-shadow: 0 16px 34px rgba(0, 0, 0, 0.18);
-        }
-
-        .poolito-blog-image {
-          display: block;
-          overflow: hidden;
-          border-radius: 14px;
-          background: #101b2a;
-          box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
-        }
-
-        .poolito-blog-image img {
-          display: block;
-          width: 100%;
-          aspect-ratio: 1.72 / 1;
-          object-fit: cover;
-          transition: transform 220ms ease;
-        }
-
-        .poolito-blog-image:hover img {
-          transform: scale(1.035);
-        }
-
-        .poolito-blog-meta {
-          margin-top: 20px;
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 18px;
-          color: var(--poolito-muted);
-          font-size: 12px;
-          font-weight: 900;
-          text-transform: uppercase;
-        }
-
-        .poolito-blog-meta span {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .poolito-blog-meta svg,
-        .poolito-blog-meta strong {
-          color: var(--poolito-green);
-        }
-
-        .poolito-blog-card h2 {
-          margin: 14px 0 0;
-          font-size: clamp(30px, 2.4vw, 42px);
-          line-height: 1.12;
-          font-weight: 950;
-          letter-spacing: -0.02em;
-        }
-
-        .poolito-blog-card h2 a {
-          color: #edf7ff;
-          text-decoration: none;
-        }
-
-        .poolito-blog-card p {
-          max-width: 930px;
-          margin: 18px 0 0;
-          color: var(--poolito-muted);
-          font-size: 15px;
-          line-height: 1.72;
-          font-weight: 600;
-        }
-
-        .poolito-blog-card-actions {
-          margin-top: 24px;
-          padding: 18px 0 20px;
-          border-top: 1px solid var(--poolito-line);
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 18px;
-        }
-
-        .poolito-blog-card-actions a,
-        .poolito-blog-card-actions button {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          border: 0;
-          padding: 0;
-          background: transparent;
-          color: #edf7ff;
-          font-size: 12px;
-          font-weight: 900;
-          text-transform: uppercase;
-          text-decoration: none;
-          cursor: pointer;
-        }
-
-        .poolito-blog-card-actions svg {
-          color: var(--poolito-green);
-        }
-
-        .poolito-blog-sidebar {
-          display: grid;
-          gap: 24px;
-          align-self: stretch;
-        }
-
-        .poolito-blog-author,
-        .poolito-blog-widget {
-          padding: 18px 18px 20px;
-          border: 1px solid var(--poolito-line);
-          border-radius: 16px;
-          background: rgba(15, 25, 38, 0.92);
-          box-shadow: 0 16px 28px rgba(0, 0, 0, 0.12);
-        }
-
-        .poolito-blog-author img {
-          width: 100%;
-          aspect-ratio: 1.25 / 1;
-          object-fit: cover;
-          border-radius: 0 52px 0 0;
-          filter: grayscale(0.2);
-        }
-
-        .poolito-blog-author h3,
-        .poolito-blog-widget h3 {
-          margin: 18px 0 0;
-          color: #edf7ff;
-          font-size: 26px;
-          line-height: 1.2;
-          font-weight: 950;
-          letter-spacing: 0;
-        }
-
-        .poolito-blog-widget h3 {
-          position: relative;
-          margin-top: 0;
-          padding-left: 28px;
-        }
-
-        .poolito-blog-widget h3::before {
-          content: "//";
-          position: absolute;
-          left: 0;
-          top: 0;
-          color: var(--poolito-green);
-        }
-
-        .poolito-blog-author p {
-          margin: 14px 0 0;
-          color: var(--poolito-muted);
-          font-size: 15px;
-          line-height: 1.7;
-          font-weight: 600;
-        }
-
-        .poolito-blog-category-list {
-          margin-top: 18px;
-          display: grid;
-        }
-
-        .poolito-blog-category-list button {
-          min-height: 46px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          border: 0;
-          border-bottom: 1px dashed rgba(146, 171, 194, 0.2);
-          background: transparent;
-          color: var(--poolito-muted);
-          font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-        }
-
-        .poolito-blog-category-list button.is-active,
-        .poolito-blog-category-list button:hover {
-          color: var(--poolito-green);
-        }
-
-        .poolito-blog-category-list span,
-        .poolito-blog-category-list strong {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .poolito-blog-category-list svg,
-        .poolito-blog-category-list strong,
-        .poolito-blog-category-list .is-active {
-          color: var(--poolito-green);
-        }
-
-        .poolito-blog-recent-list {
-          margin-top: 18px;
-          display: grid;
-          gap: 18px;
-        }
-
-        .poolito-blog-recent-list a {
-          display: grid;
-          grid-template-columns: 92px minmax(0, 1fr);
-          gap: 12px;
-          align-items: center;
-          color: #edf7ff;
-          text-decoration: none;
-        }
-
-        .poolito-blog-recent-list img {
-          width: 92px;
-          height: 84px;
-          border-radius: 8px;
-          object-fit: cover;
-        }
-
-        .poolito-blog-recent-list small {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          color: var(--poolito-green);
-          font-size: 11px;
-          font-weight: 900;
-          text-transform: uppercase;
-        }
-
-        .poolito-blog-recent-list strong {
-          display: block;
-          margin-top: 6px;
-          font-size: 15px;
-          line-height: 1.34;
-          font-weight: 900;
-          color: #edf7ff;
-        }
-
-        .poolito-blog-tags {
-          margin-top: 18px;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .poolito-blog-tags button {
-          min-height: 34px;
-          border: 1px solid rgba(146, 171, 194, 0.2);
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.02);
-          padding: 0 12px;
-          color: var(--poolito-muted);
-          font-size: 12px;
-          font-weight: 800;
-          cursor: pointer;
-        }
-
-        .poolito-blog-follow-grid {
-          margin-top: 18px;
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 10px;
-        }
-
-        .poolito-blog-follow-grid img {
-          width: 100%;
-          aspect-ratio: 1 / 0.82;
-          object-fit: cover;
-          border-radius: 6px;
-        }
-
-        .poolito-blog-socials {
-          margin-top: 16px;
-          display: flex;
-          gap: 10px;
-        }
-
-        .poolito-blog-socials a {
-          width: 34px;
-          height: 34px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #ffffff;
-          background: var(--poolito-green);
-          text-decoration: none;
-        }
-
-        .poolito-blog-search label {
-          min-height: 52px;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          border-bottom: 1px solid var(--poolito-line);
-        }
-
-        .poolito-blog-search input {
-          min-width: 0;
-          flex: 1;
-          border: 0;
-          outline: 0;
-          color: var(--poolito-dark);
-          background: transparent;
-          font-size: 15px;
-          font-weight: 750;
-        }
-
-        .poolito-blog-search svg {
-          color: var(--poolito-dark);
-        }
-
-        .poolito-blog-search a {
-          margin-top: 12px;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          color: var(--poolito-green);
-          font-size: 13px;
-          font-weight: 950;
-          text-decoration: none;
-          text-transform: uppercase;
-        }
-
-        .poolito-blog-filter-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-
-        .poolito-blog-filter-row button {
-          min-height: 40px;
-          border: 1px solid rgba(16, 155, 66, 0.25);
-          border-radius: 999px;
-          background: rgba(16, 155, 66, 0.08);
-          padding: 0 16px;
-          color: var(--poolito-green);
-          font-size: 13px;
-          font-weight: 850;
-          cursor: pointer;
-        }
-
-        .poolito-blog-pagination {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          padding-top: 6px;
-        }
-
-        .poolito-blog-pagination button,
-        .poolito-blog-pagination span {
-          width: 52px;
-          height: 52px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(6, 56, 60, 0.14);
-          border-radius: 4px;
-          color: var(--poolito-muted);
-          background: #eef2f3;
-          font-size: 15px;
-          font-weight: 950;
-        }
-
-        .poolito-blog-pagination button {
-          cursor: pointer;
-        }
-
-        .poolito-blog-pagination button:disabled {
-          opacity: 0.45;
-          cursor: not-allowed;
-        }
-
-        .poolito-blog-pagination .is-active {
-          color: #ffffff;
-          border-color: var(--poolito-green);
-          background: var(--poolito-green);
-        }
-
-        .poolito-blog-message {
-          border: 1px solid rgba(6, 56, 60, 0.12);
-          border-radius: 16px;
-          background: #ffffff;
-          padding: 28px;
-          color: var(--poolito-muted);
-          font-size: 15px;
-          font-weight: 750;
-          box-shadow: 0 16px 32px rgba(6, 56, 60, 0.08);
-        }
-
-        .poolito-blog-message-error {
-          color: #b42318;
-        }
-
-        @media (max-width: 1060px) {
-          .poolito-blog-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .poolito-blog-sidebar {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-
-        @media (max-width: 720px) {
-          .poolito-blog-hero {
-            min-height: 320px;
-            padding: 228px 0 58px;
-          }
-
-          .poolito-blog-hero-inner {
-            width: min(100% - 32px, 1340px);
-          }
-
-          .poolito-blog-hero-inner > img {
-            display: none;
-          }
-
-          .poolito-blog-main {
-            padding: 58px 0 76px;
-          }
-
-          .poolito-blog-shell {
-            width: min(100% - 32px, 1340px);
-          }
-
-          .poolito-blog-sidebar {
-            grid-template-columns: 1fr;
-          }
-
-          .poolito-blog-card-actions {
-            align-items: flex-start;
-            flex-direction: column;
-          }
-
-          .poolito-blog-recent-list a {
-            grid-template-columns: 84px minmax(0, 1fr);
-          }
-        }
-      `}</style>
     </div>
   );
 };

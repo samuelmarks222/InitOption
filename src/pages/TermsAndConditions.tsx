@@ -1,21 +1,52 @@
 import { Link } from "react-router-dom";
+import { ArrowLeft, FileText, ShieldCheck } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import PageHero from "@/components/layout/PageHero";
 
+const LEGAL_NAV = [
+  { label: "Terms & Conditions", to: "/terms", active: true },
+  { label: "Privacy Policy", to: "/privacy", active: false },
+  { label: "Risk Disclaimer", to: "/risk-disclaimer", active: false },
+  { label: "AML & KYC", to: "/aml-kyc", active: false },
+  { label: "Payment Policy", to: "/payment-policy", active: false },
+  { label: "Info Disclosure", to: "/information-disclosure", active: false },
+];
+
 const TermsAndConditions = () => {
   return (
-    <div className="poolito-page min-h-screen font-copy">
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
       <Navbar />
       <PageHero
-        eyebrow="Legal"
-        title="Terms and Conditions for InitOption Trading Platform"
-        description="Last Updated: May 17, 2026"
+        eyebrow="Legal & Governance"
+        title="Terms and Conditions"
+        description="Governing your access to and use of the InitOption trading platform, accounts, and related services. Last Updated: May 17, 2026."
       />
-      <main className="max-w-4xl mx-auto p-6">
+      <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <nav
+          aria-label="Legal policies"
+          className="mb-8 flex flex-wrap gap-2 rounded-2xl border border-white/[0.08] bg-[#0e1626] p-2"
+        >
+          {LEGAL_NAV.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-colors ${
+                item.active
+                  ? "bg-emerald-500 text-white"
+                  : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
 
-        <section className="bg-gray-50 rounded-lg p-8 space-y-6 border border-gray-200">
-          <p>Last Updated: May 17, 2026</p>
+        <section className="io-glass-card io-legal-prose rounded-3xl p-6 sm:p-10">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3.5 py-1 text-xs font-semibold text-emerald-300">
+            <FileText className="h-3.5 w-3.5" />
+            <span>Last Updated: May 17, 2026</span>
+          </div>
 
           <h2 className="font-display text-2xl font-bold text-gray-900">1. Introduction</h2>
           <p>
@@ -264,8 +295,8 @@ const TermsAndConditions = () => {
             <li>Australia</li>
             <li>Japan</li>
             <li>Israel</li>
+            <li>Any jurisdiction subject to comprehensive international financial sanctions</li>
           </ol>
-          <p>[Add other restricted jurisdictions]</p>
           <p>We reserve the right to block access from any jurisdiction at our sole discretion.</p>
 
           <h2 className="font-display text-2xl font-bold text-gray-900">17. Amendments to Terms</h2>
@@ -279,12 +310,12 @@ const TermsAndConditions = () => {
 
           <h2 className="font-display text-2xl font-bold text-gray-900">18. Governing Law and Dispute Resolution</h2>
           <h3 className="font-display text-xl font-bold text-gray-900">18.1 Governing Law</h3>
-          <p>These Terms shall be governed by and construed in accordance with the laws of [Your Country/State], without regard to conflict of law principles.</p>
+          <p>These Terms shall be governed by and construed in accordance with the applicable laws of the Company&apos;s operating jurisdiction, without regard to conflict of law principles.</p>
           <h3 className="font-display text-xl font-bold text-gray-900">18.2 Dispute Resolution</h3>
           <p>Any dispute arising from these Terms or your use of the Service shall be resolved as follows:</p>
           <ol className="list-decimal list-inside">
             <li>Informal Resolution: You agree to contact our support team first to attempt to resolve the dispute amicably.</li>
-            <li>Arbitration: If the dispute cannot be resolved informally within 30 days, it shall be resolved through binding arbitration in accordance with the rules of [Arbitration Body].</li>
+            <li>Arbitration: If the dispute cannot be resolved informally within 30 days, it shall be resolved through binding arbitration in accordance with internationally recognized commercial arbitration rules.</li>
             <li>Class Action Waiver: You agree to bring any claims against us individually and not as part of any class action.</li>
           </ol>
 
@@ -292,13 +323,13 @@ const TermsAndConditions = () => {
           <p>For questions, concerns, or support requests, please contact us at:</p>
           <ol className="list-decimal list-inside">
             <li>InitOption Support Team</li>
-            <li>Email: support@initoption.com</li>
+            <li>Email: <a href="mailto:support@initoption.com">support@initoption.com</a></li>
             <li>Live Chat: Available on our platform 24/7</li>
             <li>Response Time: Within 24 hours</li>
           </ol>
           <ol className="list-decimal list-inside">
             <li>Complaints Department</li>
-            <li>Email: complaints@initoption.com</li>
+            <li>Email: <a href="mailto:complaints@initoption.com">complaints@initoption.com</a></li>
           </ol>
 
           <h2 className="font-display text-2xl font-bold text-gray-900">20. Acknowledgment</h2>
@@ -313,18 +344,31 @@ const TermsAndConditions = () => {
           <h2 className="font-display text-2xl font-bold text-gray-900">21. Entire Agreement</h2>
           <p>These Terms, together with our Privacy Policy and any other policies referenced herein, constitute the entire agreement between you and InitOption regarding the Service and supersede all prior agreements.</p>
 
-          <p className="font-display text-xl font-bold text-gray-900 text-center mt-8">
-            INITOPTION – TRADE RESPONSIBLY
-          </p>
-
-          <p className="text-center mt-4">
-            If you or someone you know shows signs of problem gambling or trading addiction, please seek help immediately. Contact [Gambling Helpline] for support.
-          </p>
+          <div className="mt-10 rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-6 text-center">
+            <div className="inline-flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-amber-300">
+              <ShieldCheck className="h-4 w-4" />
+              <span>InitOption — Trade Responsibly</span>
+            </div>
+            <p className="mt-2 text-sm text-slate-300">
+              Never risk capital you cannot afford to lose. If trading stops feeling controlled, pause
+              live activity, switch to demo mode, or contact <a href="mailto:support@initoption.com">support@initoption.com</a> for account limits.
+            </p>
+          </div>
         </section>
 
-        <div className="mt-8">
-          <Link to="/" className="text-white underline">
-            Return to homepage
+        <div className="mt-8 flex items-center justify-between">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-white/[0.08]"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Return to homepage</span>
+          </Link>
+          <Link
+            to="/risk-disclaimer"
+            className="text-xs font-bold text-emerald-400 hover:text-emerald-300"
+          >
+            Read Risk Disclaimer →
           </Link>
         </div>
       </main>
