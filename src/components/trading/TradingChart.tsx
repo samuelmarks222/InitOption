@@ -1,3 +1,4 @@
+import { observedHistory } from "./engine/native/observedHistory";
 import { heikinAshi } from "./engine/native/marketData";
 import {
   CandlestickSeries,
@@ -3294,7 +3295,11 @@ const TradingChart = ({
       if (nextCount <= loadedHistoryCountRef.current) return;
 
       const previousCount = historyRef.current.length;
-      const nextHistory = engine.generateHistory(tf, Date.now() / 1000, nextCount);
+      const liveSource = import.meta.env.VITE_MARKET_DATA_WS_URL;
+      const nextHistory = liveSource?.trim()
+        ? observedHistory.snapshot(liveSource, asset.symbol, tf.seconds, Date.now() / 1000, nextCount).history
+        : engine.generateHistory(tf, Date.now() / 1000, nextCount);
+      if (nextHistory.length <= previousCount) return;
 
       loadedHistoryCountRef.current = nextHistory.length;
       historyRef.current = nextHistory;
@@ -3488,35 +3493,38 @@ renderOverlayIndicators(getIndicatorHistory());
     const engine = new OTCPriceEngine(asset.symbol, engineBasePrice, asset.type);
     engineRef.current = engine;
 
-    const history = engine.generateHistory(tf, nowSec);
+    const realSnapshot = websocketUrl?.trim()
+      ? observedHistory.snapshot(websocketUrl, asset.symbol, tf.seconds, nowSec, tf.historical)
+      : null;
+    // A configured real feed must never be seeded or backfilled with demo prices.
+    const history = realSnapshot ? realSnapshot.history : engine.generateHistory(tf, nowSec);
     historyRef.current = history;
     historyAssetRef.current = asset.symbol;
     loadedHistoryCountRef.current = history.length;
 
     mainSeriesRef.current?.setData(getMainSeriesData(chartTypeRef.current, historyRef.current));
 
-    const seedReplay = replayDeterministicTickState({
+    const seedCandle = realSnapshot ? realSnapshot.current : replayDeterministicTickState({
       symbol: asset.symbol,
       basePrice: engineBasePrice,
       timeframe: tf,
       timestamp: nowSec,
       assetCategory: asset.type,
-    });
-    const seedCandle = seedReplay.candle;
+    }).candle;
     liveRef.current = seedCandle;
-    const startPrice = seedCandle.open;
+    const startPrice = seedCandle?.open ?? asset.price;
     liveStartPriceRef.current = startPrice;
-    authoritativeTickPriceRef.current = seedCandle.close;
-    displayPriceRef.current = seedCandle.close;
-    liveDisplayRef.current = { ...seedCandle };
+    authoritativeTickPriceRef.current = seedCandle?.close ?? asset.price;
+    displayPriceRef.current = seedCandle?.close ?? asset.price;
+    liveDisplayRef.current = seedCandle ? { ...seedCandle } : null;
 
-    setCurrentPrice(seedCandle.close);
-    setPriceChange(((seedCandle.close - seedCandle.open) / Math.max(seedCandle.open, 0.000001)) * 100);
-    setLivePriceBeacon({
+    setCurrentPrice(seedCandle?.close ?? asset.price);
+    setPriceChange(seedCandle ? ((seedCandle.close - seedCandle.open) / Math.max(seedCandle.open, 0.000001)) * 100 : 0);
+    setLivePriceBeacon(seedCandle ? {
       price: getLiveBeaconPrice(chartTypeRef.current, seedCandle, historyRef.current),
       time: seedCandle.time,
       logical: history.length,
-    });
+    } : null);
 
     const containerWidth = mainRef.current?.clientWidth ?? 960;
     const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, history.length);
@@ -3543,8 +3551,10 @@ renderOverlayIndicators(getIndicatorHistory());
     setForceOscillatorRender((current) => current + 1);
 
     aggregatorRef.current = new CandleAggregator(step, applyLiveCandleClose, applyLiveCandleUpdate);
-    aggregatorRef.current.setSeedCandle(seedCandle, nowSec);
-    applyLiveCandleUpdate(aggregatorRef.current.getCurrentCandle() ?? seedCandle, nowSec);
+    if (seedCandle) {
+      aggregatorRef.current.setSeedCandle(seedCandle, realSnapshot?.lastTimestamp ?? nowSec);
+      applyLiveCandleUpdate(aggregatorRef.current.getCurrentCandle() ?? seedCandle, nowSec);
+    }
 
     // Register in persisted feeds before creating the feed so onTick finds the aggregator
     persistedFeeds.set(cacheKey, {

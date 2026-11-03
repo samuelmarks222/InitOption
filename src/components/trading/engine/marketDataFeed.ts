@@ -1,3 +1,4 @@
+import { observedHistory } from "./native/observedHistory";
 import { OTCPriceEngine, type OHLCCandle, type TimeframeConfig } from "./priceEngine";
 
 export type MarketFeedStatus =
@@ -436,6 +437,7 @@ class WebSocketTickFeed implements MarketDataFeed {
 
   connect() {
     this.manualDisconnect = false;
+    if (this.reconnectTimer !== null) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null; }
     this.openSocket();
   }
 
@@ -454,8 +456,10 @@ class WebSocketTickFeed implements MarketDataFeed {
         symbol: this.subscription.symbol,
         timeframe: this.subscription.timeframe.label,
       });
-      this.socket.close();
+      const socket = this.socket;
+      this.detachSocket(socket);
       this.socket = null;
+      socket.close();
     }
 
     this.callbacks.onStatusChange?.("disconnected");
@@ -473,7 +477,9 @@ class WebSocketTickFeed implements MarketDataFeed {
 
     this.callbacks.onStatusChange?.(this.reconnectAttempt === 0 ? "connecting" : "reconnecting");
 
-    const socket = new WebSocket(this.url);
+    let socket: WebSocket;
+    try { socket = new WebSocket(this.url); }
+    catch (error) { this.callbacks.onError?.(toError(error)); this.scheduleReconnect(); return; }
     this.socket = socket;
 
     socket.addEventListener("open", this.handleOpen);
@@ -484,8 +490,7 @@ class WebSocketTickFeed implements MarketDataFeed {
 
   private readonly handleOpen = () => {
     this.reconnectAttempt = 0;
-    this.lastSequence = -1;
-    this.lastTimestamp = 0;
+    // Keep replay cursors across reconnects; duplicate snapshots must not add volume.
     this.callbacks.onStatusChange?.("live");
     this.sendMessage({
       type: "subscribe",
@@ -496,11 +501,16 @@ class WebSocketTickFeed implements MarketDataFeed {
   };
 
   private readonly handleMessage = (event: MessageEvent) => {
+    if (this.manualDisconnect || event.currentTarget !== this.socket) return;
     try {
       const payload = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
 
       if (Array.isArray(payload?.ticks)) {
-        payload.ticks.forEach((tick) => this.emitTick(tick));
+        [...payload.ticks]
+          .filter(tick => tick && typeof tick === "object")
+          .sort((a, b) => normalizeTimestamp(a.timestamp) - normalizeTimestamp(b.timestamp)
+            || (isFiniteNumber(a.sequence) && isFiniteNumber(b.sequence) ? a.sequence - b.sequence : 0))
+          .forEach((tick) => this.emitTick(tick));
         return;
       }
 
@@ -516,27 +526,34 @@ class WebSocketTickFeed implements MarketDataFeed {
     this.callbacks.onError?.(new Error(`Market data socket error: ${event.type}`));
   };
 
-  private readonly handleClose = () => {
-    if (this.socket) {
-      this.socket.removeEventListener("open", this.handleOpen);
-      this.socket.removeEventListener("message", this.handleMessage);
-      this.socket.removeEventListener("error", this.handleError);
-      this.socket.removeEventListener("close", this.handleClose);
-      this.socket = null;
-    }
+  private detachSocket(socket: WebSocket) {
+    socket.removeEventListener("open", this.handleOpen);
+    socket.removeEventListener("message", this.handleMessage);
+    socket.removeEventListener("error", this.handleError);
+    socket.removeEventListener("close", this.handleClose);
+  }
 
-    if (this.manualDisconnect) {
-      return;
-    }
+  private readonly handleClose = (event: CloseEvent) => {
+    if (event.currentTarget !== this.socket) return;
+    if (this.socket) this.detachSocket(this.socket);
+    this.socket = null;
+    this.scheduleReconnect();
+  };
 
+  private scheduleReconnect() {
+    if (this.manualDisconnect || this.reconnectTimer !== null) return;
     const backoffMs = Math.min(10_000, 750 * 2 ** this.reconnectAttempt);
     const jitterMs = Math.round(Math.random() * 250);
     this.reconnectAttempt += 1;
     this.callbacks.onStatusChange?.("reconnecting");
-    this.reconnectTimer = setTimeout(() => this.openSocket(), backoffMs + jitterMs);
-  };
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.openSocket();
+    }, backoffMs + jitterMs);
+  }
 
   private emitTick(payload: Record<string, unknown>) {
+    if (!payload || typeof payload !== "object") return;
     const price = normalizePrice(payload.price);
     if (!isFiniteNumber(price) || price <= 0) {
       return;
@@ -598,7 +615,12 @@ export const createMarketDataFeed = ({
   };
 
   if (websocketUrl && websocketUrl.trim().length > 0) {
-    return new WebSocketTickFeed(websocketUrl, normalizedSubscription, callbacks);
+    return new WebSocketTickFeed(websocketUrl, normalizedSubscription, {
+      ...callbacks,
+      onTick: (tick) => {
+        if (observedHistory.record(websocketUrl, tick.symbol, tick)) callbacks.onTick(tick);
+      },
+    });
   }
 
   return new DeterministicTickFeed(normalizedSubscription, callbacks);

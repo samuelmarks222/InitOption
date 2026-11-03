@@ -48,4 +48,21 @@ describe('native chart data and timeframe engine', () => {
     expect(engine.getCurrentCandle()?.high).toBe(102); engine.destroy(); vi.advanceTimersByTime(120000);
     expect(update).not.toHaveBeenCalled(); expect(close).not.toHaveBeenCalled();
   });
+  it('accepts a delayed exchange tick after a wall-clock boundary has fired', () => {
+    vi.useFakeTimers(); vi.setSystemTime(600000);
+    const engine = new CandleAggregator(60,vi.fn(),vi.fn());
+    engine.onTick({timestamp:600,price:100});
+    vi.advanceTimersByTime(60020);
+    engine.onTick({timestamp:660.001,price:108});
+    expect(engine.getCurrentCandle()).toMatchObject({time:660,open:108,high:108,close:108,volume:1});
+    engine.onTick({timestamp:659.99,price:999});
+    expect(engine.getCurrentCandle()?.high).toBe(108);
+    engine.destroy();
+  });
+  it('rejects corrupt history seeds rather than poisoning live OHLC', () => {
+    const engine = new CandleAggregator(60,vi.fn(),vi.fn());
+    expect(() => engine.setSeedCandle(bar(600,100,90,95,102),600)).toThrow('Invalid seed candle');
+    engine.destroy();
+  });
+
 });

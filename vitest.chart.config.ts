@@ -6,6 +6,8 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: [
+      "src/test/observedHistory.test.ts",
+      "src/test/webSocketFeed.test.ts",
       "src/test/nativeChartEngine.test.ts",
       "src/test/nativeChartRenderer.test.ts",
       "src/test/realtimeCandleAggregator.test.ts",

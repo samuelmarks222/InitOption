@@ -21,12 +21,15 @@ export class CandleAggregator {
   setCallbacks(close: CandleCloseCallback, update: CandleUpdateCallback) { this.onClose = close; this.onUpdate = update; }
   setSeedCandle(candle: OHLCCandle, referenceTimestamp = Date.now()/1000) {
     if (this.disposed) return;
+    if (![candle.time, candle.open, candle.high, candle.low, candle.close, candle.volume, referenceTimestamp].every(Number.isFinite)
+      || candle.low <= 0 || candle.high < Math.max(candle.open, candle.close)
+      || candle.low > Math.min(candle.open, candle.close) || candle.volume < 0) throw new Error('Invalid seed candle');
     this.current = { ...candle, time: bucketStart(candle.time, this.seconds) };
     this.timestamp = Math.max(referenceTimestamp, candle.time);
     this.advance(referenceTimestamp); this.schedule();
   }
   onTick(tick: PriceTick): OHLCCandle {
-    if (this.disposed || !Number.isFinite(tick.timestamp) || !Number.isFinite(tick.price) || tick.price <= 0 || tick.timestamp < this.timestamp) {
+    if (this.disposed || !Number.isFinite(tick.timestamp) || !Number.isFinite(tick.price) || tick.price <= 0 || tick.timestamp < this.timestamp || (this.current && tick.timestamp < this.current.time)) {
       return this.current ? { ...this.current } : this.empty(0, 0);
     }
     this.advance(tick.timestamp);
@@ -42,7 +45,7 @@ export class CandleAggregator {
   private advance(timestamp: number) {
     if (!this.current) return;
     const target = bucketStart(timestamp, this.seconds);
-    while (this.current.time < target) {
+    while (this.current && !this.disposed && this.current.time < target) {
       const closed = { ...this.current };
       this.current = this.empty(closed.time + this.seconds,closed.close);
       this.onClose(closed);
@@ -62,7 +65,9 @@ export class CandleAggregator {
     // Historical replay must not race a wall-clock timer while ticks are ingested.
     this.timer = setTimeout(() => {
       const now = Date.now()/1000;
-      this.advance(now); this.timestamp = Math.max(this.timestamp,now); this.queue(now); this.schedule();
+      // Wall-clock closes must not move the exchange-tick cursor forward: a
+      // slightly delayed tick in the new bucket is still authoritative.
+      this.advance(now); this.queue(now); this.schedule();
     },Math.min(2147483647,delay));
   }
   destroy() {
