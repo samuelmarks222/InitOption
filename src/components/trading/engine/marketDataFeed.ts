@@ -1,3 +1,4 @@
+import { createInternalOTCFeed } from "./internalOTCFeed";
 import { getSynchronizedUnixTimeMs } from "@/lib/serverTimeSync";
 import { observedHistory } from "./native/observedHistory";
 import { OTCPriceEngine, type OHLCCandle, type TimeframeConfig } from "./priceEngine";
@@ -15,7 +16,7 @@ export interface MarketTick {
   price: number;
   timestamp: number;
   sequence?: number;
-  source: "websocket" | "simulated";
+  source: "websocket" | "simulated" | "internal-otc";
 }
 
 export interface MarketFeedSubscription {
@@ -27,6 +28,7 @@ export interface MarketFeedSubscription {
 
 export interface MarketFeedCallbacks {
   onTick: (tick: MarketTick) => void;
+  onHistory?: () => void;
   onStatusChange?: (status: MarketFeedStatus) => void;
   onError?: (error: Error) => void;
 }
@@ -40,6 +42,7 @@ interface FeedFactoryOptions {
   subscription: MarketFeedSubscription;
   callbacks: MarketFeedCallbacks;
   websocketUrl?: string;
+  internalOTC?: boolean;
 }
 
 type TimerHandle = ReturnType<typeof setTimeout>;
@@ -468,6 +471,7 @@ export const createMarketDataFeed = ({
   subscription,
   callbacks,
   websocketUrl,
+  internalOTC = false,
 }: FeedFactoryOptions): MarketDataFeed => {
   const safeBasePrice =
     Number.isFinite(subscription.basePrice) && subscription.basePrice > 0 ? subscription.basePrice : 1;
@@ -475,6 +479,8 @@ export const createMarketDataFeed = ({
     ...subscription,
     basePrice: safeBasePrice,
   };
+
+  if (internalOTC && websocketUrl?.trim()) return createInternalOTCFeed(websocketUrl, subscription.symbol, callbacks);
 
   if (websocketUrl && websocketUrl.trim().length > 0) {
     const key = JSON.stringify([websocketUrl, subscription.symbol, subscription.assetCategory ?? ""]);

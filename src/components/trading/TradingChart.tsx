@@ -1,3 +1,4 @@
+import { isInternalOTC, marketWebSocketUrl } from "@/lib/otcMarket";
 import { tickChartPoint, TickSeriesWriter } from "./engine/native/tickRendering";
 import { animateViewport } from "./engine/native/viewportAnimation";
 import { useChartMode } from "./engine/native/chartMode";
@@ -3118,7 +3119,7 @@ const TradingChart = ({
       if (nextCount <= loadedHistoryCountRef.current) return;
 
       const previousCount = historyRef.current.length;
-      const liveSource = import.meta.env.VITE_MARKET_DATA_WS_URL;
+      const liveSource = marketWebSocketUrl();
       const nextHistory = liveSource?.trim()
         ? observedHistory.snapshot(liveSource, asset.symbol, tf.seconds, getSynchronizedUnixTimeMs() / 1000, nextCount).history
         : [];
@@ -3164,6 +3165,7 @@ const TradingChart = ({
   useEffect(() => {
     const tf = TIMEFRAMES[selectedTf];
     if (!tf || !mainSeriesRef.current || !chartRef.current) return;
+    let effectActive = true;
 
     cancelViewportAnimation.current?.();
 
@@ -3171,10 +3173,33 @@ const TradingChart = ({
     authoritativeTickPriceRef.current = asset.price;
     displayPriceRef.current = asset.price;
     timeframeSecondsRef.current = tf.seconds;
-    const websocketUrl = import.meta.env.VITE_MARKET_DATA_WS_URL;
+    const websocketUrl = marketWebSocketUrl();
     const step = tf.seconds;
     const nowSec = getSynchronizedUnixTimeMs() / 1000;
     const cacheKey = `${asset.symbol}_${selectedTf}`;
+    const installReceivedHistory = () => {
+      if (!effectActive || !websocketUrl || !mainSeriesRef.current) return;
+      const snapshot = observedHistory.snapshot(websocketUrl, asset.symbol, tf.seconds, getSynchronizedUnixTimeMs()/1000, tf.historical);
+      const previousCount = historyRef.current.length;
+      aggregatorRef.current?.destroy();
+      historyRef.current = snapshot.history;
+      historyAssetRef.current = asset.symbol;
+      loadedHistoryCountRef.current = snapshot.history.length;
+      liveRef.current = snapshot.current;
+      mainSeriesRef.current.setData(getMainSeriesData(chartTypeRef.current, snapshot.history));
+      const aggregator = new CandleAggregator(tf.seconds, applyLiveCandleClose, applyLiveCandleUpdate);
+      aggregatorRef.current = aggregator;
+      const entry = persistedFeeds.get(cacheKey);
+      if (entry) { entry.aggregator = aggregator; entry.history = snapshot.history; entry.liveCandle = snapshot.current; }
+      if (snapshot.current) {
+        aggregator.setSeedCandle(snapshot.current, snapshot.lastTimestamp ?? snapshot.current.time);
+        applyLiveCandleUpdate(snapshot.current, snapshot.lastTimestamp);
+      }
+      renderOverlayIndicators(getIndicatorHistory());
+      setForceOscillatorRender(current => current+1);
+      if (!previousCount) scrollChartToLiveEdge(snapshot.history.length);
+    };
+
 
     // Clean up any stale feeds for this symbol with a different timeframe
     persistedFeeds.forEach((entry, entryKey) => {
@@ -3255,6 +3280,7 @@ renderOverlayIndicators(getIndicatorHistory());
       // Create a fresh feed that ticks into the persisted aggregator
       marketFeedRef.current = createMarketDataFeed({
         websocketUrl,
+        internalOTC: isInternalOTC,
         subscription: {
           symbol: asset.symbol,
           basePrice: engineBasePrice,
@@ -3262,7 +3288,8 @@ renderOverlayIndicators(getIndicatorHistory());
           assetCategory: asset.type,
         },
         callbacks: {
-          onStatusChange: setMarketFeedStatus,
+          onHistory: installReceivedHistory,
+          onStatusChange: status => { if (effectActive) setMarketFeedStatus(status); },
           onTick: (tick) => {
             const entry = persistedFeeds.get(cacheKey);
             if (entry?.aggregator) {
@@ -3277,6 +3304,7 @@ renderOverlayIndicators(getIndicatorHistory());
       marketFeedRef.current.connect();
 
       return () => {
+        effectActive = false;
         if (liveIndicatorFrame.current !== null) cancelAnimationFrame(liveIndicatorFrame.current);
         liveIndicatorFrame.current = null;
         liveDisplayRef.current = null;
@@ -3388,6 +3416,7 @@ renderOverlayIndicators(getIndicatorHistory());
 
     marketFeedRef.current = createMarketDataFeed({
       websocketUrl,
+      internalOTC: isInternalOTC,
       subscription: {
         symbol: asset.symbol,
         basePrice: engineBasePrice,
@@ -3395,7 +3424,8 @@ renderOverlayIndicators(getIndicatorHistory());
         assetCategory: asset.type,
       },
       callbacks: {
-        onStatusChange: setMarketFeedStatus,
+        onHistory: installReceivedHistory,
+        onStatusChange: status => { if (effectActive) setMarketFeedStatus(status); },
         onTick: (tick) => {
           const entry = persistedFeeds.get(cacheKey);
           if (entry?.aggregator) {
@@ -3411,6 +3441,7 @@ renderOverlayIndicators(getIndicatorHistory());
     { const e = persistedFeeds.get(cacheKey); if (e) e.feed = marketFeedRef.current; }
 
     return () => {
+      effectActive = false;
       if (liveIndicatorFrame.current !== null) cancelAnimationFrame(liveIndicatorFrame.current);
       liveIndicatorFrame.current = null;
       liveDisplayRef.current = null;
@@ -4047,10 +4078,11 @@ renderOverlayIndicators(getIndicatorHistory());
         onMouseLeave={handleChartMouseLeave}
         onClick={handleChartClick}
       >
-        {marketFeedStatus !== "live" && (
-          <div role="status" className="pointer-events-none absolute right-3 top-3 z-[82] max-w-[260px] rounded-md border border-amber-400/20 bg-slate-950/90 px-3 py-2 text-xs text-amber-200">
-            {marketFeedStatus === "unavailable" ? "Live market feed is not configured. No prices are being generated."
-              : marketFeedStatus === "connecting" ? "Connecting to live market data…"
+        {(isInternalOTC || marketFeedStatus !== "live") && (
+          <div role="status" className="pointer-events-none absolute right-3 top-3 z-[82] max-w-[300px] rounded-md border border-amber-400/20 bg-slate-950/90 px-3 py-2 text-xs text-amber-200">
+            {isInternalOTC ? <><strong>Platform-generated OTC prices</strong><br />{marketFeedStatus === "live" ? "Internal pricing stream connected" : "OTC service connecting or unavailable — holding the last server price"}</>
+              : marketFeedStatus === "unavailable" ? "Market feed is not configured."
+              : marketFeedStatus === "connecting" ? "Connecting to market data…"
               : "Market feed disconnected — holding the last received price."}
           </div>
         )}

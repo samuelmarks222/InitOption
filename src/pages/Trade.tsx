@@ -1,3 +1,4 @@
+import { isInternalOTC, requestOTCQuote } from "@/lib/otcMarket";
 import { WinningNotifications } from "@/components/trading/WinningNotifications";
 import { winningNotification, type WinningNotification } from "@/lib/winningNotifications";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
@@ -390,6 +391,8 @@ const Trade = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const latestChartPriceRef = useRef(0);
+  const demoExpiryQuotes = useRef(new Map<string, number>());
+  const demoExpiryRequests = useRef(new Map<string, number>());
   const latestChartMarkerTimeRef = useRef<number | null>(null);
   const latestChartMarkerTimesBySymbolRef = useRef<Record<string, number>>({});
   const latestChartMarkerLogicalBySymbolRef = useRef<Record<string, number>>({});
@@ -689,7 +692,7 @@ const Trade = () => {
 
     const timerId = window.setInterval(() => {
       const now = Date.now();
-      const canResolveDemoTrades = latestChartPriceRef.current > 0;
+      const canResolveDemoTrades = isInternalOTC || latestChartPriceRef.current > 0;
       const settledTrades: TradeHistoryEntry[] = [];
       const settledAnnouncements: ChartSettlementAnnouncement[] = [];
       let creditedAmount = 0;
@@ -708,7 +711,23 @@ const Trade = () => {
           return nextTrades;
         }
 
-        const exitPrice = latestChartPriceRef.current > 0 ? latestChartPriceRef.current : trade.entry_price;
+        let exitPrice = latestChartPriceRef.current > 0 ? latestChartPriceRef.current : trade.entry_price;
+        if (isInternalOTC) {
+          const receipt = demoExpiryQuotes.current.get(trade.id);
+          if (receipt === undefined) {
+            if ((demoExpiryRequests.current.get(trade.id) ?? 0) <= now) {
+              demoExpiryRequests.current.set(trade.id, now+10000);
+              const expiry = new Date(trade.opened_at).getTime()/1000 + trade.expiry_seconds;
+              void requestOTCQuote(trade.asset_symbol, expiry).then(quote => {
+                demoExpiryQuotes.current.set(trade.id, quote.price);
+              }).catch(() => { demoExpiryRequests.current.set(trade.id, Date.now()+2000); });
+            }
+            nextTrades.push({...trade,timeLeft:0});
+            return nextTrades;
+          }
+          exitPrice = receipt;
+          demoExpiryQuotes.current.delete(trade.id); demoExpiryRequests.current.delete(trade.id);
+        }
         const won =
           (trade.direction === "higher" && exitPrice > trade.entry_price) ||
           (trade.direction === "lower" && exitPrice < trade.entry_price);
@@ -1123,8 +1142,15 @@ const Trade = () => {
       return false;
     }
 
-    const openedAt = new Date().toISOString();
-    const currentEntryPrice = latestChartPriceRef.current > 0 ? latestChartPriceRef.current : entryPrice;
+    let openedAt = new Date().toISOString();
+    let currentEntryPrice = latestChartPriceRef.current > 0 ? latestChartPriceRef.current : entryPrice;
+    if (isInternalOTC) {
+      try {
+        const quote = await requestOTCQuote(assetSymbol);
+        currentEntryPrice = quote.price;
+        openedAt = new Date(quote.timestamp*1000).toISOString();
+      } catch { return false; }
+    }
     const timeframeSeconds = latestChartTimeframesBySymbolRef.current[assetSymbol] ?? 60;
     const clickTimestampSec = Math.floor(Date.now() / 1000);
     const activeMarkerTime =

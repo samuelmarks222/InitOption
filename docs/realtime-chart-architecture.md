@@ -312,3 +312,15 @@ source tags and deduplicates identical timestamp/price messages without sequence
 The companion's history adapter is not yet wired into dashboard history loading;
 a verified production provider contract is still required. Live outages never
 silently activate the separate simulation service.
+
+
+## Internal OTC dashboard integration
+
+The dashboard now defaults to a server-owned, explicitly platform-generated OTC
+source. See `server/otc/README.md` for the native WebSocket service, startup,
+production hosting requirements, per-symbol registry, shared transport/history,
+entry/expiry receipts, persistence/recovery tests and financial security boundary.
+Development runs that service on the Vite server; production requires a persistent
+Node deployment and routing/configuration. A static dashboard deploy alone cannot
+run it. Existing client-driven trade persistence/balance flows are not converted
+into a server-authoritative ledger by pricing receipts.

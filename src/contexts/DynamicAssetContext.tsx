@@ -1,3 +1,4 @@
+import { isInternalOTC, latestOTCQuote, subscribeOTCQuotes } from "@/lib/otcMarket";
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { api } from "@/integrations/api/client";
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,19 +61,19 @@ const buildDynamicAsset = (assetRow: AssetConfigRow, timestampSec: number): Dyna
   const basePrice = getAssetBasePrice(assetRow.symbol, category);
   const defaultPayout = getAssetDefaultPayout(category);
   const configuredPayout = clampAssetPayout(assetRow.payout_pct, defaultPayout);
-  const price = getDeterministicPriceAt({
+  const price = isInternalOTC ? (latestOTCQuote(assetRow.symbol)?.price ?? basePrice) : getDeterministicPriceAt({
     symbol: assetRow.symbol,
     basePrice,
     timestamp: timestampSec,
     category,
   });
-  const baselinePrice = getDeterministicPriceAt({
+  const baselinePrice = isInternalOTC ? basePrice : getDeterministicPriceAt({
     symbol: assetRow.symbol,
     basePrice,
     timestamp: timestampSec - 24 * 60 * 60,
     category,
   });
-  const change24h = getDeterministicChange24h({
+  const change24h = isInternalOTC ? 0 : getDeterministicChange24h({
     symbol: assetRow.symbol,
     basePrice,
     timestamp: timestampSec,
@@ -169,6 +170,24 @@ export const DynamicAssetProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (intervalId) clearInterval(intervalId);
     };
   }, [userId]);
+
+  useEffect(() => {
+    if (!isInternalOTC) return;
+    let frame: number | undefined;
+    const pending = new Map<string, number>();
+    const unsubscribe = subscribeOTCQuotes(quote => {
+      pending.set(quote.symbol, quote.price);
+      if (frame !== undefined) return;
+      frame = requestAnimationFrame(() => {
+        frame = undefined;
+        setAssets(current => {
+          const next = current.map(asset => pending.has(asset.symbol) ? {...asset, price:pending.get(asset.symbol)!} : asset);
+          assetsRef.current = next; lastGoodAssetsRef.current = next; pending.clear(); return next;
+        });
+      });
+    });
+    return () => { unsubscribe(); if (frame !== undefined) cancelAnimationFrame(frame); };
+  }, []);
 
   const getAsset = (symbol: string) => {
     return assets.find(a => a.symbol === symbol) ?? lastGoodAssetsRef.current.find(a => a.symbol === symbol);

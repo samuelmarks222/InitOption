@@ -1,0 +1,1130 @@
+{
+  "EUR/USD": {
+    "price": 1.08695652,
+    "precision": 8,
+    "volatility": 0.0006521739130434782,
+    "drift": 0,
+    "support": 1.0326086956521738,
+    "resistance": 1.141304347826087
+  },
+  "GBP/USD": {
+    "price": 1.26582278,
+    "precision": 8,
+    "volatility": 0.0007594936708860758,
+    "drift": 0,
+    "support": 1.20253164556962,
+    "resistance": 1.3291139240506329
+  },
+  "USD/JPY": {
+    "price": 150.0,
+    "precision": 8,
+    "volatility": 0.09,
+    "drift": 0,
+    "support": 142.5,
+    "resistance": 157.5
+  },
+  "USD/CHF": {
+    "price": 0.88,
+    "precision": 8,
+    "volatility": 0.0005279999999999999,
+    "drift": 0,
+    "support": 0.836,
+    "resistance": 0.924
+  },
+  "AUD/USD": {
+    "price": 0.65789474,
+    "precision": 8,
+    "volatility": 0.00039473684210526315,
+    "drift": 0,
+    "support": 0.625,
+    "resistance": 0.6907894736842106
+  },
+  "USD/CAD": {
+    "price": 1.36,
+    "precision": 8,
+    "volatility": 0.000816,
+    "drift": 0,
+    "support": 1.292,
+    "resistance": 1.4280000000000002
+  },
+  "NZD/USD": {
+    "price": 0.60606061,
+    "precision": 8,
+    "volatility": 0.0003636363636363636,
+    "drift": 0,
+    "support": 0.5757575757575758,
+    "resistance": 0.6363636363636364
+  },
+  "EUR/GBP": {
+    "price": 0.85869565,
+    "precision": 8,
+    "volatility": 0.0005152173913043478,
+    "drift": 0,
+    "support": 0.8157608695652174,
+    "resistance": 0.9016304347826087
+  },
+  "EUR/JPY": {
+    "price": 163.04347826,
+    "precision": 8,
+    "volatility": 0.09782608695652173,
+    "drift": 0,
+    "support": 154.89130434782606,
+    "resistance": 171.19565217391306
+  },
+  "GBP/JPY": {
+    "price": 189.87341772,
+    "precision": 8,
+    "volatility": 0.11392405063291139,
+    "drift": 0,
+    "support": 180.37974683544303,
+    "resistance": 199.36708860759495
+  },
+  "EUR/CHF": {
+    "price": 0.95652174,
+    "precision": 8,
+    "volatility": 0.0005739130434782608,
+    "drift": 0,
+    "support": 0.9086956521739129,
+    "resistance": 1.0043478260869565
+  },
+  "GBP/CHF": {
+    "price": 1.11392405,
+    "precision": 8,
+    "volatility": 0.0006683544303797467,
+    "drift": 0,
+    "support": 1.0582278481012657,
+    "resistance": 1.169620253164557
+  },
+  "AUD/JPY": {
+    "price": 98.68421053,
+    "precision": 8,
+    "volatility": 0.05921052631578947,
+    "drift": 0,
+    "support": 93.75,
+    "resistance": 103.61842105263159
+  },
+  "EUR/AUD": {
+    "price": 1.65217391,
+    "precision": 8,
+    "volatility": 0.0009913043478260869,
+    "drift": 0,
+    "support": 1.5695652173913044,
+    "resistance": 1.7347826086956522
+  },
+  "EUR/NZD": {
+    "price": 1.79347826,
+    "precision": 8,
+    "volatility": 0.001076086956521739,
+    "drift": 0,
+    "support": 1.7038043478260867,
+    "resistance": 1.8831521739130432
+  },
+  "EUR/CAD": {
+    "price": 1.47826087,
+    "precision": 8,
+    "volatility": 0.0008869565217391305,
+    "drift": 0,
+    "support": 1.4043478260869566,
+    "resistance": 1.5521739130434784
+  },
+  "GBP/AUD": {
+    "price": 1.92405063,
+    "precision": 8,
+    "volatility": 0.0011544303797468354,
+    "drift": 0,
+    "support": 1.8278481012658228,
+    "resistance": 2.020253164556962
+  },
+  "GBP/CAD": {
+    "price": 1.72151899,
+    "precision": 8,
+    "volatility": 0.0010329113924050632,
+    "drift": 0,
+    "support": 1.6354430379746836,
+    "resistance": 1.8075949367088608
+  },
+  "AUD/CAD": {
+    "price": 0.89473684,
+    "precision": 8,
+    "volatility": 0.0005368421052631578,
+    "drift": 0,
+    "support": 0.85,
+    "resistance": 0.9394736842105263
+  },
+  "AUD/CHF": {
+    "price": 0.57894737,
+    "precision": 8,
+    "volatility": 0.0003473684210526316,
+    "drift": 0,
+    "support": 0.55,
+    "resistance": 0.6078947368421053
+  },
+  "AUD/NZD": {
+    "price": 1.08552632,
+    "precision": 8,
+    "volatility": 0.0006513157894736841,
+    "drift": 0,
+    "support": 1.03125,
+    "resistance": 1.1398026315789473
+  },
+  "CAD/JPY": {
+    "price": 110.29411765,
+    "precision": 8,
+    "volatility": 0.06617647058823528,
+    "drift": 0,
+    "support": 104.77941176470587,
+    "resistance": 115.80882352941175
+  },
+  "CAD/CHF": {
+    "price": 0.64705882,
+    "precision": 8,
+    "volatility": 0.00038823529411764697,
+    "drift": 0,
+    "support": 0.6147058823529411,
+    "resistance": 0.6794117647058823
+  },
+  "CHF/JPY": {
+    "price": 170.45454545,
+    "precision": 8,
+    "volatility": 0.10227272727272727,
+    "drift": 0,
+    "support": 161.9318181818182,
+    "resistance": 178.97727272727275
+  },
+  "NZD/JPY": {
+    "price": 90.90909091,
+    "precision": 8,
+    "volatility": 0.05454545454545455,
+    "drift": 0,
+    "support": 86.36363636363637,
+    "resistance": 95.45454545454547
+  },
+  "NZD/CHF": {
+    "price": 0.53333333,
+    "precision": 8,
+    "volatility": 0.00031999999999999997,
+    "drift": 0,
+    "support": 0.5066666666666666,
+    "resistance": 0.56
+  },
+  "USD/ZAR": {
+    "price": 18.0,
+    "precision": 8,
+    "volatility": 0.010799999999999999,
+    "drift": 0,
+    "support": 17.099999999999998,
+    "resistance": 18.900000000000002
+  },
+  "USD/MXN": {
+    "price": 17.0,
+    "precision": 8,
+    "volatility": 0.010199999999999999,
+    "drift": 0,
+    "support": 16.15,
+    "resistance": 17.85
+  },
+  "USD/BRL": {
+    "price": 5.0,
+    "precision": 8,
+    "volatility": 0.0029999999999999996,
+    "drift": 0,
+    "support": 4.75,
+    "resistance": 5.25
+  },
+  "USD/TRY": {
+    "price": 32.0,
+    "precision": 8,
+    "volatility": 0.0192,
+    "drift": 0,
+    "support": 30.4,
+    "resistance": 33.6
+  },
+  "USD/CNH": {
+    "price": 7.2,
+    "precision": 8,
+    "volatility": 0.00432,
+    "drift": 0,
+    "support": 6.84,
+    "resistance": 7.5600000000000005
+  },
+  "USD/INR": {
+    "price": 83.0,
+    "precision": 8,
+    "volatility": 0.0498,
+    "drift": 0,
+    "support": 78.85,
+    "resistance": 87.15
+  },
+  "USD/SGD": {
+    "price": 1.35,
+    "precision": 8,
+    "volatility": 0.00081,
+    "drift": 0,
+    "support": 1.2825,
+    "resistance": 1.4175000000000002
+  },
+  "USD/HKD": {
+    "price": 7.8,
+    "precision": 8,
+    "volatility": 0.004679999999999999,
+    "drift": 0,
+    "support": 7.409999999999999,
+    "resistance": 8.19
+  },
+  "USD/NOK": {
+    "price": 10.6,
+    "precision": 8,
+    "volatility": 0.006359999999999999,
+    "drift": 0,
+    "support": 10.069999999999999,
+    "resistance": 11.13
+  },
+  "USD/SEK": {
+    "price": 10.4,
+    "precision": 8,
+    "volatility": 0.00624,
+    "drift": 0,
+    "support": 9.879999999999999,
+    "resistance": 10.920000000000002
+  },
+  "USD/DKK": {
+    "price": 6.9,
+    "precision": 8,
+    "volatility": 0.00414,
+    "drift": 0,
+    "support": 6.555,
+    "resistance": 7.245000000000001
+  },
+  "USD/PLN": {
+    "price": 4.0,
+    "precision": 8,
+    "volatility": 0.0024,
+    "drift": 0,
+    "support": 3.8,
+    "resistance": 4.2
+  },
+  "USD/HUF": {
+    "price": 360.0,
+    "precision": 8,
+    "volatility": 0.21599999999999997,
+    "drift": 0,
+    "support": 342.0,
+    "resistance": 378.0
+  },
+  "EUR/SEK": {
+    "price": 11.30434783,
+    "precision": 8,
+    "volatility": 0.006782608695652174,
+    "drift": 0,
+    "support": 10.73913043478261,
+    "resistance": 11.869565217391305
+  },
+  "EUR/NOK": {
+    "price": 11.52173913,
+    "precision": 8,
+    "volatility": 0.006913043478260868,
+    "drift": 0,
+    "support": 10.945652173913041,
+    "resistance": 12.097826086956522
+  },
+  "EUR/DKK": {
+    "price": 7.5,
+    "precision": 8,
+    "volatility": 0.0045,
+    "drift": 0,
+    "support": 7.125,
+    "resistance": 7.875
+  },
+  "EUR/PLN": {
+    "price": 4.34782609,
+    "precision": 8,
+    "volatility": 0.002608695652173913,
+    "drift": 0,
+    "support": 4.130434782608695,
+    "resistance": 4.565217391304348
+  },
+  "GBP/NZD": {
+    "price": 2.08860759,
+    "precision": 8,
+    "volatility": 0.0012531645569620249,
+    "drift": 0,
+    "support": 1.984177215189873,
+    "resistance": 2.193037974683544
+  },
+  "BTC": {
+    "price": 64320.0,
+    "precision": 8,
+    "volatility": 38.592,
+    "drift": 0,
+    "support": 61104.0,
+    "resistance": 67536.0
+  },
+  "ETH": {
+    "price": 3400.0,
+    "precision": 8,
+    "volatility": 2.04,
+    "drift": 0,
+    "support": 3230.0,
+    "resistance": 3570.0
+  },
+  "BNB": {
+    "price": 580.0,
+    "precision": 8,
+    "volatility": 0.348,
+    "drift": 0,
+    "support": 551.0,
+    "resistance": 609.0
+  },
+  "XRP": {
+    "price": 0.62,
+    "precision": 8,
+    "volatility": 0.000372,
+    "drift": 0,
+    "support": 0.589,
+    "resistance": 0.651
+  },
+  "SOL": {
+    "price": 145.0,
+    "precision": 8,
+    "volatility": 0.087,
+    "drift": 0,
+    "support": 137.75,
+    "resistance": 152.25
+  },
+  "DOGE": {
+    "price": 0.18,
+    "precision": 8,
+    "volatility": 0.00010799999999999998,
+    "drift": 0,
+    "support": 0.17099999999999999,
+    "resistance": 0.189
+  },
+  "ADA": {
+    "price": 0.72,
+    "precision": 8,
+    "volatility": 0.00043199999999999993,
+    "drift": 0,
+    "support": 0.6839999999999999,
+    "resistance": 0.756
+  },
+  "TRX": {
+    "price": 0.12,
+    "precision": 8,
+    "volatility": 7.199999999999999e-05,
+    "drift": 0,
+    "support": 0.11399999999999999,
+    "resistance": 0.126
+  },
+  "MATIC": {
+    "price": 0.94,
+    "precision": 8,
+    "volatility": 0.0005639999999999999,
+    "drift": 0,
+    "support": 0.8929999999999999,
+    "resistance": 0.987
+  },
+  "DOT": {
+    "price": 8.2,
+    "precision": 8,
+    "volatility": 0.004919999999999999,
+    "drift": 0,
+    "support": 7.789999999999999,
+    "resistance": 8.61
+  },
+  "LTC": {
+    "price": 92.0,
+    "precision": 8,
+    "volatility": 0.05519999999999999,
+    "drift": 0,
+    "support": 87.39999999999999,
+    "resistance": 96.60000000000001
+  },
+  "BCH": {
+    "price": 410.0,
+    "precision": 8,
+    "volatility": 0.24599999999999997,
+    "drift": 0,
+    "support": 389.5,
+    "resistance": 430.5
+  },
+  "LINK": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "XLM": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "ATOM": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "UNI": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "AVAX": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "SHIB": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "XTZ": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "ALGO": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "VET": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "FIL": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "ICP": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "AAVE": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "EOS": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "THETA": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "FTM": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "NEAR": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "SUI": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "APT": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "ARB": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "OP": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "AAPL": {
+    "price": 212.0,
+    "precision": 8,
+    "volatility": 0.12719999999999998,
+    "drift": 0,
+    "support": 201.39999999999998,
+    "resistance": 222.60000000000002
+  },
+  "MSFT": {
+    "price": 428.0,
+    "precision": 8,
+    "volatility": 0.2568,
+    "drift": 0,
+    "support": 406.59999999999997,
+    "resistance": 449.40000000000003
+  },
+  "GOOGL": {
+    "price": 171.0,
+    "precision": 8,
+    "volatility": 0.1026,
+    "drift": 0,
+    "support": 162.45,
+    "resistance": 179.55
+  },
+  "AMZN": {
+    "price": 186.0,
+    "precision": 8,
+    "volatility": 0.11159999999999999,
+    "drift": 0,
+    "support": 176.7,
+    "resistance": 195.3
+  },
+  "NVDA": {
+    "price": 910.0,
+    "precision": 8,
+    "volatility": 0.5459999999999999,
+    "drift": 0,
+    "support": 864.5,
+    "resistance": 955.5
+  },
+  "TSLA": {
+    "price": 182.0,
+    "precision": 8,
+    "volatility": 0.10919999999999999,
+    "drift": 0,
+    "support": 172.9,
+    "resistance": 191.1
+  },
+  "META": {
+    "price": 505.0,
+    "precision": 8,
+    "volatility": 0.303,
+    "drift": 0,
+    "support": 479.75,
+    "resistance": 530.25
+  },
+  "NFLX": {
+    "price": 628.0,
+    "precision": 8,
+    "volatility": 0.37679999999999997,
+    "drift": 0,
+    "support": 596.6,
+    "resistance": 659.4
+  },
+  "JNJ": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "V": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "WMT": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "JPM": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "MA": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "PG": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "UNH": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "HD": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "CVX": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "LLY": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "BAC": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "ABBV": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "KO": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "MRK": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "PEP": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "AVGO": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "TMO": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "COST": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "ORCL": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "CSCO": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "AMD": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "INTC": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "IBM": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "PYPL": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "DIS": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "UBER": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "LYFT": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "SNAP": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "TWTR": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "SQ": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "SHOP": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "SPOT": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "COIN": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "RIVN": {
+    "price": 100,
+    "precision": 8,
+    "volatility": 0.06,
+    "drift": 0,
+    "support": 95.0,
+    "resistance": 105.0
+  },
+  "XAU/USD": {
+    "price": 2350.0,
+    "precision": 8,
+    "volatility": 1.41,
+    "drift": 0,
+    "support": 2232.5,
+    "resistance": 2467.5
+  },
+  "XAG/USD": {
+    "price": 28.4,
+    "precision": 8,
+    "volatility": 0.017039999999999996,
+    "drift": 0,
+    "support": 26.979999999999997,
+    "resistance": 29.82
+  },
+  "WTICO/USD": {
+    "price": 78.2,
+    "precision": 8,
+    "volatility": 0.046919999999999996,
+    "drift": 0,
+    "support": 74.29,
+    "resistance": 82.11
+  },
+  "BRENT/USD": {
+    "price": 82.1,
+    "precision": 8,
+    "volatility": 0.04925999999999999,
+    "drift": 0,
+    "support": 77.99499999999999,
+    "resistance": 86.205
+  },
+  "NATGAS/USD": {
+    "price": 2.7,
+    "precision": 8,
+    "volatility": 0.00162,
+    "drift": 0,
+    "support": 2.565,
+    "resistance": 2.8350000000000004
+  },
+  "COPPER": {
+    "price": 4.2,
+    "precision": 8,
+    "volatility": 0.0025199999999999997,
+    "drift": 0,
+    "support": 3.9899999999999998,
+    "resistance": 4.41
+  },
+  "PALLADIUM": {
+    "price": 980.0,
+    "precision": 8,
+    "volatility": 0.588,
+    "drift": 0,
+    "support": 931.0,
+    "resistance": 1029.0
+  },
+  "PLATINUM": {
+    "price": 950.0,
+    "precision": 8,
+    "volatility": 0.57,
+    "drift": 0,
+    "support": 902.5,
+    "resistance": 997.5
+  },
+  "SPX": {
+    "price": 5342.0,
+    "precision": 8,
+    "volatility": 3.2051999999999996,
+    "drift": 0,
+    "support": 5074.9,
+    "resistance": 5609.1
+  },
+  "DJI": {
+    "price": 38768.0,
+    "precision": 8,
+    "volatility": 23.2608,
+    "drift": 0,
+    "support": 36829.6,
+    "resistance": 40706.4
+  },
+  "NDX": {
+    "price": 19682.0,
+    "precision": 8,
+    "volatility": 11.809199999999999,
+    "drift": 0,
+    "support": 18697.899999999998,
+    "resistance": 20666.100000000002
+  },
+  "UKX": {
+    "price": 8214.0,
+    "precision": 8,
+    "volatility": 4.9284,
+    "drift": 0,
+    "support": 7803.299999999999,
+    "resistance": 8624.7
+  },
+  "DAX": {
+    "price": 18456.0,
+    "precision": 8,
+    "volatility": 11.073599999999999,
+    "drift": 0,
+    "support": 17533.2,
+    "resistance": 19378.8
+  },
+  "CAC": {
+    "price": 8021.0,
+    "precision": 8,
+    "volatility": 4.8126,
+    "drift": 0,
+    "support": 7619.95,
+    "resistance": 8422.050000000001
+  },
+  "N225": {
+    "price": 39842.0,
+    "precision": 8,
+    "volatility": 23.905199999999997,
+    "drift": 0,
+    "support": 37849.9,
+    "resistance": 41834.1
+  },
+  "HSI": {
+    "price": 17986.0,
+    "precision": 8,
+    "volatility": 10.791599999999999,
+    "drift": 0,
+    "support": 17086.7,
+    "resistance": 18885.3
+  },
+  "ASX": {
+    "price": 7743.0,
+    "precision": 8,
+    "volatility": 4.6457999999999995,
+    "drift": 0,
+    "support": 7355.849999999999,
+    "resistance": 8130.150000000001
+  },
+  "SSEC": {
+    "price": 3156.0,
+    "precision": 8,
+    "volatility": 1.8935999999999997,
+    "drift": 0,
+    "support": 2998.2,
+    "resistance": 3313.8
+  },
+  "SX5E": {
+    "price": 4962.0,
+    "precision": 8,
+    "volatility": 2.9772,
+    "drift": 0,
+    "support": 4713.9,
+    "resistance": 5210.1
+  },
+  "IBEX": {
+    "price": 11234.0,
+    "precision": 8,
+    "volatility": 6.740399999999999,
+    "drift": 0,
+    "support": 10672.3,
+    "resistance": 11795.7
+  },
+  "SMI": {
+    "price": 12263.0,
+    "precision": 8,
+    "volatility": 7.357799999999999,
+    "drift": 0,
+    "support": 11649.85,
+    "resistance": 12876.15
+  },
+  "NIFTY": {
+    "price": 24786.0,
+    "precision": 8,
+    "volatility": 14.871599999999999,
+    "drift": 0,
+    "support": 23546.699999999997,
+    "resistance": 26025.300000000003
+  },
+  "BVSP": {
+    "price": 128593.0,
+    "precision": 8,
+    "volatility": 77.1558,
+    "drift": 0,
+    "support": 122163.34999999999,
+    "resistance": 135022.65
+  }
+}

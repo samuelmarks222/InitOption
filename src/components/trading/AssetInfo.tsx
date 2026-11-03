@@ -1,3 +1,5 @@
+import { isInternalOTC, marketWebSocketUrl, subscribeOTCQuotes } from "@/lib/otcMarket";
+import { observedHistory } from "./engine/native/observedHistory";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import type { ActiveTrade } from "@/hooks/useTrading";
@@ -33,9 +35,14 @@ const getTradeProgressPercent = (trade?: ActiveTrade | null) => {
   return Math.min(100, Math.max(0, (elapsed / trade.expiry_seconds) * 100));
 };
 
-// Mini sparkline sampled from the same deterministic market model as the chart.
+// Internal OTC sparklines project the same received server history as the chart.
 // Tints green/red while the asset has a live winning/losing position.
 const TabSparkline = ({ symbol, category, basePrice, tone }: { symbol: string; category?: string | null; basePrice: number; tone?: "up" | "down" | null }) => {
+  const [revision, setRevision] = useState(0);
+  useEffect(() => {
+    if (!isInternalOTC) return;
+    return subscribeOTCQuotes(quote => { if (quote.symbol === symbol) setRevision(value => value+1); });
+  }, [symbol]);
   const lineColor = tone === "up" ? "#18d87d" : tone === "down" ? "#ff6a72" : "#2ea3f2";
   const coords = useMemo(() => {
     const now = Math.floor(Date.now() / 1000);
@@ -44,7 +51,13 @@ const TabSparkline = ({ symbol, category, basePrice, tone }: { symbol: string; c
     const step = spanSec / (N - 1);
     const safeBase = Number.isFinite(basePrice) && basePrice > 0 ? basePrice : 1;
     const prices: number[] = [];
-    for (let i = 0; i < N; i++) {
+    if (isInternalOTC) {
+      const source = marketWebSocketUrl();
+      const snapshot = source ? observedHistory.snapshot(source, symbol, 5, now, N) : null;
+      const bars = snapshot ? [...snapshot.history, ...(snapshot.current ? [snapshot.current] : [])].slice(-N) : [];
+      prices.push(...bars.map(bar => bar.close));
+    }
+    for (let i = 0; !isInternalOTC && i < N; i++) {
       try {
         prices.push(getDeterministicPriceAt({ symbol, basePrice: safeBase, timestamp: now - spanSec + i * step, category }));
       } catch {
@@ -55,9 +68,9 @@ const TabSparkline = ({ symbol, category, basePrice, tone }: { symbol: string; c
     const max = Math.max(...prices);
     const range = max - min || 1;
     return prices
-      .map((p, i) => `${((i / (N - 1)) * 100).toFixed(2)},${(27 - ((p - min) / range) * 26).toFixed(2)}`)
+      .map((p, i) => `${((i / Math.max(1,prices.length - 1)) * 100).toFixed(2)},${(27 - ((p - min) / range) * 26).toFixed(2)}`)
       .join(" ");
-  }, [symbol, basePrice, category]);
+  }, [symbol, basePrice, category, revision]);
 
   const gradientId = useMemo(
     () => `spark-${String(symbol).replace(/[^a-zA-Z0-9]/g, "")}`,

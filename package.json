@@ -16,7 +16,9 @@
     "chart:simulation": "node server/market-data/server.js",
     "chart:test": "node --test financial-chart/*.test.js",
     "native:chart": "node native-chart/server.mjs",
-    "native:chart:test": "node --test native-chart/*.test.mjs"
+    "native:chart:test": "node --test native-chart/*.test.mjs",
+    "otc:server": "node server/otc/start.mjs",
+    "otc:test": "node --test server/otc/*.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

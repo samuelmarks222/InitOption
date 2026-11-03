@@ -13,6 +13,7 @@ export class ObservedHistory {
     if (!Number.isInteger(maxBars) || maxBars < 1 || !Number.isInteger(maxStreams) || maxStreams < 1) throw new Error('Invalid history capacity');
   }
   private key(source: string, symbol: string) { return JSON.stringify([source, symbol]); }
+  reset(source: string, symbol: string) { this.streams.delete(this.key(source,symbol)); }
   record(source: string, symbol: string, tick: ObservedTick) {
     if (!Number.isFinite(tick.timestamp) || !Number.isFinite(tick.price) || tick.price <= 0) return false;
     const key = this.key(source, symbol);
