@@ -1,3 +1,6 @@
+import { WinningNotifications } from "@/components/trading/WinningNotifications";
+import { winningNotification, type WinningNotification } from "@/lib/winningNotifications";
+import { useWebsiteContent } from "@/hooks/useWebsiteContent";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "@/integrations/api/client";
@@ -369,6 +372,11 @@ const readJsonStorage = <T,>(key: string, fallback: T): T => {
 
 const Trade = () => {
   const { profile, user } = useAuth();
+  const { data: notificationSettings } = useWebsiteContent();
+  const [winNotifications, setWinNotifications] = useState<WinningNotification[]>([]);
+  const seenWinningTradeIds = useRef(new Set<string>());
+  const dismissWinNotification = useCallback((id: string) => setWinNotifications(current => current.filter(item => item.id !== id)), []);
+  useEffect(() => { setWinNotifications([]); seenWinningTradeIds.current.clear(); }, [user?.id]);
   const {
     activeTrades,
     tradeHistory,
@@ -651,6 +659,11 @@ const Trade = () => {
     if (pendingSettlements.length === 0) return;
 
     pendingSettlements.forEach((s) => {
+      const notification = winningNotification(s, notificationSettings.tradingDefaults.bigWinProfitThreshold);
+      if (notification && !seenWinningTradeIds.current.has(notification.id)) {
+        seenWinningTradeIds.current.add(notification.id);
+        setWinNotifications(current => [...current, notification]);
+      }
       showChartSettlementAnnouncement({
         id: s.id,
         assetSymbol: s.asset_symbol,
@@ -669,7 +682,7 @@ const Trade = () => {
 
     // dismiss all processed settlements
     pendingSettlements.forEach((s) => dismissSettlement(s.id));
-  }, [dismissSettlement, pendingSettlements, showChartSettlementAnnouncement]);
+  }, [dismissSettlement, pendingSettlements, showChartSettlementAnnouncement, notificationSettings.tradingDefaults.bigWinProfitThreshold]);
 
   useEffect(() => {
     if (demoActiveTrades.length === 0) return;
@@ -1442,6 +1455,7 @@ const Trade = () => {
         onExecuteDemoTrade={handleOpenDemoTrade}
       >
         <div className="trading-terminal h-[100dvh] flex flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
+          <WinningNotifications results={winNotifications} onDismiss={dismissWinNotification} />
           <GuidedTour enabled={tourEnabled} />
           <PlatformTourOverlay />
           <TradingHeader balance={currentBalance} demoBalance={demoBalance} accountType={accountType}

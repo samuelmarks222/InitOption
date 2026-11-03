@@ -1,3 +1,4 @@
+import { confirmedSettlement } from "@/lib/winningNotifications";
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import { clerkUserIdToUuid } from "@/integrations/appwrite/authService";
 import { api } from "@/integrations/api/client";
@@ -115,6 +116,8 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
   const [tradeHistory, setTradeHistory] = useState<TradeHistoryEntry[]>([]);
   const [pendingSettlements, setPendingSettlements] = useState<TradeSettlement[]>([]);
   const [tournamentParticipantId, setTournamentParticipantId] = useState<string | null>(null);
+  const notifiedSettlementIds = useRef(new Set<string>());
+  const queuedSettlementIds = useRef(new Set<string>());
   const currentPriceRef = useRef<number>(0);
   const currentMarkerTimeRef = useRef<number | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -169,7 +172,11 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
   // Use the canonical database profile id for trade ownership.
   const userId = profile?.id ?? (user?.id ? clerkUserIdToUuid(user.id) : null);
 
+  const notificationOwnerRef = useRef(userId);
+  notificationOwnerRef.current = userId;
   useEffect(() => {
+    notifiedSettlementIds.current.clear();
+    queuedSettlementIds.current.clear();
     setActiveTrades([]);
     setTradeHistory([]);
     setPendingSettlements([]);
@@ -256,13 +263,12 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
 
   const resolveTrade = useCallback(async (trade: ActiveTrade) => {
     const exitPrice = currentPriceRef.current;
-    const won =
+    const proposedWin =
       (trade.direction === "higher" && exitPrice > trade.entry_price) ||
       (trade.direction === "lower" && exitPrice < trade.entry_price);
 
-    const profit = won ? trade.amount + trade.amount * trade.payout_rate : 0;
-    const netProfit = won ? trade.amount * trade.payout_rate : -trade.amount;
-    const status: "won" | "lost" = won ? "won" : "lost";
+    const proposedPayout = proposedWin ? trade.amount + trade.amount * trade.payout_rate : 0;
+    const proposedStatus: "won" | "lost" = proposedWin ? "won" : "lost";
     const settledAt = new Date().toISOString();
 
     const MAX_SETTLE_RETRIES = 3;
@@ -270,14 +276,24 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
 
     for (let attempt = 0; attempt < MAX_SETTLE_RETRIES; attempt++) {
       try {
-        await api.from("trades")
+        const { data: persistedRow, error: settlementError } = await api.from("trades")
           .update({
             exit_price: exitPrice,
-            status,
-            profit,
+            status: proposedStatus,
+            profit: proposedPayout,
             closed_at: settledAt,
           })
-          .eq("id", trade.id);
+          .eq("id", trade.id)
+          .select("*")
+          .single();
+        if (settlementError) throw new Error(`Settlement failed: ${settlementError.message}`);
+        const confirmed = confirmedSettlement(persistedRow as Record<string, unknown> | null, trade);
+        if (!confirmed) throw new Error("Settlement was not confirmed by the trade store");
+        // Accounting and notification amounts must share the acknowledged result.
+        const profit = confirmed.profit;
+        const status = confirmed.status;
+        const won = status === "won";
+        const netProfit = won ? profit - confirmed.amount : -confirmed.amount;
 
         clearStoredTradeMarkerTime(trade.id);
 
@@ -422,6 +438,11 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
           }
         }
 
+        if (trade.showSettlementOverlay && notificationOwnerRef.current === profile?.id && !notifiedSettlementIds.current.has(trade.id)) {
+          notifiedSettlementIds.current.add(trade.id);
+          setPendingSettlements(previous => [...previous, confirmed]);
+          void playTradeResultSound(confirmed.status);
+        }
         lastSettleError = null;
         break;
       } catch (error) {
@@ -440,43 +461,6 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
 
   const settlementQueueRef = useRef<ActiveTrade[]>([]);
   const isProcessingSettlementsRef = useRef(false);
-
-  const applySettlementPopup = useCallback((trade: ActiveTrade) => {
-    if (!trade.showSettlementOverlay) return;
-    const exitPrice = currentPriceRef.current;
-    const won =
-      (trade.direction === "higher" && exitPrice > trade.entry_price) ||
-      (trade.direction === "lower" && exitPrice < trade.entry_price);
-    const profit = won ? trade.amount + trade.amount * trade.payout_rate : 0;
-    const status: "won" | "lost" = won ? "won" : "lost";
-    const settledAt = new Date().toISOString();
-    const markerTime = typeof trade.marker_time === "number" && Number.isFinite(trade.marker_time)
-      ? trade.marker_time
-      : null;
-    setPendingSettlements((prev) => [
-      ...prev,
-      {
-        id: trade.id,
-        asset_symbol: trade.asset_symbol,
-        direction: trade.direction,
-        amount: trade.amount,
-        entry_price: trade.entry_price,
-        exit_price: exitPrice,
-        expiry_seconds: trade.expiry_seconds,
-        payout_rate: trade.payout_rate,
-        profit,
-        status,
-        settled_at: settledAt,
-        marker_time: markerTime,
-        marker_logical:
-          typeof trade.marker_logical === "number" && Number.isFinite(trade.marker_logical)
-            ? trade.marker_logical
-            : null,
-        expiry_time: markerTime !== null ? markerTime + Math.max(1, trade.expiry_seconds || 0) : null,
-      },
-    ]);
-    void playTradeResultSound(status);
-  }, []);
 
   const processSettlementQueue = useCallback(async () => {
     if (isProcessingSettlementsRef.current) return;
@@ -531,8 +515,9 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         });
 
         if (expired.length > 0) {
-          expired.forEach((trade) => applySettlementPopup(trade));
-          settlementQueueRef.current.push(...expired);
+          const unqueued = expired.filter(trade => !queuedSettlementIds.current.has(trade.id));
+          unqueued.forEach(trade => queuedSettlementIds.current.add(trade.id));
+          settlementQueueRef.current.push(...unqueued);
           void processSettlementQueue();
         }
 
@@ -545,7 +530,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
         clearInterval(intervalRef.current);
       }
     };
-  }, [activeTrades.length, applySettlementPopup, processSettlementQueue, resolveTrade]);
+  }, [activeTrades.length, processSettlementQueue, resolveTrade]);
 
   const openTrade = useCallback(
     async (

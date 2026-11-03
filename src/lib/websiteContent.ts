@@ -30,6 +30,7 @@ export interface WebsiteSocialLinkItem {
 export interface WebsiteTradingDefaults {
   chartBackgroundImage: string;
   chartBackgroundOpacity: number;
+  bigWinProfitThreshold: number;
 }
 
 export interface WebsitePublicPageSectionContent {
@@ -463,6 +464,7 @@ export const createDefaultWebsiteContent = (platformName = DEFAULT_PLATFORM_NAME
   tradingDefaults: {
     chartBackgroundImage: "",
     chartBackgroundOpacity: 66,
+    bigWinProfitThreshold: 500,
   },
   socialLinks: {
     title: "Follow Init Option",
@@ -746,6 +748,8 @@ export const normalizeWebsiteContent = (rawValue: unknown, platformName = DEFAUL
       pills: toStringArray(footer.pills, defaults.footer.pills),
     },
     tradingDefaults: {
+      bigWinProfitThreshold: Number.isFinite(Number(tradingDefaults.bigWinProfitThreshold)) && Number(tradingDefaults.bigWinProfitThreshold) > 0
+        ? Math.min(1_000_000_000, Number(tradingDefaults.bigWinProfitThreshold)) : defaults.tradingDefaults.bigWinProfitThreshold,
       chartBackgroundImage: toImageSourceValue(
         tradingDefaults.chartBackgroundImage,
         defaults.tradingDefaults.chartBackgroundImage,
