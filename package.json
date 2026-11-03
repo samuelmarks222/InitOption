@@ -14,7 +14,9 @@
     "test:watch": "vitest",
     "chart:bundle": "node scripts/build-standalone-chart.mjs",
     "chart:simulation": "node server/market-data/server.js",
-    "chart:test": "node --test financial-chart/*.test.js"
+    "chart:test": "node --test financial-chart/*.test.js",
+    "native:chart": "node native-chart/server.mjs",
+    "native:chart:test": "node --test native-chart/*.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
