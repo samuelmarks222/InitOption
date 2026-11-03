@@ -52,7 +52,7 @@ const SectionBlock = ({
         {String(index + 1).padStart(2, "0")}
       </span>
       <div className="min-w-0 flex-1">
-        <h2 className="text-xl font-bold tracking-[-0.02em] text-[#161D24] sm:text-2xl">
+        <h2 className="text-[21px] font-bold tracking-[-0.02em] text-[#161D24] sm:text-[26px] sm:leading-[1.2]">
           {interpolate(section.title, platformName)}
         </h2>
 
@@ -104,7 +104,7 @@ const FaqBlock = ({
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF6EE] text-[#2E7971]">
             <HelpCircle className="h-5 w-5" />
           </span>
-          <h2 className="text-xl font-bold tracking-[-0.02em] text-[#161D24] sm:text-2xl">
+          <h2 className="text-[21px] font-bold tracking-[-0.02em] text-[#161D24] sm:text-[26px] sm:leading-[1.2]">
             Questions &amp; Answers
           </h2>
         </div>
@@ -169,7 +169,7 @@ const FaqBlock = ({
 
 const RelatedLinksBlock = ({ links }: { links: PublicPageLinkItem[] }) => (
   <section id="related-resources" className="io-glass-card scroll-mt-28 rounded-3xl p-6 sm:p-8">
-    <h2 className="text-xl font-bold tracking-[-0.02em] text-[#161D24] sm:text-2xl">
+    <h2 className="text-[21px] font-bold tracking-[-0.02em] text-[#161D24] sm:text-[26px] sm:leading-[1.2]">
       Keep Exploring
     </h2>
     <p className="mt-2 max-w-2xl text-sm leading-7 text-[#5A6772]">
@@ -310,7 +310,7 @@ const PublicInfoPage = ({ pageKey }: PublicInfoPageProps) => {
         />
 
         <section className="bg-[#FAFDFB] py-12 sm:py-16 lg:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-8 lg:grid-cols-12">
               {/* Main Content Column */}
               <div className="space-y-6 lg:col-span-8">
@@ -344,7 +344,7 @@ const PublicInfoPage = ({ pageKey }: PublicInfoPageProps) => {
               <aside className="lg:col-span-4">
                 <div className="sticky top-28 space-y-5">
                   <div className="io-glass-card rounded-3xl p-6">
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#2E7971]">
+                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#1F6B57]">
                       <ListTree className="h-4 w-4" />
                       <span>On This Page</span>
                     </div>

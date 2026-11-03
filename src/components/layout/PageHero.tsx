@@ -39,30 +39,30 @@ const PageHero = ({ eyebrow, title, description, cta, meta }: PageHeroProps) => 
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
+          {/* Accent Hairline — the hero's opening signature */}
+          <span
+            aria-hidden="true"
+            className="mx-auto mb-6 block h-1 w-12 rounded-full bg-gradient-to-r from-[#74C686] via-[#52A788] to-[#3D848E]"
+          />
+
           {/* Breadcrumb */}
           <nav
             aria-label="Breadcrumb"
-            className="mb-4 inline-flex items-center gap-2 text-xs font-medium text-[#64707D]"
+            className="mb-5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7A858F]"
           >
-            <Link to="/" className="transition-colors hover:text-[#2E7971]">
+            <Link to="/" className="transition-colors hover:text-[#1F6B57]">
               Home
             </Link>
-            <span className="text-[#B8C7C0]">/</span>
-            <span className="font-semibold text-[#161D24]">{eyebrow || title}</span>
+            <span className="text-[#C2CEC8]">/</span>
+            <span className="text-[#1F6B57]">{eyebrow || title}</span>
           </nav>
 
-          {eyebrow ? (
-            <div>
-              <span className="io-eyebrow-pill">{eyebrow}</span>
-            </div>
-          ) : null}
-
-          <h1 className="mt-4 text-3xl font-bold leading-[1.12] tracking-[-0.025em] text-[#161D24] sm:text-5xl">
+          <h1 className="text-[34px] font-bold leading-[1.08] tracking-[-0.03em] text-[#161D24] sm:text-[52px]">
             {title}
           </h1>
 
           {description ? (
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[#586570] sm:text-lg">
+            <p className="mx-auto mt-5 max-w-2xl text-[15px] leading-7 text-[#55635C] sm:text-lg sm:leading-8">
               {description}
             </p>
           ) : null}

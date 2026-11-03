@@ -190,7 +190,7 @@ const StarRating = ({
       const starIcon = (
         <Star
           className={`h-4 w-4 sm:h-5 sm:w-5 ${
-            active ? "text-[#F07A57]" : "text-[#CBD6CE]"
+            active ? "text-[#E9933D]" : "text-[#CBD6CE]"
           }`}
           fill={active ? "currentColor" : "none"}
           strokeWidth={2}
@@ -375,7 +375,7 @@ const ReviewsPage = () => {
         />
 
         <section className="bg-[#FAFDFB] py-12 sm:py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             {/* Summary Strip */}
             <div className="io-glass-card mb-10 flex flex-wrap items-center justify-between gap-6 rounded-3xl p-6 sm:p-7">
               <div className="flex items-center gap-5">
@@ -482,7 +482,7 @@ const ReviewsPage = () => {
                     <MessageSquarePlus className="h-4 w-4" />
                     <span>Share Your Experience</span>
                   </div>
-                  <h2 className="mt-3 text-2xl font-bold text-[#161D24]">
+                  <h2 className="mt-3 text-2xl font-bold tracking-[-0.02em] text-[#161D24]">
                     Submit a Platform Review
                   </h2>
                   <p className="mt-2 text-xs leading-6 text-[#5E6B76]">

@@ -212,7 +212,7 @@ const BlogPage = () => {
         />
 
         <section className="bg-[#FAFDFB] py-12 sm:py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             {/* Search & Category Filter Bar */}
             <div className="io-glass-card mb-10 rounded-3xl p-4 sm:p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

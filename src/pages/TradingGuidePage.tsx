@@ -1431,7 +1431,7 @@ const TradingGuidePage = () => {
           />
 
           <section className="bg-[#FAFDFB] py-12 sm:py-16">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
               {/* Top 4 Category Cards */}
               <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {guideCategories.map((cat) => {
@@ -1555,7 +1555,7 @@ const TradingGuidePage = () => {
                       </span>
                     </div>
 
-                    <h2 className="mt-4 text-3xl font-bold tracking-[-0.025em] text-[#161D24] sm:text-4xl">
+                    <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-[#161D24] sm:text-4xl">
                       {selectedContent.heading}
                     </h2>
 
