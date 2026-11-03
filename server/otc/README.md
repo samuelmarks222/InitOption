@@ -1,3 +1,16 @@
+# Current default: Vercel-native OTC API
+
+**The dashboard now uses `/api/otc` with PostgreSQL-backed serverless generation
+and shared HTTP polling. No separate host is needed.** See
+[`docs/vercel-otc.md`](../../docs/vercel-otc.md) for the current architecture,
+configuration, migration and production requirements.
+
+The continuously running service documented below is retained as an **optional
+legacy transport**. It is not started by Vite and is not required by Vercel.
+Enable it only with `VITE_OTC_TRANSPORT=websocket` and explicit endpoint URLs.
+
+---
+
 # Dashboard-integrated platform-generated OTC pricing
 
 This service is now connected to **the existing dashboard chart**, not a second
@@ -12,9 +25,9 @@ npm ci
 npm run dev
 ```
 
-The Vite development server attaches the native OTC HTTP/WebSocket service to its
-own HTTP server. Open the existing dashboard on port 8080 and select an asset.
-The frontend defaults to `internal-otc` mode, connects to same-origin
+In the legacy setup, run the standalone Node service separately; Vite no longer
+attaches that service. Open the existing dashboard on port 8080 and select an asset.
+When explicitly configured for WebSockets, the frontend connects to
 `/otc/ticks`, subscribes by symbol, loads server history, then receives prices
 at 100ms cadence. There is no client price generator or external-feed requirement.
 The chart explicitly displays **Platform-generated OTC prices**.

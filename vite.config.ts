@@ -1,48 +1,63 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import { createOTCService } from "./server/otc/service.mjs";
-
 const internalOTC = () => ({
-  name: "internal-otc-pricing",
+  name: "serverless-otc-api",
   configureServer(server: any) {
-    const service = createOTCService({ dataDir: process.env.OTC_DATA_DIR ?? ".otc-data" });
-    server.middlewares.use((req: any, res: any, next: () => void) => {
-      if (!service.request(req, res)) next();
+    server.middlewares.use(async (req: any, res: any, next: () => void) => {
+      if (req.url?.split("?")[0] !== "/api/otc") return next();
+      try {
+        const { default: handler } = await server.ssrLoadModule("/api/otc.ts");
+        await handler(req, res);
+      } catch (error) {
+        console.error("Local OTC API failed:", error);
+        res.statusCode = 503;
+        res.setHeader("Content-Type", "application/json");
+        res.end(
+          JSON.stringify({
+            error: "OTC database unavailable. Configure DATABASE_URL.",
+          }),
+        );
+      }
     });
-    server.httpServer?.on("upgrade", (req: any, socket: any, head: any) => { service.upgrade(req, socket, head); });
-    server.httpServer?.once("close", () => service.close());
-    const close = server.close.bind(server);
-    server.close = async () => { service.close(); return close(); };
   },
 });
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  server: {
-    host: "0.0.0.0",
-    port: 8080,
-    allowedHosts: true,
-    hmr: {
-      overlay: false,
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  if (!process.env.DATABASE_URL && env.DATABASE_URL)
+    process.env.DATABASE_URL = env.DATABASE_URL;
+  return {
+    server: {
+      host: "0.0.0.0",
+      port: 8080,
+      allowedHosts: true,
+      hmr: {
+        overlay: false,
+      },
     },
-  },
-  plugins: [internalOTC(), react(), mode === "development" && componentTagger()].filter(Boolean),
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      buffer: "buffer",
-      crypto: "crypto-browserify",
-      stream: "stream-browserify",
-      util: "util",
-      process: "process/browser",
+    plugins: [
+      internalOTC(),
+      react(),
+      mode === "development" && componentTagger(),
+    ].filter(Boolean),
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+        buffer: "buffer",
+        crypto: "crypto-browserify",
+        stream: "stream-browserify",
+        util: "util",
+        process: "process/browser",
+      },
     },
-  },
-  define: {
-    global: "globalThis",
-    "process.env": {},
-    "process.version": '"v18.0.0"',
-    "process.platform": '"browser"',
-  },
-}));
+    define: {
+      global: "globalThis",
+      // Vite replaces process.env for browser builds, but preserves it for the local API.
+      "process.version": '"v18.0.0"',
+      "process.platform": '"browser"',
+    },
+  };
+});

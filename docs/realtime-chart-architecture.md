@@ -324,3 +324,15 @@ Development runs that service on the Vite server; production requires a persiste
 Node deployment and routing/configuration. A static dashboard deploy alone cannot
 run it. Existing client-driven trade persistence/balance flows are not converted
 into a server-authoritative ledger by pricing receipts.
+
+
+## Vercel-only default transport
+
+The former persistent-Node deployment requirement is superseded for the dashboard
+by `api/otc.ts`, a same-origin serverless endpoint using the existing private
+PostgreSQL connection. See `docs/vercel-otc.md`. Atomic database state owns the
+shared Brownian process; HTTP batches contain 100ms ticks, and stored 5s bars
+hydrate history. No browser simulation, local pricing file, persistent process,
+WebSocket server, or separate application host is required in this mode. The
+legacy standalone service remains explicitly opt-in. Financial ledger enforcement
+is still separate unfinished work; changing transport does not make it secure.
