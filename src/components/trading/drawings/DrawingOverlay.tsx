@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { IChartApi, ISeriesApi, Time } from "lightweight-charts";
+import type { IChartApi, ISeriesApi, Time } from "lightweight-charts";
 import { useDrawings, DrawingObject, Point } from "@/contexts/DrawingContext";
 import { useDrawingPreferences } from "@/hooks/useDrawingPreferences";
 import { DrawingActionBar } from "./DrawingActionBar";

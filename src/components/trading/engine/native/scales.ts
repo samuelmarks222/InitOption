@@ -31,7 +31,7 @@ export class PriceCoordinates {
   offset = 0; zoom = 1;
   priceToCoordinate(price: number) { return (this.max - price) / Math.max(Number.EPSILON, this.max - this.min) * this.height; }
   coordinateToPrice(y: number) { return this.max - y / this.height * (this.max - this.min); }
-  fit(low: number, high: number, top = .12, bottom = .12) {
+  fit(low: number, high: number, top = .1, bottom = .1) {
     const span = Math.max(high - low, Math.abs(high) * .0001, .000001) / this.zoom;
     const center = (low + high) / 2 + this.offset;
     this.min = center - span / 2 - span * bottom;

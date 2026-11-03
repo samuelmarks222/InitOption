@@ -11,7 +11,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "chart:bundle": "node scripts/build-standalone-chart.mjs",
+    "chart:simulation": "node server/market-data/server.js",
+    "chart:test": "node --test financial-chart/*.test.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -86,6 +89,7 @@
     "technicalindicators": "^3.1.0",
     "util": "^0.12.5",
     "vaul": "^0.9.9",
+    "ws": "^8.22.1",
     "zod": "^3.25.76"
   },
   "overrides": {
@@ -104,6 +108,7 @@
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
     "dotenv": "^17.3.1",
+    "esbuild": "^0.28.2",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",

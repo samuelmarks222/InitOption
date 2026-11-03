@@ -300,3 +300,15 @@ exchange history/replay service.
 - Shared timeframe-independent transport, designated OTC routing, and a verified
   real historical/recovery API remain outstanding. Observed cache cannot recreate
   ticks missed during outages or before the session.
+
+## Standalone companion and shared transport
+
+See `financial-chart/README.md` for the self-contained HTML deliverable, modular
+Node 100ms Brownian simulation service, adapter/history protocol, tick-buffer and
+incremental aggregation API, configuration, tests and deployment prerequisites.
+The existing dashboard live factory now pools transport by URL/symbol/category,
+not timeframe, fans each observed tick to all active views, rejects simulation
+source tags and deduplicates identical timestamp/price messages without sequences.
+The companion's history adapter is not yet wired into dashboard history loading;
+a verified production provider contract is still required. Live outages never
+silently activate the separate simulation service.

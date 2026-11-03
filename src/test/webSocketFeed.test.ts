@@ -61,7 +61,7 @@ describe('real WebSocket market feed', () => {
   });
   it('detaches old socket callbacks on manual disconnect and cancels retries', () => {
     const {feed,symbol,onTick}=setup(); feed.connect(); const old=MockSocket.instances[0]; old.open();
-    feed.disconnect(); feed.connect(); const current=MockSocket.instances[1]; current.open();
+    feed.disconnect(); vi.advanceTimersByTime(1000); feed.connect(); const current=MockSocket.instances[1]; current.open();
     old.message({symbol,timestamp:600,price:999}); old.close();
     current.message({symbol,timestamp:600,price:101});
     expect(onTick).toHaveBeenCalledTimes(1); expect(onTick.mock.calls[0][0].price).toBe(101);
@@ -77,10 +77,25 @@ describe('real WebSocket market feed', () => {
     const {feed,symbol,onTick}=setup(); feed.connect(); const first=MockSocket.instances[0]; first.open();
     first.message({symbol,timestamp:600,price:100,sequence:3}); feed.disconnect();
     const next=createMarketDataFeed({websocketUrl:'wss://test.invalid/market',subscription:{symbol,basePrice:100,timeframe:TIMEFRAMES['1m']},callbacks:{onTick}});
-    next.connect(); const second=MockSocket.instances[1]; second.open();
+    next.connect(); const second=MockSocket.instances[0];
+    expect(MockSocket.instances).toHaveLength(1);
     second.message({symbol,timestamp:600,price:100,sequence:3}); second.message({symbol,timestamp:601,price:102,sequence:4});
     expect(onTick).toHaveBeenCalledTimes(2); next.disconnect();
   });
+  it('shares a transport across simultaneous timeframe subscribers and rejects simulation in live mode', () => {
+    const {feed,symbol,onTick}=setup(); feed.connect(); const socket=MockSocket.instances[0]; socket.open();
+    const other=vi.fn();
+    const next=createMarketDataFeed({websocketUrl:'wss://test.invalid/market',subscription:{symbol,basePrice:100,timeframe:TIMEFRAMES['4h']},callbacks:{onTick:other}});
+    next.connect(); expect(MockSocket.instances).toHaveLength(1);
+    socket.message({symbol,timestamp:600,price:999,source:'simulated'});
+    socket.message({symbol,timestamp:600,price:101});
+    socket.message({symbol,timestamp:600,price:101});
+    expect(onTick).toHaveBeenCalledTimes(1); expect(other).toHaveBeenCalledTimes(1);
+    feed.disconnect(); socket.message({symbol,timestamp:601,price:102});
+    expect(onTick).toHaveBeenCalledTimes(1); expect(other).toHaveBeenCalledTimes(2);
+    next.disconnect(); vi.advanceTimersByTime(1000); expect(socket.readyState).toBe(MockSocket.CLOSED);
+  });
+
   it('sorts ticks with the same exchange timestamp by sequence before calculating OHLC', () => {
     const {feed,symbol,onTick}=setup(); feed.connect(); const socket=MockSocket.instances[0]; socket.open();
     socket.message({ticks:[{symbol,timestamp:600,price:110,sequence:2},{symbol,timestamp:600,price:95,sequence:1}]});

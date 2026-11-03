@@ -207,7 +207,7 @@ class NativeChart {
     if (background?.color && background.color !== 'transparent') { ctx.fillStyle = background.color; ctx.fillRect(0,0,width,height); }
     const visible = this.series.filter(s => s.config.visible !== false);
     let min = Infinity, max = -Infinity;
-    for (const s of visible) for (const r of s.rows) {
+    for (const s of visible) for (const r of this.visibleRows(s)) {
       const index = this.time.timeToLogical(r.time)!; if (index < this.time.from-1 || index > this.time.to+1) continue;
       const low = r.low ?? r.value ?? r.close, high = r.high ?? r.value ?? r.close;
       if (Number.isFinite(low) && Number.isFinite(high)) {
@@ -255,10 +255,22 @@ class NativeChart {
   }
   private label(ctx: CanvasRenderingContext2D,text: string,y: number,color: string) { if (y < 0 || y > this.price.height || this.config.rightPriceScale.visible === false) return; ctx.fillStyle=color; ctx.fillRect(this.time.width,y-10,80,20); ctx.fillStyle='#fff'; ctx.fillText(text,this.time.width+5,y+4); }
   private stroke(ctx: CanvasRenderingContext2D,x1: number,y1: number,x2: number,y2: number,color: string,width=1,style=0) { ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=width; ctx.setLineDash(style === 1 ? [1,3] : style ? [5,4] : []); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.setLineDash([]); }
+  /** Binary-search the visible time window; paints must not scan full retained history. */
+  private visibleRows(series: NativeSeries): Datum[] {
+    const from = this.time.logicalToTime(this.time.from - 1);
+    const to = this.time.logicalToTime(this.time.to + 1);
+    if (from === null || to === null) return [];
+    const lower = (time: number) => {
+      let left = 0, right = series.rows.length;
+      while (left < right) { const mid = (left + right) >>> 1; if (series.rows[mid].time < time) left = mid + 1; else right = mid; }
+      return left;
+    };
+    return series.rows.slice(lower(from), lower(to + Number.EPSILON * Math.max(1, Math.abs(to))));
+  }
   private drawSeries(ctx: CanvasRenderingContext2D,s: NativeSeries) {
     const o = s.config, points: { x: number; y: number; row: Datum }[] = [];
     const body = Math.max(1, this.time.spacing*.72), half = body/2;
-    for (const row of s.rows) {
+    for (const row of this.visibleRows(s)) {
       const index = this.time.timeToLogical(row.time)!;
       if (index < this.time.from-1 || index > this.time.to+1) continue;
       const x = this.time.logicalToCoordinate(index), value = row.value ?? row.close;
