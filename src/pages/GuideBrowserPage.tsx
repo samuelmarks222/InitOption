@@ -194,7 +194,7 @@ const GuideBrowserPage = () => {
   };
 
   return (
-    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-white text-[#161D24]">
       <Navbar />
 
       <main>
@@ -208,26 +208,26 @@ const GuideBrowserPage = () => {
           ]}
         />
 
-        <section className="py-12 sm:py-16">
+        <section className="bg-[#FAFDFB] py-12 sm:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-8 lg:grid-cols-12">
               {/* Left Filter & List Sidebar */}
               <aside className="space-y-5 lg:col-span-4">
                 <div className="io-glass-card rounded-3xl p-5">
                   <div className="relative">
-                    <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7884]" />
                     <input
                       type="search"
                       placeholder="Search guides..."
                       aria-label="Search guides"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="h-11 w-full rounded-2xl border border-white/10 bg-[#080e1a] pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:border-emerald-500/50 focus:outline-none"
+                      className="h-11 w-full rounded-full border border-[#DCE8E1] bg-[#FAFDFB] pl-10 pr-4 text-sm text-[#161D24] placeholder-[#788591] focus:border-[#52A788] focus:bg-white focus:outline-none"
                     />
                   </div>
 
                   <div className="mt-5">
-                    <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-400">
+                    <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-[#2E7971]">
                       Categories
                     </h2>
                     <div className="mt-3 space-y-1.5">
@@ -236,8 +236,8 @@ const GuideBrowserPage = () => {
                         onClick={() => handleCategoryChange("")}
                         className={`w-full rounded-xl px-3.5 py-2.5 text-left text-xs font-bold transition-colors ${
                           activeCategory === ""
-                            ? "bg-emerald-500 text-white"
-                            : "text-slate-300 hover:bg-white/[0.05] hover:text-white"
+                            ? "io-sage-btn text-white"
+                            : "text-[#4D5A66] hover:bg-[#F3FAF5] hover:text-[#161D24]"
                         }`}
                       >
                         All Guides
@@ -249,8 +249,8 @@ const GuideBrowserPage = () => {
                           onClick={() => handleCategoryChange(cat)}
                           className={`w-full rounded-xl px-3.5 py-2.5 text-left text-xs font-bold transition-colors ${
                             activeCategory === cat
-                              ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/35"
-                              : "text-slate-300 hover:bg-white/[0.05] hover:text-white"
+                              ? "border border-[#BEE0CA] bg-[#EAF6EE] text-[#2E7971]"
+                              : "text-[#4D5A66] hover:bg-[#F3FAF5] hover:text-[#161D24]"
                           }`}
                         >
                           {cat}
@@ -262,19 +262,19 @@ const GuideBrowserPage = () => {
 
                 {/* Guide Directory */}
                 <div className="io-glass-card max-h-[540px] overflow-y-auto rounded-3xl p-5">
-                  <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+                  <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-[#64717C]">
                     {filteredGuides.length} {activeCategory ? `in ${activeCategory}` : "Published Guides"}
                   </h2>
 
                   {loading ? (
                     <div className="flex justify-center py-8">
-                      <Loader className="h-6 w-6 animate-spin text-emerald-400" />
+                      <Loader className="h-6 w-6 animate-spin text-[#459982]" />
                     </div>
                   ) : filteredGuides.length === 0 ? (
-                    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 text-xs leading-6 text-slate-400">
+                    <div className="rounded-2xl border border-[#E3EEE7] bg-[#F5FBF7] p-4 text-xs leading-6 text-[#586570]">
                       No custom media guides matched this filter. Explore 30+ interactive lessons in
                       our{" "}
-                      <Link to="/trading-guide" className="font-bold text-emerald-400 hover:underline">
+                      <Link to="/trading-guide" className="font-bold text-[#2E7971] hover:underline">
                         Trading Academy
                       </Link>
                       .
@@ -288,16 +288,16 @@ const GuideBrowserPage = () => {
                           onClick={() => handleSelectGuide(guide)}
                           className={`w-full rounded-2xl border px-4 py-3 text-left transition-all ${
                             selectedGuide?.id === guide.id
-                              ? "border-emerald-500/40 bg-emerald-500/15 text-white"
-                              : "border-white/[0.07] bg-white/[0.02] text-slate-300 hover:border-white/20 hover:bg-white/[0.05]"
+                              ? "border-[#BEE0CA] bg-[#EAF6EE] text-[#161D24]"
+                              : "border-[#E3EEE7] bg-white text-[#4D5A66] hover:border-[#C2E2CE] hover:bg-[#F6FBF8]"
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
-                              <p className="text-sm font-bold text-white">{guide.title}</p>
-                              <p className="mt-0.5 text-xs text-slate-400">{guide.category}</p>
+                              <p className="text-sm font-bold text-[#161D24]">{guide.title}</p>
+                              <p className="mt-0.5 text-xs text-[#687582]">{guide.category}</p>
                             </div>
-                            <ChevronRight className="h-4 w-4 shrink-0 text-emerald-400" />
+                            <ChevronRight className="h-4 w-4 shrink-0 text-[#2E7971]" />
                           </div>
                         </button>
                       ))}
@@ -310,20 +310,20 @@ const GuideBrowserPage = () => {
               <div className="lg:col-span-8">
                 {loading && !selectedGuide ? (
                   <div className="io-glass-card flex justify-center rounded-3xl py-16">
-                    <Loader className="h-8 w-8 animate-spin text-emerald-400" />
+                    <Loader className="h-8 w-8 animate-spin text-[#459982]" />
                   </div>
                 ) : selectedGuide ? (
                   <div className="space-y-6">
                     <div className="io-glass-card rounded-3xl p-8">
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/12 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#CDE5D6] bg-[#EEF8F2] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#2E7971]">
                         <Sparkles className="h-3 w-3" />
                         {selectedGuide.category || "Guide"}
                       </span>
-                      <h2 className="mt-4 text-3xl font-extrabold text-white sm:text-4xl">
+                      <h2 className="mt-4 text-3xl font-bold text-[#161D24] sm:text-4xl">
                         {selectedGuide.title}
                       </h2>
                       {selectedGuide.description ? (
-                        <p className="mt-4 text-base leading-relaxed text-slate-300">
+                        <p className="mt-4 text-base leading-relaxed text-[#4D5A66]">
                           {selectedGuide.description}
                         </p>
                       ) : null}
@@ -334,10 +334,10 @@ const GuideBrowserPage = () => {
                         {guideSections.map((sec) => (
                           <div key={sec.id} className="io-glass-card rounded-3xl p-6 sm:p-8">
                             {sec.section_title ? (
-                              <h3 className="text-xl font-bold text-white">{sec.section_title}</h3>
+                              <h3 className="text-xl font-bold text-[#161D24]">{sec.section_title}</h3>
                             ) : null}
                             {sec.content_text ? (
-                              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-300">
+                              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-[#4D5A66]">
                                 {sec.content_text}
                               </p>
                             ) : null}
@@ -348,7 +348,7 @@ const GuideBrowserPage = () => {
 
                     {guideMedia.filter((media) => media.media_type !== "thumbnail").length > 0 ? (
                       <div className="io-glass-card rounded-3xl p-6 sm:p-8">
-                        <h3 className="mb-6 text-xl font-extrabold text-white">
+                        <h3 className="mb-6 text-xl font-bold text-[#161D24]">
                           Visual Resources &amp; Video Examples
                         </h3>
                         {guideSections.length > 0 ? (
@@ -356,16 +356,16 @@ const GuideBrowserPage = () => {
                             <div key={group.section?.id ?? "general"} className="mb-6 space-y-4">
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div>
-                                  <h4 className="text-base font-bold text-white">
+                                  <h4 className="text-base font-bold text-[#161D24]">
                                     {group.section?.section_title || "General media"}
                                   </h4>
-                                  <p className="text-xs text-slate-400">
+                                  <p className="text-xs text-[#687582]">
                                     {group.section
                                       ? `Section ${group.section.section_order + 1}`
                                       : "Supplementary content"}
                                   </p>
                                 </div>
-                                <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-300">
+                                <span className="rounded-full bg-[#EAF6EE] px-3 py-1 text-xs font-bold text-[#2E7971]">
                                   {group.items.length} item{group.items.length === 1 ? "" : "s"}
                                 </span>
                               </div>
@@ -383,7 +383,7 @@ const GuideBrowserPage = () => {
                                       href={media.youtube_url || media.media_url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="group relative overflow-hidden rounded-2xl border border-white/10 transition-all hover:border-emerald-500/40"
+                                      className="group relative overflow-hidden rounded-2xl border border-[#DFECE4] transition-all hover:border-[#9FD3B4]"
                                     >
                                       <img
                                         src={thumbnailUrl}
@@ -394,8 +394,8 @@ const GuideBrowserPage = () => {
                                         className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                       />
                                       {isVideo ? (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/35">
-                                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg">
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                                          <span className="io-sage-btn inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg">
                                             <Play className="h-3.5 w-3.5 fill-current" />
                                             Watch Video
                                           </span>
@@ -424,7 +424,7 @@ const GuideBrowserPage = () => {
                                     href={media.youtube_url || media.media_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group relative overflow-hidden rounded-2xl border border-white/10 transition-all hover:border-emerald-500/40"
+                                    className="group relative overflow-hidden rounded-2xl border border-[#DFECE4] transition-all hover:border-[#9FD3B4]"
                                   >
                                     <img
                                       src={thumbnailUrl}
@@ -435,8 +435,8 @@ const GuideBrowserPage = () => {
                                       className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                     />
                                     {isVideo ? (
-                                      <div className="absolute inset-0 flex items-center justify-center bg-black/35">
-                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg">
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                                        <span className="io-sage-btn inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg">
                                           <Play className="h-3.5 w-3.5 fill-current" />
                                           Watch Video
                                         </span>
@@ -451,18 +451,18 @@ const GuideBrowserPage = () => {
                     ) : null}
 
                     {/* Call to Action */}
-                    <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-[#0f2428] to-[#0d1626] p-8">
-                      <h3 className="text-xl font-extrabold text-white">
+                    <div className="io-teal-banner rounded-3xl p-8 text-white">
+                      <h3 className="text-xl font-bold text-white">
                         Ready to put these concepts into action?
                       </h3>
-                      <p className="mt-2 text-sm text-slate-300">
+                      <p className="mt-2 text-sm text-white/85">
                         Practice risk-free with $10,000 demo funds or trade live markets on{" "}
                         {platformName}.
                       </p>
                       <button
                         type="button"
                         onClick={() => navigate("/trade")}
-                        className="mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-emerald-500 px-6 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
+                        className="io-dark-btn mt-5 inline-flex h-11 items-center gap-2 rounded-full px-6 text-xs font-bold text-white"
                       >
                         <span>Open Trading Terminal</span>
                         <ArrowRight className="h-4 w-4" />
@@ -471,15 +471,15 @@ const GuideBrowserPage = () => {
                   </div>
                 ) : (
                   <div className="io-glass-card rounded-3xl p-10 text-center sm:p-14">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-400">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#EAF6EE] text-[#2E7971]">
                       <BookOpen className="h-7 w-7" />
                     </div>
-                    <h2 className="mt-5 text-2xl font-extrabold text-white">
+                    <h2 className="mt-5 text-2xl font-bold text-[#161D24]">
                       {searchTerm
                         ? "No guides matched your search"
                         : "Select a guide or open the Interactive Academy"}
                     </h2>
-                    <p className="mx-auto mt-2.5 max-w-md text-sm leading-6 text-slate-400">
+                    <p className="mx-auto mt-2.5 max-w-md text-sm leading-6 text-[#586570]">
                       {searchTerm
                         ? "Try broadening your search keywords or clearing category filters."
                         : "Choose a published resource from the left directory, or step through our complete 30-chapter platform & strategy handbook."}
@@ -487,14 +487,14 @@ const GuideBrowserPage = () => {
                     <div className="mt-7 flex flex-wrap justify-center gap-3">
                       <Link
                         to="/trading-guide"
-                        className="inline-flex h-11 items-center gap-2 rounded-full bg-emerald-500 px-6 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
+                        className="io-sage-btn inline-flex h-11 items-center gap-2 rounded-full px-6 text-xs font-bold text-white"
                       >
                         <span>Open Interactive Trading Guide</span>
                         <ArrowRight className="h-4 w-4" />
                       </Link>
                       <Link
                         to="/trade"
-                        className="inline-flex h-11 items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 text-xs font-semibold text-white hover:bg-white/[0.08]"
+                        className="io-dark-btn inline-flex h-11 items-center gap-2 rounded-full px-6 text-xs font-semibold text-white"
                       >
                         <span>Try $10,000 Demo</span>
                       </Link>

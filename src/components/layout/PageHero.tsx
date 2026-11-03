@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, ChevronRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface PageHeroCta {
   label: string;
@@ -7,90 +7,110 @@ interface PageHeroCta {
   primary?: boolean;
 }
 
+interface PageHeroMeta {
+  label: string;
+  value: string;
+}
+
 interface PageHeroProps {
   eyebrow?: string;
   title: string;
   description?: string;
   cta?: PageHeroCta[];
-  meta?: string[];
+  meta?: PageHeroMeta[];
 }
 
-const PageHero = ({ eyebrow, title, description, cta, meta }: PageHeroProps) => (
-  <section className="relative overflow-hidden border-b border-white/[0.08] bg-[#080d16] py-14 sm:py-20">
-    {/* Ambient Fintech Glow & Grid */}
-    <div
-      aria-hidden="true"
-      className="io-grid-pattern pointer-events-none absolute inset-0 opacity-50 [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_78%)]"
-    />
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute -top-28 left-1/4 h-80 w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,184,107,0.16),transparent_68%)] blur-3xl"
-    />
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute -bottom-24 right-1/6 h-72 w-[460px] rounded-full bg-[radial-gradient(circle,rgba(28,129,248,0.13),transparent_68%)] blur-3xl"
-    />
+const PageHero = ({ eyebrow, title, description, cta, meta }: PageHeroProps) => {
+  return (
+    <section className="relative overflow-hidden border-b border-[#E5EFE9] bg-white py-14 sm:py-20">
+      {/* Soft Sage-Mint Ambient Washes & Hairline Square Grid (Matching Reference Hero) */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at 8% 15%, rgba(126, 214, 152, 0.22), transparent 44%), radial-gradient(circle at 90% 80%, rgba(114, 198, 178, 0.18), transparent 45%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="io-grid-pattern pointer-events-none absolute inset-0 opacity-75"
+      />
 
-    <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="mb-5 flex items-center gap-2 text-xs font-medium text-slate-400">
-        <Link to="/" className="transition-colors hover:text-white">
-          Home
-        </Link>
-        <ChevronRight className="h-3.5 w-3.5 text-slate-600" />
-        <span className="text-emerald-400">{eyebrow || title}</span>
-      </nav>
-
-      {eyebrow ? (
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
-          <Sparkles className="h-3 w-3 text-emerald-400" />
-          {eyebrow}
-        </div>
-      ) : null}
-
-      <h1 className="max-w-4xl text-3xl font-extrabold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-[54px]">
-        {title}
-      </h1>
-
-      {description ? (
-        <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-          {description}
-        </p>
-      ) : null}
-
-      {meta && meta.length > 0 ? (
-        <div className="mt-5 flex flex-wrap items-center gap-2.5">
-          {meta.map((item) => (
-            <span
-              key={item}
-              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-slate-300"
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-      ) : null}
-
-      {cta && cta.length > 0 ? (
-        <div className="mt-8 flex flex-wrap items-center gap-3.5">
-          {cta.map((item) => (
-            <Link
-              key={item.label}
-              to={item.href}
-              className={
-                item.primary
-                  ? "inline-flex h-12 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#10b86b] to-[#0ea35e] px-6 text-sm font-bold text-white shadow-[0_12px_30px_rgba(16,184,107,0.3)] transition-all hover:-translate-y-0.5 hover:brightness-110"
-                  : "inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 text-sm font-semibold text-slate-200 transition-all hover:border-white/30 hover:bg-white/[0.08] hover:text-white"
-              }
-            >
-              <span>{item.label}</span>
-              {item.primary ? <ArrowRight className="h-4 w-4" /> : null}
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          {/* Breadcrumb */}
+          <nav
+            aria-label="Breadcrumb"
+            className="mb-4 inline-flex items-center gap-2 text-xs font-medium text-[#64707D]"
+          >
+            <Link to="/" className="transition-colors hover:text-[#2E7971]">
+              Home
             </Link>
-          ))}
+            <span className="text-[#B8C7C0]">/</span>
+            <span className="font-semibold text-[#161D24]">{eyebrow || title}</span>
+          </nav>
+
+          {eyebrow ? (
+            <div>
+              <span className="io-eyebrow-pill">{eyebrow}</span>
+            </div>
+          ) : null}
+
+          <h1 className="mt-4 text-3xl font-bold leading-[1.12] tracking-[-0.025em] text-[#161D24] sm:text-5xl">
+            {title}
+          </h1>
+
+          {description ? (
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[#586570] sm:text-lg">
+              {description}
+            </p>
+          ) : null}
+
+          {meta?.length ? (
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              {meta.map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-2xl border border-[#DFECE4] bg-white/90 px-4 py-2.5 text-left shadow-sm"
+                >
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-[#64707D]">
+                    {item.label}
+                  </div>
+                  <div className="mt-0.5 text-sm font-bold text-[#161D24]">{item.value}</div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {cta?.length ? (
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
+              {cta.map((action) =>
+                action.primary !== false ? (
+                  <Link
+                    key={`${action.label}-${action.href}`}
+                    to={action.href}
+                    className="io-sage-btn inline-flex h-12 items-center justify-center gap-2 rounded-full px-7 text-sm font-semibold text-white"
+                  >
+                    <span>{action.label}</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <Link
+                    key={`${action.label}-${action.href}`}
+                    to={action.href}
+                    className="io-dark-btn inline-flex h-12 items-center justify-center gap-2 rounded-full px-7 text-sm font-semibold text-white"
+                  >
+                    <span>{action.label}</span>
+                  </Link>
+                ),
+              )}
+            </div>
+          ) : null}
         </div>
-      ) : null}
-    </div>
-  </section>
-);
+      </div>
+    </section>
+  );
+};
 
 export default PageHero;

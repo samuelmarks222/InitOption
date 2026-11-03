@@ -59,34 +59,30 @@ const Forgot = () => {
   };
 
   return (
-    <div className="io-public-shell relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#080d16] px-4 py-12 text-slate-100">
+    <div className="io-public-shell relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-[#EAF6EF] via-[#F5FAF7] to-white px-4 py-12 text-[#161D24]">
       <div
         aria-hidden="true"
-        className="io-grid-pattern pointer-events-none absolute inset-0 opacity-45 [mask-image:radial-gradient(ellipse_at_center,black_25%,transparent_75%)]"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/3 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,184,107,0.18),transparent_68%)] blur-3xl"
+        className="io-grid-pattern pointer-events-none absolute inset-0 opacity-90 [mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_80%)]"
       />
 
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-8 flex justify-center">
-          <SiteLogo to="/" imageClassName="h-9 sm:h-10 w-auto object-contain" />
+          <SiteLogo to="/" surface="light" imageClassName="h-9 sm:h-10 w-auto object-contain" />
         </div>
 
         <div className="io-glass-card rounded-3xl p-7 sm:p-9">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/12 text-emerald-400">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[#CBE4D4] bg-[#EAF6EE] text-[#2E7971]">
             <KeyRound className="h-5 w-5" />
           </div>
 
-          <h1 className="mt-4 text-center text-2xl font-extrabold tracking-tight text-white">
+          <h1 className="mt-4 text-center text-2xl font-bold tracking-[-0.02em] text-[#161D24]">
             {verified
               ? "Set a New Password"
               : sent
                 ? "Verify Recovery Code"
                 : "Password Recovery"}
           </h1>
-          <p className="mt-2 text-center text-xs leading-6 text-slate-400">
+          <p className="mt-2 text-center text-xs leading-6 text-[#5E6B76]">
             {verified
               ? "Choose a strong password to secure your trading account."
               : sent
@@ -97,20 +93,20 @@ const Forgot = () => {
           {!sent && !verified ? (
             <form onSubmit={handleSend} className="mt-6 space-y-4">
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7884]" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="h-12 w-full rounded-2xl border border-white/12 bg-[#080e1a] pl-11 pr-4 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none"
+                  className="h-12 w-full rounded-full border border-[#DCE8E1] bg-[#FAFDFB] pl-11 pr-4 text-sm text-[#161D24] placeholder:text-[#788591] focus:border-[#52A788] focus:bg-white focus:outline-none"
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#10b86b] to-[#0ea35e] text-sm font-bold text-white shadow-[0_14px_32px_rgba(16,184,107,0.3)] transition-all hover:brightness-110 disabled:opacity-60"
+                className="io-sage-btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold text-white disabled:opacity-60"
               >
                 <span>{loading ? "Sending..." : "Send Verification Code"}</span>
                 <ArrowRight className="h-4 w-4" />
@@ -124,12 +120,12 @@ const Forgot = () => {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="Enter 6-digit code"
-                className="h-12 w-full rounded-2xl border border-white/12 bg-[#080e1a] px-4 text-center font-mono text-base tracking-widest text-white placeholder:font-sans placeholder:tracking-normal placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none"
+                className="h-12 w-full rounded-full border border-[#DCE8E1] bg-[#FAFDFB] px-4 text-center font-mono text-base tracking-widest text-[#161D24] placeholder:font-sans placeholder:tracking-normal placeholder:text-[#788591] focus:border-[#52A788] focus:bg-white focus:outline-none"
               />
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#10b86b] to-[#0ea35e] text-sm font-bold text-white shadow-[0_14px_32px_rgba(16,184,107,0.3)] transition-all hover:brightness-110 disabled:opacity-60"
+                className="io-sage-btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold text-white disabled:opacity-60"
               >
                 <span>{loading ? "Verifying..." : "Verify Code"}</span>
                 <ArrowRight className="h-4 w-4" />
@@ -143,12 +139,12 @@ const Forgot = () => {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter new password"
-                className="h-12 w-full rounded-2xl border border-white/12 bg-[#080e1a] px-4 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none"
+                className="h-12 w-full rounded-full border border-[#DCE8E1] bg-[#FAFDFB] px-4 text-sm text-[#161D24] placeholder:text-[#788591] focus:border-[#52A788] focus:bg-white focus:outline-none"
               />
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#10b86b] to-[#0ea35e] text-sm font-bold text-white shadow-[0_14px_32px_rgba(16,184,107,0.3)] transition-all hover:brightness-110 disabled:opacity-60"
+                className="io-sage-btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold text-white disabled:opacity-60"
               >
                 <span>{loading ? "Updating..." : "Update Password"}</span>
                 <ArrowRight className="h-4 w-4" />
@@ -156,16 +152,16 @@ const Forgot = () => {
             </form>
           )}
 
-          <div className="mt-6 flex items-center justify-between border-t border-white/[0.07] pt-5 text-xs">
+          <div className="mt-6 flex items-center justify-between border-t border-[#E6EFEA] pt-5 text-xs">
             <Link
               to="/login"
-              className="inline-flex items-center gap-1.5 font-bold text-emerald-400 hover:text-emerald-300"
+              className="inline-flex items-center gap-1.5 font-bold text-[#2E7971] hover:underline"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               <span>Back to Sign In</span>
             </Link>
-            <span className="inline-flex items-center gap-1 text-slate-400">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+            <span className="inline-flex items-center gap-1 text-[#64717C]">
+              <ShieldCheck className="h-3.5 w-3.5 text-[#459982]" />
               Encrypted Recovery
             </span>
           </div>

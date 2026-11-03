@@ -1391,41 +1391,41 @@
   }
 }
 
-/* ─── Unified Premium Dark Fintech theme for public & landing pages ─── */
+/* ─── Unified Crisp Sage-Mint & Teal Fintech theme for public & landing pages ─── */
 .poolito-page,
 .io-public-shell {
-  --io-canvas: #080d16;
-  --io-canvas-alt: #0b111e;
-  --io-surface: #111927;
-  --io-surface-elevated: #162133;
-  --io-emerald: #10b86b;
-  --io-emerald-bright: #1ed782;
-  --io-blue: #1c81f8;
-  --io-text: #f8fafc;
-  --io-text-secondary: #cbd5e1;
-  --io-text-muted: #94a3b8;
-  --io-line: rgba(148, 163, 184, 0.12);
-  --background: 219 47% 6%;
-  --foreground: 210 40% 98%;
-  --card: 218 39% 11%;
-  --card-foreground: 210 40% 98%;
-  --popover: 218 39% 11%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 152 84% 39%;
+  --io-canvas: #ffffff;
+  --io-canvas-alt: #f5fbf7;
+  --io-surface: #ffffff;
+  --io-surface-elevated: #edf7f0;
+  --io-emerald: #52a788;
+  --io-emerald-bright: #74c686;
+  --io-teal: #3d848e;
+  --io-text: #161d24;
+  --io-text-secondary: #4e5a65;
+  --io-text-muted: #6c7883;
+  --io-line: #e4ede8;
+  --background: 0 0% 100%;
+  --foreground: 207 24% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 207 24% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 207 24% 11%;
+  --primary: 158 34% 49%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 218 35% 15%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 218 32% 16%;
-  --muted-foreground: 215 20% 65%;
-  --accent: 152 84% 39%;
-  --accent-foreground: 0 0% 100%;
-  --border: 217 28% 18%;
-  --input: 217 28% 18%;
-  --ring: 152 84% 39%;
+  --secondary: 145 33% 95%;
+  --secondary-foreground: 207 24% 11%;
+  --muted: 148 25% 95%;
+  --muted-foreground: 208 11% 45%;
+  --accent: 145 36% 93%;
+  --accent-foreground: 207 24% 11%;
+  --border: 150 20% 89%;
+  --input: 150 20% 89%;
+  --ring: 158 34% 49%;
   --radius: 0.875rem;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: #f8fafc;
-  background-color: #080d16;
+  color: #161d24;
+  background-color: #ffffff;
 }
 
 .poolito-page .font-display,
@@ -1437,13 +1437,55 @@
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
+.io-sage-btn {
+  background: linear-gradient(95deg, #74c686 0%, #52a788 52%, #3d848e 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 26px rgba(61, 132, 142, 0.24);
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.io-sage-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 14px 32px rgba(61, 132, 142, 0.32);
+}
+
+.io-dark-btn {
+  background: #161b20;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(22, 27, 32, 0.16);
+  transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.io-dark-btn:hover {
+  transform: translateY(-1px);
+  background: #232b33;
+  box-shadow: 0 12px 26px rgba(22, 27, 32, 0.24);
+}
+
+.io-eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid #cfd9d5;
+  background: #ffffff;
+  border-radius: 9999px;
+  padding: 0.42rem 1.25rem;
+  color: #182026;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  box-shadow: 0 2px 8px rgba(22, 40, 34, 0.03);
+}
+
+.io-teal-banner {
+  background: linear-gradient(92deg, #7ad085 0%, #55ab88 50%, #3a7d8c 100%);
+}
+
 .io-glass-card {
-  background: linear-gradient(180deg, rgba(20, 29, 47, 0.86) 0%, rgba(13, 20, 34, 0.92) 100%);
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  box-shadow:
-    0 20px 50px rgba(2, 6, 15, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(16px);
+  background: #ffffff;
+  border: 1px solid #e5eee9;
+  box-shadow: 0 16px 42px rgba(20, 48, 40, 0.055);
 }
 
 .io-glass-card-hover {
@@ -1451,18 +1493,15 @@
 }
 
 .io-glass-card-hover:hover {
-  transform: translateY(-4px);
-  border-color: rgba(16, 184, 107, 0.36);
-  box-shadow:
-    0 24px 56px rgba(2, 6, 15, 0.55),
-    0 0 28px rgba(16, 184, 107, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-3px);
+  border-color: #b8dcc7;
+  box-shadow: 0 22px 50px rgba(20, 48, 40, 0.09);
 }
 
 .io-grid-pattern {
   background-image:
-    linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
+    linear-gradient(rgba(30, 82, 62, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30, 82, 62, 0.045) 1px, transparent 1px);
   background-size: 56px 56px;
 }
 
@@ -2218,24 +2257,24 @@
 }
 
 .io-legal-prose {
-  color: #cbd5e1;
+  color: #46535e;
   font-size: 0.95rem;
   line-height: 1.8;
 }
 
 .io-legal-prose h2 {
-  color: #f8fafc !important;
+  color: #161d24 !important;
   font-size: 1.375rem;
-  font-weight: 800;
-  letter-spacing: -0.015em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin-top: 2.25rem;
   margin-bottom: 0.85rem;
   padding-bottom: 0.6rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid #e4ede8;
 }
 
 .io-legal-prose h3 {
-  color: #e2e8f0 !important;
+  color: #1e2830 !important;
   font-size: 1.1rem;
   font-weight: 700;
   margin-top: 1.5rem;
@@ -2243,18 +2282,18 @@
 }
 
 .io-legal-prose p {
-  color: #cbd5e1 !important;
+  color: #46535e !important;
   margin-bottom: 0.75rem;
 }
 
 .io-legal-prose strong {
-  color: #f8fafc;
+  color: #161d24;
   font-weight: 700;
 }
 
 .io-legal-prose ol,
 .io-legal-prose ul {
-  color: #cbd5e1 !important;
+  color: #46535e !important;
   margin-top: 0.5rem;
   margin-bottom: 1rem;
   padding-left: 0.25rem;
@@ -2269,55 +2308,55 @@
   border-collapse: collapse;
   margin-top: 1rem;
   margin-bottom: 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid #dce9e1 !important;
   border-radius: 0.75rem;
   overflow: hidden;
-  background: rgba(9, 15, 28, 0.7);
+  background: #ffffff;
 }
 
 .io-legal-prose thead tr {
-  background: rgba(16, 184, 107, 0.12) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: #eaf6ee !important;
+  border-bottom: 1px solid #d5e6dc !important;
 }
 
 .io-legal-prose th {
-  color: #f8fafc !important;
+  color: #161d24 !important;
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   padding: 0.75rem 1rem !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: #e2ede6 !important;
 }
 
 .io-legal-prose td {
-  color: #cbd5e1 !important;
+  color: #3f4c57 !important;
   padding: 0.75rem 1rem !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: #e6efe9 !important;
   vertical-align: top;
 }
 
 .io-legal-prose tbody tr {
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: #e6efe9 !important;
 }
 
 .io-legal-prose tbody tr:hover {
-  background: rgba(255, 255, 255, 0.025);
+  background: #f6fbf8;
 }
 
 .io-legal-prose a {
-  color: #34d399 !important;
+  color: #2f7e79 !important;
   font-weight: 600;
   text-decoration: none;
 }
 
 .io-legal-prose a:hover {
-  color: #6ee7b7 !important;
+  color: #1f5f5b !important;
   text-decoration: underline;
 }
 
 .io-article-prose {
-  color: #cbd5e1;
+  color: #46535e;
   font-size: 1.05rem;
   line-height: 1.85;
 }
@@ -2326,8 +2365,8 @@
 .io-article-prose h2,
 .io-article-prose h3,
 .io-article-prose h4 {
-  color: #f8fafc;
-  font-weight: 800;
+  color: #161d24;
+  font-weight: 700;
   letter-spacing: -0.02em;
   margin-top: 2rem;
   margin-bottom: 0.85rem;
@@ -2344,13 +2383,13 @@
 
 .io-article-prose p {
   margin-bottom: 1.25rem;
-  color: #cbd5e1;
+  color: #46535e;
 }
 
 .io-article-prose ul,
 .io-article-prose ol {
   margin: 1rem 0 1.35rem 1.25rem;
-  color: #cbd5e1;
+  color: #46535e;
 }
 
 .io-article-prose ul {
@@ -2366,21 +2405,21 @@
 }
 
 .io-article-prose strong {
-  color: #f8fafc;
+  color: #161d24;
   font-weight: 700;
 }
 
 .io-article-prose blockquote {
   margin: 1.5rem 0;
   padding: 1rem 1.25rem;
-  border-left: 3px solid #10b86b;
-  background: rgba(16, 184, 107, 0.08);
+  border-left: 3px solid #52a788;
+  background: #edf7f0;
   border-radius: 0 0.75rem 0.75rem 0;
-  color: #e2e8f0;
+  color: #1d2a32;
 }
 
 .io-article-prose a {
-  color: #34d399;
+  color: #2f7e79;
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -2389,6 +2428,6 @@
 .io-article-prose img {
   border-radius: 1rem;
   margin: 1.5rem 0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid #e4ede8;
 }
 

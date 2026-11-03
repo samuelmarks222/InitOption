@@ -15,7 +15,7 @@ const LEGAL_NAV = [
 
 const InformationDisclosure = () => {
   return (
-    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-white text-[#161D24]">
       <Navbar />
       <PageHero
         eyebrow="Policy & Compliance"
@@ -25,7 +25,7 @@ const InformationDisclosure = () => {
       <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <nav
           aria-label="Legal policies"
-          className="mb-8 flex flex-wrap gap-2 rounded-2xl border border-white/[0.08] bg-[#0e1626] p-2"
+          className="mb-8 flex flex-wrap gap-2 rounded-2xl border border-[#DCE8E1] bg-[#F4FBF6] p-2"
         >
           {LEGAL_NAV.map((item) => (
             <Link
@@ -33,8 +33,8 @@ const InformationDisclosure = () => {
               to={item.to}
               className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-colors ${
                 item.active
-                  ? "bg-emerald-500 text-white"
-                  : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+                  ? "io-sage-btn text-white"
+                  : "text-[#515F6B] hover:bg-white hover:text-[#161D24]"
               }`}
             >
               {item.label}
@@ -43,12 +43,12 @@ const InformationDisclosure = () => {
         </nav>
 
         <section className="io-glass-card io-legal-prose rounded-3xl p-6 sm:p-10">
-          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] px-4 py-3 text-xs text-slate-200">
-            <Shield className="h-4 w-4 text-emerald-400" />
+          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-[#CDE5D6] bg-[#EEF8F2] px-4 py-3 text-xs text-[#232F38]">
+            <Shield className="h-4 w-4 text-[#2E7971]" />
             <span><strong>Last Updated:</strong> 9 June 2026</span>
-            <span className="text-slate-600">•</span>
+            <span className="text-[#94A5B0]">•</span>
             <span><strong>Version:</strong> 2.0</span>
-            <span className="text-slate-600">•</span>
+            <span className="text-[#94A5B0]">•</span>
             <span><strong>Scope:</strong> All users, staff, contractors &amp; service partners</span>
           </div>
 
@@ -965,14 +965,14 @@ const InformationDisclosure = () => {
         <div className="mt-8 flex items-center justify-between">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-white/[0.08]"
+            className="inline-flex items-center gap-2 rounded-full border border-[#D4E2DA] bg-white px-4 py-2.5 text-xs font-bold text-[#161D24] transition-colors hover:bg-[#F3FAF5]"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Return to homepage</span>
           </Link>
           <Link
             to="/privacy"
-            className="text-xs font-bold text-emerald-400 hover:text-emerald-300"
+            className="text-xs font-bold text-[#2E7971] hover:underline"
           >
             Read Privacy Policy →
           </Link>

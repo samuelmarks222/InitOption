@@ -23,6 +23,7 @@ import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { useDynamicRouteSeo } from "@/hooks/useDynamicRouteSeo";
 import { fetchBlogPostsPage } from "@/lib/blogApi";
 import {
+  estimateReadingTimeMinutes,
   getPublishedBlogPostSummaries,
   paginateBlogPosts,
   type BlogCategoryDefinition,
@@ -200,7 +201,7 @@ const BlogPage = () => {
   };
 
   return (
-    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-white text-[#161D24]">
       <Navbar />
 
       <main>
@@ -210,7 +211,7 @@ const BlogPage = () => {
           description="Practical articles on chart setups, technical indicators, risk discipline, M-PESA & crypto funding, and weekly tournament preparation."
         />
 
-        <section className="py-12 sm:py-16">
+        <section className="bg-[#FAFDFB] py-12 sm:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {/* Search & Category Filter Bar */}
             <div className="io-glass-card mb-10 rounded-3xl p-4 sm:p-5">
@@ -222,14 +223,14 @@ const BlogPage = () => {
                   }}
                   className="relative flex-1 lg:max-w-md"
                 >
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7884]" />
                   <input
                     type="search"
                     value={searchInput}
                     onChange={(event) => setSearchInput(event.target.value)}
                     placeholder="Search strategies, RSI, withdrawals, tournaments..."
                     aria-label="Search blog articles"
-                    className="h-11 w-full rounded-2xl border border-white/12 bg-[#080e1a] pl-11 pr-24 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none"
+                    className="h-11 w-full rounded-full border border-[#DCE8E1] bg-[#FAFDFB] pl-11 pr-24 text-sm text-[#161D24] placeholder:text-[#788591] focus:border-[#52A788] focus:bg-white focus:outline-none"
                   />
                   {searchInput ? (
                     <button
@@ -239,14 +240,14 @@ const BlogPage = () => {
                         updateParams({ q: null, page: "1" });
                       }}
                       aria-label="Clear search"
-                      className="absolute right-20 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                      className="absolute right-20 top-1/2 -translate-y-1/2 text-[#687582] hover:text-[#161D24]"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   ) : null}
                   <button
                     type="submit"
-                    className="absolute right-1.5 top-1.5 h-8 rounded-xl bg-emerald-500 px-3.5 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
+                    className="io-sage-btn absolute right-1.5 top-1.5 h-8 rounded-full px-4 text-xs font-bold text-white"
                   >
                     Search
                   </button>
@@ -257,10 +258,10 @@ const BlogPage = () => {
                   <button
                     type="button"
                     onClick={() => updateParams({ category: null, page: "1" })}
-                    className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-colors ${
+                    className={`rounded-full px-4 py-2 text-xs font-bold transition-colors ${
                       !categorySlug
-                        ? "bg-emerald-500 text-white"
-                        : "border border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/20 hover:text-white"
+                        ? "io-sage-btn text-white"
+                        : "border border-[#DCE8E1] bg-[#F6FBF8] text-[#4C5964] hover:border-[#BEDEC9] hover:text-[#161D24]"
                     }`}
                   >
                     All ({allPosts.length})
@@ -270,10 +271,10 @@ const BlogPage = () => {
                       key={cat.slug}
                       type="button"
                       onClick={() => updateParams({ category: cat.slug, page: "1" })}
-                      className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-colors ${
+                      className={`rounded-full px-4 py-2 text-xs font-bold transition-colors ${
                         categorySlug === cat.slug
-                          ? "bg-emerald-500 text-white"
-                          : "border border-white/10 bg-white/[0.03] text-slate-300 hover:border-white/20 hover:text-white"
+                          ? "io-sage-btn text-white"
+                          : "border border-[#DCE8E1] bg-[#F6FBF8] text-[#4C5964] hover:border-[#BEDEC9] hover:text-[#161D24]"
                       }`}
                     >
                       {cat.name} ({cat.count})
@@ -282,98 +283,116 @@ const BlogPage = () => {
                 </div>
               </div>
 
-              {query || activeCategory ? (
-                <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-3.5 text-xs">
-                  <span className="text-slate-400">Active filters:</span>
-                  {query ? (
-                    <button
-                      type="button"
-                      onClick={() => updateParams({ q: null, page: "1" })}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 font-semibold text-emerald-300 hover:bg-emerald-500/25"
-                    >
-                      <span>Query: &ldquo;{query}&rdquo;</span>
-                      <X className="h-3 w-3" />
-                    </button>
-                  ) : null}
-                  {activeCategory ? (
-                    <button
-                      type="button"
-                      onClick={() => updateParams({ category: null, page: "1" })}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/15 px-3 py-1 font-semibold text-sky-300 hover:bg-sky-500/25"
-                    >
-                      <span>Category: {activeCategory.name}</span>
-                      <X className="h-3 w-3" />
-                    </button>
-                  ) : null}
+              {(query || activeCategory) ? (
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#E6EFEA] pt-3.5 text-xs text-[#5E6B76]">
+                  <span>
+                    Showing <strong className="text-[#161D24]">{filteredPosts.length}</strong>{" "}
+                    {filteredPosts.length === 1 ? "article" : "articles"}
+                    {activeCategory ? ` in "${activeCategory.name}"` : ""}
+                    {query ? ` matching "${query}"` : ""}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchInput("");
+                      updateParams({ q: null, category: null, page: "1" });
+                    }}
+                    className="font-bold text-[#2E7971] hover:underline"
+                  >
+                    Clear filters
+                  </button>
                 </div>
               ) : null}
             </div>
 
             {loading && !allPosts.length ? (
-              <div className="io-glass-card rounded-3xl p-12 text-center text-sm text-slate-400">
+              <div className="rounded-3xl border border-[#DFECE4] bg-white p-12 text-center text-sm text-[#5E6B76]">
                 Loading editorial articles...
               </div>
             ) : (
               <div className="grid gap-8 lg:grid-cols-12">
-                {/* Left Main Feed */}
+                {/* Main Editorial Feed */}
                 <div className="space-y-8 lg:col-span-8">
                   {/* Featured Hero Article */}
                   {featuredPost ? (
                     <article className="io-glass-card io-glass-card-hover overflow-hidden rounded-3xl">
-                      <div className="grid md:grid-cols-12">
-                        <Link
-                          to={`/blog/${featuredPost.slug}`}
-                          className="relative block min-h-[240px] overflow-hidden bg-[#060a12] md:col-span-6"
-                        >
-                          <img
-                            src={getImage(featuredPost)}
-                            alt={featuredPost.featuredImageAlt || featuredPost.title}
-                            className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                            onError={(event) => {
-                              event.currentTarget.src = BLOG_FALLBACK_IMAGE;
-                            }}
-                          />
-                          <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-lg">
-                            <Sparkles className="h-3 w-3" />
-                            Featured
+                      <Link
+                        to={`/blog/${featuredPost.slug}`}
+                        className="group relative block aspect-[16/9] overflow-hidden bg-[#EAF6EE]"
+                      >
+                        <img
+                          src={getImage(featuredPost)}
+                          alt={featuredPost.featuredImageAlt || featuredPost.title}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          onError={(event) => {
+                            event.currentTarget.src = BLOG_FALLBACK_IMAGE;
+                          }}
+                        />
+                        <div className="absolute left-5 top-5 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-[#2E7971] shadow-sm backdrop-blur-md">
+                          <Sparkles className="h-3 w-3" />
+                          <span>Featured Insight</span>
+                        </div>
+                      </Link>
+
+                      <div className="p-6 sm:p-8">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-[#64717C]">
+                          <span className="rounded-full border border-[#CDE5D6] bg-[#EEF8F2] px-3 py-1 font-bold text-[#2E7971]">
+                            {featuredPost.primaryCategory}
                           </span>
-                        </Link>
+                          <span className="inline-flex items-center gap-1">
+                            <CalendarDays className="h-3.5 w-3.5 text-[#459982]" />
+                            {formatDate(featuredPost.publishedAt)}
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5 text-[#3D848E]" />
+                            {estimateReadingTimeMinutes(featuredPost.excerpt)} min read
+                          </span>
+                        </div>
 
-                        <div className="flex flex-col justify-between p-6 sm:p-7 md:col-span-6">
-                          <div>
-                            <div className="flex flex-wrap items-center gap-2.5 text-xs text-slate-400">
-                              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-bold text-emerald-300">
-                                {featuredPost.primaryCategory}
-                              </span>
-                              <span className="inline-flex items-center gap-1">
-                                <Clock className="h-3.5 w-3.5" />
-                                {featuredPost.readingTimeMinutes} min read
-                              </span>
-                            </div>
+                        <h2 className="mt-4 text-2xl font-bold leading-snug tracking-[-0.02em] text-[#161D24] sm:text-3xl">
+                          <Link
+                            to={`/blog/${featuredPost.slug}`}
+                            className="transition-colors hover:text-[#2E7971]"
+                          >
+                            {featuredPost.title}
+                          </Link>
+                        </h2>
 
-                            <h2 className="mt-3.5 text-2xl font-extrabold leading-snug text-white">
-                              <Link
-                                to={`/blog/${featuredPost.slug}`}
-                                className="transition-colors hover:text-emerald-400"
-                              >
-                                {featuredPost.title}
-                              </Link>
-                            </h2>
+                        <p className="mt-3 text-sm leading-7 text-[#55626E] sm:text-base">
+                          {featuredPost.excerpt}
+                        </p>
 
-                            <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-300">
-                              {featuredPost.excerpt}
-                            </p>
-                          </div>
+                        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[#E6EFEA] pt-5">
+                          <span className="inline-flex items-center gap-2 text-xs font-semibold text-[#5E6B76]">
+                            <UserRound className="h-3.5 w-3.5 text-[#2E7971]" />
+                            {featuredPost.authorName}
+                          </span>
 
-                          <div className="mt-6 flex items-center justify-between border-t border-white/[0.07] pt-4 text-xs">
-                            <span className="text-slate-400">
-                              {formatDate(featuredPost.publishedAt)} • {featuredPost.authorName}
-                            </span>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => handleShare(featuredPost)}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-[#DCE8E1] bg-white px-3.5 py-1.5 text-xs font-bold text-[#4D5A66] transition-colors hover:bg-[#F3FAF5]"
+                            >
+                              {copiedSlug === featuredPost.slug ? (
+                                <>
+                                  <Check className="h-3.5 w-3.5 text-[#2E7971]" />
+                                  <span className="text-[#2E7971]">Copied</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Share2 className="h-3.5 w-3.5" />
+                                  <span>Share</span>
+                                </>
+                              )}
+                            </button>
+
                             <Link
                               to={`/blog/${featuredPost.slug}`}
-                              className="inline-flex items-center gap-1.5 font-bold text-emerald-400 hover:text-emerald-300"
+                              className="io-sage-btn inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-xs font-bold text-white"
                             >
-                              Read Article <ArrowRight className="h-3.5 w-3.5" />
+                              <span>Read Article</span>
+                              <ArrowRight className="h-3.5 w-3.5" />
                             </Link>
                           </div>
                         </div>
@@ -382,7 +401,7 @@ const BlogPage = () => {
                   ) : null}
 
                   {/* Grid of Articles */}
-                  {visiblePosts.length ? (
+                  {visiblePosts.length > 0 ? (
                     <div className="grid gap-6 sm:grid-cols-2">
                       {visiblePosts.map((post) => (
                         <article
@@ -392,68 +411,60 @@ const BlogPage = () => {
                           <div>
                             <Link
                               to={`/blog/${post.slug}`}
-                              className="relative block h-48 overflow-hidden bg-[#060a12]"
+                              className="group relative block aspect-[16/10] overflow-hidden bg-[#EAF6EE]"
                             >
                               <img
                                 src={getImage(post)}
                                 alt={post.featuredImageAlt || post.title}
                                 loading="lazy"
-                                className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 onError={(event) => {
                                   event.currentTarget.src = BLOG_FALLBACK_IMAGE;
                                 }}
                               />
-                              <span className="absolute left-3.5 top-3.5 rounded-full border border-white/15 bg-[#080d16]/85 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 backdrop-blur-md">
-                                {post.primaryCategory}
-                              </span>
                             </Link>
 
                             <div className="p-6">
-                              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
-                                <span className="inline-flex items-center gap-1">
-                                  <CalendarDays className="h-3.5 w-3.5 text-emerald-400" />
-                                  {formatDate(post.publishedAt)}
+                              <div className="flex flex-wrap items-center gap-2 text-xs text-[#64717C]">
+                                <span className="rounded-full border border-[#CDE5D6] bg-[#EEF8F2] px-2.5 py-0.5 font-bold text-[#2E7971]">
+                                  {post.primaryCategory}
                                 </span>
-                                <span className="inline-flex items-center gap-1">
-                                  <UserRound className="h-3.5 w-3.5 text-slate-500" />
-                                  {post.authorName}
-                                </span>
+                                <span>{formatDate(post.publishedAt)}</span>
                               </div>
 
-                              <h2 className="mt-3 text-lg font-extrabold leading-snug text-white">
+                              <h3 className="mt-3.5 line-clamp-2 text-lg font-bold leading-snug text-[#161D24]">
                                 <Link
                                   to={`/blog/${post.slug}`}
-                                  className="transition-colors hover:text-emerald-400"
+                                  className="transition-colors hover:text-[#2E7971]"
                                 >
                                   {post.title}
                                 </Link>
-                              </h2>
+                              </h3>
 
-                              <p className="mt-2.5 line-clamp-3 text-sm leading-6 text-slate-400">
+                              <p className="mt-2.5 line-clamp-3 text-sm leading-6 text-[#586570]">
                                 {post.excerpt}
                               </p>
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between border-t border-white/[0.07] px-6 py-4">
+                          <div className="flex items-center justify-between border-t border-[#E6EFEA] px-6 py-4 text-xs">
                             <Link
                               to={`/blog/${post.slug}`}
-                              className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300"
+                              className="inline-flex items-center gap-1.5 font-bold text-[#2E7971] hover:underline"
                             >
-                              <span>Read More</span>
+                              <span>Read full guide</span>
                               <ArrowRight className="h-3.5 w-3.5" />
                             </Link>
 
                             <button
                               type="button"
                               onClick={() => handleShare(post)}
-                              aria-label={`Copy link to ${post.title}`}
-                              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-slate-400 transition-colors hover:bg-white/[0.05] hover:text-white"
+                              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold text-[#64717C] transition-colors hover:bg-[#EFF8F2] hover:text-[#2E7971]"
                             >
                               {copiedSlug === post.slug ? (
                                 <>
-                                  <Check className="h-3.5 w-3.5 text-emerald-400" />
-                                  <span className="text-emerald-400">Copied</span>
+                                  <Check className="h-3.5 w-3.5 text-[#2E7971]" />
+                                  <span className="text-[#2E7971]">Copied</span>
                                 </>
                               ) : (
                                 <>
@@ -468,10 +479,10 @@ const BlogPage = () => {
                     </div>
                   ) : !featuredPost ? (
                     <div className="io-glass-card rounded-3xl p-10 text-center">
-                      <p className="text-base font-bold text-white">
+                      <p className="text-base font-bold text-[#161D24]">
                         No articles matched your current search or category filter.
                       </p>
-                      <p className="mt-2 text-sm text-slate-400">
+                      <p className="mt-2 text-sm text-[#586570]">
                         Try clearing filters to view our full library of trading guides and updates.
                       </p>
                       <button
@@ -480,7 +491,7 @@ const BlogPage = () => {
                           setSearchInput("");
                           updateParams({ q: null, category: null, page: "1" });
                         }}
-                        className="mt-5 inline-flex h-10 items-center rounded-xl bg-emerald-500 px-5 text-xs font-bold text-white hover:bg-emerald-600"
+                        className="io-sage-btn mt-5 inline-flex h-10 items-center rounded-full px-5 text-xs font-bold text-white"
                       >
                         Reset All Filters
                       </button>
@@ -498,7 +509,7 @@ const BlogPage = () => {
                         disabled={normalizedPage <= 1}
                         onClick={() => updateParams({ page: String(normalizedPage - 1) })}
                         aria-label="Previous page"
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-slate-300 transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#DCE8E1] bg-white text-[#4D5A66] transition-colors hover:bg-[#F3FAF5] disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <ArrowLeft className="h-4 w-4" />
                       </button>
@@ -510,10 +521,10 @@ const BlogPage = () => {
                             key={pageNum}
                             type="button"
                             onClick={() => updateParams({ page: String(pageNum) })}
-                            className={`h-10 min-w-[40px] rounded-xl px-3 text-xs font-bold transition-colors ${
+                            className={`h-10 min-w-[40px] rounded-full px-3 text-xs font-bold transition-colors ${
                               pageNum === normalizedPage
-                                ? "bg-emerald-500 text-white"
-                                : "border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.08]"
+                                ? "io-sage-btn text-white"
+                                : "border border-[#DCE8E1] bg-white text-[#4D5A66] hover:bg-[#F3FAF5]"
                             }`}
                           >
                             {pageNum}
@@ -526,7 +537,7 @@ const BlogPage = () => {
                         disabled={normalizedPage >= totalPages}
                         onClick={() => updateParams({ page: String(normalizedPage + 1) })}
                         aria-label="Next page"
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-slate-300 transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#DCE8E1] bg-white text-[#4D5A66] transition-colors hover:bg-[#F3FAF5] disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <ArrowRight className="h-4 w-4" />
                       </button>
@@ -538,7 +549,7 @@ const BlogPage = () => {
                 <aside className="space-y-6 lg:col-span-4">
                   {/* Categories Card */}
                   <div className="io-glass-card rounded-3xl p-6">
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-emerald-400">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#2E7971]">
                       <Tag className="h-4 w-4" />
                       <span>Categories</span>
                     </div>
@@ -555,12 +566,12 @@ const BlogPage = () => {
                           }
                           className={`flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-semibold transition-colors ${
                             categorySlug === category.slug
-                              ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30"
-                              : "bg-white/[0.025] text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                              ? "border border-[#BEE0CA] bg-[#EAF6EE] text-[#2E7971]"
+                              : "bg-[#F6FBF8] text-[#4D5A66] hover:bg-[#EEF8F2] hover:text-[#161D24]"
                           }`}
                         >
                           <span>{category.name}</span>
-                          <span className="rounded-md bg-white/[0.07] px-2 py-0.5 text-[11px] text-slate-300">
+                          <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-bold text-[#2E7971]">
                             {category.count}
                           </span>
                         </button>
@@ -571,12 +582,12 @@ const BlogPage = () => {
                   {/* Latest Insights */}
                   <div className="io-glass-card rounded-3xl p-6">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-400">
+                      <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#2E7971]">
                         Recent Articles
                       </span>
                       <a
                         href="/blog/rss.xml"
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-emerald-400"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#64717C] hover:text-[#2E7971]"
                       >
                         <Rss className="h-3.5 w-3.5" />
                         RSS
@@ -587,7 +598,7 @@ const BlogPage = () => {
                         <Link
                           key={post.slug}
                           to={`/blog/${post.slug}`}
-                          className="group flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 transition-colors hover:border-emerald-500/30 hover:bg-white/[0.04]"
+                          className="group flex items-start gap-3 rounded-2xl border border-[#E3EEE7] bg-[#FAFDFB] p-3 transition-colors hover:border-[#BCDFC9] hover:bg-[#F1FAF4]"
                         >
                           <img
                             src={getImage(post)}
@@ -599,10 +610,10 @@ const BlogPage = () => {
                             }}
                           />
                           <div className="min-w-0">
-                            <div className="line-clamp-2 text-xs font-bold leading-5 text-white group-hover:text-emerald-400">
+                            <div className="line-clamp-2 text-xs font-bold leading-5 text-[#161D24] group-hover:text-[#2E7971]">
                               {post.title}
                             </div>
-                            <div className="mt-1 text-[11px] text-slate-500">
+                            <div className="mt-1 text-[11px] text-[#687582]">
                               {formatDate(post.publishedAt)}
                             </div>
                           </div>
@@ -612,25 +623,25 @@ const BlogPage = () => {
                   </div>
 
                   {/* Practice CTA */}
-                  <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-[#0f2428] to-[#0d1626] p-6">
-                    <h3 className="text-lg font-extrabold text-white">
+                  <div className="rounded-3xl border border-[#CFE6D8] bg-gradient-to-br from-[#EAF6EE] via-[#F4FBF6] to-[#E3F2EA] p-6">
+                    <h3 className="text-lg font-bold text-[#161D24]">
                       Apply What You Learn on a Free $10,000 Demo
                     </h3>
-                    <p className="mt-2 text-xs leading-6 text-slate-300">
+                    <p className="mt-2 text-xs leading-6 text-[#4D5A66]">
                       Test chart patterns, RSI setups, and position sizing on live market prices with
                       zero financial risk.
                     </p>
                     <div className="mt-5 flex flex-col gap-2.5">
                       <Link
                         to="/trade"
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-500 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
+                        className="io-sage-btn inline-flex h-10 items-center justify-center gap-2 rounded-full text-xs font-bold text-white"
                       >
                         <Play className="h-3.5 w-3.5 fill-current" />
                         <span>Open Demo Terminal</span>
                       </Link>
                       <Link
                         to="/trading-guide"
-                        className="inline-flex h-10 items-center justify-center rounded-xl border border-white/15 bg-white/[0.04] text-xs font-semibold text-white hover:bg-white/[0.08]"
+                        className="io-dark-btn inline-flex h-10 items-center justify-center rounded-full text-xs font-semibold text-white"
                       >
                         Read Full Trading Guide
                       </Link>
