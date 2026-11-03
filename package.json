@@ -19,7 +19,9 @@
     "native:chart:test": "node --test native-chart/*.test.mjs",
     "otc:server": "node server/otc/start.mjs",
     "otc:test": "node --test server/otc/*.test.mjs",
-    "typecheck:otc-api": "tsc -p tsconfig.otc-api.json"
+    "typecheck:otc-api": "tsc -p tsconfig.otc-api.json",
+    "check:vercel-functions": "node scripts/check-vercel-functions.mjs",
+    "typecheck:system-api": "tsc --noEmit --allowJs --esModuleInterop --skipLibCheck --target ES2022 --lib ES2022,DOM --module NodeNext --moduleResolution NodeNext api/system.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

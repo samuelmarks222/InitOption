@@ -1,8 +1,8 @@
 {
-  "buildCommand": "npm run typecheck:otc-api && npm run build",
+  "buildCommand": "npm run check:vercel-functions && npm run typecheck:otc-api && npm run typecheck:system-api && npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/otc.ts": {
+    "api/system.ts": {
       "maxDuration": 30,
       "includeFiles": "server/otc/assets.json"
     },
@@ -54,9 +54,10 @@
     }
   ],
   "rewrites": [
-    { "source": "/otc/price", "destination": "/api/otc?action=price" },
-    { "source": "/otc/history", "destination": "/api/otc?action=ticks" },
-    { "source": "/otc/health", "destination": "/api/otc?action=health" },
+    { "source": "/api/otc", "destination": "/api/system?route=otc" },
+    { "source": "/otc/price", "destination": "/api/system?route=otc&action=price" },
+    { "source": "/otc/history", "destination": "/api/system?route=otc&action=ticks" },
+    { "source": "/otc/health", "destination": "/api/system?route=otc&action=health" },
     { "source": "/api/system/(.*)", "destination": "/api/system?resource=$1" },
     { "source": "/api/public-bonus", "destination": "/api/system?resource=public-bonus" },
     { "source": "/api/site.webmanifest", "destination": "/api/system?resource=site.webmanifest" },

@@ -13,5 +13,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["api/otc.ts", "server/otc/serverless.d.mts", "src/test/types/otc-api.type-test.ts"]
+  "include": ["api/_lib/otcHandler.ts", "server/otc/serverless.d.mts", "src/test/types/otc-api.type-test.ts"]
 }

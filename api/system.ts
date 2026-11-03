@@ -31,6 +31,13 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
   try {
     switch (route) {
+      case "otc": {
+        // Keep OTC in this existing Function to stay within the Hobby limit.
+        // Lazy loading leaves unrelated system routes independent of pricing assets.
+        const { default: handleOTC } = await import("./_lib/otcHandler.js");
+        await handleOTC(request, res);
+        return;
+      }
       case "health":
         try {
           const dbTest = await testDbConnection();

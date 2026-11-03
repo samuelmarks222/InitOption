@@ -49,7 +49,7 @@ local environment file. Vite's private variable is not included in client define
 
 ## Serverless architecture
 
-`api/otc.ts` uses the existing `pg` PostgreSQL adapter. The pricing engine itself
+`api/_lib/otcHandler.ts`, dispatched by the existing `api/system.ts` Function, uses the existing `pg` PostgreSQL adapter. The pricing engine itself
 uses native JavaScript/Node crypto and the existing Brownian model. The native
 Canvas renderer and dashboard UI are preserved, with no added charting framework.
 PGlite is a **test-only development dependency**, not production pricing storage.
@@ -163,3 +163,18 @@ Function bundle; it does not require `resolveJsonModule`. The pricing engine's
 `.d.mts` declaration defines its transaction executor, asset registry and response
 contract. Compile-only negative tests ensure required options stay required.
 The API uses an ES2020-compatible own-property check, not `Object.hasOwn`.
+
+
+## Vercel Hobby function budget
+
+OTC is dispatched inside the existing `api/system.ts` Function, rather than as
+an additional Function. Rewrites preserve `/api/otc` and all documented legacy
+HTTP paths; frontend URLs and environment settings do not change. Pricing code
+lives in the non-entry-point `api/_lib/otcHandler.ts` helper. Catalog file inclusion
+and the 30-second duration setting belong to `api/system.ts`.
+
+`npm run check:vercel-functions` counts deployable source entry points, excluding
+underscore helpers and TypeScript declarations. The current count is **12**.
+This guard runs before Vercel's API typecheck and frontend build, and rejects
+future additions that exceed the Hobby budget. The actual deployed Function
+count must still be confirmed after Vercel packages the next deployment.

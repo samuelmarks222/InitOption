@@ -1,12 +1,12 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { transaction } from "./_lib/db.js";
-import { OTC_SCHEMA } from "./_lib/otcSchema.js";
-import { createServerlessOTC } from "../server/otc/serverless.mjs";
+import { transaction } from "./db.js";
+import { OTC_SCHEMA } from "./otcSchema.js";
+import { createServerlessOTC } from "../../server/otc/serverless.mjs";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { OTCAssetConfig } from "../server/otc/serverless.mjs";
+import type { OTCAssetConfig } from "../../server/otc/serverless.mjs";
 
-// Vercel includes this file via api/otc.ts.includeFiles. Runtime JSON loading
+// Vercel includes this file via api/system.ts.includeFiles. Runtime JSON loading
 // avoids depending on resolveJsonModule in Vercel's API TypeScript compiler.
 const assets: Record<string, OTCAssetConfig> = JSON.parse(
   readFileSync(resolve(process.cwd(), "server/otc/assets.json"), "utf8"),
