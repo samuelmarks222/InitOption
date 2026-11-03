@@ -1,6 +1,7 @@
+import { tickChartPoint, TickSeriesWriter } from "./engine/native/tickRendering";
 import { animateViewport } from "./engine/native/viewportAnimation";
 import { useChartMode } from "./engine/native/chartMode";
-import { visualCandle, heikinAshiCandle } from "./engine/native/animation";
+import { heikinAshiCandle } from "./engine/native/animation";
 import { getSynchronizedUnixTimeMs, startPeriodicSync } from "@/lib/serverTimeSync";
 import { observedHistory } from "./engine/native/observedHistory";
 import { heikinAshi } from "./engine/native/marketData";
@@ -35,8 +36,8 @@ import {
 } from "./engine/priceEngine";
 import {
   createMarketDataFeed,
-  replayDeterministicTickState,
   type MarketDataFeed,
+  type MarketFeedStatus,
 } from "./engine/marketDataFeed";
 import { CandleAggregator, type CandleCloseCallback, type CandleUpdateCallback } from "./CandleAggregator";
 import ChartToolbar, { ChartType, CandleIcon } from "./ChartToolbar";
@@ -177,8 +178,6 @@ const DEFAULT_VISIBLE_BARS = 80;
 const MAX_CANDLES_IN_MEMORY = 7200;
 const DEFAULT_CHART_TYPE: ChartType = "candles";
 const LIVE_CANDLE_SETTLE_EPSILON = 1e-9;
-const LIVE_PRICE_DAMPING_MS = 85;
-const LIVE_PRICE_MAX_FRAME_DELTA_MS = 48;
 const SYNCED_PRICE_SCALE_MIN_WIDTH = 58;
 type ChartSeriesApi = ISeriesApi<SeriesType>;
 type OverlayIndicatorPoint = LineData<Time> | HistogramData<Time>;
@@ -773,22 +772,7 @@ const buildMainSeriesUpdatePayload = (
   candle: OHLCCandle,
   history: OHLCCandle[],
 ): MainChartPoint => {
-  if (chartType === "heikinAshi") {
-    const ha = heikinAshiCandle(candle, history);
-    return { time: toChartTime(ha.time), open: ha.open, high: ha.high, low: ha.low, close: ha.close };
-  }
-
-  if (chartType === "line") {
-    return { time: toChartTime(candle.time), value: candle.close };
-  }
-
-  return {
-    time: toChartTime(candle.time),
-    open: candle.open,
-    high: candle.high,
-    low: candle.low,
-    close: candle.close,
-  };
+  return tickChartPoint(chartType, candle, history) as MainChartPoint;
 };
 
 const getLiveBeaconPrice = (chartType: ChartType, candle: OHLCCandle, history: OHLCCandle[]) => {
@@ -803,12 +787,6 @@ const getPricePrecision = (price: number) => {
   if (price > 1) return 5;
   return 6;
 };
-
-const getDisplayPriceSnapEpsilon = (price: number) => {
-  const precision = getPricePrecision(Math.max(Math.abs(price), 0.000001));
-  return Math.pow(10, -precision) * 0.05;
-};
-
 
 const formatCloneMoney = (amount: number) => {
   const safeAmount = Number.isFinite(amount) ? Math.max(0, amount) : 0;
@@ -2026,90 +2004,6 @@ const OscillatorPane = ({
   );
 };
 
-/**
- * Calculates dynamic animation duration based on market conditions
- * Larger price movements and high volatility trigger shorter, more responsive animations
- * Stable periods use longer animations for smooth, natural movement
- * This creates organic market feel similar to TradingView
- */
-const calculateAdaptiveAnimationDuration = (
-  current: { open: number; high: number; low: number; close: number },
-  previous: { open: number; high: number; low: number; close: number } | null,
-  basePrice: number,
-): number => {
-  if (!previous || basePrice <= 0) return 700; // Smoother default, less aggressive feel
-
-  // Calculate price metrics
-  const priceChange = Math.abs(current.close - previous.close);
-  const candleRange = current.high - current.low;
-  const prevCandleRange = previous.high - previous.low;
-  const volatility = (candleRange + prevCandleRange) / 2 / basePrice;
-  const changePercent = (priceChange / basePrice) * 100;
-
-  // Velocity: how fast is price changing relative to candle size
-  const velocity = candleRange > 0 ? priceChange / candleRange : 0;
-
-  // Keep the live candle motion smooth and less abrupt.
-  // High velocity only shortens the animation slightly; the overall movement stays calm.
-  const velocityFactor = Math.min(velocity, 1.2);
-  let duration = 900 - velocityFactor * 170; // Range: ~700-900ms
-
-  // Only a small volatility push, so the candle does not feel jumpy.
-  if (volatility > 0.008) {
-    duration *= 0.94;
-  }
-
-  // Slightly longer motion when the price is stable, for a softer live edge.
-  if (priceChange < basePrice * 0.0008) {
-    duration *= 1.04;
-  }
-
-  // Clamp to a softer, less aggressive range.
-  return Math.max(500, Math.min(duration, 1000));
-};
-
-/**
- * Enhanced SmoothUpdateScheduler with market-responsive animation
- * Batches rapid updates and applies dynamic animation duration based on price action
- */
-class SmoothUpdateScheduler {
-  private series: ChartSeriesApi;
-  private pendingUpdate: any = null;
-  private rafId: number | null = null;
-  constructor(series: ChartSeriesApi) {
-    this.series = series;
-    this.pendingUpdate = null;
-    this.rafId = null;
-  }
-
-  update(updateData) {
-    this.pendingUpdate = updateData;
-
-    if (this.rafId === null) {
-      this.rafId = requestAnimationFrame(() => this.flush());
-    }
-  }
-
-  flush() {
-    if (this.rafId !== null) cancelAnimationFrame(this.rafId);
-    if (this.pendingUpdate && this.series) {
-      try {
-        this.series.update(this.pendingUpdate);
-      } catch (_) {}
-      this.pendingUpdate = null;
-    }
-    this.rafId = null;
-  }
-
-  cleanup() {
-    this.pendingUpdate = null;
-    if (this.rafId !== null) {
-      cancelAnimationFrame(this.rafId);
-      this.rafId = null;
-    }
-  }
-}
-
 // ── Persistent feed cache: keeps market feed alive across page navigation ──
 const PERSIST_FEED_TTL = 5_000;
 interface PersistedFeedEntry {
@@ -2150,7 +2044,7 @@ const TradingChart = ({
 
   const chartRef = useRef<IChartApi | null>(null);
   const mainSeriesRef = useRef<ChartSeriesApi | null>(null);
-  const mainUpdateSchedulerRef = useRef<SmoothUpdateScheduler | null>(null);
+  const mainSeriesWriterRef = useRef<TickSeriesWriter<MainChartPoint> | null>(null);
   // Overlay Indicators Refs Map
   const overlaySeriesMap = useRef<Record<string, ChartSeriesApi>>({});
   const indicatorDataMap = useRef<Record<string, OverlayIndicatorPoint[]>>({});
@@ -2160,10 +2054,7 @@ const TradingChart = ({
   const historyRef = useRef<OHLCCandle[]>([]);
   const historyAssetRef = useRef<string>("");
   const liveRef = useRef<OHLCCandle | null>(null);
-  const liveTargetRef = useRef<OHLCCandle | null>(null);
   const liveDisplayRef = useRef<OHLCCandle | null>(null);
-  const liveInterpRafRef = useRef<number | null>(null);
-  const liveInterpLastFrameRef = useRef(0);
   const authoritativeTickPriceRef = useRef(asset.price);
   const displayPriceRef = useRef(asset.price);
   const liveStartPriceRef = useRef(0);
@@ -2177,100 +2068,35 @@ const TradingChart = ({
   const isZoomingRef = useRef(false);
   const priceScaleMarginKeyRef = useRef("");
   const aggregatorRef = useRef<CandleAggregator | null>(null);
+  const liveIndicatorFrame = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (liveIndicatorFrame.current !== null) cancelAnimationFrame(liveIndicatorFrame.current);
+  }, []);
   // Always-fresh ref for activeIndicators so stale closures see latest value
   const activeIndicatorsRef = useRef<ActiveIndicator[]>(activeIndicators);
   const assetSnapshotRef = useRef({ price: asset.price, change: asset.change ?? 0 });
   const onPriceUpdateRef = useRef(onPriceUpdate);
 
-  const stopLiveInterpolation = useCallback(() => {
-    if (liveInterpRafRef.current !== null) {
-      cancelAnimationFrame(liveInterpRafRef.current);
-      liveInterpRafRef.current = null;
-    }
-    liveInterpLastFrameRef.current = 0;
-  }, []);
-
-  const publishLiveDisplayCandle = useCallback((authoritativeCandle: OHLCCandle, displayPrice: number, progress = 1) => {
-    const visual = visualCandle(authoritativeCandle, displayPrice, liveDisplayRef.current, progress);
-    liveDisplayRef.current = visual;
-    displayPriceRef.current = visual.close;
-    mainUpdateSchedulerRef.current?.update(
-      buildMainSeriesUpdatePayload(chartTypeRef.current, visual, historyRef.current),
+  const publishReceivedCandle = useCallback((candle: OHLCCandle) => {
+    liveDisplayRef.current = { ...candle };
+    displayPriceRef.current = candle.close;
+    mainSeriesWriterRef.current?.update(
+      buildMainSeriesUpdatePayload(chartTypeRef.current, candle, historyRef.current),
     );
-    setLivePriceBeacon((current) => ({
-      price: getLiveBeaconPrice(chartTypeRef.current, visual, historyRef.current),
-      time: visual.time,
+    setLivePriceBeacon(current => ({
+      price: getLiveBeaconPrice(chartTypeRef.current, candle, historyRef.current),
+      time: candle.time,
       logical: current?.logical ?? historyRef.current.length,
     }));
   }, []);
 
-  const beginLiveInterpolation = useCallback(() => {
-    const target = liveTargetRef.current;
-    if (!target || !mainSeriesRef.current) {
-      return;
-    }
-
-    if (liveInterpRafRef.current !== null) {
-      return;
-    }
-
-    liveInterpLastFrameRef.current = performance.now();
-
-    const step = (frameTime: number) => {
-      const currentTarget = liveTargetRef.current;
-      if (!currentTarget || !mainSeriesRef.current) {
-        stopLiveInterpolation();
-        return;
-      }
-
-      const previousFrameTime = liveInterpLastFrameRef.current || frameTime;
-      const deltaMs = Math.max(0, Math.min(LIVE_PRICE_MAX_FRAME_DELTA_MS, frameTime - previousFrameTime));
-      liveInterpLastFrameRef.current = frameTime;
-
-      const currentDisplayPrice = Number.isFinite(displayPriceRef.current)
-        ? displayPriceRef.current
-        : currentTarget.close;
-      const priceDelta = currentTarget.close - currentDisplayPrice;
-      const snapEpsilon = getDisplayPriceSnapEpsilon(currentTarget.close);
-
-      const previousVisual = liveDisplayRef.current;
-      const wickDelta = previousVisual?.time === currentTarget.time
-        ? Math.max(Math.abs(currentTarget.high - previousVisual.high), Math.abs(currentTarget.low - previousVisual.low)) : 0;
-      if (Math.abs(priceDelta) <= snapEpsilon && wickDelta <= snapEpsilon) {
-        publishLiveDisplayCandle(currentTarget, currentTarget.close);
-        liveInterpRafRef.current = null;
-        liveInterpLastFrameRef.current = 0;
-        return;
-      }
-
-      const damping = 1 - Math.exp(-deltaMs / LIVE_PRICE_DAMPING_MS);
-      const nextDisplayPrice = currentDisplayPrice + priceDelta * damping;
-      publishLiveDisplayCandle(currentTarget, nextDisplayPrice, damping);
-      liveInterpRafRef.current = requestAnimationFrame(step);
-    };
-
-    liveInterpRafRef.current = requestAnimationFrame(step);
-  }, [publishLiveDisplayCandle, stopLiveInterpolation]);
-
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState !== "visible") {
-        stopLiveInterpolation();
-        return;
-      }
-
-      const target = liveTargetRef.current;
-      if (!target || !mainSeriesRef.current) return;
-
-      // Reconcile directly with the latest market state instead of replaying
-      // throttled animation frames accumulated while the tab was hidden.
-      publishLiveDisplayCandle(target, target.close);
-      beginLiveInterpolation();
+    const restore = () => {
+      if (document.visibilityState === "visible" && liveRef.current) publishReceivedCandle(liveRef.current);
     };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [beginLiveInterpolation, publishLiveDisplayCandle, stopLiveInterpolation]);
+    document.addEventListener("visibilitychange", restore);
+    return () => document.removeEventListener("visibilitychange", restore);
+  }, [publishReceivedCandle]);
 
   const separateIndicators = activeIndicators.filter(i => {
     const conf = INDICATOR_REGISTRY.find(c => c.id === i.configId);
@@ -2298,6 +2124,7 @@ const TradingChart = ({
   const [activeMobileMenu, setActiveMobileMenu] = useState<"time" | "type" | null>(null);
   const [mobileMenuStyle, setMobileMenuStyle] = useState<React.CSSProperties | null>(null);
   const [chartError, setChartError] = useState<string | null>(null);
+  const [marketFeedStatus, setMarketFeedStatus] = useState<MarketFeedStatus>("connecting");
   const [hideMobileQuickActions, setHideMobileQuickActions] = useState(false);
   const [editingIndicatorId, setEditingIndicatorId] = useState<string | null>(null);
   const [marketClockMs, setMarketClockMs] = useState(() => Date.now());
@@ -3017,13 +2844,12 @@ const TradingChart = ({
         !mainSeriesRef.current || mainSeriesKindRef.current !== nextSeriesKind;
 
       if (shouldRecreateSeries && mainSeriesRef.current) {
-        mainUpdateSchedulerRef.current?.cleanup();
+        mainSeriesWriterRef.current?.cleanup();
         chartRef.current.removeSeries(mainSeriesRef.current);
         mainSeriesRef.current = null;
-        mainUpdateSchedulerRef.current = null;
+        mainSeriesWriterRef.current = null;
         mainSeriesKindRef.current = null;
-        stopLiveInterpolation();
-        liveTargetRef.current = null;
+
       }
 
       if (!mainSeriesRef.current) {
@@ -3035,7 +2861,7 @@ const TradingChart = ({
           globalThemeRef.current,
         );
         mainSeriesRef.current = series;
-        mainUpdateSchedulerRef.current = new SmoothUpdateScheduler(series);
+        mainSeriesWriterRef.current = new TickSeriesWriter(series);
         mainSeriesKindRef.current = kind;
         setSyncSeries(series);
       } else {
@@ -3055,14 +2881,14 @@ const TradingChart = ({
       return;
     }
 
-    if (historyRef.current.length > 0 && mainSeriesRef.current && historyAssetRef.current === asset.symbol) {
+    if ((historyRef.current.length > 0 || liveRef.current) && mainSeriesRef.current && historyAssetRef.current === asset.symbol) {
       mainSeriesRef.current.setData(getMainSeriesData(chartType, historyRef.current));
       if (liveRef.current) {
         const visualLiveCandle =
           liveDisplayRef.current?.time === liveRef.current.time ? liveDisplayRef.current : liveRef.current;
         const tf = TIMEFRAMES[selectedTf] || { seconds: 60 };
-        if (mainUpdateSchedulerRef.current) {
-          mainUpdateSchedulerRef.current.update(
+        if (mainSeriesWriterRef.current) {
+          mainSeriesWriterRef.current.update(
             buildMainSeriesUpdatePayload(chartType, visualLiveCandle, historyRef.current),
           );
         } else {
@@ -3225,16 +3051,13 @@ const TradingChart = ({
       const viewport = scale?.getVisibleLogicalRange();
       const previousCount = historyRef.current.length;
       historyRef.current = [...historyRef.current.filter(bar => bar.time < closed.time), closed].slice(-MAX_CANDLES_IN_MEMORY);
-      stopLiveInterpolation();
-      liveTargetRef.current = null;
+
       liveDisplayRef.current = { ...closed };
       displayPriceRef.current = closed.close;
-      if (mainUpdateSchedulerRef.current) {
-        mainUpdateSchedulerRef.current.update(
+      if (mainSeriesWriterRef.current) {
+        mainSeriesWriterRef.current.update(
           buildMainSeriesUpdatePayload(chartTypeRef.current, closed, historyRef.current),
         );
-        // Commit the exact final quote before a new candle can replace a pending frame.
-        mainUpdateSchedulerRef.current.flush();
       }
       if (scale && viewport && autoScrollEnabledRef.current && viewport.to >= previousCount) {
         cancelViewportAnimation.current?.();
@@ -3244,7 +3067,7 @@ const TradingChart = ({
       renderOverlayIndicators(getIndicatorHistory());
       setForceOscillatorRender((current) => current + 1);
     },
-    [getIndicatorHistory, renderOverlayIndicators, stopLiveInterpolation],
+    [getIndicatorHistory, renderOverlayIndicators],
   );
 
   const applyLiveCandleUpdate = useCallback(
@@ -3268,17 +3091,18 @@ const TradingChart = ({
       }));
       onPriceUpdateRef.current?.(candle.close, effectiveMarkerTime, tfSeconds, markerLogical);
 
-      const previousDisplay = liveDisplayRef.current;
-      if (!previousDisplay) {
-        publishLiveDisplayCandle(candle, candle.close);
-      } else if (previousDisplay.time !== candle.time) {
-        const seedPrice = Number.isFinite(displayPriceRef.current) ? displayPriceRef.current : candle.open;
-        publishLiveDisplayCandle(candle, seedPrice);
+      publishReceivedCandle(candle);
+      // Every tick updates OHLC and series synchronously. Expensive indicator
+      // projections share a render frame, consuming the latest raw market state.
+      if (liveIndicatorFrame.current === null) {
+        liveIndicatorFrame.current = requestAnimationFrame(() => {
+          liveIndicatorFrame.current = null;
+          renderOverlayIndicators(getIndicatorHistory());
+          setForceOscillatorRender(current => current + 1);
+        });
       }
-      liveTargetRef.current = { ...candle };
-      beginLiveInterpolation();
     },
-    [beginLiveInterpolation, publishLiveDisplayCandle],
+    [publishReceivedCandle, renderOverlayIndicators, getIndicatorHistory],
   );
 
   const reloadHistoricalCandles = useCallback(
@@ -3297,7 +3121,7 @@ const TradingChart = ({
       const liveSource = import.meta.env.VITE_MARKET_DATA_WS_URL;
       const nextHistory = liveSource?.trim()
         ? observedHistory.snapshot(liveSource, asset.symbol, tf.seconds, getSynchronizedUnixTimeMs() / 1000, nextCount).history
-        : engine.generateHistory(tf, getSynchronizedUnixTimeMs() / 1000, nextCount);
+        : [];
       if (nextHistory.length <= previousCount) return;
 
       loadedHistoryCountRef.current = nextHistory.length;
@@ -3309,8 +3133,8 @@ const TradingChart = ({
         const visualLiveCandle =
           liveDisplayRef.current?.time === liveRef.current.time ? liveDisplayRef.current : liveRef.current;
         try {
-          if (mainUpdateSchedulerRef.current) {
-            mainUpdateSchedulerRef.current.update(
+          if (mainSeriesWriterRef.current) {
+            mainSeriesWriterRef.current.update(
               buildMainSeriesUpdatePayload(chartTypeRef.current, visualLiveCandle, historyRef.current),
             );
           } else {
@@ -3340,9 +3164,9 @@ const TradingChart = ({
   useEffect(() => {
     const tf = TIMEFRAMES[selectedTf];
     if (!tf || !mainSeriesRef.current || !chartRef.current) return;
-    stopLiveInterpolation();
+
     cancelViewportAnimation.current?.();
-    liveTargetRef.current = null;
+
     liveDisplayRef.current = null;
     authoritativeTickPriceRef.current = asset.price;
     displayPriceRef.current = asset.price;
@@ -3438,6 +3262,7 @@ renderOverlayIndicators(getIndicatorHistory());
           assetCategory: asset.type,
         },
         callbacks: {
+          onStatusChange: setMarketFeedStatus,
           onTick: (tick) => {
             const entry = persistedFeeds.get(cacheKey);
             if (entry?.aggregator) {
@@ -3452,9 +3277,8 @@ renderOverlayIndicators(getIndicatorHistory());
       marketFeedRef.current.connect();
 
       return () => {
-        mainUpdateSchedulerRef.current?.cleanup();
-        stopLiveInterpolation();
-        liveTargetRef.current = null;
+        if (liveIndicatorFrame.current !== null) cancelAnimationFrame(liveIndicatorFrame.current);
+        liveIndicatorFrame.current = null;
         liveDisplayRef.current = null;
         if (aggregatorRef.current) aggregatorRef.current.setCallbacks(() => {}, () => {});
         const key = `${asset.symbol}_${selectedTf}`;
@@ -3497,20 +3321,14 @@ renderOverlayIndicators(getIndicatorHistory());
       ? observedHistory.snapshot(websocketUrl, asset.symbol, tf.seconds, nowSec, tf.historical)
       : null;
     // A configured real feed must never be seeded or backfilled with demo prices.
-    const history = realSnapshot ? realSnapshot.history : engine.generateHistory(tf, nowSec);
+    const history = realSnapshot?.history ?? [];
     historyRef.current = history;
     historyAssetRef.current = asset.symbol;
     loadedHistoryCountRef.current = history.length;
 
     mainSeriesRef.current?.setData(getMainSeriesData(chartTypeRef.current, historyRef.current));
 
-    const seedCandle = realSnapshot ? realSnapshot.current : replayDeterministicTickState({
-      symbol: asset.symbol,
-      basePrice: engineBasePrice,
-      timeframe: tf,
-      timestamp: nowSec,
-      assetCategory: asset.type,
-    }).candle;
+    const seedCandle = realSnapshot?.current ?? null;
     liveRef.current = seedCandle;
     const startPrice = seedCandle?.open ?? asset.price;
     liveStartPriceRef.current = startPrice;
@@ -3577,6 +3395,7 @@ renderOverlayIndicators(getIndicatorHistory());
         assetCategory: asset.type,
       },
       callbacks: {
+        onStatusChange: setMarketFeedStatus,
         onTick: (tick) => {
           const entry = persistedFeeds.get(cacheKey);
           if (entry?.aggregator) {
@@ -3592,9 +3411,8 @@ renderOverlayIndicators(getIndicatorHistory());
     { const e = persistedFeeds.get(cacheKey); if (e) e.feed = marketFeedRef.current; }
 
     return () => {
-      mainUpdateSchedulerRef.current?.cleanup();
-      stopLiveInterpolation();
-      liveTargetRef.current = null;
+      if (liveIndicatorFrame.current !== null) cancelAnimationFrame(liveIndicatorFrame.current);
+      liveIndicatorFrame.current = null;
       liveDisplayRef.current = null;
       if (aggregatorRef.current) aggregatorRef.current.setCallbacks(() => {}, () => {});
       const key = `${asset.symbol}_${selectedTf}`;
@@ -4229,6 +4047,13 @@ renderOverlayIndicators(getIndicatorHistory());
         onMouseLeave={handleChartMouseLeave}
         onClick={handleChartClick}
       >
+        {marketFeedStatus !== "live" && (
+          <div role="status" className="pointer-events-none absolute right-3 top-3 z-[82] max-w-[260px] rounded-md border border-amber-400/20 bg-slate-950/90 px-3 py-2 text-xs text-amber-200">
+            {marketFeedStatus === "unavailable" ? "Live market feed is not configured. No prices are being generated."
+              : marketFeedStatus === "connecting" ? "Connecting to live market data…"
+              : "Market feed disconnected — holding the last received price."}
+          </div>
+        )}
         {showDesktopChartTools && !overlayUiSuppressed && (
           <>
             <div className="pointer-events-none absolute inset-y-0 left-0 z-[80] hidden sm:flex items-stretch">

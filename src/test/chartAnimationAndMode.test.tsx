@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useChartMode } from '@/components/trading/engine/native/chartMode';
-import { visualCandle, heikinAshiCandle } from '@/components/trading/engine/native/animation';
+import { heikinAshiCandle } from '@/components/trading/engine/native/animation';
 import { heikinAshi } from '@/components/trading/engine/native/marketData';
 import { CandleAggregator } from '@/components/trading/engine/native/realtime';
 import { resetSync } from '@/lib/serverTimeSync';
@@ -37,24 +37,7 @@ describe('Area mode timeframe contract', () => {
     expect(props.onSelectTf).not.toHaveBeenCalled();
   });
 });
-describe('display-only animation', () => {
-  it('smooths wick expansion and permits bullish/bearish transitions without altering actual OHLC', () => {
-    const previous = { ...bar, high:104,low:98,close:104 };
-    const target = { ...bar,close:92 };
-    const snapshot = { ...target };
-    const bullish = visualCandle(target,102,previous,.5);
-    expect(bullish.close).toBeGreaterThan(bullish.open);
-    expect(bullish.high).toBe(107);
-    const bearish = visualCandle(target,96,bullish,.5);
-    expect(bearish.close).toBeLessThan(bearish.open);
-    expect(bearish.low).toBeGreaterThanOrEqual(target.low);
-    expect(target).toEqual(snapshot);
-    expect(visualCandle(target,target.close,previous,1)).toEqual(target);
-  });
-  it('never draws an interpolated price beyond the observed range of a new candle', () => {
-    expect(visualCandle(bar,500,{ ...bar,time:595 },.1).close).toBe(110);
-    expect(visualCandle(bar,-500).close).toBe(90);
-  });
+describe('uninterpolated chart projections', () => {
   it('matches historical Heikin-Ashi formulas on first candle and final close, without a double recursion', () => {
     const first = { ...bar,time:540 };
     const all = heikinAshi([first,bar]);

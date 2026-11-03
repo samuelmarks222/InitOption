@@ -6,6 +6,7 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: [
+      "src/test/trueTickMovement.test.ts",
       "src/test/chartClockAndViewport.test.ts",
       "src/test/settlementConfirmation.test.tsx",
       "src/test/chartAnimationAndMode.test.tsx",

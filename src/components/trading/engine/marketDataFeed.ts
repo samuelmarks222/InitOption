@@ -1,7 +1,9 @@
+import { getSynchronizedUnixTimeMs } from "@/lib/serverTimeSync";
 import { observedHistory } from "./native/observedHistory";
 import { OTCPriceEngine, type OHLCCandle, type TimeframeConfig } from "./priceEngine";
 
 export type MarketFeedStatus =
+  | "unavailable"
   | "connecting"
   | "live"
   | "reconnecting"
@@ -54,6 +56,7 @@ const normalizeTimestamp = (value: unknown, fallback = Date.now() / 1000) => {
   }
 
   if (typeof value === "string") {
+    if (!value.trim()) return fallback;
     const numeric = Number(value);
     if (Number.isFinite(numeric)) {
       return numeric > 1_000_000_000_000 ? numeric / 1000 : numeric;
@@ -267,157 +270,6 @@ export const replayDeterministicTickState = ({
 
 const toError = (error: unknown) => (error instanceof Error ? error : new Error(String(error)));
 
-class DeterministicTickFeed implements MarketDataFeed {
-  private readonly subscription: MarketFeedSubscription;
-  private readonly callbacks: MarketFeedCallbacks;
-  private readonly engine: ContinuousSyntheticPriceEngine;
-  private connected = false;
-  private nextTickAtMs = 0;
-  private timer: TimerHandle | null = null;
-  private sequence = 0;
-
-  constructor(subscription: MarketFeedSubscription, callbacks: MarketFeedCallbacks) {
-    this.subscription = subscription;
-    this.callbacks = callbacks;
-    this.engine = new ContinuousSyntheticPriceEngine(subscription);
-  }
-
-  connect() {
-    if (this.connected) return;
-
-    this.connected = true;
-    const nowMs = Date.now();
-    this.engine.reconcile(nowMs / 1000);
-    this.nextTickAtMs = nowMs;
-    this.sequence = Math.floor(nowMs / SYNTHETIC_MARKET_TICK_INTERVAL_MS);
-    this.callbacks.onStatusChange?.("fallback");
-    this.schedulePump(0);
-  }
-
-  disconnect() {
-    this.connected = false;
-
-    if (this.timer !== null) {
-      clearTimeout(this.timer);
-      this.timer = null;
-    }
-
-    this.callbacks.onStatusChange?.("disconnected");
-  }
-
-  private schedulePump(delayMs: number) {
-    if (!this.connected) return;
-    this.timer = setTimeout(() => this.pump(), Math.max(0, Math.floor(delayMs)));
-  }
-
-  private pump() {
-    if (!this.connected) return;
-
-    const tickIntervalMs = getSyntheticMarketTickIntervalMs();
-    const nowMs = Date.now();
-    let guard = 0;
-
-    while (this.nextTickAtMs <= nowMs && guard < 48) {
-      const timestamp = this.nextTickAtMs / 1000;
-      const price = this.engine.next(timestamp);
-      this.sequence += 1;
-
-      this.callbacks.onTick({
-        symbol: this.subscription.symbol,
-        price,
-        timestamp,
-        sequence: this.sequence,
-        source: "simulated",
-      });
-
-      this.nextTickAtMs += tickIntervalMs;
-      guard += 1;
-    }
-
-    if (nowMs - this.nextTickAtMs > tickIntervalMs * 8) {
-      this.engine.reconcile(nowMs / 1000);
-      this.nextTickAtMs = nowMs + tickIntervalMs;
-      this.sequence = Math.floor(nowMs / tickIntervalMs);
-    }
-
-    this.schedulePump(Math.max(4, this.nextTickAtMs - Date.now()));
-  }
-}
-
-class ContinuousSyntheticPriceEngine {
-  private readonly subscription: MarketFeedSubscription;
-  private price = 1;
-  private velocity = 0;
-  private lastTimestamp = 0;
-
-  constructor(subscription: MarketFeedSubscription) {
-    this.subscription = subscription;
-    this.price = getSharedLivePriceAt(
-      new OTCPriceEngine(subscription.symbol, subscription.basePrice, subscription.assetCategory),
-      Date.now() / 1000,
-    );
-  }
-
-  reconcile(timestamp: number) {
-    const intervalSeconds = getSyntheticMarketTickIntervalMs() / 1000;
-    const replayStart = Math.max(0, timestamp - SYNTHETIC_REPLAY_WINDOW_SECONDS);
-    const seedTimestamp = Math.floor(replayStart / intervalSeconds) * intervalSeconds;
-    const seedEngine = new OTCPriceEngine(
-      this.subscription.symbol,
-      this.subscription.basePrice,
-      this.subscription.assetCategory,
-    );
-
-    this.price = getSharedLivePriceAt(seedEngine, seedTimestamp);
-    this.velocity = 0;
-    this.lastTimestamp = seedTimestamp;
-
-    for (
-      let replayTimestamp = seedTimestamp + intervalSeconds;
-      replayTimestamp <= timestamp;
-      replayTimestamp += intervalSeconds
-    ) {
-      this.next(replayTimestamp);
-    }
-  }
-
-  next(timestamp: number) {
-    if (!Number.isFinite(timestamp) || timestamp <= 0) {
-      return this.price;
-    }
-
-    if (this.lastTimestamp <= 0 || timestamp < this.lastTimestamp) {
-      this.reconcile(timestamp);
-      return this.price;
-    }
-
-    if (timestamp === this.lastTimestamp) {
-      return this.price;
-    }
-
-    const anchorEngine = new OTCPriceEngine(
-      this.subscription.symbol,
-      this.subscription.basePrice,
-      this.subscription.assetCategory,
-    );
-    const anchorPrice = getSharedLivePriceAt(anchorEngine, timestamp);
-    const nextTick = simulateDeterministicTickPrice({
-      symbol: this.subscription.symbol,
-      basePrice: this.subscription.basePrice,
-      timeframeSeconds: LIVE_MARKET_MICROSTRUCTURE_SECONDS,
-      timestamp,
-      previousPrice: this.price,
-      anchorPrice,
-      velocity: this.velocity,
-    });
-
-    this.price = nextTick.price;
-    this.velocity = nextTick.velocity;
-    this.lastTimestamp = timestamp;
-    return this.price;
-  }
-}
-
 class WebSocketTickFeed implements MarketDataFeed {
   private readonly url: string;
   private readonly subscription: MarketFeedSubscription;
@@ -559,16 +411,15 @@ class WebSocketTickFeed implements MarketDataFeed {
       return;
     }
 
-    const symbol =
-      typeof payload.symbol === "string" && payload.symbol.trim().length > 0
-        ? payload.symbol
-        : this.subscription.symbol;
+    const symbol = typeof payload.symbol === "string" ? payload.symbol : "";
 
     if (symbol !== this.subscription.symbol) {
       return;
     }
 
-    const timestamp = normalizeTimestamp(payload.timestamp, Date.now() / 1000);
+    const timestamp = normalizeTimestamp(payload.timestamp, Number.NaN);
+    if (!Number.isFinite(timestamp) || timestamp < 0 || timestamp > getSynchronizedUnixTimeMs() / 1000 + 30) return;
+    if (payload.sequence !== undefined && (!Number.isSafeInteger(payload.sequence) || Number(payload.sequence) < 0)) return;
     const sequence = isFiniteNumber(payload.sequence) ? payload.sequence : undefined;
 
     if (typeof sequence === "number" && sequence <= this.lastSequence) {
@@ -623,5 +474,11 @@ export const createMarketDataFeed = ({
     });
   }
 
-  return new DeterministicTickFeed(normalizedSubscription, callbacks);
+  return {
+    connect() {
+      callbacks.onStatusChange?.("unavailable");
+      callbacks.onError?.(new Error("Live market WebSocket URL is not configured; simulated prices are disabled"));
+    },
+    disconnect() { callbacks.onStatusChange?.("disconnected"); },
+  };
 };

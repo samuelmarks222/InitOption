@@ -1,18 +1,7 @@
 import type { OHLCCandle } from '../priceEngine';
 import { heikinAshi } from './marketData';
-/** Display-only geometry: bounded by received market extremes, never stored as OHLC. */
-export function visualCandle(target: OHLCCandle, price: number, previous?: OHLCCandle | null, progress = 1): OHLCCandle {
-  const close = Math.max(target.low, Math.min(target.high, Number.isFinite(price) ? price : target.close));
-  const alpha = Math.max(0, Math.min(1, progress));
-  const sameBucket = previous?.time === target.time;
-  const high = sameBucket ? previous.high + (target.high - previous.high) * alpha : target.high;
-  const low = sameBucket ? previous.low + (target.low - previous.low) * alpha : target.low;
-  return { ...target, close,
-    high: Math.min(target.high, Math.max(target.open, close, high)),
-    low: Math.max(target.low, Math.min(target.open, close, low)) };
-}
 // Authoritative history is replaced on close/backfill, not mutated during frames.
-// Cache its recursive prefix so Heikin-Ashi animation does not recalculate every
+// Cache its recursive prefix so Heikin-Ashi tick updates does not recalculate every
 // historical candle 60 times per second. Weak keys release superseded histories.
 const haPrefixCache = new WeakMap<readonly OHLCCandle[], { before: number; previous?: OHLCCandle }>();
 /** Exclude the current candle from the recursive prefix, including on final close. */
