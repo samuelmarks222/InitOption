@@ -88,4 +88,14 @@ describe('real WebSocket market feed', () => {
     feed.disconnect();
   });
 
+  it('rejects missing, malformed, far-future timestamps and missing symbols rather than inventing tick coordinates', () => {
+    const {feed,symbol,onTick}=setup(); feed.connect(); const socket=MockSocket.instances[0]; socket.open();
+    for (const timestamp of [undefined,'',null,'not-time',-1,1e30]) socket.message({symbol,timestamp,price:999});
+    socket.message({timestamp:600,price:999});
+    socket.message({symbol,timestamp:600,price:999,sequence:1.5});
+    expect(onTick).not.toHaveBeenCalled();
+    socket.message({symbol,timestamp:600,price:100,sequence:1});
+    expect(onTick).toHaveBeenCalledOnce(); feed.disconnect();
+  });
+
 });

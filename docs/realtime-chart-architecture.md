@@ -5,18 +5,18 @@ This project now uses a stricter real-time candle pipeline built around three la
 1. `src/components/trading/engine/marketDataFeed.ts`
    Frontend market-data adapter.
    Uses a real WebSocket feed when `VITE_MARKET_DATA_WS_URL` is configured.
-   Falls back to the deterministic local feed for local/demo environments.
+   Reports unavailable when no URL is configured; never generates fallback ticks.
 
 2. `src/components/trading/CandleAggregator.ts`
    Time-bound OHLC aggregator.
    Builds candles from ticks.
    Closes candles exactly on timeframe boundaries, even if the next tick has not arrived yet.
    Opens the next candle immediately with `open = last close`.
-   Batches visual updates to animation frames so heavy tick rates do not force re-render storms.
+   Delivers OHLC updates synchronously for every valid tick; Canvas batches paints only.
 
 3. `src/components/trading/TradingChart.tsx`
    Presentation layer.
-   Seeds history.
+   Loads previously observed ticks only (no generated history).
    Streams live ticks into the aggregator.
    Updates the Lightweight Charts series, overlays, price scale, and time scale.
 
@@ -201,16 +201,16 @@ acceptance testing and repository-wide existing TypeScript errors remain open.
 
 ### Rendering and interval separation
 
-- `native/animation.ts` produces display-only candle geometry. Close interpolation
-  is clamped to the received candle's actual range. Wicks ease toward observed
-  extrema and always contain the displayed body. The authoritative live/history
-  references and indicator calculations continue to use received OHLC, never the
-  interpolated display candle. A wick may shorten visually as the body approaches
-  its extreme; an actual historical high/low is never erased for animation.
-- A final close flushes the exact authoritative candle before the next active
-  candle can replace a queued visual update. Heikin-Ashi active and closed candles
-  use the same recursive prefix, excluding the current timestamp to avoid counting
-  a just-closed candle twice. First-candle formulas are also applied to live data.
+- `native/tickRendering.ts` projects each received candle directly into the series.
+  No close, wick, or body interpolation is performed. Japanese candles and OHLC
+  bars receive exact OHLC; Area receives the exact close. Heikin-Ashi uses proper
+  recursive mathematical OHLC through `native/animation.ts`, not visual easing.
+- Every valid tick commits synchronously. Indicators consume the latest raw OHLC
+  once per animation frame, including wick-only updates. With no tick, price holds.
+  Empty interval candles carry the last price with zero volume; the first actual
+  tick sets that interval's open/high/low before updating its close.
+- Writers are owned by the chart series, not feed subscriptions, so reconnecting
+  or changing a timeframe cannot disable a retained series writer.
 - `native/viewportAnimation.ts` eases live-follow movement separately from candle
   formation. User viewport changes interrupt following; historical navigation is
   not forced back to live. Candle duration remains controlled by interval buckets,
@@ -284,3 +284,19 @@ and live-feed visual performance acceptance are still required; mocked Canvas an
 persistence tests do not constitute a production sign-off. This work does not
 replace the existing settlement backend or provide the missing pre-session
 exchange history/replay service.
+
+## True tick movement validation (current patch)
+
+- Production build passes; focused chart/socket/settlement suite: 82 tests pass.
+- Full chart suite: 90 pass, 3 legacy simulation tests fail (two obsolete 1s
+  timeframe references and one synthetic two-sided-motion assertion). These are
+  not reasons to restore simulated live movement.
+- Repository-wide TypeScript checking still reports existing compatibility/API
+  errors; a passing Vite build is not a clean type-check or browser acceptance.
+- Main-chart generated seeding, replay and silent simulated fallback are removed.
+  Legacy deterministic utility exports still exist, and DynamicAssetContext and
+  PairInfoModal still use generated values. This is not an application-wide
+  real-market-data certification.
+- Shared timeframe-independent transport, designated OTC routing, and a verified
+  real historical/recovery API remain outstanding. Observed cache cannot recreate
+  ticks missed during outages or before the session.

@@ -41,12 +41,14 @@ describe('native chart data and timeframe engine', () => {
     const price = new PriceCoordinates(); price.height=500; price.fit(90,110);
     expect(price.coordinateToPrice(price.priceToCoordinate(102))).toBeCloseTo(102);
   });
-  it('ignores stale ticks and cancels pending frames and boundaries on destroy', () => {
+  it('delivers valid ticks synchronously, ignores stale ticks and cancels boundaries on destroy', () => {
     vi.useFakeTimers(); vi.setSystemTime(600000); const update=vi.fn(),close=vi.fn();
     const engine=new CandleAggregator(60,close,update);
     engine.onTick({timestamp:600,price:100}); engine.onTick({timestamp:601,price:102}); engine.onTick({timestamp:600.5,price:500});
-    expect(engine.getCurrentCandle()?.high).toBe(102); engine.destroy(); vi.advanceTimersByTime(120000);
-    expect(update).not.toHaveBeenCalled(); expect(close).not.toHaveBeenCalled();
+    expect(engine.getCurrentCandle()?.high).toBe(102);
+    expect(update).toHaveBeenCalledTimes(2);
+    engine.destroy(); vi.advanceTimersByTime(120000);
+    expect(update).toHaveBeenCalledTimes(2); expect(close).not.toHaveBeenCalled();
   });
   it('accepts a delayed exchange tick after a wall-clock boundary has fired', () => {
     vi.useFakeTimers(); vi.setSystemTime(600000);
