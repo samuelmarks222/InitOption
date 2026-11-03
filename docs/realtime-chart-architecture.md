@@ -149,12 +149,50 @@ placement, mobile gestures, and live WebSocket reconnects is still required.
 Repository-wide TypeScript checking also reports existing errors outside the new
 native engine.
 
-The existing market-data adapter remains in place: `VITE_MARKET_DATA_WS_URL`
-selects the real socket; without it the existing deterministic/demo feed is used.
-**History and initial seeds still come from the existing deterministic history
-provider.** This replacement does not turn that provider into real exchange
-history. Production real-history loading and recovery of actual missing exchange
-ticks require a server history/replay contract; the existing socket protocol only
-provides subscribe/unsubscribe ticks. A renderer cannot reconstruct unobserved
-market highs/lows. No new random-price generator or data-source replacement was
-introduced in the native engine.
+### Follow-up: real-feed isolation and reconnect safety
+
+`VITE_MARKET_DATA_WS_URL` selects the real socket; without it the pre-existing
+explicitly simulated/demo feed is still used. The real-socket path now **never
+calls the deterministic history generator or replay seeder**. It starts empty
+when actual history is unavailable rather than drawing invented market prices.
+
+`native/observedHistory.ts` stores a bounded, in-memory history of received ticks
+as 5-second OHLC bars, isolated by socket source and symbol. All fifteen supported
+intervals derive their observed history and active seed from these same bars.
+Revisiting timeframes reuses this history. This is session history, not an exchange
+historical-data service: missing periods stay absent in the store. The live
+aggregator's zero-volume carry-forward intervals still represent a last-known
+price, not recovered trades.
+
+Socket reconnects preserve sequence/timestamp cursors. Feed recreation also checks
+source-specific observed-history cursors to suppress repeated sequenced ticks.
+Batch messages are sorted by exchange timestamp, then sequence. Manual disconnects
+remove listeners before closing the socket, preventing an old close callback from
+clearing a replacement connection. Constructor failures report an error and retry
+with the existing bounded exponential backoff; pending retries are canceled on
+manual disconnect. Sequence IDs must remain monotonic per source/symbol, as in the
+existing tick contract.
+
+The boundary timer no longer advances the last-exchange-tick timestamp to local
+wall-clock time. Slightly delayed valid ticks within the new candle therefore
+remain eligible; ticks belonging to a closed candle are still rejected by the live
+aggregator. Invalid OHLC seed candles are rejected explicitly.
+
+Follow-up tests cover cache bounds and source isolation, OHLC reaggregation for
+all fifteen intervals, cursor persistence, reordered batches, stale socket events,
+constructor failures, manual cleanup, invalid seeds, and delayed boundary ticks.
+Run the earlier targeted command with these additional test files:
+
+```sh
+npx vitest run --config vitest.chart.config.ts \
+  src/test/nativeChartEngine.test.ts src/test/nativeChartRenderer.test.ts \
+  src/test/realtimeCandleAggregator.test.ts src/test/priceEngineTimeframes.test.ts \
+  src/test/observedHistory.test.ts src/test/webSocketFeed.test.ts
+```
+
+Production real-history loading **before this session**, recovery of unobserved
+exchange ticks, and correction of previously closed candles still require a server
+history/replay contract. The existing socket protocol only provides tick
+subscribe/unsubscribe messages. A renderer cannot reconstruct unobserved market
+highs/lows, and this implementation does not claim to do so. Authenticated browser
+acceptance testing and repository-wide existing TypeScript errors remain open.
