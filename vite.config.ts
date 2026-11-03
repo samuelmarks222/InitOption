@@ -8,7 +8,7 @@ const internalOTC = () => ({
     server.middlewares.use(async (req: any, res: any, next: () => void) => {
       if (req.url?.split("?")[0] !== "/api/otc") return next();
       try {
-        const { default: handler } = await server.ssrLoadModule("/api/otc.ts");
+        const { default: handler } = await server.ssrLoadModule("/api/_lib/otcHandler.ts");
         await handler(req, res);
       } catch (error) {
         console.error("Local OTC API failed:", error);
