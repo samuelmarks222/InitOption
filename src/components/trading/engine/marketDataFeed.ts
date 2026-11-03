@@ -1,3 +1,4 @@
+import { createInternalOTCHttpFeed } from "./internalOTCHttpFeed";
 import { createInternalOTCFeed } from "./internalOTCFeed";
 import { getSynchronizedUnixTimeMs } from "@/lib/serverTimeSync";
 import { observedHistory } from "./native/observedHistory";
@@ -480,7 +481,7 @@ export const createMarketDataFeed = ({
     basePrice: safeBasePrice,
   };
 
-  if (internalOTC && websocketUrl?.trim()) return createInternalOTCFeed(websocketUrl, subscription.symbol, callbacks);
+  if (internalOTC && websocketUrl?.trim()) return /^wss?:/i.test(websocketUrl) ? createInternalOTCFeed(websocketUrl, subscription.symbol, callbacks) : createInternalOTCHttpFeed(websocketUrl, subscription.symbol, callbacks);
 
   if (websocketUrl && websocketUrl.trim().length > 0) {
     const key = JSON.stringify([websocketUrl, subscription.symbol, subscription.assetCategory ?? ""]);

@@ -2,6 +2,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
+    "api/otc.ts": {
+      "maxDuration": 30,
+      "includeFiles": "server/otc/assets.json"
+    },
     "api/render.ts": {
       "includeFiles": "dist/**"
     }
@@ -50,6 +54,9 @@
     }
   ],
   "rewrites": [
+    { "source": "/otc/price", "destination": "/api/otc?action=price" },
+    { "source": "/otc/history", "destination": "/api/otc?action=ticks" },
+    { "source": "/otc/health", "destination": "/api/otc?action=health" },
     { "source": "/api/system/(.*)", "destination": "/api/system?resource=$1" },
     { "source": "/api/public-bonus", "destination": "/api/system?resource=public-bonus" },
     { "source": "/api/site.webmanifest", "destination": "/api/system?resource=site.webmanifest" },

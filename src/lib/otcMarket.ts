@@ -1,6 +1,9 @@
 /** Default dashboard source is the platform's explicitly synthetic OTC service. */
 export const isInternalOTC = import.meta.env.VITE_MARKET_DATA_MODE !== 'external';
 export function marketWebSocketUrl(): string | undefined {
+  if (isInternalOTC && import.meta.env.VITE_OTC_TRANSPORT !== 'websocket') {
+    return import.meta.env.VITE_OTC_API_URL?.trim() || '/api/otc';
+  }
   const configured = isInternalOTC ? import.meta.env.VITE_OTC_WS_URL : import.meta.env.VITE_MARKET_DATA_WS_URL;
   if (configured?.trim()) return configured.trim();
   if (!isInternalOTC || typeof window === 'undefined') return undefined;
@@ -20,7 +23,9 @@ export function latestOTCQuote(symbol: string, maxAge = 2): OTCQuote | undefined
 export function subscribeOTCQuotes(listener: (quote: OTCQuote) => void) { listeners.add(listener); return () => { listeners.delete(listener); }; }
 /** Exact symbol and last server tick at/before expiry, never a different chart's price. */
 export async function requestOTCQuote(symbol: string, at?: number): Promise<OTCQuote> {
-  const url = new URL(import.meta.env.VITE_OTC_HTTP_URL || '/otc/price', window.location.href);
+  const polling = import.meta.env.VITE_OTC_TRANSPORT !== 'websocket';
+  const url = new URL(polling ? (import.meta.env.VITE_OTC_API_URL || '/api/otc') : (import.meta.env.VITE_OTC_HTTP_URL || '/otc/price'), window.location.href);
+  if (polling) url.searchParams.set('action','price');
   url.searchParams.set('symbol', symbol);
   if (at !== undefined) url.searchParams.set('at', String(at));
   const controller = new AbortController();

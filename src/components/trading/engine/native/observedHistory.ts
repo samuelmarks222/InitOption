@@ -13,6 +13,10 @@ export class ObservedHistory {
     if (!Number.isInteger(maxBars) || maxBars < 1 || !Number.isInteger(maxStreams) || maxStreams < 1) throw new Error('Invalid history capacity');
   }
   private key(source: string, symbol: string) { return JSON.stringify([source, symbol]); }
+  seed(source: string, symbol: string, bars: OHLCCandle[], timestamp: number, sequence: number) {
+    this.streams.set(this.key(source,symbol), {bars:bars.slice(-this.maxBars).map(bar=>({...bar})), lastTimestamp:timestamp,lastSequence:sequence});
+    while(this.streams.size>this.maxStreams)this.streams.delete(this.streams.keys().next().value!);
+  }
   reset(source: string, symbol: string) { this.streams.delete(this.key(source,symbol)); }
   record(source: string, symbol: string, tick: ObservedTick) {
     if (!Number.isFinite(tick.timestamp) || !Number.isFinite(tick.price) || tick.price <= 0) return false;
