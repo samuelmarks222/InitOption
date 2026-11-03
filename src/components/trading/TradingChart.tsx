@@ -1,4 +1,6 @@
+import { heikinAshi } from "./engine/native/marketData";
 import {
+  CandlestickSeries,
   createChart,
   IChartApi,
   ISeriesApi,
@@ -18,7 +20,7 @@ import {
   type LineWidth,
   type SeriesType,
   type Time,
-} from "lightweight-charts";
+} from "./engine/native/compat";
 import {
   OTCPriceEngine,
   SUPPORTED_CHART_TIMEFRAMES,
@@ -31,7 +33,7 @@ import {
   replayDeterministicTickState,
   type MarketDataFeed,
 } from "./engine/marketDataFeed";
-import { CandleAggregator } from "./CandleAggregator";
+import { CandleAggregator, type CandleCloseCallback, type CandleUpdateCallback } from "./CandleAggregator";
 import ChartToolbar, { ChartType, CandleIcon } from "./ChartToolbar";
 import { TradeMarkersOverlay } from "./TradeMarkersOverlay";
 import { TradeResultTicksOverlay } from "./TradeResultTicksOverlay";
@@ -48,7 +50,7 @@ import { dispatchTradeDeskDirectionSubmit, type TradeDeskDirection } from "./tra
 import { useDrawings } from "@/contexts/DrawingContext";
 import { api } from "@/integrations/api/client";
 import { type Tables } from "@/integrations/supabase/types";
-import { CustomCandlestickPaneView, type CustomCandlestickData } from "./CustomCandlestickSeries";
+import { type CustomCandlestickData } from "./CustomCandlestickSeries";
 import {
   Briefcase,
   X,
@@ -712,21 +714,7 @@ const resolveLogicalTime = (
   return lastPoint.logical + trailingFraction;
 };
 
-const calcHeikinAshi = (candles: OHLCCandle[]): OHLCCandle[] => {
-  if (candles.length === 0) return [];
-  const ha: OHLCCandle[] = [];
-  ha.push({ ...candles[0] });
-  for (let i = 1; i < candles.length; i++) {
-    const prev = ha[i - 1];
-    const curr = candles[i];
-    const close = (curr.open + curr.high + curr.low + curr.close) / 4;
-    const open = (prev.open + prev.close) / 2;
-    const high = Math.max(curr.high, open, close);
-    const low = Math.min(curr.low, open, close);
-    ha.push({ ...curr, open, high, low, close });
-  }
-  return ha;
-};
+const calcHeikinAshi = heikinAshi;
 
 const sanitizeCandleData = (candles: OHLCCandle[]): OHLCCandle[] => {
   if (!candles || candles.length === 0) return [];
@@ -1219,7 +1207,7 @@ const getCandlestickPreviewPalette = (color: string, variant: ChartDisplayPreset
 const getMainSeriesKind = (chartType: ChartType): MainSeriesKind =>
   chartType === "line" ? "area" : chartType === "bars" ? "bar" : "candlestick";
 
-const customCandlePaneView = new CustomCandlestickPaneView();
+
 
 const createMainSeries = (
   chart: IChartApi,
@@ -1251,7 +1239,7 @@ const createMainSeries = (
   const candleSettings = getCandlestickDisplaySettings(chartType, styles, globalTheme);
   return {
     kind: "candlestick" as const,
-    series: chart.addCustomSeries(customCandlePaneView, {
+    series: chart.addSeries(CandlestickSeries, {
       priceFormat,
       upColor: candleSettings.upColor,
       downColor: candleSettings.downColor,
@@ -2102,7 +2090,10 @@ const calculateAdaptiveAnimationDuration = (
  * Batches rapid updates and applies dynamic animation duration based on price action
  */
 class SmoothUpdateScheduler {
-  constructor(series) {
+  private series: ChartSeriesApi;
+  private pendingUpdate: any = null;
+  private rafId: number | null = null;
+  constructor(series: ChartSeriesApi) {
     this.series = series;
     this.pendingUpdate = null;
     this.rafId = null;
@@ -2300,6 +2291,12 @@ const TradingChart = ({
   });
   const activeAssetTrades = activeTrades.filter((trade) => trade.asset_symbol === asset.symbol);
   const [selectedTf, setSelectedTf] = useState<SupportedChartTimeframe>("5s");
+  const savedTimeframeViews = useRef(new Map<string, { from: number; to: number }>());
+  const selectTimeframe = (tf: SupportedChartTimeframe) => {
+    const range = chartRef.current?.timeScale().getVisibleLogicalRange();
+    if (range) savedTimeframeViews.current.set(`${asset.symbol}:${selectedTf}`, { ...range });
+    setSelectedTf(tf);
+  };
   const [currentPrice, setCurrentPrice] = useState(asset.price);
   const [priceChange, setPriceChange] = useState(asset.change || 0);
   const [chartType, setChartType] = useState<ChartType>(DEFAULT_CHART_TYPE);
@@ -3022,6 +3019,8 @@ const TradingChart = ({
     const priceFormat = getSeriesPriceFormat(referencePrice);
     mainSeriesPrecisionRef.current = priceFormat.precision;
     const nextSeriesKind = getMainSeriesKind(chartType);
+    const preservedViewport = historyAssetRef.current === asset.symbol
+      ? chartRef.current.timeScale().getVisibleLogicalRange() : null;
 
     try {
       const shouldRecreateSeries =
@@ -3088,7 +3087,8 @@ const TradingChart = ({
         }));
       }
     }
-    scrollChartToLiveEdge();
+    if (preservedViewport) chartRef.current.timeScale().setVisibleLogicalRange(preservedViewport);
+    else scrollChartToLiveEdge();
   }, [asset.basePrice, asset.symbol, chartStyles, chartType, scrollChartToLiveEdge]);
 
   useEffect(() => {
@@ -3411,7 +3411,9 @@ const TradingChart = ({
         shiftVisibleRangeOnNewBar: false,
         allowShiftVisibleRangeOnWhitespaceReplacement: false,
       });
-      scrollChartToLiveEdge(historyRef.current.length);
+      const savedViewport = savedTimeframeViews.current.get(`${asset.symbol}:${selectedTf}`);
+      if (savedViewport) chartRef.current.timeScale().setVisibleLogicalRange(savedViewport);
+      else scrollChartToLiveEdge(historyRef.current.length);
 
 renderOverlayIndicators(getIndicatorHistory());
       setForceOscillatorRender((current) => current + 1);
@@ -3533,7 +3535,9 @@ renderOverlayIndicators(getIndicatorHistory());
       shiftVisibleRangeOnNewBar: false,
       allowShiftVisibleRangeOnWhitespaceReplacement: false,
     });
-    scrollChartToLiveEdge(history.length);
+    const savedViewport = savedTimeframeViews.current.get(`${asset.symbol}:${selectedTf}`);
+    if (savedViewport) chartRef.current.timeScale().setVisibleLogicalRange(savedViewport);
+    else scrollChartToLiveEdge(history.length);
 
     renderOverlayIndicators(getIndicatorHistory());
     setForceOscillatorRender((current) => current + 1);
@@ -4045,7 +4049,7 @@ renderOverlayIndicators(getIndicatorHistory());
                         <button
                           key={tf}
                           onClick={() => {
-                            setSelectedTf(tf);
+                            selectTimeframe(tf);
                             closeMobileTools();
                           }}
                           className={`rounded-[8px] px-2 py-3 text-center text-[13px] font-bold transition-colors ${
@@ -4237,7 +4241,7 @@ renderOverlayIndicators(getIndicatorHistory());
             >
               <ChartToolbar
                 selectedTf={selectedTf}
-                onSelectTf={(tf) => setSelectedTf(tf)}
+                onSelectTf={selectTimeframe}
                 styleEditorOpen={styleEditorOpen}
                 onOpenStyleEditor={() => {
                   setStyleEditorOpen((current) => !current);

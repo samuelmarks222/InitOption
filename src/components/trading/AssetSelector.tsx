@@ -104,7 +104,6 @@ export const AssetSelector = ({ selectedAsset, onSelectAsset }: AssetSelectorPro
                        <cat.icon className="w-[16px] h-[16px]" />
                        <span className={`font-semibold text-[10px] leading-tight ${activeCategory === cat.id ? "text-white" : ""}`}>{cat.label}</span>
                      </div>
-                     </div>
                    </button>
                    
                    {/* Sub-items for active category */}

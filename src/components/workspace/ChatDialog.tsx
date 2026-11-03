@@ -207,7 +207,7 @@ export const ChatDialog = ({ trader, onClose }: ChatDialogProps) => {
                   {dateKey}
                 </span>
               </div>
-dayMessages.map((msg, idx) => {
+              {dayMessages.map((msg, idx) => {
                 const isMe = msg.sender === "me";
                 const showTail = idx === dayMessages.length - 1 || dayMessages[idx + 1].sender !== msg.sender;
                 const prevMsg = idx > 0 ? dayMessages[idx - 1] : null;
@@ -391,7 +391,6 @@ dayMessages.map((msg, idx) => {
                         >
                           Browse Files
                         </button>
-                    </div>
                   </div>
                 </div>
               )}

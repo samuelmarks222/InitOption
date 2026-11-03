@@ -1,3 +1,5 @@
+import { INTERVALS } from "./native/timeframes";
+import { aggregateHistory } from "./native/marketData";
 import {
   aggregateDeterministicCandles,
   buildDeterministicCandle,
@@ -24,23 +26,15 @@ export interface TimeframeConfig {
 }
 
 export const SUPPORTED_CHART_TIMEFRAMES = [
-  "5s",
-  "1m",
-  "2m",
-  "3m",
-  "4m",
-  "5m",
-  "10m",
-  "15m",
-  "30m",
-  "1h",
-  "2h",
+  "5s", "10s", "15s", "30s", "1m", "2m", "3m", "4m", "5m",
+  "10m", "15m", "30m", "1h", "2h", "4h",
 ] as const;
 
 export type SupportedChartTimeframe = (typeof SUPPORTED_CHART_TIMEFRAMES)[number];
 
 export const TIMEFRAMES: Record<string, TimeframeConfig> = {
   "5s": { label: "5s", seconds: 5, updateIntervalMs: 1000, historical: 240, bodyPips: 3, wickPips: 2 },
+  "10s": { label: "10s", seconds: INTERVALS["10s"], updateIntervalMs: 1000, historical: 240, bodyPips: 4, wickPips: 3 },
   "15s": { label: "15s", seconds: 15, updateIntervalMs: 1000, historical: 240, bodyPips: 5, wickPips: 4 },
   "30s": { label: "30s", seconds: 30, updateIntervalMs: 1000, historical: 240, bodyPips: 6, wickPips: 5 },
   "1m": { label: "1m", seconds: 60, updateIntervalMs: 1000, historical: 240, bodyPips: 8, wickPips: 6 },
@@ -54,6 +48,9 @@ export const TIMEFRAMES: Record<string, TimeframeConfig> = {
   "1h": { label: "1h", seconds: 3600, updateIntervalMs: 1000, historical: 220, bodyPips: 46, wickPips: 24 },
   "2h": { label: "2h", seconds: 7200, updateIntervalMs: 1000, historical: 210, bodyPips: 58, wickPips: 30 },
 };
+
+TIMEFRAMES["4h"] = { label: "4h", seconds: INTERVALS["4h"], updateIntervalMs: 1000, historical: 210, bodyPips: 70, wickPips: 36 };
+for (const label of SUPPORTED_CHART_TIMEFRAMES) TIMEFRAMES[label].seconds = INTERVALS[label];
 
 const HIGH_TIMEFRAME_DIRECT_SECONDS = 30 * 60;
 const HISTORY_CACHE_VERSION = 8;
@@ -134,11 +131,7 @@ export class OTCPriceEngine {
       return baseHistory.slice(-tfConfig.historical);
     }
 
-    return aggregateDeterministicCandles({
-      candles: baseHistory,
-      targetSeconds: tfConfig.seconds,
-      nowSec,
-    }).slice(-tfConfig.historical) as OHLCCandle[];
+    return aggregateHistory(baseHistory, tfConfig.seconds).filter(candle => candle.time + tfConfig.seconds <= nowSec).slice(-tfConfig.historical);
   }
 
   tick(_perTickVol = 0.3, timestampSec = Date.now() / 1000): number {
@@ -194,9 +187,7 @@ export class OTCPriceEngine {
     };
     let candles: OHLCCandle[];
 
-    if (effectiveConfig.seconds >= 180) {
-      candles = this.getClosedHistory(effectiveConfig, effectiveConfig.historical, nowSec);
-    } else if (effectiveConfig.seconds < TIMEFRAMES["1m"].seconds) {
+    if (effectiveConfig.seconds < TIMEFRAMES["1m"].seconds) {
       // Sub-minute: 5s is the base, 15s/30s aggregate from 5s
       if (effectiveConfig.seconds === 5) {
         candles = this.getClosedHistory(effectiveConfig, effectiveConfig.historical, nowSec);
