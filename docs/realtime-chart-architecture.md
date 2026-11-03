@@ -94,3 +94,67 @@ Recommended server-side architecture for a scalable binary-options platform:
 - Live feed selection lives in `src/components/trading/engine/marketDataFeed.ts`
 - Boundary-safe candle aggregation lives in `src/components/trading/CandleAggregator.ts`
 - Chart rendering and UI wiring live in `src/components/trading/TradingChart.tsx`
+
+## Native chart replacement (November 2026)
+
+The trading dashboard and its oscillator panes now use the independent Canvas 2D
+renderer in `engine/native/chart.ts`, not the Lightweight Charts renderer. The
+older introductory description of a Lightweight Charts presentation layer above
+is superseded by this section. The dependency's **type declarations only** are
+retained at the adapter boundary so the existing SVG drawing, beacon, trade marker,
+and indicator integrations can keep their coordinate contracts.
+
+Modules:
+- `native/timeframes.ts`: all fifteen supported intervals, epoch-aligned buckets.
+- `native/marketData.ts`: sorted/deduplicated OHLC history, lower-interval
+  aggregation, recursive Heikin-Ashi calculations (including the initial candle).
+- `native/realtime.ts`: synchronous OHLC ingestion, timed closes, explicit
+  zero-volume carry-forward intervals, batched visual callbacks and cleanup.
+- `native/scales.ts`: invertible logical/time and price coordinates.
+- `native/chart.ts`: device-pixel-ratio-aware candles, OHLC bars, area, line and
+  histogram rendering, grid, axes, price lines, pointer crosshair, wheel zoom,
+  horizontal drag/scroll, price-axis pan/zoom and touch pinch zoom.
+- `native/compat.ts`: adapter exports for existing presentation components.
+
+Chart type/appearance changes preserve the current logical viewport. Timeframe
+views are retained per asset and timeframe when revisiting an interval. Drawing
+objects and indicator settings stay in their existing contexts, outside series
+lifecycle management. Empty intervals carry the last known price with zero volume;
+they do not assert that any trades occurred while the feed was disconnected.
+
+### Verification and outstanding integration work
+
+`npm run build` passes. Minimal JSX syntax corrections in AssetSelector and
+ChatDialog were necessary to unblock that build; neither component was redesigned.
+
+The new native-engine/renderer tests and existing aggregator/timeframe contract
+checks pass (31 tests). The complete chart test configuration currently reports
+39 passed / 3 failed. The three remaining failures concern legacy deterministic
+simulation tests: two reference the unsupported `1s` interval, and one expects
+bidirectional synthetic drift. Those failures also occur on the baseline commit.
+The new aggregation additionally fixes the previous 5m-vs-1m OHLC mismatch.
+
+Run targeted validation:
+
+```sh
+npx vitest run --config vitest.chart.config.ts \
+  src/test/nativeChartEngine.test.ts src/test/nativeChartRenderer.test.ts \
+  src/test/realtimeCandleAggregator.test.ts src/test/priceEngineTimeframes.test.ts
+npm run build
+```
+
+Not a production acceptance sign-off: Canvas calls are mocked in renderer tests.
+Authenticated browser testing of all drawing tools, indicator settings, trade
+placement, mobile gestures, and live WebSocket reconnects is still required.
+Repository-wide TypeScript checking also reports existing errors outside the new
+native engine.
+
+The existing market-data adapter remains in place: `VITE_MARKET_DATA_WS_URL`
+selects the real socket; without it the existing deterministic/demo feed is used.
+**History and initial seeds still come from the existing deterministic history
+provider.** This replacement does not turn that provider into real exchange
+history. Production real-history loading and recovery of actual missing exchange
+ticks require a server history/replay contract; the existing socket protocol only
+provides subscribe/unsubscribe ticks. A renderer cannot reconstruct unobserved
+market highs/lows. No new random-price generator or data-source replacement was
+introduced in the native engine.

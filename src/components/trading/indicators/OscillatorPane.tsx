@@ -10,7 +10,7 @@ import {
   type IPriceLine,
   type ISeriesApi,
   type Time,
-} from "lightweight-charts";
+} from "../engine/native/compat";
 import { X } from "lucide-react";
 import type { OscillatorIndicatorResult } from "./calculations";
 import type { ActiveIndicator } from "./types";
