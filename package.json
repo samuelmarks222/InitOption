@@ -18,7 +18,8 @@
     "native:chart": "node native-chart/server.mjs",
     "native:chart:test": "node --test native-chart/*.test.mjs",
     "otc:server": "node server/otc/start.mjs",
-    "otc:test": "node --test server/otc/*.test.mjs"
+    "otc:test": "node --test server/otc/*.test.mjs",
+    "typecheck:otc-api": "tsc -p tsconfig.otc-api.json"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

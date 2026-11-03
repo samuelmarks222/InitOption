@@ -35,7 +35,7 @@ export function createServerlessOTC({
     source: "internal-otc",
   });
   return async function read({ symbol, after, at, action = "ticks" }) {
-    if (typeof symbol !== "string" || !Object.hasOwn(assets, symbol))
+    if (typeof symbol !== "string" || !Object.prototype.hasOwnProperty.call(assets, symbol))
       throw new OTCError(400, "Unknown OTC symbol");
     if (!["ticks", "price"].includes(action))
       throw new OTCError(400, "Unknown OTC action");

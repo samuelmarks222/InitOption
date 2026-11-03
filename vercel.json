@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run typecheck:otc-api && npm run build",
   "outputDirectory": "dist",
   "functions": {
     "api/otc.ts": {

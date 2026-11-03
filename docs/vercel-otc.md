@@ -151,3 +151,15 @@ catch-up progress. PGlite uses one connection; this is not a substitute for a
 multi-connection Neon/Vercel production concurrency/load test. Frontend tests cover
 same-origin batching, pooling, non-overlapping requests, history hydration,
 catch-up withholding, failure/retry and no client price generation.
+
+
+## API deployment type checking
+
+The Vercel build runs `npm run typecheck:otc-api` before the frontend build.
+This checks the OTC entry point and its dependencies with ES2020 libraries and
+JSON-module imports disabled, independently of the frontend TypeScript project.
+The asset catalog is read server-side from the file explicitly included in the
+Function bundle; it does not require `resolveJsonModule`. The pricing engine's
+`.d.mts` declaration defines its transaction executor, asset registry and response
+contract. Compile-only negative tests ensure required options stay required.
+The API uses an ES2020-compatible own-property check, not `Object.hasOwn`.
