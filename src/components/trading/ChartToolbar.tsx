@@ -7,6 +7,7 @@ export type ChartType = "line" | "candles" | "bars" | "heikinAshi";
 
 interface ChartToolbarProps {
   selectedTf: SupportedChartTimeframe;
+  timeframeLocked?: boolean;
   onSelectTf: (tf: SupportedChartTimeframe) => void;
   styleEditorOpen?: boolean;
   onOpenStyleEditor: () => void;
@@ -82,6 +83,7 @@ const MODAL_STYLE = {
 
   const ChartToolbar = ({
   selectedTf,
+  timeframeLocked = false,
   onSelectTf,
   styleEditorOpen = false,
   onOpenStyleEditor,
@@ -191,6 +193,8 @@ const MODAL_STYLE = {
           <button
             ref={timeframeButtonRef}
             id="tour-timeframe"
+            disabled={timeframeLocked}
+            aria-label={timeframeLocked ? "5 seconds, fixed for Area chart" : undefined}
             onClick={() => toggleMenu("time", timeframeButtonRef.current, 224, 220)}
             className={menuBtnClass(activeMenu === "time", "green")}
             title={t("chartToolbar.timeInterval")}
@@ -200,7 +204,7 @@ const MODAL_STYLE = {
               </span>
           </button>
 
-          {activeMenu === "time" && (
+          {activeMenu === "time" && !timeframeLocked && (
             <div className="fixed z-[42] overflow-y-auto rounded-xl" style={{ ...MODAL_STYLE, ...(menuStyle ?? { left: 72, top: 24, width: 224, maxHeight: "calc(100vh - 24px)" }) }}>
               <div className="grid grid-cols-4 gap-1 p-2">
                 {TIMEFRAME_LABELS.map(tf => (

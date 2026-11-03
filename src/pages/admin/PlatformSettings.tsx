@@ -13,7 +13,7 @@ import {
   type PlatformSettingsRecord,
   type TwitterCardType,
 } from "@/lib/platformMetadata";
-import { writePlatformPresentationCache } from "@/lib/platformSettingsCache";
+import { writePlatformPresentationCache, writeWebsiteContentCache } from "@/lib/platformSettingsCache";
 import {
   GUIDE_MEDIA_KEYS,
   createDefaultWebsiteContent,
@@ -359,6 +359,7 @@ const PlatformSettings = () => {
     }
 
     writePlatformPresentationCache(settings);
+    writeWebsiteContentCache({ platformName: settings.platform_name, websiteContent: payload.website_content });
     applyPlatformSettingsToDocument(settings);
     toast({ title: "Platform settings published" });
     await fetchSettings();
@@ -643,6 +644,16 @@ const PlatformSettings = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className={CARD_CLASS}>
+        <h3 className="text-lg font-bold text-white">Winning notifications</h3>
+        <label className="mt-4 block text-sm text-slate-300" htmlFor="big-win-threshold">Big-win net profit threshold (USD)</label>
+        <p className="mb-3 mt-1 text-xs text-slate-400">Settled wins at or above this net profit receive the larger celebration. Smaller wins use the standard Trade Won card. Amounts are displayed in the trader's preferred currency.</p>
+        <input id="big-win-threshold" type="number" min="0.01" max="1000000000" step="0.01"
+          className="w-full max-w-xs rounded-lg border border-[#2a2f42] bg-[#111827] px-3 py-2 text-white"
+          value={websiteContent.tradingDefaults.bigWinProfitThreshold}
+          onChange={event => { const value = Number(event.target.value); if (Number.isFinite(value) && value > 0) updateTradingDefaults({ bigWinProfitThreshold: Math.min(1_000_000_000, value) }); }} />
       </div>
 
       <div className={CARD_CLASS}>

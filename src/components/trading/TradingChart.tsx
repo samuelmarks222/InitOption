@@ -1,3 +1,7 @@
+import { animateViewport } from "./engine/native/viewportAnimation";
+import { useChartMode } from "./engine/native/chartMode";
+import { visualCandle, heikinAshiCandle } from "./engine/native/animation";
+import { getSynchronizedUnixTimeMs, startPeriodicSync } from "@/lib/serverTimeSync";
 import { observedHistory } from "./engine/native/observedHistory";
 import { heikinAshi } from "./engine/native/marketData";
 import {
@@ -769,19 +773,9 @@ const buildMainSeriesUpdatePayload = (
   candle: OHLCCandle,
   history: OHLCCandle[],
 ): MainChartPoint => {
-  if (chartType === "heikinAshi" && history.length > 0) {
-    const hist = calcHeikinAshi(history);
-    const prev = hist[hist.length - 1];
-    const haOpen = (prev.open + prev.close) / 2;
-    const haClose = (candle.open + candle.high + candle.low + candle.close) / 4;
-
-    return {
-      time: toChartTime(candle.time),
-      open: haOpen,
-      high: Math.max(candle.high, haOpen, haClose),
-      low: Math.min(candle.low, haOpen, haClose),
-      close: haClose,
-    };
+  if (chartType === "heikinAshi") {
+    const ha = heikinAshiCandle(candle, history);
+    return { time: toChartTime(ha.time), open: ha.open, high: ha.high, low: ha.low, close: ha.close };
   }
 
   if (chartType === "line") {
@@ -798,13 +792,7 @@ const buildMainSeriesUpdatePayload = (
 };
 
 const getLiveBeaconPrice = (chartType: ChartType, candle: OHLCCandle, history: OHLCCandle[]) => {
-  if (chartType === "heikinAshi" && history.length > 0) {
-    const hist = calcHeikinAshi(history);
-    const prev = hist[hist.length - 1];
-    const haOpen = (prev.open + prev.close) / 2;
-    const haClose = (candle.open + candle.high + candle.low + candle.close) / 4;
-    return Math.max(Math.min(haClose, Math.max(candle.high, haOpen, haClose)), Math.min(candle.low, haOpen, haClose));
-  }
+  if (chartType === "heikinAshi") return heikinAshiCandle(candle, history).close;
 
   return candle.close;
 };
@@ -821,12 +809,6 @@ const getDisplayPriceSnapEpsilon = (price: number) => {
   return Math.pow(10, -precision) * 0.05;
 };
 
-const buildLiveDisplayCandle = (authoritativeCandle: OHLCCandle, displayPrice: number): OHLCCandle => ({
-  ...authoritativeCandle,
-  high: authoritativeCandle.high,
-  low: authoritativeCandle.low,
-  close: displayPrice,
-});
 
 const formatCloneMoney = (amount: number) => {
   const safeAmount = Number.isFinite(amount) ? Math.max(0, amount) : 0;
@@ -2109,6 +2091,7 @@ class SmoothUpdateScheduler {
   }
 
   flush() {
+    if (this.rafId !== null) cancelAnimationFrame(this.rafId);
     if (this.pendingUpdate && this.series) {
       try {
         this.series.update(this.pendingUpdate);
@@ -2119,6 +2102,7 @@ class SmoothUpdateScheduler {
   }
 
   cleanup() {
+    this.pendingUpdate = null;
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
@@ -2183,6 +2167,9 @@ const TradingChart = ({
   const authoritativeTickPriceRef = useRef(asset.price);
   const displayPriceRef = useRef(asset.price);
   const liveStartPriceRef = useRef(0);
+  const autoScrollEnabledRef = useRef(true);
+  const cancelViewportAnimation = useRef<(() => void) | null>(null);
+  useEffect(() => () => cancelViewportAnimation.current?.(), []);
   const timeframeSecondsRef = useRef<number>(60);
   const loadedHistoryCountRef = useRef(0);
   const isBackfillingHistoryRef = useRef(false);
@@ -2203,16 +2190,16 @@ const TradingChart = ({
     liveInterpLastFrameRef.current = 0;
   }, []);
 
-  const publishLiveDisplayCandle = useCallback((authoritativeCandle: OHLCCandle, displayPrice: number) => {
-    const visualCandle = buildLiveDisplayCandle(authoritativeCandle, displayPrice);
-    liveDisplayRef.current = visualCandle;
-    displayPriceRef.current = displayPrice;
+  const publishLiveDisplayCandle = useCallback((authoritativeCandle: OHLCCandle, displayPrice: number, progress = 1) => {
+    const visual = visualCandle(authoritativeCandle, displayPrice, liveDisplayRef.current, progress);
+    liveDisplayRef.current = visual;
+    displayPriceRef.current = visual.close;
     mainUpdateSchedulerRef.current?.update(
-      buildMainSeriesUpdatePayload(chartTypeRef.current, visualCandle, historyRef.current),
+      buildMainSeriesUpdatePayload(chartTypeRef.current, visual, historyRef.current),
     );
     setLivePriceBeacon((current) => ({
-      price: getLiveBeaconPrice(chartTypeRef.current, visualCandle, historyRef.current),
-      time: visualCandle.time,
+      price: getLiveBeaconPrice(chartTypeRef.current, visual, historyRef.current),
+      time: visual.time,
       logical: current?.logical ?? historyRef.current.length,
     }));
   }, []);
@@ -2246,7 +2233,10 @@ const TradingChart = ({
       const priceDelta = currentTarget.close - currentDisplayPrice;
       const snapEpsilon = getDisplayPriceSnapEpsilon(currentTarget.close);
 
-      if (Math.abs(priceDelta) <= snapEpsilon) {
+      const previousVisual = liveDisplayRef.current;
+      const wickDelta = previousVisual?.time === currentTarget.time
+        ? Math.max(Math.abs(currentTarget.high - previousVisual.high), Math.abs(currentTarget.low - previousVisual.low)) : 0;
+      if (Math.abs(priceDelta) <= snapEpsilon && wickDelta <= snapEpsilon) {
         publishLiveDisplayCandle(currentTarget, currentTarget.close);
         liveInterpRafRef.current = null;
         liveInterpLastFrameRef.current = 0;
@@ -2255,7 +2245,7 @@ const TradingChart = ({
 
       const damping = 1 - Math.exp(-deltaMs / LIVE_PRICE_DAMPING_MS);
       const nextDisplayPrice = currentDisplayPrice + priceDelta * damping;
-      publishLiveDisplayCandle(currentTarget, nextDisplayPrice);
+      publishLiveDisplayCandle(currentTarget, nextDisplayPrice, damping);
       liveInterpRafRef.current = requestAnimationFrame(step);
     };
 
@@ -2291,16 +2281,16 @@ const TradingChart = ({
     return conf && conf.pane === "overlay";
   });
   const activeAssetTrades = activeTrades.filter((trade) => trade.asset_symbol === asset.symbol);
-  const [selectedTf, setSelectedTf] = useState<SupportedChartTimeframe>("5s");
+  const { selectedTf, setSelectedTf, chartType, setChartType } = useChartMode(DEFAULT_CHART_TYPE);
   const savedTimeframeViews = useRef(new Map<string, { from: number; to: number }>());
   const selectTimeframe = (tf: SupportedChartTimeframe) => {
+    if (chartType === "line") return;
     const range = chartRef.current?.timeScale().getVisibleLogicalRange();
     if (range) savedTimeframeViews.current.set(`${asset.symbol}:${selectedTf}`, { ...range });
     setSelectedTf(tf);
   };
   const [currentPrice, setCurrentPrice] = useState(asset.price);
   const [priceChange, setPriceChange] = useState(asset.change || 0);
-  const [chartType, setChartType] = useState<ChartType>(DEFAULT_CHART_TYPE);
   const [chartStyles, setChartStyles] = useState<ChartStylePreferences>(() => loadChartStylePreferences());
   const [pairInfoOpen, setPairInfoOpen] = useState(false);
   const [styleEditorOpen, setStyleEditorOpen] = useState(false);
@@ -2317,6 +2307,7 @@ const TradingChart = ({
     down: PROFESSIONAL_DOWN_COLOR,
   });
   const { preferences: tradingPreferences } = useTradingPreferences();
+  autoScrollEnabledRef.current = tradingPreferences.autoScrolling;
   const { data: websiteContent } = useWebsiteContent();
   const defaultChartBackgroundImage = websiteContent.tradingDefaults.chartBackgroundImage.trim();
   const activeChartBackgroundImage = tradingPreferences.chartBackgroundImage || defaultChartBackgroundImage || null;
@@ -2853,9 +2844,7 @@ const TradingChart = ({
     onPriceUpdateRef.current = onPriceUpdate;
   }, [onPriceUpdate]);
 
-  useEffect(() => {
-    setChartType(DEFAULT_CHART_TYPE);
-  }, []);
+  useEffect(() => startPeriodicSync(), []);
 
   useEffect(() => {
     chartStylesRef.current = chartStyles;
@@ -3232,7 +3221,10 @@ const TradingChart = ({
 
   const applyLiveCandleClose = useCallback(
     (closed: OHLCCandle) => {
-      historyRef.current = [...historyRef.current, closed].slice(-MAX_CANDLES_IN_MEMORY);
+      const scale = chartRef.current?.timeScale();
+      const viewport = scale?.getVisibleLogicalRange();
+      const previousCount = historyRef.current.length;
+      historyRef.current = [...historyRef.current.filter(bar => bar.time < closed.time), closed].slice(-MAX_CANDLES_IN_MEMORY);
       stopLiveInterpolation();
       liveTargetRef.current = null;
       liveDisplayRef.current = { ...closed };
@@ -3241,6 +3233,13 @@ const TradingChart = ({
         mainUpdateSchedulerRef.current.update(
           buildMainSeriesUpdatePayload(chartTypeRef.current, closed, historyRef.current),
         );
+        // Commit the exact final quote before a new candle can replace a pending frame.
+        mainUpdateSchedulerRef.current.flush();
+      }
+      if (scale && viewport && autoScrollEnabledRef.current && viewport.to >= previousCount) {
+        cancelViewportAnimation.current?.();
+        const shift = Math.max(0, historyRef.current.length - previousCount);
+        if (shift) cancelViewportAnimation.current = animateViewport(scale, { from: viewport.from + shift, to: viewport.to + shift });
       }
       renderOverlayIndicators(getIndicatorHistory());
       setForceOscillatorRender((current) => current + 1);
@@ -3297,8 +3296,8 @@ const TradingChart = ({
       const previousCount = historyRef.current.length;
       const liveSource = import.meta.env.VITE_MARKET_DATA_WS_URL;
       const nextHistory = liveSource?.trim()
-        ? observedHistory.snapshot(liveSource, asset.symbol, tf.seconds, Date.now() / 1000, nextCount).history
-        : engine.generateHistory(tf, Date.now() / 1000, nextCount);
+        ? observedHistory.snapshot(liveSource, asset.symbol, tf.seconds, getSynchronizedUnixTimeMs() / 1000, nextCount).history
+        : engine.generateHistory(tf, getSynchronizedUnixTimeMs() / 1000, nextCount);
       if (nextHistory.length <= previousCount) return;
 
       loadedHistoryCountRef.current = nextHistory.length;
@@ -3342,6 +3341,7 @@ const TradingChart = ({
     const tf = TIMEFRAMES[selectedTf];
     if (!tf || !mainSeriesRef.current || !chartRef.current) return;
     stopLiveInterpolation();
+    cancelViewportAnimation.current?.();
     liveTargetRef.current = null;
     liveDisplayRef.current = null;
     authoritativeTickPriceRef.current = asset.price;
@@ -3349,7 +3349,7 @@ const TradingChart = ({
     timeframeSecondsRef.current = tf.seconds;
     const websocketUrl = import.meta.env.VITE_MARKET_DATA_WS_URL;
     const step = tf.seconds;
-    const nowSec = Date.now() / 1000;
+    const nowSec = getSynchronizedUnixTimeMs() / 1000;
     const cacheKey = `${asset.symbol}_${selectedTf}`;
 
     // Clean up any stale feeds for this symbol with a different timeframe
@@ -4049,7 +4049,7 @@ renderOverlayIndicators(getIndicatorHistory());
 
             {mobileToolsOpen && (
               <>
-                {activeMobileMenu === "time" && (
+                {activeMobileMenu === "time" && chartType !== "line" && (
                   <div
                     className="fixed z-[56] overflow-y-auto rounded-[10px] border border-white/10 bg-[#5a5f72]/95 p-2 shadow-2xl backdrop-blur-sm"
                     style={mobileMenuStyle ?? { left: 66, top: 16, width: 228, maxHeight: "calc(100vh - 24px)" }}
@@ -4125,6 +4125,8 @@ renderOverlayIndicators(getIndicatorHistory());
 
                 <button
                   type="button"
+                  disabled={chartType === "line"}
+                  title={chartType === "line" ? "Area chart uses a fixed 5-second interval" : undefined}
                   onClick={(event) => toggleMobileMenu("time", event.currentTarget)}
                   className={`mx-1 flex h-10 min-w-[42px] items-center justify-center rounded-[6px] border px-2 py-1.5 text-[18px] font-black transition-colors shadow-[0_8px_18px_rgba(0,0,0,0.24)] ${
                     activeMobileMenu === "time"
@@ -4252,6 +4254,7 @@ renderOverlayIndicators(getIndicatorHistory());
               <ChartToolbar
                 selectedTf={selectedTf}
                 onSelectTf={selectTimeframe}
+                timeframeLocked={chartType === "line"}
                 styleEditorOpen={styleEditorOpen}
                 onOpenStyleEditor={() => {
                   setStyleEditorOpen((current) => !current);

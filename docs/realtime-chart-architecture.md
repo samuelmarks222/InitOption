@@ -196,3 +196,91 @@ history/replay contract. The existing socket protocol only provides tick
 subscribe/unsubscribe messages. A renderer cannot reconstruct unobserved market
 highs/lows, and this implementation does not claim to do so. Authenticated browser
 acceptance testing and repository-wide existing TypeScript errors remain open.
+
+## Additional chart behavior and confirmed winning notifications
+
+### Rendering and interval separation
+
+- `native/animation.ts` produces display-only candle geometry. Close interpolation
+  is clamped to the received candle's actual range. Wicks ease toward observed
+  extrema and always contain the displayed body. The authoritative live/history
+  references and indicator calculations continue to use received OHLC, never the
+  interpolated display candle. A wick may shorten visually as the body approaches
+  its extreme; an actual historical high/low is never erased for animation.
+- A final close flushes the exact authoritative candle before the next active
+  candle can replace a queued visual update. Heikin-Ashi active and closed candles
+  use the same recursive prefix, excluding the current timestamp to avoid counting
+  a just-closed candle twice. First-candle formulas are also applied to live data.
+- `native/viewportAnimation.ts` eases live-follow movement separately from candle
+  formation. User viewport changes interrupt following; historical navigation is
+  not forced back to live. Candle duration remains controlled by interval buckets,
+  not by requestAnimationFrame or notification timers.
+- The aggregator and chart seed/backfill paths use the existing synchronized server
+  clock. Successful clock synchronization reschedules boundary timers; a temporary
+  sync failure retains the last valid offset. The chart starts periodic clock
+  synchronization with `/api/time`.
+
+### Area mode
+
+`native/chartMode.ts` manages chart type and timeframe in one reducer transition.
+Area (`line` in the existing UI's internal identifiers) always uses `5s`. Both the
+mobile and desktop timeframe buttons are disabled in Area mode; other timeframe
+options are not rendered. Timeframe actions are rejected by the reducer too, not
+just hidden in the UI. Switching away restores the previous non-Area timeframe.
+Drawing and indicator contexts, chart settings, and trading controls are retained.
+
+### Winning notifications
+
+The Trade page queues two compact designs: an emerald **TRADE WON** card and a
+more prominent amber **BIG WIN!** card. Both show the asset, UP/DOWN direction,
+investment, net profit, and gross payout in the trader's preferred currency.
+Manual dismiss and independent 6-second / 8.5-second expiry are supported. At most
+two cards are displayed concurrently on desktop and one on mobile; queued cards
+start their expiry only when shown. Mobile cards sit near the top, away from the
+bottom trade-entry controls. Motion-reduction preferences disable celebration animations.
+
+The previous speculative popup call at local expiry has been removed. The trading
+provider now checks settlement mutation errors and requires a matching returned
+row whose persisted status is `won` or `lost` and which has a closing timestamp.
+Only after successful settlement processing is that confirmed row queued for the
+result UI. Notification amounts come from that row, not the locally predicted
+payout rate. Accounting uses the same acknowledged payout. Losses and malformed,
+open, or pending results cannot create winning cards. Provider queue/result IDs
+and page notification IDs prevent duplicate announcements during processing.
+Result queues are cleared when the active user changes.
+
+**Admin configuration:** Platform Settings → Winning notifications → Big-win net
+profit threshold (USD). The default is $500 net profit. This field is stored in
+`platform_settings.website_content.tradingDefaults.bigWinProfitThreshold`, using
+the existing settings save mechanism; no database migration is needed. It affects
+presentation only, not trade payout rates or settlement classification. Settings
+publication updates the local website-content cache for subsequent page loads.
+
+### Validation
+
+The targeted acceptance set passes **78 tests** across ten files:
+
+```sh
+npx vitest run --config vitest.chart.config.ts \
+  src/test/chartAnimationAndMode.test.tsx src/test/chartClockAndViewport.test.ts \
+  src/test/winningNotifications.test.tsx src/test/settlementConfirmation.test.tsx \
+  src/test/nativeChartEngine.test.ts src/test/nativeChartRenderer.test.ts \
+  src/test/realtimeCandleAggregator.test.ts src/test/priceEngineTimeframes.test.ts \
+  src/test/observedHistory.test.ts src/test/webSocketFeed.test.ts
+npm run build
+```
+
+Tests include the actual trading provider with mocked persistence: a blocked
+settlement does not announce a provisional win, a confirmed loss never creates a
+winning card, failed settlement attempts remain silent, and the confirmed payout
+is used rather than a predicted return. Timing checks explicitly verify no early
+close at 4,999 ms or 14,399,999 ms, and correct rollover at 5,000 / 14,400,000 ms.
+
+The production build passes. The complete chart configuration reports 86 passed
+and the same three legacy deterministic/demo simulation failures documented
+above. Repository-wide TypeScript checking is not clean on the baseline.
+Authenticated desktop/mobile browser testing, real server settlement execution,
+and live-feed visual performance acceptance are still required; mocked Canvas and
+persistence tests do not constitute a production sign-off. This work does not
+replace the existing settlement backend or provide the missing pre-session
+exchange history/replay service.

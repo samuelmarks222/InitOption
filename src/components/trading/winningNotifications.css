@@ -1,0 +1,10 @@
+.trade-win-card{position:relative;pointer-events:auto;overflow:hidden;padding:18px;border:1px solid #34d39940;border-radius:16px;background:linear-gradient(125deg,#123c32f5,#172332fa 62%);box-shadow:0 12px 36px #0005;color:#fff;animation:trade-win-enter .32s ease-out both;backdrop-filter:blur(16px)}
+.trade-win-card--big{border-color:#fbbf2466;background:radial-gradient(ellipse at 0 0,#8a642a66,transparent 65%),linear-gradient(125deg,#302a23fa,#182131fa);box-shadow:0 12px 40px #0006,0 0 24px #fbbf2412}
+.trade-win-icon{display:grid;place-items:center;flex-shrink:0;width:44px;height:44px;border-radius:14px;background:#34d39914;box-shadow:inset 0 0 0 1px #34d39933;animation:trade-win-bloom .6s ease-out both}.trade-win-card--big .trade-win-icon{background:#fbbf2414;box-shadow:inset 0 0 0 1px #fbbf2440}
+.trade-win-timer{position:absolute;bottom:0;left:0;right:0;height:2px;transform-origin:left;background:#34d39980;animation:trade-win-countdown linear forwards}.trade-win-card--big .trade-win-timer{background:#fbbf2499}
+.trade-win-sparkles{position:absolute;inset:0;pointer-events:none}.trade-win-sparkles i{position:absolute;width:4px;height:4px;border-radius:1px;background:#fde68a;left:calc(8% + var(--spark)*10%);top:-8px;animation:trade-win-spark 1.8s ease-out both;animation-delay:calc(var(--spark)*.06s)}
+@keyframes trade-win-enter{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes trade-win-bloom{from{transform:scale(.8)}60%{transform:scale(1.08)}to{transform:scale(1)}}
+@keyframes trade-win-countdown{to{transform:scaleX(0)}}
+@keyframes trade-win-spark{0%{opacity:0;transform:translateY(0) rotate(0)}15%{opacity:.8}to{opacity:0;transform:translateY(180px) rotate(150deg)}}
+@media(prefers-reduced-motion:reduce){.trade-win-card,.trade-win-icon,.trade-win-timer,.trade-win-sparkles i{animation:none}.trade-win-sparkles{display:none}}

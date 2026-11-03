@@ -1,3 +1,4 @@
+import { getSynchronizedUnixTimeMs, subscribeClockSync } from "@/lib/serverTimeSync";
 import type { OHLCCandle } from '../priceEngine';
 import { bucketStart } from './timeframes';
 export type PriceTick = { timestamp: number; price: number };
@@ -14,12 +15,14 @@ export class CandleAggregator {
   private pending: { candle: OHLCCandle; timestamp: number } | null = null;
   private disposed = false;
   private readonly seconds: number;
+  private readonly unsubscribeClock: () => void;
   constructor(seconds: number, private onClose: CandleCloseCallback, private onUpdate: CandleUpdateCallback) {
     if (!Number.isFinite(seconds) || seconds <= 0) throw new Error('Invalid candle interval');
     this.seconds = Math.max(1, Math.floor(seconds));
+    this.unsubscribeClock = subscribeClockSync(() => this.schedule());
   }
   setCallbacks(close: CandleCloseCallback, update: CandleUpdateCallback) { this.onClose = close; this.onUpdate = update; }
-  setSeedCandle(candle: OHLCCandle, referenceTimestamp = Date.now()/1000) {
+  setSeedCandle(candle: OHLCCandle, referenceTimestamp = getSynchronizedUnixTimeMs()/1000) {
     if (this.disposed) return;
     if (![candle.time, candle.open, candle.high, candle.low, candle.close, candle.volume, referenceTimestamp].every(Number.isFinite)
       || candle.low <= 0 || candle.high < Math.max(candle.open, candle.close)
@@ -61,10 +64,10 @@ export class CandleAggregator {
   private schedule() {
     if (this.timer !== null) clearTimeout(this.timer);
     if (!this.current || this.disposed) return;
-    const delay = Math.max(1,(this.current.time + this.seconds - Date.now()/1000)*1000);
+    const delay = Math.max(1,(this.current.time + this.seconds - getSynchronizedUnixTimeMs()/1000)*1000);
     // Historical replay must not race a wall-clock timer while ticks are ingested.
     this.timer = setTimeout(() => {
-      const now = Date.now()/1000;
+      const now = getSynchronizedUnixTimeMs()/1000;
       // Wall-clock closes must not move the exchange-tick cursor forward: a
       // slightly delayed tick in the new bucket is still authoritative.
       this.advance(now); this.queue(now); this.schedule();
@@ -72,6 +75,7 @@ export class CandleAggregator {
   }
   destroy() {
     this.disposed = true;
+    this.unsubscribeClock();
     if (this.timer !== null) clearTimeout(this.timer);
     if (this.frame !== null) { if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(this.frame as number); else clearTimeout(this.frame); }
     this.timer = null; this.frame = null; this.pending = null; this.current = null;

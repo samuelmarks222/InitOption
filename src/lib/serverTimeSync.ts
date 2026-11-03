@@ -3,6 +3,11 @@ let lastSyncTime = 0;
 let syncPromise: Promise<number> | null = null;
 const SYNC_INTERVAL_MS = 30000;
 const MAX_OFFSET_AGE_MS = 60000;
+const clockListeners = new Set<() => void>();
+export function subscribeClockSync(listener: () => void): () => void {
+  clockListeners.add(listener);
+  return () => { clockListeners.delete(listener); };
+}
 
 export const getServerTimeOffset = () => serverTimeOffsetMs;
 
@@ -26,11 +31,13 @@ async function fetchServerTime(): Promise<number> {
     const data = await response.json();
     const end = performance.now();
     const roundTrip = end - start;
+    if (typeof data.timestamp !== 'number' || !Number.isFinite(data.timestamp)) throw new Error('Invalid server clock');
     const serverTimeMs = data.timestamp * 1000;
     const estimatedServerTimeAtEnd = serverTimeMs + roundTrip / 2;
     return estimatedServerTimeAtEnd - Date.now();
   } catch {
-    return 0;
+    // A temporary network failure must not discard the last known good offset.
+    return serverTimeOffsetMs;
   }
 }
 
@@ -42,6 +49,7 @@ export async function syncServerTime(): Promise<number> {
       const offset = await fetchServerTime();
       serverTimeOffsetMs = offset;
       lastSyncTime = Date.now();
+      clockListeners.forEach(listener => listener());
       return offset;
     } finally {
       syncPromise = null;

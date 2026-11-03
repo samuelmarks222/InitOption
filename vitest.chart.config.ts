@@ -6,6 +6,10 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: [
+      "src/test/chartClockAndViewport.test.ts",
+      "src/test/settlementConfirmation.test.tsx",
+      "src/test/chartAnimationAndMode.test.tsx",
+      "src/test/winningNotifications.test.tsx",
       "src/test/observedHistory.test.ts",
       "src/test/webSocketFeed.test.ts",
       "src/test/nativeChartEngine.test.ts",
