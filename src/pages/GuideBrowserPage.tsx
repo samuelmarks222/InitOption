@@ -209,7 +209,7 @@ const GuideBrowserPage = () => {
         />
 
         <section className="bg-[#FAFDFB] py-12 sm:py-16">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-8 lg:grid-cols-12">
               {/* Left Filter & List Sidebar */}
               <aside className="space-y-5 lg:col-span-4">
@@ -319,7 +319,7 @@ const GuideBrowserPage = () => {
                         <Sparkles className="h-3 w-3" />
                         {selectedGuide.category || "Guide"}
                       </span>
-                      <h2 className="mt-4 text-3xl font-bold text-[#161D24] sm:text-4xl">
+                      <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-[#161D24] sm:text-4xl">
                         {selectedGuide.title}
                       </h2>
                       {selectedGuide.description ? (

@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Clock,
   GraduationCap,
+  Gift,
   Headphones,
   Layers,
   Minus,
@@ -485,7 +486,7 @@ const PoolitoHomePage = () => {
               {/* Left Copy Column */}
               <div className="lg:col-span-6">
                 <div className="inline-flex items-center gap-2 rounded-full border border-[#E3ECE6] bg-white px-4 py-1.5 text-xs font-semibold text-[#1E2730] shadow-[0_4px_14px_rgba(20,48,40,0.05)]">
-                  <span aria-hidden="true">🎁</span>
+                  <Gift className="h-3.5 w-3.5 text-[#2E7971]" aria-hidden="true" />
                   <span>Up to 70% Welcome Bonus on Your First Deposit!</span>
                 </div>
 
@@ -520,28 +521,31 @@ const PoolitoHomePage = () => {
 
                 {/* 5-Star Rating Strip */}
                 <div className="mt-7 flex items-center gap-3">
-                  <div className="flex items-center gap-1 text-[#161D24]" aria-label="5 out of 5 stars">
+                  <div className="flex items-center gap-0.5 text-[#E9933D]" aria-label="4.9 out of 5 stars">
                     {Array.from({ length: 5 }).map((_, idx) => (
                       <Star key={idx} className="h-4 w-4 fill-current" />
                     ))}
                   </div>
                   <Link
                     to="/reviews"
-                    className="text-xs font-semibold text-[#2E3A44] underline underline-offset-4 transition-colors hover:text-[#2E7971]"
+                    className="text-xs font-semibold text-[#2E3A44] underline decoration-[#C9D8D0] underline-offset-4 transition-colors hover:text-[#1F6B57] hover:decoration-[#52A788]"
                   >
                     4.9/5 Trader Score &amp; Reviews
                   </Link>
                 </div>
 
-                {/* Bottom 3 Checkmark Badges */}
-                <div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-3 text-xs font-medium text-[#2A353E] sm:text-[13px]">
+                {/* Bottom 3 Checkmark Badges — evenly arranged as a chip row */}
+                <div className="mt-9 grid max-w-xl grid-cols-1 gap-2.5 sm:grid-cols-3">
                   {[
                     "Fast M-PESA & Crypto Payouts",
                     "100+ Global Assets",
                     "24/7 Customer Support",
                   ].map((badge) => (
-                    <span key={badge} className="inline-flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-[#439683]" />
+                    <span
+                      key={badge}
+                      className="inline-flex items-start gap-2 rounded-xl border border-[#E3ECE6] bg-white/85 px-3 py-2.5 text-[11px] font-semibold leading-4 text-[#2A353E] sm:text-xs sm:leading-[17px]"
+                    >
+                      <CheckCircle2 className="mt-px h-3.5 w-3.5 shrink-0 text-[#439683]" />
                       <span>{badge}</span>
                     </span>
                   ))}
@@ -804,14 +808,14 @@ const PoolitoHomePage = () => {
         </section>
 
         {/* ─── 3. ACCOUNT TIERS & LIVE MARKETS MATRIX (Reference Section 2) ── */}
-        <section id="markets" aria-labelledby="io-matrix-title" className="py-20 sm:py-24">
+        <section id="markets" aria-labelledby="io-matrix-title" className="py-16 sm:py-20 lg:py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {/* Centered Header */}
             <div className="mx-auto max-w-2xl text-center">
               <span className="io-eyebrow-pill">Account Tiers &amp; Markets</span>
               <h2
                 id="io-matrix-title"
-                className="mt-4 text-3xl font-bold leading-tight tracking-[-0.025em] text-[#161D24] sm:text-4xl lg:text-[42px]"
+                className="mt-4 text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-[#161D24] sm:text-4xl lg:text-[40px]"
               >
                 Define Your Strategy,
                 <br />
@@ -957,7 +961,7 @@ const PoolitoHomePage = () => {
         </section>
 
         {/* ─── 4. WHY TRUST US — YOUR BEST TRADING PARTNER ─────────────────── */}
-        <section className="relative overflow-hidden py-16 sm:py-20">
+        <section className="relative overflow-hidden py-16 sm:py-20 lg:py-24">
           <div
             aria-hidden="true"
             className="pointer-events-none absolute -left-24 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(126,214,152,0.18),transparent_70%)] blur-2xl"
@@ -965,7 +969,7 @@ const PoolitoHomePage = () => {
           <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <span className="io-eyebrow-pill">Why Trust Us</span>
-              <h2 className="mt-4 text-3xl font-bold tracking-[-0.025em] text-[#161D24] sm:text-4xl">
+              <h2 className="mt-4 text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-[#161D24] sm:text-4xl lg:text-[40px]">
                 Your Best Trading Partner
               </h2>
             </div>
@@ -989,13 +993,13 @@ const PoolitoHomePage = () => {
         </section>
 
         {/* ─── 5. EARNINGS / INTERACTIVE PAYOUT ESTIMATOR ──────────────────── */}
-        <section className="py-16 sm:py-24">
+        <section className="py-16 sm:py-20 lg:py-24">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="grid items-center gap-12 lg:grid-cols-12">
               {/* Left Copy */}
               <div className="lg:col-span-6">
                 <span className="io-eyebrow-pill">Earnings</span>
-                <h2 className="mt-4 text-3xl font-bold leading-tight tracking-[-0.025em] text-[#161D24] sm:text-4xl lg:text-[42px]">
+                <h2 className="mt-4 text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-[#161D24] sm:text-4xl lg:text-[40px]">
                   Discover Your Payout
                   <br />
                   Potential
@@ -1087,13 +1091,13 @@ const PoolitoHomePage = () => {
         </section>
 
         {/* ─── 6. WHY TRADE WITH US — 6-CARD PASTEL BENTO GRID ─────────────── */}
-        <section id="features" aria-labelledby="io-bento-heading" className="py-16 sm:py-24">
+        <section id="features" aria-labelledby="io-bento-heading" className="py-16 sm:py-20 lg:py-24">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-xl text-center">
               <span className="io-eyebrow-pill">Why Trade With Us</span>
               <h2
                 id="io-bento-heading"
-                className="mt-4 text-3xl font-bold tracking-[-0.025em] text-[#161D24] sm:text-4xl"
+                className="mt-4 text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-[#161D24] sm:text-4xl lg:text-[40px]"
               >
                 Swift &amp; Dependable Payouts
               </h2>
@@ -1207,7 +1211,7 @@ const PoolitoHomePage = () => {
         <section
           id="reviews"
           aria-labelledby="io-testimonials-title"
-          className="relative overflow-hidden bg-gradient-to-b from-white via-[#F9FCFA] to-[#EDF7F0] py-20 sm:py-24"
+          className="relative overflow-hidden bg-gradient-to-b from-white via-[#F9FCFA] to-[#EDF7F0] py-16 sm:py-20 lg:py-24"
         >
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-end justify-between gap-6">
@@ -1215,7 +1219,7 @@ const PoolitoHomePage = () => {
                 <span className="io-eyebrow-pill">Testimonials</span>
                 <h2
                   id="io-testimonials-title"
-                  className="mt-4 text-3xl font-bold tracking-[-0.025em] text-[#161D24] sm:text-4xl"
+                  className="mt-4 text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-[#161D24] sm:text-4xl lg:text-[40px]"
                 >
                   What Our Traders Say
                 </h2>
@@ -1273,7 +1277,7 @@ const PoolitoHomePage = () => {
                     <div>
                       <div className="text-sm font-bold text-[#161D24]">{item.name}</div>
                       <div
-                        className="mt-0.5 flex items-center gap-0.5 text-[#E87A48]"
+                        className="mt-0.5 flex items-center gap-0.5 text-[#E9933D]"
                         aria-label="5 out of 5 stars"
                       >
                         {Array.from({ length: 5 }).map((_, idx) => (
@@ -1289,13 +1293,13 @@ const PoolitoHomePage = () => {
         </section>
 
         {/* ─── 8. TRADE SMARTER — COMPARISON MATRIX ────────────────────────── */}
-        <section aria-labelledby="io-compare-heading" className="py-20 sm:py-24">
+        <section aria-labelledby="io-compare-heading" className="py-16 sm:py-20 lg:py-24">
           <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
             <div className="text-center">
               <span className="io-eyebrow-pill">Trade Smarter</span>
               <h2
                 id="io-compare-heading"
-                className="mt-4 text-3xl font-bold tracking-[-0.025em] text-[#161D24] sm:text-4xl"
+                className="mt-4 text-3xl font-bold leading-[1.1] tracking-[-0.03em] text-[#161D24] sm:text-4xl lg:text-[40px]"
               >
                 Smart Choices, Better Trades
               </h2>
@@ -1380,7 +1384,7 @@ const PoolitoHomePage = () => {
         </section>
 
         {/* ─── 9. FREE TRADING ACADEMY & GUIDE BLUEPRINT CALLOUT ───────────── */}
-        <section className="py-16 sm:py-24">
+        <section className="py-16 sm:py-20 lg:py-24">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="grid items-center gap-12 lg:grid-cols-12">
               {/* Left Visual Blueprint Showcase */}
@@ -1424,7 +1428,7 @@ const PoolitoHomePage = () => {
 
               {/* Right Copy & CTA (Matching Reference Blueprint Section) */}
               <div className="lg:col-span-6">
-                <h2 className="text-2xl font-bold leading-snug tracking-[-0.02em] text-[#161D24] sm:text-3xl lg:text-[34px]">
+                <h2 className="text-2xl font-bold leading-snug tracking-[-0.03em] text-[#161D24] sm:text-3xl lg:text-[34px]">
                   Hold on! Open any account and unlock our {platformName} Trading Guide for free!
                 </h2>
                 <p className="mt-4 text-sm leading-7 text-[#5A6772] sm:text-base">
@@ -1459,7 +1463,7 @@ const PoolitoHomePage = () => {
             <div className="lg:col-span-6">
               <h2
                 id="io-cta-banner-heading"
-                className="text-3xl font-bold leading-[1.15] tracking-[-0.02em] text-white sm:text-4xl lg:text-[42px]"
+                className="text-3xl font-bold leading-[1.12] tracking-[-0.03em] text-white sm:text-4xl lg:text-[40px]"
               >
                 Step into Tomorrow&apos;s
                 <br />
