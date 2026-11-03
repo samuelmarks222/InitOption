@@ -2,7 +2,15 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { transaction } from "./_lib/db.js";
 import { OTC_SCHEMA } from "./_lib/otcSchema.js";
 import { createServerlessOTC } from "../server/otc/serverless.mjs";
-import assets from "../server/otc/assets.json";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import type { OTCAssetConfig } from "../server/otc/serverless.mjs";
+
+// Vercel includes this file via api/otc.ts.includeFiles. Runtime JSON loading
+// avoids depending on resolveJsonModule in Vercel's API TypeScript compiler.
+const assets: Record<string, OTCAssetConfig> = JSON.parse(
+  readFileSync(resolve(process.cwd(), "server/otc/assets.json"), "utf8"),
+);
 
 let ready: Promise<void> | undefined;
 async function ensureSchema() {
@@ -38,14 +46,14 @@ export default async function handler(
         url.searchParams.set(key, value);
     }
     const action = url.searchParams.get("action") ?? "ticks";
-    if (!["ticks", "price", "health"].includes(action)) {
+    if (action !== "ticks" && action !== "price" && action !== "health") {
       res.statusCode = 400;
       res.end(JSON.stringify({ error: "Unknown OTC action" }));
       return;
     }
     if (
       action !== "health" &&
-      !Object.hasOwn(assets, url.searchParams.get("symbol") ?? "")
+      !Object.prototype.hasOwnProperty.call(assets, url.searchParams.get("symbol") ?? "")
     ) {
       res.statusCode = 400;
       res.end(JSON.stringify({ error: "Unknown OTC symbol" }));
@@ -74,8 +82,9 @@ export default async function handler(
               ? Number(url.searchParams.get("at"))
               : undefined,
           });
-    res.statusCode = result.pending ? 409 : 200;
-    if (result.pending) res.setHeader("Retry-After", "1");
+    const pending = "pending" in result && result.pending;
+    res.statusCode = pending ? 409 : 200;
+    if (pending) res.setHeader("Retry-After", "1");
     res.end(JSON.stringify(result));
   } catch (error) {
     const status = Number((error as any)?.status) || 503;
