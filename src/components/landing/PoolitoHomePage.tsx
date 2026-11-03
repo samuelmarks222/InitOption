@@ -1386,11 +1386,11 @@ const PoolitoHomePage = () => {
               {/* Left Visual Blueprint Showcase */}
               <div className="lg:col-span-6">
                 <div className="relative mx-auto max-w-lg rounded-[28px] border border-[#DCECE2] bg-gradient-to-br from-[#EAF6EE] via-[#F4FBF6] to-[#E2F2EA] p-6 shadow-[0_20px_50px_rgba(24,60,48,0.08)] sm:p-8">
-                  <div className="overflow-hidden rounded-2xl border border-white/80 bg-[#08121E] shadow-xl">
+                  <div className="relative">
                     <img
                       src="/landing/poolito-initoption/laptop-phone-angle.png"
                       alt={`${platformName} Academy and multi-device terminal`}
-                      className="h-56 w-full object-cover sm:h-64"
+                      className="h-56 w-full object-contain drop-shadow-[0_24px_32px_rgba(24,60,48,0.18)] sm:h-64"
                       loading="lazy"
                     />
                   </div>
