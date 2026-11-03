@@ -250,31 +250,32 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   }
 
   return (
-    <div className="relative flex min-h-screen bg-[#212634]">
-      <div className="relative hidden overflow-hidden bg-[#212634] lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:p-12">
-        <div className="absolute left-1/2 top-1/4 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#10b86b]/12 blur-[150px]" />
+    <div className="io-public-shell relative flex min-h-screen bg-[#080d16]">
+      <div className="relative hidden overflow-hidden border-r border-white/[0.08] bg-gradient-to-b from-[#0d1628] via-[#0a1220] to-[#080d16] lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:p-12">
+        <div className="io-grid-pattern pointer-events-none absolute inset-0 opacity-45" />
+        <div className="absolute left-1/2 top-1/4 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#10b86b]/14 blur-[150px]" />
         <div className="absolute bottom-0 left-0 h-[300px] w-[300px] rounded-full bg-[#10b86b]/10 blur-[100px]" />
-        <div className="absolute right-0 top-1/3 h-[200px] w-[200px] rounded-full bg-[#10b86b]/8 blur-[80px]" />
+        <div className="absolute right-0 top-1/3 h-[200px] w-[200px] rounded-full bg-sky-500/10 blur-[90px]" />
 
         <Link to="/" className="relative z-10">
           <img src={logo} alt="Init Option" className="h-10 w-auto" />
         </Link>
 
         <div className="relative z-10 max-w-md">
-          <h1 className="font-heading text-4xl font-bold leading-tight text-white">
+          <h1 className="font-heading text-4xl font-extrabold leading-tight tracking-tight text-white">
             Trade smarter with <span className="text-[#10b86b]">Init Option</span>
           </h1>
-          <p className="mt-4 leading-relaxed text-white/70">
-            Access real-time charts, practice with demo funds, and trade with confidence on our modern platform.
+          <p className="mt-4 leading-relaxed text-slate-300">
+            Access real-time charts, practice with $10,000 demo funds, and trade with confidence on our modern platform.
           </p>
 
           <div className="mt-8 space-y-4">
             {featureItems.map((item) => (
               <div key={item.text} className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#10b86b]/14">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#10b86b]/25 bg-[#10b86b]/14">
                   <item.icon size={18} className="text-[#10b86b]" />
                 </div>
-                <span className="text-sm text-white/80">{item.text}</span>
+                <span className="text-sm text-slate-200">{item.text}</span>
               </div>
             ))}
           </div>
@@ -283,19 +284,19 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
         <div className="relative z-10 flex gap-8">
           {bottomStats.map((stat) => (
             <div key={stat.label}>
-              <div className="font-heading text-xl font-bold text-[#10b86b]">{stat.value}</div>
-              <div className="text-xs text-white/60">{stat.label}</div>
+              <div className="font-heading text-xl font-extrabold text-[#10b86b]">{stat.value}</div>
+              <div className="text-xs text-slate-400">{stat.label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex w-full flex-col items-center justify-center bg-[#212634] px-6 py-12 lg:w-1/2">
+      <div className="flex w-full flex-col items-center justify-center bg-[#080d16] px-6 py-12 lg:w-1/2">
         <Link to="/" className="mb-8 lg:hidden">
           <img src={logo} alt="Init Option" className="h-8 w-auto" />
         </Link>
 
-        <div className="w-full max-w-md">
+        <div className="io-glass-card w-full max-w-md rounded-3xl p-7 sm:p-9">
           <div className="mb-8 flex rounded-xl border border-white/10 bg-white/5 p-1">
             <button
               type="button"

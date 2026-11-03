@@ -1,24 +1,56 @@
+import { Link } from "react-router-dom";
+import { ArrowLeft, Shield } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import PageHero from "@/components/layout/PageHero";
 
+const LEGAL_NAV = [
+  { label: "Terms & Conditions", to: "/terms", active: false },
+  { label: "Privacy Policy", to: "/privacy", active: false },
+  { label: "Risk Disclaimer", to: "/risk-disclaimer", active: false },
+  { label: "AML & KYC", to: "/aml-kyc", active: false },
+  { label: "Payment Policy", to: "/payment-policy", active: false },
+  { label: "Info Disclosure", to: "/information-disclosure", active: true },
+];
+
 const InformationDisclosure = () => {
   return (
-    <div className="poolito-page min-h-screen font-copy">
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
       <Navbar />
       <PageHero
-        eyebrow="Policy"
+        eyebrow="Policy & Compliance"
         title="Information Disclosure Policy"
-        description="Last Updated: 9 June 2026 — Version 2.0 — Applicable to: All users, employees, contractors, and third parties interacting with Init Option"
+        description="Version 2.0 • Last Updated: 9 June 2026 • Applicable to all users, employees, contractors, and third parties interacting with Init Option."
       />
-      <main className="max-w-4xl mx-auto p-6">
+      <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <nav
+          aria-label="Legal policies"
+          className="mb-8 flex flex-wrap gap-2 rounded-2xl border border-white/[0.08] bg-[#0e1626] p-2"
+        >
+          {LEGAL_NAV.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-colors ${
+                item.active
+                  ? "bg-emerald-500 text-white"
+                  : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
 
-        <section className="bg-gray-50 rounded-lg p-8 space-y-6 border border-gray-200">
-          <p className="text-sm text-gray-600">
-            <strong>Last Updated:</strong> 9 June 2026<br />
-            <strong>Version:</strong> 2.0<br />
-            <strong>Applicable to:</strong> All users, employees, contractors, and third parties interacting with Init Option
-          </p>
+        <section className="io-glass-card io-legal-prose rounded-3xl p-6 sm:p-10">
+          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] px-4 py-3 text-xs text-slate-200">
+            <Shield className="h-4 w-4 text-emerald-400" />
+            <span><strong>Last Updated:</strong> 9 June 2026</span>
+            <span className="text-slate-600">•</span>
+            <span><strong>Version:</strong> 2.0</span>
+            <span className="text-slate-600">•</span>
+            <span><strong>Scope:</strong> All users, staff, contractors &amp; service partners</span>
+          </div>
 
           <h2 className="font-display text-2xl font-bold text-gray-900 mt-8">TABLE OF CONTENTS</h2>
           <ol className="list-decimal list-inside space-y-1 text-gray-700">
@@ -929,6 +961,22 @@ const InformationDisclosure = () => {
             Website: <a href="https://initoption.com" target="_blank" rel="noopener noreferrer" className="text-[#1c81f8] hover:text-[#4fa3ff]">https://initoption.com</a>
           </p>
         </section>
+
+        <div className="mt-8 flex items-center justify-between">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-white/[0.08]"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Return to homepage</span>
+          </Link>
+          <Link
+            to="/privacy"
+            className="text-xs font-bold text-emerald-400 hover:text-emerald-300"
+          >
+            Read Privacy Policy →
+          </Link>
+        </div>
       </main>
       <Footer />
     </div>

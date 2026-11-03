@@ -18,8 +18,10 @@ import {
   Image as ImageIcon,
   LineChart,
   MessageCircle,
+  Play,
   Plus,
   PlaySquare,
+  Search,
   Settings,
   Smartphone,
   Star,
@@ -29,6 +31,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
+import PageHero from "@/components/layout/PageHero";
 import { TradeDeskShortcut } from "@/components/navigation/TradeDeskShortcut";
 import { NavigationSidebar, type WorkspaceModule } from "@/components/navigation/NavigationSidebar";
 import TradingHeader, { type ProfileTab } from "@/components/trading/TradingHeader";
@@ -1230,6 +1233,7 @@ const TradingGuidePage = () => {
   const [activeWorkspace, setActiveWorkspace] = useState<WorkspaceModule>(null);
   const [accountType, setAccountType] = useState<AccountType>("live");
   const [demoBalance, setDemoBalance] = useState(DEFAULT_DEMO_BALANCE);
+  const [chapterQuery, setChapterQuery] = useState("");
 
   const balance = getEffectiveLiveBalance(profile);
   const currentBalance = balance;
@@ -1365,67 +1369,182 @@ const TradingGuidePage = () => {
     "Signals",
   ].filter(Boolean);
 
-  if (showSidebar) {
+  const filteredFlatTopics = chapterQuery.trim()
+    ? flatTopics.filter((topic) =>
+        `${topic.number} ${topic.title}`.toLowerCase().includes(chapterQuery.trim().toLowerCase()),
+      )
+    : [];
+
+  if (!user) {
+    const activeCatMeta = guideCategories.find((cat) => cat.id === activeCategory) ?? guideCategories[0];
+
     return (
-      <div className="poolito-page poolito-guide-page min-h-screen overflow-x-hidden">
+      <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
         <Navbar />
 
         <main>
-          <section className="poolito-guide-hero" aria-labelledby="poolito-guide-title">
-            <div className="poolito-guide-hero-pattern" aria-hidden="true" />
-            <div className="poolito-guide-hero-inner">
-              <div>
-                <h1 id="poolito-guide-title">
-                  Trading <span>Guide</span>
-                </h1>
-                <div className="poolito-guide-breadcrumb">
-                  <Link to="/">Home</Link>
-                  <span>//</span>
-                  <strong>Our Guide</strong>
-                </div>
-              </div>
-              <img src={GUIDE_HERO_IMAGE} alt={`${platformName} trading guide preview`} />
-            </div>
-          </section>
+          <PageHero
+            eyebrow="Platform Academy & Documentation"
+            title={`${platformName} Trading Guide`}
+            description="Step-by-step walkthroughs covering terminal charts, 30+ indicators, M-PESA & crypto funding, risk routines, and trading glossary terms."
+            cta={[
+              { label: "Practice on $10,000 Demo", href: "/trade", primary: true },
+              { label: "Create Free Account", href: "/register", primary: false },
+            ]}
+          />
 
-          <section className="poolito-guide-main">
-            <div className="poolito-guide-shell">
-              <div className="poolito-guide-grid">
-                <div className="poolito-guide-feed">
-                  <article className="poolito-guide-article">
-                    <div className="poolito-guide-image">
-                      <img
-                        src={primaryFigureUrl}
-                        alt={selectedContent.figure?.title || selectedContent.heading || "Trading guide"}
-                        onError={(event) => {
-                          event.currentTarget.src = GUIDE_FIGURE_FALLBACK;
-                        }}
+          <section className="py-12 sm:py-16">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              {/* Top 4 Category Cards */}
+              <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {guideCategories.map((cat) => {
+                  const Icon = cat.icon;
+                  const isActive = cat.id === activeCategory;
+                  const count = flattenTopics(topicsByCategory[cat.id]).length;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => {
+                        switchCategory(cat.id);
+                        setChapterQuery("");
+                      }}
+                      className={`rounded-2xl border p-5 text-left transition-all ${
+                        isActive
+                          ? "border-emerald-500/45 bg-gradient-to-br from-emerald-500/15 to-[#0e182a] shadow-[0_14px_34px_rgba(16,184,107,0.12)]"
+                          : "border-white/[0.08] bg-[#0e1626] hover:border-white/20 hover:bg-[#121c30]"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                            isActive
+                              ? "bg-emerald-500 text-white"
+                              : "bg-white/[0.05] text-emerald-400"
+                          }`}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </span>
+                        <span className="rounded-full bg-white/[0.06] px-2.5 py-0.5 text-[11px] font-bold text-slate-300">
+                          {count} lessons
+                        </span>
+                      </div>
+                      <h2 className="mt-4 text-base font-extrabold text-white">{cat.label}</h2>
+                      <p className="mt-1 text-xs leading-5 text-slate-400">{cat.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="grid gap-8 lg:grid-cols-12">
+                {/* Left Expandable Chapter Tree */}
+                <aside className="lg:col-span-4">
+                  <div className="io-glass-card sticky top-28 rounded-3xl p-5">
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="search"
+                        value={chapterQuery}
+                        onChange={(e) => setChapterQuery(e.target.value)}
+                        placeholder={`Search ${activeCatMeta.label.toLowerCase()}...`}
+                        aria-label="Search guide chapters"
+                        className="h-10 w-full rounded-xl border border-white/10 bg-[#080e1a] pl-10 pr-3 text-xs text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none"
                       />
                     </div>
 
-                    <div className="poolito-guide-meta">
-                      <span>
-                        <BookOpen size={15} />
-                        Guide: <strong>{guideCategories.find((category) => category.id === activeCategory)?.label}</strong>
+                    <div className="mt-4 max-h-[540px] overflow-y-auto pr-1">
+                      {chapterQuery.trim() ? (
+                        filteredFlatTopics.length ? (
+                          <div className="space-y-1">
+                            {filteredFlatTopics.map((topic) => (
+                              <button
+                                key={topic.id}
+                                type="button"
+                                onClick={() => {
+                                  selectTopic(topic.id);
+                                  setChapterQuery("");
+                                }}
+                                className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-xs font-semibold transition-colors ${
+                                  topic.id === selectedTopic.id
+                                    ? "bg-emerald-500/15 text-emerald-300"
+                                    : "text-slate-300 hover:bg-white/[0.05] hover:text-white"
+                                }`}
+                              >
+                                <span className="font-mono text-emerald-400">{topic.number}.</span>
+                                <span>{topic.title}</span>
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="py-6 text-center text-xs text-slate-400">
+                            No chapters match &ldquo;{chapterQuery}&rdquo;.
+                          </p>
+                        )
+                      ) : (
+                        <div className="space-y-1">
+                          {currentTopics.map((topic) => (
+                            <GuideTreeNode
+                              key={topic.id}
+                              topic={topic}
+                              activeId={selectedTopic.id}
+                              openIds={openIds}
+                              onToggle={(id) =>
+                                setOpenIds((current) => {
+                                  const next = new Set(current);
+                                  if (next.has(id)) next.delete(id);
+                                  else next.add(id);
+                                  return next;
+                                })
+                              }
+                              onSelect={selectTopic}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </aside>
+
+                {/* Right Lesson Reader */}
+                <div className="space-y-6 lg:col-span-8">
+                  <article className="io-glass-card rounded-3xl p-6 sm:p-10">
+                    <div className="flex flex-wrap items-center gap-2.5 text-xs">
+                      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/12 px-3 py-1 font-bold uppercase tracking-wider text-emerald-300">
+                        {activeCatMeta.label}
                       </span>
-                      <span>
-                        <CheckCircle2 size={15} />
-                        Updated for {platformName}
+                      <span className="font-mono text-slate-400">
+                        Chapter {selectedTopic.number}
                       </span>
                     </div>
 
-                    <h2>{selectedContent.heading}</h2>
-                    <p>{selectedContent.intro}</p>
+                    <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                      {selectedContent.heading}
+                    </h2>
 
-                    {selectedContent.paragraphs?.map((paragraph) => (
-                      <p key={paragraph}>{paragraph}</p>
-                    ))}
+                    {selectedContent.intro ? (
+                      <p className="mt-4 text-base leading-8 text-slate-200 sm:text-lg">
+                        {selectedContent.intro}
+                      </p>
+                    ) : null}
+
+                    {selectedContent.paragraphs?.length ? (
+                      <div className="mt-4 space-y-4">
+                        {selectedContent.paragraphs.map((paragraph) => (
+                          <p key={paragraph} className="text-sm leading-7 text-slate-300 sm:text-base sm:leading-8">
+                            {paragraph}
+                          </p>
+                        ))}
+                      </div>
+                    ) : null}
 
                     {selectedContent.bullets?.length ? (
-                      <ul className="poolito-guide-bullets">
+                      <ul className="mt-6 grid gap-3 sm:grid-cols-2">
                         {selectedContent.bullets.map((bullet) => (
-                          <li key={bullet}>
-                            <CheckCircle2 size={19} />
+                          <li
+                            key={bullet}
+                            className="flex items-start gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 text-sm leading-6 text-slate-200"
+                          >
+                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
                             <span>{bullet}</span>
                           </li>
                         ))}
@@ -1433,613 +1552,113 @@ const TradingGuidePage = () => {
                     ) : null}
 
                     {selectedContent.note ? (
-                      <div className="poolito-guide-note">
-                        <strong>Note:</strong> {selectedContent.note}
+                      <div className="mt-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.08] p-5 text-sm leading-7 text-emerald-100">
+                        <strong className="font-bold text-emerald-300">Pro Tip:</strong>{" "}
+                        {selectedContent.note}
                       </div>
                     ) : null}
 
+                    <div className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#050912]">
+                      <img
+                        src={primaryFigureUrl}
+                        alt={selectedContent.figure?.title || selectedContent.heading || "Trading guide illustration"}
+                        className="max-h-[400px] w-full object-cover"
+                        onError={(event) => {
+                          event.currentTarget.src = GUIDE_FIGURE_FALLBACK;
+                        }}
+                      />
+                      {selectedContent.figure?.caption ? (
+                        <div className="border-t border-white/[0.07] px-4 py-3 text-xs text-slate-400">
+                          {selectedContent.figure.caption}
+                        </div>
+                      ) : null}
+                    </div>
+
                     {secondaryFigureUrl ? (
-                      <div className="poolito-guide-secondary-image">
+                      <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#050912]">
                         <img
                           src={secondaryFigureUrl}
-                          alt={selectedContent.secondaryFigure?.title || "Trading guide supporting visual"}
+                          alt={selectedContent.secondaryFigure?.title || "Supporting platform view"}
+                          className="max-h-[360px] w-full object-cover"
                           onError={(event) => {
                             event.currentTarget.src = GUIDE_FIGURE_FALLBACK;
                           }}
                         />
+                        {selectedContent.secondaryFigure?.caption ? (
+                          <div className="border-t border-white/[0.07] px-4 py-3 text-xs text-slate-400">
+                            {selectedContent.secondaryFigure.caption}
+                          </div>
+                        ) : null}
                       </div>
                     ) : null}
 
-                    <div className="poolito-guide-card-actions">
+                    {/* Previous / Next Navigation */}
+                    <div className="mt-8 grid gap-3 border-t border-white/[0.08] pt-6 sm:grid-cols-2">
                       {previousTopic ? (
-                        <button type="button" onClick={() => selectTopic(previousTopic.id)}>
-                          <ArrowRight size={18} className="poolito-guide-prev-icon" />
-                          Previous
+                        <button
+                          type="button"
+                          onClick={() => selectTopic(previousTopic.id)}
+                          className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition-colors hover:border-white/20 hover:bg-white/[0.06]"
+                        >
+                          <ArrowRight className="h-4 w-4 shrink-0 rotate-180 text-slate-400 transition-transform group-hover:-translate-x-0.5" />
+                          <div className="min-w-0">
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                              Previous Lesson
+                            </div>
+                            <div className="truncate text-xs font-bold text-white">
+                              {previousTopic.number}. {previousTopic.title}
+                            </div>
+                          </div>
                         </button>
-                      ) : <span />}
+                      ) : (
+                        <div />
+                      )}
+
                       {nextTopic ? (
-                        <button type="button" onClick={() => selectTopic(nextTopic.id)}>
-                          Next Guide <ArrowRight size={18} />
+                        <button
+                          type="button"
+                          onClick={() => selectTopic(nextTopic.id)}
+                          className="group flex items-center justify-end gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-right transition-colors hover:bg-emerald-500/20"
+                        >
+                          <div className="min-w-0">
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">
+                              Next Lesson
+                            </div>
+                            <div className="truncate text-xs font-bold text-white">
+                              {nextTopic.number}. {nextTopic.title}
+                            </div>
+                          </div>
+                          <ArrowRight className="h-4 w-4 shrink-0 text-emerald-400 transition-transform group-hover:translate-x-0.5" />
                         </button>
                       ) : null}
                     </div>
                   </article>
 
-                  {featuredTopics.length ? (
-                    <div className="poolito-guide-featured">
-                      {featuredTopics.map((topic) => (
-                        <button
-                          key={topic.id}
-                          type="button"
-                          className={topic.id === selectedTopic.id ? "is-active" : ""}
-                          onClick={() => selectTopic(topic.id)}
-                        >
-                          <span>{topic.number}</span>
-                          <strong>{topic.title}</strong>
-                        </button>
-                      ))}
+                  {/* Bottom Practice Banner */}
+                  <div className="flex flex-col items-start justify-between gap-4 rounded-3xl border border-emerald-500/25 bg-gradient-to-r from-[#0f2428] to-[#0d1626] p-6 sm:flex-row sm:items-center">
+                    <div>
+                      <h3 className="text-base font-extrabold text-white">
+                        Ready to test this in the live-price simulator?
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-300">
+                        Jump into the {platformName} terminal with $10,000 virtual funds—no deposit required.
+                      </p>
                     </div>
-                  ) : null}
+                    <Link
+                      to="/trade"
+                      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl bg-emerald-500 px-5 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
+                    >
+                      <Play className="h-3.5 w-3.5 fill-current" />
+                      <span>Open Demo Desk</span>
+                    </Link>
+                  </div>
                 </div>
-
-                <aside className="poolito-guide-sidebar">
-                  <section className="poolito-guide-author">
-                    <img src={GUIDE_HERO_IMAGE} alt={`${platformName} guide desk`} />
-                    <h3>{platformName} Academy</h3>
-                    <p>Step-by-step lessons for using charts, demo mode, wallet tools, platform settings, and trading routines.</p>
-                  </section>
-
-                  <section className="poolito-guide-widget">
-                    <h3>Category</h3>
-                    <div className="poolito-guide-category-list">
-                      {guideCategories.map((category) => {
-                        const Icon = category.icon;
-                        return (
-                          <button
-                            key={category.id}
-                            type="button"
-                            className={category.id === activeCategory ? "is-active" : ""}
-                            onClick={() => switchCategory(category.id)}
-                          >
-                            <span><Icon className="poolito-guide-list-icon" /> {category.label}</span>
-                            <strong>{topicsByCategory[category.id].length.toString().padStart(2, "0")}</strong>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </section>
-
-                  <section className="poolito-guide-widget">
-                    <h3>Recent Guides</h3>
-                    <div className="poolito-guide-recent-list">
-                      {sidebarTopics.map((topic) => (
-                        <button
-                          key={topic.id}
-                          type="button"
-                          className={topic.id === selectedTopic.id ? "is-active" : ""}
-                          onClick={() => selectTopic(topic.id)}
-                        >
-                          <span>{topic.number}</span>
-                          <strong>{topic.title}</strong>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="poolito-guide-widget">
-                    <h3>Tags</h3>
-                    <div className="poolito-guide-tags">
-                      {guideTags.map((tag) => (
-                        <span key={tag}>{tag}</span>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="poolito-guide-search">
-                    <Link to="/trade">Open Trading Desk <ArrowRight size={16} /></Link>
-                    <Link to="/blog">Read Blog <ArrowRight size={16} /></Link>
-                  </section>
-                </aside>
               </div>
             </div>
           </section>
         </main>
 
         <Footer content={websiteContent} />
-
-        <style>{`
-          .poolito-guide-page {
-            --poolito-dark: #06383c;
-            --poolito-deep: #032f32;
-            --poolito-green: #109b42;
-            --poolito-muted: #62667f;
-            --poolito-line: rgba(6, 56, 60, 0.16);
-            background: #ffffff;
-            color: var(--poolito-dark);
-            font-family: Arial, Helvetica, sans-serif;
-          }
-
-          .poolito-guide-hero {
-            position: relative;
-            overflow: hidden;
-            min-height: 370px;
-            padding: 170px 0 76px;
-            background:
-              linear-gradient(90deg, rgba(3, 47, 50, 0.98) 0%, rgba(3, 47, 50, 0.9) 48%, rgba(3, 47, 50, 0.62) 100%),
-              url("${GUIDE_HERO_IMAGE}") center right / cover no-repeat;
-          }
-
-          .poolito-guide-hero-pattern {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            opacity: 0.22;
-            background-image: radial-gradient(rgba(255, 255, 255, 0.18) 2px, transparent 2px);
-            background-size: 18px 18px;
-            mask-image: linear-gradient(90deg, #000 0%, transparent 58%);
-          }
-
-          .poolito-guide-hero::after {
-            content: "";
-            position: absolute;
-            inset: auto 0 0;
-            height: 4px;
-            background: var(--poolito-green);
-          }
-
-          .poolito-guide-hero-inner {
-            position: relative;
-            z-index: 1;
-            width: min(100% - 48px, 1340px);
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 36px;
-          }
-
-          .poolito-guide-hero h1 {
-            margin: 0;
-            color: #ffffff;
-            font-size: clamp(44px, 5vw, 68px);
-            line-height: 1;
-            font-weight: 950;
-            text-transform: uppercase;
-            letter-spacing: 0;
-          }
-
-          .poolito-guide-hero h1 span,
-          .poolito-guide-breadcrumb span,
-          .poolito-guide-breadcrumb strong {
-            color: var(--poolito-green);
-          }
-
-          .poolito-guide-breadcrumb {
-            margin-top: 22px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: 950;
-            text-transform: uppercase;
-          }
-
-          .poolito-guide-breadcrumb a {
-            color: inherit;
-            text-decoration: none;
-          }
-
-          .poolito-guide-hero-inner > img {
-            width: min(34vw, 430px);
-            max-height: 250px;
-            object-fit: cover;
-            border-radius: 0 90px 0 0;
-            opacity: 0.82;
-            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.22);
-          }
-
-          .poolito-guide-main {
-            padding: 86px 0 104px;
-            background:
-              radial-gradient(circle at 93% 15%, rgba(16, 155, 66, 0.08), transparent 24%),
-              #ffffff;
-          }
-
-          .poolito-guide-shell {
-            width: min(100% - 48px, 1340px);
-            margin: 0 auto;
-          }
-
-          .poolito-guide-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 330px;
-            gap: 48px;
-            align-items: start;
-          }
-
-          .poolito-guide-feed {
-            display: grid;
-            gap: 44px;
-          }
-
-          .poolito-guide-article {
-            min-width: 0;
-          }
-
-          .poolito-guide-image,
-          .poolito-guide-secondary-image {
-            overflow: hidden;
-            border-radius: 18px;
-            background: #eef2f3;
-            box-shadow: 0 18px 38px rgba(6, 56, 60, 0.12);
-          }
-
-          .poolito-guide-image img,
-          .poolito-guide-secondary-image img {
-            display: block;
-            width: 100%;
-            aspect-ratio: 1.72 / 1;
-            object-fit: cover;
-          }
-
-          .poolito-guide-secondary-image {
-            margin-top: 30px;
-          }
-
-          .poolito-guide-meta {
-            margin-top: 24px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 18px;
-            color: var(--poolito-dark);
-            font-size: 14px;
-            font-weight: 950;
-            text-transform: uppercase;
-          }
-
-          .poolito-guide-meta span {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-          }
-
-          .poolito-guide-meta svg,
-          .poolito-guide-meta strong {
-            color: var(--poolito-green);
-          }
-
-          .poolito-guide-article h2 {
-            margin: 14px 0 0;
-            color: var(--poolito-dark);
-            font-size: clamp(34px, 3.4vw, 50px);
-            line-height: 1.08;
-            font-weight: 950;
-            letter-spacing: 0;
-          }
-
-          .poolito-guide-article p {
-            max-width: 930px;
-            margin: 22px 0 0;
-            color: var(--poolito-muted);
-            font-size: 16px;
-            line-height: 1.74;
-            font-weight: 700;
-          }
-
-          .poolito-guide-bullets {
-            margin: 28px 0 0;
-            padding: 0;
-            display: grid;
-            gap: 14px;
-            list-style: none;
-          }
-
-          .poolito-guide-bullets li {
-            display: flex;
-            gap: 12px;
-            color: var(--poolito-muted);
-            font-size: 16px;
-            line-height: 1.65;
-            font-weight: 750;
-          }
-
-          .poolito-guide-bullets svg {
-            margin-top: 4px;
-            flex: 0 0 auto;
-            color: var(--poolito-green);
-          }
-
-          .poolito-guide-note {
-            margin-top: 30px;
-            border-left: 5px solid var(--poolito-green);
-            background: rgba(16, 155, 66, 0.08);
-            padding: 20px 24px;
-            color: var(--poolito-dark);
-            font-size: 16px;
-            line-height: 1.65;
-            font-weight: 750;
-          }
-
-          .poolito-guide-card-actions {
-            margin-top: 38px;
-            padding-top: 26px;
-            border-top: 1px solid var(--poolito-line);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 18px;
-          }
-
-          .poolito-guide-card-actions button {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border: 0;
-            padding: 0;
-            background: transparent;
-            color: var(--poolito-dark);
-            font-size: 14px;
-            font-weight: 950;
-            text-transform: uppercase;
-            cursor: pointer;
-          }
-
-          .poolito-guide-card-actions svg {
-            color: var(--poolito-green);
-          }
-
-          .poolito-guide-prev-icon {
-            transform: rotate(180deg);
-          }
-
-          .poolito-guide-featured {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            border: 1px solid var(--poolito-line);
-            background: #f4f7f6;
-          }
-
-          .poolito-guide-featured button {
-            min-height: 112px;
-            border: 0;
-            border-right: 1px solid var(--poolito-line);
-            background: transparent;
-            padding: 18px;
-            text-align: left;
-            cursor: pointer;
-          }
-
-          .poolito-guide-featured button:last-child {
-            border-right: 0;
-          }
-
-          .poolito-guide-featured span {
-            display: block;
-            color: var(--poolito-green);
-            font-size: 14px;
-            font-weight: 950;
-          }
-
-          .poolito-guide-featured strong {
-            display: block;
-            margin-top: 10px;
-            color: var(--poolito-dark);
-            font-size: 16px;
-            line-height: 1.3;
-            font-weight: 950;
-          }
-
-          .poolito-guide-featured .is-active {
-            background: var(--poolito-green);
-          }
-
-          .poolito-guide-featured .is-active span,
-          .poolito-guide-featured .is-active strong {
-            color: #ffffff;
-          }
-
-          .poolito-guide-sidebar {
-            display: grid;
-            gap: 34px;
-            align-self: stretch;
-          }
-
-          .poolito-guide-author img {
-            width: 100%;
-            aspect-ratio: 1.25 / 1;
-            object-fit: cover;
-            border-radius: 0 64px 0 0;
-          }
-
-          .poolito-guide-author h3,
-          .poolito-guide-widget h3 {
-            margin: 22px 0 0;
-            color: var(--poolito-dark);
-            font-size: 26px;
-            line-height: 1.2;
-            font-weight: 950;
-            letter-spacing: 0;
-          }
-
-          .poolito-guide-widget h3 {
-            position: relative;
-            margin-top: 0;
-            padding-left: 28px;
-          }
-
-          .poolito-guide-widget h3::before {
-            content: "//";
-            position: absolute;
-            left: 0;
-            top: 0;
-            color: var(--poolito-green);
-          }
-
-          .poolito-guide-author p {
-            margin: 14px 0 0;
-            color: var(--poolito-muted);
-            font-size: 15px;
-            line-height: 1.7;
-            font-weight: 700;
-          }
-
-          .poolito-guide-category-list,
-          .poolito-guide-recent-list {
-            margin-top: 22px;
-            display: grid;
-          }
-
-          .poolito-guide-category-list button,
-          .poolito-guide-recent-list button {
-            min-height: 52px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            border: 0;
-            border-bottom: 1px dashed rgba(6, 56, 60, 0.24);
-            background: transparent;
-            color: var(--poolito-muted);
-            font-size: 15px;
-            font-weight: 750;
-            text-align: left;
-            cursor: pointer;
-          }
-
-          .poolito-guide-recent-list button {
-            justify-content: flex-start;
-          }
-
-          .poolito-guide-category-list span,
-          .poolito-guide-category-list strong,
-          .poolito-guide-recent-list span {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-          }
-
-          .poolito-guide-list-icon {
-            width: 17px;
-            height: 17px;
-          }
-
-          .poolito-guide-category-list strong,
-          .poolito-guide-category-list .is-active,
-          .poolito-guide-recent-list .is-active {
-            color: var(--poolito-green);
-          }
-
-          .poolito-guide-recent-list span {
-            width: 42px;
-            height: 42px;
-            justify-content: center;
-            border-radius: 4px;
-            color: var(--poolito-green);
-            background: rgba(16, 155, 66, 0.08);
-            font-weight: 950;
-          }
-
-          .poolito-guide-recent-list strong {
-            min-width: 0;
-            color: inherit;
-            font-size: 15px;
-            line-height: 1.35;
-            font-weight: 950;
-          }
-
-          .poolito-guide-tags {
-            margin-top: 22px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-          }
-
-          .poolito-guide-tags span {
-            min-height: 36px;
-            display: inline-flex;
-            align-items: center;
-            border: 1px solid rgba(6, 56, 60, 0.14);
-            border-radius: 4px;
-            background: #eef2f3;
-            padding: 0 12px;
-            color: var(--poolito-muted);
-            font-size: 14px;
-            font-weight: 850;
-          }
-
-          .poolito-guide-search {
-            display: grid;
-            gap: 12px;
-          }
-
-          .poolito-guide-search a {
-            min-height: 48px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            border-radius: 999px;
-            background: var(--poolito-green);
-            padding: 0 20px;
-            color: #ffffff;
-            font-size: 14px;
-            font-weight: 950;
-            text-decoration: none;
-            text-transform: uppercase;
-          }
-
-          @media (max-width: 1060px) {
-            .poolito-guide-grid {
-              grid-template-columns: 1fr;
-            }
-
-            .poolito-guide-sidebar {
-              grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-          }
-
-          @media (max-width: 760px) {
-            .poolito-guide-hero {
-              min-height: 320px;
-              padding: 228px 0 58px;
-            }
-
-            .poolito-guide-hero-inner,
-            .poolito-guide-shell {
-              width: min(100% - 32px, 1340px);
-            }
-
-            .poolito-guide-hero-inner > img {
-              display: none;
-            }
-
-            .poolito-guide-main {
-              padding: 58px 0 76px;
-            }
-
-            .poolito-guide-sidebar,
-            .poolito-guide-featured {
-              grid-template-columns: 1fr;
-            }
-
-            .poolito-guide-grid {
-              grid-template-columns: 1fr;
-            }
-
-            .poolito-guide-featured button,
-            .poolito-guide-featured button:last-child {
-              border-right: 0;
-              border-bottom: 1px solid var(--poolito-line);
-            }
-
-            .poolito-guide-card-actions {
-              align-items: flex-start;
-              flex-direction: column;
-            }
-          }
-        `}</style>
       </div>
     );
   }

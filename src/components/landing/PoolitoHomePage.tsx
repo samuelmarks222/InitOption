@@ -1,728 +1,1237 @@
+import { useMemo, useState } from "react";
 import {
-  useEffect,
-  useState,
-} from "react";
-import {
+  Activity,
   ArrowRight,
-  BadgeCheck,
+  ArrowUpRight,
+  Award,
   BarChart3,
   Bitcoin,
+  BookOpen,
   CheckCircle2,
+  ChevronDown,
   CircleDollarSign,
+  Clock,
+  Cpu,
   Gem,
   Globe2,
   Headphones,
+  Layers,
   LineChart,
+  Lock,
   Play,
   ShieldCheck,
   Smartphone,
+  Sparkles,
   Star,
+  TrendingDown,
+  TrendingUp,
+  Trophy,
   Users,
-  WalletCards,
+  Wallet,
+  Zap,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/landing/Footer";
 import Navbar from "@/components/landing/Navbar";
 import AssetSymbolMark from "@/components/trading/AssetSymbolMark";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
+import { useWebsiteContent } from "@/hooks/useWebsiteContent";
+import { normalizeWebsiteContent } from "@/lib/websiteContent";
 
 const HOME_ASSETS = {
-  hero: "/landing/poolito-initoption/hero-laptop-desk.jpg",
-  aboutImac: "/landing/poolito-initoption/about-imac-mockup.jpg",
-  aboutPhone: "/landing/poolito-initoption/about-phone-view.jpg",
-  imac: "/landing/poolito-initoption/imac-platform.png",
+  laptopPhone: "/landing/poolito-initoption/laptop-phone-angle.png",
   imacAlt: "/landing/poolito-initoption/imac-platform-alt.png",
-  abstract: "/landing/poolito-initoption/abstract-trading-bg.jpg",
+  iphones: "/landing/poolito-initoption/iphone-platform.png",
 };
 
-const assetTags = [
-  { label: "Currencies", icon: CircleDollarSign },
-  { label: "Indices", icon: BarChart3 },
-  { label: "Crypto", icon: Bitcoin },
-  { label: "Stocks", icon: LineChart },
-  { label: "Commodities", icon: Gem },
+const PAYMENT_BADGES = [
+  { name: "M-PESA", logo: "/payment-logos/mpesa.png" },
+  { name: "USDT TRC20", logo: "/payment-logos/usdt.png" },
+  { name: "Bitcoin", logo: "/payment-logos/bitcoin.png" },
+  { name: "Binance", logo: "/payment-logos/binance.png" },
+  { name: "Visa & Mastercard", logo: "/payment-logos/visa-mastercard.png" },
 ];
 
-const howItWorksSteps = [
+const QUICK_PREVIEW_ASSETS = [
   {
-    step: "Step 1",
-    title: "Create Account",
-    text: "Sign up in seconds. No credit card required.",
-    icon: Users,
+    symbol: "EUR/USD",
+    name: "Euro / US Dollar",
+    category: "OTC",
+    price: "1.08642",
+    change: "+0.42%",
+    payout: 92,
+    up: true,
+    spark: "M0,38 C22,34 38,40 58,28 C78,16 96,24 118,14 C140,6 162,12 180,4",
   },
   {
-    step: "Step 2",
-    title: "Choose Asset",
-    text: "Pick from currencies, indices, crypto, stocks, or commodities.",
-    icon: BarChart3,
+    symbol: "BTC",
+    name: "Bitcoin / USD",
+    category: "CRYPTO",
+    price: "89,420.50",
+    change: "+2.18%",
+    payout: 89,
+    up: true,
+    spark: "M0,42 C24,38 42,30 64,33 C86,36 104,18 128,15 C150,12 164,8 180,5",
   },
   {
-    step: "Step 3",
-    title: "Trade & Withdraw",
-    text: "One-click trading. Fast withdrawals when you win.",
-    icon: CircleDollarSign,
+    symbol: "XAU/USD",
+    name: "Gold Spot / USD",
+    category: "COMMODITIES",
+    price: "2,684.10",
+    change: "+0.86%",
+    payout: 90,
+    up: true,
+    spark: "M0,40 C26,36 44,32 66,24 C88,16 112,22 136,12 C156,6 168,9 180,3",
   },
+] as const;
+
+const TICKER_ITEMS = [
+  { symbol: "EUR/USD", name: "Euro / Dollar", category: "OTC", payout: "92%", delta: "+0.42%", up: true },
+  { symbol: "GBP/USD", name: "Pound / Dollar", category: "OTC", payout: "89%", delta: "+0.31%", up: true },
+  { symbol: "BTC", name: "Bitcoin", category: "CRYPTO", payout: "89%", delta: "+2.18%", up: true },
+  { symbol: "ETH", name: "Ethereum", category: "CRYPTO", payout: "86%", delta: "+1.64%", up: true },
+  { symbol: "XAU/USD", name: "Gold", category: "COMMODITIES", payout: "90%", delta: "+0.86%", up: true },
+  { symbol: "AAPL", name: "Apple Inc.", category: "STOCKS", payout: "84%", delta: "+0.74%", up: true },
+  { symbol: "USD/JPY", name: "Dollar / Yen", category: "OTC", payout: "88%", delta: "-0.19%", up: false },
+  { symbol: "SOL", name: "Solana", category: "CRYPTO", payout: "85%", delta: "+3.45%", up: true },
+  { symbol: "MSFT", name: "Microsoft", category: "STOCKS", payout: "88%", delta: "+1.12%", up: true },
+  { symbol: "AUD/CAD", name: "Aussie / Loonie", category: "OTC", payout: "82%", delta: "-0.24%", up: false },
 ];
 
-type FeatureIconType = "candles" | "bolt" | "shield" | "profit";
-
-const FeatureDrawnIcon = ({ type }: { type: FeatureIconType }) => {
-  if (type === "candles") {
-    return (
-      <svg viewBox="0 0 72 72" aria-hidden="true">
-        <path d="M10 56H62" />
-        <path d="M17 50V23" className="poolito-icon-muted-line" />
-        <path d="M17 38H25V50H17Z" className="poolito-icon-green" />
-        <path d="M31 52V18" className="poolito-icon-muted-line" />
-        <path d="M31 25H39V42H31Z" className="poolito-icon-red" />
-        <path d="M45 50V20" className="poolito-icon-muted-line" />
-        <path d="M45 30H53V48H45Z" className="poolito-icon-green" />
-        <path d="M15 47C26 39 34 38 42 29C48 23 54 22 60 17" className="poolito-icon-trend" />
-      </svg>
-    );
-  }
-
-  if (type === "bolt") {
-    return (
-      <svg viewBox="0 0 72 72" aria-hidden="true">
-        <path d="M40 8L18 40H34L29 64L54 28H37L40 8Z" />
-        <path d="M14 17H25" className="poolito-icon-muted-line" />
-        <path d="M9 30H21" className="poolito-icon-muted-line" />
-        <path d="M50 52H62" className="poolito-icon-muted-line" />
-      </svg>
-    );
-  }
-
-  if (type === "shield") {
-    return (
-      <svg viewBox="0 0 72 72" aria-hidden="true">
-        <path d="M36 8L58 17V33C58 47 49 58 36 64C23 58 14 47 14 33V17L36 8Z" />
-        <path d="M27 34L34 41L47 27" className="poolito-icon-green" />
-        <circle cx="36" cy="28" r="6" className="poolito-icon-muted-line" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 72 72" aria-hidden="true">
-      <circle cx="28" cy="42" r="18" />
-      <path d="M22 47L34 35" className="poolito-icon-muted-line" />
-      <path d="M23 34H23.5" className="poolito-icon-muted-line" />
-      <path d="M33 48H33.5" className="poolito-icon-muted-line" />
-      <path d="M42 25H58V41" className="poolito-icon-green" />
-      <path d="M42 41L58 25" className="poolito-icon-green" />
-    </svg>
-  );
-};
-
-const services: Array<{
-  eyebrow: string;
-  title: string;
-  text: string;
-  benefit: string;
-  icon: FeatureIconType;
-}> = [
-  {
-    eyebrow: "FEATURE 01",
-    title: "Real-Time Charts",
-    text: "Professional candlestick charts with 30+ indicators.",
-    benefit: "Analyse markets like a pro with RSI, MACD, Bollinger Bands, and more.",
-    icon: "candles",
-  },
-  {
-    eyebrow: "FEATURE 02",
-    title: "Fast Withdrawals",
-    text: "Get your profits when you need them. No delays.",
-    benefit: "Withdraw via M-PESA or crypto - often within minutes.",
-    icon: "bolt",
-  },
-  {
-    eyebrow: "FEATURE 03",
-    title: "Free Demo Account",
-    text: "Practice with $10,000 virtual funds. No risk.",
-    benefit: "Unlimited time, reset anytime - learn without pressure.",
-    icon: "shield",
-  },
-  {
-    eyebrow: "FEATURE 04",
-    title: "High Profits",
-    text: "Earn up to 95% on winning trades.",
-    benefit: "Maximise your returns with competitive payouts.",
-    icon: "profit",
-  },
-];
-
-const marketGroups = [
+const MARKET_GROUPS = [
   {
     label: "Currencies",
+    icon: CircleDollarSign,
     category: "OTC",
     cards: [
       {
         symbol: "EUR/USD",
         name: "Euro / US Dollar",
-        status: "Closed",
-        payout: "74%",
-        duration: "45m",
+        status: "Open",
+        payout: "92%",
+        duration: "1m – 45m",
         direction: "Up",
+        price: "1.0864",
+        spark: "M0,28 L24,24 L48,26 L72,18 L96,20 L120,10 L144,6",
       },
       {
         symbol: "GBP/USD",
         name: "British Pound / US Dollar",
         status: "Open",
         payout: "89%",
-        duration: "45m",
+        duration: "1m – 45m",
         direction: "Up",
+        price: "1.2941",
+        spark: "M0,30 L24,27 L48,21 L72,23 L96,14 L120,12 L144,7",
       },
       {
         symbol: "USD/JPY",
         name: "US Dollar / Japanese Yen",
-        status: "Closed",
-        payout: "84%",
-        duration: "90m",
+        status: "Open",
+        payout: "87%",
+        duration: "5m – 90m",
         direction: "Up",
+        price: "152.38",
+        spark: "M0,26 L24,22 L48,25 L72,17 L96,15 L120,11 L144,8",
       },
       {
         symbol: "AUD/CAD",
-        name: "Australian Dollar / Canadian Dollar",
+        name: "Australian / Canadian Dollar",
         status: "Open",
-        payout: "79%",
-        duration: "60m",
+        payout: "83%",
+        duration: "5m – 60m",
         direction: "Down",
+        price: "0.9128",
+        spark: "M0,8 L24,12 L48,10 L72,19 L96,22 L120,25 L144,29",
       },
     ],
   },
   {
     label: "Crypto",
+    icon: Bitcoin,
     category: "CRYPTO",
     cards: [
       {
         symbol: "BTC",
         name: "Bitcoin",
         status: "Open",
-        payout: "79%",
-        duration: "60m",
-        direction: "Down",
+        payout: "89%",
+        duration: "1m – 60m",
+        direction: "Up",
+        price: "89,420",
+        spark: "M0,30 L24,25 L48,27 L72,16 L96,14 L120,9 L144,5",
       },
       {
         symbol: "ETH",
         name: "Ethereum",
         status: "Open",
         payout: "86%",
-        duration: "30m",
+        duration: "1m – 30m",
         direction: "Up",
+        price: "3,142.8",
+        spark: "M0,28 L24,26 L48,20 L72,18 L96,12 L120,14 L144,6",
       },
       {
         symbol: "SOL",
         name: "Solana",
-        status: "Closed",
-        payout: "82%",
-        duration: "45m",
+        status: "Open",
+        payout: "85%",
+        duration: "5m – 45m",
         direction: "Up",
+        price: "198.40",
+        spark: "M0,31 L24,24 L48,22 L72,15 L96,17 L120,9 L144,4",
       },
       {
         symbol: "XRP",
         name: "Ripple",
         status: "Open",
-        payout: "76%",
-        duration: "15m",
+        payout: "80%",
+        duration: "1m – 15m",
         direction: "Down",
+        price: "0.6140",
+        spark: "M0,9 L24,13 L48,11 L72,18 L96,21 L120,24 L144,28",
       },
     ],
   },
   {
     label: "Stocks",
+    icon: LineChart,
     category: "STOCKS",
     cards: [
       {
         symbol: "AAPL",
         name: "Apple Inc.",
         status: "Open",
-        payout: "81%",
-        duration: "60m",
+        payout: "86%",
+        duration: "5m – 60m",
         direction: "Up",
-      },
-      {
-        symbol: "TSLA",
-        name: "Tesla Inc.",
-        status: "Closed",
-        payout: "78%",
-        duration: "45m",
-        direction: "Down",
+        price: "228.50",
+        spark: "M0,27 L24,25 L48,19 L72,21 L96,13 L120,10 L144,6",
       },
       {
         symbol: "MSFT",
         name: "Microsoft Corp.",
         status: "Open",
         payout: "88%",
-        duration: "90m",
+        duration: "15m – 90m",
         direction: "Up",
+        price: "432.15",
+        spark: "M0,29 L24,24 L48,22 L72,15 L96,12 L120,8 L144,5",
       },
       {
         symbol: "AMZN",
         name: "Amazon.com Inc.",
         status: "Open",
-        payout: "83%",
-        duration: "30m",
+        payout: "84%",
+        duration: "5m – 30m",
         direction: "Up",
+        price: "206.90",
+        spark: "M0,28 L24,23 L48,25 L72,17 L96,14 L120,11 L144,7",
+      },
+      {
+        symbol: "TSLA",
+        name: "Tesla Inc.",
+        status: "Open",
+        payout: "82%",
+        duration: "5m – 45m",
+        direction: "Down",
+        price: "254.30",
+        spark: "M0,8 L24,11 L48,15 L72,13 L96,21 L120,24 L144,28",
       },
     ],
   },
   {
     label: "Commodities",
+    icon: Gem,
     category: "COMMODITIES",
     cards: [
       {
         symbol: "XAU/USD",
-        name: "Gold",
+        name: "Gold Spot",
         status: "Open",
         payout: "90%",
-        duration: "45m",
+        duration: "1m – 45m",
         direction: "Up",
+        price: "2,684.1",
+        spark: "M0,30 L24,26 L48,21 L72,19 L96,12 L120,9 L144,4",
+      },
+      {
+        symbol: "XAG/USD",
+        name: "Silver Spot",
+        status: "Open",
+        payout: "85%",
+        duration: "5m – 30m",
+        direction: "Up",
+        price: "31.84",
+        spark: "M0,28 L24,25 L48,22 L72,16 L96,14 L120,10 L144,6",
       },
       {
         symbol: "WTICO/USD",
         name: "WTI Crude Oil",
-        status: "Closed",
-        payout: "73%",
-        duration: "60m",
-        direction: "Down",
-      },
-      {
-        symbol: "XAG/USD",
-        name: "Silver",
         status: "Open",
-        payout: "85%",
-        duration: "30m",
-        direction: "Up",
+        payout: "81%",
+        duration: "15m – 60m",
+        direction: "Down",
+        price: "70.42",
+        spark: "M0,9 L24,12 L48,14 L72,19 L96,22 L120,25 L144,29",
       },
       {
         symbol: "NATGAS/USD",
         name: "Natural Gas",
         status: "Open",
-        payout: "77%",
-        duration: "90m",
-        direction: "Down",
+        payout: "79%",
+        duration: "15m – 90m",
+        direction: "Up",
+        price: "2.845",
+        spark: "M0,26 L24,24 L48,20 L72,18 L96,15 L120,10 L144,7",
       },
     ],
   },
-];
+] as const;
 
-const trustLogos = [
-  { label: "Markets", icon: BarChart3 },
-  { label: "Signals", icon: LineChart },
-  { label: "Wallet", icon: WalletCards },
-  { label: "Security", icon: ShieldCheck },
-  { label: "Support", icon: Headphones },
-  { label: "Demo", icon: Play },
-];
-
-const testimonials = [
+const WORKSPACE_HIGHLIGHTS = [
   {
-    quote: "The demo account helped me test strategies before placing live trades.",
+    icon: Activity,
+    title: "30+ Built-In Pro Indicators",
+    description:
+      "Layer RSI, MACD, Bollinger Bands, Stochastic, ATR, and moving averages directly onto responsive real-time charts.",
+  },
+  {
+    icon: Layers,
+    title: "Multi-Style Charting & Drawing Tools",
+    description:
+      "Switch smoothly between Candlestick, Heikin-Ashi, Area, and Bar views with saved Fibonacci and trendline drawings.",
+  },
+  {
+    icon: Smartphone,
+    title: "Cross-Device Synced Terminal",
+    description:
+      "Analyze setups on a wide desktop monitor and track open positions, deposits, or payouts from your phone without friction.",
+  },
+  {
+    icon: Clock,
+    title: "Flexible Expiries & Fixed Risk",
+    description:
+      "Choose timeframes from short-term ticks to 90-minute sessions knowing your exact potential payout before confirming.",
+  },
+];
+
+const HOW_IT_WORKS_STEPS = [
+  {
+    step: "01",
+    title: "Create Your Free Account",
+    text: "Sign up in under 30 seconds with email or Google. Unlock an instant $10,000 practice balance with no card required.",
+    ctaLabel: "Open Free Account",
+    ctaTo: "/register",
+    icon: Users,
+  },
+  {
+    step: "02",
+    title: "Select Market & Analyze",
+    text: "Choose from 100+ Forex, Crypto, Stock, and Commodity instruments. Apply technical indicators and set your trade duration.",
+    ctaLabel: "Explore Platform",
+    ctaTo: "/features",
+    icon: BarChart3,
+  },
+  {
+    step: "03",
+    title: "Execute & Withdraw Fast",
+    text: "Place Higher or Lower positions from $1, switch to live trading from $5, and withdraw profits via M-PESA or Crypto.",
+    ctaLabel: "See How It Works",
+    ctaTo: "/how-it-works",
+    icon: Wallet,
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    quote:
+      "Practicing on the $10,000 demo terminal let me refine my support-and-resistance setups before funding live. Chart execution feels instant.",
     name: "Maya K.",
-    role: "Currency trader",
+    role: "Forex & Gold Trader",
+    location: "Nairobi",
     initials: "MK",
     rating: "5.0",
   },
   {
-    quote: "Charts load quickly, the platform is clean, and withdrawals have been smooth.",
+    quote:
+      "M-PESA deposits reflect right away and my USDT and mobile money withdrawals have consistently settled faster than any broker I used before.",
     name: "Daniel R.",
-    role: "Crypto trader",
+    role: "Crypto & Momentum Trader",
+    location: "Mombasa",
     initials: "DR",
     rating: "5.0",
   },
   {
-    quote: "I can move from phone to desktop without losing track of my open positions.",
+    quote:
+      "Weekly tournaments and copy trading keep the community engaging, and switching between my laptop and phone never loses my chart drawings.",
     name: "Sofia N.",
-    role: "Multi-asset trader",
+    role: "Multi-Asset Trader",
+    location: "Kampala",
     initials: "SN",
     rating: "4.9",
   },
 ];
 
 const PoolitoHomePage = () => {
-  const { platformName } = useSiteBranding();
-  const marketSlides = [...marketGroups, marketGroups[0]!];
-  const [marketSlideIndex, setMarketSlideIndex] = useState(0);
-  const [isMarketJumping, setIsMarketJumping] = useState(false);
-  const activeMarketIndex = marketSlideIndex % marketGroups.length;
+  const { platformName, supportEmail } = useSiteBranding();
+  const { data: rawWebsiteContent } = useWebsiteContent();
+  const websiteContent = useMemo(
+    () => normalizeWebsiteContent(rawWebsiteContent, platformName),
+    [rawWebsiteContent, platformName],
+  );
 
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setMarketSlideIndex((currentIndex) => currentIndex + 1);
-    }, 4200);
+  const [selectedPreviewIdx, setSelectedPreviewIdx] = useState(0);
+  const [stakeAmount, setStakeAmount] = useState(50);
+  const [activeMarketTab, setActiveMarketTab] = useState(0);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
-    return () => window.clearInterval(intervalId);
-  }, []);
-
-  useEffect(() => {
-    if (!isMarketJumping) return undefined;
-
-    const timeoutId = window.setTimeout(() => {
-      setIsMarketJumping(false);
-    }, 40);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [isMarketJumping]);
-
-  const handleMarketSelect = (index: number) => {
-    setIsMarketJumping(false);
-    setMarketSlideIndex(index);
-  };
-
-  const handleMarketTransitionEnd = () => {
-    if (marketSlideIndex < marketGroups.length) return;
-
-    setIsMarketJumping(true);
-    setMarketSlideIndex(0);
-  };
+  const activePreview = QUICK_PREVIEW_ASSETS[selectedPreviewIdx] ?? QUICK_PREVIEW_ASSETS[0];
+  const projectedReturn = ((stakeAmount * (100 + activePreview.payout)) / 100).toFixed(2);
+  const activeMarketGroup = MARKET_GROUPS[activeMarketTab] ?? MARKET_GROUPS[0];
+  const faqItems = websiteContent.faq.items.slice(0, 6);
 
   return (
-    <div className="poolito-home min-h-screen overflow-x-hidden bg-white text-[#06383c]">
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
       <Navbar />
 
       <main>
-        <section className="poolito-hero" aria-labelledby="poolito-hero-title">
-          <div className="poolito-hero-pattern" aria-hidden="true" />
-          <div className="poolito-hero-copy">
-            <div className="poolito-frame">
-              <span className="poolito-kicker">
-                <BadgeCheck size={18} />
-                100% platform access
-              </span>
-              <h1 id="poolito-hero-title">
-                The Right Place for Online <span style={{ color: "#10b86b" }}>Trading</span> – Simple, Fast, Secure.
-              </h1>
-              <p className="poolito-hero-subheadline">
-                Trade 100+ assets with real-time charts, a free demo, and fast withdrawals. All from one clean platform.
-              </p>
-              <div className="poolito-cta-row">
-                <Link to="/register" className="poolito-cta">
-                  Start Trading Now
-                  <span>
-                    <ArrowRight size={17} />
+        {/* ─── 1. HERO SECTION ──────────────────────────────────────────────── */}
+        <section
+          aria-labelledby="io-hero-heading"
+          className="relative overflow-hidden border-b border-white/[0.07] pb-16 pt-10 sm:pb-24 sm:pt-16 lg:pb-28 lg:pt-20"
+        >
+          {/* Ambient Fintech Mesh & Radial Glows */}
+          <div
+            aria-hidden="true"
+            className="io-grid-pattern pointer-events-none absolute inset-0 opacity-60 [mask-image:radial-gradient(ellipse_at_top,black_32%,transparent_80%)]"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -left-24 -top-24 h-[480px] w-[540px] rounded-full bg-[radial-gradient(circle,rgba(16,184,107,0.18),transparent_68%)] blur-3xl"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 top-12 h-[520px] w-[580px] rounded-full bg-[radial-gradient(circle,rgba(28,129,248,0.16),transparent_70%)] blur-3xl"
+          />
+
+          <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-10">
+              {/* Left Copy Column */}
+              <div className="lg:col-span-6">
+                <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-emerald-300 shadow-[0_0_24px_rgba(16,184,107,0.15)]">
+                  <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Up to 95% Payout • Instant $10,000 Demo</span>
+                </div>
+
+                <h1
+                  id="io-hero-heading"
+                  className="mt-6 text-4xl font-extrabold leading-[1.06] tracking-tight text-white sm:text-5xl lg:text-[56px]"
+                >
+                  Trade Global Markets with{" "}
+                  <span className="bg-gradient-to-r from-emerald-400 via-emerald-300 to-sky-400 bg-clip-text text-transparent">
+                    Speed, Clarity &amp; Control.
                   </span>
-                </Link>
-                <Link to="/trade" className="poolito-cta poolito-cta-secondary">
-                  Free Demo
-                  <span>
-                    <Play size={16} fill="currentColor" />
-                  </span>
-                </Link>
+                </h1>
+
+                <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                  Access 100+ Forex, Crypto, Stock, and Commodity markets on {platformName}. Practice
+                  risk-free with $10,000 virtual funds, analyze with 30+ indicators, and withdraw fast via
+                  M-PESA or Crypto.
+                </p>
+
+                {/* Primary & Secondary CTAs */}
+                <div className="mt-8 flex flex-wrap items-center gap-4">
+                  <Link
+                    to="/register"
+                    className="group inline-flex h-13 min-h-[52px] items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-[#10b86b] to-[#0ea35e] px-7 text-sm font-bold text-white shadow-[0_16px_38px_rgba(16,184,107,0.34)] transition-all hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_20px_44px_rgba(16,184,107,0.44)]"
+                  >
+                    <span>Start Trading Free</span>
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+
+                  <Link
+                    to="/trade"
+                    className="inline-flex h-13 min-h-[52px] items-center justify-center gap-2.5 rounded-full border border-white/15 bg-white/[0.04] px-6 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/[0.08]"
+                  >
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+                      <Play className="h-3.5 w-3.5 fill-current" />
+                    </span>
+                    <span>Try $10,000 Demo</span>
+                  </Link>
+                </div>
+
+                {/* Key Trust Micro-Pills */}
+                <div className="mt-9 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:max-w-xl">
+                  {[
+                    { value: "$5", label: "Min. Deposit" },
+                    { value: "$1", label: "Min. Trade" },
+                    { value: "< 2m", label: "Fast Payouts" },
+                    { value: "24/7", label: "Live Markets" },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-2xl border border-white/[0.08] bg-white/[0.025] px-3.5 py-3 backdrop-blur-sm"
+                    >
+                      <div className="text-lg font-extrabold tabular-nums text-white">{item.value}</div>
+                      <div className="mt-0.5 text-xs font-medium text-slate-400">{item.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Interactive Showcase Column */}
+              <div className="relative lg:col-span-6">
+                <div className="relative mx-auto max-w-xl lg:max-w-none">
+                  {/* Studio Platform Render Stage */}
+                  <div className="io-glass-card relative overflow-hidden rounded-[28px] p-4 sm:p-6">
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_65%_30%,rgba(16,184,107,0.18),transparent_58%)]"
+                    />
+
+                    {/* Top Window Bar */}
+                    <div className="relative z-10 mb-3 flex items-center justify-between border-b border-white/[0.07] pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-full bg-rose-500/70" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
+                        <span className="ml-2 text-xs font-semibold text-slate-400">
+                          {platformName} Web &amp; Mobile Terminal
+                        </span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        Real-Time Feed
+                      </span>
+                    </div>
+
+                    {/* Studio Laptop + Phone Image */}
+                    <div className="relative overflow-hidden rounded-2xl bg-[#05080f]">
+                      <img
+                        src={HOME_ASSETS.laptopPhone}
+                        alt={`${platformName} desktop and mobile trading workspace`}
+                        className="h-auto w-full object-cover"
+                      />
+                    </div>
+
+                    {/* Interactive Trade Payout Preview Bar */}
+                    <div className="relative z-10 mt-4 rounded-2xl border border-white/10 bg-[#0b1322]/95 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {QUICK_PREVIEW_ASSETS.map((asset, idx) => (
+                            <button
+                              key={asset.symbol}
+                              type="button"
+                              onClick={() => setSelectedPreviewIdx(idx)}
+                              className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                                selectedPreviewIdx === idx
+                                  ? "border border-emerald-500/40 bg-emerald-500/15 text-white"
+                                  : "border border-transparent bg-white/[0.04] text-slate-400 hover:text-white"
+                              }`}
+                            >
+                              <span>{asset.symbol}</span>
+                              <span className="text-emerald-400">+{asset.payout}%</span>
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="font-mono font-bold text-white tabular-nums">
+                            {activePreview.price}
+                          </span>
+                          <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 font-bold text-emerald-400">
+                            {activePreview.change}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-3.5 grid items-center gap-3 sm:grid-cols-12">
+                        <div className="sm:col-span-5">
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                            <span>Trade Stake</span>
+                            <span className="text-slate-300">Payout: +{activePreview.payout}%</span>
+                          </div>
+                          <div className="mt-1.5 flex items-center gap-1.5">
+                            {[10, 50, 100].map((val) => (
+                              <button
+                                key={val}
+                                type="button"
+                                onClick={() => setStakeAmount(val)}
+                                className={`flex-1 rounded-lg py-1.5 text-xs font-bold tabular-nums transition-colors ${
+                                  stakeAmount === val
+                                    ? "bg-white/15 text-white ring-1 ring-emerald-400/50"
+                                    : "bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white"
+                                }`}
+                              >
+                                ${val}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.07] px-3.5 py-2 sm:col-span-4">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-300/80">
+                            Potential Return
+                          </div>
+                          <div className="mt-0.5 text-lg font-extrabold tabular-nums text-emerald-400">
+                            ${projectedReturn}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-1.5 sm:col-span-3">
+                          <Link
+                            to="/trade"
+                            className="inline-flex h-11 items-center justify-center gap-1 rounded-xl bg-[#10b86b] text-xs font-bold text-white transition-transform hover:scale-[1.02] hover:brightness-110"
+                          >
+                            <TrendingUp className="h-3.5 w-3.5" />
+                            Up
+                          </Link>
+                          <Link
+                            to="/trade"
+                            className="inline-flex h-11 items-center justify-center gap-1 rounded-xl bg-rose-500 text-xs font-bold text-white transition-transform hover:scale-[1.02] hover:brightness-110"
+                          >
+                            <TrendingDown className="h-3.5 w-3.5" />
+                            Down
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div className="poolito-hero-image" aria-label={`${platformName} trading platform preview`}>
-            <img src={HOME_ASSETS.hero} alt={`${platformName} laptop trading platform`} />
-          </div>
-          <div className="poolito-slash-one" aria-hidden="true" />
-          <div className="poolito-slash-two" aria-hidden="true" />
         </section>
 
-        <section className="poolito-asset-band" aria-label={`${platformName} tradable asset classes`}>
-          <div className="poolito-container poolito-asset-band-inner">
-            <div className="poolito-asset-band-title">
-              <div className="poolito-asset-title-icon" aria-hidden="true">
-                <Globe2 size={34} />
-              </div>
-              <div>
-                <span>Trade</span>
-                <strong>Global Assets</strong>
-              </div>
-            </div>
-            <div className="poolito-band-tags">
-              {assetTags.map((tag) => {
-                const Icon = tag.icon;
-
-                return (
-                  <span key={tag.label}>
-                    <Icon size={18} />
-                    {tag.label}
+        {/* ─── 2. LIVE MARKET MARQUEE TICKER ────────────────────────────────── */}
+        <section
+          aria-label="Live market payouts ticker"
+          className="border-b border-white/[0.06] bg-[#060a12] py-3.5"
+        >
+          <div className="landing-marquee">
+            <div className="landing-marquee-track flex w-max items-center gap-4 px-4">
+              {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, index) => (
+                <Link
+                  key={`${item.symbol}-${index}`}
+                  to="/trade"
+                  className="inline-flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-2 transition-colors hover:border-emerald-500/35 hover:bg-white/[0.05]"
+                >
+                  <AssetSymbolMark
+                    symbol={item.symbol}
+                    name={item.name}
+                    category={item.category}
+                    size={26}
+                  />
+                  <span className="text-xs font-bold text-white">{item.symbol}</span>
+                  <span
+                    className={`text-xs font-semibold tabular-nums ${
+                      item.up ? "text-emerald-400" : "text-rose-400"
+                    }`}
+                  >
+                    {item.delta}
                   </span>
+                  <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-300">
+                    {item.payout}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 3. KEY PLATFORM METRICS STRIP ────────────────────────────────── */}
+        <section className="border-b border-white/[0.06] bg-[#0a101d] py-12">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  value: "100+",
+                  label: "Global Instruments",
+                  detail: "Forex, Crypto, Equities & Commodities",
+                  icon: Globe2,
+                },
+                {
+                  value: "Up to 95%",
+                  label: "Profit on Winning Trades",
+                  detail: "Transparent payout shown before entry",
+                  icon: TrendingUp,
+                },
+                {
+                  value: "< 2 Min",
+                  label: "Fastest M-PESA Payout",
+                  detail: "Rapid mobile money & crypto settlement",
+                  icon: Zap,
+                },
+                {
+                  value: "99.97%",
+                  label: "Platform Uptime",
+                  detail: "High-availability execution engine",
+                  icon: ShieldCheck,
+                },
+              ].map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <div
+                    key={stat.label}
+                    className="flex items-start gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5"
+                  >
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/12 text-emerald-400">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-2xl font-extrabold tracking-tight text-white tabular-nums">
+                        {stat.value}
+                      </div>
+                      <div className="mt-0.5 text-sm font-bold text-slate-200">{stat.label}</div>
+                      <div className="mt-1 text-xs text-slate-400">{stat.detail}</div>
+                    </div>
+                  </div>
                 );
               })}
             </div>
           </div>
         </section>
 
-        <section className="poolito-about" aria-labelledby="poolito-about-title">
-          <div className="poolito-container poolito-about-grid">
-            <div className="poolito-about-media">
-              <div className="poolito-about-img poolito-about-img-main">
-                <img src={HOME_ASSETS.aboutImac} alt={`${platformName} iMac trading terminal`} />
+        {/* ─── 4. INTERACTIVE MARKET EXPLORER (#markets) ───────────────────── */}
+        <section id="markets" aria-labelledby="io-markets-title" className="py-20 sm:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+              <div className="max-w-2xl">
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+                  Global Markets
+                </span>
+                <h2
+                  id="io-markets-title"
+                  className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
+                >
+                  Trade Major Markets from One Unified Desk
+                </h2>
+                <p className="mt-3 text-base leading-relaxed text-slate-400">
+                  Switch across major currency pairs, 24/7 digital assets, global equities, and spot
+                  commodities with transparent fixed-return payouts.
+                </p>
               </div>
-              <div className="poolito-about-img poolito-about-img-float">
-                <img src={HOME_ASSETS.aboutPhone} alt={`${platformName} mobile trading screens`} />
-              </div>
-              <div className="poolito-round-badge" aria-hidden="true">
-                <BarChart3 size={36} />
+
+              {/* Category Tabs */}
+              <div
+                role="tablist"
+                aria-label="Market categories"
+                className="flex flex-wrap gap-2 rounded-2xl border border-white/[0.08] bg-[#0e1626] p-1.5"
+              >
+                {MARKET_GROUPS.map((group, idx) => {
+                  const Icon = group.icon;
+                  const active = activeMarketTab === idx;
+                  return (
+                    <button
+                      key={group.label}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setActiveMarketTab(idx)}
+                      className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
+                        active
+                          ? "bg-gradient-to-r from-[#10b86b] to-[#0ea35e] text-white shadow-lg shadow-emerald-500/20"
+                          : "text-slate-400 hover:bg-white/[0.04] hover:text-white"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{group.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="poolito-about-copy">
-              <span className="poolito-section-label">About Trading</span>
-              <h2 id="poolito-about-title">
-                Your Gateway to Global Markets
-              </h2>
-              <p>
-                When you work with {platformName}, market access becomes easier because your chart,
-                wallet, demo mode, and live workspace stay in one clear platform.
-              </p>
+            {/* Market Cards Grid */}
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {activeMarketGroup.cards.map((market) => {
+                const isUp = market.direction === "Up";
+                return (
+                  <article
+                    key={market.symbol}
+                    className="io-glass-card io-glass-card-hover flex flex-col justify-between rounded-2xl p-5"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <AssetSymbolMark
+                            symbol={market.symbol}
+                            name={market.name}
+                            category={activeMarketGroup.category}
+                            size={42}
+                          />
+                          <div>
+                            <h3 className="text-base font-extrabold tracking-tight text-white">
+                              {market.symbol}
+                            </h3>
+                            <p className="text-xs text-slate-400">{market.name}</p>
+                          </div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/12 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                          {market.status}
+                        </span>
+                      </div>
 
-              <div className="poolito-feature-pair">
-                <article>
-                  <LineChart size={48} />
-                  <h3>Market Trading</h3>
-                  <p>Analyze live movement across currencies, crypto, commodities, and more.</p>
-                </article>
-                <article>
-                  <Smartphone size={48} />
-                  <h3>Mobile Trading</h3>
-                  <p>Use a responsive terminal built for clear chart visibility on every device.</p>
-                </article>
-              </div>
+                      {/* Mini Sparkline & Price */}
+                      <div className="mt-5 flex items-end justify-between rounded-xl border border-white/[0.06] bg-[#090f1b] px-3.5 py-3">
+                        <div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                            Indicative Quote
+                          </div>
+                          <div className="mt-0.5 font-mono text-base font-bold text-white tabular-nums">
+                            {market.price}
+                          </div>
+                        </div>
+                        <svg
+                          viewBox="0 0 144 34"
+                          className="h-8 w-24 overflow-visible"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d={market.spark}
+                            fill="none"
+                            stroke={isUp ? "#10b86b" : "#f43f5e"}
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </div>
 
-              <div className="poolito-founder-row">
-                <Link to="/about" className="poolito-read-more">
-                  Read More
-                  <span>
-                    <ArrowRight size={18} />
-                  </span>
-                </Link>
-                <div className="poolito-founder">
-                  <span>
-                    <Headphones size={22} />
-                  </span>
-                  <div>
-                    <strong>{platformName}</strong>
-                    <small>Support desk</small>
+                      <dl className="mt-4 space-y-2 text-xs">
+                        <div className="flex items-center justify-between text-slate-400">
+                          <dt>Max Payout</dt>
+                          <dd className="font-bold text-emerald-400">{market.payout}</dd>
+                        </div>
+                        <div className="flex items-center justify-between text-slate-400">
+                          <dt>Durations</dt>
+                          <dd className="font-semibold text-slate-200">{market.duration}</dd>
+                        </div>
+                        <div className="flex items-center justify-between text-slate-400">
+                          <dt>Momentum</dt>
+                          <dd
+                            className={`inline-flex items-center gap-1 font-bold ${
+                              isUp ? "text-emerald-400" : "text-rose-400"
+                            }`}
+                          >
+                            {isUp ? (
+                              <TrendingUp className="h-3.5 w-3.5" />
+                            ) : (
+                              <TrendingDown className="h-3.5 w-3.5" />
+                            )}
+                            {market.direction}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+
+                    <Link
+                      to="/trade"
+                      className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/12 text-xs font-bold text-emerald-300 transition-all hover:bg-emerald-500 hover:text-white"
+                    >
+                      <span>Trade {market.symbol}</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 5. MULTI-DEVICE TRADING WORKSPACE SHOWCASE ───────────────────── */}
+        <section
+          aria-labelledby="io-workspace-title"
+          className="relative overflow-hidden border-y border-white/[0.07] bg-[#0b1220] py-20 sm:py-24"
+        >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[540px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,184,107,0.1),transparent_70%)] blur-3xl"
+          />
+
+          <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid items-center gap-12 lg:grid-cols-12">
+              {/* Visual Showcase */}
+              <div className="lg:col-span-6">
+                <div className="grid gap-4 sm:grid-cols-12">
+                  <div className="io-glass-card overflow-hidden rounded-3xl p-4 sm:col-span-8">
+                    <div className="mb-2 flex items-center justify-between px-1 text-[11px] font-semibold text-slate-400">
+                      <span>Desktop Pro Workspace</span>
+                      <span className="text-emerald-400">Multi-Indicator View</span>
+                    </div>
+                    <div className="overflow-hidden rounded-2xl bg-[#04070d]">
+                      <img
+                        src={HOME_ASSETS.imacAlt}
+                        alt={`${platformName} desktop charting terminal`}
+                        className="h-64 w-full object-cover sm:h-80"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="io-glass-card flex flex-col justify-between overflow-hidden rounded-3xl p-4 sm:col-span-4">
+                    <div className="mb-2 px-1 text-[11px] font-semibold text-slate-400">
+                      Mobile Web App
+                    </div>
+                    <div className="flex flex-1 items-center justify-center overflow-hidden rounded-2xl bg-[#04070d]">
+                      <img
+                        src={HOME_ASSETS.iphones}
+                        alt={`${platformName} mobile trading interface`}
+                        className="h-64 w-full object-cover sm:h-80"
+                        loading="lazy"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="poolito-note">
-                <CheckCircle2 size={22} />
-                Give your trading account a cleaner place to grow.
+              {/* Workspace Capabilities */}
+              <div className="lg:col-span-6">
+                <span className="inline-flex items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-sky-300">
+                  <Cpu className="h-3.5 w-3.5" />
+                  Precision Terminal
+                </span>
+
+                <h2
+                  id="io-workspace-title"
+                  className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
+                >
+                  Engineered for Fast Reading &amp; Confident Execution
+                </h2>
+
+                <p className="mt-4 text-base leading-relaxed text-slate-300">
+                  {platformName} keeps your chart, technical indicators, wallet controls, and demo/live
+                  switcher in one clean browser terminal—no heavy downloads required.
+                </p>
+
+                <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                  {WORKSPACE_HIGHLIGHTS.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={item.title}
+                        className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 transition-colors hover:border-emerald-500/30"
+                      >
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/12 text-emerald-400">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <h3 className="mt-3.5 text-sm font-bold text-white">{item.title}</h3>
+                        <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
+                          {item.description}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-8 flex flex-wrap items-center gap-4">
+                  <Link
+                    to="/features"
+                    className="inline-flex h-11 items-center gap-2 rounded-full bg-white/[0.08] px-5 text-xs font-bold text-white transition-colors hover:bg-white/[0.14]"
+                  >
+                    <span>Explore All Platform Features</span>
+                    <ArrowRight className="h-4 w-4 text-emerald-400" />
+                  </Link>
+                  <Link
+                    to="/trading-guide"
+                    className="inline-flex h-11 items-center gap-2 rounded-full border border-white/12 px-5 text-xs font-semibold text-slate-300 transition-colors hover:border-white/25 hover:text-white"
+                  >
+                    <BookOpen className="h-4 w-4 text-sky-400" />
+                    <span>Open Trading Guide</span>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="poolito-how" aria-labelledby="poolito-how-title">
-          <div className="poolito-container">
-            <div className="poolito-section-heading poolito-how-heading">
-              <span>Simple Start</span>
-              <h2 id="poolito-how-title">How It Works (3 Steps)</h2>
-            </div>
-
-            <div className="poolito-how-grid">
-              {howItWorksSteps.map((item) => (
-                <article className="poolito-how-card" key={item.step}>
-                  <div className="poolito-how-icon">
-                    <item.icon size={38} />
-                  </div>
-                  <span>{item.step}</span>
-                  <h3>{item.title}</h3>
-                  <p>{item.text}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="poolito-services" aria-labelledby="poolito-services-title">
-          <div className="poolito-service-pattern" aria-hidden="true" />
-          <div className="poolito-container">
-            <div className="poolito-section-heading">
-              <span>Platform Features</span>
-              <h2 id="poolito-services-title">Features Built For Traders</h2>
-              <p>Everything you need to trade with confidence - all in one place.</p>
-            </div>
-
-            <div className="poolito-service-grid">
-              {services.map((service) => (
-                <article className="poolito-service-card" key={service.title}>
-                  <div className="poolito-feature-icon">
-                    <FeatureDrawnIcon type={service.icon} />
-                  </div>
-                  <div className="poolito-service-body">
-                    <span>{service.eyebrow}</span>
-                    <h3>{service.title}</h3>
-                    <p>{service.text}</p>
-                    <p className="poolito-feature-benefit">{service.benefit}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="poolito-markets" aria-labelledby="poolito-markets-title">
-          <div className="poolito-container">
-            <div className="poolito-section-heading poolito-markets-heading">
-              <span>Markets</span>
-              <h2 id="poolito-markets-title">Market Spreads and Swaps</h2>
-              <p>
-                {platformName} combines chart action, entry logic, timer control, and higher or lower
-                execution in one focused trading surface.
+        {/* ─── 6. BENTO GRID: WHY TRADERS CHOOSE US (#features) ─────────────── */}
+        <section id="features" aria-labelledby="io-bento-title" className="py-20 sm:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+                Complete Ecosystem
+              </span>
+              <h2
+                id="io-bento-title"
+                className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
+              >
+                Everything You Need to Trade &amp; Grow
+              </h2>
+              <p className="mt-3 text-base text-slate-400">
+                From instant local mobile-money funding to weekly competitive tournaments and transparent
+                risk controls.
               </p>
             </div>
 
-            <div className="poolito-market-tabs" role="tablist" aria-label="Market categories">
-              {marketGroups.map((group, index) => (
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeMarketIndex === index}
-                  className={`poolito-market-tab ${activeMarketIndex === index ? "is-active" : ""}`}
-                  key={group.label}
-                  onClick={() => handleMarketSelect(index)}
-                >
-                  {group.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="poolito-market-stage">
-              <div
-                className={`poolito-market-track ${isMarketJumping ? "is-jumping" : ""}`}
-                style={{ transform: `translateX(-${marketSlideIndex * 100}%)` }}
-                onTransitionEnd={handleMarketTransitionEnd}
-                aria-live="polite"
-              >
-                {marketSlides.map((group, slideIndex) => (
-                  <div
-                    className="poolito-market-slide"
-                    key={`${group.label}-${slideIndex}`}
-                    aria-hidden={activeMarketIndex !== slideIndex % marketGroups.length}
-                  >
-                    <div className="poolito-market-grid">
-                      {group.cards.map((market) => {
-                        const isDown = market.direction === "Down";
-
-                        return (
-                          <article className="poolito-market-card" key={market.symbol}>
-                            <div className="poolito-market-card-head">
-                              <div className="poolito-market-mark-wrap">
-                                <AssetSymbolMark
-                                  symbol={market.symbol}
-                                  name={market.name}
-                                  category={group.category}
-                                  size={48}
-                                  className="poolito-market-mark"
-                                />
-                              </div>
-                              <div>
-                                <h3>{market.symbol}</h3>
-                                <p>{market.name}</p>
-                              </div>
-                              <span className={`poolito-market-status ${market.status.toLowerCase()}`}>
-                                {market.status}
-                              </span>
-                            </div>
-
-                            <dl className="poolito-market-metrics">
-                              <div>
-                                <dt>Payout</dt>
-                                <dd>{market.payout}</dd>
-                              </div>
-                              <div>
-                                <dt>Duration</dt>
-                                <dd>{market.duration}</dd>
-                              </div>
-                              <div>
-                                <dt>Direction</dt>
-                                <dd className={isDown ? "is-down" : "is-up"}>{market.direction}</dd>
-                              </div>
-                            </dl>
-
-                            <div className="poolito-market-bottom">
-                              <strong>{market.payout}</strong>
-                              <span>Binary</span>
-                            </div>
-
-                            <Link to="/trade" className="poolito-market-trade">
-                              Trade
-                            </Link>
-                          </article>
-                        );
-                      })}
-                    </div>
+            <div className="mt-12 grid gap-5 lg:grid-cols-12">
+              {/* Wide Card 1: Instant M-PESA & Crypto Funding */}
+              <article className="io-glass-card io-glass-card-hover flex flex-col justify-between rounded-3xl p-6 sm:p-8 lg:col-span-7">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/12 px-3 py-1 text-xs font-bold text-emerald-400">
+                    <Wallet className="h-3.5 w-3.5" />
+                    Seamless Funding &amp; Fast Withdrawals
                   </div>
-                ))}
-              </div>
-            </div>
+                  <h3 className="mt-4 text-2xl font-extrabold text-white">
+                    Deposit &amp; Withdraw via M-PESA, USDT &amp; Bitcoin
+                  </h3>
+                  <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-300">
+                    Start live trading from just $5 with 0% platform deposit fees. Withdraw profits
+                    directly to M-PESA or your crypto wallet with real-time status tracking inside your
+                    finance center.
+                  </p>
+                </div>
 
-            <div className="poolito-market-dots" aria-label="Market carousel pages">
-              {marketGroups.map((group, index) => (
-                <button
-                  type="button"
-                  className={activeMarketIndex === index ? "is-active" : ""}
-                  aria-label={`Show ${group.label} markets`}
-                  key={group.label}
-                  onClick={() => handleMarketSelect(index)}
-                />
-              ))}
+                <div className="mt-7">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {PAYMENT_BADGES.map((badge) => (
+                      <div
+                        key={badge.name}
+                        className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-white px-3 shadow-sm"
+                      >
+                        <img
+                          src={badge.logo}
+                          alt={badge.name}
+                          className="h-5 w-auto max-w-[74px] object-contain"
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.08] pt-4 text-xs">
+                    <span className="text-slate-400">
+                      Up to <strong className="text-emerald-400">70% Welcome Bonus</strong> on eligible
+                      first deposits
+                    </span>
+                    <Link
+                      to="/payment-policy"
+                      className="inline-flex items-center gap-1 font-bold text-emerald-400 hover:text-emerald-300"
+                    >
+                      Payment policy <ArrowUpRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              </article>
+
+              {/* Card 2: Weekly Tournaments */}
+              <article className="io-glass-card io-glass-card-hover flex flex-col justify-between rounded-3xl p-6 sm:p-8 lg:col-span-5">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/12 px-3 py-1 text-xs font-bold text-amber-300">
+                    <Trophy className="h-3.5 w-3.5" />
+                    Competitive Trading
+                  </div>
+                  <h3 className="mt-4 text-2xl font-extrabold text-white">
+                    Weekly Trading Tournaments
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-300">
+                    Compete on equal starting tournament balances across 4 weekly events—including
+                    free-entry competitions—and climb the live leaderboard for real cash prizes.
+                  </p>
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-white/[0.07] bg-[#090f1c] p-4">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-400">Rewards Distributed</span>
+                    <span className="font-extrabold text-emerald-400">$150,000+</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-400">Schedule</span>
+                    <span className="font-bold text-white">Mon • Wed • Fri • Sat</span>
+                  </div>
+                  <Link
+                    to="/tournaments"
+                    className="mt-4 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-white/[0.07] text-xs font-bold text-white transition-colors hover:bg-emerald-500"
+                  >
+                    Browse Live Tournaments <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </article>
+
+              {/* Card 3: Free Demo Account */}
+              <article className="io-glass-card io-glass-card-hover rounded-3xl p-6 sm:p-7 lg:col-span-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/12 text-sky-400">
+                  <Play className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 text-xl font-bold text-white">$10,000 Unlimited Demo</h3>
+                <p className="mt-2.5 text-sm leading-relaxed text-slate-400">
+                  Test strategies in real market conditions with virtual funds. Top up or reset your
+                  practice balance anytime with a single click.
+                </p>
+                <Link
+                  to="/trade"
+                  className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-sky-400 hover:text-sky-300"
+                >
+                  Launch demo terminal <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </article>
+
+              {/* Card 4: Social & Copy Trading */}
+              <article className="io-glass-card io-glass-card-hover rounded-3xl p-6 sm:p-7 lg:col-span-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/12 text-emerald-400">
+                  <Award className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 text-xl font-bold text-white">Social &amp; Copy Trading</h3>
+                <p className="mt-2.5 text-sm leading-relaxed text-slate-400">
+                  Inspect verified performance leaderboards, study top-ranked traders, and configure
+                  automated copy parameters with custom stop-loss limits.
+                </p>
+                <Link
+                  to="/why-choose-init-option"
+                  className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300"
+                >
+                  Why traders choose us <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </article>
+
+              {/* Card 5: Security & Compliance */}
+              <article className="io-glass-card io-glass-card-hover rounded-3xl p-6 sm:p-7 lg:col-span-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/12 text-emerald-400">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 text-xl font-bold text-white">Protected Account Controls</h3>
+                <p className="mt-2.5 text-sm leading-relaxed text-slate-400">
+                  Secured with TLS 1.3 encryption, optional two-factor authentication, KYC withdrawal
+                  protection, and negative-balance protection on every trade.
+                </p>
+                <Link
+                  to="/regulation"
+                  className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300"
+                >
+                  Compliance &amp; security <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </article>
             </div>
           </div>
         </section>
 
-        <section className="poolito-trust" aria-labelledby="poolito-trust-title">
-          <div className="poolito-container">
-            <div className="poolito-video-panel">
-              <img src={HOME_ASSETS.imacAlt} alt={`${platformName} desktop terminal preview`} />
-              <div>
-                <Link to="/register" aria-label="Start trading">
-                  <Play size={28} fill="currentColor" />
-                </Link>
-                <h2 id="poolito-trust-title">Most Trusted Trading Platform</h2>
-                <Link to="/register" className="poolito-small-cta">
-                  Start Demo
-                  <ArrowRight size={15} />
-                </Link>
-              </div>
+        {/* ─── 7. HOW IT WORKS (3 STEPS) ────────────────────────────────────── */}
+        <section
+          aria-labelledby="io-steps-title"
+          className="border-y border-white/[0.07] bg-[#0b1220] py-20 sm:py-24"
+        >
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+                Simple Onboarding
+              </span>
+              <h2
+                id="io-steps-title"
+                className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
+              >
+                Start Trading in 3 Clear Steps
+              </h2>
+              <p className="mt-3 text-base text-slate-400">
+                Move from registration to your first practice or live position in under a minute.
+              </p>
             </div>
 
-            <div className="poolito-logo-strip" aria-label={`${platformName} platform features`}>
-              {trustLogos.map((item) => {
+            <div className="mt-12 grid gap-6 md:grid-cols-3">
+              {HOW_IT_WORKS_STEPS.map((item) => {
                 const Icon = item.icon;
-
                 return (
-                  <span key={item.label}>
-                    <span className="poolito-logo-strip-icon">
-                      <Icon size={24} />
+                  <article
+                    key={item.step}
+                    className="io-glass-card relative flex flex-col justify-between overflow-hidden rounded-3xl p-7"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute right-5 top-4 text-6xl font-black tracking-tighter text-white/[0.04]"
+                    >
+                      {item.step}
                     </span>
-                    <strong>{item.label}</strong>
-                  </span>
+
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500/20 to-sky-500/10 text-emerald-400 ring-1 ring-emerald-500/30">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-400">
+                          Step {item.step}
+                        </span>
+                      </div>
+
+                      <h3 className="mt-5 text-xl font-bold text-white">{item.title}</h3>
+                      <p className="mt-2.5 text-sm leading-relaxed text-slate-400">{item.text}</p>
+                    </div>
+
+                    <Link
+                      to={item.ctaTo}
+                      className="mt-6 inline-flex items-center gap-2 text-xs font-bold text-white transition-colors hover:text-emerald-400"
+                    >
+                      <span>{item.ctaLabel}</span>
+                      <ArrowRight className="h-3.5 w-3.5 text-emerald-400" />
+                    </Link>
+                  </article>
                 );
               })}
             </div>
           </div>
         </section>
 
-        <section className="poolito-testimonials" aria-labelledby="poolito-testimonials-title">
-          <div className="poolito-container">
-            <div className="poolito-section-heading">
-              <span>Trader Feedback</span>
-              <h2 id="poolito-testimonials-title">What Traders Say</h2>
+        {/* ─── 8. TRADER REVIEWS (#reviews) ─────────────────────────────────── */}
+        <section id="reviews" aria-labelledby="io-reviews-title" className="py-20 sm:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+                  Community Feedback
+                </span>
+                <h2
+                  id="io-reviews-title"
+                  className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
+                >
+                  Trusted by Active Traders Every Day
+                </h2>
+              </div>
+
+              <Link
+                to="/reviews"
+                className="inline-flex h-11 items-center gap-2 self-start rounded-full border border-white/15 bg-white/[0.04] px-5 text-xs font-bold text-white transition-colors hover:border-emerald-500/40 hover:bg-white/[0.08]"
+              >
+                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                <span>4.9/5 Rating • View All Reviews</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
 
-            <div className="poolito-testimonial-grid">
-              {testimonials.map((item) => (
-                <article className="poolito-testimonial-card" key={item.name}>
-                  <div className="poolito-rating" aria-label={`${item.rating} out of 5 rating`}>
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Star key={index} size={16} fill="currentColor" />
-                    ))}
-                    <strong>{item.rating}</strong>
-                  </div>
-                  <p>{item.quote}</p>
-                  <div className="poolito-testimonial-author">
-                    <span>{item.initials}</span>
-                    <div>
-                      <strong>{item.name}</strong>
-                      <small>{item.role}</small>
+            <div className="mt-10 grid gap-6 md:grid-cols-3">
+              {TESTIMONIALS.map((item) => (
+                <article
+                  key={item.name}
+                  className="io-glass-card io-glass-card-hover flex flex-col justify-between rounded-3xl p-7"
+                >
+                  <div>
+                    <div
+                      className="flex items-center gap-1 text-amber-400"
+                      aria-label={`${item.rating} out of 5 stars`}
+                    >
+                      {Array.from({ length: 5 }).map((_, idx) => (
+                        <Star key={idx} className="h-4 w-4 fill-current" />
+                      ))}
+                      <span className="ml-2 text-xs font-bold text-slate-200">{item.rating}</span>
                     </div>
+
+                    <p className="mt-5 text-[15px] leading-relaxed text-slate-200">
+                      &ldquo;{item.quote}&rdquo;
+                    </p>
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-between border-t border-white/[0.07] pt-5">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-sky-600 text-xs font-extrabold text-white">
+                        {item.initials}
+                      </span>
+                      <div>
+                        <div className="text-sm font-bold text-white">{item.name}</div>
+                        <div className="text-xs text-slate-400">{item.role}</div>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Verified
+                    </span>
                   </div>
                 </article>
               ))}
@@ -730,1882 +1239,149 @@ const PoolitoHomePage = () => {
           </div>
         </section>
 
-        <section className="poolito-final-cta" aria-labelledby="poolito-final-cta-title">
-          <div className="poolito-container poolito-final-cta-inner">
-            <div>
-              <span className="poolito-section-label">Start Today</span>
-              <h2 id="poolito-final-cta-title">Ready to Start Your Trading Journey?</h2>
-              <p>
-                Join thousands of traders already using Init Option. Start with a free demo or go live instantly.
-              </p>
+        {/* ─── 9. INTERACTIVE FAQ SECTION (#faq) ────────────────────────────── */}
+        <section
+          id="faq"
+          aria-labelledby="io-faq-title"
+          className="border-t border-white/[0.07] bg-[#0b1220] py-20 sm:py-24"
+        >
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-10 lg:grid-cols-12">
+              <div className="lg:col-span-5">
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+                  Clear Answers
+                </span>
+                <h2
+                  id="io-faq-title"
+                  className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
+                >
+                  Frequently Asked Questions
+                </h2>
+                <p className="mt-3 text-base leading-relaxed text-slate-400">
+                  Everything you should know about demo practice, deposits, withdrawals, bonuses, and
+                  account protection before placing your first trade.
+                </p>
+
+                <div className="io-glass-card mt-8 rounded-2xl p-6">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+                      <Headphones className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <div className="text-sm font-bold text-white">Need personalized assistance?</div>
+                      <div className="text-xs text-slate-400">
+                        Average live chat response under 5 minutes
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Link
+                      to="/faq"
+                      className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-emerald-500 px-4 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
+                    >
+                      Full FAQ Center <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                    <Link
+                      to="/contact"
+                      className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.04] px-4 text-xs font-semibold text-white transition-colors hover:bg-white/[0.08]"
+                    >
+                      Contact Support ({supportEmail.split("@")[0]})
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 lg:col-span-7">
+                {faqItems.map((item, idx) => {
+                  const isOpen = openFaqIndex === idx;
+                  return (
+                    <div
+                      key={item.question}
+                      className={`rounded-2xl border transition-colors ${
+                        isOpen
+                          ? "border-emerald-500/35 bg-[#121c2e]"
+                          : "border-white/[0.08] bg-[#0e1626] hover:border-white/15"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        aria-expanded={isOpen}
+                        onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                        className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+                      >
+                        <span className="text-sm font-bold text-white sm:text-base">
+                          {item.question}
+                        </span>
+                        <ChevronDown
+                          className={`h-5 w-5 shrink-0 text-emerald-400 transition-transform duration-200 ${
+                            isOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                      {isOpen ? (
+                        <div className="border-t border-white/[0.06] px-6 pb-5 pt-3.5 text-sm leading-7 text-slate-300">
+                          {item.answer}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <div className="poolito-final-cta-actions">
-              <Link to="/register" className="poolito-cta">
-                Create Free Account
-                <span>
-                  <ArrowRight size={17} />
+          </div>
+        </section>
+
+        {/* ─── 10. FINAL CONVERSION CTA ─────────────────────────────────────── */}
+        <section aria-labelledby="io-final-cta-title" className="py-20 sm:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="relative overflow-hidden rounded-[32px] border border-emerald-500/30 bg-gradient-to-br from-[#0f2429] via-[#0d192b] to-[#0a1220] px-6 py-14 text-center shadow-[0_30px_80px_rgba(2,8,20,0.65)] sm:px-12 sm:py-18">
+              <div
+                aria-hidden="true"
+                className="io-grid-pattern pointer-events-none absolute inset-0 opacity-40"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-0 h-64 w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,184,107,0.28),transparent_70%)] blur-2xl"
+              />
+
+              <div className="relative z-10 mx-auto max-w-3xl">
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">
+                  Ready When You Are
                 </span>
-              </Link>
-              <Link to="/trade" className="poolito-cta poolito-cta-secondary">
-                Open Demo
-                <span>
-                  <Play size={16} fill="currentColor" />
-                </span>
-              </Link>
+                <h2
+                  id="io-final-cta-title"
+                  className="mt-5 text-3xl font-extrabold tracking-tight text-white sm:text-5xl"
+                >
+                  Start Your Trading Journey on {platformName} Today
+                </h2>
+                <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                  Practice risk-free on a $10,000 demo account or fund your live balance in minutes via
+                  M-PESA and cryptocurrency.
+                </p>
+
+                <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
+                  <Link
+                    to="/register"
+                    className="inline-flex h-13 min-h-[52px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#10b86b] to-[#0ea35e] px-8 text-sm font-bold text-white shadow-[0_16px_38px_rgba(16,184,107,0.36)] transition-all hover:-translate-y-0.5 hover:brightness-110"
+                  >
+                    <span>Create Free Account</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    to="/trade"
+                    className="inline-flex h-13 min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/20 bg-white/[0.06] px-8 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/[0.12]"
+                  >
+                    <Play className="h-4 w-4 fill-current text-emerald-400" />
+                    <span>Open Instant Demo</span>
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </section>
       </main>
 
-      <Footer />
-
-      <style>{`
-        .poolito-home {
-          --poolito-green: #10b86b;
-          --poolito-green-bright: #10b86b;
-          --poolito-dark: #212634;
-          --poolito-deep: #212634;
-          --poolito-muted: #6d7181;
-          --poolito-line: rgba(31, 76, 99, 0.11);
-          background: #212634;
-          font-family: Arial, Helvetica, sans-serif;
-        }
-
-        .poolito-container {
-          width: min(100% - 48px, 1300px);
-          margin: 0 auto;
-        }
-
-        .poolito-header {
-          position: relative;
-          z-index: 20;
-          background: #212634;
-          box-shadow: 0 1px 0 rgba(31, 76, 99, 0.08);
-          font-family: Arial, Helvetica, sans-serif;
-        }
-
-        .poolito-topbar {
-          background: var(--poolito-dark);
-          color: #fff;
-          font-size: 13px;
-          font-weight: 800;
-        }
-
-        .poolito-topbar-inner,
-        .poolito-topbar-left,
-        .poolito-topbar-social {
-          display: flex;
-          align-items: center;
-        }
-
-        .poolito-topbar-inner {
-          min-height: 42px;
-          justify-content: space-between;
-          gap: 22px;
-        }
-
-        .poolito-topbar-left {
-          gap: 24px;
-        }
-
-        .poolito-topbar-left a,
-        .poolito-topbar-left span,
-        .poolito-topbar-social {
-          color: rgba(255, 255, 255, 0.93);
-          text-decoration: none;
-          gap: 8px;
-        }
-
-        .poolito-topbar-left svg,
-        .poolito-topbar-social svg {
-          color: var(--poolito-green-bright);
-        }
-
-        .poolito-topbar-social {
-          gap: 10px;
-        }
-
-        .poolito-topbar-social a {
-          width: 28px;
-          height: 28px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #fff;
-          background: var(--poolito-green);
-          text-decoration: none;
-        }
-
-        .poolito-topbar-social a svg {
-          color: #fff;
-        }
-
-        .poolito-nav {
-          min-height: 82px;
-          display: flex;
-          background: #212634;
-        }
-
-        .poolito-logo-panel {
-          width: auto;
-          min-width: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0 14px 0 0;
-          background: transparent;
-          clip-path: none;
-        }
-
-        .poolito-logo {
-          max-width: 100%;
-        }
-
-        .poolito-nav-body {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 24px;
-          min-width: 0;
-          padding: 0 max(24px, calc((100vw - 1300px) / 2)) 0 8px;
-        }
-
-        .poolito-nav-links,
-        .poolito-nav-actions {
-          display: flex;
-          align-items: center;
-        }
-
-        .poolito-nav-links {
-          gap: clamp(18px, 2.4vw, 38px);
-          padding-left: 20px;
-        }
-
-        .poolito-nav-links a {
-          color: #ffffff;
-          font-size: 13px;
-          font-weight: 900;
-          text-decoration: none;
-          font-family: Arial, Helvetica, sans-serif;
-        }
-
-        .poolito-nav-links a:hover {
-          color: rgba(255, 255, 255, 0.72);
-        }
-
-        .poolito-nav-actions {
-          flex-shrink: 0;
-          gap: 12px;
-        }
-
-        .poolito-auth-link {
-          min-height: 46px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 9px;
-          padding: 0 20px;
-          border-radius: 999px;
-          color: #212634;
-          border: none;
-          background: #fff;
-          font-size: 13px;
-          font-weight: 950;
-          text-decoration: none;
-          white-space: nowrap;
-          font-family: Arial, Helvetica, sans-serif;
-        }
-
-        .poolito-auth-link:hover {
-          color: #212634;
-          background: rgba(255, 255, 255, 0.82);
-        }
-
-        .poolito-auth-link-primary {
-          color: #212634;
-          border: none;
-          background: #fff;
-        }
-
-        .poolito-auth-link-primary:hover {
-          color: #212634;
-          background: rgba(255, 255, 255, 0.82);
-        }
-
-        .poolito-hero {
-          position: relative;
-          min-height: 690px;
-          overflow: hidden;
-          display: grid;
-          grid-template-columns: minmax(0, 55%) minmax(0, 45%);
-          background: #212634;
-        }
-
-        .poolito-hero-pattern,
-        .poolito-service-pattern {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background-image: radial-gradient(rgba(255,255,255,0.13) 1.4px, transparent 1.4px);
-          background-size: 18px 18px;
-          mask-image: linear-gradient(90deg, rgba(0,0,0,0.8), transparent 58%);
-          opacity: 0.5;
-        }
-
-        .poolito-hero-copy {
-          position: relative;
-          z-index: 2;
-          display: flex;
-          align-items: center;
-          padding-left: clamp(32px, 5vw, 88px);
-          padding-right: 40px;
-        }
-
-        .poolito-frame {
-          position: relative;
-          width: min(100%, 640px);
-          padding: 46px 44px 44px;
-          border-left: 8px solid var(--poolito-green);
-        }
-
-        .poolito-frame::before,
-        .poolito-frame::after {
-          content: "";
-          position: absolute;
-          background: var(--poolito-green);
-        }
-
-        .poolito-frame::before {
-          left: 0;
-          top: 0;
-          width: 61%;
-          height: 8px;
-        }
-
-        .poolito-frame::after {
-          left: 0;
-          bottom: 0;
-          width: 86%;
-          height: 8px;
-          box-shadow: 26px 0 0 -8px var(--poolito-green);
-        }
-
-        .poolito-kicker {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 18px;
-          color: var(--poolito-green-bright);
-          font-size: 15px;
-          font-weight: 900;
-          text-transform: uppercase;
-        }
-
-        .poolito-frame h1 {
-          margin: 0;
-          color: #fff;
-          font-size: clamp(44px, 3.9vw, 68px);
-          line-height: 0.96;
-          font-weight: 950;
-          letter-spacing: -0.06em;
-          text-transform: uppercase;
-        }
-
-        .poolito-frame h1 span {
-          color: var(--poolito-green-bright);
-        }
-
-        .poolito-hero-subheadline {
-          max-width: 560px;
-          margin: 18px 0 0;
-          color: rgba(255, 255, 255, 0.82);
-          font-size: 15px;
-          line-height: 1.52;
-          font-weight: 800;
-        }
-
-        .poolito-cta-row {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 14px;
-          margin-top: 24px;
-        }
-
-        .poolito-cta,
-        .poolito-read-more,
-        .poolito-small-cta {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          text-decoration: none;
-          color: #fff;
-          background: var(--poolito-green);
-          font-weight: 900;
-        }
-
-        .poolito-cta {
-          gap: 13px;
-          min-height: 54px;
-          padding: 0 9px 0 26px;
-          border-radius: 999px;
-          font-size: 14px;
-          text-transform: uppercase;
-        }
-
-        .poolito-cta-secondary {
-          background: rgba(255, 255, 255, 0.1);
-          box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.22);
-        }
-
-        .poolito-cta span,
-        .poolito-read-more span {
-          width: 42px;
-          height: 42px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          background: var(--poolito-dark);
-        }
-
-        .poolito-hero-image {
-          position: relative;
-          z-index: 1;
-          min-height: 690px;
-          clip-path: polygon(16% 0, 100% 0, 100% 100%, 0 100%);
-        }
-
-        .poolito-hero-image::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background:
-            linear-gradient(90deg, rgba(4, 44, 43, 0.62) 0%, rgba(7, 96, 57, 0.34) 48%, rgba(18, 204, 154, 0.2) 100%),
-            rgba(6, 103, 55, 0.16);
-        }
-
-        .poolito-hero-image img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          object-position: center right;
-          display: block;
-          filter: saturate(0.9) contrast(0.92) brightness(0.88);
-        }
-
-        .poolito-slash-one,
-        .poolito-slash-two {
-          position: absolute;
-          z-index: 3;
-          top: 80px;
-          bottom: 0;
-          width: 34px;
-          background: var(--poolito-green-bright);
-          transform: skewX(-20deg);
-        }
-
-        .poolito-slash-one {
-          left: 51%;
-        }
-
-        .poolito-slash-two {
-          left: calc(51% + 52px);
-          opacity: 0.82;
-        }
-
-        .poolito-asset-band {
-          position: relative;
-          min-height: 150px;
-          display: flex;
-          align-items: center;
-          color: #fff;
-          background: linear-gradient(90deg, var(--poolito-green) 0 30%, var(--poolito-deep) 30% 100%);
-        }
-
-        .poolito-asset-band::before {
-          content: "";
-          position: absolute;
-          left: 30%;
-          top: 0;
-          bottom: 0;
-          width: 96px;
-          background: var(--poolito-green);
-          clip-path: polygon(0 0, 45% 0, 100% 100%, 0 100%);
-        }
-
-        .poolito-asset-band-inner {
-          position: relative;
-          z-index: 1;
-          display: grid;
-          grid-template-columns: minmax(220px, 0.8fr) minmax(0, 2.2fr);
-          gap: 36px;
-          align-items: center;
-        }
-
-        .poolito-asset-band-title {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .poolito-asset-title-icon {
-          width: 58px;
-          height: 58px;
-          flex: 0 0 auto;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.24);
-          background: rgba(31, 76, 99, 0.2);
-          box-shadow:
-            inset 0 0 0 8px rgba(255, 255, 255, 0.06),
-            0 14px 26px rgba(0, 0, 0, 0.16);
-        }
-
-        .poolito-asset-title-icon svg {
-          stroke-width: 2.5;
-        }
-
-        .poolito-asset-band-title span,
-        .poolito-asset-band-title strong {
-          display: block;
-          text-transform: uppercase;
-        }
-
-        .poolito-asset-band-title span {
-          color: rgba(255, 255, 255, 0.72);
-          font-size: 13px;
-          font-weight: 950;
-        }
-
-        .poolito-asset-band-title strong {
-          margin-top: 4px;
-          max-width: 250px;
-          color: #fff;
-          font-size: 32px;
-          line-height: 1.06;
-          font-weight: 950;
-        }
-
-        .poolito-band-tags {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: flex-end;
-          gap: 14px;
-        }
-
-        .poolito-band-tags span {
-          min-height: 52px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          padding: 0 22px;
-          border-radius: 999px;
-          color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          background: rgba(255, 255, 255, 0.08);
-          box-shadow: 0 16px 30px rgba(0, 0, 0, 0.16);
-          font-size: 15px;
-          font-weight: 950;
-        }
-
-        .poolito-band-tags span svg {
-          flex: 0 0 auto;
-          color: var(--poolito-green-bright);
-          stroke-width: 2.6;
-        }
-
-        .poolito-about {
-          position: relative;
-          overflow: hidden;
-          padding: 88px 0 98px;
-          background:
-            linear-gradient(135deg, rgba(248,250,252,0.98), rgba(242,248,247,0.98)),
-            radial-gradient(circle at 88% 12%, rgba(6,56,60,0.08), transparent 28%),
-            #f3f7f8;
-        }
-
-        .poolito-about::before,
-        .poolito-services::after {
-          content: "";
-          position: absolute;
-          pointer-events: none;
-          opacity: 0.42;
-          background-image:
-            linear-gradient(45deg, rgba(6,56,60,0.06) 25%, transparent 25%),
-            linear-gradient(-45deg, rgba(6,56,60,0.06) 25%, transparent 25%);
-          background-size: 42px 42px;
-        }
-
-        .poolito-about::before {
-          right: -80px;
-          top: -40px;
-          width: 360px;
-          height: 360px;
-        }
-
-        .poolito-about-grid {
-          position: relative;
-          display: grid;
-          grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-          gap: 86px;
-          align-items: center;
-        }
-
-        .poolito-about-media {
-          position: relative;
-          min-height: 600px;
-        }
-
-        .poolito-about-media::after {
-          content: "";
-          position: absolute;
-          top: 72px;
-          right: 0;
-          width: 118px;
-          height: 10px;
-          background: var(--poolito-green);
-          z-index: 0;
-        }
-
-        .poolito-about-img {
-          position: absolute;
-          overflow: hidden;
-          background: #fff;
-          box-shadow:
-            0 22px 48px rgba(31, 76, 99, 0.16),
-            0 0 0 1px rgba(18, 204, 154, 0.08);
-          z-index: 1;
-        }
-
-        .poolito-about-img img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          display: block;
-        }
-
-        .poolito-about-img-main {
-          left: 0;
-          top: 0;
-          width: 76%;
-          height: 520px;
-          border-left: 14px solid var(--poolito-green);
-          border-bottom: 14px solid var(--poolito-green);
-        }
-
-        .poolito-about-img-main img {
-          object-fit: cover;
-          object-position: 50% 50%;
-          transform: translate(-2%, -8%) scale(1.46);
-        }
-
-        .poolito-about-img-float {
-          right: 0;
-          top: 72px;
-          width: 50%;
-          height: 500px;
-          border: 10px solid var(--poolito-green);
-          box-shadow:
-            0 18px 34px rgba(31, 76, 99, 0.16),
-            inset 0 0 0 8px rgba(255, 255, 255, 0.92);
-          z-index: 2;
-        }
-
-        .poolito-about-img-float::before {
-          content: "";
-          position: absolute;
-          inset: 10px;
-          border: 1px solid rgba(18, 204, 154, 0.16);
-          pointer-events: none;
-          z-index: 2;
-        }
-
-        .poolito-about-img-float::after {
-          content: "";
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          width: 76px;
-          height: 7px;
-          background: var(--poolito-green);
-          pointer-events: none;
-          z-index: 3;
-        }
-
-        .poolito-about-img-float img {
-          object-fit: contain;
-          object-position: 50% 50%;
-          background: #fff;
-          padding: 18px;
-          transform: translateY(1%) scale(1.12);
-        }
-
-        .poolito-round-badge {
-          position: absolute;
-          left: 46%;
-          top: 43%;
-          width: 136px;
-          height: 136px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #fff;
-          background: var(--poolito-green);
-          border: 10px solid rgba(255, 255, 255, 0.22);
-          overflow: hidden;
-          transform: translate(-50%, -50%);
-          box-shadow: 0 18px 36px rgba(18, 204, 154, 0.26);
-          z-index: 3;
-        }
-
-        .poolito-round-badge::before {
-          content: "";
-          position: absolute;
-          inset: 9px;
-          border-radius: 50%;
-          background: repeating-conic-gradient(
-            from 0deg,
-            rgba(255, 255, 255, 0.78) 0deg 4deg,
-            transparent 4deg 9deg
-          );
-          -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
-          mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
-          opacity: 0.82;
-          transform-origin: center;
-          animation: poolito-badge-ring-spin 7s linear infinite;
-        }
-
-        .poolito-round-badge svg {
-          position: relative;
-          z-index: 1;
-        }
-
-        @keyframes poolito-badge-ring-spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        .poolito-section-label,
-        .poolito-section-heading span {
-          display: inline-flex;
-          align-items: center;
-          gap: 14px;
-          color: var(--poolito-green);
-          font-size: 16px;
-          font-weight: 950;
-          text-transform: uppercase;
-        }
-
-        .poolito-section-label::before,
-        .poolito-section-heading span::before,
-        .poolito-section-heading span::after {
-          content: "";
-          width: 72px;
-          height: 5px;
-          background: var(--poolito-green);
-        }
-
-        .poolito-about-copy h2,
-        .poolito-section-heading h2 {
-          margin: 16px 0 0;
-          color: var(--poolito-dark);
-          font-size: clamp(42px, 4.2vw, 64px);
-          line-height: 1.13;
-          font-weight: 950;
-          letter-spacing: 0;
-        }
-
-        .poolito-about-copy h2 {
-          max-width: 700px;
-        }
-
-        .poolito-about-copy h2::first-line {
-          color: var(--poolito-dark);
-        }
-
-        .poolito-about-copy > p {
-          max-width: 690px;
-          margin: 28px 0 0;
-          color: #606171;
-          font-size: 17px;
-          font-weight: 800;
-          line-height: 1.72;
-        }
-
-        .poolito-feature-pair {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 42px;
-          margin-top: 34px;
-        }
-
-        .poolito-feature-pair article svg {
-          color: var(--poolito-green);
-        }
-
-        .poolito-feature-pair h3 {
-          margin: 14px 0 0;
-          color: var(--poolito-dark);
-          font-size: 22px;
-          font-weight: 950;
-        }
-
-        .poolito-feature-pair p {
-          margin: 10px 0 0;
-          color: #6f7280;
-          font-size: 16px;
-          font-weight: 700;
-          line-height: 1.55;
-        }
-
-        .poolito-founder-row {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 28px;
-          margin-top: 34px;
-        }
-
-        .poolito-read-more {
-          min-height: 70px;
-          gap: 20px;
-          padding: 0 9px 0 32px;
-          border-radius: 999px;
-          font-size: 18px;
-        }
-
-        .poolito-read-more span {
-          width: 54px;
-          height: 54px;
-        }
-
-        .poolito-founder {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-        }
-
-        .poolito-founder > span {
-          width: 66px;
-          height: 66px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: var(--poolito-green);
-          border: 3px dashed var(--poolito-green);
-        }
-
-        .poolito-founder strong,
-        .poolito-founder small {
-          display: block;
-        }
-
-        .poolito-founder strong {
-          color: var(--poolito-dark);
-          font-size: 24px;
-          font-weight: 950;
-        }
-
-        .poolito-founder small {
-          color: var(--poolito-green);
-          font-size: 15px;
-          font-weight: 900;
-        }
-
-        .poolito-note {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-top: 30px;
-          color: var(--poolito-green);
-          font-size: 18px;
-          font-weight: 950;
-        }
-
-        .poolito-how {
-          position: relative;
-          overflow: hidden;
-          padding: 96px 0 102px;
-          color: #fff;
-          background:
-            linear-gradient(90deg, rgba(31, 76, 99, 0.95), rgba(31, 76, 99, 0.9)),
-            url("${HOME_ASSETS.abstract}") center/cover;
-        }
-
-        .poolito-how::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background-image: radial-gradient(rgba(255,255,255,0.12) 1.5px, transparent 1.5px);
-          background-size: 18px 18px;
-          opacity: 0.28;
-        }
-
-        .poolito-how .poolito-container {
-          position: relative;
-          z-index: 1;
-        }
-
-        .poolito-how-heading h2 {
-          color: #fff;
-        }
-
-        .poolito-how-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 28px;
-        }
-
-        .poolito-how-card {
-          position: relative;
-          min-height: 260px;
-          padding: 34px 30px 32px;
-          overflow: hidden;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-left: 7px solid var(--poolito-green);
-          border-radius: 8px;
-          background: rgba(255, 255, 255, 0.07);
-          box-shadow: 0 18px 42px rgba(0, 0, 0, 0.18);
-        }
-
-        .poolito-how-card::after {
-          content: "";
-          position: absolute;
-          right: -48px;
-          top: -48px;
-          width: 132px;
-          height: 132px;
-          border-radius: 50%;
-          background: rgba(18, 204, 154, 0.22);
-        }
-
-        .poolito-how-icon {
-          width: 74px;
-          height: 74px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #fff;
-          background: var(--poolito-green);
-        }
-
-        .poolito-how-card > span {
-          display: block;
-          margin-top: 28px;
-          color: var(--poolito-green-bright);
-          font-size: 15px;
-          font-weight: 950;
-          text-transform: uppercase;
-        }
-
-        .poolito-how-card h3 {
-          margin: 10px 0 0;
-          color: #fff;
-          font-size: 28px;
-          line-height: 1.18;
-          font-weight: 950;
-        }
-
-        .poolito-how-card p {
-          margin: 16px 0 0;
-          color: rgba(255, 255, 255, 0.76);
-          font-size: 17px;
-          line-height: 1.62;
-          font-weight: 800;
-        }
-
-        .poolito-services {
-          position: relative;
-          overflow: hidden;
-          padding: 108px 0 126px;
-          background: #fff;
-        }
-
-        .poolito-services::after {
-          right: -50px;
-          top: 70px;
-          width: 320px;
-          height: 320px;
-        }
-
-        .poolito-service-pattern {
-          inset: auto 0 0 auto;
-          width: 35%;
-          height: 56%;
-          background-image: radial-gradient(rgba(6,56,60,0.12) 2px, transparent 2px);
-          background-size: 17px 17px;
-          mask-image: linear-gradient(180deg, transparent, #000);
-        }
-
-        .poolito-section-heading {
-          position: relative;
-          z-index: 1;
-          margin-bottom: 58px;
-          text-align: center;
-        }
-
-        .poolito-section-heading span {
-          justify-content: center;
-        }
-
-        .poolito-section-heading > p {
-          max-width: 700px;
-          margin: 18px auto 0;
-          color: #657284;
-          font-size: 17px;
-          line-height: 1.62;
-          font-weight: 700;
-        }
-
-        .poolito-service-grid {
-          position: relative;
-          z-index: 1;
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 30px;
-        }
-
-        .poolito-service-card {
-          min-height: 390px;
-          display: flex;
-          flex-direction: column;
-          gap: 26px;
-          overflow: hidden;
-          padding: 32px 30px;
-          border: 1px solid rgba(31, 76, 99, 0.1);
-          border-radius: 8px;
-          background: #fff;
-          box-shadow: 0 14px 34px rgba(31, 76, 99, 0.11);
-        }
-
-        .poolito-feature-icon {
-          width: 92px;
-          height: 92px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 8px;
-          color: var(--poolito-dark);
-          border: 1px solid rgba(18, 204, 154, 0.18);
-          background: linear-gradient(135deg, rgba(18, 204, 154, 0.1), rgba(31, 76, 99, 0.04));
-        }
-
-        .poolito-feature-icon svg {
-          width: 62px;
-          height: 62px;
-        }
-
-        .poolito-feature-icon path,
-        .poolito-feature-icon circle {
-          fill: none;
-          stroke: currentColor;
-          stroke-width: 4;
-          stroke-linecap: round;
-          stroke-linejoin: round;
-        }
-
-        .poolito-feature-icon .poolito-icon-green {
-          stroke: var(--poolito-green);
-        }
-
-        .poolito-feature-icon .poolito-icon-red {
-          stroke: #e21b52;
-        }
-
-        .poolito-feature-icon .poolito-icon-muted-line {
-          stroke: rgba(31, 76, 99, 0.42);
-        }
-
-        .poolito-feature-icon .poolito-icon-trend {
-          stroke: var(--poolito-green-bright);
-          stroke-width: 3.5;
-        }
-
-        .poolito-service-body {
-          display: flex;
-          flex: 1;
-          flex-direction: column;
-        }
-
-        .poolito-service-body span {
-          color: var(--poolito-green);
-          font-size: 15px;
-          font-weight: 950;
-          text-transform: uppercase;
-        }
-
-        .poolito-service-body h3 {
-          margin: 11px 0 0;
-          color: var(--poolito-dark);
-          font-size: 24px;
-          font-weight: 950;
-          text-transform: uppercase;
-        }
-
-        .poolito-service-body p {
-          margin: 22px 0 0;
-          padding-top: 24px;
-          border-top: 2px dashed rgba(31, 76, 99, 0.18);
-          color: #717481;
-          font-size: 17px;
-          line-height: 1.62;
-          font-weight: 700;
-        }
-
-        .poolito-service-body .poolito-feature-benefit {
-          margin-top: 16px;
-          padding-top: 0;
-          border-top: 0;
-          color: var(--poolito-green);
-          font-size: 15px;
-          line-height: 1.58;
-          font-weight: 900;
-        }
-
-        .poolito-markets {
-          position: relative;
-          overflow: hidden;
-          padding: 104px 0 116px;
-          background: #f6faf8;
-        }
-
-        .poolito-markets::before {
-          content: "";
-          position: absolute;
-          inset: 48px 0 auto auto;
-          width: 34%;
-          height: 58%;
-          pointer-events: none;
-          background-image: radial-gradient(rgba(31, 76, 99, 0.1) 2px, transparent 2px);
-          background-size: 18px 18px;
-          opacity: 0.34;
-        }
-
-        .poolito-markets-heading {
-          margin-bottom: 26px;
-        }
-
-        .poolito-markets-heading p {
-          max-width: 760px;
-          margin: 18px auto 0;
-          color: #657284;
-          font-size: 17px;
-          line-height: 1.62;
-          font-weight: 700;
-        }
-
-        .poolito-market-tabs {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 10px;
-          margin-bottom: 34px;
-        }
-
-        .poolito-market-tab {
-          min-height: 38px;
-          padding: 0 22px;
-          border: 1px solid rgba(31, 76, 99, 0.12);
-          border-radius: 999px;
-          color: #607084;
-          background: #fff;
-          box-shadow: 0 10px 24px rgba(31, 76, 99, 0.05);
-          font-size: 13px;
-          font-weight: 950;
-          cursor: pointer;
-        }
-
-        .poolito-market-tab.is-active {
-          color: #fff;
-          border-color: var(--poolito-green);
-          background: var(--poolito-green);
-          box-shadow: 0 16px 28px rgba(18, 204, 154, 0.24);
-        }
-
-        .poolito-market-stage {
-          position: relative;
-          z-index: 1;
-          overflow: hidden;
-        }
-
-        .poolito-market-track {
-          display: flex;
-          transition: transform 640ms cubic-bezier(0.76, 0, 0.24, 1);
-          will-change: transform;
-        }
-
-        .poolito-market-track.is-jumping {
-          transition: none;
-        }
-
-        .poolito-market-slide {
-          min-width: 100%;
-          flex: 0 0 100%;
-        }
-
-        .poolito-market-grid {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 28px;
-        }
-
-        .poolito-market-card {
-          min-height: 360px;
-          padding: 24px 22px 22px;
-          border: 1px solid rgba(31, 76, 99, 0.08);
-          border-radius: 8px;
-          background: #fff;
-          box-shadow: 0 18px 40px rgba(31, 76, 99, 0.1);
-        }
-
-        .poolito-market-card-head {
-          display: grid;
-          grid-template-columns: 70px minmax(0, 1fr) auto;
-          gap: 12px;
-          align-items: center;
-        }
-
-        .poolito-market-mark-wrap {
-          width: 70px;
-          min-width: 70px;
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-        }
-
-        .poolito-market-mark {
-          filter: drop-shadow(0 8px 16px rgba(31, 76, 99, 0.18));
-        }
-
-        .poolito-market-card h3 {
-          margin: 0;
-          color: var(--poolito-dark);
-          font-size: 17px;
-          font-weight: 950;
-          letter-spacing: 1.5px;
-        }
-
-        .poolito-market-card p {
-          margin: 4px 0 0;
-          color: #728092;
-          font-size: 12px;
-          font-weight: 800;
-          line-height: 1.35;
-        }
-
-        .poolito-market-status {
-          min-height: 27px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0 12px;
-          border-radius: 999px;
-          color: #647181;
-          background: #edf2f4;
-          font-size: 11px;
-          font-weight: 950;
-          text-transform: uppercase;
-        }
-
-        .poolito-market-status.open {
-          color: var(--poolito-green);
-          background: rgba(24, 185, 88, 0.15);
-        }
-
-        .poolito-market-metrics {
-          display: grid;
-          gap: 12px;
-          margin: 24px 0 0;
-        }
-
-        .poolito-market-metrics div {
-          min-height: 54px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 14px;
-          padding: 0 16px;
-          border-radius: 8px;
-          background: #f4f7f8;
-        }
-
-        .poolito-market-metrics dt,
-        .poolito-market-metrics dd {
-          margin: 0;
-        }
-
-        .poolito-market-metrics dt {
-          color: #6c7b8d;
-          font-size: 12px;
-          font-weight: 850;
-          text-transform: uppercase;
-        }
-
-        .poolito-market-metrics dd {
-          color: #162536;
-          font-size: 14px;
-          font-weight: 950;
-        }
-
-        .poolito-market-metrics dd.is-up {
-          color: var(--poolito-green);
-        }
-
-        .poolito-market-metrics dd.is-down {
-          color: #e21b52;
-        }
-
-        .poolito-market-bottom {
-          min-height: 54px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 14px;
-          margin-top: 18px;
-          padding: 0 16px;
-          border-radius: 8px;
-          background: linear-gradient(90deg, #f0f2f4, #fff);
-        }
-
-        .poolito-market-bottom strong {
-          color: #162536;
-          font-size: 15px;
-          font-weight: 950;
-        }
-
-        .poolito-market-bottom span {
-          color: #718095;
-          font-size: 12px;
-          font-weight: 950;
-          letter-spacing: 3px;
-          text-transform: uppercase;
-        }
-
-        .poolito-market-trade {
-          min-height: 48px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-top: 12px;
-          border-radius: 8px;
-          color: #fff;
-          background: var(--poolito-green);
-          text-decoration: none;
-          font-size: 13px;
-          font-weight: 950;
-          letter-spacing: 0.6px;
-          text-transform: uppercase;
-        }
-
-        .poolito-market-trade:hover {
-          background: var(--poolito-dark);
-        }
-
-        .poolito-market-dots {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 9px;
-          margin-top: 28px;
-        }
-
-        .poolito-market-dots button {
-          width: 10px;
-          height: 10px;
-          padding: 0;
-          border: 0;
-          border-radius: 999px;
-          background: #cbd5d8;
-          cursor: pointer;
-        }
-
-        .poolito-market-dots button.is-active {
-          width: 28px;
-          background: var(--poolito-green);
-        }
-
-        .poolito-trust {
-          padding: 0 0 104px;
-          background: var(--poolito-deep);
-        }
-
-        .poolito-video-panel {
-          position: relative;
-          min-height: 380px;
-          transform: translateY(-64px);
-          overflow: hidden;
-          border: 8px solid var(--poolito-green);
-          background: var(--poolito-dark);
-          box-shadow: 0 24px 58px rgba(0, 0, 0, 0.22);
-        }
-
-        .poolito-video-panel img {
-          width: 100%;
-          height: 100%;
-          position: absolute;
-          inset: 0;
-          object-fit: cover;
-          opacity: 0.42;
-        }
-
-        .poolito-video-panel > div {
-          position: relative;
-          z-index: 1;
-          min-height: 380px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          padding: 40px 24px;
-          color: #fff;
-          background: rgba(18, 204, 154, 0.26);
-        }
-
-        .poolito-video-panel a:first-child {
-          width: 74px;
-          height: 74px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #fff;
-          background: var(--poolito-green);
-          text-decoration: none;
-        }
-
-        .poolito-video-panel h2 {
-          margin: 24px 0 0;
-          color: #fff;
-          font-size: clamp(30px, 4vw, 52px);
-          line-height: 1.14;
-          font-weight: 950;
-        }
-
-        .poolito-small-cta {
-          gap: 8px;
-          min-height: 42px;
-          margin-top: 24px;
-          padding: 0 20px;
-          border-radius: 999px;
-          font-size: 13px;
-        }
-
-        .poolito-logo-strip {
-          display: grid;
-          grid-template-columns: repeat(6, minmax(0, 1fr));
-          gap: 1px;
-          margin-top: -28px;
-          background: rgba(255, 255, 255, 0.1);
-        }
-
-        .poolito-logo-strip > span {
-          min-height: 94px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 13px;
-          padding: 0 18px;
-          color: rgba(255, 255, 255, 0.78);
-          background: rgba(255, 255, 255, 0.05);
-          font-size: 18px;
-          font-weight: 950;
-        }
-
-        .poolito-logo-strip-icon {
-          width: 42px;
-          height: 42px;
-          flex: 0 0 auto;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 8px;
-          color: var(--poolito-green-bright);
-          border: 1px solid rgba(24, 185, 88, 0.28);
-          background: rgba(18, 204, 154, 0.13);
-          box-shadow:
-            inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-            0 10px 20px rgba(0, 0, 0, 0.14);
-        }
-
-        .poolito-logo-strip-icon svg {
-          stroke-width: 2.4;
-        }
-
-        .poolito-logo-strip strong {
-          color: rgba(255, 255, 255, 0.82);
-          font-size: 17px;
-          font-weight: 950;
-        }
-
-        .poolito-testimonials {
-          position: relative;
-          overflow: hidden;
-          padding: 104px 0 112px;
-          background: #fff;
-        }
-
-        .poolito-testimonials::before {
-          content: "";
-          position: absolute;
-          inset: 0 0 auto auto;
-          width: 34%;
-          height: 60%;
-          pointer-events: none;
-          background-image: radial-gradient(rgba(6,56,60,0.1) 2px, transparent 2px);
-          background-size: 18px 18px;
-          opacity: 0.45;
-        }
-
-        .poolito-testimonial-grid {
-          position: relative;
-          z-index: 1;
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 28px;
-        }
-
-        .poolito-testimonial-card {
-          min-height: 310px;
-          display: flex;
-          flex-direction: column;
-          padding: 32px 30px;
-          border-radius: 8px;
-          border: 1px solid rgba(31, 76, 99, 0.1);
-          background: #fff;
-          box-shadow: 0 16px 36px rgba(31, 76, 99, 0.1);
-        }
-
-        .poolito-rating {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          color: #f2a600;
-        }
-
-        .poolito-rating strong {
-          margin-left: 8px;
-          color: var(--poolito-dark);
-          font-size: 14px;
-          font-weight: 950;
-        }
-
-        .poolito-testimonial-card p {
-          margin: 28px 0 0;
-          color: #5f6472;
-          font-size: 18px;
-          line-height: 1.62;
-          font-weight: 800;
-        }
-
-        .poolito-testimonial-author {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          margin-top: auto;
-          padding-top: 28px;
-        }
-
-        .poolito-testimonial-author > span {
-          width: 58px;
-          height: 58px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: #fff;
-          background: var(--poolito-green);
-          font-weight: 950;
-        }
-
-        .poolito-testimonial-author strong,
-        .poolito-testimonial-author small {
-          display: block;
-        }
-
-        .poolito-testimonial-author strong {
-          color: var(--poolito-dark);
-          font-size: 18px;
-          font-weight: 950;
-        }
-
-        .poolito-testimonial-author small {
-          color: var(--poolito-green);
-          font-size: 13px;
-          font-weight: 900;
-        }
-
-        .poolito-final-cta {
-          position: relative;
-          overflow: hidden;
-          padding: 96px 0;
-          background:
-            linear-gradient(90deg, rgba(31, 76, 99, 0.94), rgba(18, 204, 154, 0.9)),
-            url("${HOME_ASSETS.abstract}") center/cover;
-        }
-
-        .poolito-final-cta-inner {
-          display: grid;
-          grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.75fr);
-          gap: 48px;
-          align-items: center;
-        }
-
-        .poolito-final-cta .poolito-section-label {
-          color: #fff;
-        }
-
-        .poolito-final-cta .poolito-section-label::before {
-          background: #fff;
-        }
-
-        .poolito-final-cta h2 {
-          max-width: 760px;
-          margin: 18px 0 0;
-          color: #fff;
-          font-size: clamp(40px, 4vw, 60px);
-          line-height: 1.12;
-          font-weight: 950;
-          letter-spacing: 0;
-        }
-
-        .poolito-final-cta p {
-          max-width: 650px;
-          margin: 22px 0 0;
-          color: rgba(255, 255, 255, 0.78);
-          font-size: 18px;
-          line-height: 1.64;
-          font-weight: 800;
-        }
-
-        .poolito-final-cta-actions {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: flex-end;
-          gap: 14px;
-        }
-
-        .poolito-final-cta .poolito-cta-secondary {
-          background: rgba(255, 255, 255, 0.12);
-          box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.28);
-        }
-
-        @media (max-width: 1180px) {
-          .poolito-nav {
-            flex-wrap: wrap;
-          }
-
-          .poolito-logo-panel {
-            width: 100%;
-            min-width: 0;
-            min-height: 78px;
-            clip-path: none;
-          }
-
-          .poolito-nav-body {
-            width: 100%;
-            padding: 0 24px;
-          }
-
-          .poolito-nav-links {
-            padding-left: 0;
-            gap: 20px;
-          }
-
-          .poolito-nav-actions {
-            flex-shrink: 1;
-          }
-
-          .poolito-hero {
-            grid-template-columns: 1fr;
-          }
-
-          .poolito-hero-copy {
-            min-height: 560px;
-            padding: 72px 32px;
-          }
-
-          .poolito-hero-image {
-            min-height: 430px;
-            clip-path: none;
-          }
-
-          .poolito-slash-one,
-          .poolito-slash-two {
-            display: none;
-          }
-
-          .poolito-asset-band-inner,
-          .poolito-about-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .poolito-band-tags {
-            justify-content: flex-start;
-          }
-
-          .poolito-about-grid {
-            gap: 52px;
-          }
-
-          .poolito-how-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .poolito-service-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .poolito-market-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .poolito-testimonial-grid,
-          .poolito-final-cta-inner {
-            grid-template-columns: 1fr;
-          }
-
-          .poolito-final-cta-actions {
-            justify-content: flex-start;
-          }
-        }
-
-        @media (max-width: 820px) {
-          .poolito-container {
-            width: min(100% - 32px, 1300px);
-          }
-
-          .poolito-topbar-inner,
-          .poolito-topbar-left,
-          .poolito-topbar-social {
-            flex-wrap: wrap;
-            justify-content: center;
-          }
-
-          .poolito-topbar-inner {
-            padding: 10px 0;
-          }
-
-          .poolito-nav-body,
-          .poolito-nav-links {
-            flex-wrap: wrap;
-            justify-content: center;
-          }
-
-          .poolito-nav-body {
-            padding: 18px 18px 0;
-          }
-
-          .poolito-nav-actions {
-            width: 100%;
-            justify-content: center;
-          }
-
-          .poolito-hero-copy {
-            min-height: 0;
-            padding: 48px 20px;
-          }
-
-          .poolito-frame {
-            padding: 40px 28px;
-            border-width: 6px;
-          }
-
-          .poolito-frame::before,
-          .poolito-frame::after {
-            height: 6px;
-          }
-
-          .poolito-frame h1 {
-            font-size: clamp(34px, 11vw, 50px);
-          }
-
-          .poolito-asset-band {
-            padding: 28px 0;
-            background: var(--poolito-deep);
-          }
-
-          .poolito-asset-band::before {
-            display: none;
-          }
-
-          .poolito-asset-band-title strong {
-            font-size: 24px;
-          }
-
-          .poolito-band-tags span {
-            min-height: 42px;
-            padding: 0 16px;
-            font-size: 13px;
-          }
-
-          .poolito-about {
-            padding: 74px 0 82px;
-          }
-
-          .poolito-about-media {
-            min-height: 500px;
-          }
-
-          .poolito-about-media::after {
-            top: 48px;
-            width: 92px;
-            height: 8px;
-          }
-
-          .poolito-about-img-main {
-            width: 78%;
-            height: 410px;
-          }
-
-          .poolito-about-img-float {
-            top: 62px;
-            width: 50%;
-            height: 382px;
-            border-width: 8px;
-          }
-
-          .poolito-round-badge {
-            width: 98px;
-            height: 98px;
-            border-width: 8px;
-          }
-
-          .poolito-feature-pair,
-          .poolito-testimonial-grid,
-          .poolito-market-grid,
-          .poolito-service-grid,
-          .poolito-logo-strip {
-            grid-template-columns: 1fr;
-          }
-
-          .poolito-logo-strip > span {
-            min-height: 96px;
-          }
-
-          .poolito-logo-strip-icon {
-            width: 40px;
-            height: 40px;
-          }
-
-          .poolito-markets {
-            padding: 78px 0 86px;
-          }
-
-          .poolito-markets-heading p {
-            font-size: 15px;
-          }
-
-          .poolito-market-card {
-            min-height: 0;
-          }
-
-          .poolito-section-label::before {
-            width: 44px;
-          }
-
-          .poolito-section-heading span::before,
-          .poolito-section-heading span::after {
-            width: 48px;
-          }
-        }
-
-        @media (max-width: 520px) {
-          .poolito-topbar-left {
-            gap: 10px;
-          }
-
-          .poolito-nav-links {
-            gap: 14px;
-          }
-
-          .poolito-nav-links a {
-            font-size: 12px;
-          }
-
-          .poolito-logo-panel {
-            padding: 0 18px;
-          }
-
-          .poolito-frame {
-            padding: 34px 20px;
-          }
-
-          .poolito-band-tags {
-            gap: 8px;
-          }
-
-          .poolito-market-tab {
-            min-height: 36px;
-            padding: 0 14px;
-            font-size: 12px;
-          }
-
-          .poolito-market-card {
-            padding: 20px 18px 18px;
-          }
-
-          .poolito-market-card-head {
-            grid-template-columns: 64px minmax(0, 1fr);
-          }
-
-          .poolito-market-mark-wrap {
-            width: 64px;
-            min-width: 64px;
-          }
-
-          .poolito-market-status {
-            grid-column: 1 / -1;
-            justify-self: flex-start;
-          }
-
-          .poolito-market-bottom span {
-            letter-spacing: 2px;
-          }
-
-          .poolito-about-img-main {
-            left: 0;
-            width: 84%;
-            height: 320px;
-          }
-
-          .poolito-about-img-float {
-            top: 88px;
-            width: 58%;
-            height: 278px;
-          }
-
-          .poolito-about-copy h2,
-          .poolito-section-heading h2 {
-            font-size: 30px;
-          }
-
-          .poolito-frame h1 {
-            font-size: clamp(24px, 9vw, 34px);
-          }
-
-          .poolito-founder-row {
-            align-items: flex-start;
-          }
-        }
-      `}</style>
+      <Footer content={rawWebsiteContent} />
     </div>
   );
 };

@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
-import { useAuth } from "@/contexts/AuthContext";
+import PageHero from "@/components/layout/PageHero";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { useDynamicRouteSeo } from "@/hooks/useDynamicRouteSeo";
 import { buildTournamentListingSeo } from "@/lib/publicTournaments";
@@ -67,25 +67,32 @@ const FadeInSection = ({ children, className }: { children: React.ReactNode; cla
   );
 };
 
-const StatCard = ({ icon: Icon, label, value, suffix }: { icon: any; label: string; value: number; suffix?: string }) => {
+const StatCard = ({
+  icon: Icon,
+  label,
+  value,
+  suffix,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+  suffix?: string;
+}) => {
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#1a1e2b] p-5 transition-all duration-300 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5">
+    <div className="io-glass-card rounded-2xl p-5 transition-all duration-300 hover:border-emerald-500/35">
       <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/12 text-emerald-400">
         <Icon className="h-5 w-5" />
       </div>
-      <span className="text-[28px] font-black text-white tabular-nums">
-        {value.toLocaleString()}
-      </span>
-      {suffix && <span className="text-[28px] font-black text-emerald-400">{suffix}</span>}
-      <p className="mt-1 text-[13px] text-slate-400">{label}</p>
+      <span className="text-2xl font-extrabold text-white tabular-nums">{value.toLocaleString()}</span>
+      {suffix ? <span className="text-2xl font-extrabold text-emerald-400">{suffix}</span> : null}
+      <p className="mt-1 text-xs font-medium text-slate-400">{label}</p>
     </div>
   );
 };
 
 const TourneysPage = () => {
   const { platformName } = useSiteBranding();
-  const { user } = useAuth();
-  const { data: tournaments = [], isLoading, isError } = usePublicTournaments();
+  const { data: tournaments = [], isLoading } = usePublicTournaments();
   const seoOverride = buildTournamentListingSeo(platformName);
   useDynamicRouteSeo({ routeOverride: seoOverride });
 
@@ -95,24 +102,25 @@ const TourneysPage = () => {
   const [sortBy, setSortBy] = useState<"date" | "prize" | "entry" | "winners">("date");
 
   const filteredTournaments = useMemo(() => {
-    let result = tournaments;
+    let result = [...tournaments];
 
     if (statusFilter !== "all") {
-      result = result.filter(t => t.status === statusFilter);
+      result = result.filter((t) => t.status === statusFilter);
     }
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(t =>
-        t.title.toLowerCase().includes(term) ||
-        t.description?.toLowerCase().includes(term)
+      result = result.filter(
+        (t) =>
+          t.title.toLowerCase().includes(term) ||
+          t.description?.toLowerCase().includes(term),
       );
     }
 
     result.sort((a, b) => {
       const statusA = TOURNAMENT_STATUS_ORDER[a.status] ?? 99;
       const statusB = TOURNAMENT_STATUS_ORDER[b.status] ?? 99;
-      
+
       if (statusA !== statusB) return statusA - statusB;
 
       switch (sortBy) {
@@ -130,40 +138,39 @@ const TourneysPage = () => {
     });
 
     return result;
-  });
+  }, [tournaments, statusFilter, searchTerm, sortBy]);
 
-  const stats = useMemo(() => ({
-    total: tournaments.length,
-    active: tournaments.filter(t => t.status === "active").length,
-    upcoming: tournaments.filter(t => t.status === "upcoming").length,
-    completed: tournaments.filter(t => t.status === "completed").length,
-    totalPrizePool: tournaments.reduce((sum, t) => sum + Number(t.prize_pool), 0),
-    freeTournaments: tournaments.filter(t => t.entry_fee === 0).length,
-  }, [tournaments]));
+  const stats = useMemo(
+    () => ({
+      total: tournaments.length,
+      active: tournaments.filter((t) => t.status === "active").length,
+      upcoming: tournaments.filter((t) => t.status === "upcoming").length,
+      completed: tournaments.filter((t) => t.status === "completed").length,
+      totalPrizePool: tournaments.reduce((sum, t) => sum + Number(t.prize_pool), 0),
+      freeTournaments: tournaments.filter((t) => t.entry_fee === 0).length,
+    }),
+    [tournaments],
+  );
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ background: "#0b1220" }}>
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
       <Navbar />
 
       <main>
-        {/* ─── Hero Section ─────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden px-4 pb-16 pt-20 sm:px-6 lg:px-8">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(0,122,255,0.08)_0%,transparent_60%)]" />
-          <div className="relative mx-auto max-w-[1200px]">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/8 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-400">
-              <Trophy className="h-3.5 w-3.5" />
-              Weekly Trading Tournaments
-            </div>
-            <h1 className="text-[40px] font-black leading-tight text-white sm:text-[56px]">
-              Weekly Trading <span className="text-emerald-400">Tournaments</span>
-            </h1>
-            <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-slate-400">
-              Join thousands of traders in weekly competitions. Prove your skills, climb the leaderboard,
-              and earn real rewards. New tournaments every Monday, Wednesday, Friday, and Saturday.
-            </p>
+        <PageHero
+          eyebrow="Competitive Trading"
+          title="Weekly Trading Tournaments"
+          description="Compete on equal starting balances, climb real-time leaderboards, and earn real cash rewards every Monday, Wednesday, Friday, and Saturday."
+          cta={[
+            { label: "Create Free Account", href: "/register", primary: true },
+            { label: "Practice on $10,000 Demo", href: "/trade", primary: false },
+          ]}
+        />
 
-            {/* Stats Bar */}
-            <div className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {/* Stats Strip */}
+        <section className="px-4 py-10 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
               <StatCard icon={Trophy} label="Total Tournaments" value={stats.total} />
               <StatCard icon={Zap} label="Active Now" value={stats.active} suffix=" Live" />
               <StatCard icon={CalendarDays} label="Upcoming" value={stats.upcoming} />

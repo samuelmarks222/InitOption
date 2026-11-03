@@ -23,9 +23,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Arial', 'system-ui', 'sans-serif'],
-        heading: ['Arial', 'system-ui', 'sans-serif'],
-        body: ['Arial', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        heading: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        body: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
