@@ -25,6 +25,18 @@ describe('native canvas renderer integration', () => {
       expect(context.stroke).toHaveBeenCalled(); chart.remove();
     });
   }
+  it('scales backing pixels at DPR 2 and resizes for mobile without mutating OHLC', () => {
+    vi.stubGlobal('devicePixelRatio',2);
+    const el=host(); const chart=createChart(el,{width:800,height:400});
+    const series=chart.addSeries(CandlestickSeries);
+    const rows=[{time:60 as any,open:100,high:108,low:95,close:102}]; series.setData(rows);
+    vi.advanceTimersByTime(20);
+    const canvas=el.querySelector('canvas')!;
+    expect(canvas.width).toBe(1600); expect(canvas.height).toBe(800);
+    chart.resize(360,640); vi.advanceTimersByTime(20);
+    expect(canvas.width).toBe(720); expect(canvas.height).toBe(1280);
+    expect(series.data()).toEqual(rows); chart.remove();
+  });
   it('retains viewport across replacement series, aligns overlays, and disposes canvas', () => {
     const el=host(); const chart=createChart(el,{width:800,height:400});
     const first=chart.addSeries(CandlestickSeries);

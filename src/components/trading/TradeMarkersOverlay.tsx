@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { IChartApi, ISeriesApi, type SeriesType, Time } from "lightweight-charts";
+import type { IChartApi, ISeriesApi, SeriesType, Time } from "lightweight-charts";
 import type { ActiveTrade } from "@/hooks/useTrading";
 
 const UP = "#13b95e";

@@ -280,6 +280,7 @@ class WebSocketTickFeed implements MarketDataFeed {
   private manualDisconnect = false;
   private lastSequence = -1;
   private lastTimestamp = 0;
+  private lastPrice: number | undefined;
 
   constructor(url: string, subscription: MarketFeedSubscription, callbacks: MarketFeedCallbacks) {
     this.url = url;
@@ -405,7 +406,7 @@ class WebSocketTickFeed implements MarketDataFeed {
   }
 
   private emitTick(payload: Record<string, unknown>) {
-    if (!payload || typeof payload !== "object") return;
+    if (!payload || typeof payload !== "object" || payload.source === "simulated") return;
     const price = normalizePrice(payload.price);
     if (!isFiniteNumber(price) || price <= 0) {
       return;
@@ -434,7 +435,9 @@ class WebSocketTickFeed implements MarketDataFeed {
       this.lastSequence = sequence;
     }
 
+    if (sequence === undefined && timestamp === this.lastTimestamp && price === this.lastPrice) return;
     this.lastTimestamp = timestamp;
+    this.lastPrice = price;
     this.callbacks.onTick({
       symbol,
       price,
@@ -453,6 +456,14 @@ class WebSocketTickFeed implements MarketDataFeed {
   }
 }
 
+interface SharedFeed {
+  feed: MarketDataFeed;
+  listeners: Set<MarketFeedCallbacks>;
+  status: MarketFeedStatus;
+  timer?: ReturnType<typeof setTimeout>;
+}
+const sharedFeeds = new Map<string, SharedFeed>();
+
 export const createMarketDataFeed = ({
   subscription,
   callbacks,
@@ -466,12 +477,53 @@ export const createMarketDataFeed = ({
   };
 
   if (websocketUrl && websocketUrl.trim().length > 0) {
-    return new WebSocketTickFeed(websocketUrl, normalizedSubscription, {
-      ...callbacks,
-      onTick: (tick) => {
-        if (observedHistory.record(websocketUrl, tick.symbol, tick)) callbacks.onTick(tick);
+    const key = JSON.stringify([websocketUrl, subscription.symbol, subscription.assetCategory ?? ""]);
+    let attached: SharedFeed | undefined;
+    return {
+      connect() {
+        if (attached) return;
+        let entry = sharedFeeds.get(key);
+        const fresh = !entry;
+        if (!entry) {
+          entry = { feed: null!, listeners: new Set(), status: "connecting" };
+          const stream = entry;
+          // A raw tick subscription is independent of the selected display interval.
+          stream.feed = new WebSocketTickFeed(websocketUrl, {
+            ...normalizedSubscription,
+            timeframe: { ...normalizedSubscription.timeframe, label: "5s", seconds: 5 },
+          }, {
+            onTick(tick) {
+              if (!observedHistory.record(websocketUrl, tick.symbol, tick)) return;
+              for (const listener of [...stream.listeners]) {
+                try { listener.onTick(tick); } catch (error) { listener.onError?.(toError(error)); }
+              }
+            },
+            onStatusChange(status) {
+              stream.status = status;
+              for (const listener of [...stream.listeners]) listener.onStatusChange?.(status);
+            },
+            onError(error) { for (const listener of [...stream.listeners]) listener.onError?.(error); },
+          });
+          sharedFeeds.set(key, stream);
+        }
+        clearTimeout(entry.timer);
+        attached = entry; entry.listeners.add(callbacks);
+        callbacks.onStatusChange?.(entry.status);
+        if (fresh) entry.feed.connect();
       },
-    });
+      disconnect() {
+        if (!attached) return;
+        const stream = attached; attached = undefined;
+        stream.listeners.delete(callbacks);
+        callbacks.onStatusChange?.("disconnected");
+        if (!stream.listeners.size && stream.status === "reconnecting") {
+          clearTimeout(stream.timer); stream.feed.disconnect(); sharedFeeds.delete(key); return;
+        }
+        if (!stream.listeners.size) stream.timer = setTimeout(() => {
+          if (!stream.listeners.size) { stream.feed.disconnect(); sharedFeeds.delete(key); }
+        }, 1000);
+      },
+    };
   }
 
   return {
