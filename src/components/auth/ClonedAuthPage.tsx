@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { getAuthRestorePath } from "@/lib/authRedirect";
 import { CURRENCY_OPTIONS, SupportedCurrency, suggestCurrencyFromLocale } from "@/lib/currency";
-import logo from "@/assets/logo.png";
+import logoLight from "@/assets/logo-light.png";
 
 type AuthMode = "login" | "signup";
 
@@ -250,61 +250,61 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
   }
 
   return (
-    <div className="io-public-shell relative flex min-h-screen bg-[#080d16]">
-      <div className="relative hidden overflow-hidden border-r border-white/[0.08] bg-gradient-to-b from-[#0d1628] via-[#0a1220] to-[#080d16] lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:p-12">
-        <div className="io-grid-pattern pointer-events-none absolute inset-0 opacity-45" />
-        <div className="absolute left-1/2 top-1/4 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#10b86b]/14 blur-[150px]" />
-        <div className="absolute bottom-0 left-0 h-[300px] w-[300px] rounded-full bg-[#10b86b]/10 blur-[100px]" />
-        <div className="absolute right-0 top-1/3 h-[200px] w-[200px] rounded-full bg-sky-500/10 blur-[90px]" />
+    <div className="io-public-shell relative flex min-h-screen bg-white text-[#161D24]">
+      <div className="relative hidden overflow-hidden border-r border-[#E2ECE6] bg-gradient-to-b from-[#E5F4EC] via-[#EEF8F2] to-[#F7FCF9] lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:p-12">
+        <div className="io-grid-pattern pointer-events-none absolute inset-0 opacity-90" />
+        <div className="pointer-events-none absolute -right-20 top-16 h-80 w-80 rounded-full bg-[#B9E6CA]/55 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-10 left-10 h-64 w-64 rounded-full bg-[#C7E6EB]/55 blur-3xl" />
 
-        <Link to="/" className="relative z-10">
-          <img src={logo} alt="Init Option" className="h-10 w-auto" />
+        <Link to="/" className="relative z-10 inline-flex items-center">
+          <img src={logoLight} alt="Init Option" className="h-9 w-auto" />
         </Link>
 
         <div className="relative z-10 max-w-md">
-          <h1 className="font-heading text-4xl font-extrabold leading-tight tracking-tight text-white">
-            Trade smarter with <span className="text-[#10b86b]">Init Option</span>
+          <span className="io-eyebrow-pill mb-5">50% Welcome Deposit Bonus</span>
+          <h1 className="mt-4 text-4xl font-bold leading-[1.1] tracking-[-0.03em] text-[#161D24]">
+            Trade smarter with <span className="text-[#2E7971]">Init Option</span>
           </h1>
-          <p className="mt-4 leading-relaxed text-slate-300">
-            Access real-time charts, practice with $10,000 demo funds, and trade with confidence on our modern platform.
+          <p className="mt-4 leading-relaxed text-[#4F5D68]">
+            Access real-time charts, practice with $10,000 demo funds, and trade global markets with instant M-PESA, crypto, and card payouts.
           </p>
 
-          <div className="mt-8 space-y-4">
+          <div className="mt-8 space-y-3.5">
             {featureItems.map((item) => (
               <div key={item.text} className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#10b86b]/25 bg-[#10b86b]/14">
-                  <item.icon size={18} className="text-[#10b86b]" />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#C6E4D1] bg-white shadow-sm">
+                  <item.icon size={17} className="text-[#2E7971]" />
                 </div>
-                <span className="text-sm text-slate-200">{item.text}</span>
+                <span className="text-sm font-medium text-[#222E37]">{item.text}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="relative z-10 flex gap-8">
+        <div className="relative z-10 flex gap-8 rounded-2xl border border-[#D7E8DE] bg-white/85 px-6 py-4 backdrop-blur-sm">
           {bottomStats.map((stat) => (
             <div key={stat.label}>
-              <div className="font-heading text-xl font-extrabold text-[#10b86b]">{stat.value}</div>
-              <div className="text-xs text-slate-400">{stat.label}</div>
+              <div className="text-xl font-extrabold text-[#2E7971]">{stat.value}</div>
+              <div className="text-xs font-medium text-[#5E6B76]">{stat.label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex w-full flex-col items-center justify-center bg-[#080d16] px-6 py-12 lg:w-1/2">
+      <div className="flex w-full flex-col items-center justify-center bg-[#FAFDFB] px-6 py-12 lg:w-1/2">
         <Link to="/" className="mb-8 lg:hidden">
-          <img src={logo} alt="Init Option" className="h-8 w-auto" />
+          <img src={logoLight} alt="Init Option" className="h-8 w-auto" />
         </Link>
 
         <div className="io-glass-card w-full max-w-md rounded-3xl p-7 sm:p-9">
-          <div className="mb-8 flex rounded-xl border border-white/10 bg-white/5 p-1">
+          <div className="mb-7 flex rounded-full border border-[#DCE8E1] bg-[#F2F8F4] p-1">
             <button
               type="button"
               onClick={() => switchMode("login")}
-              className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
+              className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition-all ${
                 isLogin
-                  ? "bg-[#10b86b] text-white shadow-lg shadow-[#10b86b]/25"
-                  : "text-slate-300 hover:text-white/90"
+                  ? "io-sage-btn text-white"
+                  : "text-[#54626D] hover:text-[#161D24]"
               }`}
             >
               Sign In
@@ -312,17 +312,17 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
             <button
               type="button"
               onClick={() => switchMode("signup")}
-              className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
+              className={`flex-1 rounded-full py-2.5 text-sm font-semibold transition-all ${
                 !isLogin
-                  ? "bg-[#10b86b] text-white shadow-lg shadow-[#10b86b]/25"
-                  : "text-slate-300 hover:text-white/90"
+                  ? "io-sage-btn text-white"
+                  : "text-[#54626D] hover:text-[#161D24]"
               }`}
             >
               Sign Up
             </button>
           </div>
 
-          <h2 className="font-heading text-2xl font-bold text-white">
+          <h2 className="text-2xl font-bold tracking-[-0.02em] text-[#161D24]">
             {showPasswordReset
               ? "Reset your password"
               : showVerificationPrompt
@@ -331,32 +331,32 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                   ? "Welcome back"
                   : "Create your account"}
           </h2>
-          <p className="mt-1 text-sm text-slate-300">
+          <p className="mt-1 text-sm text-[#5E6B76]">
             {showPasswordReset
               ? "Enter your email address and we'll send you a 6-digit verification code"
               : showVerificationPrompt
                 ? `We've sent a verification link to ${verificationEmail}. Check your inbox and click the link to confirm your email.`
                 : isLogin
                   ? "Sign in to access your trading dashboard"
-                  : "Start trading with a free demo account"}
+                  : "Start trading with a free $10,000 demo account"}
           </p>
 
           {showVerificationPrompt ? (
             <div className="mt-6 space-y-4">
-              <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
-                <p className="text-sm text-white">
+              <div className="rounded-2xl border border-[#C6E4D1] bg-[#EEF8F2] p-4">
+                <p className="text-sm text-[#161D24]">
                   <strong>Check your email</strong> at <strong>{verificationEmail}</strong>
                 </p>
-                <p className="mt-2 text-xs text-slate-300">
+                <p className="mt-2 text-xs text-[#4D5A66]">
                   Look for an email from Init Option with the subject "Confirm your email" and click the verification link inside.
                 </p>
               </div>
 
-              <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-                <p className="text-xs text-slate-300">
+              <div className="rounded-2xl border border-[#E2ECE6] bg-[#FAFDFB] p-4">
+                <p className="text-xs text-[#161D24]">
                   <strong>Didn't receive the email?</strong>
                 </p>
-                <ul className="mt-2 space-y-1 text-xs text-slate-300">
+                <ul className="mt-2 space-y-1 text-xs text-[#586570]">
                   <li>• Check your spam or junk folder</li>
                   <li>• Wait a few moments and refresh your inbox</li>
                   <li>• Make sure you entered the correct email address</li>
@@ -366,7 +366,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
               <Button
                 type="button"
                 size="lg"
-                className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-[#10b86b]/25"
+                className="io-sage-btn h-11 w-full gap-2 rounded-full border-0 text-sm font-semibold text-white"
                 onClick={() => {
                   setShowVerificationPrompt(false);
                   setEmail("");
@@ -383,17 +383,17 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
               {!resetSent ? (
                 <form onSubmit={handleResetPassword} className="space-y-4">
                   <div>
-                    <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                    <label className="mb-1.5 block text-xs font-semibold text-[#3B4854]">
                       Email Address
                     </label>
                     <div className="relative">
-                      <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300/50" />
+                      <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B7884]" />
                       <Input
                         type="email"
                         value={resetEmail}
                         onChange={(e) => setResetEmail(e.target.value)}
                         placeholder="you@example.com"
-                        className="h-11 border-white/10 bg-white/5 pl-10 text-sm text-white placeholder:text-slate-400 focus:border-[#10b86b] focus:ring-1 focus:ring-[#10b86b]/30"
+                        className="h-11 rounded-xl border-[#DCE8E1] bg-[#FAFDFB] pl-10 text-sm text-[#161D24] placeholder:text-[#83909B] focus:border-[#52A788] focus:bg-white focus:ring-1 focus:ring-[#52A788]/30"
                       />
                     </div>
                   </div>
@@ -401,7 +401,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                   <Button
                     type="submit"
                     size="lg"
-                    className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-[#10b86b]/25"
+                    className="io-sage-btn h-11 w-full gap-2 rounded-full border-0 text-sm font-semibold text-white"
                     disabled={resetLoading}
                   >
                     {resetLoading ? "Sending..." : "Send Verification Code"} <ArrowRight size={16} />
@@ -411,7 +411,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                     type="button"
                     variant="outline"
                     size="lg"
-                    className="h-11 w-full text-sm font-semibold"
+                    className="h-11 w-full rounded-full border-[#D6E4DC] bg-white text-sm font-semibold text-[#161D24] hover:bg-[#F3FAF5]"
                     onClick={() => {
                       setShowPasswordReset(false);
                       setResetEmail("");
@@ -422,18 +422,18 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                 </form>
               ) : !resetCodeVerified ? (
                 <>
-                  <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
-                    <p className="text-sm text-white">
+                  <div className="rounded-2xl border border-[#C6E4D1] bg-[#EEF8F2] p-4">
+                    <p className="text-sm text-[#161D24]">
                       <strong>Verification code sent</strong> to <strong>{resetEmail}</strong>
                     </p>
-                    <p className="mt-2 text-xs text-slate-300">
+                    <p className="mt-2 text-xs text-[#4D5A66]">
                       Check your email for a 6-digit verification code and enter it below.
                     </p>
                   </div>
 
                   <form onSubmit={handleVerifyResetCode} className="space-y-4">
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                      <label className="mb-1.5 block text-xs font-semibold text-[#3B4854]">
                         Verification Code
                       </label>
                       <Input
@@ -442,14 +442,14 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                         onChange={(e) => setResetCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                         placeholder="000000"
                         maxLength={6}
-                        className="h-11 border-white/10 bg-white/5 text-center text-lg font-mono tracking-widest text-white placeholder:text-slate-400 focus:border-[#10b86b] focus:ring-1 focus:ring-[#10b86b]/30"
+                        className="h-11 rounded-xl border-[#DCE8E1] bg-[#FAFDFB] text-center font-mono text-lg tracking-widest text-[#161D24] placeholder:text-[#83909B] focus:border-[#52A788] focus:bg-white"
                       />
                     </div>
 
                     <Button
                       type="submit"
                       size="lg"
-                      className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-[#10b86b]/25"
+                      className="io-sage-btn h-11 w-full gap-2 rounded-full border-0 text-sm font-semibold text-white"
                       disabled={resetLoading || resetCode.length !== 6}
                     >
                       {resetLoading ? "Verifying..." : "Verify Code"} <ArrowRight size={16} />
@@ -459,7 +459,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                       type="button"
                       variant="outline"
                       size="lg"
-                      className="h-11 w-full text-sm font-semibold"
+                      className="h-11 w-full rounded-full border-[#D6E4DC] bg-white text-sm font-semibold text-[#161D24] hover:bg-[#F3FAF5]"
                       onClick={() => {
                         setResetSent(false);
                         setResetCode("");
@@ -470,11 +470,11 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                     </Button>
                   </form>
 
-                  <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-                    <p className="text-xs text-slate-300">
+                  <div className="rounded-2xl border border-[#E2ECE6] bg-[#FAFDFB] p-4">
+                    <p className="text-xs text-[#161D24]">
                       <strong>Didn't receive the code?</strong>
                     </p>
-                    <ul className="mt-2 space-y-1 text-xs text-slate-300">
+                    <ul className="mt-2 space-y-1 text-xs text-[#586570]">
                       <li>• Check your spam or junk folder</li>
                       <li>• Wait a few moments and refresh your inbox</li>
                       <li>• The code expires in 10 minutes</li>
@@ -483,38 +483,38 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                 </>
               ) : (
                 <>
-                  <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
-                    <p className="text-sm text-white">
+                  <div className="rounded-2xl border border-[#C6E4D1] bg-[#EEF8F2] p-4">
+                    <p className="text-sm text-[#161D24]">
                       <strong>Code verified</strong>
                     </p>
-                    <p className="mt-2 text-xs text-slate-300">
+                    <p className="mt-2 text-xs text-[#4D5A66]">
                       Now enter your new password below.
                     </p>
                   </div>
 
                   <form onSubmit={handleSetNewPassword} className="space-y-4">
                     <div>
-                      <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                      <label className="mb-1.5 block text-xs font-semibold text-[#3B4854]">
                         New Password
                       </label>
                       <div className="relative">
-                        <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300/50" />
+                        <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B7884]" />
                         <Input
                           type={showPassword ? "text" : "password"}
                           value={newResetPassword}
                           onChange={(e) => setNewResetPassword(e.target.value)}
                           placeholder="Enter new password"
-                          className="h-11 border-white/10 bg-white/5 pl-10 pr-10 text-sm text-white placeholder:text-slate-400 focus:border-[#10b86b] focus:ring-1 focus:ring-[#10b86b]/30"
+                          className="h-11 rounded-xl border-[#DCE8E1] bg-[#FAFDFB] pl-10 pr-10 text-sm text-[#161D24] placeholder:text-[#83909B] focus:border-[#52A788] focus:bg-white"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300/50 transition-colors hover:text-slate-300"
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6B7884] transition-colors hover:text-[#161D24]"
                         >
                           {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
-                      <p className="mt-1 text-xs text-slate-300">
+                      <p className="mt-1 text-xs text-[#64717C]">
                         Minimum 6 characters
                       </p>
                     </div>
@@ -522,7 +522,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                     <Button
                       type="submit"
                       size="lg"
-                      className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-[#10b86b]/25"
+                      className="io-sage-btn h-11 w-full gap-2 rounded-full border-0 text-sm font-semibold text-white"
                       disabled={resetLoading || newResetPassword.length < 6}
                     >
                       {resetLoading ? "Updating..." : "Update Password"} <ArrowRight size={16} />
@@ -532,7 +532,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                       type="button"
                       variant="outline"
                       size="lg"
-                      className="h-11 w-full text-sm font-semibold"
+                      className="h-11 w-full rounded-full border-[#D6E4DC] bg-white text-sm font-semibold text-[#161D24] hover:bg-[#F3FAF5]"
                       onClick={() => {
                         setShowPasswordReset(false);
                         setResetEmail("");
@@ -553,7 +553,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               {!isLogin ? (
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                  <label className="mb-1.5 block text-xs font-semibold text-[#3B4854]">
                     Full Name
                   </label>
                   <Input
@@ -561,53 +561,53 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter your full name"
-                    className="h-11 border-white/10 bg-white/5 pl-4 text-sm text-white placeholder:text-slate-400 focus:border-[#10b86b] focus:ring-1 focus:ring-[#10b86b]/30"
+                    className="h-11 rounded-xl border-[#DCE8E1] bg-[#FAFDFB] pl-4 text-sm text-[#161D24] placeholder:text-[#83909B] focus:border-[#52A788] focus:bg-white"
                   />
                 </div>
               ) : null}
 
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-300">
+              <label className="mb-1.5 block text-xs font-semibold text-[#3B4854]">
                 Email Address
               </label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300/50" />
+                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B7884]" />
                 <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="h-11 border-white/10 bg-white/5 pl-10 text-sm text-white placeholder:text-slate-400 focus:border-[#10b86b] focus:ring-1 focus:ring-[#10b86b]/30"
+                  className="h-11 rounded-xl border-[#DCE8E1] bg-[#FAFDFB] pl-10 text-sm text-[#161D24] placeholder:text-[#83909B] focus:border-[#52A788] focus:bg-white"
                 />
               </div>
             </div>
 
             <div>
               <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-xs font-medium text-slate-300">Password</label>
+                <label className="text-xs font-semibold text-[#3B4854]">Password</label>
                 {isLogin ? (
                   <button
                     type="button"
                     onClick={() => setShowPasswordReset(true)}
-                    className="text-xs text-[#10b86b] transition-colors hover:text-[#10b86b]/80"
+                    className="text-xs font-semibold text-[#2E7971] transition-colors hover:underline"
                   >
                     Forgot password?
                   </button>
                 ) : null}
               </div>
               <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300/50" />
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B7884]" />
                 <Input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="********"
-                  className="h-11 border-white/10 bg-white/5 pl-10 pr-10 text-sm text-white placeholder:text-slate-400 focus:border-[#10b86b] focus:ring-1 focus:ring-[#10b86b]/30"
+                  className="h-11 rounded-xl border-[#DCE8E1] bg-[#FAFDFB] pl-10 pr-10 text-sm text-[#161D24] placeholder:text-[#83909B] focus:border-[#52A788] focus:bg-white"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300/50 transition-colors hover:text-slate-300"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#6B7884] transition-colors hover:text-[#161D24]"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -616,15 +616,15 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
 
             {!isLogin ? (
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                <label className="mb-1.5 block text-xs font-semibold text-[#3B4854]">
                   Promo Code (optional)
                 </label>
                 <Input
                   type="text"
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  placeholder="Enter promo code for bonus"
-                  className="h-11 border-white/10 bg-white/5 pl-4 text-sm uppercase text-white placeholder:text-slate-400 focus:border-[#10b86b] focus:ring-1 focus:ring-[#10b86b]/30"
+                  placeholder="WELCOME50"
+                  className="h-11 rounded-xl border-[#DCE8E1] bg-[#FAFDFB] pl-4 text-sm uppercase text-[#161D24] placeholder:text-[#83909B] focus:border-[#52A788] focus:bg-white"
                 />
               </div>
             ) : null}
@@ -632,13 +632,13 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
             {!isLogin ? (
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
-                  <label className="text-xs font-medium text-slate-300">Preferred Currency</label>
-                  <span className="text-[10px] text-slate-300/70">Auto-suggested from your location</span>
+                  <label className="text-xs font-semibold text-[#3B4854]">Preferred Currency</label>
+                  <span className="text-[10px] text-[#687582]">Auto-suggested from your location</span>
                 </div>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value as SupportedCurrency)}
-                  className="h-11 w-full rounded-md border border-white/10 bg-white/5 pl-4 pr-3 text-sm text-white outline-none focus:border-[#10b86b] focus:ring-1 focus:ring-[#10b86b]/30"
+                  className="h-11 w-full rounded-xl border border-[#DCE8E1] bg-[#FAFDFB] pl-4 pr-3 text-sm font-medium text-[#161D24] outline-none focus:border-[#52A788] focus:bg-white"
                 >
                   {CURRENCY_OPTIONS.map((option) => (
                     <option key={option.code} value={option.code}>
@@ -646,7 +646,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1.5 text-[11px] leading-relaxed text-slate-300/70">
+                <p className="mt-1.5 text-[11px] leading-relaxed text-[#64717C]">
                   Your balance, trades and payouts will be shown in this currency.
                 </p>
               </div>
@@ -659,12 +659,12 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                   id="terms"
                   checked={agreed}
                   onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-white/10 bg-white/5 accent-[#10b86b]"
+                  className="mt-1 h-4 w-4 rounded border-[#C6D8CE] bg-white accent-[#459982]"
                 />
-                <label htmlFor="terms" className="text-xs leading-relaxed text-slate-300">
-                  I agree to the <Link to="/terms" className="text-[#10b86b] hover:underline">Terms &amp; Conditions</Link>,{" "}
-                  <Link to="/privacy" className="text-[#10b86b] hover:underline">Privacy Policy</Link>, and acknowledge the{" "}
-                  <Link to="/risk-disclaimer" className="text-[#10b86b] hover:underline">Risk Disclaimer</Link>
+                <label htmlFor="terms" className="text-xs leading-relaxed text-[#55626E]">
+                  I agree to the <Link to="/terms" className="font-semibold text-[#2E7971] hover:underline">Terms &amp; Conditions</Link>,{" "}
+                  <Link to="/privacy" className="font-semibold text-[#2E7971] hover:underline">Privacy Policy</Link>, and acknowledge the{" "}
+                  <Link to="/risk-disclaimer" className="font-semibold text-[#2E7971] hover:underline">Risk Disclaimer</Link>
                 </label>
               </div>
             ) : null}
@@ -672,7 +672,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
             <Button
               type="submit"
               size="lg"
-              className="h-11 w-full gap-2 text-sm font-semibold shadow-lg shadow-[#10b86b]/25"
+              className="io-sage-btn h-11 w-full gap-2 rounded-full border-0 text-sm font-semibold text-white"
               disabled={loading || (!isLogin && !agreed)}
             >
               {loading ? (isLogin ? "Signing In..." : "Creating Account...") : (isLogin ? "Sign In" : "Create Account")}{" "}
@@ -684,9 +684,9 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
           {!showVerificationPrompt && !showPasswordReset ? (
             <>
               <div className="my-6 flex items-center gap-3">
-                <div className="h-px flex-1 bg-border" />
-                <span className="text-xs text-slate-300">or continue with</span>
-                <div className="h-px flex-1 bg-border" />
+                <div className="h-px flex-1 bg-[#E4EDE8]" />
+                <span className="text-xs text-[#6B7884]">or continue with</span>
+                <div className="h-px flex-1 bg-[#E4EDE8]" />
               </div>
 
               <div className="grid grid-cols-1 gap-3">
@@ -694,7 +694,7 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                   type="button"
                   onClick={() => void handleGoogleSignIn()}
                   disabled={loading || googleLoading}
-                  className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#f0f2f5] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex items-center justify-center gap-2 rounded-full border border-[#D7E5DD] bg-white py-2.5 text-sm font-semibold text-[#161D24] shadow-sm transition-colors hover:bg-[#F3FAF5] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
@@ -706,21 +706,21 @@ const ClonedAuthPage = ({ initialMode }: ClonedAuthPageProps) => {
                 </button>
               </div>
 
-          <p className="mt-6 text-center text-xs text-slate-300">
+          <p className="mt-6 text-center text-xs text-[#5E6B76]">
             {isLogin ? "Don't have an account? " : "Already have an account? "}
             <button
               type="button"
               onClick={() => switchMode(isLogin ? "signup" : "login")}
-              className="font-semibold text-[#10b86b] transition-colors hover:text-[#10b86b]/80"
+              className="font-bold text-[#2E7971] transition-colors hover:underline"
             >
               {isLogin ? "Sign Up" : "Sign In"}
             </button>
           </p>
 
-              <div className="mt-6 rounded-lg border border-white/10 bg-white/5 p-3">
-                <p className="text-center text-[10px] leading-relaxed text-slate-300">
+              <div className="mt-6 rounded-2xl border border-[#E3EEE7] bg-[#F5FBF7] p-3">
+                <p className="text-center text-[10px] leading-relaxed text-[#5E6B76]">
                   Risk Warning: Trading involves risk. You may lose your invested capital.{" "}
-                  <Link to="/risk-disclaimer" className="text-[#10b86b] underline">
+                  <Link to="/risk-disclaimer" className="font-semibold text-[#2E7971] underline">
                     Read risk disclaimer
                   </Link>
                 </p>

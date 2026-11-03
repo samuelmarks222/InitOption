@@ -1,602 +1,754 @@
 import { useMemo, useState } from "react";
 import {
-  Activity,
+  ArrowLeft,
   ArrowRight,
-  ArrowUpRight,
   Award,
+  Banknote,
   BarChart3,
-  Bitcoin,
   BookOpen,
+  CalendarCheck2,
+  Check,
   CheckCircle2,
   ChevronDown,
-  CircleDollarSign,
   Clock,
-  Cpu,
-  Gem,
-  Globe2,
+  GraduationCap,
   Headphones,
   Layers,
-  LineChart,
-  Lock,
-  Play,
+  Minus,
+  Plus,
+  Settings,
   ShieldCheck,
-  Smartphone,
-  Sparkles,
   Star,
-  TrendingDown,
   TrendingUp,
   Trophy,
   Users,
   Wallet,
-  Zap,
+  X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { SiteLogo } from "@/components/branding/SiteLogo";
 import Footer from "@/components/landing/Footer";
 import Navbar from "@/components/landing/Navbar";
 import AssetSymbolMark from "@/components/trading/AssetSymbolMark";
 import { useSiteBranding } from "@/hooks/useSiteBranding";
 import { useWebsiteContent } from "@/hooks/useWebsiteContent";
-import { normalizeWebsiteContent } from "@/lib/websiteContent";
 
-const HOME_ASSETS = {
-  laptopPhone: "/landing/poolito-initoption/laptop-phone-angle.png",
-  imacAlt: "/landing/poolito-initoption/imac-platform-alt.png",
-  iphones: "/landing/poolito-initoption/iphone-platform.png",
-};
-
-const PAYMENT_BADGES = [
-  { name: "M-PESA", logo: "/payment-logos/mpesa.png" },
-  { name: "USDT TRC20", logo: "/payment-logos/usdt.png" },
-  { name: "Bitcoin", logo: "/payment-logos/bitcoin.png" },
-  { name: "Binance", logo: "/payment-logos/binance.png" },
-  { name: "Visa & Mastercard", logo: "/payment-logos/visa-mastercard.png" },
-];
-
-const QUICK_PREVIEW_ASSETS = [
-  {
-    symbol: "EUR/USD",
-    name: "Euro / US Dollar",
-    category: "OTC",
-    price: "1.08642",
-    change: "+0.42%",
-    payout: 92,
-    up: true,
-    spark: "M0,38 C22,34 38,40 58,28 C78,16 96,24 118,14 C140,6 162,12 180,4",
-  },
-  {
-    symbol: "BTC",
-    name: "Bitcoin / USD",
-    category: "CRYPTO",
-    price: "89,420.50",
-    change: "+2.18%",
-    payout: 89,
-    up: true,
-    spark: "M0,42 C24,38 42,30 64,33 C86,36 104,18 128,15 C150,12 164,8 180,5",
-  },
-  {
-    symbol: "XAU/USD",
-    name: "Gold Spot / USD",
-    category: "COMMODITIES",
-    price: "2,684.10",
-    change: "+0.86%",
-    payout: 90,
-    up: true,
-    spark: "M0,40 C26,36 44,32 66,24 C88,16 112,22 136,12 C156,6 168,9 180,3",
-  },
+const HERO_TICKET_ASSETS = [
+  { symbol: "EUR/USD", label: "EUR/USD", payout: 92, price: "1.0864", category: "OTC" },
+  { symbol: "BTC", label: "BTC/USD", payout: 89, price: "89,420", category: "CRYPTO" },
+  { symbol: "XAU/USD", label: "XAU/USD", payout: 90, price: "2,684.1", category: "COMMODITIES" },
+  { symbol: "AAPL", label: "AAPL", payout: 86, price: "228.50", category: "STOCKS" },
 ] as const;
 
-const TICKER_ITEMS = [
-  { symbol: "EUR/USD", name: "Euro / Dollar", category: "OTC", payout: "92%", delta: "+0.42%", up: true },
-  { symbol: "GBP/USD", name: "Pound / Dollar", category: "OTC", payout: "89%", delta: "+0.31%", up: true },
-  { symbol: "BTC", name: "Bitcoin", category: "CRYPTO", payout: "89%", delta: "+2.18%", up: true },
-  { symbol: "ETH", name: "Ethereum", category: "CRYPTO", payout: "86%", delta: "+1.64%", up: true },
-  { symbol: "XAU/USD", name: "Gold", category: "COMMODITIES", payout: "90%", delta: "+0.86%", up: true },
-  { symbol: "AAPL", name: "Apple Inc.", category: "STOCKS", payout: "84%", delta: "+0.74%", up: true },
-  { symbol: "USD/JPY", name: "Dollar / Yen", category: "OTC", payout: "88%", delta: "-0.19%", up: false },
-  { symbol: "SOL", name: "Solana", category: "CRYPTO", payout: "85%", delta: "+3.45%", up: true },
-  { symbol: "MSFT", name: "Microsoft", category: "STOCKS", payout: "88%", delta: "+1.12%", up: true },
-  { symbol: "AUD/CAD", name: "Aussie / Loonie", category: "OTC", payout: "82%", delta: "-0.24%", up: false },
-];
-
-const MARKET_GROUPS = [
-  {
-    label: "Currencies",
-    icon: CircleDollarSign,
-    category: "OTC",
-    cards: [
-      {
-        symbol: "EUR/USD",
-        name: "Euro / US Dollar",
-        status: "Open",
-        payout: "92%",
-        duration: "1m – 45m",
-        direction: "Up",
-        price: "1.0864",
-        spark: "M0,28 L24,24 L48,26 L72,18 L96,20 L120,10 L144,6",
-      },
-      {
-        symbol: "GBP/USD",
-        name: "British Pound / US Dollar",
-        status: "Open",
-        payout: "89%",
-        duration: "1m – 45m",
-        direction: "Up",
-        price: "1.2941",
-        spark: "M0,30 L24,27 L48,21 L72,23 L96,14 L120,12 L144,7",
-      },
-      {
-        symbol: "USD/JPY",
-        name: "US Dollar / Japanese Yen",
-        status: "Open",
-        payout: "87%",
-        duration: "5m – 90m",
-        direction: "Up",
-        price: "152.38",
-        spark: "M0,26 L24,22 L48,25 L72,17 L96,15 L120,11 L144,8",
-      },
-      {
-        symbol: "AUD/CAD",
-        name: "Australian / Canadian Dollar",
-        status: "Open",
-        payout: "83%",
-        duration: "5m – 60m",
-        direction: "Down",
-        price: "0.9128",
-        spark: "M0,8 L24,12 L48,10 L72,19 L96,22 L120,25 L144,29",
-      },
-    ],
-  },
-  {
-    label: "Crypto",
-    icon: Bitcoin,
-    category: "CRYPTO",
-    cards: [
-      {
-        symbol: "BTC",
-        name: "Bitcoin",
-        status: "Open",
-        payout: "89%",
-        duration: "1m – 60m",
-        direction: "Up",
-        price: "89,420",
-        spark: "M0,30 L24,25 L48,27 L72,16 L96,14 L120,9 L144,5",
-      },
-      {
-        symbol: "ETH",
-        name: "Ethereum",
-        status: "Open",
-        payout: "86%",
-        duration: "1m – 30m",
-        direction: "Up",
-        price: "3,142.8",
-        spark: "M0,28 L24,26 L48,20 L72,18 L96,12 L120,14 L144,6",
-      },
-      {
-        symbol: "SOL",
-        name: "Solana",
-        status: "Open",
-        payout: "85%",
-        duration: "5m – 45m",
-        direction: "Up",
-        price: "198.40",
-        spark: "M0,31 L24,24 L48,22 L72,15 L96,17 L120,9 L144,4",
-      },
-      {
-        symbol: "XRP",
-        name: "Ripple",
-        status: "Open",
-        payout: "80%",
-        duration: "1m – 15m",
-        direction: "Down",
-        price: "0.6140",
-        spark: "M0,9 L24,13 L48,11 L72,18 L96,21 L120,24 L144,28",
-      },
-    ],
-  },
-  {
-    label: "Stocks",
-    icon: LineChart,
-    category: "STOCKS",
-    cards: [
-      {
-        symbol: "AAPL",
-        name: "Apple Inc.",
-        status: "Open",
-        payout: "86%",
-        duration: "5m – 60m",
-        direction: "Up",
-        price: "228.50",
-        spark: "M0,27 L24,25 L48,19 L72,21 L96,13 L120,10 L144,6",
-      },
-      {
-        symbol: "MSFT",
-        name: "Microsoft Corp.",
-        status: "Open",
-        payout: "88%",
-        duration: "15m – 90m",
-        direction: "Up",
-        price: "432.15",
-        spark: "M0,29 L24,24 L48,22 L72,15 L96,12 L120,8 L144,5",
-      },
-      {
-        symbol: "AMZN",
-        name: "Amazon.com Inc.",
-        status: "Open",
-        payout: "84%",
-        duration: "5m – 30m",
-        direction: "Up",
-        price: "206.90",
-        spark: "M0,28 L24,23 L48,25 L72,17 L96,14 L120,11 L144,7",
-      },
-      {
-        symbol: "TSLA",
-        name: "Tesla Inc.",
-        status: "Open",
-        payout: "82%",
-        duration: "5m – 45m",
-        direction: "Down",
-        price: "254.30",
-        spark: "M0,8 L24,11 L48,15 L72,13 L96,21 L120,24 L144,28",
-      },
-    ],
-  },
-  {
-    label: "Commodities",
-    icon: Gem,
-    category: "COMMODITIES",
-    cards: [
-      {
-        symbol: "XAU/USD",
-        name: "Gold Spot",
-        status: "Open",
-        payout: "90%",
-        duration: "1m – 45m",
-        direction: "Up",
-        price: "2,684.1",
-        spark: "M0,30 L24,26 L48,21 L72,19 L96,12 L120,9 L144,4",
-      },
-      {
-        symbol: "XAG/USD",
-        name: "Silver Spot",
-        status: "Open",
-        payout: "85%",
-        duration: "5m – 30m",
-        direction: "Up",
-        price: "31.84",
-        spark: "M0,28 L24,25 L48,22 L72,16 L96,14 L120,10 L144,6",
-      },
-      {
-        symbol: "WTICO/USD",
-        name: "WTI Crude Oil",
-        status: "Open",
-        payout: "81%",
-        duration: "15m – 60m",
-        direction: "Down",
-        price: "70.42",
-        spark: "M0,9 L24,12 L48,14 L72,19 L96,22 L120,25 L144,29",
-      },
-      {
-        symbol: "NATGAS/USD",
-        name: "Natural Gas",
-        status: "Open",
-        payout: "79%",
-        duration: "15m – 90m",
-        direction: "Up",
-        price: "2.845",
-        spark: "M0,26 L24,24 L48,20 L72,18 L96,15 L120,10 L144,7",
-      },
-    ],
-  },
+const TRADER_AVATARS = [
+  { initials: "KM", bg: "linear-gradient(135deg,#1f3a3d,#3d848e)" },
+  { initials: "AN", bg: "linear-gradient(135deg,#2b5845,#64ba84)" },
+  { initials: "DR", bg: "linear-gradient(135deg,#25364a,#4c8696)" },
+  { initials: "SN", bg: "linear-gradient(135deg,#334e42,#74c686)" },
 ] as const;
 
-const WORKSPACE_HIGHLIGHTS = [
+const ACCOUNT_TIER_COLUMNS = [
   {
-    icon: Activity,
-    title: "30+ Built-In Pro Indicators",
-    description:
-      "Layer RSI, MACD, Bollinger Bands, Stochastic, ATR, and moving averages directly onto responsive real-time charts.",
+    heading: "$10,000",
+    sub: "Demo Funds",
+    maxPayout: "Up to 92%",
+    minStake: "$1 Virtual",
+    indicators: "30+ Built-In",
+    withdrawals: "Practice Mode",
+    bonus: "Unlimited Reset",
+    weekendTrading: "24/7 OTC & Crypto",
+    timeLimit: "Unlimited",
+    tournaments: "View & Practice",
+    copyTrading: "Yes",
+    priceMain: "$0",
+    priceStrike: "",
+    badge: "No Card Needed",
+    ctaTo: "/trade",
+    ctaLabel: "Try Demo",
   },
   {
-    icon: Layers,
-    title: "Multi-Style Charting & Drawing Tools",
-    description:
-      "Switch smoothly between Candlestick, Heikin-Ashi, Area, and Bar views with saved Fibonacci and trendline drawings.",
-  },
-  {
-    icon: Smartphone,
-    title: "Cross-Device Synced Terminal",
-    description:
-      "Analyze setups on a wide desktop monitor and track open positions, deposits, or payouts from your phone without friction.",
-  },
-  {
-    icon: Clock,
-    title: "Flexible Expiries & Fixed Risk",
-    description:
-      "Choose timeframes from short-term ticks to 90-minute sessions knowing your exact potential payout before confirming.",
-  },
-];
-
-const HOW_IT_WORKS_STEPS = [
-  {
-    step: "01",
-    title: "Create Your Free Account",
-    text: "Sign up in under 30 seconds with email or Google. Unlock an instant $10,000 practice balance with no card required.",
-    ctaLabel: "Open Free Account",
+    heading: "Standard",
+    sub: "Live Account",
+    maxPayout: "Up to 90%",
+    minStake: "$1",
+    indicators: "30+ Built-In",
+    withdrawals: "Fast (< 24h)",
+    bonus: "Up to 30%",
+    weekendTrading: "24/7 OTC & Crypto",
+    timeLimit: "Unlimited",
+    tournaments: "Free & Paid",
+    copyTrading: "Yes",
+    priceMain: "$5",
+    priceStrike: "min",
+    badge: "M-PESA & Crypto",
     ctaTo: "/register",
-    icon: Users,
+    ctaLabel: "Start Now",
   },
   {
-    step: "02",
-    title: "Select Market & Analyze",
-    text: "Choose from 100+ Forex, Crypto, Stock, and Commodity instruments. Apply technical indicators and set your trade duration.",
-    ctaLabel: "Explore Platform",
-    ctaTo: "/features",
-    icon: BarChart3,
+    heading: "Plus",
+    sub: "Active Trader",
+    maxPayout: "Up to 92%",
+    minStake: "$1",
+    indicators: "30+ Built-In",
+    withdrawals: "Express (< 4h)",
+    bonus: "Up to 50%",
+    weekendTrading: "24/7 OTC & Crypto",
+    timeLimit: "Unlimited",
+    tournaments: "Free & Paid",
+    copyTrading: "Yes",
+    priceMain: "$50",
+    priceStrike: "min",
+    badge: "Code: WELCOME50",
+    ctaTo: "/register",
+    ctaLabel: "Start Now",
   },
   {
-    step: "03",
-    title: "Execute & Withdraw Fast",
-    text: "Place Higher or Lower positions from $1, switch to live trading from $5, and withdraw profits via M-PESA or Crypto.",
-    ctaLabel: "See How It Works",
-    ctaTo: "/how-it-works",
-    icon: Wallet,
+    heading: "Pro",
+    sub: "Priority Desk",
+    maxPayout: "Up to 94%",
+    minStake: "$1",
+    indicators: "30+ Built-In",
+    withdrawals: "Priority (< 1h)",
+    bonus: "Up to 60%",
+    weekendTrading: "24/7 OTC & Crypto",
+    timeLimit: "Unlimited",
+    tournaments: "All Weekly Events",
+    copyTrading: "Yes",
+    priceMain: "$250",
+    priceStrike: "min",
+    badge: "Code: PRO60",
+    ctaTo: "/register",
+    ctaLabel: "Start Now",
   },
-];
+  {
+    heading: "VIP",
+    sub: "Elite Status",
+    maxPayout: "Up to 95%",
+    minStake: "$1",
+    indicators: "30+ Built-In",
+    withdrawals: "Instant VIP",
+    bonus: "Up to 70%",
+    weekendTrading: "24/7 OTC & Crypto",
+    timeLimit: "Unlimited",
+    tournaments: "VIP Prize Pools",
+    copyTrading: "Yes",
+    priceMain: "$1,000",
+    priceStrike: "min",
+    badge: "Code: VIP70",
+    ctaTo: "/register",
+    ctaLabel: "Start Now",
+  },
+] as const;
 
-const TESTIMONIALS = [
+const MARKET_MATRIX_COLUMNS = [
+  {
+    heading: "EUR/USD",
+    sub: "Currencies",
+    maxPayout: "Up to 92%",
+    minStake: "$1",
+    indicators: "30+ Built-In",
+    withdrawals: "Instant Settlement",
+    bonus: "1m – 45m Expiry",
+    weekendTrading: "OTC Available",
+    timeLimit: "24/7 Sessions",
+    tournaments: "Included",
+    copyTrading: "Yes",
+    priceMain: "92%",
+    priceStrike: "max",
+    badge: "Tight Spreads",
+    ctaTo: "/trade",
+    ctaLabel: "Trade Pair",
+  },
+  {
+    heading: "BTC/USD",
+    sub: "Crypto",
+    maxPayout: "Up to 89%",
+    minStake: "$1",
+    indicators: "30+ Built-In",
+    withdrawals: "Instant Settlement",
+    bonus: "1m – 60m Expiry",
+    weekendTrading: "24/7 Native",
+    timeLimit: "Always Open",
+    tournaments: "Included",
+    copyTrading: "Yes",
+    priceMain: "89%",
+    priceStrike: "max",
+    badge: "24/7 Volatility",
+    ctaTo: "/trade",
+    ctaLabel: "Trade BTC",
+  },
+  {
+    heading: "XAU/USD",
+    sub: "Gold Spot",
+    maxPayout: "Up to 90%",
+    minStake: "$1",
+    indicators: "30+ Built-In",
+    withdrawals: "Instant Settlement",
+    bonus: "1m – 45m Expiry",
+    weekendTrading: "OTC Available",
+    timeLimit: "Global Sessions",
+    tournaments: "Included",
+    copyTrading: "Yes",
+    priceMain: "90%",
+    priceStrike: "max",
+    badge: "Top Commodity",
+    ctaTo: "/trade",
+    ctaLabel: "Trade Gold",
+  },
+  {
+    heading: "AAPL",
+    sub: "Equities",
+    maxPayout: "Up to 86%",
+    minStake: "$1",
+    indicators: "30+ Built-In",
+    withdrawals: "Instant Settlement",
+    bonus: "5m – 60m Expiry",
+    weekendTrading: "OTC Available",
+    timeLimit: "US & OTC Hours",
+    tournaments: "Included",
+    copyTrading: "Yes",
+    priceMain: "86%",
+    priceStrike: "max",
+    badge: "US Tech Leader",
+    ctaTo: "/trade",
+    ctaLabel: "Trade Stock",
+  },
+  {
+    heading: "GBP/USD",
+    sub: "Currencies",
+    maxPayout: "Up to 89%",
+    minStake: "$1",
+    indicators: "30+ Built-In",
+    withdrawals: "Instant Settlement",
+    bonus: "1m – 45m Expiry",
+    weekendTrading: "OTC Available",
+    timeLimit: "London & NY",
+    tournaments: "Included",
+    copyTrading: "Yes",
+    priceMain: "89%",
+    priceStrike: "max",
+    badge: "High Liquidity",
+    ctaTo: "/trade",
+    ctaLabel: "Trade Pair",
+  },
+] as const;
+
+const MATRIX_ROWS = [
+  { key: "maxPayout", label: "Max Trade Payout" },
+  { key: "minStake", label: "Minimum Trade Stake" },
+  { key: "indicators", label: "Technical Indicators" },
+  { key: "withdrawals", label: "Payout Processing" },
+  { key: "bonus", label: "Bonus / Optimal Window" },
+  { key: "weekendTrading", label: "Trade Over The Weekend" },
+  { key: "timeLimit", label: "Session Flexibility" },
+  { key: "tournaments", label: "Weekly Tournaments" },
+  { key: "copyTrading", label: "Social Copy Trading" },
+] as const;
+
+const PARTNER_PILLARS = [
+  {
+    icon: CalendarCheck2,
+    title: "Proven Execution\nSpeed",
+  },
+  {
+    icon: Settings,
+    title: "Transparent\nFixed Payouts",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Protected Account\nEnvironment",
+  },
+  {
+    icon: Award,
+    title: "30+ Professional\nChart Indicators",
+  },
+  {
+    icon: GraduationCap,
+    title: "Committed to\nTrader Education",
+  },
+  {
+    icon: Headphones,
+    title: "24/7 Responsive\nLive Support",
+  },
+] as const;
+
+const TESTIMONIAL_ITEMS = [
   {
     quote:
-      "Practicing on the $10,000 demo terminal let me refine my support-and-resistance setups before funding live. Chart execution feels instant.",
-    name: "Maya K.",
+      "An outstanding trading platform! I started on the $10,000 demo account for four days to dial in my support-and-resistance entries, funded via M-PESA, and my first profit withdrawal arrived in minutes.",
+    name: "Kelvin Mwangi",
     role: "Forex & Gold Trader",
-    location: "Nairobi",
-    initials: "MK",
-    rating: "5.0",
+    initials: "KM",
+    bg: "linear-gradient(135deg,#254c46,#52a788)",
   },
   {
     quote:
-      "M-PESA deposits reflect right away and my USDT and mobile money withdrawals have consistently settled faster than any broker I used before.",
-    name: "Daniel R.",
+      "The cleanest web terminal we have used. Everything from payout percentages to tournament rules is transparent upfront, and our USDT TRC20 withdrawal settled into our wallet without any hassle.",
+    name: "Amina Njoroge",
     role: "Crypto & Momentum Trader",
-    location: "Mombasa",
-    initials: "DR",
-    rating: "5.0",
+    initials: "AN",
+    bg: "linear-gradient(135deg,#233d4d,#3d848e)",
   },
   {
     quote:
-      "Weekly tournaments and copy trading keep the community engaging, and switching between my laptop and phone never loses my chart drawings.",
-    name: "Sofia N.",
+      "Weekly tournaments on Mon, Wed, Fri, and Sat keep my risk discipline sharp because everyone starts with the exact same tournament balance. Copy trading and mobile sync work flawlessly.",
+    name: "Daniel Ochieng",
     role: "Multi-Asset Trader",
-    location: "Kampala",
-    initials: "SN",
-    rating: "4.9",
+    initials: "DO",
+    bg: "linear-gradient(135deg,#2f5944,#74c686)",
+  },
+  {
+    quote:
+      "Being able to fund with just $5 and place $1 trades let me transition from demo to live trading calmly without over-leveraging. Customer support answered my verification question in under 3 minutes.",
+    name: "Sofia Kamau",
+    role: "Currencies Trader",
+    initials: "SK",
+    bg: "linear-gradient(135deg,#264653,#2a9d8f)",
+  },
+] as const;
+
+const COMPARISON_ROWS: Array<{
+  label: string;
+  initOption: string | boolean;
+  legacyBroker: string | boolean;
+  basicApps: string | boolean;
+}> = [
+  {
+    label: "Minimum Live Deposit",
+    initOption: "$5 MIN. DEPOSIT",
+    legacyBroker: "$200+ MIN. DEPOSIT",
+    basicApps: "$50+ MIN. DEPOSIT",
+  },
+  {
+    label: "Practice Balance",
+    initOption: "$10,000 UNLIMITED DEMO",
+    legacyBroker: "30-DAY LIMITED TRIAL",
+    basicApps: "$1,000 DEMO",
+  },
+  {
+    label: "Max Payout Rate",
+    initOption: "UP TO 95%",
+    legacyBroker: "UP TO 80%",
+    basicApps: "UP TO 82%",
+  },
+  {
+    label: "Minimum Trade Stake",
+    initOption: "$1 PER TRADE",
+    legacyBroker: "$10 PER TRADE",
+    basicApps: "$5 PER TRADE",
+  },
+  {
+    label: "Technical Indicators",
+    initOption: "30+ BUILT-IN TOOLS",
+    legacyBroker: "DESKTOP INSTALL ONLY",
+    basicApps: "5 BASIC INDICATORS",
+  },
+  {
+    label: "Instant M-PESA & Crypto Rails",
+    initOption: true,
+    legacyBroker: false,
+    basicApps: true,
+  },
+  {
+    label: "24/7 Weekend OTC & Crypto",
+    initOption: true,
+    legacyBroker: false,
+    basicApps: false,
+  },
+  {
+    label: "Free Trading Guide & Academy",
+    initOption: true,
+    legacyBroker: false,
+    basicApps: false,
+  },
+  {
+    label: "Weekly Cash Tournaments",
+    initOption: true,
+    legacyBroker: false,
+    basicApps: false,
   },
 ];
 
-const PoolitoHomePage = () => {
-  const { platformName, supportEmail } = useSiteBranding();
-  const { data: rawWebsiteContent } = useWebsiteContent();
-  const websiteContent = useMemo(
-    () => normalizeWebsiteContent(rawWebsiteContent, platformName),
-    [rawWebsiteContent, platformName],
-  );
-
-  const [selectedPreviewIdx, setSelectedPreviewIdx] = useState(0);
-  const [stakeAmount, setStakeAmount] = useState(50);
-  const [activeMarketTab, setActiveMarketTab] = useState(0);
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
-
-  const activePreview = QUICK_PREVIEW_ASSETS[selectedPreviewIdx] ?? QUICK_PREVIEW_ASSETS[0];
-  const projectedReturn = ((stakeAmount * (100 + activePreview.payout)) / 100).toFixed(2);
-  const activeMarketGroup = MARKET_GROUPS[activeMarketTab] ?? MARKET_GROUPS[0];
-  const faqItems = websiteContent.faq.items.slice(0, 6);
+/** 24-point serrated circular badge matching the reference "100% Refundable Fees" seal */
+const StarburstSeal = () => {
+  const points = useMemo(() => {
+    const total = 56;
+    const outerR = 58;
+    const innerR = 52;
+    const cx = 60;
+    const cy = 60;
+    const coords: string[] = [];
+    for (let i = 0; i < total; i += 1) {
+      const angle = (i * Math.PI * 2) / total - Math.PI / 2;
+      const r = i % 2 === 0 ? outerR : innerR;
+      const x = (cx + r * Math.cos(angle)).toFixed(2);
+      const y = (cy + r * Math.sin(angle)).toFixed(2);
+      coords.push(`${x},${y}`);
+    }
+    return coords.join(" ");
+  }, []);
 
   return (
-    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
+    <div className="relative inline-flex h-28 w-28 select-none items-center justify-center sm:h-32 sm:w-32">
+      <svg viewBox="0 0 120 120" className="h-full w-full drop-shadow-[0_10px_20px_rgba(61,132,142,0.22)]">
+        <defs>
+          <linearGradient id="ioSealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#74C686" />
+            <stop offset="100%" stopColor="#3D848E" />
+          </linearGradient>
+        </defs>
+        <polygon points={points} fill="url(#ioSealGrad)" />
+        <circle
+          cx="60"
+          cy="60"
+          r="45"
+          fill="none"
+          stroke="rgba(255,255,255,0.78)"
+          strokeWidth="1.5"
+        />
+      </svg>
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-3 text-center leading-tight text-white">
+        <span className="text-xl font-extrabold tracking-tight sm:text-2xl">0%</span>
+        <span className="mt-0.5 text-[10px] font-semibold leading-3 text-white/95 sm:text-[11px]">
+          Platform
+          <br />
+          Deposit Fee
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const PoolitoHomePage = () => {
+  const { platformName } = useSiteBranding();
+  const { data: rawWebsiteContent } = useWebsiteContent();
+
+  // Hero isometric ticket interactive state
+  const [ticketDirection, setTicketDirection] = useState<"up" | "down">("up");
+  const [ticketAssetIdx, setTicketAssetIdx] = useState(0);
+  const [ticketStake, setTicketStake] = useState(50);
+
+  // Matrix tab ("tiers" | "markets")
+  const [matrixTab, setMatrixTab] = useState<"tiers" | "markets">("tiers");
+
+  // Profit calculator state
+  const [calcBalance, setCalcBalance] = useState(500);
+  const [calcPayoutRate, setCalcPayoutRate] = useState(92);
+
+  // Testimonial carousel offset
+  const [reviewOffset, setReviewOffset] = useState(0);
+
+  const activeTicketAsset = HERO_TICKET_ASSETS[ticketAssetIdx] ?? HERO_TICKET_ASSETS[0];
+  const ticketTotalReturn = ((ticketStake * (100 + activeTicketAsset.payout)) / 100).toFixed(2);
+
+  const activeMatrixColumns =
+    matrixTab === "tiers" ? ACCOUNT_TIER_COLUMNS : MARKET_MATRIX_COLUMNS;
+
+  // Monthly estimated net profit based on conservative 10% stake sizing & net edge
+  const calcSingleWinProfit = Math.round(calcBalance * 0.1 * (calcPayoutRate / 100));
+  const calcMonthlyProjection = Math.round(calcSingleWinProfit * 12);
+
+  const visibleTestimonials = useMemo(() => {
+    const items = [];
+    for (let i = 0; i < 3; i += 1) {
+      items.push(TESTIMONIAL_ITEMS[(reviewOffset + i) % TESTIMONIAL_ITEMS.length]);
+    }
+    return items;
+  }, [reviewOffset]);
+
+  return (
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-white text-[#161D24]">
       <Navbar />
 
       <main>
-        {/* ─── 1. HERO SECTION ──────────────────────────────────────────────── */}
+        {/* ─── 1. HERO SECTION (Matching Top One Trader Hero Aesthetic) ───── */}
         <section
           aria-labelledby="io-hero-heading"
-          className="relative overflow-hidden border-b border-white/[0.07] pb-16 pt-10 sm:pb-24 sm:pt-16 lg:pb-28 lg:pt-20"
+          className="relative overflow-hidden bg-white pb-16 pt-12 sm:pb-24 sm:pt-16 lg:pb-28 lg:pt-20"
         >
-          {/* Ambient Fintech Mesh & Radial Glows */}
+          {/* Soft Sage-Mint Corner Washes & Subtle Square Grid */}
           <div
             aria-hidden="true"
-            className="io-grid-pattern pointer-events-none absolute inset-0 opacity-60 [mask-image:radial-gradient(ellipse_at_top,black_32%,transparent_80%)]"
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(circle at 6% 8%, rgba(126, 214, 152, 0.28), transparent 38%), radial-gradient(circle at 92% 84%, rgba(122, 208, 152, 0.24), transparent 42%)",
+            }}
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -left-24 -top-24 h-[480px] w-[540px] rounded-full bg-[radial-gradient(circle,rgba(16,184,107,0.18),transparent_68%)] blur-3xl"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute right-0 top-12 h-[520px] w-[580px] rounded-full bg-[radial-gradient(circle,rgba(28,129,248,0.16),transparent_70%)] blur-3xl"
+            className="io-grid-pattern pointer-events-none absolute inset-0"
           />
 
           <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-10">
+            <div className="grid items-center gap-14 lg:grid-cols-12 lg:gap-8">
               {/* Left Copy Column */}
               <div className="lg:col-span-6">
-                <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-emerald-300 shadow-[0_0_24px_rgba(16,184,107,0.15)]">
-                  <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                  <span>Up to 95% Payout • Instant $10,000 Demo</span>
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#E3ECE6] bg-white px-4 py-1.5 text-xs font-semibold text-[#1E2730] shadow-[0_4px_14px_rgba(20,48,40,0.05)]">
+                  <span aria-hidden="true">🎁</span>
+                  <span>Up to 70% Welcome Bonus on Your First Deposit!</span>
                 </div>
 
                 <h1
                   id="io-hero-heading"
-                  className="mt-6 text-4xl font-extrabold leading-[1.06] tracking-tight text-white sm:text-5xl lg:text-[56px]"
+                  className="mt-6 text-4xl font-bold leading-[1.08] tracking-[-0.03em] text-[#161D24] sm:text-5xl lg:text-[54px]"
                 >
-                  Trade Global Markets with{" "}
-                  <span className="bg-gradient-to-r from-emerald-400 via-emerald-300 to-sky-400 bg-clip-text text-transparent">
-                    Speed, Clarity &amp; Control.
-                  </span>
+                  Achieve, Grow, Prosper with {platformName}.
                 </h1>
 
-                <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
-                  Access 100+ Forex, Crypto, Stock, and Commodity markets on {platformName}. Practice
-                  risk-free with $10,000 virtual funds, analyze with 30+ indicators, and withdraw fast via
-                  M-PESA or Crypto.
+                <p className="mt-5 max-w-xl text-[15px] leading-7 text-[#4D5A66] sm:text-base">
+                  Empower your trading skills on {platformName}. Earn up to 95% payouts on 100+
+                  global markets, practice risk-free with $10,000 virtual funds, join weekly
+                  tournaments, and withdraw fast via M-PESA &amp; Crypto!
                 </p>
 
-                {/* Primary & Secondary CTAs */}
-                <div className="mt-8 flex flex-wrap items-center gap-4">
+                {/* Primary CTA Pill */}
+                <div className="mt-8 flex flex-wrap items-center gap-3.5">
                   <Link
                     to="/register"
-                    className="group inline-flex h-13 min-h-[52px] items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-[#10b86b] to-[#0ea35e] px-7 text-sm font-bold text-white shadow-[0_16px_38px_rgba(16,184,107,0.34)] transition-all hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_20px_44px_rgba(16,184,107,0.44)]"
+                    className="io-sage-btn inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-semibold text-white"
                   >
-                    <span>Start Trading Free</span>
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                    Join Us Today!
                   </Link>
-
                   <Link
                     to="/trade"
-                    className="inline-flex h-13 min-h-[52px] items-center justify-center gap-2.5 rounded-full border border-white/15 bg-white/[0.04] px-6 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/[0.08]"
+                    className="inline-flex h-12 items-center justify-center rounded-full border border-[#D4E2DA] bg-white/90 px-6 text-sm font-semibold text-[#161D24] transition-colors hover:border-[#68BE85] hover:bg-[#F3FAF5]"
                   >
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-                      <Play className="h-3.5 w-3.5 fill-current" />
-                    </span>
-                    <span>Try $10,000 Demo</span>
+                    Try $10,000 Demo
                   </Link>
                 </div>
 
-                {/* Key Trust Micro-Pills */}
-                <div className="mt-9 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:max-w-xl">
+                {/* 5-Star Rating Strip */}
+                <div className="mt-7 flex items-center gap-3">
+                  <div className="flex items-center gap-1 text-[#161D24]" aria-label="5 out of 5 stars">
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <Star key={idx} className="h-4 w-4 fill-current" />
+                    ))}
+                  </div>
+                  <Link
+                    to="/reviews"
+                    className="text-xs font-semibold text-[#2E3A44] underline underline-offset-4 transition-colors hover:text-[#2E7971]"
+                  >
+                    4.9/5 Trader Score &amp; Reviews
+                  </Link>
+                </div>
+
+                {/* Bottom 3 Checkmark Badges */}
+                <div className="mt-10 flex flex-wrap items-center gap-x-7 gap-y-3 text-xs font-medium text-[#2A353E] sm:text-[13px]">
                   {[
-                    { value: "$5", label: "Min. Deposit" },
-                    { value: "$1", label: "Min. Trade" },
-                    { value: "< 2m", label: "Fast Payouts" },
-                    { value: "24/7", label: "Live Markets" },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="rounded-2xl border border-white/[0.08] bg-white/[0.025] px-3.5 py-3 backdrop-blur-sm"
-                    >
-                      <div className="text-lg font-extrabold tabular-nums text-white">{item.value}</div>
-                      <div className="mt-0.5 text-xs font-medium text-slate-400">{item.label}</div>
-                    </div>
+                    "Fast M-PESA & Crypto Payouts",
+                    "100+ Global Assets",
+                    "24/7 Customer Support",
+                  ].map((badge) => (
+                    <span key={badge} className="inline-flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-[#439683]" />
+                      <span>{badge}</span>
+                    </span>
                   ))}
                 </div>
               </div>
 
-              {/* Right Interactive Showcase Column */}
+              {/* Right Column: Isometric 3D Floating Order Ticket + Frosted Sage Icon Tiles */}
               <div className="relative lg:col-span-6">
-                <div className="relative mx-auto max-w-xl lg:max-w-none">
-                  {/* Studio Platform Render Stage */}
-                  <div className="io-glass-card relative overflow-hidden rounded-[28px] p-4 sm:p-6">
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_65%_30%,rgba(16,184,107,0.18),transparent_58%)]"
-                    />
+                <div className="relative mx-auto max-w-[460px] py-4 sm:py-8">
+                  {/* Soft Mint Backdrop Glow */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-6 rounded-full bg-[radial-gradient(circle,rgba(116,198,134,0.26),transparent_70%)] blur-2xl"
+                  />
 
-                    {/* Top Window Bar */}
-                    <div className="relative z-10 mb-3 flex items-center justify-between border-b border-white/[0.07] pb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2.5 w-2.5 rounded-full bg-rose-500/70" />
-                        <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
-                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
-                        <span className="ml-2 text-xs font-semibold text-slate-400">
-                          {platformName} Web &amp; Mobile Terminal
+                  {/* Floating Tile 1: Top-Right Frosted Gear */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -top-2 right-12 z-20 hidden h-16 w-16 items-center justify-center rounded-2xl border border-white/80 bg-white/85 shadow-[0_18px_36px_rgba(32,80,62,0.12)] backdrop-blur-md sm:flex"
+                    style={{ transform: "rotate(-6deg)" }}
+                  >
+                    <Settings className="h-7 w-7 text-[#59B382]" />
+                  </div>
+
+                  {/* Floating Tile 2: Upper-Left Sage Cash Tile */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -left-4 top-14 z-20 hidden h-16 w-16 items-center justify-center rounded-2xl border border-[#BBE4C8] bg-[#CEEED7]/90 shadow-[0_16px_32px_rgba(40,104,76,0.14)] backdrop-blur-md sm:flex"
+                    style={{ transform: "rotate(-8deg)" }}
+                  >
+                    <Banknote className="h-7 w-7 text-[#2E7D67]" />
+                  </div>
+
+                  {/* Floating Tile 3: Lower-Left Frosted Chart Bars */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute bottom-24 left-0 z-20 hidden h-14 w-14 items-center justify-center rounded-2xl border border-white bg-white/90 shadow-[0_16px_32px_rgba(24,60,48,0.1)] backdrop-blur-md sm:flex"
+                    style={{ transform: "rotate(5deg)" }}
+                  >
+                    <BarChart3 className="h-6 w-6 text-[#52A788]" />
+                  </div>
+
+                  {/* Floating Tile 4: Bottom-Right Layered Mint Shield */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -right-3 bottom-12 z-20 hidden h-20 w-20 items-center justify-center rounded-2xl border border-[#B5E0C3] bg-[#C5EAD0]/85 shadow-[0_20px_38px_rgba(40,104,76,0.16)] backdrop-blur-md sm:flex"
+                    style={{ transform: "rotate(6deg)" }}
+                  >
+                    <ShieldCheck className="h-8 w-8 text-[#2D7A68]" />
+                  </div>
+
+                  {/* Main Isometric Order Ticket Card */}
+                  <div className="relative z-10 rounded-[26px] border border-[#E2EEE6] bg-white/95 p-5 shadow-[0_28px_65px_rgba(24,64,52,0.12)] backdrop-blur-md transition-transform duration-300 sm:p-6 lg:[transform:perspective(1150px)_rotateY(-13deg)_rotateX(5deg)] lg:hover:[transform:perspective(1150px)_rotateY(-8deg)_rotateX(3deg)]">
+                    {/* Top Order Mode Row */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTicketDirection("up")}
+                        className={`rounded-xl py-2 text-xs font-bold transition-colors ${
+                          ticketDirection === "up"
+                            ? "bg-[#DCF3E3] text-[#226E55]"
+                            : "bg-[#F5F8F6] text-[#64707D] hover:text-[#161D24]"
+                        }`}
+                      >
+                        Higher ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTicketDirection("down")}
+                        className={`rounded-xl py-2 text-xs font-bold transition-colors ${
+                          ticketDirection === "down"
+                            ? "bg-[#FCE8E6] text-[#B43C34]"
+                            : "bg-[#F5F8F6] text-[#64707D] hover:text-[#161D24]"
+                        }`}
+                      >
+                        Lower ↓
+                      </button>
+                      <div className="flex items-center justify-between rounded-xl border border-[#E6EEE9] bg-white px-3 py-2 text-xs font-semibold text-[#36424D]">
+                        <span>1m Exp</span>
+                        <ChevronDown className="h-3.5 w-3.5 text-[#7A8793]" />
+                      </div>
+                    </div>
+
+                    {/* Row 1: Asset Stepper */}
+                    <div className="mt-4 flex items-center justify-between rounded-xl border border-[#E6EEE9] bg-[#FBFDFC] px-3.5 py-2.5">
+                      <button
+                        type="button"
+                        aria-label="Previous market"
+                        onClick={() =>
+                          setTicketAssetIdx(
+                            (prev) =>
+                              (prev - 1 + HERO_TICKET_ASSETS.length) %
+                              HERO_TICKET_ASSETS.length,
+                          )
+                        }
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#687582] hover:bg-[#EAF6EE] hover:text-[#2E7971]"
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <div className="flex items-center gap-2 text-center">
+                        <AssetSymbolMark
+                          symbol={activeTicketAsset.symbol}
+                          name={activeTicketAsset.label}
+                          category={activeTicketAsset.category}
+                          size={22}
+                        />
+                        <span className="text-xs font-bold text-[#161D24]">
+                          {activeTicketAsset.label}
+                        </span>
+                        <span className="rounded-md bg-[#E3F5E9] px-1.5 py-0.5 text-[11px] font-bold text-[#25795B]">
+                          +{activeTicketAsset.payout}%
                         </span>
                       </div>
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                        Real-Time Feed
-                      </span>
+                      <button
+                        type="button"
+                        aria-label="Next market"
+                        onClick={() =>
+                          setTicketAssetIdx((prev) => (prev + 1) % HERO_TICKET_ASSETS.length)
+                        }
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#687582] hover:bg-[#EAF6EE] hover:text-[#2E7971]"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
                     </div>
 
-                    {/* Studio Laptop + Phone Image */}
-                    <div className="relative overflow-hidden rounded-2xl bg-[#05080f]">
-                      <img
-                        src={HOME_ASSETS.laptopPhone}
-                        alt={`${platformName} desktop and mobile trading workspace`}
-                        className="h-auto w-full object-cover"
-                      />
-                    </div>
-
-                    {/* Interactive Trade Payout Preview Bar */}
-                    <div className="relative z-10 mt-4 rounded-2xl border border-white/10 bg-[#0b1322]/95 p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {QUICK_PREVIEW_ASSETS.map((asset, idx) => (
-                            <button
-                              key={asset.symbol}
-                              type="button"
-                              onClick={() => setSelectedPreviewIdx(idx)}
-                              className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                                selectedPreviewIdx === idx
-                                  ? "border border-emerald-500/40 bg-emerald-500/15 text-white"
-                                  : "border border-transparent bg-white/[0.04] text-slate-400 hover:text-white"
-                              }`}
-                            >
-                              <span>{asset.symbol}</span>
-                              <span className="text-emerald-400">+{asset.payout}%</span>
-                            </button>
-                          ))}
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="font-mono font-bold text-white tabular-nums">
-                            {activePreview.price}
-                          </span>
-                          <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 font-bold text-emerald-400">
-                            {activePreview.change}
-                          </span>
-                        </div>
+                    {/* Row 2: Stake Amount Stepper */}
+                    <div className="mt-3 flex items-center justify-between rounded-xl border border-[#E6EEE9] bg-[#FBFDFC] px-3.5 py-2.5">
+                      <button
+                        type="button"
+                        aria-label="Decrease stake"
+                        onClick={() => setTicketStake((s) => Math.max(5, s - 10))}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#687582] hover:bg-[#EAF6EE] hover:text-[#2E7971]"
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <div className="text-xs font-semibold text-[#5C6873]">
+                        Amount:{" "}
+                        <strong className="font-bold text-[#161D24] tabular-nums">
+                          ${ticketStake}
+                        </strong>
                       </div>
+                      <button
+                        type="button"
+                        aria-label="Increase stake"
+                        onClick={() => setTicketStake((s) => Math.min(500, s + 25))}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#687582] hover:bg-[#EAF6EE] hover:text-[#2E7971]"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
 
-                      <div className="mt-3.5 grid items-center gap-3 sm:grid-cols-12">
-                        <div className="sm:col-span-5">
-                          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
-                            <span>Trade Stake</span>
-                            <span className="text-slate-300">Payout: +{activePreview.payout}%</span>
-                          </div>
-                          <div className="mt-1.5 flex items-center gap-1.5">
-                            {[10, 50, 100].map((val) => (
-                              <button
-                                key={val}
-                                type="button"
-                                onClick={() => setStakeAmount(val)}
-                                className={`flex-1 rounded-lg py-1.5 text-xs font-bold tabular-nums transition-colors ${
-                                  stakeAmount === val
-                                    ? "bg-white/15 text-white ring-1 ring-emerald-400/50"
-                                    : "bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white"
-                                }`}
-                              >
-                                ${val}
-                              </button>
-                            ))}
-                          </div>
+                    {/* Percentage Preset Chips */}
+                    <div className="mt-3 grid grid-cols-4 gap-2 text-center text-[11px] font-semibold text-[#5C6873]">
+                      {[
+                        { label: "25%", val: 25 },
+                        { label: "50%", val: 50 },
+                        { label: "75%", val: 100 },
+                        { label: "100%", val: 200 },
+                      ].map((chip) => (
+                        <button
+                          key={chip.label}
+                          type="button"
+                          onClick={() => setTicketStake(chip.val)}
+                          className={`rounded-lg py-1.5 transition-colors ${
+                            ticketStake === chip.val
+                              ? "bg-[#E3F4E8] font-bold text-[#226E55]"
+                              : "bg-[#F5F8F6] hover:bg-[#EDF6F0]"
+                          }`}
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Projected Return Summary */}
+                    <div className="mt-4 flex items-center justify-between border-t border-[#EDF3EF] pt-3.5">
+                      <div>
+                        <div className="text-xs font-bold text-[#161D24]">Total Return</div>
+                        <div className="text-[11px] text-[#7A8793]">Instant Demo / Live</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-extrabold tabular-nums text-[#2A7F6E]">
+                          ${ticketTotalReturn}
                         </div>
-
-                        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.07] px-3.5 py-2 sm:col-span-4">
-                          <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-300/80">
-                            Potential Return
-                          </div>
-                          <div className="mt-0.5 text-lg font-extrabold tabular-nums text-emerald-400">
-                            ${projectedReturn}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-1.5 sm:col-span-3">
-                          <Link
-                            to="/trade"
-                            className="inline-flex h-11 items-center justify-center gap-1 rounded-xl bg-[#10b86b] text-xs font-bold text-white transition-transform hover:scale-[1.02] hover:brightness-110"
-                          >
-                            <TrendingUp className="h-3.5 w-3.5" />
-                            Up
-                          </Link>
-                          <Link
-                            to="/trade"
-                            className="inline-flex h-11 items-center justify-center gap-1 rounded-xl bg-rose-500 text-xs font-bold text-white transition-transform hover:scale-[1.02] hover:brightness-110"
-                          >
-                            <TrendingDown className="h-3.5 w-3.5" />
-                            Down
-                          </Link>
+                        <div className="text-[11px] font-semibold text-[#52A788]">
+                          Quote {activeTicketAsset.price}
                         </div>
                       </div>
                     </div>
+
+                    {/* Dark Charcoal Execute Bar */}
+                    <Link
+                      to="/trade"
+                      className="io-dark-btn mt-4 flex h-11 w-full items-center justify-center rounded-xl text-xs font-bold tracking-wide text-white"
+                    >
+                      {ticketDirection === "up" ? "Buy / Higher" : "Sell / Lower"}
+                    </Link>
+                  </div>
+
+                  {/* Bottom Floating Sage-Teal Pill Button (Matching Reference "Login" 3D Pill) */}
+                  <div className="mt-4 flex justify-center lg:justify-end lg:pr-12">
+                    <Link
+                      to="/login"
+                      className="io-sage-btn inline-flex h-11 items-center justify-center rounded-2xl px-9 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(61,132,142,0.28)]"
+                    >
+                      Open Terminal
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -604,634 +756,531 @@ const PoolitoHomePage = () => {
           </div>
         </section>
 
-        {/* ─── 2. LIVE MARKET MARQUEE TICKER ────────────────────────────────── */}
-        <section
-          aria-label="Live market payouts ticker"
-          className="border-b border-white/[0.06] bg-[#060a12] py-3.5"
-        >
-          <div className="landing-marquee">
-            <div className="landing-marquee-track flex w-max items-center gap-4 px-4">
-              {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, index) => (
-                <Link
-                  key={`${item.symbol}-${index}`}
-                  to="/trade"
-                  className="inline-flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-2 transition-colors hover:border-emerald-500/35 hover:bg-white/[0.05]"
-                >
-                  <AssetSymbolMark
-                    symbol={item.symbol}
-                    name={item.name}
-                    category={item.category}
-                    size={26}
-                  />
-                  <span className="text-xs font-bold text-white">{item.symbol}</span>
+        {/* ─── 2. FULL-BLEED SAGE-TEAL TRUST & RAILS BANNER ────────────────── */}
+        <section aria-label="Global trader trust and supported rails" className="io-teal-banner py-6">
+          <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 sm:px-6 lg:flex-row lg:px-8">
+            {/* Left Overlapping Avatars + Count */}
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-2.5">
+                {TRADER_AVATARS.map((avatar) => (
                   <span
-                    className={`text-xs font-semibold tabular-nums ${
-                      item.up ? "text-emerald-400" : "text-rose-400"
-                    }`}
+                    key={avatar.initials}
+                    style={{ background: avatar.bg }}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white shadow-sm"
                   >
-                    {item.delta}
+                    {avatar.initials}
                   </span>
-                  <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-300">
-                    {item.payout}
-                  </span>
-                </Link>
+                ))}
+              </div>
+              <div className="text-white">
+                <div className="text-sm font-semibold leading-tight text-white/95 sm:text-base">
+                  Globally Trusted by Over
+                </div>
+                <div className="text-base font-extrabold leading-tight sm:text-lg">
+                  50,000+ Active Traders
+                </div>
+              </div>
+            </div>
+
+            {/* Right Supported Funding & Execution Marks */}
+            <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+              {[
+                { title: "M-PESA", sub: "INSTANT MOBILE" },
+                { title: "USDT TRC20", sub: "CRYPTO RAIL" },
+                { title: "BITCOIN", sub: "DIRECT WALLET" },
+                { title: "WEBTRADER", sub: "30+ INDICATORS" },
+              ].map((mark) => (
+                <div key={mark.title} className="text-center text-white">
+                  <div className="text-sm font-extrabold tracking-wider text-white/95 sm:text-base">
+                    {mark.title}
+                  </div>
+                  <div className="text-[10px] font-semibold tracking-[0.16em] text-white/75">
+                    {mark.sub}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ─── 3. KEY PLATFORM METRICS STRIP ────────────────────────────────── */}
-        <section className="border-b border-white/[0.06] bg-[#0a101d] py-12">
+        {/* ─── 3. ACCOUNT TIERS & LIVE MARKETS MATRIX (Reference Section 2) ── */}
+        <section id="markets" aria-labelledby="io-matrix-title" className="py-20 sm:py-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                {
-                  value: "100+",
-                  label: "Global Instruments",
-                  detail: "Forex, Crypto, Equities & Commodities",
-                  icon: Globe2,
-                },
-                {
-                  value: "Up to 95%",
-                  label: "Profit on Winning Trades",
-                  detail: "Transparent payout shown before entry",
-                  icon: TrendingUp,
-                },
-                {
-                  value: "< 2 Min",
-                  label: "Fastest M-PESA Payout",
-                  detail: "Rapid mobile money & crypto settlement",
-                  icon: Zap,
-                },
-                {
-                  value: "99.97%",
-                  label: "Platform Uptime",
-                  detail: "High-availability execution engine",
-                  icon: ShieldCheck,
-                },
-              ].map((stat) => {
-                const Icon = stat.icon;
-                return (
-                  <div
-                    key={stat.label}
-                    className="flex items-start gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5"
-                  >
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/12 text-emerald-400">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-extrabold tracking-tight text-white tabular-nums">
-                        {stat.value}
-                      </div>
-                      <div className="mt-0.5 text-sm font-bold text-slate-200">{stat.label}</div>
-                      <div className="mt-1 text-xs text-slate-400">{stat.detail}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
+            {/* Centered Header */}
+            <div className="mx-auto max-w-2xl text-center">
+              <span className="io-eyebrow-pill">Account Tiers &amp; Markets</span>
+              <h2
+                id="io-matrix-title"
+                className="mt-4 text-3xl font-bold leading-tight tracking-[-0.025em] text-[#161D24] sm:text-4xl lg:text-[42px]"
+              >
+                Define Your Strategy,
+                <br />
+                Shape Your Success!
+              </h2>
+              <p className="mt-3 text-sm text-[#64707D] sm:text-base">
+                Customize your approach, practice risk-free, or scale with live tiers built for
+                every stage.
+              </p>
 
-        {/* ─── 4. INTERACTIVE MARKET EXPLORER (#markets) ───────────────────── */}
-        <section id="markets" aria-labelledby="io-markets-title" className="py-20 sm:py-24">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-              <div className="max-w-2xl">
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
-                  Global Markets
-                </span>
-                <h2
-                  id="io-markets-title"
-                  className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
-                >
-                  Trade Major Markets from One Unified Desk
-                </h2>
-                <p className="mt-3 text-base leading-relaxed text-slate-400">
-                  Switch across major currency pairs, 24/7 digital assets, global equities, and spot
-                  commodities with transparent fixed-return payouts.
-                </p>
-              </div>
-
-              {/* Category Tabs */}
+              {/* Segmented Toggle Pill (Matching One-Step / Two-Step Toggle) */}
               <div
                 role="tablist"
-                aria-label="Market categories"
-                className="flex flex-wrap gap-2 rounded-2xl border border-white/[0.08] bg-[#0e1626] p-1.5"
+                aria-label="Comparison view"
+                className="mt-8 inline-grid grid-cols-2 rounded-xl border border-[#E4EDE8] bg-white p-1.5 shadow-[0_6px_20px_rgba(20,48,40,0.04)]"
               >
-                {MARKET_GROUPS.map((group, idx) => {
-                  const Icon = group.icon;
-                  const active = activeMarketTab === idx;
-                  return (
-                    <button
-                      key={group.label}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      onClick={() => setActiveMarketTab(idx)}
-                      className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
-                        active
-                          ? "bg-gradient-to-r from-[#10b86b] to-[#0ea35e] text-white shadow-lg shadow-emerald-500/20"
-                          : "text-slate-400 hover:bg-white/[0.04] hover:text-white"
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{group.label}</span>
-                    </button>
-                  );
-                })}
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={matrixTab === "tiers"}
+                  onClick={() => setMatrixTab("tiers")}
+                  className={`rounded-lg px-7 py-2.5 text-xs font-semibold transition-colors sm:text-sm ${
+                    matrixTab === "tiers"
+                      ? "bg-[#DFF1E5] text-[#182226]"
+                      : "text-[#687582] hover:text-[#161D24]"
+                  }`}
+                >
+                  Account Tiers
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={matrixTab === "markets"}
+                  onClick={() => setMatrixTab("markets")}
+                  className={`rounded-lg px-7 py-2.5 text-xs font-semibold transition-colors sm:text-sm ${
+                    matrixTab === "markets"
+                      ? "bg-[#DFF1E5] text-[#182226]"
+                      : "text-[#687582] hover:text-[#161D24]"
+                  }`}
+                >
+                  Top Markets
+                </button>
               </div>
             </div>
 
-            {/* Market Cards Grid */}
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {activeMarketGroup.cards.map((market) => {
-                const isUp = market.direction === "Up";
-                return (
-                  <article
-                    key={market.symbol}
-                    className="io-glass-card io-glass-card-hover flex flex-col justify-between rounded-2xl p-5"
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <AssetSymbolMark
-                            symbol={market.symbol}
-                            name={market.name}
-                            category={activeMarketGroup.category}
-                            size={42}
-                          />
-                          <div>
-                            <h3 className="text-base font-extrabold tracking-tight text-white">
-                              {market.symbol}
-                            </h3>
-                            <p className="text-xs text-slate-400">{market.name}</p>
-                          </div>
-                        </div>
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/12 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-                          {market.status}
-                        </span>
-                      </div>
+            {/* Matrix Card with Overlapping Starburst Seal */}
+            <div className="relative mt-14">
+              {/* Overlapping Top-Left Serrated Seal */}
+              <div className="pointer-events-none -mb-10 ml-4 flex justify-start sm:absolute sm:-top-12 sm:left-6 sm:z-20 sm:mb-0">
+                <StarburstSeal />
+              </div>
 
-                      {/* Mini Sparkline & Price */}
-                      <div className="mt-5 flex items-end justify-between rounded-xl border border-white/[0.06] bg-[#090f1b] px-3.5 py-3">
-                        <div>
-                          <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                            Indicative Quote
-                          </div>
-                          <div className="mt-0.5 font-mono text-base font-bold text-white tabular-nums">
-                            {market.price}
-                          </div>
-                        </div>
-                        <svg
-                          viewBox="0 0 144 34"
-                          className="h-8 w-24 overflow-visible"
-                          aria-hidden="true"
+              <div className="overflow-x-auto rounded-[28px] border border-[#E2ECE6] bg-white shadow-[0_24px_60px_rgba(20,48,40,0.06)]">
+                <table className="w-full min-w-[880px] border-collapse text-center">
+                  <thead>
+                    <tr className="border-b border-[#EAF1ED]">
+                      <th className="w-[230px] bg-gradient-to-b from-[#E5F4EA] to-[#EEF8F1] p-6 text-left" />
+                      {activeMatrixColumns.map((col, idx) => (
+                        <th
+                          key={col.heading}
+                          className={`border-l border-[#EDF3EF] px-4 pb-6 pt-8 ${
+                            idx === activeMatrixColumns.length - 1
+                              ? "bg-gradient-to-b from-white to-[#F2FAF4]"
+                              : "bg-white"
+                          }`}
                         >
-                          <path
-                            d={market.spark}
-                            fill="none"
-                            stroke={isUp ? "#10b86b" : "#f43f5e"}
-                            strokeWidth="2.4"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </div>
+                          <div className="text-xl font-bold tracking-tight text-[#161D24] sm:text-2xl">
+                            {col.heading}
+                          </div>
+                          <div className="mt-1 text-xs font-medium text-[#7B8792]">{col.sub}</div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
 
-                      <dl className="mt-4 space-y-2 text-xs">
-                        <div className="flex items-center justify-between text-slate-400">
-                          <dt>Max Payout</dt>
-                          <dd className="font-bold text-emerald-400">{market.payout}</dd>
-                        </div>
-                        <div className="flex items-center justify-between text-slate-400">
-                          <dt>Durations</dt>
-                          <dd className="font-semibold text-slate-200">{market.duration}</dd>
-                        </div>
-                        <div className="flex items-center justify-between text-slate-400">
-                          <dt>Momentum</dt>
-                          <dd
-                            className={`inline-flex items-center gap-1 font-bold ${
-                              isUp ? "text-emerald-400" : "text-rose-400"
+                  <tbody className="text-xs sm:text-[13px]">
+                    {MATRIX_ROWS.map((row) => (
+                      <tr key={row.key} className="border-b border-[#F1F6F3] last:border-b-0">
+                        <td className="bg-[#EEF8F1]/80 px-6 py-4 text-left font-medium text-[#1E2830]">
+                          <span className="inline-flex items-center gap-2.5">
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-[#459982]" />
+                            <span>{row.label}</span>
+                          </span>
+                        </td>
+                        {activeMatrixColumns.map((col, idx) => (
+                          <td
+                            key={`${col.heading}-${row.key}`}
+                            className={`border-l border-[#EDF3EF] px-4 py-4 font-semibold text-[#26313A] ${
+                              idx === activeMatrixColumns.length - 1 ? "bg-[#F4FBF6]/70" : ""
                             }`}
                           >
-                            {isUp ? (
-                              <TrendingUp className="h-3.5 w-3.5" />
-                            ) : (
-                              <TrendingDown className="h-3.5 w-3.5" />
-                            )}
-                            {market.direction}
-                          </dd>
-                        </div>
-                      </dl>
-                    </div>
+                            {col[row.key]}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
 
-                    <Link
-                      to="/trade"
-                      className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/12 text-xs font-bold text-emerald-300 transition-all hover:bg-emerald-500 hover:text-white"
-                    >
-                      <span>Trade {market.symbol}</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
-                  </article>
-                );
-              })}
+                    {/* Pricing & CTA Footer Row */}
+                    <tr>
+                      <td className="bg-gradient-to-b from-[#EEF8F1]/80 to-[#E5F4EA] p-6" />
+                      {activeMatrixColumns.map((col, idx) => (
+                        <td
+                          key={`${col.heading}-cta`}
+                          className={`border-l border-[#EDF3EF] px-4 pb-8 pt-6 ${
+                            idx === activeMatrixColumns.length - 1
+                              ? "bg-gradient-to-b from-[#F4FBF6]/70 to-[#E4F4E9]"
+                              : ""
+                          }`}
+                        >
+                          <div className="flex items-baseline justify-center gap-1">
+                            <span className="text-2xl font-extrabold tracking-tight text-[#3E868C] sm:text-3xl">
+                              {col.priceMain}
+                            </span>
+                            {col.priceStrike ? (
+                              <span className="text-xs font-semibold text-[#7A8793]">
+                                {col.priceStrike}
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <div className="mt-3">
+                            <span className="inline-block rounded-md border border-[#CFE4D6] bg-[#EAF6EE] px-2.5 py-1 text-[10px] font-semibold text-[#2E7971]">
+                              {col.badge}
+                            </span>
+                          </div>
+
+                          <div className="mt-3.5">
+                            <Link
+                              to={col.ctaTo}
+                              className="io-sage-btn inline-flex h-9 items-center justify-center rounded-full px-5 text-xs font-semibold text-white"
+                            >
+                              {col.ctaLabel}
+                            </Link>
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* ─── 5. MULTI-DEVICE TRADING WORKSPACE SHOWCASE ───────────────────── */}
-        <section
-          aria-labelledby="io-workspace-title"
-          className="relative overflow-hidden border-y border-white/[0.07] bg-[#0b1220] py-20 sm:py-24"
-        >
+        {/* ─── 4. WHY TRUST US — YOUR BEST TRADING PARTNER ─────────────────── */}
+        <section className="relative overflow-hidden py-16 sm:py-20">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[540px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,184,107,0.1),transparent_70%)] blur-3xl"
+            className="pointer-events-none absolute -left-24 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(126,214,152,0.18),transparent_70%)] blur-2xl"
           />
-
-          <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid items-center gap-12 lg:grid-cols-12">
-              {/* Visual Showcase */}
-              <div className="lg:col-span-6">
-                <div className="grid gap-4 sm:grid-cols-12">
-                  <div className="io-glass-card overflow-hidden rounded-3xl p-4 sm:col-span-8">
-                    <div className="mb-2 flex items-center justify-between px-1 text-[11px] font-semibold text-slate-400">
-                      <span>Desktop Pro Workspace</span>
-                      <span className="text-emerald-400">Multi-Indicator View</span>
-                    </div>
-                    <div className="overflow-hidden rounded-2xl bg-[#04070d]">
-                      <img
-                        src={HOME_ASSETS.imacAlt}
-                        alt={`${platformName} desktop charting terminal`}
-                        className="h-64 w-full object-cover sm:h-80"
-                        loading="lazy"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="io-glass-card flex flex-col justify-between overflow-hidden rounded-3xl p-4 sm:col-span-4">
-                    <div className="mb-2 px-1 text-[11px] font-semibold text-slate-400">
-                      Mobile Web App
-                    </div>
-                    <div className="flex flex-1 items-center justify-center overflow-hidden rounded-2xl bg-[#04070d]">
-                      <img
-                        src={HOME_ASSETS.iphones}
-                        alt={`${platformName} mobile trading interface`}
-                        className="h-64 w-full object-cover sm:h-80"
-                        loading="lazy"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Workspace Capabilities */}
-              <div className="lg:col-span-6">
-                <span className="inline-flex items-center gap-2 rounded-full border border-sky-500/30 bg-sky-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-sky-300">
-                  <Cpu className="h-3.5 w-3.5" />
-                  Precision Terminal
-                </span>
-
-                <h2
-                  id="io-workspace-title"
-                  className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
-                >
-                  Engineered for Fast Reading &amp; Confident Execution
-                </h2>
-
-                <p className="mt-4 text-base leading-relaxed text-slate-300">
-                  {platformName} keeps your chart, technical indicators, wallet controls, and demo/live
-                  switcher in one clean browser terminal—no heavy downloads required.
-                </p>
-
-                <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                  {WORKSPACE_HIGHLIGHTS.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <div
-                        key={item.title}
-                        className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 transition-colors hover:border-emerald-500/30"
-                      >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/12 text-emerald-400">
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <h3 className="mt-3.5 text-sm font-bold text-white">{item.title}</h3>
-                        <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
-                          {item.description}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-8 flex flex-wrap items-center gap-4">
-                  <Link
-                    to="/features"
-                    className="inline-flex h-11 items-center gap-2 rounded-full bg-white/[0.08] px-5 text-xs font-bold text-white transition-colors hover:bg-white/[0.14]"
-                  >
-                    <span>Explore All Platform Features</span>
-                    <ArrowRight className="h-4 w-4 text-emerald-400" />
-                  </Link>
-                  <Link
-                    to="/trading-guide"
-                    className="inline-flex h-11 items-center gap-2 rounded-full border border-white/12 px-5 text-xs font-semibold text-slate-300 transition-colors hover:border-white/25 hover:text-white"
-                  >
-                    <BookOpen className="h-4 w-4 text-sky-400" />
-                    <span>Open Trading Guide</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ─── 6. BENTO GRID: WHY TRADERS CHOOSE US (#features) ─────────────── */}
-        <section id="features" aria-labelledby="io-bento-title" className="py-20 sm:py-24">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl text-center">
-              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
-                Complete Ecosystem
-              </span>
-              <h2
-                id="io-bento-title"
-                className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
-              >
-                Everything You Need to Trade &amp; Grow
+          <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <span className="io-eyebrow-pill">Why Trust Us</span>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.025em] text-[#161D24] sm:text-4xl">
+                Your Best Trading Partner
               </h2>
-              <p className="mt-3 text-base text-slate-400">
-                From instant local mobile-money funding to weekly competitive tournaments and transparent
-                risk controls.
-              </p>
             </div>
 
-            <div className="mt-12 grid gap-5 lg:grid-cols-12">
-              {/* Wide Card 1: Instant M-PESA & Crypto Funding */}
-              <article className="io-glass-card io-glass-card-hover flex flex-col justify-between rounded-3xl p-6 sm:p-8 lg:col-span-7">
-                <div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/12 px-3 py-1 text-xs font-bold text-emerald-400">
-                    <Wallet className="h-3.5 w-3.5" />
-                    Seamless Funding &amp; Fast Withdrawals
-                  </div>
-                  <h3 className="mt-4 text-2xl font-extrabold text-white">
-                    Deposit &amp; Withdraw via M-PESA, USDT &amp; Bitcoin
-                  </h3>
-                  <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-300">
-                    Start live trading from just $5 with 0% platform deposit fees. Withdraw profits
-                    directly to M-PESA or your crypto wallet with real-time status tracking inside your
-                    finance center.
-                  </p>
-                </div>
-
-                <div className="mt-7">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    {PAYMENT_BADGES.map((badge) => (
-                      <div
-                        key={badge.name}
-                        className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-white px-3 shadow-sm"
-                      >
-                        <img
-                          src={badge.logo}
-                          alt={badge.name}
-                          className="h-5 w-auto max-w-[74px] object-contain"
-                          loading="lazy"
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.08] pt-4 text-xs">
-                    <span className="text-slate-400">
-                      Up to <strong className="text-emerald-400">70% Welcome Bonus</strong> on eligible
-                      first deposits
-                    </span>
-                    <Link
-                      to="/payment-policy"
-                      className="inline-flex items-center gap-1 font-bold text-emerald-400 hover:text-emerald-300"
-                    >
-                      Payment policy <ArrowUpRight className="h-3.5 w-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              </article>
-
-              {/* Card 2: Weekly Tournaments */}
-              <article className="io-glass-card io-glass-card-hover flex flex-col justify-between rounded-3xl p-6 sm:p-8 lg:col-span-5">
-                <div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/12 px-3 py-1 text-xs font-bold text-amber-300">
-                    <Trophy className="h-3.5 w-3.5" />
-                    Competitive Trading
-                  </div>
-                  <h3 className="mt-4 text-2xl font-extrabold text-white">
-                    Weekly Trading Tournaments
-                  </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                    Compete on equal starting tournament balances across 4 weekly events—including
-                    free-entry competitions—and climb the live leaderboard for real cash prizes.
-                  </p>
-                </div>
-
-                <div className="mt-6 rounded-2xl border border-white/[0.07] bg-[#090f1c] p-4">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-400">Rewards Distributed</span>
-                    <span className="font-extrabold text-emerald-400">$150,000+</span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-slate-400">Schedule</span>
-                    <span className="font-bold text-white">Mon • Wed • Fri • Sat</span>
-                  </div>
-                  <Link
-                    to="/tournaments"
-                    className="mt-4 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-white/[0.07] text-xs font-bold text-white transition-colors hover:bg-emerald-500"
-                  >
-                    Browse Live Tournaments <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
-              </article>
-
-              {/* Card 3: Free Demo Account */}
-              <article className="io-glass-card io-glass-card-hover rounded-3xl p-6 sm:p-7 lg:col-span-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/12 text-sky-400">
-                  <Play className="h-5 w-5" />
-                </div>
-                <h3 className="mt-4 text-xl font-bold text-white">$10,000 Unlimited Demo</h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-slate-400">
-                  Test strategies in real market conditions with virtual funds. Top up or reset your
-                  practice balance anytime with a single click.
-                </p>
-                <Link
-                  to="/trade"
-                  className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-sky-400 hover:text-sky-300"
-                >
-                  Launch demo terminal <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </article>
-
-              {/* Card 4: Social & Copy Trading */}
-              <article className="io-glass-card io-glass-card-hover rounded-3xl p-6 sm:p-7 lg:col-span-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/12 text-emerald-400">
-                  <Award className="h-5 w-5" />
-                </div>
-                <h3 className="mt-4 text-xl font-bold text-white">Social &amp; Copy Trading</h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-slate-400">
-                  Inspect verified performance leaderboards, study top-ranked traders, and configure
-                  automated copy parameters with custom stop-loss limits.
-                </p>
-                <Link
-                  to="/why-choose-init-option"
-                  className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300"
-                >
-                  Why traders choose us <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </article>
-
-              {/* Card 5: Security & Compliance */}
-              <article className="io-glass-card io-glass-card-hover rounded-3xl p-6 sm:p-7 lg:col-span-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/12 text-emerald-400">
-                  <Lock className="h-5 w-5" />
-                </div>
-                <h3 className="mt-4 text-xl font-bold text-white">Protected Account Controls</h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-slate-400">
-                  Secured with TLS 1.3 encryption, optional two-factor authentication, KYC withdrawal
-                  protection, and negative-balance protection on every trade.
-                </p>
-                <Link
-                  to="/regulation"
-                  className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300"
-                >
-                  Compliance &amp; security <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </article>
-            </div>
-          </div>
-        </section>
-
-        {/* ─── 7. HOW IT WORKS (3 STEPS) ────────────────────────────────────── */}
-        <section
-          aria-labelledby="io-steps-title"
-          className="border-y border-white/[0.07] bg-[#0b1220] py-20 sm:py-24"
-        >
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl text-center">
-              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
-                Simple Onboarding
-              </span>
-              <h2
-                id="io-steps-title"
-                className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
-              >
-                Start Trading in 3 Clear Steps
-              </h2>
-              <p className="mt-3 text-base text-slate-400">
-                Move from registration to your first practice or live position in under a minute.
-              </p>
-            </div>
-
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
-              {HOW_IT_WORKS_STEPS.map((item) => {
-                const Icon = item.icon;
+            <div className="mt-12 grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3">
+              {PARTNER_PILLARS.map((pillar) => {
+                const Icon = pillar.icon;
                 return (
-                  <article
-                    key={item.step}
-                    className="io-glass-card relative flex flex-col justify-between overflow-hidden rounded-3xl p-7"
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute right-5 top-4 text-6xl font-black tracking-tighter text-white/[0.04]"
-                    >
-                      {item.step}
+                  <div key={pillar.title} className="flex items-center gap-4">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#DCEEE2] bg-[#EAF7EE] text-[#3B857D]">
+                      <Icon className="h-5 w-5" />
                     </span>
-
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500/20 to-sky-500/10 text-emerald-400 ring-1 ring-emerald-500/30">
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-400">
-                          Step {item.step}
-                        </span>
-                      </div>
-
-                      <h3 className="mt-5 text-xl font-bold text-white">{item.title}</h3>
-                      <p className="mt-2.5 text-sm leading-relaxed text-slate-400">{item.text}</p>
+                    <div className="whitespace-pre-line text-sm font-semibold leading-snug text-[#161D24] sm:text-[15px]">
+                      {pillar.title}
                     </div>
-
-                    <Link
-                      to={item.ctaTo}
-                      className="mt-6 inline-flex items-center gap-2 text-xs font-bold text-white transition-colors hover:text-emerald-400"
-                    >
-                      <span>{item.ctaLabel}</span>
-                      <ArrowRight className="h-3.5 w-3.5 text-emerald-400" />
-                    </Link>
-                  </article>
+                  </div>
                 );
               })}
             </div>
           </div>
         </section>
 
-        {/* ─── 8. TRADER REVIEWS (#reviews) ─────────────────────────────────── */}
-        <section id="reviews" aria-labelledby="io-reviews-title" className="py-20 sm:py-24">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
-                  Community Feedback
+        {/* ─── 5. EARNINGS / INTERACTIVE PAYOUT ESTIMATOR ──────────────────── */}
+        <section className="py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="grid items-center gap-12 lg:grid-cols-12">
+              {/* Left Copy */}
+              <div className="lg:col-span-6">
+                <span className="io-eyebrow-pill">Earnings</span>
+                <h2 className="mt-4 text-3xl font-bold leading-tight tracking-[-0.025em] text-[#161D24] sm:text-4xl lg:text-[42px]">
+                  Discover Your Payout
+                  <br />
+                  Potential
+                </h2>
+                <p className="mt-4 max-w-md text-sm leading-7 text-[#5A6772] sm:text-base">
+                  Every trade on {platformName} displays your exact fixed return before you confirm.
+                  Practice consistent 1–2% risk sizing on your free $10,000 demo, then move to live
+                  markets starting from just $5.
+                </p>
+
+                <div className="mt-8">
+                  <Link
+                    to="/register"
+                    className="io-sage-btn inline-flex h-12 items-center justify-center rounded-full px-7 text-sm font-semibold text-white"
+                  >
+                    Start Trading Today
+                  </Link>
+                </div>
+              </div>
+
+              {/* Right Interactive Calculator Card (Matching Reference "Estimate Your Profit!") */}
+              <div className="lg:col-span-6">
+                <div className="mx-auto max-w-md rounded-[28px] border border-[#DFECE4] bg-gradient-to-br from-white via-[#F6FBF8] to-[#E6F4EC] p-7 shadow-[0_24px_54px_rgba(24,60,48,0.07)] sm:p-9">
+                  <h3 className="text-xl font-bold text-[#161D24] sm:text-2xl">
+                    Estimate Your Profit!
+                  </h3>
+
+                  {/* Account Balance Stepper */}
+                  <div className="mt-6">
+                    <div className="text-xs font-medium text-[#64707D]">Account Balance</div>
+                    <div className="mt-2 flex items-center justify-between rounded-full border border-[#E2ECE6] bg-white p-1.5 shadow-sm">
+                      <button
+                        type="button"
+                        aria-label="Decrease account size"
+                        onClick={() => setCalcBalance((b) => Math.max(50, b - 100))}
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#68BE86] text-white transition-transform hover:scale-105"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="text-base font-bold tabular-nums text-[#161D24]">
+                        ${calcBalance.toLocaleString()}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="Increase account size"
+                        onClick={() => setCalcBalance((b) => Math.min(10000, b + 250))}
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#68BE86] text-white transition-transform hover:scale-105"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Payout Rate Range Slider */}
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between text-xs font-medium text-[#64707D]">
+                      <span>Asset Payout Rate ({calcPayoutRate}%)</span>
+                      <span className="font-semibold text-[#2E7971]">
+                        +${calcSingleWinProfit} / 10% trade
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={75}
+                      max={95}
+                      value={calcPayoutRate}
+                      onChange={(e) => setCalcPayoutRate(Number(e.target.value))}
+                      aria-label="Asset payout percentage"
+                      className="mt-3 h-2 w-full cursor-pointer appearance-none rounded-lg bg-[#D5EADB] accent-[#4A9E84]"
+                    />
+                  </div>
+
+                  {/* Result Pill & Total */}
+                  <div className="mt-7">
+                    <span className="inline-block rounded-full bg-[#DCEFE2] px-3.5 py-1 text-[11px] font-semibold text-[#296353]">
+                      12 Winning Setups (At {calcPayoutRate}% Payout)
+                    </span>
+                    <div className="mt-3 flex items-baseline gap-1.5">
+                      <span className="text-3xl font-extrabold tabular-nums text-[#3D848E] sm:text-4xl">
+                        ${calcMonthlyProjection.toLocaleString()}
+                      </span>
+                      <span className="text-xs font-medium text-[#64707D]">/est. return</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 6. WHY TRADE WITH US — 6-CARD PASTEL BENTO GRID ─────────────── */}
+        <section id="features" aria-labelledby="io-bento-heading" className="py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-xl text-center">
+              <span className="io-eyebrow-pill">Why Trade With Us</span>
+              <h2
+                id="io-bento-heading"
+                className="mt-4 text-3xl font-bold tracking-[-0.025em] text-[#161D24] sm:text-4xl"
+              >
+                Swift &amp; Dependable Payouts
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-[#64707D] sm:text-base">
+                Experience seamless M-PESA and cryptocurrency settlements—because your trading
+                profits shouldn&apos;t keep you waiting.
+              </p>
+            </div>
+
+            {/* Asymmetric Pastel & White Bento Grid (Matching Reference Slice 2) */}
+            <div className="mt-12 grid gap-5 md:grid-cols-12">
+              {/* Card 1: Soft Ice-Slate Tint (5 cols) */}
+              <article className="rounded-[24px] border border-[#E1ECEF] bg-[#EAF2F5] p-7 md:col-span-5">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#357D87] shadow-sm">
+                  <TrendingUp className="h-5 w-5" />
                 </span>
+                <h3 className="mt-5 text-lg font-bold leading-snug text-[#161D24]">
+                  Up to 95%
+                  <br />
+                  Payout Rates
+                </h3>
+                <p className="mt-2.5 text-xs leading-6 text-[#586672] sm:text-sm">
+                  Trade major Forex pairs, Crypto, Commodities, and Stocks knowing your exact return
+                  before confirming every order.
+                </p>
+              </article>
+
+              {/* Card 2: Crisp White Card (4 cols) */}
+              <article className="rounded-[24px] border border-[#E6EFEA] bg-white p-7 shadow-[0_16px_40px_rgba(20,48,40,0.05)] md:col-span-4">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#E7F6EC] text-[#3B8B6E]">
+                  <Layers className="h-5 w-5" />
+                </span>
+                <h3 className="mt-5 text-lg font-bold leading-snug text-[#161D24]">
+                  Risk-Free $10K
+                  <br />
+                  Demo Trading
+                </h3>
+                <p className="mt-2.5 text-xs leading-6 text-[#586672] sm:text-sm">
+                  Practice confidently with $10,000 simulated funds on live charts and reset your
+                  balance anytime.
+                </p>
+              </article>
+
+              {/* Card 3: Soft Sage Stat Card (3 cols) */}
+              <article className="flex flex-col justify-center rounded-[24px] border border-[#DFEEE5] bg-[#EEF6F1] p-7 md:col-span-3">
+                <div className="text-3xl font-extrabold tracking-tight text-[#161D24] sm:text-4xl">
+                  &lt; 2m
+                </div>
+                <h3 className="mt-2 text-base font-bold leading-snug text-[#161D24]">
+                  Fastest M-PESA
+                  <br />
+                  Payout Time
+                </h3>
+                <p className="mt-2 text-xs text-[#5E6C77]">
+                  Rapid mobile money &amp; USDT TRC20 withdrawals.
+                </p>
+              </article>
+
+              {/* Card 4: Crisp White Card (4 cols) */}
+              <article className="rounded-[24px] border border-[#E6EFEA] bg-white p-7 shadow-[0_16px_40px_rgba(20,48,40,0.05)] md:col-span-4">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#E7F6EC] text-[#3B8B6E]">
+                  <Clock className="h-5 w-5" />
+                </span>
+                <h3 className="mt-5 text-lg font-bold leading-snug text-[#161D24]">
+                  Immediate
+                  <br />
+                  Local Deposits
+                </h3>
+                <p className="mt-2.5 text-xs leading-6 text-[#586672] sm:text-sm">
+                  Fund instantly via M-PESA, USDT, Bitcoin, Binance, or Card with 0% platform
+                  deposit fees.
+                </p>
+              </article>
+
+              {/* Card 5: Soft Mint Green Card (4 cols) */}
+              <article className="rounded-[24px] border border-[#D4ECDC] bg-[#E3F4E8] p-7 md:col-span-4">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#2F7D67] shadow-sm">
+                  <Users className="h-5 w-5" />
+                </span>
+                <h3 className="mt-5 text-lg font-bold leading-snug text-[#161D24]">
+                  Tournaments &amp;
+                  <br />
+                  Copy Community
+                </h3>
+                <p className="mt-2.5 text-xs leading-6 text-[#4A5C55] sm:text-sm">
+                  Compete in 4 weekly cash tournaments or automatically mirror top-ranked verified
+                  traders.
+                </p>
+              </article>
+
+              {/* Card 6: Crisp White Card (4 cols) */}
+              <article className="rounded-[24px] border border-[#E6EFEA] bg-white p-7 shadow-[0_16px_40px_rgba(20,48,40,0.05)] md:col-span-4">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#E7F6EC] text-[#3B8B6E]">
+                  <Wallet className="h-5 w-5" />
+                </span>
+                <h3 className="mt-5 text-lg font-bold leading-snug text-[#161D24]">
+                  Accessible $5
+                  <br />
+                  Starting Capital
+                </h3>
+                <p className="mt-2.5 text-xs leading-6 text-[#586672] sm:text-sm">
+                  Begin live trading with just $5 and open positions from $1, scaling smoothly at
+                  your own pace.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 7. TESTIMONIALS — WHAT OUR TRADERS SAY ──────────────────────── */}
+        <section
+          id="reviews"
+          aria-labelledby="io-testimonials-title"
+          className="relative overflow-hidden bg-gradient-to-b from-white via-[#F9FCFA] to-[#EDF7F0] py-20 sm:py-24"
+        >
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <div>
+                <span className="io-eyebrow-pill">Testimonials</span>
                 <h2
-                  id="io-reviews-title"
-                  className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
+                  id="io-testimonials-title"
+                  className="mt-4 text-3xl font-bold tracking-[-0.025em] text-[#161D24] sm:text-4xl"
                 >
-                  Trusted by Active Traders Every Day
+                  What Our Traders Say
                 </h2>
               </div>
 
-              <Link
-                to="/reviews"
-                className="inline-flex h-11 items-center gap-2 self-start rounded-full border border-white/15 bg-white/[0.04] px-5 text-xs font-bold text-white transition-colors hover:border-emerald-500/40 hover:bg-white/[0.08]"
-              >
-                <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                <span>4.9/5 Rating • View All Reviews</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  aria-label="Previous testimonials"
+                  onClick={() =>
+                    setReviewOffset(
+                      (prev) => (prev - 1 + TESTIMONIAL_ITEMS.length) % TESTIMONIAL_ITEMS.length,
+                    )
+                  }
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#D8E4DD] bg-white text-[#5E6B76] transition-colors hover:border-[#52A788] hover:text-[#161D24]"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next testimonials"
+                  onClick={() => setReviewOffset((prev) => (prev + 1) % TESTIMONIAL_ITEMS.length)}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#161B20] text-white transition-colors hover:bg-[#262F38]"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             <div className="mt-10 grid gap-6 md:grid-cols-3">
-              {TESTIMONIALS.map((item) => (
+              {visibleTestimonials.map((item) => (
                 <article
                   key={item.name}
-                  className="io-glass-card io-glass-card-hover flex flex-col justify-between rounded-3xl p-7"
+                  className="flex flex-col justify-between rounded-[24px] border border-[#E6EFEA] bg-white p-7 shadow-[0_14px_38px_rgba(20,48,40,0.045)]"
                 >
                   <div>
                     <div
-                      className="flex items-center gap-1 text-amber-400"
-                      aria-label={`${item.rating} out of 5 stars`}
+                      aria-hidden="true"
+                      className="font-serif text-4xl font-black leading-none text-[#7AC892]"
                     >
-                      {Array.from({ length: 5 }).map((_, idx) => (
-                        <Star key={idx} className="h-4 w-4 fill-current" />
-                      ))}
-                      <span className="ml-2 text-xs font-bold text-slate-200">{item.rating}</span>
+                      &ldquo;
                     </div>
-
-                    <p className="mt-5 text-[15px] leading-relaxed text-slate-200">
-                      &ldquo;{item.quote}&rdquo;
+                    <p className="mt-3 text-xs leading-6 text-[#2C3740] sm:text-sm">
+                      {item.quote}
                     </p>
                   </div>
 
-                  <div className="mt-6 flex items-center justify-between border-t border-white/[0.07] pt-5">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-sky-600 text-xs font-extrabold text-white">
-                        {item.initials}
-                      </span>
-                      <div>
-                        <div className="text-sm font-bold text-white">{item.name}</div>
-                        <div className="text-xs text-slate-400">{item.role}</div>
+                  <div className="mt-6 flex items-center gap-3.5 pt-2">
+                    <span
+                      style={{ background: item.bg }}
+                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                    >
+                      {item.initials}
+                    </span>
+                    <div>
+                      <div className="text-sm font-bold text-[#161D24]">{item.name}</div>
+                      <div
+                        className="mt-0.5 flex items-center gap-0.5 text-[#E87A48]"
+                        aria-label="5 out of 5 stars"
+                      >
+                        {Array.from({ length: 5 }).map((_, idx) => (
+                          <Star key={idx} className="h-3.5 w-3.5 fill-current" />
+                        ))}
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">
-                      <CheckCircle2 className="h-3 w-3" />
-                      Verified
-                    </span>
                   </div>
                 </article>
               ))}
@@ -1239,142 +1288,199 @@ const PoolitoHomePage = () => {
           </div>
         </section>
 
-        {/* ─── 9. INTERACTIVE FAQ SECTION (#faq) ────────────────────────────── */}
-        <section
-          id="faq"
-          aria-labelledby="io-faq-title"
-          className="border-t border-white/[0.07] bg-[#0b1220] py-20 sm:py-24"
-        >
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-10 lg:grid-cols-12">
-              <div className="lg:col-span-5">
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
-                  Clear Answers
-                </span>
-                <h2
-                  id="io-faq-title"
-                  className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
-                >
-                  Frequently Asked Questions
-                </h2>
-                <p className="mt-3 text-base leading-relaxed text-slate-400">
-                  Everything you should know about demo practice, deposits, withdrawals, bonuses, and
-                  account protection before placing your first trade.
-                </p>
+        {/* ─── 8. TRADE SMARTER — COMPARISON MATRIX ────────────────────────── */}
+        <section aria-labelledby="io-compare-heading" className="py-20 sm:py-24">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <span className="io-eyebrow-pill">Trade Smarter</span>
+              <h2
+                id="io-compare-heading"
+                className="mt-4 text-3xl font-bold tracking-[-0.025em] text-[#161D24] sm:text-4xl"
+              >
+                Smart Choices, Better Trades
+              </h2>
+            </div>
 
-                <div className="io-glass-card mt-8 rounded-2xl p-6">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
-                      <Headphones className="h-5 w-5" />
-                    </span>
-                    <div>
-                      <div className="text-sm font-bold text-white">Need personalized assistance?</div>
-                      <div className="text-xs text-slate-400">
-                        Average live chat response under 5 minutes
+            <div className="mt-12 overflow-x-auto rounded-[28px] border border-[#E2ECE6] bg-white shadow-[0_24px_60px_rgba(20,48,40,0.06)]">
+              <table className="w-full min-w-[680px] border-collapse text-center">
+                <thead>
+                  <tr className="border-b border-[#EDF3EF]">
+                    <th className="w-[240px] bg-[#EEF8F1] p-6 text-left" />
+                    <th className="border-l border-[#EDF3EF] bg-white px-5 py-7">
+                      <div className="flex justify-center">
+                        <SiteLogo
+                          to=""
+                          surface="light"
+                          imageClassName="h-7 w-auto object-contain"
+                        />
                       </div>
-                    </div>
+                      <div className="mt-3 text-2xl font-extrabold text-[#3D848E]">$5</div>
+                      <div className="mt-0.5 text-[10px] font-medium text-[#7A8793]">
+                        *(Min. Live Deposit • $0 Demo)
+                      </div>
+                    </th>
+                    <th className="border-l border-[#EDF3EF] bg-white px-5 py-7">
+                      <div className="text-sm font-bold uppercase tracking-wider text-[#7A8793]">
+                        Legacy Brokers
+                      </div>
+                      <div className="mt-3 text-xl font-bold text-[#161D24]">$200+</div>
+                      <div className="mt-0.5 text-[10px] text-[#9AA6B0]">Min. Deposit</div>
+                    </th>
+                    <th className="border-l border-[#EDF3EF] bg-gradient-to-b from-white to-[#F3FBF5] px-5 py-7">
+                      <div className="text-sm font-bold uppercase tracking-wider text-[#7A8793]">
+                        Basic Apps
+                      </div>
+                      <div className="mt-3 text-xl font-bold text-[#161D24]">$50+</div>
+                      <div className="mt-0.5 text-[10px] text-[#9AA6B0]">Min. Deposit</div>
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody className="text-xs sm:text-[13px]">
+                  {COMPARISON_ROWS.map((row) => {
+                    const renderCell = (val: string | boolean) => {
+                      if (typeof val === "boolean") {
+                        return val ? (
+                          <span className="mx-auto inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#22A958] text-white">
+                            <Check className="h-3.5 w-3.5 stroke-[3]" />
+                          </span>
+                        ) : (
+                          <span className="mx-auto inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#DF3F32] text-white">
+                            <X className="h-3.5 w-3.5 stroke-[3]" />
+                          </span>
+                        );
+                      }
+                      return <span className="font-semibold text-[#1E2730]">{val}</span>;
+                    };
+
+                    return (
+                      <tr key={row.label} className="border-b border-[#F1F6F3] last:border-b-0">
+                        <td className="bg-[#F2FAF4] px-6 py-4 text-left font-medium text-[#1E2830]">
+                          <span className="inline-flex items-center gap-2.5">
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-[#459982]" />
+                            <span>{row.label}</span>
+                          </span>
+                        </td>
+                        <td className="border-l border-[#EDF3EF] px-4 py-4">
+                          {renderCell(row.initOption)}
+                        </td>
+                        <td className="border-l border-[#EDF3EF] px-4 py-4">
+                          {renderCell(row.legacyBroker)}
+                        </td>
+                        <td className="border-l border-[#EDF3EF] bg-[#F5FBF7]/70 px-4 py-4">
+                          {renderCell(row.basicApps)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 9. FREE TRADING ACADEMY & GUIDE BLUEPRINT CALLOUT ───────────── */}
+        <section className="py-16 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="grid items-center gap-12 lg:grid-cols-12">
+              {/* Left Visual Blueprint Showcase */}
+              <div className="lg:col-span-6">
+                <div className="relative mx-auto max-w-lg rounded-[28px] border border-[#DCECE2] bg-gradient-to-br from-[#EAF6EE] via-[#F4FBF6] to-[#E2F2EA] p-6 shadow-[0_20px_50px_rgba(24,60,48,0.08)] sm:p-8">
+                  <div className="overflow-hidden rounded-2xl border border-white/80 bg-[#08121E] shadow-xl">
+                    <img
+                      src="/landing/poolito-initoption/laptop-phone-angle.png"
+                      alt={`${platformName} Academy and multi-device terminal`}
+                      className="h-56 w-full object-cover sm:h-64"
+                      loading="lazy"
+                    />
                   </div>
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <Link
-                      to="/faq"
-                      className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-emerald-500 px-4 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
-                    >
-                      Full FAQ Center <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
-                    <Link
-                      to="/contact"
-                      className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.04] px-4 text-xs font-semibold text-white transition-colors hover:bg-white/[0.08]"
-                    >
-                      Contact Support ({supportEmail.split("@")[0]})
-                    </Link>
+
+                  {/* Overlapping Curriculum Module Cards */}
+                  <div className="-mt-6 grid grid-cols-3 gap-2.5 px-2">
+                    {[
+                      { tag: "MODULE 01", title: "Candlestick Entries & Exits", icon: BarChart3 },
+                      { tag: "HANDBOOK", title: "30+ Indicator Setup Blueprint", icon: BookOpen },
+                      { tag: "DISCIPLINE", title: "Risk & M-PESA Payout Guide", icon: Trophy },
+                    ].map((mod) => {
+                      const ModIcon = mod.icon;
+                      return (
+                        <div
+                          key={mod.title}
+                          className="rounded-xl border border-[#1E3B52] bg-gradient-to-b from-[#132B42] to-[#0B1B2B] p-3 text-white shadow-lg"
+                        >
+                          <ModIcon className="h-4 w-4 text-[#74C686]" />
+                          <div className="mt-1.5 text-[9px] font-bold tracking-wider text-[#74C686]">
+                            {mod.tag}
+                          </div>
+                          <div className="mt-0.5 text-[11px] font-bold leading-tight text-white">
+                            {mod.title}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3 lg:col-span-7">
-                {faqItems.map((item, idx) => {
-                  const isOpen = openFaqIndex === idx;
-                  return (
-                    <div
-                      key={item.question}
-                      className={`rounded-2xl border transition-colors ${
-                        isOpen
-                          ? "border-emerald-500/35 bg-[#121c2e]"
-                          : "border-white/[0.08] bg-[#0e1626] hover:border-white/15"
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        aria-expanded={isOpen}
-                        onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                        className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
-                      >
-                        <span className="text-sm font-bold text-white sm:text-base">
-                          {item.question}
-                        </span>
-                        <ChevronDown
-                          className={`h-5 w-5 shrink-0 text-emerald-400 transition-transform duration-200 ${
-                            isOpen ? "rotate-180" : ""
-                          }`}
-                        />
-                      </button>
-                      {isOpen ? (
-                        <div className="border-t border-white/[0.06] px-6 pb-5 pt-3.5 text-sm leading-7 text-slate-300">
-                          {item.answer}
-                        </div>
-                      ) : null}
-                    </div>
-                  );
-                })}
+              {/* Right Copy & CTA (Matching Reference Blueprint Section) */}
+              <div className="lg:col-span-6">
+                <h2 className="text-2xl font-bold leading-snug tracking-[-0.02em] text-[#161D24] sm:text-3xl lg:text-[34px]">
+                  Hold on! Open any account and unlock our {platformName} Trading Guide for free!
+                </h2>
+                <p className="mt-4 text-sm leading-7 text-[#5A6772] sm:text-base">
+                  If you&apos;re dedicated to trading with structure and clarity, the{" "}
+                  {platformName} Academy is your fast track to mastering the workspace. Explore 30+
+                  lessons on chart reading, RSI &amp; Bollinger setups, deposit bonuses, and
+                  disciplined risk management.
+                </p>
+
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <Link
+                    to="/trading-guide"
+                    className="io-sage-btn inline-flex h-12 items-center justify-center rounded-full px-7 text-sm font-semibold text-white"
+                  >
+                    Unlock the Trading Guide
+                  </Link>
+                  <Link
+                    to="/faq"
+                    className="inline-flex h-12 items-center justify-center rounded-full border border-[#D4E2DA] bg-white px-6 text-sm font-semibold text-[#161D24] transition-colors hover:bg-[#F3FAF5]"
+                  >
+                    Browse FAQs
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ─── 10. FINAL CONVERSION CTA ─────────────────────────────────────── */}
-        <section aria-labelledby="io-final-cta-title" className="py-20 sm:py-24">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-[32px] border border-emerald-500/30 bg-gradient-to-br from-[#0f2429] via-[#0d192b] to-[#0a1220] px-6 py-14 text-center shadow-[0_30px_80px_rgba(2,8,20,0.65)] sm:px-12 sm:py-18">
-              <div
-                aria-hidden="true"
-                className="io-grid-pattern pointer-events-none absolute inset-0 opacity-40"
-              />
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute left-1/2 top-0 h-64 w-[520px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,184,107,0.28),transparent_70%)] blur-2xl"
-              />
+        {/* ─── 10. FULL-BLEED PRE-FOOTER BANNER (Step into Tomorrow's...) ──── */}
+        <section aria-labelledby="io-cta-banner-heading" className="io-teal-banner py-16 sm:py-20">
+          <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 sm:px-6 lg:grid-cols-12 lg:px-8">
+            <div className="lg:col-span-6">
+              <h2
+                id="io-cta-banner-heading"
+                className="text-3xl font-bold leading-[1.15] tracking-[-0.02em] text-white sm:text-4xl lg:text-[42px]"
+              >
+                Step into Tomorrow&apos;s
+                <br />
+                Trading World
+              </h2>
+            </div>
 
-              <div className="relative z-10 mx-auto max-w-3xl">
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">
-                  Ready When You Are
-                </span>
-                <h2
-                  id="io-final-cta-title"
-                  className="mt-5 text-3xl font-extrabold tracking-tight text-white sm:text-5xl"
+            <div className="lg:col-span-6">
+              <p className="max-w-xl text-sm leading-7 text-white/90 sm:text-base">
+                Discover a platform where chart clarity, fast M-PESA &amp; crypto payouts, and
+                risk-free practice come standard. With {platformName}, you can test ideas on a
+                $10,000 demo and transition to live markets whenever you are ready.
+              </p>
+
+              <div className="mt-7">
+                <Link
+                  to="/register"
+                  className="io-dark-btn inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-semibold text-white"
                 >
-                  Start Your Trading Journey on {platformName} Today
-                </h2>
-                <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-                  Practice risk-free on a $10,000 demo account or fund your live balance in minutes via
-                  M-PESA and cryptocurrency.
-                </p>
-
-                <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-                  <Link
-                    to="/register"
-                    className="inline-flex h-13 min-h-[52px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#10b86b] to-[#0ea35e] px-8 text-sm font-bold text-white shadow-[0_16px_38px_rgba(16,184,107,0.36)] transition-all hover:-translate-y-0.5 hover:brightness-110"
-                  >
-                    <span>Create Free Account</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <Link
-                    to="/trade"
-                    className="inline-flex h-13 min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/20 bg-white/[0.06] px-8 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/[0.12]"
-                  >
-                    <Play className="h-4 w-4 fill-current text-emerald-400" />
-                    <span>Open Instant Demo</span>
-                  </Link>
-                </div>
+                  Start Your Journey Today!
+                </Link>
               </div>
             </div>
           </div>

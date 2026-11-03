@@ -190,7 +190,7 @@ const StarRating = ({
       const starIcon = (
         <Star
           className={`h-4 w-4 sm:h-5 sm:w-5 ${
-            active ? "text-amber-400" : "text-slate-600"
+            active ? "text-[#F07A57]" : "text-[#CBD6CE]"
           }`}
           fill={active ? "currentColor" : "none"}
           strokeWidth={2}
@@ -360,7 +360,7 @@ const ReviewsPage = () => {
   };
 
   return (
-    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-white text-[#161D24]">
       <Navbar />
 
       <main>
@@ -374,22 +374,22 @@ const ReviewsPage = () => {
           ]}
         />
 
-        <section className="py-12 sm:py-16">
+        <section className="bg-[#FAFDFB] py-12 sm:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {/* Summary Strip */}
             <div className="io-glass-card mb-10 flex flex-wrap items-center justify-between gap-6 rounded-3xl p-6 sm:p-7">
               <div className="flex items-center gap-5">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-400/12 text-2xl font-extrabold text-amber-400 ring-1 ring-amber-400/30">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#CBE4D4] bg-[#EAF6EE] text-2xl font-extrabold text-[#2E7971]">
                   {averageRating}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <StarRating rating={Math.round(Number(averageRating))} />
-                    <span className="text-xs font-bold text-slate-300">
+                    <span className="text-xs font-bold text-[#161D24]">
                       Out of 5.0
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 text-sm text-[#5A6772]">
                     Based on {reviews.length} published community{" "}
                     {reviews.length === 1 ? "review" : "reviews"}
                   </p>
@@ -400,14 +400,14 @@ const ReviewsPage = () => {
                 <button
                   type="button"
                   onClick={copyCurrentUrl}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/12 bg-white/[0.04] px-4 text-xs font-bold text-slate-200 transition-colors hover:bg-white/[0.08] hover:text-white"
+                  className="inline-flex h-10 items-center gap-2 rounded-full border border-[#D4E2DA] bg-white px-4 text-xs font-bold text-[#161D24] transition-colors hover:bg-[#F3FAF5]"
                 >
-                  <Copy className="h-3.5 w-3.5 text-emerald-400" />
+                  <Copy className="h-3.5 w-3.5 text-[#2E7971]" />
                   <span>Share Page</span>
                 </button>
                 <Link
                   to="/trade"
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-500 px-4 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
+                  className="io-sage-btn inline-flex h-10 items-center gap-2 rounded-full px-5 text-xs font-bold text-white"
                 >
                   <Play className="h-3.5 w-3.5 fill-current" />
                   <span>Try Platform</span>
@@ -427,7 +427,7 @@ const ReviewsPage = () => {
                     >
                       <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="flex items-center gap-3.5">
-                          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/25 to-sky-500/20 text-sm font-extrabold text-emerald-300 ring-1 ring-emerald-500/30">
+                          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#CBE4D4] bg-gradient-to-br from-[#DDF3E4] to-[#D9ECF0] text-sm font-extrabold text-[#2E7971]">
                             {review.avatarUrl ? (
                               <img
                                 src={review.avatarUrl}
@@ -438,7 +438,7 @@ const ReviewsPage = () => {
                               <span>{initialsFromName(review.reviewerName)}</span>
                             )}
                             {code ? (
-                              <span className="absolute -bottom-1 -right-1 flex h-4 w-4 overflow-hidden rounded-full border border-slate-900">
+                              <span className="absolute -bottom-1 -right-1 flex h-4 w-4 overflow-hidden rounded-full border border-white shadow-sm">
                                 <img
                                   src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
                                   alt={code}
@@ -450,15 +450,15 @@ const ReviewsPage = () => {
 
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-white">
+                              <span className="text-sm font-bold text-[#161D24]">
                                 {review.reviewerName}
                               </span>
-                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-[#EAF6EE] px-2 py-0.5 text-[10px] font-bold text-[#2E7971]">
                                 <CheckCircle2 className="h-3 w-3" />
                                 UID {review.reviewerUid}
                               </span>
                             </div>
-                            <time className="mt-0.5 block text-xs text-slate-400">
+                            <time className="mt-0.5 block text-xs text-[#64717C]">
                               {formatReviewDate(review.createdAt)}
                             </time>
                           </div>
@@ -467,7 +467,7 @@ const ReviewsPage = () => {
                         <StarRating rating={review.rating} />
                       </div>
 
-                      <p className="mt-4 text-sm leading-7 text-slate-200 sm:text-[15px]">
+                      <p className="mt-4 text-sm leading-7 text-[#4D5A66] sm:text-[15px]">
                         {review.text}
                       </p>
                     </article>
@@ -478,21 +478,21 @@ const ReviewsPage = () => {
               {/* Right Review Submission Form */}
               <div className="lg:col-span-5">
                 <div className="io-glass-card sticky top-28 rounded-3xl p-6 sm:p-8">
-                  <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-emerald-400">
+                  <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#2E7971]">
                     <MessageSquarePlus className="h-4 w-4" />
                     <span>Share Your Experience</span>
                   </div>
-                  <h2 className="mt-3 text-2xl font-extrabold text-white">
+                  <h2 className="mt-3 text-2xl font-bold text-[#161D24]">
                     Submit a Platform Review
                   </h2>
-                  <p className="mt-2 text-xs leading-6 text-slate-400">
+                  <p className="mt-2 text-xs leading-6 text-[#5E6B76]">
                     Tell fellow traders what stood out about execution speed, chart tools, or deposit and
                     withdrawal flows.
                   </p>
 
                   <form onSubmit={submitReview} className="mt-6 space-y-5">
-                    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#080e1a] px-4 py-3.5">
-                      <span className="text-xs font-bold text-slate-200">
+                    <div className="flex items-center justify-between rounded-2xl border border-[#DCE8E1] bg-[#FAFDFB] px-4 py-3.5">
+                      <span className="text-xs font-bold text-[#161D24]">
                         Select Rating
                       </span>
                       <StarRating rating={rating} onChange={setRating} />
@@ -501,7 +501,7 @@ const ReviewsPage = () => {
                     <div>
                       <label
                         htmlFor="review-textarea"
-                        className="block text-xs font-bold uppercase tracking-wider text-slate-300"
+                        className="block text-xs font-bold uppercase tracking-wider text-[#4D5A66]"
                       >
                         Your Review
                       </label>
@@ -509,7 +509,7 @@ const ReviewsPage = () => {
                         id="review-textarea"
                         value={reviewText}
                         onChange={(event) => setReviewText(event.target.value)}
-                        className="mt-2 h-36 w-full resize-none rounded-2xl border border-white/10 bg-[#080e1a] p-4 text-sm leading-6 text-white outline-none transition-colors placeholder:text-slate-500 focus:border-emerald-500/50"
+                        className="mt-2 h-36 w-full resize-none rounded-2xl border border-[#DCE8E1] bg-[#FAFDFB] p-4 text-sm leading-6 text-[#161D24] outline-none transition-colors placeholder:text-[#788591] focus:border-[#52A788] focus:bg-white"
                         placeholder={`Share your honest experience trading on ${platformName}...`}
                       />
                     </div>
@@ -517,14 +517,14 @@ const ReviewsPage = () => {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#10b86b] to-[#0ea35e] px-6 text-sm font-bold text-white shadow-[0_14px_32px_rgba(16,184,107,0.3)] transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="io-sage-btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <span>{submitting ? "Publishing..." : "Publish Review"}</span>
                       <ArrowRight className="h-4 w-4" />
                     </button>
 
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-400" />
+                    <div className="flex items-center gap-2 text-xs text-[#5E6B76]">
+                      <ShieldCheck className="h-4 w-4 shrink-0 text-[#459982]" />
                       <span>Published reviews appear unedited with verified trader UID tags.</span>
                     </div>
                   </form>

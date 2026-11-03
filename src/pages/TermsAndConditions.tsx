@@ -15,7 +15,7 @@ const LEGAL_NAV = [
 
 const TermsAndConditions = () => {
   return (
-    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-white text-[#161D24]">
       <Navbar />
       <PageHero
         eyebrow="Legal & Governance"
@@ -25,7 +25,7 @@ const TermsAndConditions = () => {
       <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <nav
           aria-label="Legal policies"
-          className="mb-8 flex flex-wrap gap-2 rounded-2xl border border-white/[0.08] bg-[#0e1626] p-2"
+          className="mb-8 flex flex-wrap gap-2 rounded-2xl border border-[#DCE8E1] bg-[#F4FBF6] p-2"
         >
           {LEGAL_NAV.map((item) => (
             <Link
@@ -33,8 +33,8 @@ const TermsAndConditions = () => {
               to={item.to}
               className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-colors ${
                 item.active
-                  ? "bg-emerald-500 text-white"
-                  : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+                  ? "io-sage-btn text-white"
+                  : "text-[#515F6B] hover:bg-white hover:text-[#161D24]"
               }`}
             >
               {item.label}
@@ -43,7 +43,7 @@ const TermsAndConditions = () => {
         </nav>
 
         <section className="io-glass-card io-legal-prose rounded-3xl p-6 sm:p-10">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3.5 py-1 text-xs font-semibold text-emerald-300">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#CDE5D6] bg-[#EEF8F2] px-3.5 py-1 text-xs font-semibold text-[#2E7971]">
             <FileText className="h-3.5 w-3.5" />
             <span>Last Updated: May 17, 2026</span>
           </div>
@@ -344,12 +344,12 @@ const TermsAndConditions = () => {
           <h2 className="font-display text-2xl font-bold text-gray-900">21. Entire Agreement</h2>
           <p>These Terms, together with our Privacy Policy and any other policies referenced herein, constitute the entire agreement between you and InitOption regarding the Service and supersede all prior agreements.</p>
 
-          <div className="mt-10 rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-6 text-center">
-            <div className="inline-flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-amber-300">
+          <div className="mt-10 rounded-2xl border border-[#CBE4D4] bg-[#F1FAF4] p-6 text-center">
+            <div className="inline-flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-[#2E7971]">
               <ShieldCheck className="h-4 w-4" />
               <span>InitOption — Trade Responsibly</span>
             </div>
-            <p className="mt-2 text-sm text-slate-300">
+            <p className="mt-2 text-sm text-[#4D5A66]">
               Never risk capital you cannot afford to lose. If trading stops feeling controlled, pause
               live activity, switch to demo mode, or contact <a href="mailto:support@initoption.com">support@initoption.com</a> for account limits.
             </p>
@@ -359,14 +359,14 @@ const TermsAndConditions = () => {
         <div className="mt-8 flex items-center justify-between">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-white/[0.08]"
+            className="inline-flex items-center gap-2 rounded-full border border-[#D4E2DA] bg-white px-4 py-2.5 text-xs font-bold text-[#161D24] transition-colors hover:bg-[#F3FAF5]"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Return to homepage</span>
           </Link>
           <Link
             to="/risk-disclaimer"
-            className="text-xs font-bold text-emerald-400 hover:text-emerald-300"
+            className="text-xs font-bold text-[#2E7971] hover:underline"
           >
             Read Risk Disclaimer →
           </Link>

@@ -4,7 +4,6 @@ import {
   CalendarDays,
   DollarSign,
   Flag,
-  ShieldCheck,
   Trophy,
   Zap,
   Clock,
@@ -28,15 +27,13 @@ interface TournamentCardProps {
 }
 
 export function TournamentCard({ tournament, variant = "grid" }: TournamentCardProps) {
-  const isActive = tournament.status === "active";
-  const isUpcoming = tournament.status === "upcoming";
   const path = buildTournamentPath(tournament);
 
   const statusStyles = {
-    active: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-    upcoming: "bg-sky-500/15 text-sky-300 border-sky-500/30",
-    completed: "bg-slate-500/15 text-slate-300 border-slate-500/30",
-    cancelled: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+    active: "bg-[#E6F6EC] text-[#1D7947] border-[#BBE4CB]",
+    upcoming: "bg-[#E8F2F6] text-[#2F7584] border-[#C1DCE5]",
+    completed: "bg-[#F1F4F6] text-[#5B6874] border-[#DCE3E8]",
+    cancelled: "bg-[#FDECEE] text-[#C24150] border-[#F6C8CE]",
   } as const;
 
   const statusIcon = {
@@ -54,7 +51,7 @@ export function TournamentCard({ tournament, variant = "grid" }: TournamentCardP
         to={path}
         className="io-glass-card io-glass-card-hover group relative block overflow-hidden rounded-3xl p-8"
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(16,184,107,0.12)_0%,transparent_65%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(116,198,134,0.16)_0%,transparent_65%)]" />
 
         <div className="relative z-10">
           <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -68,57 +65,57 @@ export function TournamentCard({ tournament, variant = "grid" }: TournamentCardP
               {statusLabel}
             </span>
             {tournament.rebuy_cost > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-300">
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#F0D6A8] bg-[#FDF5E6] px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#A46A18]">
                 <ArrowRight className="h-3 w-3" />
                 Rebuy Available
               </span>
             ) : null}
           </div>
 
-          <h3 className="text-2xl font-extrabold text-white transition-colors group-hover:text-emerald-400 sm:text-3xl">
+          <h3 className="text-2xl font-bold text-[#161D24] transition-colors group-hover:text-[#2E7971] sm:text-3xl">
             {tournament.title}
           </h3>
-          <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
+          <p className="mt-2 max-w-md text-sm leading-6 text-[#586570]">
             {tournament.description ||
               `A ${formatTournamentMoney(tournament.prize_pool)} prize pool competition with ${formatTournamentMoney(tournament.entry_fee).toLowerCase()} entry.`}
           </p>
 
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <div className="rounded-2xl border border-white/[0.07] bg-[#080e1a] p-4">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            <div className="rounded-2xl border border-[#DFECE4] bg-[#F5FBF7] p-4">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#64717C]">
                 Prize Pool
               </div>
-              <div className="mt-1 text-2xl font-extrabold tabular-nums text-emerald-400 sm:text-3xl">
+              <div className="mt-1 text-2xl font-extrabold tabular-nums text-[#2E7971] sm:text-3xl">
                 {formatTournamentMoney(tournament.prize_pool)}
               </div>
             </div>
-            <div className="rounded-2xl border border-white/[0.07] bg-[#080e1a] p-4">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            <div className="rounded-2xl border border-[#DFECE4] bg-[#F5FBF7] p-4">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#64717C]">
                 Entry Fee
               </div>
-              <div className="mt-1 text-2xl font-extrabold tabular-nums text-white sm:text-3xl">
+              <div className="mt-1 text-2xl font-extrabold tabular-nums text-[#161D24] sm:text-3xl">
                 {tournament.entry_fee === 0 ? "Free" : formatTournamentMoney(tournament.entry_fee)}
               </div>
             </div>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-2.5 text-xs">
-            <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500/12 px-3 py-1.5 font-semibold text-emerald-300">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF6EE] px-3 py-1.5 font-semibold text-[#2E7971]">
               <DollarSign className="h-3.5 w-3.5" />
               {formatTournamentMoney(tournament.starting_balance)} Balance
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-xl bg-sky-500/12 px-3 py-1.5 font-semibold text-sky-300">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F2F6] px-3 py-1.5 font-semibold text-[#2F7584]">
               <Users className="h-3.5 w-3.5" />
               {tournament.number_of_winners} Winners
             </span>
           </div>
 
-          <div className="mt-6 flex items-center justify-between border-t border-white/[0.07] pt-5">
-            <span className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-xs font-bold text-white transition-colors group-hover:bg-emerald-600">
+          <div className="mt-6 flex items-center justify-between border-t border-[#E5EEE9] pt-5">
+            <span className="io-sage-btn inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold text-white">
               <Trophy className="h-4 w-4" />
               View Tournament Details
             </span>
-            <span className="rounded-full bg-emerald-500/15 p-2 text-emerald-400">
+            <span className="rounded-full bg-[#EAF6EE] p-2 text-[#2E7971]">
               <TrendingUp className="h-4 w-4" />
             </span>
           </div>
@@ -133,13 +130,13 @@ export function TournamentCard({ tournament, variant = "grid" }: TournamentCardP
         to={path}
         className="io-glass-card io-glass-card-hover group grid grid-cols-1 items-center gap-4 rounded-2xl p-5 sm:grid-cols-[auto_1fr_auto]"
       >
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-emerald-500/25 bg-emerald-500/12 text-emerald-400">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#CDE5D6] bg-[#EAF6EE] text-[#2E7971]">
           <Trophy className="h-6 w-6" />
         </div>
 
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h4 className="truncate text-base font-extrabold text-white transition-colors group-hover:text-emerald-400">
+            <h4 className="truncate text-base font-bold text-[#161D24] transition-colors group-hover:text-[#2E7971]">
               {tournament.title}
             </h4>
             <span
@@ -152,39 +149,34 @@ export function TournamentCard({ tournament, variant = "grid" }: TournamentCardP
               {statusLabel}
             </span>
           </div>
-          <p className="mt-1 truncate text-xs text-slate-400">
-            {tournament.description ||
-              `${formatTournamentMoney(tournament.prize_pool)} prize pool · ${formatTournamentMoney(tournament.entry_fee).toLowerCase()} entry`}
-          </p>
-          <div className="mt-2.5 flex flex-wrap items-center gap-3 text-xs text-slate-400">
-            <span className="inline-flex items-center gap-1 font-semibold text-slate-200">
-              <Users className="h-3.5 w-3.5 text-sky-400" />
-              {tournament.number_of_winners} Winners
-            </span>
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-400">
-              <DollarSign className="h-3.5 w-3.5" />
-              {formatTournamentMoney(tournament.starting_balance)} Balance
+          <div className="mt-1.5 flex flex-wrap items-center gap-4 text-xs text-[#64717C]">
+            <span className="inline-flex items-center gap-1">
+              <CalendarDays className="h-3.5 w-3.5 text-[#459982]" />
+              {formatTournamentDateTime(tournament.start_date)}
             </span>
             <span className="inline-flex items-center gap-1">
-              <CalendarDays className="h-3.5 w-3.5" />
-              {formatTournamentDateTime(tournament.start_date)}
+              <Users className="h-3.5 w-3.5 text-[#3D848E]" />
+              {tournament.number_of_winners} Winners
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <DollarSign className="h-3.5 w-3.5 text-[#459982]" />
+              {formatTournamentMoney(tournament.starting_balance)} Start Balance
             </span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 sm:justify-end">
-          <span
-            className={cn(
-              "rounded-xl px-3 py-1.5 text-xs font-bold",
-              tournament.entry_fee === 0
-                ? "bg-emerald-500/15 text-emerald-300"
-                : "bg-white/[0.06] text-white",
-            )}
-          >
-            {tournament.entry_fee === 0 ? "Free Entry" : formatTournamentMoney(tournament.entry_fee)}
-          </span>
-          <span className="text-lg font-extrabold tabular-nums text-emerald-400">
-            {formatTournamentMoney(tournament.prize_pool)}
+        <div className="flex items-center justify-between gap-5 sm:justify-end">
+          <div className="text-left sm:text-right">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[#64717C]">
+              Prize Pool
+            </div>
+            <div className="text-lg font-extrabold tabular-nums text-[#2E7971]">
+              {formatTournamentMoney(tournament.prize_pool)}
+            </div>
+          </div>
+          <span className="io-sage-btn inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-xs font-bold text-white">
+            <span>Details</span>
+            <ArrowRight className="h-3.5 w-3.5" />
           </span>
         </div>
       </Link>
@@ -194,112 +186,76 @@ export function TournamentCard({ tournament, variant = "grid" }: TournamentCardP
   return (
     <Link
       to={path}
-      className="io-glass-card io-glass-card-hover group relative flex h-full flex-col rounded-3xl p-6"
+      className="io-glass-card io-glass-card-hover group flex flex-col justify-between rounded-3xl p-6"
     >
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="mb-2.5 flex flex-wrap items-center gap-2">
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                statusStyles[tournament.status],
-              )}
-            >
-              {statusIcon[tournament.status]}
-              {statusLabel}
-            </span>
-            {tournament.rebuy_cost > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
-                Rebuy
-              </span>
-            ) : null}
-          </div>
-          <h3 className="line-clamp-1 text-lg font-extrabold text-white transition-colors group-hover:text-emerald-400">
-            {tournament.title}
-          </h3>
-          <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-400">
-            {tournament.description ||
-              `${formatTournamentMoney(tournament.prize_pool)} prize pool · ${formatTournamentMoney(tournament.entry_fee).toLowerCase()} entry`}
-          </p>
+      <div>
+        <div className="flex items-center justify-between gap-2">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-wider",
+              statusStyles[tournament.status],
+            )}
+          >
+            {statusIcon[tournament.status]}
+            {statusLabel}
+          </span>
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF6EE] text-[#2E7971]">
+            <Trophy className="h-4 w-4" />
+          </span>
         </div>
 
-        <div className="shrink-0 text-right">
-          <div className="text-xl font-extrabold tabular-nums text-emerald-400">
-            {formatTournamentMoney(tournament.prize_pool)}
+        <h3 className="mt-4 line-clamp-1 text-lg font-bold text-[#161D24] transition-colors group-hover:text-[#2E7971]">
+          {tournament.title}
+        </h3>
+        <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-[#5D6A75]">
+          {tournament.description ||
+            `Compete on equal ${formatTournamentMoney(tournament.starting_balance)} starting balance for a share of ${formatTournamentMoney(tournament.prize_pool)}.`}
+        </p>
+
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
+          <div className="rounded-2xl border border-[#E3EEE7] bg-[#F5FBF7] p-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#687582]">
+              Prize Pool
+            </div>
+            <div className="mt-0.5 text-lg font-extrabold tabular-nums text-[#2E7971]">
+              {formatTournamentMoney(tournament.prize_pool)}
+            </div>
           </div>
-          <div className="text-[11px] text-slate-500">Prize Pool</div>
+          <div className="rounded-2xl border border-[#E3EEE7] bg-[#F5FBF7] p-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#687582]">
+              Entry Fee
+            </div>
+            <div className="mt-0.5 text-lg font-extrabold tabular-nums text-[#161D24]">
+              {tournament.entry_fee === 0 ? "Free" : formatTournamentMoney(tournament.entry_fee)}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-1.5 text-xs text-[#5E6B76]">
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5">
+              <CalendarDays className="h-3.5 w-3.5 text-[#459982]" />
+              Starts
+            </span>
+            <span className="font-semibold text-[#232F38]">
+              {formatTournamentDateTime(tournament.start_date)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5 text-[#3D848E]" />
+              Winners
+            </span>
+            <span className="font-semibold text-[#232F38]">{tournament.number_of_winners}</span>
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col justify-between">
-        <div>
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="rounded-2xl border border-white/[0.06] bg-[#080e1a] p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                Entry Fee
-              </div>
-              <div className="mt-1 text-xs font-bold text-white">
-                {tournament.entry_fee === 0 ? (
-                  <span className="inline-flex items-center gap-1 text-emerald-400">
-                    <ShieldCheck className="h-3.5 w-3.5" /> Free
-                  </span>
-                ) : (
-                  formatTournamentMoney(tournament.entry_fee)
-                )}
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/[0.06] bg-[#080e1a] p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                Winners
-              </div>
-              <div className="mt-1 text-xs font-bold text-white">{tournament.number_of_winners}</div>
-            </div>
-            <div className="rounded-2xl border border-white/[0.06] bg-[#080e1a] p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                Start Balance
-              </div>
-              <div className="mt-1 text-xs font-bold text-emerald-400">
-                {formatTournamentMoney(tournament.starting_balance)}
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/[0.06] bg-[#080e1a] p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                Rebuy
-              </div>
-              <div className="mt-1 text-xs font-bold text-amber-300">
-                {tournament.rebuy_cost > 0 ? formatTournamentMoney(tournament.rebuy_cost) : "None"}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-3 rounded-2xl border border-white/[0.06] bg-[#080e1a] p-3 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                Schedule
-              </span>
-              <span
-                className={cn(
-                  "text-[11px] font-bold",
-                  isActive ? "text-emerald-400" : isUpcoming ? "text-sky-400" : "text-slate-400",
-                )}
-              >
-                {isActive ? "Live Now" : isUpcoming ? "Starts Soon" : "Ended"}
-              </span>
-            </div>
-            <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] tabular-nums text-slate-400">
-              <span className="truncate">{formatTournamentDateTime(tournament.start_date)}</span>
-              <span>→</span>
-              <span className="truncate">{formatTournamentDateTime(tournament.end_date)}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 border-t border-white/[0.07] pt-4">
-          <span className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 text-xs font-bold text-white transition-colors group-hover:bg-emerald-600">
-            <Trophy className="h-3.5 w-3.5" />
-            {isActive ? "Enter Tournament" : isUpcoming ? "View & Register" : "View Results"}
-          </span>
-        </div>
+      <div className="mt-5 border-t border-[#E6EFEA] pt-4">
+        <span className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#CBE4D4] bg-[#F1FAF4] py-2.5 text-xs font-bold text-[#2E7971] transition-colors group-hover:bg-[#E2F4E8]">
+          <span>View Event</span>
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+        </span>
       </div>
     </Link>
   );

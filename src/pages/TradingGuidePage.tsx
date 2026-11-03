@@ -1061,6 +1061,7 @@ const GuideTreeNode = ({
   openIds,
   onToggle,
   onSelect,
+  surface = "dark",
 }: {
   topic: GuideTopic;
   activeId: string;
@@ -1068,10 +1069,12 @@ const GuideTreeNode = ({
   openIds: Set<string>;
   onToggle: (id: string) => void;
   onSelect: (id: string) => void;
+  surface?: "dark" | "light";
 }) => {
   const hasChildren = Boolean(topic.children?.length);
   const isOpen = openIds.has(topic.id);
   const isActive = topic.id === activeId;
+  const isLight = surface === "light";
 
   return (
     <div>
@@ -1082,21 +1085,54 @@ const GuideTreeNode = ({
           if (hasChildren) onToggle(topic.id);
         }}
         className={[
-          "group relative flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left leading-tight transition-all duration-200",
-          isActive 
-            ? "bg-[#1c81f8]/15 text-[#1c81f8] border border-[#1c81f8]/30" 
-            : "text-gray-400 hover:bg-white/5 hover:text-white hover:border border border-transparent",
-          depth === 0 ? "text-[16px] font-bold text-white mt-3 mb-1" : depth === 1 ? "text-[14px] font-semibold" : "text-[13px] font-medium",
+          "group relative flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left leading-tight transition-all duration-200",
+          isLight
+            ? isActive
+              ? "bg-[#EAF6EE] text-[#2E7971] border border-[#BEE0CA]"
+              : "text-[#4D5A66] hover:bg-[#F4FBF6] hover:text-[#161D24] border border-transparent"
+            : isActive
+              ? "bg-[#1c81f8]/15 text-[#1c81f8] border border-[#1c81f8]/30"
+              : "text-gray-400 hover:bg-white/5 hover:text-white hover:border border border-transparent",
+          depth === 0
+            ? isLight
+              ? "text-[15px] font-bold text-[#161D24] mt-2 mb-0.5"
+              : "text-[16px] font-bold text-white mt-3 mb-1"
+            : depth === 1
+              ? "text-[13.5px] font-semibold"
+              : "text-[13px] font-medium",
         ].join(" ")}
         style={{ paddingLeft: `${12 + depth * 16}px` }}
       >
         <span className="min-w-0 flex-1">
-          <span className={`font-semibold ${depth === 0 ? "text-[#1c81f8]" : ""}`}>{topic.number}.</span> {topic.title}
+          <span
+            className={`font-semibold ${
+              depth === 0 ? (isLight ? "text-[#2E7971]" : "text-[#1c81f8]") : ""
+            }`}
+          >
+            {topic.number}.
+          </span>{" "}
+          {topic.title}
         </span>
         {hasChildren ? (
-          <ChevronDown className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#1c81f8]" : "text-gray-400"}`} />
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+              isOpen
+                ? isLight
+                  ? "rotate-180 text-[#2E7971]"
+                  : "rotate-180 text-[#1c81f8]"
+                : isLight
+                  ? "text-[#7A8792]"
+                  : "text-gray-400"
+            }`}
+          />
         ) : null}
-        {isActive && depth === 0 && <div className="absolute left-0 top-1/2 h-[60%] w-1 -translate-y-1/2 rounded-r-full bg-[#1c81f8]"/>}
+        {isActive && depth === 0 && (
+          <div
+            className={`absolute left-0 top-1/2 h-[60%] w-1 -translate-y-1/2 rounded-r-full ${
+              isLight ? "bg-[#459982]" : "bg-[#1c81f8]"
+            }`}
+          />
+        )}
       </button>
       {hasChildren && isOpen ? (
         <div className="mt-1 space-y-1">
@@ -1109,6 +1145,7 @@ const GuideTreeNode = ({
               openIds={openIds}
               onToggle={onToggle}
               onSelect={onSelect}
+              surface={surface}
             />
           ))}
         </div>
@@ -1379,7 +1416,7 @@ const TradingGuidePage = () => {
     const activeCatMeta = guideCategories.find((cat) => cat.id === activeCategory) ?? guideCategories[0];
 
     return (
-      <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
+      <div className="io-public-shell min-h-screen overflow-x-hidden bg-white text-[#161D24]">
         <Navbar />
 
         <main>
@@ -1393,7 +1430,7 @@ const TradingGuidePage = () => {
             ]}
           />
 
-          <section className="py-12 sm:py-16">
+          <section className="bg-[#FAFDFB] py-12 sm:py-16">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               {/* Top 4 Category Cards */}
               <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -1411,26 +1448,26 @@ const TradingGuidePage = () => {
                       }}
                       className={`rounded-2xl border p-5 text-left transition-all ${
                         isActive
-                          ? "border-emerald-500/45 bg-gradient-to-br from-emerald-500/15 to-[#0e182a] shadow-[0_14px_34px_rgba(16,184,107,0.12)]"
-                          : "border-white/[0.08] bg-[#0e1626] hover:border-white/20 hover:bg-[#121c30]"
+                          ? "border-[#B4DBC2] bg-gradient-to-br from-[#E7F5EC] via-[#F3FAF5] to-white shadow-[0_14px_34px_rgba(61,132,142,0.1)]"
+                          : "border-[#E1ECE5] bg-white hover:border-[#C2E2CE] hover:bg-[#F7FCF9]"
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <span
                           className={`flex h-10 w-10 items-center justify-center rounded-xl ${
                             isActive
-                              ? "bg-emerald-500 text-white"
-                              : "bg-white/[0.05] text-emerald-400"
+                              ? "io-sage-btn text-white"
+                              : "bg-[#EAF6EE] text-[#2E7971]"
                           }`}
                         >
                           <Icon className="h-5 w-5" />
                         </span>
-                        <span className="rounded-full bg-white/[0.06] px-2.5 py-0.5 text-[11px] font-bold text-slate-300">
+                        <span className="rounded-full border border-[#DCE8E1] bg-white px-2.5 py-0.5 text-[11px] font-bold text-[#4D5A66]">
                           {count} lessons
                         </span>
                       </div>
-                      <h2 className="mt-4 text-base font-extrabold text-white">{cat.label}</h2>
-                      <p className="mt-1 text-xs leading-5 text-slate-400">{cat.description}</p>
+                      <h2 className="mt-4 text-base font-bold text-[#161D24]">{cat.label}</h2>
+                      <p className="mt-1 text-xs leading-5 text-[#5E6B76]">{cat.description}</p>
                     </button>
                   );
                 })}
@@ -1441,14 +1478,14 @@ const TradingGuidePage = () => {
                 <aside className="lg:col-span-4">
                   <div className="io-glass-card sticky top-28 rounded-3xl p-5">
                     <div className="relative">
-                      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7884]" />
                       <input
                         type="search"
                         value={chapterQuery}
                         onChange={(e) => setChapterQuery(e.target.value)}
                         placeholder={`Search ${activeCatMeta.label.toLowerCase()}...`}
                         aria-label="Search guide chapters"
-                        className="h-10 w-full rounded-xl border border-white/10 bg-[#080e1a] pl-10 pr-3 text-xs text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none"
+                        className="h-10 w-full rounded-full border border-[#DCE8E1] bg-[#FAFDFB] pl-10 pr-3 text-xs text-[#161D24] placeholder:text-[#788591] focus:border-[#52A788] focus:bg-white focus:outline-none"
                       />
                     </div>
 
@@ -1466,17 +1503,17 @@ const TradingGuidePage = () => {
                                 }}
                                 className={`flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-xs font-semibold transition-colors ${
                                   topic.id === selectedTopic.id
-                                    ? "bg-emerald-500/15 text-emerald-300"
-                                    : "text-slate-300 hover:bg-white/[0.05] hover:text-white"
+                                    ? "bg-[#EAF6EE] text-[#2E7971]"
+                                    : "text-[#4D5A66] hover:bg-[#F4FBF6] hover:text-[#161D24]"
                                 }`}
                               >
-                                <span className="font-mono text-emerald-400">{topic.number}.</span>
+                                <span className="font-mono font-bold text-[#2E7971]">{topic.number}.</span>
                                 <span>{topic.title}</span>
                               </button>
                             ))}
                           </div>
                         ) : (
-                          <p className="py-6 text-center text-xs text-slate-400">
+                          <p className="py-6 text-center text-xs text-[#6B7884]">
                             No chapters match &ldquo;{chapterQuery}&rdquo;.
                           </p>
                         )
@@ -1488,6 +1525,7 @@ const TradingGuidePage = () => {
                               topic={topic}
                               activeId={selectedTopic.id}
                               openIds={openIds}
+                              surface="light"
                               onToggle={(id) =>
                                 setOpenIds((current) => {
                                   const next = new Set(current);
@@ -1509,20 +1547,20 @@ const TradingGuidePage = () => {
                 <div className="space-y-6 lg:col-span-8">
                   <article className="io-glass-card rounded-3xl p-6 sm:p-10">
                     <div className="flex flex-wrap items-center gap-2.5 text-xs">
-                      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/12 px-3 py-1 font-bold uppercase tracking-wider text-emerald-300">
+                      <span className="rounded-full border border-[#CDE5D6] bg-[#EEF8F2] px-3 py-1 font-bold uppercase tracking-wider text-[#2E7971]">
                         {activeCatMeta.label}
                       </span>
-                      <span className="font-mono text-slate-400">
+                      <span className="font-mono font-semibold text-[#64717C]">
                         Chapter {selectedTopic.number}
                       </span>
                     </div>
 
-                    <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                    <h2 className="mt-4 text-3xl font-bold tracking-[-0.025em] text-[#161D24] sm:text-4xl">
                       {selectedContent.heading}
                     </h2>
 
                     {selectedContent.intro ? (
-                      <p className="mt-4 text-base leading-8 text-slate-200 sm:text-lg">
+                      <p className="mt-4 text-base leading-8 text-[#36434E] sm:text-lg">
                         {selectedContent.intro}
                       </p>
                     ) : null}
@@ -1530,7 +1568,7 @@ const TradingGuidePage = () => {
                     {selectedContent.paragraphs?.length ? (
                       <div className="mt-4 space-y-4">
                         {selectedContent.paragraphs.map((paragraph) => (
-                          <p key={paragraph} className="text-sm leading-7 text-slate-300 sm:text-base sm:leading-8">
+                          <p key={paragraph} className="text-sm leading-7 text-[#4D5A66] sm:text-base sm:leading-8">
                             {paragraph}
                           </p>
                         ))}
@@ -1542,9 +1580,9 @@ const TradingGuidePage = () => {
                         {selectedContent.bullets.map((bullet) => (
                           <li
                             key={bullet}
-                            className="flex items-start gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 text-sm leading-6 text-slate-200"
+                            className="flex items-start gap-3 rounded-2xl border border-[#E3EEE7] bg-[#F5FBF7] p-4 text-sm leading-6 text-[#232F38]"
                           >
-                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#459982]" />
                             <span>{bullet}</span>
                           </li>
                         ))}
@@ -1552,13 +1590,13 @@ const TradingGuidePage = () => {
                     ) : null}
 
                     {selectedContent.note ? (
-                      <div className="mt-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.08] p-5 text-sm leading-7 text-emerald-100">
-                        <strong className="font-bold text-emerald-300">Pro Tip:</strong>{" "}
+                      <div className="mt-6 rounded-2xl border border-[#CBE4D4] bg-[#EEF8F2] p-5 text-sm leading-7 text-[#232F38]">
+                        <strong className="font-bold text-[#2E7971]">Pro Tip:</strong>{" "}
                         {selectedContent.note}
                       </div>
                     ) : null}
 
-                    <div className="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-[#050912]">
+                    <div className="mt-8 overflow-hidden rounded-2xl border border-[#DFECE4] bg-[#F5FBF7]">
                       <img
                         src={primaryFigureUrl}
                         alt={selectedContent.figure?.title || selectedContent.heading || "Trading guide illustration"}
@@ -1568,14 +1606,14 @@ const TradingGuidePage = () => {
                         }}
                       />
                       {selectedContent.figure?.caption ? (
-                        <div className="border-t border-white/[0.07] px-4 py-3 text-xs text-slate-400">
+                        <div className="border-t border-[#E3EEE7] bg-white px-4 py-3 text-xs text-[#5E6B76]">
                           {selectedContent.figure.caption}
                         </div>
                       ) : null}
                     </div>
 
                     {secondaryFigureUrl ? (
-                      <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-[#050912]">
+                      <div className="mt-6 overflow-hidden rounded-2xl border border-[#DFECE4] bg-[#F5FBF7]">
                         <img
                           src={secondaryFigureUrl}
                           alt={selectedContent.secondaryFigure?.title || "Supporting platform view"}
@@ -1585,7 +1623,7 @@ const TradingGuidePage = () => {
                           }}
                         />
                         {selectedContent.secondaryFigure?.caption ? (
-                          <div className="border-t border-white/[0.07] px-4 py-3 text-xs text-slate-400">
+                          <div className="border-t border-[#E3EEE7] bg-white px-4 py-3 text-xs text-[#5E6B76]">
                             {selectedContent.secondaryFigure.caption}
                           </div>
                         ) : null}
@@ -1593,19 +1631,19 @@ const TradingGuidePage = () => {
                     ) : null}
 
                     {/* Previous / Next Navigation */}
-                    <div className="mt-8 grid gap-3 border-t border-white/[0.08] pt-6 sm:grid-cols-2">
+                    <div className="mt-8 grid gap-3 border-t border-[#E5EEE9] pt-6 sm:grid-cols-2">
                       {previousTopic ? (
                         <button
                           type="button"
                           onClick={() => selectTopic(previousTopic.id)}
-                          className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition-colors hover:border-white/20 hover:bg-white/[0.06]"
+                          className="group flex items-center gap-3 rounded-2xl border border-[#DFECE4] bg-[#FAFDFB] p-4 text-left transition-colors hover:border-[#BCDFC9] hover:bg-[#F1FAF4]"
                         >
-                          <ArrowRight className="h-4 w-4 shrink-0 rotate-180 text-slate-400 transition-transform group-hover:-translate-x-0.5" />
+                          <ArrowRight className="h-4 w-4 shrink-0 rotate-180 text-[#687582] transition-transform group-hover:-translate-x-0.5" />
                           <div className="min-w-0">
-                            <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-[#687582]">
                               Previous Lesson
                             </div>
-                            <div className="truncate text-xs font-bold text-white">
+                            <div className="truncate text-xs font-bold text-[#161D24]">
                               {previousTopic.number}. {previousTopic.title}
                             </div>
                           </div>
@@ -1618,35 +1656,35 @@ const TradingGuidePage = () => {
                         <button
                           type="button"
                           onClick={() => selectTopic(nextTopic.id)}
-                          className="group flex items-center justify-end gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-right transition-colors hover:bg-emerald-500/20"
+                          className="group flex items-center justify-end gap-3 rounded-2xl border border-[#BEE0CA] bg-[#EAF6EE] p-4 text-right transition-colors hover:bg-[#DFF1E6]"
                         >
                           <div className="min-w-0">
-                            <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-[#2E7971]">
                               Next Lesson
                             </div>
-                            <div className="truncate text-xs font-bold text-white">
+                            <div className="truncate text-xs font-bold text-[#161D24]">
                               {nextTopic.number}. {nextTopic.title}
                             </div>
                           </div>
-                          <ArrowRight className="h-4 w-4 shrink-0 text-emerald-400 transition-transform group-hover:translate-x-0.5" />
+                          <ArrowRight className="h-4 w-4 shrink-0 text-[#2E7971] transition-transform group-hover:translate-x-0.5" />
                         </button>
                       ) : null}
                     </div>
                   </article>
 
                   {/* Bottom Practice Banner */}
-                  <div className="flex flex-col items-start justify-between gap-4 rounded-3xl border border-emerald-500/25 bg-gradient-to-r from-[#0f2428] to-[#0d1626] p-6 sm:flex-row sm:items-center">
+                  <div className="io-teal-banner flex flex-col items-start justify-between gap-4 rounded-3xl p-6 text-white sm:flex-row sm:items-center">
                     <div>
-                      <h3 className="text-base font-extrabold text-white">
+                      <h3 className="text-base font-bold text-white">
                         Ready to test this in the live-price simulator?
                       </h3>
-                      <p className="mt-1 text-xs text-slate-300">
+                      <p className="mt-1 text-xs text-white/85">
                         Jump into the {platformName} terminal with $10,000 virtual funds—no deposit required.
                       </p>
                     </div>
                     <Link
                       to="/trade"
-                      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl bg-emerald-500 px-5 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
+                      className="io-dark-btn inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-5 text-xs font-bold text-white"
                     >
                       <Play className="h-3.5 w-3.5 fill-current" />
                       <span>Open Demo Desk</span>

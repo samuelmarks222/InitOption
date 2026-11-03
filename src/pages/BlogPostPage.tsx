@@ -146,63 +146,59 @@ const BlogPostPage = () => {
   const readingMinutes = post ? estimateReadingTimeMinutes(post.contentHtml) : 4;
 
   return (
-    <div className="io-public-shell min-h-screen overflow-x-hidden bg-[#080d16] text-slate-100">
+    <div className="io-public-shell min-h-screen overflow-x-hidden bg-white text-[#161D24]">
       <Navbar />
 
       <main>
         {/* Editorial Article Hero */}
-        <section className="relative overflow-hidden border-b border-white/[0.07] bg-gradient-to-b from-[#0c1424] via-[#09101d] to-[#080d16] py-12 sm:py-16 lg:py-20">
+        <section className="relative overflow-hidden border-b border-[#E5EFEA] bg-gradient-to-b from-[#EAF6EF] via-[#F4FAF6] to-white py-12 sm:py-16 lg:py-20">
           <div
             aria-hidden="true"
-            className="io-grid-pattern pointer-events-none absolute inset-0 opacity-45 [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-0 h-[360px] w-[680px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,184,107,0.16),transparent_68%)] blur-3xl"
+            className="io-grid-pattern pointer-events-none absolute inset-0 opacity-90 [mask-image:radial-gradient(ellipse_at_top,black_38%,transparent_80%)]"
           />
 
           <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <nav
                 aria-label="Breadcrumb"
-                className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-400"
+                className="flex flex-wrap items-center gap-2 text-xs font-medium text-[#64717C]"
               >
-                <Link to="/" className="transition-colors hover:text-emerald-400">
+                <Link to="/" className="transition-colors hover:text-[#2E7971]">
                   Home
                 </Link>
-                <span className="text-slate-600">/</span>
-                <Link to={BLOG_INDEX_PATH} className="transition-colors hover:text-emerald-400">
+                <span className="text-[#B6C4BD]">/</span>
+                <Link to={BLOG_INDEX_PATH} className="transition-colors hover:text-[#2E7971]">
                   Blog
                 </Link>
                 {post?.categories[0]?.name ? (
                   <>
-                    <span className="text-slate-600">/</span>
-                    <span className="text-slate-200">{post.categories[0].name}</span>
+                    <span className="text-[#B6C4BD]">/</span>
+                    <span className="font-semibold text-[#161D24]">{post.categories[0].name}</span>
                   </>
                 ) : null}
               </nav>
 
               <Link
                 to={BLOG_INDEX_PATH}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-white/[0.04] px-3.5 py-2 text-xs font-bold text-slate-200 transition-colors hover:bg-white/[0.08] hover:text-white"
+                className="inline-flex items-center gap-2 rounded-full border border-[#D4E2DA] bg-white px-4 py-2 text-xs font-bold text-[#161D24] shadow-sm transition-colors hover:bg-[#F3FAF5]"
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
+                <ArrowLeft className="h-3.5 w-3.5 text-[#2E7971]" />
                 <span>All Articles</span>
               </Link>
             </div>
 
             {loading && !post ? (
-              <div className="mt-10 text-sm text-slate-400">Loading article...</div>
+              <div className="mt-10 text-sm text-[#5E6B76]">Loading article...</div>
             ) : !post ? (
               <div className="io-glass-card mt-10 max-w-2xl rounded-3xl p-8">
-                <h1 className="text-2xl font-extrabold text-white">Article Not Found</h1>
-                <p className="mt-2 text-sm text-slate-400">
+                <h1 className="text-2xl font-bold text-[#161D24]">Article Not Found</h1>
+                <p className="mt-2 text-sm text-[#586570]">
                   The requested article could not be found or may have moved.
                   {error ? ` (${error})` : ""}
                 </p>
                 <Link
                   to={BLOG_INDEX_PATH}
-                  className="mt-6 inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-500 px-5 text-xs font-bold text-white hover:bg-emerald-600"
+                  className="io-sage-btn mt-6 inline-flex h-10 items-center gap-2 rounded-full px-5 text-xs font-bold text-white"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
                   <span>Return to Blog</span>
@@ -212,33 +208,33 @@ const BlogPostPage = () => {
               <div className="mt-8 grid items-center gap-10 lg:grid-cols-12">
                 <div className="lg:col-span-7">
                   <div className="flex flex-wrap items-center gap-3 text-xs">
-                    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/12 px-3 py-1 font-bold uppercase tracking-[0.14em] text-emerald-300">
+                    <span className="io-eyebrow-pill">
                       {post.categories[0]?.name || "Trading Insights"}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-slate-400">
-                      <CalendarDays className="h-3.5 w-3.5 text-emerald-400" />
+                    <span className="inline-flex items-center gap-1.5 text-[#5E6B76]">
+                      <CalendarDays className="h-3.5 w-3.5 text-[#459982]" />
                       {new Date(post.publishedAt).toLocaleDateString("en-US", {
                         month: "long",
                         day: "numeric",
                         year: "numeric",
                       })}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-slate-400">
-                      <Clock className="h-3.5 w-3.5 text-sky-400" />
+                    <span className="inline-flex items-center gap-1.5 text-[#5E6B76]">
+                      <Clock className="h-3.5 w-3.5 text-[#3D848E]" />
                       {readingMinutes} min read
                     </span>
                   </div>
 
-                  <h1 className="mt-5 text-3xl font-extrabold leading-[1.12] tracking-tight text-white sm:text-4xl lg:text-5xl">
+                  <h1 className="mt-5 text-3xl font-bold leading-[1.12] tracking-[-0.03em] text-[#161D24] sm:text-4xl lg:text-5xl">
                     {post.title}
                   </h1>
 
-                  <p className="mt-4 text-base leading-relaxed text-slate-300 sm:text-lg">
+                  <p className="mt-4 text-base leading-relaxed text-[#4F5D68] sm:text-lg">
                     {post.metaDescription || post.excerpt}
                   </p>
 
-                  <div className="mt-6 inline-flex items-center gap-2.5 text-xs font-semibold text-slate-300">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+                  <div className="mt-6 inline-flex items-center gap-2.5 text-xs font-semibold text-[#232F38]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#EAF6EE] text-[#2E7971]">
                       <UserRound className="h-4 w-4" />
                     </span>
                     <span>By {post.authorName}</span>
@@ -264,7 +260,7 @@ const BlogPostPage = () => {
 
         {/* Article Content + Right Rail */}
         {post ? (
-          <section className="py-12 sm:py-16 lg:py-20">
+          <section className="bg-[#FAFDFB] py-12 sm:py-16 lg:py-20">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="grid gap-8 lg:grid-cols-12">
                 <article
@@ -276,7 +272,7 @@ const BlogPostPage = () => {
                   <div className="sticky top-28 space-y-6">
                     {/* Share Box */}
                     <section className="io-glass-card rounded-3xl p-6">
-                      <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-emerald-400">
+                      <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#2E7971]">
                         <Share2 className="h-4 w-4" />
                         <span>Share Article</span>
                       </div>
@@ -285,7 +281,7 @@ const BlogPostPage = () => {
                           href={shareLinks.x}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex h-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-xs font-bold text-slate-200 transition-colors hover:bg-white/[0.08] hover:text-white"
+                          className="inline-flex h-10 items-center justify-center rounded-xl border border-[#DCE8E1] bg-[#FAFDFB] text-xs font-bold text-[#232F38] transition-colors hover:bg-[#EEF8F2] hover:text-[#2E7971]"
                         >
                           Share on X
                         </a>
@@ -293,7 +289,7 @@ const BlogPostPage = () => {
                           href={shareLinks.telegram}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex h-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-xs font-bold text-slate-200 transition-colors hover:bg-white/[0.08] hover:text-white"
+                          className="inline-flex h-10 items-center justify-center rounded-xl border border-[#DCE8E1] bg-[#FAFDFB] text-xs font-bold text-[#232F38] transition-colors hover:bg-[#EEF8F2] hover:text-[#2E7971]"
                         >
                           Telegram
                         </a>
@@ -301,19 +297,19 @@ const BlogPostPage = () => {
                           href={shareLinks.facebook}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex h-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-xs font-bold text-slate-200 transition-colors hover:bg-white/[0.08] hover:text-white"
+                          className="inline-flex h-10 items-center justify-center rounded-xl border border-[#DCE8E1] bg-[#FAFDFB] text-xs font-bold text-[#232F38] transition-colors hover:bg-[#EEF8F2] hover:text-[#2E7971]"
                         >
                           Facebook
                         </a>
                         <button
                           type="button"
                           onClick={handleCopyUrl}
-                          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] text-xs font-bold text-slate-200 transition-colors hover:bg-white/[0.08] hover:text-white"
+                          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[#DCE8E1] bg-[#FAFDFB] text-xs font-bold text-[#232F38] transition-colors hover:bg-[#EEF8F2] hover:text-[#2E7971]"
                         >
                           {copied ? (
                             <>
-                              <Check className="h-3.5 w-3.5 text-emerald-400" />
-                              <span className="text-emerald-400">Copied</span>
+                              <Check className="h-3.5 w-3.5 text-[#2E7971]" />
+                              <span className="text-[#2E7971]">Copied</span>
                             </>
                           ) : (
                             <>
@@ -328,7 +324,7 @@ const BlogPostPage = () => {
                     {/* Related Posts */}
                     {payload?.relatedPosts.length ? (
                       <section className="io-glass-card rounded-3xl p-6">
-                        <div className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-400">
+                        <div className="text-xs font-bold uppercase tracking-[0.18em] text-[#2E7971]">
                           Related Insights
                         </div>
                         <div className="mt-4 space-y-3.5">
@@ -336,15 +332,15 @@ const BlogPostPage = () => {
                             <Link
                               key={relatedPost.slug}
                               to={`/blog/${relatedPost.slug}`}
-                              className="group block rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 transition-colors hover:border-emerald-500/30 hover:bg-white/[0.05]"
+                              className="group block rounded-2xl border border-[#E3EEE7] bg-[#FAFDFB] p-4 transition-colors hover:border-[#BCDFC9] hover:bg-[#F1FAF4]"
                             >
-                              <div className="text-sm font-bold text-white group-hover:text-emerald-400">
+                              <div className="text-sm font-bold text-[#161D24] group-hover:text-[#2E7971]">
                                 {relatedPost.title}
                               </div>
-                              <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-slate-400">
+                              <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-[#586570]">
                                 {relatedPost.excerpt}
                               </p>
-                              <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+                              <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#2E7971]">
                                 <span>Read article</span>
                                 <ArrowRight className="h-3.5 w-3.5" />
                               </div>
@@ -355,17 +351,17 @@ const BlogPostPage = () => {
                     ) : null}
 
                     {/* Demo Terminal CTA */}
-                    <section className="rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-[#0f2428] to-[#0d1626] p-6">
-                      <h3 className="text-base font-extrabold text-white">
+                    <section className="rounded-3xl border border-[#CFE6D8] bg-gradient-to-br from-[#EAF6EE] via-[#F4FBF6] to-[#E3F2EA] p-6">
+                      <h3 className="text-base font-bold text-[#161D24]">
                         Practice Setups Risk-Free
                       </h3>
-                      <p className="mt-2 text-xs leading-6 text-slate-300">
+                      <p className="mt-2 text-xs leading-6 text-[#4D5A66]">
                         Test these concepts on live charts with a $10,000 demo balance before risking
                         capital.
                       </p>
                       <Link
                         to="/trade"
-                        className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
+                        className="io-sage-btn mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-full text-xs font-bold text-white"
                       >
                         <Play className="h-3.5 w-3.5 fill-current" />
                         <span>Open $10,000 Demo</span>
