@@ -1,3 +1,4 @@
+import { isInternalOTC, requestOTCQuote } from "@/lib/otcMarket";
 import { confirmedSettlement } from "@/lib/winningNotifications";
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
 import { clerkUserIdToUuid } from "@/integrations/appwrite/authService";
@@ -262,7 +263,20 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
   }, [tradeHistory.length]);
 
   const resolveTrade = useCallback(async (trade: ActiveTrade) => {
-    const exitPrice = currentPriceRef.current;
+    let exitPrice = currentPriceRef.current;
+    if (isInternalOTC) {
+      try {
+        const expiry = new Date(trade.opened_at).getTime()/1000 + trade.expiry_seconds;
+        exitPrice = (await requestOTCQuote(trade.asset_symbol, expiry)).price;
+      } catch (error) {
+        // Never replace an unavailable expiry receipt with the selected tab's price.
+        console.warn("OTC settlement pending: no server expiry receipt", trade.id, error);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        queuedSettlementIds.current.delete(trade.id);
+        setActiveTrades(current => current.some(item => item.id === trade.id) ? current : [...current, {...trade,timeLeft:0}]);
+        return;
+      }
+    }
     const proposedWin =
       (trade.direction === "higher" && exitPrice > trade.entry_price) ||
       (trade.direction === "lower" && exitPrice < trade.entry_price);
@@ -492,7 +506,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       setActiveTrades((prev) => {
         const updated: ActiveTrade[] = [];
         const expired: ActiveTrade[] = [];
-        const canResolveTrades = currentPriceRef.current > 0;
+        const canResolveTrades = isInternalOTC || currentPriceRef.current > 0;
 
         prev.forEach((trade) => {
           const elapsed = (getSynchronizedUnixTimeMs() - new Date(trade.opened_at).getTime()) / 1000;
@@ -550,8 +564,18 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
       }
 
       const activePid = tournamentParticipantIdRef.current;
-      const actualEntryPrice = currentPriceRef.current > 0 ? currentPriceRef.current : entryPrice;
-      const openedAt = new Date().toISOString();
+      let actualEntryPrice = currentPriceRef.current > 0 ? currentPriceRef.current : entryPrice;
+      let openedAt = new Date().toISOString();
+      if (isInternalOTC) {
+        try {
+          const quote = await requestOTCQuote(assetSymbol);
+          actualEntryPrice = quote.price;
+          openedAt = new Date(quote.timestamp*1000).toISOString();
+        } catch {
+          toast({title:"OTC pricing unavailable",description:"No trade was opened. Waiting for the internal pricing service.",variant:"destructive"});
+          return false;
+        }
+      }
       const markerSkewAllowance =
         typeof timeframeSecondsOverride === "number" && Number.isFinite(timeframeSecondsOverride)
           ? Math.max(10, Math.floor(timeframeSecondsOverride))

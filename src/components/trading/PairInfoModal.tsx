@@ -1,3 +1,5 @@
+import { isInternalOTC, marketWebSocketUrl } from "@/lib/otcMarket";
+import { observedHistory } from "./engine/native/observedHistory";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, X } from "lucide-react";
 import AssetSymbolMark from "./AssetSymbolMark";
@@ -64,7 +66,13 @@ export const PairInfoModal = ({ symbol, onClose, onTradeNow }: PairInfoModalProp
       ? TIMEFRAMES["1h"]
       : { ...TIMEFRAMES["2h"], label: "1d", historical: 72 };
   const candles = useMemo(
-    () => engine.generateHistory(chartConfig, nowSec, chartConfig.historical),
+    () => {
+      if (!isInternalOTC) return engine.generateHistory(chartConfig, nowSec, chartConfig.historical);
+      const source = marketWebSocketUrl();
+      if (!source) return [];
+      const snapshot = observedHistory.snapshot(source, symbol, chartConfig.seconds, nowSec, chartConfig.historical);
+      return snapshot.current ? [...snapshot.history, snapshot.current] : snapshot.history;
+    },
     [chartConfig, engine, nowSec],
   );
   const currentPrice = candles[candles.length - 1]?.close ?? basePrice;

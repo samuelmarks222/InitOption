@@ -8,8 +8,14 @@ const state = vi.hoisted(() => ({
   user:{id:'user-1'}, refresh:vi.fn(async()=>{}),
   trade: null as Record<string, any> | null,
   settle: null as null | ((value: any)=>void),
-  settleCalls:0,
+  settleCalls:0, lastUpdate:null as Record<string,any> | null,
+  entryQuote:100, exitQuote:110, quoteAvailable:true, quoteRequests:[] as [string, number | undefined][],
 }));
+vi.mock('@/lib/otcMarket',()=>({isInternalOTC:true,requestOTCQuote:vi.fn(async(symbol: string, at?: number)=>{
+  state.quoteRequests.push([symbol,at]);
+  if(!state.quoteAvailable)throw new Error('OTC service offline');
+  return {symbol,price:at===undefined?state.entryQuote:state.exitQuote,timestamp:at??Date.now()/1000,sequence:1};
+})}));
 vi.mock('@/contexts/AuthContext',()=>({useAuth:()=>({user:state.user,profile:state.profile,refreshProfile:state.refresh})}));
 vi.mock('@/contexts/VipContext',()=>({useVip:()=>({refreshVip:state.refresh})}));
 vi.mock('@/integrations/appwrite/authService',()=>({clerkUserIdToUuid:(id: string)=>id}));
@@ -28,7 +34,7 @@ vi.mock('@/integrations/api/client',()=>({api:{
       then:(resolve: (value:any)=>void,reject:(reason:unknown)=>void)=>{
         if(table==='trades'&&operation==='insert') {state.trade={id:'trade-1',...payload};return Promise.resolve({data:state.trade,error:null}).then(resolve,reject);}
         if(table==='trades'&&operation==='update') {
-          state.settleCalls++;
+          state.lastUpdate=payload;state.settleCalls++;
           return new Promise(done=>{state.settle=(response)=>{if(response.data)state.trade=response.data;done(response);};}).then(resolve,reject);
         }
         return Promise.resolve({data:table==='profiles'?state.profile:(single?null:[]),error:null}).then(resolve,reject);
@@ -36,9 +42,10 @@ vi.mock('@/integrations/api/client',()=>({api:{
     };return chain;
   },
 }}));
-beforeEach(()=>{vi.useFakeTimers();vi.setSystemTime(new Date('2026-11-04T10:00:00Z'));state.trade=null;state.settle=null;state.settleCalls=0;});
+beforeEach(()=>{vi.useFakeTimers();vi.setSystemTime(new Date('2026-11-04T10:00:00Z'));state.trade=null;state.settle=null;state.settleCalls=0;state.lastUpdate=null;state.entryQuote=100;state.exitQuote=110;state.quoteAvailable=true;state.quoteRequests=[];});
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.useRealTimers();localStorage.clear();});
 async function expiredTrade(exit=110) {
+  state.exitQuote=exit;
   const hook=renderHook(()=>useTrading(),{wrapper:TradingProvider});
   await act(async()=>{});
   act(()=>hook.result.current.setCurrentPrice(100));
@@ -47,6 +54,29 @@ async function expiredTrade(exit=110) {
   await act(async()=>{vi.advanceTimersByTime(1100);});
   return hook;
 }
+describe('OTC entry and expiry receipts',()=>{
+  it('uses the requested symbol server receipt rather than a different active chart price',async()=>{
+    const hook=renderHook(()=>useTrading(),{wrapper:TradingProvider});await act(async()=>{});
+    state.entryQuote=1.12345678;
+    act(()=>hook.result.current.setCurrentPrice(99999));
+    await act(async()=>{expect(await hook.result.current.openTrade('EUR/USD','higher',10,22222,1,.92)).toBe(true);});
+    expect(state.trade?.entry_price).toBe(1.12345678);expect(state.quoteRequests[0][0]).toBe('EUR/USD');
+  });
+  it('settles against the symbol expiry receipt, not the current selected chart price',async()=>{
+    const hook=renderHook(()=>useTrading(),{wrapper:TradingProvider});await act(async()=>{});
+    state.entryQuote=1.1;state.exitQuote=1.2;
+    await act(async()=>{expect(await hook.result.current.openTrade('EUR/USD','higher',10,22222,1,.92)).toBe(true);});
+    act(()=>hook.result.current.setCurrentPrice(99999));
+    await act(async()=>{vi.advanceTimersByTime(1100);});
+    expect(state.lastUpdate?.exit_price).toBe(1.2);
+    expect(state.quoteRequests.at(-1)).toEqual(['EUR/USD',new Date(state.trade!.opened_at).getTime()/1000+1]);
+  });
+  it('refuses to open on an unavailable server quote',async()=>{
+    const hook=renderHook(()=>useTrading(),{wrapper:TradingProvider});await act(async()=>{});state.quoteAvailable=false;
+    await act(async()=>{expect(await hook.result.current.openTrade('EUR/USD','higher',10,100,1,.92)).toBe(false);});
+    expect(state.trade).toBeNull();
+  });
+});
 describe('notifications wait for actual settlement acknowledgement',()=>{
   it('emits no provisional win, then emits exactly one result using the persisted amounts',async()=>{
     const {result}=await expiredTrade();
