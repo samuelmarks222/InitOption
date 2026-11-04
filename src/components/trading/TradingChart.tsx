@@ -1,3 +1,4 @@
+import { requestOTCHistory, mergeCandleHistory } from "@/lib/otcHistory";
 import CandleIntervalStatus from "./CandleIntervalStatus";
 import { liveViewport, constrainViewport } from "./engine/native/viewport";
 import { setChartInterval, zoomChart } from "./engine/native/chart";
@@ -2108,6 +2109,12 @@ const TradingChart = ({
   });
   const activeAssetTrades = activeTrades.filter((trade) => trade.asset_symbol === asset.symbol);
   const { selectedTf, setSelectedTf, chartType, setChartType } = useChartMode(DEFAULT_CHART_TYPE);
+  const archiveCacheRef = useRef(new Map<string, OHLCCandle[]>());
+  const archiveContextKey = `${asset.symbol}:${selectedTf}`;
+  const activeArchiveKeyRef = useRef(archiveContextKey);
+  activeArchiveKeyRef.current = archiveContextKey;
+  const archiveRequestRef = useRef<{key:string;abort:AbortController;loading:boolean;exhausted:boolean;attempt:number} | null>(null);
+  const [archiveStatus, setArchiveStatus] = useState<"idle"|"loading"|"end"|"error"|"limit">("idle");
   const savedTimeframeViews = useRef(new Map<string, { from: number; to: number }>());
   const selectTimeframe = (tf: SupportedChartTimeframe) => {
     if (chartType === "line") return;
@@ -3090,9 +3097,10 @@ const TradingChart = ({
 
       const previousCount = historyRef.current.length;
       const liveSource = marketWebSocketUrl();
-      const nextHistory = liveSource?.trim()
+      const observed = liveSource?.trim()
         ? observedHistory.snapshot(liveSource, asset.symbol, tf.seconds, getSynchronizedUnixTimeMs() / 1000, nextCount).history
         : [];
+      const nextHistory = mergeCandleHistory(observed, archiveCacheRef.current.get(`${asset.symbol}:${selectedTf}`) ?? [], nextCount);
       if (nextHistory.length <= previousCount) return;
 
       loadedHistoryCountRef.current = nextHistory.length;
@@ -3132,6 +3140,54 @@ const TradingChart = ({
     [getIndicatorHistory, renderOverlayIndicators, selectedTf],
   );
 
+  const loadOlderServerHistory = useCallback(async (retry = false) => {
+    if (!isInternalOTC || import.meta.env.VITE_OTC_TRANSPORT === "websocket" || !mainSeriesRef.current || !chartRef.current || historyAssetRef.current !== asset.symbol || timeframeSecondsRef.current !== TIMEFRAMES[selectedTf].seconds) return;
+    const key = `${asset.symbol}:${selectedTf}`;
+    let request = archiveRequestRef.current;
+    if (!request || request.key !== key) {
+      request?.abort.abort();
+      request = {key,abort:new AbortController(),loading:false,exhausted:false,attempt:-Infinity};
+      archiveRequestRef.current = request;
+    }
+    if (request.loading || request.exhausted || (!retry && performance.now()-request.attempt<3000)) return;
+    if(historyRef.current.length>=MAX_CANDLES_IN_MEMORY){setArchiveStatus("limit");return;}
+    request.loading=true;request.attempt=performance.now();setArchiveStatus("loading");
+    const timeout=window.setTimeout(()=>request!.abort.abort(),16000);
+    try {
+      const seconds=TIMEFRAMES[selectedTf].seconds;
+      const before=historyRef.current.length ? historyRef.current[0].time+seconds : Math.floor(getSynchronizedUnixTimeMs()/1000/seconds)*seconds;
+      const page=await requestOTCHistory(asset.symbol,seconds,before,request.abort.signal);
+      if(activeArchiveKeyRef.current!==key||archiveRequestRef.current!==request||request.abort.signal.aborted)return;
+      const previous=historyRef.current;
+      const range=chartRef.current?.timeScale().getVisibleLogicalRange();
+      const archive=mergeCandleHistory(archiveCacheRef.current.get(key)??[],page.candles,MAX_CANDLES_IN_MEMORY);
+      archiveCacheRef.current.set(key,archive);
+      // Bound per-chart cache across asset/timeframe switches.
+      while(archiveCacheRef.current.size>12)archiveCacheRef.current.delete(archiveCacheRef.current.keys().next().value!);
+      const next=mergeCandleHistory(previous,archive,MAX_CANDLES_IN_MEMORY);
+      const added=next.length-previous.length;
+      if(page.candles.length>0 && mainSeriesRef.current && chartRef.current){
+        historyRef.current=next;loadedHistoryCountRef.current=next.length;
+        mainSeriesRef.current.setData(getMainSeriesData(chartTypeRef.current,next));
+        if(liveRef.current)mainSeriesRef.current.update(buildMainSeriesUpdatePayload(chartTypeRef.current,liveRef.current,next));
+        renderOverlayIndicators(getIndicatorHistory());setForceOscillatorRender(value=>value+1);
+        if(range)chartRef.current.timeScale().setVisibleLogicalRange({from:range.from+added,to:range.to+added});
+      }
+      request.exhausted=!page.hasMore;
+      setArchiveStatus(request.exhausted?"end":"idle");
+    }catch(error){
+      if(activeArchiveKeyRef.current===key && archiveRequestRef.current===request){
+        request.abort=new AbortController();setArchiveStatus("error");
+      }
+    }finally{window.clearTimeout(timeout);request.loading=false;}
+  },[asset.symbol,selectedTf,getIndicatorHistory,renderOverlayIndicators]);
+
+  useEffect(()=>{
+    setArchiveStatus("idle");
+    return ()=>{archiveRequestRef.current?.abort.abort();archiveRequestRef.current=null;};
+  },[asset.symbol,selectedTf]);
+  useEffect(()=>{if(marketFeedStatus==="live")void loadOlderServerHistory();},[marketFeedStatus,loadOlderServerHistory]);
+
   useEffect(() => {
     const tf = TIMEFRAMES[selectedTf];
     if (!tf || !mainSeriesRef.current || !chartRef.current) return;
@@ -3152,6 +3208,7 @@ const TradingChart = ({
     const installReceivedHistory = () => {
       if (!effectActive || !websocketUrl || !mainSeriesRef.current) return;
       const snapshot = observedHistory.snapshot(websocketUrl, asset.symbol, tf.seconds, getSynchronizedUnixTimeMs()/1000, tf.historical);
+      snapshot.history = mergeCandleHistory(snapshot.history, archiveCacheRef.current.get(`${asset.symbol}:${selectedTf}`) ?? [], MAX_CANDLES_IN_MEMORY);
       const previousCount = historyRef.current.length;
       aggregatorRef.current?.destroy();
       historyRef.current = snapshot.history;
@@ -3170,6 +3227,7 @@ const TradingChart = ({
       renderOverlayIndicators(getIndicatorHistory());
       setForceOscillatorRender(current => current+1);
       if (!previousCount) scrollChartToLiveEdge(snapshot.history.length);
+      void loadOlderServerHistory();
     };
 
 
@@ -3452,6 +3510,7 @@ renderOverlayIndicators(getIndicatorHistory());
     getIndicatorHistory,
     renderOverlayIndicators,
     scrollChartToLiveEdge,
+    loadOlderServerHistory,
     selectedTf,
     setCurrentPrice,
   ]);
@@ -3492,6 +3551,7 @@ renderOverlayIndicators(getIndicatorHistory());
       const maxReadableRightOffset = getChartRightOffset(maxReadableBars);
       const maxReadableSpan = maxReadableBars + maxReadableRightOffset;
       const visibleSpan = range.to - range.from;
+      if (range.from < Math.max(5, visibleSpan * .2) || visibleSpan > dataPointCount * .85) void loadOlderServerHistory();
 
       if (!isBackfillingHistoryRef.current && engineRef.current) {
         const loadedCount = loadedHistoryCountRef.current;
@@ -3556,7 +3616,7 @@ renderOverlayIndicators(getIndicatorHistory());
 
     timeScale.subscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
     return () => timeScale.unsubscribeVisibleLogicalRangeChange(handleVisibleRangeChange);
-  }, [applyResponsivePriceScale, reloadHistoricalCandles, selectedTf]);
+  }, [applyResponsivePriceScale, reloadHistoricalCandles, selectedTf, loadOlderServerHistory]);
 
   useEffect(() => {
     const chart = chartRef.current;
@@ -4050,6 +4110,11 @@ renderOverlayIndicators(getIndicatorHistory());
         )}
         {!miniOverlay && !mobileHistoryOpen && !overlayUiSuppressed && (
           <CandleIntervalStatus label={selectedTf} seconds={TIMEFRAMES[selectedTf].seconds} live={marketFeedStatus === "live"} />
+        )}
+        {isInternalOTC && !miniOverlay && !mobileHistoryOpen && !overlayUiSuppressed && (
+          <div role="status" className="absolute bottom-24 left-16 z-[79] rounded bg-slate-950/85 px-2 py-1 text-[11px] text-slate-300">
+            {archiveStatus==="loading"?"Loading earlier server candles…":archiveStatus==="end"?"Earliest recorded history reached":archiveStatus==="limit"?"History window full — choose a longer timeframe to browse further":archiveStatus==="error"?<button type="button" onClick={()=>void loadOlderServerHistory(true)}>History load failed — retry</button>:"Drag left to browse recorded candle history"}
+          </div>
         )}
         {isInternalOTC && marketFeedStatus === "live" && historyRef.current.length + (liveRef.current ? 1 : 0) < 12 && (
           <div role="note" className="pointer-events-none absolute bottom-9 left-16 z-[79] rounded bg-slate-950/65 px-2 py-1 text-[11px] text-slate-400">

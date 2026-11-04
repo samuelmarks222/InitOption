@@ -16,13 +16,17 @@ export interface ServerlessOTCOptions {
   maxBatch?: number;
   warmup?: number;
   retention?: number;
+  barRetention?: number;
   /** Injectable clock for tests only; production uses PostgreSQL time. */
   nowForTests?: () => number;
 }
 
 export interface OTCReadRequest {
   symbol: string;
-  action?: "ticks" | "price";
+  action?: "ticks" | "price" | "history";
+  seconds?: number;
+  before?: number;
+  limit?: number;
   after?: number;
   at?: number;
 }
@@ -64,6 +68,16 @@ export interface OTCPriceReceipt extends OTCWireTick {
   quotedAt: number;
 }
 
+export interface OTCHistoryPage {
+  type: "history";
+  source: "internal-otc";
+  symbol: string;
+  seconds: number;
+  before: number;
+  hasMore: boolean;
+  earliest: number | null;
+  candles: OTCCandle[];
+}
 export interface OTCPending {
   pending: true;
   source: "internal-otc";
@@ -77,4 +91,4 @@ export class OTCError extends Error {
 }
 export function createServerlessOTC(
   options: ServerlessOTCOptions,
-): (request: OTCReadRequest) => Promise<OTCSnapshot | OTCPriceReceipt | OTCPending>;
+): (request: OTCReadRequest) => Promise<OTCSnapshot | OTCPriceReceipt | OTCPending | OTCHistoryPage>;

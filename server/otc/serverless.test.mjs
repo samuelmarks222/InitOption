@@ -78,3 +78,28 @@ test('SQL migration and serverless bootstrap schema stay identical',async()=>{
   const bootstrap=await readFile(new URL('../../api/_lib/otcSchema.ts',import.meta.url),'utf8');
   assert.equal(JSON.parse(bootstrap.split('export const OTC_SCHEMA = ')[1].trim().slice(0,-1)),schema);
 });
+test('history pages aggregate persisted OHLC, page backwards, and never generate prices',async()=>{
+  const app=await setup();try{
+    await app.read({symbol:'AAPL'});
+    const base=Math.floor(app.now()/1000/60)*60-3600;
+    await app.db.query(`INSERT INTO otc_bars(symbol,bucket_slot,open,high,low,close,volume) VALUES
+      ('AAPL',$1,10,14,9,12,2),('AAPL',$2,12,16,11,15,3),('AAPL',$3,15,18,13,17,4)`,[base*10,(base+5)*10,(base+60)*10]);
+    const before=(await app.db.query('SELECT model,last_slot FROM otc_markets')).rows;
+    const page=await app.read({symbol:'AAPL',action:'history',seconds:60,before:base+120,limit:1});
+    assert.equal(page.hasMore,true);assert.deepEqual(page.candles,[{time:base+60,open:15,high:18,low:13,close:17,volume:4}]);
+    const older=await app.read({symbol:'AAPL',action:'history',seconds:60,before:page.candles[0].time,limit:1});
+    assert.equal(older.hasMore,false);assert.deepEqual(older.candles,[{time:base,open:10,high:16,low:9,close:15,volume:5}]);
+    assert.deepEqual((await app.db.query('SELECT model,last_slot FROM otc_markets')).rows,before);
+    for(const args of [{seconds:7},{limit:1001},{before:base+1,seconds:60},{before:-1}])await assert.rejects(()=>app.read({symbol:'AAPL',action:'history',...args}),e=>e.status===400);
+  }finally{await app.db.close();}
+});
+test('candle archives survive raw-tick retention and remain available to cold workers',async()=>{
+  const app=await setup({retention:100,barRetention:1000});try{
+    const first=await app.read({symbol:'AAPL'});app.advance(70000);await app.read({symbol:'AAPL',after:first.cursor});
+    const raw=(await app.db.query('SELECT min(slot) AS first FROM otc_ticks')).rows[0].first;
+    const bars=(await app.db.query('SELECT min(bucket_slot) AS first FROM otc_bars')).rows[0].first;
+    assert.ok(Number(bars)<Number(raw)-100);
+    const worker=createServerlessOTC({transaction:app.transaction,assets,nowForTests:app.now});
+    const page=await worker({symbol:'AAPL',action:'history',seconds:5});assert.ok(page.candles.some(b=>b.time<Number(raw)/10));
+  }finally{await app.db.close();}
+});

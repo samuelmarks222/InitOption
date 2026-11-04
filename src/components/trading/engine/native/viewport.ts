@@ -13,6 +13,7 @@ export function constrainViewport(range: LogicalRange, count: number, maxSpan: n
   const last = Math.max(0,count-1);
   const minFrom = Math.min(0,last-span*.9);
   const maxTo = last+Math.max(6,span*.2);
-  const from = Math.max(minFrom,Math.min(range.from,maxTo-span));
+  const maxFrom = Math.min(last - span * .1, maxTo - span);
+  const from = Math.max(minFrom,Math.min(range.from,maxFrom));
   return {from,to:from+span};
 }
