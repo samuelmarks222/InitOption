@@ -1,7 +1,8 @@
 import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import { BrownianMarket } from "../../native-chart/simulation.mjs";
 export const SLOT_MS = 100;
-const DEFAULT_RETENTION = 864000; // 24h, independent of browser history depth.
+const DEFAULT_RETENTION = 9000; // 15 minutes of raw 100ms ticks.
+const DEFAULT_BAR_RETENTION = 30 * 864000; // Candle retention is independent.
 export class OTCError extends Error {
   constructor(status, message) {
     super(message);
@@ -17,7 +18,8 @@ export function createServerlessOTC({
   maxBatch = 5000,
   warmup = 0,
   retention = DEFAULT_RETENTION,
-  barRetention = 30 * DEFAULT_RETENTION,
+  barRetention = DEFAULT_BAR_RETENTION,
+  preserveOpenTradeTicks = false,
   nowForTests,
 } = {}) {
   if (
@@ -25,7 +27,7 @@ export function createServerlessOTC({
     maxBatch < 1 ||
     !Number.isInteger(warmup) ||
     warmup < 0 ||
-    warmup >= retention || !Number.isSafeInteger(barRetention) || barRetention < retention
+    warmup >= retention || !Number.isSafeInteger(retention) || retention < 1 || !Number.isSafeInteger(barRetention) || barRetention < retention
   )
     throw new Error("Invalid OTC limits");
   const wire = (symbol, row, precision) => ({
@@ -114,7 +116,7 @@ export function createServerlessOTC({
           ? Math.floor(now / SLOT_MS)
           : Math.floor(Math.round(at * 1e6) / 100000);
       let slot = Number(market.last_slot);
-      if (desired < slot - retention)
+      if (at === undefined && desired < slot - retention)
         throw new OTCError(
           409,
           "Requested expiry is outside retained price history",
@@ -173,7 +175,14 @@ export function createServerlessOTC({
         const prune = slot - Number(market.pruned_slot) >= 600;
         if (prune) {
           await client.query(
-            "DELETE FROM public.otc_ticks WHERE symbol=$1 AND slot<$2",
+            preserveOpenTradeTicks
+              ? `DELETE FROM public.otc_ticks AS tick WHERE tick.symbol=$1 AND tick.slot<$2
+                 AND NOT EXISTS (SELECT 1 FROM public.trades AS trade
+                   WHERE trade.status='open' AND trade.asset_symbol=tick.symbol
+                   AND tick.slot BETWEEN
+                     floor(extract(epoch FROM (trade.opened_at + trade.expiry_seconds * interval '1 second')) * 10)::bigint - 5
+                     AND floor(extract(epoch FROM (trade.opened_at + trade.expiry_seconds * interval '1 second')) * 10)::bigint)`
+              : "DELETE FROM public.otc_ticks WHERE symbol=$1 AND slot<$2",
             [symbol, slot - retention],
           );
           await client.query(

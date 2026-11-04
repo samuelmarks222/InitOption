@@ -36,7 +36,7 @@ export default function BackgroundCollectionControl() {
   }
   const age = status?.lastFinishedAt ? Math.max(0, (new Date(status.serverNow).getTime() - new Date(status.lastFinishedAt).getTime()) / 1000) : null;
   const schedulerLabels = {
-    disabled:'Disabled',missing:'Scheduler not observed — activate supported Vercel cron',error:'Scheduled collection failed',
+    disabled:'Disabled',missing:'Scheduler not observed recently — check the external scheduler or supported cron',error:'Scheduled collection failed',
     'awaiting-success':'Scheduler reached API — awaiting completed work',initializing:'Scheduler running — initializing assets',
     lagging:'Scheduler running — assets are falling behind',verifying:'Verifying scheduled operation — awaiting two successful runs',
     healthy:'Recent scheduled runs verified — all assets fresh',
@@ -76,7 +76,7 @@ export default function BackgroundCollectionControl() {
       {status.lastError && <p role="alert" className="text-sm text-red-300">{status.lastError}</p>}
     </>}
     <div className="rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 text-xs leading-relaxed text-amber-200">
-      {status?.scheduler?.state==='healthy' ? <><strong>Recent scheduled operation observed.</strong> The collector runs independently of this page. This is recent health evidence, not a guarantee of future uptime.</> : <><strong>A frequent scheduler is still required.</strong> Enabling this setting saves permission and runs one initial cycle; it does not install or start a scheduler. A supported Vercel plan and the one-minute cron configuration must be activated and deployed. Hobby daily cron is insufficient.</>}
+      {status?.scheduler?.state==='healthy' ? <><strong>Recent scheduled operation observed.</strong> The collector runs independently of this page. This is recent health evidence, not a guarantee of future uptime.</> : <><strong>A frequent scheduler is still required.</strong> Enabling this setting saves permission and runs one initial cycle; it does not install or start a scheduler. Configure an authenticated external scheduler (for example cron-job.org), or a supported Vercel cron, to call the collector every minute. Hobby daily cron is insufficient. If scheduled calls are failing, inspect collection errors instead of creating another job.</>}
       {status && <span className="block mt-1">Scheduler secret: {status.schedulerSecretConfigured ? 'configured (not proof a scheduler is running)' : 'not configured'}. Recorded OTC history accumulates from collection onward; missing past observations are never fabricated.</span>}
     </div>
   </section>;

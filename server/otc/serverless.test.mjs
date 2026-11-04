@@ -138,3 +138,57 @@ test('scheduled collection records independent unseen assets and their history m
     assert.equal(rows.length,2);assert.notEqual(rows[0].secret,rows[1].secret);
   }finally{await app.db.close();}
 });
+
+test('default raw retention is 15 minutes while recorded candle retention stays independent',async()=>{
+  const app=await setup({maxBatch:12000});try{
+    const initial=await app.read({symbol:'AAPL'});
+    app.advance(1000000);await app.read({symbol:'AAPL'});
+    const ticks=(await app.db.query('SELECT min(slot) AS first,count(*)::int AS n FROM otc_ticks')).rows[0];
+    assert.ok(ticks.n<=9001);
+    assert.equal(Number(ticks.first),Math.floor(app.now()/100)-9000);
+    const firstBar=(await app.db.query('SELECT min(bucket_slot) AS first FROM otc_bars')).rows[0].first;
+    assert.ok(Number(firstBar)<Number(ticks.first));
+    await assert.rejects(app.read({symbol:'AAPL',action:'price',at:Number(initial.ticks[0].t)/1e6}),e=>e.status===409);
+  }finally{await app.db.close();}
+});
+
+test('production pruning preserves open-trade expiry ticks, without changing prices or trade outcomes',async()=>{
+  const app=await setup({retention:100,preserveOpenTradeTicks:true});try{
+    await app.db.exec(`CREATE TABLE public.trades (asset_symbol text,status text,opened_at timestamptz,expiry_seconds integer);`);
+    const first=await app.read({symbol:'AAPL'}),tick=first.ticks.at(-1),at=Number(tick.t)/1e6;
+    await app.db.query("INSERT INTO trades VALUES ('AAPL','open',to_timestamp($1),1)",[at-1]);
+    app.advance(70000);await app.read({symbol:'AAPL'});
+    const protectedQuote=await app.read({symbol:'AAPL',action:'price',at});
+    assert.equal(protectedQuote.p,tick.p);
+    assert.equal((await app.db.query("SELECT status FROM trades")).rows[0].status,'open');
+    const retained=(await app.db.query('SELECT slot FROM otc_ticks WHERE slot<$1 ORDER BY slot',[Math.floor(app.now()/100)-100])).rows;
+    assert.ok(retained.length<=6);assert.ok(retained.some(row=>Number(row.slot)===first.cursor));
+    await app.db.exec("UPDATE trades SET status='won'");
+    app.advance(70000);await app.read({symbol:'AAPL'});
+    assert.equal((await app.db.query('SELECT count(*)::int AS n FROM otc_ticks WHERE slot=$1',[first.cursor])).rows[0].n,0);
+  }finally{await app.db.close();}
+});
+
+test('guarded storage recovery refuses unverified backup and retained open-trade evidence',async()=>{
+  const app=await setup();try{
+    await app.db.exec(`CREATE TABLE public.trades (asset_symbol text,status text,opened_at timestamptz,expiry_seconds integer);`);
+    const first=await app.read({symbol:'AAPL'}),at=Number(first.ticks.at(-1).t)/1e6;
+    const recovery=await readFile(new URL('../../scripts/sql/recover-otc-tick-storage.sql',import.meta.url),'utf8');
+    await assert.rejects(app.db.exec(recovery),/external backup/);await app.db.exec('ROLLBACK');
+    const confirmed=recovery.replace("initoption.verified_external_backup = 'false'","initoption.verified_external_backup = 'true'");
+    await app.db.query("INSERT INTO trades VALUES ('AAPL','open',to_timestamp($1),1)",[at-1]);
+    await assert.rejects(app.db.exec(confirmed),/expiry-window ticks/);await app.db.exec('ROLLBACK');
+    await app.db.exec("UPDATE trades SET opened_at=opened_at-interval '30 days'");
+    const markets=(await app.db.query('SELECT * FROM otc_markets')).rows;
+    const bars=(await app.db.query('SELECT * FROM otc_bars ORDER BY bucket_slot')).rows;
+    const trades=(await app.db.query('SELECT * FROM trades')).rows;
+    await app.db.exec(confirmed);
+    assert.equal((await app.db.query('SELECT count(*)::int AS n FROM otc_ticks')).rows[0].n,0);
+    assert.deepEqual((await app.db.query('SELECT * FROM otc_markets')).rows,markets);
+    assert.deepEqual((await app.db.query('SELECT * FROM otc_bars ORDER BY bucket_slot')).rows,bars);
+    assert.deepEqual((await app.db.query('SELECT * FROM trades')).rows,trades);
+    app.advance(100);
+    const resumed=await app.read({symbol:'AAPL'});assert.equal(resumed.session,first.session);
+    assert.ok(resumed.cursor>first.cursor); // Same checkpoint, no reset or synthetic backfill.
+  }finally{await app.db.close();}
+});
