@@ -445,3 +445,18 @@ new instruments still have only their recorded/generated history since bootstrap
 Startup remains the existing five-minute server warm-up, not fabricated older
 candles. Earliest-recorded boundaries are disclosed instead of generating client
 history or presenting synthetic backfill as previously recorded prices.
+
+## Generated analysis history: explicit user-approved alternative
+
+The recorded-only archive behavior above is extended by the user's explicit
+choice to provide generated historical coverage instead of a paid frequent cron.
+This is not continuous background production. See `docs/vercel-otc.md` for the
+immutable profile, canonical 5s aggregation, per-bar provenance, rolling coverage
+limit and financial-receipt isolation. The history endpoint can initialize a
+never-selected market's normal live state and provide synthetic past analysis
+candles. Existing recorded bars/model checkpoints are not rewritten to match that
+profile. At most one partial boundary aggregation mixes the synthetic prefix
+and recorded suffix; that projection is labeled `mixed`, not reported as a fully
+recorded OHLC bar. The current live candle and trade receipts remain live-engine
+observations only. Generated bars receive a persistent visible disclosure in the
+chart while present, including after merges into the per-timeframe archive cache.

@@ -9,7 +9,7 @@ async function setup(options={}){
   const db=new PGlite();await db.exec(schema);
   let now=1793790000000;
   const transaction=fn=>db.transaction(tx=>fn(tx));
-  const read=createServerlessOTC({transaction,assets,nowForTests:()=>now,warmup:20,...options});
+  const read=createServerlessOTC({transaction,assets,nowForTests:()=>now,warmup:20,generatedHistoryDays:0,...options});
   return {db,transaction,read,advance:ms=>{now+=ms;},now:()=>now};
 }
 test('PostgreSQL persists one sequence and identical prices across cold workers and concurrent readers',async()=>{
@@ -86,9 +86,9 @@ test('history pages aggregate persisted OHLC, page backwards, and never generate
       ('AAPL',$1,10,14,9,12,2),('AAPL',$2,12,16,11,15,3),('AAPL',$3,15,18,13,17,4)`,[base*10,(base+5)*10,(base+60)*10]);
     const before=(await app.db.query('SELECT model,last_slot FROM otc_markets')).rows;
     const page=await app.read({symbol:'AAPL',action:'history',seconds:60,before:base+120,limit:1});
-    assert.equal(page.hasMore,true);assert.deepEqual(page.candles,[{time:base+60,open:15,high:18,low:13,close:17,volume:4}]);
+    assert.equal(page.hasMore,true);assert.deepEqual(page.candles,[{time:base+60,open:15,high:18,low:13,close:17,volume:4,origin:'recorded'}]);
     const older=await app.read({symbol:'AAPL',action:'history',seconds:60,before:page.candles[0].time,limit:1});
-    assert.equal(older.hasMore,false);assert.deepEqual(older.candles,[{time:base,open:10,high:16,low:9,close:15,volume:5}]);
+    assert.equal(older.hasMore,false);assert.deepEqual(older.candles,[{time:base,open:10,high:16,low:9,close:15,volume:5,origin:'recorded'}]);
     assert.deepEqual((await app.db.query('SELECT model,last_slot FROM otc_markets')).rows,before);
     for(const args of [{seconds:7},{limit:1001},{before:base+1,seconds:60},{before:-1}])await assert.rejects(()=>app.read({symbol:'AAPL',action:'history',...args}),e=>e.status===400);
   }finally{await app.db.close();}
@@ -101,5 +101,21 @@ test('candle archives survive raw-tick retention and remain available to cold wo
     assert.ok(Number(bars)<Number(raw)-100);
     const worker=createServerlessOTC({transaction:app.transaction,assets,nowForTests:app.now});
     const page=await worker({symbol:'AAPL',action:'history',seconds:5});assert.ok(page.candles.some(b=>b.time<Number(raw)/10));
+  }finally{await app.db.close();}
+});
+test('a never-selected asset receives generated history, stable across workers and isolated from live trade receipts',async()=>{
+  const app=await setup({generatedHistoryDays:30});try{
+    const page=await app.read({symbol:'AAPL',action:'history',seconds:14400,limit:100});
+    assert.equal(page.candles.length,100);assert.equal(page.generated,true);assert.ok(page.notice.includes('not previously recorded'));
+    const checkpoint=(await app.db.query('SELECT model,last_slot,config FROM otc_markets')).rows[0];
+    assert.ok(checkpoint.config.historyBootstrapV1);
+    const worker=createServerlessOTC({transaction:app.transaction,assets,nowForTests:app.now,generatedHistoryDays:30});
+    const repeated=await worker({symbol:'AAPL',action:'history',seconds:14400,limit:100});assert.deepEqual(repeated,page);
+    assert.deepEqual((await app.db.query('SELECT model,last_slot FROM otc_markets')).rows[0],{model:checkpoint.model,last_slot:checkpoint.last_slot});
+    const at=checkpoint.config.historyBootstrapV1.anchor-10;
+    await assert.rejects(()=>app.read({symbol:'AAPL',action:'price',at}),e=>e.status===409);
+    const quote=await app.read({symbol:'AAPL',action:'price'});
+    assert.equal(quote.timestamp,app.now()/1000);assert.equal(quote.source,'internal-otc');
+    assert.equal(quote.origin,undefined);
   }finally{await app.db.close();}
 });

@@ -31,7 +31,7 @@ describe('OTC through existing system Function',()=>{
     expect(res.statusCode).toBe(405);expect(state.fallback).not.toHaveBeenCalled();
   });
   it('dispatches history pages through the same Function without generating ticks',async()=>{
-    state.query.mockImplementation(async(sql?:string)=>({rows:sql?.includes('clock_timestamp')?[{ms:600000}]:sql?.includes('min(bucket_slot)')?[{first:null}]:[]} as any));
+    state.query.mockImplementation(async(sql?:string)=>({rows:sql?.includes('SELECT symbol FROM')?[{symbol:'AAPL'}]:sql?.includes('SELECT config,secret')?[{secret:'test',config:{price:212,precision:8,historyBootstrapV1:{anchor:0,price:212}}}]:sql?.includes('clock_timestamp')?[{ms:600000}]:sql?.includes('min(bucket_slot)')?[{first:null}]:[]} as any));
     const res=response();
     await handler({method:'GET',url:'/api/otc?action=history&symbol=AAPL&seconds=60&before=600&limit=2',query:{route:'otc'}} as any,res);
     expect(res.statusCode).toBe(200);expect(res.body).toMatchObject({type:'history',seconds:60,candles:[],hasMore:false});

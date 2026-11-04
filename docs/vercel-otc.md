@@ -242,3 +242,41 @@ longer retention must be monitored before assuming production capacity.
 Zoom controls now follow independent time/price domains: wheel/buttons/pinch for
 time, Ctrl+wheel/right-axis gestures for price, and axis/plot double-click resets.
 The previous combined two-axis zoom behavior is superseded.
+
+### User-approved generated historical coverage (supersedes recorded-only fallback)
+
+The user elected generated history instead of upgrading for a frequent background
+scheduler. The Vercel team was checked and remains on Hobby. **No continuous
+all-asset producer or Pro schedule has been enabled.**
+
+The history endpoint now provides up to 30 days of explicitly synthetic analysis
+history, including for an asset never selected before. A private, versioned
+`historyBootstrapV1` anchor/profile is stored in its market config. New markets
+pin this metadata at initialization; legacy markets pin it to the earliest
+retained recorded 5s bar. The recorded live warm-up remains five minutes. This
+means bootstrap coverage is not evidence of prior trading or external market data.
+
+`generated-history.mjs` computes requested pages on the server using a deterministic
+private HMAC-seeded, bounded price profile. Canonical 5s bars have valid OHLC for
+a 100ms piecewise-linear historical path; all larger intervals aggregate those
+same bars. This model is deliberately separate from live arithmetic Brownian
+pricing. A boundary bucket may combine a generated prefix with a recorded suffix
+and is explicitly marked `mixed`; fully recorded buckets remain `recorded`.
+No persisted 5s recorded bar is overwritten. The raw live/expiry endpoint does not
+serve generated analysis prices, even when its exact older price is unavailable.
+
+The response includes `generated`, a notice and per-candle `origin`. The dashboard
+visibly states: "Includes generated synthetic history — not recorded trading
+activity" whenever these bars are shown. Profile parameters and the private seed
+remain server-owned; neither balances nor positions affect them. Identical stored
+metadata yields identical pages for different users/cold workers and timeframes.
+Generated coverage is limited to the historical range before the immutable anchor
+and the rolling 30-day analysis window. It never fills a missing post-anchor
+recording gap with a competing price path.
+
+Generation occurs on demand and only for the requested page; it is not a claim
+that all 141 assets run continuously on Vercel Hobby. The existing 7200-bar browser
+window still applies. No new hosting, cron, Function, billing change, migration,
+or environment variable is required. Runtime config metadata uses the existing
+private database tables. Production latency/load still requires verification.
+The server module option `generatedHistoryDays: 0` disables this analysis fallback.
