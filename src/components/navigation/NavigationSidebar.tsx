@@ -161,7 +161,7 @@ export const NavigationSidebar = ({
                 }`}>
                   <Icon className={navIconClassName} strokeWidth={2.35} />
                 </span>
-                <span className={collapsed ? "sr-only" : `${navLabelClassName} ${item.id === "tournaments" ? "max-w-[74px] text-[8px]" : ""} text-white/80`}>{item.label}</span>
+                <span className={collapsed ? "sr-only" : `${navLabelClassName} ${item.id === "tournaments" ? "max-w-[74px] text-[8px]" : ""} text-white/80`}>{item.id === "tournaments" ? <>Tourna<wbr />ments</> : item.label}</span>
               </button>
             );
           })}

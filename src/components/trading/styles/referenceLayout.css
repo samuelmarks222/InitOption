@@ -3,7 +3,7 @@
 @media (min-width: 1024px) {
   .trading-terminal {
     --terminal-header-height: clamp(58px, 4.1vw, 64px);
-    --terminal-nav-width: clamp(68px, 4.85vw, 76px);
+    --terminal-nav-width: clamp(76px, 5.36vw, 84px);
     --terminal-order-width: clamp(216px, 15vw, 232px);
     --terminal-tab-height: clamp(52px, 3.6vw, 56px);
   }
@@ -19,8 +19,8 @@
   .trading-terminal .trading-header-desktop { padding-left: var(--terminal-nav-width); }
   .trading-terminal .trading-brand { gap: 8px; }
   .trading-brand > span:not(:first-child) { display: none; }
-  .trading-terminal .trading-brand img { height: 28px; max-width: 160px !important; }
-  .trading-brand > span:first-child { font-size: 20px; }
+  .trading-terminal .trading-brand img { height: 40px; max-width: 220px !important; }
+  .trading-brand > span:first-child { font-size: 24px; font-weight: 700; }
   .trading-terminal .trading-promotion { justify-content: center; padding: 0 16px; }
   .trading-promotion > button { height: 36px; padding: 0 12px; font-size: 12px; white-space: nowrap; }
   .trading-promotion > button > span:first-child { width: 26px; height: 26px; font-size: 22px; }
@@ -33,9 +33,9 @@
   .trading-terminal .trading-navigation { width: var(--terminal-nav-width); border-right: 0; }
   .trading-terminal .trading-navigation.is-collapsed { width: 48px; }
   .trading-navigation nav { padding-left: 8px; padding-right: 8px; }
-  .trading-navigation nav > button { height: 56px; border-radius: 5px; gap: 4px; flex-shrink: 0; }
-  .trading-navigation nav > button svg { width: 21px; height: 21px; }
-  .trading-navigation nav > button > span:last-child { font-size: 9px; letter-spacing: 0; max-width: 58px; overflow-wrap: anywhere; }
+  .trading-navigation nav > button { height: 60px; border-radius: 5px; gap: 5px; flex-shrink: 0; }
+  .trading-navigation nav > button svg { width: 25px; height: 25px; stroke-width: 2.5; }
+  .trading-terminal .trading-navigation nav > button > span:last-child { font-size: 11px; font-weight: 700; line-height: 1.15; letter-spacing: 0; max-width: 68px; overflow-wrap: normal; color: #fff; }
   .trading-navigation nav[aria-label="Secondary workspace navigation"] { gap: 6px; padding-top: 8px; }
   .trading-navigation nav[aria-label="Utility workspace navigation"] > button { height: 48px; }
   .trading-navigation nav[aria-label="Utility workspace navigation"] > button[aria-label="Settings"] { order: -1; height: 32px; margin-bottom: 4px; }
@@ -81,7 +81,7 @@
 }
 @media (min-width: 1024px) and (max-width: 1399px) {
   .trading-terminal .trading-promotion { display: none; }
-  .trading-navigation nav > button { height: 52px; }
+  .trading-navigation nav > button { height: 56px; }
   .trading-navigation nav[aria-label="Secondary workspace navigation"] { gap: 4px; }
   .trading-order-form { padding-bottom: 12px; }
   .trading-terminal .trading-order-heading { padding: 12px; }
