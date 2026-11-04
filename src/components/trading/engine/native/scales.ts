@@ -31,8 +31,11 @@ export class TimeCoordinates {
 export class PriceCoordinates {
   min = 0; max = 1; height = 1;
   offset = 0; zoom = 1;
+  minimumRelativeSpan = .0001;
+  private autoBounds: { min: number; max: number } | null = null;
+  refitAuto() { this.autoBounds = null; }
   private manualBase: { min: number; max: number } | null = null;
-  reset() { this.manualBase = null; this.offset = 0; this.zoom = 1; }
+  reset() { this.manualBase = null; this.autoBounds = null; this.offset = 0; this.zoom = 1; }
   /** Zoom the price domain, not the data. Keep the price under y stationary. */
   zoomAt(factor: number, y: number) {
     if (!Number.isFinite(factor) || factor <= 0 || !Number.isFinite(y)) return;
@@ -56,9 +59,21 @@ export class PriceCoordinates {
       this.min = center - span / 2; this.max = center + span / 2;
       return;
     }
-    const span = Math.max(high - low, Math.abs(high) * .0001, .000001) / this.zoom;
-    const center = (low + high) / 2 + this.offset;
-    this.min = center - span / 2 - span * bottom;
-    this.max = center + span / 2 + span * top;
+    if (![low, high].every(Number.isFinite) || high < low) return;
+    if (!this.autoBounds) {
+      const span = Math.max(high - low, Math.abs(high) * this.minimumRelativeSpan, .000001);
+      const center = (low + high) / 2;
+      this.autoBounds = { min: center - span / 2 - span * bottom, max: center + span / 2 + span * top };
+    } else {
+      // Keep the whole plot stationary while ticks remain in view. Expanding in
+      // guarded steps avoids refitting/recentering every time close/high changes.
+      const span = this.autoBounds.max - this.autoBounds.min, step = span * .25;
+      if (low < this.autoBounds.min) this.autoBounds.min -= Math.ceil((this.autoBounds.min - low + span * .1) / step) * step;
+      if (high > this.autoBounds.max) this.autoBounds.max += Math.ceil((high - this.autoBounds.max + span * .1) / step) * step;
+    }
+    const span = (this.autoBounds.max - this.autoBounds.min) / this.zoom;
+    const center = (this.autoBounds.min + this.autoBounds.max) / 2 + this.offset;
+    this.min = center - span / 2;
+    this.max = center + span / 2;
   }
 }
