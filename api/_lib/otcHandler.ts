@@ -2,6 +2,8 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { transaction } from "./db.js";
 import { OTC_SCHEMA } from "./otcSchema.js";
 import { createServerlessOTC } from "../../server/otc/serverless.mjs";
+import { createOTCCollector } from "../../server/otc/collector.mjs";
+import { timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { OTCAssetConfig } from "../../server/otc/serverless.mjs";
@@ -27,6 +29,11 @@ async function ensureSchema() {
   return ready;
 }
 const read = createServerlessOTC({ transaction, assets });
+const collect = createOTCCollector({transaction,assets,read:async request=>{
+  const result=await read(request);
+  if (!("type" in result) || (result.type!=="snapshot" && result.type!=="batch")) throw new Error("Invalid collector tick result");
+  return result;
+}});
 export default async function handler(
   req: IncomingMessage,
   res: ServerResponse,
@@ -46,6 +53,18 @@ export default async function handler(
         url.searchParams.set(key, value);
     }
     const action = url.searchParams.get("action") ?? "ticks";
+    if (action === "collect") {
+      const secret=process.env.CRON_SECRET?.trim();
+      const received=typeof req.headers.authorization==='string'?Buffer.from(req.headers.authorization):Buffer.alloc(0);
+      const expected=Buffer.from(`Bearer ${secret??''}`);
+      if (!secret || received.length!==expected.length || !timingSafeEqual(received,expected)) {
+        res.statusCode=secret?401:503;
+        res.end(JSON.stringify({error:secret?"Unauthorized":"Background collection requires CRON_SECRET"}));return;
+      }
+      await ensureSchema();
+      const result=await collect();
+      res.statusCode=result.errors.length?503:result.complete?200:202;res.end(JSON.stringify(result));return;
+    }
     if (action !== "ticks" && action !== "price" && action !== "health" && action !== "history") {
       res.statusCode = 400;
       res.end(JSON.stringify({ error: "Unknown OTC action" }));

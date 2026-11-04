@@ -243,40 +243,53 @@ Zoom controls now follow independent time/price domains: wheel/buttons/pinch for
 time, Ctrl+wheel/right-axis gestures for price, and axis/plot double-click resets.
 The previous combined two-axis zoom behavior is superseded.
 
-### User-approved generated historical coverage (supersedes recorded-only fallback)
+### Current policy: recorded ticks only; background collector activation required
 
-The user elected generated history instead of upgrading for a frequent background
-scheduler. The Vercel team was checked and remains on Hobby. **No continuous
-all-asset producer or Pro schedule has been enabled.**
+Generated analysis history has been removed at the user's direction. History
+reads query persisted tick-derived bars only and do not initialize a market or
+create an earlier price path. Clients reject `generated: true` and non-recorded
+provenance, and discard old generated/mixed browser-cache entries. Existing
+`historyBootstrapV1` config metadata is ignored; recorded tables are not deleted.
+New serverless markets start at observation time (`warmup: 0` by default), not
+with a fabricated five-minute past. Existing retained tick-derived bars remain.
+The source is still the platform's explicitly synthetic internal OTC engine, not
+an external exchange feed. No external prices are being represented as OTC history.
 
-The history endpoint now provides up to 30 days of explicitly synthetic analysis
-history, including for an asset never selected before. A private, versioned
-`historyBootstrapV1` anchor/profile is stored in its market config. New markets
-pin this metadata at initialization; legacy markets pin it to the earliest
-retained recorded 5s bar. The recorded live warm-up remains five minutes. This
-means bootstrap coverage is not evidence of prior trading or external market data.
+`GET /api/otc?action=collect` is an authenticated collection entry point within
+the existing system Function. It requires an exact Authorization Bearer token
+matching private `CRON_SECRET`; no secret means 503, bad/missing token means 401,
+and query-string credentials are not accepted. Never put this secret in a VITE
+variable or browser code. It uses the same asset-specific checkpoint, private
+randomness, row lock, tick sequence and bar writes as live requests, without a
+parallel candle generator. No user position or balance is consulted.
 
-`generated-history.mjs` computes requested pages on the server using a deterministic
-private HMAC-seeded, bounded price profile. Canonical 5s bars have valid OHLC for
-a 100ms piecewise-linear historical path; all larger intervals aggregate those
-same bars. This model is deliberately separate from live arithmetic Brownian
-pricing. A boundary bucket may combine a generated prefix with a recorded suffix
-and is explicitly marked `mixed`; fully recorded buckets remain `recorded`.
-No persisted 5s recorded bar is overwritten. The raw live/expiry endpoint does not
-serve generated analysis prices, even when its exact older price is unavailable.
+The collector attempts all configured symbols, missing assets first then oldest
+checkpoint first, using a 10-second soft work-start budget. Long database calls
+can exceed that soft budget, and Functions still have their existing timeout.
+A bounded-backlog/budget-limited cycle returns 202 with `complete: false`,
+processed cursors and remaining count; collection errors return 503 with their
+per-asset error details, and a fully current cycle returns 200. Repeated
+calls resume from database checkpoints. Scheduler operators must inspect these
+results and collection lag, not assume 202 means all assets are current. Concurrent
+calls still use the existing serialized tick writer; they can waste work, so do
+not deliberately overlap job invocations. Capacity/load must be measured for all
+141 assets, 100ms source slots, database storage, and the required freshness target.
 
-The response includes `generated`, a notice and per-candle `origin`. The dashboard
-visibly states: "Includes generated synthetic history — not recorded trading
-activity" whenever these bars are shown. Profile parameters and the private seed
-remain server-owned; neither balances nor positions affect them. Identical stored
-metadata yields identical pages for different users/cold workers and timeframes.
-Generated coverage is limited to the historical range before the immutable anchor
-and the rolling 30-day analysis window. It never fills a missing post-anchor
-recording gap with a competing price path.
+**Activation is pending.** No cron has been added to `vercel.json`, and no billing,
+secret or hosting setting has been changed. The connected team was last verified
+as Hobby: daily cron cannot meet frequent background collection. A supported
+frequent scheduler is required (e.g. an approved Pro cron configuration, or an
+approved scheduler supported by the existing infrastructure). Once provisioned,
+it must call the protected entry point regularly even with zero visitors, and
+monitor lag/failures. The existing daily jobs are unrelated and not a substitute.
+Use the actual deployment URL, for example a scheduler-managed request equivalent
+to `curl --fail "$APP_URL/api/otc?action=collect" -H "Authorization: Bearer $CRON_SECRET"`.
+Note that curl success on 202 still requires inspecting `complete`.
 
-Generation occurs on demand and only for the requested page; it is not a claim
-that all 141 assets run continuously on Vercel Hobby. The existing 7200-bar browser
-window still applies. No new hosting, cron, Function, billing change, migration,
-or environment variable is required. Runtime config metadata uses the existing
-private database tables. Production latency/load still requires verification.
-The server module option `generatedHistoryDays: 0` disables this analysis fallback.
+Stored history now begins loading after feed setup rather than waiting for a
+live status, retains per-asset/timeframe cache isolation, and merges live hydration
+with the archive. Normal network latency cannot be eliminated. An asset with no
+recorded ticks cannot truthfully have past candles; display loading/empty/earliest
+states rather than invent history. A 4h candle needs a real observation interval
+to accumulate. All-asset prepopulation and continuous operation cannot be claimed
+until a scheduler is enabled and observed successfully across all assets.

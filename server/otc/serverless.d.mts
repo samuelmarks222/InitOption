@@ -17,7 +17,6 @@ export interface ServerlessOTCOptions {
   warmup?: number;
   retention?: number;
   barRetention?: number;
-  generatedHistoryDays?: number;
   /** Injectable clock for tests only; production uses PostgreSQL time. */
   nowForTests?: () => number;
 }
@@ -41,7 +40,7 @@ export interface OTCWireTick {
 }
 
 export interface OTCCandle {
-  origin?: "recorded" | "generated-history" | "mixed";
+  origin?: "recorded";
   time: number;
   open: number;
   high: number;
@@ -71,8 +70,7 @@ export interface OTCPriceReceipt extends OTCWireTick {
 }
 
 export interface OTCHistoryPage {
-  generated: boolean;
-  notice: string;
+  generated: false;
   type: "history";
   source: "internal-otc";
   symbol: string;

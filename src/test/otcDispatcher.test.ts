@@ -37,6 +37,17 @@ describe('OTC through existing system Function',()=>{
     expect(res.statusCode).toBe(200);expect(res.body).toMatchObject({type:'history',seconds:60,candles:[],hasMore:false});
     expect(state.query.mock.calls.some(([sql])=>String(sql).includes('INSERT INTO public.otc_markets'))).toBe(false);
   });
+  it('fails closed for collection without a configured secret and rejects unauthenticated callers',async()=>{
+    const previous=process.env.CRON_SECRET;
+    try{
+      delete process.env.CRON_SECRET;
+      let res=response();await handler({method:'GET',url:'/api/otc?action=collect',headers:{},query:{route:'otc'}} as any,res);
+      expect(res.statusCode).toBe(503);expect(state.query).not.toHaveBeenCalled();
+      process.env.CRON_SECRET='test-only-collector-secret';
+      res=response();await handler({method:'GET',url:'/api/otc?action=collect&secret=test-only-collector-secret',headers:{},query:{route:'otc'}} as any,res);
+      expect(res.statusCode).toBe(401);expect(state.query).not.toHaveBeenCalled();
+    }finally{if(previous===undefined)delete process.env.CRON_SECRET;else process.env.CRON_SECRET=previous;}
+  });
   it('does not replace the existing system health route',async()=>{
     const res=response();await handler({method:'GET',url:'/api/system?route=health',query:{route:'health'}} as any,res);
     expect(res.statusCode).toBe(200);expect(res.body).toEqual({ok:true,db:'connected'});
