@@ -213,65 +213,6 @@ type LivePriceBeaconState = {
 };
 
 
-const splitPriceLabel = (price: number, precision: number) => {
-  const safePrecision = Math.max(0, Math.min(8, precision));
-  const label = Number.isFinite(price) ? price.toFixed(safePrecision) : "0";
-  const decimalIndex = label.indexOf(".");
-
-  if (decimalIndex === -1) {
-    return { lead: "", accent: label };
-  }
-
-  return {
-    lead: label.slice(0, decimalIndex + 1),
-    accent: label.slice(decimalIndex + 1),
-  };
-};
-
-const LivePriceAxisOverlay = ({
-  chart,
-  series,
-  price,
-  precision,
-  rising,
-}: {
-  chart: IChartApi;
-  series: ChartSeriesApi;
-  price: number;
-  precision: number;
-  rising: boolean;
-}) => {
-  const y = series.priceToCoordinate(price);
-  const host = chart.container?.();
-
-  if (typeof y !== "number" || !Number.isFinite(y) || !host) {
-    return null;
-  }
-
-  const clampedY = Math.min(Math.max(16, y), Math.max(16, host.clientHeight - 16));
-  const parts = splitPriceLabel(price, precision);
-  const accentColor = rising ? "#10d66a" : "#ff6b5d";
-
-  return (
-    <div className="pointer-events-none absolute inset-0 z-[10]" aria-hidden="true">
-      <div
-        className="absolute left-0 right-[74px] h-px bg-[#e8edf7]/85 shadow-[0_0_8px_rgba(232,237,247,0.18)]"
-        style={{ top: clampedY }}
-      />
-      <div
-        className="absolute right-0 flex h-[30px] min-w-[112px] items-center justify-end bg-[#e8ecf2] pl-5 pr-2.5 text-right text-[14px] font-black leading-none shadow-[0_8px_18px_rgba(0,0,0,0.22)]"
-        style={{
-          top: clampedY - 15,
-          clipPath: "polygon(12px 0, 100% 0, 100% 100%, 12px 100%, 0 50%)",
-        }}
-      >
-        <span className="text-[#566173]">{parts.lead}</span>
-        <span style={{ color: accentColor }}>{parts.accent}</span>
-      </div>
-    </div>
-  );
-};
-
 const toLineChartData = (candles: OHLCCandle[]): LineData<Time>[] =>
   candles.map((candle) => ({ time: toChartTime(candle.time), value: candle.close }));
 
@@ -4171,15 +4112,6 @@ renderOverlayIndicators(getIndicatorHistory());
 
         {syncChart && syncSeries && (
            <>
-             {!mobileHistoryOpen && !overlayUiSuppressed && (
-               <LivePriceAxisOverlay
-                 chart={syncChart}
-                 series={syncSeries}
-                 price={livePriceBeacon?.price ?? currentPrice}
-                 precision={dec}
-                 rising={isUp}
-               />
-             )}
              {!mobileHistoryOpen && (
                <DrawingOverlay 
                  chart={syncChart} 

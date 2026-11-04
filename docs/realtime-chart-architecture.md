@@ -460,3 +460,39 @@ and recorded suffix; that projection is labeled `mixed`, not reported as a fully
 recorded OHLC bar. The current live candle and trade receipts remain live-engine
 observations only. Generated bars receive a persistent visible disclosure in the
 chart while present, including after merges into the per-timeframe archive cache.
+
+## Shared frame geometry and input batching
+
+The independent React `LivePriceAxisOverlay` was removed. It computed its own
+price Y before the native renderer's autoscale and independently clamped it to a
+host-height margin, allowing its badge/line to drift from the drawn candle. The
+native renderer now computes the last-point price Y once per visible series per
+frame, after autoscale. The same rounded Y goes to the latest body/line point,
+active price segment, and native axis badge. The segment starts at the latest
+candle's rounded center X and ends at the actual plot/axis boundary; it is hidden
+when that candle is horizontally offscreen instead of starting at a fixed pad.
+Explicit user-created price lines still span the plot as before.
+
+`frameMath.ts` keeps projection/zoom math modular. World coordinates, logical
+ranges, pan accumulation and price values retain floating-point precision.
+Rounding is confined to final Canvas drawing coordinates, including body edges,
+wicks, paths, grid/text positions and badge positioning. CSS-pixel coordinates
+are transformed for DPR once; neither source OHLC nor public coordinate APIs
+are rounded or interpolated.
+
+One native rAF scheduler owns navigation and painting. Input handlers enqueue
+small ordered intents; consecutive pan deltas coalesce without integer rounding.
+A frame computes the target logical range, applies the range once, emits the
+latest crosshair event once, and paints. Crosshair row lookup uses binary search
+rather than a full series scan. Wheel steps use a 1.12 candle-spacing multiplier
+(the reciprocal for logical span), preserving the cursor time anchor; Ctrl+wheel
+still operates only on price. Pinch/axis drags join the same pipeline. Pending
+intents and scheduled work are cleared on disposal; explicit double-click resets
+discard pending gestures. Tick/OHLC commits remain synchronous and uninterrupted.
+
+Tests assert one active-price mapping shared by line/badge, integer drawing
+arguments, latest-candle line origin, fractional pan accumulation, no synchronous
+range/crosshair notifications from input events, one batched notification/paint,
+exponential wheel accumulation, and cancellation on disposal. rAF follows browser
+and display scheduling; fixed 60/120 FPS is not guaranteed under load or tab
+throttling. Authenticated visual/physical-device acceptance remains pending.
