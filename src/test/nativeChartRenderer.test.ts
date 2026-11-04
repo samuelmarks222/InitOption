@@ -27,6 +27,32 @@ describe('native canvas renderer integration', () => {
       expect(context.stroke).toHaveBeenCalled(); chart.remove();
     });
   }
+  for (const [width,dpr] of [[800,1],[360,2]]) {
+    it(`paints panned history through the transparent price gutter at width ${width} and DPR ${dpr}`, () => {
+      vi.stubGlobal('devicePixelRatio',dpr);
+      const chart=createChart(host(),{width,height:400});
+      const series=chart.addSeries(CandlestickSeries);
+      const rows=Array.from({length:100},(_,i)=>({time:(60+i*60) as any,open:100+i/10,high:101+i/10,low:99+i/10,close:100.5+i/10}));
+      series.setData(rows);
+      for(const from of [0,3,6]) {
+        context.fillRect.mockClear();context.fillText.mockClear();context.rect.mockClear();
+        chart.timeScale().setVisibleLogicalRange({from,to:from+72});vi.advanceTimersByTime(20);
+        const x=Number(chart.timeScale().timeToCoordinate(rows[77].time));
+        const plotWidth=width-80,spacing=plotWidth/72;
+        expect(x).toBeGreaterThan(plotWidth-20);expect(x).toBeLessThan(width);
+        expect(context.rect).toHaveBeenCalledWith(0,0,width,374);
+        const left=Math.round(x-spacing*.72/2);
+        const bodyIndex=context.fillRect.mock.calls.findIndex(([bodyX,,bodyWidth])=>bodyX===left && bodyWidth<20);
+        expect(bodyIndex).toBeGreaterThanOrEqual(0);
+        const labels=context.fillText.mock.calls.map((args,index)=>({args,index})).filter(({args})=>args[1]===plotWidth+7 && args[2]<374);
+        expect(labels.length).toBeGreaterThan(0);
+        // Labels stay legible above candles, without painting a full-height panel.
+        expect(context.fillText.mock.invocationCallOrder[labels[0].index]).toBeGreaterThan(context.fillRect.mock.invocationCallOrder[bodyIndex]);
+        expect(context.fillRect.mock.calls.some(([left,top,bodyWidth,bodyHeight])=>left===plotWidth && top===0 && bodyWidth===80 && bodyHeight===374)).toBe(false);
+      }
+      expect(series.data()).toEqual(rows);chart.remove();
+    });
+  }
   it('eases the live candle and badge together, keeps exact data, then stops repainting', () => {
     const chart=createChart(host(),{width:800,height:400});
     const series=chart.addSeries(CandlestickSeries);

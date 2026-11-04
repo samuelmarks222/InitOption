@@ -522,3 +522,21 @@ motion preferences and `candleAnimation: false` on chart or series disable easin
 The existing single requestAnimationFrame scheduler runs only while an onscreen
 transition is unfinished, and removal cancels it. It does not synthesize new ticks,
 change timestamps, backfill history, or hide the feed's underlying polling latency.
+
+## Transparent right price scale while browsing history
+
+The native renderer previously clipped series at the plot's right boundary,
+80 CSS pixels before the Canvas edge. Historical candles panned into that price
+scale gutter were discarded, making it look like a background panel hid them.
+Series now paint through the transparent gutter to the Canvas edge. The bounded
+binary-search paint window and autoscale input include those newly visible bars;
+price labels are painted afterward for readability without a full-height fill.
+
+Public time/price coordinate mappings, visible-range APIs, axis zoom gestures,
+OHLC/timestamps and recorded history remain unchanged. Price lines still terminate
+at the original price-axis boundary, and the current-price badge retains its
+localized background. Active candles in the gutter continue presentation easing.
+Regression coverage checks historical bars across several pan ranges at 800px
+/DPR 1 and 360px/DPR 2, full-width clipping, label paint order, absence of a
+full-height axis fill and unchanged OHLC. Authenticated visual verification remains
+pending; no production deployment is claimed.

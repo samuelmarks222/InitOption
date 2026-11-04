@@ -337,7 +337,7 @@ class NativeChart {
     const visible = this.series.filter(s => s.config.visible !== false);
     let min = Infinity, max = -Infinity;
     for (const s of visible) for (const r of this.visibleRows(s)) {
-      const index = this.time.timeToLogical(r.time)!; if (index < this.time.from-1 || index > this.time.to+1) continue;
+      const index = this.time.timeToLogical(r.time)!; if (index < this.time.from-1 || index > this.drawRightLogical) continue;
       const low = r.low ?? r.value ?? r.close, high = r.high ?? r.value ?? r.close;
       if (Number.isFinite(low) && Number.isFinite(high)) {
         min = Math.min(min, low!); max = Math.max(max, high!);
@@ -356,12 +356,12 @@ class NativeChart {
       const power = 10 ** Math.floor(Math.log10(raw)), unit = raw / power;
       return (unit <= 1 ? 1 : unit <= 2 ? 2 : unit <= 5 ? 5 : 10) * power;
     };
+    const priceLabels: {value:number;y:number}[] = [];
     const priceStep = niceStep(this.price.max-this.price.min,h/64);
     for(let value=Math.ceil(this.price.min/priceStep)*priceStep,n=0;value<=this.price.max && n<100;value+=priceStep,n++){
       const y=this.price.priceToCoordinate(value);
-      if(this.config.grid.horzLines?.visible!==false)this.stroke(ctx,0,y,w,y,this.config.grid.horzLines?.color || '#243044');
-      ctx.fillStyle=this.config.layout.textColor;
-      if(this.config.rightPriceScale.visible!==false)ctx.fillText(this.format(value),snap(w+7),snap(y+4));
+      if(this.config.grid.horzLines?.visible!==false)this.stroke(ctx,0,y,width,y,this.config.grid.horzLines?.color || '#243044');
+      if(this.config.rightPriceScale.visible!==false)priceLabels.push({value,y});
     }
     const from=this.time.logicalToTime(this.time.from),to=this.time.logicalToTime(this.time.to);
     if(from!==null && to!==null){
@@ -384,10 +384,14 @@ class NativeChart {
       const rawCalculatedY=this.price.priceToCoordinate(value!);
       const geometry=activePriceGeometry(rawCalculatedY,offsetX,lastIndex,candleWidth,candleSpacing);
       activeFrames.set(series,{time:last.time,value:value!,row:last,...geometry});
-      if(series.animating && geometry.x>=0 && geometry.x<=w)this.renderAgain=true;
+      if(series.animating && geometry.x>=0 && geometry.x<=width)this.renderAgain=true;
     }
-    ctx.save(); ctx.beginPath(); ctx.rect(0,0,snap(w),snap(h)); ctx.clip();
+    // Price ticks overlay the chart transparently: do not discard candles in
+    // the reserved scale gutter when a historical range is panned underneath it.
+    ctx.save(); ctx.beginPath(); ctx.rect(0,0,snap(width),snap(h)); ctx.clip();
     for (const s of visible) this.drawSeries(ctx,s,activeFrames.get(s));
+    ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(0,0,snap(w),snap(h)); ctx.clip();
     for (const s of visible) {
       for (const line of s.lines) { const o = line.options(); if (o.lineVisible === false) continue; this.stroke(ctx,0,this.price.priceToCoordinate(o.price),w,this.price.priceToCoordinate(o.price),o.color || '#94a3b8',o.lineWidth || 1,o.lineStyle); }
       const active=activeFrames.get(s);
@@ -399,6 +403,8 @@ class NativeChart {
       this.stroke(ctx,0,this.pointer.y,w,this.pointer.y,'#8190a4',1,2);
     }
     ctx.restore();
+    ctx.fillStyle=this.config.layout.textColor;
+    for(const {value,y} of priceLabels)ctx.fillText(this.format(value),snap(w+7),snap(y+4));
     for (const s of visible) {
       const active=activeFrames.get(s),last=active?.row??s.rows[s.rows.length-1];
       if(active && s.config.lastValueVisible!==false)this.label(ctx,this.format(active.value,s),active.y,s.config.lineColor || (last.close!>=last.open!?s.config.upColor:s.config.downColor) || '#5677e8');
@@ -408,10 +414,15 @@ class NativeChart {
   }
   private label(ctx: CanvasRenderingContext2D,text: string,y: number,color: string) { if (y < 0 || y > this.price.height || this.config.rightPriceScale.visible === false) return; ctx.fillStyle=color; ctx.fillRect(snap(this.time.width),snap(y)-10,80,20); ctx.fillStyle='#fff'; ctx.fillText(text,snap(this.time.width)+5,snap(y)+4); }
   private stroke(ctx: CanvasRenderingContext2D,x1: number,y1: number,x2: number,y2: number,color: string,width=1,style=0) { ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=width; ctx.setLineDash(style === 1 ? [1,3] : style ? [5,4] : []); ctx.moveTo(snap(x1),snap(y1)); ctx.lineTo(snap(x2),snap(y2)); ctx.stroke(); ctx.setLineDash([]); }
-  /** Binary-search the visible time window; paints must not scan full retained history. */
+  /** Preserve the public plot/axis mapping while painting through the transparent gutter. */
+  private get drawRightLogical() {
+    const gutter = this.config.rightPriceScale.visible === false ? 0 : 80;
+    return this.time.to + gutter / this.time.spacing + 1;
+  }
+  /** Binary-search the full painted window; never scan all retained history. */
   private visibleRows(series: NativeSeries): Datum[] {
     const from = this.time.logicalToTime(this.time.from - 1);
-    const to = this.time.logicalToTime(this.time.to + 1);
+    const to = this.time.logicalToTime(this.drawRightLogical);
     if (from === null || to === null) return [];
     const lower = (time: number) => {
       let left = 0, right = series.rows.length;
@@ -426,7 +437,7 @@ class NativeChart {
     for (const storedRow of this.visibleRows(s)) {
       const row = active?.time === storedRow.time ? active.row : storedRow;
       const index = this.time.timeToLogical(row.time)!;
-      if (index < this.time.from-1 || index > this.time.to+1) continue;
+      if (index < this.time.from-1 || index > this.drawRightLogical) continue;
       const x = active?.time===row.time?active.x:this.time.logicalToCoordinate(index), value = row.value ?? row.close;
       if (!Number.isFinite(value)) continue;
       const y = active?.time===row.time?active.y:this.price.priceToCoordinate(value!);
