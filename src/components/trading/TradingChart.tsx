@@ -1,5 +1,5 @@
 import { liveViewport, constrainViewport } from "./engine/native/viewport";
-import { setChartInterval } from "./engine/native/chart";
+import { setChartInterval, zoomChart } from "./engine/native/chart";
 import { isInternalOTC, marketWebSocketUrl } from "@/lib/otcMarket";
 import { tickChartPoint, TickSeriesWriter } from "./engine/native/tickRendering";
 import { animateViewport } from "./engine/native/viewportAnimation";
@@ -1312,9 +1312,6 @@ const getCandleDownColor = (chartType: ChartType, styles: ChartStylePreferences,
 const getBarSpacingForScale = (timeframe: SupportedChartTimeframe, bodyScale: number) =>
   (BAR_SPACING_MAP[timeframe] ?? BAR_SPACING_MAP["1m"]) * clampBodyScale(bodyScale);
 
-const getMinBarSpacingForScale = (timeframe: SupportedChartTimeframe, bodyScale: number) =>
-  Math.max(1, (MIN_BAR_SPACING_MAP[timeframe] ?? MIN_BAR_SPACING_MAP["1m"]) * Math.max(0.95, bodyScale * 0.96));
-
 const buildPairInfoTrend = (candles: OHLCCandle[]): PairInfoTrendPoint[] => {
   const closes = candles.slice(-72).map((candle) => candle.close);
   if (closes.length === 0) return [];
@@ -2068,7 +2065,6 @@ const TradingChart = ({
   const loadedHistoryCountRef = useRef(0);
   const isBackfillingHistoryRef = useRef(false);
   const isNormalizingVisibleRangeRef = useRef(false);
-  const isZoomingRef = useRef(false);
   const priceScaleMarginKeyRef = useRef("");
   const aggregatorRef = useRef<CandleAggregator | null>(null);
   const liveIndicatorFrame = useRef<number | null>(null);
@@ -2524,35 +2520,8 @@ const TradingChart = ({
     const chart = chartRef.current;
     if (!chart) return;
 
-    const timeScale = chart.timeScale();
-    const containerWidth = mainRef.current?.clientWidth ?? 960;
-    const currentBarSpacing = timeScale.options().barSpacing;
-    if (!currentBarSpacing || currentBarSpacing <= 0) return;
-
-    const factor = direction === "in" ? 1.12 : 0.88;
-    const newBarSpacing = currentBarSpacing * factor;
-
-    const minSpacing = getMinBarSpacingForScale(selectedTf, chartStylesRef.current.bodyScale);
-    const dataPointCount = mainSeriesRef.current?.data()?.length ?? historyRef.current.length;
-    const defaultVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, Math.max(1, dataPointCount));
-    const maxSpacing = containerWidth / Math.max(12, Math.round(defaultVisibleBars * 0.22));
-
-    const clamped = Math.max(minSpacing, Math.min(newBarSpacing, maxSpacing));
-
-    if (Math.abs(clamped - currentBarSpacing) >= 0.5) {
-      isZoomingRef.current = true;
-      timeScale.applyOptions({ barSpacing: clamped });
-      window.requestAnimationFrame(() => {
-        isZoomingRef.current = false;
-      });
-    }
-  }, [selectedTf]);
-
-  const adjustChartZoomRef = useRef(adjustChartZoom);
-
-  useEffect(() => {
-    adjustChartZoomRef.current = adjustChartZoom;
-  }, [adjustChartZoom]);
+    zoomChart(chart, direction === "in" ? 1 / 1.12 : 1.12);
+  }, []);
 
   const applyResponsivePriceScale = useCallback(
     (visibleSpan?: number | null, force = false) => {
@@ -2588,6 +2557,7 @@ const TradingChart = ({
       const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, dataPointCount);
       const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, dataPointCount);
       const rightOffset = getChartRightOffset(trendContextBars);
+      chart.priceScale("right").applyOptions({ autoScale: true });
       const range = liveViewport(containerWidth, dataPointCount, initialVisibleBars + rightOffset);
       const visibleSpan = range.to - range.from;
 
@@ -3166,6 +3136,7 @@ const TradingChart = ({
     if (!tf || !mainSeriesRef.current || !chartRef.current) return;
     let effectActive = true;
     setChartInterval(chartRef.current, tf.seconds);
+    chartRef.current.priceScale("right").applyOptions({ autoScale: true });
 
     cancelViewportAnimation.current?.();
 
@@ -3506,7 +3477,7 @@ renderOverlayIndicators(getIndicatorHistory());
 
       applyResponsivePriceScale(range.to - range.from);
 
-      if (isNormalizingVisibleRangeRef.current || isZoomingRef.current) {
+      if (isNormalizingVisibleRangeRef.current) {
         return;
       }
 
