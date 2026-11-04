@@ -1,8 +1,10 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { transaction } from "./db.js";
-import { OTC_SCHEMA } from "./otcSchema.js";
+import { OTC_SCHEMA, OTC_COLLECTION_SCHEMA } from "./otcSchema.js";
 import { createServerlessOTC } from "../../server/otc/serverless.mjs";
 import { createOTCCollector } from "../../server/otc/collector.mjs";
+import { createOTCBackground } from "../../server/otc/background.mjs";
+import { authenticateVerifiedRequest } from "./clerkWebhook.js";
 import { timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -22,6 +24,7 @@ async function ensureSchema() {
       await client.query("SET LOCAL lock_timeout = '8s'");
       await client.query("SELECT pg_advisory_xact_lock(1732247103)");
       await client.query(OTC_SCHEMA);
+      await client.query(OTC_COLLECTION_SCHEMA);
     }).catch((error) => {
       ready = undefined;
       throw error;
@@ -34,18 +37,29 @@ const collect = createOTCCollector({transaction,assets,read:async request=>{
   if (!("type" in result) || (result.type!=="snapshot" && result.type!=="batch")) throw new Error("Invalid collector tick result");
   return result;
 }});
+const background = createOTCBackground({ transaction, assets, collect });
+async function readControlBody(req: IncomingMessage) {
+  let body = (req as any).body;
+  if (body === undefined) {
+    let raw = '';
+    for await (const chunk of req) {
+      raw += chunk.toString();
+      if (Buffer.byteLength(raw) > 4096) throw Object.assign(new Error("Request body too large"), { status: 413 });
+    }
+    body = raw;
+  }
+  try {
+    if (typeof body === 'string') body = JSON.parse(body);
+    if (!body || typeof body !== 'object' || Array.isArray(body) || typeof body.enabled !== 'boolean') throw new Error();
+    return body as { enabled: boolean };
+  } catch { throw Object.assign(new Error("enabled must be a boolean"), { status: 400 }); }
+}
 export default async function handler(
   req: IncomingMessage,
   res: ServerResponse,
 ) {
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Cache-Control", "no-store");
-  if (req.method !== "GET") {
-    res.statusCode = 405;
-    res.setHeader("Allow", "GET");
-    res.end(JSON.stringify({ error: "Read-only pricing endpoint" }));
-    return;
-  }
   try {
     const url = new URL(req.url ?? "/api/otc", "http://otc.local");
     for (const [key, value] of Object.entries((req as any).query ?? {})) {
@@ -53,6 +67,33 @@ export default async function handler(
         url.searchParams.set(key, value);
     }
     const action = url.searchParams.get("action") ?? "ticks";
+    if (action === "collection-settings" || action === "collection-run") {
+      const allowed = action === "collection-settings" ? ["GET", "POST"] : ["POST"];
+      if (!allowed.includes(req.method ?? '')) {
+        res.statusCode = 405; res.setHeader("Allow", allowed.join(', '));
+        res.end(JSON.stringify({error:"Method not allowed"})); return;
+      }
+      const userId = await authenticateVerifiedRequest(req.headers ?? {});
+      if (!userId) { res.statusCode=401; res.end(JSON.stringify({error:"Verified admin session required"})); return; }
+      const isAdmin = await transaction(async client => (await client.query(
+        "SELECT 1 FROM public.user_roles WHERE user_id=$1 AND role='admin' LIMIT 1", [userId])).rows.length > 0);
+      if (!isAdmin) { res.statusCode=403; res.end(JSON.stringify({error:"Admin role required"})); return; }
+      // Validate mutations before DDL or setting changes.
+      const body = action === "collection-settings" && req.method === "POST" ? await readControlBody(req) : null;
+      await ensureSchema();
+      if (action === "collection-run") {
+        const cycle = await background.run();
+        res.statusCode = !("result" in cycle) ? 200 : cycle.result.errors.length ? 503 : cycle.result.complete ? 200 : 202;
+        res.end(JSON.stringify(cycle)); return;
+      }
+      const status = body ? await background.setEnabled(body.enabled, userId) : await background.status();
+      res.statusCode=200;
+      res.end(JSON.stringify({...status, schedulerSecretConfigured: Boolean(process.env.CRON_SECRET?.trim())})); return;
+    }
+    if (req.method !== "GET") {
+      res.statusCode=405; res.setHeader("Allow","GET");
+      res.end(JSON.stringify({error:"Read-only pricing endpoint"})); return;
+    }
     if (action === "collect") {
       const secret=process.env.CRON_SECRET?.trim();
       const received=typeof req.headers.authorization==='string'?Buffer.from(req.headers.authorization):Buffer.alloc(0);
@@ -62,8 +103,9 @@ export default async function handler(
         res.end(JSON.stringify({error:secret?"Unauthorized":"Background collection requires CRON_SECRET"}));return;
       }
       await ensureSchema();
-      const result=await collect();
-      res.statusCode=result.errors.length?503:result.complete?200:202;res.end(JSON.stringify(result));return;
+      const cycle=await background.run();
+      res.statusCode=!("result" in cycle)?200:cycle.result.errors.length?503:cycle.result.complete?200:202;
+      res.end(JSON.stringify(cycle));return;
     }
     if (action !== "ticks" && action !== "price" && action !== "health" && action !== "history") {
       res.statusCode = 400;

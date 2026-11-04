@@ -191,3 +191,10 @@ export const verifyClerkWebhook = async (): Promise<never> => {
   // Clerk account removed; legacy Clerk webhook endpoint is inactive.
   throw new Error("Clerk webhooks are no longer handled on this deployment.");
 };
+/** Privileged OTC administration must never use the legacy unverified fallback. */
+export const authenticateVerifiedRequest = async (headers: AuthRequestHeaders): Promise<string | null> => {
+  const token = bearerFromHeader(headers["authorization"] ?? headers["Authorization"]);
+  if (!token) return null;
+  const user = await getVerifiedAppwriteUser(token);
+  return user ? resolveCanonicalUserId(user.id, user.email) : null;
+};

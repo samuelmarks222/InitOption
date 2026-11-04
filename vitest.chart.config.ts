@@ -6,6 +6,8 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: [
+      "src/test/backgroundCollectionControl.test.tsx",
+      "src/test/otcCollectionAuth.test.ts",
       "src/test/dashboardLayout.test.tsx",
       "src/test/otcHistory.test.ts",
       "src/test/candleStability.test.tsx",
