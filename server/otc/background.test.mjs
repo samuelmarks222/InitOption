@@ -7,9 +7,10 @@ import { createServerlessOTC } from './serverless.mjs';
 import { createOTCCollector } from './collector.mjs';
 const schema=await readFile(new URL('../../neon/013_otc_serverless.sql',import.meta.url),'utf8');
 const controlSchema=await readFile(new URL('../../neon/014_otc_collection_control.sql',import.meta.url),'utf8');
+const schedulerSchema=await readFile(new URL('../../neon/016_otc_scheduler_health.sql',import.meta.url),'utf8');
 const assets={AAPL:{price:212,precision:8,volatility:.12,support:200,resistance:225,drift:0},'EUR/USD':{price:1.1,precision:8,volatility:.0006,support:1,resistance:1.2,drift:0}};
 async function setup(collectOverride) {
-  const db=new PGlite();await db.exec(schema+controlSchema);
+  const db=new PGlite();await db.exec(schema+controlSchema+schedulerSchema);
   const transaction=fn=>db.transaction(tx=>fn(tx));
   let time=Date.now();
   const read=createServerlessOTC({transaction,assets,warmup:0,nowForTests:()=>time});
@@ -69,4 +70,51 @@ test('runtime control DDL stays identical to the checked-in migration',async()=>
   const runtime=await readFile(new URL('../../api/_lib/otcSchema.ts',import.meta.url),'utf8');
   const encoded=runtime.match(/OTC_COLLECTION_SCHEMA = (".*");/)[1];
   assert.equal(JSON.parse(encoded),controlSchema);
+});
+
+test('manual cycles cannot establish scheduler health; authenticated runs must demonstrate freshness',async()=>{
+  const app=await setup();try{
+    await app.background.setEnabled(true,admin);
+    await app.background.run();
+    assert.equal((await app.background.status()).scheduler.state,'missing');
+    await app.background.run({scheduled:true});
+    assert.equal((await app.background.status()).scheduler.state,'verifying');
+    await app.background.run({scheduled:true});
+    assert.equal((await app.background.status()).scheduler.state,'healthy');
+    await app.db.query("UPDATE otc_collection_control SET last_scheduled_at=now()-interval '5 minutes'");
+    assert.equal((await app.background.status()).scheduler.state,'missing');
+    await app.background.setEnabled(false,admin);
+    assert.equal((await app.background.status()).scheduler.state,'disabled');
+  }finally{await app.db.close();}
+});
+test('scheduler health never treats a recently invoked but stale catalog as healthy',async()=>{
+  const app=await setup();try{
+    await app.background.setEnabled(true,admin);
+    await app.background.run({scheduled:true});await app.background.run({scheduled:true});
+    await app.db.query("UPDATE otc_markets SET last_slot=last_slot-3000");
+    const status=await app.background.status();assert.equal(status.scheduler.state,'lagging');assert.equal(status.scheduler.freshAssets,0);
+  }finally{await app.db.close();}
+});
+test('runtime scheduler DDL matches its migration',async()=>{
+ const runtime=await readFile(new URL('../../api/_lib/otcSchema.ts',import.meta.url),'utf8');
+ assert.equal(JSON.parse(runtime.match(/OTC_SCHEDULER_SCHEMA = (".*");/)[1]),schedulerSchema);
+});
+test('a manual cycle cannot clear a scheduler failure or inflate its success count',async()=>{
+ let fail=false;
+ const app=await setup(async()=>{if(fail)throw new Error('offline');return {assets:2,processed:[{symbol:'AAPL',cursor:1,catchingUp:false}],errors:[],remaining:1,complete:false};});
+ try{
+   await app.background.setEnabled(true,admin);fail=true;
+   await assert.rejects(()=>app.background.run({scheduled:true}));
+   fail=false;await app.background.run();
+   const status=await app.background.status();assert.equal(status.scheduler.state,'error');assert.equal(status.scheduler.consecutiveSuccesses,0);assert.ok(status.scheduler.lastError);
+ }finally{await app.db.close();}
+});
+test('an obsolete worker cannot publish scheduler health after its lease is replaced',async()=>{
+ let release;let started;const began=new Promise(resolve=>{started=resolve;});
+ const app=await setup(async()=>{started();await new Promise(resolve=>{release=resolve;});return {assets:2,processed:[{symbol:'AAPL',cursor:1,catchingUp:false}],errors:[],remaining:1,complete:false};});
+ try{
+  await app.background.setEnabled(true,admin);const run=app.background.run({scheduled:true});await began;
+  await app.db.query("UPDATE otc_collection_control SET lease_token='replacement-worker',scheduled_consecutive_successes=0,last_scheduled_finished_at=NULL");
+  release();await run;const status=await app.background.status();assert.equal(status.scheduler.consecutiveSuccesses,0);assert.equal(status.scheduler.lastFinishedAt,null);
+ }finally{await app.db.close();}
 });

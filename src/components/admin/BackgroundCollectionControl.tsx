@@ -35,7 +35,13 @@ export default function BackgroundCollectionControl() {
     finally { await refresh(); setBusy(false); }
   }
   const age = status?.lastFinishedAt ? Math.max(0, (new Date(status.serverNow).getTime() - new Date(status.lastFinishedAt).getTime()) / 1000) : null;
-  const health = !status ? 'Status unavailable' : !status.enabled ? 'Disabled' : status.running ? 'Cycle in progress' :
+  const schedulerLabels = {
+    disabled:'Disabled',missing:'Scheduler not observed — activate supported Vercel cron',error:'Scheduled collection failed',
+    'awaiting-success':'Scheduler reached API — awaiting completed work',initializing:'Scheduler running — initializing assets',
+    lagging:'Scheduler running — assets are falling behind',verifying:'Verifying scheduled operation — awaiting two successful runs',
+    healthy:'Recent scheduled runs verified — all assets fresh',
+  };
+  const health = status?.scheduler ? schedulerLabels[status.scheduler.state] : !status ? 'Status unavailable' : !status.enabled ? 'Disabled' : status.running ? 'Cycle in progress' :
     status.lastError ? 'Collection errors' : age === null ? 'Awaiting first cycle' : age > 120 ? 'No recent cycle — check scheduler' : 'Recent cycle recorded';
   const buttonClass = 'rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-sky-400';
   return <section aria-labelledby="background-collection-heading" className="rounded-2xl border p-5 space-y-4" style={{background:'var(--admin-surface)',borderColor:'var(--admin-border)'}}>
@@ -59,12 +65,18 @@ export default function BackgroundCollectionControl() {
       <dl className="grid grid-cols-2 gap-3 text-sm lg:grid-cols-4">
         {[["Catalog assets",status.totalAssets],["Initialized",status.initializedAssets],["Updated within 60s",status.currentAssets],["Not yet initialized",status.uninitializedAssets]].map(([label,value]) => <div key={label} className="rounded-lg bg-black/15 px-3 py-2"><dt className="text-xs text-slate-400">{label}</dt><dd className="mt-1 text-lg font-bold tabular-nums text-white">{value}</dd></div>)}
       </dl>
+      {status.scheduler && <div className="rounded-lg border border-white/10 p-3 text-xs text-slate-300 space-y-1">
+        <p>Authenticated scheduler last seen: {status.scheduler.lastSeenAt ? new Date(status.scheduler.lastSeenAt).toLocaleString() : 'Never'}</p>
+        <p>Scheduled cycle last finished: {status.scheduler.lastFinishedAt ? new Date(status.scheduler.lastFinishedAt).toLocaleString() : 'Never'} · Consecutive successful scheduled cycles: {status.scheduler.consecutiveSuccesses}</p>
+        <p>{status.scheduler.freshAssets}/{status.totalAssets} assets advanced within {status.scheduler.freshnessWindowSeconds}s. Manual cycles do not establish scheduler health.</p>
+        {status.scheduler.lastError && <p role="alert" className="text-red-300">{status.scheduler.lastError}</p>}
+      </div>}
       <p className="text-xs text-slate-400">Last cycle finished: {status.lastFinishedAt ? new Date(status.lastFinishedAt).toLocaleString() : 'Never'} · Maximum initialized-asset lag: {status.maxLagSeconds === null ? 'Unknown' : `${status.maxLagSeconds}s`}</p>
       {status.lastResult && <p className="text-xs text-slate-300">Last cycle: {status.lastResult.processed.length} processed, {status.lastResult.remaining} remaining, {status.lastResult.errors.length} errors{status.lastResult.complete ? ' — all current at that cycle.' : ' — not fully caught up.'}</p>}
       {status.lastError && <p role="alert" className="text-sm text-red-300">{status.lastError}</p>}
     </>}
     <div className="rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 text-xs leading-relaxed text-amber-200">
-      <strong>A frequent scheduler is still required.</strong> Enabling this setting saves permission and runs one initial cycle; it does not install or start a scheduler. Scheduled requests must call the protected collector endpoint even when this page is closed. Vercel Hobby daily cron is insufficient for timely all-asset history.
+      {status?.scheduler?.state==='healthy' ? <><strong>Recent scheduled operation observed.</strong> The collector runs independently of this page. This is recent health evidence, not a guarantee of future uptime.</> : <><strong>A frequent scheduler is still required.</strong> Enabling this setting saves permission and runs one initial cycle; it does not install or start a scheduler. A supported Vercel plan and the one-minute cron configuration must be activated and deployed. Hobby daily cron is insufficient.</>}
       {status && <span className="block mt-1">Scheduler secret: {status.schedulerSecretConfigured ? 'configured (not proof a scheduler is running)' : 'not configured'}. Recorded OTC history accumulates from collection onward; missing past observations are never fabricated.</span>}
     </div>
   </section>;

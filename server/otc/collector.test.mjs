@@ -18,3 +18,22 @@ test('reports failures and catch-up instead of claiming the collection cycle is 
   const collect=createOTCCollector({transaction:async fn=>fn({query:async()=>({rows:[]})}),assets:{A:{},B:{}},now:()=>0,read:async args=>{if(args.symbol==='A')throw new Error('offline');return {cursor:1,catchingUp:true};}});
   const result=await collect();assert.equal(result.errors.length,1);assert.equal(result.processed.length,1);assert.equal(result.complete,false);
 });
+test('runs bounded parallel waves while retaining lag-prioritized results',async()=>{
+ let active=0,maxActive=0;const started=[];
+ const collect=createOTCCollector({transaction:async fn=>fn({query:async()=>({rows:[]})}),assets:{A:{},B:{},C:{},D:{},E:{}},concurrency:2,now:()=>0,read:async({symbol})=>{
+   active++;maxActive=Math.max(maxActive,active);started.push(symbol);await new Promise(resolve=>setTimeout(resolve,5));active--;return {cursor:1,catchingUp:false};
+ }});
+ const result=await collect();assert.equal(maxActive,2);assert.deepEqual(started,['A','B','C','D','E']);assert.equal(result.complete,true);
+});
+test('stops launching new waves after the durable switch turns off',async()=>{
+ let enabled=true;const calls=[];
+ const collect=createOTCCollector({transaction:async fn=>fn({query:async()=>({rows:[]})}),assets:{A:{},B:{},C:{}},concurrency:2,shouldContinue:async()=>enabled,now:()=>0,read:async({symbol})=>{
+   calls.push(symbol);enabled=false;return {cursor:1,catchingUp:false};
+ }});
+ const result=await collect();assert.equal(calls.length,2);assert.equal(result.remaining,1);assert.equal(result.complete,false);
+});
+test('validates execution limits and treats malformed writer results as asset failures',async()=>{
+ for(const concurrency of [0,-1,9,1.5])assert.throws(()=>createOTCCollector({concurrency}),/limits/);
+ const collect=createOTCCollector({transaction:async fn=>fn({query:async()=>({rows:[]})}),assets:{A:{}},read:async()=>undefined});
+ assert.equal((await collect()).errors.length,1);
+});
