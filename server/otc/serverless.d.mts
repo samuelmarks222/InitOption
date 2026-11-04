@@ -15,7 +15,10 @@ export interface ServerlessOTCOptions {
   assets: Record<string, OTCAssetConfig>;
   maxBatch?: number;
   warmup?: number;
+  /** Raw ticks, in 100ms slots; default 9000 (15 minutes). */
   retention?: number;
+  /** Preserve existing expiry-window ticks for open trades; requires public.trades. */
+  preserveOpenTradeTicks?: boolean;
   barRetention?: number;
   /** Injectable clock for tests only; production uses PostgreSQL time. */
   nowForTests?: () => number;

@@ -384,3 +384,10 @@ The approved external-trigger setup, secure cron-job.org configuration, smoke te
 browser-closed verification and rollback are documented in
 [OTC external scheduler](./otc-external-scheduler.md). This is not yet activated in
 production and does not remove Function/database limits.
+
+## Database-full recovery
+
+For Neon's project-size failure, see [OTC storage recovery](./otc-storage-recovery.md).
+The recovery code uses a 15-minute raw-tick window, preserves existing open-trade
+expiry evidence, and supports the server-only `OTC_PRICING_PAUSED=true` kill switch.
+Backup-first manual cleanup is separate from deployment and never runs automatically.

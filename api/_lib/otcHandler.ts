@@ -32,7 +32,7 @@ async function ensureSchema() {
     });
   return ready;
 }
-const read = createServerlessOTC({ transaction, assets });
+const read = createServerlessOTC({ transaction, assets, preserveOpenTradeTicks: true });
 const collect = createOTCCollector({transaction,assets,read:async request=>{
   const result=await read(request);
   if (!("type" in result) || (result.type!=="snapshot" && result.type!=="batch")) throw new Error("Invalid collector tick result");
@@ -68,6 +68,14 @@ export default async function handler(
         url.searchParams.set(key, value);
     }
     const action = url.searchParams.get("action") ?? "ticks";
+    // Operator kill switch works even when the full database cannot save Admin settings.
+    if (process.env.OTC_PRICING_PAUSED === "true" &&
+        ["ticks", "price", "collect", "collection-run"].includes(action)) {
+      res.statusCode = 503;
+      res.setHeader("Retry-After", "60");
+      res.end(JSON.stringify({error: "OTC pricing paused for maintenance"}));
+      return;
+    }
     if (action === "collection-settings" || action === "collection-run") {
       const allowed = action === "collection-settings" ? ["GET", "POST"] : ["POST"];
       if (!allowed.includes(req.method ?? '')) {
