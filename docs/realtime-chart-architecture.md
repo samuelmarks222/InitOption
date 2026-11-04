@@ -380,3 +380,35 @@ Canvas integration regressions exercise button API, pointer wheel, pinch,
 disabled scaling, anchor preservation, inverse zoom, unmodified OHLC, overlay
 coordinates, range constraints, and autoscale restoration. Authenticated visual
 and physical touch-device acceptance remains separate from mocked Canvas tests.
+
+## Tick stability and visible interval duration
+
+Same-size Canvas backing-store assignments are now skipped: assigning width or
+height, even to its existing value, clears the bitmap/context. Price-scale option
+updates therefore no longer introduce an avoidable blank frame before repaint.
+Actual resize and DPR changes still resize the backing store.
+
+Automatic price fitting now retains its domain while received OHLC remains inside
+it, rather than recentering/scaling on every tick. It expands with headroom in
+bounded steps if actual data exceeds the domain. It does not continuously contract;
+explicit autoscale/live reset, instrument/timeframe changes, major viewport moves,
+or indicator removal allow refitting. Manual two-axis zoom remains independent and
+is not cancelled by incoming data. No price, wick, body, or quote interpolation is
+used; genuine price reversals remain visible.
+
+The main chart presentation floor is `abs(price) * 0.0001 * sqrt(intervalSeconds/5)`
+(before the normal scale margins), rather than the same tiny singleton-price floor
+for every interval. This is a visual minimum span, **not** estimated volatility,
+generated history, or a different price path. Actual OHLC ranges dominate when
+larger. It avoids over-magnifying sparse long-interval candles; it does not guarantee
+that a longer-interval candle always moves fewer pixels under manual zoom.
+
+A synchronized-clock badge displays selected candle duration, time until the next
+UTC-aligned boundary, and interval progress; reconnecting streams show a waiting
+state. It is informational only and never drives prices or candle closes. All
+intervals consume the same server ticks: a 4h close can change on every tick just
+like 5s, but a 4h candle remains open for four hours. The badge is independent of
+trade expiry. Tests assert fixed anchor coordinates under contained updates,
+guarded expansion, manual zoom retention, no redundant backing-store clears,
+sparse 5s/4h scale differences without OHLC mutation, identical per-symbol live
+closes, distinct rollover times, and countdown/progress behavior.

@@ -159,14 +159,21 @@ class NativeChart {
   options() { return this.config; }
   addSeries(definition: { type: string }, options: Options = {}) { const s = new NativeSeries(this, definition.type, options); this.series.push(s); this.invalidate(); return s; }
   addCustomSeries(_view: unknown, options: Options = {}) { return this.addSeries({ type: 'Candlestick' }, options); }
-  removeSeries(series: NativeSeries) { const i = this.series.indexOf(series); if (i >= 0) this.series.splice(i, 1); this.refreshTimes(); }
+  removeSeries(series: NativeSeries) { const i = this.series.indexOf(series); if (i >= 0) this.series.splice(i, 1); this.price.refitAuto(); this.refreshTimes(); }
   applyOptions(options: Options) { merge(this.config, options); if (options.rightPriceScale?.autoScale === true) this.price.reset(); this.resize(); }
   resize(width = this.config.width || this.host.clientWidth, height = this.config.height || this.host.clientHeight) {
     const ratio = window.devicePixelRatio || 1;
-    this.canvas.width = Math.max(1, Math.round(width * ratio)); this.canvas.height = Math.max(1, Math.round(height * ratio));
-    this.time.width = Math.max(1, width - (this.config.rightPriceScale?.visible === false ? 0 : 80));
-    this.price.height = Math.max(1, height - (this.config.timeScale?.visible === false ? 0 : 26));
-    this.sizeListeners.forEach(fn => fn(width, height)); this.invalidate();
+    const pixelWidth = Math.max(1, Math.round(width * ratio)), pixelHeight = Math.max(1, Math.round(height * ratio));
+    const plotWidth = Math.max(1, width - (this.config.rightPriceScale?.visible === false ? 0 : 80));
+    const plotHeight = Math.max(1, height - (this.config.timeScale?.visible === false ? 0 : 26));
+    const changed = this.canvas.width !== pixelWidth || this.canvas.height !== pixelHeight || this.time.width !== plotWidth || this.price.height !== plotHeight;
+    // Assigning even an unchanged canvas dimension clears its bitmap/context.
+    // Option/margin updates must not blank the chart between animation frames.
+    if (this.canvas.width !== pixelWidth) this.canvas.width = pixelWidth;
+    if (this.canvas.height !== pixelHeight) this.canvas.height = pixelHeight;
+    this.time.width = plotWidth; this.price.height = plotHeight;
+    if (changed) this.sizeListeners.forEach(fn => fn(width, height));
+    this.invalidate();
   }
   priceScale() { return { applyOptions: (o: Options) => { merge(this.config.rightPriceScale, o); if (o.autoScale) this.price.reset(); this.invalidate(); }, options: () => this.config.rightPriceScale, width: () => 80 }; }
   refreshTimes() {
@@ -180,6 +187,8 @@ class NativeChart {
   private setRange(range: { from: number; to: number }) {
     if (!Number.isFinite(range.from) || !Number.isFinite(range.to) || range.to <= range.from) return;
     if (Math.abs(this.time.from-range.from) < 1e-7 && Math.abs(this.time.to-range.to) < 1e-7) return;
+    const span = this.time.to - this.time.from;
+    if (Math.abs(range.from - this.time.from) > span * .25 || Math.abs((range.to - range.from) / span - 1) > .05) this.price.refitAuto();
     this.time.from = range.from; this.time.to = range.to;
     this.rangeListeners.forEach(fn => fn({ ...range }));
     this.timeListeners.forEach(fn => fn({ from: this.time.logicalToTime(range.from), to: this.time.logicalToTime(range.to) })); this.invalidate();
@@ -325,7 +334,11 @@ export function createChart(host: HTMLElement, options: Options = {}): IChartApi
 export function setChartInterval(chart: IChartApi, seconds: number): void {
   if (!Number.isFinite(seconds) || seconds <= 0) throw new Error('Invalid chart interval');
   const native = chart as unknown as NativeChart;
+  if (native.time.intervalSeconds !== seconds) native.price.reset();
   native.time.intervalSeconds = seconds;
+  // Presentation floor only, not generated volatility or OHLC: sparse long
+  // intervals should not magnify every tick like a freshly opened 5s candle.
+  native.price.minimumRelativeSpan = .0001 * Math.sqrt(seconds / 5);
   native.invalidate();
 }
 

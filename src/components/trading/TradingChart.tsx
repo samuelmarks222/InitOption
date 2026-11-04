@@ -1,3 +1,4 @@
+import CandleIntervalStatus from "./CandleIntervalStatus";
 import { liveViewport, constrainViewport } from "./engine/native/viewport";
 import { setChartInterval, zoomChart } from "./engine/native/chart";
 import { isInternalOTC, marketWebSocketUrl } from "@/lib/otcMarket";
@@ -4046,6 +4047,9 @@ renderOverlayIndicators(getIndicatorHistory());
               : marketFeedStatus === "connecting" ? "Connecting to market data…"
               : "Market feed disconnected — holding the last received price."}
           </div>
+        )}
+        {!miniOverlay && !mobileHistoryOpen && !overlayUiSuppressed && (
+          <CandleIntervalStatus label={selectedTf} seconds={TIMEFRAMES[selectedTf].seconds} live={marketFeedStatus === "live"} />
         )}
         {isInternalOTC && marketFeedStatus === "live" && historyRef.current.length + (liveRef.current ? 1 : 0) < 12 && (
           <div role="note" className="pointer-events-none absolute bottom-9 left-16 z-[79] rounded bg-slate-950/65 px-2 py-1 text-[11px] text-slate-400">

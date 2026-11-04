@@ -119,6 +119,29 @@ describe('native canvas renderer integration', () => {
     chart.timeScale().fitContent();vi.advanceTimersByTime(20);
     expect(series.coordinateToPrice(0)!-series.coordinateToPrice(374)!).toBeCloseTo(before);chart.remove();
   });
+  it('does not clear the canvas backing store for same-size option updates', () => {
+    const el=host(),chart=createChart(el,{width:800,height:400});
+    const canvas=el.querySelector('canvas')!;
+    const width=vi.spyOn(canvas,'width','set'),height=vi.spyOn(canvas,'height','set');
+    chart.applyOptions({rightPriceScale:{scaleMargins:{top:.1,bottom:.1}}});
+    chart.resize(800,400);
+    expect(width).not.toHaveBeenCalled();expect(height).not.toHaveBeenCalled();
+    chart.resize(900,500);expect(width).toHaveBeenCalledOnce();expect(height).toHaveBeenCalledOnce();chart.remove();
+  });
+  it('uses a broader presentation floor for sparse 4h candles without changing tick prices', () => {
+    const short=createChart(host(),{width:800,height:400}),long=createChart(host(),{width:800,height:400});
+    setChartInterval(short,5);setChartInterval(long,14400);
+    const a=short.addSeries(CandlestickSeries),b=long.addSeries(CandlestickSeries);
+    const rows=[{time:14400 as any,open:100,high:100.001,low:99.999,close:100.0005}];
+    a.setData(rows);b.setData(rows);vi.advanceTimersByTime(20);
+    const shortMove=Math.abs(a.priceToCoordinate(100)!-a.priceToCoordinate(100.0005)!);
+    const longMove=Math.abs(b.priceToCoordinate(100)!-b.priceToCoordinate(100.0005)!);
+    expect(shortMove/longMove).toBeCloseTo(Math.sqrt(14400/5));
+    expect(a.data()).toEqual(rows);expect(b.data()).toEqual(rows);
+    const open=b.priceToCoordinate(100);
+    b.update({...rows[0],close:100.0006});vi.advanceTimersByTime(20);
+    expect(b.priceToCoordinate(100)).toBe(open);short.remove();long.remove();
+  });
   it('retains viewport across replacement series, aligns overlays, and disposes canvas', () => {
     const el=host(); const chart=createChart(el,{width:800,height:400});
     const first=chart.addSeries(CandlestickSeries);
