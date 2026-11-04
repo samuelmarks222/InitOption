@@ -15,6 +15,9 @@ interface Stream {
   hydrating: boolean;
   stopped: boolean;
   failures: number;
+  progressAt: number;
+  inFlight: boolean;
+  cleanup?: () => void;
   timer?: ReturnType<typeof setTimeout>;
   dispose?: ReturnType<typeof setTimeout>;
   abort?: AbortController;
@@ -29,9 +32,18 @@ export function createInternalOTCHttpFeed(
 ): MarketDataFeed {
   const key = JSON.stringify([url, symbol]);
   let attached: Stream | undefined;
+  const report = (listener: MarketFeedCallbacks, error: unknown) => {
+    try { listener.onError?.(error instanceof Error ? error : new Error(String(error))); }
+    catch { /* A consumer must never stop shared market delivery. */ }
+  };
+  const emit = (stream: Stream, deliver: (listener: MarketFeedCallbacks) => void) => {
+    for (const listener of [...stream.listeners]) {
+      try { deliver(listener); } catch (error) { report(listener,error); }
+    }
+  };
   const notify = (stream: Stream, status: MarketFeedStatus) => {
     stream.status = status;
-    for (const listener of stream.listeners) listener.onStatusChange?.(status);
+    emit(stream, listener => listener.onStatusChange?.(status));
   };
   function parse(raw: any): MarketTick {
     if (
@@ -62,11 +74,13 @@ export function createInternalOTCHttpFeed(
     };
   }
   async function poll(stream: Stream) {
-    if (stream.stopped) return;
+    if (stream.stopped || stream.inFlight) return;
+    stream.inFlight = true;
     const started = performance.now();
     const abort = new AbortController();
     stream.abort = abort;
-    const timeout = setTimeout(() => abort.abort(), 10000);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    let onAbort: (() => void) | undefined;
     let delay = 500;
     try {
       const endpoint = new URL(
@@ -79,12 +93,23 @@ export function createInternalOTCHttpFeed(
       endpoint.searchParams.set("symbol", symbol);
       if (stream.cursor !== undefined)
         endpoint.searchParams.set("after", String(stream.cursor));
-      const response = await fetch(endpoint, {
-        cache: "no-store",
-        signal: abort.signal,
-      });
-      if (!response.ok) throw new Error("OTC API unavailable");
-      const data = await response.json();
+      // Bound both fetch and JSON decoding, even if a transport fails to reject
+      // its promise after abort. Late responses cannot re-enter tick processing.
+      const data: any = await Promise.race([
+        (async () => {
+          const response = await fetch(endpoint, {cache: "no-store", signal: abort.signal});
+          if (!response.ok) throw new Error(`OTC API unavailable (${response.status})`);
+          return response.json();
+        })(),
+        new Promise<never>((_, reject) => {
+          onAbort = () => reject(new Error("OTC request aborted"));
+          abort.signal.addEventListener("abort", onAbort, {once:true});
+          timeout = setTimeout(() => {
+            reject(new Error("OTC tick request timed out"));
+            abort.abort();
+          },10000);
+        }),
+      ]);
       if (stream.stopped) return;
       if (
         data.source !== "internal-otc" ||
@@ -149,6 +174,17 @@ export function createInternalOTCHttpFeed(
             throw new Error("Invalid OTC candle");
         }
       }
+      const newest = ticks.at(-1)?.timestamp ?? stream.timestamp;
+      if (!data.catchingUp && (
+        !Number.isFinite(newest) ||
+        (Number.isFinite(newest) && data.serverTime-newest>10) ||
+        (stream.session===data.session && newest<=stream.timestamp && performance.now()-stream.progressAt>=10000)
+      )) {
+        stream.cursor=undefined;
+        stream.hydrating=true;
+        throw new Error("OTC source is not advancing; requesting a fresh snapshot");
+      }
+      if (newest>stream.timestamp || stream.session!==data.session) stream.progressAt=performance.now();
       const reset = data.type === "snapshot" || stream.session !== data.session;
       if (reset) {
         observedHistory.reset(url, symbol);
@@ -190,11 +226,11 @@ export function createInternalOTCHttpFeed(
             session: stream.session,
           });
         if (stream.hydrating) {
-          for (const listener of stream.listeners) listener.onHistory?.();
+          emit(stream, listener => listener.onHistory?.());
           stream.hydrating = false;
         } else
           for (const tick of received)
-            for (const listener of stream.listeners) listener.onTick(tick);
+            emit(stream, listener => listener.onTick(tick));
         notify(stream, "live");
         // Target the server's 100ms tick cadence, measured start-to-start.
         // A slow request never overlaps another and no intermediary prices are invented.
@@ -203,14 +239,14 @@ export function createInternalOTCHttpFeed(
     } catch (error) {
       if (!stream.stopped) {
         notify(stream, "reconnecting");
-        for (const listener of stream.listeners)
-          listener.onError?.(
-            error instanceof Error ? error : new Error(String(error)),
-          );
+        for (const listener of [...stream.listeners]) report(listener,error);
         delay = Math.min(10000, 500 * 2 ** Math.min(stream.failures++, 5));
       }
     } finally {
       clearTimeout(timeout);
+      if (onAbort) abort.signal.removeEventListener("abort",onAbort);
+      if (stream.abort===abort) stream.abort=undefined;
+      stream.inFlight=false;
       if (!stream.stopped)
         stream.timer = setTimeout(() => void poll(stream), delay);
     }
@@ -228,15 +264,31 @@ export function createInternalOTCHttpFeed(
           hydrating: true,
           stopped: false,
           failures: 0,
+          progressAt: performance.now(),
+          inFlight: false,
         };
         streams.set(key, stream);
+        const active = stream;
+        const wake = () => {
+          if (typeof document!=="undefined" && document.visibilityState==="hidden") return;
+          if(active.stopped || active.inFlight) return;
+          clearTimeout(active.timer);
+          void poll(active);
+        };
+        if (typeof window!=="undefined") window.addEventListener("online",wake);
+        if (typeof document!=="undefined") document.addEventListener("visibilitychange",wake);
+        stream.cleanup=()=>{
+          if (typeof window!=="undefined") window.removeEventListener("online",wake);
+          if (typeof document!=="undefined") document.removeEventListener("visibilitychange",wake);
+        };
       }
       attached = stream;
       clearTimeout(stream.dispose);
       stream.listeners.add(callbacks);
-      callbacks.onStatusChange?.(stream.status);
-      if (!stream.hydrating && stream.cursor !== undefined)
-        callbacks.onHistory?.();
+      try {
+        callbacks.onStatusChange?.(stream.status);
+        if (!stream.hydrating && stream.cursor !== undefined) callbacks.onHistory?.();
+      } catch (error) { report(callbacks,error); }
       if (fresh) void poll(stream);
     },
     disconnect() {
@@ -250,6 +302,7 @@ export function createInternalOTCHttpFeed(
           stream.stopped = true;
           clearTimeout(stream.timer);
           stream.abort?.abort();
+          stream.cleanup?.();
           streams.delete(key);
         }, 1000);
     },
