@@ -74,7 +74,7 @@ export const NavigationSidebar = ({
 
   return (
     <div
-      className={`relative z-40 flex h-full shrink-0 flex-col items-center overflow-hidden border-r transition-[width] duration-300 ease-out ${
+      className={`trading-navigation ${collapsed ? "is-collapsed" : ""} relative z-40 flex h-full shrink-0 flex-col items-center overflow-hidden border-r transition-[width] duration-300 ease-out ${
         collapsed ? "w-[48px]" : "w-[64px]"
       }`}
       style={{ background: "var(--trading-sidebar-bg)", borderRightColor: "#101522" }}

@@ -144,6 +144,7 @@ const TradingHeader = ({
       onClick={onOpenDeposit}
       className="flex h-10 lg:h-[34px] items-center gap-1.5 shrink-0 rounded-[4px] bg-[#00c853] px-3 sm:px-3 text-[12px] font-black text-white shadow-md shadow-[#00c853]/20 hover:bg-[#00b248] active:scale-95 transition-all"
     >
+      <Plus size={20} className="hidden lg:block" aria-hidden="true" />
       Deposit
     </button>
   );
@@ -161,7 +162,7 @@ const TradingHeader = ({
     <header className="trading-terminal-header relative flex h-[62px] lg:h-[54px] shrink-0 items-center justify-between px-3 bg-[var(--trading-header-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white z-30 select-none">
 
       {onToggleNavigation && <button type="button" onClick={onToggleNavigation} aria-label="Toggle navigation" aria-expanded={navigationExpanded}
-        className="absolute left-0 top-0 hidden h-[54px] w-16 items-center justify-center text-white/70 hover:text-white focus-visible:outline focus-visible:outline-sky-400 lg:flex"><Menu size={20} /></button>}
+        className="trading-navigation-toggle absolute left-0 top-0 hidden h-[54px] w-16 items-center justify-center text-white/70 hover:text-white focus-visible:outline focus-visible:outline-sky-400 lg:flex"><Menu size={20} /></button>}
       {/* ── MOBILE layout (hidden on lg+) ── */}
       <div className="flex lg:hidden w-full items-center gap-2 overflow-x-auto no-scrollbar">
         {renderAccountPill()}
@@ -181,12 +182,12 @@ const TradingHeader = ({
       </div>
 
       {/* ── DESKTOP layout (hidden below lg) ── */}
-      <div className={`hidden lg:flex w-full min-w-0 items-center justify-between gap-3 ${onToggleNavigation ? "pl-[60px]" : ""}`}>
+      <div className={`trading-header-desktop hidden lg:flex w-full min-w-0 items-center justify-between gap-3 ${onToggleNavigation ? "pl-[60px]" : ""}`}>
 
         {/* Left: Logo + Subtitle */}
         <Link
           to="/trade"
-          className="flex shrink-0 items-center gap-3 hover:opacity-90 transition-opacity"
+          className="trading-brand flex shrink-0 items-center gap-3 hover:opacity-90 transition-opacity"
         >
           {logoUrl ? (
             <img
@@ -208,7 +209,7 @@ const TradingHeader = ({
         </Link>
 
         {/* Center: Promo Bonus Banner */}
-        <div className="hidden min-w-0 flex-1 justify-center items-center xl:flex">
+        <div className="trading-promotion hidden min-w-0 flex-1 justify-center items-center xl:flex">
           <button
             onClick={onOpenDeposit}
             className="group flex items-center gap-2 rounded-full bg-[#0fa055] px-3 py-1 text-[10px] font-extrabold text-white shadow-lg shadow-[#0fa055]/25 hover:bg-[#0d8a49] transition-all transform hover:scale-[1.02] active:scale-95"
@@ -233,7 +234,7 @@ const TradingHeader = ({
           )}
 
           {/* Notification Bell */}
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#384259] bg-[#2a3040] hover:bg-[#343b4f] hover:border-[#526078] transition-colors">
+          <div className="trading-notifications flex h-9 w-9 items-center justify-center rounded-lg border border-[#384259] bg-[#2a3040] hover:bg-[#343b4f] hover:border-[#526078] transition-colors">
             <NotificationBell />
           </div>
 

@@ -158,7 +158,7 @@ const LEGACY_PROFESSIONAL_DOWN_COLOR = "#d96059";
 const LEGACY_CHART_BG = "#0E1217";
 const LEGACY_PLATFORM_UP = "#00C076";
 const LEGACY_PLATFORM_DOWN = "#F6465D";
-const DESKTOP_SENTIMENT_RAIL_WIDTH = 40;
+const DESKTOP_SENTIMENT_RAIL_WIDTH = 60;
 const DESKTOP_TOOLBAR_GAP_FROM_RAIL = 12;
 const DESKTOP_TOOLBAR_MAIN_LEFT_OFFSET = DESKTOP_SENTIMENT_RAIL_WIDTH + DESKTOP_TOOLBAR_GAP_FROM_RAIL;
 const DESKTOP_TOOLBAR_MAIN_BOTTOM_OFFSET = 16;
@@ -1575,7 +1575,7 @@ const TradeSentimentRail = ({
   const clampedLower = Math.max(0, Math.min(100, Math.round(lowerPercent)));
 
   return (
-    <div className="relative h-full w-[40px]">
+    <div className="relative h-full w-full">
       <button
         type="button"
         onClick={() => onSelectDirection("lower")}

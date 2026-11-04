@@ -1,3 +1,4 @@
+import "@/components/trading/styles/referenceLayout.css";
 import { getSynchronizedUnixTimeMs } from "@/lib/serverTimeSync";
 import { isInternalOTC, requestOTCQuote } from "@/lib/otcMarket";
 import { WinningNotifications } from "@/components/trading/WinningNotifications";
