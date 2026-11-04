@@ -446,21 +446,6 @@ Startup remains the existing five-minute server warm-up, not fabricated older
 candles. Earliest-recorded boundaries are disclosed instead of generating client
 history or presenting synthetic backfill as previously recorded prices.
 
-## Generated analysis history: explicit user-approved alternative
-
-The recorded-only archive behavior above is extended by the user's explicit
-choice to provide generated historical coverage instead of a paid frequent cron.
-This is not continuous background production. See `docs/vercel-otc.md` for the
-immutable profile, canonical 5s aggregation, per-bar provenance, rolling coverage
-limit and financial-receipt isolation. The history endpoint can initialize a
-never-selected market's normal live state and provide synthetic past analysis
-candles. Existing recorded bars/model checkpoints are not rewritten to match that
-profile. At most one partial boundary aggregation mixes the synthetic prefix
-and recorded suffix; that projection is labeled `mixed`, not reported as a fully
-recorded OHLC bar. The current live candle and trade receipts remain live-engine
-observations only. Generated bars receive a persistent visible disclosure in the
-chart while present, including after merges into the per-timeframe archive cache.
-
 ## Shared frame geometry and input batching
 
 The independent React `LivePriceAxisOverlay` was removed. It computed its own
@@ -496,3 +481,24 @@ range/crosshair notifications from input events, one batched notification/paint,
 exponential wheel accumulation, and cancellation on disposal. rAF follows browser
 and display scheduling; fixed 60/120 FPS is not guaranteed under load or tab
 throttling. Authenticated visual/physical-device acceptance remains pending.
+
+
+## Recorded-only history and all-asset collection (current policy)
+
+Generated/mixed analysis candles are no longer permitted. The generated-history
+module was removed, server history reads are recorded-only, and browser history
+validation/merge rejects prior synthetic-bootstrap provenance. Config metadata
+from the retired profile is ignored. Source OTC ticks remain platform-generated
+prices, but historical chart bars must be aggregates of that same persisted tick
+stream—not a second historical model or external data substituted for OTC prices.
+
+A protected, bounded all-catalog collector is available at `action=collect`,
+using the existing writer and least-advanced checkpoints for fair resumption.
+It does not depend on chart subscriptions. It is not enabled as a scheduled job:
+frequent supported scheduling, secrets/configuration, actual collection freshness,
+all-asset initialization and production capacity remain operational prerequisites.
+See `docs/vercel-otc.md` for activation and monitoring. The five-minute warm-up
+mentioned in earlier historical notes is superseded by a zero default for new
+markets. No history before actual initialization is promised. Archive fetches can
+begin during connection rather than waiting for live hydration; cached per-asset
+history is retained, and live hydration returns following views to the live edge.

@@ -9,7 +9,7 @@ async function setup(options={}){
   const db=new PGlite();await db.exec(schema);
   let now=1793790000000;
   const transaction=fn=>db.transaction(tx=>fn(tx));
-  const read=createServerlessOTC({transaction,assets,nowForTests:()=>now,warmup:20,generatedHistoryDays:0,...options});
+  const read=createServerlessOTC({transaction,assets,nowForTests:()=>now,warmup:20,...options});
   return {db,transaction,read,advance:ms=>{now+=ms;},now:()=>now};
 }
 test('PostgreSQL persists one sequence and identical prices across cold workers and concurrent readers',async()=>{
@@ -103,19 +103,38 @@ test('candle archives survive raw-tick retention and remain available to cold wo
     const page=await worker({symbol:'AAPL',action:'history',seconds:5});assert.ok(page.candles.some(b=>b.time<Number(raw)/10));
   }finally{await app.db.close();}
 });
-test('a never-selected asset receives generated history, stable across workers and isolated from live trade receipts',async()=>{
-  const app=await setup({generatedHistoryDays:30});try{
+test('history reads never initialize an unobserved asset or return generated analysis candles',async()=>{
+  const app=await setup();try{
     const page=await app.read({symbol:'AAPL',action:'history',seconds:14400,limit:100});
-    assert.equal(page.candles.length,100);assert.equal(page.generated,true);assert.ok(page.notice.includes('not previously recorded'));
-    const checkpoint=(await app.db.query('SELECT model,last_slot,config FROM otc_markets')).rows[0];
-    assert.ok(checkpoint.config.historyBootstrapV1);
-    const worker=createServerlessOTC({transaction:app.transaction,assets,nowForTests:app.now,generatedHistoryDays:30});
-    const repeated=await worker({symbol:'AAPL',action:'history',seconds:14400,limit:100});assert.deepEqual(repeated,page);
-    assert.deepEqual((await app.db.query('SELECT model,last_slot FROM otc_markets')).rows[0],{model:checkpoint.model,last_slot:checkpoint.last_slot});
-    const at=checkpoint.config.historyBootstrapV1.anchor-10;
-    await assert.rejects(()=>app.read({symbol:'AAPL',action:'price',at}),e=>e.status===409);
-    const quote=await app.read({symbol:'AAPL',action:'price'});
-    assert.equal(quote.timestamp,app.now()/1000);assert.equal(quote.source,'internal-otc');
-    assert.equal(quote.origin,undefined);
+    assert.deepEqual(page.candles,[]);assert.equal(page.generated,false);
+    assert.equal((await app.db.query('SELECT count(*)::int AS n FROM otc_markets')).rows[0].n,0);
+    await app.read({symbol:'AAPL'});
+    await app.db.query(`UPDATE otc_markets SET config=config || '{"historyBootstrapV1":{"anchor":0,"price":212}}'::jsonb`);
+    const older=await app.read({symbol:'AAPL',action:'history',seconds:14400,before:Math.floor(app.now()/1000/14400)*14400,limit:100});
+    assert.equal(older.generated,false);assert.ok(older.candles.every(bar=>bar.origin==='recorded'));
+    assert.equal((await app.db.query('SELECT count(*)::int AS n FROM otc_markets')).rows[0].n,1);
+  }finally{await app.db.close();}
+});
+test('scheduled collection records independent unseen assets and their history matches stored ticks',async()=>{
+  const {createOTCCollector}=await import('./collector.mjs');
+  const catalog={...assets,'EUR/USD':{price:1.1,volatility:.001,precision:8,support:1,resistance:1.2}};
+  const app=await setup({assets:catalog,warmup:0});try{
+    const collect=createOTCCollector({transaction:app.transaction,assets:catalog,read:app.read,now:app.now});
+    assert.equal((await collect()).complete,true);
+    app.advance(10000);assert.equal((await collect()).complete,true);
+    for(const symbol of Object.keys(catalog)){
+      const page=await app.read({symbol,action:'history',seconds:5,limit:10});
+      assert.ok(page.candles.length>=2);assert.equal(page.generated,false);
+      for(const bar of page.candles){
+        const ticks=(await app.db.query('SELECT price FROM otc_ticks WHERE symbol=$1 AND slot>=$2 AND slot<$3 ORDER BY slot',[symbol,bar.time*10,(bar.time+5)*10])).rows.map(row=>Number(row.price));
+        assert.equal(bar.open,ticks[0]);assert.equal(bar.close,ticks.at(-1));
+        assert.equal(bar.high,Math.max(...ticks));assert.equal(bar.low,Math.min(...ticks));assert.equal(bar.volume,ticks.length);
+      }
+      const live=await app.read({symbol,action:'price'});
+      const stored=(await app.db.query('SELECT price FROM otc_ticks WHERE symbol=$1 ORDER BY slot DESC LIMIT 1',[symbol])).rows[0];
+      assert.equal(live.price,Number(stored.price));
+    }
+    const rows=(await app.db.query('SELECT symbol,secret FROM otc_markets ORDER BY symbol')).rows;
+    assert.equal(rows.length,2);assert.notEqual(rows[0].secret,rows[1].secret);
   }finally{await app.db.close();}
 });
