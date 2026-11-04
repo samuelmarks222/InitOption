@@ -1,5 +1,4 @@
 import { requestOTCHistory, mergeCandleHistory } from "@/lib/otcHistory";
-import CandleIntervalStatus from "./CandleIntervalStatus";
 import { liveViewport, constrainViewport } from "./engine/native/viewport";
 import { setChartInterval, zoomChart } from "./engine/native/chart";
 import { isInternalOTC, marketWebSocketUrl } from "@/lib/otcMarket";
@@ -4045,17 +4044,6 @@ renderOverlayIndicators(getIndicatorHistory());
         onMouseLeave={handleChartMouseLeave}
         onClick={handleChartClick}
       >
-        {(isInternalOTC || marketFeedStatus !== "live") && (
-          <div role="status" className="pointer-events-none absolute right-3 top-3 z-[82] max-w-[300px] rounded-md border border-amber-400/20 bg-slate-950/90 px-3 py-2 text-xs text-amber-200">
-            {isInternalOTC ? <><strong>Platform-generated OTC prices</strong><br />{marketFeedStatus === "live" ? "Internal pricing stream connected" : "OTC service connecting or unavailable — holding the last server price"}</>
-              : marketFeedStatus === "unavailable" ? "Market feed is not configured."
-              : marketFeedStatus === "connecting" ? "Connecting to market data…"
-              : "Market feed disconnected — holding the last received price."}
-          </div>
-        )}
-        {!miniOverlay && !mobileHistoryOpen && !overlayUiSuppressed && (
-          <CandleIntervalStatus label={selectedTf} seconds={TIMEFRAMES[selectedTf].seconds} live={marketFeedStatus === "live"} />
-        )}
         {isInternalOTC && !miniOverlay && !mobileHistoryOpen && !overlayUiSuppressed && (
           <div role="status" className="absolute bottom-24 left-16 z-[79] rounded bg-slate-950/85 px-2 py-1 text-[11px] text-slate-300">
             {archiveStatus==="loading"?"Loading earlier server candles…":archiveStatus==="end"?"Earliest recorded history reached":archiveStatus==="limit"?"History window full — choose a longer timeframe to browse further":archiveStatus==="error"?<button type="button" onClick={()=>void loadOlderServerHistory(true)}>History load failed — retry</button>:"Drag left to browse recorded candle history"}
