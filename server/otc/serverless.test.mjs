@@ -76,7 +76,7 @@ test('database failures roll back ticks, bars and model together, and a later re
 });
 test('SQL migration and serverless bootstrap schema stay identical',async()=>{
   const bootstrap=await readFile(new URL('../../api/_lib/otcSchema.ts',import.meta.url),'utf8');
-  assert.equal(JSON.parse(bootstrap.split('export const OTC_SCHEMA = ')[1].trim().slice(0,-1)),schema);
+  assert.equal(JSON.parse(bootstrap.match(/^export const OTC_SCHEMA = (".*");$/m)[1]),schema);
 });
 test('history pages aggregate persisted OHLC, page backwards, and never generate prices',async()=>{
   const app=await setup();try{

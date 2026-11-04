@@ -7,6 +7,7 @@ import {
   clampAssetPayout,
   getAssetDefaultPayout,
 } from "@/lib/assets";
+import BackgroundCollectionControl from "@/components/admin/BackgroundCollectionControl";
 import AssetSymbolMark from "@/components/trading/AssetSymbolMark";
 
 interface AssetConfig {
@@ -147,6 +148,8 @@ const AssetManagement = () => {
           <p className="text-sm text-slate-300 mt-1">Browse and enable hundreds of pre-configured assets for your traders.</p>
         </div>
       </div>
+
+      <BackgroundCollectionControl />
 
       <div className="rounded-2xl overflow-hidden shadow-lg border" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
         <div className="p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-b" style={{ borderColor: "var(--admin-border)", background: "var(--admin-surface)" }}>
