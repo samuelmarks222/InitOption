@@ -27,6 +27,67 @@ describe('native canvas renderer integration', () => {
       expect(context.stroke).toHaveBeenCalled(); chart.remove();
     });
   }
+  it('eases the live candle and badge together, keeps exact data, then stops repainting', () => {
+    const chart=createChart(host(),{width:800,height:400});
+    const series=chart.addSeries(CandlestickSeries);
+    series.setData([{time:60 as any,open:100,high:110,low:90,close:102}]);
+    vi.advanceTimersByTime(20);
+    const target={time:60 as any,open:100,high:110,low:90,close:108};
+    series.update(target);
+    expect(series.data()).toEqual([target]);
+    vi.advanceTimersByTime(16);
+    const badge=context.fillRect.mock.calls.filter(([x])=>x===720).at(-1);
+    const y=badge[1]+10;
+    expect(y).toBeGreaterThan(Number(series.priceToCoordinate(108)));
+    expect(y).toBeLessThan(Number(series.priceToCoordinate(102)));
+    const x=Math.round(Number(chart.timeScale().timeToCoordinate(60 as any)));
+    expect(context.moveTo).toHaveBeenLastCalledWith(x,y);
+    expect(context.lineTo).toHaveBeenLastCalledWith(720,y);
+    const paints=context.clearRect.mock.calls.length;
+    vi.advanceTimersByTime(128);
+    expect(context.clearRect.mock.calls.length).toBeGreaterThan(paints+1);
+    const settled=context.fillRect.mock.calls.filter(([x])=>x===720).at(-1);
+    expect(settled[1]+10).toBe(Math.round(Number(series.priceToCoordinate(108))));
+    const finalPaints=context.clearRect.mock.calls.length;
+    vi.advanceTimersByTime(1000);
+    expect(context.clearRect).toHaveBeenCalledTimes(finalPaints);
+    expect(series.data()).toEqual([target]);chart.remove();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it('retargets an interrupted candle transition without overshooting or replaying queued ticks', () => {
+    const chart=createChart(host(),{width:800,height:400});const series=chart.addSeries(CandlestickSeries);
+    series.setData([{time:60 as any,open:100,high:110,low:90,close:102}]);vi.advanceTimersByTime(20);
+    const close=()=>Number(context.fillText.mock.calls.filter(([,x])=>x===725).at(-1)[0]);
+    series.update({time:60 as any,open:100,high:110,low:90,close:108});vi.advanceTimersByTime(32);
+    const before=close();expect(before).toBeGreaterThan(102);expect(before).toBeLessThan(108);
+    series.update({time:60 as any,open:100,high:110,low:90,close:96});vi.advanceTimersByTime(16);
+    expect(close()).toBeLessThan(before);expect(close()).toBeGreaterThan(96);
+    vi.advanceTimersByTime(128);expect(close()).toBe(96);chart.remove();
+  });
+  it('honors reduced motion and the explicit candleAnimation opt-out', () => {
+    for(const reduced of [true,false]){
+      vi.stubGlobal('matchMedia',vi.fn(()=>({matches:reduced})));
+      const chart=createChart(host(),{width:800,height:400,candleAnimation:reduced});
+      const series=chart.addSeries(CandlestickSeries);
+      series.setData([{time:60 as any,open:100,high:110,low:90,close:102}]);vi.advanceTimersByTime(20);
+      const paints=context.clearRect.mock.calls.length;
+      series.update({time:60 as any,open:100,high:110,low:90,close:108});vi.advanceTimersByTime(128);
+      expect(context.clearRect.mock.calls.length-paints).toBe(1);chart.remove();
+    }
+  });
+  it('snaps on bar rollover and history replacement, cancelling stale candle motion', () => {
+    const chart=createChart(host(),{width:800,height:400});const series=chart.addSeries(CandlestickSeries);
+    series.setData([{time:60 as any,open:100,high:110,low:90,close:102}]);vi.advanceTimersByTime(20);
+    series.update({time:60 as any,open:100,high:110,low:90,close:108});vi.advanceTimersByTime(16);
+    const next={time:120 as any,open:108,high:109,low:107,close:108};series.update(next);
+    vi.advanceTimersByTime(16);
+    expect(context.fillText.mock.calls.filter(([,x])=>x===725).at(-1)[0]).toBe('108.00000');
+    series.update({...next,close:109});vi.advanceTimersByTime(16);
+    series.setData([{time:180 as any,open:100,high:110,low:90,close:101}]);vi.advanceTimersByTime(16);
+    expect(context.fillText.mock.calls.filter(([,x])=>x===725).at(-1)[0]).toBe('101.00000');
+    const paints=context.clearRect.mock.calls.length;vi.advanceTimersByTime(128);
+    expect(context.clearRect).toHaveBeenCalledTimes(paints);chart.remove();
+  });
   it('scales backing pixels at DPR 2 and resizes for mobile without mutating OHLC', () => {
     vi.stubGlobal('devicePixelRatio',2);
     const el=host(); const chart=createChart(el,{width:800,height:400});
