@@ -46,7 +46,7 @@ export default async function handler(
         url.searchParams.set(key, value);
     }
     const action = url.searchParams.get("action") ?? "ticks";
-    if (action !== "ticks" && action !== "price" && action !== "health") {
+    if (action !== "ticks" && action !== "price" && action !== "health" && action !== "history") {
       res.statusCode = 400;
       res.end(JSON.stringify({ error: "Unknown OTC action" }));
       return;
@@ -75,6 +75,9 @@ export default async function handler(
         : await read({
             action,
             symbol: url.searchParams.get("symbol"),
+            seconds: url.searchParams.has("seconds") ? Number(url.searchParams.get("seconds")) : undefined,
+            before: url.searchParams.has("before") ? Number(url.searchParams.get("before")) : undefined,
+            limit: url.searchParams.has("limit") ? Number(url.searchParams.get("limit")) : undefined,
             after: url.searchParams.has("after")
               ? Number(url.searchParams.get("after"))
               : undefined,

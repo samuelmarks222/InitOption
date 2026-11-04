@@ -220,3 +220,25 @@ build, both API typechecks, and the 12/12 Function budget guard passed. The broa
 application typecheck is not clean (existing unrelated typing errors remain).
 Authenticated production trade execution and real-network cadence/load are not
 verified by these mocked transport/context checks.
+
+
+### Retained history pages and independent zoom
+
+The existing `/api/otc` handler now accepts `action=history` with `seconds`, an
+exclusive aligned Unix-seconds `before`, and `limit` (1–1000). It returns ordered
+closed candles, `hasMore`, and the earliest stored 5s timestamp. This read-only
+archive path aggregates server bars without creating ticks or accepting client
+prices. It uses the same private DB connection/schema and existing system Function.
+No additional environment variable, host, migration, or Function is required.
+
+Raw ticks remain retained for 24h; candle bars now default to 30 days via the
+server module's independent `barRetention` option. Existing already-deleted data
+cannot be restored. First-instrument warm-up remains five minutes. Browser windows
+remain bounded to 7200 candles, with a visible limit message and a recommendation
+to use a larger interval for longer coverage. It is not honest to promise unlimited
+history or candles predating the pricing system. Database storage/query usage for
+longer retention must be monitored before assuming production capacity.
+
+Zoom controls now follow independent time/price domains: wheel/buttons/pinch for
+time, Ctrl+wheel/right-axis gestures for price, and axis/plot double-click resets.
+The previous combined two-axis zoom behavior is superseded.

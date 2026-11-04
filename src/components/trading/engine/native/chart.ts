@@ -81,6 +81,10 @@ class NativeChart {
     this.canvas.style.cssText = 'display:block;width:100%;height:100%;touch-action:none;';
     this.canvas.setAttribute('role', 'img'); this.canvas.setAttribute('aria-label', 'Interactive market price chart');
     host.appendChild(this.canvas);
+    this.listen('dblclick', ((e: MouseEvent) => {
+      if (this.point(e).x > this.time.width) this.priceScale().applyOptions({autoScale:true});
+      else this.timeScale().fitContent();
+    }) as EventListener);
     this.listen('wheel', this.wheel as EventListener, { passive: false });
     this.listen('pointerdown', this.down as EventListener);
     this.listen('pointermove', this.move as EventListener);
@@ -104,7 +108,9 @@ class NativeChart {
     const p = this.point(e); this.touches.set(e.pointerId, p);
     this.canvas.setPointerCapture(e.pointerId);
     if (this.touches.size === 2) { this.drag = null; const [a,b] = [...this.touches.values()]; this.pinchDistance = Math.hypot(a.x-b.x,a.y-b.y); return; }
-    if (this.config.handleScroll === false || this.config.handleScroll?.pressedMouseMove === false) return;
+    if (p.x > this.time.width) {
+      if (this.config.handleScale === false || this.config.handleScale?.axisPressedMouseMove === false) return;
+    } else if (this.config.handleScroll === false || this.config.handleScroll?.pressedMouseMove === false) return;
     this.drag = { ...p, from: this.time.from, to: this.time.to, offset: this.price.offset, axis: p.x > this.time.width };
   };
   private move = (e: PointerEvent) => {
@@ -117,7 +123,10 @@ class NativeChart {
       this.pinchDistance = distance; return;
     }
     if (this.drag) {
-      if (this.drag.axis) this.price.offset = this.drag.offset + (p.y - this.drag.y) / this.price.height * (this.price.max - this.price.min);
+      if (this.drag.axis) {
+        this.zoomPrice(Math.exp((p.y - this.drag.y) * .01), this.price.height / 2);
+        this.drag.y = p.y;
+      }
       else {
         const delta = (p.x - this.drag.x) / this.time.spacing;
         this.setRange({ from: this.drag.from - delta, to: this.drag.to - delta });
@@ -126,32 +135,33 @@ class NativeChart {
     this.crossListeners.forEach(fn => fn(this.event(p))); this.invalidate();
   };
   private up = (e: PointerEvent) => { this.touches.delete(e.pointerId); this.drag = null; this.pinchDistance = 0; };
-  zoom(factor: number, x = this.time.width / 2, y = this.price.height / 2) {
-    if (!Number.isFinite(factor) || factor <= 0 || !Number.isFinite(x) || !Number.isFinite(y)) return;
+  zoomPrice(factor: number, y = this.price.height / 2) {
+    this.price.zoomAt(factor, y); this.config.rightPriceScale.autoScale = false; this.invalidate();
+  }
+  zoom(factor: number, x?: number, _y?: number) {
+    if (!Number.isFinite(factor) || factor <= 0) return;
+    const last = this.time.timeToLogical(this.series[0]?.rows.at(-1)?.time ?? NaN);
+    // Buttons keep the latest candle anchored when following live. Wheel/pinch
+    // pass an explicit cursor/midpoint and preserve that time position instead.
+    x ??= last !== null && this.time.to >= last && this.time.from <= last
+      ? this.time.logicalToCoordinate(last) : this.time.width / 2;
+    if (!Number.isFinite(x)) return;
     x = Math.max(0, Math.min(this.time.width, x));
-    y = Math.max(0, Math.min(this.price.height, y));
     const span = this.time.to - this.time.from;
     const count = Math.max(8, Math.min(5000, span * factor));
     if (Math.abs(count - span) < 1e-7) return;
     const anchor = this.time.coordinateToLogical(x), ratio = x / this.time.width;
-    this.price.zoomAt(count / span, y);
-    this.config.rightPriceScale.autoScale = false;
     this.setRange({ from: anchor - count * ratio, to: anchor + count * (1-ratio) });
-    // Dashboard range subscribers may enforce a narrower readable span.
-    const actual = this.time.to - this.time.from;
-    if (Math.abs(actual - count) > 1e-7) this.price.zoomAt(actual / count, y);
     this.invalidate();
   }
   private wheel = (e: WheelEvent) => {
     e.preventDefault(); const p = this.point(e);
-    if (p.x > this.time.width) {
-      if (this.config.handleScale !== false && this.config.handleScale?.mouseWheel !== false) {
-        this.price.zoomAt(Math.exp(e.deltaY * .001), p.y);
-        this.config.rightPriceScale.autoScale = false; this.invalidate();
-      }
+    const enabled = this.config.handleScale !== false && this.config.handleScale?.mouseWheel !== false;
+    if (e.ctrlKey || p.x > this.time.width) {
+      if (enabled) this.zoomPrice(Math.exp(e.deltaY * .0015), p.y);
       return;
     }
-    if (this.config.handleScale !== false && this.config.handleScale?.mouseWheel !== false && Math.abs(e.deltaY) > Math.abs(e.deltaX) && !e.shiftKey) this.zoom(Math.exp(e.deltaY * .0015), p.x, p.y);
+    if (enabled && Math.abs(e.deltaY) > Math.abs(e.deltaX) && !e.shiftKey) this.zoom(Math.exp(e.deltaY * .0015), p.x);
     else if (this.config.handleScroll !== false) { const delta = (e.deltaX || e.deltaY) / this.time.spacing; this.setRange({ from: this.time.from + delta, to: this.time.to + delta }); }
   };
   container() { return this.host; }
@@ -182,13 +192,21 @@ class NativeChart {
     this.time.times = [...new Set(this.series.flatMap(s => s.rows.map(r => r.time)))].sort((a,b) => a-b);
     if (!this.initialized && this.time.times.length) { this.initialized = true; const count = this.time.width / (this.config.timeScale.barSpacing || 6); this.time.to = this.time.times.length + (this.config.timeScale.rightOffset || 6); this.time.from = this.time.to-count; }
     else if (following && this.config.timeScale.shiftVisibleRangeOnNewBar !== false && this.time.times.length > oldLength) { const delta = this.time.times.length-oldLength; this.time.from += delta; this.time.to += delta; }
+    this.setRange({from:this.time.from,to:this.time.to});
     this.invalidate();
   }
   private setRange(range: { from: number; to: number }) {
     if (!Number.isFinite(range.from) || !Number.isFinite(range.to) || range.to <= range.from) return;
+    const width = range.to - range.from;
+    const rows = this.series[0]?.rows;
+    if (rows?.length) {
+      const first = this.time.timeToLogical(rows[0].time)!, last = this.time.timeToLogical(rows[rows.length-1].time)!;
+      if (range.to < first) range = {from:first-width*.9,to:first+width*.1};
+      else if (range.from > last) range = {from:last-width*.1,to:last+width*.9};
+    }
     if (Math.abs(this.time.from-range.from) < 1e-7 && Math.abs(this.time.to-range.to) < 1e-7) return;
     const span = this.time.to - this.time.from;
-    if (Math.abs(range.from - this.time.from) > span * .25 || Math.abs((range.to - range.from) / span - 1) > .05) this.price.refitAuto();
+    if (Math.abs((range.to-range.from)-span)<1e-7 && Math.abs(range.from-this.time.from)>span*.25) this.price.refitAuto();
     this.time.from = range.from; this.time.to = range.to;
     this.rangeListeners.forEach(fn => fn({ ...range }));
     this.timeListeners.forEach(fn => fn({ from: this.time.logicalToTime(range.from), to: this.time.logicalToTime(range.to) })); this.invalidate();
@@ -248,16 +266,27 @@ class NativeChart {
     const w = this.time.width, h = this.price.height;
     ctx.font = `${this.config.layout.fontSize || 11}px ${this.config.layout.fontFamily || 'sans-serif'}`;
     ctx.lineWidth = 1;
-    for (let i = 1; i < 6; i++) {
-      const x = w*i/6, y = h*i/6;
-      if (this.config.grid.horzLines?.visible !== false) this.stroke(ctx,0,y,w,y,this.config.grid.horzLines?.color || '#243044');
-      if (this.config.grid.vertLines?.visible !== false) this.stroke(ctx,x,0,x,h,this.config.grid.vertLines?.color || '#243044');
-      ctx.fillStyle = this.config.layout.textColor;
-      if (this.config.rightPriceScale.visible !== false) ctx.fillText(this.format(this.price.coordinateToPrice(y)),w+7,y+4);
-      const time = this.time.logicalToTime(this.time.coordinateToLogical(x));
-      if (time !== null && this.config.timeScale.visible !== false) {
-        const label = this.config.timeScale.tickMarkFormatter?.(time) || new Date(time*1000).toISOString().slice(11,19);
-        ctx.fillText(String(label),Math.max(0,x-24),h+18);
+    const niceStep = (span: number, target: number) => {
+      const raw = Math.max(Number.EPSILON, span / Math.max(1,target));
+      const power = 10 ** Math.floor(Math.log10(raw)), unit = raw / power;
+      return (unit <= 1 ? 1 : unit <= 2 ? 2 : unit <= 5 ? 5 : 10) * power;
+    };
+    const priceStep = niceStep(this.price.max-this.price.min,h/64);
+    for(let value=Math.ceil(this.price.min/priceStep)*priceStep,n=0;value<=this.price.max && n<100;value+=priceStep,n++){
+      const y=this.price.priceToCoordinate(value);
+      if(this.config.grid.horzLines?.visible!==false)this.stroke(ctx,0,y,w,y,this.config.grid.horzLines?.color || '#243044');
+      ctx.fillStyle=this.config.layout.textColor;
+      if(this.config.rightPriceScale.visible!==false)ctx.fillText(this.format(value),w+7,y+4);
+    }
+    const from=this.time.logicalToTime(this.time.from),to=this.time.logicalToTime(this.time.to);
+    if(from!==null && to!==null){
+      const step=niceStep(to-from,w/110);
+      for(let value=Math.ceil(from/step)*step,n=0;value<=to && n<100;value+=step,n++){
+        const logical=this.time.timeToLogical(value);if(logical===null)continue;
+        const x=this.time.logicalToCoordinate(logical);
+        if(this.config.grid.vertLines?.visible!==false)this.stroke(ctx,x,0,x,h,this.config.grid.vertLines?.color || '#243044');
+        ctx.fillStyle=this.config.layout.textColor;
+        if(this.config.timeScale.visible!==false){const label=this.config.timeScale.tickMarkFormatter?.(value) || new Date(value*1000).toISOString().slice(11,19);ctx.fillText(String(label),Math.max(0,x-24),h+18);}
       }
     }
     ctx.save(); ctx.beginPath(); ctx.rect(0,0,w,h); ctx.clip();
@@ -342,7 +371,11 @@ export function setChartInterval(chart: IChartApi, seconds: number): void {
   native.invalidate();
 }
 
-/** Unified two-axis viewport zoom used by dashboard buttons, wheel and pinch. */
+/** Horizontal viewport zoom used by dashboard buttons, wheel and pinch. */
 export function zoomChart(chart: IChartApi, factor: number): void {
   (chart as unknown as NativeChart).zoom(factor);
+}
+
+export function zoomPriceScale(chart: IChartApi, factor: number, y?: number): void {
+  (chart as unknown as NativeChart).zoomPrice(factor, y);
 }

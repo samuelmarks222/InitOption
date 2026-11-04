@@ -17,6 +17,7 @@ export function createServerlessOTC({
   maxBatch = 5000,
   warmup = 3000,
   retention = DEFAULT_RETENTION,
+  barRetention = 30 * DEFAULT_RETENTION,
   nowForTests,
 } = {}) {
   if (
@@ -24,7 +25,7 @@ export function createServerlessOTC({
     maxBatch < 1 ||
     !Number.isInteger(warmup) ||
     warmup < 0 ||
-    warmup >= retention
+    warmup >= retention || !Number.isSafeInteger(barRetention) || barRetention < retention
   )
     throw new Error("Invalid OTC limits");
   const wire = (symbol, row, precision) => ({
@@ -34,15 +35,36 @@ export function createServerlessOTC({
     p: Number(row.price).toFixed(precision),
     source: "internal-otc",
   });
-  return async function read({ symbol, after, at, action = "ticks" }) {
+  return async function read({ symbol, after, at, seconds = 5, before, limit = 200, action = "ticks" }) {
     if (typeof symbol !== "string" || !Object.prototype.hasOwnProperty.call(assets, symbol))
       throw new OTCError(400, "Unknown OTC symbol");
-    if (!["ticks", "price"].includes(action))
+    if (!["ticks", "price", "history"].includes(action))
       throw new OTCError(400, "Unknown OTC action");
     if (after !== undefined && (!Number.isSafeInteger(after) || after < 0))
       throw new OTCError(400, "Invalid tick cursor");
     if (at !== undefined && (!Number.isFinite(at) || at < 0))
       throw new OTCError(400, "Invalid expiry timestamp");
+    if (action === "history") {
+      if (![5,10,15,30,60,120,180,240,300,600,900,1800,3600,7200,14400].includes(seconds) ||
+          !Number.isInteger(limit) || limit < 1 || limit > 1000 ||
+          (before !== undefined && (!Number.isSafeInteger(before) || before < 0 || before % seconds !== 0)))
+        throw new OTCError(400, "Invalid history window");
+      return transaction(async client => {
+        await client.query("SET LOCAL statement_timeout = '15s'");
+        const clock = nowForTests ? nowForTests() : Number((await client.query("SELECT floor(extract(epoch FROM clock_timestamp())*1000)::bigint AS ms")).rows[0].ms);
+        const end = Math.min(before ?? Infinity, Math.floor(clock / 1000 / seconds) * seconds);
+        const rows = (await client.query(`SELECT floor(bucket_slot / $2::numeric) * $2 AS bucket,
+          (array_agg(open ORDER BY bucket_slot))[1] AS open, max(high) AS high, min(low) AS low,
+          (array_agg(close ORDER BY bucket_slot DESC))[1] AS close, sum(volume) AS volume
+          FROM public.otc_bars WHERE symbol=$1 AND bucket_slot<$3
+          GROUP BY floor(bucket_slot / $2::numeric) ORDER BY bucket DESC LIMIT $4`,
+          [symbol, seconds*10, end*10, limit+1])).rows;
+        const oldest = (await client.query("SELECT min(bucket_slot) AS first FROM public.otc_bars WHERE symbol=$1",[symbol])).rows[0]?.first;
+        return {type:"history",source:"internal-otc",symbol,seconds,before:end,hasMore:rows.length>limit,
+          earliest:oldest == null ? null : Number(oldest)/10,
+          candles:rows.slice(0,limit).reverse().map(row=>({time:Number(row.bucket)/10,open:Number(row.open),high:Number(row.high),low:Number(row.low),close:Number(row.close),volume:Number(row.volume)}))};
+      });
+    }
     return transaction(async (client) => {
       await client.query("SET LOCAL lock_timeout = '5s'");
       await client.query("SET LOCAL statement_timeout = '15s'");
@@ -156,7 +178,7 @@ export function createServerlessOTC({
           );
           await client.query(
             "DELETE FROM public.otc_bars WHERE symbol=$1 AND bucket_slot<$2",
-            [symbol, Math.floor((slot - retention) / 50) * 50],
+            [symbol, Math.floor((slot - barRetention) / 50) * 50],
           );
         }
         await client.query(

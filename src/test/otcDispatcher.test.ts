@@ -1,5 +1,5 @@
 import {describe,it,expect,vi,beforeEach} from 'vitest';
-const state=vi.hoisted(()=>({query:vi.fn(async()=>({rows:[]})),fallback:vi.fn()}));
+const state=vi.hoisted(()=>({query:vi.fn(async(_sql?:string,_args?:unknown[])=>({rows:[]})),fallback:vi.fn()}));
 vi.mock('../../api/_lib/db.js',()=>({query:vi.fn(),queryOne:vi.fn(),transaction:async(work:any)=>work({query:state.query})}));
 vi.mock('../../api/_lib/systemHandler.js',()=>({default:state.fallback}));
 vi.mock('../../api/_lib/newApi.js',()=>({
@@ -29,6 +29,13 @@ describe('OTC through existing system Function',()=>{
   it('keeps the pricing route read-only',async()=>{
     const res=response();await handler({method:'POST',url:'/api/otc',query:{route:'otc'}} as any,res);
     expect(res.statusCode).toBe(405);expect(state.fallback).not.toHaveBeenCalled();
+  });
+  it('dispatches history pages through the same Function without generating ticks',async()=>{
+    state.query.mockImplementation(async(sql?:string)=>({rows:sql?.includes('clock_timestamp')?[{ms:600000}]:sql?.includes('min(bucket_slot)')?[{first:null}]:[]} as any));
+    const res=response();
+    await handler({method:'GET',url:'/api/otc?action=history&symbol=AAPL&seconds=60&before=600&limit=2',query:{route:'otc'}} as any,res);
+    expect(res.statusCode).toBe(200);expect(res.body).toMatchObject({type:'history',seconds:60,candles:[],hasMore:false});
+    expect(state.query.mock.calls.some(([sql])=>String(sql).includes('INSERT INTO public.otc_markets'))).toBe(false);
   });
   it('does not replace the existing system health route',async()=>{
     const res=response();await handler({method:'GET',url:'/api/system?route=health',query:{route:'health'}} as any,res);

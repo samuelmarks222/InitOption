@@ -357,29 +357,29 @@ panning, 5s through 4h one-bar time mapping, coordinate round-trips, and retaine
 raw OHLC in the Canvas renderer. Authenticated visual/device acceptance remains
 separate from mocked Canvas checks.
 
-## Whole-chart viewport zoom
+## Independent professional viewport zoom
 
-The dashboard +/- controls now call the native `zoomChart` viewport operation,
-not a `barSpacing` option update. Plot wheel gestures and two-finger pinch use
-the same operation: both the visible logical-time span and visible price span
-scale together. Buttons anchor at plot center, wheel at the pointer, and pinch
-at the finger midpoint. Axes/grid, all main-pane series, and price/time anchored
-trade markers and drawings use the same coordinate transforms. Oscillator panes
-retain their indicator-specific price units and follow the main time range.
-Dedicated price-axis gestures remain vertical-only.
+Horizontal and vertical zoom are independent (superseding the earlier combined
+zoom behavior). Neither operation changes stored OHLC, candle timestamps, or
+interval durations. All series, drawings, indicators and trade overlays continue
+to use the shared time/price coordinate APIs.
 
-A manual price-domain baseline prevents automatic fitting from cancelling the
-vertical part of zoom on the next paint/tick. It does not modify, interpolate or
-rescale the stored OHLC values. Explicit live-edge reset, changing the instrument
-or timeframe, `fitContent`, and explicit `autoScale: true` restore automatic
-price fitting. Prices may move out of the manually zoomed window until reset,
-just as with manual vertical scaling. Readability/overscroll constraints still
-apply, and the final constrained time span determines the price zoom ratio.
+- Wheel on the plot and +/- buttons change only the time viewport.
+- Ctrl+wheel and wheel over the price axis change only the price viewport.
+- Horizontal drag navigates history; right-axis drag scales the price domain.
+- Double-click price axis restores price autoscale without changing time.
+- Double-click plot restores automatic price fitting and fits loaded history.
+- Touch pinch changes the time viewport around the finger midpoint.
+- Pointer zoom keeps its time/price anchor. Button zoom keeps the latest candle
+  anchored when it is in view; historical views use plot center.
+- Axis ticks and gridlines use nice, domain-aligned steps, not a fixed six-column
+  overlay. Time zoom recalculates time ticks; price zoom recalculates price ticks.
 
-Canvas integration regressions exercise button API, pointer wheel, pinch,
-disabled scaling, anchor preservation, inverse zoom, unmodified OHLC, overlay
-coordinates, range constraints, and autoscale restoration. Authenticated visual
-and physical touch-device acceptance remains separate from mocked Canvas tests.
+Manual vertical scaling persists across time zoom and ticks. With automatic
+vertical fitting enabled, newly exposed historical highs/lows can naturally
+expand the price domain so their candles remain visible. Oscillators preserve
+their indicator-specific units while following the main time viewport. No third-
+party runtime or price interpolation is introduced.
 
 ## Tick stability and visible interval duration
 
@@ -412,3 +412,36 @@ trade expiry. Tests assert fixed anchor coordinates under contained updates,
 guarded expansion, manual zoom retention, no redundant backing-store clears,
 sparse 5s/4h scale differences without OHLC mutation, identical per-symbol live
 closes, distinct rollover times, and countdown/progress behavior.
+
+
+## Server archive browsing and empty-window protection
+
+`/api/otc?action=history&symbol=...&seconds=...&before=...&limit=...` serves
+backward, exclusive-boundary pages aggregated from persisted 5s bars. It does not
+advance the pricing model, take the market writer lock, or generate history.
+Server aggregation preserves first open, maximum high, minimum low, last close
+and summed volume. Valid intervals are the existing 5s–4h intervals; limit is
+bounded to 1000 (the dashboard requests 300). The handler is inside the existing
+system Function, not an additional Vercel Function.
+
+The dashboard loads an archive page after hydration and requests more near the
+left edge or on zoom-out. It corrects the oldest overlapping partial snapshot
+bucket using the complete server-aggregated closed bar, merges by timestamp,
+keeps the current/live candle separate, shifts logical indexes by the number of
+prepended bars, and guards requests against asset/timeframe switches. Loading,
+retry, earliest-recorded, and window-cap states are visible. The cache is bounded
+to 12 source/interval entries and the existing 7200-bar chart window; the window
+cap explicitly suggests using a larger timeframe to browse farther. This is not
+unlimited browser history. Independent API pages can retrieve older retained data.
+Navigation clamps fully empty past/future windows against actual series data.
+
+Raw pricing ticks retain their existing 24h limit. Persisted 5s bars now have a
+separate default 30-day limit, pruned on the existing cadence, so raw-tick pruning
+no longer discards all older chart history. Thirty days can mean up to 518400
+5s bars per active symbol; production database storage/query load needs monitoring.
+History queries have a 15s statement timeout. No claim of load-tested capacity
+or unlimited retention is made. Previously pruned history is unrecoverable;
+new instruments still have only their recorded/generated history since bootstrap.
+Startup remains the existing five-minute server warm-up, not fabricated older
+candles. Earliest-recorded boundaries are disclosed instead of generating client
+history or presenting synthetic backfill as previously recorded prices.
