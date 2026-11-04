@@ -129,6 +129,7 @@ class NativeChart {
   private drag: { x: number; y: number; from: number; to: number; offset: number; axis: boolean } | null = null;
   private touches = new Map<number, { x: number; y: number }>();
   private pinchDistance = 0;
+  private pinchMidpoint = 0;
   constructor(readonly host: HTMLElement, options: Options) {
     this.config = merge({ layout: { background: { color: '#101827' }, textColor: '#94a3b8', fontSize: 11 }, grid: {}, timeScale: { barSpacing: 6, rightOffset: 6, shiftVisibleRangeOnNewBar: false }, rightPriceScale: {} }, options);
     this.canvas.style.cssText = 'display:block;width:100%;height:100%;touch-action:none;';
@@ -167,7 +168,13 @@ class NativeChart {
   private down = (e: PointerEvent) => {
     const p = this.point(e); this.touches.set(e.pointerId, p);
     this.canvas.setPointerCapture(e.pointerId);
-    if (this.touches.size === 2) { this.drag = null; const [a,b] = [...this.touches.values()]; this.pinchDistance = Math.hypot(a.x-b.x,a.y-b.y); return; }
+    if (this.touches.size === 2) {
+      this.drag = null;
+      const [a,b] = [...this.touches.values()];
+      this.pinchDistance = Math.hypot(a.x-b.x,a.y-b.y);
+      this.pinchMidpoint = Math.max(0,Math.min(this.time.width,(a.x+b.x)/2));
+      return;
+    }
     if (p.x > this.time.width) {
       if (this.config.handleScale === false || this.config.handleScale?.axisPressedMouseMove === false) return;
     } else if (this.config.handleScroll === false || this.config.handleScroll?.pressedMouseMove === false) return;
@@ -178,9 +185,14 @@ class NativeChart {
     if (this.touches.has(e.pointerId)) this.touches.set(e.pointerId, p);
     if (this.touches.size === 2) {
       const [a,b] = [...this.touches.values()]; const distance = Math.hypot(a.x-b.x,a.y-b.y);
-      if (this.config.handleScale !== false && this.config.handleScale?.pinch !== false && this.pinchDistance > 0 && distance > 0)
-        this.zoom(this.pinchDistance / distance, (a.x+b.x)/2, (a.y+b.y)/2);
-      this.pinchDistance = distance; return;
+      const midpoint = Math.max(0,Math.min(this.time.width,(a.x+b.x)/2));
+      if (this.config.handleScale !== false && this.config.handleScale?.pinch !== false && this.pinchDistance > 0 && distance > 0) {
+        // Anchor to the previous finger midpoint, then translate to the new one.
+        // Anchoring directly at the new midpoint makes stationary fingers drift.
+        this.zoom(this.pinchDistance / distance, this.pinchMidpoint);
+        this.enqueue({kind:"pan",dx:midpoint-this.pinchMidpoint});
+      }
+      this.pinchDistance = distance; this.pinchMidpoint = midpoint; return;
     }
     if (this.drag) {
       if (this.drag.axis) {
@@ -194,7 +206,7 @@ class NativeChart {
     }
     this.pendingCross=true;this.invalidate();
   };
-  private up = (e: PointerEvent) => { this.touches.delete(e.pointerId); this.drag = null; this.pinchDistance = 0; };
+  private up = (e: PointerEvent) => { this.touches.delete(e.pointerId); this.drag = null; this.pinchDistance = 0; this.pinchMidpoint = 0; };
   private enqueue(input: NavigationInput) {
     const last=this.pendingInputs[this.pendingInputs.length-1];
     if(input.kind==="pan" && last?.kind==="pan")last.dx+=input.dx;

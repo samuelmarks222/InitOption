@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { ChartZoomControls } from '@/components/trading/ChartZoomControls';
 import TradingHeader from '@/components/trading/TradingHeader';
 import AssetInfo from '@/components/trading/AssetInfo';
 import TradingPanel from '@/components/trading/TradingPanel';
@@ -24,6 +25,17 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 const eur = { symbol:'EUR/USD', type:'OTC' as const, name:'Euro / US Dollar', basePrice:1.1, icon:'', flags:[], maxProfit:92, price:1.1, change:0 };
 const gbp = { ...eur, symbol:'GBP/CHF', name:'Pound / Franc', maxProfit:89 };
 describe('compact trading dashboard controls', () => {
+  it('exposes both zoom directions as focusable mobile controls', () => {
+    const zoom=vi.fn();
+    render(<ChartZoomControls onZoom={zoom} />);
+    const zoomIn=screen.getByRole('button',{name:'tradingChart.zoomIn'});
+    const zoomOut=screen.getByRole('button',{name:'tradingChart.zoomOut'});
+    zoomIn.focus();expect(document.activeElement).toBe(zoomIn);
+    fireEvent.click(zoomIn);fireEvent.click(zoomOut);
+    expect(zoom.mock.calls).toEqual([['in'],['out']]);
+    expect(zoomIn.classList.contains('h-11')).toBe(true);
+    expect(zoomIn.closest('.hidden')).toBeNull();
+  });
   it('preserves branding, balance, account, funding and navigation actions in the compact header', () => {
     const toggle=vi.fn(),deposit=vi.fn(),withdraw=vi.fn();
     render(<MemoryRouter><TradingHeader balance={10} demoBalance={457} accountType="demo" openTabs={[]} onRemoveTab={vi.fn()} onAddAssetClick={vi.fn()} onSwitchAccount={vi.fn()} onOpenDeposit={deposit} onOpenWithdrawal={withdraw} onOpenProfile={vi.fn()} onUpdateDemoBalance={vi.fn()} onResetDemoBalance={vi.fn()} onOpenSettings={vi.fn()} onOpenHistory={vi.fn()} onToggleNavigation={toggle} navigationExpanded /></MemoryRouter>);
