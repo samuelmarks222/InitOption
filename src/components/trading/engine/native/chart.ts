@@ -7,7 +7,7 @@ import { PriceCoordinates, TimeCoordinates } from './scales';
 type Options = Record<string, any>;
 type Datum = { time: number; value?: number; open?: number; high?: number; low?: number; close?: number; color?: string };
 type NavigationInput = {kind:"pan";dx:number} | {kind:"time"|"price";factor:number;x:number;y:number};
-type ActiveFrame = {time:number;value:number;x:number;y:number};
+type ActiveFrame = {time:number;value:number;x:number;y:number;row:Datum};
 type Listener = (event: any) => void;
 export const ColorType = { Solid: 'solid' as LegacyColorType, VerticalGradient: 'gradient' as LegacyColorType } as const;
 export const CrosshairMode = { Normal: 0, Magnet: 1, Hidden: 2 } as const;
@@ -29,12 +29,46 @@ function merge(target: Options, patch: Options) {
 class NativeSeries {
   rows: Datum[] = [];
   config: Options;
+  private presented: Datum | null = null;
+  private transition: { from: Datum; to: Datum; start: number } | null = null;
+  get animating() { return this.transition !== null; }
+  private motionEnabled() {
+    return (this.kind === 'Candlestick' || this.kind === 'Bar') &&
+      this.chart.config.candleAnimation !== false && this.config.candleAnimation !== false &&
+      !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  }
+  /** Presentation only: series rows, trading quotes and indicator inputs stay exact. */
+  displayRow(now = performance.now()): Datum | undefined {
+    const latest = this.rows[this.rows.length - 1];
+    const transition = this.transition;
+    if (!latest) return undefined;
+    if (!transition || !this.motionEnabled()) {
+      this.transition = null;
+      this.presented = latest;
+      return latest;
+    }
+    const progress = Math.max(0, Math.min(1, (now - transition.start) / 90));
+    if (progress === 1) {
+      this.transition = null;
+      this.presented = latest;
+      return latest;
+    }
+    // Bounded linear travel follows the newest tick without spring overshoot.
+    const row = { ...transition.to };
+    for (const key of ['open', 'high', 'low', 'close', 'value'] as const) {
+      const from = transition.from[key], to = transition.to[key];
+      if (Number.isFinite(from) && Number.isFinite(to)) row[key] = from! + (to! - from!) * progress;
+    }
+    this.presented = row;
+    return row;
+  }
   lines = new Set<{ options: () => Options; applyOptions: (o: Options) => void }>();
   constructor(readonly chart: NativeChart, readonly kind: string, options: Options) { this.config = merge({}, options); }
   setData(rows: Datum[]) {
     const unique = new Map<number, Datum>();
     for (const row of rows) if (Number.isFinite(Number(row.time))) unique.set(Number(row.time), { ...row, time: Number(row.time) });
     this.rows = [...unique.values()].sort((a, b) => a.time - b.time);
+    this.presented = null; this.transition = null;
     this.chart.refreshTimes();
   }
   update(row: Datum) {
@@ -42,8 +76,19 @@ class NativeSeries {
     const time = Number(row.time);
     let left = 0, right = this.rows.length;
     while (left < right) { const mid = (left + right) >>> 1; if (this.rows[mid].time < time) left = mid + 1; else right = mid; }
-    if (this.rows[left]?.time === time) { this.rows[left] = { ...row, time }; this.chart.invalidate(); }
-    else { this.rows.splice(left, 0, { ...row, time }); this.chart.refreshTimes(); }
+    if (this.rows[left]?.time === time) {
+      if (left === this.rows.length - 1 && this.presented && this.motionEnabled()) {
+        const now = performance.now();
+        const from = this.displayRow(now)!;
+        const changed = (['open', 'high', 'low', 'close', 'value'] as const).some(key => this.rows[left][key] !== row[key]);
+        if (changed) this.transition = { from, to: { ...row, time }, start: now };
+      }
+      this.rows[left] = { ...row, time }; this.chart.invalidate();
+    }
+    else {
+      if (left === this.rows.length) { this.presented = null; this.transition = null; }
+      this.rows.splice(left, 0, { ...row, time }); this.chart.refreshTimes();
+    }
   }
   applyOptions(options: Options) { merge(this.config, options); this.chart.invalidate(); }
   options() { return this.config; }
@@ -331,13 +376,15 @@ class NativeChart {
     }
     const activeFrames=new Map<NativeSeries,ActiveFrame>();
     for(const series of visible){
-      const last=series.rows[series.rows.length-1],value=last?.close??last?.value;
+      const last=series.displayRow(),value=last?.close??last?.value;
       if(!last||!Number.isFinite(value))continue;
       const lastIndex=this.time.timeToLogical(last.time);if(lastIndex===null)continue;
       const candleWidth=this.time.spacing*.72,candleSpacing=this.time.spacing-candleWidth;
       const offsetX=this.time.logicalToCoordinate(0)-candleWidth/2;
       const rawCalculatedY=this.price.priceToCoordinate(value!);
-      activeFrames.set(series,{time:last.time,value:value!,...activePriceGeometry(rawCalculatedY,offsetX,lastIndex,candleWidth,candleSpacing)});
+      const geometry=activePriceGeometry(rawCalculatedY,offsetX,lastIndex,candleWidth,candleSpacing);
+      activeFrames.set(series,{time:last.time,value:value!,row:last,...geometry});
+      if(series.animating && geometry.x>=0 && geometry.x<=w)this.renderAgain=true;
     }
     ctx.save(); ctx.beginPath(); ctx.rect(0,0,snap(w),snap(h)); ctx.clip();
     for (const s of visible) this.drawSeries(ctx,s,activeFrames.get(s));
@@ -353,7 +400,7 @@ class NativeChart {
     }
     ctx.restore();
     for (const s of visible) {
-      const active=activeFrames.get(s),last=s.rows[s.rows.length-1];
+      const active=activeFrames.get(s),last=active?.row??s.rows[s.rows.length-1];
       if(active && s.config.lastValueVisible!==false)this.label(ctx,this.format(active.value,s),active.y,s.config.lineColor || (last.close!>=last.open!?s.config.upColor:s.config.downColor) || '#5677e8');
       for (const line of s.lines) { const o = line.options(); if (o.axisLabelVisible !== false) this.label(ctx,this.format(o.price,s),this.price.priceToCoordinate(o.price),o.color || '#5677e8'); }
     }
@@ -376,7 +423,8 @@ class NativeChart {
   private drawSeries(ctx: CanvasRenderingContext2D,s: NativeSeries,active?:ActiveFrame) {
     const o = s.config, points: { x: number; y: number; row: Datum }[] = [];
     const body = Math.max(1, this.time.spacing*.72), half = body/2;
-    for (const row of this.visibleRows(s)) {
+    for (const storedRow of this.visibleRows(s)) {
+      const row = active?.time === storedRow.time ? active.row : storedRow;
       const index = this.time.timeToLogical(row.time)!;
       if (index < this.time.from-1 || index > this.time.to+1) continue;
       const x = active?.time===row.time?active.x:this.time.logicalToCoordinate(index), value = row.value ?? row.close;

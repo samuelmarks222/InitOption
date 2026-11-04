@@ -202,11 +202,13 @@ acceptance testing and repository-wide existing TypeScript errors remain open.
 ### Rendering and interval separation
 
 - `native/tickRendering.ts` projects each received candle directly into the series.
-  No close, wick, or body interpolation is performed. Japanese candles and OHLC
-  bars receive exact OHLC; Area receives the exact close. Heikin-Ashi uses proper
-  recursive mathematical OHLC through `native/animation.ts`, not visual easing.
+  Japanese candles and OHLC bars receive exact OHLC; Area receives the exact close.
+  The Canvas renderer now eases the active candle presentation over 90ms (see below),
+  without modifying these committed values. Heikin-Ashi uses proper recursive
+  mathematical OHLC through `native/animation.ts` before presentation easing.
 - Every valid tick commits synchronously. Indicators consume the latest raw OHLC
-  once per animation frame, including wick-only updates. With no tick, price holds.
+  once per animation frame, including wick-only updates. With no tick, the committed
+  price holds; any pending presentation transition finishes, then rendering stops.
   Empty interval candles carry the last price with zero volume; the first actual
   tick sets that interval's open/high/low before updating its close.
 - Writers are owned by the chart series, not feed subscriptions, so reconnecting
@@ -393,8 +395,8 @@ it, rather than recentering/scaling on every tick. It expands with headroom in
 bounded steps if actual data exceeds the domain. It does not continuously contract;
 explicit autoscale/live reset, instrument/timeframe changes, major viewport moves,
 or indicator removal allow refitting. Manual two-axis zoom remains independent and
-is not cancelled by incoming data. No price, wick, body, or quote interpolation is
-used; genuine price reversals remain visible.
+is not cancelled by incoming data. Trading quotes and authoritative OHLC remain
+exact; active candle presentation now uses the bounded transition described below.
 
 The main chart presentation floor is `abs(price) * 0.0001 * sqrt(intervalSeconds/5)`
 (before the normal scale margins), rather than the same tiny singleton-price floor
@@ -502,3 +504,21 @@ mentioned in earlier historical notes is superseded by a zero default for new
 markets. No history before actual initialization is promised. Archive fetches can
 begin during connection rather than waiting for live hydration; cached per-asset
 history is retained, and live hydration returns following views to the live edge.
+
+## Smooth live candle presentation
+
+At the user's request, the native Canvas renderer now animates same-bar updates
+for Candlestick (including Heikin-Ashi) and OHLC Bar series over 90ms. Linear,
+bounded interpolation of the presentation OHLC avoids overshoot, and a reversal
+retargets from the current visual state rather than queuing obsolete ticks.
+The active close, native price segment and chart badge share a single animated
+price coordinate. During this brief transition the chart badge is a presentation
+value, not an executable quote. Trading controls, series data, history, indicators,
+price-coordinate APIs and settlement retain the exact committed tick values.
+
+Only an already-painted live bar animates. Initial data, history replacement and
+bar rollover snap to their exact values; old closed bars do not animate. Reduced
+motion preferences and `candleAnimation: false` on chart or series disable easing.
+The existing single requestAnimationFrame scheduler runs only while an onscreen
+transition is unfinished, and removal cancels it. It does not synthesize new ticks,
+change timestamps, backfill history, or hide the feed's underlying polling latency.
