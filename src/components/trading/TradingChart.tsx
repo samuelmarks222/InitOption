@@ -1,3 +1,5 @@
+import { liveViewport, constrainViewport } from "./engine/native/viewport";
+import { setChartInterval } from "./engine/native/chart";
 import { isInternalOTC, marketWebSocketUrl } from "@/lib/otcMarket";
 import { tickChartPoint, TickSeriesWriter } from "./engine/native/tickRendering";
 import { animateViewport } from "./engine/native/viewportAnimation";
@@ -1824,7 +1826,7 @@ const OscillatorPane = ({
         rightOffset,
         barSpacing: 6,
         minBarSpacing: 1.5,
-        fixLeftEdge: true,
+        fixLeftEdge: false,
         fixRightEdge: false,
         rightBarStaysOnScroll: false,
         shiftVisibleRangeOnNewBar: false,
@@ -2578,7 +2580,7 @@ const TradingChart = ({
 
       const dataPointCount = Math.max(
         1,
-        historyCountOverride ??
+        (historyCountOverride === undefined ? undefined : historyCountOverride + (liveRef.current ? 1 : 0)) ??
           mainSeriesRef.current?.data()?.length ??
           historyRef.current.length,
       );
@@ -2586,8 +2588,8 @@ const TradingChart = ({
       const trendContextBars = getTrendContextBarCount(containerWidth, selectedTf, dataPointCount);
       const initialVisibleBars = getInitialVisibleBars(containerWidth, selectedTf, dataPointCount);
       const rightOffset = getChartRightOffset(trendContextBars);
-      const visibleSpan = initialVisibleBars + rightOffset;
-      const targetTo = dataPointCount + rightOffset;
+      const range = liveViewport(containerWidth, dataPointCount, initialVisibleBars + rightOffset);
+      const visibleSpan = range.to - range.from;
 
       chart.timeScale().applyOptions({
         rightOffset,
@@ -2596,10 +2598,7 @@ const TradingChart = ({
         allowShiftVisibleRangeOnWhitespaceReplacement: false,
       });
       applyResponsivePriceScale(visibleSpan, true);
-      chart.timeScale().setVisibleLogicalRange({
-        from: Math.max(0, targetTo - visibleSpan),
-        to: targetTo,
-      });
+      chart.timeScale().setVisibleLogicalRange(range);
     },
     [applyResponsivePriceScale, selectedTf],
   );
@@ -2780,7 +2779,7 @@ const TradingChart = ({
           rightOffset: 6,
           barSpacing: 6,
           minBarSpacing: 1.5,
-          fixLeftEdge: true,
+          fixLeftEdge: false,
           fixRightEdge: false,
           rightBarStaysOnScroll: false,
           shiftVisibleRangeOnNewBar: false,
@@ -3166,6 +3165,7 @@ const TradingChart = ({
     const tf = TIMEFRAMES[selectedTf];
     if (!tf || !mainSeriesRef.current || !chartRef.current) return;
     let effectActive = true;
+    setChartInterval(chartRef.current, tf.seconds);
 
     cancelViewportAnimation.current?.();
 
@@ -3259,7 +3259,7 @@ const TradingChart = ({
         timeVisible: true,
         secondsVisible: tf.seconds < 60,
         tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
-        fixLeftEdge: true,
+        fixLeftEdge: false,
         fixRightEdge: false,
         rightBarStaysOnScroll: false,
         shiftVisibleRangeOnNewBar: false,
@@ -3383,7 +3383,7 @@ renderOverlayIndicators(getIndicatorHistory());
       timeVisible: true,
       secondsVisible: tf.seconds < 60,
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
-      fixLeftEdge: true,
+      fixLeftEdge: false,
       fixRightEdge: false,
       rightBarStaysOnScroll: false,
       shiftVisibleRangeOnNewBar: false,
@@ -3538,17 +3538,10 @@ renderOverlayIndicators(getIndicatorHistory());
         }
       }
 
-      if (range.from < -0.5 || visibleSpan > maxReadableSpan + 0.5) {
-        const targetSpan = Math.max(1, Math.min(visibleSpan, maxReadableSpan));
-        const center = range.from < -0.5 ? targetSpan / 2 : (Math.max(0, range.from) + Math.min(dataPointCount, range.to)) / 2;
-        const maxTo = dataPointCount + maxReadableRightOffset;
-        let nextFrom = Math.max(0, center - targetSpan / 2);
-        let nextTo = nextFrom + targetSpan;
-
-        if (nextTo > maxTo) {
-          nextFrom = Math.max(0, nextFrom - (nextTo - maxTo));
-          nextTo = maxTo;
-        }
+      const constrained = constrainViewport(range, dataPointCount, maxReadableSpan);
+      if (Math.abs(constrained.from-range.from) > .01 || Math.abs(constrained.to-range.to) > .01) {
+        const nextFrom = constrained.from;
+        const nextTo = constrained.to;
 
         if (Math.abs(range.from - nextFrom) > 0.01 || Math.abs(range.to - nextTo) > 0.01) {
           isNormalizingVisibleRangeRef.current = true;
@@ -3626,7 +3619,7 @@ renderOverlayIndicators(getIndicatorHistory());
       timeVisible: true,
       secondsVisible: tf.seconds < 60,
       tickMarkFormatter: (time: number) => formatTimeScaleTick(time, tf.seconds),
-      fixLeftEdge: true,
+      fixLeftEdge: false,
       fixRightEdge: false,
       rightBarStaysOnScroll: false,
       shiftVisibleRangeOnNewBar: false,
@@ -3639,11 +3632,7 @@ renderOverlayIndicators(getIndicatorHistory());
     }
 
     if (!currentRange) {
-      const targetTo = dataPointCount + rightOffset;
-      timeScale.setVisibleLogicalRange({
-        from: Math.max(0, targetTo - (initialVisibleBars + rightOffset)),
-        to: targetTo,
-      });
+      timeScale.setVisibleLogicalRange(liveViewport(containerWidth, dataPointCount, initialVisibleBars + rightOffset));
       return;
     }
 
@@ -3661,8 +3650,9 @@ renderOverlayIndicators(getIndicatorHistory());
       Math.max(initialVisibleBars + rightOffset, currentRange.to - currentRange.from),
       trendContextBars + rightOffset,
     );
-    const targetTo = dataPointCount + rightOffset;
-    const targetFrom = Math.max(0, targetTo - visibleSpan);
+    const target = liveViewport(containerWidth, dataPointCount, visibleSpan);
+    const targetTo = target.to;
+    const targetFrom = target.from;
 
     if (Math.abs(currentRange.from - targetFrom) < 0.01 && Math.abs(currentRange.to - targetTo) < 0.01) {
       return;
@@ -4084,6 +4074,11 @@ renderOverlayIndicators(getIndicatorHistory());
               : marketFeedStatus === "unavailable" ? "Market feed is not configured."
               : marketFeedStatus === "connecting" ? "Connecting to market data…"
               : "Market feed disconnected — holding the last received price."}
+          </div>
+        )}
+        {isInternalOTC && marketFeedStatus === "live" && historyRef.current.length + (liveRef.current ? 1 : 0) < 12 && (
+          <div role="note" className="pointer-events-none absolute bottom-9 left-16 z-[79] rounded bg-slate-950/65 px-2 py-1 text-[11px] text-slate-400">
+            {historyRef.current.length + (liveRef.current ? 1 : 0)} candles available at {selectedTf}. Earlier history has not accumulated yet.
           </div>
         )}
         {showDesktopChartTools && !overlayUiSuppressed && (

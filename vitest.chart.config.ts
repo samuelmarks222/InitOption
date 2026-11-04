@@ -6,6 +6,7 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: [
+      "src/test/sparseViewport.test.ts",
       "src/test/otcDispatcher.test.ts",
       "src/test/internalOTCHttpFeed.test.ts",
       "src/test/internalOTCFeed.test.ts",

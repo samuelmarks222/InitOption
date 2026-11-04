@@ -336,3 +336,23 @@ hydrate history. No browser simulation, local pricing file, persistent process,
 WebSocket server, or separate application host is required in this mode. The
 legacy standalone service remains explicitly opt-in. Financial ledger enforcement
 is still separate unfinished work; changing transport does not make it secure.
+
+## Sparse-history viewport and explicit timeframe axes
+
+The dashboard now uses `native/viewport.ts` to keep readable candle spacing and
+place the live candle near the right edge even when a timeframe has only one or
+a few received bars. Empty logical space is permitted to the left; it is not
+converted into fake historical candles. Overscroll constraints preserve that
+space instead of forcing the range back to index zero. Manual historical views
+remain bounded without automatic jumps to live.
+
+The native time scale receives the selected interval explicitly. With only one
+bar, a 15m/30m/4h axis no longer silently extrapolates using a guessed 60 seconds.
+Sparse histories display a count/availability note. The initial five-minute OTC
+warm-up naturally produces few bars at longer intervals; this change does not
+retroactively fabricate an earlier price path or alter stored OHLC.
+
+Regression coverage includes desktop/mobile sparse viewport placement, bounded
+panning, 5s through 4h one-bar time mapping, coordinate round-trips, and retained
+raw OHLC in the Canvas renderer. Authenticated visual/device acceptance remains
+separate from mocked Canvas checks.
