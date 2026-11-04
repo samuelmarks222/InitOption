@@ -31,9 +31,31 @@ export class TimeCoordinates {
 export class PriceCoordinates {
   min = 0; max = 1; height = 1;
   offset = 0; zoom = 1;
+  private manualBase: { min: number; max: number } | null = null;
+  reset() { this.manualBase = null; this.offset = 0; this.zoom = 1; }
+  /** Zoom the price domain, not the data. Keep the price under y stationary. */
+  zoomAt(factor: number, y: number) {
+    if (!Number.isFinite(factor) || factor <= 0 || !Number.isFinite(y)) return;
+    const ratio = Math.max(0, Math.min(1, y / Math.max(1, this.height)));
+    const anchor = this.coordinateToPrice(ratio * this.height);
+    if (!this.manualBase) {
+      this.manualBase = { min: this.min, max: this.max };
+      this.offset = 0; this.zoom = 1;
+    }
+    this.zoom = Math.max(.05, Math.min(50, this.zoom / factor));
+    const span = (this.manualBase.max - this.manualBase.min) / this.zoom;
+    this.offset = anchor + (ratio - .5) * span - (this.manualBase.min + this.manualBase.max) / 2;
+    this.fit(0, 0);
+  }
   priceToCoordinate(price: number) { return (this.max - price) / Math.max(Number.EPSILON, this.max - this.min) * this.height; }
   coordinateToPrice(y: number) { return this.max - y / this.height * (this.max - this.min); }
   fit(low: number, high: number, top = .1, bottom = .1) {
+    if (this.manualBase) {
+      const span = (this.manualBase.max - this.manualBase.min) / this.zoom;
+      const center = (this.manualBase.min + this.manualBase.max) / 2 + this.offset;
+      this.min = center - span / 2; this.max = center + span / 2;
+      return;
+    }
     const span = Math.max(high - low, Math.abs(high) * .0001, .000001) / this.zoom;
     const center = (low + high) / 2 + this.offset;
     this.min = center - span / 2 - span * bottom;

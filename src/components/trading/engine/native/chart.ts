@@ -103,7 +103,7 @@ class NativeChart {
   private down = (e: PointerEvent) => {
     const p = this.point(e); this.touches.set(e.pointerId, p);
     this.canvas.setPointerCapture(e.pointerId);
-    if (this.touches.size === 2) { const [a,b] = [...this.touches.values()]; this.pinchDistance = Math.hypot(a.x-b.x,a.y-b.y); return; }
+    if (this.touches.size === 2) { this.drag = null; const [a,b] = [...this.touches.values()]; this.pinchDistance = Math.hypot(a.x-b.x,a.y-b.y); return; }
     if (this.config.handleScroll === false || this.config.handleScroll?.pressedMouseMove === false) return;
     this.drag = { ...p, from: this.time.from, to: this.time.to, offset: this.price.offset, axis: p.x > this.time.width };
   };
@@ -112,7 +112,8 @@ class NativeChart {
     if (this.touches.has(e.pointerId)) this.touches.set(e.pointerId, p);
     if (this.touches.size === 2) {
       const [a,b] = [...this.touches.values()]; const distance = Math.hypot(a.x-b.x,a.y-b.y);
-      if (this.pinchDistance > 0 && distance > 0) this.zoom(this.pinchDistance / distance, (a.x+b.x)/2);
+      if (this.config.handleScale !== false && this.config.handleScale?.pinch !== false && this.pinchDistance > 0 && distance > 0)
+        this.zoom(this.pinchDistance / distance, (a.x+b.x)/2, (a.y+b.y)/2);
       this.pinchDistance = distance; return;
     }
     if (this.drag) {
@@ -125,16 +126,32 @@ class NativeChart {
     this.crossListeners.forEach(fn => fn(this.event(p))); this.invalidate();
   };
   private up = (e: PointerEvent) => { this.touches.delete(e.pointerId); this.drag = null; this.pinchDistance = 0; };
-  private zoom(factor: number, x: number) {
-    const anchor = this.time.coordinateToLogical(x);
-    const count = Math.max(8, Math.min(5000, (this.time.to - this.time.from) * factor));
-    const ratio = x / this.time.width;
+  zoom(factor: number, x = this.time.width / 2, y = this.price.height / 2) {
+    if (!Number.isFinite(factor) || factor <= 0 || !Number.isFinite(x) || !Number.isFinite(y)) return;
+    x = Math.max(0, Math.min(this.time.width, x));
+    y = Math.max(0, Math.min(this.price.height, y));
+    const span = this.time.to - this.time.from;
+    const count = Math.max(8, Math.min(5000, span * factor));
+    if (Math.abs(count - span) < 1e-7) return;
+    const anchor = this.time.coordinateToLogical(x), ratio = x / this.time.width;
+    this.price.zoomAt(count / span, y);
+    this.config.rightPriceScale.autoScale = false;
     this.setRange({ from: anchor - count * ratio, to: anchor + count * (1-ratio) });
+    // Dashboard range subscribers may enforce a narrower readable span.
+    const actual = this.time.to - this.time.from;
+    if (Math.abs(actual - count) > 1e-7) this.price.zoomAt(actual / count, y);
+    this.invalidate();
   }
   private wheel = (e: WheelEvent) => {
     e.preventDefault(); const p = this.point(e);
-    if (p.x > this.time.width) { this.price.zoom = Math.max(.05, Math.min(50, this.price.zoom * Math.exp(-e.deltaY * .001))); this.invalidate(); return; }
-    if (this.config.handleScale !== false && Math.abs(e.deltaY) > Math.abs(e.deltaX) && !e.shiftKey) this.zoom(Math.exp(e.deltaY * .0015), p.x);
+    if (p.x > this.time.width) {
+      if (this.config.handleScale !== false && this.config.handleScale?.mouseWheel !== false) {
+        this.price.zoomAt(Math.exp(e.deltaY * .001), p.y);
+        this.config.rightPriceScale.autoScale = false; this.invalidate();
+      }
+      return;
+    }
+    if (this.config.handleScale !== false && this.config.handleScale?.mouseWheel !== false && Math.abs(e.deltaY) > Math.abs(e.deltaX) && !e.shiftKey) this.zoom(Math.exp(e.deltaY * .0015), p.x, p.y);
     else if (this.config.handleScroll !== false) { const delta = (e.deltaX || e.deltaY) / this.time.spacing; this.setRange({ from: this.time.from + delta, to: this.time.to + delta }); }
   };
   container() { return this.host; }
@@ -143,7 +160,7 @@ class NativeChart {
   addSeries(definition: { type: string }, options: Options = {}) { const s = new NativeSeries(this, definition.type, options); this.series.push(s); this.invalidate(); return s; }
   addCustomSeries(_view: unknown, options: Options = {}) { return this.addSeries({ type: 'Candlestick' }, options); }
   removeSeries(series: NativeSeries) { const i = this.series.indexOf(series); if (i >= 0) this.series.splice(i, 1); this.refreshTimes(); }
-  applyOptions(options: Options) { merge(this.config, options); this.resize(); }
+  applyOptions(options: Options) { merge(this.config, options); if (options.rightPriceScale?.autoScale === true) this.price.reset(); this.resize(); }
   resize(width = this.config.width || this.host.clientWidth, height = this.config.height || this.host.clientHeight) {
     const ratio = window.devicePixelRatio || 1;
     this.canvas.width = Math.max(1, Math.round(width * ratio)); this.canvas.height = Math.max(1, Math.round(height * ratio));
@@ -151,7 +168,7 @@ class NativeChart {
     this.price.height = Math.max(1, height - (this.config.timeScale?.visible === false ? 0 : 26));
     this.sizeListeners.forEach(fn => fn(width, height)); this.invalidate();
   }
-  priceScale() { return { applyOptions: (o: Options) => { merge(this.config.rightPriceScale, o); if (o.autoScale) { this.price.offset = 0; this.price.zoom = 1; } this.invalidate(); }, options: () => this.config.rightPriceScale, width: () => 80 }; }
+  priceScale() { return { applyOptions: (o: Options) => { merge(this.config.rightPriceScale, o); if (o.autoScale) this.price.reset(); this.invalidate(); }, options: () => this.config.rightPriceScale, width: () => 80 }; }
   refreshTimes() {
     const oldLength = this.time.times.length;
     const following = this.time.to >= oldLength - 1;
@@ -186,7 +203,7 @@ class NativeChart {
       unsubscribeVisibleTimeRangeChange: (fn: Listener) => this.timeListeners.delete(fn),
       subscribeSizeChange: (fn: (width: number, height: number) => void) => this.sizeListeners.add(fn),
       unsubscribeSizeChange: (fn: (width: number, height: number) => void) => this.sizeListeners.delete(fn),
-      fitContent: () => this.setRange({ from: 0, to: Math.max(8, this.time.times.length + 6) }),
+      fitContent: () => { this.price.reset(); this.config.rightPriceScale.autoScale = true; this.setRange({ from: 0, to: Math.max(8, this.time.times.length + 6) }); this.invalidate(); },
       scrollPosition: () => this.time.to - this.time.times.length,
       scrollToPosition: (offset: number) => { const count = this.time.to-this.time.from; this.setRange({ from: this.time.times.length+offset-count, to: this.time.times.length+offset }); },
       scrollToRealTime: () => { const count = this.time.to-this.time.from; this.setRange({ from: this.time.times.length+6-count, to: this.time.times.length+6 }); },
@@ -310,4 +327,9 @@ export function setChartInterval(chart: IChartApi, seconds: number): void {
   const native = chart as unknown as NativeChart;
   native.time.intervalSeconds = seconds;
   native.invalidate();
+}
+
+/** Unified two-axis viewport zoom used by dashboard buttons, wheel and pinch. */
+export function zoomChart(chart: IChartApi, factor: number): void {
+  (chart as unknown as NativeChart).zoom(factor);
 }

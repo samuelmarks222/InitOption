@@ -356,3 +356,27 @@ Regression coverage includes desktop/mobile sparse viewport placement, bounded
 panning, 5s through 4h one-bar time mapping, coordinate round-trips, and retained
 raw OHLC in the Canvas renderer. Authenticated visual/device acceptance remains
 separate from mocked Canvas checks.
+
+## Whole-chart viewport zoom
+
+The dashboard +/- controls now call the native `zoomChart` viewport operation,
+not a `barSpacing` option update. Plot wheel gestures and two-finger pinch use
+the same operation: both the visible logical-time span and visible price span
+scale together. Buttons anchor at plot center, wheel at the pointer, and pinch
+at the finger midpoint. Axes/grid, all main-pane series, and price/time anchored
+trade markers and drawings use the same coordinate transforms. Oscillator panes
+retain their indicator-specific price units and follow the main time range.
+Dedicated price-axis gestures remain vertical-only.
+
+A manual price-domain baseline prevents automatic fitting from cancelling the
+vertical part of zoom on the next paint/tick. It does not modify, interpolate or
+rescale the stored OHLC values. Explicit live-edge reset, changing the instrument
+or timeframe, `fitContent`, and explicit `autoScale: true` restore automatic
+price fitting. Prices may move out of the manually zoomed window until reset,
+just as with manual vertical scaling. Readability/overscroll constraints still
+apply, and the final constrained time span determines the price zoom ratio.
+
+Canvas integration regressions exercise button API, pointer wheel, pinch,
+disabled scaling, anchor preservation, inverse zoom, unmodified OHLC, overlay
+coordinates, range constraints, and autoscale restoration. Authenticated visual
+and physical touch-device acceptance remains separate from mocked Canvas tests.
