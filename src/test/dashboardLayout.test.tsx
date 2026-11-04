@@ -58,6 +58,18 @@ describe('compact trading dashboard controls', () => {
     expect(tabs[0].getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(tabs[1]);expect(tabs[1].getAttribute('aria-pressed')).toBe('true');
   });
+  it('keeps phone investment, duration and Buy/Sell controls usable in the full-width form', () => {
+    render(<TradingPanel asset={{symbol:'NZD/CHF',price:.447,maxProfit:81,available:true}} demoBalance={457} accountType="demo" onDemoBalanceChange={vi.fn()} activeTradesOverride={[]} tradeHistoryOverride={[]} mobileDocked />);
+    const amount=screen.getByRole('spinbutton',{name:'Investment amount'}) as HTMLInputElement;
+    expect(amount.value).toBe('1');
+    fireEvent.click(screen.getByRole('button',{name:'Increase investment'}));expect(amount.value).toBe('2');
+    fireEvent.click(screen.getByRole('button',{name:'Decrease investment'}));expect(amount.value).toBe('1');
+    fireEvent.change(amount,{target:{value:'100'}});expect(amount.value).toBe('100');
+    expect(screen.getByRole('button',{name:'Buy'}).hasAttribute('disabled')).toBe(false);
+    expect(screen.getByRole('button',{name:'Sell'}).hasAttribute('disabled')).toBe(false);
+    fireEvent.click(screen.getByRole('button',{name:'Choose trade duration'}));
+    expect(screen.getAllByText('00:01:00').length).toBeGreaterThan(0);
+  });
   it('keeps compact asset tabs selectable, closable and keyboard-accessible without losing payouts', () => {
     const select=vi.fn(),remove=vi.fn(),add=vi.fn();
     render(<AssetInfo asset={eur} onSelectAsset={vi.fn()} onOpenSelector={add} onAddAssetClick={add} openTabs={[eur,gbp]} activeTabId={eur.symbol} onSelectTab={select} onRemoveTab={remove} />);

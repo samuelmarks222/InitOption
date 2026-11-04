@@ -107,3 +107,83 @@
   }
   .trading-terminal .trading-history-card { min-height: 130px; }
 }
+
+/* Phone/tablet layout: chart, order form and bottom navigation never overlap.
+   Reserve only the actual navigation height, not a guessed order-panel height. */
+@media (max-width: 1023px) {
+  .trading-terminal {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+  .trading-terminal .trading-terminal-header { height: 48px; padding: 0 10px; border: 0; z-index: 160; }
+  .trading-mobile-header { min-width: 0; gap: 6px; }
+  .trading-mobile-header > div:first-child { min-width: 0; flex-shrink: 1; }
+  .trading-mobile-header #tour-account-switch { min-width: 0; height: 34px; gap: 6px; padding: 0 8px; border: 0; }
+  .trading-mobile-header #tour-account-switch > div { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .trading-mobile-header #tour-account-switch p:first-child { font-size: 10px; white-space: nowrap; }
+  .trading-mobile-header #tour-account-switch p:last-child { font-size: 14px; margin: 0; white-space: nowrap; }
+  .trading-mobile-header #tour-account-switch > svg { width: 16px; height: 16px; }
+  .trading-mobile-header .trading-mobile-notifications { width: 36px; height: 34px; }
+  .trading-mobile-header [data-deposit-trigger] { height: 34px; padding: 0 12px; font-size: 13px; }
+  .trading-mobile-workspace { min-height: 0; }
+  .trading-mobile-chart { padding-bottom: 0; overflow: hidden; }
+  .trading-terminal .trading-mobile-order-dock .trading-order-panel {
+    height: auto; min-height: 0; border-radius: 6px 6px 0 0; border-left: 0; box-shadow: none;
+  }
+  .trading-mobile-order-dock .trading-order-form { padding: 0 8px 8px; }
+  .trading-mobile-order-dock .trading-order-heading { min-height: 36px; padding: 5px 2px 8px; gap: 6px; }
+  .trading-mobile-order-dock .trading-order-heading > button:first-child { flex: 1; min-width: 0; gap: 6px; }
+  .trading-mobile-order-dock .trading-order-heading > button:first-child > div { min-width: 0; gap: 4px; font-weight: 700; }
+  .trading-mobile-order-dock .trading-order-heading > button:first-child > div > span:first-child { max-width: 125px; }
+  .trading-mobile-order-dock .trading-mobile-pending > span { color: #249cf5; font-size: 9px; font-weight: 700; letter-spacing: 0; }
+  .trading-mobile-order-dock .trading-order-inputs { padding-bottom: 0; }
+  .trading-mobile-order-dock .trading-mobile-field-grid { gap: 10px; padding: 0; }
+  .trading-mobile-order-dock .trading-mobile-field { height: 44px; padding: 0 8px; border-radius: 4px; align-items: center; }
+  .trading-mobile-order-dock .trading-mobile-field > span { font-size: 11px; top: -7px; left: 8px; }
+  .trading-mobile-order-dock .trading-mobile-timer { height: 100%; width: 100%; text-align: left; }
+  .trading-mobile-order-dock .trading-mobile-timer > span { font-size: 16px; }
+  .trading-mobile-order-dock .trading-mobile-field > div { height: 100%; gap: 2px; }
+  .trading-mobile-order-dock .trading-mobile-field input { min-width: 0; width: 54px; font-size: 16px; }
+  .trading-mobile-order-dock .trading-mobile-field button[aria-label$="investment"] { width: 28px; height: 36px; }
+  .trading-mobile-order-dock .trading-mobile-switch { width: 50%; margin-left: auto; justify-content: center; height: 16px; padding: 0; }
+  .trading-mobile-order-dock .trading-mobile-switch button { font-size: 10px; font-weight: 700; color: #249cf5; }
+  .trading-mobile-order-dock .trading-mobile-payout { height: 22px; padding: 0; margin-bottom: 4px; gap: 8px; }
+  .trading-mobile-payout > span:first-child { display: flex; flex: 1; align-items: center; gap: 8px; }
+  .trading-mobile-payout > span:first-child::after { content: ''; flex: 1; border-bottom: 1px dashed var(--trading-control-border); }
+  .trading-mobile-order-dock .trading-direction-buttons { gap: 10px; padding: 0; }
+  .trading-mobile-order-dock .trading-direction-buttons > button { min-height: 44px; height: 44px; font-size: 16px; font-weight: 700; padding: 0 12px; }
+  .trading-terminal .trading-mobile-bottom-nav { background: var(--trading-header-bg); box-shadow: none; }
+  .trading-mobile-bottom-nav > div { max-width: none; padding: 0 12px; }
+}
+@media (max-width: 359px) {
+  .trading-mobile-header #tour-account-switch { padding: 0 5px; gap: 4px; }
+  .trading-mobile-header #tour-account-switch > div { gap: 5px; }
+  .trading-mobile-header #tour-account-switch p:last-child { font-size: 12px; }
+  .trading-mobile-header [data-deposit-trigger] { padding: 0 8px; }
+  .trading-mobile-order-dock .trading-mobile-pending > span { font-size: 8px; }
+  .trading-mobile-order-dock .trading-mobile-field-grid { gap: 6px; }
+  .trading-mobile-order-dock .trading-mobile-field { padding: 0 5px; }
+  .trading-mobile-order-dock .trading-mobile-field input { width: 42px; }
+}
+
+@media (max-width: 1023px) {
+  .trading-mobile-order-dock .trading-order-payout-rate:not(.text-red-400) { color: #f5b44b; font-weight: 700; }
+}
+@media (max-width: 1023px) and (max-height: 600px) and (orientation: landscape) {
+  .trading-mobile-workspace { overflow-y: auto; }
+  .trading-mobile-chart { flex: 0 0 240px; }
+}
+
+@media (max-width: 1023px) {
+  .trading-mobile-overlay { bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+  .trading-mobile-order-dock .trading-history-card.fixed { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (max-width: 1023px) {
+  .trading-mobile-notifications .fixed { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (max-width: 1023px) {
+  .trading-mobile-header #tour-account-switch p:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .trading-mobile-header .trading-mobile-admin { height: 34px; width: 32px; padding: 0; justify-content: center; }
+  .trading-mobile-admin > span { display: none; }
+}

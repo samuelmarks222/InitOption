@@ -1,3 +1,36 @@
+# Phone layout update
+
+The latest phone reference supersedes the earlier desktop-only scope below.
+Phone/tablet changes (below 1024px) retain the live chart, real account/notification
+state and trade execution, without copying the reference's balance or trades.
+
+- 48px header with inline account/balance, a mobile notification bell and deposit.
+- A flex workspace containing chart then a full-width order form. Remove the
+  fixed order dock, 430px form cap and guessed 250/262px chart-bottom reservation.
+- Side-by-side 44px Timer/Investment fields, investment switch, payout row, and
+  equal-width 44px Buy/Sell buttons. Investment +/- and duration are actual buttons.
+- Bottom navigation reserves 56px plus the device safe area. History/workspace
+  overlays and mobile notification popovers account for that same safe area.
+- On short landscape screens the workspace scrolls, keeping both chart and form
+  reachable. Desktop form dimensions and pricing/candle logic are unchanged.
+
+Chromium checks used isolated real header/form components with mocked contexts
+and an empty chart region (not an authenticated dashboard or market-data test):
+
+| Viewport | Header | Chart | Order form | Bottom nav | Horizontal overflow |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 430 × 932 | 48px | 630px | 198px | 56px | No |
+| 393 × 852 | 48px | 550px | 198px | 56px | No |
+| 320 × 568 | 48px | 266px | 198px | 56px | No |
+
+Portrait checks found the order form ends exactly above bottom navigation. The
+844 × 390 landscape fixture enables scrolling with a 240px chart; the form remains
+reachable by scrolling. Safe-area CSS is implemented but physical iOS keyboard,
+notch, device-font rendering and authenticated live-chart acceptance remain
+unverified. Do not describe these component checks as exact production parity.
+
+---
+
 # Current refinement: balanced desktop density
 
 The user subsequently requested smaller, more balanced controls rather than the

@@ -101,7 +101,7 @@ const TradingHeader = ({
 
   const AccountPillIcon = accountType === "demo" ? GraduationCap : ShieldCheck;
 
-  const renderAccountPill = () => (
+  const renderAccountPill = (compact = false) => (
     <div className="relative flex items-center shrink-0">
       <button
         id="tour-account-switch"
@@ -111,9 +111,9 @@ const TradingHeader = ({
         <AccountPillIcon size={18} className={accountType === "demo" ? "text-white shrink-0" : "text-[#0fa055] shrink-0"} />
         <div className="text-left leading-none">
           <p className={`text-[9px] font-black uppercase tracking-wide ${accountBadgeColor}`}>
-            {accountTitle}
+            {compact ? accountTitle.replace(" ACCOUNT", "") : accountTitle}
           </p>
-          <p className="mt-0.5 text-[13px] font-black text-white font-sans tracking-tight">
+          <p title={formatMoney(displayBalance)} className="mt-0.5 text-[13px] font-black text-white font-sans tracking-tight">
             {formatMoney(displayBalance)}
           </p>
         </div>
@@ -164,18 +164,20 @@ const TradingHeader = ({
       {onToggleNavigation && <button type="button" onClick={onToggleNavigation} aria-label="Toggle navigation" aria-expanded={navigationExpanded}
         className="trading-navigation-toggle absolute left-0 top-0 hidden h-[54px] w-16 items-center justify-center text-white/70 hover:text-white focus-visible:outline focus-visible:outline-sky-400 lg:flex"><Menu size={20} /></button>}
       {/* ── MOBILE layout (hidden on lg+) ── */}
-      <div className="flex lg:hidden w-full items-center gap-2 overflow-x-auto no-scrollbar">
-        {renderAccountPill()}
+      <div className="trading-mobile-header flex lg:hidden w-full items-center gap-2">
+        {renderAccountPill(true)}
+        <div className="trading-mobile-notifications flex shrink-0 items-center justify-center rounded bg-[#2a3040]"><NotificationBell mobile /></div>
         <div className="ml-auto flex items-center gap-2 shrink-0">
           {renderDepositButton()}
           {isAdmin && (
             <button
               onClick={() => navigate("/admin")}
-              className="flex h-10 items-center gap-1 rounded-lg border border-[#0fa055]/30 bg-[#2a3040] px-2.5 text-xs font-black text-[#0fa055] hover:bg-[#343b4f]"
+              aria-label="Admin panel"
+              className="trading-mobile-admin flex h-10 items-center gap-1 rounded-lg border border-[#0fa055]/30 bg-[#2a3040] px-2.5 text-xs font-black text-[#0fa055] hover:bg-[#343b4f]"
               title="Admin Panel"
             >
               <ShieldCheck size={14} />
-              ADMIN
+              <span>ADMIN</span>
             </button>
           )}
         </div>
