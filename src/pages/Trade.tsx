@@ -1,3 +1,4 @@
+import { getSynchronizedUnixTimeMs } from "@/lib/serverTimeSync";
 import { isInternalOTC, requestOTCQuote } from "@/lib/otcMarket";
 import { WinningNotifications } from "@/components/trading/WinningNotifications";
 import { winningNotification, type WinningNotification } from "@/lib/winningNotifications";
@@ -567,7 +568,7 @@ const Trade = () => {
     setDemoBalance(readDemoBalanceStorage(user.id));
     setDemoActiveTrades(
       readJsonStorage<ActiveTrade[]>(getDemoActiveTradesStorageKey(user.id), []).map((trade) => {
-        const elapsedSeconds = (Date.now() - new Date(trade.opened_at).getTime()) / 1000;
+        const elapsedSeconds = (getSynchronizedUnixTimeMs() - new Date(trade.opened_at).getTime()) / 1000;
         return {
           ...trade,
           timeLeft: Math.max(0, trade.expiry_seconds - elapsedSeconds),
@@ -691,7 +692,7 @@ const Trade = () => {
     if (demoActiveTrades.length === 0) return;
 
     const timerId = window.setInterval(() => {
-      const now = Date.now();
+      const now = getSynchronizedUnixTimeMs();
       const canResolveDemoTrades = isInternalOTC || latestChartPriceRef.current > 0;
       const settledTrades: TradeHistoryEntry[] = [];
       const settledAnnouncements: ChartSettlementAnnouncement[] = [];
@@ -720,7 +721,7 @@ const Trade = () => {
               const expiry = new Date(trade.opened_at).getTime()/1000 + trade.expiry_seconds;
               void requestOTCQuote(trade.asset_symbol, expiry).then(quote => {
                 demoExpiryQuotes.current.set(trade.id, quote.price);
-              }).catch(() => { demoExpiryRequests.current.set(trade.id, Date.now()+2000); });
+              }).catch(() => { demoExpiryRequests.current.set(trade.id, getSynchronizedUnixTimeMs()+2000); });
             }
             nextTrades.push({...trade,timeLeft:0});
             return nextTrades;
@@ -1138,7 +1139,8 @@ const Trade = () => {
     markerTimeOverride?: number | null,
     markerLogicalOverride?: number | null,
   ) => {
-    if (amount <= 0 || amount > demoBalance) {
+    if (!Number.isFinite(amount) || amount <= 0 || amount > demoBalance) {
+      toast({title: "Demo trade not opened", description: "Enter a positive amount within your available demo balance.", variant: "destructive"});
       return false;
     }
 
@@ -1149,7 +1151,14 @@ const Trade = () => {
         const quote = await requestOTCQuote(assetSymbol);
         currentEntryPrice = quote.price;
         openedAt = new Date(quote.timestamp*1000).toISOString();
-      } catch { return false; }
+      } catch (error) {
+        toast({
+          title: "Demo trade not opened",
+          description: error instanceof Error ? error.message : "OTC pricing is unavailable. Please try again.",
+          variant: "destructive",
+        });
+        return false;
+      }
     }
     const timeframeSeconds = latestChartTimeframesBySymbolRef.current[assetSymbol] ?? 60;
     const clickTimestampSec = Math.floor(Date.now() / 1000);

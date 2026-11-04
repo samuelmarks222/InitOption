@@ -109,6 +109,27 @@ describe("Vercel same-origin OTC transport", () => {
     await vi.advanceTimersByTimeAsync(30000);
     expect(fetch).toHaveBeenCalledTimes(count);
   });
+  it("delivers new server prices at 100ms cadence rather than collapsing five ticks every 500ms", async () => {
+    const a=setup();let cursor=6000;
+    const fetch=vi.fn(async()=>({ok:true,json:async()=>response(a.symbol,cursor===6000?'snapshot':'batch',cursor++,String(cursor))}));
+    vi.stubGlobal('fetch',fetch);a.feed.connect();await vi.advanceTimersByTimeAsync(0);
+    expect(a.onHistory).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(99);expect(a.onTick).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);expect(a.onTick).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(400);expect(a.onTick).toHaveBeenCalledTimes(5);
+    expect(a.onTick.mock.calls.map(([tick])=>tick.sequence)).toEqual([6001,6002,6003,6004,6005]);
+    a.feed.disconnect();await vi.advanceTimersByTimeAsync(1000);
+  });
+  it("measures cadence start-to-start without overlapping slow responses", async () => {
+    const a=setup();const starts:number[]=[];let cursor=6000;
+    vi.stubGlobal('fetch',vi.fn(async()=>{
+      starts.push(performance.now());await new Promise(resolve=>setTimeout(resolve,60));
+      return {ok:true,json:async()=>response(a.symbol,cursor===6000?'snapshot':'batch',cursor++)};
+    }));
+    a.feed.connect();await vi.advanceTimersByTimeAsync(250);
+    expect(starts).toEqual([0,100,200]);expect(a.onTick).toHaveBeenCalledTimes(1);
+    a.feed.disconnect();await vi.advanceTimersByTimeAsync(1100);
+  });
   it("does not overlap requests and never generates prices while a response is pending", async () => {
     const a = setup();
     let finish: (value: any) => void;
