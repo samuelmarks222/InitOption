@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
+  Menu,
   GraduationCap,
   Plus,
   ShieldCheck,
@@ -24,6 +25,8 @@ import {
 export type ProfileTab = "personal" | "deposit" | "support" | "balance_history" | "trading_history" | "settings";
 
 interface TradingHeaderProps {
+  onToggleNavigation?: () => void;
+  navigationExpanded?: boolean;
   balance: number;
   demoBalance: number;
   accountType: AccountType;
@@ -44,6 +47,8 @@ interface TradingHeaderProps {
 }
 
 const TradingHeader = ({
+  onToggleNavigation,
+  navigationExpanded,
   balance,
   demoBalance,
   accountType,
@@ -101,14 +106,14 @@ const TradingHeader = ({
       <button
         id="tour-account-switch"
         onClick={() => setShowAccountDrop((v) => !v)}
-        className="flex h-10 items-center gap-2.5 rounded-[8px] border border-[#384259] bg-[#2a3040] px-3.5"
+        className="flex h-10 lg:h-[34px] items-center gap-2 rounded-[4px] border border-[#384259] bg-[#2a3040] px-2.5"
       >
         <AccountPillIcon size={18} className={accountType === "demo" ? "text-white shrink-0" : "text-[#0fa055] shrink-0"} />
         <div className="text-left leading-none">
-          <p className={`text-[10px] font-black uppercase tracking-wider ${accountBadgeColor}`}>
+          <p className={`text-[9px] font-black uppercase tracking-wide ${accountBadgeColor}`}>
             {accountTitle}
           </p>
-          <p className="mt-0.5 text-[15px] font-black text-white font-sans tracking-tight">
+          <p className="mt-0.5 text-[13px] font-black text-white font-sans tracking-tight">
             {formatMoney(displayBalance)}
           </p>
         </div>
@@ -137,7 +142,7 @@ const TradingHeader = ({
       id="tour-deposit-button"
       data-deposit-trigger="true"
       onClick={onOpenDeposit}
-      className="flex h-10 items-center gap-1.5 shrink-0 rounded-[8px] bg-[#00c853] px-3 sm:px-5 text-[14px] font-black text-white shadow-md shadow-[#00c853]/20 hover:bg-[#00b248] active:scale-95 transition-all"
+      className="flex h-10 lg:h-[34px] items-center gap-1.5 shrink-0 rounded-[4px] bg-[#00c853] px-3 sm:px-3 text-[12px] font-black text-white shadow-md shadow-[#00c853]/20 hover:bg-[#00b248] active:scale-95 transition-all"
     >
       Deposit
     </button>
@@ -146,15 +151,17 @@ const TradingHeader = ({
   const renderWithdrawalButton = () => (
     <button
       onClick={onOpenWithdrawal}
-      className="hidden lg:flex h-10 items-center shrink-0 rounded-[8px] bg-[#4a5366] px-3 sm:px-5 text-[14px] font-black text-white hover:bg-[#576278] active:scale-95 transition-colors"
+      className="hidden lg:flex h-[34px] items-center shrink-0 rounded-[4px] bg-[#4a5366] px-3 sm:px-3 text-[12px] font-black text-white hover:bg-[#576278] active:scale-95 transition-colors"
     >
       Withdrawal
     </button>
   );
 
   return (
-    <header className="relative flex h-[62px] shrink-0 items-center justify-between px-4 bg-[var(--trading-header-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white z-30 select-none">
+    <header className="trading-terminal-header relative flex h-[62px] lg:h-[54px] shrink-0 items-center justify-between px-3 bg-[var(--trading-header-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white z-30 select-none">
 
+      {onToggleNavigation && <button type="button" onClick={onToggleNavigation} aria-label="Toggle navigation" aria-expanded={navigationExpanded}
+        className="absolute left-0 top-0 hidden h-[54px] w-16 items-center justify-center text-white/70 hover:text-white focus-visible:outline focus-visible:outline-sky-400 lg:flex"><Menu size={20} /></button>}
       {/* ── MOBILE layout (hidden on lg+) ── */}
       <div className="flex lg:hidden w-full items-center gap-2 overflow-x-auto no-scrollbar">
         {renderAccountPill()}
@@ -174,7 +181,7 @@ const TradingHeader = ({
       </div>
 
       {/* ── DESKTOP layout (hidden below lg) ── */}
-      <div className="hidden lg:flex w-full items-center justify-between gap-4">
+      <div className={`hidden lg:flex w-full min-w-0 items-center justify-between gap-3 ${onToggleNavigation ? "pl-[60px]" : ""}`}>
 
         {/* Left: Logo + Subtitle */}
         <Link
@@ -185,26 +192,26 @@ const TradingHeader = ({
             <img
               src={logoUrl}
               alt={platformName}
-              className="h-10 w-auto object-contain"
-              style={{ maxWidth: "200px" }}
+              className="h-7 w-auto object-contain"
+              style={{ maxWidth: "150px" }}
               onError={(e) => {
                 (e.target as HTMLElement).style.display = "none";
               }}
             />
           ) : (
-            <span className="font-black text-2xl tracking-tight text-white">{platformName}</span>
+            <span className="font-black text-lg tracking-tight text-white">{platformName}</span>
           )}
           <span className="text-[#3A4659] font-bold text-base">•</span>
-          <span className="text-sm font-bold tracking-wider text-white/40 uppercase whitespace-nowrap">
+          <span className="hidden xl:inline text-[10px] font-bold tracking-wider text-white/35 uppercase whitespace-nowrap">
             WEB TRADING PLATFORM
           </span>
         </Link>
 
         {/* Center: Promo Bonus Banner */}
-        <div className="flex-1 flex justify-center items-center">
+        <div className="hidden min-w-0 flex-1 justify-center items-center xl:flex">
           <button
             onClick={onOpenDeposit}
-            className="group flex items-center gap-2.5 rounded-full bg-[#0fa055] px-5 py-2 text-xs font-extrabold text-white shadow-lg shadow-[#0fa055]/25 hover:bg-[#0d8a49] transition-all transform hover:scale-[1.02] active:scale-95"
+            className="group flex items-center gap-2 rounded-full bg-[#0fa055] px-3 py-1 text-[10px] font-extrabold text-white shadow-lg shadow-[#0fa055]/25 hover:bg-[#0d8a49] transition-all transform hover:scale-[1.02] active:scale-95"
           >
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25 text-sm">🚀</span>
             <span>Get a 50% bonus on your deposit!</span>

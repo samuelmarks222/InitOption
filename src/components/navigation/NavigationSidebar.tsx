@@ -20,22 +20,24 @@ interface NavigationSidebarProps {
   activeWorkspace: WorkspaceModule;
   onSelectWorkspace: (module: WorkspaceModule) => void;
   collapsed?: boolean;
+  showMenuButton?: boolean;
   onToggleCollapsed?: () => void;
 }
 
 type PrimaryNavKey = "trading";
 
 const getNavItemClassName = (collapsed: boolean) =>
-  `group relative flex w-full flex-col items-center justify-center rounded-[10px] transition-all duration-200 ${
-    collapsed ? "h-[48px] gap-0" : "h-[74px] gap-1.5"
+  `group relative flex w-full flex-col items-center justify-center rounded-[4px] transition-all duration-200 ${
+    collapsed ? "h-[48px] gap-0" : "h-[52px] gap-1"
   }`;
-const navIconClassName = "h-[22px] w-[22px] transition-transform duration-200 group-hover:-translate-y-0.5";
-const navLabelClassName = "max-w-[62px] text-center text-[9px] font-black uppercase leading-[1.15] tracking-[0.12em]";
+const navIconClassName = "h-[20px] w-[20px] transition-transform duration-200 group-hover:-translate-y-0.5";
+const navLabelClassName = "max-w-[62px] text-center text-[9px] font-black uppercase leading-[1.15] tracking-[0.02em]";
 
 export const NavigationSidebar = ({
   activeWorkspace,
   onSelectWorkspace,
   collapsed = false,
+  showMenuButton = true,
   onToggleCollapsed,
 }: NavigationSidebarProps) => {
   const { unreadCount } = useNotifications();
@@ -73,13 +75,13 @@ export const NavigationSidebar = ({
   return (
     <div
       className={`relative z-40 flex h-full shrink-0 flex-col items-center overflow-hidden border-r transition-[width] duration-300 ease-out ${
-        collapsed ? "w-[62px]" : "w-[78px]"
+        collapsed ? "w-[48px]" : "w-[64px]"
       }`}
-      style={{ background: "#1b2030", borderRightColor: "#101522" }}
+      style={{ background: "var(--trading-sidebar-bg)", borderRightColor: "#101522" }}
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/25" />
       <div className="relative z-10 flex h-full w-full flex-col items-center">
-        <div className={`w-full ${collapsed ? "px-1 pt-1.5" : "px-2 pt-1.5"}`}>
+        {showMenuButton && <div className={`w-full ${collapsed ? "px-1 pt-1.5" : "px-2 pt-1.5"}`}>
           <button
             type="button"
             onClick={onToggleCollapsed}
@@ -89,7 +91,7 @@ export const NavigationSidebar = ({
           >
             <Menu className="h-5 w-5 transition-transform duration-200 group-hover:-translate-y-0.5" strokeWidth={2.45} />
           </button>
-        </div>
+        </div>}
 
         <nav className={`w-full space-y-2 ${collapsed ? "px-1 pt-1" : "px-2 pt-1"}`} aria-label="Primary workspace navigation">
           {PRIMARY_ITEMS.map((item) => {
@@ -107,14 +109,14 @@ export const NavigationSidebar = ({
                 title={collapsed ? item.label : undefined}
                 className={`${getNavItemClassName(collapsed)} ${
                   isActive
-                    ? "bg-[#596273] text-white shadow-[0_8px_18px_rgba(89,98,115,0.24)]"
+                    ? "bg-[#087bcb] text-white"
                     : "text-white hover:bg-white/[0.045]"
                 }`}
               >
                 <span className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border ${
                   isActive
-                    ? "border-[#8c98ad] bg-[#727d90] text-white"
-                    : "border-[#2a3652] bg-[#111a2d] text-[#dfeafc]"
+                    ? "border-transparent bg-transparent text-white"
+                    : "border-transparent bg-transparent text-[#dfeafc]"
                 }`}>
                   <Icon
                     className={`${navIconClassName} ${isActive ? "text-white" : "text-current"}`}
@@ -129,7 +131,7 @@ export const NavigationSidebar = ({
           })}
         </nav>
 
-        <nav className={`flex w-full flex-1 flex-col items-center gap-2 overflow-y-auto pb-3 pt-2 no-scrollbar ${collapsed ? "px-1" : "px-2"}`} aria-label="Secondary workspace navigation">
+        <nav className={`flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto pb-3 pt-2 no-scrollbar ${collapsed ? "px-1" : "px-2"}`} aria-label="Secondary workspace navigation">
           {SECONDARY_ITEMS.map((item) => {
             const isActive = activeWorkspace === item.id;
             const Icon = item.icon;
@@ -155,7 +157,7 @@ export const NavigationSidebar = ({
                 <span className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border ${
                   isActive
                     ? "border-[#5ca4ff] bg-[#1c3f6a] text-white"
-                    : "border-[#2a3652] bg-[#111a2d] text-[#dfeafc]"
+                    : "border-transparent bg-transparent text-[#dfeafc]"
                 }`}>
                   <Icon className={navIconClassName} strokeWidth={2.35} />
                 </span>
@@ -180,16 +182,16 @@ export const NavigationSidebar = ({
                   title={collapsed ? item.label : undefined}
                 className={`${getNavItemClassName(collapsed)} ${
                     isActive
-                      ? "bg-[#596273] text-white shadow-[0_8px_18px_rgba(89,98,115,0.24)]"
+                      ? "bg-[#087bcb] text-white"
                       : item.id === "help"
-                        ? "bg-[#596273] text-white hover:bg-[#687386]"
+                        ? "bg-[#0fa055] text-white hover:bg-[#0d8a49]"
                         : "text-white hover:bg-white/[0.045]"
                   }`}
                 >
                   <span className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border ${
                     isActive || item.id === "help"
                       ? "border-transparent bg-white/12 text-white"
-                      : "border-[#2a3652] bg-[#111a2d] text-[#dfeafc]"
+                      : "border-transparent bg-transparent text-[#dfeafc]"
                   }`}>
                     <Icon className={navIconClassName} strokeWidth={2.35} />
                   </span>
