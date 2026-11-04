@@ -1,4 +1,26 @@
-# Dashboard reference alignment
+# Current refinement: balanced desktop density
+
+The user subsequently requested smaller, more balanced controls rather than the
+large reference-scale UI. This supersedes the exact-reference sizing recorded
+below. The desktop layout now uses:
+
+- 58–64px header; 68–76px expanded navigation rail.
+- 52–56px asset strip with 40px tabs and a 38px add button.
+- 216–232px order panel, retaining separate order/history cards.
+- 44px Time/Investment fields and Buy/Sell buttons; 16px field text.
+- Smaller 21px navigation icons, 9px labels and consistent 8–14px spacing.
+- 44px sentiment rail, with toolbar offsets derived from the same constant.
+- Short desktop windows scroll the order form when needed, preserving history
+  access and action-target sizes. Desktop-only overrides leave mobile sizing alone.
+
+No chart prices, tick handling, account data, trade execution or workspace
+functionality is changed. The table below documents the **previous** large layout,
+not measurements of this refinement. Authenticated visual verification of the
+new layout remains pending.
+
+---
+
+# Previous reference-scale layout
 
 The latest supplied reference is `quotex.com_en_demo-trade(Nest Hub Max).png`,
 1568 × 980. The earlier 54px-header / 64px-navigation / 188px-order-panel compact
