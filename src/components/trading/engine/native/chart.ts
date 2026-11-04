@@ -1,10 +1,13 @@
 /** Independent Canvas 2D chart. The adapter retains the dashboard's coordinate contract;
  * no runtime code from a third-party chart renderer is used. */
 import type { IChartApi, SeriesDefinition, ColorType as LegacyColorType } from 'lightweight-charts';
+import { snap, activePriceGeometry, zoomRange, wheelFactor } from './frameMath';
 import { PriceCoordinates, TimeCoordinates } from './scales';
 
 type Options = Record<string, any>;
 type Datum = { time: number; value?: number; open?: number; high?: number; low?: number; close?: number; color?: string };
+type NavigationInput = {kind:"pan";dx:number} | {kind:"time"|"price";factor:number;x:number;y:number};
+type ActiveFrame = {time:number;value:number;x:number;y:number};
 type Listener = (event: any) => void;
 export const ColorType = { Solid: 'solid' as LegacyColorType, VerticalGradient: 'gradient' as LegacyColorType } as const;
 export const CrosshairMode = { Normal: 0, Magnet: 1, Hidden: 2 } as const;
@@ -65,6 +68,11 @@ class NativeChart {
   readonly config: Options;
   private frame = 0;
   private disposed = false;
+  private isTicking = false;
+  private rendering = false;
+  private renderAgain = false;
+  private pendingInputs: NavigationInput[] = [];
+  private pendingCross = false;
   private initialized = false;
   private rangeListeners = new Set<Listener>();
   private timeListeners = new Set<Listener>();
@@ -82,6 +90,7 @@ class NativeChart {
     this.canvas.setAttribute('role', 'img'); this.canvas.setAttribute('aria-label', 'Interactive market price chart');
     host.appendChild(this.canvas);
     this.listen('dblclick', ((e: MouseEvent) => {
+      this.pendingInputs=[];this.pendingCross=false;
       if (this.point(e).x > this.time.width) this.priceScale().applyOptions({autoScale:true});
       else this.timeScale().fitContent();
     }) as EventListener);
@@ -102,8 +111,14 @@ class NativeChart {
   private event(point: { x: number; y: number }) {
     const logical = this.time.coordinateToLogical(point.x);
     const time = this.time.logicalToTime(logical);
-    return { point, logical, time, seriesData: new Map(this.series.map(s => [s, s.rows.find(r => r.time === this.time.times[Math.round(logical)])])) };
-  }
+    const candleTime=this.time.times[Math.round(logical)];
+    const seriesData=new Map(this.series.map(series=>{
+      let low=0,high=series.rows.length;
+      while(low<high){const mid=(low+high)>>>1;if(series.rows[mid].time<candleTime)low=mid+1;else high=mid;}
+      return [series,series.rows[low]?.time===candleTime?series.rows[low]:undefined] as const;
+    }));
+    return {point,logical,time,seriesData};
+  };
   private down = (e: PointerEvent) => {
     const p = this.point(e); this.touches.set(e.pointerId, p);
     this.canvas.setPointerCapture(e.pointerId);
@@ -128,41 +143,55 @@ class NativeChart {
         this.drag.y = p.y;
       }
       else {
-        const delta = (p.x - this.drag.x) / this.time.spacing;
-        this.setRange({ from: this.drag.from - delta, to: this.drag.to - delta });
+        this.enqueue({kind:"pan",dx:p.x-this.drag.x});
+        this.drag.x=p.x;
       }
     }
-    this.crossListeners.forEach(fn => fn(this.event(p))); this.invalidate();
+    this.pendingCross=true;this.invalidate();
   };
   private up = (e: PointerEvent) => { this.touches.delete(e.pointerId); this.drag = null; this.pinchDistance = 0; };
+  private enqueue(input: NavigationInput) {
+    const last=this.pendingInputs[this.pendingInputs.length-1];
+    if(input.kind==="pan" && last?.kind==="pan")last.dx+=input.dx;
+    else this.pendingInputs.push(input);
+    this.invalidate();
+  }
+  private flushInputs() {
+    let range={from:this.time.from,to:this.time.to};
+    const inputs=this.pendingInputs.splice(0);
+    for(const input of inputs){
+      if(input.kind==="pan"){
+        const delta=input.dx*(range.to-range.from)/this.time.width;
+        range={from:range.from-delta,to:range.to-delta};
+      } else if(input.kind==="time")range=zoomRange(range,this.time.width,input.factor,input.x);
+      else {this.price.zoomAt(input.factor,input.y);this.config.rightPriceScale.autoScale=false;}
+    }
+    if(inputs.length)this.setRange(range);
+    const cross=this.pendingCross;this.pendingCross=false;
+    if(cross && this.pointer){
+      const event=this.event(this.pointer);
+      this.crossListeners.forEach(fn=>fn(event));
+    }
+  }
   zoomPrice(factor: number, y = this.price.height / 2) {
-    this.price.zoomAt(factor, y); this.config.rightPriceScale.autoScale = false; this.invalidate();
+    if(Number.isFinite(factor)&&factor>0&&Number.isFinite(y))this.enqueue({kind:"price",factor,x:0,y});
   }
   zoom(factor: number, x?: number, _y?: number) {
     if (!Number.isFinite(factor) || factor <= 0) return;
     const last = this.time.timeToLogical(this.series[0]?.rows.at(-1)?.time ?? NaN);
-    // Buttons keep the latest candle anchored when following live. Wheel/pinch
-    // pass an explicit cursor/midpoint and preserve that time position instead.
     x ??= last !== null && this.time.to >= last && this.time.from <= last
       ? this.time.logicalToCoordinate(last) : this.time.width / 2;
-    if (!Number.isFinite(x)) return;
-    x = Math.max(0, Math.min(this.time.width, x));
-    const span = this.time.to - this.time.from;
-    const count = Math.max(8, Math.min(5000, span * factor));
-    if (Math.abs(count - span) < 1e-7) return;
-    const anchor = this.time.coordinateToLogical(x), ratio = x / this.time.width;
-    this.setRange({ from: anchor - count * ratio, to: anchor + count * (1-ratio) });
-    this.invalidate();
+    if(Number.isFinite(x))this.enqueue({kind:"time",factor,x,y:0});
   }
   private wheel = (e: WheelEvent) => {
-    e.preventDefault(); const p = this.point(e);
+    e.preventDefault(); if(!Number.isFinite(e.deltaY)||e.deltaY===0&&e.deltaX===0)return; const p = this.point(e);
     const enabled = this.config.handleScale !== false && this.config.handleScale?.mouseWheel !== false;
     if (e.ctrlKey || p.x > this.time.width) {
-      if (enabled) this.zoomPrice(Math.exp(e.deltaY * .0015), p.y);
+      if (enabled && e.deltaY!==0) this.zoomPrice(wheelFactor(e.deltaY), p.y);
       return;
     }
-    if (enabled && Math.abs(e.deltaY) > Math.abs(e.deltaX) && !e.shiftKey) this.zoom(Math.exp(e.deltaY * .0015), p.x);
-    else if (this.config.handleScroll !== false) { const delta = (e.deltaX || e.deltaY) / this.time.spacing; this.setRange({ from: this.time.from + delta, to: this.time.to + delta }); }
+    if (enabled && Math.abs(e.deltaY) > Math.abs(e.deltaX) && !e.shiftKey) this.zoom(wheelFactor(e.deltaY), p.x);
+    else if (this.config.handleScroll !== false) { this.enqueue({kind:"pan",dx:-(e.deltaX || e.deltaY)}); }
   };
   container() { return this.host; }
   chartElement() { return this.host; }
@@ -240,8 +269,19 @@ class NativeChart {
   unsubscribeClick(fn: Listener) { this.clickListeners.delete(fn); }
   subscribeCrosshairMove(fn: Listener) { this.crossListeners.add(fn); }
   unsubscribeCrosshairMove(fn: Listener) { this.crossListeners.delete(fn); }
-  remove() { this.disposed = true; cancelAnimationFrame(this.frame); this.cleanup.forEach(fn => fn()); this.canvas.remove(); this.rangeListeners.clear(); this.timeListeners.clear(); this.sizeListeners.clear(); this.clickListeners.clear(); this.crossListeners.clear(); }
-  invalidate() { if (this.frame || this.disposed) return; this.frame = requestAnimationFrame(() => { this.frame = 0; this.render(); }); }
+  remove() { this.disposed = true; cancelAnimationFrame(this.frame); this.pendingInputs=[];this.pendingCross=false;this.isTicking=false; this.cleanup.forEach(fn => fn()); this.canvas.remove(); this.rangeListeners.clear(); this.timeListeners.clear(); this.sizeListeners.clear(); this.clickListeners.clear(); this.crossListeners.clear(); }
+  invalidate() {
+    if(this.disposed)return;
+    if(this.isTicking){if(this.rendering)this.renderAgain=true;return;}
+    this.isTicking=true;
+    this.frame=requestAnimationFrame(()=>{
+      try{this.flushInputs();if(!this.disposed){this.rendering=true;this.render();}}
+      finally{
+        this.rendering=false;this.isTicking=false;this.frame=0;
+        if(this.pendingInputs.length||this.pendingCross||this.renderAgain){this.renderAgain=false;this.invalidate();}
+      }
+    });
+  }
   format(price: number, series = this.series[0]) { const format = series?.config.priceFormat; return format?.formatter ? format.formatter(price) : price.toFixed(format?.precision ?? 5); }
   private render() {
     const ctx = this.canvas.getContext('2d'); if (!ctx) return;
@@ -276,7 +316,7 @@ class NativeChart {
       const y=this.price.priceToCoordinate(value);
       if(this.config.grid.horzLines?.visible!==false)this.stroke(ctx,0,y,w,y,this.config.grid.horzLines?.color || '#243044');
       ctx.fillStyle=this.config.layout.textColor;
-      if(this.config.rightPriceScale.visible!==false)ctx.fillText(this.format(value),w+7,y+4);
+      if(this.config.rightPriceScale.visible!==false)ctx.fillText(this.format(value),snap(w+7),snap(y+4));
     }
     const from=this.time.logicalToTime(this.time.from),to=this.time.logicalToTime(this.time.to);
     if(from!==null && to!==null){
@@ -286,15 +326,26 @@ class NativeChart {
         const x=this.time.logicalToCoordinate(logical);
         if(this.config.grid.vertLines?.visible!==false)this.stroke(ctx,x,0,x,h,this.config.grid.vertLines?.color || '#243044');
         ctx.fillStyle=this.config.layout.textColor;
-        if(this.config.timeScale.visible!==false){const label=this.config.timeScale.tickMarkFormatter?.(value) || new Date(value*1000).toISOString().slice(11,19);ctx.fillText(String(label),Math.max(0,x-24),h+18);}
+        if(this.config.timeScale.visible!==false){const label=this.config.timeScale.tickMarkFormatter?.(value) || new Date(value*1000).toISOString().slice(11,19);ctx.fillText(String(label),snap(Math.max(0,x-24)),snap(h+18));}
       }
     }
-    ctx.save(); ctx.beginPath(); ctx.rect(0,0,w,h); ctx.clip();
-    for (const s of visible) this.drawSeries(ctx,s);
+    const activeFrames=new Map<NativeSeries,ActiveFrame>();
+    for(const series of visible){
+      const last=series.rows[series.rows.length-1],value=last?.close??last?.value;
+      if(!last||!Number.isFinite(value))continue;
+      const lastIndex=this.time.timeToLogical(last.time);if(lastIndex===null)continue;
+      const candleWidth=this.time.spacing*.72,candleSpacing=this.time.spacing-candleWidth;
+      const offsetX=this.time.logicalToCoordinate(0)-candleWidth/2;
+      const rawCalculatedY=this.price.priceToCoordinate(value!);
+      activeFrames.set(series,{time:last.time,value:value!,...activePriceGeometry(rawCalculatedY,offsetX,lastIndex,candleWidth,candleSpacing)});
+    }
+    ctx.save(); ctx.beginPath(); ctx.rect(0,0,snap(w),snap(h)); ctx.clip();
+    for (const s of visible) this.drawSeries(ctx,s,activeFrames.get(s));
     for (const s of visible) {
       for (const line of s.lines) { const o = line.options(); if (o.lineVisible === false) continue; this.stroke(ctx,0,this.price.priceToCoordinate(o.price),w,this.price.priceToCoordinate(o.price),o.color || '#94a3b8',o.lineWidth || 1,o.lineStyle); }
-      const last = s.rows[s.rows.length-1]; const value = last?.close ?? last?.value;
-      if (value !== undefined && s.config.priceLineVisible !== false) this.stroke(ctx,0,this.price.priceToCoordinate(value),w,this.price.priceToCoordinate(value),s.config.priceLineColor || s.config.lineColor || '#6b8afd',1,2);
+      const active=activeFrames.get(s);
+      if(active && active.x>=0 && active.x<=snap(w) && s.config.priceLineVisible!==false)
+        this.stroke(ctx,active.x,active.y,w,active.y,s.config.priceLineColor || s.config.lineColor || '#6b8afd',1,2);
     }
     if (this.pointer && this.config.crosshair?.mode !== CrosshairMode.Hidden) {
       this.stroke(ctx,this.pointer.x,0,this.pointer.x,h,'#8190a4',1,2);
@@ -302,14 +353,14 @@ class NativeChart {
     }
     ctx.restore();
     for (const s of visible) {
-      const last = s.rows[s.rows.length-1]; const value = last?.close ?? last?.value;
-      if (value !== undefined && s.config.lastValueVisible !== false) this.label(ctx,this.format(value,s),this.price.priceToCoordinate(value),s.config.lineColor || (last.close! >= last.open! ? s.config.upColor : s.config.downColor) || '#5677e8');
+      const active=activeFrames.get(s),last=s.rows[s.rows.length-1];
+      if(active && s.config.lastValueVisible!==false)this.label(ctx,this.format(active.value,s),active.y,s.config.lineColor || (last.close!>=last.open!?s.config.upColor:s.config.downColor) || '#5677e8');
       for (const line of s.lines) { const o = line.options(); if (o.axisLabelVisible !== false) this.label(ctx,this.format(o.price,s),this.price.priceToCoordinate(o.price),o.color || '#5677e8'); }
     }
     if (this.pointer && this.pointer.y < h) this.label(ctx,this.format(this.price.coordinateToPrice(this.pointer.y)),this.pointer.y,'#46536a');
   }
-  private label(ctx: CanvasRenderingContext2D,text: string,y: number,color: string) { if (y < 0 || y > this.price.height || this.config.rightPriceScale.visible === false) return; ctx.fillStyle=color; ctx.fillRect(this.time.width,y-10,80,20); ctx.fillStyle='#fff'; ctx.fillText(text,this.time.width+5,y+4); }
-  private stroke(ctx: CanvasRenderingContext2D,x1: number,y1: number,x2: number,y2: number,color: string,width=1,style=0) { ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=width; ctx.setLineDash(style === 1 ? [1,3] : style ? [5,4] : []); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.setLineDash([]); }
+  private label(ctx: CanvasRenderingContext2D,text: string,y: number,color: string) { if (y < 0 || y > this.price.height || this.config.rightPriceScale.visible === false) return; ctx.fillStyle=color; ctx.fillRect(snap(this.time.width),snap(y)-10,80,20); ctx.fillStyle='#fff'; ctx.fillText(text,snap(this.time.width)+5,snap(y)+4); }
+  private stroke(ctx: CanvasRenderingContext2D,x1: number,y1: number,x2: number,y2: number,color: string,width=1,style=0) { ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=width; ctx.setLineDash(style === 1 ? [1,3] : style ? [5,4] : []); ctx.moveTo(snap(x1),snap(y1)); ctx.lineTo(snap(x2),snap(y2)); ctx.stroke(); ctx.setLineDash([]); }
   /** Binary-search the visible time window; paints must not scan full retained history. */
   private visibleRows(series: NativeSeries): Datum[] {
     const from = this.time.logicalToTime(this.time.from - 1);
@@ -322,15 +373,15 @@ class NativeChart {
     };
     return series.rows.slice(lower(from), lower(to + Number.EPSILON * Math.max(1, Math.abs(to))));
   }
-  private drawSeries(ctx: CanvasRenderingContext2D,s: NativeSeries) {
+  private drawSeries(ctx: CanvasRenderingContext2D,s: NativeSeries,active?:ActiveFrame) {
     const o = s.config, points: { x: number; y: number; row: Datum }[] = [];
     const body = Math.max(1, this.time.spacing*.72), half = body/2;
     for (const row of this.visibleRows(s)) {
       const index = this.time.timeToLogical(row.time)!;
       if (index < this.time.from-1 || index > this.time.to+1) continue;
-      const x = this.time.logicalToCoordinate(index), value = row.value ?? row.close;
+      const x = active?.time===row.time?active.x:this.time.logicalToCoordinate(index), value = row.value ?? row.close;
       if (!Number.isFinite(value)) continue;
-      const y = this.price.priceToCoordinate(value!);
+      const y = active?.time===row.time?active.y:this.price.priceToCoordinate(value!);
       if (s.kind === 'Candlestick' || s.kind === 'Bar') {
         if (![row.open,row.high,row.low,row.close].every(Number.isFinite)) continue;
         const up = row.close! >= row.open!, color = up ? o.upColor || '#22c58b' : o.downColor || '#ef5350';
@@ -338,20 +389,20 @@ class NativeChart {
         if (s.kind === 'Bar') { this.stroke(ctx,x,high,x,low,color); if (o.openVisible !== false) this.stroke(ctx,x-half,open,x,open,color); this.stroke(ctx,x,y,x+half,y,color); }
         else {
           if (o.wickVisible !== false) this.stroke(ctx,x,high,x,low,up ? o.wickUpColor || color : o.wickDownColor || color);
-          ctx.fillStyle=color; ctx.fillRect(x-half,Math.min(open,y),body,Math.max(1,Math.abs(open-y)));
-          if (o.borderVisible) { ctx.strokeStyle=up ? o.borderUpColor || color : o.borderDownColor || color; ctx.lineWidth=1; ctx.strokeRect(x-half,Math.min(open,y),body,Math.max(1,Math.abs(open-y))); }
+          ctx.fillStyle=color; ctx.fillRect(snap(x-half),snap(Math.min(open,y)),Math.max(1,snap(x+half)-snap(x-half)),Math.max(1,Math.abs(snap(open)-snap(y))));
+          if (o.borderVisible) { ctx.strokeStyle=up ? o.borderUpColor || color : o.borderDownColor || color; ctx.lineWidth=1; ctx.strokeRect(snap(x-half),snap(Math.min(open,y)),Math.max(1,snap(x+half)-snap(x-half)),Math.max(1,Math.abs(snap(open)-snap(y)))); }
         }
-      } else if (s.kind === 'Histogram') { const base=this.price.priceToCoordinate(o.base ?? 0); ctx.fillStyle=row.color || o.color || '#6789ee'; ctx.fillRect(x-half,Math.min(base,y),body,Math.max(1,Math.abs(base-y))); }
+      } else if (s.kind === 'Histogram') { const base=this.price.priceToCoordinate(o.base ?? 0); ctx.fillStyle=row.color || o.color || '#6789ee'; ctx.fillRect(snap(x-half),snap(Math.min(base,y)),Math.max(1,snap(x+half)-snap(x-half)),Math.max(1,Math.abs(snap(base)-snap(y)))); }
       else points.push({x,y,row});
     }
     if (!points.length) return;
     if (s.kind === 'Area' || s.kind === 'Baseline') {
-      ctx.beginPath(); points.forEach((p,i) => i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y));
+      ctx.beginPath(); points.forEach((p,i) => i ? ctx.lineTo(snap(p.x),snap(p.y)) : ctx.moveTo(snap(p.x),snap(p.y)));
       const baseY = s.kind === 'Baseline' ? this.price.priceToCoordinate(o.baseValue?.price ?? 0) : this.price.height;
-      ctx.lineTo(points[points.length-1].x,baseY); ctx.lineTo(points[0].x,baseY); ctx.closePath();
+      ctx.lineTo(snap(points[points.length-1].x),snap(baseY)); ctx.lineTo(snap(points[0].x),snap(baseY)); ctx.closePath();
       const gradient=ctx.createLinearGradient(0,0,0,this.price.height); gradient.addColorStop(0,o.topColor || o.topFillColor1 || 'rgba(70,120,230,.35)'); gradient.addColorStop(1,o.bottomColor || o.bottomFillColor2 || 'rgba(70,120,230,0)'); ctx.fillStyle=gradient; ctx.fill();
     }
-    if (o.lineVisible !== false) { ctx.beginPath(); points.forEach((p,i) => i ? ctx.lineTo(p.x,p.y) : ctx.moveTo(p.x,p.y)); ctx.strokeStyle=o.lineColor || o.color || o.topLineColor || '#6789ee'; ctx.lineWidth=o.lineWidth || 2; ctx.setLineDash(o.lineStyle ? [4,4] : []); ctx.stroke(); ctx.setLineDash([]); }
+    if (o.lineVisible !== false) { ctx.beginPath(); points.forEach((p,i) => i ? ctx.lineTo(snap(p.x),snap(p.y)) : ctx.moveTo(snap(p.x),snap(p.y))); ctx.strokeStyle=o.lineColor || o.color || o.topLineColor || '#6789ee'; ctx.lineWidth=o.lineWidth || 2; ctx.setLineDash(o.lineStyle ? [4,4] : []); ctx.stroke(); ctx.setLineDash([]); }
   }
 }
 /** Narrow compatibility boundary: consumers retain their existing type-only contract. */

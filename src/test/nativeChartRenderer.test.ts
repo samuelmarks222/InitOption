@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
+import { PriceCoordinates } from '@/components/trading/engine/native/scales';
 import { liveViewport } from '@/components/trading/engine/native/viewport';
 import { createChart, setChartInterval, zoomChart, zoomPriceScale, CandlestickSeries, AreaSeries, BarSeries, LineSeries, HistogramSeries } from '@/components/trading/engine/native/chart';
 let context: any;
@@ -88,7 +89,7 @@ describe('native canvas renderer integration', () => {
     vi.advanceTimersByTime(20);
     expect(chart.timeScale().getVisibleLogicalRange()).toEqual(horizontal);
     expect(series.coordinateToPrice(100)).toBeCloseTo(price);
-    expect(series.coordinateToPrice(0)!-series.coordinateToPrice(374)!).toBeCloseTo(span*Math.exp(-.15));
+    expect(series.coordinateToPrice(0)!-series.coordinateToPrice(374)!).toBeCloseTo(span/1.12);
     series.update({time:120 as any,open:102,high:120,low:90,close:104});vi.advanceTimersByTime(20);
     expect(series.coordinateToPrice(100)).toBeCloseTo(price);
     chart.priceScale('right').applyOptions({autoScale:true});vi.advanceTimersByTime(20);
@@ -177,6 +178,52 @@ describe('native canvas renderer integration', () => {
     const x=chart.timeScale().timeToCoordinate(120 as any);
     zoomChart(chart,.7);vi.advanceTimersByTime(20);expect(chart.timeScale().timeToCoordinate(120 as any)).toBeCloseTo(Number(x));
     chart.remove();
+  });
+  it('uses one active-price Y for the latest-candle segment and native badge, grounding drawing coordinates', () => {
+    const chart=createChart(host(),{width:800,height:400});
+    const series=chart.addSeries(CandlestickSeries);
+    const price=104.12345;
+    series.setData([{time:60 as any,open:100.1,high:108.2,low:95.3,close:102.4},{time:120 as any,open:102.2,high:109.7,low:98.2,close:price}]);
+    chart.timeScale().setVisibleLogicalRange({from:-10.3,to:30.7});
+    const mapping=vi.spyOn(PriceCoordinates.prototype,'priceToCoordinate');
+    vi.advanceTimersByTime(20);
+    expect(mapping.mock.calls.filter(([p])=>p===price)).toHaveLength(1);
+    const x=Math.round(Number(chart.timeScale().timeToCoordinate(120 as any)));
+    const badge=context.fillRect.mock.calls.find(([left])=>left===720);
+    expect(badge).toBeTruthy();
+    const y=badge[1]+10;
+    expect(context.moveTo).toHaveBeenCalledWith(x,y);
+    expect(context.lineTo).toHaveBeenCalledWith(720,y);
+    for(const method of ['moveTo','lineTo','fillRect','strokeRect'])for(const call of context[method].mock.calls)
+      expect(call.every((value:unknown)=>typeof value==='number'&&Number.isInteger(value))).toBe(true);
+    chart.remove();
+  });
+  it('batches wheel, fractional pan and crosshair work into one frame without direct input-thread notifications', () => {
+    const el=host(),chart=createChart(el,{width:800,height:400});
+    const series=chart.addSeries(CandlestickSeries);
+    series.setData(Array.from({length:100},(_,i)=>({time:(60+i*60) as any,open:100,high:108,low:95,close:102})));
+    chart.timeScale().setVisibleLogicalRange({from:20,to:60});vi.advanceTimersByTime(20);
+    const rangeListener=vi.fn(),crossListener=vi.fn();
+    chart.timeScale().subscribeVisibleLogicalRangeChange(rangeListener);chart.subscribeCrosshairMove(crossListener);
+    const canvas=el.querySelector('canvas')!;canvas.setPointerCapture=vi.fn();
+    const pointer=(type:string,x:number)=>{const event=new MouseEvent(type,{clientX:x,clientY:180});Object.defineProperty(event,'clientX',{value:x});Object.defineProperty(event,'pointerId',{value:1});canvas.dispatchEvent(event);};
+    pointer('pointerdown',300);
+    for(let i=1;i<=20;i++)pointer('pointermove',300+i*.125);
+    pointer('pointerup',302.5);
+    expect(rangeListener).not.toHaveBeenCalled();expect(crossListener).not.toHaveBeenCalled();
+    const paints=context.clearRect.mock.calls.length;
+    vi.advanceTimersByTime(16);
+    expect(rangeListener).toHaveBeenCalledOnce();expect(crossListener).toHaveBeenCalledOnce();
+    expect(chart.timeScale().getVisibleLogicalRange()!.from).toBeCloseTo(20-2.5/18);
+    expect(context.clearRect.mock.calls.length-paints).toBe(1);
+    rangeListener.mockClear();
+    const before=chart.timeScale().getVisibleLogicalRange()!;
+    for(let i=0;i<3;i++)canvas.dispatchEvent(new WheelEvent('wheel',{deltaY:-1,clientX:360,clientY:180,cancelable:true}));
+    expect(chart.timeScale().getVisibleLogicalRange()).toEqual(before);
+    vi.advanceTimersByTime(16);
+    const after=chart.timeScale().getVisibleLogicalRange()!;
+    expect(after.to-after.from).toBeCloseTo(40/(1.12**3));expect(rangeListener).toHaveBeenCalledOnce();
+    chart.remove();expect(vi.getTimerCount()).toBe(0);
   });
   it('retains viewport across replacement series, aligns overlays, and disposes canvas', () => {
     const el=host(); const chart=createChart(el,{width:800,height:400});
