@@ -1493,7 +1493,7 @@ const Trade = () => {
           <WinningNotifications results={winNotifications} onDismiss={dismissWinNotification} />
           <GuidedTour enabled={tourEnabled} />
           <PlatformTourOverlay />
-          <TradingHeader balance={currentBalance} demoBalance={demoBalance} accountType={accountType}
+          <TradingHeader onToggleNavigation={() => setLeftPanelOpen(current => !current)} navigationExpanded={leftPanelOpen} balance={currentBalance} demoBalance={demoBalance} accountType={accountType}
           onSwitchAccount={handleSwitchAccount} activeTabId={activeTabId} onSelectTab={handleSelectTab}
           openTabs={openTabs} onRemoveTab={handleRemoveTab} onAddAssetClick={() => setShowAssetSelector(true)}
           onOpenDeposit={openDepositPage}
@@ -1523,6 +1523,7 @@ const Trade = () => {
                 activeWorkspace={activeWorkspace}
                 onSelectWorkspace={setActiveWorkspace}
                 collapsed={!leftPanelOpen}
+                showMenuButton={false}
                 onToggleCollapsed={() => setLeftPanelOpen((current) => !current)}
               />
             </div>

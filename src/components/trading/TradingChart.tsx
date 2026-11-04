@@ -143,11 +143,11 @@ export interface ChartOrderAnnouncement {
   amount: number;
 }
 
-const PROFESSIONAL_CHART_BG = "#1e2131";
+const PROFESSIONAL_CHART_BG = "#1c1f2b";
 const PROFESSIONAL_CHART_PANEL = "#23283b";
 const PROFESSIONAL_CHART_TEXT = "#eef3fb";
 const PROFESSIONAL_CHART_MUTED_TEXT = "#96a4b9";
-const PROFESSIONAL_CHART_GRID = "rgba(143, 164, 210, 0.08)";
+const PROFESSIONAL_CHART_GRID = "rgba(153, 160, 183, 0.12)";
 const PROFESSIONAL_CHART_BORDER = "rgba(143, 164, 210, 0.14)";
 const PROFESSIONAL_UP_COLOR = "#10a055";
 const PROFESSIONAL_DOWN_COLOR = "#e85b4e";

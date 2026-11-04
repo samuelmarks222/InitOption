@@ -1,14 +1,12 @@
-import { isInternalOTC, marketWebSocketUrl, subscribeOTCQuotes } from "@/lib/otcMarket";
-import { observedHistory } from "./engine/native/observedHistory";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import type { ActiveTrade } from "@/hooks/useTrading";
 import { useDynamicAssets } from "@/contexts/DynamicAssetContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { formatCurrencyAmount } from "@/lib/currency";
 import { getLiveAssetTradeSummary } from "@/lib/liveTradeSummary";
-import { getDeterministicPriceAt } from "@/lib/deterministicMarket";
 import { Asset } from "./data/assets";
+import AssetSymbolMark from "./AssetSymbolMark";
 
 interface AssetInfoProps {
   asset: Asset & { price: number; change: number };
@@ -35,70 +33,6 @@ const getTradeProgressPercent = (trade?: ActiveTrade | null) => {
   return Math.min(100, Math.max(0, (elapsed / trade.expiry_seconds) * 100));
 };
 
-// Internal OTC sparklines project the same received server history as the chart.
-// Tints green/red while the asset has a live winning/losing position.
-const TabSparkline = ({ symbol, category, basePrice, tone }: { symbol: string; category?: string | null; basePrice: number; tone?: "up" | "down" | null }) => {
-  const [revision, setRevision] = useState(0);
-  useEffect(() => {
-    if (!isInternalOTC) return;
-    return subscribeOTCQuotes(quote => { if (quote.symbol === symbol) setRevision(value => value+1); });
-  }, [symbol]);
-  const lineColor = tone === "up" ? "#18d87d" : tone === "down" ? "#ff6a72" : "#2ea3f2";
-  const coords = useMemo(() => {
-    const now = Math.floor(Date.now() / 1000);
-    const N = 48;
-    const spanSec = 2 * 60 * 60;
-    const step = spanSec / (N - 1);
-    const safeBase = Number.isFinite(basePrice) && basePrice > 0 ? basePrice : 1;
-    const prices: number[] = [];
-    if (isInternalOTC) {
-      const source = marketWebSocketUrl();
-      const snapshot = source ? observedHistory.snapshot(source, symbol, 5, now, N) : null;
-      const bars = snapshot ? [...snapshot.history, ...(snapshot.current ? [snapshot.current] : [])].slice(-N) : [];
-      prices.push(...bars.map(bar => bar.close));
-    }
-    for (let i = 0; !isInternalOTC && i < N; i++) {
-      try {
-        prices.push(getDeterministicPriceAt({ symbol, basePrice: safeBase, timestamp: now - spanSec + i * step, category }));
-      } catch {
-        prices.push(safeBase);
-      }
-    }
-    const min = Math.min(...prices);
-    const max = Math.max(...prices);
-    const range = max - min || 1;
-    return prices
-      .map((p, i) => `${((i / Math.max(1,prices.length - 1)) * 100).toFixed(2)},${(27 - ((p - min) / range) * 26).toFixed(2)}`)
-      .join(" ");
-  }, [symbol, basePrice, category, revision]);
-
-  const gradientId = useMemo(
-    () => `spark-${String(symbol).replace(/[^a-zA-Z0-9]/g, "")}`,
-    [symbol]
-  );
-
-  return (
-    <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="h-full w-full">
-      <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={lineColor} stopOpacity="0.35" />
-          <stop offset="100%" stopColor={lineColor} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon points={`0,28 ${coords} 100,28`} fill={`url(#${gradientId})`} />
-      <polyline
-        points={coords}
-        fill="none"
-        stroke={lineColor}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
-  );
-};
-
 const AssetInfo = ({
   asset,
   onOpenSelector,
@@ -111,7 +45,7 @@ const AssetInfo = ({
   livePrices = {},
 }: AssetInfoProps) => {
   const { getAsset } = useDynamicAssets();
-  const { formatMoney, currency } = useCurrency();
+  const { currency } = useCurrency();
   const tabs = openTabs.length > 0 ? openTabs : [asset];
   const stripRef = useRef<HTMLDivElement | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -148,7 +82,7 @@ const AssetInfo = ({
   };
 
   return (
-    <div className="relative flex h-[64px] shrink-0 items-center justify-between overflow-hidden hidden lg:flex px-3 bg-[var(--trading-tabs-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white select-none">
+    <div className="trading-asset-strip relative flex h-[48px] shrink-0 items-center justify-between overflow-hidden hidden lg:flex px-2 bg-[var(--trading-tabs-bg,#1e2131)] border-b border-[var(--trading-border-color,rgba(143,164,210,0.16))] text-white select-none">
       {/* Scrollable strip */}
       <div
         ref={stripRef}
@@ -157,10 +91,10 @@ const AssetInfo = ({
         {/* Plus button */}
         <button
           onClick={onAddAssetClick ?? onOpenSelector}
-          className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg bg-[#0084FF] text-white shadow-md shadow-[#0084FF]/30 hover:bg-[#0070df] transition-all"
+          className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[5px] bg-[#0084FF] text-white shadow-md shadow-[#0084FF]/30 hover:bg-[#0070df] transition-all"
           title="Add asset pair"
         >
-          <Plus className="h-6 w-6 stroke-[3.5]" />
+          <Plus className="h-5 w-5 stroke-[3]" />
         </button>
 
         {/* Asset tab chips */}
@@ -179,15 +113,15 @@ const AssetInfo = ({
             const payout = Math.round(dynamicTab?.maxProfit ?? tab.maxProfit ?? 82);
 
             const showOtcSuffix = tab.symbol.includes("/") && !tab.symbol.toUpperCase().includes("OTC");
-            const tabLabel = showOtcSuffix ? `${tab.symbol} OTC` : tab.symbol;
+            const tabLabel = showOtcSuffix ? `${tab.symbol} (OTC)` : tab.symbol;
             const liveTone = !hasActiveTrade ? null : isWinningTrade ? "up" : isLosingTrade ? "down" : null;
             const borderClasses = hasActiveTrade && liveTone
               ? liveTone === "up"
                 ? "bg-[#2a3040] border-[#18d87d] shadow-md ring-1 ring-[#18d87d]/40"
                 : "bg-[#2a3040] border-[#E03E3E] shadow-md ring-1 ring-[#E03E3E]/45"
               : isActive
-                ? "bg-[#2a3040] border-[#2ea3f2] shadow-md ring-1 ring-[#2ea3f2]/50"
-                : "bg-[#2a3040] border-[#384259] hover:bg-[#343b4f] hover:border-gray-500/50";
+                ? "bg-[#151721] border-[#454b5e]"
+                : "bg-[#292d3e] border-white/5 hover:bg-[#343849] hover:border-white/20";
 
             // Live P/L text: +$19.20 (winning) or -$0.45 (losing, live value)
             const livePnlText = isWinningTrade
@@ -200,78 +134,31 @@ const AssetInfo = ({
               : null;
 
             return (
-              <div
-                key={tab.symbol}
-                onClick={() => (onSelectTab ? onSelectTab(tab.symbol) : onOpenSelector())}
-                className={`group relative flex h-[54px] w-[150px] shrink-0 cursor-pointer flex-col overflow-hidden rounded-md border transition-all ${borderClasses}`}
-              >
-                {/* Left-edge vertical indicator stripe for active trades */}
-                {hasActiveTrade && (
-                  <span
-                    className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-md"
-                    style={{ background: isWinningTrade ? "#0FA053" : "#E03E3E" }}
-                  />
-                )}
-
-                {/* Header row: close | symbol + OTC | payout */}
-                <div className="flex shrink-0 items-center gap-1 px-1.5 pt-1.5">
-                  {onRemoveTab && (
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); onRemoveTab(tab.symbol); }}
-                      className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-gray-500 opacity-70 transition-all hover:bg-white/15 hover:text-white hover:opacity-100"
-                    >
-                      <X className="h-3 w-3" strokeWidth={2.5} />
-                    </button>
+              <div key={tab.symbol} className={`group relative h-[38px] w-[148px] shrink-0 overflow-hidden rounded-[4px] border ${borderClasses}`}>
+                <button
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => (onSelectTab ? onSelectTab(tab.symbol) : onOpenSelector())}
+                  className="flex h-full w-full items-center gap-2 px-2 pr-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400"
+                >
+                  <AssetSymbolMark symbol={tab.symbol} category={tab.type} flags={tab.flags} size={20} />
+                  <span className="min-w-0 flex-1 leading-tight">
+                    <span className="block truncate text-[10px] font-bold text-white">{tabLabel}</span>
+                    <span className="block text-[10px] font-bold text-[#f5b44b]">{payout}%</span>
+                  </span>
+                  {hasActiveTrade && livePnlText && (
+                    <span className="absolute bottom-1 right-2 text-[9px] font-bold tabular-nums" style={{color:accent}} title={`Investment ${stakeText ?? ''}`}>
+                      {livePnlText}
+                    </span>
                   )}
-                  <span className="min-w-0 flex-1 truncate text-[12px] font-bold uppercase tracking-wide text-white antialiased">
-                    {tabLabel}
-                  </span>
-                  <span className="shrink-0 text-[12px] font-bold antialiased" style={{ color: WIN_COLOR }}>
-                    +{payout}%
-                  </span>
-                </div>
-
-                {/* Sparkline + stake / live P/L overlay */}
-                <div className="relative min-h-0 flex-1">
-                  <div className="pointer-events-none absolute inset-0 px-1.5 pb-1 pt-0.5">
-                    <TabSparkline
-                      symbol={tab.symbol}
-                      category={typeof tab.type === "string" ? tab.type : undefined}
-                      basePrice={Number(dynamicTab?.price ?? currentPrice ?? 1)}
-                      tone={liveTone}
-                    />
-                  </div>
-                  {hasActiveTrade && (stakeText || livePnlText) ? (
-                    <div className="relative z-[1] flex items-center justify-between gap-1 px-1.5 pt-0.5 leading-none">
-                      {stakeText ? (
-                        <span className="text-[12px] font-black text-white">{stakeText}</span>
-                      ) : <span />}
-                      {livePnlText ? (
-                        <span
-                          className="text-[12px] font-black"
-                          style={{ color: accent, textShadow: "0 1px 3px rgba(0,0,0,0.85)" }}
-                        >
-                          {livePnlText}
-                        </span>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-
-                {/* Active trade progress bar at bottom */}
-                {hasActiveTrade && (
-                  <div className="absolute inset-x-1.5 bottom-[3px] h-[3px] overflow-hidden rounded-full bg-black/45">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${progressPercent}%`,
-                        background: accent,
-                        boxShadow: `0 0 6px ${accent}88`,
-                      }}
-                    />
-                  </div>
+                </button>
+                {onRemoveTab && (
+                  <button type="button" aria-label={`Close ${tabLabel}`} onClick={() => onRemoveTab(tab.symbol)}
+                    className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full text-white/40 transition-colors hover:bg-white/15 hover:text-white focus-visible:outline focus-visible:outline-sky-400">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
                 )}
+                {hasActiveTrade && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-black/30"><div className="h-full transition-[width]" style={{width:`${progressPercent}%`,background:accent}} /></div>}
               </div>
             );
           })}
@@ -282,6 +169,7 @@ const AssetInfo = ({
       {canScrollLeft && (
         <button
           type="button"
+          aria-label="Scroll assets left"
           onClick={() => scrollTabs("left")}
           className="absolute left-[54px] top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--trading-border-color)] bg-[var(--trading-tabs-bg)] text-gray-300 shadow-md hover:text-white transition-colors"
         >
@@ -292,6 +180,7 @@ const AssetInfo = ({
       {canScrollRight && (
         <button
           type="button"
+          aria-label="Scroll assets right"
           onClick={() => scrollTabs("right")}
           className="absolute right-3 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--trading-border-color)] bg-[var(--trading-tabs-bg)] text-gray-300 shadow-md hover:text-white transition-colors"
         >

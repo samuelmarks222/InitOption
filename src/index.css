@@ -477,15 +477,15 @@
   }
 
   .trading-terminal {
-    --trading-workspace-bg: #1e2131;
-    --trading-header-bg: #1e2131;
-    --trading-sidebar-bg: #1e2131;
+    --trading-workspace-bg: #1c1f2b;
+    --trading-header-bg: #1c1f2b;
+    --trading-sidebar-bg: #1c1f2b;
     --trading-workspace-panel-bg: #1e2131;
-    --trading-panel-bg: #23283b;
+    --trading-panel-bg: #292d3e;
     --trading-panel-soft-bg: #2c3148;
-    --trading-tabs-bg: #1e2131;
+    --trading-tabs-bg: #1c1f2b;
     --trading-chart-divider-bg: #23283b;
-    --trading-chart-pane-bg: #1e2131;
+    --trading-chart-pane-bg: #1c1f2b;
     --trading-border-color: rgba(143, 164, 210, 0.16);
     --trading-border-strong-color: rgba(143, 164, 210, 0.24);
     --trading-control-bg: #2a3046;
@@ -1016,15 +1016,15 @@
   }
 
   html[data-trading-template="amber"] .trading-terminal {
-    --trading-workspace-bg: #1e2131;
-    --trading-header-bg: #1e2131;
-    --trading-sidebar-bg: #1e2131;
+    --trading-workspace-bg: #1c1f2b;
+    --trading-header-bg: #1c1f2b;
+    --trading-sidebar-bg: #1c1f2b;
     --trading-workspace-panel-bg: #1e2131;
-    --trading-panel-bg: #23283b;
+    --trading-panel-bg: #292d3e;
     --trading-panel-soft-bg: #2c3148;
-    --trading-tabs-bg: #1e2131;
+    --trading-tabs-bg: #1c1f2b;
     --trading-chart-divider-bg: #23283b;
-    --trading-chart-pane-bg: #1e2131;
+    --trading-chart-pane-bg: #1c1f2b;
     --trading-border-color: rgba(143, 164, 210, 0.16);
     --trading-border-strong-color: rgba(143, 164, 210, 0.24);
     --trading-control-bg: #2a3046;
