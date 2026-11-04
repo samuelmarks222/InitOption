@@ -775,29 +775,46 @@ const TradingPanel = ({
     };
   }, []);
 
+  const tradeOpeningRef = useRef(false);
+  const [isOpeningTrade, setIsOpeningTrade] = useState(false);
+
   // Trade execution
   const executeTradeNow = async (direction: "higher" | "lower") => {
-    const dir = isSignalMode && contextDirection ? contextDirection : direction;
-    if (effectiveInvestment <= 0) return false;
+    if (tradeOpeningRef.current) return false;
+    tradeOpeningRef.current = true;
+    setIsOpeningTrade(true);
+    try {
+      const dir = isSignalMode && contextDirection ? contextDirection : direction;
+      if (effectiveInvestment <= 0) return false;
 
-    // Use context executeTrade in signal mode for cross-component integration
-    if (isSignalMode && contextExecuteTrade) {
-      return await contextExecuteTrade(
-        asset.symbol,
-        dir,
-        effectiveInvestment,
-        asset.price,
-        expirySeconds,
-        payoutRate,
-      );
-    }
-
-    if (accountType === "demo") {
-      if (effectiveInvestment > demoBalance) {
-        alert("Insufficient demo balance");
-        return false;
+      // Use context executeTrade in signal mode for cross-component integration
+      if (isSignalMode && contextExecuteTrade) {
+        return await contextExecuteTrade({
+          assetSymbol: asset.symbol,
+          direction: dir,
+          amount: effectiveInvestment,
+          entryPrice: asset.price,
+          expirySeconds,
+          payoutRate,
+        });
       }
-      return await (onDemoTrade ?? executeTrade)(
+
+      if (accountType === "demo") {
+        if (effectiveInvestment > demoBalance) {
+          alert("Insufficient demo balance");
+          return false;
+        }
+        return await (onDemoTrade ?? executeTrade)(
+          asset.symbol,
+          dir,
+          effectiveInvestment,
+          asset.price,
+          expirySeconds,
+          payoutRate,
+        );
+      }
+
+      return await executeTrade(
         asset.symbol,
         dir,
         effectiveInvestment,
@@ -805,16 +822,17 @@ const TradingPanel = ({
         expirySeconds,
         payoutRate,
       );
+    } catch (error) {
+      toast({
+        title: "Trade request failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      tradeOpeningRef.current = false;
+      setIsOpeningTrade(false);
     }
-
-    return await executeTrade(
-      asset.symbol,
-      dir,
-      effectiveInvestment,
-      asset.price,
-      expirySeconds,
-      payoutRate,
-    );
   };
 
   const cancelQueuedPendingTrade = () => {
@@ -1287,7 +1305,8 @@ const TradingPanel = ({
             ref={higherButtonRef}
             type="button"
             onClick={() => placeTrade("higher")}
-            disabled={asset.available === false}
+            disabled={isOpeningTrade || asset.available === false}
+            aria-busy={isOpeningTrade}
             className={`flex h-[44px] items-center justify-between rounded-[4px] px-3 text-[12px] font-normal text-white transition-all active:scale-[0.99] focus:outline-none lg:h-[46px] lg:rounded-[5px] lg:px-[13px] lg:text-[15px] lg:font-bold ${
               higherButtonFocused ? "scale-[1.02]" : ""
             } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
@@ -1296,8 +1315,8 @@ const TradingPanel = ({
               color: "var(--trading-success-contrast-color)",
               boxShadow: higherButtonFocused ? "var(--trading-success-focus-shadow)" : "0 4px 16px rgba(16,160,85,0.30)",
             }}>
-            <span className="lg:hidden">Up</span>
-            <span className="hidden lg:inline">Buy</span>
+            <span className="lg:hidden">{isOpeningTrade ? "Opening…" : "Up"}</span>
+            <span className="hidden lg:inline">{isOpeningTrade ? "Opening…" : "Buy"}</span>
             <span className="flex w-[20px] h-[20px] items-center justify-center rounded-full bg-white/20 text-[10px] lg:w-[22px] lg:h-[22px]">
               <ArrowUp className="w-3 h-3" strokeWidth={3} />
             </span>
@@ -1307,7 +1326,8 @@ const TradingPanel = ({
             ref={lowerButtonRef}
             type="button"
             onClick={() => placeTrade("lower")}
-            disabled={asset.available === false}
+            disabled={isOpeningTrade || asset.available === false}
+            aria-busy={isOpeningTrade}
             className={`flex h-[44px] items-center justify-between rounded-[4px] px-3 text-[12px] font-normal text-white transition-all active:scale-[0.99] focus:outline-none lg:h-[46px] lg:rounded-[5px] lg:px-[13px] lg:text-[15px] lg:font-bold ${
               lowerButtonFocused ? "scale-[1.02]" : ""
             } ${asset.available === false ? "cursor-not-allowed opacity-40" : ""}`}
@@ -1316,8 +1336,8 @@ const TradingPanel = ({
               color: "var(--trading-danger-contrast-color)",
               boxShadow: lowerButtonFocused ? "var(--trading-danger-focus-shadow)" : "0 4px 16px rgba(220,60,60,0.30)",
             }}>
-            <span className="lg:hidden">{t("tradingPanel.down")}</span>
-            <span className="hidden lg:inline">Sell</span>
+            <span className="lg:hidden">{isOpeningTrade ? "Opening…" : t("tradingPanel.down")}</span>
+            <span className="hidden lg:inline">{isOpeningTrade ? "Opening…" : "Sell"}</span>
             <span className="flex w-[20px] h-[20px] items-center justify-center rounded-full bg-white/20 text-[10px] lg:w-[22px] lg:h-[22px]">
               <ArrowDown className="w-3 h-3" strokeWidth={3} />
             </span>

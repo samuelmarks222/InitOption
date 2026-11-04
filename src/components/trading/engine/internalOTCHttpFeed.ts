@@ -63,6 +63,7 @@ export function createInternalOTCHttpFeed(
   }
   async function poll(stream: Stream) {
     if (stream.stopped) return;
+    const started = performance.now();
     const abort = new AbortController();
     stream.abort = abort;
     const timeout = setTimeout(() => abort.abort(), 10000);
@@ -195,6 +196,9 @@ export function createInternalOTCHttpFeed(
           for (const tick of received)
             for (const listener of stream.listeners) listener.onTick(tick);
         notify(stream, "live");
+        // Target the server's 100ms tick cadence, measured start-to-start.
+        // A slow request never overlaps another and no intermediary prices are invented.
+        delay = Math.max(0, 100 - (performance.now() - started));
       }
     } catch (error) {
       if (!stream.stopped) {

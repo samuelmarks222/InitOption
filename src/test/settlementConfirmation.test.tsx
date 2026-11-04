@@ -2,6 +2,7 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { TradingProvider, useTrading } from '@/hooks/useTrading';
+import { toast } from '@/hooks/use-toast';
 import { winningNotification } from '@/lib/winningNotifications';
 const state = vi.hoisted(() => ({
   profile:{id:'user-1',balance:1000,total_deposit:1000,total_profit:0,total_trades:0,total_wins:0,reserved_withdrawal_balance:0},
@@ -75,6 +76,7 @@ describe('OTC entry and expiry receipts',()=>{
     const hook=renderHook(()=>useTrading(),{wrapper:TradingProvider});await act(async()=>{});state.quoteAvailable=false;
     await act(async()=>{expect(await hook.result.current.openTrade('EUR/USD','higher',10,100,1,.92)).toBe(false);});
     expect(state.trade).toBeNull();
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({title:'Trade not opened',description:'OTC service offline',variant:'destructive'}));
   });
 });
 describe('notifications wait for actual settlement acknowledgement',()=>{

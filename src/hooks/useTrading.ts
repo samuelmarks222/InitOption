@@ -571,8 +571,8 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
           const quote = await requestOTCQuote(assetSymbol);
           actualEntryPrice = quote.price;
           openedAt = new Date(quote.timestamp*1000).toISOString();
-        } catch {
-          toast({title:"OTC pricing unavailable",description:"No trade was opened. Waiting for the internal pricing service.",variant:"destructive"});
+        } catch (error) {
+          toast({title:"Trade not opened",description:error instanceof Error ? error.message : "Waiting for the internal pricing service.",variant:"destructive"});
           return false;
         }
       }
@@ -820,7 +820,7 @@ export const TradingProvider = ({ children }: { children: React.ReactNode }) => 
                   typeof markerLogicalOverride === "number" && Number.isFinite(markerLogicalOverride)
                     ? markerLogicalOverride
                     : undefined,
-                timeLeft: Math.max(0, expirySeconds - (Date.now() - new Date(openedAt).getTime()) / 1000),
+                timeLeft: Math.max(0, expirySeconds - (getSynchronizedUnixTimeMs() - new Date(openedAt).getTime()) / 1000),
                 tournament_participant_id: activePid ?? null,
                 showSettlementOverlay: true,
               }

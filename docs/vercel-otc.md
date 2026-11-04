@@ -92,7 +92,7 @@ return retryable 409 while catching up rather than using an old price as current
 Large idle gaps can take time and incur database/function costs; instantaneous
 recovery is not promised.
 
-The frontend polls every 500ms after the previous response completes, retries with
+The frontend targets a 100ms start-to-start polling cadence, never overlaps requests, and retries with
 backoff, aborts timeouts and shares one request loop per URL/symbol within the tab.
 It processes every returned 100ms tick synchronously; Canvas RAF batches paints
 only. Several ticks may arrive in one network response. **This does not promise
@@ -178,3 +178,45 @@ underscore helpers and TypeScript declarations. The current count is **12**.
 This guard runs before Vercel's API typecheck and frontend build, and rejects
 future additions that exceed the Hobby budget. The actual deployed Function
 count must still be confirmed after Vercel packages the next deployment.
+
+
+### Candle cadence and order diagnostics
+
+Successful HTTP polls now target the 100ms source interval (measured with the
+monotonic browser clock), rather than waiting 500ms after each response. This
+reduces coalescing of multiple source ticks into a single Canvas paint without
+interpolating prices, smoothing OHLC, or replaying stale ticks as live prices.
+Slow network/database responses still arrive in batches and cannot guarantee
+100ms screen updates. Connections remain pooled per URL/symbol within a browser;
+this is **not** cross-user pooling. At low latency this can issue up to 10 requests
+per second per active symbol/browser, so production database contention and
+Vercel request usage must be monitored. This is not a production load-test result.
+
+Both OTC price services provide `quotedAt`. Freshness validation compares the
+receipt timestamp to that server timestamp instead of the device wall clock;
+expiry requests retain the strict at/before-expiry and 500ms tolerance checks.
+Demo countdown/retry scheduling uses the existing synchronized clock, as live
+countdowns already do. The client requests a fresh quote for execution and never
+substitutes a cached chart price when pricing is unavailable.
+
+Demo entry quote failures now show an error rather than silently returning false.
+The order panel also shows an opening state, serializes in-flight submissions,
+and reports thrown handler failures. Live entry quote errors include the pricing
+failure reason. These changes do not repair or certify the existing financial
+ledger: authenticated production placement/persistence must still be verified,
+and server-side atomic financial accounting remains a separate requirement.
+
+The signal/desk path also now correctly adapts its object-based order to the
+positional dashboard handlers. Previously the panel sent positional arguments to
+an object-based context function, the provider forwarded an object to positional
+handlers, and an unset `currentAsset` silently prevented execution. Orders now
+validate their explicit symbol/parameters without requiring the selected chart.
+Account selection and demo balance follow the page props on subsequent renders
+instead of staying frozen at mount. Regression tests cover the adapter, malformed
+orders, fresh demo balances, and demo/live/tournament routing after account switches.
+
+Validation for this change: 140 targeted tests passed across 17 files; production
+build, both API typechecks, and the 12/12 Function budget guard passed. The broad
+application typecheck is not clean (existing unrelated typing errors remain).
+Authenticated production trade execution and real-network cadence/load are not
+verified by these mocked transport/context checks.
