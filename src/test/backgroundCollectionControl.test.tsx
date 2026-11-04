@@ -38,3 +38,18 @@ describe('all-asset background collection administration',()=>{
     cleanup();expect(vi.getTimerCount()).toBe(0);
   });
 });
+describe('authenticated scheduler evidence',()=>{
+ it('shows missing scheduled execution even after a successful manual cycle',async()=>{
+  calls.get.mockResolvedValue({...base,enabled:true,lastFinishedAt:base.serverNow,scheduler:{state:'missing',lastSeenAt:null,lastFinishedAt:null,consecutiveSuccesses:0,lastError:null,freshAssets:0,freshnessWindowSeconds:120,heartbeatWindowSeconds:150}});
+  render(<BackgroundCollectionControl/>);
+  expect(await screen.findByText(/Scheduler not observed/)).toBeTruthy();
+  expect(screen.queryByText(/Recent scheduled runs verified/)).toBeNull();
+ });
+ it('reports observed health only from separate scheduled-run and freshness evidence',async()=>{
+  calls.get.mockResolvedValue({...base,enabled:true,scheduler:{state:'healthy',lastSeenAt:base.serverNow,lastFinishedAt:base.serverNow,consecutiveSuccesses:2,lastError:null,freshAssets:141,freshnessWindowSeconds:120,heartbeatWindowSeconds:150}});
+  render(<BackgroundCollectionControl/>);
+  expect(await screen.findByText(/Recent scheduled runs verified/)).toBeTruthy();
+  expect(screen.getByText(/141\/141 assets advanced/)).toBeTruthy();
+  expect(screen.queryByText(/A frequent scheduler is still required/)).toBeNull();
+ });
+});

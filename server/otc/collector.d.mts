@@ -8,5 +8,5 @@ export function createOTCCollector(options:{
   transaction:<T>(work:(client:PoolClient)=>Promise<T>)=>Promise<T>;
   assets:Record<string,unknown>;
   read:(request:OTCReadRequest)=>Promise<OTCSnapshot>;
-  now?:()=>number;budgetMs?:number;
+  now?:()=>number;budgetMs?:number;concurrency?:number;shouldContinue?:()=>Promise<boolean>;
 }):()=>Promise<CollectorResult>;

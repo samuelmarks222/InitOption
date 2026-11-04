@@ -369,3 +369,18 @@ hosting change was made by this recovery fix. See the activation-pending section
 above. The reported production freeze's exact cause has not been established from
 live runtime responses; this is local transport hardening, not proof that the
 production collector is running continuously.
+
+### Opt-in Vercel scheduler implementation
+
+See [OTC scheduler activation](otc-scheduler-activation.md) for the new protected
+cron alias, guarded local configuration command, migration 016, four-way collection,
+separate scheduled-run health, capacity caveats and rollout/rollback checklist.
+This supersedes the earlier collector implementation details but does **not** mean
+that a frequent schedule has been activated or a hosting upgrade approved.
+
+## No-upgrade external scheduling
+
+The approved external-trigger setup, secure cron-job.org configuration, smoke test,
+browser-closed verification and rollback are documented in
+[OTC external scheduler](./otc-external-scheduler.md). This is not yet activated in
+production and does not remove Function/database limits.

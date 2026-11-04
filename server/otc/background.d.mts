@@ -7,5 +7,5 @@ export function createOTCBackground(options: {
 }): {
   status(): Promise<OTCCollectionStatus>;
   setEnabled(enabled: boolean, userId: string): Promise<OTCCollectionStatus>;
-  run(): Promise<OTCCollectionCycle>;
+  run(options?: {scheduled?:boolean}): Promise<OTCCollectionCycle>;
 };

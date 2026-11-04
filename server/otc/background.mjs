@@ -13,7 +13,15 @@ export function createOTCBackground({ transaction, assets, collect }) {
       const slots = new Map(rows.map(row => [row.symbol, Number(row.last_slot)]));
       const initialized = symbols.filter(symbol => slots.has(symbol));
       const lag = initialized.map(symbol => Math.max(0, now - slots.get(symbol) * 100));
+      const freshAssets=lag.filter(ms=>ms<=120000).length;
+      const scheduledAge=control.last_scheduled_at ? (now-new Date(control.last_scheduled_at).getTime())/1000 : Infinity;
+      const finishedAge=control.last_scheduled_finished_at ? (now-new Date(control.last_scheduled_finished_at).getTime())/1000 : Infinity;
+      const schedulerState=!control.enabled?'disabled':scheduledAge>150?'missing':control.scheduled_last_error?'error':finishedAge>150?'awaiting-success':
+        initialized.length!==symbols.length?'initializing':freshAssets!==symbols.length?'lagging':Number(control.scheduled_consecutive_successes)<2?'verifying':'healthy';
       return {
+        scheduler: {state:schedulerState,lastSeenAt:iso(control.last_scheduled_at),lastFinishedAt:iso(control.last_scheduled_finished_at),
+          consecutiveSuccesses:Number(control.scheduled_consecutive_successes??0),lastError:control.scheduled_last_error??null,
+          freshAssets,freshnessWindowSeconds:120,heartbeatWindowSeconds:150},
         enabled: control.enabled, totalAssets: symbols.length,
         initializedAssets: initialized.length,
         currentAssets: lag.filter(ms => ms <= 60000).length,
@@ -30,10 +38,12 @@ export function createOTCBackground({ transaction, assets, collect }) {
   async function setEnabled(enabled, userId) {
     if (typeof enabled !== 'boolean') throw new TypeError('enabled must be a boolean');
     await transaction(client => client.query(`UPDATE public.otc_collection_control
-      SET enabled=$1, updated_by=$2, updated_at=clock_timestamp() WHERE id=true`, [enabled, userId]));
+      SET enabled=$1, updated_by=$2, updated_at=clock_timestamp(),
+        scheduled_consecutive_successes=CASE WHEN enabled IS DISTINCT FROM $1 THEN 0 ELSE scheduled_consecutive_successes END WHERE id=true`, [enabled, userId]));
     return status();
   }
-  async function run() {
+  async function run({scheduled=false}={}) {
+    if(scheduled) await transaction(client=>client.query("UPDATE public.otc_collection_control SET last_scheduled_at=clock_timestamp() WHERE id=true"));
     const token = randomUUID();
     const acquired = await transaction(async client => (await client.query(`UPDATE public.otc_collection_control
       SET lease_token=$1, lease_until=clock_timestamp()+interval '60 seconds', last_started_at=clock_timestamp()
@@ -42,13 +52,23 @@ export function createOTCBackground({ transaction, assets, collect }) {
     try {
       const result = await collect();
       await transaction(client => client.query(`UPDATE public.otc_collection_control
-        SET last_finished_at=clock_timestamp(), last_result=$2::jsonb, last_error=$3, lease_token=NULL, lease_until=NULL
-        WHERE id=true AND lease_token=$1`, [token, JSON.stringify(result), result.errors.length ? 'Some assets failed collection; inspect the cycle result.' : null]));
+        SET last_finished_at=clock_timestamp(), last_result=$2::jsonb, last_error=$3,
+          last_scheduled_finished_at=CASE WHEN $4::boolean THEN clock_timestamp() ELSE last_scheduled_finished_at END,
+          scheduled_last_error=CASE WHEN $4::boolean THEN $3 ELSE scheduled_last_error END,
+          scheduled_consecutive_successes=CASE WHEN $4::boolean THEN
+            CASE WHEN $3::text IS NULL AND $5::boolean THEN scheduled_consecutive_successes+1 ELSE 0 END
+            ELSE scheduled_consecutive_successes END,
+          lease_token=NULL, lease_until=NULL WHERE id=true AND lease_token=$1`,
+        [token,JSON.stringify(result),result.errors.length?'Some assets failed collection; inspect the cycle result.':null,scheduled,result.processed.length>0]));
       return { skipped: false, result };
     } catch (error) {
       await transaction(client => client.query(`UPDATE public.otc_collection_control
-        SET last_finished_at=clock_timestamp(), last_result=NULL, last_error=$2, lease_token=NULL, lease_until=NULL
-        WHERE id=true AND lease_token=$1`, [token, 'Collection failed. Check server logs and database connectivity.']));
+        SET last_finished_at=clock_timestamp(), last_result=NULL, last_error=$2,
+          last_scheduled_finished_at=CASE WHEN $3::boolean THEN clock_timestamp() ELSE last_scheduled_finished_at END,
+          scheduled_last_error=CASE WHEN $3::boolean THEN $2 ELSE scheduled_last_error END,
+          scheduled_consecutive_successes=CASE WHEN $3::boolean THEN 0 ELSE scheduled_consecutive_successes END,
+          lease_token=NULL, lease_until=NULL WHERE id=true AND lease_token=$1`,
+        [token,'Collection failed. Check server logs and database connectivity.',scheduled]));
       throw error;
     }
   }

@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { transaction } from "./db.js";
-import { OTC_SCHEMA, OTC_COLLECTION_SCHEMA } from "./otcSchema.js";
+import { OTC_SCHEMA, OTC_COLLECTION_SCHEMA, OTC_SCHEDULER_SCHEMA } from "./otcSchema.js";
 import { createServerlessOTC } from "../../server/otc/serverless.mjs";
 import { createOTCCollector } from "../../server/otc/collector.mjs";
 import { createOTCBackground } from "../../server/otc/background.mjs";
@@ -25,6 +25,7 @@ async function ensureSchema() {
       await client.query("SELECT pg_advisory_xact_lock(1732247103)");
       await client.query(OTC_SCHEMA);
       await client.query(OTC_COLLECTION_SCHEMA);
+      await client.query(OTC_SCHEDULER_SCHEMA);
     }).catch((error) => {
       ready = undefined;
       throw error;
@@ -103,7 +104,7 @@ export default async function handler(
         res.end(JSON.stringify({error:secret?"Unauthorized":"Background collection requires CRON_SECRET"}));return;
       }
       await ensureSchema();
-      const cycle=await background.run();
+      const cycle=await background.run({scheduled:true});
       res.statusCode=!("result" in cycle)?200:cycle.result.errors.length?503:cycle.result.complete?200:202;
       res.end(JSON.stringify(cycle));return;
     }

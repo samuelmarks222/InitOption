@@ -54,6 +54,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/api/otc/collect", "destination": "/api/system?route=otc&action=collect" },
     { "source": "/api/otc", "destination": "/api/system?route=otc" },
     { "source": "/otc/price", "destination": "/api/system?route=otc&action=price" },
     { "source": "/otc/history", "destination": "/api/system?route=otc&action=ticks" },
