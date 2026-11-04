@@ -1029,7 +1029,7 @@ const TradingPanel = ({
               <span className="hidden max-w-[112px] truncate text-[11px] font-semibold text-white lg:inline">
                 {headerSymbol}
               </span>
-              <span className={`shrink-0 text-[12px] font-normal text-[#8a93a6] ${asset.available === false ? "text-red-400" : ""}`}>{asset.available === false ? "N/A" : `${asset.maxProfit ?? 79}%`}</span>
+              <span className={`trading-order-payout-rate shrink-0 text-[12px] font-normal text-[#8a93a6] ${asset.available === false ? "text-red-400" : ""}`}>{asset.available === false ? "N/A" : `${asset.maxProfit ?? 79}%`}</span>
               <ChevronDown className="w-3.5 h-3.5 text-gray-400 lg:hidden" strokeWidth={3} />
             </div>
           </button>
@@ -1039,7 +1039,7 @@ const TradingPanel = ({
             type="button"
             onClick={handlePendingTradeToggle}
             aria-pressed={pendingTradeEnabled}
-            className="flex shrink-0 items-center gap-1.5 lg:hidden"
+            className="trading-mobile-pending flex shrink-0 items-center gap-1.5 lg:hidden"
           >
             <span className={`text-[9px] font-normal uppercase tracking-wider ${pendingTradeEnabled ? "text-[#0fa053]" : "text-[#7f8b99]"}`}>
               PENDING TRADE
@@ -1081,35 +1081,36 @@ const TradingPanel = ({
             <div className="grid w-full grid-cols-1 gap-2 lg:grid-cols-1 lg:gap-3">
               <div className="relative">
                 {/* Mobile: Two separate cards - Timer and Investment (edge-to-edge) */}
-                <div className="relative lg:hidden">
-                  <div className="flex gap-1 px-1">
+                <div className="trading-mobile-fields relative lg:hidden">
+                  <div className="trading-mobile-field-grid flex gap-1 px-1">
                     {/* Timer card */}
-                    <div className="relative flex h-[35px] flex-1 rounded-lg border py-2.5 px-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
+                    <div className="trading-mobile-field relative flex h-[35px] min-w-0 flex-1 rounded-lg border py-2.5 px-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
                       <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-control-bg)" }}>Timer</span>
-                      <div
+                      <button type="button" aria-label="Choose trade duration"
                         onClick={() => setShowTimeSwitcher((value) => !value)}
-                        className="flex h-[15px] cursor-pointer items-center"
+                        className="trading-mobile-timer flex h-[15px] cursor-pointer items-center"
                       >
                         <span className="text-[15px] font-normal tabular-nums text-[var(--trading-text-color)]" style={{ fontFamily: "Arial, sans-serif" }}>
                           {formatTradeClock(expirySeconds)}
                         </span>
-                      </div>
+                      </button>
                     </div>
 
                     {/* Investment card */}
-                    <div className="relative flex h-[35px] flex-1 rounded-lg border py-2.5 px-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
+                    <div className="trading-mobile-field relative flex h-[35px] min-w-0 flex-1 rounded-lg border py-2.5 px-3" style={{ background: "var(--trading-control-bg)", borderColor: "var(--trading-control-border)" }}>
                       <span className="absolute -top-2 left-3 z-10 px-1 text-[9px] font-normal text-[var(--trading-muted-color)]" style={{ background: "var(--trading-control-bg)" }}>Investment</span>
                       <div className="flex h-[15px] w-full items-center justify-between">
-                        <span
+                        <button type="button" aria-label="Decrease investment"
                           className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
                           style={{ background: "var(--trading-panel-soft-bg)" }}
                           onClick={() => adjustInvestment(-1)}
                         >
                           <Minus className="h-3.5 w-3.5" />
-                        </span>
+                        </button>
                         <div className="flex items-center gap-1">
                           <input
                             type="number"
+                            aria-label="Investment amount"
                             value={investment}
                             min={1}
                             max={MAX_MANUAL_INVESTMENT}
@@ -1121,19 +1122,19 @@ const TradingPanel = ({
                           />
                           <span className="text-[12px] font-normal text-[var(--trading-muted-color)]">{investmentMode === "percent" ? "%" : "$"}</span>
                         </div>
-                        <span
+                        <button type="button" aria-label="Increase investment"
                           className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[var(--trading-muted-color)] active:scale-95"
                           style={{ background: "var(--trading-panel-soft-bg)" }}
                           onClick={() => adjustInvestment(1)}
                         >
                           <Plus className="h-3.5 w-3.5" />
-                        </span>
+                        </button>
                       </div>
                     </div>
                   </div>
 
                   {/* SWITCH below cards, right-aligned */}
-                  <div className="mt-1 flex items-center justify-end px-1">
+                  <div className="trading-mobile-switch mt-1 flex items-center justify-end px-1">
                     <button
                       type="button"
                       onClick={() => { setInvestmentMode((m) => (m === "percent" ? "amount" : "percent")); setShowInvestmentSwitcher(false); }}
@@ -1144,7 +1145,7 @@ const TradingPanel = ({
                   </div>
 
                   {/* Payout row below */}
-                  <div className="mt-0.5 flex items-center justify-between px-1">
+                  <div className="trading-mobile-payout mt-0.5 flex items-center justify-between px-1">
                     <span className="text-[11px] font-normal text-[var(--trading-muted-color)]">Payout</span>
                     <span className="text-[14px] font-normal text-[var(--trading-text-color)]">
                       {asset.available === false ? "N/A" : formatCurrencyAmount(payout, currency)}
@@ -1316,8 +1317,7 @@ const TradingPanel = ({
               color: "var(--trading-success-contrast-color)",
               boxShadow: higherButtonFocused ? "var(--trading-success-focus-shadow)" : "0 4px 16px rgba(16,160,85,0.30)",
             }}>
-            <span className="lg:hidden">{isOpeningTrade ? "Opening…" : "Up"}</span>
-            <span className="hidden lg:inline">{isOpeningTrade ? "Opening…" : "Buy"}</span>
+            <span>{isOpeningTrade ? "Opening…" : "Buy"}</span>
             <span className="flex w-[20px] h-[20px] items-center justify-center rounded-full bg-white/20 text-[10px] lg:w-[22px] lg:h-[22px]">
               <ArrowUp className="w-3 h-3" strokeWidth={3} />
             </span>
@@ -1337,8 +1337,7 @@ const TradingPanel = ({
               color: "var(--trading-danger-contrast-color)",
               boxShadow: lowerButtonFocused ? "var(--trading-danger-focus-shadow)" : "0 4px 16px rgba(220,60,60,0.30)",
             }}>
-            <span className="lg:hidden">{isOpeningTrade ? "Opening…" : t("tradingPanel.down")}</span>
-            <span className="hidden lg:inline">{isOpeningTrade ? "Opening…" : "Sell"}</span>
+            <span>{isOpeningTrade ? "Opening…" : "Sell"}</span>
             <span className="flex w-[20px] h-[20px] items-center justify-center rounded-full bg-white/20 text-[10px] lg:w-[22px] lg:h-[22px]">
               <ArrowDown className="w-3 h-3" strokeWidth={3} />
             </span>

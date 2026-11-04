@@ -285,7 +285,7 @@ const MobileModuleOverlay = ({
 }: MobileModuleOverlayProps) => {
   if (!mobileOverlay) return null;
   return (
-    <div className="fixed inset-x-0 bottom-[56px] top-0 z-[200] flex items-stretch justify-center bg-[#0a0d14] w-full">
+    <div className="trading-mobile-overlay fixed inset-x-0 bottom-[56px] top-0 z-[200] flex items-stretch justify-center bg-[#0a0d14] w-full">
       <div className="relative flex h-full w-full overflow-hidden bg-[#0a0d14]">
       {mobileOverlay === "account" && (
         <AnalyticsGridOverlay activeAsset={analyticsSignalAsset} initialTab={accountInitialTab} onClose={() => setMobileOverlay(null)} onNavigate={onAnalyticsNavigate} />
@@ -1703,7 +1703,7 @@ const Trade = () => {
                 {showAssetSelector && <AssetSelectorModal onSelect={handleSelectAsset} onClose={() => setShowAssetSelector(false)} />}
               </div>
               ) : selectedAsset && (
-              <div className="relative flex flex-1 flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
+              <div className="trading-mobile-workspace relative flex min-h-0 flex-1 flex-col overflow-hidden" style={{ background: "var(--trading-workspace-bg)" }}>
                 {/* ── MOBILE: Chart + Trading Panel combined in a fixed flex layout ── */}
                 {/* Chart block — dynamically fills remaining vertical space */}
                 {showAssetSelector && <AssetSelectorModal onSelect={handleSelectAsset} onClose={() => setShowAssetSelector(false)} />}
@@ -1713,7 +1713,7 @@ const Trade = () => {
                     onRemoveTab={handleRemoveTab} onAddAssetClick={() => setShowAssetSelector(true)}
                     activeTrades={visibleActiveTrades} livePrices={liveChartPrices} />
                 </div>
-                <div id="tour-chart" className="flex-1 min-h-0 relative flex flex-col pb-[250px] sm:pb-[262px]">
+                <div id="tour-chart" className="trading-mobile-chart flex-1 min-h-0 relative flex flex-col">
                   <div className="hidden">
                     <span style={{ fontSize: "11px", color: "#7f8b99" }} />
                     <button
@@ -1764,8 +1764,8 @@ const Trade = () => {
                 </div>
 
                 {/* Trading Panel directly below chart — NO paddingBottom here to remove big space */}
-                <div id="tour-trade-panel" className={`fixed left-0 right-0 bottom-[56px] px-2 sm:px-3 ${showMobileHistory ? "z-[120]" : "z-40"}`}>
-                  <div className="mx-auto w-full max-w-[430px]">
+                <div id="tour-trade-panel" className={`trading-mobile-order-dock relative shrink-0 ${showMobileHistory ? "z-[120]" : "z-40"}`}>
+                  <div className="w-full">
                     <TradingPanel 
                        asset={selectedAsset} 
                        balance={currentBalance} 
@@ -1792,8 +1792,8 @@ const Trade = () => {
 
         {/* ── MOBILE 5-icon Bottom Navigation — ALWAYS VISIBLE ── */}
         <div
-          className="fixed bottom-0 left-0 right-0 z-[300] lg:hidden border-t border-[#243247] bg-[linear-gradient(180deg,rgba(24,31,45,0.96)_0%,rgba(10,14,22,0.99)_100%)] shadow-[0_-16px_32px_rgba(0,0,0,0.42)] backdrop-blur-xl"
-          style={{ paddingBottom: "env(safe-area-inset-bottom, 8px)", height: "56px" }}
+          className="trading-mobile-bottom-nav fixed bottom-0 left-0 right-0 z-[300] lg:hidden border-t border-[#243247] bg-[linear-gradient(180deg,rgba(24,31,45,0.96)_0%,rgba(10,14,22,0.99)_100%)] shadow-[0_-16px_32px_rgba(0,0,0,0.42)] backdrop-blur-xl"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)", height: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
         >
           <div className="mx-auto flex h-full max-w-[430px] items-center gap-1 px-2">
             <button
