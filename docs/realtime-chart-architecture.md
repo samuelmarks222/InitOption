@@ -540,3 +540,19 @@ Regression coverage checks historical bars across several pan ranges at 800px
 /DPR 1 and 360px/DPR 2, full-width clipping, label paint order, absence of a
 full-height axis fill and unchanged OHLC. Authenticated visual verification remains
 pending; no production deployment is claimed.
+
+## Phone zoom controls and pinch anchoring
+
+The +/- controls now render on phones instead of being hidden below 640px.
+Phone buttons have 44px touch targets; larger screens retain compact 24px controls.
+Both use the same existing 1.12 exponential horizontal zoom pipeline as before.
+
+Two-finger zoom previously used the new midpoint as its original anchor. When
+one finger remained stationary, this incorrectly moved the time beneath that
+finger. Native pinch handling now queues scaling at the previous midpoint then
+translates to the new midpoint in the same animation-frame navigation batch.
+Scaling is still gated by handleScale/pinch settings, and does not change the
+price domain, candle values, timestamps, timeframe, or recorded history.
+Regression tests check multiple queued pinch moves in both directions, anchored
+time, inverse zoom recovery, unchanged OHLC/price coordinates, and accessible
+mobile +/- actions. Authenticated physical-device verification remains pending.

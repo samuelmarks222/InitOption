@@ -1,5 +1,6 @@
 import { requestOTCHistory, mergeCandleHistory } from "@/lib/otcHistory";
 import { liveViewport, constrainViewport } from "./engine/native/viewport";
+import { ChartZoomControls } from "./ChartZoomControls";
 import { setChartInterval, zoomChart } from "./engine/native/chart";
 import { isInternalOTC, marketWebSocketUrl } from "@/lib/otcMarket";
 import { tickChartPoint, TickSeriesWriter } from "./engine/native/tickRendering";
@@ -76,8 +77,6 @@ import {
   Info,
   SlidersHorizontal,
   ArrowRight,
-  Plus,
-  Minus,
   CheckCheck,
 } from "lucide-react";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -4217,28 +4216,7 @@ renderOverlayIndicators(getIndicatorHistory());
         )}
 
         {!compactPane && !miniOverlay && !mobileHistoryOpen && !overlayUiSuppressed && (
-          <div className="pointer-events-none absolute bottom-2 left-1/2 z-[56] hidden -translate-x-1/2 sm:flex">
-            <div className="pointer-events-auto inline-flex items-center gap-[3px] rounded-[4px] bg-transparent">
-              <button
-                type="button"
-                onClick={() => adjustChartZoom("out")}
-                className="flex h-[20px] w-[20px] items-center justify-center rounded-[2px] border border-white/6 bg-[#2a3040]/96 text-[#b8c1d2] shadow-[0_6px_14px_rgba(0,0,0,0.22)] transition-colors hover:bg-[#333a4b]"
-                title={t("tradingChart.zoomOut")}
-                aria-label={t("tradingChart.zoomOut")}
-              >
-                <Minus className="h-[11px] w-[11px]" strokeWidth={2.6} />
-              </button>
-              <button
-                type="button"
-                onClick={() => adjustChartZoom("in")}
-                className="flex h-[20px] w-[20px] items-center justify-center rounded-[2px] border border-white/6 bg-[#2a3040]/96 text-[#b8c1d2] shadow-[0_6px_14px_rgba(0,0,0,0.22)] transition-colors hover:bg-[#333a4b]"
-                title={t("tradingChart.zoomIn")}
-                aria-label={t("tradingChart.zoomIn")}
-              >
-                <Plus className="h-[11px] w-[11px]" strokeWidth={2.6} />
-              </button>
-            </div>
-          </div>
+          <ChartZoomControls onZoom={adjustChartZoom} />
         )}
 
         {chartType === "line" && (

@@ -196,6 +196,27 @@ describe('native canvas renderer integration', () => {
     chart.applyOptions({handleScale:false});pointer('pointermove',2,700);vi.advanceTimersByTime(20);
     expect(chart.timeScale().getVisibleLogicalRange()).toEqual(range);chart.remove();
   });
+  it('keeps a stationary finger anchored while pinching in and out, including batched moves', () => {
+    const el=host(),chart=createChart(el,{width:800,height:400});
+    const series=chart.addSeries(CandlestickSeries);
+    const rows=Array.from({length:100},(_,i)=>({time:(60+i*60) as any,open:100,high:108,low:95,close:102}));
+    series.setData(rows);chart.timeScale().setVisibleLogicalRange({from:20,to:60});vi.advanceTimersByTime(20);
+    const canvas=el.querySelector('canvas')!;canvas.setPointerCapture=vi.fn();
+    const pointer=(type:string,id:number,x:number)=>{const e=new MouseEvent(type,{clientX:x,clientY:180});Object.defineProperty(e,'pointerId',{value:id});canvas.dispatchEvent(e);};
+    const anchoredTime=chart.timeScale().coordinateToTime(200)!;
+    const price=series.coordinateToPrice(100);
+    pointer('pointerdown',1,200);pointer('pointerdown',2,400);
+    pointer('pointermove',2,500);pointer('pointermove',2,600);vi.advanceTimersByTime(20);
+    expect(chart.timeScale().timeToCoordinate(anchoredTime)).toBeCloseTo(200);
+    const range=chart.timeScale().getVisibleLogicalRange()!;expect(range.to-range.from).toBeCloseTo(20);
+    pointer('pointermove',2,500);pointer('pointermove',2,400);vi.advanceTimersByTime(20);
+    expect(chart.timeScale().getVisibleLogicalRange()!.from).toBeCloseTo(20);
+    expect(chart.timeScale().getVisibleLogicalRange()!.to).toBeCloseTo(60);
+    expect(chart.timeScale().timeToCoordinate(anchoredTime)).toBeCloseTo(200);
+    expect(series.coordinateToPrice(100)).toBeCloseTo(Number(price));
+    expect(series.data()).toEqual(rows);
+    pointer('pointerup',1,200);pointer('pointerup',2,400);chart.remove();
+  });
   it('keeps constrained horizontal zoom independent of price and fitContent restores autoscale', () => {
     const chart=createChart(host(),{width:800,height:400});
     const series=chart.addSeries(CandlestickSeries);
