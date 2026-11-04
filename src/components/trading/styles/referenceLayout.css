@@ -44,8 +44,14 @@
   .trading-terminal .trading-asset-strip { height: var(--terminal-tab-height); padding: 0 12px; border-bottom: 0; }
   .trading-terminal .trading-add-asset { width: 38px; height: 38px; border-radius: 6px; margin-right: 4px; }
   .trading-terminal .trading-asset-tab { width: 156px; height: 44px; }
-  .trading-terminal .trading-asset-tab > button:first-child > span > span { font-size: 12px; font-weight: 800; }
-  .trading-terminal .trading-asset-tab > button:first-child > span > span:last-child { font-size: 11px; font-weight: 800; }
+  /* Use the loaded Inter Black face: Arial often maps 800/900 to ordinary bold. */
+  .trading-terminal .trading-asset-tab .trading-asset-name,
+  .trading-terminal .trading-asset-tab .trading-asset-payout {
+    font-family: "Inter", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.2;
+  }
   .trading-asset-tab > button:first-child { gap: 6px; padding-left: 10px; }
   .trading-terminal #tour-trade-panel { padding: 10px 10px 10px 8px; min-height: 0; }
   .trading-terminal aside.trading-order-panel {

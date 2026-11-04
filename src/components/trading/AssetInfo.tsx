@@ -143,8 +143,8 @@ const AssetInfo = ({
                 >
                   <AssetSymbolMark symbol={tab.symbol} category={tab.type} flags={tab.flags} size={20} />
                   <span className="min-w-0 flex-1 leading-tight">
-                    <span className="block truncate text-[10px] font-bold text-white">{tabLabel}</span>
-                    <span className="block text-[10px] font-bold text-[#f5b44b]">{payout}%</span>
+                    <span className="trading-asset-name block truncate text-[12px] font-black text-white">{tabLabel}</span>
+                    <span className="trading-asset-payout block text-[12px] font-black text-[#f5b44b]">{payout}%</span>
                   </span>
                   {hasActiveTrade && livePnlText && (
                     <span className="absolute bottom-1 right-2 text-[9px] font-bold tabular-nums" style={{color:accent}} title={`Investment ${stakeText ?? ''}`}>
