@@ -20,6 +20,15 @@ describe('server candle history transport',()=>{
       respond(undefined,change);await expect(requestOTCHistory('AAPL',60,120,new AbortController().signal)).rejects.toThrow();
     });
   }
+  it('preserves explicit generated-history provenance so the dashboard can disclose it',async()=>{
+    const candles=[{...bar(0),origin:'generated-history'},{...bar(60),origin:'mixed'}];
+    respond(candles as any,{generated:true,notice:'Synthetic analysis data'});
+    const page=await requestOTCHistory('AAPL',60,120,new AbortController().signal);
+    expect(page.generated).toBe(true);
+    expect(mergeCandleHistory([],page.candles)[0]).toHaveProperty('origin','generated-history');
+    respond([{...bar(0),origin:'external-real-market'}] as any);
+    await expect(requestOTCHistory('AAPL',60,120,new AbortController().signal)).rejects.toThrow();
+  });
   it('accepts a genuine empty earliest page without inventing history',async()=>{
     respond([],{hasMore:false,earliest:null});const page=await requestOTCHistory('AAPL',60,120,new AbortController().signal);
     expect(page.candles).toEqual([]);expect(page.hasMore).toBe(false);

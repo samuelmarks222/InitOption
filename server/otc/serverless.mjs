@@ -1,4 +1,5 @@
 import { createHmac, randomBytes, randomUUID } from "node:crypto";
+import { generatedHistory, combineHistory } from "./generated-history.mjs";
 import { BrownianMarket } from "../../native-chart/simulation.mjs";
 export const SLOT_MS = 100;
 const DEFAULT_RETENTION = 864000; // 24h, independent of browser history depth.
@@ -18,6 +19,7 @@ export function createServerlessOTC({
   warmup = 3000,
   retention = DEFAULT_RETENTION,
   barRetention = 30 * DEFAULT_RETENTION,
+  generatedHistoryDays = 30,
   nowForTests,
 } = {}) {
   if (
@@ -25,7 +27,7 @@ export function createServerlessOTC({
     maxBatch < 1 ||
     !Number.isInteger(warmup) ||
     warmup < 0 ||
-    warmup >= retention || !Number.isSafeInteger(barRetention) || barRetention < retention
+    warmup >= retention || !Number.isSafeInteger(barRetention) || barRetention < retention || !Number.isInteger(generatedHistoryDays) || generatedHistoryDays < 0 || generatedHistoryDays > 30
   )
     throw new Error("Invalid OTC limits");
   const wire = (symbol, row, precision) => ({
@@ -49,8 +51,29 @@ export function createServerlessOTC({
           !Number.isInteger(limit) || limit < 1 || limit > 1000 ||
           (before !== undefined && (!Number.isSafeInteger(before) || before < 0 || before % seconds !== 0)))
         throw new OTCError(400, "Invalid history window");
-      return transaction(async client => {
+      if (generatedHistoryDays) {
+        const exists = await transaction(async client => (await client.query("SELECT symbol FROM public.otc_markets WHERE symbol=$1",[symbol])).rows.length > 0);
+        if (!exists) await read({symbol,action:"ticks"});
+      }
+      const stored = await transaction(async client => {
         await client.query("SET LOCAL statement_timeout = '15s'");
+        let market;
+        if (generatedHistoryDays) {
+          // Persist a versioned anchor once. Old checkpoints only update model,
+          // so this immutable metadata survives live generation and cold starts.
+          market=(await client.query("SELECT config,secret FROM public.otc_markets WHERE symbol=$1",[symbol])).rows[0];
+          if (!market?.config.historyBootstrapV1) {
+            await client.query("SET LOCAL lock_timeout = '5s'");
+            market=(await client.query("SELECT config,secret FROM public.otc_markets WHERE symbol=$1 FOR UPDATE",[symbol])).rows[0];
+            if (!market.config.historyBootstrapV1) {
+              const first=(await client.query("SELECT bucket_slot,open FROM public.otc_bars WHERE symbol=$1 ORDER BY bucket_slot LIMIT 1",[symbol])).rows[0];
+              if (!first) throw new OTCError(503,"Historical anchor unavailable; retry after pricing initialization");
+              const anchor={anchor:Number(first.bucket_slot)/10,price:Number(first.open),volatility:market.config.volatility,precision:market.config.precision??8};
+              await client.query("UPDATE public.otc_markets SET config=config || $2::jsonb WHERE symbol=$1",[symbol,JSON.stringify({historyBootstrapV1:anchor})]);
+              market.config={...market.config,historyBootstrapV1:anchor};
+            }
+          }
+        }
         const clock = nowForTests ? nowForTests() : Number((await client.query("SELECT floor(extract(epoch FROM clock_timestamp())*1000)::bigint AS ms")).rows[0].ms);
         const end = Math.min(before ?? Infinity, Math.floor(clock / 1000 / seconds) * seconds);
         const rows = (await client.query(`SELECT floor(bucket_slot / $2::numeric) * $2 AS bucket,
@@ -60,10 +83,26 @@ export function createServerlessOTC({
           GROUP BY floor(bucket_slot / $2::numeric) ORDER BY bucket DESC LIMIT $4`,
           [symbol, seconds*10, end*10, limit+1])).rows;
         const oldest = (await client.query("SELECT min(bucket_slot) AS first FROM public.otc_bars WHERE symbol=$1",[symbol])).rows[0]?.first;
-        return {type:"history",source:"internal-otc",symbol,seconds,before:end,hasMore:rows.length>limit,
-          earliest:oldest == null ? null : Number(oldest)/10,
-          candles:rows.slice(0,limit).reverse().map(row=>({time:Number(row.bucket)/10,open:Number(row.open),high:Number(row.high),low:Number(row.low),close:Number(row.close),volume:Number(row.volume)}))};
+        return {market,end,clock,hasMore:rows.length>limit,earliest:oldest == null ? null : Number(oldest)/10,
+          candles:rows.slice(0,limit+1).reverse().map(row=>({time:Number(row.bucket)/10,open:Number(row.open),high:Number(row.high),low:Number(row.low),close:Number(row.close),volume:Number(row.volume)}))};
       });
+      // Build only the requested page, outside the database transaction. This
+      // profile is analysis history only and never feeds entry/expiry receipts.
+      const bootstrap=stored.market?.config.historyBootstrapV1;
+      const synthetic=bootstrap && stored.candles.length<=limit ? generatedHistory({
+        secret:stored.market.secret,...bootstrap,volatility:bootstrap.volatility??stored.market.config.volatility,
+        precision:bootstrap.precision??stored.market.config.precision,seconds,before:stored.end,limit:limit+1,days:generatedHistoryDays,
+        notBefore:Math.floor((stored.clock/1000-generatedHistoryDays*86400)/5)*5,
+      }) : {candles:[],hasMore:false,earliest:null};
+      const combined=combineHistory(synthetic.candles,stored.candles,limit+1);
+      const candles=combined.slice(-limit);
+      const starts=[stored.earliest,synthetic.earliest].filter(value=>value!==null);
+      return {type:"history",source:"internal-otc",symbol,seconds,before:stored.end,
+        hasMore:stored.hasMore||synthetic.hasMore||combined.length>limit,
+        earliest:starts.length?Math.min(...starts):null,
+        generated:candles.some(bar=>bar.origin!=="recorded"),
+        notice:"Generated historical candles are synthetic analysis data, not previously recorded trading activity. Live trade receipts use the recorded pricing engine only.",
+        candles};
     }
     return transaction(async (client) => {
       await client.query("SET LOCAL lock_timeout = '5s'");
@@ -86,7 +125,10 @@ export function createServerlessOTC({
           symbol,
           randomUUID(),
           randomBytes(32).toString("hex"),
-          JSON.stringify(config),
+          JSON.stringify(generatedHistoryDays ? {...config,historyBootstrapV1:{
+            anchor:Math.floor((initialSlot+1)/50)*5,price:config.price,
+            volatility:config.volatility,precision:config.precision??8,
+          }} : config),
           JSON.stringify(initialModel),
           initialSlot,
         ],
