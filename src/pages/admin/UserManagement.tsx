@@ -1,3 +1,5 @@
+import { useSearchParams, Link } from "react-router-dom";
+import { IdentityReviewQueue } from "@/components/admin/IdentityReviewQueue";
 import { api } from "@/integrations/api/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -48,7 +50,7 @@ const STATUS_STYLES: Record<KycStatus, string> = {
 const isVipTierId = (value: string | null | undefined): value is VipTierId =>
   value === "standard" || value === "pro" || value === "vip";
 
-const UserManagement = () => {
+const UserManagementList = () => {
   const { roles } = useStaffAccess();
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -371,63 +373,10 @@ const UserManagement = () => {
               </div>
             </div>
 
-            {/* KYC Documents Inspection */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-black uppercase text-gray-300">Identity Verification Documents</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-xl border border-white/5 bg-[#0b1018] p-3">
-                  <span className="text-[10px] font-bold text-gray-400">Front Document ID</span>
-                  {selectedUser.kycDocuments.front?.url ? (
-                    <img src={selectedUser.kycDocuments.front.url} alt="Front" className="mt-2 h-32 w-full rounded-lg object-cover border border-white/10" />
-                  ) : (
-                    <div className="mt-2 flex h-32 items-center justify-center rounded-lg border border-dashed border-white/10 text-xs text-gray-500">
-                      Not Uploaded
-                    </div>
-                  )}
-                </div>
-
-                <div className="rounded-xl border border-white/5 bg-[#0b1018] p-3">
-                  <span className="text-[10px] font-bold text-gray-400">Back Document ID</span>
-                  {selectedUser.kycDocuments.back?.url ? (
-                    <img src={selectedUser.kycDocuments.back.url} alt="Back" className="mt-2 h-32 w-full rounded-lg object-cover border border-white/10" />
-                  ) : (
-                    <div className="mt-2 flex h-32 items-center justify-center rounded-lg border border-dashed border-white/10 text-xs text-gray-500">
-                      Not Uploaded
-                    </div>
-                  )}
-                </div>
-              </div>
+            <div className="rounded-xl border border-white/10 p-4 text-sm text-gray-300">
+              Identity documents and decisions are managed in the private review workspace.
+              <Link className="mt-3 block min-h-11 text-emerald-300 underline" to="/admin/users?tab=kyc">Open identity review queue</Link>
             </div>
-
-            {/* Admin KYC Review Decision */}
-            {canReviewKyc && (
-              <div className="space-y-3 border-t border-white/10 pt-4">
-                <textarea
-                  placeholder="Admin review note (optional)..."
-                  value={kycAdminNote}
-                  onChange={(e) => setKycAdminNote(e.target.value)}
-                  className="w-full h-20 rounded-xl border border-white/10 bg-[#0b1018] p-3 text-xs text-white outline-none focus:border-[#1689e8]"
-                />
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => void handleKycReviewSubmit("Verified")}
-                    disabled={isSavingKyc}
-                    className="flex-1 rounded-xl bg-[#00c878] py-2.5 text-xs font-black text-white hover:bg-[#00b26b] transition disabled:opacity-50"
-                  >
-                    Approve & Verify KYC
-                  </button>
-
-                  <button
-                    onClick={() => void handleKycReviewSubmit("Rejected")}
-                    disabled={isSavingKyc}
-                    className="flex-1 rounded-xl bg-[#ff4a5a] py-2.5 text-xs font-black text-white hover:bg-[#e03b4b] transition disabled:opacity-50"
-                  >
-                    Reject KYC
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -435,4 +384,7 @@ const UserManagement = () => {
   );
 };
 
-export default UserManagement;
+export default function UserManagement() {
+  const [params]=useSearchParams();
+  return params.get('tab')==='kyc'?<IdentityReviewQueue/>:<UserManagementList/>;
+}

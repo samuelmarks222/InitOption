@@ -5,7 +5,8 @@ export { testDbConnection } from "./db.js";
 import {
   clerkUserIdToUuid,
   authenticateRequest,
-  authenticateWithUid,
+  authenticateWithUid,
+  authenticateVerifiedRequest,
 } from "./clerkWebhook.js";
 import {
   DEFAULT_PLATFORM_SETTINGS,
@@ -80,19 +81,17 @@ export async function handlePlatformSettings(request: ApiRequest, response: ApiR
 /* ------------------------------------------------------------------ */
 /* Profile (GET/POST/PATCH, Clerk-authenticated)                        */
 /* ------------------------------------------------------------------ */
-const PATCH_ALLOWED = new Set([
-  "avatar_url",
-  "username",
-  "kyc_status",
-  "kyc_documents",
-  "nationality",
-  "phone_country",
-  "phone_country_code",
-  "balance",
-  "welcome_bonus_granted_at",
-  "preferred_currency",
-]);
-
+const PATCH_ALLOWED = new Set([
+  "avatar_url",
+  "username",
+  "nationality",
+  "phone_country",
+  "phone_country_code",
+  "balance",
+  "welcome_bonus_granted_at",
+  "preferred_currency",
+]);
+
 const fetchProfile = async (clerkUserId: string): Promise<Row | null> => {
   const id = clerkUserIdToUuid(clerkUserId);
   const r = await transaction(async (client) => {
@@ -121,7 +120,7 @@ const ensureUserRow = async (id: string, email: string | null) => {
 export async function handleProfile(request: ApiRequest, response: ApiResponse): Promise<void> {
   const method = request.method || "GET";
   try {
-    const clerkUserId = await authenticateRequest(request.headers);
+    const clerkUserId = await authenticateVerifiedRequest(request.headers);
     if (!clerkUserId) {
       sendJson(response, 401, { error: "Unauthorized" });
       return;
@@ -199,6 +198,9 @@ export async function handleProfile(request: ApiRequest, response: ApiResponse):
 
     if (method === "PATCH") {
       const id = clerkUserIdToUuid(clerkUserId);
+      if (Object.keys(body).some(key => /^kyc/i.test(key))) {
+        sendJson(response, 403, { error: "Use the private identity submission and review endpoints." }); return;
+      }
       const updates: Record<string, unknown> = {};
       for (const key of Object.keys(body)) {
         if (PATCH_ALLOWED.has(key)) updates[key] = body[key] === undefined ? null : body[key];
@@ -351,6 +353,9 @@ export async function handleCloudinaryUpload(request: ApiRequest, response: ApiR
     }
 
     const folder = folderPart?.value as string | undefined;
+    if (folder && /(^|\/)kyc(\/|$)/i.test(folder)) {
+      sendJson(response, 410, { error: "Use the private identity document upload workflow." }); return;
+    }
     const uploadResult = await uploadToCloudinary(filePart.data, {
       folder: folder || undefined,
       public_id: publicIdPart ? (publicIdPart.value as string) : (filePart.filename ? filePart.filename.replace(/\.[^/.]+$/, "") : undefined),
@@ -807,6 +812,11 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
       sendJson(response, 400, { error: "Table not allowed" });
       return;
     }
+    if (table === "user_roles" && method !== "GET") {
+      const verified = await authenticateVerifiedRequest(request.headers);
+      const admin = verified && await queryOne("SELECT 1 FROM public.user_roles WHERE user_id=$1 AND role='admin' LIMIT 1", [verified]);
+      if (!admin) { sendJson(response, 403, { error: "Verified administrator required for role changes." }); return; }
+    }
     const idSegment = segments[1] ?? undefined;
     const params: unknown[] = [];
 
@@ -815,6 +825,9 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
       if (!parsedSelect) {
         sendJson(response, 400, { error: "Invalid select columns" });
         return;
+      }
+      if (parsedSelect.embeds.some(emb => !ALLOWED_TABLES.has(emb.table) || emb.cols.some(col => col !== "*" && !IS_IDENTIFIER.test(col)))) {
+        sendJson(response, 400, { error: "Embedded table or column not allowed" }); return;
       }
       const { selectList, joins } = buildSelectAndJoins(parsedSelect, table);
 
@@ -869,6 +882,24 @@ export async function handleDb(request: ApiRequest, response: ApiResponse): Prom
       }
     }
 
+    if (table === "profiles" && Object.keys(body.values ?? {}).some(key => /^kyc/i.test(key))) {
+      sendJson(response, 403, { error: "KYC can only be changed through the private identity workflow." }); return;
+    }
+    if (table === "profiles") {
+      const verified = await authenticateVerifiedRequest(request.headers);
+      if (!verified || verified !== mappedId) { sendJson(response, 401, { error: "Verified account session required." }); return; }
+      if (method === "PATCH" && Object.prototype.hasOwnProperty.call(body.values ?? {}, "id")) {
+        sendJson(response, 403, { error: "Account identity cannot be reassigned." }); return;
+      }
+      const admin = await queryOne("SELECT 1 FROM public.user_roles WHERE user_id=$1 AND role='admin' LIMIT 1", [verified]);
+      if (!admin) {
+        if (method === "POST") {
+          const suppliedId = body.values?.id;
+          if (suppliedId && suppliedId !== mappedId && suppliedId !== appwriteUid) { sendJson(response, 403, { error: "Cannot create another account profile." }); return; }
+          body.values = {...body.values, id:mappedId};
+        } else body.filters = [...(body.filters ?? []), {c:"id", o:"eq", v:mappedId}];
+      }
+    }
     const filterClauses = body.filters ?? [];
     const matchEntries = Object.entries(body.match ?? {});
     if (matchEntries.length > 0) filterClauses.push(...matchEntries.map(([c, v]) => ({ c, o: "eq", v })));

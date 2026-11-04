@@ -3,7 +3,7 @@ import { fetchAllPublishedBlogPostsForSeo, fetchPublicBlogSitemapEntries } from 
 import { fetchPublicTournaments } from "./publicTournaments.js";
 import { readJsonRequestBody } from "./sasapay.js";
 import { query, queryOne, rpc } from "./db.js";
-import { authenticateRequest, clerkUserIdToUuid } from "./clerkWebhook.js";
+import { authenticateRequest, authenticateVerifiedRequest, clerkUserIdToUuid } from "./clerkWebhook.js";
 import { buildTournamentPath } from "../../src/lib/publicTournaments.js";
 import {
   DEFAULT_FAVICON_PATH,
@@ -426,64 +426,8 @@ const notifyKycStatusChange = async ({
   }
 };
 
-const handleAdminReviewKyc = async (request: ApiRequest, response: ApiResponse) => {
-  if (request.method !== "POST") {
-    response.setHeader("Allow", "POST");
-    response.status(405).json({ error: "Method not allowed" });
-    return;
-  }
-
-  const body = (await readJsonRequestBody(request as never)) as KycReviewPayload;
-  const userId = asString(body.userId);
-  const status = asString(body.status);
-  const adminNote = asString(body.adminNote);
-
-  const clerkUserId = await authenticateRequest(request.headers);
-  if (!clerkUserId) {
-    response.status(401).json({ error: "Missing or invalid Bearer token." });
-    return;
-  }
-
-  if (!userId || !isSupportedKycStatus(status)) {
-    response.status(400).json({ error: "userId and a valid KYC status are required." });
-    return;
-  }
-
-  await requireKycReviewer(clerkUserId);
-
-  const targetUserId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)
-    ? userId
-    : clerkUserIdToUuid(userId);
-
-  const profileRow = await queryOne(
-    "select id, kyc_status from profiles where id = $1",
-    [targetUserId],
-  ) as { id: string; kyc_status: string | null } | null;
-
-  if (!profileRow) {
-    throw new Error("User profile not found.");
-  }
-
-  const now = new Date().toISOString();
-  const updatedRow = await queryOne(
-    "update profiles set kyc_status = $1, updated_at = $2 where id = $3 returning id, kyc_status",
-    [status, now, targetUserId],
-  ) as { id: string; kyc_status: string | null } | null;
-
-  if (!updatedRow) {
-    throw new Error("KYC review could not be saved. Refresh and try again.");
-  }
-
-  await notifyKycStatusChange({
-    adminNote,
-    status,
-    userId: targetUserId,
-  });
-
-  response.status(200).json({
-    status: updatedRow.kyc_status,
-    user_id: updatedRow.id,
-  });
+const handleAdminReviewKyc = async (_request: ApiRequest, response: ApiResponse) => {
+  response.status(410).json({error:"Use the private identity review queue. Legacy KYC status changes are disabled."});
 };
 
 const handleAdminUsers = async (request: ApiRequest, response: ApiResponse) => {
@@ -493,7 +437,7 @@ const handleAdminUsers = async (request: ApiRequest, response: ApiResponse) => {
     return;
   }
 
-  const clerkUserId = await authenticateRequest(request.headers);
+  const clerkUserId = await authenticateVerifiedRequest(request.headers ?? {});
   if (!clerkUserId) {
     response.status(401).json({ error: "Missing or invalid Bearer token." });
     return;

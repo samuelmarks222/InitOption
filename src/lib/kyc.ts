@@ -5,6 +5,7 @@ export type KycDocumentLike = {
 } | null | undefined;
 
 export type KycDocumentsLike = {
+  submission?: {status?: string};
   front?: KycDocumentLike;
   back?: KycDocumentLike;
 } | null | undefined;
@@ -27,5 +28,5 @@ export const getProfileKycLabel = (statusValue: unknown, documents: KycDocuments
 
   if (status === "Verified") return "Verified";
   if (status === "Rejected") return "Rejected";
-  return hasUploadedKycDocuments(documents) ? "Submitted" : "Not verified";
+  return documents?.submission?.status === "Submitted" || hasUploadedKycDocuments(documents) ? "Submitted" : "Not verified";
 };
