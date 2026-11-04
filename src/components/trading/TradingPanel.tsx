@@ -1016,8 +1016,9 @@ const TradingPanel = ({
         }}
       >
 
+        <div className="trading-order-form shrink-0">
         {/* â”€â”€ Asset Header & Pending Toggle (Single Row) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <div className="flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-3 lg:pt-2 lg:pb-1" style={{ background: "var(--trading-panel-bg)" }}>
+        <div className="trading-order-heading flex items-center justify-between px-2.5 pt-2 pb-1.5 lg:px-3 lg:pt-2 lg:pb-1" style={{ background: "var(--trading-panel-bg)" }}>
           <button 
             onClick={() => onOpenAssetSelector?.()}
             className="flex min-w-0 items-center gap-2 rounded-[4px] p-1 -ml-1 transition-colors hover:bg-white/5"
@@ -1059,7 +1060,7 @@ const TradingPanel = ({
           type="button"
           onClick={handlePendingTradeToggle}
           aria-pressed={pendingTradeEnabled}
-          className="hidden items-center justify-between px-3 pb-2.5 pt-1 text-left transition-colors hover:bg-white/[0.02] lg:flex"
+          className="trading-pending-toggle hidden items-center justify-between px-3 pb-2.5 pt-1 text-left transition-colors hover:bg-white/[0.02] lg:flex"
         >
           <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-[#1c9cff]">
             {t("tradingPanel.pendingTradeLabel")}
@@ -1075,7 +1076,7 @@ const TradingPanel = ({
         </button>
 
         {/* â”€â”€ Compact mobile layout with desktop controls restored â”€â”€ */}
-        <div className="pb-2 lg:px-3 lg:pt-2 lg:pb-2.5">
+        <div className="trading-order-inputs pb-2 lg:px-3 lg:pt-2 lg:pb-2.5">
           <div className="relative z-10 lg:pb-0 lg:px-0">
             <div className="grid w-full grid-cols-1 gap-2 lg:grid-cols-1 lg:gap-3">
               <div className="relative">
@@ -1293,14 +1294,14 @@ const TradingPanel = ({
         </div>
 
         {/* â”€â”€ Payout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <div className="hidden items-center justify-between px-2.5 pb-2 pt-2 text-xs lg:mx-3 lg:flex lg:px-0 lg:pb-[10px] lg:pt-[10px]" style={{ color: "#8b91a1" }}>
+        <div className="trading-payout hidden items-center justify-between px-2.5 pb-2 pt-2 text-xs lg:mx-3 lg:flex lg:px-0 lg:pb-[10px] lg:pt-[10px]" style={{ color: "#8b91a1" }}>
           <span className="shrink-0 font-normal text-[12px]">Payout</span>
           <span className="mx-2 flex-1 border-b border-dotted border-[#454b5c]" />
           <span className="shrink-0 text-[13px] font-bold tracking-wide text-white">{asset.available === false ? "N/A" : `${payout.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`}</span>
         </div>
 
         {/* â”€â”€ UP & DOWN Buttons (Side-by-side on mobile, stacked on desktop) â”€â”€ */}
-        <div className="grid grid-cols-2 gap-2 px-1.5 pb-3 lg:mx-3 lg:grid-cols-1 lg:gap-3 lg:px-0 lg:pb-2">
+        <div className="trading-direction-buttons grid grid-cols-2 gap-2 px-1.5 pb-3 lg:mx-3 lg:grid-cols-1 lg:gap-3 lg:px-0 lg:pb-2">
           <button
             ref={higherButtonRef}
             type="button"
@@ -1344,16 +1345,19 @@ const TradingPanel = ({
           </button>
         </div>
 
+        </div>
+
         {/* â”€â”€ Secondary Layout Block (Modal on Mobile, Fixed Panel on Desktop) â”€â”€ */}
         <div
-          className={`${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:mt-2 lg:flex flex-1'} flex-col overflow-hidden rounded-[4px] border border-[#242b3e] border-t-[#1c9cff] bg-[#252b3d] lg:bg-[var(--trading-panel-bg)]`}
+          className={`trading-history-card ${mobileHistoryOpen ? 'fixed inset-0 z-[100] flex animate-in slide-in-from-bottom pb-12' : 'hidden lg:mt-2 lg:flex flex-1'} flex-col overflow-hidden rounded-[4px] border border-[#242b3e] border-t-[#1c9cff] bg-[#252b3d] lg:bg-[var(--trading-panel-bg)]`}
         >
           
           {/* â”€â”€ Tabs: History / Pending â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div
-            className="grid grid-cols-2 border-b border-[#202638] bg-[#252b3d] text-center text-xs font-semibold lg:border-transparent lg:bg-transparent"
+            className="trading-history-tabs grid grid-cols-2 border-b border-[#202638] bg-[#252b3d] text-center text-xs font-semibold lg:border-transparent lg:bg-transparent"
           >
             <button
+              aria-pressed={activeTab === "trades"}
               onClick={() => setActiveTab("trades")}
               className={`flex items-center justify-center gap-1.5 py-3 text-xs font-black transition-colors lg:py-2.5 ${activeTab === "trades" ? "text-white" : "text-gray-400 hover:text-gray-200"}`}
             >
@@ -1362,6 +1366,7 @@ const TradingPanel = ({
             </button>
 
             <button
+              aria-pressed={activeTab === "pending"}
               onClick={() => setActiveTab("pending")}
               aria-label={t("tradingPanel.pendingTrades")}
               className={`flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors lg:py-2.5 ${activeTab === "pending" ? "text-white" : "text-gray-400 hover:text-gray-200"}`}

@@ -91,7 +91,7 @@ const AssetInfo = ({
         {/* Plus button */}
         <button
           onClick={onAddAssetClick ?? onOpenSelector}
-          className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[5px] bg-[#0084FF] text-white shadow-md shadow-[#0084FF]/30 hover:bg-[#0070df] transition-all"
+          className="trading-add-asset flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[5px] bg-[#0084FF] text-white shadow-md shadow-[#0084FF]/30 hover:bg-[#0070df] transition-all"
           title="Add asset pair"
         >
           <Plus className="h-5 w-5 stroke-[3]" />
@@ -134,7 +134,7 @@ const AssetInfo = ({
               : null;
 
             return (
-              <div key={tab.symbol} className={`group relative h-[38px] w-[148px] shrink-0 overflow-hidden rounded-[4px] border ${borderClasses}`}>
+              <div key={tab.symbol} className={`trading-asset-tab group relative h-[38px] w-[148px] shrink-0 overflow-hidden rounded-[4px] border ${borderClasses}`}>
                 <button
                   type="button"
                   aria-pressed={isActive}

@@ -4,7 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import TradingHeader from '@/components/trading/TradingHeader';
 import AssetInfo from '@/components/trading/AssetInfo';
+import TradingPanel from '@/components/trading/TradingPanel';
 import { NavigationSidebar } from '@/components/navigation/NavigationSidebar';
+vi.mock('@/hooks/useTrading', () => ({ useTrading: () => ({ activeTrades: [], tradeHistory: [], openTrade: vi.fn() }) }));
+vi.mock('@/lib/tradingPreferences', () => ({ useTradingPreferences: () => ({ preferences: { upTrendColor:'#0fa055', downTrendColor:'#e85b4e', oneClickTrade:true } }) }));
+vi.mock('@/components/trading/TradingDeskContext', () => ({ useTradingDesk: () => ({ isSignalMode:false }) }));
+vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key:string) => key }) }));
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ profile: null }) }));
 vi.mock('@/hooks/useStaffAccess', () => ({ useStaffAccess: () => ({ isAdmin: false }) }));
 vi.mock('@/hooks/useSiteBranding', () => ({ useSiteBranding: () => ({ platformName: 'InitOption', logoUrl: null }) }));
@@ -37,6 +42,18 @@ describe('compact trading dashboard controls', () => {
     fireEvent.click(screen.getByRole('button',{name:'Support'}));expect(select).toHaveBeenLastCalledWith('support');
     fireEvent.click(screen.getByRole('button',{name:'Trade'}));expect(select).toHaveBeenLastCalledWith(null);
     expect(screen.getByRole('button',{name:'Settings'})).toBeTruthy();
+  });
+  it('separates the right order form and scrollable history without losing controls or unavailable-asset protection', () => {
+    const {container}=render(<TradingPanel asset={{symbol:'EUR/USD',price:1.1,maxProfit:92,available:false}} demoBalance={457} accountType="demo" onDemoBalanceChange={vi.fn()} activeTradesOverride={[]} tradeHistoryOverride={[]} />);
+    const form=container.querySelector('.trading-order-form')!;
+    const history=container.querySelector('.trading-history-card')!;
+    expect(form.parentElement).toBe(history.parentElement);
+    expect(form.contains(screen.getByRole('button',{name:/Buy/}))).toBe(true);
+    expect(screen.getByRole('button',{name:/Buy/}).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button',{name:/Sell/}).hasAttribute('disabled')).toBe(true);
+    const tabs=history.querySelectorAll('.trading-history-tabs > button');
+    expect(tabs[0].getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(tabs[1]);expect(tabs[1].getAttribute('aria-pressed')).toBe('true');
   });
   it('keeps compact asset tabs selectable, closable and keyboard-accessible without losing payouts', () => {
     const select=vi.fn(),remove=vi.fn(),add=vi.fn();

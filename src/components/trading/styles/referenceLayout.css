@@ -1,0 +1,93 @@
+/* Geometry measured from the supplied 1568 × 980 reference. Desktop only:
+   retain real branding/data and existing mobile controls, not screenshot content. */
+@media (min-width: 1024px) {
+  .trading-terminal {
+    --terminal-header-height: clamp(62px, 4.9745vw, 78px);
+    --terminal-nav-width: clamp(76px, 6.25vw, 98px);
+    --terminal-order-width: clamp(220px, 16.4541vw, 258px);
+    --terminal-tab-height: clamp(60px, 4.7194vw, 74px);
+  }
+  .trading-terminal .trading-terminal-header {
+    height: var(--terminal-header-height);
+    border-bottom: 0;
+  }
+  .trading-terminal .trading-navigation-toggle {
+    width: var(--terminal-nav-width);
+    height: var(--terminal-header-height);
+  }
+  .trading-navigation-toggle svg { width: 26px; height: 26px; }
+  .trading-terminal .trading-header-desktop { padding-left: var(--terminal-nav-width); }
+  .trading-terminal .trading-brand { gap: 8px; }
+  .trading-brand > span:not(:first-child) { display: none; }
+  .trading-terminal .trading-brand img { height: 34px; max-width: 190px !important; }
+  .trading-brand > span:first-child { font-size: 24px; }
+  .trading-terminal .trading-promotion { justify-content: flex-start; padding-left: clamp(24px, 12.25vw, 192px); }
+  .trading-promotion > button { height: 52px; padding: 0 14px; font-size: 16px; white-space: nowrap; }
+  .trading-promotion > button > span:first-child { width: 38px; height: 38px; font-size: 30px; }
+  .trading-terminal-header .trading-notifications { width: 80px; height: 46px; }
+  .trading-terminal-header #tour-account-switch { min-width: 184px; height: 46px; padding: 0 14px; gap: 10px; }
+  .trading-terminal-header #tour-account-switch p:first-child { font-size: 11px; }
+  .trading-terminal-header #tour-account-switch p:last-child { font-size: 17px; }
+  .trading-terminal-header [data-deposit-trigger],
+  .trading-header-desktop > div:last-child > button:last-child { height: 46px; padding: 0 15px; font-size: 15px; }
+  .trading-terminal .trading-navigation { width: var(--terminal-nav-width); border-right: 0; }
+  .trading-terminal .trading-navigation.is-collapsed { width: 56px; }
+  .trading-navigation nav { padding-left: 12px; padding-right: 12px; }
+  .trading-navigation nav > button { height: 76px; border-radius: 4px; gap: 7px; flex-shrink: 0; }
+  .trading-navigation nav > button svg { width: 25px; height: 25px; }
+  .trading-navigation nav > button > span:last-child { font-size: 11px; letter-spacing: 0; max-width: 70px; overflow-wrap: anywhere; }
+  .trading-navigation nav[aria-label="Secondary workspace navigation"] { gap: 12px; padding-top: 12px; }
+  .trading-navigation nav[aria-label="Utility workspace navigation"] > button { height: 62px; }
+  .trading-navigation nav[aria-label="Utility workspace navigation"] > button[aria-label="Settings"] { order: -1; height: 40px; margin-bottom: 8px; }
+  .trading-navigation nav[aria-label="Utility workspace navigation"] > button[aria-label="Settings"] > span:last-child { display: none; }
+  .trading-navigation nav[aria-label="Utility workspace navigation"] > button[aria-label="Help"] { height: 56px; }
+  .trading-terminal .trading-asset-strip { height: var(--terminal-tab-height); padding: 0 12px; border-bottom: 0; }
+  .trading-terminal .trading-add-asset { width: 50px; height: 50px; border-radius: 9px; margin-right: 12px; }
+  .trading-terminal .trading-asset-tab { width: 132px; height: 54px; }
+  .trading-asset-tab > button:first-child > span > span { font-size: 13px; }
+  .trading-asset-tab > button:first-child > span > span:last-child { font-size: 12px; }
+  .trading-asset-tab > button:first-child { gap: 6px; padding-left: 10px; }
+  .trading-terminal #tour-trade-panel { padding: 12px 12px 12px 10px; min-height: 0; }
+  .trading-terminal aside.trading-order-panel {
+    width: var(--terminal-order-width);
+    min-height: 0;
+    gap: 12px;
+    background: transparent !important;
+    border: 0 !important;
+    overflow: visible;
+  }
+  .trading-order-form { background: var(--trading-panel-bg); border-radius: 6px; padding-bottom: 18px; }
+  .trading-terminal .trading-order-heading { padding: 16px 18px 12px; min-height: 50px; border-radius: 6px 6px 0 0; }
+  .trading-order-heading button > div > span { font-size: 15px; }
+  .trading-order-heading button > div > span:last-of-type { margin-left: auto; }
+  .trading-terminal .trading-pending-toggle { padding: 4px 18px 12px; min-height: 32px; width: 100%; }
+  .trading-pending-toggle > span { font-size: 11px; }
+  .trading-terminal .trading-order-inputs { padding: 15px 18px 0; }
+  .trading-order-inputs > div > div { gap: 12px; }
+  .trading-order-inputs .lg\:block > div:first-child { font-size: 14px; }
+  .trading-order-inputs .lg\:block > div:nth-child(2) { height: 58px; padding: 0 14px; background: transparent; }
+  .trading-order-inputs .lg\:block > div:nth-child(2) > span:not(.flex-1) { width: 30px; height: 30px; background: rgba(255,255,255,.06); border: 0; }
+  .trading-order-inputs .lg\:block > div:nth-child(2) > .flex-1,
+  .trading-order-inputs input { font-size: 20px; font-weight: 500; }
+  .trading-order-inputs .lg\:block > div:nth-child(3) { height: 14px; margin-top: 4px; justify-content: center; }
+  .trading-terminal .trading-payout { margin: 0 18px; padding: 0 0 14px; height: 30px; }
+  .trading-payout > span { font-size: 14px; }
+  .trading-terminal .trading-direction-buttons { margin: 0 18px; gap: 12px; padding: 0; }
+  .trading-terminal .trading-direction-buttons > button { height: 54px; border-radius: 4px; padding: 0 15px; font-size: 16px; }
+  .trading-terminal .trading-history-card { margin-top: 0; min-height: 0; border: 0; border-radius: 5px; }
+  .trading-terminal .trading-history-tabs { height: 54px; flex-shrink: 0; grid-template-columns: 7fr 3fr; }
+  .trading-history-tabs > button { border-top: 3px solid transparent; font-size: 14px; }
+  .trading-history-tabs > button[aria-pressed="true"] { border-top-color: #1c9cff; background: rgba(255,255,255,.025); }
+}
+@media (min-width: 1024px) and (max-width: 1399px) {
+  .trading-terminal .trading-promotion { display: none; }
+  .trading-navigation nav > button { height: 60px; }
+  .trading-navigation nav[aria-label="Secondary workspace navigation"] { gap: 4px; }
+  .trading-order-form { padding-bottom: 12px; }
+  .trading-terminal .trading-order-heading { padding: 12px; }
+  .trading-terminal .trading-pending-toggle { padding-left: 12px; padding-right: 12px; }
+  .trading-terminal .trading-order-inputs { padding: 16px 12px 0; }
+  .trading-order-inputs .lg\:block > div:nth-child(2) { height: 44px; padding: 0 8px; }
+  .trading-terminal .trading-direction-buttons > button { height: 44px; }
+  .trading-terminal .trading-direction-buttons, .trading-terminal .trading-payout { margin-left: 12px; margin-right: 12px; }
+}
