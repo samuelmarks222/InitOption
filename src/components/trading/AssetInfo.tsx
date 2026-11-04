@@ -117,11 +117,11 @@ const AssetInfo = ({
             const liveTone = !hasActiveTrade ? null : isWinningTrade ? "up" : isLosingTrade ? "down" : null;
             const borderClasses = hasActiveTrade && liveTone
               ? liveTone === "up"
-                ? "bg-[#2a3040] border-[#18d87d] shadow-md ring-1 ring-[#18d87d]/40"
-                : "bg-[#2a3040] border-[#E03E3E] shadow-md ring-1 ring-[#E03E3E]/45"
+                ? "bg-[#363a43] border-[#18d87d] shadow-md ring-1 ring-[#18d87d]/40"
+                : "bg-[#363a43] border-[#E03E3E] shadow-md ring-1 ring-[#E03E3E]/45"
               : isActive
-                ? "bg-[#151721] border-[#454b5e]"
-                : "bg-[#292d3e] border-white/5 hover:bg-[#343849] hover:border-white/20";
+                ? "bg-[#444a55] border-[#939dad]"
+                : "bg-[#363a43] border-white/10 hover:bg-[#414752] hover:border-white/25";
 
             // Live P/L text: +$19.20 (winning) or -$0.45 (losing, live value)
             const livePnlText = isWinningTrade
