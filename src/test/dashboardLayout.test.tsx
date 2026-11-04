@@ -42,6 +42,9 @@ describe('compact trading dashboard controls', () => {
     fireEvent.click(screen.getByRole('button',{name:'Support'}));expect(select).toHaveBeenLastCalledWith('support');
     fireEvent.click(screen.getByRole('button',{name:'Trade'}));expect(select).toHaveBeenLastCalledWith(null);
     expect(screen.getByRole('button',{name:'Settings'})).toBeTruthy();
+    const tournaments=screen.getByRole('button',{name:'Tournaments'});
+    expect(tournaments.querySelector('wbr')).toBeTruthy();
+    fireEvent.click(tournaments);expect(select).toHaveBeenLastCalledWith('tournaments');
   });
   it('separates the right order form and scrollable history without losing controls or unavailable-asset protection', () => {
     const {container}=render(<TradingPanel asset={{symbol:'EUR/USD',price:1.1,maxProfit:92,available:false}} demoBalance={457} accountType="demo" onDemoBalanceChange={vi.fn()} activeTradesOverride={[]} tradeHistoryOverride={[]} />);

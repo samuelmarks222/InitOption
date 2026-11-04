@@ -4,14 +4,20 @@ The user subsequently requested smaller, more balanced controls rather than the
 large reference-scale UI. This supersedes the exact-reference sizing recorded
 below. The desktop layout now uses:
 
-- 58–64px header; 68–76px expanded navigation rail.
+- 58–64px header; 76–84px expanded navigation rail.
 - 52–56px asset strip with 40px tabs and a 38px add button.
 - 216–232px order panel, retaining separate order/history cards.
 - 44px Time/Investment fields and Buy/Sell buttons; 16px field text.
-- Smaller 21px navigation icons, 9px labels and consistent 8–14px spacing.
+- More legible 25px navigation icons with 2.5px strokes, bold 11px labels,
+  and consistent 8–14px spacing.
 - 44px sentiment rail, with toolbar offsets derived from the same constant.
 - Short desktop windows scroll the order form when needed, preserving history
   access and action-target sizes. Desktop-only overrides leave mobile sizing alone.
+
+A subsequent targeted readability correction increases the desktop logo image
+to 40px high (maximum 220px wide), and the text fallback to bold 24px. Navigation
+labels remain white and wrap Tournaments at a deliberate word break instead of
+splitting arbitrary trailing letters. Other panel/control dimensions stay compact.
 
 No chart prices, tick handling, account data, trade execution or workspace
 functionality is changed. The table below documents the **previous** large layout,
