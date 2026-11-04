@@ -340,3 +340,32 @@ all catalog assets; sustained unattended history still needs an approved frequen
 scheduler and measured all-asset capacity/freshness. No pre-recording candles are
 fabricated and source slots filled from the persisted OTC engine checkpoint are
 not represented as external exchange observations.
+
+### Live feed freeze recovery
+
+The same-origin HTTP transport now bounds both response fetch and JSON decoding
+with a 10-second timeout. Aborted/timed-out responses cannot later overwrite a
+recovered stream. Repeated non-advancing cursors for 10 seconds (or an authoritative
+server timestamp over 10 seconds ahead of its newest tick without catchingUp)
+trigger reconnecting state and a fresh snapshot request, not a false live state.
+An empty initial snapshot is not considered a live price.
+
+Each chart/history/status/error consumer is isolated so a failing view cannot
+starve other subscribers. Quote subscribers are isolated too, with one warning
+per failing subscriber rather than a log flood. Foreground visibility and online
+restoration wake idle polling immediately without overlapping an in-flight poll;
+listeners and timeouts are removed when the shared stream is disposed.
+
+These changes add no browser-generated prices, candle history, countdown overlay,
+or pricing/status banner. Catch-up history still waits for the authoritative
+server backlog to complete; server/database outages cannot be repaired by client
+animation. Source ticks remain 100ms logical steps, not a guaranteed 100ms HTTP
+arrival rate. Tests cover hung fetches, late responses, stagnant cursors, empty
+snapshots, callback failures, connectivity/visibility recovery and cleanup.
+
+**24/7 unattended all-asset recording remains a separate deployment requirement.**
+The admin enable switch is not a scheduler. No frequent cron, worker, billing or
+hosting change was made by this recovery fix. See the activation-pending section
+above. The reported production freeze's exact cause has not been established from
+live runtime responses; this is local transport hardening, not proof that the
+production collector is running continuously.

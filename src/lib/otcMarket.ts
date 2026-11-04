@@ -12,15 +12,24 @@ export function marketWebSocketUrl(): string | undefined {
 export interface OTCQuote {symbol:string;price:number;timestamp:number;sequence:number;session?:string}
 const quotes = new Map<string, OTCQuote>();
 const listeners = new Set<(quote: OTCQuote) => void>();
+const reportedQuoteFailures = new WeakSet<(quote: OTCQuote) => void>();
 export function publishOTCQuote(quote: OTCQuote) {
   quotes.set(quote.symbol, quote);
-  for (const listener of listeners) listener(quote);
+  for (const listener of [...listeners]) {
+    try { listener(quote); }
+    catch (error) {
+      if (!reportedQuoteFailures.has(listener)) {
+        reportedQuoteFailures.add(listener);
+        console.warn('OTC quote consumer failed; market delivery continues', error);
+      }
+    }
+  }
 }
 export function latestOTCQuote(symbol: string, maxAge = 2): OTCQuote | undefined {
   const quote = quotes.get(symbol);
   return quote && Date.now()/1000 - quote.timestamp <= maxAge ? quote : undefined;
 }
-export function subscribeOTCQuotes(listener: (quote: OTCQuote) => void) { listeners.add(listener); return () => { listeners.delete(listener); }; }
+export function subscribeOTCQuotes(listener: (quote: OTCQuote) => void) { listeners.add(listener); return () => { listeners.delete(listener); reportedQuoteFailures.delete(listener); }; }
 /** Exact symbol and last server tick at/before expiry, never a different chart's price.
  * Current receipt freshness uses the authoritative server quotedAt, not the device
  * wall clock (which may be minutes off). Both supported servers supply quotedAt. */
