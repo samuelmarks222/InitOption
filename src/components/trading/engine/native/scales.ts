@@ -1,5 +1,6 @@
 export class TimeCoordinates {
   times: number[] = [];
+  intervalSeconds: number | null = null;
   from = 0;
   to = 100;
   width = 1;
@@ -7,6 +8,7 @@ export class TimeCoordinates {
   logicalToCoordinate(index: number) { return (index - this.from) * this.spacing; }
   coordinateToLogical(x: number) { return this.from + x / this.spacing; }
   get interval() {
+    if (this.intervalSeconds !== null) return this.intervalSeconds;
     return this.times.length > 1 ? Math.max(1, this.times[this.times.length - 1] - this.times[this.times.length - 2]) : 60;
   }
   timeToLogical(time: number): number | null {

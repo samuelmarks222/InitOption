@@ -303,3 +303,11 @@ class NativeChart {
 export function createChart(host: HTMLElement, options: Options = {}): IChartApi {
   return new NativeChart(host, options) as unknown as IChartApi;
 }
+
+/** Explicit UTC interval for extrapolating sparse axes (one bar has no inferred step). */
+export function setChartInterval(chart: IChartApi, seconds: number): void {
+  if (!Number.isFinite(seconds) || seconds <= 0) throw new Error('Invalid chart interval');
+  const native = chart as unknown as NativeChart;
+  native.time.intervalSeconds = seconds;
+  native.invalidate();
+}

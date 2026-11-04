@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
-import { createChart, CandlestickSeries, AreaSeries, BarSeries, LineSeries, HistogramSeries } from '@/components/trading/engine/native/chart';
+import { liveViewport } from '@/components/trading/engine/native/viewport';
+import { createChart, setChartInterval, CandlestickSeries, AreaSeries, BarSeries, LineSeries, HistogramSeries } from '@/components/trading/engine/native/chart';
 let context: any;
 beforeEach(() => {
   vi.useFakeTimers();
@@ -36,6 +37,19 @@ describe('native canvas renderer integration', () => {
     chart.resize(360,640); vi.advanceTimersByTime(20);
     expect(canvas.width).toBe(720); expect(canvas.height).toBe(1280);
     expect(series.data()).toEqual(rows); chart.remove();
+  });
+  it('renders one high-timeframe candle near the right edge with accurate future axis times', () => {
+    const chart=createChart(host(),{width:800,height:400});
+    setChartInterval(chart,900);
+    const series=chart.addSeries(CandlestickSeries);
+    const rows=[{time:1800 as any,open:100,high:108,low:95,close:102}];series.setData(rows);
+    const range=liveViewport(800,1,7);chart.timeScale().setVisibleLogicalRange(range);
+    vi.advanceTimersByTime(20);
+    const x=chart.timeScale().timeToCoordinate(1800 as any)!;
+    expect(x/720).toBeGreaterThan(.8);expect(x/720).toBeLessThan(.95);
+    const future=chart.timeScale().timeToCoordinate(2700 as any)!;
+    expect(chart.timeScale().coordinateToTime(future)).toBeCloseTo(2700);
+    expect(series.data()).toEqual(rows);chart.remove();
   });
   it('retains viewport across replacement series, aligns overlays, and disposes canvas', () => {
     const el=host(); const chart=createChart(el,{width:800,height:400});
