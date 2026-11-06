@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TradingChart from "@/components/trading/TradingChart";
 
+const chartTick = vi.hoisted(() => vi.fn());
 const feeds = vi.hoisted(() => [] as Array<{options: any; connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>}>);
 vi.mock("@/components/trading/engine/marketDataFeed", () => ({
   createMarketDataFeed: (options: any) => {
@@ -13,7 +14,7 @@ vi.mock("@/components/trading/engine/marketDataFeed", () => ({
 vi.mock("@/components/trading/drawings/DrawingOverlay", () => ({ DrawingOverlay: () => null }));
 vi.mock("@/components/trading/chart-core/useTradingPriceChart", () => ({ useTradingPriceChart: () => ({
   view: null, message: 'Loading chart history…', status: 'connecting', historyWarning: '',
-  onTick: vi.fn(), onHistory: vi.fn(), onStatus: vi.fn(), zoom: vi.fn(), latest: vi.fn(), reset: vi.fn(),
+  onTick: chartTick, onHistory: vi.fn(), onStatus: vi.fn(), zoom: vi.fn(), latest: vi.fn(), reset: vi.fn(),
 }) }));
 vi.mock("@/contexts/DrawingContext", () => ({ useDrawings: () => ({ activeTool: null, setActiveTool: vi.fn(), setDrawings: vi.fn() }) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
@@ -23,7 +24,7 @@ const asset = {symbol:"EUR/USD", price:1.1, basePrice:1.1, type:"forex"};
 const indicator = {instanceId:"a", configId:"sma", name:"SMA", pane:"overlay" as const, params:{}, visible:true};
 const props = () => ({ asset, activeIndicators: [indicator], onPriceUpdate: vi.fn(), onToggleIndicatorsPanel: vi.fn(), onToggleDrawingsPanel: vi.fn(), onUpdateIndicator: vi.fn(), onRemoveIndicator: vi.fn(), onOpenIndicatorSettings: vi.fn() });
 
-beforeEach(() => { feeds.length = 0; });
+beforeEach(() => { feeds.length = 0; chartTick.mockReset(); });
 describe("chart rebuild shell", () => {
   it("retains indicator and drawing entry points while loading the chart", () => {
     const p = props();
@@ -57,6 +58,14 @@ describe("chart rebuild shell", () => {
     expect(feeds[1].options.subscription.symbol).toBe("GBP/USD");
     view.unmount();
     expect(feeds[1].disconnect).toHaveBeenCalledOnce();
+  });
+  it("continues updating the chart when a trading price consumer throws", () => {
+    const p = props();
+    p.onPriceUpdate.mockImplementation(() => { throw new Error('consumer failure'); });
+    render(<TradingChart {...p} />);
+    const tick = {symbol:"EUR/USD", price:1.25, timestamp:125, source:"internal-otc"};
+    expect(() => feeds[0].options.callbacks.onTick(tick)).toThrow('consumer failure');
+    expect(chartTick).toHaveBeenCalledWith(tick);
   });
   it("keeps mobile indicator and drawing controls accessible", () => {
     const p = props();

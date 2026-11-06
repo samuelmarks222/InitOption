@@ -52,6 +52,7 @@ export class ObservedHistory {
       history: count ? closed.slice(-count) : [],
       current: bars.find(bar => bar.time === currentTime) ?? null,
       lastTimestamp: stream?.lastTimestamp,
+      lastSequence: stream && stream.lastSequence >= 0 ? stream.lastSequence : undefined,
     };
   }
 }

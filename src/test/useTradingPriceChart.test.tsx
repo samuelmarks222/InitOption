@@ -46,6 +46,42 @@ describe('trading chart data integration', () => {
     await act(async () => resolve({candles:[candle(100),candle(105)],hasMore:false}));
     expect(inst.series.setData).toHaveBeenLastCalledWith([candle(100),candle(105),{...current,high:1.3,close:1.3,volume:6}], true);
   });
+  it('applies distinct sequence-ordered ticks with the same timestamp without resetting the chart', () => {
+    fakes.snapshot.mockReturnValue({history: [candle(105)], current: candle(110), lastTimestamp: 112, lastSequence: 10});
+    const {result} = renderHook(() => useTradingPriceChart(ref, 'EUR/CAD', 5, 'candles'));
+    const inst = fakes.instances[0].instance;
+    const emit = (price:number, sequence:number) => act(() => result.current.onTick({symbol:'EUR/CAD',timestamp:112,price,sequence,source:'internal-otc'}));
+    emit(1.4, 11); emit(0.8, 12); emit(2, 12); emit(2, 9);
+    expect(inst.series.update).toHaveBeenCalledTimes(2);
+    expect(inst.series.update).toHaveBeenLastCalledWith({time:110,open:1,high:1.4,low:0.8,close:0.8,volume:7});
+    expect(inst.series.setData).toHaveBeenCalledTimes(1);
+  });
+  it('recovers a failed incremental update using the latest observed snapshot', () => {
+    fakes.snapshot.mockReturnValue({history:[candle(105)], current:candle(110), lastTimestamp:112, lastSequence:10});
+    const {result} = renderHook(() => useTradingPriceChart(ref, 'EUR/CAD', 5, 'candles'));
+    const inst = fakes.instances[0].instance;
+    inst.series.update.mockImplementationOnce(() => {throw new Error('renderer out of sync')});
+    const next = {...candle(110), high:1.4, close:1.4, volume:6};
+    fakes.snapshot.mockReturnValue({history:[candle(105)], current:next, lastTimestamp:113, lastSequence:11});
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    act(() => result.current.onTick({symbol:'EUR/CAD',timestamp:113,price:1.4,sequence:11,source:'internal-otc'}));
+    expect(inst.series.setData).toHaveBeenLastCalledWith([candle(105),next],true);
+    expect(result.current.liveWarning).toBe('');
+    warn.mockRestore();
+  });
+  it('warns if the feed stops advancing and clears the warning on a new tick', async () => {
+    vi.useFakeTimers();
+    fakes.snapshot.mockReturnValue({history: [candle(105)], current: candle(110), lastTimestamp: 112, lastSequence: 10});
+    const {result,unmount} = renderHook(() => useTradingPriceChart(ref, 'EUR/CAD', 5, 'candles'));
+    act(() => result.current.onStatus('live'));
+    act(() => vi.advanceTimersByTime(15000));
+    expect(result.current.liveWarning).toContain('No recent price updates');
+    act(() => result.current.onTick({symbol:'EUR/CAD',timestamp:113,price:1.3,sequence:11,source:'internal-otc'}));
+    expect(result.current.liveWarning).toBe('');
+    act(() => result.current.onStatus('reconnecting'));
+    expect(result.current.liveWarning).toContain('reconnecting');
+    unmount(); vi.runOnlyPendingTimers(); vi.useRealTimers();
+  });
   it('changes type without remounting the chart, and cleans up on symbol change', async () => {
     const {rerender, unmount} = renderHook(({symbol, kind}) => useTradingPriceChart(ref, symbol, 5, kind), {initialProps:{symbol:'EUR/CAD',kind:'candles' as 'candles'|'bars'}});
     const first = fakes.instances[0].instance;
