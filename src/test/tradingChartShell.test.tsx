@@ -10,6 +10,11 @@ vi.mock("@/components/trading/engine/marketDataFeed", () => ({
     return feed;
   },
 }));
+vi.mock("@/components/trading/drawings/DrawingOverlay", () => ({ DrawingOverlay: () => null }));
+vi.mock("@/components/trading/chart-core/useTradingPriceChart", () => ({ useTradingPriceChart: () => ({
+  view: null, message: 'Loading chart history…', status: 'connecting', historyWarning: '',
+  onTick: vi.fn(), onHistory: vi.fn(), onStatus: vi.fn(), zoom: vi.fn(), latest: vi.fn(), reset: vi.fn(),
+}) }));
 vi.mock("@/contexts/DrawingContext", () => ({ useDrawings: () => ({ activeTool: null, setActiveTool: vi.fn(), setDrawings: vi.fn() }) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock("@/components/trading/PairInfoModal", () => ({ PairInfoModal: () => null }));
@@ -20,10 +25,10 @@ const props = () => ({ asset, activeIndicators: [indicator], onPriceUpdate: vi.f
 
 beforeEach(() => { feeds.length = 0; });
 describe("chart rebuild shell", () => {
-  it("retains indicator and drawing entry points without rendering a chart", () => {
+  it("retains indicator and drawing entry points while loading the chart", () => {
     const p = props();
     render(<TradingChart {...p} />);
-    expect(screen.getByRole("status")).toHaveTextContent("chart system is being rebuilt");
+    expect(screen.getByRole("status")).toHaveTextContent("Loading chart history");
     fireEvent.click(screen.getByTitle("chartToolbar.graphicalTools"));
     fireEvent.click(screen.getByTitle("chartToolbar.indicators"));
     expect(p.onToggleDrawingsPanel).toHaveBeenCalledOnce();
@@ -32,7 +37,7 @@ describe("chart rebuild shell", () => {
     expect(p.onUpdateIndicator).toHaveBeenCalledWith("a", {visible:false});
     fireEvent.click(screen.getByRole("button", {name: "Delete SMA"}));
     expect(p.onRemoveIndicator).toHaveBeenCalledWith("a");
-    expect(screen.getByRole("button", {name:"tradingChart.zoomIn"})).toBeDisabled();
+    expect(screen.getByRole("button", {name:"tradingChart.zoomIn"})).toBeEnabled();
     fireEvent.click(screen.getByRole("button", {name:"chartToolbar.openChartSettings"}));
     expect(screen.getByText("tradingChart.displaySettings")).toBeInTheDocument();
     expect(screen.getByText("tradingChart.chartTypeCandles")).toBeInTheDocument();
