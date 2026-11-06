@@ -4,7 +4,6 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { BetSlipProvider } from "@/fieldbook/sportsbook/BetSlipContext";
 import SafeAppwriteProvider from "@/integrations/appwrite/AppwriteProvider";
 import TradingRouteProviders from "@/components/TradingRouteProviders";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -15,7 +14,7 @@ import RouteSeoManager from "@/components/seo/RouteSeoManager";
 
 const queryClient = new QueryClient();
 
-const Index = lazy(() => import("./components/sportsbook/Sportsbook"));
+const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Forgot = lazy(() => import("./pages/Forgot"));
@@ -149,10 +148,8 @@ const App = () => {
          <BrowserRouter>
            <RouteSeoManager platformSettings={platformSettings} />
            <SafeAppwriteProvider>
-             <BetSlipProvider>
              <Routes>
                         <Route path="/" element={withRouteSuspense(<Index />)} />
-                        <Route path="/fieldbook/:page" element={withRouteSuspense(<Index />)} />
                         <Route path="/about" element={withRouteSuspense(<PublicInfoPage pageKey="about" />)} />
                         <Route path="/facts-and-figures" element={withRouteSuspense(<PublicInfoPage pageKey="facts-and-figures" />)} />
                         <Route path="/blog" element={withRouteSuspense(<BlogPage />)} />
@@ -228,7 +225,6 @@ const App = () => {
 
                         <Route path="*" element={withRouteSuspense(<NotFound />)} />
              </Routes>
-             </BetSlipProvider>
            </SafeAppwriteProvider>
          </BrowserRouter>
       </TooltipProvider>
