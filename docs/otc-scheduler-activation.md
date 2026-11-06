@@ -21,7 +21,7 @@ Vercel cron instead; do not configure both.
 - Separately persisted authenticated scheduler observations. Manual admin cycles
   cannot fabricate scheduled-run health or erase a scheduler failure. Completion
   and health updates are fenced by the same cycle lease token.
-- Admin health requires recent scheduler receipt/completion (150s), two successful
+- Scheduler health requires recent scheduler receipt/completion (150s), two successful
   scheduled work cycles, no scheduled error, every catalog asset initialized, and
   every asset advanced within 120s. Missing jobs, failures, initialization and lag
   are distinct states. Partial cycles alone do not prove catalog freshness.
@@ -68,9 +68,10 @@ based on positions, balances or outcomes.
    `--confirm-supported-plan` is an operator acknowledgment, not plan detection.
 5. Review/publish that manifest through the agreed PR/deployment workflow. The
    command edits a local file only; it does not deploy anything.
-6. In Admin, enable all assets. This saves permission and runs one manual initial
-   cycle. Close the page and allow the scheduled service to run independently.
-7. Reopen Admin after multiple minute boundaries. Verify **separate** scheduler
+6. An authorized administrator can enable collection and request a cycle through
+   the protected APIs documented in `vercel-otc.md`. The Asset Library control
+   panel has been removed. Allow the scheduled service to run independently.
+7. Query the protected status API after multiple minute boundaries. Verify **separate** scheduler
    timestamps, at least two consecutive successful scheduled work cycles, and all
    catalog assets within the freshness window. Do not infer unattended operation
    from a secret being configured, a manual cycle, or currently viewed assets.
@@ -98,7 +99,7 @@ acceptance. No external alert delivery or paid monitoring is provisioned here.
 
 ## Rollback
 
-- Disable background collection in Admin to stop new waves while retaining history.
+- Disable background collection through the protected administrator API to stop new waves while retaining history.
 - To remove only the OTC cron from the local manifest:
 
   ```sh
@@ -115,6 +116,5 @@ Node tests cover opt-in cron configuration, idempotence/rollback, routing, bound
 parallelism, switch cancellation between waves, missing/manual versus scheduled
 health, freshness, failures and obsolete-lease fencing. Embedded PostgreSQL tests
 exercise real SQL with test assets; these are not real Vercel cron executions.
-Admin interaction tests verify honest missing/healthy states and status-only page
-polling. Production cron execution, capacity and browser-closed recording remain
+Backend tests cover collection authorization and scheduler health. Production cron execution, capacity and browser-closed recording remain
 pending until the activation checklist is completed.
