@@ -82,9 +82,13 @@ export default function TradingChart({
         onTick: (tick) => {
           if (!active || tick.symbol !== asset.symbol) return;
           const seconds = timeframeRef.current;
-          callbackRef.current?.(tick.price, Math.floor(tick.timestamp / seconds) * seconds, seconds);
-          try { chartHandlers.current.onTick(tick); }
-          catch (error) { console.error('Chart update failed:', error); }
+          try {
+            callbackRef.current?.(tick.price, Math.floor(tick.timestamp / seconds) * seconds, seconds);
+          } finally {
+            // A trading-panel consumer error must not silently freeze the chart.
+            try { chartHandlers.current.onTick(tick); }
+            catch (error) { console.error('Chart update failed:', error); }
+          }
         },
         onHistory: () => { try { chartHandlers.current.onHistory(); } catch (error) { console.error('Chart history failed:', error); } },
         onStatusChange: (status) => chartHandlers.current.onStatus(status),
@@ -114,6 +118,7 @@ export default function TradingChart({
         {isInternalOTC && <div>Synthetic OTC prices</div>}
         {chart.status !== "live" && <div>Feed: {chart.status}</div>}
         {chart.historyWarning && <div>{chart.historyWarning}</div>}
+        {chart.liveWarning && <div role="status" className="rounded bg-amber-950/90 px-2 py-1 text-amber-200">{chart.liveWarning}</div>}
         {activeIndicators.some(ind => ind.visible) && <div>Indicator plots are not yet available</div>}
       </div>
       {showTools && <>
