@@ -1,7 +1,7 @@
 import { Minus, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-export function ChartZoomControls({ onZoom }: { onZoom: (direction: "in" | "out") => void }) {
+export function ChartZoomControls({ onZoom, disabled = false }: { onZoom: (direction: "in" | "out") => void; disabled?: boolean }) {
   const { t } = useTranslation();
   const controls = [
     { direction: "out" as const, label: t("tradingChart.zoomOut"), Icon: Minus },
@@ -15,6 +15,7 @@ export function ChartZoomControls({ onZoom }: { onZoom: (direction: "in" | "out"
             key={direction}
             type="button"
             onClick={() => onZoom(direction)}
+            disabled={disabled}
             className="flex h-11 w-11 items-center justify-center rounded-[4px] border border-white/6 bg-[#2a3040]/96 text-[#b8c1d2] shadow-[0_6px_14px_rgba(0,0,0,0.22)] transition-colors hover:bg-[#333a4b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8fa4d2] sm:h-6 sm:w-6"
             title={label}
             aria-label={label}

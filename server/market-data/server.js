@@ -1,5 +1,4 @@
 import {createServer} from 'node:http';
-import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {WebSocketServer, WebSocket} from 'ws';
 import {SimulationMarket} from './simulation.js';
@@ -14,11 +13,6 @@ export function createSimulationServer({port = 8090, host = '0.0.0.0', market = 
       const from = Number(url.searchParams.get('from') ?? 0);
       res.setHeader('Content-Type','application/json');
       res.end(JSON.stringify({mode:'simulation',ticks:ticks.filter(t => t.timestamp >= from)})); return;
-    }
-    if (url.pathname === '/' || url.pathname === '/chart.html') {
-      try { const html = await readFile(new URL('../../financial-chart/chart.html', import.meta.url)); res.setHeader('Content-Type','text/html; charset=utf-8'); res.end(html); }
-      catch { res.writeHead(503); res.end('Run npm run chart:bundle first.'); }
-      return;
     }
     res.writeHead(404); res.end();
   });
@@ -56,6 +50,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const number = (key, fallback) => process.env[key] === undefined ? fallback : Number(process.env[key]);
   const market = new SimulationMarket({symbol:process.env.SIM_SYMBOL ?? 'DEMO/USD',price:number('SIM_PRICE',100),drift:number('SIM_DRIFT',.02),volatility:number('SIM_VOLATILITY',.2),precision:number('SIM_PRECISION',5),support:number('SIM_SUPPORT',90),resistance:number('SIM_RESISTANCE',110),boundaryStrength:number('SIM_BOUNDARY_STRENGTH',.3)});
   const app = createSimulationServer({port:number('PORT',8090),market});
-  app.server.on('listening', () => console.log(`SIMULATION ONLY — HTTP/chart/history and WebSocket /ticks on port ${app.server.address().port}`));
+  app.server.on('listening', () => console.log(`SIMULATION ONLY — HTTP history and WebSocket /ticks on port ${app.server.address().port}`));
   for (const signal of ['SIGINT','SIGTERM']) process.on(signal, () => app.close().then(() => process.exit(0)));
 }

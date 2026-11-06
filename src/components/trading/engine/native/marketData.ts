@@ -26,13 +26,3 @@ export function aggregateHistory(input: readonly OHLCCandle[], seconds: number):
   }
   return result;
 }
-export function heikinAshi(input: readonly OHLCCandle[]): OHLCCandle[] {
-  const result: OHLCCandle[] = [];
-  for (const bar of input) {
-    const previous = result[result.length - 1];
-    const open = previous ? (previous.open + previous.close) / 2 : (bar.open + bar.close) / 2;
-    const close = (bar.open + bar.high + bar.low + bar.close) / 4;
-    result.push({ ...bar, open, close, high: Math.max(bar.high, open, close), low: Math.min(bar.low, open, close) });
-  }
-  return result;
-}
