@@ -33,8 +33,10 @@ restrictions, or the need to verify hosting terms. It is not a persistent 100ms 
    account access and keep request headers/credentials private.
 4. Leave the minute Vercel cron disabled. Existing daily financial cron jobs stay
    unchanged. Confirm with `node scripts/configure-otc-scheduler.mjs --check`.
-5. In Admin enable all-asset background collection. This durable permission is
-   separate from the scheduler; a successful HTTP 200 can mean it was skipped.
+5. The Asset Library no longer has a collection control panel. An authorized
+   administrator can manage the durable permission through the protected
+   `collection-settings` API documented in `vercel-otc.md`; a successful scheduler
+   HTTP 200 can still mean the cycle was skipped.
 
 ## Create the job in cron-job.org
 
@@ -83,7 +85,7 @@ skips/errors as failures. It is **not** evidence that cron-job.org is running.
 2. Close all InitOption browser tabs. Leave the enabled job untouched for at least
    five minute boundaries; do not use the smoke test or manual collection meanwhile.
 3. Inspect scheduler history: multiple independent timed calls, no auth/timeouts/errors.
-4. Reopen Admin and inspect the separate scheduler receipt/completion timestamps,
+4. Inspect the protected collection status API for scheduler receipt/completion timestamps,
    consecutive successes and every asset's freshness. At least two successful work
    cycles and all 141 assets within the configured 120s window are required by
    current health rules. One manually triggered call cannot prove autonomous operation.
@@ -98,6 +100,6 @@ usage regularly, including the host's permitted-use terms for this trading servi
 
 ## Stop / rollback
 
-Disable the external job first, then disable collection in Admin. Already running
+Disable the external job first, then disable collection through the protected administrator API. Already running
 work can finish. Keep recorded candles/state. Revoke/rotate a compromised secret
 across all legitimate consumers together; never expose it to confirm a diagnosis.

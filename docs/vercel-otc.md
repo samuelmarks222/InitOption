@@ -297,17 +297,13 @@ states rather than invent history. A 4h candle needs a real observation interval
 to accumulate. All-asset prepopulation and continuous operation cannot be claimed
 until a scheduler is enabled and observed successfully across all assets.
 
-### Admin: enable background history for the entire OTC catalog
+### Background collection control API
 
-The admin **Asset Library** now includes **Background history collection**.
-**Enable all assets & collect now** persists a global server-side setting and
-requests one initial collection cycle for every symbol in `server/otc/assets.json`,
-without opening charts. It does not modify `assets_config` trading availability,
-payouts, live chart prices, or recorded history. The pricing catalog can differ
-from the broader asset library; only supported OTC engine symbols are collected.
-**Run one cycle** is a bounded manual action, not an always-running worker.
-Disabling preserves recorded data and does not stop live ticks for viewed assets;
-an already-running cycle may finish after disable.
+The Asset Library no longer displays the background history collection panel. Removing
+it does **not** change the persisted enabled setting, delete recorded history, or
+stop a deployed scheduler. The following existing, protected server API remains
+available to authorized administrators; a cycle is bounded, and disabling allows
+in-flight work to finish. The pricing catalog may differ from the asset library.
 
 Private migration `neon/014_otc_collection_control.sql` stores the singleton
 setting, modifying administrator, last cycle/result/error, and expiring worker
@@ -326,18 +322,16 @@ and non-boolean settings are 400. This privileged route does not use the legacy
 unverified identity fallback when Appwrite is unconfigured. CRON_SECRET cannot
 administer settings, and no scheduler secret is sent to the browser.
 
-The protected scheduler `action=collect` now honors the same durable enable switch
-and lease. The admin page polls **status only** every 30 seconds, never collection.
-Status shows initialized/missing catalog assets, checkpoints within 60 seconds,
+The protected scheduler `action=collect` honors the same durable enable switch
+and lease. The protected status API reports initialized/missing catalog assets, checkpoints within 60 seconds,
 maximum initialized-asset lag, last cycle result, and errors. Viewed assets can
 advance checkpoints too: freshness is not proof that the scheduler is running.
 "Recent cycle" is historical evidence of one finished invocation, not a claim of
 continuous operation. Configured CRON_SECRET is explicitly not scheduler proof.
 
-No scheduler, environment secret, plan upgrade or production DB change was made
-by this code change. After deployment, an administrator can enable and initialize
-all catalog assets; sustained unattended history still needs an approved frequent
-scheduler and measured all-asset capacity/freshness. No pre-recording candles are
+Removing the panel does not change a scheduler, secret, plan or database setting.
+Sustained unattended history still needs an approved frequent scheduler and
+measured all-asset capacity/freshness. No pre-recording candles are
 fabricated and source slots filled from the persisted OTC engine checkpoint are
 not represented as external exchange observations.
 
