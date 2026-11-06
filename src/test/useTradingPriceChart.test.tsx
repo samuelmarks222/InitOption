@@ -82,6 +82,20 @@ describe('trading chart data integration', () => {
     expect(result.current.liveWarning).toContain('reconnecting');
     unmount(); vi.runOnlyPendingTimers(); vi.useRealTimers();
   });
+  it('distinguishes sync delays from service errors without displaying raw server details', () => {
+    const {result,unmount} = renderHook(() => useTradingPriceChart(ref, 'EUR/CAD', 5, 'candles'));
+    act(() => result.current.onStatus('catching-up'));
+    expect(result.current.liveWarning).toContain('Syncing recorded prices');
+    act(() => result.current.onStatus('reconnecting'));
+    act(() => result.current.onFeedError(new Error('OTC API unavailable (503)')));
+    expect(result.current.liveWarning).toContain('Price service unavailable');
+    act(() => result.current.onFeedError(new Error('private error secret')));
+    expect(result.current.liveWarning).not.toContain('secret');
+    expect(result.current.liveWarning).toContain('connection failed');
+    act(() => result.current.onStatus('live'));
+    expect(result.current.liveWarning).toBe('');
+    unmount();
+  });
   it('changes type without remounting the chart, and cleans up on symbol change', async () => {
     const {rerender, unmount} = renderHook(({symbol, kind}) => useTradingPriceChart(ref, symbol, 5, kind), {initialProps:{symbol:'EUR/CAD',kind:'candles' as 'candles'|'bars'}});
     const first = fakes.instances[0].instance;

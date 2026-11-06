@@ -74,6 +74,7 @@ export default function TradingChart({
 
   useEffect(() => {
     let active = true;
+    let feedIsLive = false;
     const feed = createMarketDataFeed({
       websocketUrl: marketWebSocketUrl(),
       internalOTC: isInternalOTC,
@@ -91,8 +92,16 @@ export default function TradingChart({
           }
         },
         onHistory: () => { try { chartHandlers.current.onHistory(); } catch (error) { console.error('Chart history failed:', error); } },
-        onStatusChange: (status) => chartHandlers.current.onStatus(status),
-        onError: (error) => console.warn(`Market feed error for ${asset.symbol}:`, error),
+        onStatusChange: (status) => {
+          feedIsLive = status === 'live';
+          chartHandlers.current.onStatus(status);
+        },
+        onError: (error) => {
+          // Shared feeds also report exceptions from individual consumers. Do
+          // not label those as a connection failure while the feed is live.
+          if (!feedIsLive) chartHandlers.current.onFeedError(error);
+          console.warn(`Market feed error for ${asset.symbol}:`, error);
+        },
       },
     });
     feed.connect();

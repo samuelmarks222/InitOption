@@ -11,7 +11,7 @@ import type { Candle } from './candles';
 /** Rendering consumes the existing shared feed; it never supplies trade prices. */
 export function useTradingPriceChart(container: RefObject<HTMLDivElement>, symbol: string, seconds: number, kind: ChartKind) {
   const chartRef = useRef<LightweightChart | null>(null);
-  const callbacks = useRef<{ tick: (tick: MarketTick) => void; history: () => void; status: (status: MarketFeedStatus) => void } | null>(null);
+  const callbacks = useRef<{ tick: (tick: MarketTick) => void; history: () => void; status: (status: MarketFeedStatus) => void; error: (error: Error) => void } | null>(null);
   const kindRef = useRef(kind); kindRef.current = kind;
   const [view, setView] = useState<{chart: IChartApi; series: ISeriesApi<any>} | null>(null);
   const [message, setMessage] = useState('Loading chart history…');
@@ -177,14 +177,24 @@ export function useTradingPriceChart(container: RefObject<HTMLDivElement>, symbo
       if (!alive) return;
       setStatus(next);
       if (next === 'live' && !waitingForFirstUpdate) markReceipt();
-      if (next === 'reconnecting' || next === 'unavailable') {
+      if (next === 'reconnecting' || next === 'unavailable' || next === 'catching-up') {
         clearTimeout(staleTimer); waitingForFirstUpdate = false;
-        setLiveWarning(next === 'reconnecting' ? 'Price feed reconnecting; candles are paused.' : 'Price feed unavailable; candles are paused.');
+        setLiveWarning(next === 'catching-up' ? 'Syncing recorded prices; candles resume when the feed is current.' : next === 'reconnecting' ? 'Price feed reconnecting; candles are paused.' : 'Price feed unavailable; candles are paused.');
         // An external reconnect lacks a snapshot cursor: don't merge a partial
         // interval onto a previously observed candle.
         if (!isInternalOTC) { hasSnapshot = false; observedSince = undefined; liveTimestamp = undefined; liveSequence = undefined; livePrice = undefined; }
-        if (!bars.length) setMessage(next === 'unavailable' ? 'Price feed unavailable.' : 'Reconnecting to the price feed…');
+        if (!bars.length) setMessage(next === 'unavailable' ? 'Price feed unavailable.' : next === 'catching-up' ? 'Syncing recorded prices…' : 'Reconnecting to the price feed…');
       }
+    }, error: error => {
+      if (!alive) return;
+      const message = error.message;
+      if (/OTC API unavailable \(400\)/.test(message)) setLiveWarning('This asset is unavailable from the price service (400).');
+      else if (/OTC API unavailable \(429\)/.test(message)) setLiveWarning('Price service rate limit reached (429). Retrying…');
+      else if (/OTC API unavailable \(5\d\d\)/.test(message)) setLiveWarning('Price service unavailable. Retrying…');
+      else if (/timed out/i.test(message)) setLiveWarning('Price service timed out. Retrying…');
+      else if (/invalid|unordered/i.test(message)) setLiveWarning('Price service returned invalid data. Retrying…');
+      else if (/not advancing/i.test(message)) setLiveWarning('Price service stopped advancing. Resyncing…');
+      else setLiveWarning('Price feed connection failed. Retrying…');
     }};
     hydrate();
     if (hasHistoryApi) void loadHistory(Math.floor(Date.now() / 1000 / seconds) * seconds);
@@ -215,6 +225,7 @@ export function useTradingPriceChart(container: RefObject<HTMLDivElement>, symbo
     onTick: (tick: MarketTick) => callbacks.current?.tick(tick),
     onHistory: () => callbacks.current?.history(),
     onStatus: (next: MarketFeedStatus) => callbacks.current?.status(next),
+    onFeedError: (error: Error) => callbacks.current?.error(error),
     zoom: (direction: 'in' | 'out') => chartRef.current?.zoom(direction),
     latest: () => chartRef.current?.latest(),
     reset: () => chartRef.current?.reset(),

@@ -337,9 +337,15 @@ not represented as external exchange observations.
 
 ### Live feed freeze recovery
 
-The same-origin HTTP transport now bounds both response fetch and JSON decoding
-with a 10-second timeout. Aborted/timed-out responses cannot later overwrite a
-recovered stream. Repeated non-advancing cursors for 10 seconds (or an authoritative
+The same-origin HTTP transport bounds both response fetch and JSON decoding.
+Initial and catch-up requests have a 35-second deadline to allow the configured
+30-second server function to finish; regular live requests retain the 10-second
+deadline. Responses taking over two seconds are retained for synchronization but
+not published as current quotes: the feed waits for a fresh response before
+reporting live. This conservative check can leave the chart paused on a slow
+connection instead of presenting delayed prices as live. Aborted/timed-out
+responses cannot later overwrite a recovered stream. Repeated non-advancing
+cursors for 10 seconds (or an authoritative
 server timestamp over 10 seconds ahead of its newest tick without catchingUp)
 trigger reconnecting state and a fresh snapshot request, not a false live state.
 An empty initial snapshot is not considered a live price.
@@ -350,8 +356,9 @@ per failing subscriber rather than a log flood. Foreground visibility and online
 restoration wake idle polling immediately without overlapping an in-flight poll;
 listeners and timeouts are removed when the shared stream is disposed.
 
-These changes add no browser-generated prices, candle history, countdown overlay,
-or pricing/status banner. Catch-up history still waits for the authoritative
+These changes add no browser-generated prices or candle history. The chart
+indicates whether the feed is syncing, unavailable, or reconnecting; it cannot
+repair an unavailable server/database by itself. Catch-up history still waits for the authoritative
 server backlog to complete; server/database outages cannot be repaired by client
 animation. Source ticks remain 100ms logical steps, not a guaranteed 100ms HTTP
 arrival rate. Tests cover hung fetches, late responses, stagnant cursors, empty
