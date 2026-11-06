@@ -9,6 +9,7 @@ export type MarketFeedStatus =
   | "connecting"
   | "live"
   | "reconnecting"
+  | "catching-up"
   | "fallback"
   | "disconnected";
 

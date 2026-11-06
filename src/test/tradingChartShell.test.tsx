@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import TradingChart from "@/components/trading/TradingChart";
 
 const chartTick = vi.hoisted(() => vi.fn());
+const chartFeedError = vi.hoisted(() => vi.fn());
 const feeds = vi.hoisted(() => [] as Array<{options: any; connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>}>);
 vi.mock("@/components/trading/engine/marketDataFeed", () => ({
   createMarketDataFeed: (options: any) => {
@@ -14,7 +15,7 @@ vi.mock("@/components/trading/engine/marketDataFeed", () => ({
 vi.mock("@/components/trading/drawings/DrawingOverlay", () => ({ DrawingOverlay: () => null }));
 vi.mock("@/components/trading/chart-core/useTradingPriceChart", () => ({ useTradingPriceChart: () => ({
   view: null, message: 'Loading chart history…', status: 'connecting', historyWarning: '',
-  onTick: chartTick, onHistory: vi.fn(), onStatus: vi.fn(), zoom: vi.fn(), latest: vi.fn(), reset: vi.fn(),
+  onTick: chartTick, onHistory: vi.fn(), onStatus: vi.fn(), onFeedError: chartFeedError, zoom: vi.fn(), latest: vi.fn(), reset: vi.fn(),
 }) }));
 vi.mock("@/contexts/DrawingContext", () => ({ useDrawings: () => ({ activeTool: null, setActiveTool: vi.fn(), setDrawings: vi.fn() }) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
@@ -24,8 +25,20 @@ const asset = {symbol:"EUR/USD", price:1.1, basePrice:1.1, type:"forex"};
 const indicator = {instanceId:"a", configId:"sma", name:"SMA", pane:"overlay" as const, params:{}, visible:true};
 const props = () => ({ asset, activeIndicators: [indicator], onPriceUpdate: vi.fn(), onToggleIndicatorsPanel: vi.fn(), onToggleDrawingsPanel: vi.fn(), onUpdateIndicator: vi.fn(), onRemoveIndicator: vi.fn(), onOpenIndicatorSettings: vi.fn() });
 
-beforeEach(() => { feeds.length = 0; chartTick.mockReset(); });
+beforeEach(() => { feeds.length = 0; chartTick.mockReset(); chartFeedError.mockReset(); });
 describe("chart rebuild shell", () => {
+  it("shows feed errors without mislabeling consumer errors as disconnections", () => {
+    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const view = render(<TradingChart {...props()} />);
+    const callbacks = feeds[0].options.callbacks;
+    const error = new Error('feed error');
+    callbacks.onStatusChange('reconnecting'); callbacks.onError(error);
+    expect(chartFeedError).toHaveBeenCalledWith(error);
+    chartFeedError.mockClear();
+    callbacks.onStatusChange('live'); callbacks.onError(new Error('consumer error'));
+    expect(chartFeedError).not.toHaveBeenCalled();
+    view.unmount();consoleWarn.mockRestore();
+  });
   it("retains indicator and drawing entry points while loading the chart", () => {
     const p = props();
     render(<TradingChart {...p} />);

@@ -209,10 +209,67 @@ describe("Vercel same-origin OTC transport", () => {
   it("bounds hung requests and ignores their late responses after recovery",async()=>{
     const a=setup();let finish:((value:any)=>void)|undefined;
     const fetch=vi.fn().mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;})).mockImplementation(async()=>({ok:true,json:async()=>response(a.symbol)}));
-    vi.stubGlobal('fetch',fetch);a.feed.connect();await vi.advanceTimersByTimeAsync(10500);
+    vi.stubGlobal('fetch',fetch);a.feed.connect();await vi.advanceTimersByTimeAsync(35500);
     expect(fetch).toHaveBeenCalledTimes(2);expect(a.onHistory).toHaveBeenCalledOnce();
     finish!({ok:true,json:async()=>response(a.symbol,'snapshot',5000)});await vi.advanceTimersByTimeAsync(0);
     expect(a.onHistory).toHaveBeenCalledOnce();expect(a.onStatusChange).toHaveBeenLastCalledWith('live');
+    a.feed.disconnect();await vi.advanceTimersByTimeAsync(1000);
+  });
+  it("allows a slow initial response to finish without presenting delayed prices as live",async()=>{
+    const a=setup();const quotes=vi.fn();const unsubscribe=subscribeOTCQuotes(quotes);let calls=0;
+    const fetch=vi.fn(async()=>{
+      calls++;
+      if(calls===1) await new Promise(resolve=>setTimeout(resolve,12000));
+      return {ok:true,json:async()=>calls===1?response(a.symbol):response(a.symbol,'batch',6001,'101')};
+    });
+    vi.stubGlobal('fetch',fetch);a.feed.connect();await vi.advanceTimersByTimeAsync(10000);
+    expect(fetch).toHaveBeenCalledTimes(1);expect(a.onHistory).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(a.onStatusChange).toHaveBeenLastCalledWith('catching-up');
+    expect(a.onHistory).not.toHaveBeenCalled();expect(a.onTick).not.toHaveBeenCalled();expect(quotes).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(100);
+    expect(a.onHistory).toHaveBeenCalledOnce();expect(a.onStatusChange).toHaveBeenLastCalledWith('live');
+    expect(quotes).toHaveBeenCalledWith(expect.objectContaining({symbol:a.symbol,sequence:6001,price:101}));
+    unsubscribe();a.feed.disconnect();await vi.advanceTimersByTimeAsync(1000);
+  });
+  it("withholds slow live batches and resumes only after a fresh response",async()=>{
+    const a=setup();let calls=0;const quotes=vi.fn();const unsubscribe=subscribeOTCQuotes(quotes);
+    const fetch=vi.fn(async()=>{
+      calls++;
+      if(calls===2) await new Promise(resolve=>setTimeout(resolve,2100));
+      return {ok:true,json:async()=>calls===1?response(a.symbol):response(a.symbol,'batch',calls===2?6001:6002,calls===2?'101':'102')};
+    });
+    vi.stubGlobal('fetch',fetch);a.feed.connect();await vi.advanceTimersByTimeAsync(0);
+    expect(a.onHistory).toHaveBeenCalledOnce();expect(quotes).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(2200);
+    expect(a.onStatusChange).toHaveBeenLastCalledWith('catching-up');
+    expect(a.onTick).not.toHaveBeenCalled();expect(quotes).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(a.onStatusChange).toHaveBeenLastCalledWith('live');expect(a.onHistory).toHaveBeenCalledTimes(2);
+    expect(quotes).toHaveBeenLastCalledWith(expect.objectContaining({sequence:6002,price:102}));
+    unsubscribe();a.feed.disconnect();await vi.advanceTimersByTimeAsync(1000);
+  });
+  it("does not treat an empty response after a delayed snapshot as a fresh price",async()=>{
+    const a=setup();let calls=0;const quotes=vi.fn();const unsubscribe=subscribeOTCQuotes(quotes);
+    vi.stubGlobal('fetch',vi.fn(async()=>{
+      calls++;
+      if(calls===1) await new Promise(resolve=>setTimeout(resolve,2100));
+      return {ok:true,json:async()=>calls===1?response(a.symbol):calls===2?{...response(a.symbol,'batch',6000),ticks:[]}:response(a.symbol,'batch',6001,'101')};
+    }));
+    a.feed.connect();await vi.advanceTimersByTimeAsync(2200);
+    expect(a.onStatusChange).toHaveBeenLastCalledWith('catching-up');expect(a.onHistory).not.toHaveBeenCalled();expect(quotes).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(100);
+    expect(a.onStatusChange).toHaveBeenLastCalledWith('live');expect(quotes).toHaveBeenCalledOnce();
+    unsubscribe();a.feed.disconnect();await vi.advanceTimersByTimeAsync(1000);
+  });
+  it("retains the shorter live request timeout after initial synchronization",async()=>{
+    const a=setup();let calls=0;
+    const fetch=vi.fn(async()=>{calls++;return calls===1?{ok:true,json:async()=>response(a.symbol)}:new Promise(()=>{});});
+    vi.stubGlobal('fetch',fetch);a.feed.connect();await vi.advanceTimersByTimeAsync(0);
+    expect(a.onStatusChange).toHaveBeenLastCalledWith('live');
+    await vi.advanceTimersByTimeAsync(10100);
+    expect(a.onStatusChange).toHaveBeenLastCalledWith('reconnecting');
+    expect(a.onError).toHaveBeenCalledWith(expect.objectContaining({message:'OTC tick request timed out'}));
     a.feed.disconnect();await vi.advanceTimersByTimeAsync(1000);
   });
   it("detects a non-advancing cursor and resynchronizes instead of reporting a frozen feed as live",async()=>{

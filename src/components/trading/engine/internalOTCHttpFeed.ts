@@ -23,6 +23,12 @@ interface Stream {
   abort?: AbortController;
 }
 const streams = new Map<string, Stream>();
+// The serverless function may run for up to 30 seconds. Allow a bounded
+// initial/catch-up request to finish, but keep the shorter deadline once live.
+const HYDRATION_TIMEOUT_MS = 35_000;
+const LIVE_TIMEOUT_MS = 10_000;
+// A delayed response is useful for backfill, but must not be published as live.
+const MAX_LIVE_RESPONSE_AGE_MS = 2_000;
 /** Same-origin serverless transport. One non-overlapping request per symbol,
  * batched 100ms server ticks, no browser price generation or easing. */
 export function createInternalOTCHttpFeed(
@@ -107,7 +113,7 @@ export function createInternalOTCHttpFeed(
           timeout = setTimeout(() => {
             reject(new Error("OTC tick request timed out"));
             abort.abort();
-          },10000);
+          }, stream.hydrating ? HYDRATION_TIMEOUT_MS : LIVE_TIMEOUT_MS);
         }),
       ]);
       if (stream.stopped) return;
@@ -212,9 +218,11 @@ export function createInternalOTCHttpFeed(
       }
       stream.cursor = data.cursor;
       stream.failures = 0;
-      if (data.catchingUp) {
+      if (data.catchingUp || performance.now() - started > MAX_LIVE_RESPONSE_AGE_MS || (stream.hydrating && !received.length)) {
+        // Store and advance the cursor, but wait for a fresh response before
+        // publishing a quote or claiming that the chart is live.
         stream.hydrating = true;
-        notify(stream, "reconnecting");
+        notify(stream, "catching-up");
         delay = 100;
       } else {
         // Hydrate only after backlog is complete; never turn downtime into flat/fake bars.
