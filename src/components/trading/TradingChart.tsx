@@ -12,6 +12,8 @@ import { ChartZoomControls } from "./ChartZoomControls";
 import { dispatchTradeDeskDirectionSubmit } from "./tradeDeskEvents";
 import { PairInfoModal } from "./PairInfoModal";
 import type { ActiveIndicator } from "./indicators/types";
+import { DrawingOverlay } from "./drawings/DrawingOverlay";
+import { useTradingPriceChart } from "./chart-core/useTradingPriceChart";
 
 export interface ChartSettlementAnnouncement {
   id: string; assetSymbol: string; direction: TradeDirection; amount: number; expirySeconds: number;
@@ -40,29 +42,17 @@ interface TradingChartProps {
   orderAnnouncements?: ChartOrderAnnouncement[];
 }
 
-/**
- * Temporary workspace shell. The chart renderer has been removed; controls and
- * saved drawings/indicators remain owned by their existing contexts. Market
- * quotes remain independent of the absent renderer so removing it does not
- * silently switch the trading panel to a stale static price.
- */
 export default function TradingChart({
   asset, onPriceUpdate, activeIndicators, activeTrades = [], onToggleIndicatorsPanel,
   onToggleDrawingsPanel, onRemoveIndicator, onUpdateIndicator, onOpenIndicatorSettings,
   overlayUiSuppressed = false, onToggleMobileHistory, mobileHistoryOpen = false,
-  compactPane = false, miniOverlay = false,
+  compactPane = false, miniOverlay = false, liveEdgeRequestKey,
 }: TradingChartProps) {
   const { t } = useTranslation();
   const { activeTool, setActiveTool, setDrawings } = useDrawings();
   const [selectedTf, setSelectedTf] = useState<SupportedChartTimeframe>("5s");
   const [chartType, setChartTypeState] = useState<ChartType>("candles");
-  const previousTimeframe = useRef<SupportedChartTimeframe>("5s");
-  const setChartType = (type: ChartType) => {
-    if (type === chartType) return;
-    if (type === "line") { previousTimeframe.current = selectedTf; setSelectedTf("5s"); }
-    else if (chartType === "line") setSelectedTf(previousTimeframe.current);
-    setChartTypeState(type);
-  };
+  const setChartType = (type: ChartType) => setChartTypeState(type);
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
   const [timeMenuOpen, setTimeMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -73,6 +63,14 @@ export default function TradingChart({
   callbackRef.current = onPriceUpdate;
   const basePriceRef = useRef(asset.basePrice ?? asset.price);
   basePriceRef.current = asset.basePrice ?? asset.price;
+  const chartContainer = useRef<HTMLDivElement>(null);
+  const chart = useTradingPriceChart(chartContainer, asset.symbol, TIMEFRAMES[selectedTf].seconds, chartType === "line" ? "area" : chartType);
+  const chartHandlers = useRef(chart);
+  chartHandlers.current = chart;
+
+  useEffect(() => {
+    if (liveEdgeRequestKey !== undefined) chartHandlers.current.latest();
+  }, [liveEdgeRequestKey]);
 
   useEffect(() => {
     let active = true;
@@ -85,7 +83,11 @@ export default function TradingChart({
           if (!active || tick.symbol !== asset.symbol) return;
           const seconds = timeframeRef.current;
           callbackRef.current?.(tick.price, Math.floor(tick.timestamp / seconds) * seconds, seconds);
+          try { chartHandlers.current.onTick(tick); }
+          catch (error) { console.error('Chart update failed:', error); }
         },
+        onHistory: () => { try { chartHandlers.current.onHistory(); } catch (error) { console.error('Chart history failed:', error); } },
+        onStatusChange: (status) => chartHandlers.current.onStatus(status),
         onError: (error) => console.warn(`Market feed error for ${asset.symbol}:`, error),
       },
     });
@@ -103,8 +105,16 @@ export default function TradingChart({
           <button type="button" onClick={() => setPairInfoOpen(true)} className="text-left text-xs font-bold text-slate-200 hover:text-white">{asset.symbol}</button>
         </div>
       )}
-      <div role="status" className="pointer-events-none absolute inset-0 flex items-center justify-center px-16 text-center text-xs text-slate-400">
-        Chart unavailable while the chart system is being rebuilt. Indicators and drawing settings are preserved.
+      <div className={`absolute inset-y-0 right-0 left-0 ${showTools ? "sm:left-[44px]" : ""}`}>
+        <div ref={chartContainer} className="absolute inset-0" aria-label="Price chart" />
+        {chart.view && !compactPane && <DrawingOverlay chart={chart.view.chart} series={chart.view.series} timeframeSeconds={TIMEFRAMES[selectedTf].seconds} />}
+        {chart.message && <div role="status" className="pointer-events-none absolute inset-0 flex items-center justify-center px-16 text-center text-xs text-slate-400">{chart.message}</div>}
+      </div>
+      <div className="pointer-events-none absolute right-3 top-3 z-40 text-right text-[10px] text-slate-400">
+        {isInternalOTC && <div>Synthetic OTC prices</div>}
+        {chart.status !== "live" && <div>Feed: {chart.status}</div>}
+        {chart.historyWarning && <div>{chart.historyWarning}</div>}
+        {activeIndicators.some(ind => ind.visible) && <div>Indicator plots are not yet available</div>}
       </div>
       {showTools && <>
         <div className="absolute inset-y-0 left-0 hidden w-[44px] border-r sm:block" style={{ borderRightColor: "var(--trading-border-strong-color)" }}>
@@ -113,18 +123,22 @@ export default function TradingChart({
           <button type="button" aria-label="Trade higher" onClick={() => dispatchTradeDeskDirectionSubmit("higher")} className="absolute inset-x-0 bottom-0 h-[45%] hover:bg-white/[0.04]"><span className="absolute bottom-2 left-1 text-[11px] text-slate-400">—</span></button>
         </div>
         <div className="absolute bottom-4 left-[56px] z-[81] hidden sm:flex">
-          <ChartToolbar selectedTf={selectedTf} onSelectTf={setSelectedTf} timeframeLocked={chartType === "line"} styleEditorOpen={settingsOpen}
+          <ChartToolbar selectedTf={selectedTf} onSelectTf={setSelectedTf} timeframeLocked={false} styleEditorOpen={settingsOpen}
             onOpenStyleEditor={() => setSettingsOpen(v => !v)} activeInds={[]} onToggleInd={() => {}}
             activeDrawTool={activeTool} onSelectDrawTool={(tool) => { if (tool === "clear") setDrawings([]); setActiveTool(tool === "clear" ? null : tool); }}
             onToggleIndicatorsPanel={openIndicators} onToggleDrawingsPanel={openDrawings} />
         </div>
-        <ChartZoomControls onZoom={() => {}} disabled />
+        <ChartZoomControls onZoom={chart.zoom} />
+        <div className="absolute bottom-3 right-3 z-[56] flex gap-2">
+          <button type="button" onClick={chart.latest} className="rounded bg-[#2a3040] px-2 py-1 text-[11px] text-slate-200" title="Return to latest candle">Latest</button>
+          <button type="button" onClick={chart.reset} className="rounded bg-[#2a3040] px-2 py-1 text-[11px] text-slate-200" title="Reset chart view">Reset</button>
+        </div>
       </>}
       {!mobileHistoryOpen && !overlayUiSuppressed && !compactPane && <div className="absolute left-3 top-3 z-[55] flex flex-col gap-3 sm:hidden">
         <button type="button" aria-label="Chart tools" onClick={() => setMobileToolsOpen(v => !v)} className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-white/6 bg-[#2a3142]/95 text-white"><MoreHorizontal size={18}/></button>
         {mobileToolsOpen && <>
           <button type="button" aria-label="Drawing tools" onClick={openDrawings} className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-white/6 bg-[#2a3142]/95 text-white"><PenTool size={18}/></button>
-          <button type="button" aria-label="Time interval" disabled={chartType === "line"} onClick={() => setTimeMenuOpen(v => !v)} className="flex h-10 min-w-[42px] items-center justify-center rounded-[6px] border border-white/6 bg-[#2a3142]/95 text-[#0fa053] font-black">{selectedTf}</button>
+          <button type="button" aria-label="Time interval" onClick={() => setTimeMenuOpen(v => !v)} className="flex h-10 min-w-[42px] items-center justify-center rounded-[6px] border border-white/6 bg-[#2a3142]/95 text-[#0fa053] font-black">{selectedTf}</button>
           {timeMenuOpen && <div className="fixed left-16 top-20 z-[56] grid w-56 grid-cols-3 gap-1 rounded-[10px] border border-white/10 bg-[#5a5f72] p-2">{SUPPORTED_CHART_TIMEFRAMES.map(tf => <button key={tf} type="button" onClick={() => {setSelectedTf(tf);setTimeMenuOpen(false)}} className="rounded px-2 py-2 text-xs text-white hover:bg-white/10">{tf}</button>)}</div>}
           <button type="button" aria-label="Chart settings" onClick={() => setSettingsOpen(v => !v)} className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-white/6 bg-[#2a3142]/95 text-white"><CandleIcon className="h-[18px] w-[18px]"/></button>
           <button type="button" aria-label="Indicators" onClick={openIndicators} className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-white/6 bg-[#2a3142]/95 text-white"><Compass size={18}/></button>
